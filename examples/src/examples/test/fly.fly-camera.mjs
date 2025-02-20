@@ -17,8 +17,6 @@ const PASSIVE = { passive: false };
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
-const MOBILE_SCREEN_SIZE = 768;
-
 class JoyStick {
     /**
      * @type {number}
@@ -208,7 +206,7 @@ class Input extends EventHandler {
     }
 
     get isMobile() {
-        return Math.min(window.screen.width, window.screen.height) < MOBILE_SCREEN_SIZE;
+        return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
     }
 
     get speedMult() {
@@ -238,15 +236,10 @@ class Input extends EventHandler {
             left
         });
 
-        if (this.isMobile) {
-            // manage left and right touch
-            if (left) {
-                this._joystick.hidden = false;
-                this._joystick.setBase(event.clientX, event.clientY);
-                this._joystick.setInner(event.clientX, event.clientY);
-            } else {
-                this.fire('rotate:start', event);
-            }
+        if (this.isMobile && left) {
+            this._joystick.hidden = false;
+            this._joystick.setBase(event.clientX, event.clientY);
+            this._joystick.setInner(event.clientX, event.clientY);
         } else {
             this.fire('rotate:start', event);
         }
@@ -265,14 +258,8 @@ class Input extends EventHandler {
         data.x = event.clientX;
         data.y = event.clientY;
 
-        if (this.isMobile) {
-
-            // move joystick or fire move event
-            if (left) {
-                this._joystick.setInner(event.clientX, event.clientY);
-            } else {
-                this.fire('rotate:move', event);
-            }
+        if (this.isMobile && left) {
+            this._joystick.setInner(event.clientX, event.clientY);
         } else {
             this.fire('rotate:move', event);
         }
@@ -293,16 +280,8 @@ class Input extends EventHandler {
         const { left } = data;
         this._pointerData.delete(event.pointerId);
 
-        if (this._pointerData.size < 2) {
-            this._lastPinchDist = -1;
-        }
-
-        if (this.isMobile) {
-            if (left) {
-                this._joystick.hidden = true;
-            } else {
-                this.fire('rotate:end', event);
-            }
+        if (this.isMobile && left) {
+            this._joystick.hidden = true;
         } else {
             this.fire('rotate:end', event);
         }
@@ -437,7 +416,6 @@ class Input extends EventHandler {
         this._element.addEventListener('pointerup', this._onPointerUp);
         this._element.addEventListener('contextmenu', this._onContextMenu);
 
-        // These can stay on window since they're keyboard events
         window.addEventListener('keydown', this._onKeyDown, false);
         window.addEventListener('keyup', this._onKeyUp, false);
     }
