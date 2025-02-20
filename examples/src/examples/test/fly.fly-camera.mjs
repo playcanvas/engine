@@ -140,11 +140,12 @@ class JoyStick {
             tmpVa.normalize().mulScalar(this._innerMaxDist);
             this._innerPos.add2(this._basePos, tmpVa);
         }
+        this._inner.style.left = `${this._innerPos.x - this._size * this._innerScale * 0.5}px`;
+        this._inner.style.top = `${this._innerPos.y - this._size * this._innerScale * 0.5}px`;
+
         const vx = math.clamp(tmpVa.x / this._innerMaxDist, -1, 1);
         const vy = math.clamp(tmpVa.y / this._innerMaxDist, -1, 1);
         this._value.set(vx, vy);
-        this._inner.style.left = `${this._innerPos.x - this._size * this._innerScale * 0.5}px`;
-        this._inner.style.top = `${this._innerPos.y - this._size * this._innerScale * 0.5}px`;
     }
 }
 
