@@ -85,6 +85,8 @@ app.root.addChild(camera);
 
 /** @type {FlyCamera} */
 const flyCamera = new FlyCamera();
+flyCamera.rotateSpeed = 0.3;
+flyCamera.rotateDamping = 0.95;
 flyCamera.attach(app.graphicsDevice.canvas, camera.getWorldTransform());
 
 app.on('update', (dt) => {

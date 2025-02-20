@@ -182,6 +182,16 @@ class Input extends EventHandler {
      */
     _joystick = new JoyStick();
 
+    /**
+     * @type {number}
+     */
+    sprintMult = 2;
+
+    /**
+     * @type {number}
+     */
+    crouchMult = 0.5;
+
     constructor() {
         super();
 
@@ -200,6 +210,10 @@ class Input extends EventHandler {
 
     get isMobile() {
         return Math.min(window.screen.width, window.screen.height) < MOBILE_SCREEN_SIZE;
+    }
+
+    get speedMult() {
+        return this._key.sprint ? this.sprintMult : this._key.crouch ? this.crouchMult : 1;
     }
 
     /**
@@ -381,26 +395,33 @@ class Input extends EventHandler {
     }
 
     /**
-     * @param {string} name - The key name.
-     * @returns {number} - The key value.
+     * @returns {number} - The z axis input.
      */
-    key(name) {
+    getZ() {
         if (this.isMobile) {
-            switch (name) {
-                case 'forward':
-                    return Math.max(0, -this._joystick.value.y);
-                case 'backward':
-                    return Math.max(0, this._joystick.value.y);
-                case 'left':
-                    return Math.max(0, -this._joystick.value.x);
-                case 'right':
-                    return Math.max(0, this._joystick.value.x);
-                default:
-                    return 0;
-            }
+            return -this._joystick.value.y;
         }
+        return (this._key.forward - this._key.backward) * this.speedMult;
+    }
 
-        return +this._key[name];
+    /**
+     * @returns {number} - The x axis input.
+     */
+    getX() {
+        if (this.isMobile) {
+            return this._joystick.value.x;
+        }
+        return (this._key.right - this._key.left) * this.speedMult;
+    }
+
+    /**
+     * @returns {number} - The y axis input.
+     */
+    getY() {
+        if (this.isMobile) {
+            return 0;
+        }
+        return (this._key.up - this._key.down) * this.speedMult;
     }
 
     /**
@@ -500,7 +521,8 @@ class FlyCamera extends EventHandler {
     _transform = new Mat4();
 
     /**
-     * @description The rotation speed.
+     * The rotation speed.
+     *
      * @type {number}
      */
     rotateSpeed = 0.2;
@@ -513,25 +535,11 @@ class FlyCamera extends EventHandler {
     rotateDamping = 0.98;
 
     /**
-     * The fly move speed relative to the scene size.
+     * The fly move speed.
      *
      * @type {number}
      */
     moveSpeed = 20;
-
-    /**
-     * The fast fly move speed relative to the scene size.
-     *
-     * @type {number}
-     */
-    moveFastSpeed = 40;
-
-    /**
-     * The slow fly move speed relative to the scene size.
-     *
-     * @type {number}
-     */
-    moveSlowSpeed = 10;
 
     /**
      * The movement damping. A higher value means more damping. A value of 0 means no damping.
@@ -548,6 +556,31 @@ class FlyCamera extends EventHandler {
         });
     }
 
+    /**
+     * The multiplier for the fast movement speed.
+     *
+     * @type {number}
+     */
+    set moveFastMult(value) {
+        this._input.sprintMult = value;
+    }
+
+    get moveFastMult() {
+        return this._input.sprintMult;
+    }
+
+    /**
+     * The multiplier for the slow movement speed.
+     *
+     * @type {number}
+     */
+    set moveSlowMult(value) {
+        this._input.crouchMult = value;
+    }
+
+    get moveSlowMult() {
+        return this._input.crouchMult;
+    }
 
     /**
      * The camera's pitch range. Having a value of -360 means no minimum pitch and 360
@@ -590,15 +623,10 @@ class FlyCamera extends EventHandler {
         const up = this._transform.getY();
 
         tmpV1.set(0, 0, 0);
-        tmpV1.sub(tmpV2.copy(back).mulScalar(this._input.key('forward')));
-        tmpV1.add(tmpV2.copy(back).mulScalar(this._input.key('backward')));
-        tmpV1.sub(tmpV2.copy(right).mulScalar(this._input.key('left')));
-        tmpV1.add(tmpV2.copy(right).mulScalar(this._input.key('right')));
-        tmpV1.add(tmpV2.copy(up).mulScalar(this._input.key('up')));
-        tmpV1.sub(tmpV2.copy(up).mulScalar(this._input.key('down')));
-
-        const speed = this._input.key('crouch') ? this.moveSlowSpeed : this._input.key('sprint') ? this.moveFastSpeed : this.moveSpeed;
-        tmpV1.mulScalar(speed * dt);
+        tmpV1.sub(tmpV2.copy(back).mulScalar(this._input.getZ()));
+        tmpV1.add(tmpV2.copy(right).mulScalar(this._input.getX()));
+        tmpV1.add(tmpV2.copy(up).mulScalar(this._input.getY()));
+        tmpV1.mulScalar(this.moveSpeed * dt);
 
         this._targetPosition.add(tmpV1);
     }
