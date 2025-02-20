@@ -232,10 +232,10 @@ class Input extends EventHandler {
                 this._joystick.setBase(event.clientX, event.clientY);
                 this._joystick.setInner(event.clientX, event.clientY);
             } else {
-                this.fire('drag:start', event);
+                this.fire('rotate:start', event);
             }
         } else {
-            this.fire('drag:start', event);
+            this.fire('rotate:start', event);
         }
     }
 
@@ -258,10 +258,10 @@ class Input extends EventHandler {
             if (left) {
                 this._joystick.setInner(event.clientX, event.clientY);
             } else {
-                this.fire('drag:move', event);
+                this.fire('rotate:move', event);
             }
         } else {
-            this.fire('drag:move', event);
+            this.fire('rotate:move', event);
         }
 
     }
@@ -288,10 +288,10 @@ class Input extends EventHandler {
             if (left) {
                 this._joystick.hidden = true;
             } else {
-                this.fire('drag:end', event);
+                this.fire('rotate:end', event);
             }
         } else {
-            this.fire('drag:end', event);
+            this.fire('rotate:end', event);
         }
 
     }
@@ -452,16 +452,16 @@ class Input extends EventHandler {
 
 class FlyCamera extends EventHandler {
     /**
+     * @type {HTMLElement | null}
      * @private
-     * @type {CameraComponent | null}
      */
-    _camera = null;
+    _element = null;
 
     /**
      * @private
      * @type {Vec3}
      */
-    _origin = new Vec3();
+    _targetPosition = new Vec3();
 
     /**
      * @private
@@ -471,9 +471,9 @@ class FlyCamera extends EventHandler {
 
     /**
      * @private
-     * @type {Vec2}
+     * @type {Vec3}
      */
-    _dir = new Vec2();
+    _targetAngles = new Vec3();
 
     /**
      * @private
@@ -494,23 +494,10 @@ class FlyCamera extends EventHandler {
     _input = new Input();
 
     /**
-     * @type {HTMLElement}
-     * @private
-     */
-    _element;
-
-    /**
      * @type {Mat4}
      * @private
      */
     _transform = new Mat4();
-
-    /**
-     * The scene size. The zoom, pan and fly speeds are relative to this size.
-     *
-     * @type {number}
-     */
-    sceneSize = 100;
 
     /**
      * @description The rotation speed.
@@ -530,21 +517,21 @@ class FlyCamera extends EventHandler {
      *
      * @type {number}
      */
-    moveSpeed = 2;
+    moveSpeed = 20;
 
     /**
      * The fast fly move speed relative to the scene size.
      *
      * @type {number}
      */
-    moveFastSpeed = 4;
+    moveFastSpeed = 40;
 
     /**
      * The slow fly move speed relative to the scene size.
      *
      * @type {number}
      */
-    moveSlowSpeed = 1;
+    moveSlowSpeed = 10;
 
     /**
      * The movement damping. A higher value means more damping. A value of 0 means no damping.
@@ -553,34 +540,14 @@ class FlyCamera extends EventHandler {
      */
     moveDamping = 0.98;
 
-    /**
-     * @param {HTMLElement} element - The element.
-     */
-    constructor(element) {
+    constructor() {
         super();
-        this._element = element;
 
-        this._input.on('drag:move', this._onDragMove, this);
+        this._input.on('rotate:move', (event) => {
+            this._look(event.movementX, event.movementY, event.target);
+        });
     }
 
-    /**
-     * The element to attach the camera controls to.
-     *
-     * @type {HTMLElement}
-     */
-    set element(value) {
-        this._element = value;
-
-        const camera = this._camera;
-        this.detach();
-        if (camera) {
-            this.attach(camera);
-        }
-    }
-
-    get element() {
-        return this._element;
-    }
 
     /**
      * The camera's pitch range. Having a value of -360 means no minimum pitch and 360
@@ -602,14 +569,6 @@ class FlyCamera extends EventHandler {
 
     /**
      * @private
-     * @param {PointerEvent} event - The pointer event.
-     */
-    _onDragMove(event) {
-        this._look(event.movementX, event.movementY, event.target);
-    }
-
-    /**
-     * @private
      * @param {number} x - The x value.
      * @param {number} y - The y value.
      * @param {EventTarget | null} target - The target.
@@ -618,31 +577,30 @@ class FlyCamera extends EventHandler {
         if (target !== this._element) {
             return;
         }
-        const movementX = x || 0;
-        const movementY = y || 0;
-        this._dir.x -= movementY * this.rotateSpeed;
-        this._dir.y -= movementX * this.rotateSpeed;
+        this._targetAngles.x -= (y || 0) * this.rotateSpeed;
+        this._targetAngles.y -= (x || 0) * this.rotateSpeed;
     }
 
     /**
      * @param {number} dt - The delta time.
      */
     _move(dt) {
-        if (!this._camera) {
-            return;
-        }
+        const back = this._transform.getZ();
+        const right = this._transform.getX();
+        const up = this._transform.getY();
+
         tmpV1.set(0, 0, 0);
-        tmpV1.add(tmpV2.copy(this._camera.entity.forward).mulScalar(this._input.key('forward')));
-        tmpV1.sub(tmpV2.copy(this._camera.entity.forward).mulScalar(this._input.key('backward')));
-        tmpV1.sub(tmpV2.copy(this._camera.entity.right).mulScalar(this._input.key('left')));
-        tmpV1.add(tmpV2.copy(this._camera.entity.right).mulScalar(this._input.key('right')));
-        tmpV1.add(tmpV2.copy(this._camera.entity.up).mulScalar(this._input.key('up')));
-        tmpV1.sub(tmpV2.copy(this._camera.entity.up).mulScalar(this._input.key('down')));
+        tmpV1.sub(tmpV2.copy(back).mulScalar(this._input.key('forward')));
+        tmpV1.add(tmpV2.copy(back).mulScalar(this._input.key('backward')));
+        tmpV1.sub(tmpV2.copy(right).mulScalar(this._input.key('left')));
+        tmpV1.add(tmpV2.copy(right).mulScalar(this._input.key('right')));
+        tmpV1.add(tmpV2.copy(up).mulScalar(this._input.key('up')));
+        tmpV1.sub(tmpV2.copy(up).mulScalar(this._input.key('down')));
 
         const speed = this._input.key('crouch') ? this.moveSlowSpeed : this._input.key('sprint') ? this.moveFastSpeed : this.moveSpeed;
-        tmpV1.mulScalar(this.sceneSize * speed * dt);
+        tmpV1.mulScalar(speed * dt);
 
-        this._origin.add(tmpV1);
+        this._targetPosition.add(tmpV1);
     }
 
     /**
@@ -652,9 +610,10 @@ class FlyCamera extends EventHandler {
     _smoothTransform(dt) {
         const ar = dt === -1 ? 1 : lerpRate(this.rotateDamping, dt);
         const am = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
-        this._angles.x = math.lerpAngle(this._angles.x % 360, this._dir.x % 360, ar);
-        this._angles.y = math.lerpAngle(this._angles.y % 360, this._dir.y % 360, ar);
-        this._position.lerp(this._position, this._origin, am);
+
+        this._angles.x = math.lerpAngle(this._angles.x % 360, this._targetAngles.x % 360, ar);
+        this._angles.y = math.lerpAngle(this._angles.y % 360, this._targetAngles.y % 360, ar);
+        this._position.lerp(this._position, this._targetPosition, am);
         this._transform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
     }
 
@@ -662,48 +621,35 @@ class FlyCamera extends EventHandler {
      * @private
      */
     _cancelSmoothTransform() {
-        this._origin.copy(this._position);
-        this._dir.set(this._angles.x, this._angles.y);
+        this._targetPosition.copy(this._position);
+        this._targetAngles.copy(this._angles);
     }
 
     /**
-     * @private
+     * @param {HTMLElement} element - The element.
+     * @param {Mat4} transform - The transform.
      */
-    _updateTransform() {
-        if (!this._camera) {
-            return;
-        }
-        this._camera.entity.setPosition(this._transform.getTranslation());
-        this._camera.entity.setEulerAngles(this._transform.getEulerAngles());
-    }
-
-    /**
-     * @param {CameraComponent} camera - The camera component.
-     */
-    attach(camera) {
-        if (this._camera) {
+    attach(element, transform) {
+        if (this._element) {
             this.detach();
         }
-        this._camera = camera;
+        this._element = element;
         this._input.attach(this._element);
 
-        const pos = this._camera.entity.getPosition();
-        const rot = this._camera.entity.getRotation();
-        this._transform.setTRS(pos, rot, Vec3.ONE);
+        this._position.copy(transform.getTranslation());
+        this._targetPosition.copy(this._position);
 
-        this._origin.copy(pos);
-        this._position.copy(pos);
+        this._angles.copy(transform.getEulerAngles());
+        this._targetAngles.copy(this._angles);
 
-        const angles = rot.getEulerAngles();
-        this._dir.set(angles.x, angles.y);
-        this._angles.set(angles.x, angles.y, 0);
+        this._transform.copy(transform);
     }
 
     detach() {
-        if (!this._camera) {
+        if (!this._element) {
             return;
         }
-        this._camera = null;
+        this._element = null;
         this._input.detach();
 
         this._cancelSmoothTransform();
@@ -711,16 +657,18 @@ class FlyCamera extends EventHandler {
 
     /**
      * @param {number} dt - The delta time.
+     * @returns {Mat4} - The camera transform.
      */
     update(dt) {
-        if (!this._camera) {
-            return;
+        if (!this._element) {
+            return this._transform;
         }
 
         this._move(dt);
 
         this._smoothTransform(dt);
-        this._updateTransform();
+
+        return this._transform;
     }
 
     destroy() {

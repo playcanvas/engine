@@ -58,24 +58,6 @@ await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-/**
- * Calculate the bounding box of an entity.
- *
- * @param {pc.BoundingBox} bbox - The bounding box.
- * @param {pc.Entity} entity - The entity.
- * @returns {pc.BoundingBox} The bounding box.
- */
-const calcEntityAABB = (bbox, entity) => {
-    bbox.center.set(0, 0, 0);
-    bbox.halfExtents.set(0, 0, 0);
-    entity.findComponents('render').forEach((render) => {
-        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
-            bbox.add(mi.aabb);
-        });
-    });
-    return bbox;
-};
-
 app.start();
 
 app.scene.ambientLight.set(0.4, 0.4, 0.4);
@@ -101,20 +83,18 @@ camera.setPosition(0, 20, 30);
 camera.setEulerAngles(-20, 0, 0);
 app.root.addChild(camera);
 
-const bbox = calcEntityAABB(new pc.BoundingBox(), statue);
-
 /** @type {FlyCamera} */
-const flyCamera = new FlyCamera(app.graphicsDevice.canvas);
-flyCamera.sceneSize = bbox.halfExtents.length();
-flyCamera.pitchRange = new pc.Vec2(-90, 90);
-flyCamera.attach(camera.camera);
+const flyCamera = new FlyCamera();
+flyCamera.attach(app.graphicsDevice.canvas, camera.getWorldTransform());
 
 app.on('update', (dt) => {
     if (app.xr?.active) {
         return;
     }
 
-    flyCamera.update(dt);
+    const mat = flyCamera.update(dt);
+    camera.setPosition(mat.getTranslation());
+    camera.setEulerAngles(mat.getEulerAngles());
 });
 
 app.on('destroy', () => {
