@@ -257,9 +257,9 @@ class Input extends EventHandler {
         }
 
         if (this.isMobile) {
-            this._joystick.setInner(event.clientX, event.clientY);
-
-            if (event.clientX > window.innerWidth * 0.5) {
+            if (event.clientX < window.innerWidth * 0.5) {
+                this._joystick.setInner(event.clientX, event.clientY);
+            } else {
                 this.fire('move', event, this._pointerEvents.size);
             }
         } else {
