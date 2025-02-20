@@ -202,7 +202,10 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
                     file: output,
                     format: 'esm'
                 },
-                context: 'this'
+                context: 'this',
+                external: [
+                    'playcanvas'
+                ]
             });
             continue;
         }
