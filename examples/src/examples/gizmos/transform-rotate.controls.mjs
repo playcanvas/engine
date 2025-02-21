@@ -4,10 +4,11 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     const { BindingTwoWay, LabelGroup, Panel, ColorPicker, SliderInput, SelectInput, BooleanInput } = ReactPCUI;
+    const { useState } = React;
 
-    const [proj, setProj] = React.useState(pc.PROJECTION_PERSPECTIVE);
+    const [proj, setProj] = useState(pc.PROJECTION_PERSPECTIVE);
 
     return fragment(
         jsx(
@@ -44,6 +45,15 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     min: 1,
                     max: 10,
                     precision: 0
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Orbit Rotation' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.orbitRotation' }
                 })
             )
         ),
@@ -176,4 +186,4 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 )
         )
     );
-}
+};

@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export function controls({ React, jsx, fragment }) {
+export const controls = ({ React, jsx, fragment }) => {
     const { useEffect, useRef } = React;
     /** @type {React.MutableRefObject<HTMLCanvasElement>} */
     const canvasRef = useRef(null);
@@ -17,7 +17,7 @@ export function controls({ React, jsx, fragment }) {
         const height = width;
         const halfWidth = Math.floor(width / 2);
         const halfHeight = Math.floor(height / 2);
-        canvas.setAttribute('style', 'width: ' + width + 'px; height: ' + height + 'px;');
+        canvas.setAttribute('style', `width: ${width}px; height: ${height}px;`);
         canvas.setAttribute('width', width);
         canvas.setAttribute('height', height);
         const ctx = canvas.getContext('2d');
@@ -80,4 +80,4 @@ export function controls({ React, jsx, fragment }) {
         canvas.addEventListener('mousedown', mouseEvent);
     });
     return fragment(jsx('canvas', { ref: canvasRef }));
-}
+};

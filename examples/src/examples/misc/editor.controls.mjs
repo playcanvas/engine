@@ -4,17 +4,35 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
+    const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput, ColorPicker } = ReactPCUI;
+    const { useState } = React;
 
-    const [type, setType] = React.useState('translate');
-    const [proj, setProj] = React.useState(pc.PROJECTION_PERSPECTIVE);
+    const [type, setType] = useState('translate');
+    const [proj, setProj] = useState(pc.PROJECTION_PERSPECTIVE);
 
-    // @ts-ignore
-    window.setType = (/** @type {string} */ value) => setType(value);
-
-    // @ts-ignore
-    window.setProj = (/** @type {number} */ value) => setProj(value);
+    // observe changes to the camera and gizmo type
+    observer.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
+        const [category, key] = path.split('.');
+        switch (category) {
+            case 'camera': {
+                switch (key) {
+                    case 'proj':
+                        setType(value);
+                        break;
+                }
+                break;
+            }
+            case 'gizmo': {
+                switch (key) {
+                    case 'type':
+                        setType(value);
+                        break;
+                }
+                break;
+            }
+        }
+    });
 
     return fragment(
         jsx(
@@ -96,6 +114,107 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                         max: 100
                     })
                 )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Grid' },
+            jsx(
+                LabelGroup,
+                { text: 'Resolution' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 3, t: 'High' },
+                        { v: 2, t: 'Medium' },
+                        { v: 1, t: 'Low' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'grid.resolution' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color X' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'grid.colorX' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color Z' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'grid.colorZ' }
+                })
+            )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'View Cube' },
+            jsx(
+                LabelGroup,
+                { text: 'Color X' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.colorX' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color Y' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.colorY' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color Z' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.colorZ' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Radius' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.radius' },
+                    min: 10,
+                    max: 50
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Text Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.textSize' },
+                    min: 1,
+                    max: 50
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Line Thickness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.lineThickness' },
+                    min: 1,
+                    max: 20
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Line Length' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.lineLength' },
+                    min: 10,
+                    max: 200
+                })
+            )
         )
     );
-}
+};

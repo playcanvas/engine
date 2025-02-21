@@ -22,6 +22,7 @@ const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
  * Script Types defined in JavaScript files to be executed with access to the Entity. For more
  * details on scripting see [Scripting](https://developer.playcanvas.com/user-manual/scripting/).
  *
+ * @hideconstructor
  * @category Script
  */
 class ScriptComponent extends Component {
@@ -690,7 +691,7 @@ class ScriptComponent extends Component {
         if (typeof scriptType === 'string') {
             scriptType = this.system.app.scripts.get(scriptType);
         } else if (scriptType) {
-            scriptName = scriptType.__name ?? toLowerCamelCase(getScriptName(scriptType));
+            scriptName = scriptType.__name ??= toLowerCamelCase(getScriptName(scriptType));
         }
 
         if (scriptType) {

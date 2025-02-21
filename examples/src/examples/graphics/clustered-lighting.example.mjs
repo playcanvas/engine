@@ -1,19 +1,19 @@
 // @config ENGINE performance
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/normal-map.png' })
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // enable HDR rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR
@@ -52,10 +52,6 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
-
-    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
-    app.scene.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES;
-    app.scene.rendering.gammaCorrection = pc.GAMMA_SRGB;
 
     /** @type {Array<pc.Entity>} */
     const pointLightList = [];
@@ -104,7 +100,6 @@ assetListLoader.load(() => {
     const cylinderMesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.CylinderGeometry({ capSegments: 200 }));
     const cylinder = new pc.Entity();
     cylinder.addComponent('render', {
-        material: material,
         meshInstances: [new pc.MeshInstance(cylinderMesh, material)],
         castShadows: true
     });
@@ -196,7 +191,11 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.05, 0.05, 0.05),
         farClip: 500,
-        nearClip: 0.1
+        nearClip: 0.1,
+
+        // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+        toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
+        gammaCorrection: pc.GAMMA_SRGB
     });
     camera.setLocalPosition(140, 140, 140);
     camera.lookAt(new pc.Vec3(0, 40, 0));
@@ -217,18 +216,18 @@ assetListLoader.load(() => {
 
     // Set an update function on the app's update event
     let time = 0;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         time += dt;
 
         // move lights along sin based waves around the cylinder
-        pointLightList.forEach(function (light, i) {
+        pointLightList.forEach((light, i) => {
             const angle = (i / pointLightList.length) * Math.PI * 2;
             const y = Math.sin(time * 0.5 + 7 * angle) * 30 + 70;
             light.setLocalPosition(30 * Math.sin(angle), y, 30 * Math.cos(angle));
         });
 
         // rotate spot lights around
-        spotLightList.forEach(function (spotlight, i) {
+        spotLightList.forEach((spotlight, i) => {
             const angle = (i / spotLightList.length) * Math.PI * 2;
             spotlight.setLocalPosition(40 * Math.sin(time + angle), 5, 40 * Math.cos(time + angle));
             spotlight.lookAt(pc.Vec3.ZERO);

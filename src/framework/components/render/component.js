@@ -9,11 +9,15 @@ import { SkinInstanceCache } from '../../../scene/skin-instance-cache.js';
 import { Asset } from '../../asset/asset.js';
 import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
-import { EntityReference } from '../../utils/entity-reference.js';
+
+/**
+ * @import { Entity } from '../../entity.js'
+ */
 
 /**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
  * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Material } from '../../../scene/materials/material.js'
  * @import { RenderComponentSystem } from './system.js'
  */
@@ -57,9 +61,6 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * - [Spinning Cube](https://playcanvas.github.io/#/misc/hello-world)
  * - [Primitive Shapes](https://playcanvas.github.io/#/graphics/shapes)
  * - [Loading Render Assets](https://playcanvas.github.io/#/graphics/render-asset)
- *
- * @property {Entity} rootBone A reference to the entity to be used as the root bone for any
- * skinned meshes that are rendered by this component.
  *
  * @category Graphics
  */
@@ -140,10 +141,37 @@ class RenderComponent extends Component {
     _material;
 
     /**
-     * @type {EntityReference}
+     * A reference to the entity to be used as the root bone for any skinned meshes that
+     * are rendered by this component.
+     *
+     * @type {Entity|null}
      * @private
      */
-    _rootBone;
+    _rootBone = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayersChanged = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtSetMeshes = null;
 
     /**
      * Create a new RenderComponent.
@@ -155,8 +183,6 @@ class RenderComponent extends Component {
         super(system, entity);
 
         // the entity that represents the root bone if this render component has skinned meshes
-        this._rootBone = new EntityReference(this, 'rootBone');
-        this._rootBone.on('set:entity', this._onSetRootBone, this);
 
         // render asset reference
         this._assetReference = new AssetReference(
@@ -253,7 +279,6 @@ class RenderComponent extends Component {
      * @type {string}
      */
     set type(value) {
-
         if (this._type !== value) {
             this._area = null;
             this._type = value;
@@ -290,7 +315,6 @@ class RenderComponent extends Component {
      * @type {MeshInstance[]}
      */
     set meshInstances(value) {
-
         Debug.assert(Array.isArray(value), 'MeshInstances set to a Render component must be an array.');
         this.destroyMeshInstances();
 
@@ -681,27 +705,49 @@ class RenderComponent extends Component {
     }
 
     /**
-     * @param {Entity} entity - The entity set as the root bone.
-     * @private
+     * Sets the root bone entity (or entity guid) for the render component.
+     *
+     * @type {Entity|string|null}
      */
-    _onSetRootBone(entity) {
-        if (entity) {
-            this._onRootBoneChanged();
+    set rootBone(value) {
+        if (this._rootBone !== value) {
+            const isString = typeof value === 'string';
+            if (this._rootBone && isString && this._rootBone.getGuid() === value) {
+                return;
+            }
+
+            if (this._rootBone) {
+                this._clearSkinInstances();
+            }
+
+            if (value instanceof GraphNode) {
+                this._rootBone = value;
+            } else if (isString) {
+                this._rootBone = this.system.app.getEntityFromIndex(value) || null;
+                if (!this._rootBone) {
+                    Debug.warn('Failed to find rootBone Entity by GUID');
+                }
+            } else {
+                this._rootBone = null;
+            }
+
+            if (this._rootBone) {
+                this._cloneSkinInstances();
+            }
         }
     }
 
-    /** @private */
-    _onRootBoneChanged() {
-        // remove existing skin instances and create new ones, connected to new root bone
-        this._clearSkinInstances();
-        if (this.enabled && this.entity.enabled) {
-            this._cloneSkinInstances();
-        }
+    /**
+     * Gets the root bone entity for the render component.
+     *
+     * @type {Entity|null}
+     */
+    get rootBone() {
+        return this._rootBone;
     }
 
     /** @private */
     destroyMeshInstances() {
-
         const meshInstances = this._meshInstances;
         if (meshInstances) {
             this.removeFromLayers();
@@ -790,15 +836,17 @@ class RenderComponent extends Component {
     onEnable() {
         const app = this.system.app;
         const scene = app.scene;
+        const layers = scene.layers;
 
-        this._rootBone.onParentComponentEnable();
+        if (this._rootBone) {
+            this._cloneSkinInstances();
+        }
 
-        this._cloneSkinInstances();
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
 
-        scene.on('set:layers', this.onLayersChanged, this);
-        if (scene.layers) {
-            scene.layers.on('add', this.onLayerAdded, this);
-            scene.layers.on('remove', this.onLayerRemoved, this);
+        if (layers) {
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         const isAsset = (this._type === 'asset');
@@ -823,11 +871,20 @@ class RenderComponent extends Component {
     onDisable() {
         const app = this.system.app;
         const scene = app.scene;
+        const layers = scene.layers;
 
-        scene.off('set:layers', this.onLayersChanged, this);
-        if (scene.layers) {
-            scene.layers.off('add', this.onLayerAdded, this);
-            scene.layers.off('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
+        if (this._rootBone) {
+            this._clearSkinInstances();
+        }
+
+        if (layers) {
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
         if (this._batchGroupId >= 0) {
@@ -875,14 +932,13 @@ class RenderComponent extends Component {
     }
 
     _onRenderAssetLoad() {
-
         // remove existing instances
         this.destroyMeshInstances();
 
         if (this._assetReference.asset) {
             const render = this._assetReference.asset.resource;
-            render.off('set:meshes', this._onSetMeshes, this);
-            render.on('set:meshes', this._onSetMeshes, this);
+            this._evtSetMeshes?.off();
+            this._evtSetMeshes = render.on('set:meshes', this._onSetMeshes, this);
             if (render.meshes) {
                 this._onSetMeshes(render.meshes);
             }
@@ -894,7 +950,6 @@ class RenderComponent extends Component {
     }
 
     _clearSkinInstances() {
-
         for (let i = 0; i < this._meshInstances.length; i++) {
             const meshInstance = this._meshInstances[i];
 
@@ -905,23 +960,20 @@ class RenderComponent extends Component {
     }
 
     _cloneSkinInstances() {
-
-        if (this._meshInstances.length && this._rootBone.entity instanceof GraphNode) {
-
+        if (this._meshInstances.length && this._rootBone instanceof GraphNode) {
             for (let i = 0; i < this._meshInstances.length; i++) {
                 const meshInstance = this._meshInstances[i];
                 const mesh = meshInstance.mesh;
 
                 // if skinned but does not have instance created yet
                 if (mesh.skin && !meshInstance.skinInstance) {
-                    meshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(mesh.skin, this._rootBone.entity, this.entity);
+                    meshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(mesh.skin, this._rootBone, this.entity);
                 }
             }
         }
     }
 
     _cloneMeshes(meshes) {
-
         if (meshes && meshes.length) {
 
             // cloned mesh instances
@@ -957,9 +1009,8 @@ class RenderComponent extends Component {
     }
 
     _onRenderAssetRemove() {
-        if (this._assetReference.asset && this._assetReference.asset.resource) {
-            this._assetReference.asset.resource.off('set:meshes', this._onSetMeshes, this);
-        }
+        this._evtSetMeshes?.off();
+        this._evtSetMeshes = null;
 
         this._onRenderAssetUnload();
     }
@@ -1003,10 +1054,9 @@ class RenderComponent extends Component {
     }
 
     resolveDuplicatedEntityReferenceProperties(oldRender, duplicatedIdsMap) {
-        if (oldRender.rootBone && duplicatedIdsMap[oldRender.rootBone]) {
-            this.rootBone = duplicatedIdsMap[oldRender.rootBone];
+        if (oldRender.rootBone) {
+            this.rootBone = duplicatedIdsMap[oldRender.rootBone.getGuid()];
         }
-        this._clearSkinInstances();
     }
 }
 

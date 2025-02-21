@@ -29,6 +29,7 @@ import { Asset } from '../../asset/asset.js';
 
 /**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Material } from '../../../scene/materials/material.js'
  * @import { Sprite } from '../../../scene/sprite.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
@@ -263,6 +264,12 @@ class ImageRenderable {
 }
 
 class ImageElement {
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtSetMeshes = null;
+
     constructor(element) {
         this._element = element;
         this._entity = element.entity;
@@ -794,7 +801,7 @@ class ImageElement {
 
     // Hook up event handlers on sprite asset
     _bindSprite(sprite) {
-        sprite.on('set:meshes', this._onSpriteMeshesChange, this);
+        this._evtSetMeshes = sprite.on('set:meshes', this._onSpriteMeshesChange, this);
         sprite.on('set:pixelsPerUnit', this._onSpritePpuChange, this);
         sprite.on('set:atlas', this._onAtlasTextureChange, this);
         if (sprite.atlas) {
@@ -803,7 +810,8 @@ class ImageElement {
     }
 
     _unbindSprite(sprite) {
-        sprite.off('set:meshes', this._onSpriteMeshesChange, this);
+        this._evtSetMeshes?.off();
+        this._evtSetMeshes = null;
         sprite.off('set:pixelsPerUnit', this._onSpritePpuChange, this);
         sprite.off('set:atlas', this._onAtlasTextureChange, this);
         if (sprite.atlas) {

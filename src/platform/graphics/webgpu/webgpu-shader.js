@@ -3,6 +3,7 @@ import { SHADERLANGUAGE_WGSL } from '../constants.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { ShaderProcessor } from '../shader-processor.js';
 import { WebgpuDebug } from './webgpu-debug.js';
+import { WebgpuShaderProcessorWGSL } from './webgpu-shader-processor-wgsl.js';
 
 /**
  * @import { GraphicsDevice } from '../graphics-device.js'
@@ -61,24 +62,37 @@ class WebgpuShader {
 
         if (definition.shaderLanguage === SHADERLANGUAGE_WGSL) {
 
-            this._vertexCode = definition.vshader ?? null;
-            this._fragmentCode = definition.fshader ?? null;
-            this._computeCode = definition.cshader ?? null;
+            if (definition.cshader) {
 
-            shader.meshUniformBufferFormat = definition.meshUniformBufferFormat;
-            shader.meshBindGroupFormat = definition.meshBindGroupFormat;
+                this._computeCode = definition.cshader ?? null;
+                this.computeUniformBufferFormats = definition.computeUniformBufferFormats;
+                this.computeBindGroupFormat = definition.computeBindGroupFormat;
 
-            this.computeUniformBufferFormats = definition.computeUniformBufferFormats;
-            this.computeBindGroupFormat = definition.computeBindGroupFormat;
+            } else {
 
-            this.vertexEntryPoint = 'vertexMain';
-            this.fragmentEntryPoint = 'fragmentMain';
+                this.vertexEntryPoint = 'vertexMain';
+                this.fragmentEntryPoint = 'fragmentMain';
+
+                if (definition.processingOptions) {
+
+                    this.processWGSL();
+
+                } else {
+
+                    this._vertexCode = definition.vshader ?? null;
+                    this._fragmentCode = definition.fshader ?? null;
+
+                    shader.meshUniformBufferFormat = definition.meshUniformBufferFormat;
+                    shader.meshBindGroupFormat = definition.meshBindGroupFormat;
+                }
+            }
+
             shader.ready = true;
 
         } else {
 
             if (definition.processingOptions) {
-                this.process();
+                this.processGLSL();
             }
         }
     }
@@ -125,7 +139,7 @@ class WebgpuShader {
         return this.createShaderModule(this._computeCode, 'Compute');
     }
 
-    process() {
+    processGLSL() {
         const shader = this.shader;
 
         // process the shader source to allow for uniforms
@@ -144,6 +158,24 @@ class WebgpuShader {
         } else {
             shader.ready = true;
         }
+
+        shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
+        shader.meshBindGroupFormat = processed.meshBindGroupFormat;
+    }
+
+    processWGSL() {
+        const shader = this.shader;
+
+        // process the shader source to allow for uniforms
+        const processed = WebgpuShaderProcessorWGSL.run(shader.device, shader.definition, shader);
+
+        // keep reference to processed shaders in debug mode
+        Debug.call(() => {
+            this.processed = processed;
+        });
+
+        this._vertexCode = processed.vshader;
+        this._fragmentCode = processed.fshader;
 
         shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
         shader.meshBindGroupFormat = processed.meshBindGroupFormat;

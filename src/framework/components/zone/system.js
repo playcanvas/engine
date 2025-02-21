@@ -90,12 +90,15 @@ class ZoneComponentSystem extends ComponentSystem {
      */
     cloneComponent(entity, clone) {
         const c = entity.zone;
-        return this.addComponent(clone, {
+        const data = {
+            enabled: c.enabled,
             size: c.size,
             shape: c.shape,
             halfExtents: c.halfExtents,
             radius: c.radius
-        });
+        };
+
+        return this.addComponent(clone, data);
     }
 
     /**

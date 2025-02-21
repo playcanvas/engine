@@ -26,6 +26,12 @@ varying vec2 shadow_offset;
 #endif
 
 vec4 applyMsdf(vec4 color) {
+
+    // Convert to linear space before processing
+    // TODO: ideally this would receive the color in linear space, but that would require larger changes
+    // on the engine side, with the way premultiplied alpha is handled as well.
+    color.rgb = gammaCorrectInput(color.rgb);
+
     // sample the field
     vec3 tsample = texture2D(texture_msdfMap, vUv0).rgb;
     vec2 uvShdw = vUv0 - shadow_offset;
@@ -61,6 +67,9 @@ vec4 applyMsdf(vec4 color) {
 
     vec4 scolor = (shadow > outline) ? shadow * vec4(shadow_color.a * shadow_color.rgb, shadow_color.a) : tcolor;
     tcolor = mix(scolor, tcolor, outline);
+
+    // Convert back to gamma space before returning
+    tcolor.rgb = gammaCorrectOutput(tcolor.rgb);
     
     return tcolor;
 }

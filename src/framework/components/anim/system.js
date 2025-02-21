@@ -186,7 +186,8 @@ class AnimComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         let masks;
-        // If the component animaites from the components entity, any layer mask hierarchy should be updated from the old entity to the cloned entity.
+        // If the component animates from the components entity, any layer mask hierarchy should be
+        // updated from the old entity to the cloned entity.
         if (!entity.anim.rootBone || entity.anim.rootBone === entity) {
             masks = {};
             entity.anim.layers.forEach((layer, i) => {
@@ -204,6 +205,7 @@ class AnimComponentSystem extends ComponentSystem {
             });
         }
         const data = {
+            enabled: entity.anim.enabled,
             stateGraphAsset: entity.anim.stateGraphAsset,
             animationAssets: entity.anim.animationAssets,
             speed: entity.anim.speed,

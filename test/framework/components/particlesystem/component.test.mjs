@@ -1,12 +1,10 @@
-import { Application } from '../../../../src/framework/application.js';
-import { Asset } from '../../../../src/framework/asset/asset.js';
-import { AssetListLoader } from '../../../../src/framework/asset/asset-list-loader.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
+
+import { AssetListLoader } from '../../../../src/framework/asset/asset-list-loader.js';
+import { Asset } from '../../../../src/framework/asset/asset.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ParticleSystemComponent', function () {
     let app;
@@ -15,15 +13,15 @@ describe('ParticleSystemComponent', function () {
     const loadAssets = function (cb) {
         const assetList = [
             new Asset('Box', 'model', {
-                url: 'http://localhost:3000/test/test-assets/box/box.json'
+                url: 'http://localhost:3000/test/assets/cube/cube.json'
             }),
             new Asset('ColorMap', 'texture', {
-                url: 'http://localhost:3000/test/test-assets/test.png'
+                url: 'http://localhost:3000/test/assets/test.png'
             }, {
                 srgb: true
             }),
             new Asset('NormalMap', 'texture', {
-                url: 'http://localhost:3000/test/test-assets/test.png'
+                url: 'http://localhost:3000/test/assets/test.png'
             })
         ];
         const loader = new AssetListLoader(assetList, app.assets);
@@ -37,13 +35,16 @@ describe('ParticleSystemComponent', function () {
     };
 
     beforeEach(function (done) {
-        const canvas = new Canvas(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        jsdomSetup();
+        app = createApp();
+
         loadAssets(done);
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
         assets = {};
     });
 

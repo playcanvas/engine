@@ -1,10 +1,10 @@
-import { Mouse } from '../../../src/platform/input/mouse.js';
+import { expect } from 'chai';
+
 import {
     EVENT_MOUSEDOWN, EVENT_MOUSEUP,
     MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT
 } from '../../../src/platform/input/constants.js';
-
-import { expect } from 'chai';
+import { Mouse } from '../../../src/platform/input/mouse.js';
 
 const buttons = [MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT];
 

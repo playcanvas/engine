@@ -1,10 +1,13 @@
 import { math } from '../../../core/math/math.js';
 import { ORIENTATION_HORIZONTAL } from '../../../scene/constants.js';
+
+import { GraphNode } from '../../../scene/graph-node.js';
+
 import { Component } from '../component.js';
 import { ElementDragHelper } from '../element/element-drag-helper.js';
-import { EntityReference } from '../../utils/entity-reference.js';
 
 /**
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Entity } from '../../entity.js'
  * @import { ScrollbarComponentData } from './data.js'
  * @import { ScrollbarComponentSystem } from './system.js'
@@ -13,6 +16,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
 /**
  * A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
  *
+ * @hideconstructor
  * @category User Interface
  */
 class ScrollbarComponent extends Component {
@@ -29,6 +33,24 @@ class ScrollbarComponent extends Component {
     static EVENT_SETVALUE = 'set:value';
 
     /**
+     * @type {Entity|null}
+     * @private
+     */
+    _handleEntity = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtHandleEntityElementAdd = null;
+
+    /**
+     * @type {EventHandle[]}
+     * @private
+     */
+    _evtHandleEntityChanges = [];
+
+    /**
      * Create a new ScrollbarComponent.
      *
      * @param {ScrollbarComponentSystem} system - The ComponentSystem that created this Component.
@@ -36,15 +58,6 @@ class ScrollbarComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
-
-        this._handleReference = new EntityReference(this, 'handleEntity', {
-            'element#gain': this._onHandleElementGain,
-            'element#lose': this._onHandleElementLose,
-            'element#set:anchor': this._onSetHandleAlignment,
-            'element#set:margin': this._onSetHandleAlignment,
-            'element#set:pivot': this._onSetHandleAlignment
-        });
-
         this._toggleLifecycleListeners('on');
     }
 
@@ -141,19 +154,48 @@ class ScrollbarComponent extends Component {
      * Sets the entity to be used as the scrollbar handle. This entity must have a
      * {@link ScrollbarComponent}.
      *
-     * @type {Entity}
+     * @type {Entity|string|null}
      */
     set handleEntity(arg) {
-        this._setValue('handleEntity', arg);
+        if (this._handleEntity === arg) {
+            return;
+        }
+
+        const isString = typeof arg === 'string';
+        if (this._handleEntity && isString && this._handleEntity.getGuid() === arg) {
+            return;
+        }
+
+        if (this._handleEntity) {
+            this._handleEntityUnsubscribe();
+        }
+
+        if (arg instanceof GraphNode) {
+            this._handleEntity = arg;
+        } else if (isString) {
+            this._handleEntity = this.system.app.getEntityFromIndex(arg) || null;
+        } else {
+            this._handleEntity = null;
+        }
+
+        if (this._handleEntity) {
+            this._handleEntitySubscribe();
+        }
+
+        if (this._handleEntity) {
+            this.data.handleEntity = this._handleEntity.getGuid();
+        } else if (isString && arg) {
+            this.data.handleEntity = arg;
+        }
     }
 
     /**
      * Gets the entity to be used as the scrollbar handle.
      *
-     * @type {Entity}
+     * @type {Entity|null}
      */
     get handleEntity() {
-        return this.data.handleEntity;
+        return this._handleEntity;
     }
 
     /** @ignore */
@@ -176,20 +218,56 @@ class ScrollbarComponent extends Component {
         // TODO Handle scrollwheel events
     }
 
+    _handleEntitySubscribe() {
+        this._evtHandleEntityElementAdd = this._handleEntity.on('element:add', this._onHandleElementGain, this);
+
+        if (this._handleEntity.element) {
+            this._onHandleElementGain();
+        }
+    }
+
+    _handleEntityUnsubscribe() {
+        this._evtHandleEntityElementAdd?.off();
+        this._evtHandleEntityElementAdd = null;
+
+        if (this._handleEntity?.element) {
+            this._onHandleElementLose();
+        }
+    }
+
+    _handleEntityElementSubscribe() {
+        const element = this._handleEntity.element;
+
+        const handles = this._evtHandleEntityChanges;
+        handles.push(element.once('beforeremove', this._onHandleElementLose, this));
+        handles.push(element.on('set:anchor', this._onSetHandleAlignment, this));
+        handles.push(element.on('set:margin', this._onSetHandleAlignment, this));
+        handles.push(element.on('set:pivot', this._onSetHandleAlignment, this));
+    }
+
+    _handleEntityElementUnsubscribe() {
+        for (let i = 0; i < this._evtHandleEntityChanges.length; i++) {
+            this._evtHandleEntityChanges[i].off();
+        }
+        this._evtHandleEntityChanges.length = 0;
+    }
+
     _onHandleElementGain() {
+        this._handleEntityElementSubscribe();
         this._destroyDragHelper();
-        this._handleDragHelper = new ElementDragHelper(this._handleReference.entity.element, this._getAxis());
+        this._handleDragHelper = new ElementDragHelper(this._handleEntity.element, this._getAxis());
         this._handleDragHelper.on('drag:move', this._onHandleDrag, this);
 
         this._updateHandlePositionAndSize();
     }
 
     _onHandleElementLose() {
+        this._handleEntityElementUnsubscribe();
         this._destroyDragHelper();
     }
 
     _onHandleDrag(position) {
-        if (this._handleReference.entity && this.enabled && this.entity.enabled) {
+        if (this._handleEntity && this.enabled && this.entity.enabled) {
             this.value = this._handlePositionToScrollValue(position[this._getAxis()]);
         }
     }
@@ -214,19 +292,19 @@ class ScrollbarComponent extends Component {
     }
 
     _onSetOrientation(name, oldValue, newValue) {
-        if (newValue !== oldValue && this._handleReference.hasComponent('element')) {
-            this._handleReference.entity.element[this._getOppositeDimension()] = 0;
+        if (newValue !== oldValue && this._handleEntity?.element) {
+            this._handleEntity.element[this._getOppositeDimension()] = 0;
         }
     }
 
     _updateHandlePositionAndSize() {
-        const handleEntity = this._handleReference.entity;
-        const handleElement = handleEntity && handleEntity.element;
+        const handleEntity = this._handleEntity;
+        const handleElement = handleEntity?.element;
 
         if (handleEntity) {
             const position = handleEntity.getLocalPosition();
             position[this._getAxis()] = this._getHandlePosition();
-            this._handleReference.entity.setLocalPosition(position);
+            handleEntity.setLocalPosition(position);
         }
 
         if (handleElement) {
@@ -291,7 +369,6 @@ class ScrollbarComponent extends Component {
     }
 
     onEnable() {
-        this._handleReference.onParentComponentEnable();
         this._setHandleDraggingEnabled(true);
     }
 
@@ -302,6 +379,12 @@ class ScrollbarComponent extends Component {
     onRemove() {
         this._destroyDragHelper();
         this._toggleLifecycleListeners('off');
+    }
+
+    resolveDuplicatedEntityReferenceProperties(oldScrollbar, duplicatedIdsMap) {
+        if (oldScrollbar.handleEntity) {
+            this.handleEntity = duplicatedIdsMap[oldScrollbar.handleEntity.getGuid()];
+        }
     }
 }
 

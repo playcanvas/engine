@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,18 +8,18 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/flakes5n.png' }),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: rootPath + '/static/assets/textures/flakes5c.png' }),
-    other: new pc.Asset('other', 'texture', { url: rootPath + '/static/assets/textures/flakes5o.png' })
+    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/flakes5n.png` }),
+    diffuse: new pc.Asset('diffuse', 'texture', { url: `${rootPath}/static/assets/textures/flakes5c.png` }),
+    other: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/flakes5o.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -51,13 +51,14 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 1;
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent('camera');
+    camera.addComponent('camera', {
+        toneMapping: pc.TONEMAP_ACES
+    });
     camera.translate(0, 0, 3);
     app.root.addChild(camera);
 
@@ -125,7 +126,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         // rotate camera around the objects
         time += dt;
         camera.setLocalPosition(3 * Math.sin(time * 0.5), 0, 3 * Math.cos(time * 0.5));

@@ -91,14 +91,14 @@ class TextureAtlasHandler extends ResourceHandler {
     }
 
     // Create texture atlas resource using the texture from the texture loader
-    open(url, data) {
+    open(url, data, asset) {
         const resource = new TextureAtlas();
         if (data.texture && data.data) {
             resource.texture = data.texture;
             resource.__data = data.data; // store data temporarily to be copied into asset
         } else {
             const handler = this._loader.getHandler('texture');
-            const texture = handler.open(url, data);
+            const texture = handler.open(url, data, asset);
             if (!texture) return null;
             resource.texture = texture;
         }

@@ -1,13 +1,13 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -23,7 +23,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    tv: new pc.Asset('tv', 'container', { url: rootPath + '/static/assets/models/tv.glb' })
+    tv: new pc.Asset('tv', 'container', { url: `${rootPath}/static/assets/models/tv.glb` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -94,15 +94,15 @@ assetListLoader.load(() => {
         'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
     );
 
-    video.src = rootPath + '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
+    video.src = `${rootPath}/static/assets/video/SampleVideo_1280x720_1mb.mp4`;
     document.body.append(video);
 
-    video.addEventListener('canplaythrough', function () {
+    video.addEventListener('canplaythrough', () => {
         videoTexture.setSource(video);
     });
 
     // Listen for the 'loadedmetadata' event to resize the texture appropriately
-    video.addEventListener('loadedmetadata', function () {
+    video.addEventListener('loadedmetadata', () => {
         videoTexture.resize(video.videoWidth, video.videoHeight);
     });
 
@@ -123,7 +123,7 @@ assetListLoader.load(() => {
     video.load();
 
     const mouse = new pc.Mouse(document.body);
-    mouse.on('mousedown', function (event) {
+    mouse.on('mousedown', (event) => {
         if (entity && event.buttons[pc.MOUSEBUTTON_LEFT]) {
             video.muted = !video.muted;
         }
@@ -131,7 +131,7 @@ assetListLoader.load(() => {
 
     let upload = false;
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time += dt;
 
         // rotate the tv object

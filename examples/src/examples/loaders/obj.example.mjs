@@ -1,13 +1,13 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -41,19 +41,19 @@ app.on('destroy', () => {
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-const objurl = rootPath + '/static/assets/models/monkey.obj';
-const scripturl = rootPath + '/static/scripts/parsers/obj-model.js';
+const objurl = `${rootPath}/static/assets/models/monkey.obj`;
+const scripturl = `${rootPath}/static/scripts/parsers/obj-model.js`;
 /** @type {pc.Entity} */
 let entity;
-app.assets.loadFromUrl(scripturl, 'script', function () {
+app.assets.loadFromUrl(scripturl, 'script', () => {
     // OBJ Parser is not enabled by default in engine. Add the parser to the model resource handler
     // set up obj parser
     // @ts-ignore globally loaded ObjModelParser
-    app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice), function (url) {
+    app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice), (url) => {
         return pc.path.getExtension(url) === '.obj';
     });
 
-    app.assets.loadFromUrl(objurl, 'model', function (err, asset) {
+    app.assets.loadFromUrl(objurl, 'model', (err, asset) => {
         app.start();
 
         entity = new pc.Entity();
@@ -90,7 +90,7 @@ light.addComponent('light', {
 light.translate(5, 0, 15);
 app.root.addChild(light);
 
-app.on('update', function (dt) {
+app.on('update', (dt) => {
     if (entity) {
         entity.rotate(0, 100 * dt, 0);
     }

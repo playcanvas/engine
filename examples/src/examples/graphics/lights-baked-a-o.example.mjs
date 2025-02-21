@@ -1,7 +1,7 @@
 // @config WEBGPU_DISABLED
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -10,17 +10,17 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    house: new pc.Asset('house', 'container', { url: rootPath + '/static/assets/models/house.glb' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
+    house: new pc.Asset('house', 'container', { url: `${rootPath}/static/assets/models/house.glb` }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -96,7 +96,7 @@ assetListLoader.load(() => {
         shadowBias: 0.2,
         shadowDistance: 100,
         shadowResolution: 2048,
-        shadowType: pc.SHADOW_PCF3,
+        shadowType: pc.SHADOW_PCF3_32F,
         color: new pc.Color(0.7, 0.7, 0.5),
         intensity: 1.6
     });
@@ -115,7 +115,7 @@ assetListLoader.load(() => {
         shadowBias: 0.2,
         shadowDistance: 25,
         shadowResolution: 512,
-        shadowType: pc.SHADOW_PCF3,
+        shadowType: pc.SHADOW_PCF3_32F,
         color: pc.Color.YELLOW,
         range: 25,
         intensity: 0.9
@@ -135,7 +135,7 @@ assetListLoader.load(() => {
         shadowBias: 0.2,
         shadowDistance: 50,
         shadowResolution: 512,
-        shadowType: pc.SHADOW_PCF3,
+        shadowType: pc.SHADOW_PCF3_32F,
         color: pc.Color.RED,
         range: 10,
         intensity: 2.5
@@ -244,14 +244,14 @@ assetListLoader.load(() => {
     });
 
     // Set an update function on the app's update event
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         // bake lightmaps when HUD properties change
         if (needBake) {
             needBake = false;
             app.lightmapper.bake(null, bakeType);
 
             // update stats with the bake duration
-            data.set('data.stats.duration', app.lightmapper.stats.totalRenderTime.toFixed(1) + 'ms');
+            data.set('data.stats.duration', `${app.lightmapper.stats.totalRenderTime.toFixed(1)}ms`);
         }
     });
 });

@@ -8,12 +8,18 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_BAKE, MASK_AFFECT_DYNAMIC,
-    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
+    SHADOW_PCF1_32F, SHADOW_PCF3_32F, SHADOW_VSM_16F, SHADOW_VSM_32F, SHADOW_PCSS_32F,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
-    LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
+    LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR,
+    shadowTypeInfo,
+    SHADOW_PCF1_16F, SHADOW_PCF3_16F
 } from './constants.js';
 import { ShadowRenderer } from './renderer/shadow-renderer.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
+
+/**
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ */
 
 /**
  * @import { BindGroup } from '../platform/graphics/bind-group.js'
@@ -50,7 +56,7 @@ let id = 0;
  * Class storing shadow rendering related private information
  */
 class LightRenderData {
-    constructor(device, camera, face, light) {
+    constructor(camera, face, light) {
 
         // light this data belongs to
         this.light = light;
@@ -62,7 +68,7 @@ class LightRenderData {
         this.camera = camera;
 
         // camera used to cull / render the shadow map
-        this.shadowCamera = ShadowRenderer.createShadowCamera(device, light._shadowType, light._type, face);
+        this.shadowCamera = ShadowRenderer.createShadowCamera(light._shadowType, light._type, face);
 
         // shadow view-projection matrix
         this.shadowMatrix = new Mat4();
@@ -74,7 +80,6 @@ class LightRenderData {
         this.shadowScissor = new Vec4(0, 0, 1, 1);
 
         // depth range compensation for PCSS with directional lights
-        this.depthRangeCompensation = 0;
         this.projectionCompensation = 0;
 
         // face index, value is based on light type:
@@ -138,6 +143,10 @@ class Light {
      */
     shadowDepthState = DepthState.DEFAULT.clone();
 
+    /**
+     * @param {GraphicsDevice} graphicsDevice - The graphics device.
+     * @param {boolean} clusteredLighting - True if the clustered lighting is enabled.
+     */
     constructor(graphicsDevice, clusteredLighting) {
         this.device = graphicsDevice;
         this.clusteredLighting = clusteredLighting;
@@ -162,7 +171,7 @@ class Light {
         this.attenuationStart = 10;
         this.attenuationEnd = 10;
         this._falloffMode = LIGHTFALLOFF_LINEAR;
-        this._shadowType = SHADOW_PCF3;
+        this._shadowType = SHADOW_PCF3_32F;
         this._vsmBlurSize = 11;
         this.vsmBlurMode = BLUR_GAUSSIAN;
         this.vsmBias = 0.01 * 0.25;
@@ -186,6 +195,7 @@ class Light {
         this._shadowMatrixPalette = null;   // a float array, 16 floats per cascade
         this._shadowCascadeDistances = null;
         this.numCascades = 1;
+        this._cascadeBlend = 0;
         this.cascadeDistribution = 0.5;
 
         // Light source shape properties
@@ -215,9 +225,14 @@ class Light {
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
         this.shadowUpdateOverrides = null;
-        this._penumbraSize = 1.0;
         this._isVsm = false;
         this._isPcf = true;
+
+        this._softShadowParams = new Float32Array(4);
+        this.shadowSamples = 16;
+        this.shadowBlockerSamples = 16;
+        this.penumbraSize = 1.0;
+        this.penumbraFalloff = 1.0;
 
         // cookie matrix (used in case the shadow mapping is disabled and so the shadow matrix cannot be used)
         this._cookieMatrix = null;
@@ -270,6 +285,22 @@ class Light {
         this.layers.delete(layer);
     }
 
+    set shadowSamples(value) {
+        this._softShadowParams[0] = value;
+    }
+
+    get shadowSamples() {
+        return this._softShadowParams[0];
+    }
+
+    set shadowBlockerSamples(value) {
+        this._softShadowParams[1] = value;
+    }
+
+    get shadowBlockerSamples() {
+        return this._softShadowParams[1];
+    }
+
     set shadowBias(value) {
         if (this._shadowBias !== value) {
             this._shadowBias = value;
@@ -293,6 +324,17 @@ class Light {
 
     get numCascades() {
         return this.cascades.length;
+    }
+
+    set cascadeBlend(value) {
+        if (this._cascadeBlend !== value) {
+            this._cascadeBlend = value;
+            this.updateKey();
+        }
+    }
+
+    get cascadeBlend() {
+        return this._cascadeBlend;
     }
 
     set shadowMap(shadowMap) {
@@ -385,23 +427,30 @@ class Light {
 
         const device = this.device;
 
+        // PCSS requires F16 or F32 render targets
+        if (value === SHADOW_PCSS_32F && !device.textureFloatRenderable && !device.textureHalfFloatRenderable) {
+            value = SHADOW_PCF3_32F;
+        }
+
         // omni light supports PCF1, PCF3 and PCSS only
-        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF1 && value !== SHADOW_PCF3 && value !== SHADOW_PCSS) {
-            value = SHADOW_PCF3;
+        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF1_32F && value !== SHADOW_PCF3_32F &&
+            value !== SHADOW_PCF1_16F && value !== SHADOW_PCF3_16F && value !== SHADOW_PCSS_32F) {
+            value = SHADOW_PCF3_32F;
         }
 
         // fallback from vsm32 to vsm16
-        if (value === SHADOW_VSM32 && (!device.textureFloatRenderable || !device.textureFloatFilterable)) {
-            value = SHADOW_VSM16;
+        if (value === SHADOW_VSM_32F && (!device.textureFloatRenderable || !device.textureFloatFilterable)) {
+            value = SHADOW_VSM_16F;
         }
 
-        // fallback from vsm16 to vsm8
-        if (value === SHADOW_VSM16 && !device.textureHalfFloatRenderable) {
-            value = SHADOW_VSM8;
+        // fallback from vsm16 to pcf3
+        if (value === SHADOW_VSM_16F && !device.textureHalfFloatRenderable) {
+            value = SHADOW_PCF3_32F;
         }
 
-        this._isVsm = value === SHADOW_VSM8 || value === SHADOW_VSM16 || value === SHADOW_VSM32;
-        this._isPcf = value === SHADOW_PCF1 || value === SHADOW_PCF3 || value === SHADOW_PCF5;
+        const shadowInfo = shadowTypeInfo.get(value);
+        this._isVsm = shadowInfo?.vsm ?? false;
+        this._isPcf = shadowInfo?.pcf ?? false;
 
         this._shadowType = value;
         this._destroyShadowMap();
@@ -470,14 +519,14 @@ class Light {
     }
 
     set normalOffsetBias(value) {
-        if (this._normalOffsetBias === value) {
-            return;
-        }
+        if (this._normalOffsetBias !== value) {
+            const dirty = (!this._normalOffsetBias && value) || (this._normalOffsetBias && !value);
+            this._normalOffsetBias = value;
 
-        if ((!this._normalOffsetBias && value) || (this._normalOffsetBias && !value)) {
-            this.updateKey();
+            if (dirty) {
+                this.updateKey();
+            }
         }
-        this._normalOffsetBias = value;
     }
 
     get normalOffsetBias() {
@@ -532,10 +581,19 @@ class Light {
 
     set penumbraSize(value) {
         this._penumbraSize = value;
+        this._softShadowParams[2] = value;
     }
 
     get penumbraSize() {
         return this._penumbraSize;
+    }
+
+    set penumbraFalloff(value) {
+        this._softShadowParams[3] = value;
+    }
+
+    get penumbraFalloff() {
+        return this._softShadowParams[3];
     }
 
     _updateOuterAngle(angle) {
@@ -724,7 +782,7 @@ class Light {
         }
 
         // create new one
-        const rd = new LightRenderData(this.device, camera, face, this);
+        const rd = new LightRenderData(camera, face, this);
         this._renderData.push(rd);
         return rd;
     }
@@ -754,7 +812,6 @@ class Light {
         clone.vsmBlurSize = this._vsmBlurSize;
         clone.vsmBlurMode = this.vsmBlurMode;
         clone.vsmBias = this.vsmBias;
-        clone.penumbraSize = this.penumbraSize;
         clone.shadowUpdateMode = this.shadowUpdateMode;
         clone.mask = this.mask;
 
@@ -769,6 +826,7 @@ class Light {
         // Directional properties
         clone.numCascades = this.numCascades;
         clone.cascadeDistribution = this.cascadeDistribution;
+        clone.cascadeBlend = this._cascadeBlend;
 
         // shape properties
         clone.shape = this._shape;
@@ -780,6 +838,11 @@ class Light {
         clone.shadowResolution = this._shadowResolution;
         clone.shadowDistance = this.shadowDistance;
         clone.shadowIntensity = this.shadowIntensity;
+
+        clone.shadowSamples = this.shadowSamples;
+        clone.shadowBlockerSamples = this.shadowBlockerSamples;
+        clone.penumbraSize = this.penumbraSize;
+        clone.penumbraFalloff = this.penumbraFalloff;
 
         // Cookies properties
         // clone.cookie = this._cookie;
@@ -949,7 +1012,9 @@ class Light {
 
     layersDirty() {
         this.layers.forEach((layer) => {
-            layer.markLightsDirty();
+            if (layer.hasLight(this)) {
+                layer.markLightsDirty();
+            }
         });
     }
 
@@ -963,8 +1028,7 @@ class Light {
         // Bit
         // 31      : sign bit (leave)
         // 29 - 30 : type
-        // 28      : cast shadows
-        // 25 - 27 : shadow type
+        // 25 - 28 : shadow type
         // 23 - 24 : falloff mode
         // 22      : normal offset bias
         // 21      : cookie
@@ -974,12 +1038,13 @@ class Light {
         // 14 - 15 : cookie channel B
         // 12      : cookie transform
         // 10 - 11 : light source shape
-        //  8 -  9 : light num cascades
+        //  9      : use cascades
+        //  8      : cascade blend
         //  7      : disable specular
         //  6 -  4 : mask
+        //  3      : cast shadows
         let key =
                (this._type                                << 29) |
-               ((this._castShadows ? 1 : 0)               << 28) |
                (this._shadowType                          << 25) |
                (this._falloffMode                         << 23) |
                ((this._normalOffsetBias !== 0.0 ? 1 : 0)  << 22) |
@@ -988,9 +1053,11 @@ class Light {
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
                ((this._cookieTransform ? 1 : 0)           << 12) |
                ((this._shape)                             << 10) |
-               ((this.numCascades - 1)                    <<  8) |
+               ((this.numCascades > 0 ? 1 : 0)            <<  9) |
+               ((this._cascadeBlend > 0 ? 1 : 0)          <<  8) |
                ((this.affectSpecularity ? 1 : 0)          <<  7) |
-               ((this.mask)                               <<  6);
+               ((this.mask)                               <<  6) |
+               ((this._castShadows ? 1 : 0)               <<  3);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);

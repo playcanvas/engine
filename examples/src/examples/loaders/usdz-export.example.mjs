@@ -1,6 +1,6 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -20,16 +20,16 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bench: new pc.Asset('bench', 'container', { url: rootPath + '/static/assets/models/bench_wooden_01.glb' })
+    bench: new pc.Asset('bench', 'container', { url: `${rootPath}/static/assets/models/bench_wooden_01.glb` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -67,7 +67,8 @@ assetListLoader.load(() => {
     const camera = new pc.Entity();
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.1, 0.1),
-        farClip: 100
+        farClip: 100,
+        toneMapping: pc.TONEMAP_ACES
     });
     camera.translate(-3, 1, 2);
     camera.lookAt(0, 0.5, 0);
@@ -75,7 +76,6 @@ assetListLoader.load(() => {
 
     // set skybox
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
 
     // a link element, created in the html part of the examples.
@@ -87,25 +87,25 @@ assetListLoader.load(() => {
     };
 
     new pc.UsdzExporter()
-        .build(entity, options)
-        .then((arrayBuffer) => {
-            const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
-            // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
-            // the download of the .asdz file triggers its opening in QuickLook AT mode.
-            // In other browsers, this simply downloads the generated .asdz file.
+    .build(entity, options)
+    .then((arrayBuffer) => {
+        const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+        // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
+        // the download of the .asdz file triggers its opening in QuickLook AT mode.
+        // In other browsers, this simply downloads the generated .asdz file.
 
-            // @ts-ignore
-            link.href = URL.createObjectURL(blob);
-        })
-        .catch(console.error);
+        // @ts-ignore
+        link.href = URL.createObjectURL(blob);
+    })
+    .catch(console.error);
 
     // when clicking on the download UI button, trigger the download
-    data.on('download', function () {
+    data.on('download', () => {
         link.click();
     });
 
     // spin the meshe
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         if (entity) {
             entity.rotate(0, -12 * dt, 0);
         }

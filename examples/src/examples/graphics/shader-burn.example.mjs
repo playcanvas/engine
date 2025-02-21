@@ -1,19 +1,19 @@
-import * as pc from 'playcanvas';
 import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
-    clouds: new pc.Asset('clouds', 'texture', { url: rootPath + '/static/assets/textures/clouds.jpg' })
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
+    clouds: new pc.Asset('clouds', 'texture', { url: `${rootPath}/static/assets/textures/clouds.jpg` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // Enable HDR rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR
@@ -112,7 +112,7 @@ assetListLoader.load(() => {
     material.update();
 
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time += 0.2 * dt;
 
         // reverse time

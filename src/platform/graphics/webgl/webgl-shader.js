@@ -192,11 +192,16 @@ class WebglShader {
      * @param {string} src - The shader source code.
      * @param {boolean} isVertexShader - True if the shader is a vertex shader, false if it is a
      * fragment shader.
-     * @returns {WebGLShader} The compiled shader.
+     * @returns {WebGLShader|null} The compiled shader, or null if the device is lost.
      * @private
      */
     _compileShaderSource(device, src, isVertexShader) {
         const gl = device.gl;
+
+        // if the device is lost, silently ignore
+        if (gl.isContextLost()) {
+            return null;
+        }
 
         // device cache for current device, containing cache of compiled shaders
         const shaderDeviceCache = isVertexShader ? _vertexShaderCache : _fragmentShaderCache;
@@ -217,11 +222,6 @@ class WebglShader {
             // #endif
 
             glShader = gl.createShader(isVertexShader ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
-
-            // if the device is lost, silently ignore
-            if (!glShader && gl.isContextLost()) {
-                return glShader;
-            }
 
             gl.shaderSource(glShader, src);
             gl.compileShader(glShader);

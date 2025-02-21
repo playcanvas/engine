@@ -5,10 +5,13 @@ import { getProgramLibrary } from './get-program-library.js';
 import { Debug } from '../../core/debug.js';
 import { ShaderGenerator } from './programs/shader-generator.js';
 import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { ShaderPass } from '../shader-pass.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js'
+ * @import { CameraShaderParams } from '../camera-shader-params.js'
+ * @import { Material, ShaderVariantParams } from '../materials/material.js'
  */
 
 /**
@@ -166,4 +169,25 @@ function processShader(shader, processingOptions) {
     return variant;
 }
 
-export { createShader, createShaderFromCode, processShader };
+/**
+ * Create a map of defines used for shader generation for a material.
+ *
+ * @param {Material} material - The material to create the shader defines for.
+ * @param {ShaderVariantParams} params - The shader variant parameters.
+ * @returns {Map<string, string>} The map of shader defines.
+ * @ignore
+ */
+const getCoreDefines = (material, params) => {
+
+    // merge both maps, with camera shader params taking precedence
+    const defines = new Map(material.defines);
+    params.cameraShaderParams.defines.forEach((value, key) => defines.set(key, value));
+
+    // add pass defines
+    const shaderPassInfo = ShaderPass.get(params.device).getByIndex(params.pass);
+    shaderPassInfo.defines.forEach((value, key) => defines.set(key, value));
+
+    return defines;
+};
+
+export { createShader, createShaderFromCode, processShader, getCoreDefines };

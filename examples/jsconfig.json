@@ -11,6 +11,6 @@
         "strictNullChecks": true,
         "target": "ESNext",
     },
-    "include": ["src", "scripts", "iframe", "utils"],
+    "include": ["src", "scripts", "iframe", "templates", "utils", "rollup.config.js"],
     "exclude": ["node_modules", "src/lib"]
 }

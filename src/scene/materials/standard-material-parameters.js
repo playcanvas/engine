@@ -182,7 +182,15 @@ const standardMaterialRemovedParameters = {
     opacityMapVertexColor: 'boolean',
     specularAntialias: 'boolean',
     specularMapTint: 'boolean',
-    specularMapVertexColor: 'boolean'
+    specularMapVertexColor: 'boolean',
+    ambientTint: 'boolean',
+    emissiveTint: 'boolean',
+    diffuseTint: 'boolean',
+    sheenTint: 'boolean',
+    conserveEnergy: 'boolean',
+    useGamma: 'boolean',
+    useGammaTonemap: 'boolean',
+    sheenGlossTint: 'boolean'
 };
 
 export {

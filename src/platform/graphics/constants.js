@@ -932,7 +932,7 @@ export const PIXELFORMAT_R16F = 50;
 export const PIXELFORMAT_RG16F = 51;
 
 /**
- * 8-bit per-channel unsigned integer (R) format.
+ * 8-bit per-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -940,7 +940,7 @@ export const PIXELFORMAT_RG16F = 51;
 export const PIXELFORMAT_R8 = 52;
 
 /**
- * 8-bit per-channel unsigned integer (RG) format.
+ * 8-bit per-channel (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -970,38 +970,6 @@ export const PIXELFORMAT_DXT3_SRGBA = 55;
  * @category Graphics
  */
 export const PIXELFORMAT_DXT5_SRGBA = 56;
-
-/**
- * Format equivalent to {@link PIXELFORMAT_PVRTC_2BPP_RGB_1} but sampled in linear color space.
- *
- * @type {number}
- * @category Graphics
- */
-export const PIXELFORMAT_PVRTC_2BPP_SRGB_1 = 57;
-
-/**
- * Format equivalent to {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1} but sampled in linear color space.
- *
- * @type {number}
- * @category Graphics
- */
-export const PIXELFORMAT_PVRTC_2BPP_SRGBA_1 = 58;
-
-/**
- * Format equivalent to {@link PIXELFORMAT_PVRTC_4BPP_RGB_1} but sampled in linear color space.
- *
- * @type {number}
- * @category Graphics
- */
-export const PIXELFORMAT_PVRTC_4BPP_SRGB_1 = 59;
-
-/**
- * Format equivalent to {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1} but sampled in linear color space.
- *
- * @type {number}
- * @category Graphics
- */
-export const PIXELFORMAT_PVRTC_4BPP_SRGBA_1 = 60;
 
 /**
  * Format equivalent to {@link PIXELFORMAT_ETC2_RGB} but sampled in linear color space.
@@ -1070,6 +1038,14 @@ export const PIXELFORMAT_BC7 = 67;
 export const PIXELFORMAT_BC7_SRGBA = 68;
 
 /**
+ * A 16-bit depth buffer format.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_DEPTH16 = 69;
+
+/**
  * Information about pixel formats.
  *
  * ldr: whether the format is low dynamic range (LDR), which typically means it's not HDR, and uses
@@ -1100,12 +1076,13 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_RGBA32F,       { name: 'RGBA32F', size: 16 }],
     [PIXELFORMAT_R32F,          { name: 'R32F', size: 4 }],
     [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4 }],
+    [PIXELFORMAT_DEPTH16,       { name: 'DEPTH16', size: 2 }],
     [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4 }],
     [PIXELFORMAT_111110F,       { name: '111110F', size: 4 }],
     [PIXELFORMAT_SRGB8,         { name: 'SRGB8', size: 4, ldr: true, srgb: true }],
     [PIXELFORMAT_SRGBA8,        { name: 'SRGBA8', size: 4, ldr: true, srgb: true }],
     [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4, ldr: true }],
-    [PIXELFORMAT_SBGRA8,         { name: 'SBGRA8', size: 4, ldr: true, srgb: true }],
+    [PIXELFORMAT_SBGRA8,        { name: 'SBGRA8', size: 4, ldr: true, srgb: true }],
 
     // compressed formats
     [PIXELFORMAT_DXT1,              { name: 'DXT1', blockSize: 8, ldr: true, srgbFormat: PIXELFORMAT_DXT1_SRGB }],
@@ -1114,10 +1091,10 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_ETC1,              { name: 'ETC1', blockSize: 8, ldr: true }],
     [PIXELFORMAT_ETC2_RGB,          { name: 'ETC2_RGB', blockSize: 8, ldr: true, srgbFormat: PIXELFORMAT_ETC2_SRGB }],
     [PIXELFORMAT_ETC2_RGBA,         { name: 'ETC2_RGBA', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_ETC2_SRGBA }],
-    [PIXELFORMAT_PVRTC_2BPP_RGB_1,  { name: 'PVRTC_2BPP_RGB_1', ldr: true, blockSize: 8, srgbFormat: PIXELFORMAT_PVRTC_2BPP_SRGB_1 }],
-    [PIXELFORMAT_PVRTC_2BPP_RGBA_1, { name: 'PVRTC_2BPP_RGBA_1', ldr: true, blockSize: 8, srgbFormat: PIXELFORMAT_PVRTC_2BPP_SRGBA_1 }],
-    [PIXELFORMAT_PVRTC_4BPP_RGB_1,  { name: 'PVRTC_4BPP_RGB_1', ldr: true, blockSize: 8, srgbFormat: PIXELFORMAT_PVRTC_4BPP_SRGB_1 }],
-    [PIXELFORMAT_PVRTC_4BPP_RGBA_1, { name: 'PVRTC_4BPP_RGBA_1', ldr: true, blockSize: 8, srgbFormat: PIXELFORMAT_PVRTC_4BPP_SRGBA_1 }],
+    [PIXELFORMAT_PVRTC_2BPP_RGB_1,  { name: 'PVRTC_2BPP_RGB_1', ldr: true, blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_2BPP_RGBA_1, { name: 'PVRTC_2BPP_RGBA_1', ldr: true, blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_4BPP_RGB_1,  { name: 'PVRTC_4BPP_RGB_1', ldr: true, blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_4BPP_RGBA_1, { name: 'PVRTC_4BPP_RGBA_1', ldr: true, blockSize: 8 }],
     [PIXELFORMAT_ASTC_4x4,          { name: 'ASTC_4x4', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_ASTC_4x4_SRGB }],
     [PIXELFORMAT_ATC_RGB,           { name: 'ATC_RGB', blockSize: 8, ldr: true }],
     [PIXELFORMAT_ATC_RGBA,          { name: 'ATC_RGBA', blockSize: 16, ldr: true }],
@@ -1129,10 +1106,6 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_DXT1_SRGB,          { name: 'DXT1_SRGB', blockSize: 8, ldr: true, srgb: true }],
     [PIXELFORMAT_DXT3_SRGBA,         { name: 'DXT3_SRGBA', blockSize: 16, ldr: true, srgb: true }],
     [PIXELFORMAT_DXT5_SRGBA,         { name: 'DXT5_SRGBA', blockSize: 16, ldr: true, srgb: true }],
-    [PIXELFORMAT_PVRTC_2BPP_SRGB_1,  { name: 'PVRTC_2BPP_SRGB_1', blockSize: 8, ldr: true, srgb: true }],
-    [PIXELFORMAT_PVRTC_2BPP_SRGBA_1, { name: 'PVRTC_2BPP_SRGBA_1', blockSize: 8, ldr: true, srgb: true }],
-    [PIXELFORMAT_PVRTC_4BPP_SRGB_1,  { name: 'PVRTC_4BPP_SRGB_1', blockSize: 8, ldr: true, srgb: true }],
-    [PIXELFORMAT_PVRTC_4BPP_SRGBA_1, { name: 'PVRTC_4BPP_SRGBA_1', blockSize: 8, ldr: true, srgb: true }],
     [PIXELFORMAT_ETC2_SRGB,          { name: 'ETC2_SRGB', blockSize: 8, ldr: true, srgb: true }],
     [PIXELFORMAT_ETC2_SRGBA,         { name: 'ETC2_SRGBA', blockSize: 16, ldr: true, srgb: true }],
     [PIXELFORMAT_ASTC_4x4_SRGB,      { name: 'ASTC_4x4_SRGB', blockSize: 16, ldr: true, srgb: true }],
@@ -1183,6 +1156,24 @@ export const isIntegerPixelFormat = (format) => {
  */
 export const pixelFormatLinearToGamma = (format) => {
     return pixelFormatInfo.get(format)?.srgbFormat || format;
+};
+
+/**
+ * Returns the linear equivalent format for the supplied sRGB format. If it does not exist, the input
+ * format is returned. For example for {@link PIXELFORMAT_SRGBA8} the return value is
+ * {@link PIXELFORMAT_RGBA8}.
+ *
+ * @param {number} format - The texture format.
+ * @returns {number} The equivalent format without automatic sRGB conversion.
+ * @ignore
+ */
+export const pixelFormatGammaToLinear = (format) => {
+    for (const [key, value] of pixelFormatInfo) {
+        if (value.srgbFormat === format) {
+            return key;
+        }
+    }
+    return format;
 };
 
 /**
@@ -2073,6 +2064,7 @@ export const UNIFORMTYPE_UTEXTURE2D_ARRAY = 49;
 
 // ----------
 
+// Uniform types in GLSL
 export const uniformTypeToName = [
     // Uniforms
     'bool',
@@ -2126,6 +2118,73 @@ export const uniformTypeToName = [
     'isampler2DArray',
     'usampler2DArray'
 ];
+
+// Uniform types in WGSL
+export const uniformTypeToNameWGSL = [
+    // Uniforms
+    ['bool'],                          // UNIFORMTYPE_BOOL
+    ['i32'],                           // UNIFORMTYPE_INT
+    ['f32'],                           // UNIFORMTYPE_FLOAT
+    ['vec2f', 'vec2<f32>'],            // UNIFORMTYPE_VEC2
+    ['vec3f', 'vec3<f32>'],            // UNIFORMTYPE_VEC3
+    ['vec4f', 'vec4<f32>'],            // UNIFORMTYPE_VEC4
+    ['vec2i', 'vec2<i32>'],            // UNIFORMTYPE_IVEC2
+    ['vec3i', 'vec3<i32>'],            // UNIFORMTYPE_IVEC3
+    ['vec4i', 'vec4<i32>'],            // UNIFORMTYPE_IVEC4
+    ['vec2<bool>'],                    // UNIFORMTYPE_BVEC2
+    ['vec3<bool>'],                    // UNIFORMTYPE_BVEC3
+    ['vec4<bool>'],                    // UNIFORMTYPE_BVEC4
+    ['mat2x2f', 'mat2x2<f32>'],        // UNIFORMTYPE_MAT2
+    ['mat3x3f', 'mat3x3<f32>'],        // UNIFORMTYPE_MAT3
+    ['mat4x4f', 'mat4x4<f32>'],        // UNIFORMTYPE_MAT4
+    ['texture_2d<f32>'],               // UNIFORMTYPE_TEXTURE2D
+    ['texture_cube<f32>'],             // UNIFORMTYPE_TEXTURECUBE
+    ['array<f32>'],                    // UNIFORMTYPE_FLOATARRAY
+    ['texture_depth_2d'],              // UNIFORMTYPE_TEXTURE2D_SHADOW
+    ['texture_depth_cube'],            // UNIFORMTYPE_TEXTURECUBE_SHADOW
+    ['texture_3d<f32>'],               // UNIFORMTYPE_TEXTURE3D
+    ['array<vec2<f32>>'],              // UNIFORMTYPE_VEC2ARRAY
+    ['array<vec3<f32>>'],              // UNIFORMTYPE_VEC3ARRAY
+    ['array<vec4<f32>>'],              // UNIFORMTYPE_VEC4ARRAY
+    ['array<mat4x4<f32>>'],            // UNIFORMTYPE_MAT4ARRAY
+    ['texture_2d_array<f32>'],         // UNIFORMTYPE_TEXTURE2D_ARRAY
+
+    // Unsigned integer uniforms
+    ['u32'],                           // UNIFORMTYPE_UINT
+    ['vec2u', 'vec2<u32>'],            // UNIFORMTYPE_UVEC2
+    ['vec3u', 'vec3<u32>'],            // UNIFORMTYPE_UVEC3
+    ['vec4u', 'vec4<u32>'],            // UNIFORMTYPE_UVEC4
+
+    // Integer array uniforms
+    ['array<i32>'],                        // UNIFORMTYPE_INTARRAY
+    ['array<u32>'],                        // UNIFORMTYPE_UINTARRAY
+    ['array<bool>'],                       // UNIFORMTYPE_BOOLARRAY
+    ['array<vec2i>', 'array<vec2<i32>>'],  // UNIFORMTYPE_IVEC2ARRAY
+    ['array<vec2u>', 'array<vec2<u32>>'],  // UNIFORMTYPE_UVEC2ARRAY
+    ['array<vec2b>', 'array<vec2<bool>>'], // UNIFORMTYPE_BVEC2ARRAY
+    ['array<vec3i>', 'array<vec3<i32>>'],  // UNIFORMTYPE_IVEC3ARRAY
+    ['array<vec3u>', 'array<vec3<u32>>'],  // UNIFORMTYPE_UVEC3ARRAY
+    ['array<vec3b>', 'array<vec3<bool>>'], // UNIFORMTYPE_BVEC3ARRAY
+    ['array<vec4i>', 'array<vec4<i32>>'],  // UNIFORMTYPE_IVEC4ARRAY
+    ['array<vec4u>', 'array<vec4<u32>>'],  // UNIFORMTYPE_UVEC4ARRAY
+    ['array<vec4b>', 'array<vec4<bool>>'], // UNIFORMTYPE_BVEC4ARRAY
+
+    // Integer texture types
+    ['texture_2d<i32>'],                   // UNIFORMTYPE_ITEXTURE2D
+    ['texture_2d<u32>'],                   // UNIFORMTYPE_UTEXTURE2D
+    ['texture_cube<i32>'],                 // UNIFORMTYPE_ITEXTURECUBE
+    ['texture_cube<u32>'],                 // UNIFORMTYPE_UTEXTURECUBE
+    ['texture_3d<i32>'],                   // UNIFORMTYPE_ITEXTURE3D
+    ['texture_3d<u32>'],                   // UNIFORMTYPE_UTEXTURE3D
+    ['texture_2d_array<i32>'],             // UNIFORMTYPE_ITEXTURE2D_ARRAY
+    ['texture_2d_array<u32>']              // UNIFORMTYPE_UTEXTURE2D_ARRAY
+];
+
+// map version of uniformTypeToNameMapWGSL, allowing type name lookup by type name
+export const uniformTypeToNameMapWGSL = new Map();
+uniformTypeToNameWGSL.forEach((names, index) => {
+    names.forEach(name => uniformTypeToNameMapWGSL.set(name, index));
+});
 
 // Map to convert uniform type to storage type, used in uniform-buffer.js
 export const uniformTypeToStorage = new Uint8Array([
@@ -2284,6 +2343,9 @@ export const bindGroupNames = ['view', 'mesh', 'mesh_ub'];
 // name of the default uniform buffer slot in a bind group
 export const UNIFORM_BUFFER_DEFAULT_SLOT_NAME = 'default';
 
+// WebGPU does not support empty uniform buffer, add a dummy uniform to avoid validation errors
+export const UNUSED_UNIFORM_NAME = '_unused_float_uniform';
+
 // map of engine TYPE_*** enums to their corresponding typed array constructors and byte sizes
 export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Uint16Array];
 export const typedArrayTypesByteSize = [1, 1, 2, 2, 4, 4, 4, 2];
@@ -2363,3 +2425,5 @@ export const CHUNKAPI_1_62 = '1.62';
 export const CHUNKAPI_1_65 = '1.65';
 export const CHUNKAPI_1_70 = '1.70';
 export const CHUNKAPI_2_1 = '2.1';
+export const CHUNKAPI_2_3 = '2.3';
+export const CHUNKAPI_2_5 = '2.5';
