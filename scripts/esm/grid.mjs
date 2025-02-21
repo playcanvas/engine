@@ -175,6 +175,13 @@ class Grid extends Script {
      */
     _resolution = Grid.RESOLUTION_HIGH;
 
+    createMeshInstance() {
+        // create mesh
+        const mesh = Mesh.fromGeometry(this.app.graphicsDevice, new PlaneGeometry());
+        this._meshInstance = new MeshInstance(mesh, this._material);
+        this._meshInstance.castShadow = false;
+    }
+
     initialize() {
 
         // ensure the entity has a render component
@@ -196,9 +203,7 @@ class Grid extends Script {
         this._material.cull = CULLFACE_NONE;
         this._material.update();
 
-        // create mesh
-        const mesh = Mesh.fromGeometry(this.app.graphicsDevice, new PlaneGeometry());
-        this._meshInstance = new MeshInstance(mesh, this._material);
+        this.createMeshInstance();
         this.entity.render.meshInstances = [this._meshInstance];
 
         // set the initial values
@@ -224,9 +229,7 @@ class Grid extends Script {
         this.on('enable', () => {
             if (!this.entity.render) return;
             if (!this._meshInstance.mesh) {
-                const mesh = Mesh.fromGeometry(this.app.graphicsDevice, new PlaneGeometry());
-                this._meshInstance = new MeshInstance(mesh, this._material);
-                this._meshInstance.material = this._material;
+                this.createMeshInstance();
             }
             this.entity.render.meshInstances = [this._meshInstance];
         });
