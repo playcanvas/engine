@@ -179,14 +179,14 @@ class Grid extends Script {
         // create mesh
         const mesh = Mesh.fromGeometry(this.app.graphicsDevice, new PlaneGeometry());
         this._meshInstance = new MeshInstance(mesh, this._material);
-        this._meshInstance.castShadow = false;
     }
 
     initialize() {
 
         // ensure the entity has a render component
         if (!this.entity.render) {
-            this.entity.addComponent('render');
+            const render = this.entity.addComponent('render');
+            render.castShadows = false;
         }
 
         // create shader material
