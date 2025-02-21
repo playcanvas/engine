@@ -26,26 +26,7 @@ class Input extends EventHandler {
 
     static EVENT_ROTATEEND = 'rotate:end';
 
-    /**
-     * @returns {number} - The z axis input.
-     */
-    getZ() {
-        return 0;
-    }
-
-    /**
-     * @returns {number} - The x axis input.
-     */
-    getX() {
-        return 0;
-    }
-
-    /**
-     * @returns {number} - The y axis input.
-     */
-    getY() {
-        return 0;
-    }
+    translation = new Vec3();
 }
 
 class JoystickInput extends Input {
@@ -104,12 +85,6 @@ class JoystickInput extends Input {
     _innerPos = new Vec2();
 
     /**
-     * @type {Vec2}
-     * @private
-     */
-    _value = new Vec2();
-
-    /**
      * @param {object} options - The options.
      * @param {number} [options.scale] - The scale of the joystick.
      * @param {number} [options.innerScale] - The inner scale of the joystick.
@@ -155,7 +130,7 @@ class JoystickInput extends Input {
         const display = value ? 'none' : 'block';
         this._base.style.display = display;
         this._inner.style.display = display;
-        this._value.set(0, 0);
+        this.translation.set(0, 0, 0);
     }
 
     get hidden() {
@@ -260,28 +235,7 @@ class JoystickInput extends Input {
 
         const vx = math.clamp(tmpVa.x / this._innerMaxDist, -1, 1);
         const vy = math.clamp(tmpVa.y / this._innerMaxDist, -1, 1);
-        this._value.set(vx, vy);
-    }
-
-    /**
-     * @returns {number} - The z axis input.
-     */
-    getZ() {
-        return -this._value.y;
-    }
-
-    /**
-     * @returns {number} - The x axis input.
-     */
-    getX() {
-        return this._value.x;
-    }
-
-    /**
-     * @returns {number} - The y axis input.
-     */
-    getY() {
-        return 0;
+        this.translation.set(vx, 0, -vy);
     }
 
     /**
@@ -474,6 +428,8 @@ class KeyboardMouseInput extends Input {
                 this._key.crouch = 1;
                 break;
         }
+
+        this._updateTranslation();
     }
 
     /**
@@ -512,27 +468,19 @@ class KeyboardMouseInput extends Input {
                 this._key.crouch = 0;
                 break;
         }
+
+        this._updateTranslation();
     }
 
     /**
-     * @returns {number} - The z axis input.
+     * @private
      */
-    getZ() {
-        return (this._key.forward - this._key.backward) * this.speedMult;
-    }
-
-    /**
-     * @returns {number} - The x axis input.
-     */
-    getX() {
-        return (this._key.right - this._key.left) * this.speedMult;
-    }
-
-    /**
-     * @returns {number} - The y axis input.
-     */
-    getY() {
-        return (this._key.up - this._key.down) * this.speedMult;
+    _updateTranslation() {
+        this.translation.set(
+            (this._key.right - this._key.left) * this.speedMult,
+            (this._key.up - this._key.down) * this.speedMult,
+            (this._key.forward - this._key.backward) * this.speedMult
+        );
     }
 
     /**
@@ -703,9 +651,9 @@ class FlyCamera extends EventHandler {
         const up = this._transform.getY();
 
         tmpV1.set(0, 0, 0);
-        tmpV1.sub(tmpV2.copy(back).mulScalar(this._input.getZ()));
-        tmpV1.add(tmpV2.copy(right).mulScalar(this._input.getX()));
-        tmpV1.add(tmpV2.copy(up).mulScalar(this._input.getY()));
+        tmpV1.sub(tmpV2.copy(back).mulScalar(this._input.translation.z));
+        tmpV1.add(tmpV2.copy(right).mulScalar(this._input.translation.x));
+        tmpV1.add(tmpV2.copy(up).mulScalar(this._input.translation.y));
         tmpV1.mulScalar(this.moveSpeed * dt);
 
         this._targetPosition.add(tmpV1);
