@@ -19,139 +19,6 @@ const PASSIVE = { passive: false };
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
-class JoyStick {
-    /**
-     * @type {number}
-     * @private
-     */
-    _size = 100;
-
-    /**
-     * @type {HTMLDivElement}
-     * @private
-     */
-    _base;
-
-    /**
-     * @type {HTMLDivElement}
-     * @private
-     */
-    _inner;
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _basePos = new Vec2();
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _innerPos = new Vec2();
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _innerScale = 0.6;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _innerMaxDist = 70;
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _value = new Vec2();
-
-    /**
-     * @param {number} [size] - The size of the joystick.
-     */
-    constructor(size) {
-        this._size = size ?? this._size;
-
-        this._base = document.createElement('div');
-        this._base.id = 'joystick-base';
-        Object.assign(this._base.style, {
-            display: 'none',
-            position: 'absolute',
-            width: `${this._size}px`,
-            height: `${this._size}px`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)'
-        });
-
-        this._inner = document.createElement('div');
-        this._inner.id = 'joystick-inner';
-        Object.assign(this._inner.style, {
-            display: 'none',
-            position: 'absolute',
-            width: `${this._size * this._innerScale}px`,
-            height: `${this._size * this._innerScale}px`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
-        });
-    }
-
-    get dom() {
-        return [this._base, this._inner];
-    }
-
-    set hidden(value) {
-        const display = value ? 'none' : 'block';
-        this._base.style.display = display;
-        this._inner.style.display = display;
-        this._value.set(0, 0);
-    }
-
-    get hidden() {
-        return this._base.style.display === 'none';
-    }
-
-    get value() {
-        return this._value;
-    }
-
-    /**
-     * @param {number} x - The x position.
-     * @param {number} y - The y position.
-     */
-    setBase(x, y) {
-        this._basePos.set(x, y);
-        this._base.style.left = `${this._basePos.x - this._size * 0.5}px`;
-        this._base.style.top = `${this._basePos.y - this._size * 0.5}px`;
-    }
-
-    /**
-     * @param {number} x - The x position.
-     * @param {number} y - The y position.
-     */
-    setInner(x, y) {
-        this._innerPos.set(x, y);
-        tmpVa.sub2(this._innerPos, this._basePos);
-        const dist = tmpVa.length();
-        if (dist > this._innerMaxDist) {
-            tmpVa.normalize().mulScalar(this._innerMaxDist);
-            this._innerPos.add2(this._basePos, tmpVa);
-        }
-        this._inner.style.left = `${this._innerPos.x - this._size * this._innerScale * 0.5}px`;
-        this._inner.style.top = `${this._innerPos.y - this._size * this._innerScale * 0.5}px`;
-
-        const vx = math.clamp(tmpVa.x / this._innerMaxDist, -1, 1);
-        const vy = math.clamp(tmpVa.y / this._innerMaxDist, -1, 1);
-        this._value.set(vx, vy);
-    }
-
-    destroy() {
-        this._base.remove();
-        this._inner.remove();
-    }
-}
-
 class Input extends EventHandler {
     static EVENT_ROTATESTART = 'rotate:start';
 
@@ -195,19 +62,104 @@ class JoystickInput extends Input {
     _pointerData = new Map();
 
     /**
-     * @type {JoyStick}
+     * @type {number}
      * @private
      */
-    _joystick = new JoyStick();
+    _scale = 100;
 
-    constructor() {
+    /**
+     * @type {number}
+     * @private
+     */
+    _innerScaleMult = 0.6;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _innerMaxDist = 70;
+
+    /**
+     * @type {HTMLDivElement}
+     * @private
+     */
+    _base;
+
+    /**
+     * @type {HTMLDivElement}
+     * @private
+     */
+    _inner;
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _basePos = new Vec2();
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _innerPos = new Vec2();
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _value = new Vec2();
+
+    /**
+     * @param {object} options - The options.
+     * @param {number} [options.scale] - The scale of the joystick.
+     * @param {number} [options.innerScale] - The inner scale of the joystick.
+     * @param {number} [options.innerMaxDist] - The inner max distance of the joystick.
+     */
+    constructor(options) {
         super();
+
+        this._scale = options.scale ?? this._scale;
+        this._innerScaleMult = options.innerScale ?? this._innerScaleMult;
+        this._innerMaxDist = options.innerMaxDist ?? this._innerMaxDist;
+
+        this._base = document.createElement('div');
+        this._base.id = 'joystick-base';
+        Object.assign(this._base.style, {
+            display: 'none',
+            position: 'absolute',
+            width: `${this._scale}px`,
+            height: `${this._scale}px`,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.5)'
+        });
+
+        this._inner = document.createElement('div');
+        this._inner.id = 'joystick-inner';
+        Object.assign(this._inner.style, {
+            display: 'none',
+            position: 'absolute',
+            width: `${this._scale * this._innerScaleMult}px`,
+            height: `${this._scale * this._innerScaleMult}px`,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+        });
+
+        document.body.append(this._base, this._inner);
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
+    }
 
-        document.body.append(...this._joystick.dom);
+    set hidden(value) {
+        const display = value ? 'none' : 'block';
+        this._base.style.display = display;
+        this._inner.style.display = display;
+        this._value.set(0, 0);
+    }
+
+    get hidden() {
+        return this._base.style.display === 'none';
     }
 
     /**
@@ -225,9 +177,9 @@ class JoystickInput extends Input {
         });
 
         if (left) {
-            this._joystick.hidden = false;
-            this._joystick.setBase(event.clientX, event.clientY);
-            this._joystick.setInner(event.clientX, event.clientY);
+            this.hidden = false;
+            this._setBase(event.clientX, event.clientY);
+            this._setInner(event.clientX, event.clientY);
         } else {
             this.fire(Input.EVENT_ROTATESTART, event.clientX, event.clientY);
         }
@@ -250,7 +202,7 @@ class JoystickInput extends Input {
         data.y = event.clientY;
 
         if (left) {
-            this._joystick.setInner(event.clientX, event.clientY);
+            this._setInner(event.clientX, event.clientY);
         } else {
             this.fire(Input.EVENT_ROTATEMOVE, event.movementX, event.movementY);
         }
@@ -272,7 +224,7 @@ class JoystickInput extends Input {
         this._pointerData.delete(event.pointerId);
 
         if (left) {
-            this._joystick.hidden = true;
+            this.hidden = true;
         } else {
             this.fire(Input.EVENT_ROTATEEND, event.clientX, event.clientY);
         }
@@ -280,17 +232,49 @@ class JoystickInput extends Input {
     }
 
     /**
+     * @param {number} x - The x position.
+     * @param {number} y - The y position.
+     * @private
+     */
+    _setBase(x, y) {
+        this._basePos.set(x, y);
+        this._base.style.left = `${this._basePos.x - this._scale * 0.5}px`;
+        this._base.style.top = `${this._basePos.y - this._scale * 0.5}px`;
+    }
+
+    /**
+     * @param {number} x - The x position.
+     * @param {number} y - The y position.
+     * @private
+     */
+    _setInner(x, y) {
+        this._innerPos.set(x, y);
+        tmpVa.sub2(this._innerPos, this._basePos);
+        const dist = tmpVa.length();
+        if (dist > this._innerMaxDist) {
+            tmpVa.normalize().mulScalar(this._innerMaxDist);
+            this._innerPos.add2(this._basePos, tmpVa);
+        }
+        this._inner.style.left = `${this._innerPos.x - this._scale * this._innerScaleMult * 0.5}px`;
+        this._inner.style.top = `${this._innerPos.y - this._scale * this._innerScaleMult * 0.5}px`;
+
+        const vx = math.clamp(tmpVa.x / this._innerMaxDist, -1, 1);
+        const vy = math.clamp(tmpVa.y / this._innerMaxDist, -1, 1);
+        this._value.set(vx, vy);
+    }
+
+    /**
      * @returns {number} - The z axis input.
      */
     getZ() {
-        return -this._joystick.value.y;
+        return -this._value.y;
     }
 
     /**
      * @returns {number} - The x axis input.
      */
     getX() {
-        return this._joystick.value.x;
+        return this._value.x;
     }
 
     /**
@@ -326,7 +310,9 @@ class JoystickInput extends Input {
 
     destroy() {
         this.detach();
-        this._joystick.destroy();
+
+        this._base.remove();
+        this._inner.remove();
     }
 }
 
