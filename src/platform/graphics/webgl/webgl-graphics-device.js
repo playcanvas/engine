@@ -866,6 +866,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (this.maxTextures <= 8) {
             this.supportsAreaLights = false;
         }
+
+        this.initCapsDefines();
     }
 
     /**

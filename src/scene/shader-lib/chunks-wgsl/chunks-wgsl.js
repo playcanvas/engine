@@ -71,8 +71,10 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import iridescencePS from './standard/frag/iridescence.js';
 // import iridescenceThicknessPS from './standard/frag/iridescenceThickness.js';
 // import iorPS from './standard/frag/ior.js';
+// import lightDeclarationPS from './lit/frag/lightDeclaration.js';
 // import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 // import lightDirPointPS from './lit/frag/lightDirPoint.js';
+// import lightingPS from './lit/frag/lighting/lighting.js';
 // import lightmapAddPS from './lit/frag/lightmapAdd.js';
 // import lightmapDirAddPS from './lit/frag/lightmapDirAdd.js';
 // import lightmapDirPS from './standard/frag/lightmapDir.js';
@@ -159,13 +161,12 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import screenDepthPS from './common/frag/screenDepth.js';
 // import shadowCascadesPS from './lit/frag/shadowCascades.js';
 // import shadowEVSMPS from './lit/frag/shadowEVSM.js';
-// import shadowEVSMnPS from './lit/frag/shadowEVSMn.js';
+// import shadowPCF1PS from './lit/frag/shadowPCF1.js';
+// import shadowPCF3PS from './lit/frag/shadowPCF3.js';
+// import shadowPCF5PS from './lit/frag/shadowPCF5.js';
 // import shadowPCSSPS from './lit/frag/shadowPCSS.js';
 // import shadowSampleCoordPS from './lit/frag/shadowSampleCoord.js';
 // import shadowSoftPS from './lit/frag/shadowSoft.js';
-// import shadowStandardPS from './lit/frag/shadowStandard.js';
-// import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
-// import shadowVSM_commonPS from './lit/frag/shadowVSM_common.js';
 // import skinBatchVS from './common/vert/skinBatch.js';
 // import skinVS from './common/vert/skin.js';
 import skyboxPS from './skybox/frag/skybox.js';
@@ -283,8 +284,10 @@ const shaderChunksWGSL = {
     // iridescencePS,
     // iridescenceThicknessPS,
     // iorPS,
+    // lightDeclarationPS,
     // lightDiffuseLambertPS,
     // lightDirPointPS,
+    // lightingPS,
     // lightmapAddPS,
     // lightmapDirAddPS,
     // lightmapDirPS,
@@ -371,13 +374,12 @@ const shaderChunksWGSL = {
     // screenDepthPS,
     // shadowCascadesPS,
     // shadowEVSMPS,
-    // shadowEVSMnPS,
+    // shadowPCF1PS,
+    // shadowPCF3PS
+    // shadowPCF5PS,
     // shadowPCSSPS,
     // shadowSampleCoordPS,
     // shadowSoftPS,
-    // shadowStandardPS,
-    // shadowStandardGL2PS,
-    // shadowVSM_commonPS,
     // skinBatchVS,
     // skinVS,
     skyboxPS,

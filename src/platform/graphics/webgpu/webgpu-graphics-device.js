@@ -172,6 +172,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // WGSL features
         const wgslFeatures = navigator.gpu.wgslLanguageFeatures;
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
+
+        this.initCapsDefines();
     }
 
     async initWebGpu(glslangUrl, twgslUrl) {

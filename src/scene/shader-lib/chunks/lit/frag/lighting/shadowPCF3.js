@@ -48,14 +48,6 @@ float getShadowSpotPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 sh
     return _getShadowPCF3x3(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams.xyz);
 }
 
-float getShadowPCF1x1(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
-    return textureShadow(shadowMap, shadowCoord);
-}
-
-float getShadowSpotPCF1x1(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
-    return textureShadow(shadowMap, shadowCoord);
-}
-
 // ----- Omni Sampling -----
 
 #ifndef WEBGPU
@@ -77,11 +69,6 @@ float getShadowPointPCF3x3(samplerCubeShadow shadowMap, vec4 shadowParams, vec3 
     shadows.w = texture(shadowMap, vec4(tc + vec3( z,-z,-z), shadowZ));
 
     return dot(shadows, vec4(0.25));
-}
-
-float getShadowPointPCF1x1(samplerCubeShadow shadowMap, vec3 shadowCoord, vec4 shadowParams, vec3 lightDir) {
-    float shadowZ = length(lightDir) * shadowParams.w + shadowParams.z;
-    return texture(shadowMap, vec4(lightDir, shadowZ));
 }
 
 float getShadowPointPCF3x3(samplerCubeShadow shadowMap, vec3 shadowCoord, vec4 shadowParams, vec3 lightDir) {
