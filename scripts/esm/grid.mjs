@@ -175,11 +175,18 @@ class Grid extends Script {
      */
     _resolution = Grid.RESOLUTION_HIGH;
 
+    createMeshInstance() {
+        // create mesh
+        const mesh = Mesh.fromGeometry(this.app.graphicsDevice, new PlaneGeometry());
+        this._meshInstance = new MeshInstance(mesh, this._material);
+    }
+
     initialize() {
 
         // ensure the entity has a render component
         if (!this.entity.render) {
-            this.entity.addComponent('render');
+            const render = this.entity.addComponent('render');
+            render.castShadows = false;
         }
 
         // create shader material
@@ -196,9 +203,7 @@ class Grid extends Script {
         this._material.cull = CULLFACE_NONE;
         this._material.update();
 
-        // create mesh
-        const mesh = Mesh.fromGeometry(this.app.graphicsDevice, new PlaneGeometry());
-        this._meshInstance = new MeshInstance(mesh, this._material);
+        this.createMeshInstance();
         this.entity.render.meshInstances = [this._meshInstance];
 
         // set the initial values
@@ -222,9 +227,14 @@ class Grid extends Script {
 
         // enable/disable the mesh instance
         this.on('enable', () => {
+            if (!this.entity.render) return;
+            if (!this._meshInstance.mesh) {
+                this.createMeshInstance();
+            }
             this.entity.render.meshInstances = [this._meshInstance];
         });
         this.on('disable', () => {
+            if (!this.entity.render) return;
             this.entity.render.meshInstances = [];
         });
     }
