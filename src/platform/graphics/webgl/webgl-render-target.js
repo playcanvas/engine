@@ -121,6 +121,12 @@ class WebglRenderTarget {
 
         } else {
 
+            Debug.call(() => {
+                if (target.width <= 0 || target.height <= 0) {
+                    Debug.warnOnce(`Invalid render target size: ${target.width} x ${target.height}`, target);
+                }
+            });
+
             // ##### Create main FBO #####
             this._glFrameBuffer = gl.createFramebuffer();
             device.setFramebuffer(this._glFrameBuffer);
@@ -199,12 +205,6 @@ class WebglRenderTarget {
 
         // ##### Create MSAA FBO (WebGL2 only) #####
         if (device.isWebGL2 && target._samples > 1) {
-
-            Debug.call(() => {
-                if (target.width <= 0 || target.height <= 0) {
-                    Debug.warnOnce(`Invalid render target size: ${target.width} x ${target.height}`, target);
-                }
-            });
 
             // Use previous FBO for resolves
             this._glResolveFrameBuffer = this._glFrameBuffer;
