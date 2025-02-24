@@ -63,7 +63,7 @@ class KeyboardMouseInput extends Input {
      */
     _onWheel(event) {
         event.preventDefault();
-        this.fire('wheel', event.deltaY);
+        this.add('zoom', event.deltaY);
     }
 
     /**
@@ -97,7 +97,8 @@ class KeyboardMouseInput extends Input {
         data.y = event.clientY;
 
         this.fire(Input.EVENT_ROTATEMOVE, event.movementX, event.movementY);
-
+        this.add('rotate:x', event.movementX);
+        this.add('rotate:y', event.movementY);
     }
 
     /**
@@ -114,7 +115,6 @@ class KeyboardMouseInput extends Input {
         this._pointerData.delete(event.pointerId);
 
         this.fire(Input.EVENT_ROTATEEND, event.clientX, event.clientY);
-
     }
 
     /**

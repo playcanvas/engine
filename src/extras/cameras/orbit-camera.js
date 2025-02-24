@@ -117,6 +117,20 @@ class OrbitCamera extends EventHandler {
     moveDamping = 0.98;
 
     /**
+     * The zoom damping. A higher value means more damping. A value of 0 means no damping.
+     *
+     * @type {number}
+     */
+    zoomDamping = 0.98;
+
+    /**
+     * The zoom speed relative to the scene size.
+     *
+     * @type {number}
+     */
+    zoomSpeed = 0.01;
+
+    /**
      * @param {number} x - The x value.
      * @param {number} y - The y value.
      * @private
@@ -124,6 +138,14 @@ class OrbitCamera extends EventHandler {
     _look(x, y) {
         this._targetAngles.x -= (y || 0) * this.rotateSpeed;
         this._targetAngles.y -= (x || 0) * this.rotateSpeed;
+    }
+
+    /**
+     * @param {number} delta - The delta value.
+     * @private
+     */
+    _zoom(delta) {
+        this._targetZoomDist += delta * this.zoomSpeed;
     }
 
     /**
@@ -138,7 +160,6 @@ class OrbitCamera extends EventHandler {
         this._angles.y = math.lerpAngle(this._angles.y % 360, this._targetAngles.y % 360, ar);
         this._position.lerp(this._position, this._targetPosition, am);
         this._rootTransform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
-        this._transform.mul2(this._rootTransform, this._orbitTransform);
     }
 
     /**
@@ -147,6 +168,23 @@ class OrbitCamera extends EventHandler {
     _cancelSmoothTransform() {
         this._targetPosition.copy(this._position);
         this._targetAngles.copy(this._angles);
+    }
+
+    /**
+     * @param {number} dt - The delta time.
+     * @private
+     */
+    _smoothZoom(dt) {
+        const a = dt === -1 ? 1 : lerpRate(this.zoomDamping, dt);
+        this._zoomDist = math.lerp(this._zoomDist, this._targetZoomDist, a);
+        this._orbitTransform.setTranslate(0, 0, this._zoomDist);
+    }
+
+    /**
+     * @private
+     */
+    _cancelSmoothZoom() {
+        this._targetZoomDist = this._zoomDist;
     }
 
     /**
@@ -159,7 +197,7 @@ class OrbitCamera extends EventHandler {
             this.detach();
         }
         this._input = input;
-        this._evts.push(this._input.on(Input.EVENT_ROTATEMOVE, this._look, this));
+        // this._evts.push(this._input.on(Input.EVENT_ROTATEMOVE, this._look, this));
 
         this._position.copy(point);
         this._targetPosition.copy(this._position);
@@ -170,9 +208,11 @@ class OrbitCamera extends EventHandler {
         this._angles.set(-elev, azim, 0);
         this._targetAngles.copy(this._angles);
 
-        this._zoomDist = tmpV1.length();
-        this._orbitTransform.setTranslate(0, 0, this._zoomDist);
         this._rootTransform.setTRS(point, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
+
+        this._zoomDist = tmpV1.length();
+        this._targetZoomDist = this._zoomDist;
+        this._orbitTransform.setTranslate(0, 0, this._zoomDist);
     }
 
     detach() {
@@ -184,6 +224,7 @@ class OrbitCamera extends EventHandler {
         this._input = null;
 
         this._cancelSmoothTransform();
+        this._cancelSmoothZoom();
     }
 
     /**
@@ -195,9 +236,15 @@ class OrbitCamera extends EventHandler {
             return this._transform;
         }
 
-        this._smoothTransform(dt);
+        this._look(this._input.get('rotate:x'), this._input.get('rotate:y'));
+        this._zoom(this._input.get('zoom'));
 
-        return this._transform;
+        this._smoothTransform(dt);
+        this._smoothZoom(dt);
+
+        this._input.clear();
+
+        return this._transform.mul2(this._rootTransform, this._orbitTransform);
     }
 
     destroy() {
