@@ -163,7 +163,7 @@ class Shader {
 
     /** @ignore */
     get label() {
-        return `Shader Id ${this.id} ${this.name}`;
+        return `Shader Id ${this.id} (${this.definition.shaderLanguage === SHADERLANGUAGE_WGSL ? 'WGSL' : 'GLSL'}) ${this.name}`;
     }
 
     /**
