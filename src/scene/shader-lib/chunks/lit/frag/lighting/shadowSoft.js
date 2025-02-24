@@ -32,35 +32,29 @@ void prepareDiskConstants(out DiskData data, int sampleCount, int numRings, floa
     data.invNumSamples = 1.0 / float(sampleCount);
     data.angleStep = pi2 * float(numRings) * data.invNumSamples;
     data.initialAngle = randomSeed * pi2;
-    data.currentRadius = data.invNumSamples;
 #ifdef USE_POISSON
+    data.currentRadius = data.invNumSamples;
     data.currentAngle = data.initialAngle;
+#else
+    data.currentRadius = 0.0;
 #endif
 }
 
 #define GOLDEN_ANGLE 2.399963
 
-vec2 rotateVector(vec2 v, vec2 rot) {
-    return vec2(
-        v.x * rot.x - v.y * rot.y,
-        v.x * rot.y + v.y * rot.x
-    );
-}
-
 vec2 generateDiskSample(inout DiskData data) {
 #ifdef USE_POISSON
-    vec2 offset = vec2(cos(data.currentAngle), sin(data.currentAngle)) * data.currentRadius;
-    data.currentRadius += data.invNumSamples; // expand radius each sample
-    data.currentAngle  += data.angleStep;     // rotate angle
+    vec2 offset = vec2(cos(data.currentAngle), sin(data.currentAngle)) * pow(data.currentRadius, 0.75);
+    data.currentRadius += data.invNumSamples;
+    data.currentAngle += data.angleStep;
     return offset;
 #else
-    float i = (data.currentRadius / data.invNumSamples) - 1.0;
-    float r = sqrt((i + 0.5) * data.invNumSamples);
-    float theta = i * GOLDEN_ANGLE + data.initialAngle;
+    float r = sqrt((data.currentRadius + 0.5) * data.invNumSamples);
+    float theta = data.currentRadius * GOLDEN_ANGLE + data.initialAngle;
 
     vec2 offset = vec2(cos(theta), sin(theta)) * r;
 
-    data.currentRadius += data.invNumSamples;
+    data.currentRadius += 1.0;
     return offset;
 #endif
 }
@@ -96,7 +90,6 @@ float PCSSFilter(TEXTURE_ACCEPT(shadowMap), vec2 uv, float receiverDepth, int sh
     for (int i = 0; i < shadowSamples; i++) {
         vec2 offsetUV = generateDiskSample(diskData) * filterRadius;
         float depth = texture2DLod(shadowMap, uv + offsetUV, 0.0).r;
-        // step(receiverDepth, sampleDepth) => 1.0 if lit, else 0.0
         sum += step(receiverDepth, depth);
     }
     return sum / float(shadowSamples);
