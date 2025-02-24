@@ -12,8 +12,6 @@ import {
     Vec2
 } from 'playcanvas';
 
-/** @import { AppBase, Entity } from 'playcanvas' */
-
 const tmpVa = new Vec2();
 
 const EPISILON = 1e-3;
@@ -140,6 +138,12 @@ class Grid extends Script {
     static RESOLUTION_HIGH = 2;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _addedRender = false;
+
+    /**
      * @type {ShaderMaterial}
      * @private
      */
@@ -179,7 +183,10 @@ class Grid extends Script {
 
         // ensure the entity has a render component
         if (!this.entity.render) {
-            this.entity.addComponent('render');
+            this.entity.addComponent('render', {
+                castShadows: false
+            });
+            this._addedRender = true;
         }
 
         // create shader material
@@ -222,11 +229,13 @@ class Grid extends Script {
 
         // enable/disable the mesh instance
         this.on('enable', () => {
-            this.entity.render.meshInstances = [this._meshInstance];
+            this._meshInstance.visible = true;
         });
         this.on('disable', () => {
-            this.entity.render.meshInstances = [];
+            this._meshInstance.visible = false;
         });
+
+        this.on('destroy', this.destroy, this);
     }
 
     /**
@@ -319,6 +328,14 @@ class Grid extends Script {
 
     get resolution() {
         return this._resolution;
+    }
+
+    destroy() {
+        this.entity.render.meshInstances = [];
+
+        if (this._addedRender) {
+            this.entity.removeComponent('render');
+        }
     }
 }
 

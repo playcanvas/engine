@@ -105,10 +105,10 @@ class Preprocessor {
             }
         });
 
-        // extract defines with name starting with __INJECT_
+        // extract defines with name starting with _INJECT_
         const injectDefines = new Map();
         defines.forEach((value, key) => {
-            if (key.startsWith('__INJECT_')) {
+            if (key.startsWith('_INJECT_')) {
                 injectDefines.set(key, value);
             }
         });

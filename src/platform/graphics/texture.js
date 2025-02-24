@@ -282,11 +282,12 @@ class Texture {
         // #endif
 
         this._levels = options.levels;
+        const upload = !!options.levels;
         if (!this._levels) {
             this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
         }
 
-        this.recreateImpl();
+        this.recreateImpl(upload);
 
         // track the texture
         graphicsDevice.textures.push(this);
@@ -327,7 +328,7 @@ class Texture {
         }
     }
 
-    recreateImpl() {
+    recreateImpl(upload = true) {
 
         const { device } = this;
 
@@ -338,7 +339,10 @@ class Texture {
         // create new
         this.impl = device.createTextureImpl(this);
         this.dirtyAll();
-        this.upload();
+
+        if (upload) {
+            this.upload();
+        }
     }
 
     /**
