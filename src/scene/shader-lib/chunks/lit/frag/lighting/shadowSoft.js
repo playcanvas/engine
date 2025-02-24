@@ -20,9 +20,11 @@ struct DiskData {
     float invNumSamples;
     float angleStep;
     float initialAngle;
-    float currentRadius;
 #ifdef USE_POISSON
+    float currentRadius;
     float currentAngle;
+#else
+    float currentPointId;
 #endif
 };
 
@@ -36,7 +38,7 @@ void prepareDiskConstants(out DiskData data, int sampleCount, int numRings, floa
     data.currentRadius = data.invNumSamples;
     data.currentAngle = data.initialAngle;
 #else
-    data.currentRadius = 0.0;
+    data.currentPointId = 0.0;
 #endif
 }
 
@@ -49,12 +51,12 @@ vec2 generateDiskSample(inout DiskData data) {
     data.currentAngle += data.angleStep;
     return offset;
 #else
-    float r = sqrt((data.currentRadius + 0.5) * data.invNumSamples);
-    float theta = data.currentRadius * GOLDEN_ANGLE + data.initialAngle;
+    float r = sqrt((data.currentPointId + 0.5) * data.invNumSamples);
+    float theta = data.currentPointId * GOLDEN_ANGLE + data.initialAngle;
 
     vec2 offset = vec2(cos(theta), sin(theta)) * r;
 
-    data.currentRadius += 1.0;
+    data.currentPointId += 1.0;
     return offset;
 #endif
 }
