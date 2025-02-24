@@ -104,13 +104,6 @@ class OrbitCamera extends EventHandler {
     rotateDamping = 0.98;
 
     /**
-     * The fly move speed.
-     *
-     * @type {number}
-     */
-    moveSpeed = 20;
-
-    /**
      * The movement damping. A higher value means more damping. A value of 0 means no damping.
      *
      * @type {number}

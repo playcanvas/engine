@@ -53,7 +53,7 @@ class KeyboardMouseInput extends Input {
         this._onKeyUp = this._onKeyUp.bind(this);
     }
 
-    get speedMult() {
+    get moveMult() {
         return this._key.sprint ? this.sprintMult : this._key.crouch ? this.crouchMult : 1;
     }
 
@@ -247,9 +247,9 @@ class KeyboardMouseInput extends Input {
     }
 
     collect() {
-        const x = (this._key.right - this._key.left) * this.speedMult;
-        const y = (this._key.up - this._key.down) * this.speedMult;
-        const z = (this._key.forward - this._key.backward) * this.speedMult;
+        const x = (this._key.right - this._key.left) * this.moveMult;
+        const y = (this._key.up - this._key.down) * this.moveMult;
+        const z = (this._key.forward - this._key.backward) * this.moveMult;
         this.add('translate:x', x);
         this.add('translate:y', y);
         this.add('translate:z', z);
