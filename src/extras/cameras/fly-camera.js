@@ -4,9 +4,11 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-import { Input } from '../inputs/input.js';
-
-/** @import { EventHandle } from 'playcanvas' */
+/**
+ * @import { EventHandle } from 'playcanvas'
+ *
+ * @import { Input } from '../inputs/input.js'
+ */
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -103,22 +105,21 @@ class FlyCamera extends EventHandler {
     }
 
     /**
+     * @param {number} x - The x value.
+     * @param {number} y - The y value.
+     * @param {number} z - The z value.
      * @param {number} dt - The delta time.
      * @private
      */
-    _move(dt) {
-        if (!this._input) {
-            return;
-        }
-
+    _move(x, y, z, dt) {
         const back = this._transform.getZ();
         const right = this._transform.getX();
         const up = this._transform.getY();
 
         tmpV1.set(0, 0, 0);
-        tmpV1.sub(tmpV2.copy(back).mulScalar(this._input.translation.z));
-        tmpV1.add(tmpV2.copy(right).mulScalar(this._input.translation.x));
-        tmpV1.add(tmpV2.copy(up).mulScalar(this._input.translation.y));
+        tmpV1.sub(tmpV2.copy(back).mulScalar(z));
+        tmpV1.add(tmpV2.copy(right).mulScalar(x));
+        tmpV1.add(tmpV2.copy(up).mulScalar(y));
         tmpV1.mulScalar(this.moveSpeed * dt);
 
         this._targetPosition.add(tmpV1);
@@ -155,7 +156,7 @@ class FlyCamera extends EventHandler {
             this.detach();
         }
         this._input = input;
-        this._evts.push(this._input.on(Input.EVENT_ROTATEMOVE, this._look, this));
+        // this._evts.push(this._input.on(Input.EVENT_ROTATEMOVE, this._look, this));
 
         this._position.copy(transform.getTranslation());
         this._targetPosition.copy(this._position);
@@ -186,7 +187,10 @@ class FlyCamera extends EventHandler {
             return this._transform;
         }
 
-        this._move(dt);
+        this._input.collect();
+        this._look(this._input.get('rotate:x'), this._input.get('rotate:y'));
+        this._move(this._input.get('translate:x'), this._input.get('translate:y'), this._input.get('translate:z'), dt);
+        this._input.flush();
 
         this._smoothTransform(dt);
 

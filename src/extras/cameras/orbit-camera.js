@@ -4,12 +4,13 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-import { Input } from '../inputs/input.js';
-
-/** @import { EventHandle } from 'playcanvas' */
+/**
+ * @import { EventHandle } from 'playcanvas'
+ *
+ * @import { Input } from '../inputs/input.js'
+ */
 
 const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
 /**
@@ -236,13 +237,13 @@ class OrbitCamera extends EventHandler {
             return this._transform;
         }
 
+        this._input.collect();
         this._look(this._input.get('rotate:x'), this._input.get('rotate:y'));
         this._zoom(this._input.get('zoom'));
+        this._input.flush();
 
         this._smoothTransform(dt);
         this._smoothZoom(dt);
-
-        this._input.clear();
 
         return this._transform.mul2(this._rootTransform, this._orbitTransform);
     }

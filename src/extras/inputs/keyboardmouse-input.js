@@ -119,7 +119,7 @@ class KeyboardMouseInput extends Input {
 
     /**
      * @private
-     * @param {MouseEvent} event - The wheel event.
+     * @param {MouseEvent} event - The mouse event.
      */
     _onContextMenu(event) {
         event.preventDefault();
@@ -161,8 +161,6 @@ class KeyboardMouseInput extends Input {
                 this._key.crouch = 1;
                 break;
         }
-
-        this._updateTranslation();
     }
 
     /**
@@ -201,19 +199,6 @@ class KeyboardMouseInput extends Input {
                 this._key.crouch = 0;
                 break;
         }
-
-        this._updateTranslation();
-    }
-
-    /**
-     * @private
-     */
-    _updateTranslation() {
-        this.translation.set(
-            (this._key.right - this._key.left) * this.speedMult,
-            (this._key.up - this._key.down) * this.speedMult,
-            (this._key.forward - this._key.backward) * this.speedMult
-        );
     }
 
     /**
@@ -259,6 +244,15 @@ class KeyboardMouseInput extends Input {
             sprint: 0,
             crouch: 0
         };
+    }
+
+    collect() {
+        const x = (this._key.right - this._key.left) * this.speedMult;
+        const y = (this._key.up - this._key.down) * this.speedMult;
+        const z = (this._key.forward - this._key.backward) * this.speedMult;
+        this.add('translate:x', x);
+        this.add('translate:y', y);
+        this.add('translate:z', z);
     }
 
     destroy() {

@@ -61,6 +61,12 @@ class JoystickInput extends Input {
     _innerPos = new Vec2();
 
     /**
+     * @type {Vec2}
+     * @private
+     */
+    _value = new Vec2();
+
+    /**
      * @param {object} options - The options.
      * @param {number} [options.scale] - The scale of the joystick.
      * @param {number} [options.innerScale] - The inner scale of the joystick.
@@ -156,6 +162,8 @@ class JoystickInput extends Input {
             this._setInner(event.clientX, event.clientY);
         } else {
             this.fire(Input.EVENT_ROTATEMOVE, event.movementX, event.movementY);
+            this.add('rotate:x', event.movementX);
+            this.add('rotate:y', event.movementY);
         }
 
     }
@@ -176,6 +184,7 @@ class JoystickInput extends Input {
 
         if (left) {
             this.hidden = true;
+            this._value.set(0, 0);
         } else {
             this.fire(Input.EVENT_ROTATEEND, event.clientX, event.clientY);
         }
@@ -211,7 +220,7 @@ class JoystickInput extends Input {
 
         const vx = math.clamp(tmpVa.x / this._innerMaxDist, -1, 1);
         const vy = math.clamp(tmpVa.y / this._innerMaxDist, -1, 1);
-        this.translation.set(vx, 0, -vy);
+        this._value.set(vx, vy);
     }
 
     /**
@@ -236,6 +245,11 @@ class JoystickInput extends Input {
         this._element.removeEventListener('pointerup', this._onPointerUp);
 
         this._pointerData.clear();
+    }
+
+    collect() {
+        this.add('translate:x', this._value.x);
+        this.add('translate:z', -this._value.y);
     }
 
     destroy() {

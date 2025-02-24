@@ -10,17 +10,17 @@ class Input extends EventHandler {
 
     translation = new Vec3();
 
-    _state = new Map();
+    _deltas = new Map();
 
     /**
      * @param {string} name - The name of the state.
-     * @param {number} delta - The delta to add.
+     * @param {number} val - The delta to add.
      */
-    add(name, delta) {
-        if (this._state.has(name)) {
-            this._state.set(name, this._state.get(name) + delta);
+    add(name, val) {
+        if (this._deltas.has(name)) {
+            this._deltas.set(name, this._deltas.get(name) + val);
         } else {
-            this._state.set(name, delta);
+            this._deltas.set(name, val);
         }
     }
 
@@ -29,11 +29,14 @@ class Input extends EventHandler {
      * @returns {number} - The state value.
      */
     get(name) {
-        return this._state.get(name) || 0;
+        return this._deltas.get(name) || 0;
     }
 
-    clear() {
-        this._state.clear();
+    collect() {
+    }
+
+    flush() {
+        this._deltas.clear();
     }
 }
 

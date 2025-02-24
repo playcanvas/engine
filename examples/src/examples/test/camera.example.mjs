@@ -107,10 +107,10 @@ if (pc.platform.mobile) {
 }
 input.attach(canvas);
 
-const cam = new pc.OrbitCamera();
+const cam = new pc.FlyCamera();
 cam.rotateSpeed = 0.3;
 cam.rotateDamping = 0.95;
-cam.attach(input, camera.getWorldTransform(), calcEntityAABB(new pc.BoundingBox(), statue).center);
+cam.attach(input, camera.getWorldTransform());
 
 app.on('update', (dt) => {
     if (app.xr?.active) {
