@@ -34,6 +34,7 @@ export { KeyboardMouseInput } from './inputs/keyboardmouse-input.js';
 
 // CAMERAS
 export { FlyCamera } from './cameras/fly-camera.js';
+export { OrbitCamera } from './cameras/orbit-camera.js';
 
 // GIZMOS
 export {

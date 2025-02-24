@@ -21,7 +21,7 @@ const tmpQ1 = new Quat();
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
-class FlyCamera extends EventHandler {
+class OrbitCamera extends EventHandler {
     /**
      * @type {Input | null}
      * @private
@@ -57,6 +57,30 @@ class FlyCamera extends EventHandler {
      * @type {Vec3}
      */
     _angles = new Vec3();
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _targetZoomDist = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _zoomDist = 0;
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _orbitTransform = new Mat4();
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _rootTransform = new Mat4();
 
     /**
      * @type {Mat4}
@@ -106,28 +130,6 @@ class FlyCamera extends EventHandler {
      * @param {number} dt - The delta time.
      * @private
      */
-    _move(dt) {
-        if (!this._input) {
-            return;
-        }
-
-        const back = this._transform.getZ();
-        const right = this._transform.getX();
-        const up = this._transform.getY();
-
-        tmpV1.set(0, 0, 0);
-        tmpV1.sub(tmpV2.copy(back).mulScalar(this._input.translation.z));
-        tmpV1.add(tmpV2.copy(right).mulScalar(this._input.translation.x));
-        tmpV1.add(tmpV2.copy(up).mulScalar(this._input.translation.y));
-        tmpV1.mulScalar(this.moveSpeed * dt);
-
-        this._targetPosition.add(tmpV1);
-    }
-
-    /**
-     * @param {number} dt - The delta time.
-     * @private
-     */
     _smoothTransform(dt) {
         const ar = dt === -1 ? 1 : lerpRate(this.rotateDamping, dt);
         const am = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
@@ -135,7 +137,8 @@ class FlyCamera extends EventHandler {
         this._angles.x = math.lerpAngle(this._angles.x % 360, this._targetAngles.x % 360, ar);
         this._angles.y = math.lerpAngle(this._angles.y % 360, this._targetAngles.y % 360, ar);
         this._position.lerp(this._position, this._targetPosition, am);
-        this._transform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
+        this._rootTransform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
+        this._transform.mul2(this._rootTransform, this._orbitTransform);
     }
 
     /**
@@ -149,21 +152,27 @@ class FlyCamera extends EventHandler {
     /**
      * @param {Input} input - The input.
      * @param {Mat4} transform - The transform.
+     * @param {Vec3} [point] - The point.
      */
-    attach(input, transform) {
+    attach(input, transform, point = Vec3.ZERO) {
         if (this._input) {
             this.detach();
         }
         this._input = input;
         this._evts.push(this._input.on(Input.EVENT_ROTATEMOVE, this._look, this));
 
-        this._position.copy(transform.getTranslation());
+        this._position.copy(point);
         this._targetPosition.copy(this._position);
 
-        this._angles.copy(transform.getEulerAngles());
+        tmpV1.sub2(transform.getTranslation(), point);
+        const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
+        const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
+        this._angles.set(-elev, azim, 0);
         this._targetAngles.copy(this._angles);
 
-        this._transform.copy(transform);
+        this._zoomDist = tmpV1.length();
+        this._orbitTransform.setTranslate(0, 0, this._zoomDist);
+        this._rootTransform.setTRS(point, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
     }
 
     detach() {
@@ -186,8 +195,6 @@ class FlyCamera extends EventHandler {
             return this._transform;
         }
 
-        this._move(dt);
-
         this._smoothTransform(dt);
 
         return this._transform;
@@ -198,4 +205,4 @@ class FlyCamera extends EventHandler {
     }
 }
 
-export { FlyCamera };
+export { OrbitCamera };

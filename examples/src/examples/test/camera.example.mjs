@@ -81,6 +81,24 @@ camera.setPosition(0, 20, 30);
 camera.setEulerAngles(-20, 0, 0);
 app.root.addChild(camera);
 
+/**
+ * Calculate the bounding box of an entity.
+ *
+ * @param {pc.BoundingBox} bbox - The bounding box.
+ * @param {pc.Entity} entity - The entity.
+ * @returns {pc.BoundingBox} The bounding box.
+ */
+const calcEntityAABB = (bbox, entity) => {
+    bbox.center.set(0, 0, 0);
+    bbox.halfExtents.set(0, 0, 0);
+    entity.findComponents('render').forEach((render) => {
+        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
+            bbox.add(mi.aabb);
+        });
+    });
+    return bbox;
+};
+
 let input;
 if (pc.platform.mobile) {
     input = new pc.JoystickInput();
@@ -89,24 +107,24 @@ if (pc.platform.mobile) {
 }
 input.attach(canvas);
 
-const flyCamera = new pc.FlyCamera();
-flyCamera.rotateSpeed = 0.3;
-flyCamera.rotateDamping = 0.95;
-flyCamera.attach(input, camera.getWorldTransform());
+const cam = new pc.OrbitCamera();
+cam.rotateSpeed = 0.3;
+cam.rotateDamping = 0.95;
+cam.attach(input, camera.getWorldTransform(), calcEntityAABB(new pc.BoundingBox(), statue).center);
 
 app.on('update', (dt) => {
     if (app.xr?.active) {
         return;
     }
 
-    const mat = flyCamera.update(dt);
+    const mat = cam.update(dt);
     camera.setPosition(mat.getTranslation());
     camera.setEulerAngles(mat.getEulerAngles());
 });
 
 app.on('destroy', () => {
     input.destroy();
-    flyCamera.destroy();
+    cam.destroy();
 });
 
 export { app };
