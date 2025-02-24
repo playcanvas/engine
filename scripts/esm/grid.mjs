@@ -138,6 +138,12 @@ class Grid extends Script {
     static RESOLUTION_HIGH = 2;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _addedRender = false;
+
+    /**
      * @type {ShaderMaterial}
      * @private
      */
@@ -180,6 +186,7 @@ class Grid extends Script {
             this.entity.addComponent('render', {
                 castShadows: false
             });
+            this._addedRender = true;
         }
 
         // create shader material
@@ -325,6 +332,10 @@ class Grid extends Script {
 
     destroy() {
         this.entity.render.meshInstances = [];
+
+        if (this._addedRender) {
+            this.entity.removeComponent('render');
+        }
     }
 }
 
