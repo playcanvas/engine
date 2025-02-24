@@ -1213,14 +1213,14 @@ class LitShader {
                         let shadowMatrix = `light${i}_shadowMatrix`;
                         if (lightType === LIGHTTYPE_DIRECTIONAL && light.numCascades > 1) {
                             // select shadow cascade matrix
-                            backend.append(`int cascadeIndex = getShadowCascadeIndex(light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount);`);
+                            backend.append(`int cascadeIndex${i} = getShadowCascadeIndex(light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount);`);
 
                             if (light.cascadeBlend > 0) {
-                                backend.append(`cascadeIndex = ditherShadowCascadeIndex(cascadeIndex, light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount, light${i}_shadowCascadeBlend);`);
+                                backend.append(`cascadeIndex${i} = ditherShadowCascadeIndex(cascadeIndex${i}, light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount, light${i}_shadowCascadeBlend);`);
                             }
 
-                            backend.append(`mat4 cascadeShadowMat = light${i}_shadowMatrixPalette[cascadeIndex];`);
-                            shadowMatrix = 'cascadeShadowMat';
+                            backend.append(`mat4 cascadeShadowMat${i} = light${i}_shadowMatrixPalette[cascadeIndex${i}];`);
+                            shadowMatrix = `cascadeShadowMat${i}`;
                         }
 
                         backend.append(`    dShadowCoord = getShadowSampleCoord${i}(${shadowMatrix}, light${i}_shadowParams, vPositionW, dLightPosW, dLightDirW, dLightDirNormW, dVertexNormalW);`);
