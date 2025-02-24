@@ -177,7 +177,9 @@ class Grid extends Script {
 
         // ensure the entity has a render component
         if (!this.entity.render) {
-            this.entity.addComponent('render');
+            this.entity.addComponent('render', {
+                castShadows: false
+            });
         }
 
         // create shader material
