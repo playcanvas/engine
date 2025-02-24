@@ -22,7 +22,7 @@ const UNDEF = /undef[ \t]+([^\n]+)\r?(?:\n|$)/g;
 const IF = /(ifdef|ifndef|if)[ \t]*([^\r\n]+)\r?\n/g;
 
 // #endif/#else or #elif EXPRESSION
-const ENDIF = /(endif|else|elif)([ \t][^\r\n]+)?\r?(?:\n|$)/g;
+const ENDIF = /(endif|else|elif)(?:[ \t]+([^\r\n]*))?\r?\n?/g;
 
 // identifier
 const IDENTIFIER = /([\w-]+)/;
@@ -401,6 +401,8 @@ class Preprocessor {
                         // cut out the include line and replace it with the included string
                         let includeSource = includes?.get(identifier);
                         if (includeSource !== undefined) {
+
+                            includeSource = this.stripComments(includeSource);
 
                             // handle second identifier specifying loop count
                             if (countIdentifier) {
