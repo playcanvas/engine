@@ -54,7 +54,7 @@ vec2 generateDiskSample(inout DiskData data) {
     float r = sqrt((data.currentPointId + 0.5) * data.invNumSamples);
     float theta = data.currentPointId * GOLDEN_ANGLE + data.initialAngle;
 
-    vec2 offset = vec2(cos(theta), sin(theta)) * r;
+    vec2 offset = vec2(cos(theta), sin(theta)) * pow(r, 1.33);
 
     data.currentPointId += 1.0;
     return offset;
