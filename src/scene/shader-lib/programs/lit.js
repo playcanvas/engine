@@ -60,15 +60,19 @@ class ShaderGeneratorLit extends ShaderGenerator {
             ...options.litOptions.chunks
         }));
 
-        const defines = new Map(options.defines);
+        const vDefines = litShader.vDefines;
+        options.defines.forEach((value, key) => vDefines.set(key, value));
+
+        const fDefines = litShader.fDefines;
+        options.defines.forEach((value, key) => fDefines.set(key, value));
 
         definitionOptions.attributes = litShader.attributes;
         definitionOptions.vertexCode = litShader.vshader;
         definitionOptions.vertexIncludes = includes;
-        definitionOptions.vertexDefines = defines;
+        definitionOptions.vertexDefines = vDefines;
         definitionOptions.fragmentCode = litShader.fshader;
         definitionOptions.fragmentIncludes = includes;
-        definitionOptions.fragmentDefines = defines;
+        definitionOptions.fragmentDefines = fDefines;
 
         return ShaderUtils.createDefinition(device, definitionOptions);
     }

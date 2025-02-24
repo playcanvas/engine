@@ -226,6 +226,12 @@ export const LIGHTTYPE_SPOT = 2;
 // private - the number of light types
 export const LIGHTTYPE_COUNT = 3;
 
+export const lightTypeNames = {
+    [LIGHTTYPE_DIRECTIONAL]: 'DIRECTIONAL',
+    [LIGHTTYPE_OMNI]: 'OMNI',
+    [LIGHTTYPE_SPOT]: 'SPOT'
+};
+
 /**
  * Infinitesimally small point light source shape.
  *
@@ -257,6 +263,13 @@ export const LIGHTSHAPE_DISK = 2;
  * @category Graphics
  */
 export const LIGHTSHAPE_SPHERE = 3;
+
+export const lightShapeNames = {
+    [LIGHTSHAPE_PUNCTUAL]: 'PUNCTUAL',
+    [LIGHTSHAPE_RECT]: 'RECT',
+    [LIGHTSHAPE_DISK]: 'DISK',
+    [LIGHTSHAPE_SPHERE]: 'SPHERE'
+};
 
 /**
  * Linear distance falloff model for light attenuation.
@@ -384,15 +397,15 @@ export const SHADOW_PCF5_16F = 9;
  * @ignore
  */
 export const shadowTypeInfo = new Map([
-    [SHADOW_PCF1_32F,    { name: 'PCF1_32F', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF3_32F,    { name: 'PCF3_32F', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF5_32F,    { name: 'PCF5_32F', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF1_16F,    { name: 'PCF1_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_PCF3_16F,    { name: 'PCF3_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_PCF5_16F,    { name: 'PCF5_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_VSM_16F,     { name: 'VSM_16F', format: PIXELFORMAT_RGBA16F, vsm: true }],
-    [SHADOW_VSM_32F,     { name: 'VSM_32F', format: PIXELFORMAT_RGBA32F, vsm: true }],
-    [SHADOW_PCSS_32F,    { name: 'PCSS_32F', format: PIXELFORMAT_R32F, pcss: true }]
+    [SHADOW_PCF1_32F,    { name: 'PCF1_32F', kind: 'PCF1', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF3_32F,    { name: 'PCF3_32F', kind: 'PCF3', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF5_32F,    { name: 'PCF5_32F', kind: 'PCF5', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF1_16F,    { name: 'PCF1_16F', kind: 'PCF1', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_PCF3_16F,    { name: 'PCF3_16F', kind: 'PCF3', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_PCF5_16F,    { name: 'PCF5_16F', kind: 'PCF5', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_VSM_16F,     { name: 'VSM_16F', kind: 'VSM', format: PIXELFORMAT_RGBA16F, vsm: true }],
+    [SHADOW_VSM_32F,     { name: 'VSM_32F', kind: 'VSM', format: PIXELFORMAT_RGBA32F, vsm: true }],
+    [SHADOW_PCSS_32F,    { name: 'PCSS_32F', kind: 'PCSS', format: PIXELFORMAT_R32F, pcss: true }]
 ]);
 
 /**

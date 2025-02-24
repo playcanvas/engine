@@ -400,6 +400,14 @@ class GraphicsDevice extends EventHandler {
      */
     _shadersDirty = false;
 
+    /**
+     * A list of shader defines based on the capabilities of the device.
+     *
+     * @type {Map<string, string>}
+     * @ignore
+     */
+    capsDefines = new Map();
+
     static EVENT_RESIZE = 'resizecanvas';
 
     constructor(canvas, options) {
@@ -475,6 +483,17 @@ class GraphicsDevice extends EventHandler {
         this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
             data: positions
         });
+    }
+
+    /**
+     * Initialize the map of device capabilities, which are supplied to shaders as defines.
+     *
+     * @ignore
+     */
+    initCapsDefines() {
+        const { capsDefines } = this;
+        capsDefines.clear();
+        if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
     }
 
     /**
