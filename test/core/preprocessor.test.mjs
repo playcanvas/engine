@@ -18,8 +18,8 @@ describe('Preprocessor', function () {
     const srcData = `
         
         #define LOOP_COUNT 3
-        #define __INJECT_COUNT 2
-        #define __INJECT_STRING hello
+        #define _INJECT_COUNT 2
+        #define _INJECT_STRING hello
         #define FEATURE1
         #define FEATURE2
         #define AND1
@@ -126,8 +126,8 @@ describe('Preprocessor', function () {
             CMP5
         #endif
 
-        TESTINJECTION __INJECT_COUNT
-        INJECTSTRING __INJECT_STRING(x)
+        TESTINJECTION _INJECT_COUNT
+        INJECTSTRING _INJECT_STRING(x)
     `;
 
     it('returns false for MORPH_A', function () {
