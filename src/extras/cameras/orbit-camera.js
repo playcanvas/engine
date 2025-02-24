@@ -189,21 +189,14 @@ class OrbitCamera extends EventHandler {
     }
 
     /**
-     * @param {Input} input - The input.
-     * @param {Mat4} transform - The transform.
-     * @param {Vec3} [point] - The point.
+     * @param {Vec3} start - The start point.
+     * @param {Vec3} point - The focus point.
      */
-    attach(input, transform, point = Vec3.ZERO) {
-        if (this._input) {
-            this.detach();
-        }
-        this._input = input;
-        // this._evts.push(this._input.on(Input.EVENT_ROTATEMOVE, this._look, this));
-
+    focus(start, point) {
         this._position.copy(point);
         this._targetPosition.copy(this._position);
 
-        tmpV1.sub2(transform.getTranslation(), point);
+        tmpV1.sub2(start, point);
         const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
         this._angles.set(-elev, azim, 0);
@@ -214,6 +207,20 @@ class OrbitCamera extends EventHandler {
         this._zoomDist = tmpV1.length();
         this._targetZoomDist = this._zoomDist;
         this._orbitTransform.setTranslate(0, 0, this._zoomDist);
+    }
+
+    /**
+     * @param {Input} input - The input.
+     * @param {Mat4} transform - The transform.
+     */
+    attach(input, transform) {
+        if (this._input) {
+            this.detach();
+        }
+        this._input = input;
+        // this._evts.push(this._input.on(Input.EVENT_ROTATEMOVE, this._look, this));
+
+        this.focus(transform.getTranslation(), Vec3.ZERO);
     }
 
     detach() {

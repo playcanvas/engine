@@ -81,6 +81,19 @@ camera.setPosition(0, 20, 30);
 camera.setEulerAngles(-20, 0, 0);
 app.root.addChild(camera);
 
+let input;
+if (pc.platform.mobile) {
+    input = new pc.JoystickInput();
+} else {
+    input = new pc.KeyboardMouseInput();
+}
+input.attach(canvas);
+
+const cam = new pc.OrbitCamera();
+cam.rotateSpeed = 0.3;
+cam.rotateDamping = 0.95;
+cam.attach(input, camera.getWorldTransform());
+
 /**
  * Calculate the bounding box of an entity.
  *
@@ -98,19 +111,7 @@ const calcEntityAABB = (bbox, entity) => {
     });
     return bbox;
 };
-
-let input;
-if (pc.platform.mobile) {
-    input = new pc.JoystickInput();
-} else {
-    input = new pc.KeyboardMouseInput();
-}
-input.attach(canvas);
-
-const cam = new pc.FlyCamera();
-cam.rotateSpeed = 0.3;
-cam.rotateDamping = 0.95;
-cam.attach(input, camera.getWorldTransform());
+cam.focus(camera.getPosition(), calcEntityAABB(new pc.BoundingBox(), statue).center);
 
 app.on('update', (dt) => {
     if (app.xr?.active) {
