@@ -1,6 +1,6 @@
 import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
-import { Input } from './input.js';
+import { Delta, Input } from './input.js';
 
 const tmpVa = new Vec2();
 
@@ -58,6 +58,17 @@ class JoystickInput extends Input {
      * @private
      */
     _value = new Vec2();
+
+    /**
+     * @type {Record<string, Delta>}
+     */
+    deltas = {
+        translate: new Delta(3),
+        rotate: new Delta(2),
+        pointer: new Delta(2),
+        pan: new Delta(2),
+        zoom: new Delta()
+    };
 
     /**
      * @param {object} options - The options.

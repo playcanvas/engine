@@ -36,13 +36,7 @@ class Input {
     /**
      * @type {Record<string, Delta>}
      */
-    deltas = {
-        translate: new Delta(3),
-        rotate: new Delta(2),
-        pointer: new Delta(2),
-        pan: new Delta(2),
-        zoom: new Delta()
-    };
+    deltas = {};
 
     /**
      * @param {HTMLElement} element - The element.
@@ -77,4 +71,4 @@ class Input {
     }
 }
 
-export { Input };
+export { Delta, Input };

@@ -1,5 +1,5 @@
 import { Vec2 } from '../../core/math/vec2.js';
-import { Input } from './input.js';
+import { Delta, Input } from './input.js';
 
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
@@ -41,6 +41,17 @@ class KeyboardMouseInput extends Input {
     _mouse = {
         rotate: 1,
         pan: 2
+    };
+
+    /**
+     * @type {Record<string, Delta>}
+     */
+    deltas = {
+        translate: new Delta(3),
+        rotate: new Delta(2),
+        pointer: new Delta(2),
+        pan: new Delta(2),
+        zoom: new Delta()
     };
 
     /**
