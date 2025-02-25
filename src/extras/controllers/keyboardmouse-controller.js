@@ -37,6 +37,15 @@ class KeyboardMouseController extends Controller {
     };
 
     /**
+     * @type {Record<string, number>}
+     * @private
+     */
+    _mouse = {
+        rotate: 1,
+        pan: 2
+    };
+
+    /**
      * @type {boolean}
      * @private
      */
@@ -89,7 +98,7 @@ class KeyboardMouseController extends Controller {
             y: event.clientY
         });
 
-        if (event.buttons === 2) {
+        if (event.buttons === this._mouse.pan) {
             this._startPosition.set(event.clientX, event.clientY);
             this._panning = true;
         }
@@ -111,10 +120,10 @@ class KeyboardMouseController extends Controller {
         data.y = event.clientY;
 
         if (this._panning) {
-            tmpVa.set(event.clientX, event.clientY);
-            this.add('pan:dx', tmpVa.x - this._startPosition.x);
-            this.add('pan:dy', tmpVa.y - this._startPosition.y);
+            const dv = tmpVa.set(event.clientX, event.clientY).sub(this._startPosition);
             this._startPosition.set(event.clientX, event.clientY);
+            this.add('pan:dx', dv.x);
+            this.add('pan:dy', dv.y);
         } else {
             this.add('rotate:dx', event.movementX);
             this.add('rotate:dy', event.movementY);
