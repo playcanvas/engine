@@ -6,6 +6,8 @@ import { Controller } from './controller.js';
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
 
+const tmpVa = new Vec2();
+
 class KeyboardMouseController extends Controller {
     /**
      * @type {Map<number, { x: number, y: number }>}
@@ -87,9 +89,8 @@ class KeyboardMouseController extends Controller {
             y: event.clientY
         });
 
-        this._startPosition.set(event.clientX, event.clientY);
-
         if (event.buttons === 2) {
+            this._startPosition.set(event.clientX, event.clientY);
             this._panning = true;
         }
     }
@@ -110,14 +111,15 @@ class KeyboardMouseController extends Controller {
         data.y = event.clientY;
 
         if (this._panning) {
-            this.add('pan:dx', event.movementX);
-            this.add('pan:dy', event.movementY);
+            tmpVa.set(event.clientX, event.clientY);
+            this.add('pan:dx', tmpVa.x - this._startPosition.x);
+            this.add('pan:dy', tmpVa.y - this._startPosition.y);
+            this._startPosition.set(event.clientX, event.clientY);
         } else {
             this.add('rotate:dx', event.movementX);
             this.add('rotate:dy', event.movementY);
         }
 
-        this._startPosition.set(event.clientX, event.clientY);
     }
 
     /**
