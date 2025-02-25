@@ -1,12 +1,17 @@
+import { Vec2 } from '../../core/math/vec2.js';
 import { Input } from './input.js';
+
+/** @import { CameraComponent } from '../../framework/components/camera/component.js' */
 
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
 
+const tmpVa = new Vec2();
+
 class KeyboardMouseInput extends Input {
     /**
-     * @private
      * @type {HTMLElement | null}
+     * @private
      */
     _element = null;
 
@@ -15,6 +20,12 @@ class KeyboardMouseInput extends Input {
      * @private
      */
     _pointerData = new Map();
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _startPosition = new Vec2();
 
     /**
      * @type {Record<string, number>}
@@ -78,9 +89,9 @@ class KeyboardMouseInput extends Input {
             y: event.clientY
         });
 
+        this._startPosition.set(event.clientX, event.clientY);
+
         this.fire(Input.EVENT_ROTATESTART, event.clientX, event.clientY);
-        this.add('rotate:x', event.clientX);
-        this.add('rotate:y', event.clientY);
     }
 
     /**
@@ -114,6 +125,8 @@ class KeyboardMouseInput extends Input {
             return;
         }
         this._pointerData.delete(event.pointerId);
+
+        this._startPosition.set(0, 0);
 
         this.fire(Input.EVENT_ROTATEEND, event.clientX, event.clientY);
     }
@@ -204,8 +217,9 @@ class KeyboardMouseInput extends Input {
 
     /**
      * @param {HTMLElement} element - The element.
+     * @param {CameraComponent} camera - The camera.
      */
-    attach(element) {
+    attach(element, camera) {
         if (this._element) {
             this.detach();
         }
@@ -218,6 +232,8 @@ class KeyboardMouseInput extends Input {
 
         window.addEventListener('keydown', this._onKeyDown, false);
         window.addEventListener('keyup', this._onKeyUp, false);
+
+        this._camera = camera;
     }
 
     detach() {
@@ -229,6 +245,9 @@ class KeyboardMouseInput extends Input {
         this._element.removeEventListener('pointermove', this._onPointerMove);
         this._element.removeEventListener('pointerup', this._onPointerUp);
         this._element.removeEventListener('contextmenu', this._onContextMenu);
+
+        this._element = null;
+        this._camera = null;
 
         window.removeEventListener('keydown', this._onKeyDown, false);
         window.removeEventListener('keyup', this._onKeyUp, false);
@@ -254,6 +273,9 @@ class KeyboardMouseInput extends Input {
         this.add('translate:dx', x);
         this.add('translate:dy', y);
         this.add('translate:dz', z);
+
+        this.add('rotate:x', this._startPosition.x);
+        this.add('rotate:y', this._startPosition.y);
     }
 
     destroy() {

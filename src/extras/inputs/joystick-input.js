@@ -3,6 +3,10 @@ import { Vec2 } from '../../core/math/vec2.js';
 
 import { Input } from './input.js';
 
+/**
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ */
+
 const tmpVa = new Vec2();
 
 class JoystickInput extends Input {
@@ -224,8 +228,9 @@ class JoystickInput extends Input {
 
     /**
      * @param {HTMLElement} element - The element.
+     * @param {CameraComponent} camera - The camera.
      */
-    attach(element) {
+    attach(element, camera) {
         if (this._element) {
             this.detach();
         }
@@ -233,6 +238,8 @@ class JoystickInput extends Input {
         this._element.addEventListener('pointerdown', this._onPointerDown);
         this._element.addEventListener('pointermove', this._onPointerMove);
         this._element.addEventListener('pointerup', this._onPointerUp);
+
+        this._camera = camera;
     }
 
     detach() {
@@ -244,6 +251,9 @@ class JoystickInput extends Input {
         this._element.removeEventListener('pointerup', this._onPointerUp);
 
         this._pointerData.clear();
+
+        this._element = null;
+        this._camera = null;
     }
 
     collect() {

@@ -1,3 +1,4 @@
+import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 import { Mat4 } from '../../core/math/mat4.js';
@@ -7,11 +8,14 @@ import { Plane } from '../../core/shape/plane.js';
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
- * @import { EventHandle } from 'playcanvas'
+ * @import { EventHandle } from '../../core/event-handle.js';
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
  *
  * @import { Input } from '../inputs/input.js'
  */
 
+const tmpVa = new Vec2();
+const tmpVb = new Vec2();
 const tmpV1 = new Vec3();
 const tmpQ1 = new Quat();
 const tmpR1 = new Ray();
@@ -128,6 +132,14 @@ class OrbitCamera extends EventHandler {
      */
     zoomSpeed = 0.01;
 
+    get point() {
+        return this._rootTransform.getTranslation();
+    }
+
+    get view() {
+        return this._transform.getTranslation();
+    }
+
     /**
      * @param {number} dx - The dx value.
      * @param {number} dy - The dy value.
@@ -146,7 +158,15 @@ class OrbitCamera extends EventHandler {
      * @private
      */
     _pan(x, y, dx, dy) {
-        console.log(x, y, dx, dy);
+        if (!this._input?.camera) {
+            return;
+        }
+
+        const start = this._screenToWorldPan(this._input.camera, tmpVa.set(x, y), new Vec3());
+        const end = this._screenToWorldPan(this._input.camera, tmpVb.set(x + dx, y + dy), new Vec3());
+        tmpV1.sub2(start, end);
+
+        this._targetPosition.add(tmpV1);
     }
 
     /**
@@ -155,6 +175,27 @@ class OrbitCamera extends EventHandler {
      */
     _zoom(delta) {
         this._targetZoomDist += delta * this.zoomSpeed;
+    }
+
+    /**
+     * @param {CameraComponent} camera - The camera.
+     * @param {Vec2} pos - The screen position.
+     * @param {Vec3} out - The output point.
+     * @returns {Vec3} - The world point.
+     * @private
+     */
+    _screenToWorldPan(camera, pos, out) {
+        const mouseW = camera.screenToWorld(pos.x, pos.y, 1);
+        const view = this.view;
+        const point = this.point;
+
+        const normal = tmpV1.sub2(view, point).normalize();
+        const plane = tmpP1.setFromPointNormal(point, normal);
+        const ray = tmpR1.set(view, mouseW.sub(view).normalize());
+
+        plane.intersectsRay(ray, out);
+
+        return out;
     }
 
     /**
@@ -197,14 +238,14 @@ class OrbitCamera extends EventHandler {
     }
 
     /**
-     * @param {Vec3} start - The start point.
+     * @param {Vec3} view - The view point.
      * @param {Vec3} point - The focus point.
      */
-    focus(start, point) {
+    focus(view, point) {
         this._position.copy(point);
         this._targetPosition.copy(this._position);
 
-        tmpV1.sub2(start, point);
+        tmpV1.sub2(view, point);
         const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
         this._angles.set(-elev, azim, 0);
@@ -252,7 +293,8 @@ class OrbitCamera extends EventHandler {
         }
 
         this._input.collect();
-        this._look(this._input.get('rotate:dx'), this._input.get('rotate:dy'));
+        this._pan(this._input.get('rotate:x'), this._input.get('rotate:y'), this._input.get('rotate:dx'), this._input.get('rotate:dy'));
+        // this._look(this._input.get('rotate:dx'), this._input.get('rotate:dy'));
         this._zoom(this._input.get('zoom:dx'));
         this._input.flush();
 

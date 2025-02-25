@@ -87,7 +87,7 @@ if (pc.platform.mobile) {
 } else {
     input = new pc.KeyboardMouseInput();
 }
-input.attach(canvas);
+input.attach(canvas, camera.camera);
 
 const cam = new pc.OrbitCamera();
 cam.rotateSpeed = 0.3;
