@@ -63,7 +63,7 @@ class KeyboardMouseInput extends Input {
      */
     _onWheel(event) {
         event.preventDefault();
-        this.add('zoom', event.deltaY);
+        this.add('zoom:dx', event.deltaY);
     }
 
     /**
@@ -79,6 +79,8 @@ class KeyboardMouseInput extends Input {
         });
 
         this.fire(Input.EVENT_ROTATESTART, event.clientX, event.clientY);
+        this.add('rotate:x', event.clientX);
+        this.add('rotate:y', event.clientY);
     }
 
     /**
@@ -96,9 +98,8 @@ class KeyboardMouseInput extends Input {
         data.x = event.clientX;
         data.y = event.clientY;
 
-        this.fire(Input.EVENT_ROTATEMOVE, event.movementX, event.movementY);
-        this.add('rotate:x', event.movementX);
-        this.add('rotate:y', event.movementY);
+        this.add('rotate:dx', event.movementX);
+        this.add('rotate:dy', event.movementY);
     }
 
     /**
@@ -250,9 +251,9 @@ class KeyboardMouseInput extends Input {
         const x = (this._key.right - this._key.left) * this.moveMult;
         const y = (this._key.up - this._key.down) * this.moveMult;
         const z = (this._key.forward - this._key.backward) * this.moveMult;
-        this.add('translate:x', x);
-        this.add('translate:y', y);
-        this.add('translate:z', z);
+        this.add('translate:dx', x);
+        this.add('translate:dy', y);
+        this.add('translate:dz', z);
     }
 
     destroy() {

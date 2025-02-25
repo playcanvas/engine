@@ -95,31 +95,32 @@ class FlyCamera extends EventHandler {
     moveDamping = 0.98;
 
     /**
-     * @param {number} x - The x value.
-     * @param {number} y - The y value.
+     * @param {number} dx - The dx value.
+     * @param {number} dy - The dy value.
      * @private
      */
-    _look(x, y) {
-        this._targetAngles.x -= (y || 0) * this.rotateSpeed;
-        this._targetAngles.y -= (x || 0) * this.rotateSpeed;
+    _look(dx, dy) {
+        this._targetAngles.x -= (dy || 0) * this.rotateSpeed;
+        this._targetAngles.y -= (dx || 0) * this.rotateSpeed;
     }
 
+
     /**
-     * @param {number} x - The x value.
-     * @param {number} y - The y value.
-     * @param {number} z - The z value.
+     * @param {number} dx - The dx value.
+     * @param {number} dy - The dy value.
+     * @param {number} dz - The dz value.
      * @param {number} dt - The delta time.
      * @private
      */
-    _move(x, y, z, dt) {
+    _move(dx, dy, dz, dt) {
         const back = this._transform.getZ();
         const right = this._transform.getX();
         const up = this._transform.getY();
 
         tmpV1.set(0, 0, 0);
-        tmpV1.sub(tmpV2.copy(back).mulScalar(z));
-        tmpV1.add(tmpV2.copy(right).mulScalar(x));
-        tmpV1.add(tmpV2.copy(up).mulScalar(y));
+        tmpV1.sub(tmpV2.copy(back).mulScalar(dz));
+        tmpV1.add(tmpV2.copy(right).mulScalar(dx));
+        tmpV1.add(tmpV2.copy(up).mulScalar(dy));
         tmpV1.mulScalar(this.moveSpeed * dt);
 
         this._targetPosition.add(tmpV1);
@@ -156,7 +157,6 @@ class FlyCamera extends EventHandler {
             this.detach();
         }
         this._input = input;
-        // this._evts.push(this._input.on(Input.EVENT_ROTATEMOVE, this._look, this));
 
         this._position.copy(transform.getTranslation());
         this._targetPosition.copy(this._position);
@@ -188,8 +188,8 @@ class FlyCamera extends EventHandler {
         }
 
         this._input.collect();
-        this._look(this._input.get('rotate:x'), this._input.get('rotate:y'));
-        this._move(this._input.get('translate:x'), this._input.get('translate:y'), this._input.get('translate:z'), dt);
+        this._look(this._input.get('rotate:dx'), this._input.get('rotate:dy'));
+        this._move(this._input.get('translate:dx'), this._input.get('translate:dy'), this._input.get('translate:dz'), dt);
         this._input.flush();
 
         this._smoothTransform(dt);

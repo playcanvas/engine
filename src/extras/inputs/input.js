@@ -3,8 +3,6 @@ import { EventHandler } from '../../core/event-handler.js';
 class Input extends EventHandler {
     static EVENT_ROTATESTART = 'rotate:start';
 
-    static EVENT_ROTATEMOVE = 'rotate:move';
-
     static EVENT_ROTATEEND = 'rotate:end';
 
     _deltas = new Map();

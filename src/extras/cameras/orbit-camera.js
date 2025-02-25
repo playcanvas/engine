@@ -129,13 +129,24 @@ class OrbitCamera extends EventHandler {
     zoomSpeed = 0.01;
 
     /**
-     * @param {number} x - The x value.
-     * @param {number} y - The y value.
+     * @param {number} dx - The dx value.
+     * @param {number} dy - The dy value.
      * @private
      */
-    _look(x, y) {
-        this._targetAngles.x -= (y || 0) * this.rotateSpeed;
-        this._targetAngles.y -= (x || 0) * this.rotateSpeed;
+    _look(dx, dy) {
+        this._targetAngles.x -= (dy || 0) * this.rotateSpeed;
+        this._targetAngles.y -= (dx || 0) * this.rotateSpeed;
+    }
+
+    /**
+     * @param {number} x - The x value.
+     * @param {number} y - The y value.
+     * @param {number} dx - The dx value.
+     * @param {number} dy - The dy value.
+     * @private
+     */
+    _pan(x, y, dx, dy) {
+        console.log(x, y, dx, dy);
     }
 
     /**
@@ -215,7 +226,6 @@ class OrbitCamera extends EventHandler {
             this.detach();
         }
         this._input = input;
-        // this._evts.push(this._input.on(Input.EVENT_ROTATEMOVE, this._look, this));
 
         this.focus(transform.getTranslation(), Vec3.ZERO);
     }
@@ -242,8 +252,8 @@ class OrbitCamera extends EventHandler {
         }
 
         this._input.collect();
-        this._look(this._input.get('rotate:x'), this._input.get('rotate:y'));
-        this._zoom(this._input.get('zoom'));
+        this._look(this._input.get('rotate:dx'), this._input.get('rotate:dy'));
+        this._zoom(this._input.get('zoom:dx'));
         this._input.flush();
 
         this._smoothTransform(dt);
