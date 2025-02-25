@@ -34,29 +34,15 @@ class Input {
     _element = null;
 
     /**
-     * @type {Delta}
+     * @type {Record<string, Delta>}
      */
-    translate = new Delta(3);
-
-    /**
-     * @type {Delta}
-     */
-    rotate = new Delta(2);
-
-    /**
-     * @type {Delta}
-     */
-    pointer = new Delta(2);
-
-    /**
-     * @type {Delta}
-     */
-    pan = new Delta(2);
-
-    /**
-     * @type {Delta}
-     */
-    zoom = new Delta();
+    deltas = {
+        translate: new Delta(3),
+        rotate: new Delta(2),
+        pointer: new Delta(2),
+        pan: new Delta(2),
+        zoom: new Delta()
+    };
 
     /**
      * @param {HTMLElement} element - The element.
@@ -78,23 +64,11 @@ class Input {
     }
 
     frame() {
-        const frame = [
-            this.translate.value[0],
-            this.translate.value[1],
-            this.translate.value[2],
-            this.rotate.value[0],
-            this.rotate.value[1],
-            this.pointer.value[0],
-            this.pointer.value[1],
-            this.pan.value[0],
-            this.pan.value[1],
-            this.zoom.value[0]
-        ];
-        this.translate.flush();
-        this.pointer.flush();
-        this.rotate.flush();
-        this.pan.flush();
-        this.zoom.flush();
+        const frame = [];
+        for (const delta in this.deltas) {
+            frame.push(...this.deltas[delta].value);
+            this.deltas[delta].flush();
+        }
         return frame;
     }
 

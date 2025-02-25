@@ -81,7 +81,7 @@ class KeyboardMouseInput extends Input {
      */
     _onWheel(event) {
         event.preventDefault();
-        this.zoom.add(event.deltaY);
+        this.deltas.zoom.add(event.deltaY);
     }
 
     /**
@@ -120,9 +120,9 @@ class KeyboardMouseInput extends Input {
         if (this._panning) {
             const dv = tmpVa.set(event.clientX, event.clientY).sub(this._startPosition);
             this._startPosition.set(event.clientX, event.clientY);
-            this.pan.add(dv.x, dv.y);
+            this.deltas.pan.add(dv.x, dv.y);
         } else {
-            this.rotate.add(event.movementX, event.movementY);
+            this.deltas.rotate.add(event.movementX, event.movementY);
         }
 
     }
@@ -282,9 +282,9 @@ class KeyboardMouseInput extends Input {
         const x = (this._key.right - this._key.left) * this.moveMult;
         const y = (this._key.up - this._key.down) * this.moveMult;
         const z = (this._key.forward - this._key.backward) * this.moveMult;
-        this.translate.add(x, y, z);
+        this.deltas.translate.add(x, y, z);
 
-        this.pointer.add(this._startPosition.x, this._startPosition.y);
+        this.deltas.pointer.add(this._startPosition.x, this._startPosition.y);
 
         return super.frame();
     }

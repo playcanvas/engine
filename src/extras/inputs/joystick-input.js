@@ -154,7 +154,7 @@ class JoystickInput extends Input {
         if (left) {
             this._setInner(event.clientX, event.clientY);
         } else {
-            this.rotate.add(event.movementX, event.movementY);
+            this.deltas.rotate.add(event.movementX, event.movementY);
         }
 
     }
@@ -242,7 +242,7 @@ class JoystickInput extends Input {
     }
 
     frame() {
-        this.translate.add(this._value.x, 0, -this._value.y);
+        this.deltas.translate.add(this._value.x, 0, -this._value.y);
 
         return super.frame();
     }
