@@ -4,12 +4,6 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-/**
- * @import { EventHandle } from 'playcanvas'
- *
- * @import { Input } from '../inputs/input.js'
- */
-
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
@@ -24,18 +18,6 @@ const tmpQ1 = new Quat();
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class FlyCamera extends EventHandler {
-    /**
-     * @type {Input | null}
-     * @private
-     */
-    _input = null;
-
-    /**
-     * @type {EventHandle[]}
-     * @private
-     */
-    _evts = [];
-
     /**
      * @private
      * @type {Vec3}
@@ -149,15 +131,9 @@ class FlyCamera extends EventHandler {
     }
 
     /**
-     * @param {Input} input - The input.
      * @param {Mat4} transform - The transform.
      */
-    attach(input, transform) {
-        if (this._input) {
-            this.detach();
-        }
-        this._input = input;
-
+    attach(transform) {
         this._position.copy(transform.getTranslation());
         this._targetPosition.copy(this._position);
 
@@ -168,13 +144,6 @@ class FlyCamera extends EventHandler {
     }
 
     detach() {
-        if (!this._input) {
-            return;
-        }
-        this._evts.forEach(evt => evt.off());
-        this._evts.length = 0;
-        this._input = null;
-
         this._cancelSmoothTransform();
     }
 

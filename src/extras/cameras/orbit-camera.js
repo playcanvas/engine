@@ -8,10 +8,7 @@ import { Plane } from '../../core/shape/plane.js';
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
- * @import { EventHandle } from '../../core/event-handle.js';
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
- *
- * @import { Input } from '../inputs/input.js'
  */
 
 const tmpVa = new Vec2();
@@ -31,18 +28,6 @@ const tmpP1 = new Plane();
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class OrbitCamera extends EventHandler {
-    /**
-     * @type {Input | null}
-     * @private
-     */
-    _input = null;
-
-    /**
-     * @type {EventHandle[]}
-     * @private
-     */
-    _evts = [];
-
     /**
      * @private
      * @type {Vec3}
@@ -256,26 +241,13 @@ class OrbitCamera extends EventHandler {
     }
 
     /**
-     * @param {Input} input - The input.
      * @param {Mat4} transform - The transform.
      */
-    attach(input, transform) {
-        if (this._input) {
-            this.detach();
-        }
-        this._input = input;
-
+    attach(transform) {
         this.focus(transform.getTranslation(), Vec3.ZERO);
     }
 
     detach() {
-        if (!this._input) {
-            return;
-        }
-        this._evts.forEach(evt => evt.off());
-        this._evts.length = 0;
-        this._input = null;
-
         this._cancelSmoothTransform();
         this._cancelSmoothZoom();
     }

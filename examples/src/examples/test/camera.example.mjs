@@ -92,7 +92,7 @@ input.attach(canvas);
 const cam = new pc.OrbitCamera();
 cam.rotateSpeed = 0.3;
 cam.rotateDamping = 0.95;
-cam.attach(input, camera.getWorldTransform());
+cam.attach(camera.getWorldTransform());
 
 /**
  * Calculate the bounding box of an entity.
