@@ -4,20 +4,18 @@ import { Delta, Input } from './input.js';
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
 
-const tmpVa = new Vec2();
-
 class KeyboardMouseInput extends Input {
     /**
-     * @type {Map<number, { x: number, y: number }>}
+     * @type {number}
      * @private
      */
-    _pointerData = new Map();
+    _pointerId = 0;
 
     /**
      * @type {Vec2}
      * @private
      */
-    _startPosition = new Vec2();
+    _pointerPos = new Vec2();
 
     /**
      * @type {Record<string, number>}
@@ -44,12 +42,6 @@ class KeyboardMouseInput extends Input {
     };
 
     /**
-     * @type {boolean}
-     * @private
-     */
-    _panning = false;
-
-    /**
      * @type {number}
      */
     sprintMult = 2;
@@ -66,7 +58,6 @@ class KeyboardMouseInput extends Input {
         translate: new Delta(3),
         rotate: new Delta(2),
         pointer: new Delta(2),
-        pan: new Delta(2),
         zoom: new Delta()
     };
 
@@ -87,8 +78,8 @@ class KeyboardMouseInput extends Input {
     }
 
     /**
-     * @private
      * @param {WheelEvent} event - The wheel event.
+     * @private
      */
     _onWheel(event) {
         event.preventDefault();
@@ -96,66 +87,52 @@ class KeyboardMouseInput extends Input {
     }
 
     /**
-     * @private
      * @param {PointerEvent} event - The pointer event.
+     * @private
      */
     _onPointerDown(event) {
         this._element?.setPointerCapture(event.pointerId);
 
-        this._pointerData.set(event.pointerId, {
-            x: event.clientX,
-            y: event.clientY
-        });
+        if (this._pointerId) {
+            return;
+        }
+        this._pointerId = event.pointerId;
 
         if (event.buttons === this._mouse.pan) {
-            this._startPosition.set(event.clientX, event.clientY);
+            this._pointerPos.set(event.clientX, event.clientY);
             this._panning = true;
         }
     }
 
     /**
-     * @private
      * @param {PointerEvent} event - The pointer event.
+     * @private
      */
     _onPointerMove(event) {
         if (event.target !== this._element) {
             return;
         }
-        const data = this._pointerData.get(event.pointerId);
-        if (!data) {
+        if (this._pointerId !== event.pointerId) {
             return;
         }
-        data.x = event.clientX;
-        data.y = event.clientY;
-
-        if (this._panning) {
-            const dv = tmpVa.set(event.clientX, event.clientY).sub(this._startPosition);
-            this._startPosition.set(event.clientX, event.clientY);
-            this.deltas.pan.add(dv.x, dv.y);
-        } else {
-            this.deltas.rotate.add(event.movementX, event.movementY);
+        if (event.buttons === this._mouse.pan) {
+            this._pointerPos.set(event.clientX, event.clientY);
         }
-
+        this.deltas.rotate.add(event.movementX, event.movementY);
     }
 
     /**
-     * @private
      * @param {PointerEvent} event - The pointer event.
+     * @private
      */
     _onPointerUp(event) {
         this._element?.releasePointerCapture(event.pointerId);
 
-        const data = this._pointerData.get(event.pointerId);
-        if (!data) {
+        if (this._pointerId !== event.pointerId) {
             return;
         }
-        this._pointerData.delete(event.pointerId);
-
-        this._startPosition.set(0, 0);
-
-        if (this._panning) {
-            this._panning = false;
-        }
+        this._pointerId = 0;
+        this._pointerPos.set(0, 0);
     }
 
     /**
@@ -167,8 +144,8 @@ class KeyboardMouseInput extends Input {
     }
 
     /**
-     * @private
      * @param {KeyboardEvent} event - The keyboard event.
+     * @private
      */
     _onKeyDown(event) {
         event.stopPropagation();
@@ -205,8 +182,8 @@ class KeyboardMouseInput extends Input {
     }
 
     /**
-     * @private
      * @param {KeyboardEvent} event - The keyboard event.
+     * @private
      */
     _onKeyUp(event) {
         event.stopPropagation();
@@ -254,6 +231,7 @@ class KeyboardMouseInput extends Input {
         this._element.addEventListener('pointerdown', this._onPointerDown);
         this._element.addEventListener('pointermove', this._onPointerMove);
         this._element.addEventListener('pointerup', this._onPointerUp);
+        this._element.addEventListener('pointerout', this._onPointerUp);
         this._element.addEventListener('contextmenu', this._onContextMenu);
 
         window.addEventListener('keydown', this._onKeyDown, false);
@@ -268,14 +246,13 @@ class KeyboardMouseInput extends Input {
         this._element.removeEventListener('pointerdown', this._onPointerDown);
         this._element.removeEventListener('pointermove', this._onPointerMove);
         this._element.removeEventListener('pointerup', this._onPointerUp);
+        this._element.removeEventListener('pointerout', this._onPointerUp);
         this._element.removeEventListener('contextmenu', this._onContextMenu);
 
         this._element = null;
 
         window.removeEventListener('keydown', this._onKeyDown, false);
         window.removeEventListener('keyup', this._onKeyUp, false);
-
-        this._pointerData.clear();
 
         this._key = {
             forward: 0,
@@ -298,7 +275,7 @@ class KeyboardMouseInput extends Input {
         const z = (this._key.forward - this._key.backward) * this.moveMult;
         this.deltas.translate.add(x, y, z);
 
-        this.deltas.pointer.add(this._startPosition.x, this._startPosition.y);
+        this.deltas.pointer.add(this._pointerPos.x, this._pointerPos.y);
 
         return super.frame();
     }
