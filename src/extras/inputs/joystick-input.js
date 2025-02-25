@@ -112,7 +112,7 @@ class JoystickInput extends Input {
         const display = value ? 'none' : 'block';
         this._base.style.display = display;
         this._inner.style.display = display;
-        this.translation.set(0, 0, 0);
+        this._value.set(0, 0);
     }
 
     get hidden() {

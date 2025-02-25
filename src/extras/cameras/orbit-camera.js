@@ -2,6 +2,8 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
+import { Ray } from '../../core/shape/ray.js';
+import { Plane } from '../../core/shape/plane.js';
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
@@ -12,6 +14,8 @@ import { EventHandler } from '../../core/event-handler.js';
 
 const tmpV1 = new Vec3();
 const tmpQ1 = new Quat();
+const tmpR1 = new Ray();
+const tmpP1 = new Plane();
 
 /**
  * Calculate the lerp rate.
