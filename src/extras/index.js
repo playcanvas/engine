@@ -27,10 +27,9 @@ export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 export { CameraFrame } from './render-passes/camera-frame.js';
 
-// INPUT
-export { Input } from './inputs/input.js';
-export { JoystickInput } from './inputs/joystick-input.js';
-export { KeyboardMouseInput } from './inputs/keyboardmouse-input.js';
+// CONTROLLERS
+export { JoystickController } from './controllers/joystick-controller.js';
+export { KeyboardMouseController } from './controllers/keyboardmouse-controller.js';
 
 // CAMERAS
 export { FlyCamera } from './cameras/fly-camera.js';

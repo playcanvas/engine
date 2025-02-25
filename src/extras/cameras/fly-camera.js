@@ -7,7 +7,7 @@ import { EventHandler } from '../../core/event-handler.js';
 /**
  * @import { EventHandle } from 'playcanvas'
  *
- * @import { Input } from '../inputs/input.js'
+ * @import { Controller } from '../controllers/controller.js'
  */
 
 const tmpV1 = new Vec3();
@@ -25,10 +25,10 @@ const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class FlyCamera extends EventHandler {
     /**
-     * @type {Input | null}
+     * @type {Controller | null}
      * @private
      */
-    _input = null;
+    _controller = null;
 
     /**
      * @type {EventHandle[]}
@@ -149,14 +149,14 @@ class FlyCamera extends EventHandler {
     }
 
     /**
-     * @param {Input} input - The input.
+     * @param {Controller} input - The input.
      * @param {Mat4} transform - The transform.
      */
     attach(input, transform) {
-        if (this._input) {
+        if (this._controller) {
             this.detach();
         }
-        this._input = input;
+        this._controller = input;
 
         this._position.copy(transform.getTranslation());
         this._targetPosition.copy(this._position);
@@ -168,12 +168,12 @@ class FlyCamera extends EventHandler {
     }
 
     detach() {
-        if (!this._input) {
+        if (!this._controller) {
             return;
         }
         this._evts.forEach(evt => evt.off());
         this._evts.length = 0;
-        this._input = null;
+        this._controller = null;
 
         this._cancelSmoothTransform();
     }
@@ -183,14 +183,14 @@ class FlyCamera extends EventHandler {
      * @returns {Mat4} - The camera transform.
      */
     update(dt) {
-        if (!this._input) {
+        if (!this._controller) {
             return this._transform;
         }
 
-        this._input.collect();
-        this._look(this._input.get('rotate:dx'), this._input.get('rotate:dy'));
-        this._move(this._input.get('translate:dx'), this._input.get('translate:dy'), this._input.get('translate:dz'), dt);
-        this._input.flush();
+        this._controller.collect();
+        this._look(this._controller.get('rotate:dx'), this._controller.get('rotate:dy'));
+        this._move(this._controller.get('translate:dx'), this._controller.get('translate:dy'), this._controller.get('translate:dz'), dt);
+        this._controller.flush();
 
         this._smoothTransform(dt);
 

@@ -1,20 +1,12 @@
 import { Vec2 } from '../../core/math/vec2.js';
-import { Input } from './input.js';
+import { Controller } from './controller.js';
 
 /** @import { CameraComponent } from '../../framework/components/camera/component.js' */
 
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
 
-const tmpVa = new Vec2();
-
-class KeyboardMouseInput extends Input {
-    /**
-     * @type {HTMLElement | null}
-     * @private
-     */
-    _element = null;
-
+class KeyboardMouseController extends Controller {
     /**
      * @type {Map<number, { x: number, y: number }>}
      * @private
@@ -41,6 +33,12 @@ class KeyboardMouseInput extends Input {
         sprint: 0,
         crouch: 0
     };
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _panning = false;
 
     /**
      * @type {number}
@@ -91,7 +89,9 @@ class KeyboardMouseInput extends Input {
 
         this._startPosition.set(event.clientX, event.clientY);
 
-        this.fire(Input.EVENT_ROTATESTART, event.clientX, event.clientY);
+        if (event.buttons === 2) {
+            this._panning = true;
+        }
     }
 
     /**
@@ -109,8 +109,15 @@ class KeyboardMouseInput extends Input {
         data.x = event.clientX;
         data.y = event.clientY;
 
-        this.add('rotate:dx', event.movementX);
-        this.add('rotate:dy', event.movementY);
+        if (this._panning) {
+            this.add('pan:dx', event.movementX);
+            this.add('pan:dy', event.movementY);
+        } else {
+            this.add('rotate:dx', event.movementX);
+            this.add('rotate:dy', event.movementY);
+        }
+
+        this._startPosition.set(event.clientX, event.clientY);
     }
 
     /**
@@ -128,7 +135,9 @@ class KeyboardMouseInput extends Input {
 
         this._startPosition.set(0, 0);
 
-        this.fire(Input.EVENT_ROTATEEND, event.clientX, event.clientY);
+        if (this._panning) {
+            this._panning = false;
+        }
     }
 
     /**
@@ -274,8 +283,8 @@ class KeyboardMouseInput extends Input {
         this.add('translate:dy', y);
         this.add('translate:dz', z);
 
-        this.add('rotate:x', this._startPosition.x);
-        this.add('rotate:y', this._startPosition.y);
+        this.add('pan:x', this._startPosition.x);
+        this.add('pan:y', this._startPosition.y);
     }
 
     destroy() {
@@ -283,4 +292,4 @@ class KeyboardMouseInput extends Input {
     }
 }
 
-export { KeyboardMouseInput };
+export { KeyboardMouseController };

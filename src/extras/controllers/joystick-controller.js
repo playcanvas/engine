@@ -1,7 +1,7 @@
 import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
 
-import { Input } from './input.js';
+import { Controller } from './controller.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -9,13 +9,7 @@ import { Input } from './input.js';
 
 const tmpVa = new Vec2();
 
-class JoystickInput extends Input {
-    /**
-     * @private
-     * @type {HTMLElement | null}
-     */
-    _element = null;
-
+class JoystickController extends Controller {
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
      * @private
@@ -142,7 +136,7 @@ class JoystickInput extends Input {
             this._setBase(event.clientX, event.clientY);
             this._setInner(event.clientX, event.clientY);
         } else {
-            this.fire(Input.EVENT_ROTATESTART, event.clientX, event.clientY);
+            // this.fire(Input.EVENT_ROTATESTART, event.clientX, event.clientY);
         }
     }
 
@@ -189,7 +183,7 @@ class JoystickInput extends Input {
             this.hidden = true;
             this._value.set(0, 0);
         } else {
-            this.fire(Input.EVENT_ROTATEEND, event.clientX, event.clientY);
+            // this.fire(Input.EVENT_ROTATEEND, event.clientX, event.clientY);
         }
 
     }
@@ -269,4 +263,4 @@ class JoystickInput extends Input {
     }
 }
 
-export { JoystickInput };
+export { JoystickController };

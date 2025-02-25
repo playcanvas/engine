@@ -11,7 +11,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * @import { EventHandle } from '../../core/event-handle.js';
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  *
- * @import { Input } from '../inputs/input.js'
+ * @import { Controller } from '../controllers/controller.js'
  */
 
 const tmpVa = new Vec2();
@@ -32,10 +32,10 @@ const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class OrbitCamera extends EventHandler {
     /**
-     * @type {Input | null}
+     * @type {Controller | null}
      * @private
      */
-    _input = null;
+    _controller = null;
 
     /**
      * @type {EventHandle[]}
@@ -158,12 +158,12 @@ class OrbitCamera extends EventHandler {
      * @private
      */
     _pan(x, y, dx, dy) {
-        if (!this._input?.camera) {
+        if (!this._controller?.camera) {
             return;
         }
 
-        const start = this._screenToWorldPan(this._input.camera, tmpVa.set(x, y), new Vec3());
-        const end = this._screenToWorldPan(this._input.camera, tmpVb.set(x + dx, y + dy), new Vec3());
+        const start = this._screenToWorldPan(this._controller.camera, tmpVa.set(x, y), new Vec3());
+        const end = this._screenToWorldPan(this._controller.camera, tmpVb.set(x + dx, y + dy), new Vec3());
         tmpV1.sub2(start, end);
 
         this._targetPosition.add(tmpV1);
@@ -259,25 +259,25 @@ class OrbitCamera extends EventHandler {
     }
 
     /**
-     * @param {Input} input - The input.
+     * @param {Controller} input - The input.
      * @param {Mat4} transform - The transform.
      */
     attach(input, transform) {
-        if (this._input) {
+        if (this._controller) {
             this.detach();
         }
-        this._input = input;
+        this._controller = input;
 
         this.focus(transform.getTranslation(), Vec3.ZERO);
     }
 
     detach() {
-        if (!this._input) {
+        if (!this._controller) {
             return;
         }
         this._evts.forEach(evt => evt.off());
         this._evts.length = 0;
-        this._input = null;
+        this._controller = null;
 
         this._cancelSmoothTransform();
         this._cancelSmoothZoom();
@@ -288,15 +288,15 @@ class OrbitCamera extends EventHandler {
      * @returns {Mat4} - The camera transform.
      */
     update(dt) {
-        if (!this._input) {
+        if (!this._controller) {
             return this._transform;
         }
 
-        this._input.collect();
-        this._pan(this._input.get('rotate:x'), this._input.get('rotate:y'), this._input.get('rotate:dx'), this._input.get('rotate:dy'));
-        // this._look(this._input.get('rotate:dx'), this._input.get('rotate:dy'));
-        this._zoom(this._input.get('zoom:dx'));
-        this._input.flush();
+        this._controller.collect();
+        this._pan(this._controller.get('pan:x'), this._controller.get('pan:y'), this._controller.get('pan:dx'), this._controller.get('pan:dy'));
+        this._look(this._controller.get('rotate:dx'), this._controller.get('rotate:dy'));
+        this._zoom(this._controller.get('zoom:dx'));
+        this._controller.flush();
 
         this._smoothTransform(dt);
         this._smoothZoom(dt);
