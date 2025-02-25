@@ -159,8 +159,7 @@ class JoystickController extends Controller {
         if (left) {
             this._setInner(event.clientX, event.clientY);
         } else {
-            this.add('rotate:dx', event.movementX);
-            this.add('rotate:dy', event.movementY);
+            this.rotate.add(event.movementX, event.movementY);
         }
 
     }
@@ -250,9 +249,10 @@ class JoystickController extends Controller {
         this._camera = null;
     }
 
-    collect() {
-        this.add('translate:dx', this._value.x);
-        this.add('translate:dz', -this._value.y);
+    frame() {
+        this.translate.add(this._value.x, 0, -this._value.y);
+
+        return super.frame();
     }
 
     destroy() {

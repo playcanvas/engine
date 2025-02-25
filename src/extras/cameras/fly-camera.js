@@ -183,14 +183,19 @@ class FlyCamera extends EventHandler {
      * @returns {Mat4} - The camera transform.
      */
     update(dt) {
-        if (!this._controller) {
+        if (!this._controller?.camera) {
             return this._transform;
         }
 
-        this._controller.collect();
-        this._look(this._controller.get('rotate:dx'), this._controller.get('rotate:dy'));
-        this._move(this._controller.get('translate:dx'), this._controller.get('translate:dy'), this._controller.get('translate:dz'), dt);
-        this._controller.flush();
+        const [
+            tdx, tdy, tdz,
+            rdx, rdy,
+            px, py,
+            pdx, pdy,
+            zdx
+        ] = this._controller.frame();
+        this._look(rdx, rdy);
+        this._move(tdx, tdy, tdz, dt);
 
         this._smoothTransform(dt);
 

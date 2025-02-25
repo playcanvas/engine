@@ -151,19 +151,16 @@ class OrbitCamera extends EventHandler {
     }
 
     /**
+     * @param {CameraComponent} camera - The camera.
      * @param {number} x - The x value.
      * @param {number} y - The y value.
      * @param {number} dx - The dx value.
      * @param {number} dy - The dy value.
      * @private
      */
-    _pan(x, y, dx, dy) {
-        if (!this._controller?.camera) {
-            return;
-        }
-
-        const start = this._screenToWorldPan(this._controller.camera, tmpVa.set(x, y), new Vec3());
-        const end = this._screenToWorldPan(this._controller.camera, tmpVb.set(x + dx, y + dy), new Vec3());
+    _pan(camera, x, y, dx, dy) {
+        const start = this._screenToWorldPan(camera, tmpVa.set(x, y), new Vec3());
+        const end = this._screenToWorldPan(camera, tmpVb.set(x + dx, y + dy), new Vec3());
         tmpV1.sub2(start, end);
 
         this._targetPosition.add(tmpV1);
@@ -288,15 +285,20 @@ class OrbitCamera extends EventHandler {
      * @returns {Mat4} - The camera transform.
      */
     update(dt) {
-        if (!this._controller) {
+        if (!this._controller?.camera) {
             return this._transform;
         }
 
-        this._controller.collect();
-        this._pan(this._controller.get('pan:x'), this._controller.get('pan:y'), this._controller.get('pan:dx'), this._controller.get('pan:dy'));
-        this._look(this._controller.get('rotate:dx'), this._controller.get('rotate:dy'));
-        this._zoom(this._controller.get('zoom:dx'));
-        this._controller.flush();
+        const [
+            tdx, tdy, tdz,
+            rdx, rdy,
+            px, py,
+            pdx, pdy,
+            zdx
+        ] = this._controller.frame();
+        this._pan(this._controller.camera, px, py, pdx, pdy);
+        this._look(rdx, rdy);
+        this._zoom(zdx);
 
         this._smoothTransform(dt);
         this._smoothZoom(dt);

@@ -83,7 +83,7 @@ class KeyboardMouseController extends Controller {
      */
     _onWheel(event) {
         event.preventDefault();
-        this.add('zoom:dx', event.deltaY);
+        this.zoom.add(event.deltaY);
     }
 
     /**
@@ -122,11 +122,9 @@ class KeyboardMouseController extends Controller {
         if (this._panning) {
             const dv = tmpVa.set(event.clientX, event.clientY).sub(this._startPosition);
             this._startPosition.set(event.clientX, event.clientY);
-            this.add('pan:dx', dv.x);
-            this.add('pan:dy', dv.y);
+            this.pan.add(dv.x, dv.y);
         } else {
-            this.add('rotate:dx', event.movementX);
-            this.add('rotate:dy', event.movementY);
+            this.rotate.add(event.movementX, event.movementY);
         }
 
     }
@@ -286,16 +284,15 @@ class KeyboardMouseController extends Controller {
         };
     }
 
-    collect() {
+    frame() {
         const x = (this._key.right - this._key.left) * this.moveMult;
         const y = (this._key.up - this._key.down) * this.moveMult;
         const z = (this._key.forward - this._key.backward) * this.moveMult;
-        this.add('translate:dx', x);
-        this.add('translate:dy', y);
-        this.add('translate:dz', z);
+        this.translate.add(x, y, z);
 
-        this.add('pan:x', this._startPosition.x);
-        this.add('pan:y', this._startPosition.y);
+        this.pointer.add(this._startPosition.x, this._startPosition.y);
+
+        return super.frame();
     }
 
     destroy() {
