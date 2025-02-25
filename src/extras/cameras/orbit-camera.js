@@ -11,7 +11,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * @import { EventHandle } from '../../core/event-handle.js';
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  *
- * @import { Controller } from '../controllers/controller.js'
+ * @import { Input } from '../inputs/input.js'
  */
 
 const tmpVa = new Vec2();
@@ -32,10 +32,10 @@ const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class OrbitCamera extends EventHandler {
     /**
-     * @type {Controller | null}
+     * @type {Input | null}
      * @private
      */
-    _controller = null;
+    _input = null;
 
     /**
      * @type {EventHandle[]}
@@ -256,47 +256,45 @@ class OrbitCamera extends EventHandler {
     }
 
     /**
-     * @param {Controller} input - The input.
+     * @param {Input} input - The input.
      * @param {Mat4} transform - The transform.
      */
     attach(input, transform) {
-        if (this._controller) {
+        if (this._input) {
             this.detach();
         }
-        this._controller = input;
+        this._input = input;
 
         this.focus(transform.getTranslation(), Vec3.ZERO);
     }
 
     detach() {
-        if (!this._controller) {
+        if (!this._input) {
             return;
         }
         this._evts.forEach(evt => evt.off());
         this._evts.length = 0;
-        this._controller = null;
+        this._input = null;
 
         this._cancelSmoothTransform();
         this._cancelSmoothZoom();
     }
 
     /**
+     * @param {number[]} frame - The frame.
+     * @param {CameraComponent} camera - The camera.
      * @param {number} dt - The delta time.
      * @returns {Mat4} - The camera transform.
      */
-    update(dt) {
-        if (!this._controller?.camera) {
-            return this._transform;
-        }
-
+    update(frame, camera, dt) {
         const [
             tdx, tdy, tdz,
             rdx, rdy,
             px, py,
             pdx, pdy,
             zdx
-        ] = this._controller.frame();
-        this._pan(this._controller.camera, px, py, pdx, pdy);
+        ] = frame;
+        this._pan(camera, px, py, pdx, pdy);
         this._look(rdx, rdy);
         this._zoom(zdx);
 

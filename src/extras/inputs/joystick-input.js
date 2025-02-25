@@ -1,15 +1,10 @@
 import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
-
-import { Controller } from './controller.js';
-
-/**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- */
+import { Input } from './input.js';
 
 const tmpVa = new Vec2();
 
-class JoystickController extends Controller {
+class JoystickInput extends Input {
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
      * @private
@@ -221,9 +216,8 @@ class JoystickController extends Controller {
 
     /**
      * @param {HTMLElement} element - The element.
-     * @param {CameraComponent} camera - The camera.
      */
-    attach(element, camera) {
+    attach(element) {
         if (this._element) {
             this.detach();
         }
@@ -231,8 +225,6 @@ class JoystickController extends Controller {
         this._element.addEventListener('pointerdown', this._onPointerDown);
         this._element.addEventListener('pointermove', this._onPointerMove);
         this._element.addEventListener('pointerup', this._onPointerUp);
-
-        this._camera = camera;
     }
 
     detach() {
@@ -263,4 +255,4 @@ class JoystickController extends Controller {
     }
 }
 
-export { JoystickController };
+export { JoystickInput };

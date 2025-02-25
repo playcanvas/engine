@@ -1,14 +1,12 @@
 import { Vec2 } from '../../core/math/vec2.js';
-import { Controller } from './controller.js';
-
-/** @import { CameraComponent } from '../../framework/components/camera/component.js' */
+import { Input } from './input.js';
 
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
 
 const tmpVa = new Vec2();
 
-class KeyboardMouseController extends Controller {
+class KeyboardMouseInput extends Input {
     /**
      * @type {Map<number, { x: number, y: number }>}
      * @private
@@ -235,9 +233,8 @@ class KeyboardMouseController extends Controller {
 
     /**
      * @param {HTMLElement} element - The element.
-     * @param {CameraComponent} camera - The camera.
      */
-    attach(element, camera) {
+    attach(element) {
         if (this._element) {
             this.detach();
         }
@@ -250,8 +247,6 @@ class KeyboardMouseController extends Controller {
 
         window.addEventListener('keydown', this._onKeyDown, false);
         window.addEventListener('keyup', this._onKeyUp, false);
-
-        this._camera = camera;
     }
 
     detach() {
@@ -265,7 +260,6 @@ class KeyboardMouseController extends Controller {
         this._element.removeEventListener('contextmenu', this._onContextMenu);
 
         this._element = null;
-        this._camera = null;
 
         window.removeEventListener('keydown', this._onKeyDown, false);
         window.removeEventListener('keyup', this._onKeyUp, false);
@@ -300,4 +294,4 @@ class KeyboardMouseController extends Controller {
     }
 }
 
-export { KeyboardMouseController };
+export { KeyboardMouseInput };

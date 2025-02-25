@@ -7,7 +7,7 @@ import { EventHandler } from '../../core/event-handler.js';
 /**
  * @import { EventHandle } from 'playcanvas'
  *
- * @import { Controller } from '../controllers/controller.js'
+ * @import { Input } from '../inputs/input.js'
  */
 
 const tmpV1 = new Vec3();
@@ -25,10 +25,10 @@ const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class FlyCamera extends EventHandler {
     /**
-     * @type {Controller | null}
+     * @type {Input | null}
      * @private
      */
-    _controller = null;
+    _input = null;
 
     /**
      * @type {EventHandle[]}
@@ -149,14 +149,14 @@ class FlyCamera extends EventHandler {
     }
 
     /**
-     * @param {Controller} input - The input.
+     * @param {Input} input - The input.
      * @param {Mat4} transform - The transform.
      */
     attach(input, transform) {
-        if (this._controller) {
+        if (this._input) {
             this.detach();
         }
-        this._controller = input;
+        this._input = input;
 
         this._position.copy(transform.getTranslation());
         this._targetPosition.copy(this._position);
@@ -168,32 +168,29 @@ class FlyCamera extends EventHandler {
     }
 
     detach() {
-        if (!this._controller) {
+        if (!this._input) {
             return;
         }
         this._evts.forEach(evt => evt.off());
         this._evts.length = 0;
-        this._controller = null;
+        this._input = null;
 
         this._cancelSmoothTransform();
     }
 
     /**
+     * @param {number[]} frame - The frame.
      * @param {number} dt - The delta time.
      * @returns {Mat4} - The camera transform.
      */
-    update(dt) {
-        if (!this._controller?.camera) {
-            return this._transform;
-        }
-
+    update(frame, dt) {
         const [
             tdx, tdy, tdz,
             rdx, rdy,
             px, py,
             pdx, pdy,
             zdx
-        ] = this._controller.frame();
+        ] = frame;
         this._look(rdx, rdy);
         this._move(tdx, tdy, tdz, dt);
 

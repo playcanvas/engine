@@ -1,8 +1,4 @@
-/**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- */
-
-class Input {
+class Delta {
     /**
      * @type {number[]}
      */
@@ -30,7 +26,7 @@ class Input {
     }
 }
 
-class Controller {
+class Input {
     /**
      * @type {HTMLElement | null}
      * @protected
@@ -38,53 +34,38 @@ class Controller {
     _element = null;
 
     /**
-     * @type {CameraComponent | null}
-     * @protected
+     * @type {Delta}
      */
-    _camera = null;
+    translate = new Delta(3);
 
     /**
-     * @type {Input}
+     * @type {Delta}
      */
-    translate = new Input(3);
+    rotate = new Delta(2);
 
     /**
-     * @type {Input}
+     * @type {Delta}
      */
-    rotate = new Input(2);
+    pointer = new Delta(2);
 
     /**
-     * @type {Input}
+     * @type {Delta}
      */
-    pointer = new Input(2);
+    pan = new Delta(2);
 
     /**
-     * @type {Input}
+     * @type {Delta}
      */
-    pan = new Input(2);
-
-    /**
-     * @type {Input}
-     */
-    zoom = new Input();
-
-    /**
-     * @returns {CameraComponent | null} - The camera.
-     */
-    get camera() {
-        return this._camera;
-    }
+    zoom = new Delta();
 
     /**
      * @param {HTMLElement} element - The element.
-     * @param {CameraComponent} camera - The camera.
      */
-    attach(element, camera) {
+    attach(element) {
         if (this._element) {
             this.detach();
         }
         this._element = element;
-        this._camera = camera;
     }
 
     detach() {
@@ -122,4 +103,4 @@ class Controller {
     }
 }
 
-export { Controller };
+export { Input };
