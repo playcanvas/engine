@@ -122,13 +122,13 @@ app.on('update', (dt) => {
 
     const frame = input.frame();
     const mat = cam.update(input instanceof pc.JoystickInput ? {
-        rotate: frame.rotate,
+        drag: frame.touch,
         pointer: [0, 0],
-        zoom: [-frame.translate[2] * 10]
+        zoom: [-frame.stick[2] * 10]
     } : {
-        rotate: frame.rotate,
-        pointer: frame.pointer ?? [0, 0],
-        zoom: frame.zoom ?? [0]
+        drag: frame.mouse,
+        pointer: frame.pointer,
+        zoom: frame.wheel
     }, camera.camera, dt);
     camera.setPosition(mat.getTranslation());
     camera.setEulerAngles(mat.getEulerAngles());

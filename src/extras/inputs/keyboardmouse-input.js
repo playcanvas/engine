@@ -55,10 +55,10 @@ class KeyboardMouseInput extends Input {
      * @override
      */
     deltas = {
-        translate: new Delta(3),
-        rotate: new Delta(2),
+        key: new Delta(3),
+        mouse: new Delta(2),
         pointer: new Delta(2),
-        zoom: new Delta()
+        wheel: new Delta()
     };
 
     constructor() {
@@ -83,7 +83,7 @@ class KeyboardMouseInput extends Input {
      */
     _onWheel(event) {
         event.preventDefault();
-        this.deltas.zoom.add(event.deltaY);
+        this.deltas.wheel.add(event.deltaY);
     }
 
     /**
@@ -118,7 +118,7 @@ class KeyboardMouseInput extends Input {
         if (event.buttons === this._mouse.pan) {
             this._pointerPos.set(event.clientX, event.clientY);
         }
-        this.deltas.rotate.add(event.movementX, event.movementY);
+        this.deltas.mouse.add(event.movementX, event.movementY);
     }
 
     /**
@@ -273,7 +273,7 @@ class KeyboardMouseInput extends Input {
         const x = (this._key.right - this._key.left) * this.moveMult;
         const y = (this._key.up - this._key.down) * this.moveMult;
         const z = (this._key.forward - this._key.backward) * this.moveMult;
-        this.deltas.translate.add(x, y, z);
+        this.deltas.key.add(x, y, z);
 
         this.deltas.pointer.add(this._pointerPos.x, this._pointerPos.y);
 

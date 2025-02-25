@@ -63,8 +63,8 @@ class JoystickInput extends Input {
      * @override
      */
     deltas = {
-        translate: new Delta(3),
-        rotate: new Delta(2)
+        stick: new Delta(3),
+        touch: new Delta(2)
     };
 
     /**
@@ -162,7 +162,7 @@ class JoystickInput extends Input {
         if (left) {
             this._setInner(event.clientX, event.clientY);
         } else {
-            this.deltas.rotate.add(event.movementX, event.movementY);
+            this.deltas.touch.add(event.movementX, event.movementY);
         }
 
     }
@@ -253,7 +253,7 @@ class JoystickInput extends Input {
      * @override
      */
     frame() {
-        this.deltas.translate.add(this._value.x, 0, -this._value.y);
+        this.deltas.stick.add(this._value.x, 0, -this._value.y);
 
         return super.frame();
     }

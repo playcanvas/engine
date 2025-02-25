@@ -13,7 +13,7 @@ import { EventHandler } from '../../core/event-handler.js';
 
 /**
  * @typedef {object} OrbitInputFrame
- * @property {number[]} rotate - The rotate deltas.
+ * @property {number[]} drag - The rotate deltas.
  * @property {number[]} pointer - The pointer deltas.
  * @property {number[]} zoom - The zoom deltas.
  */
@@ -266,11 +266,11 @@ class OrbitCamera extends EventHandler {
      * @returns {Mat4} - The camera transform.
      */
     update(frame, camera, dt) {
-        const { rotate, pointer, zoom } = frame;
+        const { drag, pointer, zoom } = frame;
         if (pointer[0] && pointer[1]) {
-            this._pan(camera, pointer[0], pointer[1], rotate[0], rotate[1]);
+            this._pan(camera, pointer[0], pointer[1], drag[0], drag[1]);
         } else {
-            this._look(rotate[0], rotate[1]);
+            this._look(drag[0], drag[1]);
         }
         this._zoom(zoom[0]);
 
