@@ -122,7 +122,7 @@ app.on('update', (dt) => {
 
     const frame = input.frame();
     const mat = cam.update({
-        move: frame.pan,
+        pan: frame.pan,
         rotate: frame.rotate,
         pointer: frame.pointer ?? [0, 0],
         zoom: frame.zoom ?? [0]
