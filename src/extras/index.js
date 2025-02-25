@@ -28,6 +28,7 @@ export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 export { CameraFrame } from './render-passes/camera-frame.js';
 
 // INPUTS
+export { Input } from './inputs/input.js';
 export { JoystickInput } from './inputs/joystick-input.js';
 export { KeyboardMouseInput } from './inputs/keyboardmouse-input.js';
 

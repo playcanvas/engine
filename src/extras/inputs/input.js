@@ -34,7 +34,8 @@ class Input {
     _element = null;
 
     /**
-     * @type {Record<string, Delta>}
+     * @type {object}
+     * @protected
      */
     deltas = {};
 
@@ -57,11 +58,16 @@ class Input {
         this._camera = null;
     }
 
+    /**
+     * @returns {Record<string, number[]>} - The frame.
+     */
     frame() {
-        const frame = [];
-        for (const delta in this.deltas) {
-            frame.push(...this.deltas[delta].value);
-            this.deltas[delta].flush();
+        /** @type {Record<string, number[]>} */
+        const frame = {};
+        for (const name in this.deltas) {
+            const delta = this.deltas[name];
+            frame[name] = delta.value.slice();
+            delta.flush();
         }
         return frame;
     }

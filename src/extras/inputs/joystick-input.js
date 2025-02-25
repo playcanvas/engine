@@ -60,14 +60,11 @@ class JoystickInput extends Input {
     _value = new Vec2();
 
     /**
-     * @type {Record<string, Delta>}
+     * @override
      */
     deltas = {
         translate: new Delta(3),
-        rotate: new Delta(2),
-        pointer: new Delta(2),
-        pan: new Delta(2),
-        zoom: new Delta()
+        rotate: new Delta(2)
     };
 
     /**
@@ -252,6 +249,9 @@ class JoystickInput extends Input {
         this._camera = null;
     }
 
+    /**
+     * @override
+     */
     frame() {
         this.deltas.translate.add(this._value.x, 0, -this._value.y);
 

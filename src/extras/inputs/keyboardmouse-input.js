@@ -44,17 +44,6 @@ class KeyboardMouseInput extends Input {
     };
 
     /**
-     * @type {Record<string, Delta>}
-     */
-    deltas = {
-        translate: new Delta(3),
-        rotate: new Delta(2),
-        pointer: new Delta(2),
-        pan: new Delta(2),
-        zoom: new Delta()
-    };
-
-    /**
      * @type {boolean}
      * @private
      */
@@ -69,6 +58,17 @@ class KeyboardMouseInput extends Input {
      * @type {number}
      */
     crouchMult = 0.5;
+
+    /**
+     * @override
+     */
+    deltas = {
+        translate: new Delta(3),
+        rotate: new Delta(2),
+        pointer: new Delta(2),
+        pan: new Delta(2),
+        zoom: new Delta()
+    };
 
     constructor() {
         super();
@@ -289,6 +289,9 @@ class KeyboardMouseInput extends Input {
         };
     }
 
+    /**
+     * @override
+     */
     frame() {
         const x = (this._key.right - this._key.left) * this.moveMult;
         const y = (this._key.up - this._key.down) * this.moveMult;

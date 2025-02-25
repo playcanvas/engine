@@ -11,6 +11,14 @@ import { EventHandler } from '../../core/event-handler.js';
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  */
 
+/**
+ * @typedef {object} OrbitInputFrame
+ * @property {number[]} move - The move deltas.
+ * @property {number[]} rotate - The rotate deltas.
+ * @property {number[]} pointer - The pointer deltas.
+ * @property {number[]} zoom - The zoom deltas.
+ */
+
 const tmpVa = new Vec2();
 const tmpVb = new Vec2();
 const tmpV1 = new Vec3();
@@ -253,22 +261,16 @@ class OrbitCamera extends EventHandler {
     }
 
     /**
-     * @param {number[]} frame - The frame.
+     * @param {OrbitInputFrame} frame - The input frame.
      * @param {CameraComponent} camera - The camera.
      * @param {number} dt - The delta time.
      * @returns {Mat4} - The camera transform.
      */
     update(frame, camera, dt) {
-        const [
-            tdx, tdy, tdz,
-            rdx, rdy,
-            px, py,
-            pdx, pdy,
-            zdx
-        ] = frame;
-        this._pan(camera, px, py, pdx, pdy);
-        this._look(rdx, rdy);
-        this._zoom(zdx);
+        const { move, rotate, pointer, zoom } = frame;
+        this._pan(camera, pointer[0], pointer[1], move[0], move[1]);
+        this._look(rotate[0], rotate[1]);
+        this._zoom(zoom[0]);
 
         this._smoothTransform(dt);
         this._smoothZoom(dt);

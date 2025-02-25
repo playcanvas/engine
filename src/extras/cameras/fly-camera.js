@@ -4,6 +4,12 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
 import { EventHandler } from '../../core/event-handler.js';
 
+/**
+ * @typedef {object} FlyInputFrame
+ * @property {number[]} move - The move deltas.
+ * @property {number[]} rotate - The rotate deltas.
+ */
+
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
@@ -148,20 +154,14 @@ class FlyCamera extends EventHandler {
     }
 
     /**
-     * @param {number[]} frame - The frame.
+     * @param {FlyInputFrame} frame - The input frame.
      * @param {number} dt - The delta time.
      * @returns {Mat4} - The camera transform.
      */
     update(frame, dt) {
-        const [
-            tdx, tdy, tdz,
-            rdx, rdy,
-            px, py,
-            pdx, pdy,
-            zdx
-        ] = frame;
-        this._look(rdx, rdy);
-        this._move(tdx, tdy, tdz, dt);
+        const { move, rotate } = frame;
+        this._look(rotate[0], rotate[1]);
+        this._move(move[0], move[1], move[2], dt);
 
         this._smoothTransform(dt);
 

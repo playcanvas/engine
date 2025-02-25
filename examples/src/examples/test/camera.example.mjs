@@ -81,12 +81,14 @@ camera.setPosition(0, 20, 30);
 camera.setEulerAngles(-20, 0, 0);
 app.root.addChild(camera);
 
+/** @type {pc.Input} */
 let input;
 if (pc.platform.mobile) {
     input = new pc.JoystickInput();
 } else {
     input = new pc.KeyboardMouseInput();
 }
+// const input = new pc.KeyboardMouseInput();
 input.attach(canvas);
 
 const cam = new pc.OrbitCamera();
@@ -119,7 +121,12 @@ app.on('update', (dt) => {
     }
 
     const frame = input.frame();
-    const mat = cam.update(frame, camera.camera, dt);
+    const mat = cam.update({
+        move: frame.pan,
+        rotate: frame.rotate,
+        pointer: frame.pointer ?? [0, 0],
+        zoom: frame.zoom ?? [0]
+    }, camera.camera, dt);
     camera.setPosition(mat.getTranslation());
     camera.setEulerAngles(mat.getEulerAngles());
 });
