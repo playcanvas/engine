@@ -5,8 +5,16 @@ const tmpVa = new pc.Vec2();
 const tmpV1 = new pc.Vec3();
 
 class CameraControls {
+    /**
+     * @type {string}
+     * @static
+     */
     static MODE_FLY = 'fly';
 
+    /**
+     * @type {string}
+     * @static
+     */
     static MODE_ORBIT = 'orbit';
 
     /**
