@@ -177,6 +177,7 @@ class Grid extends Script {
         // check if the entity already has a render component
         if (this.entity.render) {
             console.error('The entity already has a render component.');
+            return;
         }
 
         // create render component
