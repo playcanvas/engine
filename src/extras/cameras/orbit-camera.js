@@ -14,8 +14,8 @@ import { EventHandler } from '../../core/event-handler.js';
 /**
  * @typedef {object} OrbitInputFrame
  * @property {number[]} drag - The rotate deltas.
- * @property {number[]} zoom - The zoom deltas.
- * @property {number[]} pan - The pan deltas.
+ * @property {number} zoom - The zoom delta.
+ * @property {boolean} pan - The pan state.
  */
 
 const tmpVa = new Vec2();
@@ -264,12 +264,12 @@ class OrbitCamera extends EventHandler {
      */
     update(frame, camera, dt) {
         const { drag, zoom, pan } = frame;
-        if (pan[0]) {
+        if (pan) {
             this._pan(camera, drag[0], drag[1]);
         } else {
             this._look(drag[0], drag[1]);
         }
-        this._zoom(zoom[0]);
+        this._zoom(zoom);
 
         this._smoothTransform(dt);
         this._smoothZoom(dt);

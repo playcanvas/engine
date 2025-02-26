@@ -124,15 +124,15 @@ app.on('update', (dt) => {
         const frame = input.frame();
         mat = cam.update({
             drag: frame.mouse,
-            zoom: frame.wheel,
-            pan: [+(frame.button[0] === 2)]
+            zoom: frame.wheel[0],
+            pan: frame.button[0] === 2
         }, camera.camera, dt);
     } else {
         const frame = input.frame();
         mat = cam.update({
             drag: frame.touch,
-            zoom: frame.pinch.map(x => x * 5),
-            pan: [+frame.multi[0]]
+            zoom: frame.pinch[0] * 5,
+            pan: !!frame.multi[0]
         }, camera.camera, dt);
     }
     camera.setPosition(mat.getTranslation());
