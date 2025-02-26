@@ -10,9 +10,7 @@ import aoSpecOccConstPS from './lit/frag/aoSpecOccConst.js';
 import aoSpecOccConstSimplePS from './lit/frag/aoSpecOccConstSimple.js';
 import aoSpecOccSimplePS from './lit/frag/aoSpecOccSimple.js';
 import basePS from './lit/frag/base.js';
-import baseVS from './lit/vert/base.js';
 import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
-import baseNineSlicedVS from './lit/vert/baseNineSliced.js';
 import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
 import bayerPS from './common/frag/bayer.js';
 import blurVSMPS from './lit/frag/blurVSM.js';
@@ -37,7 +35,6 @@ import diffuseDetailMapPS from './standard/frag/diffuseDetailMap.js';
 import emissivePS from './standard/frag/emissive.js';
 import encodePS from './common/frag/encode.js';
 import endPS from './lit/frag/end.js';
-import endVS from './lit/vert/end.js';
 import envAtlasPS from './common/frag/envAtlas.js';
 import envConstPS from './common/frag/envConst.js';
 import envMultiplyPS from './common/frag/envMultiply.js';
@@ -83,6 +80,7 @@ import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 import lightSheenPS from './lit/frag/lightSheen.js';
 import linearizeDepthPS from './common/frag/linearizeDepth.js';
+import litMainVS from './lit/vert/litMain.js';
 import litShaderArgsPS from './standard/frag/litShaderArgs.js';
 import ltcPS from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
@@ -176,7 +174,6 @@ import sphericalPS from './common/frag/spherical.js';
 import specularityFactorPS from './standard/frag/specularityFactor.js';
 import spotPS from './lit/frag/spot.js';
 import startPS from './lit/frag/start.js';
-import startVS from './lit/vert/start.js';
 import startNineSlicedPS from './lit/frag/startNineSliced.js';
 import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
 import tangentBinormalVS from './lit/vert/tangentBinormal.js';
@@ -199,8 +196,9 @@ import transmissionPS from './standard/frag/transmission.js';
 import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
+import uvTransformPS from './lit/vert/uvTransform.js';
+import uvTransformUniformsPS from './lit/vert/uvTransformUniforms.js';
 import viewDirPS from './lit/frag/viewDir.js';
-import viewNormalVS from './lit/vert/viewNormal.js';
 import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu.js';
 import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
 
@@ -223,9 +221,7 @@ const shaderChunks = {
     aoSpecOccConstSimplePS,
     aoSpecOccSimplePS,
     basePS,
-    baseVS,
     baseNineSlicedPS,
-    baseNineSlicedVS,
     baseNineSlicedTiledPS,
     bayerPS,
     blurVSMPS,
@@ -250,7 +246,6 @@ const shaderChunks = {
     emissivePS,
     encodePS,
     endPS,
-    endVS,
     envAtlasPS,
     envConstPS,
     envMultiplyPS,
@@ -296,6 +291,7 @@ const shaderChunks = {
     lightSpecularBlinnPS,
     lightSheenPS,
     linearizeDepthPS,
+    litMainVS,
     litShaderArgsPS,
     ltcPS,
     metalnessPS,
@@ -389,7 +385,6 @@ const shaderChunks = {
     specularityFactorPS,
     spotPS,
     startPS,
-    startVS,
     startNineSlicedPS,
     startNineSlicedTiledPS,
     tangentBinormalVS,
@@ -412,8 +407,9 @@ const shaderChunks = {
     twoSidedLightingPS,
     uv0VS,
     uv1VS,
+    uvTransformPS,
+    uvTransformUniformsPS,
     viewDirPS,
-    viewNormalVS,
     webgpuPS,
     webgpuVS
 };

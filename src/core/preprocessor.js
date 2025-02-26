@@ -152,7 +152,7 @@ class Preprocessor {
             // replace all instances of the injected defines with the value itself
             const lines = source.split('\n');
             injectDefines.forEach((value, key) => {
-                const regex = new RegExp(`\\b${key}\\b`, 'g');
+                const regex = new RegExp(key, 'g');
                 for (let i = 0; i < lines.length; i++) {
 
                     // replace them on lines that do not contain a preprocessor directive (the define itself for example)
