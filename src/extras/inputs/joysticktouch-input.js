@@ -63,7 +63,7 @@ class JoystickTouchInput extends Input {
      * @override
      */
     deltas = {
-        stick: new Delta(3),
+        stick: new Delta(2),
         touch: new Delta(2)
     };
 
@@ -249,7 +249,7 @@ class JoystickTouchInput extends Input {
      * @override
      */
     frame() {
-        this.deltas.stick.add(this._value.x, 0, -this._value.y);
+        this.deltas.stick.add(this._value.x, -this._value.y);
 
         return super.frame();
     }

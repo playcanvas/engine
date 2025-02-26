@@ -6,7 +6,7 @@ const PASSIVE = { passive: false };
 
 const tmpVa = new Vec2();
 
-class TouchInput extends Input {
+class MultiTouchInput extends Input {
     /**
      * @type {Map<number, PointerEvent>}
      * @private
@@ -203,4 +203,4 @@ class TouchInput extends Input {
     }
 }
 
-export { TouchInput };
+export { MultiTouchInput };

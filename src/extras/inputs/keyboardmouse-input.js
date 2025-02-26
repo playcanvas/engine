@@ -32,20 +32,10 @@ class KeyboardMouseInput extends Input {
     _button = 0;
 
     /**
-     * @type {number}
-     */
-    sprintMult = 2;
-
-    /**
-     * @type {number}
-     */
-    crouchMult = 0.5;
-
-    /**
      * @override
      */
     deltas = {
-        axes: new Delta(3),
+        keys: new Delta(8),
         mouse: new Delta(2),
         button: new Delta(),
         wheel: new Delta()
@@ -61,10 +51,6 @@ class KeyboardMouseInput extends Input {
         this._onContextMenu = this._onContextMenu.bind(this);
         this._onKeyDown = this._onKeyDown.bind(this);
         this._onKeyUp = this._onKeyUp.bind(this);
-    }
-
-    get moveMult() {
-        return this._key.sprint ? this.sprintMult : this._key.crouch ? this.crouchMult : 1;
     }
 
     /**
@@ -254,10 +240,16 @@ class KeyboardMouseInput extends Input {
      * @override
      */
     frame() {
-        const x = (this._key.right - this._key.left) * this.moveMult;
-        const y = (this._key.up - this._key.down) * this.moveMult;
-        const z = (this._key.forward - this._key.backward) * this.moveMult;
-        this.deltas.axes.add(x, y, z);
+        this.deltas.keys.add(
+            this._key.forward,
+            this._key.backward,
+            this._key.left,
+            this._key.right,
+            this._key.up,
+            this._key.down,
+            this._key.sprint,
+            this._key.crouch
+        );
 
         this.deltas.button.add(this._button);
 

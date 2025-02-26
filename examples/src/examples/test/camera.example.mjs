@@ -1,6 +1,8 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>LMB</b>) Fly</div><div>(<b>WASDQE</b>) Move</div></div>
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, localImport } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+const { CameraControls } = await localImport('camera-controls.mjs');
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -81,26 +83,6 @@ camera.setPosition(0, 20, 30);
 camera.setEulerAngles(-20, 0, 0);
 app.root.addChild(camera);
 
-let input;
-if (pc.platform.mobile) {
-    input = new pc.TouchInput();
-} else {
-    input = new pc.KeyboardMouseInput();
-}
-// const input = new pc.KeyboardMouseInput();
-input.attach(canvas);
-
-const mode = 'fly';
-let cam;
-if (mode === 'fly') {
-    cam = new pc.FlyCamera();
-} else {
-    cam = new pc.OrbitCamera();
-}
-cam.rotateSpeed = 0.3;
-cam.rotateDamping = 0.95;
-cam.attach(camera.getWorldTransform());
-
 /**
  * Calculate the bounding box of an entity.
  *
@@ -118,56 +100,21 @@ const calcEntityAABB = (bbox, entity) => {
     });
     return bbox;
 };
-if (cam instanceof pc.OrbitCamera) {
-    cam.focus(camera.getPosition(), calcEntityAABB(new pc.BoundingBox(), statue).center);
-}
 
-const tmpVa = new pc.Vec2();
-const tmpV1 = new pc.Vec3();
+// Create a camera controller
+const cc = new CameraControls({
+    app,
+    camera: camera.camera,
+    mode: CameraControls.MODE_FLY,
+    focus: calcEntityAABB(new pc.BoundingBox(), statue).center
+});
+
 app.on('update', (dt) => {
-    if (app.xr?.active) {
-        return;
-    }
-
-    let mat;
-    if (cam instanceof pc.OrbitCamera) {
-        if (input instanceof pc.KeyboardMouseInput) {
-            const [,,, mouseDx, mouseDy, wheelDx, button] = input.frame();
-            mat = cam.update({
-                drag: tmpVa.set(mouseDx, mouseDy),
-                zoom: wheelDx,
-                pan: button === 2
-            }, camera.camera, dt);
-        } else {
-            const [touchDx, touchDy, pinchDx, multi] = input.frame();
-            mat = cam.update({
-                drag: tmpVa.set(touchDx, touchDy),
-                zoom: pinchDx * 5,
-                pan: !!multi
-            }, camera.camera, dt);
-        }
-    } else {
-        if (input instanceof pc.KeyboardMouseInput) {
-            const [axisDx, axisDy, axisDz, mouseDx, mouseDy] = input.frame();
-            mat = cam.update({
-                rotate: tmpVa.set(mouseDx, mouseDy),
-                move: tmpV1.set(axisDx, axisDy, axisDz)
-            }, dt);
-        } else {
-            const [touchDx, touchDy] = input.frame();
-            mat = cam.update({
-                rotate: tmpVa.set(touchDx, touchDy),
-                move: tmpV1.set(0, 0, 0)
-            }, dt);
-        }
-    }
-    camera.setPosition(mat.getTranslation());
-    camera.setEulerAngles(mat.getEulerAngles());
+    cc.update(dt);
 });
 
 app.on('destroy', () => {
-    input.destroy();
-    cam.destroy();
+    cc.destroy();
 });
 
 export { app };
