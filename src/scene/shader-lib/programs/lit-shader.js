@@ -625,8 +625,8 @@ class LitShader {
             func.append(chunks.reflectionSpherePS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
         }
 
-        if (this.reflections) {
-            func.append(`
+        func.append(`
+            #ifdef LIT_REFLECTIONS
                 #ifdef LIT_CLEARCOAT
                     #include "reflectionCCPS"
                 #endif
@@ -634,8 +634,8 @@ class LitShader {
                 #ifdef LIT_SHEEN
                     #include "reflectionSheenPS"
                 #endif
-            `);
-        }
+            #endif
+        `);
 
         if (options.useRefraction) {
             if (options.useDynamicRefraction) {
