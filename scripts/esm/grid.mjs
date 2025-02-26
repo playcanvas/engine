@@ -180,14 +180,16 @@ class Grid extends Script {
     _resolution = Grid.RESOLUTION_HIGH;
 
     initialize() {
-
-        // ensure the entity has a render component
-        if (!this.entity.render) {
-            this.entity.addComponent('render', {
-                castShadows: false
-            });
-            this._addedRender = true;
+        // check if the entity already has a render component
+        if (this.entity.render) {
+            console.warn('The entity already has a render component.');
+            return;
         }
+
+        // create render component
+        this._addedRender = !!this.entity.addComponent('render', {
+            castShadows: false
+        });
 
         // create shader material
         this._material = new ShaderMaterial({
@@ -254,7 +256,6 @@ class Grid extends Script {
      * @private
      */
     _set(name, value) {
-
         if (!this._material) {
             return;
         }
