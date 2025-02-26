@@ -1,4 +1,3 @@
-import { Vec2 } from '../../core/math/vec2.js';
 import { Delta, Input } from './input.js';
 
 /** @type {AddEventListenerOptions & EventListenerOptions} */
@@ -10,12 +9,6 @@ class KeyboardMouseInput extends Input {
      * @private
      */
     _pointerId = 0;
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _pointerPos = new Vec2();
 
     /**
      * @type {Record<string, number>}
@@ -33,13 +26,10 @@ class KeyboardMouseInput extends Input {
     };
 
     /**
-     * @type {Record<string, number>}
+     * @type {number}
      * @private
      */
-    _mouse = {
-        rotate: 1,
-        pan: 2
-    };
+    _button = 0;
 
     /**
      * @type {number}
@@ -57,7 +47,7 @@ class KeyboardMouseInput extends Input {
     deltas = {
         key: new Delta(3),
         mouse: new Delta(2),
-        pointer: new Delta(2),
+        button: new Delta(),
         wheel: new Delta()
     };
 
@@ -97,10 +87,7 @@ class KeyboardMouseInput extends Input {
             return;
         }
         this._pointerId = event.pointerId;
-
-        if (event.buttons === this._mouse.pan) {
-            this._pointerPos.set(event.clientX, event.clientY);
-        }
+        this._button = event.buttons;
     }
 
     /**
@@ -114,9 +101,7 @@ class KeyboardMouseInput extends Input {
         if (this._pointerId !== event.pointerId) {
             return;
         }
-        if (event.buttons === this._mouse.pan) {
-            this._pointerPos.set(event.clientX, event.clientY);
-        }
+        this._button = event.buttons;
         this.deltas.mouse.add(event.movementX, event.movementY);
     }
 
@@ -131,7 +116,7 @@ class KeyboardMouseInput extends Input {
             return;
         }
         this._pointerId = 0;
-        this._pointerPos.set(0, 0);
+        this._button = 0;
     }
 
     /**
@@ -274,7 +259,7 @@ class KeyboardMouseInput extends Input {
         const z = (this._key.forward - this._key.backward) * this.moveMult;
         this.deltas.key.add(x, y, z);
 
-        this.deltas.pointer.add(this._pointerPos.x, this._pointerPos.y);
+        this.deltas.button.add(this._button);
 
         return super.frame();
     }

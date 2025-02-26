@@ -14,12 +14,11 @@ import { EventHandler } from '../../core/event-handler.js';
 /**
  * @typedef {object} OrbitInputFrame
  * @property {number[]} drag - The rotate deltas.
- * @property {number[]} pointer - The pointer deltas.
  * @property {number[]} zoom - The zoom deltas.
+ * @property {number[]} pan - The pan deltas.
  */
 
 const tmpVa = new Vec2();
-const tmpVb = new Vec2();
 const tmpV1 = new Vec3();
 const tmpQ1 = new Quat();
 const tmpR1 = new Ray();
@@ -144,15 +143,13 @@ class OrbitCamera extends EventHandler {
 
     /**
      * @param {CameraComponent} camera - The camera.
-     * @param {number} x - The x value.
-     * @param {number} y - The y value.
      * @param {number} dx - The dx value.
      * @param {number} dy - The dy value.
      * @private
      */
-    _pan(camera, x, y, dx, dy) {
-        const start = this._screenToWorldPan(camera, tmpVa.set(x, y), new Vec3());
-        const end = this._screenToWorldPan(camera, tmpVb.set(x + dx, y + dy), new Vec3());
+    _pan(camera, dx, dy) {
+        const start = this._screenToWorldPan(camera, Vec2.ZERO, new Vec3());
+        const end = this._screenToWorldPan(camera, tmpVa.set(dx, dy), new Vec3());
         tmpV1.sub2(start, end);
 
         this._targetPosition.add(tmpV1);
@@ -266,9 +263,9 @@ class OrbitCamera extends EventHandler {
      * @returns {Mat4} - The camera transform.
      */
     update(frame, camera, dt) {
-        const { drag, pointer, zoom } = frame;
-        if (pointer[0] && pointer[1]) {
-            this._pan(camera, pointer[0], pointer[1], drag[0], drag[1]);
+        const { drag, zoom, pan } = frame;
+        if (pan[0]) {
+            this._pan(camera, drag[0], drag[1]);
         } else {
             this._look(drag[0], drag[1]);
         }

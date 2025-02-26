@@ -123,12 +123,12 @@ app.on('update', (dt) => {
     const frame = input.frame();
     const mat = cam.update(input instanceof pc.KeyboardMouseInput ? {
         drag: frame.mouse,
-        pointer: frame.pointer,
-        zoom: frame.wheel
+        zoom: frame.wheel,
+        pan: [+(frame.button[0] === 2)]
     } : {
         drag: frame.touch,
-        pointer: frame.pointer,
-        zoom: frame.pinch.map(x => x * 5)
+        zoom: frame.pinch.map(x => x * 5),
+        pan: [+frame.multi[0]]
     }, camera.camera, dt);
     camera.setPosition(mat.getTranslation());
     camera.setEulerAngles(mat.getEulerAngles());
