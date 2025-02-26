@@ -185,6 +185,7 @@ import thicknessPS from './standard/frag/thickness.js';
 import tonemappingPS from './common/frag/tonemapping/tonemapping.js';
 import tonemappingAcesPS from './common/frag/tonemapping/tonemappingAces.js';
 import tonemappingAces2PS from './common/frag/tonemapping/tonemappingAces2.js';
+import tonemappingAces2NoExposurePS from './common/frag/tonemapping/tonemappingAces2_noexposure.js';
 import tonemappingFilmicPS from './common/frag/tonemapping/tonemappingFilmic.js';
 import tonemappingHejlPS from './common/frag/tonemapping/tonemappingHejl.js';
 import tonemappingLinearPS from './common/frag/tonemapping/tonemappingLinear.js';
@@ -399,6 +400,7 @@ const shaderChunks = {
     tonemappingPS,
     tonemappingAcesPS,
     tonemappingAces2PS,
+    tonemappingAces2NoExposurePS,
     tonemappingFilmicPS,
     tonemappingHejlPS,
     tonemappingLinearPS,

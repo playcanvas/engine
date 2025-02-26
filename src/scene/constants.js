@@ -669,6 +669,14 @@ export const TONEMAP_NEUTRAL = 5;
  */
 export const TONEMAP_NONE = 6;
 
+/**
+ * No tonemapping or exposure is applied. Used for HDR rendering.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const TONEMAP_ACES2_NOEXPOSURE = 7;
+
 // names of the tonemaps
 export const tonemapNames = [
     'LINEAR',
@@ -677,7 +685,8 @@ export const tonemapNames = [
     'ACES',
     'ACES2',
     'NEUTRAL',
-    'NONE'
+    'NONE',
+    'ACES2_NOEXPOSURE'
 ];
 
 /**

@@ -12,6 +12,8 @@ export default /* glsl */`
     #include "tonemappingAcesPS"
 #elif TONEMAP == ACES2
     #include "tonemappingAces2PS"
+#elif TONEMAP == ACES2_NOEXPOSURE
+    #include "tonemappingAces2NoExposurePS"
 #elif TONEMAP == NEUTRAL
     #include "tonemappingNeutralPS"
 #endif
