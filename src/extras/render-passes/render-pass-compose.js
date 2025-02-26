@@ -13,7 +13,6 @@ import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from
 const fragmentShader = /* glsl */ `
 
     #include "tonemappingPS"
-    #include "decodePS"
     #include "gammaPS"
 
     varying vec2 uv0;
