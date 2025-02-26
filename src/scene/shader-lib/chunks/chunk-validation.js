@@ -115,7 +115,12 @@ const removedChunks = {
     shadowEVSMnPS: CHUNKAPI_2_6,
     shadowVSM_commonPS: CHUNKAPI_2_6,
     shadowStandardPS: CHUNKAPI_2_6,
-    shadowStandardGL2PS: CHUNKAPI_2_6
+    shadowStandardGL2PS: CHUNKAPI_2_6,
+    startVS: CHUNKAPI_2_6,
+    endVS: CHUNKAPI_2_6,
+    baseVS: CHUNKAPI_2_6,
+    baseNineSlicedVS: CHUNKAPI_2_6,
+    viewNormalVS: CHUNKAPI_2_6
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
