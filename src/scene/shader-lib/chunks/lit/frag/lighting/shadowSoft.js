@@ -12,45 +12,45 @@ highp float fractSinRand( const in vec2 uv ) {
 }
 
 // struct to hold precomputed constants and current state
-struct PoissonDiskData {
+struct VogelDiskData {
     float invNumSamples;
-    float angleStep;
     float initialAngle;
-    float currentRadius;
-    float currentAngle;
+    float currentPointId;
 };
 
-// prepare the Poisson disk constants and initialize the current state in the struct
-void preparePoissonConstants(out PoissonDiskData data, int sampleCount, int numRings, float randomSeed) {
+// prepare the Vogel disk constants and initialize the current state in the struct
+void prepareDiskConstants(out VogelDiskData data, int sampleCount, int numRings, float randomSeed) {
     const float pi2 = 6.28318530718;
     data.invNumSamples = 1.0 / float(sampleCount);
-    data.angleStep = pi2 * float(numRings) * data.invNumSamples;
     data.initialAngle = randomSeed * pi2;
-    data.currentRadius = data.invNumSamples;
-    data.currentAngle = data.initialAngle;
+    data.currentPointId = 0.0;
 }
 
-// generate a Poisson sample using the precomputed struct
-vec2 generatePoissonSample(inout PoissonDiskData data) {
-    vec2 offset = vec2(cos(data.currentAngle), sin(data.currentAngle)) * pow(data.currentRadius, 0.75);
-    data.currentRadius += data.invNumSamples;
-    data.currentAngle += data.angleStep;
+#define GOLDEN_ANGLE 2.399963
+
+vec2 generateDiskSample(inout VogelDiskData data) {
+    float r = sqrt((data.currentPointId + 0.5) * data.invNumSamples);
+    float theta = data.currentPointId * GOLDEN_ANGLE + data.initialAngle;
+
+    vec2 offset = vec2(cos(theta), sin(theta)) * pow(r, 1.33);
+
+    data.currentPointId += 1.0;
     return offset;
 }
 
 void PCSSFindBlocker(TEXTURE_ACCEPT(shadowMap), out float avgBlockerDepth, out int numBlockers,
     vec2 shadowCoords, float z, int shadowBlockerSamples, float penumbraSize, float invShadowMapSize, float randomSeed) {
 
-    PoissonDiskData poissonData;
-    preparePoissonConstants(poissonData, shadowBlockerSamples, 11, randomSeed);
+    VogelDiskData diskData;
+    prepareDiskConstants(diskData, shadowBlockerSamples, 11, randomSeed);
 
     float searchWidth = penumbraSize * invShadowMapSize;
     float blockerSum = 0.0;
     numBlockers = 0;
 
     for( int i = 0; i < shadowBlockerSamples; ++i ) {
-        vec2 poissonUV = generatePoissonSample(poissonData);
-        vec2 sampleUV = shadowCoords + poissonUV * searchWidth;
+        vec2 diskUV = generateDiskSample(diskData);
+        vec2 sampleUV = shadowCoords + diskUV * searchWidth;
         float shadowMapDepth = texture2DLod(shadowMap, sampleUV, 0.0).r;
         if ( shadowMapDepth < z ) {
             blockerSum += shadowMapDepth;
@@ -61,20 +61,18 @@ void PCSSFindBlocker(TEXTURE_ACCEPT(shadowMap), out float avgBlockerDepth, out i
 }
 
 float PCSSFilter(TEXTURE_ACCEPT(shadowMap), vec2 uv, float receiverDepth, int shadowSamples, float filterRadius, float randomSeed) {
- 
-    PoissonDiskData poissonData;
-    preparePoissonConstants(poissonData, shadowSamples, 11, randomSeed);
 
-    float sum = 0.0f;
-    for ( int i = 0; i < shadowSamples; ++i )
-    {
-        vec2 poissonUV = generatePoissonSample(poissonData);
-        vec2 sampleUV = uv + poissonUV * filterRadius;
-        float depth = texture2DLod(shadowMap, sampleUV, 0.0).r;
+    VogelDiskData diskData;
+    prepareDiskConstants(diskData, shadowSamples, 11, randomSeed);
+
+    float sum = 0.0;
+    for (int i = 0; i < shadowSamples; i++) {
+        vec2 offsetUV = generateDiskSample(diskData) * filterRadius;
+        float depth = texture2DLod(shadowMap, uv + offsetUV, 0.0).r;
         sum += step(receiverDepth, depth);
     }
     return sum / float(shadowSamples);
-} 
+}
 
 float getPenumbra(float dblocker, float dreceiver, float penumbraSize, float penumbraFalloff) {
     float dist = dreceiver - dblocker;
