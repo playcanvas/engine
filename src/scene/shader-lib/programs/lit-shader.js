@@ -517,6 +517,7 @@ class LitShader {
         }
 
         if (options.useMetalness) fDefines.set('LIT_METALNESS', '');
+        if (options.enableGGXSpecular) fDefines.set('LIT_GGX_SPECULAR', '');
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
 
@@ -660,9 +661,11 @@ class LitShader {
             #ifdef LIT_SHEEN
                 #include "lightSheenPS"
             #endif
-        `);
 
-        if (options.enableGGXSpecular) func.append('uniform float material_anisotropy;');
+            #ifdef LIT_GGX_SPECULAR
+                uniform float material_anisotropy;
+            #endif
+        `);
 
         if (this.lighting) {
             func.append(chunks.lightDiffuseLambertPS);
@@ -675,7 +678,13 @@ class LitShader {
         if (options.useSpecular) {
 
             if (this.lighting) {
-                func.append(options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS);
+                func.append(`
+                    #ifdef LIT_GGX_SPECULAR
+                        #include "lightSpecularAnisoGGXPS"
+                    #else
+                        #include "lightSpecularBlinnPS"
+                    #endif
+                `);
             }
 
             if (!options.fresnelModel && !this.reflections && !options.diffuseMapEnabled) {
