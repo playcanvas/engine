@@ -261,7 +261,7 @@ class GSplatData {
 
     /**
      * @param {Vec3} result - The result.
-     * @param {Function} pred - Predicate given index for skipping.
+     * @param {Function} [pred] - Predicate given index for skipping.
      */
     calcFocalPoint(result, pred) {
         const x = this.getProp('x');

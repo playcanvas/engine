@@ -70,7 +70,10 @@ class ImageRenderable {
         this.model = null;
         this.node = null;
         this.mesh = null;
+        this.meshInstance?.destroy();
         this.meshInstance = null;
+        this.unmaskMeshInstance?.destroy();
+        this.unmaskMeshInstance = null;
         this._entity = null;
         this._element = null;
     }
@@ -92,6 +95,11 @@ class ImageRenderable {
     setMask(mask) {
         if (!this.meshInstance) return;
 
+        // remove model to remove mesh instance from layers
+        if (this._entity.enabled && this._element.enabled) {
+            this._element.removeModelFromLayers(this.model);
+        }
+
         if (mask) {
             this.unmaskMeshInstance = new MeshInstance(this.mesh, this.meshInstance.material, this.node);
             this.unmaskMeshInstance.name = `Unmask: ${this._entity.name}`;
@@ -111,14 +119,16 @@ class ImageRenderable {
             if (idx >= 0) {
                 this.model.meshInstances.splice(idx, 1);
             }
-
-            this.unmaskMeshInstance = null;
         }
 
-        // remove model then re-add to update to current mesh instances
+        // re-add to update to current mesh instances
         if (this._entity.enabled && this._element.enabled) {
-            this._element.removeModelFromLayers(this.model);
             this._element.addModelToLayers(this.model);
+        }
+
+        if (!mask) {
+            this.unmaskMeshInstance?.destroy();
+            this.unmaskMeshInstance = null;
         }
     }
 

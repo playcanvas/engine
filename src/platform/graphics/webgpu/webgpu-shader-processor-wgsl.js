@@ -282,7 +282,7 @@ class WebgpuShaderProcessorWGSL {
         const resourcesData = WebgpuShaderProcessorWGSL.processResources(device, parsedResources, shaderDefinition.processingOptions, shader);
 
         // generate fragment output struct
-        const fOutput = WebgpuShaderProcessorWGSL.generateFragmentOutputStruct(device.maxColorAttachments);
+        const fOutput = WebgpuShaderProcessorWGSL.generateFragmentOutputStruct(fragmentExtracted.src, device.maxColorAttachments);
 
         // VS - insert the blocks to the source
         const vBlock = `${attributesBlock}\n${vertexVaryingsBlock}\n${uniformsData.code}\n${resourcesData.code}\n`;
@@ -400,9 +400,9 @@ class WebgpuShaderProcessorWGSL {
             meshUniforms.push(new UniformFormat(UNUSED_UNIFORM_NAME, UNIFORMTYPE_FLOAT));
         }
 
-        const meshUniformBufferFormat = meshUniforms.length ? new UniformBufferFormat(device, meshUniforms) : null;
+        const meshUniformBufferFormat = new UniformBufferFormat(device, meshUniforms);
 
-        // generate code for uniform buffers
+        // generate code for uniform buffers, starts on the slot 0
         let code = '';
         processingOptions.uniformFormats.forEach((format, bindGroupIndex) => {
             if (format) {
@@ -484,12 +484,12 @@ class WebgpuShaderProcessorWGSL {
         let code = '';
         processingOptions.bindGroupFormats.forEach((format, bindGroupIndex) => {
             if (format) {
-                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, bindGroupIndex);
+                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, bindGroupIndex, 1);
             }
         });
 
         // and also for generated mesh format
-        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH);
+        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH, 0);
 
         return {
             code,
@@ -537,11 +537,12 @@ class WebgpuShaderProcessorWGSL {
      * ```
      * @param {BindGroupFormat} format - The format of the bind group.
      * @param {number} bindGroup - The bind group index.
+     * @param {number} startBindIndex - The starting bind index.
      * @returns {string} - The shader code for the bind group.
      */
-    static getTextureShaderDeclaration(format, bindGroup) {
+    static getTextureShaderDeclaration(format, bindGroup, startBindIndex) {
         let code = '';
-        let bindIndex = 0;
+        let bindIndex = startBindIndex;
 
         format.textureFormats.forEach((format) => {
 
@@ -606,14 +607,18 @@ class WebgpuShaderProcessorWGSL {
         return `struct ${structName} {\n${block}};\n`;
     }
 
-    static generateFragmentOutputStruct(numRenderTargets) {
+    static generateFragmentOutputStruct(src, numRenderTargets) {
         let structCode = 'struct FragmentOutput {\n';
 
         for (let i = 0; i < numRenderTargets; i++) {
             structCode += `    @location(${i}) color${i > 0 ? i : ''} : vec4f,\n`;
         }
 
-        structCode += '    @builtin(frag_depth) fragDepth : f32\n';
+        // find if the src contains `.fragDepth =`, ignoring whitespace before = sign
+        const needsFragDepth = src.search(/\.fragDepth\s*=/) !== -1;
+        if (needsFragDepth) {
+            structCode += '    @builtin(frag_depth) fragDepth : f32\n';
+        }
 
         return `${structCode}};\n`;
     }

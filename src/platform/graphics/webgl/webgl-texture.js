@@ -632,7 +632,7 @@ class WebglTexture {
                                 Math.max(Math.floor(texture._width * resMult), 1),
                                 Math.max(Math.floor(texture._height * resMult), 1),
                                 1,
-                                this._glFormat,
+                                this._glInternalFormat,
                                 mipObject[index]
                             );
                         }

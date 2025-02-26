@@ -12,8 +12,6 @@ import {
     Vec2
 } from 'playcanvas';
 
-/** @import { AppBase, Entity } from 'playcanvas' */
-
 const tmpVa = new Vec2();
 
 const EPISILON = 1e-3;
@@ -176,11 +174,16 @@ class Grid extends Script {
     _resolution = Grid.RESOLUTION_HIGH;
 
     initialize() {
-
-        // ensure the entity has a render component
-        if (!this.entity.render) {
-            this.entity.addComponent('render');
+        // check if the entity already has a render component
+        if (this.entity.render) {
+            console.error('The entity already has a render component.');
+            return;
         }
+
+        // create render component
+        this.entity.addComponent('render', {
+            castShadows: false
+        });
 
         // create shader material
         this._material = new ShaderMaterial({
@@ -222,18 +225,13 @@ class Grid extends Script {
 
         // enable/disable the mesh instance
         this.on('enable', () => {
-            if (!this.entity.render) return;
-            if (!this._meshInstance.mesh) {
-                const mesh = Mesh.fromGeometry(this.app.graphicsDevice, new PlaneGeometry());
-                this._meshInstance = new MeshInstance(mesh, this._material);
-                this._meshInstance.material = this._material;
-            }
-            this.entity.render.meshInstances = [this._meshInstance];
+            this._meshInstance.visible = true;
         });
         this.on('disable', () => {
-            if (!this.entity.render) return;
-            this.entity.render.meshInstances = [];
+            this._meshInstance.visible = false;
         });
+
+        this.on('destroy', this.destroy, this);
     }
 
     /**
@@ -252,7 +250,6 @@ class Grid extends Script {
      * @private
      */
     _set(name, value) {
-
         if (!this._material) {
             return;
         }
@@ -326,6 +323,10 @@ class Grid extends Script {
 
     get resolution() {
         return this._resolution;
+    }
+
+    destroy() {
+        this.entity.removeComponent('render');
     }
 }
 

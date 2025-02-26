@@ -2,10 +2,8 @@ import { FloatPacking } from '../../core/math/float-packing.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { Mat3 } from '../../core/math/mat3.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U,
-    PIXELFORMAT_RGBA8
+    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
@@ -81,7 +79,7 @@ class GSplat {
         gsplatData.calcAabb(this.aabb);
 
         const size = this.evalTextureSize(numSplats);
-        this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA8, size);
+        this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA16F, size);
         this.transformATexture = this.createTexture('transformA', PIXELFORMAT_RGBA32U, size);
         this.transformBTexture = this.createTexture('transformB', PIXELFORMAT_RGBA16F, size);
 
@@ -183,6 +181,7 @@ class GSplat {
         if (!texture) {
             return;
         }
+        const float2Half = FloatPacking.float2Half;
         const data = texture.lock();
 
         const cr = gsplatData.getProp('f_dc_0');
@@ -193,15 +192,15 @@ class GSplat {
         const SH_C0 = 0.28209479177387814;
 
         for (let i = 0; i < this.numSplats; ++i) {
-            const r = (cr[i] * SH_C0 + 0.5) * 255;
-            const g = (cg[i] * SH_C0 + 0.5) * 255;
-            const b = (cb[i] * SH_C0 + 0.5) * 255;
-            const a = 255 / (1 + Math.exp(-ca[i]));
+            const r = (cr[i] * SH_C0 + 0.5);
+            const g = (cg[i] * SH_C0 + 0.5);
+            const b = (cb[i] * SH_C0 + 0.5);
+            const a = 1 / (1 + Math.exp(-ca[i]));
 
-            data[i * 4 + 0] = r < 0 ? 0 : r > 255 ? 255 : r;
-            data[i * 4 + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
-            data[i * 4 + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
-            data[i * 4 + 3] = a < 0 ? 0 : a > 255 ? 255 : a;
+            data[i * 4 + 0] = float2Half(r);
+            data[i * 4 + 1] = float2Half(g);
+            data[i * 4 + 2] = float2Half(b);
+            data[i * 4 + 3] = float2Half(a);
         }
 
         texture.unlock();
@@ -227,58 +226,27 @@ class GSplat {
         const s = new Vec3();
         const iter = gsplatData.createIter(p, r, s);
 
-        const mat = new Mat3();
-        const cA = new Vec3();
-        const cB = new Vec3();
-
         for (let i = 0; i < this.numSplats; i++) {
             iter.read(i);
 
             r.normalize();
-            mat.setFromQuat(r);
-
-            this.computeCov3d(mat, s, cA, cB);
+            if (r.w < 0) {
+                r.mulScalar(-1);
+            }
 
             dataAFloat32[i * 4 + 0] = p.x;
             dataAFloat32[i * 4 + 1] = p.y;
             dataAFloat32[i * 4 + 2] = p.z;
-            dataA[i * 4 + 3] = float2Half(cB.x) | (float2Half(cB.y) << 16);
+            dataA[i * 4 + 3] = float2Half(r.x) | (float2Half(r.y) << 16);
 
-            dataB[i * 4 + 0] = float2Half(cA.x);
-            dataB[i * 4 + 1] = float2Half(cA.y);
-            dataB[i * 4 + 2] = float2Half(cA.z);
-            dataB[i * 4 + 3] = float2Half(cB.z);
+            dataB[i * 4 + 0] = float2Half(s.x);
+            dataB[i * 4 + 1] = float2Half(s.y);
+            dataB[i * 4 + 2] = float2Half(s.z);
+            dataB[i * 4 + 3] = float2Half(r.z);
         }
 
         this.transformATexture.unlock();
         this.transformBTexture.unlock();
-    }
-
-    /**
-     * Evaluate the covariance values based on the rotation and scale.
-     *
-     * @param {Mat3} rot - The rotation matrix.
-     * @param {Vec3} scale - The scale.
-     * @param {Vec3} covA - The first covariance vector.
-     * @param {Vec3} covB - The second covariance vector.
-     */
-    computeCov3d(rot, scale, covA, covB) {
-        const sx = scale.x;
-        const sy = scale.y;
-        const sz = scale.z;
-
-        const data = rot.data;
-        const r00 = data[0] * sx; const r01 = data[1] * sx; const r02 = data[2] * sx;
-        const r10 = data[3] * sy; const r11 = data[4] * sy; const r12 = data[5] * sy;
-        const r20 = data[6] * sz; const r21 = data[7] * sz; const r22 = data[8] * sz;
-
-        covA.x = r00 * r00 + r10 * r10 + r20 * r20;
-        covA.y = r00 * r01 + r10 * r11 + r20 * r21;
-        covA.z = r00 * r02 + r10 * r12 + r20 * r22;
-
-        covB.x = r01 * r01 + r11 * r11 + r21 * r21;
-        covB.y = r01 * r02 + r11 * r12 + r21 * r22;
-        covB.z = r02 * r02 + r12 * r12 + r22 * r22;
     }
 
     /**
