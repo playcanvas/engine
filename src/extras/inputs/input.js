@@ -59,10 +59,9 @@ class Input {
     }
 
     /**
-     * @returns {Record<string, number[]>} - The frame.
+     * @returns {object} - The deltas.
      */
     frame() {
-        /** @type {Record<string, number[]>} */
         const frame = {};
         for (const name in this.deltas) {
             const delta = this.deltas[name];

@@ -81,7 +81,6 @@ camera.setPosition(0, 20, 30);
 camera.setEulerAngles(-20, 0, 0);
 app.root.addChild(camera);
 
-/** @type {pc.Input} */
 let input;
 if (pc.platform.mobile) {
     input = new pc.TouchInput();
@@ -120,16 +119,22 @@ app.on('update', (dt) => {
         return;
     }
 
-    const frame = input.frame();
-    const mat = cam.update(input instanceof pc.KeyboardMouseInput ? {
-        drag: frame.mouse,
-        zoom: frame.wheel,
-        pan: [+(frame.button[0] === 2)]
-    } : {
-        drag: frame.touch,
-        zoom: frame.pinch.map(x => x * 5),
-        pan: [+frame.multi[0]]
-    }, camera.camera, dt);
+    let mat;
+    if (input instanceof pc.KeyboardMouseInput) {
+        const frame = input.frame();
+        mat = cam.update({
+            drag: frame.mouse,
+            zoom: frame.wheel,
+            pan: [+(frame.button[0] === 2)]
+        }, camera.camera, dt);
+    } else {
+        const frame = input.frame();
+        mat = cam.update({
+            drag: frame.touch,
+            zoom: frame.pinch.map(x => x * 5),
+            pan: [+frame.multi[0]]
+        }, camera.camera, dt);
+    }
     camera.setPosition(mat.getTranslation());
     camera.setEulerAngles(mat.getEulerAngles());
 });
