@@ -4,10 +4,12 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
 import { EventHandler } from '../../core/event-handler.js';
 
+/** @import { Vec2 } from '../../core/math/vec2.js'; */
+
 /**
  * @typedef {object} FlyInputFrame
- * @property {number[]} move - The move deltas.
- * @property {number[]} rotate - The rotate deltas.
+ * @property {Vec3} move - The move deltas.
+ * @property {Vec2} rotate - The rotate deltas.
  */
 
 const tmpV1 = new Vec3();
@@ -83,32 +85,29 @@ class FlyCamera extends EventHandler {
     moveDamping = 0.98;
 
     /**
-     * @param {number} dx - The dx value.
-     * @param {number} dy - The dy value.
+     * @param {Vec2} dv - The delta.
      * @private
      */
-    _look(dx, dy) {
-        this._targetAngles.x -= (dy || 0) * this.rotateSpeed;
-        this._targetAngles.y -= (dx || 0) * this.rotateSpeed;
+    _look(dv) {
+        this._targetAngles.x -= dv.y * this.rotateSpeed;
+        this._targetAngles.y -= dv.x * this.rotateSpeed;
     }
 
 
     /**
-     * @param {number} dx - The dx value.
-     * @param {number} dy - The dy value.
-     * @param {number} dz - The dz value.
+     * @param {Vec3} dv - The delta vector.
      * @param {number} dt - The delta time.
      * @private
      */
-    _move(dx, dy, dz, dt) {
+    _move(dv, dt) {
         const back = this._transform.getZ();
         const right = this._transform.getX();
         const up = this._transform.getY();
 
         tmpV1.set(0, 0, 0);
-        tmpV1.sub(tmpV2.copy(back).mulScalar(dz));
-        tmpV1.add(tmpV2.copy(right).mulScalar(dx));
-        tmpV1.add(tmpV2.copy(up).mulScalar(dy));
+        tmpV1.sub(tmpV2.copy(back).mulScalar(dv.z));
+        tmpV1.add(tmpV2.copy(right).mulScalar(dv.x));
+        tmpV1.add(tmpV2.copy(up).mulScalar(dv.y));
         tmpV1.mulScalar(this.moveSpeed * dt);
 
         this._targetPosition.add(tmpV1);
@@ -160,8 +159,8 @@ class FlyCamera extends EventHandler {
      */
     update(frame, dt) {
         const { move, rotate } = frame;
-        this._look(rotate[0], rotate[1]);
-        this._move(move[0], move[1], move[2], dt);
+        this._look(rotate);
+        this._move(move, dt);
 
         this._smoothTransform(dt);
 

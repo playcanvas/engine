@@ -114,6 +114,7 @@ const calcEntityAABB = (bbox, entity) => {
 };
 cam.focus(camera.getPosition(), calcEntityAABB(new pc.BoundingBox(), statue).center);
 
+const tmpVa = new pc.Vec2();
 app.on('update', (dt) => {
     if (app.xr?.active) {
         return;
@@ -123,14 +124,14 @@ app.on('update', (dt) => {
     if (input instanceof pc.KeyboardMouseInput) {
         const [mouseX, mouseY, wheel, button] = input.frame();
         mat = cam.update({
-            drag: [mouseX, mouseY],
+            drag: tmpVa.set(mouseX, mouseY),
             zoom: wheel,
             pan: button === 2
         }, camera.camera, dt);
     } else {
         const [touchX, touchY, pinch, multi] = input.frame();
         mat = cam.update({
-            drag: [touchX, touchY],
+            drag: tmpVa.set(touchX, touchY),
             zoom: pinch * 5,
             pan: !!multi
         }, camera.camera, dt);
