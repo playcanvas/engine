@@ -2,7 +2,6 @@ import { FloatPacking } from '../../core/math/float-packing.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { Mat3 } from '../../core/math/mat3.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U,
     PIXELFORMAT_RGBA8
@@ -227,58 +226,27 @@ class GSplat {
         const s = new Vec3();
         const iter = gsplatData.createIter(p, r, s);
 
-        const mat = new Mat3();
-        const cA = new Vec3();
-        const cB = new Vec3();
-
         for (let i = 0; i < this.numSplats; i++) {
             iter.read(i);
 
             r.normalize();
-            mat.setFromQuat(r);
-
-            this.computeCov3d(mat, s, cA, cB);
+            if (r.w < 0) {
+                r.mulScalar(-1);
+            }
 
             dataAFloat32[i * 4 + 0] = p.x;
             dataAFloat32[i * 4 + 1] = p.y;
             dataAFloat32[i * 4 + 2] = p.z;
-            dataA[i * 4 + 3] = float2Half(cB.x) | (float2Half(cB.y) << 16);
+            dataA[i * 4 + 3] = float2Half(r.x) | (float2Half(r.y) << 16);
 
-            dataB[i * 4 + 0] = float2Half(cA.x);
-            dataB[i * 4 + 1] = float2Half(cA.y);
-            dataB[i * 4 + 2] = float2Half(cA.z);
-            dataB[i * 4 + 3] = float2Half(cB.z);
+            dataB[i * 4 + 0] = float2Half(s.x);
+            dataB[i * 4 + 1] = float2Half(s.y);
+            dataB[i * 4 + 2] = float2Half(s.z);
+            dataB[i * 4 + 3] = float2Half(r.z);
         }
 
         this.transformATexture.unlock();
         this.transformBTexture.unlock();
-    }
-
-    /**
-     * Evaluate the covariance values based on the rotation and scale.
-     *
-     * @param {Mat3} rot - The rotation matrix.
-     * @param {Vec3} scale - The scale.
-     * @param {Vec3} covA - The first covariance vector.
-     * @param {Vec3} covB - The second covariance vector.
-     */
-    computeCov3d(rot, scale, covA, covB) {
-        const sx = scale.x;
-        const sy = scale.y;
-        const sz = scale.z;
-
-        const data = rot.data;
-        const r00 = data[0] * sx; const r01 = data[1] * sx; const r02 = data[2] * sx;
-        const r10 = data[3] * sy; const r11 = data[4] * sy; const r12 = data[5] * sy;
-        const r20 = data[6] * sz; const r21 = data[7] * sz; const r22 = data[8] * sz;
-
-        covA.x = r00 * r00 + r10 * r10 + r20 * r20;
-        covA.y = r00 * r01 + r10 * r11 + r20 * r21;
-        covA.z = r00 * r02 + r10 * r12 + r20 * r22;
-
-        covB.x = r01 * r01 + r11 * r11 + r21 * r21;
-        covB.y = r01 * r02 + r11 * r12 + r21 * r22;
-        covB.z = r02 * r02 + r12 * r12 + r22 * r22;
     }
 
     /**
