@@ -252,7 +252,6 @@ class KeyboardMouseInput extends Input {
 
     /**
      * @override
-     * @returns {{ [K in keyof KeyboardMouseInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
         const x = (this._key.right - this._key.left) * this.moveMult;

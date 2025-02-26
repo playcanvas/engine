@@ -121,18 +121,18 @@ app.on('update', (dt) => {
 
     let mat;
     if (input instanceof pc.KeyboardMouseInput) {
-        const frame = input.frame();
+        const [mouseX, mouseY, wheel, button] = input.frame();
         mat = cam.update({
-            drag: frame.mouse,
-            zoom: frame.wheel[0],
-            pan: frame.button[0] === 2
+            drag: [mouseX, mouseY],
+            zoom: wheel,
+            pan: button === 2
         }, camera.camera, dt);
     } else {
-        const frame = input.frame();
+        const [touchX, touchY, pinch, multi] = input.frame();
         mat = cam.update({
-            drag: frame.touch,
-            zoom: frame.pinch[0] * 5,
-            pan: !!frame.multi[0]
+            drag: [touchX, touchY],
+            zoom: pinch * 5,
+            pan: !!multi
         }, camera.camera, dt);
     }
     camera.setPosition(mat.getTranslation());

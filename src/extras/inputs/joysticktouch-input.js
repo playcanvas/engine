@@ -251,7 +251,6 @@ class JoystickTouchInput extends Input {
 
     /**
      * @override
-     * @returns {{ [K in keyof JoystickTouchInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
         this.deltas.stick.add(this._value.x, 0, -this._value.y);
