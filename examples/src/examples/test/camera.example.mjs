@@ -90,7 +90,13 @@ if (pc.platform.mobile) {
 // const input = new pc.KeyboardMouseInput();
 input.attach(canvas);
 
-const cam = new pc.OrbitCamera();
+const mode = 'fly';
+let cam;
+if (mode === 'fly') {
+    cam = new pc.FlyCamera();
+} else {
+    cam = new pc.OrbitCamera();
+}
 cam.rotateSpeed = 0.3;
 cam.rotateDamping = 0.95;
 cam.attach(camera.getWorldTransform());
@@ -112,29 +118,48 @@ const calcEntityAABB = (bbox, entity) => {
     });
     return bbox;
 };
-cam.focus(camera.getPosition(), calcEntityAABB(new pc.BoundingBox(), statue).center);
+if (cam instanceof pc.OrbitCamera) {
+    cam.focus(camera.getPosition(), calcEntityAABB(new pc.BoundingBox(), statue).center);
+}
 
 const tmpVa = new pc.Vec2();
+const tmpV1 = new pc.Vec3();
 app.on('update', (dt) => {
     if (app.xr?.active) {
         return;
     }
 
     let mat;
-    if (input instanceof pc.KeyboardMouseInput) {
-        const [mouseX, mouseY, wheel, button] = input.frame();
-        mat = cam.update({
-            drag: tmpVa.set(mouseX, mouseY),
-            zoom: wheel,
-            pan: button === 2
-        }, camera.camera, dt);
+    if (cam instanceof pc.OrbitCamera) {
+        if (input instanceof pc.KeyboardMouseInput) {
+            const [,,, mouseDx, mouseDy, wheelDx, button] = input.frame();
+            mat = cam.update({
+                drag: tmpVa.set(mouseDx, mouseDy),
+                zoom: wheelDx,
+                pan: button === 2
+            }, camera.camera, dt);
+        } else {
+            const [touchDx, touchDy, pinchDx, multi] = input.frame();
+            mat = cam.update({
+                drag: tmpVa.set(touchDx, touchDy),
+                zoom: pinchDx * 5,
+                pan: !!multi
+            }, camera.camera, dt);
+        }
     } else {
-        const [touchX, touchY, pinch, multi] = input.frame();
-        mat = cam.update({
-            drag: tmpVa.set(touchX, touchY),
-            zoom: pinch * 5,
-            pan: !!multi
-        }, camera.camera, dt);
+        if (input instanceof pc.KeyboardMouseInput) {
+            const [axisDx, axisDy, axisDz, mouseDx, mouseDy] = input.frame();
+            mat = cam.update({
+                rotate: tmpVa.set(mouseDx, mouseDy),
+                move: tmpV1.set(axisDx, axisDy, axisDz)
+            }, dt);
+        } else {
+            const [touchDx, touchDy] = input.frame();
+            mat = cam.update({
+                rotate: tmpVa.set(touchDx, touchDy),
+                move: tmpV1.set(0, 0, 0)
+            }, dt);
+        }
     }
     camera.setPosition(mat.getTranslation());
     camera.setEulerAngles(mat.getEulerAngles());

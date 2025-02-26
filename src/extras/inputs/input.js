@@ -67,7 +67,7 @@ class Input {
         const frame = [];
         for (const name in this.deltas) {
             const delta = this.deltas[name];
-            frame[name].push(...delta.value);
+            frame.push(...delta.value);
             delta.flush();
         }
         return frame;

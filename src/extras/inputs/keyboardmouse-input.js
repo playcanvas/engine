@@ -45,7 +45,7 @@ class KeyboardMouseInput extends Input {
      * @override
      */
     deltas = {
-        key: new Delta(3),
+        axes: new Delta(3),
         mouse: new Delta(2),
         button: new Delta(),
         wheel: new Delta()
@@ -257,7 +257,7 @@ class KeyboardMouseInput extends Input {
         const x = (this._key.right - this._key.left) * this.moveMult;
         const y = (this._key.up - this._key.down) * this.moveMult;
         const z = (this._key.forward - this._key.backward) * this.moveMult;
-        this.deltas.key.add(x, y, z);
+        this.deltas.axes.add(x, y, z);
 
         this.deltas.button.add(this._button);
 
