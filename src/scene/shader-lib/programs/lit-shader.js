@@ -516,6 +516,8 @@ class LitShader {
             if (options.useIridescence) fDefines.set('LIT_IRIDESCENCE', '');
         }
 
+        if (options.useMetalness) fDefines.set('LIT_METALNESS', '');
+
         // FRAGMENT SHADER INPUTS: UNIFORMS
 
         let hasAreaLights = options.lights.some((light) => {
@@ -581,9 +583,11 @@ class LitShader {
         }
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
-            if (options.useMetalness) {
-                func.append(chunks.metalnessModulatePS);
-            }
+            func.append(`
+                #ifdef LIT_METALNESS
+                    #include "metalnessModulatePS"
+                #endif
+            `);
 
             if (options.fresnelModel === FRESNEL_SCHLICK) {
                 func.append(chunks.fresnelSchlickPS);
@@ -792,13 +796,13 @@ class LitShader {
         }
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
-            if (options.useMetalness) {
-                backend.append('    float f0 = 1.0 / litArgs_ior; f0 = (f0 - 1.0) / (f0 + 1.0); f0 *= f0;');
-                backend.append('    litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0);');
-                backend.append('    litArgs_albedo = getAlbedoModulate(litArgs_albedo, litArgs_metalness);');
-            }
-
             backend.append(`
+                #ifdef LIT_METALNESS
+                    float f0 = 1.0 / litArgs_ior; f0 = (f0 - 1.0) / (f0 + 1.0); f0 *= f0;
+                    litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0);
+                    litArgs_albedo = getAlbedoModulate(litArgs_albedo, litArgs_metalness);
+                #endif
+
                 #ifdef LIT_IRIDESCENCE
                     vec3 iridescenceFresnel = getIridescence(saturate(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence_thickness);
                 #endif
