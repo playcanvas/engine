@@ -72,7 +72,10 @@ class KeyboardMouseInput extends Input {
             return;
         }
         this._pointerId = event.pointerId;
+
+        this._button.fill(0);
         this._button[event.button] = 1;
+        this.deltas.button.add(...this._button);
     }
 
     /**
@@ -94,13 +97,16 @@ class KeyboardMouseInput extends Input {
      * @private
      */
     _onPointerUp(event) {
-        this._button.fill(0);
         this._element?.releasePointerCapture(event.pointerId);
 
         if (this._pointerId !== event.pointerId) {
             return;
         }
         this._pointerId = 0;
+
+        this._button.fill(0);
+        this._button[event.button] = -1;
+        this.deltas.button.add(...this._button);
     }
 
     /**
@@ -250,12 +256,6 @@ class KeyboardMouseInput extends Input {
             this._key.down,
             this._key.sprint,
             this._key.crouch
-        );
-
-        this.deltas.button.add(
-            this._button[0],
-            this._button[1],
-            this._button[2]
         );
 
         return super.frame();
