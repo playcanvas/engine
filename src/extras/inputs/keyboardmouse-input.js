@@ -232,6 +232,8 @@ class KeyboardMouseInput extends Input {
             sprint: 0,
             crouch: 0
         };
+
+        this._button.fill(0);
     }
 
     /**
