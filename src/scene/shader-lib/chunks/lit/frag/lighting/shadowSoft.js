@@ -14,7 +14,6 @@ highp float fractSinRand( const in vec2 uv ) {
 // struct to hold precomputed constants and current state
 struct VogelDiskData {
     float invNumSamples;
-    float angleStep;
     float initialAngle;
     float currentPointId;
 };
@@ -23,7 +22,6 @@ struct VogelDiskData {
 void prepareDiskConstants(out VogelDiskData data, int sampleCount, int numRings, float randomSeed) {
     const float pi2 = 6.28318530718;
     data.invNumSamples = 1.0 / float(sampleCount);
-    data.angleStep = pi2 * float(numRings) * data.invNumSamples;
     data.initialAngle = randomSeed * pi2;
     data.currentPointId = 0.0;
 }
