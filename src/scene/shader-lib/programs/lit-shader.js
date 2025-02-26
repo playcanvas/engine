@@ -19,7 +19,6 @@ import {
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
-import { LightsBuffer } from '../../lighting/lights-buffer.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { ChunkBuilder } from '../chunk-builder.js';
@@ -587,7 +586,7 @@ class LitShader {
             #include "lightDeclarationPS, LIGHT_COUNT"
 
             #if defined(CLUSTERED_LIGHTS)
-                ${LightsBuffer.getShaderDefines()}
+                #include "lightBufferDefinesPS"
             #endif
 
             // required lighting functionality

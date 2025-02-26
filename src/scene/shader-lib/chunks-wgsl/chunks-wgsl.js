@@ -284,6 +284,7 @@ const shaderChunksWGSL = {
     // iridescencePS,
     // iridescenceThicknessPS,
     // iorPS,
+    lightBufferDefinesPS: '',  // this chunk gets genereated at startup
     // lightDeclarationPS,
     // lightDiffuseLambertPS,
     // lightDirPointPS,
