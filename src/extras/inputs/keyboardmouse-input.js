@@ -26,18 +26,18 @@ class KeyboardMouseInput extends Input {
     };
 
     /**
-     * @type {number}
+     * @type {number[]}
      * @private
      */
-    _button = 0;
+    _button = [0, 0, 0];
 
     /**
      * @override
      */
     deltas = {
-        keys: new Delta(8),
+        key: new Delta(8),
+        button: new Delta(3),
         mouse: new Delta(2),
-        button: new Delta(),
         wheel: new Delta()
     };
 
@@ -68,12 +68,11 @@ class KeyboardMouseInput extends Input {
      */
     _onPointerDown(event) {
         this._element?.setPointerCapture(event.pointerId);
-
         if (this._pointerId) {
             return;
         }
         this._pointerId = event.pointerId;
-        this._button = event.buttons;
+        this._button[event.button] = 1;
     }
 
     /**
@@ -87,7 +86,6 @@ class KeyboardMouseInput extends Input {
         if (this._pointerId !== event.pointerId) {
             return;
         }
-        this._button = event.buttons;
         this.deltas.mouse.add(event.movementX, event.movementY);
     }
 
@@ -96,13 +94,13 @@ class KeyboardMouseInput extends Input {
      * @private
      */
     _onPointerUp(event) {
+        this._button.fill(0);
         this._element?.releasePointerCapture(event.pointerId);
 
         if (this._pointerId !== event.pointerId) {
             return;
         }
         this._pointerId = 0;
-        this._button = 0;
     }
 
     /**
@@ -238,9 +236,10 @@ class KeyboardMouseInput extends Input {
 
     /**
      * @override
+     * @returns {{ [K in keyof KeyboardMouseInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
-        this.deltas.keys.add(
+        this.deltas.key.add(
             this._key.forward,
             this._key.backward,
             this._key.left,
@@ -251,7 +250,11 @@ class KeyboardMouseInput extends Input {
             this._key.crouch
         );
 
-        this.deltas.button.add(this._button);
+        this.deltas.button.add(
+            this._button[0],
+            this._button[1],
+            this._button[2]
+        );
 
         return super.frame();
     }

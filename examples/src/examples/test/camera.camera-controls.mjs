@@ -94,17 +94,28 @@ class CameraControls {
 
         // focus
         if (focus) {
-            this.focus(focus);
+            this.focusPoint = focus;
         }
     }
 
     /**
-     * @param {pc.Vec3} point - The point.
+     * @attribute
+     * @title Focus Point
+     * @description The camera's focus point.
+     * @type {Vec3}
+     * @default [0, 0, 0]
      */
-    focus(point) {
+    set focusPoint(point) {
         if (this._model instanceof pc.OrbitModel) {
             this._model.focus(this._camera.entity.getPosition(), point);
         }
+    }
+
+    get focusPoint() {
+        if (this._model instanceof pc.OrbitModel) {
+            return this._model.point;
+        }
+        return this._camera.entity.getPosition();
     }
 
     /**
@@ -117,66 +128,49 @@ class CameraControls {
 
         if (this._model instanceof pc.OrbitModel) {
             if (this._input instanceof pc.KeyboardMouseInput) {
-                const [
-                    ,,,,,,,,
-                    mouseX,
-                    mouseY,
-                    wheel,
-                    button
-                ] = this._input.frame();
+                const { button, mouse, wheel } = this._input.frame();
                 tmpM1.copy(this._model.update({
-                    drag: tmpVa.set(mouseX, mouseY),
-                    zoom: wheel,
-                    pan: button === this.panButton
+                    drag: tmpVa.fromArray(mouse),
+                    zoom: wheel[0],
+                    pan: !!button[2]
                 }, this._camera, dt));
             }
             if (this._input instanceof pc.MultiTouchInput) {
-                const [
-                    touchX,
-                    touchY,
-                    pinch,
-                    multi
-                ] = this._input.frame();
+                const { touch, pinch, multi } = this._input.frame();
                 tmpM1.copy(this._model.update({
-                    drag: tmpVa.set(touchX, touchY),
-                    zoom: pinch * this.pinchMult,
-                    pan: !!multi
+                    drag: tmpVa.fromArray(touch),
+                    zoom: pinch[0] * this.pinchMult,
+                    pan: !!multi[0]
                 }, this._camera, dt));
             }
         } else {
             if (this._input instanceof pc.KeyboardMouseInput) {
+                const { key, mouse } = this._input.frame();
                 const [
-                    keyForward,
-                    keyBack,
-                    keyLeft,
-                    keyRight,
-                    keyUp,
-                    keyDown,
-                    keyFast,
-                    keySlow,
-                    mouseX,
-                    mouseY
-                ] = this._input.frame();
-                const mult = keyFast ? this.moveFastMult : keySlow ? this.moveSlowMult : 1;
+                    forward,
+                    back,
+                    left,
+                    right,
+                    up,
+                    down,
+                    fast,
+                    slow
+                ] = key;
+                const mult = fast ? this.moveFastMult : slow ? this.moveSlowMult : 1;
                 tmpM1.copy(this._model.update({
-                    rotate: tmpVa.set(mouseX, mouseY),
+                    rotate: tmpVa.fromArray(mouse),
                     move: tmpV1.set(
-                        (keyRight - keyLeft) * mult,
-                        (keyUp - keyDown) * mult,
-                        (keyForward - keyBack) * mult
+                        (right - left) * mult,
+                        (up - down) * mult,
+                        (forward - back) * mult
                     )
                 }, dt));
             }
             if (this._input instanceof pc.JoystickTouchInput) {
-                const [
-                    stickX,
-                    stickY,
-                    touchX,
-                    touchY
-                ] = this._input.frame();
+                const { stick, touch } = this._input.frame();
                 tmpM1.copy(this._model.update({
-                    rotate: tmpVa.set(touchX, touchY),
-                    move: tmpV1.set(stickX, 0, stickY)
+                    rotate: tmpVa.fromArray(touch),
+                    move: tmpV1.set(stick[0], 0, stick[1])
                 }, dt));
             }
         }

@@ -59,15 +59,13 @@ class Input {
     }
 
     /**
-     * Flatten the deltas into a frame and then flushes them.
-     *
-     * @returns {number[]} - The delta frame.
+     * @returns {object} - The deltas.
      */
     frame() {
-        const frame = [];
+        const frame = {};
         for (const name in this.deltas) {
             const delta = this.deltas[name];
-            frame.push(...delta.value);
+            frame[name] = delta.value.slice();
             delta.flush();
         }
         return frame;

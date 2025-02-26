@@ -191,6 +191,7 @@ class MultiTouchInput extends Input {
 
     /**
      * @override
+     * @returns {{ [K in keyof MultiTouchInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
         this.deltas.multi.add(+this._multi);

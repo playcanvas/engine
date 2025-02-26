@@ -105,7 +105,7 @@ const calcEntityAABB = (bbox, entity) => {
 const cc = new CameraControls({
     app,
     camera: camera.camera,
-    mode: CameraControls.MODE_FLY,
+    mode: CameraControls.MODE_ORBIT,
     focus: calcEntityAABB(new pc.BoundingBox(), statue).center
 });
 
