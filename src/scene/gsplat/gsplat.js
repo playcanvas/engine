@@ -80,7 +80,7 @@ class GSplat {
         gsplatData.calcAabb(this.aabb);
 
         const size = this.evalTextureSize(numSplats);
-        this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA8, size);
+        this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA16F, size);
         this.transformATexture = this.createTexture('transformA', PIXELFORMAT_RGBA32U, size);
         this.transformBTexture = this.createTexture('transformB', PIXELFORMAT_RGBA16F, size);
 
@@ -182,6 +182,7 @@ class GSplat {
         if (!texture) {
             return;
         }
+        const float2Half = FloatPacking.float2Half;
         const data = texture.lock();
 
         const cr = gsplatData.getProp('f_dc_0');
@@ -192,15 +193,15 @@ class GSplat {
         const SH_C0 = 0.28209479177387814;
 
         for (let i = 0; i < this.numSplats; ++i) {
-            const r = (cr[i] * SH_C0 + 0.5) * 255;
-            const g = (cg[i] * SH_C0 + 0.5) * 255;
-            const b = (cb[i] * SH_C0 + 0.5) * 255;
-            const a = 255 / (1 + Math.exp(-ca[i]));
+            const r = (cr[i] * SH_C0 + 0.5);
+            const g = (cg[i] * SH_C0 + 0.5);
+            const b = (cb[i] * SH_C0 + 0.5);
+            const a = 1 / (1 + Math.exp(-ca[i]));
 
-            data[i * 4 + 0] = r < 0 ? 0 : r > 255 ? 255 : r;
-            data[i * 4 + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
-            data[i * 4 + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
-            data[i * 4 + 3] = a < 0 ? 0 : a > 255 ? 255 : a;
+            data[i * 4 + 0] = float2Half(r);
+            data[i * 4 + 1] = float2Half(g);
+            data[i * 4 + 2] = float2Half(b);
+            data[i * 4 + 3] = float2Half(a);
         }
 
         texture.unlock();
