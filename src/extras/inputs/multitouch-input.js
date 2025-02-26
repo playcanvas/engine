@@ -20,10 +20,10 @@ class MultiTouchInput extends Input {
     _pointerPos = new Vec2();
 
     /**
-     * @type {boolean}
+     * @type {number}
      * @private
      */
-    _multi = false;
+    _touches = 0;
 
     /**
      * @type {number}
@@ -36,7 +36,7 @@ class MultiTouchInput extends Input {
      */
     deltas = {
         touch: new Delta(2),
-        multi: new Delta(),
+        count: new Delta(),
         pinch: new Delta()
     };
 
@@ -68,8 +68,8 @@ class MultiTouchInput extends Input {
 
         this._pointerEvents.set(event.pointerId, event);
 
-        this._multi = this._pointerEvents.size > 1;
-        if (this._multi) {
+        this._touches = this._pointerEvents.size;
+        if (this._touches > 1) {
             // pan
             this._getMidPoint(this._pointerPos);
 
@@ -91,8 +91,8 @@ class MultiTouchInput extends Input {
         }
         this._pointerEvents.set(event.pointerId, event);
 
-        this._multi = this._pointerEvents.size > 1;
-        if (this._multi) {
+        this._touches = this._pointerEvents.size;
+        if (this._touches > 1) {
             // pan
             const mid = this._getMidPoint(tmpVa);
             this.deltas.touch.add(mid.x - this._pointerPos.x, mid.y - this._pointerPos.y);
@@ -118,8 +118,8 @@ class MultiTouchInput extends Input {
 
         this._pointerEvents.delete(event.pointerId);
 
-        this._multi = this._pointerEvents.size > 1;
-        if (!this._multi) {
+        this._touches = this._pointerEvents.size;
+        if (this._touches < 2) {
             this._pinchDist = -1;
         }
 
@@ -194,7 +194,7 @@ class MultiTouchInput extends Input {
      * @returns {{ [K in keyof MultiTouchInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
-        this.deltas.multi.add(+this._multi);
+        this.deltas.count.add(+this._touches);
 
         return super.frame();
     }

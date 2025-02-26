@@ -132,15 +132,15 @@ class CameraControls {
                 tmpM1.copy(this._model.update({
                     drag: tmpVa.fromArray(mouse),
                     zoom: wheel[0],
-                    pan: !!button[2]
+                    pan: !!button[this.panButton]
                 }, this._camera, dt));
             }
             if (this._input instanceof pc.MultiTouchInput) {
-                const { touch, pinch, multi } = this._input.frame();
+                const { touch, pinch, count } = this._input.frame();
                 tmpM1.copy(this._model.update({
                     drag: tmpVa.fromArray(touch),
                     zoom: pinch[0] * this.pinchMult,
-                    pan: !!multi[0]
+                    pan: count[0] > 1
                 }, this._camera, dt));
             }
         } else {
