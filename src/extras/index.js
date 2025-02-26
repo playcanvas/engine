@@ -33,9 +33,9 @@ export { MultiTouchInput } from './inputs/multitouch-input.js';
 export { JoystickTouchInput } from './inputs/joysticktouch-input.js';
 export { KeyboardMouseInput } from './inputs/keyboardmouse-input.js';
 
-// CAMERAS
-export { FlyCamera } from './cameras/fly-camera.js';
-export { OrbitCamera } from './cameras/orbit-camera.js';
+// MODELS
+export { FlyModel } from './models/fly-model.js';
+export { OrbitModel } from './models/orbit-model.js';
 
 // GIZMOS
 export {

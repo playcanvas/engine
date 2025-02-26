@@ -32,7 +32,7 @@ const tmpP1 = new Plane();
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
-class OrbitCamera extends EventHandler {
+class OrbitModel extends EventHandler {
     /**
      * @private
      * @type {Vec3}
@@ -279,4 +279,4 @@ class OrbitCamera extends EventHandler {
     }
 }
 
-export { OrbitCamera };
+export { OrbitModel };

@@ -34,10 +34,10 @@ class CameraControls {
     _input;
 
     /**
-     * @type {pc.FlyCamera|pc.OrbitCamera}
+     * @type {pc.FlyModel|pc.OrbitModel}
      * @private
      */
-    _view;
+    _model;
 
     /**
      * @type {string}
@@ -86,11 +86,11 @@ class CameraControls {
         }
         this._input.attach(this._app.graphicsDevice.canvas);
 
-        // view
-        this._view = this._mode === CameraControls.MODE_FLY ? new pc.FlyCamera() : new pc.OrbitCamera();
-        this._view.rotateSpeed = 0.3;
-        this._view.rotateDamping = 0.95;
-        this._view.attach(this._camera.entity.getWorldTransform());
+        // model
+        this._model = this._mode === CameraControls.MODE_FLY ? new pc.FlyModel() : new pc.OrbitModel();
+        this._model.rotateSpeed = 0.3;
+        this._model.rotateDamping = 0.95;
+        this._model.attach(this._camera.entity.getWorldTransform());
 
         // focus
         if (focus) {
@@ -102,8 +102,8 @@ class CameraControls {
      * @param {pc.Vec3} point - The point.
      */
     focus(point) {
-        if (this._view instanceof pc.OrbitCamera) {
-            this._view.focus(this._camera.entity.getPosition(), point);
+        if (this._model instanceof pc.OrbitModel) {
+            this._model.focus(this._camera.entity.getPosition(), point);
         }
     }
 
@@ -115,40 +115,36 @@ class CameraControls {
             return;
         }
 
-        const camera = this._camera;
-        const input = this._input;
-        const cam = this._view;
-
-        if (cam instanceof pc.OrbitCamera) {
-            if (input instanceof pc.KeyboardMouseInput) {
+        if (this._model instanceof pc.OrbitModel) {
+            if (this._input instanceof pc.KeyboardMouseInput) {
                 const [
                     ,,,,,,,,
                     mouseX,
                     mouseY,
                     wheel,
                     button
-                ] = input.frame();
-                tmpM1.copy(cam.update({
+                ] = this._input.frame();
+                tmpM1.copy(this._model.update({
                     drag: tmpVa.set(mouseX, mouseY),
                     zoom: wheel,
                     pan: button === this.panButton
-                }, camera, dt));
+                }, this._camera, dt));
             }
-            if (input instanceof pc.MultiTouchInput) {
+            if (this._input instanceof pc.MultiTouchInput) {
                 const [
                     touchX,
                     touchY,
                     pinch,
                     multi
-                ] = input.frame();
-                tmpM1.copy(cam.update({
+                ] = this._input.frame();
+                tmpM1.copy(this._model.update({
                     drag: tmpVa.set(touchX, touchY),
                     zoom: pinch * this.pinchMult,
                     pan: !!multi
-                }, camera, dt));
+                }, this._camera, dt));
             }
         } else {
-            if (input instanceof pc.KeyboardMouseInput) {
+            if (this._input instanceof pc.KeyboardMouseInput) {
                 const [
                     keyForward,
                     keyBack,
@@ -160,9 +156,9 @@ class CameraControls {
                     keySlow,
                     mouseX,
                     mouseY
-                ] = input.frame();
+                ] = this._input.frame();
                 const mult = keyFast ? this.moveFastMult : keySlow ? this.moveSlowMult : 1;
-                tmpM1.copy(cam.update({
+                tmpM1.copy(this._model.update({
                     rotate: tmpVa.set(mouseX, mouseY),
                     move: tmpV1.set(
                         (keyRight - keyLeft) * mult,
@@ -171,26 +167,26 @@ class CameraControls {
                     )
                 }, dt));
             }
-            if (input instanceof pc.JoystickTouchInput) {
+            if (this._input instanceof pc.JoystickTouchInput) {
                 const [
                     stickX,
                     stickY,
                     touchX,
                     touchY
-                ] = input.frame();
-                tmpM1.copy(cam.update({
+                ] = this._input.frame();
+                tmpM1.copy(this._model.update({
                     rotate: tmpVa.set(touchX, touchY),
                     move: tmpV1.set(stickX, 0, stickY)
                 }, dt));
             }
         }
 
-        camera.entity.setPosition(tmpM1.getTranslation());
-        camera.entity.setEulerAngles(tmpM1.getEulerAngles());
+        this._camera.entity.setPosition(tmpM1.getTranslation());
+        this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
     }
 
     destroy() {
-        this._view.destroy();
+        this._model.destroy();
         this._input.destroy();
     }
 }

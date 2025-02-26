@@ -25,7 +25,7 @@ const tmpQ1 = new Quat();
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
-class FlyCamera extends EventHandler {
+class FlyModel extends EventHandler {
     /**
      * @private
      * @type {Vec3}
@@ -172,4 +172,4 @@ class FlyCamera extends EventHandler {
     }
 }
 
-export { FlyCamera };
+export { FlyModel };
