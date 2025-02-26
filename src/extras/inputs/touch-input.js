@@ -8,10 +8,10 @@ const tmpVa = new Vec2();
 
 class TouchInput extends Input {
     /**
-     * @type {Map<number, { x: number, y: number }>}
+     * @type {Map<number, PointerEvent>}
      * @private
      */
-    _pointerData = new Map();
+    _pointerEvents = new Map();
 
     /**
      * @type {Vec2}
@@ -20,19 +20,18 @@ class TouchInput extends Input {
     _pointerPos = new Vec2();
 
     /**
-     * @type {boolean}
+     * @type {number}
      * @private
      */
-    _panning = false;
+    _pinchDist = -1;
 
     /**
      * @override
      */
     deltas = {
-        rotate: new Delta(2),
+        touch: new Delta(2),
         pointer: new Delta(2),
-        pan: new Delta(2),
-        zoom: new Delta()
+        pinch: new Delta()
     };
 
     constructor() {
@@ -59,13 +58,17 @@ class TouchInput extends Input {
      * @private
      */
     _onPointerDown(event) {
-        console.log(event.pointerId);
         this._element?.setPointerCapture(event.pointerId);
 
-        this._pointerData.set(event.pointerId, {
-            x: event.clientX,
-            y: event.clientY
-        });
+        this._pointerEvents.set(event.pointerId, event);
+
+        if (this._pointerEvents.size > 1) {
+            // pan
+            this._getMidPoint(this._pointerPos);
+
+            // pinch
+            this._pinchDist = this._getPinchDist();
+        }
     }
 
     /**
@@ -76,18 +79,25 @@ class TouchInput extends Input {
         if (event.target !== this._element) {
             return;
         }
-        const data = this._pointerData.get(event.pointerId);
-        if (!data) {
+        if (this._pointerEvents.size === 0) {
             return;
         }
-        data.x = event.clientX;
-        data.y = event.clientY;
+        this._pointerEvents.set(event.pointerId, event);
 
-        if (this._panning) {
-            this._pointerPos.set(event.clientX, event.clientY);
-            this.deltas.pan.add(event.movementX, event.movementY);
+        if (this._pointerEvents.size > 1) {
+            // pan
+            const mid = this._getMidPoint(tmpVa);
+            this.deltas.touch.add(mid.x - this._pointerPos.x, mid.y - this._pointerPos.y);
+            this._pointerPos.copy(mid);
+
+            // pinch
+            const pinchDist = this._getPinchDist();
+            if (this._pinchDist > 0) {
+                this.deltas.pinch.add(this._pinchDist - pinchDist);
+            }
+            this._pinchDist = pinchDist;
         } else {
-            this.deltas.rotate.add(event.movementX, event.movementY);
+            this.deltas.touch.add(event.movementX, event.movementY);
         }
     }
 
@@ -98,17 +108,13 @@ class TouchInput extends Input {
     _onPointerUp(event) {
         this._element?.releasePointerCapture(event.pointerId);
 
-        const data = this._pointerData.get(event.pointerId);
-        if (!data) {
-            return;
+        this._pointerEvents.delete(event.pointerId);
+
+        if (this._pointerEvents.size < 2) {
+            this._pinchDist = -1;
         }
-        this._pointerData.delete(event.pointerId);
 
         this._pointerPos.set(0, 0);
-
-        if (this._panning) {
-            this._panning = false;
-        }
     }
 
     /**
@@ -117,6 +123,29 @@ class TouchInput extends Input {
      */
     _onContextMenu(event) {
         event.preventDefault();
+    }
+
+    /**
+     * @param {Vec2} out - The output vector.
+     * @returns {Vec2} The mid point.
+     * @private
+     */
+    _getMidPoint(out) {
+        const [a, b] = this._pointerEvents.values();
+        const dx = a.clientX - b.clientX;
+        const dy = a.clientY - b.clientY;
+        return out.set(b.clientX + dx * 0.5, b.clientY + dy * 0.5);
+    }
+
+    /**
+     * @returns {number} The pinch distance.
+     * @private
+     */
+    _getPinchDist() {
+        const [a, b] = this._pointerEvents.values();
+        const dx = a.clientX - b.clientX;
+        const dy = a.clientY - b.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     /**
@@ -148,7 +177,7 @@ class TouchInput extends Input {
 
         this._element = null;
 
-        this._pointerData.clear();
+        this._pointerEvents.clear();
     }
 
     /**

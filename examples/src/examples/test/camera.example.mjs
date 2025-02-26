@@ -84,7 +84,7 @@ app.root.addChild(camera);
 /** @type {pc.Input} */
 let input;
 if (pc.platform.mobile) {
-    input = new pc.JoystickTouchInput();
+    input = new pc.TouchInput();
 } else {
     input = new pc.KeyboardMouseInput();
 }
@@ -121,14 +121,14 @@ app.on('update', (dt) => {
     }
 
     const frame = input.frame();
-    const mat = cam.update(input instanceof pc.JoystickTouchInput ? {
-        drag: frame.touch,
-        pointer: [0, 0],
-        zoom: [-frame.stick[2] * 10]
-    } : {
+    const mat = cam.update(input instanceof pc.KeyboardMouseInput ? {
         drag: frame.mouse,
         pointer: frame.pointer,
         zoom: frame.wheel
+    } : {
+        drag: frame.touch,
+        pointer: frame.pointer,
+        zoom: frame.pinch.map(x => x * 5)
     }, camera.camera, dt);
     camera.setPosition(mat.getTranslation());
     camera.setEulerAngles(mat.getEulerAngles());

@@ -100,7 +100,6 @@ class KeyboardMouseInput extends Input {
 
         if (event.buttons === this._mouse.pan) {
             this._pointerPos.set(event.clientX, event.clientY);
-            this._panning = true;
         }
     }
 
