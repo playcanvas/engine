@@ -564,11 +564,14 @@ class LitShader {
             }
         }
 
-        func.append(chunks.sphericalPS);
-        func.append(chunks.decodePS);
-        func.append(chunks.gammaPS);
-        func.append(chunks.tonemappingPS);
-        func.append(chunks.fogPS);
+        func.append(`
+            #include "sphericalPS"
+            #include "decodePS"
+            #include "gammaPS"
+            #include "tonemappingPS"
+            #include "fogPS"
+        `);
+
         // frontend
         func.append(this.frontendCode);
 
