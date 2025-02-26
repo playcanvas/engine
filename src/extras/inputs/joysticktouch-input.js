@@ -138,8 +138,6 @@ class JoystickTouchInput extends Input {
             this.hidden = false;
             this._setBase(event.clientX, event.clientY);
             this._setInner(event.clientX, event.clientY);
-        } else {
-            // this.fire(Input.EVENT_ROTATESTART, event.clientX, event.clientY);
         }
     }
 
@@ -184,8 +182,6 @@ class JoystickTouchInput extends Input {
         if (left) {
             this.hidden = true;
             this._value.set(0, 0);
-        } else {
-            // this.fire(Input.EVENT_ROTATEEND, event.clientX, event.clientY);
         }
 
     }
