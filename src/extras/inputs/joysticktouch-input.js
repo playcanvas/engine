@@ -4,7 +4,7 @@ import { Delta, Input } from './input.js';
 
 const tmpVa = new Vec2();
 
-class JoystickInput extends Input {
+class JoystickTouchInput extends Input {
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
      * @private
@@ -266,4 +266,4 @@ class JoystickInput extends Input {
     }
 }
 
-export { JoystickInput };
+export { JoystickTouchInput };

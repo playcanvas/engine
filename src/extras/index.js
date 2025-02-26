@@ -29,7 +29,7 @@ export { CameraFrame } from './render-passes/camera-frame.js';
 
 // INPUTS
 export { Input } from './inputs/input.js';
-export { JoystickInput } from './inputs/joystick-input.js';
+export { JoystickTouchInput } from './inputs/joysticktouch-input.js';
 export { KeyboardMouseInput } from './inputs/keyboardmouse-input.js';
 
 // CAMERAS
