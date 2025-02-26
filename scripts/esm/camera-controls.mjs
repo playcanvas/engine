@@ -1,6 +1,14 @@
-import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math, EventHandler } from 'playcanvas';
+import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math } from 'playcanvas';
 
-/** @import { CameraComponent } from 'playcanvas' */
+/** @import { AppBase, Entity, CameraComponent } from 'playcanvas' */
+
+/**
+ * @typedef {object} ScriptArgs
+ * @property {AppBase} app - The app.
+ * @property {Entity} entity - The entity.
+ * @property {boolean} [enabled] - The enabled state.
+ * @property {object} [attributes] - The attributes.
+ */
 
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
@@ -23,468 +31,6 @@ const EPSILON = 0.0001;
  * @returns {number} - The lerp rate.
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
-
-const MOBILE_SCREEN_SIZE = 768;
-
-class JoyStick {
-    /**
-     * @type {number}
-     * @private
-     */
-    _size = 100;
-
-    /**
-     * @type {HTMLDivElement}
-     * @private
-     */
-    _base;
-
-    /**
-     * @type {HTMLDivElement}
-     * @private
-     */
-    _inner;
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _basePos = new Vec2();
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _innerPos = new Vec2();
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _innerScale = 0.6;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _innerMaxDist = 70;
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _value = new Vec2();
-
-    constructor(size) {
-        this._size = size ?? this._size;
-
-        this._base = document.createElement('div');
-        this._base.id = 'joystick-base';
-        Object.assign(this._base.style, {
-            display: 'none',
-            position: 'absolute',
-            width: `${this._size}px`,
-            height: `${this._size}px`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)'
-        });
-
-        this._inner = document.createElement('div');
-        this._inner.id = 'joystick-inner';
-        Object.assign(this._inner.style, {
-            display: 'none',
-            position: 'absolute',
-            width: `${this._size * this._innerScale}px`,
-            height: `${this._size * this._innerScale}px`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
-        });
-    }
-
-    get dom() {
-        return [this._base, this._inner];
-    }
-
-    set hidden(value) {
-        const display = value ? 'none' : 'block';
-        this._base.style.display = display;
-        this._inner.style.display = display;
-        this._value.set(0, 0);
-    }
-
-    get hidden() {
-        return this._base.style.display === 'none';
-    }
-
-    get value() {
-        return this._value;
-    }
-
-    setBase(x, y) {
-        this._basePos.set(x, y);
-        this._base.style.left = `${this._basePos.x - this._size * 0.5}px`;
-        this._base.style.top = `${this._basePos.y - this._size * 0.5}px`;
-    }
-
-    setInner(x, y) {
-        this._innerPos.set(x, y);
-        tmpVa.sub2(this._innerPos, this._basePos);
-        const dist = tmpVa.length();
-        if (dist > this._innerMaxDist) {
-            tmpVa.normalize().mulScalar(this._innerMaxDist);
-            this._innerPos.add2(this._basePos, tmpVa);
-        }
-        const vx = math.clamp(tmpVa.x / this._innerMaxDist, -1, 1);
-        const vy = math.clamp(tmpVa.y / this._innerMaxDist, -1, 1);
-        this._value.set(vx, vy);
-        this._inner.style.left = `${this._innerPos.x - this._size * this._innerScale * 0.5}px`;
-        this._inner.style.top = `${this._innerPos.y - this._size * this._innerScale * 0.5}px`;
-    }
-}
-
-class Input extends EventHandler {
-    /**
-     * @private
-     * @type {HTMLElement | null}
-     */
-    _element = null;
-
-    /**
-     * @type {Map<number, { x, y, left }>}
-     * @private
-     */
-    _pointerData = new Map();
-
-    /**
-     * @type {Record<string, number>}
-     * @private
-     */
-    _key = {
-        forward: 0,
-        backward: 0,
-        left: 0,
-        right: 0,
-        up: 0,
-        down: 0,
-        sprint: 0,
-        crouch: 0
-    };
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _lastPinchDist = -1;
-
-    /**
-     * @type {JoyStick}
-     * @private
-     */
-    _joystick = new JoyStick();
-
-    constructor() {
-        super();
-
-        this._onWheel = this._onWheel.bind(this);
-        this._onPointerDown = this._onPointerDown.bind(this);
-        this._onPointerMove = this._onPointerMove.bind(this);
-        this._onPointerUp = this._onPointerUp.bind(this);
-        this._onContextMenu = this._onContextMenu.bind(this);
-        this._onKeyDown = this._onKeyDown.bind(this);
-        this._onKeyUp = this._onKeyUp.bind(this);
-
-        if (this.isMobile) {
-            document.body.append(...this._joystick.dom);
-        }
-    }
-
-    get isMobile() {
-        return Math.min(window.screen.width, window.screen.height) < MOBILE_SCREEN_SIZE;
-    }
-
-    /**
-     * @private
-     * @param {WheelEvent} event - The wheel event.
-     */
-    _onWheel(event) {
-        event.preventDefault();
-        this.fire('wheel', event.deltaY);
-    }
-
-    /**
-     * @private
-     * @param {PointerEvent} event - The pointer event.
-     */
-    _onPointerDown(event) {
-        this._element?.setPointerCapture(event.pointerId);
-
-        const left = event.clientX < window.innerWidth * 0.5;
-        this._pointerData.set(event.pointerId, {
-            x: event.clientX,
-            y: event.clientY,
-            left
-        });
-
-        // track pinch distance
-        if (this._pointerData.size === 2) {
-            this._lastPinchDist = this.getPinchDist();
-        }
-
-        if (this.isMobile) {
-            // manage left and right touch
-            if (left) {
-                this._joystick.hidden = false;
-                this._joystick.setBase(event.clientX, event.clientY);
-                this._joystick.setInner(event.clientX, event.clientY);
-            } else {
-                this.fire('drag:start', event, false);
-            }
-        } else {
-            this.fire('drag:start', event, this._pointerData.size === 2);
-        }
-    }
-
-    /**
-     * @private
-     * @param {PointerEvent} event - The pointer event.
-     */
-    _onPointerMove(event) {
-        const data = this._pointerData.get(event.pointerId);
-        if (!data) {
-            return;
-        }
-        const { left } = data;
-        data.x = event.clientX;
-        data.y = event.clientY;
-
-        // calculate pinch delta
-        if (this._pointerData.size === 2) {
-            const pinchDist = this.getPinchDist();
-            if (this._lastPinchDist > 0) {
-                const pinchDelta = this._lastPinchDist - pinchDist;
-                this.fire('pinch', pinchDelta);
-            }
-            this._lastPinchDist = pinchDist;
-        }
-
-        if (this.isMobile) {
-
-            // move joystick or fire move event
-            if (left) {
-                this._joystick.setInner(event.clientX, event.clientY);
-            } else {
-                this.fire('drag:move', event, false);
-            }
-        } else {
-            this.fire('drag:move', event, this._pointerData.size === 2);
-        }
-
-    }
-
-    /**
-     * @private
-     * @param {PointerEvent} event - The pointer event.
-     */
-    _onPointerUp(event) {
-        this._element?.releasePointerCapture(event.pointerId);
-
-        const data = this._pointerData.get(event.pointerId);
-        if (!data) {
-            return;
-        }
-        const { left } = data;
-        this._pointerData.delete(event.pointerId);
-
-        if (this._pointerData.size < 2) {
-            this._lastPinchDist = -1;
-        }
-
-        if (this.isMobile) {
-            if (left) {
-                this._joystick.hidden = true;
-            } else {
-                this.fire('drag:end', event, false);
-            }
-        } else {
-            this.fire('drag:end', event, this._pointerData.size === 2);
-        }
-
-    }
-
-    /**
-     * @private
-     * @param {MouseEvent} event - The wheel event.
-     */
-    _onContextMenu(event) {
-        event.preventDefault();
-    }
-
-    /**
-     * @private
-     * @param {KeyboardEvent} event - The keyboard event.
-     */
-    _onKeyDown(event) {
-        event.stopPropagation();
-        switch (event.key.toLowerCase()) {
-            case 'w':
-            case 'arrowup':
-                this._key.forward = 1;
-                break;
-            case 's':
-            case 'arrowdown':
-                this._key.backward = 1;
-                break;
-            case 'a':
-            case 'arrowleft':
-                this._key.left = 1;
-                break;
-            case 'd':
-            case 'arrowright':
-                this._key.right = 1;
-                break;
-            case 'q':
-                this._key.up = 1;
-                break;
-            case 'e':
-                this._key.down = 1;
-                break;
-            case 'shift':
-                this._key.sprint = 1;
-                break;
-            case 'control':
-                this._key.crouch = 1;
-                break;
-        }
-    }
-
-    /**
-     * @private
-     * @param {KeyboardEvent} event - The keyboard event.
-     */
-    _onKeyUp(event) {
-        event.stopPropagation();
-        switch (event.key.toLowerCase()) {
-            case 'w':
-            case 'arrowup':
-                this._key.forward = 0;
-                break;
-            case 's':
-            case 'arrowdown':
-                this._key.backward = 0;
-                break;
-            case 'a':
-            case 'arrowleft':
-                this._key.left = 0;
-                break;
-            case 'd':
-            case 'arrowright':
-                this._key.right = 0;
-                break;
-            case 'q':
-                this._key.up = 0;
-                break;
-            case 'e':
-                this._key.down = 0;
-                break;
-            case 'shift':
-                this._key.sprint = 0;
-                break;
-            case 'control':
-                this._key.crouch = 0;
-                break;
-        }
-    }
-
-    /**
-     * @param {string} name - The key name.
-     * @returns {number} - The key value.
-     */
-    key(name) {
-        if (this.isMobile) {
-            switch (name) {
-                case 'forward':
-                    return Math.max(0, -this._joystick.value.y);
-                case 'backward':
-                    return Math.max(0, this._joystick.value.y);
-                case 'left':
-                    return Math.max(0, -this._joystick.value.x);
-                case 'right':
-                    return Math.max(0, this._joystick.value.x);
-                default:
-                    return 0;
-            }
-        }
-
-        return +this._key[name];
-    }
-
-    /**
-     * @param {Vec2} out - The output vector.
-     * @returns {Vec2} The mid point.
-     */
-    getMidPoint(out) {
-        const [a, b] = this._pointerData.values();
-        const dx = a.x - b.y;
-        const dy = a.x - b.y;
-        return out.set(b.x + dx * 0.5, b.y + dy * 0.5);
-    }
-
-    /**
-     * @returns {number} The pinch distance.
-     */
-    getPinchDist() {
-        const [a, b] = this._pointerData.values();
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    /**
-     * @param {HTMLElement} element - The element.
-     */
-    attach(element) {
-        if (this._element) {
-            this.detach();
-        }
-        this._element = element;
-        this._element.addEventListener('wheel', this._onWheel, PASSIVE);
-        this._element.addEventListener('pointerdown', this._onPointerDown);
-        this._element.addEventListener('pointermove', this._onPointerMove);
-        this._element.addEventListener('pointerup', this._onPointerUp);
-        this._element.addEventListener('contextmenu', this._onContextMenu);
-
-        // These can stay on window since they're keyboard events
-        window.addEventListener('keydown', this._onKeyDown, false);
-        window.addEventListener('keyup', this._onKeyUp, false);
-    }
-
-    detach() {
-        if (!this._element) {
-            return;
-        }
-        this._element.removeEventListener('wheel', this._onWheel, PASSIVE);
-        this._element.removeEventListener('pointerdown', this._onPointerDown);
-        this._element.removeEventListener('pointermove', this._onPointerMove);
-        this._element.removeEventListener('pointerup', this._onPointerUp);
-        this._element.removeEventListener('contextmenu', this._onContextMenu);
-
-        window.removeEventListener('keydown', this._onKeyDown, false);
-        window.removeEventListener('keyup', this._onKeyUp, false);
-
-        this._pointerData.clear();
-
-        this._key = {
-            forward: 0,
-            backward: 0,
-            left: 0,
-            right: 0,
-            up: 0,
-            down: 0,
-            sprint: 0,
-            crouch: 0
-        };
-    }
-}
 
 class CameraControls extends Script {
     /**
@@ -570,16 +116,28 @@ class CameraControls extends Script {
     _cameraDist = 0;
 
     /**
-     * @type {Input}
+     * @type {Map<number, PointerEvent>}
      * @private
      */
-    _input = new Input();
+    _pointerEvents = new Map();
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lastPinchDist = -1;
 
     /**
      * @type {Vec2}
      * @private
      */
     _lastPosition = new Vec2();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dragging = false;
 
     /**
      * @type {boolean}
@@ -610,6 +168,21 @@ class CameraControls extends Script {
      * @private
      */
     _focusing = false;
+
+    /**
+     * @type {Record<string, boolean>}
+     * @private
+     */
+    _key = {
+        forward: false,
+        backward: false,
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+        sprint: false,
+        crouch: false
+    };
 
     /**
      * @type {HTMLElement}
@@ -759,11 +332,13 @@ class CameraControls extends Script {
     zoomScaleMin = 0;
 
     initialize() {
-        this._input.on('wheel', wheelDelta => this._zoom(wheelDelta));
-        this._input.on('pinch', pinchDelta => this._zoom(pinchDelta * this.zoomPinchSens));
-        this._input.on('drag:start', this._onDragStart, this);
-        this._input.on('drag:move', this._onDragMove, this);
-        this._input.on('drag:end', this._onDragEnd, this);
+        this._onWheel = this._onWheel.bind(this);
+        this._onKeyDown = this._onKeyDown.bind(this);
+        this._onKeyUp = this._onKeyUp.bind(this);
+        this._onPointerDown = this._onPointerDown.bind(this);
+        this._onPointerMove = this._onPointerMove.bind(this);
+        this._onPointerUp = this._onPointerUp.bind(this);
+        this._onContextMenu = this._onContextMenu.bind(this);
 
         if (!this.entity.camera) {
             throw new Error('CameraControls script requires a camera component');
@@ -927,10 +502,18 @@ class CameraControls extends Script {
 
     /**
      * @private
+     * @param {MouseEvent} event - The mouse event.
+     */
+    _onContextMenu(event) {
+        event.preventDefault();
+    }
+
+    /**
+     * @private
      * @param {PointerEvent} event - The pointer event.
      * @returns {boolean} Whether the mouse pan should start.
      */
-    _isStartPan(event) {
+    _isStartMousePan(event) {
         if (!this.enablePan) {
             return false;
         }
@@ -1019,64 +602,85 @@ class CameraControls extends Script {
     /**
      * @private
      * @param {PointerEvent} event - The pointer event.
-     * @param {boolean} mobilePan - Whether the pan is mobile.
      */
-    _onDragStart(event, mobilePan) {
+    _onPointerDown(event) {
         if (!this._camera) {
             return;
         }
+        this._element.setPointerCapture(event.pointerId);
+        this._pointerEvents.set(event.pointerId, event);
+
+        const startTouchPan = this.enablePan && this._pointerEvents.size === 2;
+        const startMousePan = this._isStartMousePan(event);
+        const startFly = this._isStartFly(event);
+        const startOrbit = this._isStartOrbit(event);
 
         if (this._focusing) {
             this._cancelSmoothTransform();
             this._focusing = false;
         }
 
-        if (this.enablePan && mobilePan) {
+        if (startTouchPan) {
             // start touch pan
-            this._input.getMidPoint(this._lastPosition);
+            this._lastPinchDist = this._getPinchDist();
+            this._getMidPoint(this._lastPosition);
             this._panning = true;
-            return;
         }
-
-        if (this._isStartPan(event)) {
+        if (startMousePan) {
             // start mouse pan
             this._lastPosition.set(event.clientX, event.clientY);
             this._panning = true;
+            this._dragging = true;
         }
-        if (this._isStartFly(event)) {
+        if (startFly) {
             // start fly
             this._switchToFly();
+            this._dragging = true;
         }
-        if (this._isStartOrbit(event)) {
+        if (startOrbit) {
             // start orbit
             this._switchToOrbit();
+            this._dragging = true;
         }
     }
 
     /**
      * @private
      * @param {PointerEvent} event - The pointer event.
-     * @param {boolean} mobilePan - Whether the pan is mobile.
      */
-    _onDragMove(event, mobilePan) {
+    _onPointerMove(event) {
+        if (this._pointerEvents.size === 0) {
+            return;
+        }
+        this._pointerEvents.set(event.pointerId, event);
+
         if (this._focusing) {
             this._cancelSmoothTransform();
             this._focusing = false;
         }
 
-        if (mobilePan) {
-            // touch pan
+        if (this._pointerEvents.size === 1) {
             if (this._panning) {
-                this._pan(this._input.getMidPoint(tmpVa));
+                // mouse pan
+                this._pan(tmpVa.set(event.clientX, event.clientY));
+            } else if (this._orbiting || this._flying) {
+                this._look(event);
             }
             return;
         }
 
-        if (this._panning) {
-            // mouse pan
-            this._pan(tmpVa.set(event.clientX, event.clientY));
-        } else if (this._orbiting || this._flying) {
-            this._look(event.movementX, event.movementY, event.target);
+        if (this._pointerEvents.size === 2) {
+            // touch pan
+            if (this._panning) {
+                this._pan(this._getMidPoint(tmpVa));
+            }
+
+            // pinch zoom
+            const pinchDist = this._getPinchDist();
+            if (this._lastPinchDist > 0) {
+                this._zoom((this._lastPinchDist - pinchDist) * this.zoomPinchSens);
+            }
+            this._lastPinchDist = pinchDist;
         }
 
     }
@@ -1084,26 +688,117 @@ class CameraControls extends Script {
     /**
      * @private
      * @param {PointerEvent} event - The pointer event.
-     * @param {boolean} mobilePan - Whether the pan is mobile.
      */
-    _onDragEnd(event, mobilePan) {
+    _onPointerUp(event) {
+        this._element.releasePointerCapture(event.pointerId);
+        this._pointerEvents.delete(event.pointerId);
+        if (this._pointerEvents.size < 2) {
+            this._lastPinchDist = -1;
+            this._panning = false;
+        }
         if (this._panning) {
             this._panning = false;
+        }
+        if (this._dragging) {
+            this._dragging = false;
         }
     }
 
     /**
      * @private
-     * @param {number} x - The x value.
-     * @param {number} y - The y value.
-     * @param {EventTarget | null} target - The target.
+     * @param {WheelEvent} event - The wheel event.
      */
-    _look(x, y, target) {
-        if (target !== this.app.graphicsDevice.canvas) {
+    _onWheel(event) {
+        event.preventDefault();
+        this._zoom(event.deltaY);
+    }
+
+    /**
+     * @private
+     * @param {KeyboardEvent} event - The keyboard event.
+     */
+    _onKeyDown(event) {
+        event.stopPropagation();
+        switch (event.key.toLowerCase()) {
+            case 'w':
+            case 'arrowup':
+                this._key.forward = true;
+                break;
+            case 's':
+            case 'arrowdown':
+                this._key.backward = true;
+                break;
+            case 'a':
+            case 'arrowleft':
+                this._key.left = true;
+                break;
+            case 'd':
+            case 'arrowright':
+                this._key.right = true;
+                break;
+            case 'q':
+                this._key.up = true;
+                break;
+            case 'e':
+                this._key.down = true;
+                break;
+            case 'shift':
+                this._key.sprint = true;
+                break;
+            case 'control':
+                this._key.crouch = true;
+                break;
+        }
+    }
+
+    /**
+     * @private
+     * @param {KeyboardEvent} event - The keyboard event.
+     */
+    _onKeyUp(event) {
+        event.stopPropagation();
+        switch (event.key.toLowerCase()) {
+            case 'w':
+            case 'arrowup':
+                this._key.forward = false;
+                break;
+            case 's':
+            case 'arrowdown':
+                this._key.backward = false;
+                break;
+            case 'a':
+            case 'arrowleft':
+                this._key.left = false;
+                break;
+            case 'd':
+            case 'arrowright':
+                this._key.right = false;
+                break;
+            case 'q':
+                this._key.up = false;
+                break;
+            case 'e':
+                this._key.down = false;
+                break;
+            case 'shift':
+                this._key.sprint = false;
+                break;
+            case 'control':
+                this._key.crouch = false;
+                break;
+        }
+    }
+
+    /**
+     * @private
+     * @param {PointerEvent} event - The pointer event.
+     */
+    _look(event) {
+        if (event.target !== this.app.graphicsDevice.canvas) {
             return;
         }
-        const movementX = x || 0;
-        const movementY = y || 0;
+        const movementX = event.movementX || 0;
+        const movementY = event.movementY || 0;
         this._dir.x -= movementY * this.rotateSpeed;
         this._dir.y -= movementX * this.rotateSpeed;
         this._clampAngles(this._dir);
@@ -1116,15 +811,29 @@ class CameraControls extends Script {
         if (!this.enableFly) {
             return;
         }
+
         tmpV1.set(0, 0, 0);
-        tmpV1.add(tmpV2.copy(this.entity.forward).mulScalar(this._input.key('forward')));
-        tmpV1.sub(tmpV2.copy(this.entity.forward).mulScalar(this._input.key('backward')));
-        tmpV1.sub(tmpV2.copy(this.entity.right).mulScalar(this._input.key('left')));
-        tmpV1.add(tmpV2.copy(this.entity.right).mulScalar(this._input.key('right')));
-        tmpV1.add(tmpV2.copy(this.entity.up).mulScalar(this._input.key('up')));
-        tmpV1.sub(tmpV2.copy(this.entity.up).mulScalar(this._input.key('down')));
+        if (this._key.forward) {
+            tmpV1.add(this.entity.forward);
+        }
+        if (this._key.backward) {
+            tmpV1.sub(this.entity.forward);
+        }
+        if (this._key.left) {
+            tmpV1.sub(this.entity.right);
+        }
+        if (this._key.right) {
+            tmpV1.add(this.entity.right);
+        }
+        if (this._key.up) {
+            tmpV1.add(this.entity.up);
+        }
+        if (this._key.down) {
+            tmpV1.sub(this.entity.up);
+        }
+        tmpV1.normalize();
         this._moving = tmpV1.length() > 0;
-        const speed = this._input.key('crouch') ? this.moveSlowSpeed : this._input.key('sprint') ? this.moveFastSpeed : this.moveSpeed;
+        const speed = this._key.crouch ? this.moveSlowSpeed : this._key.sprint ? this.moveFastSpeed : this.moveSpeed;
         tmpV1.mulScalar(this.sceneSize * speed * dt);
         this._origin.add(tmpV1);
 
@@ -1137,6 +846,29 @@ class CameraControls extends Script {
 
             this._clampPosition(this._origin);
         }
+    }
+
+    /**
+     * @private
+     * @param {Vec2} out - The output vector.
+     * @returns {Vec2} The mid point.
+     */
+    _getMidPoint(out) {
+        const [a, b] = this._pointerEvents.values();
+        const dx = a.clientX - b.clientX;
+        const dy = a.clientY - b.clientY;
+        return out.set(b.clientX + dx * 0.5, b.clientY + dy * 0.5);
+    }
+
+    /**
+     * @private
+     * @returns {number} The pinch distance.
+     */
+    _getPinchDist() {
+        const [a, b] = this._pointerEvents.values();
+        const dx = a.clientX - b.clientX;
+        const dy = a.clientY - b.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     /**
@@ -1191,6 +923,9 @@ class CameraControls extends Script {
             return;
         }
         if (this._flying) {
+            if (this._dragging) {
+                return;
+            }
             if (!this._switchToOrbit()) {
                 return;
             }
@@ -1271,6 +1006,9 @@ class CameraControls extends Script {
             return;
         }
         if (this._flying) {
+            if (this._dragging) {
+                return;
+            }
             if (!this._switchToOrbit()) {
                 return;
             }
@@ -1346,21 +1084,53 @@ class CameraControls extends Script {
             return;
         }
         this._camera = camera;
-        this._input.attach(this._element);
+
+        // Attach events to canvas instead of window
+        this._element.addEventListener('wheel', this._onWheel, PASSIVE);
+        this._element.addEventListener('pointerdown', this._onPointerDown);
+        this._element.addEventListener('pointermove', this._onPointerMove);
+        this._element.addEventListener('pointerup', this._onPointerUp);
+        this._element.addEventListener('contextmenu', this._onContextMenu);
+
+        // These can stay on window since they're keyboard events
+        window.addEventListener('keydown', this._onKeyDown, false);
+        window.addEventListener('keyup', this._onKeyUp, false);
     }
 
     detach() {
         if (!this._camera) {
             return;
         }
+
+        // Remove from canvas instead of window
+        this._element.removeEventListener('wheel', this._onWheel, PASSIVE);
+        this._element.removeEventListener('pointermove', this._onPointerMove);
+        this._element.removeEventListener('pointerdown', this._onPointerDown);
+        this._element.removeEventListener('pointerup', this._onPointerUp);
+        this._element.removeEventListener('contextmenu', this._onContextMenu);
+
+        // Remove keyboard events from window
+        window.removeEventListener('keydown', this._onKeyDown, false);
+        window.removeEventListener('keyup', this._onKeyUp, false);
+
         this._camera = null;
-        this._input.detach();
 
         this._cancelSmoothZoom();
         this._cancelSmoothTransform();
 
+        this._pointerEvents.clear();
         this._lastPinchDist = -1;
         this._panning = false;
+        this._key = {
+            forward: false,
+            backward: false,
+            left: false,
+            right: false,
+            up: false,
+            down: false,
+            sprint: false,
+            crouch: false
+        };
     }
 
     /**
@@ -1386,7 +1156,6 @@ class CameraControls extends Script {
 
     destroy() {
         this.detach();
-        this._input.off();
     }
 }
 
