@@ -52,6 +52,24 @@ class CameraControls {
     _panning = 0;
 
     /**
+     * @type {pc.Vec3}
+     * @private
+     */
+    _moveAxes = new pc.Vec3();
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _moveFast = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _moveSlow = 0;
+
+    /**
      * @type {number}
      */
     moveFastMult = 2;
@@ -161,15 +179,14 @@ class CameraControls {
                     fast,
                     slow
                 ] = key;
-                const mult = fast ? this.moveFastMult : slow ? this.moveSlowMult : 1;
+                this._moveAxes.add(tmpV1.set(right - left, up - down, forward - back));
+                this._moveFast += fast;
+                this._moveSlow += slow;
+                const mult = this._moveFast ? this.moveFastMult : this._moveSlow ? this.moveSlowMult : 1;
 
                 tmpM1.copy(this._model.update({
                     rotate: tmpVa.fromArray(mouse),
-                    move: tmpV1.set(
-                        (right - left) * mult,
-                        (up - down) * mult,
-                        (forward - back) * mult
-                    )
+                    move: tmpV1.copy(this._moveAxes).mulScalar(mult)
                 }, dt));
             }
 

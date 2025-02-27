@@ -3,6 +3,8 @@ import { Delta, Input } from './input.js';
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
 
+const array3 = new Array(3).fill(0);
+
 class KeyboardMouseInput extends Input {
     /**
      * @type {number}
@@ -11,25 +13,16 @@ class KeyboardMouseInput extends Input {
     _pointerId = 0;
 
     /**
-     * @type {Record<string, number>}
+     * @type {number[]}
      * @private
      */
-    _key = {
-        forward: 0,
-        backward: 0,
-        left: 0,
-        right: 0,
-        up: 0,
-        down: 0,
-        sprint: 0,
-        crouch: 0
-    };
+    _keyPrev = new Array(8).fill(0);
 
     /**
      * @type {number[]}
      * @private
      */
-    _button = [0, 0, 0];
+    _keyNow = new Array(8).fill(0);
 
     /**
      * @override
@@ -73,9 +66,9 @@ class KeyboardMouseInput extends Input {
         }
         this._pointerId = event.pointerId;
 
-        this._button.fill(0);
-        this._button[event.button] = 1;
-        this.deltas.button.add(...this._button);
+        array3.fill(0);
+        array3[event.button] = 1;
+        this.deltas.button.add(...array3);
     }
 
     /**
@@ -104,9 +97,9 @@ class KeyboardMouseInput extends Input {
         }
         this._pointerId = 0;
 
-        this._button.fill(0);
-        this._button[event.button] = -1;
-        this.deltas.button.add(...this._button);
+        array3.fill(0);
+        array3[event.button] = -1;
+        this.deltas.button.add(...array3);
     }
 
     /**
@@ -123,34 +116,35 @@ class KeyboardMouseInput extends Input {
      */
     _onKeyDown(event) {
         event.stopPropagation();
+
         switch (event.key.toLowerCase()) {
             case 'w':
             case 'arrowup':
-                this._key.forward = 1;
+                this._keyNow[0] = 1;
                 break;
             case 's':
             case 'arrowdown':
-                this._key.backward = 1;
+                this._keyNow[1] = 1;
                 break;
             case 'a':
             case 'arrowleft':
-                this._key.left = 1;
+                this._keyNow[2] = 1;
                 break;
             case 'd':
             case 'arrowright':
-                this._key.right = 1;
+                this._keyNow[3] = 1;
                 break;
             case 'q':
-                this._key.up = 1;
+                this._keyNow[4] = 1;
                 break;
             case 'e':
-                this._key.down = 1;
+                this._keyNow[5] = 1;
                 break;
             case 'shift':
-                this._key.sprint = 1;
+                this._keyNow[6] = 1;
                 break;
             case 'control':
-                this._key.crouch = 1;
+                this._keyNow[7] = 1;
                 break;
         }
     }
@@ -161,34 +155,35 @@ class KeyboardMouseInput extends Input {
      */
     _onKeyUp(event) {
         event.stopPropagation();
+
         switch (event.key.toLowerCase()) {
             case 'w':
             case 'arrowup':
-                this._key.forward = 0;
+                this._keyNow[0] = 0;
                 break;
             case 's':
             case 'arrowdown':
-                this._key.backward = 0;
+                this._keyNow[1] = 0;
                 break;
             case 'a':
             case 'arrowleft':
-                this._key.left = 0;
+                this._keyNow[2] = 0;
                 break;
             case 'd':
             case 'arrowright':
-                this._key.right = 0;
+                this._keyNow[3] = 0;
                 break;
             case 'q':
-                this._key.up = 0;
+                this._keyNow[4] = 0;
                 break;
             case 'e':
-                this._key.down = 0;
+                this._keyNow[5] = 0;
                 break;
             case 'shift':
-                this._key.sprint = 0;
+                this._keyNow[6] = 0;
                 break;
             case 'control':
-                this._key.crouch = 0;
+                this._keyNow[7] = 0;
                 break;
         }
     }
@@ -228,18 +223,8 @@ class KeyboardMouseInput extends Input {
         window.removeEventListener('keydown', this._onKeyDown, false);
         window.removeEventListener('keyup', this._onKeyUp, false);
 
-        this._key = {
-            forward: 0,
-            backward: 0,
-            left: 0,
-            right: 0,
-            up: 0,
-            down: 0,
-            sprint: 0,
-            crouch: 0
-        };
-
-        this._button.fill(0);
+        this._keyNow.fill(0);
+        this._keyPrev.fill(0);
     }
 
     /**
@@ -248,14 +233,11 @@ class KeyboardMouseInput extends Input {
      */
     frame() {
         this.deltas.key.add(
-            this._key.forward,
-            this._key.backward,
-            this._key.left,
-            this._key.right,
-            this._key.up,
-            this._key.down,
-            this._key.sprint,
-            this._key.crouch
+            ...this._keyNow.map((key, index) => {
+                const v = key - this._keyPrev[index];
+                this._keyPrev[index] = key;
+                return v;
+            })
         );
 
         return super.frame();
