@@ -73,7 +73,6 @@ import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from './lit/frag/lightDirPoint.js';
 import lightingPS from './lit/frag/lighting/lighting.js';
 import lightmapAddPS from './lit/frag/lightmapAdd.js';
-import lightmapDirAddPS from './lit/frag/lightmapDirAdd.js';
 import lightmapDirPS from './standard/frag/lightmapDir.js';
 import lightmapSinglePS from './standard/frag/lightmapSingle.js';
 import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
@@ -285,7 +284,6 @@ const shaderChunks = {
     lightDirPointPS,
     lightingPS,
     lightmapAddPS,
-    lightmapDirAddPS,
     lightmapDirPS,
     lightmapSinglePS,
     lightSpecularAnisoGGXPS,

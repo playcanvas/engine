@@ -75,7 +75,6 @@ const chunkVersions = {
     fresnelSchlickPS: CHUNKAPI_1_65,
     iridescenceDiffractionPS: CHUNKAPI_1_65,
     lightmapAddPS: CHUNKAPI_1_65,
-    lightmapDirAddPS: CHUNKAPI_1_65,
     refractionCubePS: CHUNKAPI_1_70,
     refractionDynamicPS: CHUNKAPI_1_70
 };
@@ -120,7 +119,8 @@ const removedChunks = {
     endVS: CHUNKAPI_2_6,
     baseVS: CHUNKAPI_2_6,
     baseNineSlicedVS: CHUNKAPI_2_6,
-    viewNormalVS: CHUNKAPI_2_6
+    viewNormalVS: CHUNKAPI_2_6,
+    lightmapDirAddPS: CHUNKAPI_2_6
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
