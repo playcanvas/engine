@@ -520,6 +520,8 @@ class LitShader {
         this.fDefineSet(options.useCubeMapRotation, 'CUBEMAP_ROTATION');
         this.fDefineSet(options.occludeSpecularFloat, 'LIT_OCCLUDE_SPECULAR_FLOAT');
         this.fDefineSet(options.twoSidedLighting, 'LIT_TWO_SIDED_LIGHTING');
+        this.fDefineSet(options.lightMapEnabled, 'LIT_LIGHTMAP');
+        this.fDefineSet(options.dirLightMapEnabled, 'LIT_DIR_LIGHTMAP');
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
 
@@ -711,12 +713,14 @@ class LitShader {
             }
         }
 
-        func.append(chunks.combinePS);
+        func.append(`
 
-        // lightmap support
-        if (options.lightMapEnabled) {
-            func.append((options.useSpecular && options.dirLightMapEnabled) ? chunks.lightmapDirAddPS : chunks.lightmapAddPS);
-        }
+            #include "combinePS"
+
+            #ifdef LIT_LIGHTMAP
+                #include "lightmapAddPS"
+            #endif
+        `);
 
         const addAmbient = !options.lightMapEnabled || options.lightMapWithoutAmbient;
 
@@ -873,23 +877,25 @@ class LitShader {
             backend.append('    occludeDiffuse(litArgs_ao);');
         }
 
-        if (options.lightMapEnabled) {
-            backend.append(`    addLightMap(
-                litArgs_lightmap, 
-                litArgs_lightmapDir, 
-                litArgs_worldNormal, 
-                dViewDirW, 
-                dReflDirW, 
-                litArgs_gloss, 
-                litArgs_specularity, 
-                dVertexNormalW,
-                dTBN
-            #if defined(LIT_IRIDESCENCE)
-                , iridescenceFresnel,
-                litArgs_iridescence_intensity
+        backend.append(`
+            #ifdef LIT_LIGHTMAP
+                addLightMap(
+                    litArgs_lightmap, 
+                    litArgs_lightmapDir, 
+                    litArgs_worldNormal, 
+                    dViewDirW, 
+                    dReflDirW, 
+                    litArgs_gloss, 
+                    litArgs_specularity, 
+                    dVertexNormalW,
+                    dTBN
+                #if defined(LIT_IRIDESCENCE)
+                    , iridescenceFresnel,
+                    litArgs_iridescence_intensity
+                #endif
+                );
             #endif
-                );`);
-        }
+        `);
 
         if (this.lighting || this.reflections) {
             if (this.reflections) {
