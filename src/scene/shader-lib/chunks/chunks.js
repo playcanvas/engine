@@ -177,8 +177,6 @@ import startNineSlicedPS from './lit/frag/startNineSliced.js';
 import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
 import tangentBinormalVS from './lit/vert/tangentBinormal.js';
 import TBNPS from './lit/frag/TBN.js';
-import TBNderivativePS from './lit/frag/TBNderivative.js';
-import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
 import thicknessPS from './standard/frag/thickness.js';
 import tonemappingPS from './common/frag/tonemapping/tonemapping.js';
 import tonemappingAcesPS from './common/frag/tonemapping/tonemappingAces.js';
@@ -388,8 +386,6 @@ const shaderChunks = {
     startNineSlicedTiledPS,
     tangentBinormalVS,
     TBNPS,
-    TBNderivativePS,
-    TBNObjectSpacePS,
     thicknessPS,
     tonemappingPS,
     tonemappingAcesPS,

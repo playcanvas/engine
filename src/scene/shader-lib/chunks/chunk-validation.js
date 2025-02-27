@@ -65,8 +65,6 @@ const chunkVersions = {
     shadowEVSMPS: CHUNKAPI_1_62,
     spotPS: CHUNKAPI_1_62,
     TBNPS: CHUNKAPI_1_62,
-    TBNObjectSpacePS: CHUNKAPI_1_62,
-    TBNderivativePS: CHUNKAPI_1_62,
 
     endPS: CHUNKAPI_1_65,
     metalnessModulatePS: CHUNKAPI_1_65,
@@ -120,7 +118,9 @@ const removedChunks = {
     baseVS: CHUNKAPI_2_6,
     baseNineSlicedVS: CHUNKAPI_2_6,
     viewNormalVS: CHUNKAPI_2_6,
-    lightmapDirAddPS: CHUNKAPI_2_6
+    lightmapDirAddPS: CHUNKAPI_2_6,
+    TBNObjectSpacePS: CHUNKAPI_2_6,
+    TBNderivativePS: CHUNKAPI_2_6
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.

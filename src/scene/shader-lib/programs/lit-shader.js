@@ -505,6 +505,8 @@ class LitShader {
         const backend = new ChunkBuilder();
         const code = new ChunkBuilder();
 
+        const hasTBN = this.needsNormal && (options.useNormals || options.useClearCoatNormals || (options.enableGGXSpecular && !options.useHeights));
+
         if (options.useSpecular) {
             this.fDefineSet(true, 'LIT_SPECULAR');
             this.fDefineSet(this.reflections, 'LIT_REFLECTIONS');
@@ -522,6 +524,18 @@ class LitShader {
         this.fDefineSet(options.twoSidedLighting, 'LIT_TWO_SIDED_LIGHTING');
         this.fDefineSet(options.lightMapEnabled, 'LIT_LIGHTMAP');
         this.fDefineSet(options.dirLightMapEnabled, 'LIT_DIR_LIGHTMAP');
+        this.fDefineSet(hasTBN, 'LIT_TBN');
+        this.fDefineSet(options.hasTangents, 'LIT_TANGENTS');
+        this.fDefineSet(options.useNormals, 'LIT_USE_NORMALS');
+        this.fDefineSet(options.useClearCoatNormals, 'LIT_USE_CLEARCOAT_NORMALS');
+
+        // injection defines
+        this.fDefineSet(true, '{lightingUv}', this.lightingUv ?? ''); // example: vUV0_1
+
+        // globals
+        decl.append(`
+            mat3 dTBN;
+        `);
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
 
@@ -555,33 +569,23 @@ class LitShader {
             #include "lightingPS"
         `);
 
-        // TBN
-        const hasTBN = this.needsNormal && (options.useNormals || options.useClearCoatNormals || (options.enableGGXSpecular && !options.useHeights));
+        func.append(`
 
-        if (hasTBN) {
-            if (options.hasTangents) {
-                func.append(chunks.TBNPS);
-            } else {
-                if (options.useNormals || options.useClearCoatNormals) {
-                    func.append(chunks.TBNderivativePS.replace(/\$UV/g, this.lightingUv));
-                } else {
-                    func.append(chunks.TBNObjectSpacePS);
-                }
-            }
+            // TBN
+            #ifdef LIT_TBN
+                #include "TBNPS"
 
-            func.append(`
                 #ifdef LIT_TWO_SIDED_LIGHTING
                     #include "twoSidedLightingPS"
                 #endif
-            `);
-        }
+            #endif
 
-        func.append(`
             #include "sphericalPS"
             #include "decodePS"
             #include "gammaPS"
             #include "tonemappingPS"
             #include "fogPS"
+
         `);
 
         // frontend
@@ -800,16 +804,17 @@ class LitShader {
                 code.append('    dBinormalW = vBinormalW;');
             }
 
-            code.append('    getViewDir();');
-            if (hasTBN) {
-                code.append(`
+            code.append(`
+                getViewDir();
+
+                #ifdef LIT_TBN
                     getTBN(dTangentW, dBinormalW, dVertexNormalW);
 
                     #ifdef LIT_TWO_SIDED_LIGHTING
                         handleTwoSidedLighting();
                     #endif
-                `);
-            }
+                #endif
+            `);
         }
 
         // invoke frontend functions
@@ -1354,7 +1359,6 @@ class LitShader {
         const mergedCode = decl.code + func.code + code.code;
 
         // Light inputs
-        if (mergedCode.includes('dTBN')) structCode += 'mat3 dTBN;\n';
         if (mergedCode.includes('dVertexNormalW')) structCode += 'vec3 dVertexNormalW;\n';
         if (mergedCode.includes('dTangentW')) structCode += 'vec3 dTangentW;\n';
         if (mergedCode.includes('dBinormalW')) structCode += 'vec3 dBinormalW;\n';
