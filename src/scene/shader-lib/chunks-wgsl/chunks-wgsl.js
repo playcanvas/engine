@@ -172,7 +172,6 @@ import skyboxVS from './skybox/vert/skybox.js';
 import sphericalPS from './common/frag/spherical.js';
 // import specularityFactorPS from './standard/frag/specularityFactor.js';
 // import spotPS from './lit/frag/spot.js';
-// import startPS from './lit/frag/start.js';
 // import startNineSlicedPS from './lit/frag/startNineSliced.js';
 // import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
 // import tangentBinormalVS from './lit/vert/tangentBinormal.js';
@@ -381,7 +380,6 @@ const shaderChunksWGSL = {
     sphericalPS,
     // specularityFactorPS,
     // spotPS,
-    // startPS,
     // startNineSlicedPS,
     // startNineSlicedTiledPS,
     // tangentBinormalVS,

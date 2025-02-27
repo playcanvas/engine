@@ -31,7 +31,6 @@ const chunkVersions = {
 
     // backend
     normalVertexPS: CHUNKAPI_1_55,
-    startPS: CHUNKAPI_1_55,
 
     ambientConstantPS: CHUNKAPI_1_62,
     ambientEnvPS: CHUNKAPI_1_62,
@@ -120,7 +119,8 @@ const removedChunks = {
     viewNormalVS: CHUNKAPI_2_6,
     lightmapDirAddPS: CHUNKAPI_2_6,
     TBNObjectSpacePS: CHUNKAPI_2_6,
-    TBNderivativePS: CHUNKAPI_2_6
+    TBNderivativePS: CHUNKAPI_2_6,
+    startPS: CHUNKAPI_2_6
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.

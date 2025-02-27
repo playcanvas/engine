@@ -906,6 +906,12 @@ export const SPRITE_RENDERMODE_SLICED = 1;
  */
 export const SPRITE_RENDERMODE_TILED = 2;
 
+export const spriteRenderModeNames = {
+    [SPRITE_RENDERMODE_SIMPLE]: 'SIMPLE',
+    [SPRITE_RENDERMODE_SLICED]: 'SLICED',
+    [SPRITE_RENDERMODE_TILED]: 'TILED'
+};
+
 /**
  * Single color lightmap.
  *
