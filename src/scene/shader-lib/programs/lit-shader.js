@@ -15,14 +15,14 @@ import {
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     SHADOW_PCF1_16F, SHADOW_PCF5_16F, SHADOW_PCF3_16F,
     lightTypeNames,
-    lightShapeNames
+    lightShapeNames,
+    spriteRenderModeNames
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { ChunkBuilder } from '../chunk-builder.js';
-import { ShaderGenerator } from './shader-generator.js';
 import { Debug } from '../../../core/debug.js';
 
 /**
@@ -143,17 +143,6 @@ class LitShader {
             result += chunks.baseNineSlicedPS;
         } else if (options.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
             result += chunks.baseNineSlicedTiledPS;
-        }
-        return result;
-    }
-
-    // Add "Start" Code section to fragment shader.
-    _fsGetStartCode(code, device, chunks, options) {
-        let result = chunks.startPS;
-        if (options.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
-            result += chunks.startNineSlicedPS;
-        } else if (options.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
-            result += chunks.startNineSlicedTiledPS;
         }
         return result;
     }
@@ -527,14 +516,23 @@ class LitShader {
         this.fDefineSet(hasTBN, 'LIT_TBN');
         this.fDefineSet(options.hasTangents, 'LIT_TANGENTS');
         this.fDefineSet(options.useNormals, 'LIT_USE_NORMALS');
+        this.fDefineSet(this.needsNormal, 'LIT_NEEDS_NORMAL');
         this.fDefineSet(options.useClearCoatNormals, 'LIT_USE_CLEARCOAT_NORMALS');
+        this.fDefineSet(options.dispersion, 'LIT_DISPERSION');
+        this.fDefineSet(options.useHeights, 'LIT_HEIGHTS');
+        this.fDefineSet(true, 'LIT_NONE_SLICE_MODE', spriteRenderModeNames[options.nineSlicedMode]);
 
         // injection defines
         this.fDefineSet(true, '{lightingUv}', this.lightingUv ?? ''); // example: vUV0_1
 
-        // globals
         decl.append(`
+            // globals
             mat3 dTBN;
+            vec3 sReflection;
+
+            #ifdef LIT_DISPERSION
+                uniform float material_dispersion;
+            #endif
         `);
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
@@ -670,10 +668,6 @@ class LitShader {
 
         if (options.useRefraction) {
             if (options.useDynamicRefraction) {
-                if (options.dispersion) {
-                    decl.append('uniform float material_dispersion;');
-                    decl.append('#define DISPERSION\n');
-                }
                 func.append(chunks.refractionDynamicPS);
             } else if (this.reflections) {
                 func.append(chunks.refractionCubePS);
@@ -752,8 +746,8 @@ class LitShader {
             func.append(chunks.msdfPS);
         }
 
-        if (this.needsNormal) {
-            func.append(`
+        func.append(`
+            #ifdef LIT_NEEDS_NORMAL
                 #include "viewDirPS"
                 #ifdef LIT_SPECULAR
                     #ifdef LIT_GGX_SPECULAR
@@ -762,8 +756,8 @@ class LitShader {
                         #include "reflDirPS"
                     #endif
                 #endif
-            `);
-        }
+            #endif
+        `);
 
         let hasPointLights = false;
         let usesLinearFalloff = false;
@@ -794,31 +788,51 @@ class LitShader {
 
         // FRAGMENT SHADER BODY
 
-        code.append(this._fsGetStartCode(code, device, chunks, options));
+        code.append(`
 
-        if (this.needsNormal) {
-            code.append('    dVertexNormalW = normalize(vNormalW);');
+            void main(void) {
+                dReflection = vec4(0);
 
-            if ((options.useHeights || options.useNormals) && options.hasTangents) {
-                code.append('    dTangentW = vTangentW;');
-                code.append('    dBinormalW = vBinormalW;');
-            }
+                #ifdef LIT_CLEARCOAT
+                ccSpecularLight = vec3(0);
+                ccReflection = vec3(0);
+                #endif
 
-            code.append(`
-                getViewDir();
+                #if LIT_NONE_SLICE_MODE == SLICED
+                    #include "startNineSlicedPS"
+                #elif LIT_NONE_SLICE_MODE == TILED
+                    #include "startNineSlicedTiledPS"
+                #endif
 
-                #ifdef LIT_TBN
-                    getTBN(dTangentW, dBinormalW, dVertexNormalW);
+                #ifdef LIT_NEEDS_NORMAL
+                    dVertexNormalW = normalize(vNormalW);
 
-                    #ifdef LIT_TWO_SIDED_LIGHTING
-                        handleTwoSidedLighting();
+                    #ifdef LIT_TANGENTS
+                        #if defined(LIT_HEIGHTS) || defined(LIT_USE_NORMALS)
+                            dTangentW = vTangentW;
+                            dBinormalW = vBinormalW;
+                        #endif
+                    #endif
+
+                    getViewDir();
+
+                    #ifdef LIT_TBN
+                        getTBN(dTangentW, dBinormalW, dVertexNormalW);
+
+                        #ifdef LIT_TWO_SIDED_LIGHTING
+                            handleTwoSidedLighting();
+                        #endif
                     #endif
                 #endif
-            `);
-        }
 
-        // invoke frontend functions
-        code.append('    evaluateFrontend();');
+                // invoke frontend functions
+                evaluateFrontend();
+
+                #include "debugProcessFrontendPS"
+
+                evaluateBackend();
+            }
+        `);
 
         // apply SSAO
         if (options.ssao) {
@@ -830,8 +844,8 @@ class LitShader {
         }
 
         // transform tangent space normals to world space
-        if (this.needsNormal) {
-            backend.append(`
+        backend.append(`
+            #ifdef LIT_NEEDS_NORMAL
                 #ifdef LIT_SPECULAR
                     getReflDir(litArgs_worldNormal, dViewDirW, litArgs_gloss, dTBN);
                 #endif
@@ -839,8 +853,8 @@ class LitShader {
                 #ifdef LIT_CLEARCOAT
                     ccReflDirW = normalize(-reflect(dViewDirW, litArgs_clearcoat_worldNormal));
                 #endif
-            `);
-        }
+            #endif
+        `);
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
             backend.append(`
@@ -1350,12 +1364,6 @@ class LitShader {
         const backendCode = `void evaluateBackend() {\n${backend.code}\n}`;
         func.append(backendCode);
 
-        code.append(chunks.debugProcessFrontendPS);
-
-        code.append('    evaluateBackend();');
-
-        code.append(ShaderGenerator.end());
-
         const mergedCode = decl.code + func.code + code.code;
 
         // Light inputs
@@ -1386,7 +1394,6 @@ class LitShader {
         if (mergedCode.includes('ccSpecularLight')) structCode += 'vec3 ccSpecularLight;\n';
         if (mergedCode.includes('ccSpecularityNoFres')) structCode += 'float ccSpecularityNoFres;\n';
         if (mergedCode.includes('sSpecularLight')) structCode += 'vec3 sSpecularLight;\n';
-        if (mergedCode.includes('sReflection')) structCode += 'vec3 sReflection;\n';
 
         const result = this._fsGetBeginCode() +
             this.varyingsCode +

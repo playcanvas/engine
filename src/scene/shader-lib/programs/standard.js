@@ -520,7 +520,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         }
 
         decl.append(litShader.chunks.litShaderArgsPS);
-        code.append(`void evaluateFrontend() { \n${func.code}\n${args.code}\n }\n`);
+        code.append(`
+            void evaluateFrontend() {
+                ${func.code}
+                ${args.code}
+            }
+        `);
 
         for (const texture in textureMapping) {
             decl.append(`uniform sampler2D ${textureMapping[texture]};`);
