@@ -182,7 +182,9 @@ class CameraControls {
                 this._moveAxes.add(tmpV1.set(right - left, up - down, forward - back));
                 this._moveFast += fast;
                 this._moveSlow += slow;
-                const mult = this._moveFast ? this.moveFastMult : this._moveSlow ? this.moveSlowMult : 1;
+                const mult = this._moveFast ?
+                    this.moveFastMult : this._moveSlow ?
+                        this.moveSlowMult : 1;
 
                 tmpM1.copy(this._model.update({
                     rotate: tmpVa.fromArray(mouse),
