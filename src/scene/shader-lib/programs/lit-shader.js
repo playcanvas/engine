@@ -256,9 +256,9 @@ class LitShader {
 
                 // defines used by the included chunks
                 const varName = `texture_${name}MapTransform`;
-                vDefines.set(`_INJECT_TRANSFORM_NAME_${numTransforms}`, varName);
-                vDefines.set(`_INJECT_TRANSFORM_UV_${numTransforms}`, uv);
-                vDefines.set(`_INJECT_TRANSFORM_ID_${numTransforms}`, id);
+                vDefines.set(`{TRANSFORM_NAME_${numTransforms}}`, varName);
+                vDefines.set(`{TRANSFORM_UV_${numTransforms}}`, uv);
+                vDefines.set(`{TRANSFORM_ID_${numTransforms}}`, id);
 
                 numTransforms++;
             }
