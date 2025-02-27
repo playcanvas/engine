@@ -27,6 +27,14 @@ export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 export { CameraFrame } from './render-passes/camera-frame.js';
 
+// INPUT
+export { Input } from './inputs/input.js';
+export { JoystickInput } from './inputs/joystick-input.js';
+export { KeyboardMouseInput } from './inputs/keyboardmouse-input.js';
+
+// CAMERAS
+export { FlyCamera } from './cameras/fly-camera.js';
+
 // GIZMOS
 export {
     GIZMOSPACE_LOCAL,
