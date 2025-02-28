@@ -4,8 +4,21 @@ export default /* glsl */`
     attribute vec4 vertex_color;
 #endif
 
+#ifdef NINESLICED
+
+    varying vec2 vMask;
+    varying vec2 vTiledUv;
+
+    uniform mediump vec4 innerOffset;
+    uniform mediump vec2 outerScale;
+    uniform mediump vec4 atlasRect;
+
+#endif
+
 vec3 dPositionW;
 mat4 dModelMatrix;
+
+#include "transformCoreVS"
 
 #ifdef UV0
     attribute vec2 vertex_texCoord0;
@@ -17,18 +30,6 @@ mat4 dModelMatrix;
     #include "uv1VS"
 #endif
 
-#include "transformCoreVS"
-
-#ifdef NINESLICED
-
-    varying vec2 vMask;
-    varying vec2 vTiledUv;
-
-    uniform mediump vec4 innerOffset;
-    uniform mediump vec2 outerScale;
-    uniform mediump vec4 atlasRect;
-
-#endif
 
 #ifdef LINEAR_DEPTH
     #ifndef VIEWMATRIX
