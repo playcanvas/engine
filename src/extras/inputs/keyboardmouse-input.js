@@ -193,9 +193,8 @@ class KeyboardMouseInput extends Input {
      * @param {HTMLElement} element - The element.
      */
     attach(element) {
-        if (this._element) {
-            this.detach();
-        }
+        super.attach(element);
+
         this._element = element;
         this._element.addEventListener('wheel', this._onWheel, PASSIVE);
         this._element.addEventListener('pointerdown', this._onPointerDown);
@@ -219,13 +218,13 @@ class KeyboardMouseInput extends Input {
         this._element.removeEventListener('pointerout', this._onPointerUp);
         this._element.removeEventListener('contextmenu', this._onContextMenu);
 
-        this._element = null;
-
         window.removeEventListener('keydown', this._onKeyDown, false);
         window.removeEventListener('keyup', this._onKeyUp, false);
 
         this._keyNow.fill(0);
         this._keyPrev.fill(0);
+
+        super.detach();
     }
 
     /**
@@ -240,10 +239,6 @@ class KeyboardMouseInput extends Input {
         this.deltas.key.add(array8);
 
         return super.frame();
-    }
-
-    destroy() {
-        this.detach();
     }
 }
 

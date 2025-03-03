@@ -119,9 +119,8 @@ class JoystickDoubleInput extends Input {
      * @param {HTMLElement} element - The element.
      */
     attach(element) {
-        if (this._element) {
-            this.detach();
-        }
+        super.attach(element);
+
         this._element = element;
         this._element.addEventListener('pointerdown', this._onPointerDown);
         this._element.addEventListener('pointermove', this._onPointerMove);
@@ -138,8 +137,9 @@ class JoystickDoubleInput extends Input {
 
         this._pointerData.clear();
 
-        this._element = null;
         this._camera = null;
+
+        super.detach();
     }
 
     /**
@@ -154,10 +154,10 @@ class JoystickDoubleInput extends Input {
     }
 
     destroy() {
-        this.detach();
-
         this._leftJoystick.destroy();
         this._rightJoystick.destroy();
+
+        super.destroy();
     }
 }
 

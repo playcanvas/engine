@@ -161,9 +161,8 @@ class MultiTouchInput extends Input {
      * @param {HTMLElement} element - The element.
      */
     attach(element) {
-        if (this._element) {
-            this.detach();
-        }
+        super.attach(element);
+
         this._element = element;
         this._element.addEventListener('wheel', this._onWheel, PASSIVE);
         this._element.addEventListener('pointerdown', this._onPointerDown);
@@ -184,9 +183,9 @@ class MultiTouchInput extends Input {
         this._element.removeEventListener('pointerout', this._onPointerUp);
         this._element.removeEventListener('contextmenu', this._onContextMenu);
 
-        this._element = null;
-
         this._pointerEvents.clear();
+
+        super.detach();
     }
 
     /**
@@ -197,10 +196,6 @@ class MultiTouchInput extends Input {
         this.deltas.count.add([+this._touches]);
 
         return super.frame();
-    }
-
-    destroy() {
-        this.detach();
     }
 }
 
