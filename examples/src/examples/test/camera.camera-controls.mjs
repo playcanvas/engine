@@ -172,6 +172,7 @@ class CameraControls {
         }
 
         if (this._model instanceof pc.OrbitModel) {
+            // orbit desktop
             if (this._input instanceof pc.KeyboardMouseInput) {
                 const { button, mouse, wheel } = this._input.frame();
                 this._panning += button[2];
@@ -183,6 +184,7 @@ class CameraControls {
                 }, this._camera, dt));
             }
 
+            // orbit mobile
             if (this._input instanceof pc.MultiTouchInput) {
                 const { touch, pinch, count } = this._input.frame();
 
@@ -193,6 +195,7 @@ class CameraControls {
                 }, this._camera, dt));
             }
         } else {
+            // fly desktop
             if (this._input instanceof pc.KeyboardMouseInput) {
                 const { key, mouse } = this._input.frame();
                 const [
@@ -218,6 +221,7 @@ class CameraControls {
                 }, dt));
             }
 
+            // fly mobile
             if (this._input instanceof pc.JoystickTouchInput) {
                 const { stick, touch } = this._input.frame();
 
