@@ -13,16 +13,16 @@ uniform float font_sdfIntensity; // intensity is used to boost the value read fr
 uniform float font_pxrange;      // the number of pixels between inside and outside the font in SDF
 uniform float font_textureWidth; // the width of the texture atlas
 
-#ifdef UNIFORM_TEXT_PARAMETERS
-uniform vec4 outline_color;
-uniform float outline_thickness;
-uniform vec4 shadow_color;
-uniform vec2 shadow_offset;
+#ifndef LIT_MSDF_TEXT_ATTRIBUTE
+    uniform vec4 outline_color;
+    uniform float outline_thickness;
+    uniform vec4 shadow_color;
+    uniform vec2 shadow_offset;
 #else
-varying vec4 outline_color;
-varying float outline_thickness;
-varying vec4 shadow_color;
-varying vec2 shadow_offset;
+    varying vec4 outline_color;
+    varying float outline_thickness;
+    varying vec4 shadow_color;
+    varying vec2 shadow_offset;
 #endif
 
 vec4 applyMsdf(vec4 color) {

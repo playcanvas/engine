@@ -131,19 +131,6 @@ class LitShader {
         this.fshader = null;
     }
 
-    // Add "Base" Code section to fragment shader.
-    _fsGetBaseCode() {
-        const options = this.options;
-        const chunks = this.chunks;
-        let result = this.chunks.basePS;
-        if (options.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
-            result += chunks.baseNineSlicedPS;
-        } else if (options.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
-            result += chunks.baseNineSlicedTiledPS;
-        }
-        return result;
-    }
-
     _getLightSourceShapeString(shape) {
         switch (shape) {
             case LIGHTSHAPE_RECT:
@@ -489,7 +476,6 @@ class LitShader {
         const decl = new ChunkBuilder();
         const func = new ChunkBuilder();
         const backend = new ChunkBuilder();
-        const code = new ChunkBuilder();
 
         const hasTBN = this.needsNormal && (options.useNormals || options.useClearCoatNormals || (options.enableGGXSpecular && !options.useHeights));
 
@@ -524,10 +510,14 @@ class LitShader {
         this.fDefineSet(this.needsNormal, 'LIT_NEEDS_NORMAL');
         this.fDefineSet(options.useClearCoatNormals, 'LIT_USE_CLEARCOAT_NORMALS');
         this.fDefineSet(options.useRefraction, 'LIT_REFRACTION');
+        this.fDefineSet(options.useDynamicRefraction, 'LIT_DYNAMIC_REFRACTION');
         this.fDefineSet(options.dispersion, 'LIT_DISPERSION');
         this.fDefineSet(options.useHeights, 'LIT_HEIGHTS');
         this.fDefineSet(options.opacityFadesSpecular, 'LIT_OPACITY_FADES_SPECULAR');
         this.fDefineSet(options.alphaToCoverage, 'LIT_ALPHA_TO_COVERAGE');
+        this.fDefineSet(options.useMsdf, 'LIT_MSDF');
+        this.fDefineSet(options.ssao, 'LIT_SSAO');
+        this.fDefineSet(options.msdfTextAttribute, 'LIT_MSDF_TEXT_ATTRIBUTE');
         this.fDefineSet(true, 'LIT_NONE_SLICE_MODE', spriteRenderModeNames[options.nineSlicedMode]);
         this.fDefineSet(true, 'LIT_BLEND_TYPE', blendNames[options.blendType]);
         this.fDefineSet(true, 'LIT_CUBEMAP_PROJECTION', cubemaProjectionNames[options.cubeMapProjection]);
@@ -570,19 +560,22 @@ class LitShader {
             float ccSpecularityNoFres;
             vec3 sSpecularLight;
 
+            // FRAGMENT SHADER INPUTS: UNIFORMS
+
             #ifdef LIT_DISPERSION
                 uniform float material_dispersion;
             #endif
-        `);
 
-        // FRAGMENT SHADER INPUTS: UNIFORMS
-
-        decl.append(`
             #ifndef LIT_OPACITY_FADES_SPECULAR
                 uniform float material_alphaFade;
             #endif
 
-            // lighting and shadowing code
+            #ifdef LIT_SSAO
+                uniform sampler2D ssaoTexture;
+                uniform vec2 ssaoTextureSizeInv;
+            #endif
+
+            // lighting and shadowing declarations
 
             // LOOP - uniform declarations for all non-clustered lights
             #include "lightDeclarationPS, LIGHT_COUNT"
@@ -591,11 +584,19 @@ class LitShader {
                 #include "lightBufferDefinesPS"
             #endif
 
-            // required lighting functionality
-            #include "lightingPS"
+            // TODO: move this to 'func' section, but for now we prepend to it and it needs to be first
+            #include "basePS"
+
         `);
 
         func.append(`
+
+            // 9-slice support code
+            #if LIT_NONE_SLICE_MODE == SLICED
+                #include "baseNineSlicedPS"
+            #elif LIT_NONE_SLICE_MODE == TILED
+                #include "baseNineSlicedTiledPS"
+            #endif
 
             // TBN
             #ifdef LIT_TBN
@@ -612,6 +613,8 @@ class LitShader {
             #include "tonemappingPS"
             #include "fogPS"
 
+            // required lighting functionality
+            #include "lightingPS"
         `);
 
         // frontend
@@ -693,17 +696,15 @@ class LitShader {
                     #include "reflectionSheenPS"
                 #endif
             #endif
-        `);
 
-        if (options.useRefraction) {
-            if (options.useDynamicRefraction) {
-                func.append(chunks.refractionDynamicPS);
-            } else if (this.reflections) {
-                func.append(chunks.refractionCubePS);
-            }
-        }
+            #ifdef LIT_REFRACTION
+                #if defined(LIT_DYNAMIC_REFRACTION)
+                    #include "refractionDynamicPS"
+                #elif defined(LIT_REFLECTIONS)
+                    #include "refractionCubePS"
+                #endif
+            #endif
 
-        func.append(`
             #ifdef LIT_SHEEN
                 #include "lightSheenPS"
             #endif
@@ -768,14 +769,12 @@ class LitShader {
             decl.append('uniform vec3 material_ambient;');
         }
 
-        if (options.useMsdf) {
-            if (!options.msdfTextAttribute) {
-                decl.append('#define UNIFORM_TEXT_PARAMETERS');
-            }
-            func.append(chunks.msdfPS);
-        }
-
         func.append(`
+
+            #ifdef LIT_MSDF
+                #include "msdfPS"
+            #endif
+
             #ifdef LIT_NEEDS_NORMAL
                 #include "viewDirPS"
                 #ifdef LIT_SPECULAR
@@ -821,7 +820,7 @@ class LitShader {
 
         // FRAGMENT SHADER BODY
 
-        code.append(`
+        const code = `
 
             void main(void) {
                 dReflection = vec4(0);
@@ -865,19 +864,16 @@ class LitShader {
 
                 evaluateBackend();
             }
-        `);
+        `;
 
-        // apply SSAO
-        if (options.ssao) {
-            func.append(`
-                    uniform sampler2D ssaoTexture;
-                    uniform vec2 ssaoTextureSizeInv;
-                `);
-            backend.append('litArgs_ao *= texture2DLod(ssaoTexture, gl_FragCoord.xy * ssaoTextureSizeInv, 0.0).r;');
-        }
-
-        // transform tangent space normals to world space
         backend.append(`
+
+            // apply SSAO during lighting
+            #ifdef LIT_SSAO
+                litArgs_ao *= texture2DLod(ssaoTexture, gl_FragCoord.xy * ssaoTextureSizeInv, 0.0).r;
+            #endif
+
+            // transform tangent space normals to world space
             #ifdef LIT_NEEDS_NORMAL
                 #ifdef LIT_SPECULAR
                     getReflDir(litArgs_worldNormal, dViewDirW, litArgs_gloss, dTBN);
@@ -1380,13 +1376,11 @@ class LitShader {
 
             #include "endPS"
             #include "outputAlphaPS"
-        `);
 
-        if (options.useMsdf) {
-            backend.append('    gl_FragColor = applyMsdf(gl_FragColor);');
-        }
+            #ifdef LIT_MSDF
+                gl_FragColor = applyMsdf(gl_FragColor);
+            #endif
 
-        backend.append(`
             #include "outputPS"
             #include "debugOutputPS"
         `);
@@ -1416,11 +1410,10 @@ class LitShader {
 
         const result = this._fsGetBeginCode() +
             this.varyingsCode +
-            this._fsGetBaseCode() +
             this.frontendDecl +
             decl.code +
             func.code +
-            code.code;
+            code;
 
         return result;
     }
