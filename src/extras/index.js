@@ -29,9 +29,10 @@ export { CameraFrame } from './render-passes/camera-frame.js';
 
 // INPUTS
 export { Input } from './inputs/input.js';
-export { MultiTouchInput } from './inputs/multitouch-input.js';
+export { JoystickDoubleInput } from './inputs/joystickdouble-input.js';
 export { JoystickTouchInput } from './inputs/joysticktouch-input.js';
 export { KeyboardMouseInput } from './inputs/keyboardmouse-input.js';
+export { MultiTouchInput } from './inputs/multitouch-input.js';
 
 // MODELS
 export { FlyModel } from './models/fly-model.js';

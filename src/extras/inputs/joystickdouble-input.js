@@ -5,7 +5,7 @@ import { Joystick } from './joystick.js';
 
 const tmpVa = new Vec2();
 
-class JoystickTouchInput extends Input {
+class JoystickDoubleInput extends Input {
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
      * @private
@@ -16,21 +16,30 @@ class JoystickTouchInput extends Input {
      * @type {Joystick}
      * @private
      */
-    _joystick;
+    _leftJoystick;
+
+    /**
+     * @type {Joystick}
+     * @private
+     */
+    _rightJoystick;
 
     /**
      * @override
      */
     deltas = {
-        stick: new Delta(2),
-        touch: new Delta(2)
+        leftStick: new Delta(2),
+        rightStick: new Delta(2)
     };
 
     constructor() {
         super();
 
-        this._joystick = new Joystick();
-        document.body.append(this._joystick.dom);
+        this._leftJoystick = new Joystick();
+        document.body.append(this._leftJoystick.dom);
+
+        this._rightJoystick = new Joystick();
+        document.body.append(this._rightJoystick.dom);
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
@@ -52,8 +61,11 @@ class JoystickTouchInput extends Input {
         });
 
         if (left) {
-            this._joystick.hidden = false;
-            this._joystick.position = tmpVa.set(event.clientX, event.clientY);
+            this._leftJoystick.hidden = false;
+            this._leftJoystick.position = tmpVa.set(event.clientX, event.clientY);
+        } else {
+            this._rightJoystick.hidden = false;
+            this._rightJoystick.position = tmpVa.set(event.clientX, event.clientY);
         }
     }
 
@@ -74,9 +86,9 @@ class JoystickTouchInput extends Input {
         data.y = event.clientY;
 
         if (left) {
-            this._joystick.stickPosition = tmpVa.set(event.clientX, event.clientY);
+            this._leftJoystick.stickPosition = tmpVa.set(event.clientX, event.clientY);
         } else {
-            this.deltas.touch.add([event.movementX, event.movementY]);
+            this._rightJoystick.stickPosition = tmpVa.set(event.clientX, event.clientY);
         }
 
     }
@@ -96,7 +108,9 @@ class JoystickTouchInput extends Input {
         this._pointerData.delete(event.pointerId);
 
         if (left) {
-            this._joystick.hidden = true;
+            this._leftJoystick.hidden = true;
+        } else {
+            this._rightJoystick.hidden = true;
         }
 
     }
@@ -130,10 +144,11 @@ class JoystickTouchInput extends Input {
 
     /**
      * @override
-     * @returns {{ [K in keyof JoystickTouchInput["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof JoystickDoubleInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
-        this.deltas.stick.add([this._joystick.value.x, this._joystick.value.y]);
+        this.deltas.leftStick.add([this._leftJoystick.value.x, this._leftJoystick.value.y]);
+        this.deltas.rightStick.add([this._rightJoystick.value.x, this._rightJoystick.value.y]);
 
         return super.frame();
     }
@@ -141,8 +156,9 @@ class JoystickTouchInput extends Input {
     destroy() {
         this.detach();
 
-        this._joystick.destroy();
+        this._leftJoystick.destroy();
+        this._rightJoystick.destroy();
     }
 }
 
-export { JoystickTouchInput };
+export { JoystickDoubleInput };

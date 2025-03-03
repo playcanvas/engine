@@ -28,7 +28,7 @@ class CameraControls {
     _camera;
 
     /**
-     * @type {pc.KeyboardMouseInput|pc.JoystickTouchInput|pc.MultiTouchInput}
+     * @type {pc.KeyboardMouseInput|pc.JoystickDoubleInput|pc.JoystickTouchInput|pc.MultiTouchInput}
      * @private
      */
     _input;
@@ -85,6 +85,11 @@ class CameraControls {
     pinchMult = 5;
 
     /**
+     * @type {number}
+     */
+    joytickRotateMult = 2;
+
+    /**
      * @param {Object} options - The options.
      * @param {pc.AppBase} options.app - The application.
      * @param {pc.CameraComponent} options.camera - The camera.
@@ -100,7 +105,7 @@ class CameraControls {
 
         // input
         if (pc.platform.mobile) {
-            this._input = this._mode === CameraControls.MODE_FLY ? new pc.JoystickTouchInput() : new pc.MultiTouchInput();
+            this._input = this._mode === CameraControls.MODE_FLY ? new pc.JoystickDoubleInput() : new pc.MultiTouchInput();
         } else {
             this._input = new pc.KeyboardMouseInput();
         }
@@ -221,13 +226,23 @@ class CameraControls {
                 }, dt));
             }
 
-            // fly mobile
+            // fly mobile (joystick + touch)
             if (this._input instanceof pc.JoystickTouchInput) {
                 const { stick, touch } = this._input.frame();
 
                 tmpM1.copy(this._model.update({
                     rotate: tmpVa.fromArray(touch),
-                    move: tmpV1.set(stick[0], 0, stick[1])
+                    move: tmpV1.set(stick[0], 0, -stick[1])
+                }, dt));
+            }
+
+            // fly mobile (joystick x2)
+            if (this._input instanceof pc.JoystickDoubleInput) {
+                const { leftStick, rightStick } = this._input.frame();
+
+                tmpM1.copy(this._model.update({
+                    rotate: tmpVa.fromArray(rightStick).mulScalar(this.joytickRotateMult),
+                    move: tmpV1.set(leftStick[0], 0, -leftStick[1])
                 }, dt));
             }
         }
