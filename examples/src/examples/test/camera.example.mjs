@@ -117,6 +117,14 @@ const cc = new CameraControls({
 // focus on entity when 'f' key is pressed
 const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
     switch (e.key) {
+        case '1': {
+            cc.mode = CameraControls.MODE_ORBIT;
+            break;
+        }
+        case '2': {
+            cc.mode = CameraControls.MODE_FLY;
+            break;
+        }
         case 'f': {
             cc.focus(focus, dist);
             break;

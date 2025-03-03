@@ -56,9 +56,11 @@ class Input {
         if (!this._element) {
             return;
         }
-
         this._element = null;
-        this._camera = null;
+
+        for (const name in this.deltas) {
+            this.deltas[name].flush();
+        }
     }
 
     /**

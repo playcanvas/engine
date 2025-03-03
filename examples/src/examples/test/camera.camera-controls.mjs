@@ -28,10 +28,46 @@ class CameraControls {
     _camera;
 
     /**
+     * @type {pc.KeyboardMouseInput}
+     * @private
+     */
+    _orbitDesktopInput;
+
+    /**
+     * @type {pc.MultiTouchInput}
+     * @private
+     */
+    _orbitMobileInput;
+
+    /**
+     * @type {pc.KeyboardMouseInput}
+     * @private
+     */
+    _flyDesktopInput;
+
+    /**
+     * @type {pc.JoystickTouchInput}
+     * @private
+     */
+    _flyMobileInput;
+
+    /**
      * @type {pc.KeyboardMouseInput|pc.JoystickDoubleInput|pc.JoystickTouchInput|pc.MultiTouchInput}
      * @private
      */
     _input;
+
+    /**
+     * @type {pc.FlyModel}
+     * @private
+     */
+    _flyModel;
+
+    /**
+     * @type {pc.OrbitModel}
+     * @private
+     */
+    _orbitModel;
 
     /**
      * @type {pc.FlyModel|pc.OrbitModel}
@@ -100,22 +136,22 @@ class CameraControls {
         this._app = app;
         this._camera = camera;
 
-        // mode
-        this._mode = mode ?? CameraControls.MODE_ORBIT;
-
         // input
-        if (pc.platform.mobile) {
-            this._input = this._mode === CameraControls.MODE_FLY ? new pc.JoystickTouchInput() : new pc.MultiTouchInput();
-        } else {
-            this._input = new pc.KeyboardMouseInput();
-        }
-        this._input.attach(this._app.graphicsDevice.canvas);
+        this._orbitDesktopInput = new pc.KeyboardMouseInput();
+        this._orbitMobileInput = new pc.MultiTouchInput();
+        this._flyDesktopInput = new pc.KeyboardMouseInput();
+        this._flyMobileInput = new pc.JoystickTouchInput();
 
-        // model
-        this._model = this._mode === CameraControls.MODE_FLY ? new pc.FlyModel() : new pc.OrbitModel();
-        this._model.rotateSpeed = 0.3;
-        this._model.rotateDamping = 0.95;
-        this._model.attach(this._camera.entity.getWorldTransform());
+        // models
+        this._flyModel = new pc.FlyModel();
+        this._flyModel.rotateSpeed = 0.3;
+        this._flyModel.rotateDamping = 0.95;
+        this._orbitModel = new pc.OrbitModel();
+        this._orbitModel.rotateSpeed = 0.3;
+        this._orbitModel.rotateDamping = 0.95;
+
+        // mode
+        this.mode = mode ?? CameraControls.MODE_ORBIT;
 
         // focus
         if (focus) {
@@ -137,6 +173,44 @@ class CameraControls {
             return this._model.point;
         }
         return this._camera.entity.getPosition();
+    }
+
+    set mode(mode) {
+        if (this._mode === mode) {
+            return;
+        }
+
+        this._mode = mode;
+
+        this._panning = 0;
+        this._moveAxes.set(0, 0, 0);
+        this._moveFast = 0;
+        this._moveSlow = 0;
+
+        if (this._input) {
+            this._input.detach();
+        }
+
+        if (this._model) {
+            this._model.detach();
+        }
+
+        if (this._mode === CameraControls.MODE_FLY) {
+            this._input = pc.platform.mobile ? this._flyMobileInput : this._flyDesktopInput;
+            this._model = this._flyModel;
+        } else {
+            this._input = pc.platform.mobile ? this._orbitMobileInput : this._orbitDesktopInput;
+            this._model = this._orbitModel;
+        }
+
+        this._input.attach(this._app.graphicsDevice.canvas);
+        this._model.attach(this._camera.entity.getWorldTransform());
+
+        console.log(`CameraControls: mode set to ${mode}`);
+    }
+
+    get mode() {
+        return this._mode;
     }
 
     /**
@@ -252,8 +326,13 @@ class CameraControls {
     }
 
     destroy() {
-        this._model.destroy();
-        this._input.destroy();
+        this._orbitDesktopInput.destroy();
+        this._orbitMobileInput.destroy();
+        this._flyDesktopInput.destroy();
+        this._flyMobileInput.destroy();
+
+        this._flyModel.destroy();
+        this._orbitModel.destroy();
     }
 }
 
