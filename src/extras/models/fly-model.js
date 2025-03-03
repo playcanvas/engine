@@ -139,13 +139,15 @@ class FlyModel extends EventHandler {
      * @param {Mat4} transform - The transform.
      */
     attach(transform) {
-        this._position.copy(transform.getTranslation());
-        this._targetPosition.copy(this._position);
+        this._targetPosition.copy(transform.getTranslation());
 
-        this._angles.copy(transform.getEulerAngles());
-        this._targetAngles.copy(this._angles);
+        transform.getZ(tmpV1).normalize();
+        const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
+        const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
+        this._targetAngles.set(-elev, azim, 0);
 
-        this._transform.copy(transform);
+        this._position.copy(this._targetPosition);
+        this._angles.copy(this._targetAngles);
     }
 
     detach() {
