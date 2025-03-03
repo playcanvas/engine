@@ -94,6 +94,20 @@ export const BLEND_MIN = 9;
  */
 export const BLEND_MAX = 10;
 
+export const blendNames = {
+    [BLEND_SUBTRACTIVE]: 'SUBTRACTIVE',
+    [BLEND_ADDITIVE]: 'ADDITIVE',
+    [BLEND_NORMAL]: 'NORMAL',
+    [BLEND_NONE]: 'NONE',
+    [BLEND_PREMULTIPLIED]: 'PREMULTIPLIED',
+    [BLEND_MULTIPLICATIVE]: 'MULTIPLICATIVE',
+    [BLEND_ADDITIVEALPHA]: 'ADDITIVEALPHA',
+    [BLEND_MULTIPLICATIVE2X]: 'MULTIPLICATIVE2X',
+    [BLEND_SCREEN]: 'SCREEN',
+    [BLEND_MIN]: 'MIN',
+    [BLEND_MAX]: 'MAX'
+};
+
 /**
  * No fog is applied to the scene.
  *
@@ -141,6 +155,11 @@ export const FRESNEL_NONE = 0;
  * @category Graphics
  */
 export const FRESNEL_SCHLICK = 2;
+
+export const fresnelNames = {
+    [FRESNEL_NONE]: 'NONE',
+    [FRESNEL_SCHLICK]: 'SCHLICK'
+};
 
 // Legacy
 export const LAYER_HUD = 0;
@@ -556,6 +575,12 @@ export const CUBEPROJ_NONE = 0;
  */
 export const CUBEPROJ_BOX = 1;
 
+// names of the cubemap projection
+export const cubemaProjectionNames = {
+    [CUBEPROJ_NONE]: 'NONE',
+    [CUBEPROJ_BOX]: 'BOX'
+};
+
 /**
  * Multiply together the primary and secondary colors.
  *
@@ -905,6 +930,12 @@ export const SPRITE_RENDERMODE_SLICED = 1;
  * @category Graphics
  */
 export const SPRITE_RENDERMODE_TILED = 2;
+
+export const spriteRenderModeNames = {
+    [SPRITE_RENDERMODE_SIMPLE]: 'SIMPLE',
+    [SPRITE_RENDERMODE_SLICED]: 'SLICED',
+    [SPRITE_RENDERMODE_TILED]: 'TILED'
+};
 
 /**
  * Single color lightmap.

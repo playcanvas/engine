@@ -36,7 +36,7 @@ void main(void) {
             opacityDither(alpha, id * 0.013);
         #endif
 
-        gl_FragColor = vec4(gaussianColor.xyz, alpha);
+        gl_FragColor = vec4(gaussianColor.xyz * alpha, alpha);
     #endif
 }
 `;

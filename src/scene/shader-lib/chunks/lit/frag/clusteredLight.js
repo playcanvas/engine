@@ -98,25 +98,51 @@ struct ClusterLightData {
 mat4 lightProjectionMatrix;
 
 // macros for light properties
-#define isClusteredLightCastShadow(light) ( light.shadowIntensity > 0.0 )
-#define isClusteredLightCookie(light) (light.cookie > 0.5 )
-#define isClusteredLightCookieRgb(light) (light.cookieRgb > 0.5 )
-#define isClusteredLightSpot(light) ( light.lightType > 0.5 )
-#define isClusteredLightFalloffLinear(light) ( light.falloffMode < 0.5 )
+bool isClusteredLightCastShadow(in ClusterLightData light) {
+  return light.shadowIntensity > 0.0;
+}
+
+bool isClusteredLightCookie(in ClusterLightData light) {
+  return light.cookie > 0.5;
+}
+
+bool isClusteredLightCookieRgb(in ClusterLightData light) {
+  return light.cookieRgb > 0.5;
+}
+
+bool isClusteredLightSpot(in ClusterLightData light) {
+  return light.lightType > 0.5;
+}
+
+bool isClusteredLightFalloffLinear(in ClusterLightData light) {
+  return light.falloffMode < 0.5;
+}
 
 // macros to test light shape
 // Note: Following functions need to be called serially in listed order as they do not test both '>' and '<'
-#define isClusteredLightArea(light) ( light.shape > 0.1 )
-#define isClusteredLightRect(light) ( light.shape < 0.3 )
-#define isClusteredLightDisk(light) ( light.shape < 0.6 )
+bool isClusteredLightArea(in ClusterLightData light) {
+  return light.shape > 0.1;
+}
+
+bool isClusteredLightRect(in ClusterLightData light) {
+  return light.shape < 0.3;
+}
+
+bool isClusteredLightDisk(in ClusterLightData light) {
+  return light.shape < 0.6;
+}
 
 // macro to test light mask (mesh accepts dynamic vs lightmapped lights)
 #ifdef CLUSTER_MESH_DYNAMIC_LIGHTS
     // accept lights marked as dynamic or both dynamic and lightmapped
-    #define acceptLightMask(light) ( light.mask < 0.75)
+    bool acceptLightMask(in ClusterLightData light) {
+        return light.mask < 0.75;
+    }
 #else
     // accept lights marked as lightmapped or both dynamic and lightmapped
-    #define acceptLightMask(light) ( light.mask > 0.25)
+    bool acceptLightMask(in ClusterLightData light) {
+        return light.mask > 0.25;
+    }
 #endif
 
 vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {

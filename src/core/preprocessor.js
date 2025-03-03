@@ -22,10 +22,10 @@ const UNDEF = /undef[ \t]+([^\n]+)\r?(?:\n|$)/g;
 const IF = /(ifdef|ifndef|if)[ \t]*([^\r\n]+)\r?\n/g;
 
 // #endif/#else or #elif EXPRESSION
-const ENDIF = /(endif|else|elif)([ \t][^\r\n]+)?\r?(?:\n|$)/g;
+const ENDIF = /(endif|else|elif)(?:[ \t]+([^\r\n]*))?\r?\n?/g;
 
-// identifier
-const IDENTIFIER = /([\w-]+)/;
+// identifier in form of IDENTIFIER or {IDENTIFIER}
+const IDENTIFIER = /\{?[\w-]+\}?/;
 
 // [!]defined(EXPRESSION)
 const DEFINED = /(!|\s)?defined\(([\w-]+)\)/;
@@ -41,6 +41,9 @@ const INCLUDE = /include[ \t]+"([\w-]+)(?:\s*,\s*([\w-]+))?"\r?(?:\n|$)/g;
 
 // loop index to replace, in the format {i}
 const LOOP_INDEX = /\{i\}/g;
+
+// matches color attachments, for example: pcFragColor1
+const FRAGCOLOR = /(pcFragColor[1-8])\b/g;
 
 /**
  * Pure static class implementing subset of C-style preprocessor.
@@ -73,29 +76,14 @@ class Preprocessor {
         .map(line => line.trimEnd())
         .join('\n');
 
-        // generate defines to remove unused color attachments
+        // extracted defines
         const defines = new Map();
-        if (options.stripUnusedColorAttachments) {
 
-            // find out how many times pcFragColorX is used (see gles3.js)
-            const counts = new Map();
-            const regex = /(pcFragColor[1-8])\b/g;
-            const matches = source.match(regex);
-            matches?.forEach((match) => {
-                const index = parseInt(match.charAt(match.length - 1), 10);
-                counts.set(index, (counts.get(index) ?? 0) + 1);
-            });
-
-            // if pcFragColorX is used only once, remove it
-            counts.forEach((count, index) => {
-                if (count === 1) {
-                    defines.set(`REMOVE_COLOR_ATTACHMENT_${index}`, '');
-                }
-            });
-        }
+        // extracted defines with name in {} which are to be replaced with their values
+        const injectDefines = new Map();
 
         // preprocess defines / ifdefs ..
-        source = this._preprocess(source, defines, includes, options.stripDefines);
+        source = this._preprocess(source, defines, injectDefines, includes, options.stripDefines);
 
         // extract defines that evaluate to an integer number
         const intDefines = new Map();
@@ -105,16 +93,10 @@ class Preprocessor {
             }
         });
 
-        // extract defines with name starting with _INJECT_
-        const injectDefines = new Map();
-        defines.forEach((value, key) => {
-            if (key.startsWith('_INJECT_')) {
-                injectDefines.set(key, value);
-            }
-        });
-
         // strip comments again after the includes have been resolved
         source = this.stripComments(source);
+
+        source = this.stripUnusedColorAttachments(source, options);
 
         // remove empty lines
         source = this.RemoveEmptyLines(source);
@@ -124,6 +106,43 @@ class Preprocessor {
 
         // inject defines
         source = this.injectDefines(source, injectDefines);
+
+        return source;
+    }
+
+    static stripUnusedColorAttachments(source, options) {
+
+        if (options.stripUnusedColorAttachments) {
+
+            // find out how many times pcFragColorX is used (see gles3.js)
+            const counts = new Map();
+            const matches = source.match(FRAGCOLOR);
+            matches?.forEach((match) => {
+                const index = parseInt(match.charAt(match.length - 1), 10);
+                counts.set(index, (counts.get(index) ?? 0) + 1);
+            });
+
+            // if there's any attachment used only one time (only as a declaration, without actual use)
+            const anySingleUse = Array.from(counts.values()).some(count => count === 1);
+            if (anySingleUse) {
+
+                // remove all lines that contains pcFragColorX with single usage
+                const lines = source.split('\n');
+                const keepLines = [];
+                for (let i = 0; i < lines.length; i++) {
+                    const match = lines[i].match(FRAGCOLOR);
+                    if (match) {
+                        const index = parseInt(match[0].charAt(match[0].length - 1), 10);
+                        if (index > 0 && counts.get(index) === 1) {
+                            continue;
+                        }
+                    }
+                    keepLines.push(lines[i]);
+                }
+
+                source = keepLines.join('\n');
+            }
+        }
 
         return source;
     }
@@ -152,7 +171,7 @@ class Preprocessor {
             // replace all instances of the injected defines with the value itself
             const lines = source.split('\n');
             injectDefines.forEach((value, key) => {
-                const regex = new RegExp(`\\b${key}\\b`, 'g');
+                const regex = new RegExp(key, 'g');
                 for (let i = 0; i < lines.length; i++) {
 
                     // replace them on lines that do not contain a preprocessor directive (the define itself for example)
@@ -190,12 +209,14 @@ class Preprocessor {
      * @param {Map<string, string>} defines - Supplied defines which are used in addition to those
      * defined in the source code. Maps a define name to its value. Note that the map is modified
      * by the function.
+     * @param {Map<string, string>} injectDefines - An object to collect defines that are to be
+     * replaced with their values.
      * @param {Map<string, string>} [includes] - An object containing key-value pairs of include names and their
      * content.
      * @param {boolean} [stripDefines] - If true, strips all defines from the source.
      * @returns {string} Returns preprocessed source code.
      */
-    static _preprocess(source, defines = new Map(), includes, stripDefines) {
+    static _preprocess(source, defines = new Map(), injectDefines, includes, stripDefines) {
 
         const originalSource = source;
 
@@ -222,17 +243,29 @@ class Preprocessor {
                     // split it to identifier name and a value
                     IDENTIFIER.lastIndex = define.index;
                     const identifierValue = IDENTIFIER.exec(expression);
-                    const identifier = identifierValue[1];
+                    const identifier = identifierValue[0];
                     let value = expression.substring(identifier.length).trim();
                     if (value === '') value = 'true';
 
                     // are we inside if-blocks that are accepted
                     const keep = Preprocessor._keep(stack);
+                    let stripThisDefine = stripDefines;
 
                     if (keep) {
-                        defines.set(identifier, value);
 
-                        if (stripDefines) {
+                        // replacement identifier (inside {}) - always remove it from code
+                        const replacementDefine = identifier.startsWith('{') && identifier.endsWith('}');
+                        if (replacementDefine) {
+                            stripThisDefine = true;
+                        }
+
+                        if (replacementDefine) {
+                            injectDefines.set(identifier, value);
+                        } else {
+                            defines.set(identifier, value);
+                        }
+
+                        if (stripThisDefine) {
                             // cut out the define line
                             source = source.substring(0, define.index - 1) + source.substring(DEFINE.lastIndex);
 
@@ -244,7 +277,7 @@ class Preprocessor {
                     Debug.trace(TRACEID, `${keyword}: [${identifier}] ${value} ${keep ? '' : 'IGNORED'}`);
 
                     // continue on the next line
-                    if (!stripDefines) {
+                    if (!stripThisDefine) {
                         KEYWORD.lastIndex = define.index + define[0].length;
                     }
                     break;
@@ -401,6 +434,8 @@ class Preprocessor {
                         // cut out the include line and replace it with the included string
                         let includeSource = includes?.get(identifier);
                         if (includeSource !== undefined) {
+
+                            includeSource = this.stripComments(includeSource);
 
                             // handle second identifier specifying loop count
                             if (countIdentifier) {

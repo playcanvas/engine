@@ -10,9 +10,7 @@
 // import aoSpecOccConstSimplePS from './lit/frag/aoSpecOccConstSimple.js';
 // import aoSpecOccSimplePS from './lit/frag/aoSpecOccSimple.js';
 // import basePS from './lit/frag/base.js';
-// import baseVS from './lit/vert/base.js';
 // import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
-// import baseNineSlicedVS from './lit/vert/baseNineSliced.js';
 // import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
 // import bayerPS from './common/frag/bayer.js';
 // import blurVSMPS from './lit/frag/blurVSM.js';
@@ -25,8 +23,7 @@
 // import clusteredLightPS from './lit/frag/clusteredLight.js';
 // import combinePS from './lit/frag/combine.js';
 // import cookiePS from './lit/frag/cookie.js';
-// import cubeMapProjectBoxPS from './lit/frag/cubeMapProjectBox.js';
-// import cubeMapProjectNonePS from './lit/frag/cubeMapProjectNone.js';
+// import cubeMapProjectPS from './lit/frag/cubeMapProject.js';
 // import cubeMapRotatePS from './lit/frag/cubeMapRotate.js';
 // import debugOutputPS from './lit/frag/debug-output.js';
 // import debugProcessFrontendPS from './lit/frag/debug-process-frontend.js';
@@ -37,7 +34,6 @@ import decodePS from './common/frag/decode.js';
 // import emissivePS from './standard/frag/emissive.js';
 // import encodePS from './common/frag/encode.js';
 // import endPS from './lit/frag/end.js';
-// import endVS from './lit/vert/end.js';
 import envAtlasPS from './common/frag/envAtlas.js';
 // import envConstPS from './common/frag/envConst.js';
 import envMultiplyPS from './common/frag/envMultiply.js';
@@ -76,13 +72,13 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import lightDirPointPS from './lit/frag/lightDirPoint.js';
 // import lightingPS from './lit/frag/lighting/lighting.js';
 // import lightmapAddPS from './lit/frag/lightmapAdd.js';
-// import lightmapDirAddPS from './lit/frag/lightmapDirAdd.js';
 // import lightmapDirPS from './standard/frag/lightmapDir.js';
 // import lightmapSinglePS from './standard/frag/lightmapSingle.js';
 // import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 // import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 // import lightSheenPS from './lit/frag/lightSheen.js';
 // import linearizeDepthPS from './common/frag/linearizeDepth.js';
+// import litMainVS from './lit/vert/litMain.js';
 // import litShaderArgsPS from './standard/frag/litShaderArgs.js';
 // import ltcPS from './lit/frag/ltc.js';
 // import metalnessPS from './standard/frag/metalness.js';
@@ -99,8 +95,6 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import opacityDitherPS from './standard/frag/opacity-dither.js';
 // import outputPS from './lit/frag/output.js';
 // import outputAlphaPS from './lit/frag/outputAlpha.js';
-// import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
-// import outputAlphaPremulPS from './lit/frag/outputAlphaPremul.js';
 // import outputTex2DPS from './common/frag/outputTex2D.js';
 // import sheenPS from './standard/frag/sheen.js';
 // import sheenGlossPS from './standard/frag/sheenGloss.js';
@@ -175,14 +169,10 @@ import skyboxVS from './skybox/vert/skybox.js';
 import sphericalPS from './common/frag/spherical.js';
 // import specularityFactorPS from './standard/frag/specularityFactor.js';
 // import spotPS from './lit/frag/spot.js';
-// import startPS from './lit/frag/start.js';
-// import startVS from './lit/vert/start.js';
 // import startNineSlicedPS from './lit/frag/startNineSliced.js';
 // import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
 // import tangentBinormalVS from './lit/vert/tangentBinormal.js';
 // import TBNPS from './lit/frag/TBN.js';
-// import TBNderivativePS from './lit/frag/TBNderivative.js';
-// import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
 // import thicknessPS from './standard/frag/thickness.js';
 import tonemappingPS from './common/frag/tonemapping/tonemapping.js';
 import tonemappingAcesPS from './common/frag/tonemapping/tonemappingAces.js';
@@ -199,8 +189,9 @@ import tonemappingNonePS from './common/frag/tonemapping/tonemappingNone.js';
 // import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 // import uv0VS from './lit/vert/uv0.js';
 // import uv1VS from './lit/vert/uv1.js';
+// import uvTransformPS from './lit/vert/uvTransform.js';
+// import uvTransformUniformsPS from './lit/vert/uvTransformUniforms.js';
 // import viewDirPS from './lit/frag/viewDir.js';
-// import viewNormalVS from './lit/vert/viewNormal.js';
 // import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu.js';
 // import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
 
@@ -223,9 +214,7 @@ const shaderChunksWGSL = {
     // aoSpecOccConstSimplePS,
     // aoSpecOccSimplePS,
     // basePS,
-    // baseVS,
     // baseNineSlicedPS,
-    // baseNineSlicedVS,
     // baseNineSlicedTiledPS,
     // bayerPS,
     // blurVSMPS,
@@ -238,8 +227,7 @@ const shaderChunksWGSL = {
     // clusteredLightPS,
     // combinePS,
     // cookiePS,
-    // cubeMapProjectBoxPS,
-    // cubeMapProjectNonePS,
+    // cubeMapProjectPS,
     // cubeMapRotatePS,
     // debugOutputPS,
     // debugProcessFrontendPS,
@@ -250,7 +238,6 @@ const shaderChunksWGSL = {
     // emissivePS,
     // encodePS,
     // endPS,
-    // endVS,
     envAtlasPS,
     // envConstPS,
     envMultiplyPS,
@@ -284,18 +271,19 @@ const shaderChunksWGSL = {
     // iridescencePS,
     // iridescenceThicknessPS,
     // iorPS,
+    lightBufferDefinesPS: '',  // this chunk gets genereated at startup
     // lightDeclarationPS,
     // lightDiffuseLambertPS,
     // lightDirPointPS,
     // lightingPS,
     // lightmapAddPS,
-    // lightmapDirAddPS,
     // lightmapDirPS,
     // lightmapSinglePS,
     // lightSpecularAnisoGGXPS,
     // lightSpecularBlinnPS,
     // lightSheenPS,
     // linearizeDepthPS,
+    // litMainVS,
     // litShaderArgsPS,
     // ltcPS,
     // metalnessPS,
@@ -312,8 +300,6 @@ const shaderChunksWGSL = {
     // opacityDitherPS,
     // outputPS,
     // outputAlphaPS,
-    // outputAlphaOpaquePS,
-    // outputAlphaPremulPS,
     // outputTex2DPS,
     // sheenPS,
     // sheenGlossPS,
@@ -388,14 +374,10 @@ const shaderChunksWGSL = {
     sphericalPS,
     // specularityFactorPS,
     // spotPS,
-    // startPS,
-    // startVS,
     // startNineSlicedPS,
     // startNineSlicedTiledPS,
     // tangentBinormalVS,
     // TBNPS,
-    // TBNderivativePS,
-    // TBNObjectSpacePS,
     // thicknessPS,
     tonemappingPS,
     tonemappingAcesPS,
@@ -412,8 +394,9 @@ const shaderChunksWGSL = {
     // twoSidedLightingPS,
     // uv0VS,
     // uv1VS,
+    // uvTransformPS,
+    // uvTransformUniformsPS,
     // viewDirPS,
-    // viewNormalVS,
     // webgpuPS,
     // webgpuVS
 };

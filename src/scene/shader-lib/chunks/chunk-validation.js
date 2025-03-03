@@ -31,7 +31,6 @@ const chunkVersions = {
 
     // backend
     normalVertexPS: CHUNKAPI_1_55,
-    startPS: CHUNKAPI_1_55,
 
     ambientConstantPS: CHUNKAPI_1_62,
     ambientEnvPS: CHUNKAPI_1_62,
@@ -65,8 +64,6 @@ const chunkVersions = {
     shadowEVSMPS: CHUNKAPI_1_62,
     spotPS: CHUNKAPI_1_62,
     TBNPS: CHUNKAPI_1_62,
-    TBNObjectSpacePS: CHUNKAPI_1_62,
-    TBNderivativePS: CHUNKAPI_1_62,
 
     endPS: CHUNKAPI_1_65,
     metalnessModulatePS: CHUNKAPI_1_65,
@@ -75,7 +72,6 @@ const chunkVersions = {
     fresnelSchlickPS: CHUNKAPI_1_65,
     iridescenceDiffractionPS: CHUNKAPI_1_65,
     lightmapAddPS: CHUNKAPI_1_65,
-    lightmapDirAddPS: CHUNKAPI_1_65,
     refractionCubePS: CHUNKAPI_1_70,
     refractionDynamicPS: CHUNKAPI_1_70
 };
@@ -115,7 +111,20 @@ const removedChunks = {
     shadowEVSMnPS: CHUNKAPI_2_6,
     shadowVSM_commonPS: CHUNKAPI_2_6,
     shadowStandardPS: CHUNKAPI_2_6,
-    shadowStandardGL2PS: CHUNKAPI_2_6
+    shadowStandardGL2PS: CHUNKAPI_2_6,
+    startVS: CHUNKAPI_2_6,
+    endVS: CHUNKAPI_2_6,
+    baseVS: CHUNKAPI_2_6,
+    baseNineSlicedVS: CHUNKAPI_2_6,
+    viewNormalVS: CHUNKAPI_2_6,
+    lightmapDirAddPS: CHUNKAPI_2_6,
+    TBNObjectSpacePS: CHUNKAPI_2_6,
+    TBNderivativePS: CHUNKAPI_2_6,
+    startPS: CHUNKAPI_2_6,
+    outputAlphaOpaque: CHUNKAPI_2_6,
+    outputAlphaPremul: CHUNKAPI_2_6,
+    cubeMapProjectBoxPS: CHUNKAPI_2_6,
+    cubeMapProjectNonePS: CHUNKAPI_2_6
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
