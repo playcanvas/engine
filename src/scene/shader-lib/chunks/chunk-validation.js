@@ -120,7 +120,11 @@ const removedChunks = {
     lightmapDirAddPS: CHUNKAPI_2_6,
     TBNObjectSpacePS: CHUNKAPI_2_6,
     TBNderivativePS: CHUNKAPI_2_6,
-    startPS: CHUNKAPI_2_6
+    startPS: CHUNKAPI_2_6,
+    outputAlphaOpaque: CHUNKAPI_2_6,
+    outputAlphaPremul: CHUNKAPI_2_6,
+    cubeMapProjectBoxPS: CHUNKAPI_2_6,
+    cubeMapProjectNonePS: CHUNKAPI_2_6
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.

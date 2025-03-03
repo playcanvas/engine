@@ -262,8 +262,6 @@ class Lightmapper {
 
         // avoid writing unrelated things to alpha
         material.chunks.outputAlphaPS = '\n';
-        material.chunks.outputAlphaOpaquePS = '\n';
-        material.chunks.outputAlphaPremulPS = '\n';
         material.cull = CULLFACE_NONE;
         material.forceUv1 = true; // provide data to xformUv1
         material.update();

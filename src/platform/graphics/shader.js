@@ -118,6 +118,12 @@ class Shader {
             Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
             Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
 
+            // keep reference to unmodified shaders in debug mode
+            Debug.call(() => {
+                this.vUnmodified = definition.vshader;
+                this.fUnmodified = definition.fshader;
+            });
+
             const wgsl = definition.shaderLanguage === SHADERLANGUAGE_WGSL;
 
             // pre-process vertex shader source
