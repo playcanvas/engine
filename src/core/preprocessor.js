@@ -42,6 +42,9 @@ const INCLUDE = /include[ \t]+"([\w-]+)(?:\s*,\s*([\w-]+))?"\r?(?:\n|$)/g;
 // loop index to replace, in the format {i}
 const LOOP_INDEX = /\{i\}/g;
 
+// matches color attachments, for example: pcFragColor1
+const FRAGCOLOR = /(pcFragColor[1-8])\b/g;
+
 /**
  * Pure static class implementing subset of C-style preprocessor.
  * inspired by: https://github.com/dcodeIO/Preprocessor.js
@@ -73,26 +76,8 @@ class Preprocessor {
         .map(line => line.trimEnd())
         .join('\n');
 
-        // generate defines to remove unused color attachments
+        // extracted defines
         const defines = new Map();
-        if (options.stripUnusedColorAttachments) {
-
-            // find out how many times pcFragColorX is used (see gles3.js)
-            const counts = new Map();
-            const regex = /(pcFragColor[1-8])\b/g;
-            const matches = source.match(regex);
-            matches?.forEach((match) => {
-                const index = parseInt(match.charAt(match.length - 1), 10);
-                counts.set(index, (counts.get(index) ?? 0) + 1);
-            });
-
-            // if pcFragColorX is used only once, remove it
-            counts.forEach((count, index) => {
-                if (count === 1) {
-                    defines.set(`REMOVE_COLOR_ATTACHMENT_${index}`, '');
-                }
-            });
-        }
 
         // extracted defines with name in {} which are to be replaced with their values
         const injectDefines = new Map();
@@ -111,6 +96,8 @@ class Preprocessor {
         // strip comments again after the includes have been resolved
         source = this.stripComments(source);
 
+        source = this.stripUnusedColorAttachments(source, options);
+
         // remove empty lines
         source = this.RemoveEmptyLines(source);
 
@@ -119,6 +106,43 @@ class Preprocessor {
 
         // inject defines
         source = this.injectDefines(source, injectDefines);
+
+        return source;
+    }
+
+    static stripUnusedColorAttachments(source, options) {
+
+        if (options.stripUnusedColorAttachments) {
+
+            // find out how many times pcFragColorX is used (see gles3.js)
+            const counts = new Map();
+            const matches = source.match(FRAGCOLOR);
+            matches?.forEach((match) => {
+                const index = parseInt(match.charAt(match.length - 1), 10);
+                counts.set(index, (counts.get(index) ?? 0) + 1);
+            });
+
+            // if there's any attachment used only one time (only as a declaration, without actual use)
+            const anySingleUse = Array.from(counts.values()).some(count => count === 1);
+            if (anySingleUse) {
+
+                // remove all lines that contains pcFragColorX with single usage
+                const lines = source.split('\n');
+                const keepLines = [];
+                for (let i = 0; i < lines.length; i++) {
+                    const match = lines[i].match(FRAGCOLOR);
+                    if (match) {
+                        const index = parseInt(match[0].charAt(match[0].length - 1), 10);
+                        if (index > 0 && counts.get(index) === 1) {
+                            continue;
+                        }
+                    }
+                    keepLines.push(lines[i]);
+                }
+
+                source = keepLines.join('\n');
+            }
+        }
 
         return source;
     }
