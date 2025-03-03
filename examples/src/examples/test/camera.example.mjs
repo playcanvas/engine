@@ -97,6 +97,8 @@ const calcEntityAABB = (bbox, entity) => {
 };
 
 const start = new pc.Vec3(0, 20, 30);
+const focus = calcEntityAABB(new pc.BoundingBox(), statue).center;
+const dist = start.distance(focus);
 
 const camera = new pc.Entity();
 camera.addComponent('camera');
@@ -105,24 +107,26 @@ camera.setPosition(start);
 camera.setEulerAngles(-20, 0, 0);
 app.root.addChild(camera);
 
-const bbox = calcEntityAABB(new pc.BoundingBox(), statue);
-
 const cc = new CameraControls({
     app,
     camera: camera.camera,
     mode: typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT,
-    focus: bbox.center
+    focus
 });
 
 // focus on entity when 'f' key is pressed
 const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
     switch (e.key) {
         case 'f': {
-            cc.focus(camera.getPosition(), bbox.center);
+            cc.focus(focus, dist);
+            break;
+        }
+        case 'l': {
+            cc.focus(focus);
             break;
         }
         case 'r': {
-            cc.focus(start, bbox.center);
+            cc.reset(start, focus);
             break;
         }
     }
