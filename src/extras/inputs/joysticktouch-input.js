@@ -75,7 +75,7 @@ class JoystickTouchInput extends Input {
         if (left) {
             this._joystick.stickPosition = tmpVa.set(event.clientX, event.clientY);
         } else {
-            this.deltas.touch.add(event.movementX, event.movementY);
+            this.deltas.touch.add([event.movementX, event.movementY]);
         }
 
     }
@@ -132,7 +132,7 @@ class JoystickTouchInput extends Input {
      * @returns {{ [K in keyof JoystickTouchInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
-        this.deltas.stick.add(this._joystick.value.x, -this._joystick.value.y);
+        this.deltas.stick.add([this._joystick.value.x, -this._joystick.value.y]);
 
         return super.frame();
     }

@@ -15,9 +15,12 @@ class Delta {
         return this._instance;
     }
 
-    add() {
+    /**
+     * @param {number[]} offsets - The offsets.
+     */
+    add(offsets) {
         for (let i = 0; i < this._instance.length; i++) {
-            this._instance[i] += arguments[i] || 0;
+            this._instance[i] += offsets[i] || 0;
         }
     }
 

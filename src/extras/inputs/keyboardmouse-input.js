@@ -53,7 +53,7 @@ class KeyboardMouseInput extends Input {
      */
     _onWheel(event) {
         event.preventDefault();
-        this.deltas.wheel.add(event.deltaY);
+        this.deltas.wheel.add([event.deltaY]);
     }
 
     /**
@@ -69,7 +69,7 @@ class KeyboardMouseInput extends Input {
 
         array3.fill(0);
         array3[event.button] = 1;
-        this.deltas.button.add(...array3);
+        this.deltas.button.add(array3);
     }
 
     /**
@@ -83,7 +83,7 @@ class KeyboardMouseInput extends Input {
         if (this._pointerId !== event.pointerId) {
             return;
         }
-        this.deltas.mouse.add(event.movementX, event.movementY);
+        this.deltas.mouse.add([event.movementX, event.movementY]);
     }
 
     /**
@@ -100,7 +100,7 @@ class KeyboardMouseInput extends Input {
 
         array3.fill(0);
         array3[event.button] = -1;
-        this.deltas.button.add(...array3);
+        this.deltas.button.add(array3);
     }
 
     /**
@@ -237,7 +237,7 @@ class KeyboardMouseInput extends Input {
             array8[i] = this._keyNow[i] - this._keyPrev[i];
             this._keyPrev[i] = this._keyNow[i];
         }
-        this.deltas.key.add(...array8);
+        this.deltas.key.add(array8);
 
         return super.frame();
     }

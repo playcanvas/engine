@@ -95,17 +95,17 @@ class MultiTouchInput extends Input {
         if (this._touches > 1) {
             // pan
             const mid = this._getMidPoint(tmpVa);
-            this.deltas.touch.add(mid.x - this._pointerPos.x, mid.y - this._pointerPos.y);
+            this.deltas.touch.add([mid.x - this._pointerPos.x, mid.y - this._pointerPos.y]);
             this._pointerPos.copy(mid);
 
             // pinch
             const pinchDist = this._getPinchDist();
             if (this._pinchDist > 0) {
-                this.deltas.pinch.add(this._pinchDist - pinchDist);
+                this.deltas.pinch.add([this._pinchDist - pinchDist]);
             }
             this._pinchDist = pinchDist;
         } else {
-            this.deltas.touch.add(event.movementX, event.movementY);
+            this.deltas.touch.add([event.movementX, event.movementY]);
         }
     }
 
@@ -194,7 +194,7 @@ class MultiTouchInput extends Input {
      * @returns {{ [K in keyof MultiTouchInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
-        this.deltas.count.add(+this._touches);
+        this.deltas.count.add([+this._touches]);
 
         return super.frame();
     }
