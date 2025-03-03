@@ -1386,13 +1386,8 @@ class LitShader {
             backend.append('    gl_FragColor = applyMsdf(gl_FragColor);');
         }
 
-        // TODO: moving this to include bellow makes MRT example to break, as we no longer find pc_fragColor1
-        // in code during preprocessing with stripUnusedColorAttachments. We need some other soltuion for it,
-        // perhaps do this preprocessing after the incldues are inlined?
-        backend.append(chunks.outputPS);
-
         backend.append(`
-            // #include "outputPS"
+            #include "outputPS"
             #include "debugOutputPS"
         `);
 
