@@ -150,6 +150,7 @@ class CameraControls {
             if (this._input instanceof pc.KeyboardMouseInput) {
                 const { button, mouse, wheel } = this._input.frame();
                 this._panning += button[2];
+
                 tmpM1.copy(this._model.update({
                     drag: tmpVa.fromArray(mouse),
                     zoom: wheel[0],
