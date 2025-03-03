@@ -222,7 +222,7 @@ class CameraControls {
 
                 tmpM1.copy(this._model.update({
                     rotate: tmpVa.fromArray(mouse),
-                    move: tmpV1.copy(this._moveAxes).mulScalar(mult)
+                    move: tmpV1.copy(this._moveAxes).normalize().mulScalar(mult)
                 }, dt));
             }
 
