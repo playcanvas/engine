@@ -39,19 +39,13 @@ class CameraControls {
      * @type {pc.KeyboardMouseInput}
      * @private
      */
-    _orbitDesktopInput;
+    _desktopInput;
 
     /**
      * @type {pc.MultiTouchInput}
      * @private
      */
     _orbitMobileInput;
-
-    /**
-     * @type {pc.KeyboardMouseInput}
-     * @private
-     */
-    _flyDesktopInput;
 
     /**
      * @type {pc.JoystickTouchInput}
@@ -145,9 +139,8 @@ class CameraControls {
         this._camera = camera;
 
         // input
-        this._orbitDesktopInput = new pc.KeyboardMouseInput();
+        this._desktopInput = new pc.KeyboardMouseInput();
         this._orbitMobileInput = new pc.MultiTouchInput();
-        this._flyDesktopInput = new pc.KeyboardMouseInput();
         this._flyMobileInput = new pc.JoystickTouchInput();
 
         // models
@@ -206,10 +199,10 @@ class CameraControls {
         }
 
         if (this._mode === CameraControls.MODE_FLY) {
-            this._input = pc.platform.mobile ? this._flyMobileInput : this._flyDesktopInput;
+            this._input = pc.platform.mobile ? this._flyMobileInput : this._desktopInput;
             this._model = this._flyModel;
         } else {
-            this._input = pc.platform.mobile ? this._orbitMobileInput : this._orbitDesktopInput;
+            this._input = pc.platform.mobile ? this._orbitMobileInput : this._desktopInput;
             this._model = this._orbitModel;
         }
 
@@ -342,7 +335,7 @@ class CameraControls {
     }
 
     destroy() {
-        this._orbitDesktopInput.destroy();
+        this._desktopInput.destroy();
         this._orbitMobileInput.destroy();
         this._flyDesktopInput.destroy();
         this._flyMobileInput.destroy();
