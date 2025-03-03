@@ -105,7 +105,7 @@ class CameraControls {
 
         // input
         if (pc.platform.mobile) {
-            this._input = this._mode === CameraControls.MODE_FLY ? new pc.JoystickDoubleInput() : new pc.MultiTouchInput();
+            this._input = this._mode === CameraControls.MODE_FLY ? new pc.JoystickTouchInput() : new pc.MultiTouchInput();
         } else {
             this._input = new pc.KeyboardMouseInput();
         }
