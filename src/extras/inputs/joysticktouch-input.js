@@ -1,9 +1,9 @@
-import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
+
 import { Delta, Input } from './input.js';
+import { Joystick } from './joystick.js';
 
 const tmpVa = new Vec2();
-
 class JoystickTouchInput extends Input {
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
@@ -12,52 +12,10 @@ class JoystickTouchInput extends Input {
     _pointerData = new Map();
 
     /**
-     * @type {number}
+     * @type {Joystick}
      * @private
      */
-    _scale = 100;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _innerScaleMult = 0.6;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _innerMaxDist = 70;
-
-    /**
-     * @type {HTMLDivElement}
-     * @private
-     */
-    _base;
-
-    /**
-     * @type {HTMLDivElement}
-     * @private
-     */
-    _inner;
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _basePos = new Vec2();
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _innerPos = new Vec2();
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _value = new Vec2();
+    _joystick;
 
     /**
      * @override
@@ -67,57 +25,15 @@ class JoystickTouchInput extends Input {
         touch: new Delta(2)
     };
 
-    /**
-     * @param {object} options - The options.
-     * @param {number} [options.scale] - The scale of the joystick.
-     * @param {number} [options.innerScale] - The inner scale of the joystick.
-     * @param {number} [options.innerMaxDist] - The inner max distance of the joystick.
-     */
-    constructor(options = {}) {
+    constructor() {
         super();
 
-        this._scale = options.scale ?? this._scale;
-        this._innerScaleMult = options.innerScale ?? this._innerScaleMult;
-        this._innerMaxDist = options.innerMaxDist ?? this._innerMaxDist;
-
-        this._base = document.createElement('div');
-        this._base.id = 'joystick-base';
-        Object.assign(this._base.style, {
-            display: 'none',
-            position: 'absolute',
-            width: `${this._scale}px`,
-            height: `${this._scale}px`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)'
-        });
-
-        this._inner = document.createElement('div');
-        this._inner.id = 'joystick-inner';
-        Object.assign(this._inner.style, {
-            display: 'none',
-            position: 'absolute',
-            width: `${this._scale * this._innerScaleMult}px`,
-            height: `${this._scale * this._innerScaleMult}px`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
-        });
-
-        document.body.append(this._base, this._inner);
+        this._joystick = new Joystick();
+        document.body.append(this._joystick.dom);
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
-    }
-
-    set hidden(value) {
-        const display = value ? 'none' : 'block';
-        this._base.style.display = display;
-        this._inner.style.display = display;
-        this._value.set(0, 0);
-    }
-
-    get hidden() {
-        return this._base.style.display === 'none';
     }
 
     /**
@@ -135,9 +51,8 @@ class JoystickTouchInput extends Input {
         });
 
         if (left) {
-            this.hidden = false;
-            this._setBase(event.clientX, event.clientY);
-            this._setInner(event.clientX, event.clientY);
+            this._joystick.hidden = false;
+            this._joystick.position = tmpVa.set(event.clientX, event.clientY);
         }
     }
 
@@ -158,7 +73,7 @@ class JoystickTouchInput extends Input {
         data.y = event.clientY;
 
         if (left) {
-            this._setInner(event.clientX, event.clientY);
+            this._joystick.stickPosition = tmpVa.set(event.clientX, event.clientY);
         } else {
             this.deltas.touch.add(event.movementX, event.movementY);
         }
@@ -180,42 +95,9 @@ class JoystickTouchInput extends Input {
         this._pointerData.delete(event.pointerId);
 
         if (left) {
-            this.hidden = true;
-            this._value.set(0, 0);
+            this._joystick.hidden = true;
         }
 
-    }
-
-    /**
-     * @param {number} x - The x position.
-     * @param {number} y - The y position.
-     * @private
-     */
-    _setBase(x, y) {
-        this._basePos.set(x, y);
-        this._base.style.left = `${this._basePos.x - this._scale * 0.5}px`;
-        this._base.style.top = `${this._basePos.y - this._scale * 0.5}px`;
-    }
-
-    /**
-     * @param {number} x - The x position.
-     * @param {number} y - The y position.
-     * @private
-     */
-    _setInner(x, y) {
-        this._innerPos.set(x, y);
-        tmpVa.sub2(this._innerPos, this._basePos);
-        const dist = tmpVa.length();
-        if (dist > this._innerMaxDist) {
-            tmpVa.normalize().mulScalar(this._innerMaxDist);
-            this._innerPos.add2(this._basePos, tmpVa);
-        }
-        this._inner.style.left = `${this._innerPos.x - this._scale * this._innerScaleMult * 0.5}px`;
-        this._inner.style.top = `${this._innerPos.y - this._scale * this._innerScaleMult * 0.5}px`;
-
-        const vx = math.clamp(tmpVa.x / this._innerMaxDist, -1, 1);
-        const vy = math.clamp(tmpVa.y / this._innerMaxDist, -1, 1);
-        this._value.set(vx, vy);
     }
 
     /**
@@ -250,7 +132,7 @@ class JoystickTouchInput extends Input {
      * @returns {{ [K in keyof JoystickTouchInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
-        this.deltas.stick.add(this._value.x, -this._value.y);
+        this.deltas.stick.add(this._joystick.value.x, -this._joystick.value.y);
 
         return super.frame();
     }
@@ -258,8 +140,7 @@ class JoystickTouchInput extends Input {
     destroy() {
         this.detach();
 
-        this._base.remove();
-        this._inner.remove();
+        this._joystick.destroy();
     }
 }
 
