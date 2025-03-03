@@ -101,11 +101,14 @@ const calcEntityAABB = (bbox, entity) => {
     return bbox;
 };
 
+// Parse the URL parameters
+const params = new URLSearchParams(window.location.search);
+
 // Create a camera controller
 const cc = new CameraControls({
     app,
     camera: camera.camera,
-    mode: CameraControls.MODE_FLY,
+    mode: typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT,
     focus: calcEntityAABB(new pc.BoundingBox(), statue).center
 });
 
