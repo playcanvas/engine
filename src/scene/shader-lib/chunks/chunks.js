@@ -23,7 +23,7 @@ import clusteredLightShadowsPS from './lit/frag/clusteredLightShadows.js';
 import clusteredLightPS from './lit/frag/clusteredLight.js';
 import combinePS from './lit/frag/combine.js';
 import cookiePS from './lit/frag/cookie.js';
-import cubeMapProjectPS from './lit/frag/cubeMapProject.js';
+import cubeMapProjectPS from './lit/frag/cubeMapProjection.js/index.js';
 import cubeMapRotatePS from './lit/frag/cubeMapRotate.js';
 import debugOutputPS from './lit/frag/debug-output.js';
 import debugProcessFrontendPS from './lit/frag/debug-process-frontend.js';
