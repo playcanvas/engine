@@ -4,8 +4,6 @@ import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1
 } from '../../../platform/graphics/constants.js';
 import {
-    BLEND_ADDITIVEALPHA, BLEND_NORMAL, BLEND_PREMULTIPLIED,
-    FRESNEL_SCHLICK,
     LIGHTFALLOFF_LINEAR,
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
@@ -14,11 +12,7 @@ import {
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     SHADOW_PCF1_16F, SHADOW_PCF5_16F, SHADOW_PCF3_16F,
-    lightTypeNames,
-    lightShapeNames,
-    spriteRenderModeNames,
-    fresnelNames,
-    blendNames,
+    lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames,
     cubemaProjectionNames
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
