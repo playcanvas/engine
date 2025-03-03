@@ -4,6 +4,7 @@ import { Delta, Input } from './input.js';
 const PASSIVE = { passive: false };
 
 const array3 = new Array(3).fill(0);
+const array8 = new Array(8).fill(0);
 
 class KeyboardMouseInput extends Input {
     /**
@@ -232,13 +233,11 @@ class KeyboardMouseInput extends Input {
      * @returns {{ [K in keyof KeyboardMouseInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
-        this.deltas.key.add(
-            ...this._keyNow.map((key, index) => {
-                const v = key - this._keyPrev[index];
-                this._keyPrev[index] = key;
-                return v;
-            })
-        );
+        for (let i = 0; i < array8.length; i++) {
+            array8[i] = this._keyNow[i] - this._keyPrev[i];
+            this._keyPrev[i] = this._keyNow[i];
+        }
+        this.deltas.key.add(...array8);
 
         return super.frame();
     }
