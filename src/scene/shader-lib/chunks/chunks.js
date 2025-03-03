@@ -23,8 +23,7 @@ import clusteredLightShadowsPS from './lit/frag/clusteredLightShadows.js';
 import clusteredLightPS from './lit/frag/clusteredLight.js';
 import combinePS from './lit/frag/combine.js';
 import cookiePS from './lit/frag/cookie.js';
-import cubeMapProjectBoxPS from './lit/frag/cubeMapProjectBox.js';
-import cubeMapProjectNonePS from './lit/frag/cubeMapProjectNone.js';
+import cubeMapProjectPS from './lit/frag/cubeMapProject.js';
 import cubeMapRotatePS from './lit/frag/cubeMapRotate.js';
 import debugOutputPS from './lit/frag/debug-output.js';
 import debugProcessFrontendPS from './lit/frag/debug-process-frontend.js';
@@ -96,8 +95,6 @@ import opacityPS from './standard/frag/opacity.js';
 import opacityDitherPS from './standard/frag/opacity-dither.js';
 import outputPS from './lit/frag/output.js';
 import outputAlphaPS from './lit/frag/outputAlpha.js';
-import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
-import outputAlphaPremulPS from './lit/frag/outputAlphaPremul.js';
 import outputTex2DPS from './common/frag/outputTex2D.js';
 import sheenPS from './standard/frag/sheen.js';
 import sheenGlossPS from './standard/frag/sheenGloss.js';
@@ -230,8 +227,7 @@ const shaderChunks = {
     clusteredLightPS,
     combinePS,
     cookiePS,
-    cubeMapProjectBoxPS,
-    cubeMapProjectNonePS,
+    cubeMapProjectPS,
     cubeMapRotatePS,
     debugOutputPS,
     debugProcessFrontendPS,
@@ -304,8 +300,6 @@ const shaderChunks = {
     opacityDitherPS,
     outputPS,
     outputAlphaPS,
-    outputAlphaOpaquePS,
-    outputAlphaPremulPS,
     outputTex2DPS,
     sheenPS,
     sheenGlossPS,
