@@ -119,16 +119,10 @@ class CameraControls {
     }
 
     /**
-     * @attribute
-     * @title Focus Point
-     * @description The camera's focus point.
      * @type {pc.Vec3}
-     * @default [0, 0, 0]
      */
     set focusPoint(point) {
-        if (this._model instanceof pc.OrbitModel) {
-            this._model.focus(this._camera.entity.getPosition(), point);
-        }
+        this.focus(this._camera.entity.getPosition(), point, false);
     }
 
     get focusPoint() {
@@ -136,6 +130,17 @@ class CameraControls {
             return this._model.point;
         }
         return this._camera.entity.getPosition();
+    }
+
+    /**
+     * @param {pc.Vec3} view - The view point.
+     * @param {pc.Vec3} point - The focus point.
+     * @param {boolean} [smooth] - Whether to smooth the transition.
+     */
+    focus(view, point, smooth = true) {
+        if (this._model instanceof pc.OrbitModel) {
+            this._model.focus(view, point, smooth);
+        }
     }
 
     /**

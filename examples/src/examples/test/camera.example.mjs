@@ -10,6 +10,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 window.focus();
 
+const params = new URLSearchParams(window.location.search);
+
 const gfxOptions = {
     deviceTypes: [deviceType],
     glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
@@ -76,13 +78,6 @@ const statue = assets.statue.resource.instantiateRenderEntity();
 statue.setLocalPosition(0, -0.5, 0);
 app.root.addChild(statue);
 
-const camera = new pc.Entity();
-camera.addComponent('camera');
-camera.addComponent('script');
-camera.setPosition(0, 20, 30);
-camera.setEulerAngles(-20, 0, 0);
-app.root.addChild(camera);
-
 /**
  * Calculate the bounding box of an entity.
  *
@@ -101,15 +96,40 @@ const calcEntityAABB = (bbox, entity) => {
     return bbox;
 };
 
-// Parse the URL parameters
-const params = new URLSearchParams(window.location.search);
+const start = new pc.Vec3(0, 20, 30);
 
-// Create a camera controller
+const camera = new pc.Entity();
+camera.addComponent('camera');
+camera.addComponent('script');
+camera.setPosition(start);
+camera.setEulerAngles(-20, 0, 0);
+app.root.addChild(camera);
+
+const bbox = calcEntityAABB(new pc.BoundingBox(), statue);
+
 const cc = new CameraControls({
     app,
     camera: camera.camera,
     mode: typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT,
-    focus: calcEntityAABB(new pc.BoundingBox(), statue).center
+    focus: bbox.center
+});
+
+// focus on entity when 'f' key is pressed
+const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
+    switch (e.key) {
+        case 'f': {
+            cc.focus(camera.getPosition(), bbox.center);
+            break;
+        }
+        case 'r': {
+            cc.focus(start, bbox.center);
+            break;
+        }
+    }
+};
+window.addEventListener('keydown', onKeyDown);
+app.on('destroy', () => {
+    window.removeEventListener('keydown', onKeyDown);
 });
 
 app.on('update', (dt) => {

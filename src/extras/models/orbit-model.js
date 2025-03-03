@@ -23,6 +23,8 @@ const tmpQ1 = new Quat();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
 
+const EPSILON = 0.001;
+
 /**
  * Calculate the lerp rate.
  *
@@ -33,6 +35,12 @@ const tmpP1 = new Plane();
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class OrbitModel extends EventHandler {
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _focusing = false;
+
     /**
      * @private
      * @type {Vec3}
@@ -86,6 +94,13 @@ class OrbitModel extends EventHandler {
      * @private
      */
     _transform = new Mat4();
+
+    /**
+     * The focus damping. A higher value means more damping. A value of 0 means no damping.
+     *
+     * @type {number}
+     */
+    focusDamping = 0.98;
 
     /**
      * The rotation speed.
@@ -186,8 +201,8 @@ class OrbitModel extends EventHandler {
      * @private
      */
     _smoothTransform(dt) {
-        const ar = dt === -1 ? 1 : lerpRate(this.rotateDamping, dt);
-        const am = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
+        const ar = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.rotateDamping, dt);
+        const am = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.moveDamping, dt);
 
         this._angles.x = math.lerpAngle(this._angles.x % 360, this._targetAngles.x % 360, ar);
         this._angles.y = math.lerpAngle(this._angles.y % 360, this._targetAngles.y % 360, ar);
@@ -208,7 +223,7 @@ class OrbitModel extends EventHandler {
      * @private
      */
     _smoothZoom(dt) {
-        const a = dt === -1 ? 1 : lerpRate(this.zoomDamping, dt);
+        const a = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.zoomDamping, dt);
         this._zoomDist = math.lerp(this._zoomDist, this._targetZoomDist, a);
         this._orbitTransform.setTranslate(0, 0, this._zoomDist);
     }
@@ -221,36 +236,72 @@ class OrbitModel extends EventHandler {
     }
 
     /**
+     * @private
+     */
+    _checkEndFocus() {
+        if (!this._focusing) {
+            return;
+        }
+        const focusDelta = this._position.distance(this._targetPosition) +
+            this._angles.distance(this._targetAngles) +
+            Math.abs(this._zoomDist - this._targetZoomDist);
+        if (focusDelta < EPSILON) {
+            this._focusing = false;
+        }
+    }
+
+    /**
+     * @param {Vec2} drag - The drag deltas.
+     * @param {number} zoom - The zoom delta.
+     * @private
+     */
+    _checkCancelFocus(drag, zoom) {
+        if (!this._focusing) {
+            return;
+        }
+        const inputDelta = drag.length() + Math.abs(zoom);
+        if (inputDelta > 0) {
+            this._cancelSmoothTransform();
+            this._cancelSmoothZoom();
+            this._focusing = false;
+        }
+    }
+
+    /**
      * @param {Vec3} view - The view point.
      * @param {Vec3} point - The focus point.
+     * @param {boolean} smooth - Whether to smooth the transition.
      */
-    focus(view, point) {
-        this._position.copy(point);
-        this._targetPosition.copy(this._position);
+    focus(view, point, smooth = true) {
+        this._targetPosition.copy(point);
 
         tmpV1.sub2(view, point);
         const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-        this._angles.set(-elev, azim, 0);
-        this._targetAngles.copy(this._angles);
+        this._targetAngles.set(-elev, azim, 0);
 
-        this._rootTransform.setTRS(point, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
+        this._targetZoomDist = tmpV1.length();
 
-        this._zoomDist = tmpV1.length();
-        this._targetZoomDist = this._zoomDist;
-        this._orbitTransform.setTranslate(0, 0, this._zoomDist);
+        if (smooth) {
+            this._focusing = true;
+        } else {
+            this._position.copy(this._targetPosition);
+            this._angles.copy(this._targetAngles);
+            this._zoomDist = this._targetZoomDist;
+        }
     }
 
     /**
      * @param {Mat4} transform - The transform.
      */
     attach(transform) {
-        this.focus(transform.getTranslation(), Vec3.ZERO);
+        this.focus(transform.getTranslation(), Vec3.ZERO, false);
     }
 
     detach() {
         this._cancelSmoothTransform();
         this._cancelSmoothZoom();
+        this._focusing = false;
     }
 
     /**
@@ -261,6 +312,9 @@ class OrbitModel extends EventHandler {
      */
     update(frame, camera, dt) {
         const { drag, zoom, pan } = frame;
+
+        this._checkCancelFocus(drag, zoom);
+
         if (pan) {
             this._pan(camera, drag);
         } else {
@@ -270,6 +324,8 @@ class OrbitModel extends EventHandler {
 
         this._smoothTransform(dt);
         this._smoothZoom(dt);
+
+        this._checkEndFocus();
 
         return this._transform.mul2(this._rootTransform, this._orbitTransform);
     }
