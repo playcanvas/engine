@@ -19,13 +19,21 @@ class CameraControls {
 
     /**
      * @type {pc.AppBase}
+     * @private
      */
     _app;
 
     /**
      * @type {pc.CameraComponent}
+     * @private
      */
     _camera;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _zoom = 0;
 
     /**
      * @type {pc.KeyboardMouseInput}
@@ -164,7 +172,9 @@ class CameraControls {
      */
     set focusPoint(point) {
         if (this._model instanceof pc.OrbitModel) {
-            this._model.focus(this._camera.entity.getPosition(), point, false);
+            const start = this._camera.entity.getPosition();
+            this._zoom = start.distance(point);
+            this._model.focus(start, point, false);
         }
     }
 
@@ -206,6 +216,12 @@ class CameraControls {
         this._input.attach(this._app.graphicsDevice.canvas);
         this._model.attach(this._camera.entity.getWorldTransform());
 
+        if (this._model instanceof pc.OrbitModel) {
+            const start = this._camera.entity.getPosition();
+            const point = tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoom).add(start);
+            this._model.focus(start, point, false);
+        }
+
         console.log(`CameraControls: mode set to ${mode}`);
     }
 
@@ -215,15 +231,15 @@ class CameraControls {
 
     /**
      * @param {pc.Vec3} point - The focus point.
-     * @param {number} [distance] - The distance from focus point.
+     * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
-    focus(point, distance) {
+    focus(point, resetZoom = true) {
         if (this._model instanceof pc.OrbitModel) {
-            if (distance !== undefined) {
+            if (resetZoom) {
                 const start = tmpV1.copy(this._camera.entity.getPosition())
                 .sub(point)
                 .normalize()
-                .mulScalar(distance)
+                .mulScalar(this._zoom)
                 .add(point);
                 this._model.focus(start, point);
             } else {

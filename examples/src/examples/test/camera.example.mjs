@@ -98,13 +98,11 @@ const calcEntityAABB = (bbox, entity) => {
 
 const start = new pc.Vec3(0, 20, 30);
 const focus = calcEntityAABB(new pc.BoundingBox(), statue).center;
-const dist = start.distance(focus);
 
 const camera = new pc.Entity();
 camera.addComponent('camera');
 camera.addComponent('script');
 camera.setPosition(start);
-camera.setEulerAngles(-20, 0, 0);
 app.root.addChild(camera);
 
 const cc = new CameraControls({
@@ -126,11 +124,11 @@ const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
             break;
         }
         case 'f': {
-            cc.focus(focus, dist);
+            cc.focus(focus);
             break;
         }
         case 'l': {
-            cc.focus(focus);
+            cc.focus(focus, false);
             break;
         }
         case 'r': {
