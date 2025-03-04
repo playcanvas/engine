@@ -108,6 +108,21 @@ class CameraControls {
     _moveSlow = 0;
 
     /**
+     * @type {boolean}
+     */
+    enableFly = true;
+
+    /**
+     * @type {boolean}
+     */
+    enableOrbit = true;
+
+    /**
+     * @type {boolean}
+     */
+    enablePanning = true;
+
+    /**
      * @type {number}
      */
     moveFastMult = 2;
@@ -181,8 +196,38 @@ class CameraControls {
             return;
         }
 
-        this._mode = mode;
+        // mode validation
+        if (this.mode) {
+            if (mode === CameraControls.MODE_FLY && !this.enableFly) {
+                return;
+            }
+            if (mode === CameraControls.MODE_ORBIT && !this.enableOrbit) {
+                return;
+            }
 
+            this._mode = mode;
+        } else {
+            switch (true) {
+                case this.enableFly && this.enableOrbit: {
+                    this._mode = mode;
+                    break;
+                }
+                case this.enableFly && !this.enableOrbit: {
+                    this._mode = CameraControls.MODE_FLY;
+                    break;
+                }
+                case !this.enableFly && this.enableOrbit: {
+                    this._mode = CameraControls.MODE_ORBIT;
+                    break;
+                }
+                case !this.enableFly && !this.enableOrbit: {
+                    console.warn('CameraControls: both fly and orbit modes are disabled');
+                    return;
+                }
+            }
+        }
+
+        // determine input and model
         let input, model;
         if (this._mode === CameraControls.MODE_FLY) {
             input = pc.platform.mobile ? this._flyMobileInput : this._desktopInput;
@@ -192,6 +237,7 @@ class CameraControls {
             model = this._orbitModel;
         }
 
+        // input reattach
         if (input !== this._input) {
             if (this._input) {
                 this._input.detach();
@@ -200,6 +246,7 @@ class CameraControls {
             this._input.attach(this._app.graphicsDevice.canvas);
         }
 
+        // model reattach
         if (model !== this._model) {
             if (this._model) {
                 this._model.detach();
@@ -208,13 +255,14 @@ class CameraControls {
             this._model.attach(this._camera.entity.getWorldTransform());
         }
 
+        // refocus if orbit mode
         if (this._model instanceof pc.OrbitModel) {
             const start = this._camera.entity.getPosition();
             const point = tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoom).add(start);
             this._model.focus(point, start, false);
         }
 
-        console.log(`CameraControls: mode set to ${mode}`);
+        console.log(`CameraControls: mode set to ${this._mode}`);
     }
 
     get mode() {
@@ -384,7 +432,7 @@ class CameraControls {
                 tmpM1.copy(this._model.update({
                     drag: tmpVa.fromArray(mouse),
                     zoom: wheel[0],
-                    pan: !!this._panning
+                    pan: !!this._panning && this.enablePanning
                 }, this._camera, dt));
             } else {
                 tmpM1.copy(this._model.update({
@@ -403,7 +451,7 @@ class CameraControls {
                 tmpM1.copy(this._model.update({
                     drag: tmpVa.fromArray(touch),
                     zoom: pinch[0] * this.pinchMult,
-                    pan: count[0] > 1
+                    pan: count[0] > 1 && this.enablePanning
                 }, this._camera, dt));
             }
         }
