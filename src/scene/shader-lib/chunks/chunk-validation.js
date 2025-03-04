@@ -126,7 +126,7 @@ const removedChunks = {
     envConstPS: CHUNKAPI_2_6,
     aoSpecOccConstPS: CHUNKAPI_2_6,
     aoSpecOccConstSimplePS: CHUNKAPI_2_6,
-    aoSpecOccSimplePS: CHUNKAPI_2_6,
+    aoSpecOccSimplePS: CHUNKAPI_2_6
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
