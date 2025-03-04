@@ -411,7 +411,10 @@ class CameraControls {
                 slow
             ] = key;
 
+            // left mouse button, middle mouse button, mouse wheel
             const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
+
+            // right mouse button or any key
             const switchToFly = button[2] === 1 || key.some(k => k === 1);
 
             if (switchToOrbit) {
