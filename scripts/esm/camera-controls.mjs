@@ -450,7 +450,6 @@ class CameraControls extends Script {
         return this._zoomMax;
     }
 
-
     /**
      * @param {Vec3} out - The output vector.
      * @returns {Vec3} - The focus vector.

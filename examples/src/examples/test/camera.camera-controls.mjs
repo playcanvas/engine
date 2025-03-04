@@ -271,6 +271,32 @@ class CameraControls {
         return this._orbitModel.zoomDamping;
     }
 
+    set pitchRange(range) {
+        this._flyModel.pitchRange = range;
+        this._orbitModel.pitchRange = range;
+    }
+
+    get pitchRange() {
+        return this._model.pitchRange;
+    }
+
+    set yawRange(range) {
+        this._flyModel.yawRange = range;
+        this._orbitModel.yawRange = range;
+    }
+
+    get yawRange() {
+        return this._model.yawRange;
+    }
+
+    set zoomRange(range) {
+        this._orbitModel.zoomRange = range;
+    }
+
+    get zoomRange() {
+        return this._orbitModel.zoomRange;
+    }
+
     /**
      * @param {pc.Vec3} point - The focus point.
      */

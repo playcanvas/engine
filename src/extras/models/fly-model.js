@@ -1,10 +1,9 @@
+import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
 import { EventHandler } from '../../core/event-handler.js';
-
-/** @import { Vec2 } from '../../core/math/vec2.js'; */
 
 /**
  * @typedef {object} FlyInputFrame
@@ -57,6 +56,18 @@ class FlyModel extends EventHandler {
     _transform = new Mat4();
 
     /**
+     * @type {Vec2}
+     * @private
+     */
+    _pitchRange = new Vec2(-Infinity, Infinity);
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _yawRange = new Vec2(-Infinity, Infinity);
+
+    /**
      * The rotation speed.
      *
      * @type {number}
@@ -84,6 +95,34 @@ class FlyModel extends EventHandler {
      */
     moveDamping = 0.98;
 
+    set pitchRange(value) {
+        this._pitchRange.copy(value);
+        this._clampAngles();
+        this._smoothTransform(-1);
+    }
+
+    get pitchRange() {
+        return this._pitchRange;
+    }
+
+    set yawRange(value) {
+        this._yawRange.copy(value);
+        this._clampAngles();
+        this._smoothTransform(-1);
+    }
+
+    get yawRange() {
+        return this._yawRange;
+    }
+
+    /**
+     * @private
+     */
+    _clampAngles() {
+        this._targetAngles.x = math.clamp(this._targetAngles.x, this._pitchRange.x, this._pitchRange.y);
+        this._targetAngles.y = math.clamp(this._targetAngles.y, this._yawRange.x, this._yawRange.y);
+    }
+
     /**
      * @param {Vec2} dv - The delta.
      * @private
@@ -91,8 +130,8 @@ class FlyModel extends EventHandler {
     _look(dv) {
         this._targetAngles.x -= dv.y * this.rotateSpeed;
         this._targetAngles.y -= dv.x * this.rotateSpeed;
+        this._clampAngles();
     }
-
 
     /**
      * @param {Vec3} dv - The delta vector.

@@ -163,6 +163,36 @@ class OrbitModel extends EventHandler {
         return this._transform.getTranslation();
     }
 
+    set pitchRange(range) {
+        this._pitchRange.copy(range);
+        this._clampAngles();
+        this._smoothTransform(-1);
+    }
+
+    get pitchRange() {
+        return this._pitchRange;
+    }
+
+    set yawRange(range) {
+        this._yawRange.copy(range);
+        this._clampAngles();
+        this._smoothTransform(-1);
+    }
+
+    get yawRange() {
+        return this._yawRange;
+    }
+
+    set zoomRange(range) {
+        this._zoomRange.copy(range);
+        this._clampZoom();
+        this._smoothZoom(-1);
+    }
+
+    get zoomRange() {
+        return this._zoomRange;
+    }
+
     /**
      * @private
      */
