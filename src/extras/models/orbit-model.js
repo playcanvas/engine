@@ -268,19 +268,21 @@ class OrbitModel extends EventHandler {
     }
 
     /**
-     * @param {Vec3} view - The view point.
      * @param {Vec3} point - The focus point.
-     * @param {boolean} smooth - Whether to smooth the transition.
+     * @param {Vec3} [start] - The start point.
+     * @param {boolean} [smooth] - Whether to smooth the transition.
      */
-    focus(view, point, smooth = true) {
+    focus(point, start, smooth = true) {
         this._targetPosition.copy(point);
 
-        tmpV1.sub2(view, point);
-        const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
-        const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-        this._targetAngles.set(-elev, azim, 0);
+        if (start) {
+            tmpV1.sub2(start, point);
+            const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
+            const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
+            this._targetAngles.set(-elev, azim, 0);
 
-        this._targetZoomDist = tmpV1.length();
+            this._targetZoomDist = tmpV1.length();
+        }
 
         if (smooth) {
             this._focusing = true;

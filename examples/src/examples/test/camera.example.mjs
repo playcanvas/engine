@@ -10,6 +10,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 window.focus();
 
+const params = new URLSearchParams(window.location.search);
+
 const gfxOptions = {
     deviceTypes: [deviceType],
     glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
@@ -106,6 +108,7 @@ app.root.addChild(camera);
 const cc = new CameraControls({
     app,
     camera: camera.camera,
+    mode: typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT,
     focus
 });
 
@@ -117,11 +120,11 @@ const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
             break;
         }
         case 'l': {
-            cc.focus(focus, false);
+            cc.focus(focus, true);
             break;
         }
         case 'r': {
-            cc.reset(start, focus);
+            cc.reset(focus, start);
             break;
         }
     }

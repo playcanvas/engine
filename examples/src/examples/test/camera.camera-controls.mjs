@@ -169,7 +169,7 @@ class CameraControls {
         if (this._model instanceof pc.OrbitModel) {
             const start = this._camera.entity.getPosition();
             this._zoom = start.distance(point);
-            this._model.focus(start, point, false);
+            this._model.focus(point, start, false);
         }
     }
 
@@ -217,7 +217,7 @@ class CameraControls {
         if (this._model instanceof pc.OrbitModel) {
             const start = this._camera.entity.getPosition();
             const point = tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoom).add(start);
-            this._model.focus(start, point, false);
+            this._model.focus(point, start, false);
         }
 
         console.log(`CameraControls: mode set to ${mode}`);
@@ -231,7 +231,7 @@ class CameraControls {
      * @param {pc.Vec3} point - The focus point.
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
-    focus(point, resetZoom = true) {
+    focus(point, resetZoom = false) {
         this.mode = CameraControls.MODE_ORBIT;
 
         if (this._model instanceof pc.OrbitModel) {
@@ -241,22 +241,22 @@ class CameraControls {
                 .normalize()
                 .mulScalar(this._zoom)
                 .add(point);
-                this._model.focus(start, point);
+                this._model.focus(point, start);
             } else {
-                this._model.focus(this._camera.entity.getPosition(), point);
+                this._model.focus(point);
             }
         }
     }
 
     /**
-     * @param {pc.Vec3} start - The start point.
      * @param {pc.Vec3} point - The focus point.
+     * @param {pc.Vec3} start - The start point.
      */
-    reset(start, point) {
+    reset(point, start) {
         this.mode = CameraControls.MODE_ORBIT;
 
         if (this._model instanceof pc.OrbitModel) {
-            this._model.focus(start, point);
+            this._model.focus(point, start);
         }
     }
 
