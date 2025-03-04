@@ -151,13 +151,14 @@ class CameraControls {
         this._orbitModel.rotateSpeed = 0.3;
         this._orbitModel.rotateDamping = 0.95;
 
-        // mode
-        this.mode = mode ?? CameraControls.MODE_ORBIT;
-
         // focus
         if (focus) {
             this.focusPoint = focus;
+            this.update(0);
         }
+
+        // mode
+        this.mode = mode ?? CameraControls.MODE_ORBIT;
     }
 
     /**
