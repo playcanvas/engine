@@ -96,6 +96,24 @@ class OrbitModel extends EventHandler {
     _transform = new Mat4();
 
     /**
+     * @type {Vec2}
+     * @private
+     */
+    _pitchRange = new Vec2(-Infinity, Infinity);
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _yawRange = new Vec2(-Infinity, Infinity);
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _zoomRange = new Vec2(0, Infinity);
+
+    /**
      * The focus damping. A higher value means more damping. A value of 0 means no damping.
      *
      * @type {number}
@@ -146,12 +164,28 @@ class OrbitModel extends EventHandler {
     }
 
     /**
+     * @private
+     */
+    _clampAngles() {
+        this._targetAngles.x = math.clamp(this._targetAngles.x, this._pitchRange.x, this._pitchRange.y);
+        this._targetAngles.y = math.clamp(this._targetAngles.y, this._yawRange.x, this._yawRange.y);
+    }
+
+    /**
+     * @private
+     */
+    _clampZoom() {
+        this._targetZoomDist = math.clamp(this._targetZoomDist, this._zoomRange.x, this._zoomRange.y);
+    }
+
+    /**
      * @param {Vec2} dv - The delta vector.
      * @private
      */
     _look(dv) {
         this._targetAngles.x -= dv.y * this.rotateSpeed;
         this._targetAngles.y -= dv.x * this.rotateSpeed;
+        this._clampAngles();
     }
 
     /**
@@ -173,6 +207,7 @@ class OrbitModel extends EventHandler {
      */
     _zoom(delta) {
         this._targetZoomDist += delta * this.zoomSpeed;
+        this._clampZoom();
     }
 
     /**
