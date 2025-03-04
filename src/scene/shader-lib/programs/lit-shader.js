@@ -521,6 +521,7 @@ class LitShader {
         this.fDefineSet(options.useMsdf, 'LIT_MSDF');
         this.fDefineSet(options.ssao, 'LIT_SSAO');
         this.fDefineSet(options.useAo, 'LIT_AO');
+        this.fDefineSet(options.occludeDirect, 'LIT_OCCLUDE_DIRECT');
         this.fDefineSet(options.msdfTextAttribute, 'LIT_MSDF_TEXT_ATTRIBUTE');
         this.fDefineSet(true, 'LIT_NONE_SLICE_MODE', spriteRenderModeNames[options.nineSlicedMode]);
         this.fDefineSet(true, 'LIT_BLEND_TYPE', blendNames[options.blendType]);
@@ -904,11 +905,14 @@ class LitShader {
             backend.append('    dDiffuseLight *= material_ambient;');
         }
 
-        if (options.useAo && !options.occludeDirect) {
-            backend.append('    occludeDiffuse(litArgs_ao);');
-        }
-
         backend.append(`
+
+            #ifdef LIT_AO
+                #ifndef LIT_OCCLUDE_DIRECT
+                    occludeDiffuse(litArgs_ao);
+                #endif
+            #endif
+
             #ifdef LIT_LIGHTMAP
                 addLightMap(
                     litArgs_lightmap, 
@@ -1329,16 +1333,19 @@ class LitShader {
             `);
         }
 
-        if (options.useAo) {
-            if (options.occludeDirect) {
-                backend.append('    occludeDiffuse(litArgs_ao);');
-            }
-            if (options.occludeSpecular === SPECOCC_AO || options.occludeSpecular === SPECOCC_GLOSSDEPENDENT) {
-                backend.append('    occludeSpecular(litArgs_gloss, litArgs_ao, litArgs_worldNormal, dViewDirW);');
-            }
-        }
-
         backend.append(`
+
+            // apply ambient occlusion
+            #ifdef LIT_AO
+                #ifdef LIT_OCCLUDE_DIRECT
+                    occludeDiffuse(litArgs_ao);
+                #endif
+
+                #if LIT_OCCLUDE_SPECULAR != NONE
+                    occludeSpecular(litArgs_gloss, litArgs_ao, litArgs_worldNormal, dViewDirW);
+                #endif
+            #endif
+
             #ifdef LIT_SPECULARITY_FACTOR
                 dSpecularLight *= litArgs_specularityFactor;
             #endif
