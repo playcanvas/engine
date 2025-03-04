@@ -185,29 +185,30 @@ class CameraControls {
 
         this._mode = mode;
 
-        this._panning = 0;
-        this._moveAxes.set(0, 0, 0);
-        this._moveFast = 0;
-        this._moveSlow = 0;
-
-        if (this._input) {
-            this._input.detach();
-        }
-
-        if (this._model) {
-            this._model.detach();
-        }
-
+        let input, model;
         if (this._mode === CameraControls.MODE_FLY) {
-            this._input = pc.platform.mobile ? this._flyMobileInput : this._desktopInput;
-            this._model = this._flyModel;
+            input = pc.platform.mobile ? this._flyMobileInput : this._desktopInput;
+            model = this._flyModel;
         } else {
-            this._input = pc.platform.mobile ? this._orbitMobileInput : this._desktopInput;
-            this._model = this._orbitModel;
+            input = pc.platform.mobile ? this._orbitMobileInput : this._desktopInput;
+            model = this._orbitModel;
         }
 
-        this._input.attach(this._app.graphicsDevice.canvas);
-        this._model.attach(this._camera.entity.getWorldTransform());
+        if (input !== this._input) {
+            if (this._input) {
+                this._input.detach();
+            }
+            this._input = input;
+            this._input.attach(this._app.graphicsDevice.canvas);
+        }
+
+        if (model !== this._model) {
+            if (this._model) {
+                this._model.detach();
+            }
+            this._model = model;
+            this._model.attach(this._camera.entity.getWorldTransform());
+        }
 
         if (this._model instanceof pc.OrbitModel) {
             const start = this._camera.entity.getPosition();
@@ -259,19 +260,53 @@ class CameraControls {
             return;
         }
 
-        if (this._model instanceof pc.OrbitModel) {
-            // orbit desktop
-            if (this._input instanceof pc.KeyboardMouseInput) {
-                const { button, mouse, wheel } = this._input.frame();
-                this._panning += button[2];
+        // desktop input
+        if (this._input instanceof pc.KeyboardMouseInput) {
+            const { key, button, mouse, wheel } = this._input.frame();
+            const [
+                forward,
+                back,
+                left,
+                right,
+                up,
+                down,
+                fast,
+                slow
+            ] = key;
 
+            const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
+            const switchToFly = button[2] === 1 || key.some(k => k === 1);
+
+            if (switchToOrbit) {
+                this.mode = CameraControls.MODE_ORBIT;
+            } else if (switchToFly) {
+                this.mode = CameraControls.MODE_FLY;
+            }
+
+            this._moveAxes.add(tmpV1.set(right - left, up - down, forward - back));
+            this._moveFast += fast;
+            this._moveSlow += slow;
+            const mult = this._moveFast ?
+                this.moveFastMult : this._moveSlow ?
+                    this.moveSlowMult : 1;
+            this._panning += button[1];
+
+            if (this._model instanceof pc.OrbitModel) {
                 tmpM1.copy(this._model.update({
                     drag: tmpVa.fromArray(mouse),
                     zoom: wheel[0],
                     pan: !!this._panning
                 }, this._camera, dt));
+            } else {
+                tmpM1.copy(this._model.update({
+                    rotate: tmpVa.fromArray(mouse),
+                    move: tmpV1.copy(this._moveAxes).normalize().mulScalar(mult)
+                }, dt));
             }
+        }
 
+        // orbit only input
+        if (this._model instanceof pc.OrbitModel) {
             // orbit mobile
             if (this._input instanceof pc.MultiTouchInput) {
                 const { touch, pinch, count } = this._input.frame();
@@ -282,33 +317,10 @@ class CameraControls {
                     pan: count[0] > 1
                 }, this._camera, dt));
             }
-        } else {
-            // fly desktop
-            if (this._input instanceof pc.KeyboardMouseInput) {
-                const { key, mouse } = this._input.frame();
-                const [
-                    forward,
-                    back,
-                    left,
-                    right,
-                    up,
-                    down,
-                    fast,
-                    slow
-                ] = key;
-                this._moveAxes.add(tmpV1.set(right - left, up - down, forward - back));
-                this._moveFast += fast;
-                this._moveSlow += slow;
-                const mult = this._moveFast ?
-                    this.moveFastMult : this._moveSlow ?
-                        this.moveSlowMult : 1;
+        }
 
-                tmpM1.copy(this._model.update({
-                    rotate: tmpVa.fromArray(mouse),
-                    move: tmpV1.copy(this._moveAxes).normalize().mulScalar(mult)
-                }, dt));
-            }
-
+        // fly only input
+        if (this._model instanceof pc.FlyModel) {
             // fly mobile (joystick + touch)
             if (this._input instanceof pc.JoystickTouchInput) {
                 const { stick, touch } = this._input.frame();
