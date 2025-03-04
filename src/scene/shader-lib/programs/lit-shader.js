@@ -520,6 +520,7 @@ class LitShader {
         this.fDefineSet(options.alphaToCoverage, 'LIT_ALPHA_TO_COVERAGE');
         this.fDefineSet(options.useMsdf, 'LIT_MSDF');
         this.fDefineSet(options.ssao, 'LIT_SSAO');
+        this.fDefineSet(options.useAo, 'LIT_AO');
         this.fDefineSet(options.msdfTextAttribute, 'LIT_MSDF_TEXT_ATTRIBUTE');
         this.fDefineSet(true, 'LIT_NONE_SLICE_MODE', spriteRenderModeNames[options.nineSlicedMode]);
         this.fDefineSet(true, 'LIT_BLEND_TYPE', blendNames[options.blendType]);
@@ -648,13 +649,12 @@ class LitShader {
             `);
         }
 
-        if (options.useAo) {
-
-            func.append(`
+        func.append(`
+            #ifdef LIT_AO
                 #include "aoDiffuseOccPS"
                 #include "aoSpecOccPS"
-            `);
-        }
+            #endif
+        `);
 
         if (options.reflectionSource === 'envAtlasHQ') {
             func.append(chunks.envAtlasPS);
