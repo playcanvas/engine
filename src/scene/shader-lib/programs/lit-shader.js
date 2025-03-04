@@ -9,11 +9,11 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_PICK,
     SHADOW_PCF1_32F, SHADOW_PCF3_32F, SHADOW_PCF5_32F, SHADOW_VSM_16F, SHADOW_VSM_32F, SHADOW_PCSS_32F,
-    SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     SHADOW_PCF1_16F, SHADOW_PCF5_16F, SHADOW_PCF3_16F,
     lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames,
-    cubemaProjectionNames
+    cubemaProjectionNames,
+    specularOcclusionNames
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -519,10 +519,13 @@ class LitShader {
         this.fDefineSet(options.alphaToCoverage, 'LIT_ALPHA_TO_COVERAGE');
         this.fDefineSet(options.useMsdf, 'LIT_MSDF');
         this.fDefineSet(options.ssao, 'LIT_SSAO');
+        this.fDefineSet(options.useAo, 'LIT_AO');
+        this.fDefineSet(options.occludeDirect, 'LIT_OCCLUDE_DIRECT');
         this.fDefineSet(options.msdfTextAttribute, 'LIT_MSDF_TEXT_ATTRIBUTE');
         this.fDefineSet(true, 'LIT_NONE_SLICE_MODE', spriteRenderModeNames[options.nineSlicedMode]);
         this.fDefineSet(true, 'LIT_BLEND_TYPE', blendNames[options.blendType]);
         this.fDefineSet(true, 'LIT_CUBEMAP_PROJECTION', cubemaProjectionNames[options.cubeMapProjection]);
+        this.fDefineSet(true, 'LIT_OCCLUDE_SPECULAR', specularOcclusionNames[options.occludeSpecular]);
 
         // injection defines
         this.fDefineSet(true, '{lightingUv}', this.lightingUv ?? ''); // example: vUV0_1
@@ -646,31 +649,12 @@ class LitShader {
             `);
         }
 
-        if (options.useAo) {
-            func.append(chunks.aoDiffuseOccPS);
-            switch (options.occludeSpecular) {
-                case SPECOCC_AO:
-                    func.append(`
-                        #ifdef LIT_OCCLUDE_SPECULAR_FLOAT
-                            #include "aoSpecOccSimplePS"
-                        #else
-                            #include "aoSpecOccConstSimplePS"
-                        #endif
-                    `);
-                    break;
-                case SPECOCC_GLOSSDEPENDENT:
-                    func.append(`
-                        #ifdef LIT_OCCLUDE_SPECULAR_FLOAT
-                            #include "aoSpecOccPS"
-                        #else
-                            #include "aoSpecOccConstPS"
-                        #endif
-                    `);
-                    break;
-                default:
-                    break;
-            }
-        }
+        func.append(`
+            #ifdef LIT_AO
+                #include "aoDiffuseOccPS"
+                #include "aoSpecOccPS"
+            #endif
+        `);
 
         if (options.reflectionSource === 'envAtlasHQ') {
             func.append(chunks.envAtlasPS);
@@ -920,11 +904,14 @@ class LitShader {
             backend.append('    dDiffuseLight *= material_ambient;');
         }
 
-        if (options.useAo && !options.occludeDirect) {
-            backend.append('    occludeDiffuse(litArgs_ao);');
-        }
-
         backend.append(`
+
+            #ifdef LIT_AO
+                #ifndef LIT_OCCLUDE_DIRECT
+                    occludeDiffuse(litArgs_ao);
+                #endif
+            #endif
+
             #ifdef LIT_LIGHTMAP
                 addLightMap(
                     litArgs_lightmap, 
@@ -1345,16 +1332,19 @@ class LitShader {
             `);
         }
 
-        if (options.useAo) {
-            if (options.occludeDirect) {
-                backend.append('    occludeDiffuse(litArgs_ao);');
-            }
-            if (options.occludeSpecular === SPECOCC_AO || options.occludeSpecular === SPECOCC_GLOSSDEPENDENT) {
-                backend.append('    occludeSpecular(litArgs_gloss, litArgs_ao, litArgs_worldNormal, dViewDirW);');
-            }
-        }
-
         backend.append(`
+
+            // apply ambient occlusion
+            #ifdef LIT_AO
+                #ifdef LIT_OCCLUDE_DIRECT
+                    occludeDiffuse(litArgs_ao);
+                #endif
+
+                #if LIT_OCCLUDE_SPECULAR != NONE
+                    occludeSpecular(litArgs_gloss, litArgs_ao, litArgs_worldNormal, dViewDirW);
+                #endif
+            #endif
+
             #ifdef LIT_SPECULARITY_FACTOR
                 dSpecularLight *= litArgs_specularityFactor;
             #endif
