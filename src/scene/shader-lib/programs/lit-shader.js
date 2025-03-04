@@ -13,7 +13,8 @@ import {
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     SHADOW_PCF1_16F, SHADOW_PCF5_16F, SHADOW_PCF3_16F,
     lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames,
-    cubemaProjectionNames
+    cubemaProjectionNames,
+    specularOcclusionNames
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -523,6 +524,7 @@ class LitShader {
         this.fDefineSet(true, 'LIT_NONE_SLICE_MODE', spriteRenderModeNames[options.nineSlicedMode]);
         this.fDefineSet(true, 'LIT_BLEND_TYPE', blendNames[options.blendType]);
         this.fDefineSet(true, 'LIT_CUBEMAP_PROJECTION', cubemaProjectionNames[options.cubeMapProjection]);
+        this.fDefineSet(true, 'LIT_OCCLUDE_SPECULAR', specularOcclusionNames[options.occludeSpecular]);
 
         // injection defines
         this.fDefineSet(true, '{lightingUv}', this.lightingUv ?? ''); // example: vUV0_1
@@ -647,29 +649,11 @@ class LitShader {
         }
 
         if (options.useAo) {
-            func.append(chunks.aoDiffuseOccPS);
-            switch (options.occludeSpecular) {
-                case SPECOCC_AO:
-                    func.append(`
-                        #ifdef LIT_OCCLUDE_SPECULAR_FLOAT
-                            #include "aoSpecOccSimplePS"
-                        #else
-                            #include "aoSpecOccConstSimplePS"
-                        #endif
-                    `);
-                    break;
-                case SPECOCC_GLOSSDEPENDENT:
-                    func.append(`
-                        #ifdef LIT_OCCLUDE_SPECULAR_FLOAT
-                            #include "aoSpecOccPS"
-                        #else
-                            #include "aoSpecOccConstPS"
-                        #endif
-                    `);
-                    break;
-                default:
-                    break;
-            }
+
+            func.append(`
+                #include "aoDiffuseOccPS"
+                #include "aoSpecOccPS"
+            `);
         }
 
         if (options.reflectionSource === 'envAtlasHQ') {

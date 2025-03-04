@@ -6,9 +6,6 @@ import aoPS from './standard/frag/ao.js';
 import aoDetailMapPS from './standard/frag/aoDetailMap.js';
 import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
-import aoSpecOccConstPS from './lit/frag/aoSpecOccConst.js';
-import aoSpecOccConstSimplePS from './lit/frag/aoSpecOccConstSimple.js';
-import aoSpecOccSimplePS from './lit/frag/aoSpecOccSimple.js';
 import basePS from './lit/frag/base.js';
 import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
 import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
@@ -209,9 +206,6 @@ const shaderChunks = {
     aoDetailMapPS,
     aoDiffuseOccPS,
     aoSpecOccPS,
-    aoSpecOccConstPS,
-    aoSpecOccConstSimplePS,
-    aoSpecOccSimplePS,
     basePS,
     baseNineSlicedPS,
     baseNineSlicedTiledPS,

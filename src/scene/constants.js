@@ -742,6 +742,12 @@ export const SPECOCC_AO = 1;
  */
 export const SPECOCC_GLOSSDEPENDENT = 2;
 
+export const specularOcclusionNames = {
+    [SPECOCC_NONE]: 'NONE',
+    [SPECOCC_AO]: 'AO',
+    [SPECOCC_GLOSSDEPENDENT]: 'GLOSSDEPENDENT'
+};
+
 // 16 bits for shader defs
 export const SHADERDEF_NOSHADOW = 1;
 export const SHADERDEF_SKIN = 2;
