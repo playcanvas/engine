@@ -111,6 +111,8 @@ const cc = new CameraControls({
     mode: typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT,
     focus
 });
+cc.rotateSpeed = 0.3;
+cc.rotateDamping = 0.95;
 
 // focus on entity when 'f' key is pressed
 const onKeyDown = (/** @type {KeyboardEvent} */ e) => {

@@ -145,11 +145,7 @@ class CameraControls {
 
         // models
         this._flyModel = new pc.FlyModel();
-        this._flyModel.rotateSpeed = 0.3;
-        this._flyModel.rotateDamping = 0.95;
         this._orbitModel = new pc.OrbitModel();
-        this._orbitModel.rotateSpeed = 0.3;
-        this._orbitModel.rotateDamping = 0.95;
 
         // focus
         if (focus) {
@@ -161,9 +157,6 @@ class CameraControls {
         this.mode = mode ?? CameraControls.MODE_ORBIT;
     }
 
-    /**
-     * @type {pc.Vec3}
-     */
     set focusPoint(point) {
         this.mode = CameraControls.MODE_ORBIT;
 
@@ -226,6 +219,56 @@ class CameraControls {
 
     get mode() {
         return this._mode;
+    }
+
+    set rotateSpeed(speed) {
+        this._flyModel.rotateSpeed = speed;
+        this._orbitModel.rotateSpeed = speed;
+    }
+
+    get rotateSpeed() {
+        return this._model.rotateSpeed;
+    }
+
+    set rotateDamping(damping) {
+        this._flyModel.rotateDamping = damping;
+        this._orbitModel.rotateDamping = damping;
+    }
+
+    get rotateDamping() {
+        return this._model.rotateDamping;
+    }
+
+    set moveSpeed(speed) {
+        this._flyModel.moveSpeed = speed;
+    }
+
+    get moveSpeed() {
+        return this._flyModel.moveSpeed;
+    }
+
+    set moveDamping(damping) {
+        this._flyModel.moveDamping = damping;
+    }
+
+    get moveDamping() {
+        return this._flyModel.moveDamping;
+    }
+
+    set zoomSpeed(speed) {
+        this._orbitModel.zoomSpeed = speed;
+    }
+
+    get zoomSpeed() {
+        return this._orbitModel.zoomSpeed;
+    }
+
+    set zoomDamping(damping) {
+        this._orbitModel.zoomDamping = damping;
+    }
+
+    get zoomDamping() {
+        return this._orbitModel.zoomDamping;
     }
 
     /**
