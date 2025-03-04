@@ -1,8 +1,21 @@
-import * as pc from 'playcanvas';
+import {
+    platform,
+    FlyModel,
+    JoystickDoubleInput,
+    JoystickTouchInput,
+    KeyboardMouseInput,
+    Mat4,
+    MultiTouchInput,
+    OrbitModel,
+    Vec2,
+    Vec3
+} from 'playcanvas';
 
-const tmpM1 = new pc.Mat4();
-const tmpVa = new pc.Vec2();
-const tmpV1 = new pc.Vec3();
+/** @import { AppBase, CameraComponent } from 'playcanvas' */
+
+const tmpM1 = new Mat4();
+const tmpVa = new Vec2();
+const tmpV1 = new Vec3();
 
 class CameraControls {
     /**
@@ -18,13 +31,13 @@ class CameraControls {
     static MODE_ORBIT = 'orbit';
 
     /**
-     * @type {pc.AppBase}
+     * @type {AppBase}
      * @private
      */
     _app;
 
     /**
-     * @type {pc.CameraComponent}
+     * @type {CameraComponent}
      * @private
      */
     _camera;
@@ -36,43 +49,43 @@ class CameraControls {
     _zoom = 0;
 
     /**
-     * @type {pc.KeyboardMouseInput}
+     * @type {KeyboardMouseInput}
      * @private
      */
     _desktopInput;
 
     /**
-     * @type {pc.MultiTouchInput}
+     * @type {MultiTouchInput}
      * @private
      */
     _orbitMobileInput;
 
     /**
-     * @type {pc.JoystickTouchInput}
+     * @type {JoystickTouchInput}
      * @private
      */
     _flyMobileInput;
 
     /**
-     * @type {pc.KeyboardMouseInput|pc.JoystickDoubleInput|pc.JoystickTouchInput|pc.MultiTouchInput}
+     * @type {KeyboardMouseInput|JoystickDoubleInput|JoystickTouchInput|MultiTouchInput}
      * @private
      */
     _input;
 
     /**
-     * @type {pc.FlyModel}
+     * @type {FlyModel}
      * @private
      */
     _flyModel;
 
     /**
-     * @type {pc.OrbitModel}
+     * @type {OrbitModel}
      * @private
      */
     _orbitModel;
 
     /**
-     * @type {pc.FlyModel|pc.OrbitModel}
+     * @type {FlyModel|OrbitModel}
      * @private
      */
     _model;
@@ -90,10 +103,10 @@ class CameraControls {
     _panning = 0;
 
     /**
-     * @type {pc.Vec3}
+     * @type {Vec3}
      * @private
      */
-    _moveAxes = new pc.Vec3();
+    _moveAxes = new Vec3();
 
     /**
      * @type {number}
@@ -144,23 +157,23 @@ class CameraControls {
 
     /**
      * @param {Object} options - The options.
-     * @param {pc.AppBase} options.app - The application.
-     * @param {pc.CameraComponent} options.camera - The camera.
+     * @param {AppBase} options.app - The application.
+     * @param {CameraComponent} options.camera - The camera.
      * @param {string} options.mode - The mode.
-     * @param {pc.Vec3} [options.focus] - The focus.
+     * @param {Vec3} [options.focus] - The focus.
      */
     constructor({ app, camera, mode, focus }) {
         this._app = app;
         this._camera = camera;
 
         // input
-        this._desktopInput = new pc.KeyboardMouseInput();
-        this._orbitMobileInput = new pc.MultiTouchInput();
-        this._flyMobileInput = new pc.JoystickTouchInput();
+        this._desktopInput = new KeyboardMouseInput();
+        this._orbitMobileInput = new MultiTouchInput();
+        this._flyMobileInput = new JoystickTouchInput();
 
         // models
-        this._flyModel = new pc.FlyModel();
-        this._orbitModel = new pc.OrbitModel();
+        this._flyModel = new FlyModel();
+        this._orbitModel = new OrbitModel();
 
         // focus
         if (focus) {
@@ -175,7 +188,7 @@ class CameraControls {
     set focusPoint(point) {
         this.mode = CameraControls.MODE_ORBIT;
 
-        if (this._model instanceof pc.OrbitModel) {
+        if (this._model instanceof OrbitModel) {
             const start = this._camera.entity.getPosition();
             this._zoom = start.distance(point);
             this._model.focus(point, start, false);
@@ -185,7 +198,7 @@ class CameraControls {
     get focusPoint() {
         this.mode = CameraControls.MODE_ORBIT;
 
-        if (this._model instanceof pc.OrbitModel) {
+        if (this._model instanceof OrbitModel) {
             return this._model.point;
         }
         return this._camera.entity.getPosition();
@@ -230,10 +243,10 @@ class CameraControls {
         // determine input and model
         let input, model;
         if (this._mode === CameraControls.MODE_FLY) {
-            input = pc.platform.mobile ? this._flyMobileInput : this._desktopInput;
+            input = platform.mobile ? this._flyMobileInput : this._desktopInput;
             model = this._flyModel;
         } else {
-            input = pc.platform.mobile ? this._orbitMobileInput : this._desktopInput;
+            input = platform.mobile ? this._orbitMobileInput : this._desktopInput;
             model = this._orbitModel;
         }
 
@@ -256,7 +269,7 @@ class CameraControls {
         }
 
         // refocus if orbit mode
-        if (this._model instanceof pc.OrbitModel) {
+        if (this._model instanceof OrbitModel) {
             const start = this._camera.entity.getPosition();
             const point = tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoom).add(start);
             this._model.focus(point, start, false);
@@ -346,24 +359,24 @@ class CameraControls {
     }
 
     /**
-     * @param {pc.Vec3} point - The focus point.
+     * @param {Vec3} point - The focus point.
      */
     focus(point) {
         this.mode = CameraControls.MODE_ORBIT;
 
-        if (this._model instanceof pc.OrbitModel) {
+        if (this._model instanceof OrbitModel) {
             this._model.focus(point);
         }
     }
 
     /**
-     * @param {pc.Vec3} point - The focus point.
+     * @param {Vec3} point - The focus point.
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
     look(point, resetZoom = false) {
         this.mode = CameraControls.MODE_ORBIT;
 
-        if (this._model instanceof pc.OrbitModel) {
+        if (this._model instanceof OrbitModel) {
             if (resetZoom) {
                 const start = tmpV1.copy(this._camera.entity.getPosition())
                 .sub(point)
@@ -378,13 +391,13 @@ class CameraControls {
     }
 
     /**
-     * @param {pc.Vec3} point - The focus point.
-     * @param {pc.Vec3} start - The start point.
+     * @param {Vec3} point - The focus point.
+     * @param {Vec3} start - The start point.
      */
     reset(point, start) {
         this.mode = CameraControls.MODE_ORBIT;
 
-        if (this._model instanceof pc.OrbitModel) {
+        if (this._model instanceof OrbitModel) {
             this._model.focus(point, start);
         }
     }
@@ -398,7 +411,7 @@ class CameraControls {
         }
 
         // desktop input
-        if (this._input instanceof pc.KeyboardMouseInput) {
+        if (this._input instanceof KeyboardMouseInput) {
             const { key, button, mouse, wheel } = this._input.frame();
             const [
                 forward,
@@ -431,7 +444,7 @@ class CameraControls {
                     this.moveSlowMult : 1;
             this._panning += button[1];
 
-            if (this._model instanceof pc.OrbitModel) {
+            if (this._model instanceof OrbitModel) {
                 tmpM1.copy(this._model.update({
                     drag: tmpVa.fromArray(mouse),
                     zoom: wheel[0],
@@ -446,9 +459,9 @@ class CameraControls {
         }
 
         // orbit only input
-        if (this._model instanceof pc.OrbitModel) {
+        if (this._model instanceof OrbitModel) {
             // orbit mobile
-            if (this._input instanceof pc.MultiTouchInput) {
+            if (this._input instanceof MultiTouchInput) {
                 const { touch, pinch, count } = this._input.frame();
 
                 tmpM1.copy(this._model.update({
@@ -460,9 +473,9 @@ class CameraControls {
         }
 
         // fly only input
-        if (this._model instanceof pc.FlyModel) {
+        if (this._model instanceof FlyModel) {
             // fly mobile (joystick + touch)
-            if (this._input instanceof pc.JoystickTouchInput) {
+            if (this._input instanceof JoystickTouchInput) {
                 const { stick, touch } = this._input.frame();
 
                 tmpM1.copy(this._model.update({
@@ -472,7 +485,7 @@ class CameraControls {
             }
 
             // fly mobile (joystick x2)
-            if (this._input instanceof pc.JoystickDoubleInput) {
+            if (this._input instanceof JoystickDoubleInput) {
                 const { leftStick, rightStick } = this._input.frame();
 
                 tmpM1.copy(this._model.update({
