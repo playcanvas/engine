@@ -10,8 +10,6 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 window.focus();
 
-const params = new URLSearchParams(window.location.search);
-
 const gfxOptions = {
     deviceTypes: [deviceType],
     glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
@@ -108,21 +106,12 @@ app.root.addChild(camera);
 const cc = new CameraControls({
     app,
     camera: camera.camera,
-    mode: typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT,
     focus
 });
 
 // focus on entity when 'f' key is pressed
 const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
     switch (e.key) {
-        case '1': {
-            cc.mode = CameraControls.MODE_ORBIT;
-            break;
-        }
-        case '2': {
-            cc.mode = CameraControls.MODE_FLY;
-            break;
-        }
         case 'f': {
             cc.focus(focus);
             break;
