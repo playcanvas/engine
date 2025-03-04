@@ -229,9 +229,20 @@ class CameraControls {
 
     /**
      * @param {pc.Vec3} point - The focus point.
+     */
+    focus(point) {
+        this.mode = CameraControls.MODE_ORBIT;
+
+        if (this._model instanceof pc.OrbitModel) {
+            this._model.focus(point);
+        }
+    }
+
+    /**
+     * @param {pc.Vec3} point - The focus point.
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
-    focus(point, resetZoom = false) {
+    look(point, resetZoom = false) {
         this.mode = CameraControls.MODE_ORBIT;
 
         if (this._model instanceof pc.OrbitModel) {
@@ -243,7 +254,7 @@ class CameraControls {
                 .add(point);
                 this._model.focus(point, start);
             } else {
-                this._model.focus(point);
+                this._model.focus(point, this._camera.entity.getPosition());
             }
         }
     }

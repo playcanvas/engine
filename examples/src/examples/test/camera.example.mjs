@@ -120,7 +120,7 @@ const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
             break;
         }
         case 'l': {
-            cc.focus(focus, true);
+            cc.look(focus);
             break;
         }
         case 'r': {
