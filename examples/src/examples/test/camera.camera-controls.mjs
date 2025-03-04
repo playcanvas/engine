@@ -164,6 +164,8 @@ class CameraControls {
      * @type {pc.Vec3}
      */
     set focusPoint(point) {
+        this.mode = CameraControls.MODE_ORBIT;
+
         if (this._model instanceof pc.OrbitModel) {
             const start = this._camera.entity.getPosition();
             this._zoom = start.distance(point);
@@ -172,6 +174,8 @@ class CameraControls {
     }
 
     get focusPoint() {
+        this.mode = CameraControls.MODE_ORBIT;
+
         if (this._model instanceof pc.OrbitModel) {
             return this._model.point;
         }
@@ -228,6 +232,8 @@ class CameraControls {
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
     focus(point, resetZoom = true) {
+        this.mode = CameraControls.MODE_ORBIT;
+
         if (this._model instanceof pc.OrbitModel) {
             if (resetZoom) {
                 const start = tmpV1.copy(this._camera.entity.getPosition())
@@ -247,6 +253,8 @@ class CameraControls {
      * @param {pc.Vec3} point - The focus point.
      */
     reset(start, point) {
+        this.mode = CameraControls.MODE_ORBIT;
+
         if (this._model instanceof pc.OrbitModel) {
             this._model.focus(start, point);
         }
@@ -349,7 +357,6 @@ class CameraControls {
     destroy() {
         this._desktopInput.destroy();
         this._orbitMobileInput.destroy();
-        this._flyDesktopInput.destroy();
         this._flyMobileInput.destroy();
 
         this._flyModel.destroy();
