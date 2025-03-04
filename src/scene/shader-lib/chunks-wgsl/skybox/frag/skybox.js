@@ -1,5 +1,7 @@
 export default /* wgsl */`
-    #include "envMultiplyPS"
+    #define LIT_SKYBOX_INTENSITY
+
+    #include "envProcPS"
     #include "gammaPS"
     #include "tonemappingPS"
 

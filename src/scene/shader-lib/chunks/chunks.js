@@ -35,8 +35,7 @@ import emissivePS from './standard/frag/emissive.js';
 import encodePS from './common/frag/encode.js';
 import endPS from './lit/frag/end.js';
 import envAtlasPS from './common/frag/envAtlas.js';
-import envConstPS from './common/frag/envConst.js';
-import envMultiplyPS from './common/frag/envMultiply.js';
+import envProcPS from './common/frag/envProc.js';
 import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
 import falloffLinearPS from './lit/frag/falloffLinear.js';
 import floatUnpackingPS from './lit/frag/float-unpacking.js';
@@ -239,8 +238,7 @@ const shaderChunks = {
     encodePS,
     endPS,
     envAtlasPS,
-    envConstPS,
-    envMultiplyPS,
+    envProcPS,
     falloffInvSquaredPS,
     falloffLinearPS,
     floatUnpackingPS,
