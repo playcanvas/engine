@@ -748,6 +748,54 @@ export const specularOcclusionNames = {
     [SPECOCC_GLOSSDEPENDENT]: 'GLOSSDEPENDENT'
 };
 
+/**
+ * There is no reflection source.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const REFLECTIONSRC_NONE = 'none';
+
+/**
+ * EnvAtlas is used as a source for the reflection.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const REFLECTIONSRC_ENVATLAS = 'envAtlas';
+
+/**
+ * EnvAtlas and high resolution cubemap are used as a source for the reflection.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const REFLECTIONSRC_ENVATLASHQ = 'envAtlasHQ';
+
+/**
+ * Cubemap is used as a source for the reflection.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const REFLECTIONSRC_CUBEMAP = 'cubeMap';
+
+/**
+ * Spheremap is used as a source for the reflection.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const REFLECTIONSRC_SPHEREMAP = 'sphereMap';
+
+export const reflectionSrcNames = {
+    [REFLECTIONSRC_NONE]: 'NONE',
+    [REFLECTIONSRC_ENVATLAS]: 'ENVATLAS',
+    [REFLECTIONSRC_ENVATLASHQ]: 'ENVATLASHQ',
+    [REFLECTIONSRC_CUBEMAP]: 'CUBEMAP',
+    [REFLECTIONSRC_SPHEREMAP]: 'SPHEREMAP'
+};
+
 // 16 bits for shader defs
 export const SHADERDEF_NOSHADOW = 1;
 export const SHADERDEF_SKIN = 2;

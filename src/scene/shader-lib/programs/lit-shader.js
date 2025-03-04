@@ -12,8 +12,8 @@ import {
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     SHADOW_PCF1_16F, SHADOW_PCF5_16F, SHADOW_PCF3_16F,
     lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames,
-    cubemaProjectionNames,
-    specularOcclusionNames
+    cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames,
+    REFLECTIONSRC_NONE
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -98,7 +98,7 @@ class LitShader {
         this.shadowPass = this.shaderPassInfo.isShadow;
 
         this.lighting = (options.lights.length > 0) || options.dirLightMapEnabled || options.clusteredLightingEnabled;
-        this.reflections = !!options.reflectionSource;
+        this.reflections = options.reflectionSource !== REFLECTIONSRC_NONE;
         this.needsNormal =
             this.lighting ||
             this.reflections ||
@@ -526,9 +526,12 @@ class LitShader {
         this.fDefineSet(true, 'LIT_BLEND_TYPE', blendNames[options.blendType]);
         this.fDefineSet(true, 'LIT_CUBEMAP_PROJECTION', cubemaProjectionNames[options.cubeMapProjection]);
         this.fDefineSet(true, 'LIT_OCCLUDE_SPECULAR', specularOcclusionNames[options.occludeSpecular]);
+        this.fDefineSet(true, 'LIT_REFLECTION_SOURCE', reflectionSrcNames[options.reflectionSource]);
 
         // injection defines
         this.fDefineSet(true, '{lightingUv}', this.lightingUv ?? ''); // example: vUV0_1
+        this.fDefineSet(true, '{reflectionDecode}', ChunkUtils.decodeFunc(options.reflectionEncoding));
+        this.fDefineSet(true, '{reflectionCubemapDecode}', ChunkUtils.decodeFunc(options.reflectionCubemapEncoding));
 
         // lighting defines
         this._setupLightingDefines(hasAreaLights, options.clusteredLightingEnabled);
@@ -654,24 +657,19 @@ class LitShader {
                 #include "aoDiffuseOccPS"
                 #include "aoSpecOccPS"
             #endif
-        `);
 
-        if (options.reflectionSource === 'envAtlasHQ') {
-            func.append(chunks.envAtlasPS);
-            func.append(chunks.reflectionEnvHQPS
-            .replace(/\$DECODE_CUBEMAP/g, ChunkUtils.decodeFunc(options.reflectionCubemapEncoding))
-            .replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding))
-            );
-        } else if (options.reflectionSource === 'envAtlas') {
-            func.append(chunks.envAtlasPS);
-            func.append(chunks.reflectionEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
-        } else if (options.reflectionSource === 'cubeMap') {
-            func.append(chunks.reflectionCubePS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
-        } else if (options.reflectionSource === 'sphereMap') {
-            func.append(chunks.reflectionSpherePS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
-        }
+            #if LIT_REFLECTION_SOURCE == ENVATLASHQ
+                #include "envAtlasPS"
+                #include "reflectionEnvHQPS"
+            #elif LIT_REFLECTION_SOURCE == ENVATLAS
+                #include "envAtlasPS"
+                #include "reflectionEnvPS"
+            #elif LIT_REFLECTION_SOURCE == CUBEMAP
+                #include "reflectionCubePS"
+            #elif LIT_REFLECTION_SOURCE == SPHEREMAP
+                #include "reflectionSpherePS"
+            #endif
 
-        func.append(`
             #ifdef LIT_REFLECTIONS
                 #ifdef LIT_CLEARCOAT
                     #include "reflectionCCPS"
@@ -741,9 +739,14 @@ class LitShader {
             if (options.ambientSource === 'ambientSH') {
                 func.append(chunks.ambientSHPS);
             } else if (options.ambientSource === 'envAtlas') {
-                if (options.reflectionSource !== 'envAtlas' && options.reflectionSource !== 'envAtlasHQ') {
-                    func.append(chunks.envAtlasPS);
-                }
+
+                func.append(`
+                    // if the envAtlas is not already included by reflections, include it here
+                    #if LIT_REFLECTION_SOURCE != ENVATLAS && LIT_REFLECTION_SOURCE != ENVATLASHQ
+                        #include "envAtlasPS"
+                    #endif
+                `);
+
                 func.append(chunks.ambientEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.ambientEncoding)));
             } else {
                 func.append(chunks.ambientConstantPS);
