@@ -504,6 +504,8 @@ class LitShader {
         this.fDefineSet(options.twoSidedLighting, 'LIT_TWO_SIDED_LIGHTING');
         this.fDefineSet(options.lightMapEnabled, 'LIT_LIGHTMAP');
         this.fDefineSet(options.dirLightMapEnabled, 'LIT_DIR_LIGHTMAP');
+        this.fDefineSet(options.skyboxIntensity, 'LIT_SKYBOX_INTENSITY');
+        this.fDefineSet(options.clusteredLightingShadowsEnabled, 'LIT_CLUSTERED_SHADOWS');
         this.fDefineSet(hasTBN, 'LIT_TBN');
         this.fDefineSet(options.hasTangents, 'LIT_TANGENTS');
         this.fDefineSet(options.useNormals, 'LIT_USE_NORMALS');
@@ -620,14 +622,13 @@ class LitShader {
         // frontend
         func.append(this.frontendCode);
 
-        if (this.needsNormal) {
-            func.append(`
+        func.append(`
+            #ifdef LIT_NEEDS_NORMAL
                 #include "cubeMapRotatePS"
                 #include "cubeMapProjectPS"
-            `);
-
-            func.append(options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS);
-        }
+                #include "envProcPS"
+            #endif
+        `);
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
             func.append(`

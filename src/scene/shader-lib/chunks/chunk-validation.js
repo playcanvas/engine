@@ -124,7 +124,9 @@ const removedChunks = {
     outputAlphaOpaque: CHUNKAPI_2_6,
     outputAlphaPremul: CHUNKAPI_2_6,
     cubeMapProjectBoxPS: CHUNKAPI_2_6,
-    cubeMapProjectNonePS: CHUNKAPI_2_6
+    cubeMapProjectNonePS: CHUNKAPI_2_6,
+    envMultiplyPS: CHUNKAPI_2_6,
+    envConstPS: CHUNKAPI_2_6
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
