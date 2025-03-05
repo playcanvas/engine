@@ -5,7 +5,8 @@ import {
     SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE,
     SHADERDEF_MORPH_TEXTURE_BASED_INT,
     FOG_NONE,
-    REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP
+    REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP,
+    AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT
 } from '../constants.js';
 
 class LitMaterialOptionsBuilder {
@@ -112,13 +113,13 @@ class LitMaterialOptionsBuilder {
 
         // source of environment ambient is as follows:
         if (material.ambientSH) {
-            litOptions.ambientSource = 'ambientSH';
+            litOptions.ambientSource = AMBIENTSRC_AMBIENTSH;
             litOptions.ambientEncoding = null;
         } else if (litOptions.reflectionSource !== REFLECTIONSRC_NONE && scene.envAtlas) {
-            litOptions.ambientSource = 'envAtlas';
+            litOptions.ambientSource = AMBIENTSRC_ENVALATLAS;
             litOptions.ambientEncoding = scene.envAtlas.encoding;
         } else {
-            litOptions.ambientSource = 'constant';
+            litOptions.ambientSource = AMBIENTSRC_CONSTANT;
             litOptions.ambientEncoding = null;
         }
 

@@ -12,7 +12,7 @@ import {
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     SHADOW_PCF1_16F, SHADOW_PCF5_16F, SHADOW_PCF3_16F,
     lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames,
-    cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames,
+    cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
     REFLECTIONSRC_NONE
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
@@ -484,6 +484,7 @@ class LitShader {
         const hasAreaLights = clusteredAreaLights || options.lights.some((light) => {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
+        const addAmbient = !options.lightMapEnabled || options.lightMapWithoutAmbient;
 
         if (options.useSpecular) {
             this.fDefineSet(true, 'LIT_SPECULAR');
@@ -509,6 +510,7 @@ class LitShader {
         this.fDefineSet(options.clusteredLightingShadowsEnabled, 'LIT_CLUSTERED_SHADOWS');
         this.fDefineSet(options.clusteredLightingAreaLightsEnabled, 'LIT_CLUSTERED_AREA_LIGHTS');
         this.fDefineSet(hasTBN, 'LIT_TBN');
+        this.fDefineSet(addAmbient, 'LIT_ADD_AMBIENT');
         this.fDefineSet(options.hasTangents, 'LIT_TANGENTS');
         this.fDefineSet(options.useNormals, 'LIT_USE_NORMALS');
         this.fDefineSet(options.useClearCoatNormals, 'LIT_USE_CLEARCOAT_NORMALS');
@@ -523,17 +525,20 @@ class LitShader {
         this.fDefineSet(options.useAo, 'LIT_AO');
         this.fDefineSet(options.occludeDirect, 'LIT_OCCLUDE_DIRECT');
         this.fDefineSet(options.msdfTextAttribute, 'LIT_MSDF_TEXT_ATTRIBUTE');
+        this.fDefineSet(options.diffuseMapEnabled, 'LIT_DIFFUSE_MAP');
         this.fDefineSet(true, 'LIT_FRESNEL_MODEL', fresnelNames[options.fresnelModel]);
         this.fDefineSet(true, 'LIT_NONE_SLICE_MODE', spriteRenderModeNames[options.nineSlicedMode]);
         this.fDefineSet(true, 'LIT_BLEND_TYPE', blendNames[options.blendType]);
         this.fDefineSet(true, 'LIT_CUBEMAP_PROJECTION', cubemaProjectionNames[options.cubeMapProjection]);
         this.fDefineSet(true, 'LIT_OCCLUDE_SPECULAR', specularOcclusionNames[options.occludeSpecular]);
         this.fDefineSet(true, 'LIT_REFLECTION_SOURCE', reflectionSrcNames[options.reflectionSource]);
+        this.fDefineSet(true, 'LIT_AMBIENT_SOURCE', ambientSrcNames[options.ambientSource]);
 
         // injection defines
         this.fDefineSet(true, '{lightingUv}', this.lightingUv ?? ''); // example: vUV0_1
         this.fDefineSet(true, '{reflectionDecode}', ChunkUtils.decodeFunc(options.reflectionEncoding));
         this.fDefineSet(true, '{reflectionCubemapDecode}', ChunkUtils.decodeFunc(options.reflectionCubemapEncoding));
+        this.fDefineSet(true, '{ambientDecode}', ChunkUtils.decodeFunc(options.ambientEncoding));
 
         // lighting defines
         this._setupLightingDefines(hasAreaLights, options.clusteredLightingEnabled);
@@ -592,6 +597,12 @@ class LitShader {
 
             #if defined(CLUSTERED_LIGHTS)
                 #include "lightBufferDefinesPS"
+            #endif
+
+            #ifdef LIT_SPECULAR
+                #if LIT_FRESNEL_MODEL == NONE && !defined(LIT_REFLECTIONS) && !defined(LIT_DIFFUSE_MAP) 
+                    #define LIT_OLD_AMBIENT
+                #endif
             #endif
 
             // TODO: move this to 'func' section, but for now we prepend to it and it needs to be first
@@ -702,69 +713,38 @@ class LitShader {
             #ifdef LIT_GGX_SPECULAR
                 uniform float material_anisotropy;
             #endif
-        `);
 
-        if (this.lighting) {
-            func.append(chunks.lightDiffuseLambertPS);
-            if (hasAreaLights || options.clusteredLightingAreaLightsEnabled) {
-                func.append(chunks.ltcPS);
-            }
-        }
 
-        let useOldAmbient = false;
-        if (options.useSpecular) {
+            #ifdef LIT_LIGHTING
+                #include "lightDiffuseLambertPS"
 
-            if (this.lighting) {
-                func.append(`
+                // area lights
+                #if defined(AREA_LIGHTS) || defined(LIT_CLUSTERED_AREA_LIGHTS)
+                    #include "ltcPS"
+                #endif
+            #endif
+
+            uniform vec3 material_ambient;
+
+            #ifdef LIT_SPECULAR
+                #ifdef LIT_LIGHTING
                     #ifdef LIT_GGX_SPECULAR
                         #include "lightSpecularAnisoGGXPS"
                     #else
                         #include "lightSpecularBlinnPS"
                     #endif
-                `);
-            }
-
-            if (!options.fresnelModel && !this.reflections && !options.diffuseMapEnabled) {
-                decl.append('uniform vec3 material_ambient;');
-                decl.append('#define LIT_OLD_AMBIENT');
-                useOldAmbient = true;
-            }
-        }
-
-        func.append(`
+                #endif
+            #endif
 
             #include "combinePS"
 
             #ifdef LIT_LIGHTMAP
                 #include "lightmapAddPS"
             #endif
-        `);
 
-        const addAmbient = !options.lightMapEnabled || options.lightMapWithoutAmbient;
-
-        if (addAmbient) {
-            if (options.ambientSource === 'ambientSH') {
-                func.append(chunks.ambientSHPS);
-            } else if (options.ambientSource === 'envAtlas') {
-
-                func.append(`
-                    // if the envAtlas is not already included by reflections, include it here
-                    #if LIT_REFLECTION_SOURCE != ENVATLAS && LIT_REFLECTION_SOURCE != ENVATLASHQ
-                        #include "envAtlasPS"
-                    #endif
-                `);
-
-                func.append(chunks.ambientEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.ambientEncoding)));
-            } else {
-                func.append(chunks.ambientConstantPS);
-            }
-        }
-
-        if (!useOldAmbient) {
-            decl.append('uniform vec3 material_ambient;');
-        }
-
-        func.append(`
+            #ifdef LIT_ADD_AMBIENT
+                #include "ambientPS"
+            #endif
 
             #ifdef LIT_MSDF
                 #include "msdfPS"
@@ -878,10 +858,8 @@ class LitShader {
                     ccReflDirW = normalize(-reflect(dViewDirW, litArgs_clearcoat_worldNormal));
                 #endif
             #endif
-        `);
 
-        if ((this.lighting && options.useSpecular) || this.reflections) {
-            backend.append(`
+            #ifdef LIT_SPECULAR_OR_REFLECTION
                 #ifdef LIT_METALNESS
                     float f0 = 1.0 / litArgs_ior; f0 = (f0 - 1.0) / (f0 + 1.0); f0 *= f0;
                     litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0);
@@ -891,11 +869,10 @@ class LitShader {
                 #ifdef LIT_IRIDESCENCE
                     vec3 iridescenceFresnel = getIridescence(saturate(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence_thickness);
                 #endif
-            `);
-        }
+            #endif
 
-        if (addAmbient) {
-            backend.append(`
+            // ambient
+            #ifdef LIT_ADD_AMBIENT
                 addAmbient(litArgs_worldNormal);
 
                 #ifdef LIT_SPECULAR
@@ -907,14 +884,11 @@ class LitShader {
                     vec3 dAmbientLight = dDiffuseLight;
                     dDiffuseLight = vec3(0);
                 #endif
-            `);
-        }
+            #endif
 
-        if (!useOldAmbient) {
-            backend.append('    dDiffuseLight *= material_ambient;');
-        }
-
-        backend.append(`
+            #ifndef LIT_OLD_AMBIENT
+                dDiffuseLight *= material_ambient;
+            #endif
 
             #ifdef LIT_AO
                 #ifndef LIT_OCCLUDE_DIRECT

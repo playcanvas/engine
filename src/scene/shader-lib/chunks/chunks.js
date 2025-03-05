@@ -1,7 +1,5 @@
 import alphaTestPS from './standard/frag/alphaTest.js';
-import ambientConstantPS from './lit/frag/ambientConstant.js';
-import ambientEnvPS from './lit/frag/ambientEnv.js';
-import ambientSHPS from './lit/frag/ambientSH.js';
+import ambientPS from './lit/frag/ambient.js';
 import aoPS from './standard/frag/ao.js';
 import aoDetailMapPS from './standard/frag/aoDetailMap.js';
 import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
@@ -199,9 +197,7 @@ import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
  */
 const shaderChunks = {
     alphaTestPS,
-    ambientConstantPS,
-    ambientEnvPS,
-    ambientSHPS,
+    ambientPS,
     aoPS,
     aoDetailMapPS,
     aoDiffuseOccPS,
