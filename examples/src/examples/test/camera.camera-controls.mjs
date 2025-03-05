@@ -102,6 +102,7 @@ class CameraControls {
     _mode;
 
     /**
+     * @type {{ axis: Vec3, shift: number, ctrl: number, mouse: number[] }}
      * @private
      */
     _state = {
