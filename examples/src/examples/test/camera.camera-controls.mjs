@@ -383,6 +383,7 @@ class CameraControls {
      * @param {EventHandler} joystick - The joystick.
      * @param {number} baseSize - The base size.
      * @param {number} stickSize - The stick size.
+     * @private
      */
     _createJoystickUI(joystick, baseSize, stickSize) {
         const base = document.createElement('div');
