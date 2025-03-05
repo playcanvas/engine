@@ -392,7 +392,8 @@ class CameraControls {
             width: `${baseSize}px`,
             height: `${baseSize}px`,
             borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)'
+            backgroundColor: 'rgba(50, 50, 50, 0.5)',
+            boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5)'
         });
 
         const stick = document.createElement('div');
@@ -402,7 +403,8 @@ class CameraControls {
             width: `${stickSize}px`,
             height: `${stickSize}px`,
             borderRadius: '50%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)'
         });
 
         joystick.on('position:base', (x, y) => {
