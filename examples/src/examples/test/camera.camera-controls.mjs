@@ -102,28 +102,14 @@ class CameraControls {
     _mode;
 
     /**
-     * @type {number}
      * @private
      */
-    _panning = 0;
-
-    /**
-     * @type {Vec3}
-     * @private
-     */
-    _moveAxes = new Vec3();
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _moveFast = 0;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _moveSlow = 0;
+    _state = {
+        axis: new Vec3(),
+        shift: 0,
+        ctrl: 0,
+        buttons: [0, 0, 0]
+    };
 
     /**
      * @type {boolean}
@@ -303,6 +289,12 @@ class CameraControls {
             }
             this._input = input;
             this._input.attach(this._app.graphicsDevice.canvas);
+
+            // reset state
+            this._state.axis.set(0, 0, 0);
+            this._state.shift = 0;
+            this._state.ctrl = 0;
+            this._state.buttons.fill(0);
         }
 
         // model reattach
@@ -320,11 +312,6 @@ class CameraControls {
             const point = tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoom).add(start);
             this._model.focus(point, start, false);
         }
-
-        this._moveAxes.set(0, 0, 0);
-        this._moveFast = 0;
-        this._moveSlow = 0;
-        this._panning = 0;
 
         console.log(`CameraControls: mode set to ${this._mode}`);
     }
@@ -443,8 +430,8 @@ class CameraControls {
      * @private
      */
     _scaleMove(move) {
-        const speed = this._moveFast ?
-            this.moveFastSpeed : this._moveSlow ?
+        const speed = this._state.shift ?
+            this.moveFastSpeed : this._state.ctrl ?
                 this.moveSlowSpeed : this.moveSpeed;
         return move.mulScalar(speed * this.sceneSize);
     }
@@ -525,15 +512,16 @@ class CameraControls {
                 right,
                 up,
                 down,
-                fast,
-                slow
+                shift,
+                ctrl
             ] = key;
 
             // left mouse button, middle mouse button, mouse wheel
             const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
 
             // right mouse button or any key
-            const switchToFly = button[2] === 1 || key.some(k => k === 1);
+            const switchToFly = button[2] === 1 ||
+                forward === 1 || back === 1 || left === 1 || right === 1 || up === 1 || down === 1;
 
             if (switchToOrbit) {
                 this.mode = CameraControls.MODE_ORBIT;
@@ -541,13 +529,17 @@ class CameraControls {
                 this.mode = CameraControls.MODE_FLY;
             }
 
-            this._moveAxes.add(tmpV1.set(right - left, up - down, forward - back));
-            this._moveFast += fast;
-            this._moveSlow += slow;
-            this._panning += button[1];
+            // update state
+            this._state.axis.add(tmpV1.set(right - left, up - down, forward - back));
+            this._state.shift += shift;
+            this._state.ctrl += ctrl;
+            for (let i = 0; i < 3; i++) {
+                this._state.buttons[i] += button[i];
+            }
 
             if (this._model instanceof OrbitModel) {
-                const pan = !!this._panning && this.enablePanning;
+                // pan shift or middle mouse button
+                const pan = (!!this._state.shift || !!this._state.buttons[1]) && this.enablePanning;
                 tmpM1.copy(this._model.update({
                     drag: tmpVa.fromArray(mouse).mulScalar(pan ? 1 : this.rotateSpeed),
                     zoom: this._scaleZoom(wheel[0]),
@@ -556,7 +548,7 @@ class CameraControls {
             } else {
                 tmpM1.copy(this._model.update({
                     rotate: tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed),
-                    move: this._scaleMove(tmpV1.copy(this._moveAxes).normalize())
+                    move: this._scaleMove(tmpV1.copy(this._state.axis).normalize())
                 }, dt));
             }
         }
