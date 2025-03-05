@@ -494,7 +494,8 @@ class LitShader {
             this.fDefineSet(options.useIridescence, 'LIT_IRIDESCENCE');
         }
 
-        this.fDefineSet(true, 'LIT_FRESNEL_MODEL', fresnelNames[options.fresnelModel]);
+        this.fDefineSet(this.needsNormal, 'LIT_NEEDS_NORMAL');
+        this.fDefineSet(this.lighting, 'LIT_LIGHTING');
         this.fDefineSet(options.useMetalness, 'LIT_METALNESS');
         this.fDefineSet(options.enableGGXSpecular, 'LIT_GGX_SPECULAR');
         this.fDefineSet(options.useSpecularityFactor, 'LIT_SPECULARITY_FACTOR');
@@ -506,10 +507,10 @@ class LitShader {
         this.fDefineSet(options.dirLightMapEnabled, 'LIT_DIR_LIGHTMAP');
         this.fDefineSet(options.skyboxIntensity, 'LIT_SKYBOX_INTENSITY');
         this.fDefineSet(options.clusteredLightingShadowsEnabled, 'LIT_CLUSTERED_SHADOWS');
+        this.fDefineSet(options.clusteredLightingAreaLightsEnabled, 'LIT_CLUSTERED_AREA_LIGHTS');
         this.fDefineSet(hasTBN, 'LIT_TBN');
         this.fDefineSet(options.hasTangents, 'LIT_TANGENTS');
         this.fDefineSet(options.useNormals, 'LIT_USE_NORMALS');
-        this.fDefineSet(this.needsNormal, 'LIT_NEEDS_NORMAL');
         this.fDefineSet(options.useClearCoatNormals, 'LIT_USE_CLEARCOAT_NORMALS');
         this.fDefineSet(options.useRefraction, 'LIT_REFRACTION');
         this.fDefineSet(options.useDynamicRefraction, 'LIT_DYNAMIC_REFRACTION');
@@ -522,6 +523,7 @@ class LitShader {
         this.fDefineSet(options.useAo, 'LIT_AO');
         this.fDefineSet(options.occludeDirect, 'LIT_OCCLUDE_DIRECT');
         this.fDefineSet(options.msdfTextAttribute, 'LIT_MSDF_TEXT_ATTRIBUTE');
+        this.fDefineSet(true, 'LIT_FRESNEL_MODEL', fresnelNames[options.fresnelModel]);
         this.fDefineSet(true, 'LIT_NONE_SLICE_MODE', spriteRenderModeNames[options.nineSlicedMode]);
         this.fDefineSet(true, 'LIT_BLEND_TYPE', blendNames[options.blendType]);
         this.fDefineSet(true, 'LIT_CUBEMAP_PROJECTION', cubemaProjectionNames[options.cubeMapProjection]);
@@ -634,10 +636,16 @@ class LitShader {
                 #include "cubeMapProjectPS"
                 #include "envProcPS"
             #endif
-        `);
 
-        if ((this.lighting && options.useSpecular) || this.reflections) {
-            func.append(`
+            // ----- specular or reflections -----
+            #if defined(LIT_LIGHTING) && defined(LIT_SPECULAR)
+                #define LIT_SPECULAR_OR_REFLECTION
+            #elif defined(LIT_REFLECTIONS)
+                #define LIT_SPECULAR_OR_REFLECTION
+            #endif
+
+            #ifdef LIT_SPECULAR_OR_REFLECTION
+
                 #ifdef LIT_METALNESS
                     #include "metalnessModulatePS"
                 #endif
@@ -649,10 +657,9 @@ class LitShader {
                 #ifdef LIT_IRIDESCENCE
                     #include "iridescenceDiffractionPS"
                 #endif
-            `);
-        }
+            #endif
 
-        func.append(`
+            // ----- ambient occlusion -----
             #ifdef LIT_AO
                 #include "aoDiffuseOccPS"
                 #include "aoSpecOccPS"
