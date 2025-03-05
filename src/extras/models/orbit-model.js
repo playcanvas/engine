@@ -352,7 +352,7 @@ class OrbitModel extends EventHandler {
      * @param {Mat4} transform - The transform.
      */
     attach(transform) {
-        this.focus(transform.getTranslation(), Vec3.ZERO, false);
+        this.focus(Vec3.ZERO, transform.getTranslation(), false);
     }
 
     detach() {
