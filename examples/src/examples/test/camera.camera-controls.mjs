@@ -321,6 +321,11 @@ class CameraControls {
             this._model.focus(point, start, false);
         }
 
+        this._moveAxes.set(0, 0, 0);
+        this._moveFast = 0;
+        this._moveSlow = 0;
+        this._panning = 0;
+
         console.log(`CameraControls: mode set to ${this._mode}`);
     }
 
