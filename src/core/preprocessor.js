@@ -380,7 +380,7 @@ class Preprocessor {
 
                     const blockInfo = stack.pop();
                     if (!blockInfo) {
-                        console.error(`Shader preprocessing encountered "#${endif[1]}" without proceding #if #ifdef #ifndef while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
+                        console.error(`Shader preprocessing encountered "#${endif[1]}" without a preceding #if #ifdef #ifndef while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
                         error = true;
                         continue;
                     }
