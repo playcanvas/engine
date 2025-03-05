@@ -149,6 +149,10 @@ class OrbitModel extends EventHandler {
         return this._transform.getTranslation();
     }
 
+    get zoom() {
+        return this._zoomDist;
+    }
+
     set pitchRange(range) {
         this._pitchRange.copy(range);
         this._clampAngles();

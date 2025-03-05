@@ -8,7 +8,8 @@ import {
     MultiTouchInput,
     OrbitModel,
     Vec2,
-    Vec3
+    Vec3,
+    math
 } from 'playcanvas';
 
 /** @import { AppBase, CameraComponent } from 'playcanvas' */
@@ -16,6 +17,8 @@ import {
 const tmpM1 = new Mat4();
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
+
+const ZOOM_SCALE_MULT = 10;
 
 class CameraControls {
     /**
@@ -176,6 +179,11 @@ class CameraControls {
     zoomPinchSens = 5;
 
     /**
+     * @type {number}
+     */
+    zoomScaleMin;
+
+    /**
      * @param {Object} options - The options.
      * @param {AppBase} options.app - The application.
      * @param {CameraComponent} options.camera - The camera.
@@ -186,6 +194,9 @@ class CameraControls {
     constructor({ app, camera, mode, focus, sceneSize }) {
         this._app = app;
         this._camera = camera;
+
+        // zoom scale min
+        this.zoomScaleMin = this._camera.nearClip;
 
         // input
         this._desktopInput = new KeyboardMouseInput();
@@ -358,6 +369,41 @@ class CameraControls {
     }
 
     /**
+     * @param {Vec2} rotate - The rotate delta.
+     * @returns {Vec2} The scaled delta.
+     * @private
+     */
+    _scaleRotate(rotate) {
+        return rotate.mulScalar(this.rotateSpeed);
+    }
+
+    /**
+     * @param {Vec3} move - The move delta.
+     * @returns {Vec3} The scaled delta.
+     * @private
+     */
+    _scaleMove(move) {
+        const speed = this._moveFast ?
+            this.moveFastSpeed : this._moveSlow ?
+                this.moveSlowSpeed : this.moveSpeed;
+        return move.mulScalar(speed * this.sceneSize);
+    }
+
+    /**
+     * @param {number} zoom - The delta.
+     * @returns {number} The scaled delta.
+     * @private
+     */
+    _scaleZoom(zoom) {
+        if (!(this._model instanceof OrbitModel)) {
+            return 0;
+        }
+        const norm = this._model.zoom / (ZOOM_SCALE_MULT * this.sceneSize);
+        const scale = math.clamp(norm, this.zoomScaleMin, 1);
+        return zoom * scale * this.zoomSpeed * this.sceneSize;
+    }
+
+    /**
      * @param {Vec3} point - The focus point.
      */
     focus(point) {
@@ -442,18 +488,14 @@ class CameraControls {
 
             if (this._model instanceof OrbitModel) {
                 tmpM1.copy(this._model.update({
-                    drag: tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed),
-                    zoom: wheel[0] * this.zoomSpeed * this.sceneSize,
+                    drag: this._scaleRotate(tmpVa.fromArray(mouse)),
+                    zoom: this._scaleZoom(wheel[0]),
                     pan: !!this._panning && this.enablePanning
                 }, this._camera, dt));
             } else {
-                const speed = this._moveFast ?
-                    this.moveFastSpeed : this._moveSlow ?
-                        this.moveSlowSpeed : this.moveSpeed;
-
                 tmpM1.copy(this._model.update({
-                    rotate: tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed),
-                    move: tmpV1.copy(this._moveAxes).normalize().mulScalar(speed * this.sceneSize)
+                    rotate: this._scaleRotate(tmpVa.fromArray(mouse)),
+                    move: this._scaleMove(tmpV1.copy(this._moveAxes).normalize())
                 }, dt));
             }
         }
@@ -465,8 +507,8 @@ class CameraControls {
                 const { touch, pinch, count } = this._input.frame();
 
                 tmpM1.copy(this._model.update({
-                    drag: tmpVa.fromArray(touch).mulScalar(this.rotateSpeed),
-                    zoom: pinch[0] * this.zoomSpeed * this.sceneSize * this.zoomPinchSens,
+                    drag: this._scaleRotate(tmpVa.fromArray(touch)),
+                    zoom: this._scaleZoom(pinch[0]) * this.zoomPinchSens,
                     pan: count[0] > 1 && this.enablePanning
                 }, this._camera, dt));
             }
@@ -479,8 +521,8 @@ class CameraControls {
                 const { stick, touch } = this._input.frame();
 
                 tmpM1.copy(this._model.update({
-                    rotate: tmpVa.fromArray(touch).mulScalar(this.rotateSpeed),
-                    move: tmpV1.set(stick[0], 0, -stick[1])
+                    rotate: this._scaleRotate(tmpVa.fromArray(touch)),
+                    move: this._scaleMove(tmpV1.set(stick[0], 0, -stick[1]))
                 }, dt));
             }
 
@@ -489,8 +531,8 @@ class CameraControls {
                 const { leftStick, rightStick } = this._input.frame();
 
                 tmpM1.copy(this._model.update({
-                    rotate: tmpVa.fromArray(rightStick).mulScalar(this.rotateJoystickSens * this.rotateSpeed),
-                    move: tmpV1.set(leftStick[0], 0, -leftStick[1])
+                    rotate: this._scaleRotate(tmpVa.fromArray(rightStick)).mulScalar(this.rotateJoystickSens),
+                    move: this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1]))
                 }, dt));
             }
         }
