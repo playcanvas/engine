@@ -108,7 +108,7 @@ class CameraControls {
         axis: new Vec3(),
         shift: 0,
         ctrl: 0,
-        buttons: [0, 0, 0]
+        mouse: [0, 0, 0]
     };
 
     /**
@@ -294,7 +294,7 @@ class CameraControls {
             this._state.axis.set(0, 0, 0);
             this._state.shift = 0;
             this._state.ctrl = 0;
-            this._state.buttons.fill(0);
+            this._state.mouse.fill(0);
         }
 
         // model reattach
@@ -534,12 +534,12 @@ class CameraControls {
             this._state.shift += shift;
             this._state.ctrl += ctrl;
             for (let i = 0; i < 3; i++) {
-                this._state.buttons[i] += button[i];
+                this._state.mouse[i] += button[i];
             }
 
             if (this._model instanceof OrbitModel) {
                 // pan shift or middle mouse button
-                const pan = (!!this._state.shift || !!this._state.buttons[1]) && this.enablePanning;
+                const pan = (!!this._state.shift || !!this._state.mouse[1]) && this.enablePanning;
                 tmpM1.copy(this._model.update({
                     drag: tmpVa.fromArray(mouse).mulScalar(pan ? 1 : this.rotateSpeed),
                     zoom: this._scaleZoom(wheel[0]),
