@@ -227,7 +227,7 @@ class Preprocessor {
         let error = false;
 
         let match;
-        while ((match = KEYWORD.exec(source)) !== null) {
+        while ((match = KEYWORD.exec(source)) !== null && !error) {
 
             const keyword = match[1];
             switch (keyword) {
@@ -379,6 +379,11 @@ class Preprocessor {
                     const endif = ENDIF.exec(source);
 
                     const blockInfo = stack.pop();
+                    if (!blockInfo) {
+                        console.error(`Shader preprocessing encountered "#${endif[1]}" without proceding #if #ifdef #ifndef while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
+                        error = true;
+                        continue;
+                    }
 
                     // code between if and endif
                     const blockCode = blockInfo.keep ? source.substring(blockInfo.end, match.index) : '';
@@ -451,7 +456,7 @@ class Preprocessor {
                                     includeSource = result;
 
                                 } else {
-                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line: ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
+                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
                                     error = true;
                                 }
                             }
@@ -473,8 +478,13 @@ class Preprocessor {
             }
         }
 
+        if (stack.length > 0) {
+            console.error(`Shader preprocessing reached the end of the file without encountering the necessary #endif to close a preceding #if, #ifdef, or #ifndef block. ${Preprocessor.sourceName}`);
+            error = true;
+        }
+
         if (error) {
-            console.warn('Failed to preprocess shader: ', { source: originalSource });
+            console.error('Failed to preprocess shader: ', { source: originalSource });
             return originalSource;
         }
 
