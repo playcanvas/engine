@@ -119,7 +119,7 @@ const cc = new CameraControls({
 const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
     switch (e.key) {
         case 'f': {
-            cc.focus(focus);
+            cc.focus(focus, true);
             break;
         }
         case 'l': {

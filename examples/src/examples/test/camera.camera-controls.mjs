@@ -51,7 +51,7 @@ class CameraControls {
      * @type {number}
      * @private
      */
-    _zoom = 0;
+    _startZoomDist = 0;
 
     /**
      * @type {KeyboardMouseInput}
@@ -223,7 +223,7 @@ class CameraControls {
 
         if (this._model instanceof OrbitModel) {
             const start = this._camera.entity.getPosition();
-            this._zoom = start.distance(point);
+            this._startZoomDist = start.distance(point);
             this._model.focus(point, start, false);
         }
     }
@@ -283,6 +283,9 @@ class CameraControls {
             model = this._orbitModel;
         }
 
+        // NOTE: save zoom as attach will reset it
+        const currZoomDist = this._orbitModel.zoom;
+
         // input reattach
         if (input !== this._input) {
             if (this._input) {
@@ -310,7 +313,7 @@ class CameraControls {
         // refocus if orbit mode
         if (this._model instanceof OrbitModel) {
             const start = this._camera.entity.getPosition();
-            const point = tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoom).add(start);
+            const point = tmpV1.copy(this._camera.entity.forward).mulScalar(currZoomDist).add(start);
             this._model.focus(point, start, false);
         }
 
@@ -453,12 +456,20 @@ class CameraControls {
 
     /**
      * @param {Vec3} point - The focus point.
+     * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
-    focus(point) {
+    focus(point, resetZoom = false) {
         this.mode = CameraControls.MODE_ORBIT;
 
         if (this._model instanceof OrbitModel) {
-            this._model.focus(point);
+            if (resetZoom) {
+                const start = tmpV1.copy(this._camera.entity.forward)
+                .mulScalar(-this._startZoomDist)
+                .add(point);
+                this._model.focus(point, start);
+            } else {
+                this._model.focus(point);
+            }
         }
     }
 
@@ -474,7 +485,7 @@ class CameraControls {
                 const start = tmpV1.copy(this._camera.entity.getPosition())
                 .sub(point)
                 .normalize()
-                .mulScalar(this._zoom)
+                .mulScalar(this._startZoomDist)
                 .add(point);
                 this._model.focus(point, start);
             } else {
