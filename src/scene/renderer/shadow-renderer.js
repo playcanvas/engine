@@ -280,6 +280,9 @@ class ShadowRenderer {
         const shadowPass = this.getShadowPass(light);
         const cameraShaderParams = camera.shaderParams;
 
+        // reverse face culling when shadow map has flipY set to true which cases reversed winding order
+        const flipFactor = camera.renderTarget.flipY ? -1 : 1;
+
         // Render
         const count = visibleCasters.length;
         for (let i = 0; i < count; i++) {
@@ -300,8 +303,7 @@ class ShadowRenderer {
                 material.dirty = false;
             }
 
-            // reverse face culling on WebGPU - shadow maps have flipY set to true on WebGPU and so the winding order is reversed
-            renderer.setupCullMode(true, device.isWebGPU ? -1 : 1, meshInstance);
+            renderer.setupCullMode(true, flipFactor, meshInstance);
 
             // Uniforms I (shadow): material
             material.setParameters(device);
