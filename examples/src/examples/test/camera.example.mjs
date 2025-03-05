@@ -114,8 +114,6 @@ const cc = new CameraControls({
     focus,
     sceneSize
 });
-cc.rotateSpeed = 0.3;
-cc.rotateDamping = 0.95;
 
 // focus on entity when 'f' key is pressed
 const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
