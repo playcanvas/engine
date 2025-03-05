@@ -68,25 +68,11 @@ class FlyModel extends EventHandler {
     _yawRange = new Vec2(-Infinity, Infinity);
 
     /**
-     * The rotation speed.
-     *
-     * @type {number}
-     */
-    rotateSpeed = 0.2;
-
-    /**
      * The rotation damping. A higher value means more damping. A value of 0 means no damping.
      *
      * @type {number}
      */
     rotateDamping = 0.98;
-
-    /**
-     * The fly move speed.
-     *
-     * @type {number}
-     */
-    moveSpeed = 20;
 
     /**
      * The movement damping. A higher value means more damping. A value of 0 means no damping.
@@ -128,8 +114,8 @@ class FlyModel extends EventHandler {
      * @private
      */
     _look(dv) {
-        this._targetAngles.x -= dv.y * this.rotateSpeed;
-        this._targetAngles.y -= dv.x * this.rotateSpeed;
+        this._targetAngles.x -= dv.y;
+        this._targetAngles.y -= dv.x;
         this._clampAngles();
     }
 
@@ -147,7 +133,7 @@ class FlyModel extends EventHandler {
         tmpV1.sub(tmpV2.copy(back).mulScalar(dv.z));
         tmpV1.add(tmpV2.copy(right).mulScalar(dv.x));
         tmpV1.add(tmpV2.copy(up).mulScalar(dv.y));
-        tmpV1.mulScalar(this.moveSpeed * dt);
+        tmpV1.mulScalar(dt);
 
         this._targetPosition.add(tmpV1);
     }

@@ -138,22 +138,42 @@ class CameraControls {
     /**
      * @type {number}
      */
-    moveFastMult = 2;
+    sceneSize = 100;
 
     /**
      * @type {number}
      */
-    moveSlowMult = 0.5;
+    rotateSpeed = 0.2;
 
     /**
      * @type {number}
      */
-    pinchMult = 5;
+    rotateJoystickSens = 2;
 
     /**
      * @type {number}
      */
-    joytickRotateMult = 2;
+    moveSpeed = 2;
+
+    /**
+     * @type {number}
+     */
+    moveFastSpeed = 4;
+
+    /**
+     * @type {number}
+     */
+    moveSlowSpeed = 1;
+
+    /**
+     * @type {number}
+     */
+    zoomSpeed = 0.005;
+
+    /**
+     * @type {number}
+     */
+    zoomPinchSens = 5;
 
     /**
      * @param {Object} options - The options.
@@ -161,8 +181,9 @@ class CameraControls {
      * @param {CameraComponent} options.camera - The camera.
      * @param {string} options.mode - The mode.
      * @param {Vec3} [options.focus] - The focus.
+     * @param {number} [options.sceneSize] - The scene size.
      */
-    constructor({ app, camera, mode, focus }) {
+    constructor({ app, camera, mode, focus, sceneSize }) {
         this._app = app;
         this._camera = camera;
 
@@ -180,6 +201,9 @@ class CameraControls {
             this.focusPoint = focus;
             this.update(0);
         }
+
+        // scene size
+        this.sceneSize = sceneSize ?? this.sceneSize;
 
         // mode
         this.mode = mode ?? CameraControls.MODE_ORBIT;
@@ -282,15 +306,6 @@ class CameraControls {
         return this._mode;
     }
 
-    set rotateSpeed(speed) {
-        this._flyModel.rotateSpeed = speed;
-        this._orbitModel.rotateSpeed = speed;
-    }
-
-    get rotateSpeed() {
-        return this._model.rotateSpeed;
-    }
-
     set rotateDamping(damping) {
         this._flyModel.rotateDamping = damping;
         this._orbitModel.rotateDamping = damping;
@@ -300,28 +315,12 @@ class CameraControls {
         return this._model.rotateDamping;
     }
 
-    set moveSpeed(speed) {
-        this._flyModel.moveSpeed = speed;
-    }
-
-    get moveSpeed() {
-        return this._flyModel.moveSpeed;
-    }
-
     set moveDamping(damping) {
         this._flyModel.moveDamping = damping;
     }
 
     get moveDamping() {
         return this._flyModel.moveDamping;
-    }
-
-    set zoomSpeed(speed) {
-        this._orbitModel.zoomSpeed = speed;
-    }
-
-    get zoomSpeed() {
-        return this._orbitModel.zoomSpeed;
     }
 
     set zoomDamping(damping) {
@@ -439,21 +438,22 @@ class CameraControls {
             this._moveAxes.add(tmpV1.set(right - left, up - down, forward - back));
             this._moveFast += fast;
             this._moveSlow += slow;
-            const mult = this._moveFast ?
-                this.moveFastMult : this._moveSlow ?
-                    this.moveSlowMult : 1;
             this._panning += button[1];
 
             if (this._model instanceof OrbitModel) {
                 tmpM1.copy(this._model.update({
-                    drag: tmpVa.fromArray(mouse),
-                    zoom: wheel[0],
+                    drag: tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed),
+                    zoom: wheel[0] * this.zoomSpeed * this.sceneSize,
                     pan: !!this._panning && this.enablePanning
                 }, this._camera, dt));
             } else {
+                const speed = this._moveFast ?
+                    this.moveFastSpeed : this._moveSlow ?
+                        this.moveSlowSpeed : this.moveSpeed;
+
                 tmpM1.copy(this._model.update({
-                    rotate: tmpVa.fromArray(mouse),
-                    move: tmpV1.copy(this._moveAxes).normalize().mulScalar(mult)
+                    rotate: tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed),
+                    move: tmpV1.copy(this._moveAxes).normalize().mulScalar(speed * this.sceneSize)
                 }, dt));
             }
         }
@@ -465,8 +465,8 @@ class CameraControls {
                 const { touch, pinch, count } = this._input.frame();
 
                 tmpM1.copy(this._model.update({
-                    drag: tmpVa.fromArray(touch),
-                    zoom: pinch[0] * this.pinchMult,
+                    drag: tmpVa.fromArray(touch).mulScalar(this.rotateSpeed),
+                    zoom: pinch[0] * this.zoomSpeed * this.sceneSize * this.zoomPinchSens,
                     pan: count[0] > 1 && this.enablePanning
                 }, this._camera, dt));
             }
@@ -479,7 +479,7 @@ class CameraControls {
                 const { stick, touch } = this._input.frame();
 
                 tmpM1.copy(this._model.update({
-                    rotate: tmpVa.fromArray(touch),
+                    rotate: tmpVa.fromArray(touch).mulScalar(this.rotateSpeed),
                     move: tmpV1.set(stick[0], 0, -stick[1])
                 }, dt));
             }
@@ -489,7 +489,7 @@ class CameraControls {
                 const { leftStick, rightStick } = this._input.frame();
 
                 tmpM1.copy(this._model.update({
-                    rotate: tmpVa.fromArray(rightStick).mulScalar(this.joytickRotateMult),
+                    rotate: tmpVa.fromArray(rightStick).mulScalar(this.rotateJoystickSens * this.rotateSpeed),
                     move: tmpV1.set(leftStick[0], 0, -leftStick[1])
                 }, dt));
             }

@@ -97,7 +97,9 @@ const calcEntityAABB = (bbox, entity) => {
 };
 
 const start = new pc.Vec3(0, 20, 30);
-const focus = calcEntityAABB(new pc.BoundingBox(), statue).center;
+const bbox = calcEntityAABB(new pc.BoundingBox(), statue);
+const focus = bbox.center;
+const sceneSize = bbox.halfExtents.length();
 
 const camera = new pc.Entity();
 camera.addComponent('camera');
@@ -109,7 +111,8 @@ const cc = new CameraControls({
     app,
     camera: camera.camera,
     mode: typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT,
-    focus
+    focus,
+    sceneSize
 });
 cc.rotateSpeed = 0.3;
 cc.rotateDamping = 0.95;

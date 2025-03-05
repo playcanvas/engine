@@ -121,13 +121,6 @@ class OrbitModel extends EventHandler {
     focusDamping = 0.98;
 
     /**
-     * The rotation speed.
-     *
-     * @type {number}
-     */
-    rotateSpeed = 0.2;
-
-    /**
      * The rotation damping. A higher value means more damping. A value of 0 means no damping.
      *
      * @type {number}
@@ -147,13 +140,6 @@ class OrbitModel extends EventHandler {
      * @type {number}
      */
     zoomDamping = 0.98;
-
-    /**
-     * The zoom speed relative to the scene size.
-     *
-     * @type {number}
-     */
-    zoomSpeed = 0.01;
 
     get point() {
         return this._rootTransform.getTranslation();
@@ -213,8 +199,8 @@ class OrbitModel extends EventHandler {
      * @private
      */
     _look(dv) {
-        this._targetAngles.x -= dv.y * this.rotateSpeed;
-        this._targetAngles.y -= dv.x * this.rotateSpeed;
+        this._targetAngles.x -= dv.y;
+        this._targetAngles.y -= dv.x;
         this._clampAngles();
     }
 
@@ -236,7 +222,7 @@ class OrbitModel extends EventHandler {
      * @private
      */
     _zoom(delta) {
-        this._targetZoomDist += delta * this.zoomSpeed;
+        this._targetZoomDist += delta;
         this._clampZoom();
     }
 
