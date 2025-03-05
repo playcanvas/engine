@@ -13,7 +13,8 @@ import {
     DITHER_NONE,
     SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
     FOG_NONE,
-    REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP
+    REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP,
+    AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -325,15 +326,15 @@ class StandardMaterialOptionsBuilder {
 
         // source of environment ambient is as follows:
         if (stdMat.ambientSH) {
-            options.litOptions.ambientSource = 'ambientSH';
+            options.litOptions.ambientSource = AMBIENTSRC_AMBIENTSH;
             options.litOptions.ambientEncoding = null;
         } else {
             const envAtlas = stdMat.envAtlas || (stdMat.useSkybox && scene.envAtlas ? scene.envAtlas : null);
             if (envAtlas && !stdMat.sphereMap) {
-                options.litOptions.ambientSource = 'envAtlas';
+                options.litOptions.ambientSource = AMBIENTSRC_ENVALATLAS;
                 options.litOptions.ambientEncoding = envAtlas.encoding;
             } else {
-                options.litOptions.ambientSource = 'constant';
+                options.litOptions.ambientSource = AMBIENTSRC_CONSTANT;
                 options.litOptions.ambientEncoding = null;
             }
         }

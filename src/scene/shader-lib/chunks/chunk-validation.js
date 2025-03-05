@@ -31,10 +31,6 @@ const chunkVersions = {
 
     // backend
     normalVertexPS: CHUNKAPI_1_55,
-
-    ambientConstantPS: CHUNKAPI_1_62,
-    ambientEnvPS: CHUNKAPI_1_62,
-    ambientSHPS: CHUNKAPI_1_62,
     aoDiffuseOccPS: CHUNKAPI_1_62,
     aoSpecOccPS: CHUNKAPI_2_6,
     clusteredLightPS: CHUNKAPI_1_62,
@@ -126,7 +122,10 @@ const removedChunks = {
     envConstPS: CHUNKAPI_2_6,
     aoSpecOccConstPS: CHUNKAPI_2_6,
     aoSpecOccConstSimplePS: CHUNKAPI_2_6,
-    aoSpecOccSimplePS: CHUNKAPI_2_6
+    aoSpecOccSimplePS: CHUNKAPI_2_6,
+    ambientConstantPS: CHUNKAPI_2_6,
+    ambientEnvPS: CHUNKAPI_2_6,
+    ambientSHPS: CHUNKAPI_2_6
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.

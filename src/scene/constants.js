@@ -748,44 +748,11 @@ export const specularOcclusionNames = {
     [SPECOCC_GLOSSDEPENDENT]: 'GLOSSDEPENDENT'
 };
 
-/**
- * There is no reflection source.
- *
- * @type {string}
- * @category Graphics
- */
+// reflection source used by the shader generation
 export const REFLECTIONSRC_NONE = 'none';
-
-/**
- * EnvAtlas is used as a source for the reflection.
- *
- * @type {string}
- * @category Graphics
- */
 export const REFLECTIONSRC_ENVATLAS = 'envAtlas';
-
-/**
- * EnvAtlas and high resolution cubemap are used as a source for the reflection.
- *
- * @type {string}
- * @category Graphics
- */
 export const REFLECTIONSRC_ENVATLASHQ = 'envAtlasHQ';
-
-/**
- * Cubemap is used as a source for the reflection.
- *
- * @type {string}
- * @category Graphics
- */
 export const REFLECTIONSRC_CUBEMAP = 'cubeMap';
-
-/**
- * Spheremap is used as a source for the reflection.
- *
- * @type {string}
- * @category Graphics
- */
 export const REFLECTIONSRC_SPHEREMAP = 'sphereMap';
 
 export const reflectionSrcNames = {
@@ -794,6 +761,17 @@ export const reflectionSrcNames = {
     [REFLECTIONSRC_ENVATLASHQ]: 'ENVATLASHQ',
     [REFLECTIONSRC_CUBEMAP]: 'CUBEMAP',
     [REFLECTIONSRC_SPHEREMAP]: 'SPHEREMAP'
+};
+
+// ambient source used by the shader generation
+export const AMBIENTSRC_AMBIENTSH = 'ambientSH';
+export const AMBIENTSRC_ENVALATLAS = 'envAtlas';
+export const AMBIENTSRC_CONSTANT = 'constant';
+
+export const ambientSrcNames = {
+    [AMBIENTSRC_AMBIENTSH]: 'AMBIENTSH',
+    [AMBIENTSRC_ENVALATLAS]: 'ENVALATLAS',
+    [AMBIENTSRC_CONSTANT]: 'CONSTANT'
 };
 
 // 16 bits for shader defs
