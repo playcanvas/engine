@@ -4,7 +4,8 @@ import {
     SHADERDEF_MORPH_POSITION, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
     SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE,
     SHADERDEF_MORPH_TEXTURE_BASED_INT,
-    FOG_NONE
+    FOG_NONE,
+    REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP
 } from '../constants.js';
 
 class LitMaterialOptionsBuilder {
@@ -95,17 +96,17 @@ class LitMaterialOptionsBuilder {
 
         // source of reflections
         if (material.useSkybox && scene.envAtlas && scene.skybox) {
-            litOptions.reflectionSource = 'envAtlasHQ';
+            litOptions.reflectionSource = REFLECTIONSRC_ENVATLASHQ;
             litOptions.reflectionEncoding = scene.envAtlas.encoding;
             litOptions.reflectionCubemapEncoding = scene.skybox.encoding;
         } else if (material.useSkybox && scene.envAtlas) {
-            litOptions.reflectionSource = 'envAtlas';
+            litOptions.reflectionSource = REFLECTIONSRC_ENVATLAS;
             litOptions.reflectionEncoding = scene.envAtlas.encoding;
         } else if (material.useSkybox && scene.skybox) {
-            litOptions.reflectionSource = 'cubeMap';
+            litOptions.reflectionSource = REFLECTIONSRC_CUBEMAP;
             litOptions.reflectionEncoding = scene.skybox.encoding;
         } else {
-            litOptions.reflectionSource = null;
+            litOptions.reflectionSource = REFLECTIONSRC_NONE;
             litOptions.reflectionEncoding = null;
         }
 
@@ -113,7 +114,7 @@ class LitMaterialOptionsBuilder {
         if (material.ambientSH) {
             litOptions.ambientSource = 'ambientSH';
             litOptions.ambientEncoding = null;
-        } else if (litOptions.reflectionSource && scene.envAtlas) {
+        } else if (litOptions.reflectionSource !== REFLECTIONSRC_NONE && scene.envAtlas) {
             litOptions.ambientSource = 'envAtlas';
             litOptions.ambientEncoding = scene.envAtlas.encoding;
         } else {
@@ -121,7 +122,7 @@ class LitMaterialOptionsBuilder {
             litOptions.ambientEncoding = null;
         }
 
-        const hasSkybox = !!litOptions.reflectionSource;
+        const hasSkybox = litOptions.reflectionSource !== REFLECTIONSRC_NONE;
         litOptions.skyboxIntensity = hasSkybox;
         litOptions.useCubeMapRotation = hasSkybox && scene._skyboxRotationShaderInclude;
     }

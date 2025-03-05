@@ -12,7 +12,8 @@ import {
     TONEMAP_NONE,
     DITHER_NONE,
     SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
-    FOG_NONE
+    FOG_NONE,
+    REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -274,7 +275,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.litOptions.fresnelModel = stdMat.fresnelModel;
-        options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.litOptions.reflectionSource);
+        options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || options.litOptions.reflectionSource !== REFLECTIONSRC_NONE);
         options.litOptions.useClearCoat = !!stdMat.clearCoat;
         options.litOptions.useSheen = stdMat.useSheen;
         options.litOptions.useIridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;
@@ -292,33 +293,33 @@ class StandardMaterialOptionsBuilder {
 
         // source of environment reflections is as follows:
         if (stdMat.envAtlas && stdMat.cubeMap) {
-            options.litOptions.reflectionSource = 'envAtlasHQ';
+            options.litOptions.reflectionSource = REFLECTIONSRC_ENVATLASHQ;
             options.litOptions.reflectionEncoding = stdMat.envAtlas.encoding;
             options.litOptions.reflectionCubemapEncoding = stdMat.cubeMap.encoding;
         } else if (stdMat.envAtlas) {
-            options.litOptions.reflectionSource = 'envAtlas';
+            options.litOptions.reflectionSource = REFLECTIONSRC_ENVATLAS;
             options.litOptions.reflectionEncoding = stdMat.envAtlas.encoding;
         } else if (stdMat.cubeMap) {
-            options.litOptions.reflectionSource = 'cubeMap';
+            options.litOptions.reflectionSource = REFLECTIONSRC_CUBEMAP;
             options.litOptions.reflectionEncoding = stdMat.cubeMap.encoding;
         } else if (stdMat.sphereMap) {
-            options.litOptions.reflectionSource = 'sphereMap';
+            options.litOptions.reflectionSource = REFLECTIONSRC_SPHEREMAP;
             options.litOptions.reflectionEncoding = stdMat.sphereMap.encoding;
         } else if (stdMat.useSkybox && scene.envAtlas && scene.skybox) {
-            options.litOptions.reflectionSource = 'envAtlasHQ';
+            options.litOptions.reflectionSource = REFLECTIONSRC_ENVATLASHQ;
             options.litOptions.reflectionEncoding = scene.envAtlas.encoding;
             options.litOptions.reflectionCubemapEncoding = scene.skybox.encoding;
             usingSceneEnv = true;
         } else if (stdMat.useSkybox && scene.envAtlas) {
-            options.litOptions.reflectionSource = 'envAtlas';
+            options.litOptions.reflectionSource = REFLECTIONSRC_ENVATLAS;
             options.litOptions.reflectionEncoding = scene.envAtlas.encoding;
             usingSceneEnv = true;
         } else if (stdMat.useSkybox && scene.skybox) {
-            options.litOptions.reflectionSource = 'cubeMap';
+            options.litOptions.reflectionSource = REFLECTIONSRC_CUBEMAP;
             options.litOptions.reflectionEncoding = scene.skybox.encoding;
             usingSceneEnv = true;
         } else {
-            options.litOptions.reflectionSource = null;
+            options.litOptions.reflectionSource = REFLECTIONSRC_NONE;
             options.litOptions.reflectionEncoding = null;
         }
 

@@ -12,7 +12,7 @@ vec3 calcReflection(vec3 reflDir, float gloss) {
     float m = 2.0 * sqrt( dot(reflDirV.xy, reflDirV.xy) + (reflDirV.z+1.0)*(reflDirV.z+1.0) );
     vec2 sphereMapUv = reflDirV.xy / m + 0.5;
 
-    return $DECODE(texture2D(texture_sphereMap, sphereMapUv));
+    return {reflectionDecode}(texture2D(texture_sphereMap, sphereMapUv));
 }
 
 void addReflection(vec3 reflDir, float gloss) {   
