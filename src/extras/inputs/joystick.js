@@ -1,38 +1,33 @@
 import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
+import { EventHandler } from '../../core/event-handler.js';
 
 const tmpVa = new Vec2();
 
-class Joystick {
+class Joystick extends EventHandler {
     /**
-     * @type {number}
-     * @private
+     * @type {string}
+     * @static
      */
-    _scale = 100;
+    static EVENT_POSITIONBASE = 'position:base';
+
+    /**
+     * @type {string}
+     * @static
+     */
+    static EVENT_POSITIONSTICK = 'position:stick';
+
+    /**
+     * @type {string}
+     * @static
+     */
+    static EVENT_RESET = 'reset';
 
     /**
      * @type {number}
      * @private
      */
-    _innerScaleMult = 0.6;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _innerMaxDist = 70;
-
-    /**
-     * @type {HTMLDivElement}
-     * @private
-     */
-    _base;
-
-    /**
-     * @type {HTMLDivElement}
-     * @private
-     */
-    _stick;
+    _displacement = 70;
 
     /**
      * @type {Vec2}
@@ -54,96 +49,49 @@ class Joystick {
 
     /**
      * @param {object} options - The options.
-     * @param {number} [options.scale] - The scale of the joystick.
-     * @param {number} [options.innerScale] - The inner scale of the joystick.
-     * @param {number} [options.innerMaxDist] - The inner max distance of the joystick.
+     * @param {number} [options.displacement] - The inner max distance of the joystick.
      */
     constructor(options = {}) {
-        this._scale = options.scale ?? this._scale;
-        this._innerScaleMult = options.innerScale ?? this._innerScaleMult;
-        this._innerMaxDist = options.innerMaxDist ?? this._innerMaxDist;
-
-        this._base = document.createElement('div');
-        this._base.id = 'joystick-base';
-        Object.assign(this._base.style, {
-            display: 'none',
-            position: 'absolute',
-            width: `${this._scale}px`,
-            height: `${this._scale}px`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)'
-        });
-
-        this._stick = document.createElement('div');
-        this._stick.id = 'joystick-inner';
-        Object.assign(this._stick.style, {
-            display: 'none',
-            position: 'absolute',
-            width: `${this._scale * this._innerScaleMult}px`,
-            height: `${this._scale * this._innerScaleMult}px`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
-        });
-
-        document.body.append(this._base, this._stick);
+        super();
+        this._displacement = options.displacement ?? this._displacement;
     }
 
-    get dom() {
-        return this._base;
-    }
-
-    set hidden(value) {
-        const display = value ? 'none' : 'block';
-        this._base.style.display = display;
-        this._stick.style.display = display;
-        this._value.set(0, 0);
-    }
-
-    get hidden() {
-        return this._base.style.display === 'none';
-    }
-
-    set position(value) {
+    /**
+     * @param {number} x - The x position.
+     * @param {number} y - The y position.
+     */
+    setBase(x, y) {
         // base position
-        this._basePos.copy(value);
-        this._base.style.left = `${this._basePos.x - this._scale * 0.5}px`;
-        this._base.style.top = `${this._basePos.y - this._scale * 0.5}px`;
-
-        // stick position
-        this.stickPosition = value;
+        this._basePos.set(x, y);
+        this.fire(Joystick.EVENT_POSITIONBASE, this._basePos.x, this._basePos.y);
     }
 
-    get position() {
-        return this._basePos;
-    }
-
-    set stickPosition(value) {
-        this._stickPos.copy(value);
+    /**
+     * @param {number} x - The x position.
+     * @param {number} y - The y position.
+     */
+    setStick(x, y) {
+        this._stickPos.set(x, y);
         tmpVa.sub2(this._stickPos, this._basePos);
         const dist = tmpVa.length();
-        if (dist > this._innerMaxDist) {
-            tmpVa.normalize().mulScalar(this._innerMaxDist);
+        if (dist > this._displacement) {
+            tmpVa.normalize().mulScalar(this._displacement);
             this._stickPos.add2(this._basePos, tmpVa);
         }
-        this._stick.style.left = `${this._stickPos.x - this._scale * this._innerScaleMult * 0.5}px`;
-        this._stick.style.top = `${this._stickPos.y - this._scale * this._innerScaleMult * 0.5}px`;
+        this.fire(Joystick.EVENT_POSITIONSTICK, this._stickPos.x, this._stickPos.y);
 
-        const vx = math.clamp(tmpVa.x / this._innerMaxDist, -1, 1);
-        const vy = math.clamp(tmpVa.y / this._innerMaxDist, -1, 1);
+        const vx = math.clamp(tmpVa.x / this._displacement, -1, 1);
+        const vy = math.clamp(tmpVa.y / this._displacement, -1, 1);
         this._value.set(vx, vy);
     }
 
-    get stickPosition() {
-        return this._stickPos;
+    reset() {
+        this._value.set(0, 0);
+        this.fire(Joystick.EVENT_RESET);
     }
 
     get value() {
         return this._value;
-    }
-
-    destroy() {
-        this._base.remove();
-        this._stick.remove();
     }
 }
 

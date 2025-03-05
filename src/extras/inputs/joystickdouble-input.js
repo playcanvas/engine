@@ -1,9 +1,5 @@
-import { Vec2 } from '../../core/math/vec2.js';
-
 import { Delta, Input } from './input.js';
 import { Joystick } from './joystick.js';
-
-const tmpVa = new Vec2();
 
 class JoystickDoubleInput extends Input {
     /**
@@ -36,14 +32,19 @@ class JoystickDoubleInput extends Input {
         super();
 
         this._leftJoystick = new Joystick();
-        document.body.append(this._leftJoystick.dom);
-
         this._rightJoystick = new Joystick();
-        document.body.append(this._rightJoystick.dom);
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
+    }
+
+    get leftJoystick() {
+        return this._leftJoystick;
+    }
+
+    get rightJoystick() {
+        return this._rightJoystick;
     }
 
     /**
@@ -61,11 +62,11 @@ class JoystickDoubleInput extends Input {
         });
 
         if (left) {
-            this._leftJoystick.hidden = false;
-            this._leftJoystick.position = tmpVa.set(event.clientX, event.clientY);
+            this._leftJoystick.setBase(event.clientX, event.clientY);
+            this._leftJoystick.setStick(event.clientX, event.clientY);
         } else {
-            this._rightJoystick.hidden = false;
-            this._rightJoystick.position = tmpVa.set(event.clientX, event.clientY);
+            this._rightJoystick.setBase(event.clientX, event.clientY);
+            this._rightJoystick.setStick(event.clientX, event.clientY);
         }
     }
 
@@ -86,9 +87,9 @@ class JoystickDoubleInput extends Input {
         data.y = event.clientY;
 
         if (left) {
-            this._leftJoystick.stickPosition = tmpVa.set(event.clientX, event.clientY);
+            this._leftJoystick.setStick(event.clientX, event.clientY);
         } else {
-            this._rightJoystick.stickPosition = tmpVa.set(event.clientX, event.clientY);
+            this._rightJoystick.setStick(event.clientX, event.clientY);
         }
 
     }
@@ -108,9 +109,9 @@ class JoystickDoubleInput extends Input {
         this._pointerData.delete(event.pointerId);
 
         if (left) {
-            this._leftJoystick.hidden = true;
+            this._leftJoystick.reset();
         } else {
-            this._rightJoystick.hidden = true;
+            this._rightJoystick.reset();
         }
 
     }
@@ -154,8 +155,8 @@ class JoystickDoubleInput extends Input {
     }
 
     destroy() {
-        this._leftJoystick.destroy();
-        this._rightJoystick.destroy();
+        this._leftJoystick.reset();
+        this._rightJoystick.reset();
 
         super.destroy();
     }

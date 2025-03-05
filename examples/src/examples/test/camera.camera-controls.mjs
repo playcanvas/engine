@@ -12,13 +12,15 @@ import {
     math
 } from 'playcanvas';
 
-/** @import { AppBase, CameraComponent } from 'playcanvas' */
+/** @import { AppBase, CameraComponent, EventHandler } from 'playcanvas' */
 
 const tmpM1 = new Mat4();
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
 
 const ZOOM_SCALE_MULT = 10;
+const JOYSTICK_BASE_SIZE = 100;
+const JOYSTICK_STICK_SIZE = 60;
 
 class CameraControls {
     /**
@@ -64,7 +66,7 @@ class CameraControls {
     _orbitMobileInput;
 
     /**
-     * @type {JoystickTouchInput}
+     * @type {JoystickTouchInput | JoystickDoubleInput}
      * @private
      */
     _flyMobileInput;
@@ -190,8 +192,9 @@ class CameraControls {
      * @param {string} options.mode - The mode.
      * @param {Vec3} [options.focus] - The focus.
      * @param {number} [options.sceneSize] - The scene size.
+     * @param {boolean} [options.doubleStick] - Whether to use double stick.
      */
-    constructor({ app, camera, mode, focus, sceneSize }) {
+    constructor({ app, camera, mode, focus, sceneSize, doubleStick }) {
         this._app = app;
         this._camera = camera;
 
@@ -201,7 +204,7 @@ class CameraControls {
         // input
         this._desktopInput = new KeyboardMouseInput();
         this._orbitMobileInput = new MultiTouchInput();
-        this._flyMobileInput = new JoystickTouchInput();
+        this._flyMobileInput = doubleStick ? new JoystickDoubleInput() : new JoystickTouchInput();
 
         // models
         this._flyModel = new FlyModel();
@@ -218,6 +221,14 @@ class CameraControls {
 
         // mode
         this.mode = mode ?? CameraControls.MODE_ORBIT;
+
+        // ui
+        if (this._flyMobileInput instanceof JoystickDoubleInput) {
+            this._createJoystickUI(this._flyMobileInput.leftJoystick, JOYSTICK_BASE_SIZE, JOYSTICK_STICK_SIZE);
+            this._createJoystickUI(this._flyMobileInput.rightJoystick, JOYSTICK_BASE_SIZE, JOYSTICK_STICK_SIZE);
+        } else {
+            this._createJoystickUI(this._flyMobileInput.joystick, JOYSTICK_BASE_SIZE, JOYSTICK_STICK_SIZE);
+        }
     }
 
     set focusPoint(point) {
@@ -366,6 +377,56 @@ class CameraControls {
 
     get zoomRange() {
         return this._orbitModel.zoomRange;
+    }
+
+    /**
+     * @param {EventHandler} joystick - The joystick.
+     * @param {number} baseSize - The base size.
+     * @param {number} stickSize - The stick size.
+     */
+    _createJoystickUI(joystick, baseSize, stickSize) {
+        const base = document.createElement('div');
+        Object.assign(base.style, {
+            display: 'none',
+            position: 'absolute',
+            width: `${baseSize}px`,
+            height: `${baseSize}px`,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.5)'
+        });
+
+        const stick = document.createElement('div');
+        Object.assign(stick.style, {
+            display: 'none',
+            position: 'absolute',
+            width: `${stickSize}px`,
+            height: `${stickSize}px`,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+        });
+
+        joystick.on('position:base', (x, y) => {
+            const left = x - baseSize * 0.5;
+            const top = y - baseSize * 0.5;
+
+            base.style.display = 'block';
+            base.style.left = `${left}px`;
+            base.style.top = `${top}px`;
+        });
+        joystick.on('position:stick', (x, y) => {
+            const left = x - stickSize * 0.5;
+            const top = y - stickSize * 0.5;
+
+            stick.style.display = 'block';
+            stick.style.left = `${left}px`;
+            stick.style.top = `${top}px`;
+        });
+        joystick.on('reset', () => {
+            base.style.display = 'none';
+            stick.style.display = 'none';
+        });
+
+        document.body.append(base, stick);
     }
 
     /**

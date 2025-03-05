@@ -1,9 +1,5 @@
-import { Vec2 } from '../../core/math/vec2.js';
-
 import { Delta, Input } from './input.js';
 import { Joystick } from './joystick.js';
-
-const tmpVa = new Vec2();
 
 class JoystickTouchInput extends Input {
     /**
@@ -30,11 +26,14 @@ class JoystickTouchInput extends Input {
         super();
 
         this._joystick = new Joystick();
-        document.body.append(this._joystick.dom);
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
+    }
+
+    get joystick() {
+        return this._joystick;
     }
 
     /**
@@ -52,8 +51,8 @@ class JoystickTouchInput extends Input {
         });
 
         if (left) {
-            this._joystick.hidden = false;
-            this._joystick.position = tmpVa.set(event.clientX, event.clientY);
+            this._joystick.setBase(event.clientX, event.clientY);
+            this._joystick.setStick(event.clientX, event.clientY);
         }
     }
 
@@ -74,7 +73,7 @@ class JoystickTouchInput extends Input {
         data.y = event.clientY;
 
         if (left) {
-            this._joystick.stickPosition = tmpVa.set(event.clientX, event.clientY);
+            this._joystick.setStick(event.clientX, event.clientY);
         } else {
             this.deltas.touch.add([event.movementX, event.movementY]);
         }
@@ -96,7 +95,7 @@ class JoystickTouchInput extends Input {
         this._pointerData.delete(event.pointerId);
 
         if (left) {
-            this._joystick.hidden = true;
+            this._joystick.reset();
         }
 
     }
@@ -139,7 +138,7 @@ class JoystickTouchInput extends Input {
     }
 
     destroy() {
-        this._joystick.destroy();
+        this._joystick.reset();
 
         super.destroy();
     }
