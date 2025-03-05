@@ -300,7 +300,8 @@ class ShadowRenderer {
                 material.dirty = false;
             }
 
-            renderer.setupCullMode(true, 1, meshInstance);
+            // reverse face culling on WebGPU - shadow maps have flipY set to true on WebGPU and so the winding order is reversed
+            renderer.setupCullMode(true, device.isWebGPU ? -1 : 1, meshInstance);
 
             // Uniforms I (shadow): material
             material.setParameters(device);
