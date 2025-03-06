@@ -1,9 +1,6 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Delta, Input } from './input.js';
 
-/** @type {AddEventListenerOptions & EventListenerOptions} */
-const PASSIVE = { passive: false };
-
 const tmpVa = new Vec2();
 
 class MultiTouchInput extends Input {
@@ -37,20 +34,10 @@ class MultiTouchInput extends Input {
     constructor() {
         super();
 
-        this._onWheel = this._onWheel.bind(this);
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
         this._onContextMenu = this._onContextMenu.bind(this);
-    }
-
-    /**
-     * @param {WheelEvent} event - The wheel event.
-     * @private
-     */
-    _onWheel(event) {
-        event.preventDefault();
-        this.deltas.zoom.add(event.deltaY);
     }
 
     /**
@@ -157,7 +144,6 @@ class MultiTouchInput extends Input {
         super.attach(element);
 
         this._element = element;
-        this._element.addEventListener('wheel', this._onWheel, PASSIVE);
         this._element.addEventListener('pointerdown', this._onPointerDown);
         this._element.addEventListener('pointermove', this._onPointerMove);
         this._element.addEventListener('pointerup', this._onPointerUp);
@@ -168,7 +154,6 @@ class MultiTouchInput extends Input {
         if (!this._element) {
             return;
         }
-        this._element.removeEventListener('wheel', this._onWheel, PASSIVE);
         this._element.removeEventListener('pointerdown', this._onPointerDown);
         this._element.removeEventListener('pointermove', this._onPointerMove);
         this._element.removeEventListener('pointerup', this._onPointerUp);
