@@ -345,6 +345,9 @@ class OrbitModel extends EventHandler {
             this._position.copy(this._targetPosition);
             this._angles.copy(this._targetAngles);
             this._zoomDist = this._targetZoomDist;
+
+            this._smoothZoom(-1);
+            this._smoothTransform(-1);
         }
     }
 

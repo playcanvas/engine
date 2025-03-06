@@ -173,6 +173,8 @@ class FlyModel extends EventHandler {
 
         this._position.copy(this._targetPosition);
         this._angles.copy(this._targetAngles);
+
+        this._smoothTransform(-1);
     }
 
     detach() {
