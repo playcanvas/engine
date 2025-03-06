@@ -1,9 +1,10 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
-import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
-import { EventHandler } from '../../core/event-handler.js';
+import { Model } from './model.js';
+
+/** @import { Mat4 } from '../../core/math/mat4.js'; */
 
 /**
  * @typedef {object} FlyInputFrame
@@ -24,7 +25,7 @@ const tmpQ1 = new Quat();
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
-class FlyModel extends EventHandler {
+class FlyModel extends Model {
     /**
      * @private
      * @type {Vec3}
@@ -48,12 +49,6 @@ class FlyModel extends EventHandler {
      * @type {Vec3}
      */
     _angles = new Vec3();
-
-    /**
-     * @type {Mat4}
-     * @private
-     */
-    _transform = new Mat4();
 
     /**
      * @type {Vec2}

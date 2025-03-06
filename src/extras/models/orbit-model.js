@@ -5,7 +5,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Plane } from '../../core/shape/plane.js';
-import { EventHandler } from '../../core/event-handler.js';
+import { Model } from './model.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -34,7 +34,7 @@ const EPSILON = 0.001;
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
-class OrbitModel extends EventHandler {
+class OrbitModel extends Model {
     /**
      * @type {boolean}
      * @private
@@ -88,12 +88,6 @@ class OrbitModel extends EventHandler {
      * @private
      */
     _rootTransform = new Mat4();
-
-    /**
-     * @type {Mat4}
-     * @private
-     */
-    _transform = new Mat4();
 
     /**
      * @type {Vec2}
