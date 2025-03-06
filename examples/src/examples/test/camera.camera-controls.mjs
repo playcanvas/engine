@@ -96,7 +96,7 @@ class CameraControls {
     _model;
 
     /**
-     * @type {string}
+     * @type {CameraControls.MODE_ORBIT|CameraControls.MODE_FLY}
      * @private
      */
     _mode;
