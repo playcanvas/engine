@@ -376,6 +376,15 @@ class CameraControls {
     }
 
     /**
+     * @param {Mat4} transform - The transform.
+     * @private
+     */
+    _updateTransform(transform) {
+        this._camera.entity.setPosition(transform.getTranslation());
+        this._camera.entity.setEulerAngles(transform.getEulerAngles());
+    }
+
+    /**
      * @param {EventHandler} joystick - The joystick.
      * @param {number} baseSize - The base size.
      * @param {number} stickSize - The stick size.
@@ -517,16 +526,7 @@ class CameraControls {
         // desktop input
         if (this._input instanceof KeyboardMouseInput) {
             const { key, button, mouse, wheel } = this._input.frame();
-            const [
-                forward,
-                back,
-                left,
-                right,
-                up,
-                down,
-                shift,
-                ctrl
-            ] = key;
+            const [forward, back, left, right, up, down, shift, ctrl] = key;
 
             // left mouse button, middle mouse button, mouse wheel
             const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
@@ -557,11 +557,19 @@ class CameraControls {
                     zoom: this._scaleZoom(wheel[0]),
                     pan
                 }, this._camera, dt));
-            } else {
+
+                this._updateTransform(tmpM1);
+                return;
+            }
+
+            if (this._model instanceof FlyModel) {
                 tmpM1.copy(this._model.update({
                     rotate: tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed),
                     move: this._scaleMove(tmpV1.copy(this._state.axis).normalize())
                 }, dt));
+
+                this._updateTransform(tmpM1);
+                return;
             }
         }
 
@@ -578,6 +586,9 @@ class CameraControls {
                     zoom: this._scaleZoom(pinch[0]) * this.zoomPinchSens,
                     pan
                 }, this._camera, dt));
+
+                this._updateTransform(tmpM1);
+                return;
             }
         }
 
@@ -591,6 +602,9 @@ class CameraControls {
                     rotate: tmpVa.fromArray(touch).mulScalar(this.rotateSpeed),
                     move: this._scaleMove(tmpV1.set(stick[0], 0, -stick[1]))
                 }, dt));
+
+                this._updateTransform(tmpM1);
+                return;
             }
 
             // fly mobile (joystick x2)
@@ -601,11 +615,10 @@ class CameraControls {
                     rotate: tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens),
                     move: this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1]))
                 }, dt));
+
+                this._updateTransform(tmpM1);
             }
         }
-
-        this._camera.entity.setPosition(tmpM1.getTranslation());
-        this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
     }
 
     destroy() {
