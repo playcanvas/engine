@@ -3,6 +3,7 @@ import { now } from '../../core/time.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
+import { Quat } from '../../core/math/quat.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
@@ -79,6 +80,7 @@ const _haltonSequence = [
     new Vec2(0.03125, 0.592593)
 ];
 
+const _tempVec3 = new Vec3();
 const _tempProjMat0 = new Mat4();
 const _tempProjMat1 = new Mat4();
 const _tempProjMat2 = new Mat4();
@@ -566,11 +568,45 @@ class Renderer {
     }
 
     updateCameraFrustum(camera) {
-
         if (camera.xr && camera.xr.views.list.length) {
             // calculate frustum based on XR view
             const view = camera.xr.views.list[0];
-            viewProjMat.mul2(view.projMat, view.viewOffMat);
+
+            if (camera.xr.views.list.length > 1) {
+                // construct frustum based on two views: left & right eyes
+                const viewOther = camera.xr.views.list[1];
+                const m = _tempProjMat1;
+                const v = _tempVec3;
+
+                // construct an average view matrix
+                m.add2(view.viewOffMat, viewOther.viewOffMat);
+                // right
+                v.set(m.data[0], m.data[1], m.data[2]).normalize();
+                m.data[0] = v.x; m.data[1] = v.y; m.data[2] = v.z;
+                // up
+                v.set(m.data[4], m.data[5], m.data[6]).normalize();
+                m.data[4] = v.x; m.data[5] = v.y; m.data[6] = v.z;
+                // forward
+                v.set(m.data[8], m.data[9], m.data[10]).normalize();
+                m.data[8] = v.x; m.data[9] = v.y; m.data[10] = v.z;
+                // position
+                m.data[12] /= 2;
+                m.data[13] /= 2;
+                m.data[14] /= 2;
+                m.data[15] = 1;
+
+                // offset view slightly backwards
+                _tempVec3.set(0, 0, 1);
+                camera._node.getRotation().transformVector(_tempVec3, _tempVec3); // rotate vector relative to camera
+                _tempProjMat0.setTRS(_tempVec3, Quat.IDENTITY, Vec3.ONE).invert();
+                m.mul(_tempProjMat0);
+
+                // make view projection matrix
+                viewProjMat.mul2(view.projMat, m);
+            } else {
+                viewProjMat.mul2(view.projMat, view.viewOffMat);
+            }
+
             camera.frustum.setFromMat4(viewProjMat);
             return;
         }
