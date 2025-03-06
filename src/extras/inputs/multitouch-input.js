@@ -23,12 +23,6 @@ class MultiTouchInput extends Input {
      * @type {number}
      * @private
      */
-    _touches = 0;
-
-    /**
-     * @type {number}
-     * @private
-     */
     _pinchDist = -1;
 
     /**
@@ -68,8 +62,8 @@ class MultiTouchInput extends Input {
 
         this._pointerEvents.set(event.pointerId, event);
 
-        this._touches = this._pointerEvents.size;
-        if (this._touches > 1) {
+        this.deltas.count.add([1]);
+        if (this._pointerEvents.size > 1) {
             // pan
             this._getMidPoint(this._pointerPos);
 
@@ -91,8 +85,7 @@ class MultiTouchInput extends Input {
         }
         this._pointerEvents.set(event.pointerId, event);
 
-        this._touches = this._pointerEvents.size;
-        if (this._touches > 1) {
+        if (this._pointerEvents.size > 1) {
             // pan
             const mid = this._getMidPoint(tmpVa);
             this.deltas.touch.add([mid.x - this._pointerPos.x, mid.y - this._pointerPos.y]);
@@ -118,8 +111,8 @@ class MultiTouchInput extends Input {
 
         this._pointerEvents.delete(event.pointerId);
 
-        this._touches = this._pointerEvents.size;
-        if (this._touches < 2) {
+        this.deltas.count.add([-1]);
+        if (this._pointerEvents.size < 2) {
             this._pinchDist = -1;
         }
 
@@ -168,7 +161,6 @@ class MultiTouchInput extends Input {
         this._element.addEventListener('pointerdown', this._onPointerDown);
         this._element.addEventListener('pointermove', this._onPointerMove);
         this._element.addEventListener('pointerup', this._onPointerUp);
-        this._element.addEventListener('pointerout', this._onPointerUp);
         this._element.addEventListener('contextmenu', this._onContextMenu);
     }
 
@@ -180,7 +172,6 @@ class MultiTouchInput extends Input {
         this._element.removeEventListener('pointerdown', this._onPointerDown);
         this._element.removeEventListener('pointermove', this._onPointerMove);
         this._element.removeEventListener('pointerup', this._onPointerUp);
-        this._element.removeEventListener('pointerout', this._onPointerUp);
         this._element.removeEventListener('contextmenu', this._onContextMenu);
 
         this._pointerEvents.clear();
@@ -193,8 +184,6 @@ class MultiTouchInput extends Input {
      * @returns {{ [K in keyof MultiTouchInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
-        this.deltas.count.add([+this._touches]);
-
         return super.frame();
     }
 }

@@ -102,14 +102,15 @@ class CameraControls {
     _mode;
 
     /**
-     * @type {{ axis: Vec3, shift: number, ctrl: number, mouse: number[] }}
+     * @type {{ axis: Vec3, shift: number, ctrl: number, mouse: number[], touches: 0 }}
      * @private
      */
     _state = {
         axis: new Vec3(),
         shift: 0,
         ctrl: 0,
-        mouse: [0, 0, 0]
+        mouse: [0, 0, 0],
+        touches: 0
     };
 
     /**
@@ -299,6 +300,7 @@ class CameraControls {
             this._state.shift = 0;
             this._state.ctrl = 0;
             this._state.mouse.fill(0);
+            this._state.touches = 0;
         }
 
         // model reattach
@@ -570,8 +572,9 @@ class CameraControls {
             // orbit mobile
             if (this._input instanceof MultiTouchInput) {
                 const { touch, pinch, count } = this._input.frame();
+                this._state.touches += count[0];
 
-                const pan = count[0] > 1 && this.enablePanning;
+                const pan = this._state.touches > 1 && this.enablePanning;
                 tmpM1.copy(this._model.update({
                     drag: tmpVa.fromArray(touch).mulScalar(pan ? 1 : this.rotateSpeed),
                     zoom: this._scaleZoom(pinch[0]) * this.zoomPinchSens,
