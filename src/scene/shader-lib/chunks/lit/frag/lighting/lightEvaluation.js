@@ -78,7 +78,7 @@ export default /* glsl */`
             #if LIGHT{i}SHAPE == RECT
                 dAttenD = getRectLightDiffuse(litArgs_worldNormal, dViewDirW, dLightDirW, dLightDirNormW) * 16.0;
             #elif LIGHT{i}SHAPE == DISK
-                dAttenD = get$DiskLightDiffuse(litArgs_worldNormal, dViewDirW, dLightDirW, dLightDirNormW) * 16.0;
+                dAttenD = getDiskLightDiffuse(litArgs_worldNormal, dViewDirW, dLightDirW, dLightDirNormW) * 16.0;
             #elif LIGHT{i}SHAPE == SPHERE
                 dAttenD = getSphereLightDiffuse(litArgs_worldNormal, dViewDirW, dLightDirW, dLightDirNormW) * 16.0;
             #endif
