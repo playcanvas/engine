@@ -71,7 +71,7 @@ export default /* glsl */`
     // diffuse lighting - LTC lights do not mix diffuse lighting into attenuation that affects specular
     #if LIGHT{i}SHAPE != PUNCTUAL
         #if LIGHT{i}TYPE == DIRECTIONAL
-            // NB: A better aproximation perhaps using wrap lighting could be implemented here
+            // NB: A better approximation perhaps using wrap lighting could be implemented here
             dAttenD = getLightDiffuse(litArgs_worldNormal, dViewDirW, dLightDirW, dLightDirNormW);
         #else
             // 16.0 is a constant that is in getFalloffInvSquared()
