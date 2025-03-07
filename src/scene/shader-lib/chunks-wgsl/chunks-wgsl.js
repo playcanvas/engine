@@ -64,6 +64,8 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import lightDeclarationPS from './lit/frag/lightDeclaration.js';
 // import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 // import lightDirPointPS from './lit/frag/lightDirPoint.js';
+// import lightEvaluationPS from './lit/frag/lighting/lightEvaluation.js';
+// import lightFunctionPS from './lit/frag/lighting/lightFunction.js';
 // import lightingPS from './lit/frag/lighting/lighting.js';
 // import lightmapAddPS from './lit/frag/lightmapAdd.js';
 // import lightmapDirPS from './standard/frag/lightmapDir.js';
@@ -153,7 +155,6 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import shadowPCF3PS from './lit/frag/shadowPCF3.js';
 // import shadowPCF5PS from './lit/frag/shadowPCF5.js';
 // import shadowPCSSPS from './lit/frag/shadowPCSS.js';
-// import shadowSampleCoordPS from './lit/frag/shadowSampleCoord.js';
 // import shadowSoftPS from './lit/frag/shadowSoft.js';
 // import skinBatchVS from './common/vert/skinBatch.js';
 // import skinVS from './common/vert/skin.js';
@@ -264,6 +265,8 @@ const shaderChunksWGSL = {
     // lightDeclarationPS,
     // lightDiffuseLambertPS,
     // lightDirPointPS,
+    // lightEvaluationPS,
+    // lightFunctionPS,
     // lightingPS,
     // lightmapAddPS,
     // lightmapDirPS,
@@ -353,7 +356,6 @@ const shaderChunksWGSL = {
     // shadowPCF3PS
     // shadowPCF5PS,
     // shadowPCSSPS,
-    // shadowSampleCoordPS,
     // shadowSoftPS,
     // skinBatchVS,
     // skinVS,

@@ -306,6 +306,11 @@ export const LIGHTFALLOFF_LINEAR = 0;
  */
 export const LIGHTFALLOFF_INVERSESQUARED = 1;
 
+export const lightFalloffNames = {
+    [LIGHTFALLOFF_LINEAR]: 'LINEAR',
+    [LIGHTFALLOFF_INVERSESQUARED]: 'INVERSESQUARED'
+};
+
 /**
  * A shadow sampling technique using 32bit shadow map that averages depth comparisons from a 3x3
  * grid of texels for softened shadow edges.

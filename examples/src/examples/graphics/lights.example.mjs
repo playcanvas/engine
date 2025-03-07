@@ -106,10 +106,13 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputTouch');
 
     // ground material
-    const material = createMaterial({
-        ambient: pc.Color.GRAY,
-        diffuse: pc.Color.GRAY
-    });
+    const material = new pc.StandardMaterial();
+    material.diffuse = pc.Color.GRAY;
+    material.ambient = pc.Color.GRAY;
+    material.gloss = 0.5;
+    material.metalness = 0.5;
+    material.useMetalness = true;
+    material.update();
 
     // Create an Entity for the ground
     const ground = new pc.Entity();

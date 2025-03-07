@@ -469,6 +469,7 @@ class Preprocessor {
                         } else {
                             console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`, { source: originalSource });
                             error = true;
+                            continue;
                         }
                     }
 
