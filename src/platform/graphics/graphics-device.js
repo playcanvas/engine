@@ -494,6 +494,7 @@ class GraphicsDevice extends EventHandler {
         const { capsDefines } = this;
         capsDefines.clear();
         if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
+        if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
     }
 
     /**

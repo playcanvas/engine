@@ -74,8 +74,15 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 // import lightSheenPS from './lit/frag/lightSheen.js';
 // import linearizeDepthPS from './common/frag/linearizeDepth.js';
+// import litForwardBackendPS from './lit/frag/main/litBackend.js';
+// import litForwardDeclarationPS from './lit/frag/main/litForwardDeclaration.js';
+// import litForwardMainPS from './lit/frag/main/litForwardMain.js';
+// import litForwardPostCodePS from './lit/frag/main-forward/litForwardPostCode.js';
+// import litForwardPreCodePS from './lit/frag/main-forward/litForwardPreCode.js';
 // import litMainVS from './lit/vert/litMain.js';
+// import litOtherMainPS from './lit/frag/pass-other/litOtherMain.js';
 // import litShaderArgsPS from './standard/frag/litShaderArgs.js';
+// import litShadowMainPS from './lit/frag/pass-shadow/litShadowMain.js';
 // import ltcPS from './lit/frag/ltc.js';
 // import metalnessPS from './standard/frag/metalness.js';
 // import msdfPS from './common/frag/msdf.js';
@@ -275,8 +282,15 @@ const shaderChunksWGSL = {
     // lightSpecularBlinnPS,
     // lightSheenPS,
     // linearizeDepthPS,
+    // litForwardBackendPS,
+    // litForwardDeclarationPS,
+    // litForwardPSMain,
+    // litForwardPostCodePS,
+    // litForwardPreCodePS,
     // litMainVS,
+    // litOtherMainPS,
     // litShaderArgsPS,
+    // litShadowMainPS,
     // ltcPS,
     // metalnessPS,
     // metalnessModulatePS,
