@@ -41,6 +41,9 @@ class JoystickTouchInput extends Input {
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerDown(event) {
+        if (event.pointerType !== 'touch') {
+            return;
+        }
         this._element?.setPointerCapture(event.pointerId);
 
         const left = event.clientX < window.innerWidth * 0.5;
@@ -61,6 +64,9 @@ class JoystickTouchInput extends Input {
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerMove(event) {
+        if (event.pointerType !== 'touch') {
+            return;
+        }
         if (event.target !== this._element) {
             return;
         }
@@ -85,6 +91,9 @@ class JoystickTouchInput extends Input {
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerUp(event) {
+        if (event.pointerType !== 'touch') {
+            return;
+        }
         this._element?.releasePointerCapture(event.pointerId);
 
         const data = this._pointerData.get(event.pointerId);

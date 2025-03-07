@@ -61,6 +61,9 @@ class KeyboardMouseInput extends Input {
      * @private
      */
     _onPointerDown(event) {
+        if (event.pointerType !== 'mouse') {
+            return;
+        }
         this._element?.setPointerCapture(event.pointerId);
         if (this._pointerId) {
             return;
@@ -77,6 +80,9 @@ class KeyboardMouseInput extends Input {
      * @private
      */
     _onPointerMove(event) {
+        if (event.pointerType !== 'mouse') {
+            return;
+        }
         if (event.target !== this._element) {
             return;
         }
@@ -91,6 +97,9 @@ class KeyboardMouseInput extends Input {
      * @private
      */
     _onPointerUp(event) {
+        if (event.pointerType !== 'mouse') {
+            return;
+        }
         this._element?.releasePointerCapture(event.pointerId);
 
         if (this._pointerId !== event.pointerId) {

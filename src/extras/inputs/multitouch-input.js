@@ -45,6 +45,9 @@ class MultiTouchInput extends Input {
      * @private
      */
     _onPointerDown(event) {
+        if (event.pointerType !== 'touch') {
+            return;
+        }
         this._element?.setPointerCapture(event.pointerId);
 
         this._pointerEvents.set(event.pointerId, event);
@@ -64,6 +67,9 @@ class MultiTouchInput extends Input {
      * @private
      */
     _onPointerMove(event) {
+        if (event.pointerType !== 'touch') {
+            return;
+        }
         if (event.target !== this._element) {
             return;
         }
@@ -94,6 +100,9 @@ class MultiTouchInput extends Input {
      * @private
      */
     _onPointerUp(event) {
+        if (event.pointerType !== 'touch') {
+            return;
+        }
         this._element?.releasePointerCapture(event.pointerId);
 
         this._pointerEvents.delete(event.pointerId);
