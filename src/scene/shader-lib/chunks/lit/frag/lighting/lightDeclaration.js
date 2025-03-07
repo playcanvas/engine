@@ -7,10 +7,16 @@ export default /* glsl */`
     #if LIGHT{i}TYPE == DIRECTIONAL
         uniform vec3 light{i}_direction;
     #else
+
+        #define LIT_CODE_LIGHTS_POINT // include functionality for point lights
+
         uniform vec3 light{i}_position;
         uniform float light{i}_radius;
 
         #if LIGHT{i}TYPE == SPOT
+
+            #define LIT_CODE_LIGHTS_SPOT // include functionality for spot lights
+
             uniform vec3 light{i}_direction;
             uniform float light{i}_innerConeAngle;
             uniform float light{i}_outerConeAngle;
@@ -19,11 +25,24 @@ export default /* glsl */`
 
     // area lights
     #if LIGHT{i}SHAPE != PUNCTUAL
+
+        #define LIT_CODE_FALLOFF_SQUARED // include functionality for inverse squared falloff
+
         #if LIGHT{i}TYPE == DIRECTIONAL
             uniform vec3 light{i}_position;
         #endif
         uniform vec3 light{i}_halfWidth;
         uniform vec3 light{i}_halfHeight;
+    #else
+
+        #if LIGHT{i}FALLOFF == LINEAR
+            #define LIT_CODE_FALLOFF_LINEAR // include functionality for linear falloff
+        #endif
+
+        #if LIGHT{i}FALLOFF == INVERSESQUARED
+            #define LIT_CODE_FALLOFF_SQUARED // include functionality for inverse squared falloff
+        #endif
+
     #endif
 
     // shadow casting
@@ -67,25 +86,26 @@ export default /* glsl */`
 
     // cookie
     #if defined(LIGHT{i}COOKIE)
-        #if defined(LIGHT{i}COOKIE_CUBEMAP)
-            #if LIGHT{i}TYPE == OMNI
-                uniform samplerCube light{i}_cookie;
-                uniform float light{i}_cookieIntensity;
-                #if !defined(LIGHT{i}CASTSHADOW)
-                    uniform mat4 light{i}_shadowMatrix;
-                #endif
+
+        #define LIT_CODE_COOKIE // include functionality for cookies
+
+        #if LIGHT{i}TYPE == OMNI
+            uniform samplerCube light{i}_cookie;
+            uniform float light{i}_cookieIntensity;
+            #if !defined(LIGHT{i}CASTSHADOW)
+                uniform mat4 light{i}_shadowMatrix;
             #endif
-        #else
-            #if LIGHT{i}TYPE == SPOT
-                uniform sampler2D light{i}_cookie;
-                uniform float light{i}_cookieIntensity;
-                #if !defined(LIGHT{i}CASTSHADOW)
-                    uniform mat4 light{i}_shadowMatrix;
-                #endif
-                #if defined(LIGHT{i}COOKIE_TRANSFORM)
-                    uniform vec4 light{i}_cookieMatrix;
-                    uniform vec2 light{i}_cookieOffset;
-                #endif
+        #endif
+
+        #if LIGHT{i}TYPE == SPOT
+            uniform sampler2D light{i}_cookie;
+            uniform float light{i}_cookieIntensity;
+            #if !defined(LIGHT{i}CASTSHADOW)
+                uniform mat4 light{i}_shadowMatrix;
+            #endif
+            #if defined(LIGHT{i}COOKIE_TRANSFORM)
+                uniform vec4 light{i}_cookieMatrix;
+                uniform vec2 light{i}_cookieOffset;
             #endif
         #endif
     #endif

@@ -64,6 +64,8 @@ import iorPS from './standard/frag/ior.js';
 import lightDeclarationPS from './lit/frag/lighting/lightDeclaration.js';
 import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from './lit/frag/lightDirPoint.js';
+import lightEvaluationPS from './lit/frag/lighting/lightEvaluation.js';
+import lightFunctionPS from './lit/frag/lighting/lightFunction.js';
 import lightingPS from './lit/frag/lighting/lighting.js';
 import lightmapAddPS from './lit/frag/lightmapAdd.js';
 import lightmapDirPS from './standard/frag/lightmapDir.js';
@@ -153,7 +155,6 @@ import shadowPCF1PS from './lit/frag/lighting/shadowPCF1.js';
 import shadowPCF3PS from './lit/frag/lighting/shadowPCF3.js';
 import shadowPCF5PS from './lit/frag/lighting/shadowPCF5.js';
 import shadowPCSSPS from './lit/frag/lighting/shadowPCSS.js';
-import shadowSampleCoordPS from './lit/frag/lighting/shadowSampleCoord.js';
 import shadowSoftPS from './lit/frag/lighting/shadowSoft.js';
 import skinBatchVS from './common/vert/skinBatch.js';
 import skinVS from './common/vert/skin.js';
@@ -263,6 +264,8 @@ const shaderChunks = {
     lightDeclarationPS,
     lightDiffuseLambertPS,
     lightDirPointPS,
+    lightEvaluationPS,
+    lightFunctionPS,
     lightingPS,
     lightmapAddPS,
     lightmapDirPS,
@@ -352,7 +355,6 @@ const shaderChunks = {
     shadowPCF3PS,
     shadowPCF5PS,
     shadowPCSSPS,
-    shadowSampleCoordPS,
     shadowSoftPS,
     skinBatchVS,
     skinVS,
