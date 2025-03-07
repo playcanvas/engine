@@ -306,6 +306,11 @@ export const LIGHTFALLOFF_LINEAR = 0;
  */
 export const LIGHTFALLOFF_INVERSESQUARED = 1;
 
+export const lightFalloffNames = {
+    [LIGHTFALLOFF_LINEAR]: 'LINEAR',
+    [LIGHTFALLOFF_INVERSESQUARED]: 'INVERSESQUARED'
+};
+
 /**
  * A shadow sampling technique using 32bit shadow map that averages depth comparisons from a 3x3
  * grid of texels for softened shadow edges.
@@ -741,6 +746,38 @@ export const SPECOCC_AO = 1;
  * @category Graphics
  */
 export const SPECOCC_GLOSSDEPENDENT = 2;
+
+export const specularOcclusionNames = {
+    [SPECOCC_NONE]: 'NONE',
+    [SPECOCC_AO]: 'AO',
+    [SPECOCC_GLOSSDEPENDENT]: 'GLOSSDEPENDENT'
+};
+
+// reflection source used by the shader generation
+export const REFLECTIONSRC_NONE = 'none';
+export const REFLECTIONSRC_ENVATLAS = 'envAtlas';
+export const REFLECTIONSRC_ENVATLASHQ = 'envAtlasHQ';
+export const REFLECTIONSRC_CUBEMAP = 'cubeMap';
+export const REFLECTIONSRC_SPHEREMAP = 'sphereMap';
+
+export const reflectionSrcNames = {
+    [REFLECTIONSRC_NONE]: 'NONE',
+    [REFLECTIONSRC_ENVATLAS]: 'ENVATLAS',
+    [REFLECTIONSRC_ENVATLASHQ]: 'ENVATLASHQ',
+    [REFLECTIONSRC_CUBEMAP]: 'CUBEMAP',
+    [REFLECTIONSRC_SPHEREMAP]: 'SPHEREMAP'
+};
+
+// ambient source used by the shader generation
+export const AMBIENTSRC_AMBIENTSH = 'ambientSH';
+export const AMBIENTSRC_ENVALATLAS = 'envAtlas';
+export const AMBIENTSRC_CONSTANT = 'constant';
+
+export const ambientSrcNames = {
+    [AMBIENTSRC_AMBIENTSH]: 'AMBIENTSH',
+    [AMBIENTSRC_ENVALATLAS]: 'ENVALATLAS',
+    [AMBIENTSRC_CONSTANT]: 'CONSTANT'
+};
 
 // 16 bits for shader defs
 export const SHADERDEF_NOSHADOW = 1;

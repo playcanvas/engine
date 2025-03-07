@@ -52,7 +52,7 @@ float getShadowSpotPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 sh
 
 #ifndef WEBGPU
 
-float getShadowPointPCF3x3(samplerCubeShadow shadowMap, vec4 shadowParams, vec3 dir) {
+float getShadowOmniPCF3x3(samplerCubeShadow shadowMap, vec4 shadowParams, vec3 dir) {
     
     // Calculate shadow depth from the light direction
     float shadowZ = length(dir) * shadowParams.w + shadowParams.z;
@@ -71,8 +71,8 @@ float getShadowPointPCF3x3(samplerCubeShadow shadowMap, vec4 shadowParams, vec3 
     return dot(shadows, vec4(0.25));
 }
 
-float getShadowPointPCF3x3(samplerCubeShadow shadowMap, vec3 shadowCoord, vec4 shadowParams, vec3 lightDir) {
-    return getShadowPointPCF3x3(shadowMap, shadowParams, lightDir);
+float getShadowOmniPCF3x3(samplerCubeShadow shadowMap, vec3 shadowCoord, vec4 shadowParams, vec3 lightDir) {
+    return getShadowOmniPCF3x3(shadowMap, shadowParams, lightDir);
 }
 
 #endif

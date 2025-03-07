@@ -1,4 +1,8 @@
 export default /* glsl */`
+
+#ifndef _ENVATLAS_INCLUDED_
+#define _ENVATLAS_INCLUDED_
+
 // the envAtlas is fixed at 512 pixels. every equirect is generated with 1 pixel boundary.
 const float atlasSize = 512.0;
 const float seamSize = 1.0 / atlasSize;
@@ -20,4 +24,6 @@ vec2 mapShinyUv(vec2 uv, float level) {
     float t = 1.0 / exp2(level);
     return mapUv(uv, vec4(1.0 - t, 1.0 - t, t, t * 0.5));
 }
+
+#endif
 `;

@@ -31,15 +31,8 @@ const chunkVersions = {
 
     // backend
     normalVertexPS: CHUNKAPI_1_55,
-
-    ambientConstantPS: CHUNKAPI_1_62,
-    ambientEnvPS: CHUNKAPI_1_62,
-    ambientSHPS: CHUNKAPI_1_62,
     aoDiffuseOccPS: CHUNKAPI_1_62,
-    aoSpecOccPS: CHUNKAPI_1_62,
-    aoSpecOccConstPS: CHUNKAPI_1_62,
-    aoSpecOccConstSimplePS: CHUNKAPI_1_62,
-    aoSpecOccSimplePS: CHUNKAPI_1_62,
+    aoSpecOccPS: CHUNKAPI_2_6,
     clusteredLightPS: CHUNKAPI_1_62,
     clusteredLightShadowPS: CHUNKAPI_1_62,
     combinePS: CHUNKAPI_1_62,
@@ -53,11 +46,11 @@ const chunkVersions = {
     reflDirPS: CHUNKAPI_1_62,
     reflDirAnisoPS: CHUNKAPI_1_62,
     reflectionCCPS: CHUNKAPI_1_62,
-    reflectionCubePS: CHUNKAPI_1_62,
-    reflectionEnvPS: CHUNKAPI_1_62,
-    reflectionEnvHQPS: CHUNKAPI_1_62,
+    reflectionCubePS: CHUNKAPI_2_6,
+    reflectionEnvPS: CHUNKAPI_2_6,
+    reflectionEnvHQPS: CHUNKAPI_2_6,
+    reflectionSpherePS: CHUNKAPI_2_6,
     reflectionSheenPS: CHUNKAPI_1_62,
-    reflectionSpherePS: CHUNKAPI_1_62,
     shadowCommonPS: CHUNKAPI_1_62,
     shadowCoordPS: CHUNKAPI_1_62,
     shadowCoordPerspZBufferPS: CHUNKAPI_1_62,
@@ -124,7 +117,16 @@ const removedChunks = {
     outputAlphaOpaque: CHUNKAPI_2_6,
     outputAlphaPremul: CHUNKAPI_2_6,
     cubeMapProjectBoxPS: CHUNKAPI_2_6,
-    cubeMapProjectNonePS: CHUNKAPI_2_6
+    cubeMapProjectNonePS: CHUNKAPI_2_6,
+    envMultiplyPS: CHUNKAPI_2_6,
+    envConstPS: CHUNKAPI_2_6,
+    aoSpecOccConstPS: CHUNKAPI_2_6,
+    aoSpecOccConstSimplePS: CHUNKAPI_2_6,
+    aoSpecOccSimplePS: CHUNKAPI_2_6,
+    ambientConstantPS: CHUNKAPI_2_6,
+    ambientEnvPS: CHUNKAPI_2_6,
+    ambientSHPS: CHUNKAPI_2_6,
+    shadowSampleCoordPS: CHUNKAPI_2_6
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
