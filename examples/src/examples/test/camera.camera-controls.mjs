@@ -1,5 +1,4 @@
 import {
-    platform,
     FlyModel,
     JoystickDoubleInput,
     JoystickTouchInput,
@@ -60,6 +59,12 @@ class CameraControls {
     _desktopInput;
 
     /**
+     * @type {JoystickDoubleInput | JoystickTouchInput | MultiTouchInput}
+     * @private
+     */
+    _mobileInput;
+
+    /**
      * @type {MultiTouchInput}
      * @private
      */
@@ -70,12 +75,6 @@ class CameraControls {
      * @private
      */
     _flyMobileInput;
-
-    /**
-     * @type {KeyboardMouseInput|JoystickDoubleInput|JoystickTouchInput|MultiTouchInput}
-     * @private
-     */
-    _input;
 
     /**
      * @type {FlyModel}
@@ -243,8 +242,8 @@ class CameraControls {
             return;
         }
 
-        // mode validation
         if (this.mode) {
+            // validate mode switch
             if (mode === CameraControls.MODE_FLY && !this.enableFly) {
                 return;
             }
@@ -254,6 +253,7 @@ class CameraControls {
 
             this._mode = mode;
         } else {
+            // set initial mode
             switch (true) {
                 case this.enableFly && this.enableOrbit: {
                     this._mode = mode;
@@ -272,28 +272,19 @@ class CameraControls {
                     return;
                 }
             }
+
+            // desktop input attach
+            this._desktopInput.attach(this._app.graphicsDevice.canvas);
         }
 
-        // determine input and model
-        let input, model;
-        if (this._mode === CameraControls.MODE_FLY) {
-            input = platform.mobile ? this._flyMobileInput : this._desktopInput;
-            model = this._flyModel;
-        } else {
-            input = platform.mobile ? this._orbitMobileInput : this._desktopInput;
-            model = this._orbitModel;
-        }
-
-        // NOTE: save zoom as attach will reset it
-        const currZoomDist = this._orbitModel.zoom;
-
-        // input reattach
-        if (input !== this._input) {
-            if (this._input) {
-                this._input.detach();
+        // mobile input reattach
+        const mobileInput = this._mode === CameraControls.MODE_FLY ? this._flyMobileInput : this._orbitMobileInput;
+        if (mobileInput !== this._mobileInput) {
+            if (this._mobileInput) {
+                this._mobileInput.detach();
             }
-            this._input = input;
-            this._input.attach(this._app.graphicsDevice.canvas);
+            this._mobileInput = mobileInput;
+            this._mobileInput.attach(this._app.graphicsDevice.canvas);
 
             // reset state
             this._state.axis.set(0, 0, 0);
@@ -304,6 +295,8 @@ class CameraControls {
         }
 
         // model reattach
+        const model = this._mode === CameraControls.MODE_FLY ? this._flyModel : this._orbitModel;
+        const currZoomDist = this._orbitModel.zoom;
         if (model !== this._model) {
             if (this._model) {
                 this._model.detach();
@@ -523,9 +516,17 @@ class CameraControls {
             return;
         }
 
-        // desktop input
-        if (this._input instanceof KeyboardMouseInput) {
-            const { key, button, mouse, wheel } = this._input.frame();
+        // desktop
+        const move = new Vec3();
+        const rotate = new Vec2();
+
+        // mobile
+        const drag = new Vec2();
+        let zoom = 0;
+        let pan = false;
+
+        if (this._desktopInput instanceof KeyboardMouseInput) {
+            const { key, button, mouse, wheel } = this._desktopInput.frame();
             const [forward, back, left, right, up, down, shift, ctrl] = key;
 
             // left mouse button, middle mouse button, mouse wheel
@@ -549,75 +550,50 @@ class CameraControls {
                 this._state.mouse[i] += button[i];
             }
 
-            if (this._model instanceof OrbitModel) {
-                // pan shift or middle mouse button
-                const pan = (!!this._state.shift || !!this._state.mouse[1]) && this.enablePanning;
-                tmpM1.copy(this._model.update({
-                    drag: tmpVa.fromArray(mouse).mulScalar(pan ? 1 : this.rotateSpeed),
-                    zoom: this._scaleZoom(wheel[0]),
-                    pan
-                }, this._camera, dt));
+            move.add(this._scaleMove(tmpV1.copy(this._state.axis).normalize()));
+            rotate.add(tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed));
 
-                this._updateTransform(tmpM1);
-                return;
-            }
-
-            if (this._model instanceof FlyModel) {
-                tmpM1.copy(this._model.update({
-                    rotate: tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed),
-                    move: this._scaleMove(tmpV1.copy(this._state.axis).normalize())
-                }, dt));
-
-                this._updateTransform(tmpM1);
-                return;
-            }
+            const _pan = (!!this._state.shift || !!this._state.mouse[1]) && this.enablePanning;
+            drag.add(tmpVa.fromArray(mouse).mulScalar(_pan ? 1 : this.rotateSpeed));
+            zoom += this._scaleZoom(wheel[0]);
+            pan ||= _pan;
         }
 
-        // orbit only input
+        if (this._mobileInput instanceof MultiTouchInput) {
+            const { touch, pinch, count } = this._mobileInput.frame();
+            this._state.touches += count[0];
+
+            const _pan = this._state.touches > 1 && this.enablePanning;
+            drag.add(tmpVa.fromArray(touch).mulScalar(_pan ? 1 : this.rotateSpeed));
+            zoom += this._scaleZoom(pinch[0]) * this.zoomPinchSens;
+            pan ||= _pan;
+        }
+
+        if (this._mobileInput instanceof JoystickTouchInput) {
+            const { stick, touch } = this._mobileInput.frame();
+
+            rotate.add(tmpVa.fromArray(touch).mulScalar(this.rotateSpeed));
+            move.add(this._scaleMove(tmpV1.set(stick[0], 0, -stick[1])));
+        }
+
+        if (this._mobileInput instanceof JoystickDoubleInput) {
+            const { leftStick, rightStick } = this._mobileInput.frame();
+
+            rotate.add(tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+            move.add(this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1])));
+        }
+
+        // orbit model
         if (this._model instanceof OrbitModel) {
-            // orbit mobile
-            if (this._input instanceof MultiTouchInput) {
-                const { touch, pinch, count } = this._input.frame();
-                this._state.touches += count[0];
-
-                const pan = this._state.touches > 1 && this.enablePanning;
-                tmpM1.copy(this._model.update({
-                    drag: tmpVa.fromArray(touch).mulScalar(pan ? 1 : this.rotateSpeed),
-                    zoom: this._scaleZoom(pinch[0]) * this.zoomPinchSens,
-                    pan
-                }, this._camera, dt));
-
-                this._updateTransform(tmpM1);
-                return;
-            }
+            tmpM1.copy(this._model.update({ drag, zoom, pan }, this._camera, dt));
+            this._updateTransform(tmpM1);
+            return;
         }
 
-        // fly only input
+        // fly model
         if (this._model instanceof FlyModel) {
-            // fly mobile (joystick + touch)
-            if (this._input instanceof JoystickTouchInput) {
-                const { stick, touch } = this._input.frame();
-
-                tmpM1.copy(this._model.update({
-                    rotate: tmpVa.fromArray(touch).mulScalar(this.rotateSpeed),
-                    move: this._scaleMove(tmpV1.set(stick[0], 0, -stick[1]))
-                }, dt));
-
-                this._updateTransform(tmpM1);
-                return;
-            }
-
-            // fly mobile (joystick x2)
-            if (this._input instanceof JoystickDoubleInput) {
-                const { leftStick, rightStick } = this._input.frame();
-
-                tmpM1.copy(this._model.update({
-                    rotate: tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens),
-                    move: this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1]))
-                }, dt));
-
-                this._updateTransform(tmpM1);
-            }
+            tmpM1.copy(this._model.update({ move, rotate }, dt));
+            this._updateTransform(tmpM1);
         }
     }
 
