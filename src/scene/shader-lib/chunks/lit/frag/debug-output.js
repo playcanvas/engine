@@ -34,4 +34,8 @@ gl_FragColor = vec4(vec3(litArgs_ao) , 1.0);
 #ifdef DEBUG_EMISSION_PASS
 gl_FragColor = vec4(gammaCorrectOutput(litArgs_emission), 1.0);
 #endif
+
+#ifdef DEBUG_ENCODED_DEPTH_PASS
+gl_FragColor = ((uvec4(floatBitsToUint(gl_FragCoord.z)) >> uvec4(0u, 8u, 16u, 24u)) & 0xffu) / 255.0;
+#endif
 `;

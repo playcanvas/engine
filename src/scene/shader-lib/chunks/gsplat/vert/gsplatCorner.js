@@ -29,6 +29,11 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
     mat3 T = W * J;
     mat3 cov = transpose(T) * Vrk * T;
 
+    // calculate AA compensation
+    float detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[0][1];
+    float detBlur = (cov[0][0] + 0.3) * (cov[1][1] + 0.3) - cov[0][1] * cov[0][1];
+    corner.compensation = sqrt(max(detOrig / detBlur, 0.0));
+
     float diagonal1 = cov[0][0] + 0.3;
     float offDiagonal = cov[0][1];
     float diagonal2 = cov[1][1] + 0.3;
