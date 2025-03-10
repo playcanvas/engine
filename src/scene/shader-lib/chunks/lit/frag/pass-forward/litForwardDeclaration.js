@@ -12,13 +12,13 @@ vec3 ccReflDirW;
 
 // Per-light temporaries
 vec3 dLightDirNormW;
+float dAtten;
 
 // Outputs
 mat3 dTBN;
 vec4 dReflection;
 vec3 dDiffuseLight;
 vec3 dSpecularLight;
-float dAtten;
 float ccFresnel;
 vec3 ccReflection;
 vec3 ccSpecularLight;
