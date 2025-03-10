@@ -1,5 +1,6 @@
 import {
     FlyModel,
+    GamepadInput,
     JoystickDoubleInput,
     JoystickTouchInput,
     KeyboardMouseInput,
@@ -75,6 +76,12 @@ class CameraControls {
      * @private
      */
     _flyMobileInput;
+
+    /**
+     * @type {GamepadInput}
+     * @private
+     */
+    _gamepadInput;
 
     /**
      * @type {FlyModel}
@@ -173,6 +180,16 @@ class CameraControls {
     zoomScaleMin;
 
     /**
+     * @type {number}
+     */
+    gamepadDeadZoneLow = 0.3;
+
+    /**
+     * @type {number}
+     */
+    gamepadDeadZoneHigh = 0.6;
+
+    /**
      * @param {Object} options - The options.
      * @param {AppBase} options.app - The application.
      * @param {CameraComponent} options.camera - The camera.
@@ -192,6 +209,7 @@ class CameraControls {
         this._desktopInput = new KeyboardMouseInput();
         this._orbitMobileInput = new MultiTouchInput();
         this._flyMobileInput = doubleStick ? new JoystickDoubleInput() : new JoystickTouchInput();
+        this._gamepadInput = new GamepadInput();
 
         // models
         this._flyModel = new FlyModel();
@@ -275,6 +293,9 @@ class CameraControls {
 
             // desktop input attach
             this._desktopInput.attach(this._app.graphicsDevice.canvas);
+
+            // gamepad input attach
+            this._gamepadInput.attach(this._app.graphicsDevice.canvas);
         }
 
         // mobile input reattach
@@ -431,6 +452,20 @@ class CameraControls {
     }
 
     /**
+     * @param {Vec2} stick - The stick
+     * @returns {Vec2} The remapped stick.
+     * @private
+     */
+    _applyDeadZone(stick) {
+        const mag = stick.length();
+        if (mag < this.gamepadDeadZoneLow) {
+            return stick.set(0, 0);
+        }
+        const scale = (mag - this.gamepadDeadZoneLow) / (this.gamepadDeadZoneHigh - this.gamepadDeadZoneLow);
+        return stick.normalize().mulScalar(scale);
+    }
+
+    /**
      * @param {Vec3} move - The move delta.
      * @returns {Vec3} The scaled delta.
      * @private
@@ -581,6 +616,16 @@ class CameraControls {
 
             rotate.add(tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
             move.add(this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1])));
+        }
+
+        if (this._gamepadInput instanceof GamepadInput) {
+            const { leftStick, rightStick } = this._gamepadInput.frame();
+
+            const right = this._applyDeadZone(tmpVa.set(rightStick[0], -rightStick[1]));
+            rotate.add(right.mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+
+            const left = this._applyDeadZone(tmpVa.fromArray(leftStick));
+            move.add(this._scaleMove(tmpV1.set(left.x, 0, left.y)));
         }
 
         // orbit model

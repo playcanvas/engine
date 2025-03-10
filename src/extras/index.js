@@ -32,6 +32,7 @@ export { JoystickDoubleInput } from './inputs/joystickdouble-input.js';
 export { JoystickTouchInput } from './inputs/joysticktouch-input.js';
 export { KeyboardMouseInput } from './inputs/keyboardmouse-input.js';
 export { MultiTouchInput } from './inputs/multitouch-input.js';
+export { GamepadInput } from './inputs/gamepad-input.js';
 
 // MODELS
 export { FlyModel } from './models/fly-model.js';
