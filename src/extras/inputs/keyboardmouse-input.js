@@ -3,7 +3,6 @@ import { Delta, Input } from './input.js';
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
 
-const array3 = new Array(3).fill(0);
 const array8 = new Array(8).fill(0);
 
 class KeyboardMouseInput extends Input {
@@ -24,6 +23,11 @@ class KeyboardMouseInput extends Input {
      * @private
      */
     _keyNow = new Array(8).fill(0);
+
+    /**
+     * @type {number[]}
+     */
+    _button = new Array(3).fill(0);
 
     /**
      * @override
@@ -65,14 +69,21 @@ class KeyboardMouseInput extends Input {
             return;
         }
         this._element?.setPointerCapture(event.pointerId);
+
+        for (let i = 0; i < this._button.length; i++) {
+            if (this._button[i] === 1) {
+                this._button[i] = -1;
+                continue;
+            }
+            this._button[i] = 0;
+        }
+        this._button[event.button] = 1;
+        this.deltas.button.add(this._button);
+
         if (this._pointerId) {
             return;
         }
         this._pointerId = event.pointerId;
-
-        array3.fill(0);
-        array3[event.button] = 1;
-        this.deltas.button.add(array3);
     }
 
     /**
@@ -102,14 +113,19 @@ class KeyboardMouseInput extends Input {
         }
         this._element?.releasePointerCapture(event.pointerId);
 
+        for (let i = 0; i < this._button.length; i++) {
+            if (this._button[i] === 1) {
+                this._button[i] = -1;
+                continue;
+            }
+            this._button[i] = 0;
+        }
+        this.deltas.button.add(this._button);
+
         if (this._pointerId !== event.pointerId) {
             return;
         }
         this._pointerId = 0;
-
-        array3.fill(0);
-        array3[event.button] = -1;
-        this.deltas.button.add(array3);
     }
 
     /**
