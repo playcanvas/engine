@@ -12,8 +12,6 @@ vec3 ccReflDirW;
 
 // Per-light temporaries
 vec3 dLightDirNormW;
-vec3 dLightDirW;
-vec3 dLightPosW;
 
 // Outputs
 mat3 dTBN;

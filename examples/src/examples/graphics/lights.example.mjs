@@ -82,7 +82,7 @@ assetListLoader.load(() => {
 
 
 
-    app.scene.clusteredLightingEnabled = false;
+    // app.scene.clusteredLightingEnabled = false;
 
 
 

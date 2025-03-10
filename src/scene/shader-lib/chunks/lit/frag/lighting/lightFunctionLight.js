@@ -24,7 +24,8 @@ void evaluateLight{i}() {
 
     #else // omni or spot light
         
-        getLightDirPoint(light{i}_position);
+        vec3 lightDirW;
+        evalOmniLight(light{i}_position, lightDirW, dLightDirNormW);
 
         // cookie attenuation
         #if defined(LIGHT{i}COOKIE)
@@ -57,13 +58,13 @@ void evaluateLight{i}() {
         // distance falloff
         #if LIGHT{i}SHAPE == PUNCTUAL
             #if LIGHT{i}FALLOFF == LINEAR
-                dAtten = getFalloffLinear(light{i}_radius, dLightDirW);
+                dAtten = getFalloffLinear(light{i}_radius, lightDirW);
             #else
-                dAtten = getFalloffInvSquared(light{i}_radius, dLightDirW);
+                dAtten = getFalloffInvSquared(light{i}_radius, lightDirW);
             #endif
         #else
             // non punctual lights only gets the range window here
-            dAtten = getFalloffWindow(light{i}_radius, dLightDirW);
+            dAtten = getFalloffWindow(light{i}_radius, lightDirW);
         #endif
 
         if (dAtten < 0.00001) {
@@ -85,25 +86,30 @@ void evaluateLight{i}() {
 
         #if LIGHT{i}TYPE == DIRECTIONAL
             // NB: A better approximation perhaps using wrap lighting could be implemented here
-            float attenDiffuse = getLightDiffuse(litArgs_worldNormal, dViewDirW, dLightDirW, dLightDirNormW);
+            float attenDiffuse = getLightDiffuse(litArgs_worldNormal, dViewDirW, dLightDirNormW);
         #else
             // 16.0 is a constant that is in getFalloffInvSquared()
             #if LIGHT{i}SHAPE == RECT
-                float attenDiffuse = getRectLightDiffuse(litArgs_worldNormal, dViewDirW, dLightDirW, dLightDirNormW) * 16.0;
+                float attenDiffuse = getRectLightDiffuse(litArgs_worldNormal, dViewDirW, lightDirW, dLightDirNormW) * 16.0;
             #elif LIGHT{i}SHAPE == DISK
-                float attenDiffuse = getDiskLightDiffuse(litArgs_worldNormal, dViewDirW, dLightDirW, dLightDirNormW) * 16.0;
+                float attenDiffuse = getDiskLightDiffuse(litArgs_worldNormal, dViewDirW, lightDirW, dLightDirNormW) * 16.0;
             #elif LIGHT{i}SHAPE == SPHERE
-                float attenDiffuse = getSphereLightDiffuse(litArgs_worldNormal, dViewDirW, dLightDirW, dLightDirNormW) * 16.0;
+                float attenDiffuse = getSphereLightDiffuse(litArgs_worldNormal, dViewDirW, lightDirW, dLightDirNormW) * 16.0;
             #endif
         #endif
     #else
-        dAtten *= getLightDiffuse(litArgs_worldNormal, dViewDirW, dLightDirW, dLightDirNormW);
+        // one parameter is unused for punctual lights
+        dAtten *= getLightDiffuse(litArgs_worldNormal, vec3(0.0), dLightDirNormW);
     #endif
 
     // apply the shadow attenuation
     #ifdef LIGHT{i}CASTSHADOW
 
-        float shadow = getShadow{i}();
+        #if LIGHT{i}TYPE == DIRECTIONAL
+            float shadow = getShadow{i}(vec3(0.0)); //////////////////////////////
+        #else
+            float shadow = getShadow{i}(lightDirW);
+        #endif
         dAtten *= mix(1.0, shadow, light{i}_shadowIntensity);
 
     #endif
