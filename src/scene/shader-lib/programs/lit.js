@@ -42,16 +42,16 @@ class ShaderGeneratorLit extends ShaderGenerator {
         decl.append(litShader.chunks.litShaderArgsPS);
         code.append(options.shaderChunk);
 
-        const usedUvSets = options.usedUvs || [true];
-        const mapTransforms = [];
-
         const definitionOptions = {
             name: 'LitShader',
             shaderLanguage: SHADERLANGUAGE_GLSL,
             tag: litShader.shaderPassInfo.isForward ? SHADERTAG_MATERIAL : undefined
         };
 
+        const usedUvSets = options.usedUvs || [true];
+        const mapTransforms = [];
         litShader.generateVertexShader(usedUvSets, usedUvSets, mapTransforms);
+
         litShader.generateFragmentShader(decl.code, code.code, 'vUv0');
 
         const includes = new Map(Object.entries({

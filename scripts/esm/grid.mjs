@@ -138,12 +138,6 @@ class Grid extends Script {
     static RESOLUTION_HIGH = 2;
 
     /**
-     * @type {boolean}
-     * @private
-     */
-    _addedRender = false;
-
-    /**
      * @type {ShaderMaterial}
      * @private
      */
@@ -180,14 +174,16 @@ class Grid extends Script {
     _resolution = Grid.RESOLUTION_HIGH;
 
     initialize() {
-
-        // ensure the entity has a render component
-        if (!this.entity.render) {
-            this.entity.addComponent('render', {
-                castShadows: false
-            });
-            this._addedRender = true;
+        // check if the entity already has a render component
+        if (this.entity.render) {
+            console.error('The entity already has a render component.');
+            return;
         }
+
+        // create render component
+        this.entity.addComponent('render', {
+            castShadows: false
+        });
 
         // create shader material
         this._material = new ShaderMaterial({
@@ -254,7 +250,6 @@ class Grid extends Script {
      * @private
      */
     _set(name, value) {
-
         if (!this._material) {
             return;
         }
@@ -331,11 +326,7 @@ class Grid extends Script {
     }
 
     destroy() {
-        this.entity.render.meshInstances = [];
-
-        if (this._addedRender) {
-            this.entity.removeComponent('render');
-        }
+        this.entity.removeComponent('render');
     }
 }
 

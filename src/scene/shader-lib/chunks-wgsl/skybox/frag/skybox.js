@@ -1,5 +1,7 @@
 export default /* wgsl */`
-    #include "envMultiplyPS"
+    #define LIT_SKYBOX_INTENSITY
+
+    #include "envProcPS"
     #include "gammaPS"
     #include "tonemappingPS"
 
@@ -47,13 +49,13 @@ export default /* wgsl */`
             #endif
 
             dir.x *= -1.0;
-            linear = _INJECT_SKYBOX_DECODE_FNC(textureSample(texture_cubeMap, texture_cubeMap_sampler, dir));
+            linear = {SKYBOX_DECODE_FNC}(textureSample(texture_cubeMap, texture_cubeMap_sampler, dir));
 
         #else // env-atlas
 
             dir = input.vViewDir * vec3f(-1.0, 1.0, 1.0);
             let uv : vec2f = toSphericalUv(normalize(dir));
-            linear = _INJECT_SKYBOX_DECODE_FNC(textureSample(texture_envAtlas, texture_envAtlas_sampler, mapRoughnessUv(uv, uniform.mipLevel)));
+            linear = {SKYBOX_DECODE_FNC}(textureSample(texture_envAtlas, texture_envAtlas_sampler, mapRoughnessUv(uv, uniform.mipLevel)));
 
         #endif
 

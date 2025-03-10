@@ -94,6 +94,20 @@ export const BLEND_MIN = 9;
  */
 export const BLEND_MAX = 10;
 
+export const blendNames = {
+    [BLEND_SUBTRACTIVE]: 'SUBTRACTIVE',
+    [BLEND_ADDITIVE]: 'ADDITIVE',
+    [BLEND_NORMAL]: 'NORMAL',
+    [BLEND_NONE]: 'NONE',
+    [BLEND_PREMULTIPLIED]: 'PREMULTIPLIED',
+    [BLEND_MULTIPLICATIVE]: 'MULTIPLICATIVE',
+    [BLEND_ADDITIVEALPHA]: 'ADDITIVEALPHA',
+    [BLEND_MULTIPLICATIVE2X]: 'MULTIPLICATIVE2X',
+    [BLEND_SCREEN]: 'SCREEN',
+    [BLEND_MIN]: 'MIN',
+    [BLEND_MAX]: 'MAX'
+};
+
 /**
  * No fog is applied to the scene.
  *
@@ -141,6 +155,11 @@ export const FRESNEL_NONE = 0;
  * @category Graphics
  */
 export const FRESNEL_SCHLICK = 2;
+
+export const fresnelNames = {
+    [FRESNEL_NONE]: 'NONE',
+    [FRESNEL_SCHLICK]: 'SCHLICK'
+};
 
 // Legacy
 export const LAYER_HUD = 0;
@@ -286,6 +305,11 @@ export const LIGHTFALLOFF_LINEAR = 0;
  * @category Graphics
  */
 export const LIGHTFALLOFF_INVERSESQUARED = 1;
+
+export const lightFalloffNames = {
+    [LIGHTFALLOFF_LINEAR]: 'LINEAR',
+    [LIGHTFALLOFF_INVERSESQUARED]: 'INVERSESQUARED'
+};
 
 /**
  * A shadow sampling technique using 32bit shadow map that averages depth comparisons from a 3x3
@@ -556,6 +580,12 @@ export const CUBEPROJ_NONE = 0;
  */
 export const CUBEPROJ_BOX = 1;
 
+// names of the cubemap projection
+export const cubemaProjectionNames = {
+    [CUBEPROJ_NONE]: 'NONE',
+    [CUBEPROJ_BOX]: 'BOX'
+};
+
 /**
  * Multiply together the primary and secondary colors.
  *
@@ -716,6 +746,38 @@ export const SPECOCC_AO = 1;
  * @category Graphics
  */
 export const SPECOCC_GLOSSDEPENDENT = 2;
+
+export const specularOcclusionNames = {
+    [SPECOCC_NONE]: 'NONE',
+    [SPECOCC_AO]: 'AO',
+    [SPECOCC_GLOSSDEPENDENT]: 'GLOSSDEPENDENT'
+};
+
+// reflection source used by the shader generation
+export const REFLECTIONSRC_NONE = 'none';
+export const REFLECTIONSRC_ENVATLAS = 'envAtlas';
+export const REFLECTIONSRC_ENVATLASHQ = 'envAtlasHQ';
+export const REFLECTIONSRC_CUBEMAP = 'cubeMap';
+export const REFLECTIONSRC_SPHEREMAP = 'sphereMap';
+
+export const reflectionSrcNames = {
+    [REFLECTIONSRC_NONE]: 'NONE',
+    [REFLECTIONSRC_ENVATLAS]: 'ENVATLAS',
+    [REFLECTIONSRC_ENVATLASHQ]: 'ENVATLASHQ',
+    [REFLECTIONSRC_CUBEMAP]: 'CUBEMAP',
+    [REFLECTIONSRC_SPHEREMAP]: 'SPHEREMAP'
+};
+
+// ambient source used by the shader generation
+export const AMBIENTSRC_AMBIENTSH = 'ambientSH';
+export const AMBIENTSRC_ENVALATLAS = 'envAtlas';
+export const AMBIENTSRC_CONSTANT = 'constant';
+
+export const ambientSrcNames = {
+    [AMBIENTSRC_AMBIENTSH]: 'AMBIENTSH',
+    [AMBIENTSRC_ENVALATLAS]: 'ENVALATLAS',
+    [AMBIENTSRC_CONSTANT]: 'CONSTANT'
+};
 
 // 16 bits for shader defs
 export const SHADERDEF_NOSHADOW = 1;
@@ -905,6 +967,12 @@ export const SPRITE_RENDERMODE_SLICED = 1;
  * @category Graphics
  */
 export const SPRITE_RENDERMODE_TILED = 2;
+
+export const spriteRenderModeNames = {
+    [SPRITE_RENDERMODE_SIMPLE]: 'SIMPLE',
+    [SPRITE_RENDERMODE_SLICED]: 'SLICED',
+    [SPRITE_RENDERMODE_TILED]: 'TILED'
+};
 
 /**
  * Single color lightmap.

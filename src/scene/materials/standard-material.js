@@ -10,7 +10,8 @@ import {
     FRESNEL_SCHLICK,
     SHADER_DEPTH, SHADER_PICK,
     SHADER_PREPASS,
-    SPECOCC_AO
+    SPECOCC_AO,
+    tonemapNames
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { EnvLighting } from '../graphics/env-lighting.js';
@@ -836,6 +837,9 @@ class StandardMaterial extends Material {
         } else {
             this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, sortedLights);
         }
+
+        // standard material can overwrite camera's tonemapping setting
+        options.defines.set('TONEMAP', tonemapNames[options.litOptions.toneMap]);
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {

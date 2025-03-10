@@ -1,18 +1,26 @@
-// Core include for lighting / shadowing code.
+// functionality includes for lighting / shadowing code.
 export default /* glsl */`
 
-// clustered lighting
-#ifdef CLUSTERED_LIGHTS
-    // include this before shadow / cookie code
-    #include "clusteredLightUtilsPS"
-    #ifdef CLUSTER_COOKIES
-        #include "clusteredLightCookiesPS"
-    #endif
+#ifdef LIT_CLUSTERED_LIGHTS
+    // all this functionality that needs to be included for clustered lighting
+    #define LIT_CODE_FALLOFF_LINEAR
+    #define LIT_CODE_FALLOFF_SQUARED
+    #define LIT_CODE_LIGHTS_POINT
+    #define LIT_CODE_LIGHTS_SPOT
 #endif
 
 #ifdef AREA_LIGHTS
     uniform highp sampler2D areaLightsLutTex1;
     uniform highp sampler2D areaLightsLutTex2;
+#endif
+
+#ifdef LIT_LIGHTING
+    #include "lightDiffuseLambertPS"
+
+    // area lights
+    #if defined(AREA_LIGHTS) || defined(LIT_CLUSTERED_AREA_LIGHTS)
+        #include "ltcPS"
+    #endif
 #endif
 
 #ifdef SHADOW_DIRECTIONAL
@@ -40,4 +48,48 @@ export default /* glsl */`
 #if defined(SHADOW_KIND_VSM)
     #include "shadowEVSMPS"
 #endif
+
+#ifdef LIT_CODE_FALLOFF_LINEAR
+    #include "falloffLinearPS"
+#endif
+
+#ifdef LIT_CODE_FALLOFF_SQUARED
+    #include "falloffInvSquaredPS"
+#endif
+
+#ifdef LIT_CODE_LIGHTS_POINT
+    #include "lightDirPointPS"
+#endif
+
+#ifdef LIT_CODE_LIGHTS_SPOT
+    #include "spotPS"
+#endif
+
+#ifdef LIT_CODE_COOKIE
+    #include "cookiePS"
+#endif
+
+// clustered lighting
+#ifdef LIT_CLUSTERED_LIGHTS
+
+    #include "lightBufferDefinesPS"
+
+    // include this before shadow / cookie code
+    #include "clusteredLightUtilsPS"
+
+    #ifdef CLUSTER_COOKIES
+        #include "clusteredLightCookiesPS"
+    #endif
+
+    #ifdef CLUSTER_SHADOWS
+        #include "clusteredLightShadowsPS"
+    #endif
+
+    #include "floatUnpackingPS"
+    #include "clusteredLightPS"
+
+#endif
+
+// LOOP - generate light evaluation functions for all non-clustered lights
+#include "lightFunctionPS, LIGHT_COUNT"
 `;

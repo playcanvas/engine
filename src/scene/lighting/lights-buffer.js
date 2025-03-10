@@ -4,6 +4,8 @@ import { FloatPacking } from '../../core/math/float-packing.js';
 import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { LightCamera } from '../renderer/light-camera.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 const epsilon = 0.000001;
 
@@ -48,29 +50,21 @@ const TextureIndexFloat = {
     COUNT: 8
 };
 
-let _defines;
+// converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1"
+const buildShaderDefines = (object, prefix) => {
+    return Object.keys(object)
+    .map(key => `#define ${prefix}${key} ${object[key]}`)
+    .join('\n');
+};
+
+// create a shader chunk with defines for the light buffer textures
+shaderChunks.lightBufferDefinesPS = shaderChunksWGSL.lightBufferDefinesPS = `\n
+    ${buildShaderDefines(TextureIndex8, 'CLUSTER_TEXTURE_8_')}
+    ${buildShaderDefines(TextureIndexFloat, 'CLUSTER_TEXTURE_F_')}
+`;
 
 // A class used by clustered lighting, responsible for encoding light properties into textures for the use on the GPU
 class LightsBuffer {
-    static getShaderDefines() {
-
-        // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1"
-        const buildShaderDefines = (object, prefix) => {
-            return Object.keys(object)
-            .map(key => `#define ${prefix}${key} ${object[key]}`)
-            .join('\n');
-        };
-
-        if (!_defines) {
-            _defines =  `\n
-                ${buildShaderDefines(TextureIndex8, 'CLUSTER_TEXTURE_8_')}
-                ${buildShaderDefines(TextureIndexFloat, 'CLUSTER_TEXTURE_F_')}
-            `;
-        }
-
-        return _defines;
-    }
-
     areaLightsEnabled = false;
 
     constructor(device) {
