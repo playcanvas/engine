@@ -554,7 +554,7 @@ class CameraControls {
         this._state.axis.add(tmpV1.set(right - left, up - down, forward - back));
         this._state.shift += shift;
         this._state.ctrl += ctrl;
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }
 
