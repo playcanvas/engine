@@ -45,7 +45,7 @@ float VSM16(TEXTURE_ACCEPT(tex), vec2 texCoords, float resolution, float Z, floa
     return calculateEVSM(moments, Z, vsmBias, exponent);
 }
 
-float getShadowVSM16(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, float exponent, vec3 lightDir) {
+float getShadowVSM16(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, float exponent) {
     return VSM16(TEXTURE_PASS(shadowMap), shadowCoord.xy, shadowParams.x, shadowCoord.z, shadowParams.y, exponent);
 }
 
@@ -75,7 +75,7 @@ float VSM32(TEXTURE_ACCEPT(tex), vec2 texCoords, float resolution, float Z, floa
     return calculateEVSM(moments, Z, vsmBias, exponent);
 }
 
-float getShadowVSM32(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, float exponent, vec3 lightDir) {
+float getShadowVSM32(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, float exponent) {
     return VSM32(TEXTURE_PASS(shadowMap), shadowCoord.xy, shadowParams.x, shadowCoord.z, shadowParams.y, exponent);
 }
 

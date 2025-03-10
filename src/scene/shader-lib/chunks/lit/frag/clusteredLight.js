@@ -264,7 +264,9 @@ void evaluateLight(
     float falloffAttenuation = 1.0;
 
     // evaluate omni part of the light
-    getLightDirPoint(light.position);
+    vec3 lightDirW;
+    vec3 lightDirNormW;
+    evalOmniLight(light.position, lightDirW, lightDirNormW);
 
     #ifdef CLUSTER_AREALIGHTS
 
@@ -283,7 +285,7 @@ void evaluateLight(
             calcSphereLightValues(light.position, light.halfWidth, light.halfHeight);
         }
 
-        falloffAttenuation = getFalloffWindow(light.range, dLightDirW);
+        falloffAttenuation = getFalloffWindow(light.range, lightDirW);
 
     } else
 
@@ -292,9 +294,9 @@ void evaluateLight(
     {   // punctual light
 
         if (isClusteredLightFalloffLinear(light))
-            falloffAttenuation = getFalloffLinear(light.range, dLightDirW);
+            falloffAttenuation = getFalloffLinear(light.range, lightDirW);
         else
-            falloffAttenuation = getFalloffInvSquared(light.range, dLightDirW);
+            falloffAttenuation = getFalloffInvSquared(light.range, lightDirW);
     }
 
     if (falloffAttenuation > 0.00001) {
@@ -305,11 +307,11 @@ void evaluateLight(
 
             // handle light shape
             if (isClusteredLightRect(light)) {
-                diffuseAttenuation = getRectLightDiffuse(worldNormal, viewDir, dLightDirW, dLightDirNormW) * 16.0;
+                diffuseAttenuation = getRectLightDiffuse(worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
             } else if (isClusteredLightDisk(light)) {
-                diffuseAttenuation = getDiskLightDiffuse(worldNormal, viewDir, dLightDirW, dLightDirNormW) * 16.0;
+                diffuseAttenuation = getDiskLightDiffuse(worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
             } else { // sphere
-                diffuseAttenuation = getSphereLightDiffuse(worldNormal, viewDir, dLightDirW, dLightDirNormW) * 16.0;
+                diffuseAttenuation = getSphereLightDiffuse(worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
             }
 
         } else
@@ -317,13 +319,13 @@ void evaluateLight(
         #endif
 
         {
-            falloffAttenuation *= getLightDiffuse(worldNormal, viewDir, dLightDirW, dLightDirNormW); 
+            falloffAttenuation *= getLightDiffuse(worldNormal, viewDir, lightDirNormW); 
         }
 
         // spot light falloff
         if (isClusteredLightSpot(light)) {
             decodeClusterLightSpot(light);
-            falloffAttenuation *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos, dLightDirNormW);
+            falloffAttenuation *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos, lightDirNormW);
         }
 
         #if defined(CLUSTER_COOKIES) || defined(CLUSTER_SHADOWS)
@@ -352,7 +354,7 @@ void evaluateLight(
                     if (isClusteredLightSpot(light)) {
                         cookieAttenuation = getCookie2DClustered(TEXTURE_PASS(cookieAtlasTexture), lightProjectionMatrix, vPositionW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask);
                     } else {
-                        cookieAttenuation = getCookieCubeClustered(TEXTURE_PASS(cookieAtlasTexture), dLightDirW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
+                        cookieAttenuation = getCookieCubeClustered(TEXTURE_PASS(cookieAtlasTexture), lightDirW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
                     }
                 }
 
@@ -369,23 +371,23 @@ void evaluateLight(
                     if (isClusteredLightSpot(light)) {
 
                         // spot shadow
-                        getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams, geometricNormal);
+                        vec3 shadowCoord = getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams, geometricNormal);
                         
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            float shadow = getShadowSpotClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowCoord, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            float shadow = getShadowSpotClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), shadowCoord, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            float shadow = getShadowSpotClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), shadowCoord, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCSS)
-                            float shadow = getShadowSpotClusteredPCSS(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
+                            float shadow = getShadowSpotClusteredPCSS(SHADOWMAP_PASS(shadowAtlasTexture), shadowCoord, shadowParams);
                         #endif
                         falloffAttenuation *= mix(1.0, shadow, light.shadowIntensity);
 
                     } else {
 
                         // omni shadow
-                        vec3 dir = normalOffsetPointShadow(shadowParams, dLightPosW, dLightDirW, dLightDirNormW, geometricNormal);  // normalBias adjusted for distance
+                        vec3 dir = normalOffsetPointShadow(shadowParams, light.position, lightDirW, lightDirNormW, geometricNormal);  // normalBias adjusted for distance
 
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
                             float shadow = getShadowOmniClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dir);
@@ -478,12 +480,12 @@ void evaluateLight(
             // specular and clear coat are material settings and get included by a define based on the material
             #ifdef LIT_SPECULAR
 
-                vec3 halfDir = normalize(-dLightDirNormW + viewDir);
+                vec3 halfDir = normalize(-lightDirNormW + viewDir);
                 
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
                     dSpecularLight += 
-                        getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, dLightDirNormW, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * 
+                        getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, lightDirNormW, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * 
                         getFresnel(
                             dot(viewDir, halfDir), 
                             gloss, 
@@ -494,19 +496,19 @@ void evaluateLight(
                         #endif
                             );
                 #else
-                    dSpecularLight += getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, dLightDirNormW, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * specularity;
+                    dSpecularLight += getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, lightDirNormW, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * specularity;
                 #endif
 
                 #ifdef LIT_CLEARCOAT
                     #ifdef LIT_SPECULAR_FRESNEL
-                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat_worldNormal, viewDir, dLightDirNormW, clearcoat_gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * getFresnelCC(dot(viewDir, halfDir));
+                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat_worldNormal, viewDir, lightDirNormW, clearcoat_gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * getFresnelCC(dot(viewDir, halfDir));
                     #else
-                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat_worldNormal, viewDir, dLightDirNormW, clearcoat_gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation; 
+                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat_worldNormal, viewDir, lightDirNormW, clearcoat_gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation; 
                     #endif
                 #endif
 
                 #ifdef LIT_SHEEN
-                    sSpecularLight += getLightSpecularSheen(halfDir, worldNormal, viewDir, dLightDirNormW, sheen_gloss) * falloffAttenuation * light.color * cookieAttenuation;
+                    sSpecularLight += getLightSpecularSheen(halfDir, worldNormal, viewDir, lightDirNormW, sheen_gloss) * falloffAttenuation * light.color * cookieAttenuation;
                 #endif
 
             #endif
@@ -515,8 +517,7 @@ void evaluateLight(
 
     // Write to global attenuation values (for lightmapper)
     dAtten = falloffAttenuation;
-    dAttenD = diffuseAttenuation;
-    dAtten3 = cookieAttenuation;
+    dLightDirNormW = lightDirNormW;
 }
 
 void evaluateClusterLight(
