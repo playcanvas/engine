@@ -14,6 +14,15 @@ import {
 
 /** @import { AppBase, CameraComponent, EventHandler } from 'playcanvas' */
 
+/**
+ * @typedef {object} ControllerInput
+ * @property {Vec3} move - The move delta.
+ * @property {Vec2} rotate - The rotate delta.
+ * @property {Vec2} drag - The drag delta.
+ * @property {number} zoom - The zoom delta.
+ * @property {boolean} pan - The pan flag.
+ */
+
 const tmpM1 = new Mat4();
 const tmpVa = new Vec2();
 const tmpVb = new Vec2();
@@ -495,6 +504,104 @@ class CameraControls {
     }
 
     /**
+     * @param {ControllerInput} data - The input data.
+     * @private
+     */
+    _addDesktopInputs(data) {
+        const { key, button, mouse, wheel } = this._desktopInput.frame();
+        const [forward, back, left, right, up, down, shift, ctrl] = key;
+
+        // left mouse button, middle mouse button, mouse wheel
+        const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
+
+        // right mouse button or any key
+        const switchToFly = button[2] === 1 ||
+            forward === 1 || back === 1 || left === 1 || right === 1 || up === 1 || down === 1;
+
+        if (switchToOrbit) {
+            this.mode = CameraControls.MODE_ORBIT;
+        } else if (switchToFly) {
+            this.mode = CameraControls.MODE_FLY;
+        }
+
+        // update state
+        this._state.axis.add(tmpV1.set(right - left, up - down, forward - back));
+        this._state.shift += shift;
+        this._state.ctrl += ctrl;
+        for (let i = 0; i < 3; i++) {
+            this._state.mouse[i] += button[i];
+        }
+
+        data.move.add(this._scaleMove(tmpV1.copy(this._state.axis).normalize()));
+        data.rotate.add(tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed));
+
+        const _pan = (!!this._state.shift || !!this._state.mouse[1]) && this.enablePanning;
+        data.drag.add(tmpVa.fromArray(mouse).mulScalar(_pan ? 1 : this.rotateSpeed));
+        data.zoom += this._scaleZoom(wheel[0]);
+        data.pan ||= _pan;
+    }
+
+    /**
+     * @param {ControllerInput} data - The input data.
+     * @private
+     */
+    _addMobileInputs(data) {
+        if (this._mobileInput instanceof MultiTouchInput) {
+            const { touch, pinch, count } = this._mobileInput.frame();
+            this._state.touches += count[0];
+
+            const _pan = this._state.touches > 1 && this.enablePanning;
+            data.drag.add(tmpVa.fromArray(touch).mulScalar(_pan ? 1 : this.rotateSpeed));
+            data.zoom += this._scaleZoom(pinch[0]) * this.zoomPinchSens;
+            data.pan ||= _pan;
+        }
+
+        if (this._mobileInput instanceof JoystickTouchInput) {
+            const { stick, touch } = this._mobileInput.frame();
+
+            data.rotate.add(tmpVa.fromArray(touch).mulScalar(this.rotateSpeed));
+            data.move.add(this._scaleMove(tmpV1.set(stick[0], 0, -stick[1])));
+        }
+
+        if (this._mobileInput instanceof JoystickDoubleInput) {
+            const { leftStick, rightStick } = this._mobileInput.frame();
+
+            data.rotate.add(tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+            data.move.add(this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1])));
+        }
+    }
+
+    /**
+     * @param {ControllerInput} data - The input data.
+     * @private
+     */
+    _addGamepadInputs(data) {
+        const { leftStick, rightStick } = this._gamepadInput.frame();
+
+        const right = this._applyDeadZone(tmpVa.set(rightStick[0], -rightStick[1]));
+        data.rotate.add(right.mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+
+        const left = this._applyDeadZone(tmpVa.fromArray(leftStick));
+        data.move.add(this._scaleMove(tmpV1.set(left.x, 0, left.y)));
+    }
+
+    /**
+     * @param {ControllerInput} data - The input data.
+     * @param {number} dt - The time delta.
+     */
+    _updateController(data, dt) {
+        if (this._controller instanceof OrbitController) {
+            tmpM1.copy(this._controller.update(data, this._camera, dt));
+            this._updateTransform(tmpM1);
+        }
+
+        if (this._controller instanceof FlyController) {
+            tmpM1.copy(this._controller.update(data, dt));
+            this._updateTransform(tmpM1);
+        }
+    }
+
+    /**
      * @param {Vec3} point - The focus point.
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
@@ -554,95 +661,20 @@ class CameraControls {
             return;
         }
 
-        // desktop
-        const move = tmpV2.set(0, 0, 0);
-        const rotate = tmpVb.set(0, 0);
+        // accumulate inputs
+        const data = {
+            move: tmpV2.set(0, 0, 0),
+            rotate: tmpVb.set(0, 0),
+            drag: tmpVc.set(0, 0),
+            zoom: 0,
+            pan: false
+        };
+        this._addDesktopInputs(data);
+        this._addMobileInputs(data);
+        this._addGamepadInputs(data);
 
-        // mobile
-        const drag = tmpVc.set(0, 0);
-        let zoom = 0;
-        let pan = false;
-
-        if (this._desktopInput instanceof KeyboardMouseInput) {
-            const { key, button, mouse, wheel } = this._desktopInput.frame();
-            const [forward, back, left, right, up, down, shift, ctrl] = key;
-
-            // left mouse button, middle mouse button, mouse wheel
-            const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
-
-            // right mouse button or any key
-            const switchToFly = button[2] === 1 ||
-                forward === 1 || back === 1 || left === 1 || right === 1 || up === 1 || down === 1;
-
-            if (switchToOrbit) {
-                this.mode = CameraControls.MODE_ORBIT;
-            } else if (switchToFly) {
-                this.mode = CameraControls.MODE_FLY;
-            }
-
-            // update state
-            this._state.axis.add(tmpV1.set(right - left, up - down, forward - back));
-            this._state.shift += shift;
-            this._state.ctrl += ctrl;
-            for (let i = 0; i < 3; i++) {
-                this._state.mouse[i] += button[i];
-            }
-
-            move.add(this._scaleMove(tmpV1.copy(this._state.axis).normalize()));
-            rotate.add(tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed));
-
-            const _pan = (!!this._state.shift || !!this._state.mouse[1]) && this.enablePanning;
-            drag.add(tmpVa.fromArray(mouse).mulScalar(_pan ? 1 : this.rotateSpeed));
-            zoom += this._scaleZoom(wheel[0]);
-            pan ||= _pan;
-        }
-
-        if (this._mobileInput instanceof MultiTouchInput) {
-            const { touch, pinch, count } = this._mobileInput.frame();
-            this._state.touches += count[0];
-
-            const _pan = this._state.touches > 1 && this.enablePanning;
-            drag.add(tmpVa.fromArray(touch).mulScalar(_pan ? 1 : this.rotateSpeed));
-            zoom += this._scaleZoom(pinch[0]) * this.zoomPinchSens;
-            pan ||= _pan;
-        }
-
-        if (this._mobileInput instanceof JoystickTouchInput) {
-            const { stick, touch } = this._mobileInput.frame();
-
-            rotate.add(tmpVa.fromArray(touch).mulScalar(this.rotateSpeed));
-            move.add(this._scaleMove(tmpV1.set(stick[0], 0, -stick[1])));
-        }
-
-        if (this._mobileInput instanceof JoystickDoubleInput) {
-            const { leftStick, rightStick } = this._mobileInput.frame();
-
-            rotate.add(tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
-            move.add(this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1])));
-        }
-
-        if (this._gamepadInput instanceof GamepadInput) {
-            const { leftStick, rightStick } = this._gamepadInput.frame();
-
-            const right = this._applyDeadZone(tmpVa.set(rightStick[0], -rightStick[1]));
-            rotate.add(right.mulScalar(this.rotateSpeed * this.rotateJoystickSens));
-
-            const left = this._applyDeadZone(tmpVa.fromArray(leftStick));
-            move.add(this._scaleMove(tmpV1.set(left.x, 0, left.y)));
-        }
-
-        // orbit controller
-        if (this._controller instanceof OrbitController) {
-            tmpM1.copy(this._controller.update({ drag, zoom, pan }, this._camera, dt));
-            this._updateTransform(tmpM1);
-            return;
-        }
-
-        // fly controller
-        if (this._controller instanceof FlyController) {
-            tmpM1.copy(this._controller.update({ move, rotate }, dt));
-            this._updateTransform(tmpM1);
-        }
+        // update controller
+        this._updateController(data, dt);
     }
 
     destroy() {
