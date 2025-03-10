@@ -80,12 +80,6 @@ assetListLoader.load(() => {
     // ambient lighting
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-
-
-    // app.scene.clusteredLightingEnabled = false;
-
-
-
     // create an entity with the statue
     const entity = assets.statue.resource.instantiateRenderEntity();
 
