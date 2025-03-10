@@ -1,6 +1,6 @@
 import { Mat4 } from '../../core/math/mat4.js';
 
-class Model {
+class Controller {
     /**
      * @type {Mat4}
      * @protected
@@ -28,4 +28,4 @@ class Model {
     }
 }
 
-export { Model };
+export { Controller };

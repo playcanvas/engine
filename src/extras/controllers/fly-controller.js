@@ -2,7 +2,7 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 import { math } from '../../core/math/math.js';
-import { Model } from './model.js';
+import { Controller } from './controller.js';
 
 /** @import { Mat4 } from '../../core/math/mat4.js'; */
 
@@ -25,7 +25,7 @@ const tmpQ1 = new Quat();
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
-class FlyModel extends Model {
+class FlyController extends Controller {
     /**
      * @private
      * @type {Vec3}
@@ -196,4 +196,4 @@ class FlyModel extends Model {
     }
 }
 
-export { FlyModel };
+export { FlyController };

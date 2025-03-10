@@ -1,15 +1,15 @@
 import {
-    FlyModel,
+    math,
     GamepadInput,
     JoystickDoubleInput,
     JoystickTouchInput,
     KeyboardMouseInput,
-    Mat4,
     MultiTouchInput,
-    OrbitModel,
+    FlyController,
+    OrbitController,
+    Mat4,
     Vec2,
-    Vec3,
-    math
+    Vec3
 } from 'playcanvas';
 
 /** @import { AppBase, CameraComponent, EventHandler } from 'playcanvas' */
@@ -87,22 +87,22 @@ class CameraControls {
     _gamepadInput;
 
     /**
-     * @type {FlyModel}
+     * @type {FlyController}
      * @private
      */
-    _flyModel;
+    _flyController;
 
     /**
-     * @type {OrbitModel}
+     * @type {OrbitController}
      * @private
      */
-    _orbitModel;
+    _orbitController;
 
     /**
-     * @type {FlyModel|OrbitModel}
+     * @type {FlyController|OrbitController}
      * @private
      */
-    _model;
+    _controller;
 
     /**
      * @type {CameraControls.MODE_ORBIT|CameraControls.MODE_FLY}
@@ -214,9 +214,9 @@ class CameraControls {
         this._flyMobileInput = doubleStick ? new JoystickDoubleInput() : new JoystickTouchInput();
         this._gamepadInput = new GamepadInput();
 
-        // models
-        this._flyModel = new FlyModel();
-        this._orbitModel = new OrbitModel();
+        // controllers
+        this._flyController = new FlyController();
+        this._orbitController = new OrbitController();
 
         // focus
         if (focus) {
@@ -242,18 +242,18 @@ class CameraControls {
     set focusPoint(point) {
         this.mode = CameraControls.MODE_ORBIT;
 
-        if (this._model instanceof OrbitModel) {
+        if (this._controller instanceof OrbitController) {
             const start = this._camera.entity.getPosition();
             this._startZoomDist = start.distance(point);
-            this._model.focus(point, start, false);
+            this._controller.focus(point, start, false);
         }
     }
 
     get focusPoint() {
         this.mode = CameraControls.MODE_ORBIT;
 
-        if (this._model instanceof OrbitModel) {
-            return this._model.point;
+        if (this._controller instanceof OrbitController) {
+            return this._controller.point;
         }
         return this._camera.entity.getPosition();
     }
@@ -318,22 +318,22 @@ class CameraControls {
             this._state.touches = 0;
         }
 
-        // model reattach
-        const model = this._mode === CameraControls.MODE_FLY ? this._flyModel : this._orbitModel;
-        const currZoomDist = this._orbitModel.zoom;
-        if (model !== this._model) {
-            if (this._model) {
-                this._model.detach();
+        // controller reattach
+        const controller = this._mode === CameraControls.MODE_FLY ? this._flyController : this._orbitController;
+        const currZoomDist = this._orbitController.zoom;
+        if (controller !== this._controller) {
+            if (this._controller) {
+                this._controller.detach();
             }
-            this._model = model;
-            this._model.attach(this._camera.entity.getWorldTransform());
+            this._controller = controller;
+            this._controller.attach(this._camera.entity.getWorldTransform());
         }
 
         // refocus if orbit mode
-        if (this._model instanceof OrbitModel) {
+        if (this._controller instanceof OrbitController) {
             const start = this._camera.entity.getPosition();
             const point = tmpV1.copy(this._camera.entity.forward).mulScalar(currZoomDist).add(start);
-            this._model.focus(point, start, false);
+            this._controller.focus(point, start, false);
         }
     }
 
@@ -342,54 +342,54 @@ class CameraControls {
     }
 
     set rotateDamping(damping) {
-        this._flyModel.rotateDamping = damping;
-        this._orbitModel.rotateDamping = damping;
+        this._flyController.rotateDamping = damping;
+        this._orbitController.rotateDamping = damping;
     }
 
     get rotateDamping() {
-        return this._model.rotateDamping;
+        return this._controller.rotateDamping;
     }
 
     set moveDamping(damping) {
-        this._flyModel.moveDamping = damping;
+        this._flyController.moveDamping = damping;
     }
 
     get moveDamping() {
-        return this._flyModel.moveDamping;
+        return this._flyController.moveDamping;
     }
 
     set zoomDamping(damping) {
-        this._orbitModel.zoomDamping = damping;
+        this._orbitController.zoomDamping = damping;
     }
 
     get zoomDamping() {
-        return this._orbitModel.zoomDamping;
+        return this._orbitController.zoomDamping;
     }
 
     set pitchRange(range) {
-        this._flyModel.pitchRange = range;
-        this._orbitModel.pitchRange = range;
+        this._flyController.pitchRange = range;
+        this._orbitController.pitchRange = range;
     }
 
     get pitchRange() {
-        return this._model.pitchRange;
+        return this._controller.pitchRange;
     }
 
     set yawRange(range) {
-        this._flyModel.yawRange = range;
-        this._orbitModel.yawRange = range;
+        this._flyController.yawRange = range;
+        this._orbitController.yawRange = range;
     }
 
     get yawRange() {
-        return this._model.yawRange;
+        return this._controller.yawRange;
     }
 
     set zoomRange(range) {
-        this._orbitModel.zoomRange = range;
+        this._orbitController.zoomRange = range;
     }
 
     get zoomRange() {
-        return this._orbitModel.zoomRange;
+        return this._orbitController.zoomRange;
     }
 
     /**
@@ -486,10 +486,10 @@ class CameraControls {
      * @private
      */
     _scaleZoom(zoom) {
-        if (!(this._model instanceof OrbitModel)) {
+        if (!(this._controller instanceof OrbitController)) {
             return 0;
         }
-        const norm = this._model.zoom / (ZOOM_SCALE_MULT * this.sceneSize);
+        const norm = this._controller.zoom / (ZOOM_SCALE_MULT * this.sceneSize);
         const scale = math.clamp(norm, this.zoomScaleMin, 1);
         return zoom * scale * this.zoomSpeed * this.sceneSize;
     }
@@ -501,14 +501,14 @@ class CameraControls {
     focus(point, resetZoom = false) {
         this.mode = CameraControls.MODE_ORBIT;
 
-        if (this._model instanceof OrbitModel) {
+        if (this._controller instanceof OrbitController) {
             if (resetZoom) {
                 const start = tmpV1.copy(this._camera.entity.forward)
                 .mulScalar(-this._startZoomDist)
                 .add(point);
-                this._model.focus(point, start);
+                this._controller.focus(point, start);
             } else {
-                this._model.focus(point);
+                this._controller.focus(point);
             }
         }
     }
@@ -520,16 +520,16 @@ class CameraControls {
     look(point, resetZoom = false) {
         this.mode = CameraControls.MODE_ORBIT;
 
-        if (this._model instanceof OrbitModel) {
+        if (this._controller instanceof OrbitController) {
             if (resetZoom) {
                 const start = tmpV1.copy(this._camera.entity.getPosition())
                 .sub(point)
                 .normalize()
                 .mulScalar(this._startZoomDist)
                 .add(point);
-                this._model.focus(point, start);
+                this._controller.focus(point, start);
             } else {
-                this._model.focus(point, this._camera.entity.getPosition());
+                this._controller.focus(point, this._camera.entity.getPosition());
             }
         }
     }
@@ -541,8 +541,8 @@ class CameraControls {
     reset(point, start) {
         this.mode = CameraControls.MODE_ORBIT;
 
-        if (this._model instanceof OrbitModel) {
-            this._model.focus(point, start);
+        if (this._controller instanceof OrbitController) {
+            this._controller.focus(point, start);
         }
     }
 
@@ -631,16 +631,16 @@ class CameraControls {
             move.add(this._scaleMove(tmpV1.set(left.x, 0, left.y)));
         }
 
-        // orbit model
-        if (this._model instanceof OrbitModel) {
-            tmpM1.copy(this._model.update({ drag, zoom, pan }, this._camera, dt));
+        // orbit controller
+        if (this._controller instanceof OrbitController) {
+            tmpM1.copy(this._controller.update({ drag, zoom, pan }, this._camera, dt));
             this._updateTransform(tmpM1);
             return;
         }
 
-        // fly model
-        if (this._model instanceof FlyModel) {
-            tmpM1.copy(this._model.update({ move, rotate }, dt));
+        // fly controller
+        if (this._controller instanceof FlyController) {
+            tmpM1.copy(this._controller.update({ move, rotate }, dt));
             this._updateTransform(tmpM1);
         }
     }
@@ -650,8 +650,8 @@ class CameraControls {
         this._orbitMobileInput.destroy();
         this._flyMobileInput.destroy();
 
-        this._flyModel.destroy();
-        this._orbitModel.destroy();
+        this._flyController.destroy();
+        this._orbitController.destroy();
     }
 }
 
