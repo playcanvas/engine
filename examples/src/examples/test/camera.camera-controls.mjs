@@ -16,7 +16,10 @@ import {
 
 const tmpM1 = new Mat4();
 const tmpVa = new Vec2();
+const tmpVb = new Vec2();
+const tmpVc = new Vec2();
 const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
 
 const ZOOM_SCALE_MULT = 10;
 const JOYSTICK_BASE_SIZE = 100;
@@ -552,11 +555,11 @@ class CameraControls {
         }
 
         // desktop
-        const move = new Vec3();
-        const rotate = new Vec2();
+        const move = tmpV2.set(0, 0, 0);
+        const rotate = tmpVb.set(0, 0);
 
         // mobile
-        const drag = new Vec2();
+        const drag = tmpVc.set(0, 0);
         let zoom = 0;
         let pan = false;
 
