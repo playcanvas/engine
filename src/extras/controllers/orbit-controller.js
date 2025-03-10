@@ -144,7 +144,7 @@ class OrbitController extends Controller {
     }
 
     get zoom() {
-        return this._zoomDist;
+        return this._targetZoomDist;
     }
 
     set pitchRange(range) {
