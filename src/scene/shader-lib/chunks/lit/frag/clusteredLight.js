@@ -369,16 +369,16 @@ void evaluateLight(
                     if (isClusteredLightSpot(light)) {
 
                         // spot shadow
-                        getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams, geometricNormal);
+                        vec3 shadowCoord = getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams, geometricNormal);
                         
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            float shadow = getShadowSpotClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowCoord, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            float shadow = getShadowSpotClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), shadowCoord, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            float shadow = getShadowSpotClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), shadowCoord, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCSS)
-                            float shadow = getShadowSpotClusteredPCSS(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
+                            float shadow = getShadowSpotClusteredPCSS(SHADOWMAP_PASS(shadowAtlasTexture), shadowCoord, shadowParams);
                         #endif
                         falloffAttenuation *= mix(1.0, shadow, light.shadowIntensity);
 
@@ -515,8 +515,6 @@ void evaluateLight(
 
     // Write to global attenuation values (for lightmapper)
     dAtten = falloffAttenuation;
-    dAttenD = diffuseAttenuation;
-    dAtten3 = cookieAttenuation;
 }
 
 void evaluateClusterLight(

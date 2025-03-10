@@ -366,7 +366,7 @@ class LitShader {
                 fDefines.set(`LIGHT${i}CASTSHADOW`, true);
                 if (shadowInfo.pcf) fDefines.set(`LIGHT${i}SHADOW_PCF`, true);
 
-                // shadow addressing defines, used by lightFunctionPS
+                // shadow addressing defines, used by lightFunctionShadowPS
                 if (light._normalOffsetBias && !light._isVsm) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_NORMAL_OFFSET`, true);
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_ORTHO`, true);
