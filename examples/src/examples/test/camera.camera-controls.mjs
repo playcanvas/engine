@@ -15,7 +15,7 @@ import {
 /** @import { AppBase, CameraComponent, EventHandler } from 'playcanvas' */
 
 /**
- * @typedef {object} InputFrame
+ * @typedef {object} CameraControlsFrame
  * @property {Vec3} move - The move delta.
  * @property {Vec2} rotate - The rotate delta.
  * @property {Vec2} drag - The drag delta.
@@ -24,7 +24,7 @@ import {
  */
 
 /**
- * @typedef {object} ControlsState
+ * @typedef {object} CameraControlsState
  * @property {Vec3} axis - The axis.
  * @property {number} shift - The shift.
  * @property {number} ctrl - The ctrl.
@@ -126,7 +126,7 @@ class CameraControls {
     _mode;
 
     /**
-     * @type {InputFrame}
+     * @type {CameraControlsFrame}
      * @private
      */
     _frame = {
@@ -138,7 +138,7 @@ class CameraControls {
     };
 
     /**
-     * @type {ControlsState}
+     * @type {CameraControlsState}
      * @private
      */
     _state = {
