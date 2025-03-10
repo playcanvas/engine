@@ -15,7 +15,7 @@ import {
 /** @import { AppBase, CameraComponent, EventHandler } from 'playcanvas' */
 
 /**
- * @typedef {object} ControllerInput
+ * @typedef {object} InputFrame
  * @property {Vec3} move - The move delta.
  * @property {Vec2} rotate - The rotate delta.
  * @property {Vec2} drag - The drag delta.
@@ -23,12 +23,18 @@ import {
  * @property {boolean} pan - The pan flag.
  */
 
+/**
+ * @typedef {object} ControlsState
+ * @property {Vec3} axis - The axis.
+ * @property {number} shift - The shift.
+ * @property {number} ctrl - The ctrl.
+ * @property {number[]} mouse - The mouse.
+ * @property {number} touches - The touches.
+ */
+
 const tmpM1 = new Mat4();
 const tmpVa = new Vec2();
-const tmpVb = new Vec2();
-const tmpVc = new Vec2();
 const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
 
 const ZOOM_SCALE_MULT = 10;
 const JOYSTICK_BASE_SIZE = 100;
@@ -120,7 +126,19 @@ class CameraControls {
     _mode;
 
     /**
-     * @type {{ axis: Vec3, shift: number, ctrl: number, mouse: number[], touches: 0 }}
+     * @type {InputFrame}
+     * @private
+     */
+    _frame = {
+        move: new Vec3(),
+        rotate: new Vec2(),
+        drag: new Vec2(),
+        zoom: 0,
+        pan: false
+    };
+
+    /**
+     * @type {ControlsState}
      * @private
      */
     _state = {
@@ -320,11 +338,7 @@ class CameraControls {
             this._mobileInput.attach(this._app.graphicsDevice.canvas);
 
             // reset state
-            this._state.axis.set(0, 0, 0);
-            this._state.shift = 0;
-            this._state.ctrl = 0;
-            this._state.mouse.fill(0);
-            this._state.touches = 0;
+            this._resetState();
         }
 
         // controller reattach
@@ -402,12 +416,25 @@ class CameraControls {
     }
 
     /**
-     * @param {Mat4} transform - The transform.
      * @private
      */
-    _updateTransform(transform) {
-        this._camera.entity.setPosition(transform.getTranslation());
-        this._camera.entity.setEulerAngles(transform.getEulerAngles());
+    _resetFrame() {
+        this._frame.move.set(0, 0, 0);
+        this._frame.rotate.set(0, 0);
+        this._frame.drag.set(0, 0);
+        this._frame.zoom = 0;
+        this._frame.pan = false;
+    }
+
+    /**
+     * @private
+     */
+    _resetState() {
+        this._state.axis.set(0, 0, 0);
+        this._state.shift = 0;
+        this._state.ctrl = 0;
+        this._state.mouse.fill(0);
+        this._state.touches = 0;
     }
 
     /**
@@ -504,10 +531,9 @@ class CameraControls {
     }
 
     /**
-     * @param {ControllerInput} data - The input data.
      * @private
      */
-    _addDesktopInputs(data) {
+    _addDesktopInputs() {
         const { key, button, mouse, wheel } = this._desktopInput.frame();
         const [forward, back, left, right, up, down, shift, ctrl] = key;
 
@@ -532,72 +558,71 @@ class CameraControls {
             this._state.mouse[i] += button[i];
         }
 
-        data.move.add(this._scaleMove(tmpV1.copy(this._state.axis).normalize()));
-        data.rotate.add(tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed));
+        this._frame.move.add(this._scaleMove(tmpV1.copy(this._state.axis).normalize()));
+        this._frame.rotate.add(tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed));
 
         const _pan = (!!this._state.shift || !!this._state.mouse[1]) && this.enablePanning;
-        data.drag.add(tmpVa.fromArray(mouse).mulScalar(_pan ? 1 : this.rotateSpeed));
-        data.zoom += this._scaleZoom(wheel[0]);
-        data.pan ||= _pan;
+        this._frame.drag.add(tmpVa.fromArray(mouse).mulScalar(_pan ? 1 : this.rotateSpeed));
+        this._frame.zoom += this._scaleZoom(wheel[0]);
+        this._frame.pan ||= _pan;
     }
 
     /**
-     * @param {ControllerInput} data - The input data.
      * @private
      */
-    _addMobileInputs(data) {
+    _addMobileInputs() {
         if (this._mobileInput instanceof MultiTouchInput) {
             const { touch, pinch, count } = this._mobileInput.frame();
             this._state.touches += count[0];
 
             const _pan = this._state.touches > 1 && this.enablePanning;
-            data.drag.add(tmpVa.fromArray(touch).mulScalar(_pan ? 1 : this.rotateSpeed));
-            data.zoom += this._scaleZoom(pinch[0]) * this.zoomPinchSens;
-            data.pan ||= _pan;
+            this._frame.drag.add(tmpVa.fromArray(touch).mulScalar(_pan ? 1 : this.rotateSpeed));
+            this._frame.zoom += this._scaleZoom(pinch[0]) * this.zoomPinchSens;
+            this._frame.pan ||= _pan;
         }
 
         if (this._mobileInput instanceof JoystickTouchInput) {
             const { stick, touch } = this._mobileInput.frame();
 
-            data.rotate.add(tmpVa.fromArray(touch).mulScalar(this.rotateSpeed));
-            data.move.add(this._scaleMove(tmpV1.set(stick[0], 0, -stick[1])));
+            this._frame.rotate.add(tmpVa.fromArray(touch).mulScalar(this.rotateSpeed));
+            this._frame.move.add(this._scaleMove(tmpV1.set(stick[0], 0, -stick[1])));
         }
 
         if (this._mobileInput instanceof JoystickDoubleInput) {
             const { leftStick, rightStick } = this._mobileInput.frame();
 
-            data.rotate.add(tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
-            data.move.add(this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1])));
+            this._frame.rotate.add(tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+            this._frame.move.add(this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1])));
         }
     }
 
     /**
-     * @param {ControllerInput} data - The input data.
      * @private
      */
-    _addGamepadInputs(data) {
+    _addGamepadInputs() {
         const { leftStick, rightStick } = this._gamepadInput.frame();
 
         const right = this._applyDeadZone(tmpVa.set(rightStick[0], -rightStick[1]));
-        data.rotate.add(right.mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+        this._frame.rotate.add(right.mulScalar(this.rotateSpeed * this.rotateJoystickSens));
 
         const left = this._applyDeadZone(tmpVa.fromArray(leftStick));
-        data.move.add(this._scaleMove(tmpV1.set(left.x, 0, left.y)));
+        this._frame.move.add(this._scaleMove(tmpV1.set(left.x, 0, left.y)));
     }
 
     /**
-     * @param {ControllerInput} data - The input data.
      * @param {number} dt - The time delta.
      */
-    _updateController(data, dt) {
+    _updateController(dt) {
         if (this._controller instanceof OrbitController) {
-            tmpM1.copy(this._controller.update(data, this._camera, dt));
-            this._updateTransform(tmpM1);
+            tmpM1.copy(this._controller.update(this._frame, this._camera, dt));
+            this._camera.entity.setPosition(tmpM1.getTranslation());
+            this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
         }
 
         if (this._controller instanceof FlyController) {
-            tmpM1.copy(this._controller.update(data, dt));
-            this._updateTransform(tmpM1);
+            tmpM1.copy(this._controller.update(this._frame, dt));
+            this._camera.entity.setPosition(tmpM1.getTranslation());
+            this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
         }
     }
 
@@ -661,20 +686,15 @@ class CameraControls {
             return;
         }
 
+        this._resetFrame();
+
         // accumulate inputs
-        const data = {
-            move: tmpV2.set(0, 0, 0),
-            rotate: tmpVb.set(0, 0),
-            drag: tmpVc.set(0, 0),
-            zoom: 0,
-            pan: false
-        };
-        this._addDesktopInputs(data);
-        this._addMobileInputs(data);
-        this._addGamepadInputs(data);
+        this._addDesktopInputs();
+        this._addMobileInputs();
+        this._addGamepadInputs();
 
         // update controller
-        this._updateController(data, dt);
+        this._updateController(dt);
     }
 
     destroy() {
