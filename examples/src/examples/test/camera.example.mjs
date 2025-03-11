@@ -211,6 +211,7 @@ data.set('attr', [
     'yawRange',
     'zoomRange',
     'zoomScaleMin',
+    'gamepadDeadZone',
     'useVirtualGamepad'
 ].reduce((/** @type {Record<string, any>} */ obj, key) => {
     const value = cc[key];

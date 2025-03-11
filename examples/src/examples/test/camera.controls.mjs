@@ -202,6 +202,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Gamepad deadzone' },
+                jsx(VectorInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.gamepadDeadZone' },
+                    dimensions: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Use Virtual Gamepad' },
                 jsx(BooleanInput, {
                     type: 'toggle',

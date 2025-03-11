@@ -263,22 +263,13 @@ class CameraControls extends Script {
     zoomScaleMin = 0.001;
 
     /**
-     * The gamepad dead zone low value.
+     * The gamepad dead zone.
      *
      * @attribute
-     * @title Gamepad Dead Zone Low
-     * @type {number}
+     * @title Gamepad Dead Zone
+     * @type {Vec2}
      */
-    gamepadDeadZoneLow = 0.3;
-
-    /**
-     * The gamepad dead zone high value.
-     *
-     * @attribute
-     * @title Gamepad Dead Zone High
-     * @type {number}
-     */
-    gamepadDeadZoneHigh = 0.6;
+    gamepadDeadZone = new Vec2(0.3, 0.6);
 
     /**
      * The joystick event name for the base position.
@@ -657,10 +648,10 @@ class CameraControls extends Script {
      */
     _applyDeadZone(stick) {
         const mag = stick.length();
-        if (mag < this.gamepadDeadZoneLow) {
+        if (mag < this.gamepadDeadZone.x) {
             return stick.set(0, 0);
         }
-        const scale = (mag - this.gamepadDeadZoneLow) / (this.gamepadDeadZoneHigh - this.gamepadDeadZoneLow);
+        const scale = (mag - this.gamepadDeadZone.x) / (this.gamepadDeadZone.y - this.gamepadDeadZone.x);
         return stick.normalize().mulScalar(scale);
     }
 
