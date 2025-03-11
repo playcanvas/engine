@@ -7,12 +7,13 @@ import {
     MultiTouchInput,
     FlyController,
     OrbitController,
+    Script,
     Mat4,
     Vec2,
     Vec3
 } from 'playcanvas';
 
-/** @import { AppBase, CameraComponent, EventHandler } from 'playcanvas' */
+/** @import { CameraComponent, EventHandler } from 'playcanvas' */
 
 /**
  * @typedef {object} CameraControlsFrame
@@ -40,7 +41,7 @@ const ZOOM_SCALE_MULT = 10;
 const JOYSTICK_BASE_SIZE = 100;
 const JOYSTICK_STICK_SIZE = 60;
 
-class CameraControls {
+class CameraControls extends Script {
     /**
      * @type {string}
      * @static
@@ -52,12 +53,6 @@ class CameraControls {
      * @static
      */
     static MODE_ORBIT = 'orbit';
-
-    /**
-     * @type {AppBase}
-     * @private
-     */
-    _app;
 
     /**
      * @type {CameraComponent}
@@ -75,13 +70,13 @@ class CameraControls {
      * @type {boolean}
      * @private
      */
-    _doubleStick = false;
+    _useVirtualGamepad = false;
 
     /**
      * @type {KeyboardMouseInput}
      * @private
      */
-    _desktopInput;
+    _desktopInput = new KeyboardMouseInput();
 
     /**
      * @type {JoystickDoubleInput | JoystickTouchInput | MultiTouchInput}
@@ -93,31 +88,37 @@ class CameraControls {
      * @type {MultiTouchInput}
      * @private
      */
-    _orbitMobileInput;
+    _orbitMobileInput = new MultiTouchInput();
 
     /**
-     * @type {JoystickTouchInput | JoystickDoubleInput}
+     * @type {JoystickTouchInput}
      * @private
      */
-    _flyMobileInput;
+    _flyMobileTouchInput = new JoystickTouchInput();
+
+    /**
+     * @type {JoystickDoubleInput}
+     * @private
+     */
+    _flyMobileGamepadInput = new JoystickDoubleInput();
 
     /**
      * @type {GamepadInput}
      * @private
      */
-    _gamepadInput;
+    _gamepadInput = new GamepadInput();
 
     /**
      * @type {FlyController}
      * @private
      */
-    _flyController;
+    _flyController = new FlyController();
 
     /**
      * @type {OrbitController}
      * @private
      */
-    _orbitController;
+    _orbitController = new OrbitController();
 
     /**
      * @type {FlyController|OrbitController}
@@ -225,59 +226,22 @@ class CameraControls {
      */
     gamepadDeadZoneHigh = 0.6;
 
-    /**
-     * @param {CameraComponent} camera - The camera.
-     */
-    constructor(camera) {
-        this._app = camera.system.app;
-        this._camera = camera;
-
-        // input
-        this._desktopInput = new KeyboardMouseInput();
-        this._desktopInput.attach(this._app.graphicsDevice.canvas);
-        this._orbitMobileInput = new MultiTouchInput();
-        this._flyMobileInput = this._doubleStick ? new JoystickDoubleInput() : new JoystickTouchInput();
-        this._gamepadInput = new GamepadInput();
-        this._gamepadInput.attach(this._app.graphicsDevice.canvas);
-
-        // controllers
-        this._flyController = new FlyController();
-        this._orbitController = new OrbitController();
-
+    initialize() {
         // mode
-        this.mode = CameraControls.MODE_ORBIT;
+        this.mode = this._mode ?? CameraControls.MODE_ORBIT;
 
-        // ui
-        if (this._flyMobileInput instanceof JoystickDoubleInput) {
-            this._createJoystickUI(this._flyMobileInput.leftJoystick, JOYSTICK_BASE_SIZE, JOYSTICK_STICK_SIZE);
-            this._createJoystickUI(this._flyMobileInput.rightJoystick, JOYSTICK_BASE_SIZE, JOYSTICK_STICK_SIZE);
-        } else {
-            this._createJoystickUI(this._flyMobileInput.joystick, JOYSTICK_BASE_SIZE, JOYSTICK_STICK_SIZE);
-        }
-    }
-
-    set focusPoint(point) {
-        this.mode = CameraControls.MODE_ORBIT;
-
-        if (this._controller instanceof OrbitController) {
-            const start = this._camera.entity.getPosition();
-            this._startZoomDist = start.distance(point);
-            this._controller.focus(point, start, false);
-        }
-    }
-
-    get focusPoint() {
-        this.mode = CameraControls.MODE_ORBIT;
-
-        if (this._controller instanceof OrbitController) {
-            return this._controller.point;
-        }
-        return this._camera.entity.getPosition();
+        // destroy
+        this.on('destroy', this.destroy, this);
     }
 
     set mode(mode) {
         if (this._mode === mode) {
             return;
+        }
+
+        // check if initialized
+        if (!this._mode) {
+            this._init();
         }
 
         // set mode
@@ -301,13 +265,17 @@ class CameraControls {
         }
 
         // mobile input reattach
-        const mobileInput = this._mode === CameraControls.MODE_FLY ? this._flyMobileInput : this._orbitMobileInput;
+        const mobileInput = this._mode === CameraControls.MODE_FLY ?
+            this._useVirtualGamepad ?
+                this._flyMobileGamepadInput :
+                this._flyMobileTouchInput :
+            this._orbitMobileInput;
         if (mobileInput !== this._mobileInput) {
             if (this._mobileInput) {
                 this._mobileInput.detach();
             }
             this._mobileInput = mobileInput;
-            this._mobileInput.attach(this._app.graphicsDevice.canvas);
+            this._mobileInput.attach(this.app.graphicsDevice.canvas);
 
             // reset state
             this._resetState();
@@ -336,55 +304,127 @@ class CameraControls {
         return this._mode;
     }
 
+    set focusPoint(point) {
+        this.mode = CameraControls.MODE_ORBIT;
+
+        if (this._controller instanceof OrbitController) {
+            const start = this._camera.entity.getPosition();
+            this._startZoomDist = start.distance(point);
+            this._controller.focus(point, start, false);
+            this.update(0);
+        }
+    }
+
+    get focusPoint() {
+        this.mode = CameraControls.MODE_ORBIT;
+
+        if (this._controller instanceof OrbitController) {
+            return this._controller.point;
+        }
+        return this._camera.entity.getPosition();
+    }
+
     set rotateDamping(damping) {
+        this.mode = this._mode;
+
         this._flyController.rotateDamping = damping;
         this._orbitController.rotateDamping = damping;
     }
 
     get rotateDamping() {
+        this.mode = this._mode;
+
         return this._controller.rotateDamping;
     }
 
     set moveDamping(damping) {
+        this.mode = this._mode;
+
         this._flyController.moveDamping = damping;
     }
 
     get moveDamping() {
+        this.mode = this._mode;
+
         return this._flyController.moveDamping;
     }
 
     set zoomDamping(damping) {
+        this.mode = this._mode;
+
         this._orbitController.zoomDamping = damping;
     }
 
     get zoomDamping() {
+        this.mode = this._mode;
+
         return this._orbitController.zoomDamping;
     }
 
     set pitchRange(range) {
+        this.mode = this._mode;
+
         this._flyController.pitchRange = range;
         this._orbitController.pitchRange = range;
     }
 
     get pitchRange() {
+        this.mode = this._mode;
+
         return this._controller.pitchRange;
     }
 
     set yawRange(range) {
+        this.mode = this._mode;
+
         this._flyController.yawRange = range;
         this._orbitController.yawRange = range;
     }
 
     get yawRange() {
+        this.mode = this._mode;
+
         return this._controller.yawRange;
     }
 
     set zoomRange(range) {
+        this.mode = this._mode;
+
         this._orbitController.zoomRange = range;
     }
 
     get zoomRange() {
+        this.mode = this._mode;
+
         return this._orbitController.zoomRange;
+    }
+
+    set useVirtualGamepad(use) {
+        this._useVirtualGamepad = use;
+    }
+
+    get useVirtualGamepad() {
+        return this._useVirtualGamepad;
+    }
+
+    /**
+     * @private
+     */
+    _init() {
+        if (!this.entity.camera) {
+            console.error('CameraControls: camera component not found');
+            return;
+        }
+        this._camera = this.entity.camera;
+
+        // attach input
+        this._desktopInput.attach(this.app.graphicsDevice.canvas);
+        this._gamepadInput.attach(this.app.graphicsDevice.canvas);
+
+        // create ui
+        this._createJoystickUI(this._flyMobileGamepadInput.leftJoystick, JOYSTICK_BASE_SIZE, JOYSTICK_STICK_SIZE);
+        this._createJoystickUI(this._flyMobileGamepadInput.rightJoystick, JOYSTICK_BASE_SIZE, JOYSTICK_STICK_SIZE);
+        this._createJoystickUI(this._flyMobileTouchInput.joystick, JOYSTICK_BASE_SIZE, JOYSTICK_STICK_SIZE);
     }
 
     /**
@@ -650,7 +690,7 @@ class CameraControls {
      * @param {number} dt - The time delta.
      */
     update(dt) {
-        if (this._app.xr?.active) {
+        if (this.app.xr?.active) {
             return;
         }
 
@@ -668,7 +708,9 @@ class CameraControls {
     destroy() {
         this._desktopInput.destroy();
         this._orbitMobileInput.destroy();
-        this._flyMobileInput.destroy();
+        this._flyMobileTouchInput.destroy();
+        this._flyMobileGamepadInput.destroy();
+        this._gamepadInput.destroy();
 
         this._flyController.destroy();
         this._orbitController.destroy();
