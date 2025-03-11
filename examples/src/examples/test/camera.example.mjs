@@ -1,8 +1,11 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>LMB</b>) Fly</div><div>(<b>WASDQE</b>) Move</div></div>
-import { deviceType, rootPath, localImport } from 'examples/utils';
+// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move (Fly enabled)</div><div>(<b>LMB</b>) Orbit, (<b>LMB </b>(Orbit disabled)<b> / RMB</b>) Fly</div><div>(<b>Hold Shift / MMB / RMB </b>(Fly or Orbit disabled)) Pan</div><div>(<b>Scroll Wheel</b> (Orbit or Pan enabled)) Zoom</div><div>(<b>F</b>) Focus (<b>R</b>) Reset</div></div>
+import { data } from 'examples/observer';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { CameraControls } = await localImport('camera-controls.mjs');
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.new.mjs`);
+
+const tmpVa = new pc.Vec2();
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -183,7 +186,61 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
 
     document.body.append(base, stick);
 };
+
+// Create joystick UI
 createJoystickUI('left');
 createJoystickUI('right');
+
+// Bind controls to camera attributes
+data.set('attr', [
+    'enableOrbit',
+    'enableFly',
+    'enablePan',
+    'rotateSpeed',
+    'rotateJoystickSens',
+    'moveSpeed',
+    'moveFastSpeed',
+    'moveSlowSpeed',
+    'zoomSpeed',
+    'zoomPinchSens',
+    'focusDamping',
+    'rotateDamping',
+    'moveDamping',
+    'zoomDamping',
+    'pitchRange',
+    'yawRange',
+    'zoomRange',
+    'zoomScaleMin',
+    'useVirtualGamepad'
+].reduce((/** @type {Record<string, any>} */ obj, key) => {
+    const value = cc[key];
+
+    if (value instanceof pc.Vec2) {
+        obj[key] = [value.x, value.y];
+        return obj;
+    }
+
+    obj[key] = cc[key];
+    return obj;
+}, {}));
+
+data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
+    const [category, key, index] = path.split('.');
+    if (category !== 'attr') {
+        return;
+    }
+
+    if (Array.isArray(value)) {
+        cc[key] = tmpVa.set(value[0], value[1]);
+        return;
+    }
+    if (index !== undefined) {
+        const arr = data.get(`${category}.${key}`);
+        cc[key] = tmpVa.set(arr[0], arr[1]);
+        return;
+    }
+
+    cc[key] = value;
+});
 
 export { app };

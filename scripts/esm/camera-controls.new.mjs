@@ -155,15 +155,6 @@ class CameraControls extends Script {
     };
 
     /**
-     * Enable fly camera controls.
-     *
-     * @attribute
-     * @title Enable Fly
-     * @type {boolean}
-     */
-    enableFly = true;
-
-    /**
      * Enable orbit camera controls.
      *
      * @attribute
@@ -173,13 +164,22 @@ class CameraControls extends Script {
     enableOrbit = true;
 
     /**
+     * Enable fly camera controls.
+     *
+     * @attribute
+     * @title Enable Fly
+     * @type {boolean}
+     */
+    enableFly = true;
+
+    /**
      * Enable panning.
      *
      * @attribute
      * @title Enable Panning
      * @type {boolean}
      */
-    enablePanning = true;
+    enablePan = true;
 
     /**
      * The scene size. The zoom, pan and fly speeds are relative to this size.
@@ -420,6 +420,26 @@ class CameraControls extends Script {
             return this._controller.point;
         }
         return this._camera.entity.getPosition();
+    }
+
+    /**
+     * The focus damping. A higher value means more damping. A value of 0 means no damping.
+     * The damping is applied to the orbit mode.
+     *
+     * @attribute
+     * @title Rotate Damping
+     * @type {number}
+     */
+    set focusDamping(damping) {
+        this.mode = this._mode;
+
+        this._orbitController.focusDamping = damping;
+    }
+
+    get focusDamping() {
+        this.mode = this._mode;
+
+        return this._orbitController.focusDamping;
     }
 
     /**
@@ -697,7 +717,7 @@ class CameraControls extends Script {
         this._frame.move.add(this._scaleMove(tmpV1.copy(this._state.axis).normalize()));
         this._frame.rotate.add(tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed));
 
-        const _pan = (!!this._state.shift || !!this._state.mouse[1]) && this.enablePanning;
+        const _pan = (!!this._state.shift || !!this._state.mouse[1]) && this.enablePan;
         this._frame.drag.add(tmpVa.fromArray(mouse).mulScalar(_pan ? 1 : this.rotateSpeed));
         this._frame.zoom += this._scaleZoom(wheel[0]);
         this._frame.pan ||= _pan;
@@ -711,7 +731,7 @@ class CameraControls extends Script {
             const { touch, pinch, count } = this._mobileInput.frame();
             this._state.touches += count[0];
 
-            const _pan = this._state.touches > 1 && this.enablePanning;
+            const _pan = this._state.touches > 1 && this.enablePan;
             this._frame.drag.add(tmpVa.fromArray(touch).mulScalar(_pan ? 1 : this.rotateSpeed));
             this._frame.zoom += this._scaleZoom(pinch[0]) * this.zoomPinchSens;
             this._frame.pan ||= _pan;
