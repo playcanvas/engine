@@ -164,7 +164,6 @@ export const fresnelNames = {
 // Legacy
 export const LAYER_HUD = 0;
 export const LAYER_GIZMO = 1;
-export const LAYER_FX = 2;
 // 3 - 14 are custom user layers
 export const LAYER_WORLD = 15;
 
@@ -819,9 +818,6 @@ export const SHADOWUPDATE_THISFRAME = 1;
  * @category Graphics
  */
 export const SHADOWUPDATE_REALTIME = 2;
-
-export const SORTKEY_FORWARD = 0;
-export const SORTKEY_DEPTH = 1;
 
 // flags used on the mask property of the Light, and also on mask property of the MeshInstance
 export const MASK_AFFECT_DYNAMIC = 1;

@@ -22,7 +22,6 @@ import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
 import {
-    SORTKEY_DEPTH, SORTKEY_FORWARD,
     VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
     LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
@@ -264,50 +263,6 @@ class Renderer {
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
-    }
-
-    sortCompare(drawCallA, drawCallB) {
-        if (drawCallA.layer === drawCallB.layer) {
-            if (drawCallA.drawOrder && drawCallB.drawOrder) {
-                return drawCallA.drawOrder - drawCallB.drawOrder;
-            } else if (drawCallA.zdist && drawCallB.zdist) {
-                return drawCallB.zdist - drawCallA.zdist; // back to front
-            } else if (drawCallA.zdist2 && drawCallB.zdist2) {
-                return drawCallA.zdist2 - drawCallB.zdist2; // front to back
-            }
-        }
-
-        return drawCallB._key[SORTKEY_FORWARD] - drawCallA._key[SORTKEY_FORWARD];
-    }
-
-    sortCompareMesh(drawCallA, drawCallB) {
-        if (drawCallA.layer === drawCallB.layer) {
-            if (drawCallA.drawOrder && drawCallB.drawOrder) {
-                return drawCallA.drawOrder - drawCallB.drawOrder;
-            } else if (drawCallA.zdist && drawCallB.zdist) {
-                return drawCallB.zdist - drawCallA.zdist; // back to front
-            }
-        }
-
-        const keyA = drawCallA._key[SORTKEY_FORWARD];
-        const keyB = drawCallB._key[SORTKEY_FORWARD];
-
-        if (keyA === keyB && drawCallA.mesh && drawCallB.mesh) {
-            return drawCallB.mesh.id - drawCallA.mesh.id;
-        }
-
-        return keyB - keyA;
-    }
-
-    sortCompareDepth(drawCallA, drawCallB) {
-        const keyA = drawCallA._key[SORTKEY_DEPTH];
-        const keyB = drawCallB._key[SORTKEY_DEPTH];
-
-        if (keyA === keyB && drawCallA.mesh && drawCallB.mesh) {
-            return drawCallB.mesh.id - drawCallA.mesh.id;
-        }
-
-        return keyB - keyA;
     }
 
     /**
