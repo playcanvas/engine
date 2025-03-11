@@ -199,6 +199,8 @@ class OrbitController extends Controller {
     _look(dv) {
         this._targetAngles.x -= dv.y;
         this._targetAngles.y -= dv.x;
+        this._targetAngles.x %= 360;
+        this._targetAngles.y %= 360;
         this._clampAngles();
     }
 
@@ -253,8 +255,8 @@ class OrbitController extends Controller {
         const ar = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.rotateDamping, dt);
         const am = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.moveDamping, dt);
 
-        this._angles.x = math.lerpAngle(this._angles.x % 360, this._targetAngles.x % 360, ar);
-        this._angles.y = math.lerpAngle(this._angles.y % 360, this._targetAngles.y % 360, ar);
+        this._angles.x = math.lerpAngle(this._angles.x, this._targetAngles.x, ar) % 360;
+        this._angles.y = math.lerpAngle(this._angles.y, this._targetAngles.y, ar) % 360;
         this._position.lerp(this._position, this._targetPosition, am);
         this._rootTransform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
     }
