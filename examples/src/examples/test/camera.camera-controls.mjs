@@ -501,59 +501,6 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {EventHandler} joystick - The joystick.
-     * @param {number} baseSize - The base size.
-     * @param {number} stickSize - The stick size.
-     * @private
-     */
-    _createJoystickUI(joystick, baseSize, stickSize) {
-        const base = document.createElement('div');
-        Object.assign(base.style, {
-            display: 'none',
-            position: 'absolute',
-            width: `${baseSize}px`,
-            height: `${baseSize}px`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(50, 50, 50, 0.5)',
-            boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5)'
-        });
-
-        const stick = document.createElement('div');
-        Object.assign(stick.style, {
-            display: 'none',
-            position: 'absolute',
-            width: `${stickSize}px`,
-            height: `${stickSize}px`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)',
-            boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)'
-        });
-
-        joystick.on('position:base', (x, y) => {
-            const left = x - baseSize * 0.5;
-            const top = y - baseSize * 0.5;
-
-            base.style.display = 'block';
-            base.style.left = `${left}px`;
-            base.style.top = `${top}px`;
-        });
-        joystick.on('position:stick', (x, y) => {
-            const left = x - stickSize * 0.5;
-            const top = y - stickSize * 0.5;
-
-            stick.style.display = 'block';
-            stick.style.left = `${left}px`;
-            stick.style.top = `${top}px`;
-        });
-        joystick.on('reset', () => {
-            base.style.display = 'none';
-            stick.style.display = 'none';
-        });
-
-        document.body.append(base, stick);
-    }
-
-    /**
      * @param {Vec2} stick - The stick
      * @returns {Vec2} The remapped stick.
      * @private
