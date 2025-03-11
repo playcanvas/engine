@@ -162,15 +162,19 @@ class KeyboardMouseInput extends Input {
     _setKey(code, value) {
         switch (code) {
             case 'KeyW':
+            case 'ArrowUp':
                 this._keyNow[0] = value;
                 break;
             case 'KeyS':
+            case 'ArrowDown':
                 this._keyNow[1] = value;
                 break;
             case 'KeyA':
+            case 'ArrowLeft':
                 this._keyNow[2] = value;
                 break;
             case 'KeyD':
+            case 'ArrowRight':
                 this._keyNow[3] = value;
                 break;
             case 'KeyQ':
