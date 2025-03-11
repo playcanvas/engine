@@ -142,37 +142,7 @@ class KeyboardMouseInput extends Input {
      */
     _onKeyDown(event) {
         event.stopPropagation();
-
-        switch (event.key.toLowerCase()) {
-            case 'w':
-            case 'arrowup':
-                this._keyNow[0] = 1;
-                break;
-            case 's':
-            case 'arrowdown':
-                this._keyNow[1] = 1;
-                break;
-            case 'a':
-            case 'arrowleft':
-                this._keyNow[2] = 1;
-                break;
-            case 'd':
-            case 'arrowright':
-                this._keyNow[3] = 1;
-                break;
-            case 'q':
-                this._keyNow[4] = 1;
-                break;
-            case 'e':
-                this._keyNow[5] = 1;
-                break;
-            case 'shift':
-                this._keyNow[6] = 1;
-                break;
-            case 'control':
-                this._keyNow[7] = 1;
-                break;
-        }
+        this._setKey(event.code, 1);
     }
 
     /**
@@ -181,35 +151,41 @@ class KeyboardMouseInput extends Input {
      */
     _onKeyUp(event) {
         event.stopPropagation();
+        this._setKey(event.code, 0);
+    }
 
-        switch (event.key.toLowerCase()) {
-            case 'w':
-            case 'arrowup':
-                this._keyNow[0] = 0;
+    /**
+     * @param {string} code - The code.
+     * @param {number} value - The value.
+     * @private
+     */
+    _setKey(code, value) {
+        switch (code) {
+            case 'KeyW':
+                this._keyNow[0] = value;
                 break;
-            case 's':
-            case 'arrowdown':
-                this._keyNow[1] = 0;
+            case 'KeyS':
+                this._keyNow[1] = value;
                 break;
-            case 'a':
-            case 'arrowleft':
-                this._keyNow[2] = 0;
+            case 'KeyA':
+                this._keyNow[2] = value;
                 break;
-            case 'd':
-            case 'arrowright':
-                this._keyNow[3] = 0;
+            case 'KeyD':
+                this._keyNow[3] = value;
                 break;
-            case 'q':
-                this._keyNow[4] = 0;
+            case 'KeyQ':
+                this._keyNow[4] = value;
                 break;
-            case 'e':
-                this._keyNow[5] = 0;
+            case 'KeyE':
+                this._keyNow[5] = value;
                 break;
-            case 'shift':
-                this._keyNow[6] = 0;
+            case 'ShiftLeft':
+            case 'ShiftRight':
+                this._keyNow[6] = value;
                 break;
-            case 'control':
-                this._keyNow[7] = 0;
+            case 'ControlLeft':
+            case 'ControlRight':
+                this._keyNow[7] = value;
                 break;
         }
     }
