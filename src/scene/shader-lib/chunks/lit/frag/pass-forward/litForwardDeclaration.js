@@ -8,24 +8,17 @@ vec3 dTangentW;
 vec3 dBinormalW;
 vec3 dViewDirW;
 vec3 dReflDirW;
-vec3 dHalfDirW;
 vec3 ccReflDirW;
 
 // Per-light temporaries
 vec3 dLightDirNormW;
-vec3 dLightDirW;
-vec3 dLightPosW;
-vec3 dShadowCoord;
+float dAtten;
 
 // Outputs
 mat3 dTBN;
 vec4 dReflection;
 vec3 dDiffuseLight;
 vec3 dSpecularLight;
-float dAtten;
-float dAttenD; // separate diffuse attenuation for non-punctual light sources
-vec3 dAtten3;
-vec4 dMsdf;
 float ccFresnel;
 vec3 ccReflection;
 vec3 ccSpecularLight;

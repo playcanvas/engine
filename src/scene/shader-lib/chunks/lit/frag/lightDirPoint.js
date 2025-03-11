@@ -1,7 +1,6 @@
 export default /* glsl */`
-void getLightDirPoint(vec3 lightPosW) {
-    dLightDirW = vPositionW - lightPosW;
-    dLightDirNormW = normalize(dLightDirW);
-    dLightPosW = lightPosW;
+void evalOmniLight(vec3 lightPosW, out vec3 lightDirW, out vec3 lightDirNormW) {
+    lightDirW = vPositionW - lightPosW;
+    lightDirNormW = normalize(lightDirW);
 }
 `;
