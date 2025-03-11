@@ -155,86 +155,157 @@ class CameraControls extends Script {
     };
 
     /**
+     * Enable fly camera controls.
+     *
+     * @attribute
+     * @title Enable Fly
      * @type {boolean}
      */
     enableFly = true;
 
     /**
+     * Enable orbit camera controls.
+     *
+     * @attribute
+     * @title Enable Orbit
      * @type {boolean}
      */
     enableOrbit = true;
 
     /**
+     * Enable panning.
+     *
+     * @attribute
+     * @title Enable Panning
      * @type {boolean}
      */
     enablePanning = true;
 
     /**
+     * The scene size. The zoom, pan and fly speeds are relative to this size.
+     *
+     * @attribute
+     * @title Scene Size
      * @type {number}
      */
     sceneSize = 100;
 
     /**
+     * The rotation speed.
+     *
+     * @attribute
+     * @title Rotate Speed
      * @type {number}
      */
     rotateSpeed = 0.2;
 
     /**
+     * The rotation joystick sensitivity.
+     *
+     * @attribute
+     * @title Rotate Joystick Sensitivity
      * @type {number}
      */
     rotateJoystickSens = 2;
 
     /**
+     * The fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Speed
      * @type {number}
      */
     moveSpeed = 2;
 
     /**
+     * The fast fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Fast Speed
      * @type {number}
      */
     moveFastSpeed = 4;
 
     /**
+     * The slow fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Slow Speed
      * @type {number}
      */
     moveSlowSpeed = 1;
 
     /**
+     * The zoom speed relative to the scene size.
+     *
+     * @attribute
+     * @title Zoom Speed
      * @type {number}
      */
     zoomSpeed = 0.005;
 
     /**
+     * The touch zoom pinch sensitivity.
+     *
+     * @attribute
+     * @title Zoom
      * @type {number}
      */
     zoomPinchSens = 5;
 
     /**
+     * The minimum scale the camera can zoom (absolute value).
+     *
+     * @attribute
+     * @title Zoom Scale Min
      * @type {number}
      */
     zoomScaleMin = 0.001;
 
     /**
+     * The gamepad dead zone low value.
+     *
+     * @attribute
+     * @title Gamepad Dead Zone Low
      * @type {number}
      */
     gamepadDeadZoneLow = 0.3;
 
     /**
+     * The gamepad dead zone high value.
+     *
+     * @attribute
+     * @title Gamepad Dead Zone High
      * @type {number}
      */
     gamepadDeadZoneHigh = 0.6;
 
     /**
+     * The joystick event name for the base position.
+     * The event name is appended with the side: 'left' or 'right'.
+     *
+     * @attribute
+     * @title Joystick Base Event Name
      * @type {string}
      */
     joystickBaseEventName = 'joystick:base';
 
     /**
+     * The joystick event name for the stick position.
+     * The event name is appended with the side: 'left' or 'right'.
+     *
+     * @attribute
+     * @title Joystick Stick Event Name
      * @type {string}
      */
     joystickStickEventName = 'joystick:stick';
 
     /**
+     * The joystick event name for the reset event.
+     * The event name is appended with the side: 'left' or 'right'.
+     *
+     * @attribute
+     * @title Joystick Reset Event Name
      * @type {string}
      */
     joystickResetEventName = 'joystick:reset';
@@ -244,9 +315,16 @@ class CameraControls extends Script {
         this.mode = this._mode ?? CameraControls.MODE_ORBIT;
 
         // destroy
-        this.on('destroy', this.destroy, this);
+        this.on('destroy', this._destroy, this);
     }
 
+    /**
+     * The camera controls mode.
+     *
+     * @attribute
+     * @title Mode
+     * @type {string}
+     */
     set mode(mode) {
         if (this._mode === mode) {
             return;
@@ -317,6 +395,13 @@ class CameraControls extends Script {
         return this._mode;
     }
 
+    /**
+     * The focus point.
+     *
+     * @attribute
+     * @title Focus Point
+     * @type {Vec3}
+     */
     set focusPoint(point) {
         this.mode = CameraControls.MODE_ORBIT;
 
@@ -337,6 +422,14 @@ class CameraControls extends Script {
         return this._camera.entity.getPosition();
     }
 
+    /**
+     * The rotate damping. A higher value means more damping. A value of 0 means no damping.
+     * The damping is applied to both the fly and orbit modes.
+     *
+     * @attribute
+     * @title Rotate Damping
+     * @type {number}
+     */
     set rotateDamping(damping) {
         this.mode = this._mode;
 
@@ -350,6 +443,14 @@ class CameraControls extends Script {
         return this._controller.rotateDamping;
     }
 
+    /**
+     * The move damping. A higher value means more damping. A value of 0 means no damping.
+     * The damping is applied to the fly mode and the orbit mode when panning.
+     *
+     * @attribute
+     * @title Move Damping
+     * @type {number}
+     */
     set moveDamping(damping) {
         this.mode = this._mode;
 
@@ -362,6 +463,14 @@ class CameraControls extends Script {
         return this._flyController.moveDamping;
     }
 
+    /**
+     * The zoom damping. A higher value means more damping. A value of 0 means no damping.
+     * The damping is applied to the orbit mode.
+     *
+     * @attribute
+     * @title Zoom Damping
+     * @type {number}
+     */
     set zoomDamping(damping) {
         this.mode = this._mode;
 
@@ -374,6 +483,13 @@ class CameraControls extends Script {
         return this._orbitController.zoomDamping;
     }
 
+    /**
+     * The pitch range.
+     *
+     * @attribute
+     * @title Pitch Range
+     * @type {Vec2}
+     */
     set pitchRange(range) {
         this.mode = this._mode;
 
@@ -387,6 +503,13 @@ class CameraControls extends Script {
         return this._controller.pitchRange;
     }
 
+    /**
+     * The yaw range.
+     *
+     * @attribute
+     * @title Yaw Range
+     * @type {Vec2}
+     */
     set yawRange(range) {
         this.mode = this._mode;
 
@@ -400,6 +523,13 @@ class CameraControls extends Script {
         return this._controller.yawRange;
     }
 
+    /**
+     * The zoom range.
+     *
+     * @attribute
+     * @title Zoom Range
+     * @type {Vec2}
+     */
     set zoomRange(range) {
         this.mode = this._mode;
 
@@ -412,6 +542,13 @@ class CameraControls extends Script {
         return this._orbitController.zoomRange;
     }
 
+    /**
+     * Whether to use the virtual gamepad or touch joystick for mobile fly mode.
+     *
+     * @attribute
+     * @title Use Virtual Gamepad
+     * @type {boolean}
+     */
     set useVirtualGamepad(use) {
         this._useVirtualGamepad = use;
     }
@@ -438,6 +575,20 @@ class CameraControls extends Script {
         this._exposeJoystickEvents(this._flyMobileTouchInput.joystick, 'left');
         this._exposeJoystickEvents(this._flyMobileGamepadInput.leftJoystick, 'left');
         this._exposeJoystickEvents(this._flyMobileGamepadInput.rightJoystick, 'right');
+    }
+
+    /**
+     * @private
+     */
+    _destroy() {
+        this._desktopInput.destroy();
+        this._orbitMobileInput.destroy();
+        this._flyMobileTouchInput.destroy();
+        this._flyMobileGamepadInput.destroy();
+        this._gamepadInput.destroy();
+
+        this._flyController.destroy();
+        this._orbitController.destroy();
     }
 
     /**
@@ -680,17 +831,6 @@ class CameraControls extends Script {
 
         // update controller
         this._updateController(dt);
-    }
-
-    destroy() {
-        this._desktopInput.destroy();
-        this._orbitMobileInput.destroy();
-        this._flyMobileTouchInput.destroy();
-        this._flyMobileGamepadInput.destroy();
-        this._gamepadInput.destroy();
-
-        this._flyController.destroy();
-        this._orbitController.destroy();
     }
 }
 
