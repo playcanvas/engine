@@ -99,7 +99,6 @@ const calcEntityAABB = (bbox, entity) => {
 const start = new pc.Vec3(0, 20, 30);
 const bbox = calcEntityAABB(new pc.BoundingBox(), statue);
 const focus = bbox.center;
-const sceneSize = bbox.halfExtents.length();
 
 const camera = new pc.Entity();
 camera.addComponent('camera');
@@ -107,13 +106,10 @@ camera.addComponent('script');
 camera.setPosition(start);
 app.root.addChild(camera);
 
-const cc = new CameraControls({
-    app,
-    camera: camera.camera,
-    mode: typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT,
-    focus,
-    sceneSize
-});
+const cc = new CameraControls(camera.camera);
+cc.mode = typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT;
+cc.sceneSize = bbox.halfExtents.length();
+cc.focusPoint = bbox.center;
 
 // focus on entity when 'f' key is pressed
 const onKeyDown = (/** @type {KeyboardEvent} */ e) => {

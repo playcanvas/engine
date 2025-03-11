@@ -72,6 +72,12 @@ class CameraControls {
     _startZoomDist = 0;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _doubleStick = false;
+
+    /**
      * @type {KeyboardMouseInput}
      * @private
      */
@@ -220,39 +226,26 @@ class CameraControls {
     gamepadDeadZoneHigh = 0.6;
 
     /**
-     * @param {Object} options - The options.
-     * @param {AppBase} options.app - The application.
-     * @param {CameraComponent} options.camera - The camera.
-     * @param {string} [options.mode] - The mode.
-     * @param {Vec3} [options.focus] - The focus.
-     * @param {number} [options.sceneSize] - The scene size.
-     * @param {boolean} [options.doubleStick] - Whether to use double stick.
+     * @param {CameraComponent} camera - The camera.
      */
-    constructor({ app, camera, mode, focus, sceneSize, doubleStick }) {
-        this._app = app;
+    constructor(camera) {
+        this._app = camera.system.app;
         this._camera = camera;
 
         // input
         this._desktopInput = new KeyboardMouseInput();
+        this._desktopInput.attach(this._app.graphicsDevice.canvas);
         this._orbitMobileInput = new MultiTouchInput();
-        this._flyMobileInput = doubleStick ? new JoystickDoubleInput() : new JoystickTouchInput();
+        this._flyMobileInput = this._doubleStick ? new JoystickDoubleInput() : new JoystickTouchInput();
         this._gamepadInput = new GamepadInput();
+        this._gamepadInput.attach(this._app.graphicsDevice.canvas);
 
         // controllers
         this._flyController = new FlyController();
         this._orbitController = new OrbitController();
 
-        // focus
-        if (focus) {
-            this.focusPoint = focus;
-            this.update(0);
-        }
-
-        // scene size
-        this.sceneSize = sceneSize ?? this.sceneSize;
-
         // mode
-        this.mode = mode ?? CameraControls.MODE_ORBIT;
+        this.mode = CameraControls.MODE_ORBIT;
 
         // ui
         if (this._flyMobileInput instanceof JoystickDoubleInput) {
@@ -287,42 +280,24 @@ class CameraControls {
             return;
         }
 
-        if (this.mode) {
-            // validate mode switch
-            if (mode === CameraControls.MODE_FLY && !this.enableFly) {
+        // set mode
+        switch (true) {
+            case this.enableFly && this.enableOrbit: {
+                this._mode = mode;
+                break;
+            }
+            case this.enableFly && !this.enableOrbit: {
+                this._mode = CameraControls.MODE_FLY;
+                break;
+            }
+            case !this.enableFly && this.enableOrbit: {
+                this._mode = CameraControls.MODE_ORBIT;
+                break;
+            }
+            case !this.enableFly && !this.enableOrbit: {
+                console.warn('CameraControls: both fly and orbit modes are disabled');
                 return;
             }
-            if (mode === CameraControls.MODE_ORBIT && !this.enableOrbit) {
-                return;
-            }
-
-            this._mode = mode;
-        } else {
-            // set initial mode
-            switch (true) {
-                case this.enableFly && this.enableOrbit: {
-                    this._mode = mode;
-                    break;
-                }
-                case this.enableFly && !this.enableOrbit: {
-                    this._mode = CameraControls.MODE_FLY;
-                    break;
-                }
-                case !this.enableFly && this.enableOrbit: {
-                    this._mode = CameraControls.MODE_ORBIT;
-                    break;
-                }
-                case !this.enableFly && !this.enableOrbit: {
-                    console.warn('CameraControls: both fly and orbit modes are disabled');
-                    return;
-                }
-            }
-
-            // desktop input attach
-            this._desktopInput.attach(this._app.graphicsDevice.canvas);
-
-            // gamepad input attach
-            this._gamepadInput.attach(this._app.graphicsDevice.canvas);
         }
 
         // mobile input reattach
