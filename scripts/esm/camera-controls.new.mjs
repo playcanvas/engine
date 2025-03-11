@@ -59,6 +59,18 @@ class CameraControls extends Script {
     _camera;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _enableOrbit = true;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _enableFly = true;
+
+    /**
      * @type {number}
      * @private
      */
@@ -153,24 +165,6 @@ class CameraControls extends Script {
         mouse: [0, 0, 0],
         touches: 0
     };
-
-    /**
-     * Enable orbit camera controls.
-     *
-     * @attribute
-     * @title Enable Orbit
-     * @type {boolean}
-     */
-    enableOrbit = true;
-
-    /**
-     * Enable fly camera controls.
-     *
-     * @attribute
-     * @title Enable Fly
-     * @type {boolean}
-     */
-    enableFly = true;
 
     /**
      * Enable panning.
@@ -310,6 +304,44 @@ class CameraControls extends Script {
     }
 
     /**
+     * Enable orbit camera controls.
+     *
+     * @attribute
+     * @title Enable Orbit
+     * @type {boolean}
+     */
+    set enableOrbit(enable) {
+        this._enableOrbit = enable;
+
+        if (!this._enableOrbit && this._mode === CameraControls.MODE_ORBIT) {
+            this.mode = CameraControls.MODE_FLY;
+        }
+    }
+
+    get enableOrbit() {
+        return this._enableOrbit;
+    }
+
+    /**
+     * Enable fly camera controls.
+     *
+     * @attribute
+     * @title Enable Fly
+     * @type {boolean}
+     */
+    set enableFly(enable) {
+        this._enableFly = enable;
+
+        if (!this._enableFly && this._mode === CameraControls.MODE_FLY) {
+            this.mode = CameraControls.MODE_ORBIT;
+        }
+    }
+
+    get enableFly() {
+        return this._enableFly;
+    }
+
+    /**
      * The camera controls mode.
      *
      * @attribute
@@ -317,13 +349,14 @@ class CameraControls extends Script {
      * @type {string}
      */
     set mode(mode) {
-        if (this._mode === mode) {
-            return;
-        }
-
         // check if initialized
         if (!this._mode) {
             this._init();
+        }
+
+        // check if mode is the same
+        if (this._mode === mode) {
+            return;
         }
 
         // set mode
