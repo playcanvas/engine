@@ -186,12 +186,4 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
 createJoystickUI('left');
 createJoystickUI('right');
 
-app.on('update', (dt) => {
-    cc.update(dt);
-});
-
-app.on('destroy', () => {
-    cc.destroy();
-});
-
 export { app };
