@@ -133,11 +133,11 @@ app.on('destroy', () => {
 });
 
 /**
- * @param {string} name - The name.
+ * @param {string} side - The name.
  * @param {number} baseSize - The base size.
  * @param {number} stickSize - The stick size.
  */
-const createJoystickUI = (name, baseSize = 100, stickSize = 60) => {
+const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
     const base = document.createElement('div');
     Object.assign(base.style, {
         display: 'none',
@@ -160,7 +160,7 @@ const createJoystickUI = (name, baseSize = 100, stickSize = 60) => {
         boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)'
     });
 
-    app.on(`joystick:${name}:base`, (x, y) => {
+    app.on(`${cc.joystickBaseEventName}:${side}`, (x, y) => {
         const left = x - baseSize * 0.5;
         const top = y - baseSize * 0.5;
 
@@ -168,7 +168,7 @@ const createJoystickUI = (name, baseSize = 100, stickSize = 60) => {
         base.style.left = `${left}px`;
         base.style.top = `${top}px`;
     });
-    app.on(`joystick:${name}:stick`, (x, y) => {
+    app.on(`${cc.joystickStickEventName}:${side}`, (x, y) => {
         const left = x - stickSize * 0.5;
         const top = y - stickSize * 0.5;
 
@@ -176,7 +176,7 @@ const createJoystickUI = (name, baseSize = 100, stickSize = 60) => {
         stick.style.left = `${left}px`;
         stick.style.top = `${top}px`;
     });
-    app.on(`joystick:${name}:reset`, () => {
+    app.on(`${cc.joystickResetEventName}:${side}`, () => {
         base.style.display = 'none';
         stick.style.display = 'none';
     });

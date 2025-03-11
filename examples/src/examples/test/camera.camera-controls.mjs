@@ -53,12 +53,6 @@ class CameraControls extends Script {
     static MODE_ORBIT = 'orbit';
 
     /**
-     * @type {string}
-     * @static
-     */
-    static UI_JOYSTICK_RESET = 'reset';
-
-    /**
      * @type {CameraComponent}
      * @private
      */
@@ -229,6 +223,21 @@ class CameraControls extends Script {
      * @type {number}
      */
     gamepadDeadZoneHigh = 0.6;
+
+    /**
+     * @type {string}
+     */
+    joystickBaseEventName = 'joystick:base';
+
+    /**
+     * @type {string}
+     */
+    joystickStickEventName = 'joystick:stick';
+
+    /**
+     * @type {string}
+     */
+    joystickResetEventName = 'joystick:reset';
 
     initialize() {
         // mode
@@ -433,18 +442,18 @@ class CameraControls extends Script {
 
     /**
      * @param {EventHandler} joystick - The joystick.
-     * @param {string} name - The name.
+     * @param {string} side - The chirality.
      * @private
      */
-    _exposeJoystickEvents(joystick, name) {
+    _exposeJoystickEvents(joystick, side) {
         joystick.on('position:base', (x, y) => {
-            this.app.fire(`joystick:${name}:base`, x, y);
+            this.app.fire(`${this.joystickBaseEventName}:${side}`, x, y);
         });
         joystick.on('position:stick', (x, y) => {
-            this.app.fire(`joystick:${name}:stick`, x, y);
+            this.app.fire(`${this.joystickStickEventName}:${side}`, x, y);
         });
         joystick.on('reset', () => {
-            this.app.fire(`joystick:${name}:reset`);
+            this.app.fire(`${this.joystickResetEventName}:${side}`);
         });
     }
 
