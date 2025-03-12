@@ -164,7 +164,6 @@ assetListLoader.load(() => {
         rotate: false
     });
 
-    let angleRad = 5;
     app.on('update', (dt) => {
 
         // enable the shadow catcher
@@ -172,7 +171,6 @@ assetListLoader.load(() => {
 
         // rotate the light
         if (data.get('data.rotate')) {
-            angleRad += dt;
             light1.rotate(0, 20 * dt, 0);
             light2.rotate(0, -30 * dt, 0);
         }
