@@ -12,7 +12,7 @@ const assets = {
     hdri_street: new pc.Asset(
         'hdri',
         'texture',
-        { url: `${rootPath}/static/assets/hdri/wide-street.hdr` },
+        { url: `${rootPath}/static/assets/hdri/st-peters-square.hdr` },
         { mipmaps: false }
     )
 };
@@ -59,6 +59,7 @@ assetListLoader.load(() => {
     const statueEntity = assets.statue.resource.instantiateRenderEntity({
         castShadows: true
     });
+    statueEntity.rotate(0, 140, 0);
     app.root.addChild(statueEntity);
 
     // Create an Entity with a camera component
@@ -86,7 +87,7 @@ assetListLoader.load(() => {
     cameraEntity.script.create('orbitCameraInputTouch');
 
     // position the camera in the world
-    cameraEntity.setLocalPosition(20, 23, -10);
+    cameraEntity.setLocalPosition(35, 12, -17);
     cameraEntity.lookAt(0, 0, 1);
     app.root.addChild(cameraEntity);
 
@@ -110,6 +111,7 @@ assetListLoader.load(() => {
     app.scene.sky.node.setLocalScale(new pc.Vec3(200, 200, 200));
     app.scene.sky.node.setLocalPosition(pc.Vec3.ZERO);
     app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
+    app.scene.exposure = 0.4;
 
     // create two directional lights which cast shadows
     const light1 = new pc.Entity('Light1');
@@ -121,8 +123,14 @@ assetListLoader.load(() => {
         normalOffsetBias: 0.3,
         shadowDistance: 50,
         shadowResolution: 1024,
-        shadowIntensity: 0.4
+        shadowIntensity: 0.2,
+        shadowType: pc.SHADOW_PCSS_32F,
+        penumbraSize: 10,
+        penumbraFalloff: 4,
+        shadowSamples: 10,
+        shadowBlockerSamples: 10
     });
+    light1.setLocalEulerAngles(55, -90, 0);
     app.root.addChild(light1);
 
     const light2 = new pc.Entity('Light2');
@@ -134,13 +142,9 @@ assetListLoader.load(() => {
         normalOffsetBias: 0.3,
         shadowDistance: 50,
         shadowResolution: 1024,
-        shadowType: pc.SHADOW_PCSS_32F,
-        penumbraSize: 10,
-        penumbraFalloff: 4,
-        shadowSamples: 10,
-        shadowBlockerSamples: 10,
-        shadowIntensity: 0.4
+        shadowIntensity: 0.3
     });
+    light2.setLocalEulerAngles(45, -30, 0);
     app.root.addChild(light2);
 
     // Create an entity with a shadow catcher script, and create a shadow catcher geometry plane
@@ -155,15 +159,23 @@ assetListLoader.load(() => {
 
     // set initial values
     data.set('data', {
-        affectScene: false
+        affectScene: false,
+        catcher: true,
+        rotate: false
     });
 
-    // Simple update loop to rotate the light
     let angleRad = 5;
     app.on('update', (dt) => {
-        angleRad += dt;
-        light1.setLocalEulerAngles(45, -20 * angleRad, 0);
-        light2.setLocalEulerAngles(55, 30 * angleRad, 0);
+
+        // enable the shadow catcher
+        shadowCatcher.enabled = data.get('data.catcher');
+
+        // rotate the light
+        if (data.get('data.rotate')) {
+            angleRad += dt;
+            light1.rotate(0, 20 * dt, 0);
+            light2.rotate(0, -30 * dt, 0);
+        }
 
         // if lights should not affect the scene, set their intensity to 0
         const affectScene = data.get('data.affectScene');

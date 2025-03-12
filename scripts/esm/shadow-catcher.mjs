@@ -77,8 +77,8 @@ class ShadowCatcher extends Script {
                 castShadows: false,
                 material: shadowCatcherMaterial
             });
-            this.app.root.addChild(this.geometry);
         }
+        this.entity.addChild(this.geometry);
 
         this.geometry?.render?.meshInstances.forEach((mi) => {
 

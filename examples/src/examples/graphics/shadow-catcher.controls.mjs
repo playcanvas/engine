@@ -7,7 +7,16 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     return fragment(
         jsx(
             Panel,
-            { headerText: 'Light Settings' },
+            { headerText: 'Settings' },
+            jsx(
+                LabelGroup,
+                { text: 'Enable' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.catcher' }
+                })
+            ),
             jsx(
                 LabelGroup,
                 { text: 'Affect Scene' },
@@ -15,6 +24,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.affectScene' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Rotate' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.rotate' }
                 })
             )
         )
