@@ -3,7 +3,7 @@ import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.new.mjs`);
 
 const tmpVa = new pc.Vec2();
 
@@ -12,6 +12,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
     throw new Error('No canvas found');
 }
 window.focus();
+
+const params = new URLSearchParams(window.location.search);
 
 const gfxOptions = {
     deviceTypes: [deviceType],
@@ -61,78 +63,6 @@ await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-/**
- * Calculate the bounding box of an entity.
- *
- * @param {pc.BoundingBox} bbox - The bounding box.
- * @param {pc.Entity} entity - The entity.
- * @returns {pc.BoundingBox} The bounding box.
- */
-const calcEntityAABB = (bbox, entity) => {
-    bbox.center.set(0, 0, 0);
-    bbox.halfExtents.set(0, 0, 0);
-    entity.findComponents('render').forEach((render) => {
-        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
-            bbox.add(mi.aabb);
-        });
-    });
-    return bbox;
-};
-
-/**
- * @param {pc.Entity} focus - The entity to focus the camera on.
- * @returns {CameraControls} The camera-controls script.
- */
-const createMultiCamera = (focus) => {
-    const start = new pc.Vec3(0, 20, 30);
-
-    const camera = new pc.Entity();
-    camera.addComponent('camera');
-    camera.addComponent('script');
-    camera.setPosition(start);
-    app.root.addChild(camera);
-
-    const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
-    const cameraDist = start.distance(bbox.center);
-
-    /** @type {CameraControls} */
-    const script = camera.script.create(CameraControls, {
-        properties: {
-            focusPoint: bbox.center,
-            sceneSize: bbox.halfExtents.length()
-        }
-    });
-
-    // focus on entity when 'f' key is pressed
-    const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
-        switch (e.key) {
-            case 'f': {
-                script.refocus(
-                    bbox.center,
-                    null,
-                    data.get('example.zoomReset') ? cameraDist : null,
-                    data.get('example.smoothedFocus')
-                );
-                break;
-            }
-            case 'r': {
-                script.refocus(
-                    bbox.center,
-                    start,
-                    data.get('example.zoomReset') ? cameraDist : null,
-                    data.get('example.smoothedFocus')
-                );
-            }
-        }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    app.on('destroy', () => {
-        window.removeEventListener('keydown', onKeyDown);
-    });
-
-    return script;
-};
-
 app.start();
 
 app.scene.ambientLight.set(0.4, 0.4, 0.4);
@@ -151,41 +81,149 @@ const statue = assets.statue.resource.instantiateRenderEntity();
 statue.setLocalPosition(0, -0.5, 0);
 app.root.addChild(statue);
 
-const multiCameraScript = createMultiCamera(statue);
+/**
+ * Calculate the bounding box of an entity.
+ *
+ * @param {pc.BoundingBox} bbox - The bounding box.
+ * @param {pc.Entity} entity - The entity.
+ * @returns {pc.BoundingBox} The bounding box.
+ */
+const calcEntityAABB = (bbox, entity) => {
+    bbox.center.set(0, 0, 0);
+    bbox.halfExtents.set(0, 0, 0);
+    entity.findComponents('render').forEach((render) => {
+        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
+            bbox.add(mi.aabb);
+        });
+    });
+    return bbox;
+};
 
-// Bind controls to camera attributes
-data.set('example', {
-    zoomReset: true,
-    smoothedFocus: true
+const start = new pc.Vec3(0, 20, 30);
+const bbox = calcEntityAABB(new pc.BoundingBox(), statue);
+const focus = bbox.center;
+
+const camera = new pc.Entity();
+camera.addComponent('camera');
+camera.addComponent('script');
+camera.setPosition(start);
+app.root.addChild(camera);
+const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+Object.assign(cc, {
+    sceneSize: bbox.halfExtents.length(),
+    focusPoint: bbox.center,
+    mode: typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT
 });
 
+// focus on entity when 'f' key is pressed
+const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
+    switch (e.key) {
+        case 'f': {
+            cc.focus(focus, true);
+            break;
+        }
+        case 'l': {
+            cc.look(focus);
+            break;
+        }
+        case 'r': {
+            cc.reset(focus, start);
+            break;
+        }
+    }
+};
+window.addEventListener('keydown', onKeyDown);
+app.on('destroy', () => {
+    window.removeEventListener('keydown', onKeyDown);
+});
+
+/**
+ * @param {string} side - The name.
+ * @param {number} baseSize - The base size.
+ * @param {number} stickSize - The stick size.
+ */
+const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
+    const base = document.createElement('div');
+    Object.assign(base.style, {
+        display: 'none',
+        position: 'absolute',
+        width: `${baseSize}px`,
+        height: `${baseSize}px`,
+        borderRadius: '50%',
+        backgroundColor: 'rgba(50, 50, 50, 0.5)',
+        boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5)'
+    });
+
+    const stick = document.createElement('div');
+    Object.assign(stick.style, {
+        display: 'none',
+        position: 'absolute',
+        width: `${stickSize}px`,
+        height: `${stickSize}px`,
+        borderRadius: '50%',
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)'
+    });
+
+    app.on(`${cc.joystickBaseEventName}:${side}`, (x, y) => {
+        const left = x - baseSize * 0.5;
+        const top = y - baseSize * 0.5;
+
+        base.style.display = 'block';
+        base.style.left = `${left}px`;
+        base.style.top = `${top}px`;
+    });
+    app.on(`${cc.joystickStickEventName}:${side}`, (x, y) => {
+        const left = x - stickSize * 0.5;
+        const top = y - stickSize * 0.5;
+
+        stick.style.display = 'block';
+        stick.style.left = `${left}px`;
+        stick.style.top = `${top}px`;
+    });
+    app.on(`${cc.joystickResetEventName}:${side}`, () => {
+        base.style.display = 'none';
+        stick.style.display = 'none';
+    });
+
+    document.body.append(base, stick);
+};
+
+// Create joystick UI
+createJoystickUI('left');
+createJoystickUI('right');
+
+// Bind controls to camera attributes
 data.set('attr', [
     'enableOrbit',
-    'enablePan',
     'enableFly',
-    'focusDamping',
-    'pitchRange',
+    'enablePan',
     'rotateSpeed',
-    'rotateDamping',
+    'rotateJoystickSens',
     'moveSpeed',
     'moveFastSpeed',
     'moveSlowSpeed',
-    'moveDamping',
     'zoomSpeed',
     'zoomPinchSens',
+    'focusDamping',
+    'rotateDamping',
+    'moveDamping',
     'zoomDamping',
-    'zoomMin',
-    'zoomMax',
-    'zoomScaleMin'
+    'pitchRange',
+    'yawRange',
+    'zoomRange',
+    'zoomScaleMin',
+    'gamepadDeadZone',
+    'useVirtualGamepad'
 ].reduce((/** @type {Record<string, any>} */ obj, key) => {
-    const value = multiCameraScript[key];
+    const value = cc[key];
 
     if (value instanceof pc.Vec2) {
         obj[key] = [value.x, value.y];
         return obj;
     }
 
-    obj[key] = multiCameraScript[key];
+    obj[key] = cc[key];
     return obj;
 }, {}));
 
@@ -196,16 +234,16 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     }
 
     if (Array.isArray(value)) {
-        multiCameraScript[key] = tmpVa.set(value[0], value[1]);
+        cc[key] = tmpVa.set(value[0], value[1]);
         return;
     }
     if (index !== undefined) {
         const arr = data.get(`${category}.${key}`);
-        multiCameraScript[key] = tmpVa.set(arr[0], arr[1]);
+        cc[key] = tmpVa.set(arr[0], arr[1]);
         return;
     }
 
-    multiCameraScript[key] = value;
+    cc[key] = value;
 });
 
 export { app };
