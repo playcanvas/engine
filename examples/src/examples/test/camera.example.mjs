@@ -109,9 +109,11 @@ camera.addComponent('script');
 camera.setPosition(start);
 app.root.addChild(camera);
 const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
-cc.sceneSize = bbox.halfExtents.length();
-cc.focusPoint = bbox.center;
-cc.mode = typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT;
+Object.assign(cc, {
+    sceneSize: bbox.halfExtents.length(),
+    focusPoint: bbox.center,
+    mode: typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT
+});
 
 // focus on entity when 'f' key is pressed
 const onKeyDown = (/** @type {KeyboardEvent} */ e) => {

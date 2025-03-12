@@ -296,6 +296,21 @@ class CameraControls extends Script {
     joystickResetEventName = 'joystick:reset';
 
     initialize() {
+        if (!this.entity.camera) {
+            console.error('CameraControls: camera component not found');
+            return;
+        }
+        this._camera = this.entity.camera;
+
+        // attach input
+        this._desktopInput.attach(this.app.graphicsDevice.canvas);
+        this._gamepadInput.attach(this.app.graphicsDevice.canvas);
+
+        // expose ui events
+        this._exposeJoystickEvents(this._flyMobileTouchInput.joystick, 'left');
+        this._exposeJoystickEvents(this._flyMobileGamepadInput.leftJoystick, 'left');
+        this._exposeJoystickEvents(this._flyMobileGamepadInput.rightJoystick, 'right');
+
         // mode
         this.mode = this._mode ?? CameraControls.MODE_ORBIT;
 
@@ -349,11 +364,6 @@ class CameraControls extends Script {
      * @type {string}
      */
     set mode(mode) {
-        // check if initialized
-        if (!this._mode) {
-            this._init();
-        }
-
         // check if mode is the same
         if (this._mode === mode) {
             return;
@@ -455,14 +465,10 @@ class CameraControls extends Script {
      * @type {number}
      */
     set focusDamping(damping) {
-        this.mode = this._mode;
-
         this._orbitController.focusDamping = damping;
     }
 
     get focusDamping() {
-        this.mode = this._mode;
-
         return this._orbitController.focusDamping;
     }
 
@@ -475,15 +481,11 @@ class CameraControls extends Script {
      * @type {number}
      */
     set rotateDamping(damping) {
-        this.mode = this._mode;
-
         this._flyController.rotateDamping = damping;
         this._orbitController.rotateDamping = damping;
     }
 
     get rotateDamping() {
-        this.mode = this._mode;
-
         return this._controller.rotateDamping;
     }
 
@@ -496,14 +498,10 @@ class CameraControls extends Script {
      * @type {number}
      */
     set moveDamping(damping) {
-        this.mode = this._mode;
-
         this._flyController.moveDamping = damping;
     }
 
     get moveDamping() {
-        this.mode = this._mode;
-
         return this._flyController.moveDamping;
     }
 
@@ -516,14 +514,10 @@ class CameraControls extends Script {
      * @type {number}
      */
     set zoomDamping(damping) {
-        this.mode = this._mode;
-
         this._orbitController.zoomDamping = damping;
     }
 
     get zoomDamping() {
-        this.mode = this._mode;
-
         return this._orbitController.zoomDamping;
     }
 
@@ -535,15 +529,11 @@ class CameraControls extends Script {
      * @type {Vec2}
      */
     set pitchRange(range) {
-        this.mode = this._mode;
-
         this._flyController.pitchRange = range;
         this._orbitController.pitchRange = range;
     }
 
     get pitchRange() {
-        this.mode = this._mode;
-
         return this._controller.pitchRange;
     }
 
@@ -555,15 +545,11 @@ class CameraControls extends Script {
      * @type {Vec2}
      */
     set yawRange(range) {
-        this.mode = this._mode;
-
         this._flyController.yawRange = range;
         this._orbitController.yawRange = range;
     }
 
     get yawRange() {
-        this.mode = this._mode;
-
         return this._controller.yawRange;
     }
 
@@ -575,14 +561,10 @@ class CameraControls extends Script {
      * @type {Vec2}
      */
     set zoomRange(range) {
-        this.mode = this._mode;
-
         this._orbitController.zoomRange = range;
     }
 
     get zoomRange() {
-        this.mode = this._mode;
-
         return this._orbitController.zoomRange;
     }
 
@@ -599,26 +581,6 @@ class CameraControls extends Script {
 
     get useVirtualGamepad() {
         return this._useVirtualGamepad;
-    }
-
-    /**
-     * @private
-     */
-    _init() {
-        if (!this.entity.camera) {
-            console.error('CameraControls: camera component not found');
-            return;
-        }
-        this._camera = this.entity.camera;
-
-        // attach input
-        this._desktopInput.attach(this.app.graphicsDevice.canvas);
-        this._gamepadInput.attach(this.app.graphicsDevice.canvas);
-
-        // expose ui events
-        this._exposeJoystickEvents(this._flyMobileTouchInput.joystick, 'left');
-        this._exposeJoystickEvents(this._flyMobileGamepadInput.leftJoystick, 'left');
-        this._exposeJoystickEvents(this._flyMobileGamepadInput.rightJoystick, 'right');
     }
 
     /**
