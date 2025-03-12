@@ -166,19 +166,18 @@ class GSplatInstance {
         }
     }
 
-    updateViewport() {
-        // TODO: improve, needs to handle render targets of different sizes
-        const device = this.splat.device;
-        viewport[0] = device.width;
-        viewport[1] = device.height;
+    updateViewport(cameraNode) {
+        const camera = cameraNode?.camera;
+        const renderTarget = camera?.renderTarget;
+        const { width, height } = renderTarget ?? this.splat.device;
+
+        viewport[0] = width;
+        viewport[1] = height;
 
         // adjust viewport for stereoscopic VR sessions
-        if (this.cameras.length > 0) {
-            const camera = this.cameras[0];
-            const xr = camera.xr;
-            if (xr && xr.active && xr.views.list.length === 2) {
-                viewport[0] /= 2;
-            }
+        const xr = camera?.xr;
+        if (xr?.active && xr.views.list.length === 2) {
+            viewport[0] *= 0.5;
         }
 
         this.material.setParameter('viewport', viewport);
@@ -207,7 +206,7 @@ class GSplatInstance {
             }
         }
 
-        this.updateViewport();
+        this.updateViewport(cameraNode);
     }
 
     update() {
