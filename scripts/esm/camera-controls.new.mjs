@@ -77,6 +77,24 @@ class CameraControls extends Script {
     _startZoomDist = 0;
 
     /**
+     * @type {Vec2}
+     * @private
+     */
+    _pitchRange = new Vec2(-360, 360);
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _yawRange = new Vec2(-360, 360);
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _zoomRange = new Vec2();
+
+    /**
      * @type {boolean}
      * @private
      */
@@ -529,12 +547,14 @@ class CameraControls extends Script {
      * @type {Vec2}
      */
     set pitchRange(range) {
-        this._flyController.pitchRange = range;
-        this._orbitController.pitchRange = range;
+        this._pitchRange.x = math.clamp(range.x, -360, 360);
+        this._pitchRange.y = math.clamp(range.y, -360, 360);
+        this._flyController.pitchRange = this._pitchRange;
+        this._orbitController.pitchRange = this._pitchRange;
     }
 
     get pitchRange() {
-        return this._controller.pitchRange;
+        return this._pitchRange;
     }
 
     /**
@@ -545,12 +565,14 @@ class CameraControls extends Script {
      * @type {Vec2}
      */
     set yawRange(range) {
-        this._flyController.yawRange = range;
-        this._orbitController.yawRange = range;
+        this._yawRange.x = math.clamp(range.x, -360, 360);
+        this._yawRange.y = math.clamp(range.y, -360, 360);
+        this._flyController.yawRange = this._yawRange;
+        this._orbitController.yawRange = this._yawRange;
     }
 
     get yawRange() {
-        return this._controller.yawRange;
+        return this._yawRange;
     }
 
     /**
@@ -561,11 +583,13 @@ class CameraControls extends Script {
      * @type {Vec2}
      */
     set zoomRange(range) {
-        this._orbitController.zoomRange = range;
+        this._zoomRange.x = range.x;
+        this._zoomRange.y = range.y <= range.x ? Infinity : range.y;
+        this._orbitController.zoomRange = this._zoomRange;
     }
 
     get zoomRange() {
-        return this._orbitController.zoomRange;
+        return this._zoomRange;
     }
 
     /**
