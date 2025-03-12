@@ -137,7 +137,8 @@ const standardMaterialParameterTypes = {
 
     envAtlas: 'texture',
 
-    twoSidedLighting: 'boolean'
+    twoSidedLighting: 'boolean',
+    shadowCatcher: 'boolean'
 
     // nineSlicedMode
     // pixelSnap
