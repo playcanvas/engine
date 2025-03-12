@@ -187,8 +187,6 @@ class OutlineRenderer {
     addEntity(entity, color, recursive = true) {
         const meshInstances = this.getMeshInstances(entity, recursive);
 
-        console.log(meshInstances.length);
-
         // update all materials
         meshInstances.forEach((meshInstance) => {
             if (meshInstance.material instanceof StandardMaterial) {
