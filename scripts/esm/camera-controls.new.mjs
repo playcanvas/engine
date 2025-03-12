@@ -716,7 +716,7 @@ class CameraControls extends Script {
      */
     _addDesktopInputs() {
         const { key, button, mouse, wheel } = this._desktopInput.frame();
-        const [forward, back, left, right, up, down, shift, ctrl] = key;
+        const [forward, back, left, right, up, down, /** space */, shift, ctrl] = key;
 
         // left mouse button, middle mouse button, mouse wheel
         const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;

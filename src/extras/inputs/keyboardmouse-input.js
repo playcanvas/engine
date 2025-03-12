@@ -3,7 +3,7 @@ import { Delta, Input } from './input.js';
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
 
-const array8 = new Array(8).fill(0);
+const array9 = new Array(9).fill(0);
 
 class KeyboardMouseInput extends Input {
     /**
@@ -16,13 +16,13 @@ class KeyboardMouseInput extends Input {
      * @type {number[]}
      * @private
      */
-    _keyPrev = new Array(8).fill(0);
+    _keyPrev = new Array(9).fill(0);
 
     /**
      * @type {number[]}
      * @private
      */
-    _keyNow = new Array(8).fill(0);
+    _keyNow = new Array(9).fill(0);
 
     /**
      * @type {number[]}
@@ -33,7 +33,7 @@ class KeyboardMouseInput extends Input {
      * @override
      */
     deltas = {
-        key: new Delta(8),
+        key: new Delta(9),
         button: new Delta(3),
         mouse: new Delta(2),
         wheel: new Delta()
@@ -183,13 +183,16 @@ class KeyboardMouseInput extends Input {
             case 'KeyE':
                 this._keyNow[5] = value;
                 break;
+            case 'Space':
+                this._keyNow[6] = value;
+                break;
             case 'ShiftLeft':
             case 'ShiftRight':
-                this._keyNow[6] = value;
+                this._keyNow[7] = value;
                 break;
             case 'ControlLeft':
             case 'ControlRight':
-                this._keyNow[7] = value;
+                this._keyNow[8] = value;
                 break;
         }
     }
@@ -235,11 +238,11 @@ class KeyboardMouseInput extends Input {
      * @returns {{ [K in keyof KeyboardMouseInput["deltas"]]: number[] }} - The deltas.
      */
     frame() {
-        for (let i = 0; i < array8.length; i++) {
-            array8[i] = this._keyNow[i] - this._keyPrev[i];
+        for (let i = 0; i < array9.length; i++) {
+            array9[i] = this._keyNow[i] - this._keyPrev[i];
             this._keyPrev[i] = this._keyNow[i];
         }
-        this.deltas.key.add(array8);
+        this.deltas.key.add(array9);
 
         return super.frame();
     }
