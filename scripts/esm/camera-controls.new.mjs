@@ -792,6 +792,7 @@ class CameraControls extends Script {
 
     /**
      * @param {number} dt - The time delta.
+     * @private
      */
     _updateController(dt) {
         if (this._controller instanceof OrbitController) {
