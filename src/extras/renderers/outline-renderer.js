@@ -160,14 +160,14 @@ class OutlineRenderer {
 
         const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
         renders.forEach((render) => {
-            if (render.entity.enabled && render.enabled && render.meshInstances) {
+            if (render.meshInstances) {
                 meshInstances.push(...render.meshInstances);
             }
         });
 
         const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
         models.forEach((model) => {
-            if (model.entity.enabled && model.enabled && model.meshInstances) {
+            if (model.meshInstances) {
                 meshInstances.push(...model.meshInstances);
             }
         });
@@ -186,6 +186,8 @@ class OutlineRenderer {
      */
     addEntity(entity, color, recursive = true) {
         const meshInstances = this.getMeshInstances(entity, recursive);
+
+        console.log(meshInstances.length);
 
         // update all materials
         meshInstances.forEach((meshInstance) => {
