@@ -440,16 +440,17 @@ function reprojectTexture(source, target, options = {}) {
 
     let shader = getProgramLibrary(device).getCachedShader(shaderKey);
     if (!shader) {
-        const defines =
-            `#define PROCESS_FUNC ${processFunc}\n${
-                prefilterSamples ? '#define USE_SAMPLES_TEX\n' : ''
-            }${source.cubemap ? '#define CUBEMAP_SOURCE\n' : ''
-            }#define DECODE_FUNC ${decodeFunc}\n` +
-            `#define ENCODE_FUNC ${encodeFunc}\n` +
-            `#define SOURCE_FUNC ${sourceFunc}\n` +
-            `#define TARGET_FUNC ${targetFunc}\n` +
-            `#define NUM_SAMPLES ${numSamples}\n` +
-            `#define NUM_SAMPLES_SQRT ${Math.round(Math.sqrt(numSamples)).toFixed(1)}\n`;
+        const defines = `
+            #define PROCESS_FUNC ${processFunc}
+            ${prefilterSamples ? '#define USE_SAMPLES_TEX' : ''}
+            ${source.cubemap ? '#define CUBEMAP_SOURCE' : ''}
+            #define DECODE_FUNC ${decodeFunc}
+            #define ENCODE_FUNC ${encodeFunc}
+            #define SOURCE_FUNC ${sourceFunc}
+            #define TARGET_FUNC ${targetFunc}
+            #define NUM_SAMPLES ${numSamples}
+            #define NUM_SAMPLES_SQRT ${Math.round(Math.sqrt(numSamples)).toFixed(1)}
+        `;
 
         shader = createShaderFromCode(
             device,
