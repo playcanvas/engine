@@ -408,39 +408,10 @@ class CameraControls extends Script {
         }
 
         // mobile input reattach
-        const mobileInput = this._mode === CameraControls.MODE_FLY ?
-            this._useVirtualGamepad ?
-                this._flyMobileGamepadInput :
-                this._flyMobileTouchInput :
-            this._orbitMobileInput;
-        if (mobileInput !== this._mobileInput) {
-            if (this._mobileInput) {
-                this._mobileInput.detach();
-            }
-            this._mobileInput = mobileInput;
-            this._mobileInput.attach(this.app.graphicsDevice.canvas);
-
-            // reset state
-            this._resetState();
-        }
+        this._reattachMobileInput();
 
         // controller reattach
-        const controller = this._mode === CameraControls.MODE_FLY ? this._flyController : this._orbitController;
-        const currZoomDist = this._orbitController.zoom;
-        if (controller !== this._controller) {
-            if (this._controller) {
-                this._controller.detach();
-            }
-            this._controller = controller;
-            this._controller.attach(this._camera.entity.getWorldTransform());
-        }
-
-        // refocus if orbit mode
-        if (this._controller instanceof OrbitController) {
-            const start = this._camera.entity.getPosition();
-            const point = tmpV1.copy(this._camera.entity.forward).mulScalar(currZoomDist).add(start);
-            this._controller.focus(point, start, false);
-        }
+        this._reattachController();
     }
 
     get mode() {
@@ -601,6 +572,7 @@ class CameraControls extends Script {
      */
     set useVirtualGamepad(use) {
         this._useVirtualGamepad = use;
+        this._reattachMobileInput();
     }
 
     get useVirtualGamepad() {
@@ -636,6 +608,49 @@ class CameraControls extends Script {
         joystick.on('reset', () => {
             this.app.fire(`${this.joystickResetEventName}:${side}`);
         });
+    }
+
+    /**
+     * @private
+     */
+    _reattachMobileInput() {
+        const mobileInput = this._mode === CameraControls.MODE_FLY ?
+            this._useVirtualGamepad ?
+                this._flyMobileGamepadInput :
+                this._flyMobileTouchInput :
+            this._orbitMobileInput;
+        if (mobileInput !== this._mobileInput) {
+            if (this._mobileInput) {
+                this._mobileInput.detach();
+            }
+            this._mobileInput = mobileInput;
+            this._mobileInput.attach(this.app.graphicsDevice.canvas);
+
+            // reset state
+            this._resetState();
+        }
+    }
+
+    /**
+     * @private
+     */
+    _reattachController() {
+        const controller = this._mode === CameraControls.MODE_FLY ? this._flyController : this._orbitController;
+        const currZoomDist = this._orbitController.zoom;
+        if (controller !== this._controller) {
+            if (this._controller) {
+                this._controller.detach();
+            }
+            this._controller = controller;
+            this._controller.attach(this._camera.entity.getWorldTransform());
+        }
+
+        // refocus if orbit mode
+        if (this._controller instanceof OrbitController) {
+            const start = this._camera.entity.getPosition();
+            const point = tmpV1.copy(this._camera.entity.forward).mulScalar(currZoomDist).add(start);
+            this._controller.focus(point, start, false);
+        }
     }
 
     /**
