@@ -114,7 +114,11 @@ function createCharacterController(camera) {
     });
     entity.addComponent('script');
     const fpc = /** @type {FirstPersonControls} */ (entity.script.create(FirstPersonControls));
-    fpc.camera = camera.camera;
+    Object.assign(fpc, {
+        camera: camera.camera,
+        moveDamping: 0,
+        rotateDamping: 0
+    });
 
     return entity;
 }

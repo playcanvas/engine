@@ -1,5 +1,4 @@
 import {
-    math,
     GamepadInput,
     JoystickDoubleInput,
     JoystickTouchInput,
@@ -11,7 +10,7 @@ import {
     Vec3
 } from 'playcanvas';
 
-/** @import { CameraComponent, EventHandler } from 'playcanvas' */
+/** @import { CameraComponent, RigidBodyComponent, EventHandler } from 'playcanvas' */
 
 /**
  * @typedef {object} CameraControlsFrame
@@ -22,6 +21,7 @@ import {
 /**
  * @typedef {object} CameraControlsState
  * @property {Vec3} axis - The axis.
+ * @property {number} space - The space.
  * @property {number} shift - The shift.
  * @property {number} ctrl - The ctrl.
  * @property {number[]} mouse - The mouse.
@@ -40,16 +40,10 @@ class FirstPersonControls extends Script {
     _camera = null;
 
     /**
-     * @type {Vec2}
+     * @type {RigidBodyComponent}
      * @private
      */
-    _pitchRange = new Vec2(-360, 360);
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _yawRange = new Vec2(-360, 360);
+    _rigidbody;
 
     /**
      * @type {boolean}
@@ -108,20 +102,16 @@ class FirstPersonControls extends Script {
      */
     _state = {
         axis: new Vec3(),
+        space: 0,
         shift: 0,
         ctrl: 0,
         mouse: [0, 0, 0],
         touches: 0
     };
 
-    /**
-     * The scene size. The zoom, pan and fly speeds are relative to this size.
-     *
-     * @attribute
-     * @title Scene Size
-     * @type {number}
-     */
-    sceneSize = 10;
+    _position = new Vec3();
+
+    _jumping = false;
 
     /**
      * The rotation speed.
@@ -142,31 +132,33 @@ class FirstPersonControls extends Script {
     rotateJoystickSens = 2;
 
     /**
-     * The fly move speed relative to the scene size.
+     * The fly move speed.
      *
      * @attribute
      * @title Move Speed
      * @type {number}
      */
-    moveSpeed = 2;
+    moveSpeed = 5;
 
     /**
-     * The fast fly move speed relative to the scene size.
+     * The fast fly move speed.
      *
      * @attribute
      * @title Move Fast Speed
      * @type {number}
      */
-    moveFastSpeed = 4;
+    moveFastSpeed = 10;
 
     /**
-     * The slow fly move speed relative to the scene size.
+     * The slow fly move speed.
      *
      * @attribute
      * @title Move Slow Speed
      * @type {number}
      */
-    moveSlowSpeed = 1;
+    moveSlowSpeed = 3;
+
+    jumpForce = 850;
 
     /**
      * The gamepad dead zone.
@@ -208,13 +200,19 @@ class FirstPersonControls extends Script {
     joystickResetEventName = 'joystick:reset';
 
     initialize() {
+        if (!this.entity.rigidbody) {
+            console.error('FirstPersonControls: rigidbody component not found');
+            return;
+        }
+        this._rigidbody = this.entity.rigidbody;
+
         // destroy
         this.on('destroy', this._destroy, this);
     }
 
     set camera(camera) {
         if (!camera) {
-            console.error('CameraControls: camera component not found');
+            console.error('FirstPersonControls: camera component not found');
             return;
         }
         this._camera = camera;
@@ -272,40 +270,6 @@ class FirstPersonControls extends Script {
     }
 
     /**
-     * The pitch range.
-     *
-     * @attribute
-     * @title Pitch Range
-     * @type {Vec2}
-     */
-    set pitchRange(range) {
-        this._pitchRange.x = math.clamp(range.x, -360, 360);
-        this._pitchRange.y = math.clamp(range.y, -360, 360);
-        this._controller.pitchRange = this._pitchRange;
-    }
-
-    get pitchRange() {
-        return this._pitchRange;
-    }
-
-    /**
-     * The yaw range.
-     *
-     * @attribute
-     * @title Yaw Range
-     * @type {Vec2}
-     */
-    set yawRange(range) {
-        this._yawRange.x = math.clamp(range.x, -360, 360);
-        this._yawRange.y = math.clamp(range.y, -360, 360);
-        this._controller.yawRange = this._yawRange;
-    }
-
-    get yawRange() {
-        return this._yawRange;
-    }
-
-    /**
      * Whether to use the virtual gamepad or touch joystick for mobile fly mode.
      *
      * @attribute
@@ -319,6 +283,17 @@ class FirstPersonControls extends Script {
 
     get useVirtualGamepad() {
         return this._useVirtualGamepad;
+    }
+
+    get grounded() {
+        const start = this.entity.getPosition();
+        const end = tmpV1.copy(start).add(Vec3.DOWN);
+        end.y -= 0.1;
+        const system = this.app.systems.rigidbody;
+        if (!system) {
+            return false;
+        }
+        return !!system.raycastFirst(start, end);
     }
 
     /**
@@ -380,6 +355,7 @@ class FirstPersonControls extends Script {
      */
     _resetState() {
         this._state.axis.set(0, 0, 0);
+        this._state.space = 0;
         this._state.shift = 0;
         this._state.ctrl = 0;
         this._state.mouse.fill(0);
@@ -409,7 +385,7 @@ class FirstPersonControls extends Script {
         const speed = this._state.shift ?
             this.moveFastSpeed : this._state.ctrl ?
                 this.moveSlowSpeed : this.moveSpeed;
-        return move.mulScalar(speed * this.sceneSize);
+        return move.mulScalar(speed);
     }
 
     /**
@@ -417,10 +393,11 @@ class FirstPersonControls extends Script {
      */
     _addDesktopInputs() {
         const { key, button, mouse } = this._desktopInput.frame();
-        const [forward, back, left, right, up, down, /** space */, shift, ctrl] = key;
+        const [forward, back, left, right, /** up */, /** down */, space, shift, ctrl] = key;
 
         // update state
-        this._state.axis.add(tmpV1.set(right - left, up - down, forward - back));
+        this._state.axis.add(tmpV1.set(right - left, 0, forward - back));
+        this._state.space += space;
         this._state.shift += shift;
         this._state.ctrl += ctrl;
         for (let i = 0; i < this._state.mouse.length; i++) {
@@ -464,6 +441,41 @@ class FirstPersonControls extends Script {
     }
 
     /**
+     * @private
+     */
+    _jump() {
+        if (this._rigidbody.linearVelocity.y < 0) {
+            this._jumping = false;
+        }
+        if (this._state.space && !this._jumping && this.grounded) {
+            this._jumping = true;
+            this._rigidbody.applyImpulse(0, this.jumpForce, 0);
+        }
+    }
+
+    /**
+     * @param {number} dt - The time delta.
+     * @private
+     */
+    _updateController(dt) {
+        if (!this._camera) {
+            return;
+        }
+
+        // camera update
+        tmpM1.copy(this._controller.update(this._frame, dt));
+        this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
+
+        // rigidbody update
+        this._jump();
+        const position = tmpM1.getTranslation();
+        const velocity = tmpV1.sub2(position, this._position).divScalar(dt);
+        velocity.y = this._rigidbody.linearVelocity.y;
+        this._rigidbody.linearVelocity = velocity;
+        this._position.copy(position);
+    }
+
+    /**
      * @param {number} dt - The time delta.
      */
     update(dt) {
@@ -483,9 +495,7 @@ class FirstPersonControls extends Script {
         this._addGamepadInputs();
 
         // update controller
-        tmpM1.copy(this._controller.update(this._frame, dt));
-        // this._camera.entity.setPosition(tmpM1.getTranslation());
-        this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
+        this._updateController(dt);
     }
 }
 

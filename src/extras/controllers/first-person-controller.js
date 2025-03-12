@@ -1,10 +1,9 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
+import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
 import { Controller } from './controller.js';
-
-/** @import { Mat4 } from '../../core/math/mat4.js'; */
 
 /**
  * @typedef {object} FirstPersonInputFrame
@@ -15,6 +14,7 @@ import { Controller } from './controller.js';
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
+const tmpM1 = new Mat4();
 
 /**
  * Calculate the lerp rate.
@@ -51,18 +51,6 @@ class FirstPersonController extends Controller {
     _angles = new Vec3();
 
     /**
-     * @type {Vec2}
-     * @private
-     */
-    _pitchRange = new Vec2(-Infinity, Infinity);
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _yawRange = new Vec2(-Infinity, Infinity);
-
-    /**
      * The rotation damping. A higher value means more damping. A value of 0 means no damping.
      *
      * @type {number}
@@ -76,32 +64,11 @@ class FirstPersonController extends Controller {
      */
     moveDamping = 0.98;
 
-    set pitchRange(value) {
-        this._pitchRange.copy(value);
-        this._clampAngles();
-        this._smoothTransform(-1);
-    }
-
-    get pitchRange() {
-        return this._pitchRange;
-    }
-
-    set yawRange(value) {
-        this._yawRange.copy(value);
-        this._clampAngles();
-        this._smoothTransform(-1);
-    }
-
-    get yawRange() {
-        return this._yawRange;
-    }
-
     /**
      * @private
      */
     _clampAngles() {
-        this._targetAngles.x = math.clamp(this._targetAngles.x, this._pitchRange.x, this._pitchRange.y);
-        this._targetAngles.y = math.clamp(this._targetAngles.y, this._yawRange.x, this._yawRange.y);
+        this._targetAngles.x = math.clamp(this._targetAngles.x, -90, 90);
     }
 
     /**
@@ -120,14 +87,8 @@ class FirstPersonController extends Controller {
      * @private
      */
     _move(dv, dt) {
-        const back = this._transform.getZ();
-        const right = this._transform.getX();
-        const up = this._transform.getY();
-
-        tmpV1.set(0, 0, 0);
-        tmpV1.sub(tmpV2.copy(back).mulScalar(dv.z));
-        tmpV1.add(tmpV2.copy(right).mulScalar(dv.x));
-        tmpV1.add(tmpV2.copy(up).mulScalar(dv.y));
+        tmpM1.setFromAxisAngle(Vec3.UP, this._angles.y);
+        tmpM1.transformVector(tmpV1.set(dv.x, dv.y, -dv.z), tmpV1);
         tmpV1.mulScalar(dt);
 
         this._targetPosition.add(tmpV1);
@@ -159,7 +120,7 @@ class FirstPersonController extends Controller {
      * @param {Mat4} transform - The transform.
      */
     attach(transform) {
-        this._targetPosition.copy(transform.getTranslation());
+        this._targetPosition.set(0, 0, 0);
 
         transform.getZ(tmpV1).normalize();
         const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
