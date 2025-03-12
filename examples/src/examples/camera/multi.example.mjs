@@ -1,4 +1,4 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move (Fly enabled)</div><div>(<b>LMB</b>) Orbit, (<b>LMB </b>(Orbit disabled)<b> / RMB</b>) Fly</div><div>(<b>Hold Shift / MMB / RMB </b>(Fly or Orbit disabled)) Pan</div><div>(<b>Scroll Wheel</b> (Orbit or Pan enabled)) Zoom</div><div>(<b>F</b>) Focus (<b>R</b>) Reset</div></div>
+// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move </div><div>(<b>Hold Shift</b>) Move Fast (<b>Hold Ctrl</b>) Move Slow</div><div>(<b>LMB / RMB </b>) Orbit / Fly</div><div>(<b>Hold Shift / MMB </b>) Pan</div><div>(<b>Wheel / Pinch</b>) Zoom</div><div>(<b>F</b>) Focus (<b>R</b>) Reset</div></div>
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
@@ -12,8 +12,6 @@ if (!(canvas instanceof HTMLCanvasElement)) {
     throw new Error('No canvas found');
 }
 window.focus();
-
-const params = new URLSearchParams(window.location.search);
 
 const gfxOptions = {
     deviceTypes: [deviceType],
@@ -101,7 +99,6 @@ const calcEntityAABB = (bbox, entity) => {
 
 const start = new pc.Vec3(0, 20, 30);
 const bbox = calcEntityAABB(new pc.BoundingBox(), statue);
-const focus = bbox.center;
 
 const camera = new pc.Entity();
 camera.addComponent('camera');
@@ -111,23 +108,22 @@ app.root.addChild(camera);
 const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
 Object.assign(cc, {
     sceneSize: bbox.halfExtents.length(),
-    focusPoint: bbox.center,
-    mode: typeof params.get('fly') === 'string' ? CameraControls.MODE_FLY : CameraControls.MODE_ORBIT
+    focusPoint: bbox.center
 });
 
 // focus on entity when 'f' key is pressed
 const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
     switch (e.key) {
         case 'f': {
-            cc.focus(focus, true);
+            cc.focus(bbox.center, true);
             break;
         }
         case 'l': {
-            cc.look(focus);
+            cc.look(bbox.center);
             break;
         }
         case 'r': {
-            cc.reset(focus, start);
+            cc.reset(bbox.center, start);
             break;
         }
     }
