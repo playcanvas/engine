@@ -46,7 +46,7 @@ class TransformGizmo extends Gizmo {
      *
      * @event
      * @example
-     * const gizmo = new pc.TransformGizmo(app, camera, layer);
+     * const gizmo = new pc.TransformGizmo(camera, layer);
      * gizmo.on('transform:start', () => {
      *     console.log('Transformation started');
      * });
@@ -58,7 +58,7 @@ class TransformGizmo extends Gizmo {
      *
      * @event
      * @example
-     * const gizmo = new pc.TransformGizmo(app, camera, layer);
+     * const gizmo = new pc.TransformGizmo(camera, layer);
      * gizmo.on('transform:move', (pointDelta, angleDelta) => {
      *     console.log('Transformation moved by ${pointDelta} (angle: ${angleDelta})');
      * });
@@ -70,7 +70,7 @@ class TransformGizmo extends Gizmo {
      *
      * @event
      * @example
-     * const gizmo = new pc.TransformGizmo(app, camera, layer);
+     * const gizmo = new pc.TransformGizmo(camera, layer);
      * gizmo.on('transform:end', () => {
      *     console.log('Transformation ended');
      * });
@@ -247,7 +247,7 @@ class TransformGizmo extends Gizmo {
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
-     * const gizmo = new pc.TransformGizmo(app, camera, layer);
+     * const gizmo = new pc.TransformGizmo(camera, layer);
      */
     constructor(camera, layer) {
         super(camera, layer);
