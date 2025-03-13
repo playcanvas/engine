@@ -366,19 +366,6 @@ const generateGGXSamplesTex = (device, numSamples, specularPower, sourceTotalPix
     });
 };
 
-const vsCode = `
-attribute vec2 vertex_position;
-
-uniform vec4 uvMod;
-
-varying vec2 vUv0;
-
-void main(void) {
-    gl_Position = vec4(vertex_position, 0.5, 1.0);
-    vUv0 = getImageEffectUV((vertex_position.xy * 0.5 + 0.5) * uvMod.xy + uvMod.zw);
-}
-`;
-
 /**
  * This function reprojects textures between cubemap, equirectangular and octahedral formats. The
  * function can read and write textures with pixel data in RGBE, RGBM, linear and sRGB formats.
@@ -441,22 +428,29 @@ function reprojectTexture(source, target, options = {}) {
     let shader = getProgramLibrary(device).getCachedShader(shaderKey);
     if (!shader) {
         const defines = `
-            #define PROCESS_FUNC ${processFunc}
             ${prefilterSamples ? '#define USE_SAMPLES_TEX' : ''}
             ${source.cubemap ? '#define CUBEMAP_SOURCE' : ''}
-            #define DECODE_FUNC ${decodeFunc}
-            #define ENCODE_FUNC ${encodeFunc}
-            #define SOURCE_FUNC ${sourceFunc}
-            #define TARGET_FUNC ${targetFunc}
-            #define NUM_SAMPLES ${numSamples}
-            #define NUM_SAMPLES_SQRT ${Math.round(Math.sqrt(numSamples)).toFixed(1)}
+            #define {PROCESS_FUNC} ${processFunc}
+            #define {DECODE_FUNC} ${decodeFunc}
+            #define {ENCODE_FUNC} ${encodeFunc}
+            #define {SOURCE_FUNC} ${sourceFunc}
+            #define {TARGET_FUNC} ${targetFunc}
+            #define {NUM_SAMPLES} ${numSamples}
+            #define {NUM_SAMPLES_SQRT} ${Math.round(Math.sqrt(numSamples)).toFixed(1)}
         `;
+
+        const includes = new Map();
+        includes.set('decodePS', shaderChunks.decodePS);
+        includes.set('encodePS', shaderChunks.encodePS);
 
         shader = createShaderFromCode(
             device,
-            vsCode,
+            shaderChunks.reprojectVS,
             `${defines}\n${shaderChunks.reprojectPS}`,
-            shaderKey
+            shaderKey,
+            undefined, {
+                fragmentIncludes: includes
+            }
         );
     }
 
