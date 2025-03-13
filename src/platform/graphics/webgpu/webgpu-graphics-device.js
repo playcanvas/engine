@@ -564,6 +564,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 }
             }
 
+            Debug.call(() => this.validateAttributes(this.shader, vb0?.format, vb1?.format));
+
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
                 this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
