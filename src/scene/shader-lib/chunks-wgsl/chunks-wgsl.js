@@ -155,6 +155,7 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import refractionCubePS from './lit/frag/refractionCube.js';
 // import refractionDynamicPS from './lit/frag/refractionDynamic.js';
 // import reprojectPS from './common/frag/reproject.js';
+// import reprojectVS from './common/vert/reproject.js';
 // import sampleCatmullRomPS from './common/frag/sampleCatmullRom.js';
 // import screenDepthPS from './common/frag/screenDepth.js';
 // import shadowCascadesPS from './lit/frag/shadowCascades.js';
@@ -364,6 +365,7 @@ const shaderChunksWGSL = {
     // refractionCubePS,
     // refractionDynamicPS,
     // reprojectPS,
+    // reprojectVS,
     // sampleCatmullRomPS,
     // screenDepthPS,
     // shadowCascadesPS,

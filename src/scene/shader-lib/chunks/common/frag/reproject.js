@@ -1,7 +1,3 @@
-import decode from './decode.js';
-import encode from './encode.js';
-
-export default /* glsl */`
 // This shader requires the following #DEFINEs:
 //
 // PROCESS_FUNC - must be one of reproject, prefilter
@@ -13,6 +9,7 @@ export default /* glsl */`
 // When filtering:
 // NUM_SAMPLES - number of samples
 // NUM_SAMPLES_SQRT - sqrt of number of samples
+export default /* glsl */`
 
 varying vec2 vUv0;
 
@@ -45,8 +42,8 @@ float saturate(float x) {
     return clamp(x, 0.0, 1.0);
 }
 
-${decode}
-${encode}
+#include "decodePS"
+#include "encodePS"
 
 //-- supported projections
 
@@ -116,8 +113,8 @@ vec2 octEncode(in vec3 v) {
     }
 
     vec4 sampleCubemap(vec2 sph) {
-    return sampleCubemap(fromSpherical(sph));
-}
+        return sampleCubemap(fromSpherical(sph));
+    }
 
     vec4 sampleCubemap(vec3 dir, float mipLevel) {
         return textureCubeLod(sourceCube, modifySeams(dir, 1.0), mipLevel);
@@ -204,24 +201,24 @@ mat3 matrixFromVectorSlow(vec3 n) {
 }
 
 vec4 reproject() {
-    if (NUM_SAMPLES <= 1) {
+    if ({NUM_SAMPLES} <= 1) {
         // single sample
-        return ENCODE_FUNC(DECODE_FUNC(SOURCE_FUNC(TARGET_FUNC())));
+        return {ENCODE_FUNC}({DECODE_FUNC}({SOURCE_FUNC}({TARGET_FUNC}())));
     } else {
         // multi sample
-        vec3 t = TARGET_FUNC();
+        vec3 t = {TARGET_FUNC}();
         vec3 tu = dFdx(t);
         vec3 tv = dFdy(t);
 
         vec3 result = vec3(0.0);
-        for (float u = 0.0; u < NUM_SAMPLES_SQRT; ++u) {
-            for (float v = 0.0; v < NUM_SAMPLES_SQRT; ++v) {
-                result += DECODE_FUNC(SOURCE_FUNC(normalize(t +
-                                                            tu * (u / NUM_SAMPLES_SQRT - 0.5) +
-                                                            tv * (v / NUM_SAMPLES_SQRT - 0.5))));
+        for (float u = 0.0; u < {NUM_SAMPLES_SQRT}; ++u) {
+            for (float v = 0.0; v < {NUM_SAMPLES_SQRT}; ++v) {
+                result += {DECODE_FUNC}({SOURCE_FUNC}(normalize(t +
+                                                            tu * (u / {NUM_SAMPLES_SQRT} - 0.5) +
+                                                            tv * (v / {NUM_SAMPLES_SQRT} - 0.5))));
             }
         }
-        return ENCODE_FUNC(result / (NUM_SAMPLES_SQRT * NUM_SAMPLES_SQRT));
+        return {ENCODE_FUNC}(result / ({NUM_SAMPLES_SQRT} * {NUM_SAMPLES_SQRT}));
     }
 }
 
@@ -245,42 +242,42 @@ vec4 unpackFloat = vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
     // convolve an environment given pre-generated samples
     vec4 prefilterSamples() {
         // construct vector space given target direction
-        mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
+        mat3 vecSpace = matrixFromVectorSlow({TARGET_FUNC}());
 
         vec3 L;
         float mipLevel;
 
         vec3 result = vec3(0.0);
         float totalWeight = 0.0;
-        for (int i = 0; i < NUM_SAMPLES; ++i) {
+        for (int i = 0; i < {NUM_SAMPLES}; ++i) {
             unpackSample(i, L, mipLevel);
-            result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel)) * L.z;
+            result += {DECODE_FUNC}({SOURCE_FUNC}(vecSpace * L, mipLevel)) * L.z;
             totalWeight += L.z;
         }
 
-        return ENCODE_FUNC(result / totalWeight);
+        return {ENCODE_FUNC}(result / totalWeight);
     }
 
     // unweighted version of prefilterSamples
     vec4 prefilterSamplesUnweighted() {
         // construct vector space given target direction
-        mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
+        mat3 vecSpace = matrixFromVectorSlow({TARGET_FUNC}());
 
         vec3 L;
         float mipLevel;
 
         vec3 result = vec3(0.0);
         float totalWeight = 0.0;
-        for (int i = 0; i < NUM_SAMPLES; ++i) {
+        for (int i = 0; i < {NUM_SAMPLES}; ++i) {
             unpackSample(i, L, mipLevel);
-            result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel));
+            result += {DECODE_FUNC}({SOURCE_FUNC}(vecSpace * L, mipLevel));
         }
 
-        return ENCODE_FUNC(result / float(NUM_SAMPLES));
+        return {ENCODE_FUNC}(result / float({NUM_SAMPLES}));
     }
 #endif
 
 void main(void) {
-    gl_FragColor = PROCESS_FUNC();
+    gl_FragColor = {PROCESS_FUNC}();
 }
 `;
