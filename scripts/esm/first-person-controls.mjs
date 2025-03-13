@@ -3,11 +3,11 @@ import {
     JoystickDoubleInput,
     JoystickTouchInput,
     KeyboardMouseInput,
-    FirstPersonController,
     Script,
     Mat4,
     Vec2,
-    Vec3
+    Vec3,
+    math
 } from 'playcanvas';
 
 /** @import { CameraComponent, RigidBodyComponent, EventHandler } from 'playcanvas' */
@@ -82,12 +82,6 @@ class FirstPersonControls extends Script {
     _gamepadInput = new GamepadInput();
 
     /**
-     * @type {FirstPersonController}
-     * @private
-     */
-    _controller = new FirstPersonController();
-
-    /**
      * @type {CameraControlsFrame}
      * @private
      */
@@ -109,55 +103,80 @@ class FirstPersonControls extends Script {
         touches: 0
     };
 
-    _position = new Vec3();
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _angles = new Vec3();
 
+    /**
+     * @type {boolean}
+     * @private
+     */
     _jumping = false;
 
     /**
-     * The rotation speed.
-     *
      * @attribute
-     * @title Rotate Speed
+     * @title Look Sensitivity
+     * @description The sensitivity of the look controls.
      * @type {number}
      */
-    rotateSpeed = 0.2;
+    lookSens = 0.08;
 
     /**
-     * The rotation joystick sensitivity.
-     *
      * @attribute
-     * @title Rotate Joystick Sensitivity
+     * @title Ground Speed
+     * @description The speed of the character when on the ground.
      * @type {number}
      */
-    rotateJoystickSens = 2;
+    speedGround = 50;
 
     /**
-     * The fly move speed.
-     *
      * @attribute
-     * @title Move Speed
+     * @title Air Speed
+     * @description The speed of the character when in the air.
      * @type {number}
      */
-    moveSpeed = 5;
+    speedAir = 5;
 
     /**
-     * The fast fly move speed.
-     *
      * @attribute
-     * @title Move Fast Speed
+     * @title Sprint Multiplier
+     * @description The multiplier applied to the speed when sprinting.
      * @type {number}
      */
-    moveFastSpeed = 10;
+    sprintMult = 1.5;
 
     /**
-     * The slow fly move speed.
-     *
      * @attribute
-     * @title Move Slow Speed
+     * @title Crouch Multiplier
+     * @description The multiplier applied to the speed when crouching.
      * @type {number}
      */
-    moveSlowSpeed = 3;
+    crouchMult = 0.5;
 
+    /**
+     * @attribute
+     * @title Velocity Damping Ground
+     * @description The damping applied to the velocity when on the ground.
+     * @type {number}
+     */
+    velocityDampingGround = 0.99;
+
+    /**
+     * @attribute
+     * @title Velocity Damping Air
+     * @description The damping applied to the velocity when in the air.
+     * @type {number}
+     */
+    velocityDampingAir = 0.99925;
+
+    /**
+     * @attribute
+     * @title Jump Force
+     * @description The force applied when jumping.
+     * @type {number}
+     */
     jumpForce = 850;
 
     /**
@@ -228,45 +247,10 @@ class FirstPersonControls extends Script {
 
         // input attach
         this._reattachMobileInput();
-
-        // controller attach
-        this._controller.attach(this._camera.entity.getWorldTransform());
     }
 
     get camera() {
         return this._camera;
-    }
-
-    /**
-     * The rotate damping. A higher value means more damping. A value of 0 means no damping.
-     * The damping is applied to both the fly and orbit modes.
-     *
-     * @attribute
-     * @title Rotate Damping
-     * @type {number}
-     */
-    set rotateDamping(damping) {
-        this._controller.rotateDamping = damping;
-    }
-
-    get rotateDamping() {
-        return this._controller.rotateDamping;
-    }
-
-    /**
-     * The move damping. A higher value means more damping. A value of 0 means no damping.
-     * The damping is applied to the fly mode and the orbit mode when panning.
-     *
-     * @attribute
-     * @title Move Damping
-     * @type {number}
-     */
-    set moveDamping(damping) {
-        this._controller.moveDamping = damping;
-    }
-
-    get moveDamping() {
-        return this._controller.moveDamping;
     }
 
     /**
@@ -304,8 +288,6 @@ class FirstPersonControls extends Script {
         this._mobileTouchInput.destroy();
         this._mobileGamepadInput.destroy();
         this._gamepadInput.destroy();
-
-        this._controller.destroy();
     }
 
     /**
@@ -383,8 +365,8 @@ class FirstPersonControls extends Script {
      */
     _scaleMove(move) {
         const speed = this._state.shift ?
-            this.moveFastSpeed : this._state.ctrl ?
-                this.moveSlowSpeed : this.moveSpeed;
+            this.sprintMult : this._state.ctrl ?
+                this.crouchMult : 1;
         return move.mulScalar(speed);
     }
 
@@ -405,7 +387,7 @@ class FirstPersonControls extends Script {
         }
 
         this._frame.move.add(this._scaleMove(tmpV1.copy(this._state.axis).normalize()));
-        this._frame.rotate.add(tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed));
+        this._frame.rotate.add(tmpVa.fromArray(mouse).mulScalar(this.lookSens));
     }
 
     /**
@@ -415,14 +397,14 @@ class FirstPersonControls extends Script {
         if (this._mobileInput instanceof JoystickTouchInput) {
             const { stick, touch } = this._mobileInput.frame();
 
-            this._frame.rotate.add(tmpVa.fromArray(touch).mulScalar(this.rotateSpeed));
+            this._frame.rotate.add(tmpVa.fromArray(touch).mulScalar(this.lookSens));
             this._frame.move.add(this._scaleMove(tmpV1.set(stick[0], 0, -stick[1])));
         }
 
         if (this._mobileInput instanceof JoystickDoubleInput) {
             const { leftStick, rightStick } = this._mobileInput.frame();
 
-            this._frame.rotate.add(tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+            this._frame.rotate.add(tmpVa.fromArray(rightStick).mulScalar(this.lookSens));
             this._frame.move.add(this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1])));
         }
     }
@@ -434,45 +416,61 @@ class FirstPersonControls extends Script {
         const { leftStick, rightStick } = this._gamepadInput.frame();
 
         const right = this._applyDeadZone(tmpVa.set(rightStick[0], -rightStick[1]));
-        this._frame.rotate.add(right.mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+        this._frame.rotate.add(right.mulScalar(this.lookSens));
 
         const left = this._applyDeadZone(tmpVa.fromArray(leftStick));
         this._frame.move.add(this._scaleMove(tmpV1.set(left.x, 0, left.y)));
     }
 
     /**
+     * @param {Vec2} dv - The delta.
      * @private
      */
-    _jump() {
-        if (this._rigidbody.linearVelocity.y < 0) {
-            this._jumping = false;
-        }
-        if (this._state.space && !this._jumping && this.grounded) {
-            this._jumping = true;
-            this._rigidbody.applyImpulse(0, this.jumpForce, 0);
-        }
-    }
-
-    /**
-     * @param {number} dt - The time delta.
-     * @private
-     */
-    _updateController(dt) {
+    _look(dv) {
         if (!this._camera) {
             return;
         }
 
-        // camera update
-        tmpM1.copy(this._controller.update(this._frame, dt));
-        this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
+        this._angles.x -= dv.y;
+        this._angles.y -= dv.x;
+        this._angles.x = math.clamp(this._angles.x, -90, 90);
 
-        // rigidbody update
-        this._jump();
-        const position = tmpM1.getTranslation();
-        const velocity = tmpV1.sub2(position, this._position).divScalar(dt);
-        velocity.y = this._rigidbody.linearVelocity.y;
+        this._camera.entity.setLocalEulerAngles(this._angles);
+    }
+
+    /**
+     * @param {Vec3} dv - The delta vector.
+     * @param {number} dt - The delta time.
+     * @private
+     */
+    _transform(dv, dt) {
+        const grounded = this.grounded;
+
+        // jump
+        if (this._rigidbody.linearVelocity.y < 0) {
+            this._jumping = false;
+        }
+        if (this._state.space && !this._jumping && grounded) {
+            this._jumping = true;
+            this._rigidbody.applyImpulse(0, this.jumpForce, 0);
+        }
+
+        // direction
+        tmpM1.setFromAxisAngle(Vec3.UP, this._angles.y);
+        tmpM1.transformVector(tmpV1.set(dv.x, dv.y, -dv.z), tmpV1);
+
+        // force
+        const speed = grounded ? this.speedGround : this.speedAir;
+        const accel = tmpV1.mulScalar(speed * dt);
+        const velocity = this._rigidbody.linearVelocity.add(accel);
+
+        // drag
+        const drag = grounded ? this.velocityDampingGround : this.velocityDampingAir;
+        const mult = Math.pow(drag, dt * 1e3);
+        velocity.x *= mult;
+        velocity.z *= mult;
+
         this._rigidbody.linearVelocity = velocity;
-        this._position.copy(position);
     }
 
     /**
@@ -495,7 +493,8 @@ class FirstPersonControls extends Script {
         this._addGamepadInputs();
 
         // update controller
-        this._updateController(dt);
+        this._look(this._frame.rotate);
+        this._transform(this._frame.move, dt);
     }
 }
 
