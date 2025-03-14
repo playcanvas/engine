@@ -112,7 +112,7 @@ class WebgpuDebug {
                 const { type, lineNum, linePos, message: msg } = message;
                 const lineIndex = lineNum - 1; // Convert to zero-based index
 
-                errorMessage += `\n----- ${type.toUpperCase()} ${index + 1} details: :${lineNum}:${linePos} ${type}: ${msg}\n`;
+                errorMessage += `\n----- ${type.toUpperCase()} ${index + 1} context: :${lineNum}:${linePos} ${type}: ${msg}\n`;
 
                 // Extract surrounding lines for context
                 const startLine = Math.max(0, lineIndex - contextLines);
