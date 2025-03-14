@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 attribute vertex_position: vec2f;
 uniform uvMod: vec4f;
 varying vUv0: vec2f;

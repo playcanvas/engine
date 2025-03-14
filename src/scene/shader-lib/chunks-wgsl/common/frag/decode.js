@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 
 #ifndef _DECODE_INCLUDED_
 #define _DECODE_INCLUDED_

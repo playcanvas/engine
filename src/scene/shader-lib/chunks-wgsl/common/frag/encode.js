@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 fn encodeLinear(source: vec3f) -> vec4f {
     return vec4f(source, 1.0);
 }
