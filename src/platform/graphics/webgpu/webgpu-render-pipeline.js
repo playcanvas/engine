@@ -365,7 +365,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         DebugHelper.setLabel(pipeline, `RenderPipeline-${_pipelineId}`);
         Debug.trace(TRACEID_RENDERPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}, stack: ${DebugGraphics.toString()}`, desc);
 
-        WebgpuDebug.end(this.device, {
+        WebgpuDebug.end(this.device, 'RenderPipeline creation', {
             renderPipeline: this,
             desc: desc,
             shader

@@ -118,7 +118,7 @@ class WebgpuShader {
         });
         DebugHelper.setLabel(shaderModule, `${shaderType}:${this.shader.label}`);
 
-        WebgpuDebug.end(device, {
+        WebgpuDebug.endShader(device, shaderModule, code, 6, {
             shaderType,
             source: code,
             shader: this.shader
