@@ -18,6 +18,7 @@ import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 import { StencilParameters } from './stencil-parameters.js';
+import { DebugGraphics } from './debug-graphics.js';
 
 /**
  * @import { Compute } from './compute.js'
@@ -29,6 +30,8 @@ import { StencilParameters } from './stencil-parameters.js';
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
  */
+
+const _tempSet = new Set();
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -1010,6 +1013,38 @@ class GraphicsDevice extends EventHandler {
             }
         }
         return undefined;
+    }
+
+    /**
+     * Validate that all attributes required by the shader are present in the currently assigned
+     * vertex buffers.
+     *
+     * @param {Shader} shader - The shader to validate.
+     * @param {VertexFormat} vb0Format - The format of the first vertex buffer.
+     * @param {VertexFormat} vb1Format - The format of the second vertex buffer.
+     * @protected
+     */
+    validateAttributes(shader, vb0Format, vb1Format) {
+
+        Debug.call(() => {
+            // add all attribute names from vertex formats to the set
+            _tempSet.clear();
+            vb0Format?.elements.forEach(element => _tempSet.add(element.name));
+            vb1Format?.elements.forEach(element => _tempSet.add(element.name));
+
+            // this is an object, we need to iterator over keys and make sure the value is in the temp set
+            const attributes = shader.definition.attributes;
+            for (const name in attributes) {
+                const value = attributes[name];
+                if (!_tempSet.has(value)) {
+                    Debug.errorOnce(`Attribute [${name}: ${value}] required by the shader is not present in the currently assigned vertex buffers, while rendering [${DebugGraphics.toString()}]`, {
+                        shader,
+                        vb0Format,
+                        vb1Format
+                    });
+                }
+            }
+        });
     }
 }
 
