@@ -82,7 +82,9 @@ class GSplatComponentSystem extends ComponentSystem {
         const component = this.addComponent(clone, data);
 
         // clone gsplat instance
-        component.instance = gSplatComponent.instance.clone();
+        if (gSplatComponent.instance) {
+            component.instance = gSplatComponent.instance.clone();
+        }
 
         if (gSplatComponent.customAabb) {
             component.customAabb = gSplatComponent.customAabb.clone();
