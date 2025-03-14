@@ -118,7 +118,6 @@ class WebgpuDebug {
                 const startLine = Math.max(0, lineIndex - contextLines);
                 const endLine = Math.min(sourceLines.length, lineIndex + contextLines + 1);
 
-                // errorMessage += '\nShader Source Context:\n';
                 for (let i = startLine; i < endLine; i++) {
                     const linePrefix = i === lineIndex ? '> ' : '  ';
                     errorMessage += `${linePrefix}${i + 1}: ${sourceLines[i]}\n`;
