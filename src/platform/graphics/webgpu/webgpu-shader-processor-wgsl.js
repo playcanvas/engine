@@ -623,7 +623,7 @@ class WebgpuShaderProcessorWGSL {
         return `${structCode}};\n`;
     }
 
-    static processAttributes(attributeLines, shaderDefinitionAttributes, processingOptions) {
+    static processAttributes(attributeLines, shaderDefinitionAttributes = {}, processingOptions) {
         let block = '';
         const usedLocations = {};
         attributeLines.forEach((line) => {

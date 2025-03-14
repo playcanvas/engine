@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 
 #if (FOG != NONE)
     uniform fog_color : vec3f;

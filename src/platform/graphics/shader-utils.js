@@ -12,7 +12,8 @@ import webgpuFS from './shader-chunks/frag/webgpu.js';
 import webgpuVS from './shader-chunks/vert/webgpu.js';
 import wgslFS from './shader-chunks/frag/webgpu-wgsl.js';
 import wgslVS from './shader-chunks/vert/webgpu-wgsl.js';
-import sharedFS from './shader-chunks/frag/shared.js';
+import sharedGLSL from './shader-chunks/frag/shared.js';
+import sharedWGSL from './shader-chunks/frag/shared-wgsl.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -115,13 +116,19 @@ class ShaderUtils {
 
         if (wgsl) {
 
-            vertCode = `${wgslVS}
+            vertCode = `
+                ${wgslVS}
+                ${sharedWGSL}
                 ${vertexDefinesCode}
-                ${options.vertexCode}`;
+                ${options.vertexCode}
+            `;
 
-            fragCode = `${wgslFS}
+            fragCode = `
+                ${wgslFS}
+                ${sharedWGSL}
                 ${fragmentDefinesCode}
-                ${options.fragmentCode}`;
+                ${options.fragmentCode}
+            `;
 
         } else {
 
@@ -130,7 +137,7 @@ class ShaderUtils {
                 getDefines(webgpuVS, gles3VS, true, options) +
                 vertexDefinesCode +
                 ShaderUtils.precisionCode(device)}
-                ${sharedFS}
+                ${sharedGLSL}
                 ${ShaderUtils.getShaderNameCode(name)}
                 ${options.vertexCode}`;
 
@@ -140,7 +147,7 @@ class ShaderUtils {
                 getDefines(webgpuFS, gles3FS, false, options) +
                 fragmentDefinesCode +
                 ShaderUtils.precisionCode(device)}
-                ${sharedFS}
+                ${sharedGLSL}
                 ${ShaderUtils.getShaderNameCode(name)}
                 ${options.fragmentCode || ShaderUtils.dummyFragmentCode()}`;
         }

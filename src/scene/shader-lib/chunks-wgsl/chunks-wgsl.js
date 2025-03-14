@@ -27,7 +27,7 @@ import decodePS from './common/frag/decode.js';
 // import diffusePS from './standard/frag/diffuse.js';
 // import diffuseDetailMapPS from './standard/frag/diffuseDetailMap.js';
 // import emissivePS from './standard/frag/emissive.js';
-// import encodePS from './common/frag/encode.js';
+import encodePS from './common/frag/encode.js';
 // import endPS from './lit/frag/end.js';
 import envAtlasPS from './common/frag/envAtlas.js';
 import envProcPS from './common/frag/envProc.js';
@@ -154,8 +154,8 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import reflectionSheenPS from './lit/frag/reflectionSheen.js';
 // import refractionCubePS from './lit/frag/refractionCube.js';
 // import refractionDynamicPS from './lit/frag/refractionDynamic.js';
-// import reprojectPS from './common/frag/reproject.js';
-// import reprojectVS from './common/vert/reproject.js';
+import reprojectPS from './internal/frag/reproject.js';
+import reprojectVS from './internal/vert/reproject.js';
 // import sampleCatmullRomPS from './common/frag/sampleCatmullRom.js';
 // import screenDepthPS from './common/frag/screenDepth.js';
 // import shadowCascadesPS from './lit/frag/shadowCascades.js';
@@ -235,7 +235,7 @@ const shaderChunksWGSL = {
     // diffuseDetailMapPS,
     decodePS,
     // emissivePS,
-    // encodePS,
+    encodePS,
     // endPS,
     envAtlasPS,
     // envConstPS,
@@ -364,8 +364,8 @@ const shaderChunksWGSL = {
     // reflectionSheenPS,
     // refractionCubePS,
     // refractionDynamicPS,
-    // reprojectPS,
-    // reprojectVS,
+    reprojectPS,
+    reprojectVS,
     // sampleCatmullRomPS,
     // screenDepthPS,
     // shadowCascadesPS,

@@ -4,7 +4,6 @@ import { shaderChunks } from './chunks/chunks.js';
 import { getProgramLibrary } from './get-program-library.js';
 import { Debug } from '../../core/debug.js';
 import { ShaderGenerator } from './programs/shader-generator.js';
-import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderPass } from '../shader-pass.js';
 
 /**
@@ -155,13 +154,6 @@ function processShader(shader, processingOptions) {
 
     // generate shader variant - its the same shader, but with different processing options
     const variant = library.getProgram(libraryModuleName, {}, processingOptions);
-
-    // For now WGSL shaders need to provide their own formats as they aren't processed.
-    // Make sure to copy these from the original shader.
-    if (shader.definition.shaderLanguage === SHADERLANGUAGE_WGSL) {
-        variant.meshUniformBufferFormat = shaderDefinition.meshUniformBufferFormat;
-        variant.meshBindGroupFormat = shaderDefinition.meshBindGroupFormat;
-    }
 
     // unregister it again
     library.unregister(libraryModuleName);
