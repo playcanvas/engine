@@ -42,6 +42,11 @@ vec3 sSpecularLight;
 
 // lighting and shadowing declarations
 
+#ifdef LIT_SHADOW_CATCHER
+    // a variable to accumulate shadows for shadow catcher materials
+    float dShadowCatcher = 1.0;
+#endif
+
 // LOOP - uniform declarations for all non-clustered lights
 #include "lightDeclarationPS, LIGHT_COUNT"
 

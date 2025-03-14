@@ -520,6 +520,8 @@ const _tempColor = new Color();
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
  * backfaces.
+ * @property {boolean} shadowCatcher When enabled, the material will output accumulated directional
+ * shadow value in linear space as the color.
  * @property {UpdateShaderCallback} onUpdateShader A custom function that will be called after all
  * shader generator properties are collected and before shader code is generated. This function
  * will receive an object with shader generator settings (based on current material and scene
@@ -1180,6 +1182,7 @@ function _defineMaterialProps() {
     _defineFlag('clearCoatGlossInvert', false);
     _defineFlag('opacityDither', DITHER_NONE);
     _defineFlag('opacityShadowDither', DITHER_NONE);
+    _defineFlag('shadowCatcher', false);
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');
