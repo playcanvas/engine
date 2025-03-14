@@ -7,7 +7,7 @@ fn decodeLinear(raw: vec4f) -> vec3f {
     return raw.rgb;
 }
 
-fn decodeGamma(raw: f32) -> f32 {
+fn decodeGammaFloat(raw: f32) -> f32 {
     return pow(raw, 2.2);
 }
 
@@ -15,7 +15,7 @@ fn decodeGammaVec3(raw: vec3f) -> vec3f {
     return pow(raw, vec3f(2.2));
 }
 
-fn decodeGammaVec4(raw: vec4f) -> vec3f {
+fn decodeGamma(raw: vec4f) -> vec3f {
     return pow(raw.xyz, vec3f(2.2));
 }
 

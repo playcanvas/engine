@@ -5,7 +5,7 @@ export default /* glsl */`
 #if (GAMMA == SRGB)
 
     fn gammaCorrectInput(color: f32) -> f32 {
-        return decodeGamma(color);
+        return decodeGammaFloat(color);
     }
 
     fn gammaCorrectInputVec3(color: vec3f) -> vec3f {

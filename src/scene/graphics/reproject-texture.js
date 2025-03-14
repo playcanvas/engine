@@ -3,7 +3,10 @@ import { random } from '../../core/math/random.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import {
     FILTER_NEAREST,
-    TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE
+    TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE,
+    SHADERLANGUAGE_WGSL,
+    SHADERLANGUAGE_GLSL,
+    SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
@@ -15,6 +18,7 @@ import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
+import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 /**
  * @import { Vec4 } from '../../core/math/vec4.js'
@@ -439,17 +443,26 @@ function reprojectTexture(source, target, options = {}) {
             #define {NUM_SAMPLES_SQRT} ${Math.round(Math.sqrt(numSamples)).toFixed(1)}
         `;
 
+        const wgsl = device.isWebGPU;
+        const chunks = wgsl ? shaderChunksWGSL : shaderChunks;
         const includes = new Map();
-        includes.set('decodePS', shaderChunks.decodePS);
-        includes.set('encodePS', shaderChunks.encodePS);
+        includes.set('decodePS', chunks.decodePS);
+        includes.set('encodePS', chunks.encodePS);
 
+        const vert = chunks.reprojectVS;
+        const frag = chunks.reprojectPS;
         shader = createShaderFromCode(
             device,
-            shaderChunks.reprojectVS,
-            `${defines}\n${shaderChunks.reprojectPS}`,
-            shaderKey,
-            undefined, {
-                fragmentIncludes: includes
+            vert,
+            `
+                ${defines}
+                ${frag}
+            `,
+            shaderKey, {
+                vertex_position: SEMANTIC_POSITION
+            }, {
+                fragmentIncludes: includes,
+                shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL
             }
         );
     }
