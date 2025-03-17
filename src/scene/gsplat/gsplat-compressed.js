@@ -59,7 +59,7 @@ class GSplatCompressed {
 
         this.device = device;
         this.numSplats = numSplats;
-        this.numVisibleSplats = numSplats;
+        this.numSplatsVisible = numSplats;
 
         // initialize aabb
         this.aabb = new BoundingBox();
