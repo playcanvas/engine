@@ -85,7 +85,7 @@ class SplatCompressedIterator {
                 const shData = [shData0, shData1, shData2];
                 for (let j = 0; j < 3; ++j) {
                     for (let k = 0; k < 15; ++k) {
-                        sh[j * 15 + k] = (k < shCoeffs) ? (shData[j][i * 3 * shCoeffs + k] * (8 / 255) - 4) : 0;
+                        sh[j * 15 + k] = (k < shCoeffs) ? (shData[j][i * 16 + k] * (8 / 255) - 4) : 0;
                     }
                 }
             }
