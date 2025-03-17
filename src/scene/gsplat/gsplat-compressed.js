@@ -32,6 +32,9 @@ class GSplatCompressed {
     /** @type {BoundingBox} */
     aabb;
 
+    /** @type {Float32Array} */
+    centers;
+
     /** @type {Texture} */
     packedTexture;
 
@@ -61,6 +64,10 @@ class GSplatCompressed {
         // initialize aabb
         this.aabb = new BoundingBox();
         gsplatData.calcAabb(this.aabb);
+
+        // initialize centers
+        this.centers = new Float32Array(numSplats * 3);
+        gsplatData.getCenters(this.centers);
 
         // initialize packed data
         this.packedTexture = this.createTexture('packedData', PIXELFORMAT_RGBA32U, this.evalTextureSize(numSplats), vertexData);
