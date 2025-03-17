@@ -425,6 +425,13 @@ class Light {
             return;
         }
 
+        // unsupported shadow type
+        let shadowInfo = shadowTypeInfo.get(value);
+        if (!shadowInfo) {
+            console.warn('Unsupported shadow type: ' + value);
+            value = SHADOW_PCF3_32F;
+        }
+
         const device = this.device;
 
         // PCSS requires F16 or F32 render targets
@@ -448,7 +455,7 @@ class Light {
             value = SHADOW_PCF3_32F;
         }
 
-        const shadowInfo = shadowTypeInfo.get(value);
+        shadowInfo = shadowTypeInfo.get(value);
         this._isVsm = shadowInfo?.vsm ?? false;
         this._isPcf = shadowInfo?.pcf ?? false;
 
