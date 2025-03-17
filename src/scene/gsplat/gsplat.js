@@ -31,9 +31,6 @@ class GSplat {
 
     numSplatsVisible;
 
-    /** @type {Float32Array} */
-    centers;
-
     /** @type {BoundingBox} */
     aabb;
 
@@ -71,9 +68,6 @@ class GSplat {
         this.device = device;
         this.numSplats = numSplats;
         this.numSplatsVisible = numSplats;
-
-        this.centers = new Float32Array(gsplatData.numSplats * 3);
-        gsplatData.getCenters(this.centers);
 
         this.aabb = new BoundingBox();
         gsplatData.calcAabb(this.aabb);
