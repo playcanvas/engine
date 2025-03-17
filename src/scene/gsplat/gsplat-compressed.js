@@ -32,9 +32,6 @@ class GSplatCompressed {
     /** @type {BoundingBox} */
     aabb;
 
-    /** @type {Float32Array} */
-    centers;
-
     /** @type {Texture} */
     packedTexture;
 
@@ -65,10 +62,6 @@ class GSplatCompressed {
         this.aabb = new BoundingBox();
         gsplatData.calcAabb(this.aabb);
 
-        // initialize centers
-        this.centers = new Float32Array(numSplats * 3);
-        gsplatData.getCenters(this.centers);
-
         // initialize packed data
         this.packedTexture = this.createTexture('packedData', PIXELFORMAT_RGBA32U, this.evalTextureSize(numSplats), vertexData);
 
@@ -94,9 +87,9 @@ class GSplatCompressed {
         // load optional spherical harmonics data
         if (shBands > 0) {
             const size = this.evalTextureSize(numSplats);
-            this.shTexture0 =this.createTexture('shTexture0', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData0.buffer));
-            this.shTexture1 =this.createTexture('shTexture1', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData1.buffer));
-            this.shTexture2 =this.createTexture('shTexture2', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData2.buffer));
+            this.shTexture0 = this.createTexture('shTexture0', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData0.buffer));
+            this.shTexture1 = this.createTexture('shTexture1', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData1.buffer));
+            this.shTexture2 = this.createTexture('shTexture2', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData2.buffer));
         } else {
             this.shTexture0 = null;
             this.shTexture1 = null;

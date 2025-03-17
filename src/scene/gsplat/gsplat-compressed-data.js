@@ -119,14 +119,27 @@ class GSplatCompressedData {
     vertexData;
 
     /**
-     * Contains optional quantized spherical harmonic data for up to 3 bands.
+     * Contains optional quantized spherical harmonic data.
      * @type {Uint8Array}
      */
     shData0;
+
+    /**
+     * Contains optional quantized spherical harmonic data.
+     * @type {Uint8Array}
+     */
     shData1;
+
+    /**
+     * Contains optional quantized spherical harmonic data.
+     * @type {Uint8Array}
+     */
     shData2;
 
-    // number of bands
+    /**
+     * Contains the number of bands of spherical harmonics data.
+     * @type {number}
+     */
     shBands;
 
     /**

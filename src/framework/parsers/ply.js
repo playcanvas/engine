@@ -323,7 +323,7 @@ const readCompressedPly = async (streamBuf, elements) => {
                         shData0[tidx] = tmpBuf[(j * 3 + 0) * srcCoeffs + k];
                         shData1[tidx] = tmpBuf[(j * 3 + 1) * srcCoeffs + k];
                         shData2[tidx] = tmpBuf[(j * 3 + 2) * srcCoeffs + k];
-                    } else {srcCoeffs
+                    } else {
                         shData0[tidx] = 127;
                         shData1[tidx] = 127;
                         shData2[tidx] = 127;
