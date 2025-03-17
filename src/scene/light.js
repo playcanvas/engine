@@ -428,7 +428,6 @@ class Light {
         // unsupported shadow type
         let shadowInfo = shadowTypeInfo.get(value);
         if (!shadowInfo) {
-            console.warn('Unsupported shadow type: ' + value);
             value = SHADOW_PCF3_32F;
         }
 
