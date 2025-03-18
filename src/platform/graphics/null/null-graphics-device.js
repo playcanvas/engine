@@ -26,6 +26,8 @@ class NullGraphicsDevice extends GraphicsDevice {
             stencil: this.supportsStencil,
             samples: this.samples
         });
+
+        this.initDeviceCaps();
     }
 
     destroy() {
