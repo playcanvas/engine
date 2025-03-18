@@ -275,7 +275,8 @@ class WebgpuShaderProcessorWGSL {
         const fragmentExtracted = WebgpuShaderProcessorWGSL.extract(shaderDefinition.fshader);
 
         // VS - convert a list of attributes to a shader block with fixed locations
-        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, shaderDefinition.processingOptions);
+        const attributesMap = new Map();
+        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions);
 
         // VS - convert a list of varyings to a shader block
         const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true);
@@ -326,6 +327,7 @@ class WebgpuShaderProcessorWGSL {
         return {
             vshader: vshader,
             fshader: fshader,
+            attributes: attributesMap,
             meshUniformBufferFormat: uniformsData.meshUniformBufferFormat,
             meshBindGroupFormat: resourcesData.meshBindGroupFormat
         };
@@ -669,7 +671,7 @@ class WebgpuShaderProcessorWGSL {
         return `${structCode}};\n`;
     }
 
-    static processAttributes(attributeLines, shaderDefinitionAttributes = {}, processingOptions) {
+    static processAttributes(attributeLines, shaderDefinitionAttributes = {}, attributesMap, processingOptions) {
         let block = '';
         const usedLocations = {};
         attributeLines.forEach((line) => {
@@ -684,6 +686,9 @@ class WebgpuShaderProcessorWGSL {
                 Debug.assert(!usedLocations.hasOwnProperty(location),
                     `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
                 usedLocations[location] = semantic;
+
+                // build a map of used attributes
+                attributesMap.set(location, name);
 
                 // generates: @location(0) position : vec4f
                 block += `    @location(${location}) ${line},\n`;

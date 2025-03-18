@@ -161,6 +161,7 @@ class WebgpuShader {
 
         shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
         shader.meshBindGroupFormat = processed.meshBindGroupFormat;
+        shader.attributes = processed.attributes;
     }
 
     processWGSL() {
@@ -179,6 +180,7 @@ class WebgpuShader {
 
         shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
         shader.meshBindGroupFormat = processed.meshBindGroupFormat;
+        shader.attributes = processed.attributes;
     }
 
     transpile(src, shaderType, originalSrc) {
