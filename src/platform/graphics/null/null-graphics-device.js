@@ -27,7 +27,7 @@ class NullGraphicsDevice extends GraphicsDevice {
             samples: this.samples
         });
 
-        this.initDeviceCaps();
+        // this.initDeviceCaps();
     }
 
     destroy() {
