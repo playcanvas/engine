@@ -553,7 +553,7 @@ class WebgpuShaderProcessorWGSL {
             // array uniforms
             if (uniform.count > 0) {
 
-                // if the type is one of the onces that are not by default 16byte aligned, which is
+                // if the type is one of the ones that are not by default 16byte aligned, which is
                 // a requirement for uniform buffers, we need to wrap them in a struct
                 // for example: array<f32, 5> becomes  array<WrappedF32, 5>
                 if (wrappedArrayTypes.hasOwnProperty(typeString)) {
