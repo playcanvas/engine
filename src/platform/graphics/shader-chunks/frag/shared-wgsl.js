@@ -14,4 +14,12 @@ fn getImageEffectUV(uv: vec2<f32>) -> vec2<f32> {
     modifiedUV.y = 1.0 - modifiedUV.y;
     return modifiedUV;
 }
+
+// types wrapped in size aligned structures to ensure correct alignment in uniform buffer arrays
+struct WrappedF32 { @size(16) x: f32 }
+struct WrappedI32 { @size(16) x: i32 }
+struct WrappedU32 { @size(16) x: u32 }
+struct WrappedVec2F { @size(16) x: f32, y: f32 }
+struct WrappedVec2I { @size(16) x: i32, y: i32 }
+struct WrappedVec2U { @size(16) x: u32, y: u32 }
 `;
