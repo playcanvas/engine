@@ -132,7 +132,8 @@ class ShaderProcessorGLSL {
         const fragmentExtracted = ShaderProcessorGLSL.extract(shaderDefinition.fshader);
 
         // VS - convert a list of attributes to a shader block with fixed locations
-        const attributesBlock = ShaderProcessorGLSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, shaderDefinition.processingOptions);
+        const attributesMap = new Map();
+        const attributesBlock = ShaderProcessorGLSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions);
 
         // VS - convert a list of varyings to a shader block
         const vertexVaryingsBlock = ShaderProcessorGLSL.processVaryings(vertexExtracted.varyings, varyingMap, true);
@@ -173,6 +174,7 @@ class ShaderProcessorGLSL {
         return {
             vshader: vshader,
             fshader: fshader,
+            attributes: attributesMap,
             meshUniformBufferFormat: uniformsData.meshUniformBufferFormat,
             meshBindGroupFormat: uniformsData.meshBindGroupFormat
         };
@@ -393,7 +395,7 @@ class ShaderProcessorGLSL {
         return isNaN(num) ? 1 : num;
     }
 
-    static processAttributes(attributeLines, shaderDefinitionAttributes, processingOptions) {
+    static processAttributes(attributeLines, shaderDefinitionAttributes, attributesMap, processingOptions) {
         let block = '';
         const usedLocations = {};
         attributeLines.forEach((line) => {
@@ -409,6 +411,9 @@ class ShaderProcessorGLSL {
                 Debug.assert(!usedLocations.hasOwnProperty(location),
                     `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
                 usedLocations[location] = semantic;
+
+                // build a map of used attributes
+                attributesMap.set(location, name);
 
                 // if vertex format for this attribute is not of a float type, we need to adjust the attribute format, for example we convert
                 //      attribute vec4 vertex_position;

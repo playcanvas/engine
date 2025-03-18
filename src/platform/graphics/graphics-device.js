@@ -10,7 +10,8 @@ import {
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    DISPLAYFORMAT_LDR
+    DISPLAYFORMAT_LDR,
+    semanticToLocation
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
@@ -1027,17 +1028,16 @@ class GraphicsDevice extends EventHandler {
     validateAttributes(shader, vb0Format, vb1Format) {
 
         Debug.call(() => {
-            // add all attribute names from vertex formats to the set
-            _tempSet.clear();
-            vb0Format?.elements.forEach(element => _tempSet.add(element.name));
-            vb1Format?.elements.forEach(element => _tempSet.add(element.name));
 
-            // this is an object, we need to iterator over keys and make sure the value is in the temp set
-            const attributes = shader.definition.attributes;
-            for (const name in attributes) {
-                const value = attributes[name];
-                if (!_tempSet.has(value)) {
-                    Debug.errorOnce(`Attribute [${name}: ${value}] required by the shader is not present in the currently assigned vertex buffers, while rendering [${DebugGraphics.toString()}]`, {
+            // add all attribute locations from vertex formats to the set
+            _tempSet.clear();
+            vb0Format?.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
+            vb1Format?.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
+
+            // every location shader needs must be in the vertex buffer
+            for (const [location, name] of shader.attributes) {
+                if (!_tempSet.has(location)) {
+                    Debug.errorOnce(`Vertex attribute [${name}] at location ${location} required by the shader is not present in the currently assigned vertex buffers, while rendering [${DebugGraphics.toString()}]`, {
                         shader,
                         vb0Format,
                         vb1Format
