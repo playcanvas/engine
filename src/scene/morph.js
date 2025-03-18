@@ -47,15 +47,13 @@ class Morph extends RefCountedObject {
 
         Debug.assert(graphicsDevice, 'Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.');
         this.device = graphicsDevice;
+        const device = graphicsDevice;
 
         this.preferHighPrecision = preferHighPrecision;
 
         // validation
         Debug.assert(targets.every(target => !target.used), 'A specified target has already been used to create a Morph, use its clone instead.');
         this._targets = targets.slice();
-
-        // default to texture based morphing if available
-        const device = this.device;
 
         // renderable format
         const renderableHalf = device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : undefined;
