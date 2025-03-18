@@ -7,7 +7,8 @@ import {
     TYPE_FLOAT32, TYPE_INT8, TYPE_INT16, TYPE_INT32, TYPE_FLOAT16, SAMPLETYPE_INT, SAMPLETYPE_UINT,
     BINDGROUP_MESH_UB,
     UNUSED_UNIFORM_NAME,
-    UNIFORMTYPE_FLOAT
+    UNIFORMTYPE_FLOAT,
+    bindGroupNames
 } from './constants.js';
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js';
@@ -51,6 +52,13 @@ const textureDimensions = {
     usamplerCube: TEXTUREDIMENSION_CUBE,
     isampler2DArray: TEXTUREDIMENSION_2D_ARRAY,
     usampler2DArray: TEXTUREDIMENSION_2D_ARRAY
+};
+
+const textureDimensionInfo = {
+    [TEXTUREDIMENSION_2D]: 'texture2D',
+    [TEXTUREDIMENSION_CUBE]: 'textureCube',
+    [TEXTUREDIMENSION_3D]: 'texture3D',
+    [TEXTUREDIMENSION_2D_ARRAY]: 'texture2DArray'
 };
 
 class UniformLine {
@@ -105,7 +113,7 @@ class UniformLine {
  * Pure static class implementing processing of GLSL shaders. It allocates fixed locations for
  * attributes, and handles conversion of uniforms to uniform buffers.
  */
-class ShaderProcessor {
+class ShaderProcessorGLSL {
     /**
      * Process the shader.
      *
@@ -120,20 +128,20 @@ class ShaderProcessor {
         const varyingMap = new Map();
 
         // extract lines of interests from both shaders
-        const vertexExtracted = ShaderProcessor.extract(shaderDefinition.vshader);
-        const fragmentExtracted = ShaderProcessor.extract(shaderDefinition.fshader);
+        const vertexExtracted = ShaderProcessorGLSL.extract(shaderDefinition.vshader);
+        const fragmentExtracted = ShaderProcessorGLSL.extract(shaderDefinition.fshader);
 
         // VS - convert a list of attributes to a shader block with fixed locations
-        const attributesBlock = ShaderProcessor.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, shaderDefinition.processingOptions);
+        const attributesBlock = ShaderProcessorGLSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, shaderDefinition.processingOptions);
 
         // VS - convert a list of varyings to a shader block
-        const vertexVaryingsBlock = ShaderProcessor.processVaryings(vertexExtracted.varyings, varyingMap, true);
+        const vertexVaryingsBlock = ShaderProcessorGLSL.processVaryings(vertexExtracted.varyings, varyingMap, true);
 
         // FS - convert a list of varyings to a shader block
-        const fragmentVaryingsBlock = ShaderProcessor.processVaryings(fragmentExtracted.varyings, varyingMap, false);
+        const fragmentVaryingsBlock = ShaderProcessorGLSL.processVaryings(fragmentExtracted.varyings, varyingMap, false);
 
         // FS - convert a list of outputs to a shader block
-        const outBlock = ShaderProcessor.processOuts(fragmentExtracted.outs);
+        const outBlock = ShaderProcessorGLSL.processOuts(fragmentExtracted.outs);
 
         // uniforms - merge vertex and fragment uniforms, and create shared uniform buffers
         // Note that as both vertex and fragment can declare the same uniform, we need to remove duplicates
@@ -152,7 +160,7 @@ class ShaderProcessor {
                 map.set(uni.name, uni.line);
             });
         });
-        const uniformsData = ShaderProcessor.processUniforms(device, parsedUniforms, shaderDefinition.processingOptions, shader);
+        const uniformsData = ShaderProcessorGLSL.processUniforms(device, parsedUniforms, shaderDefinition.processingOptions, shader);
 
         // VS - insert the blocks to the source
         const vBlock = `${attributesBlock}\n${vertexVaryingsBlock}\n${uniformsData.code}`;
@@ -209,7 +217,7 @@ class ShaderProcessor {
                     }
 
                     // cut it out
-                    src = ShaderProcessor.cutOut(src, match.index, KEYWORD_LINE.lastIndex, replacement);
+                    src = ShaderProcessorGLSL.cutOut(src, match.index, KEYWORD_LINE.lastIndex, replacement);
                     KEYWORD.lastIndex = match.index + replacement.length;
 
                     // only place a single replacement marker
@@ -321,24 +329,24 @@ class ShaderProcessor {
         let code = '';
         processingOptions.uniformFormats.forEach((format, bindGroupIndex) => {
             if (format) {
-                code += format.getShaderDeclaration(bindGroupIndex, 0);
+                code += ShaderProcessorGLSL.getUniformShaderDeclaration(format, bindGroupIndex, 0);
             }
         });
 
         // and also for generated mesh format, which is at the slot 0 of the bind group
         if (meshUniformBufferFormat) {
-            code += meshUniformBufferFormat.getShaderDeclaration(BINDGROUP_MESH_UB, 0);
+            code += ShaderProcessorGLSL.getUniformShaderDeclaration(meshUniformBufferFormat, BINDGROUP_MESH_UB, 0);
         }
 
         // generate code for textures
         processingOptions.bindGroupFormats.forEach((format, bindGroupIndex) => {
             if (format) {
-                code += format.getShaderDeclarationTextures(bindGroupIndex);
+                code += ShaderProcessorGLSL.getTexturesShaderDeclaration(format, bindGroupIndex);
             }
         });
 
         // and also for generated mesh format
-        code += meshBindGroupFormat.getShaderDeclarationTextures(BINDGROUP_MESH);
+        code += ShaderProcessorGLSL.getTexturesShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH);
 
         return {
             code,
@@ -351,7 +359,7 @@ class ShaderProcessor {
         let block = '';
         const op = isVertex ? 'out' : 'in';
         varyingLines.forEach((line, index) => {
-            const words = ShaderProcessor.splitToWords(line);
+            const words = ShaderProcessorGLSL.splitToWords(line);
             const type = words.slice(0, -1).join(' ');
             const name = words[words.length - 1];
 
@@ -389,7 +397,7 @@ class ShaderProcessor {
         let block = '';
         const usedLocations = {};
         attributeLines.forEach((line) => {
-            const words = ShaderProcessor.splitToWords(line);
+            const words = ShaderProcessorGLSL.splitToWords(line);
             let type = words[0];
             let name = words[1];
 
@@ -414,7 +422,7 @@ class ShaderProcessor {
                     const dataType = element.dataType;
                     if (dataType !== TYPE_FLOAT32 && dataType !== TYPE_FLOAT16 && !element.normalize && !element.asInt) {
 
-                        const attribNumElements = ShaderProcessor.getTypeCount(type);
+                        const attribNumElements = ShaderProcessorGLSL.getTypeCount(type);
                         const newName = `_private_${name}`;
 
                         // second line of new code, copy private (u)int type into vec type
@@ -452,6 +460,48 @@ class ShaderProcessor {
     static cutOut(src, start, end, replacement) {
         return src.substring(0, start) + replacement + src.substring(end);
     }
+
+    static getUniformShaderDeclaration(format, bindGroup, bindIndex) {
+        const name = bindGroupNames[bindGroup];
+        let code = `layout(set = ${bindGroup}, binding = ${bindIndex}, std140) uniform ub_${name} {\n`;
+
+        format.uniforms.forEach((uniform) => {
+            const typeString = uniformTypeToName[uniform.type];
+            Debug.assert(typeString.length > 0, `Uniform type ${uniform.type} is not handled.`);
+            code += `    ${typeString} ${uniform.shortName}${uniform.count ? `[${uniform.count}]` : ''};\n`;
+        });
+
+        return `${code}};\n`;
+    }
+
+    static getTexturesShaderDeclaration(bindGroupFormat, bindGroup) {
+        let code = '';
+        bindGroupFormat.textureFormats.forEach((format) => {
+
+            let textureType = textureDimensionInfo[format.textureDimension];
+            Debug.assert(textureType, 'Unsupported texture type', format.textureDimension);
+            const isArray = textureType === 'texture2DArray';
+
+            const sampleTypePrefix = format.sampleType === SAMPLETYPE_UINT ? 'u' : (format.sampleType === SAMPLETYPE_INT ? 'i' : '');
+            textureType = `${sampleTypePrefix}${textureType}`;
+
+            // handle texture2DArray by renaming the texture object and defining a replacement macro
+            let namePostfix = '';
+            let extraCode = '';
+            if (isArray) {
+                namePostfix = '_texture';
+                extraCode = `#define ${format.name} ${sampleTypePrefix}sampler2DArray(${format.name}${namePostfix}, ${format.name}_sampler)\n`;
+            }
+
+            code += `layout(set = ${bindGroup}, binding = ${format.slot}) uniform ${textureType} ${format.name}${namePostfix};\n`;
+            if (format.hasSampler) {
+                code += `layout(set = ${bindGroup}, binding = ${format.slot + 1}) uniform sampler ${format.name}_sampler;\n`;
+            }
+            code += extraCode;
+        });
+
+        return code;
+    }
 }
 
-export { ShaderProcessor };
+export { ShaderProcessorGLSL };
