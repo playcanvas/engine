@@ -42,7 +42,7 @@ class Shader {
     meshBindGroupFormat;
 
     /**
-     * The attributes that this shader code uses, the location is the key, the value is the name.
+     * The attributes that this shader code uses. The location is the key, the value is the name.
      * These attributes are queried / extracted from the final shader.
      *
      * @type {Map<number, string>}
