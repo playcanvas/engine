@@ -70,9 +70,9 @@ function SortWorker() {
         let minDist;
         let maxDist;
         for (let i = 0; i < 8; ++i) {
-            const x = (i & 1 ? boundMin.x : boundMax.x) - px;
-            const y = (i & 2 ? boundMin.y : boundMax.y) - py;
-            const z = (i & 4 ? boundMin.z : boundMax.z) - pz;
+            const x = (i & 1 ? boundMin.x : boundMax.x);
+            const y = (i & 2 ? boundMin.y : boundMax.y);
+            const z = (i & 4 ? boundMin.z : boundMax.z);
             const d = x * dx + y * dy + z * dz;
             if (i === 0) {
                 minDist = maxDist = d;
@@ -104,13 +104,10 @@ function SortWorker() {
         const divider = (range < 1e-6) ? 0 : 1 / range * (2 ** compareBits);
         for (let i = 0; i < numVertices; ++i) {
             const istride = i * 3;
-            const x = centers[istride + 0] - px;
-            const y = centers[istride + 1] - py;
-            const z = centers[istride + 2] - pz;
+            const x = centers[istride + 0];
+            const y = centers[istride + 1];
+            const z = centers[istride + 2];
             const d = x * dx + y * dy + z * dz;
-            if (isNaN(d)) {
-                continue;
-            }
             const sortKey = Math.floor((d - minDist) * divider);
 
             distances[i] = sortKey;
@@ -132,7 +129,8 @@ function SortWorker() {
         }
 
         // find splat with distance 0 to limit rendering behind the camera
-        const dist = i => distances[order[i]] / divider + minDist;
+        const tmp = -px * dx - py * dy - pz * dz;
+        const dist = i => distances[order[i]] / divider + minDist + tmp;
         const findZero = () => {
             const result = binarySearch(0, numVertices - 1, i => -dist(i));
             return Math.min(numVertices, Math.abs(result));
@@ -166,12 +164,18 @@ function SortWorker() {
             let initialized = false;
             const numVertices = centers.length / 3;
             for (let i = 0; i < numVertices; ++i) {
-                const x = centers[i * 3 + 0];
-                const y = centers[i * 3 + 1];
-                const z = centers[i * 3 + 2];
+                let x = centers[i * 3 + 0];
+                let y = centers[i * 3 + 1];
+                let z = centers[i * 3 + 2];
 
-                if (isNaN(x) || isNaN(y) || isNaN(z)) {
-                    continue;
+                if (isNaN(x)) {
+                    x = centers[i * 3 + 0] = 0;
+                }
+                if (isNaN(y)) {
+                    y = centers[i * 3 + 1] = 0;
+                }
+                if (isNaN(z)) {
+                    z = centers[i * 3 + 2] = 0;
                 }
 
                 if (!initialized) {

@@ -59,7 +59,7 @@ class GSplatCompressed {
 
         this.device = device;
         this.numSplats = numSplats;
-        this.numVisibleSplats = numSplats;
+        this.numSplatsVisible = numSplats;
 
         // initialize aabb
         this.aabb = new BoundingBox();
@@ -93,39 +93,10 @@ class GSplatCompressed {
 
         // load optional spherical harmonics data
         if (shBands > 0) {
-            const { shData } = gsplatData;
-
             const size = this.evalTextureSize(numSplats);
-
-            const texture0 = this.createTexture('shTexture0', PIXELFORMAT_RGBA32U, size);
-            const texture1 = this.createTexture('shTexture1', PIXELFORMAT_RGBA32U, size);
-            const texture2 = this.createTexture('shTexture2', PIXELFORMAT_RGBA32U, size);
-
-            const data0 = texture0.lock();
-            const data1 = texture1.lock();
-            const data2 = texture2.lock();
-
-            const target0 = new Uint8Array(data0.buffer);
-            const target1 = new Uint8Array(data1.buffer);
-            const target2 = new Uint8Array(data2.buffer);
-
-            const srcCoeffs = [3, 8, 15][shBands - 1];
-
-            for (let i = 0; i < numSplats; ++i) {
-                for (let j = 0; j < 15; ++j) {
-                    target0[i * 16 + j] = j < srcCoeffs ? shData[(i * 3 + 0) * srcCoeffs + j] : 127;
-                    target1[i * 16 + j] = j < srcCoeffs ? shData[(i * 3 + 1) * srcCoeffs + j] : 127;
-                    target2[i * 16 + j] = j < srcCoeffs ? shData[(i * 3 + 2) * srcCoeffs + j] : 127;
-                }
-            }
-
-            texture0.unlock();
-            texture1.unlock();
-            texture2.unlock();
-
-            this.shTexture0 = texture0;
-            this.shTexture1 = texture1;
-            this.shTexture2 = texture2;
+            this.shTexture0 = this.createTexture('shTexture0', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData0.buffer));
+            this.shTexture1 = this.createTexture('shTexture1', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData1.buffer));
+            this.shTexture2 = this.createTexture('shTexture2', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData2.buffer));
         } else {
             this.shTexture0 = null;
             this.shTexture1 = null;

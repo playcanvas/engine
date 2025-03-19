@@ -1,7 +1,7 @@
 import { Color } from '../../../core/math/color.js';
 import {
     CULLFACE_NONE,
-    PIXELFORMAT_RGBA8
+    PIXELFORMAT_SRGBA8
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
@@ -64,7 +64,7 @@ class SpriteComponentSystem extends ComponentSystem {
             const texture = new Texture(this.app.graphicsDevice, {
                 width: 1,
                 height: 1,
-                format: PIXELFORMAT_RGBA8,
+                format: PIXELFORMAT_SRGBA8,
                 name: 'sprite'
             });
             const pixels = new Uint8Array(texture.lock());
