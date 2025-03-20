@@ -447,7 +447,8 @@ class WebglShader {
 
             // Chrome reports shader errors on lines indexed from 1
             for (let i = from; i < to; i++) {
-                code += `${i + 1}:\t${lines[i]}\n`;
+                const linePrefix = (i + 1 === error.line) ? '> ' : '  ';
+                code += `${linePrefix}${i + 1}:\t${lines[i]}\n`;
             }
 
             error.source = src;
