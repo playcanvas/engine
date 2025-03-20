@@ -15,7 +15,6 @@ const tempMin3 = new Vec3();
 const tempMax3 = new Vec3();
 const tempBox = new BoundingBox();
 
-const epsilon = 0.000001;
 const maxTextureSize = 4096;    // maximum texture size allowed to work on all devices
 
 // helper class to store properties of a light used by clustering
