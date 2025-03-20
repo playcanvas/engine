@@ -20,7 +20,7 @@ class MorphTarget {
      * Create a new MorphTarget instance.
      *
      * @param {object} options - Object for passing optional arguments.
-     * @param {ArrayBuffer} options.deltaPositions - An array of 3-dimensional vertex position
+     * @param {ArrayBuffer|Float32Array} options.deltaPositions - An array of 3-dimensional vertex position
      * offsets.
      * @param {ArrayBuffer} [options.deltaNormals] - An array of 3-dimensional vertex normal
      * offsets.

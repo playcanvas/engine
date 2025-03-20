@@ -146,7 +146,7 @@ class VertexBuffer {
     /**
      * Copies data into vertex buffer's memory.
      *
-     * @param {ArrayBuffer} [data] - Source data to copy.
+     * @param {ArrayBuffer|Float32Array} [data] - Source data to copy.
      * @returns {boolean} True if function finished successfully, false otherwise.
      */
     setData(data) {
