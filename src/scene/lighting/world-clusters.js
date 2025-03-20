@@ -56,10 +56,6 @@ class WorldClusters {
         // number of lights each cell can store
         this.maxCellLightCount = 4;
 
-        // limits on some light properties, used for compression to 8bit texture
-        this._maxAttenuation = 0;
-        this._maxColorValue = 0;
-
         // internal list of lights (of type ClusterLight)
         this._usedLights = [];
 
@@ -141,10 +137,6 @@ class WorldClusters {
         // number of cells in each direction (vec3)
         this._clusterCellsMaxId = device.scope.resolve('clusterCellsMax');
         this._clusterCellsMaxData = new Float32Array(3);
-
-        // compression limit 0
-        this._clusterCompressionLimit0Id = device.scope.resolve('clusterCompressionLimit0');
-        this._clusterCompressionLimit0Data = new Float32Array(2);
     }
 
     // updates itself based on parameters stored in the scene
@@ -239,16 +231,12 @@ class WorldClusters {
         this._clusterBoundsDeltaData[1] = boundsDelta.y;
         this._clusterBoundsDeltaData[2] = boundsDelta.z;
 
-        this._clusterCompressionLimit0Data[0] = this._maxAttenuation;
-        this._clusterCompressionLimit0Data[1] = this._maxColorValue;
-
         // assign values
         this._clusterTextureSizeId.setValue(this._clusterTextureSizeData);
         this._clusterBoundsMinId.setValue(this._clusterBoundsMinData);
         this._clusterBoundsDeltaId.setValue(this._clusterBoundsDeltaData);
         this._clusterCellsDotId.setValue(this._clusterCellsDotData);
         this._clusterCellsMaxId.setValue(this._clusterCellsMaxData);
-        this._clusterCompressionLimit0Id.setValue(this._clusterCompressionLimit0Data);
     }
 
     // evaluates min and max coordinates of AABB of the light in the cell space
@@ -350,30 +338,6 @@ class WorldClusters {
         this.lightsBuffer.setBounds(min, this.boundsDelta);
     }
 
-    // evaluate ranges of variables compressed to 8bit texture to allow their scaling to 0..1 range
-    evaluateCompressionLimits() {
-
-        let maxAttenuation = 0;
-        let maxColorValue = 0;
-
-        const usedLights = this._usedLights;
-        for (let i = 1; i < usedLights.length; i++) {
-            const light = usedLights[i].light;
-            maxAttenuation = Math.max(light.attenuationEnd, maxAttenuation);
-
-            const color = light._colorLinear;
-            maxColorValue = Math.max(color[0], maxColorValue);
-            maxColorValue = Math.max(color[1], maxColorValue);
-            maxColorValue = Math.max(color[2], maxColorValue);
-        }
-
-        // increase slightly as compression needs value < 1
-        this._maxAttenuation = maxAttenuation + epsilon;
-        this._maxColorValue = maxColorValue + epsilon;
-
-        this.lightsBuffer.setCompressionRanges(this._maxAttenuation, this._maxColorValue);
-    }
-
     updateClusters(lightingParams) {
 
         // clear clusters
@@ -447,7 +411,6 @@ class WorldClusters {
         this.updateCells();
         this.collectLights(lights);
         this.evaluateBounds();
-        this.evaluateCompressionLimits();
         this.updateClusters(lightingParams);
         this.uploadTextures();
     }
