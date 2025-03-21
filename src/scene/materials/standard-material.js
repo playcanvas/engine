@@ -840,6 +840,9 @@ class StandardMaterial extends Material {
             this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, sortedLights);
         }
 
+        // standard material can overwrite camera's fog setting
+        if (!this.useFog) options.defines.set('FOG', 'NONE');
+
         // standard material can overwrite camera's tonemapping setting
         options.defines.set('TONEMAP', tonemapNames[options.litOptions.toneMap]);
 
