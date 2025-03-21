@@ -196,7 +196,9 @@ const standardMaterialRemovedParameters = {
     opacityMapVertexColor: 'boolean',
     specularAntialias: 'boolean',
     specularMapTint: 'boolean',
-    specularMapVertexColor: 'boolean'
+    specularMapVertexColor: 'boolean',
+    useTonemap: 'boolean',
+    aoIntensity: 'number'
 };
 
 export {
