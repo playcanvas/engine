@@ -732,7 +732,6 @@ class Renderer {
                     new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterCellsDot', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterCellsMax', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCompressionLimit0', UNIFORMTYPE_VEC2),
                     new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
                     new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
                     new UniformFormat('clusterSkip', UNIFORMTYPE_FLOAT)
@@ -747,8 +746,7 @@ class Renderer {
                 // uniform buffer needs to be first, as the shader processor assumes slot 0 for it
                 new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT),
 
-                new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
-                new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
+                new BindTextureFormat('lightsTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
                 new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
                 new BindTextureFormat('cookieAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
 
