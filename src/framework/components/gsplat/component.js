@@ -72,6 +72,9 @@ class GSplatComponent extends Component {
      */
     _evtLayerRemoved = null;
 
+    /** @private */
+    _castShadows = false;
+
     /**
      * Create a new GSplatComponent.
      *
@@ -144,6 +147,7 @@ class GSplatComponent extends Component {
                 mi.node = this.entity;
             }
 
+            mi.castShadow = this._castShadows;
             mi.setCustomAabb(this._customAabb);
 
             // if we have custom shader options, apply them
@@ -187,6 +191,55 @@ class GSplatComponent extends Component {
      */
     get material() {
         return this._instance?.material;
+    }
+
+    /**
+     * Sets whether gsplat will cast shadows for lights that have shadow casting enabled. Defaults
+     * to false.
+     *
+     * @type {boolean}
+     */
+    set castShadows(value) {
+
+        if (this._castShadows !== value) {
+
+            const mi = this.instance?.meshInstance;
+
+            if (mi) {
+                const layers = this.layers;
+                const scene = this.system.app.scene;
+                if (this._castShadows && !value) {
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(this.layers[i]);
+                        if (layer) {
+                            layer.removeShadowCasters([mi]);
+                        }
+                    }
+                }
+
+                mi.castShadow = value;
+
+                if (!this._castShadows && value) {
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(layers[i]);
+                        if (layer) {
+                            layer.addShadowCasters([mi]);
+                        }
+                    }
+                }
+            }
+
+            this._castShadows = value;
+        }
+    }
+
+    /**
+     * Gets whether gsplat will cast shadows for lights that have shadow casting enabled.
+     *
+     * @type {boolean}
+     */
+    get castShadows() {
+        return this._castShadows;
     }
 
     /**

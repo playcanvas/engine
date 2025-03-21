@@ -15,6 +15,7 @@ const _schema = [
 
 // order matters here
 const _properties = [
+    'castShadows',
     'instance',
     'asset',
     'layers'
