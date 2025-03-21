@@ -445,11 +445,14 @@ class MeshInstance {
 
     /**
      * Sets the draw bucket for mesh instances. The draw bucket, an integer from 0 to 255 (default
-     * 127), serves as the primary sort key for mesh rendering. Meshes are sorted in ascending order
-     * by draw bucket, then by sort mode. This setting is only effective when mesh instances are
-     * added to a {@link Layer} with its {@link Layer#opaqueSortMode} or
-     * {@link Layer#transparentSortMode} (depending on the material) set to
-     * {@link SORTMODE_BACK2FRONT}, {@link SORTMODE_FRONT2BACK}, or {@link SORTMODE_MATERIALMESH}.
+     * 127), serves as the primary sort key for mesh rendering. Meshes are sorted by draw bucket,
+     * then by sort mode. This setting is only effective when mesh instances are added to a
+     * {@link Layer} with its {@link Layer#opaqueSortMode} or {@link Layer#transparentSortMode}
+     * (depending on the material) set to {@link SORTMODE_BACK2FRONT}, {@link SORTMODE_FRONT2BACK},
+     * or {@link SORTMODE_MATERIALMESH}.
+     *
+     * Note: When {@link SORTMODE_BACK2FRONT} is used, a descending sort order is used; otherwise,
+     * an ascending sort order is used.
      *
      * @type {number}
      */
