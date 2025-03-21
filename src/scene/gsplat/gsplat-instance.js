@@ -161,6 +161,7 @@ class GSplatInstance {
     createMaterial(options) {
         this.material = this.splat.createMaterial(options);
         this.material.setParameter('splatOrder', this.orderTexture);
+        this.material.setParameter('alphaClip', 0.3);
         if (this.meshInstance) {
             this.meshInstance.material = this.material;
         }
