@@ -46,8 +46,10 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
         return false;
     }
 
-    // perform cull against x/y axes
-    if (any(greaterThan(abs(center.proj.xy) - vec2(l1, l2) / viewport * center.proj.w, center.proj.ww))) {
+    vec2 c = center.proj.ww / viewport;
+
+    // cull against frustum x/y axes
+    if (any(greaterThan(abs(center.proj.xy) - vec2(max(l1, l2)) * c, center.proj.ww))) {
         return false;
     }
 
@@ -55,7 +57,7 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
     vec2 v1 = l1 * diagonalVector;
     vec2 v2 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
 
-    corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) / viewport * center.proj.w;
+    corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) * c;
     corner.uv = source.cornerUV;
 
     return true;
