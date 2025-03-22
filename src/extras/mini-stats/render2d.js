@@ -146,6 +146,7 @@ class Render2d {
             type: PRIMITIVE_TRIANGLES,
             indexed: true,
             base: 0,
+            baseVertex: 0,
             count: 0
         };
         this.quads = 0;
