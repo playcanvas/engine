@@ -33,7 +33,6 @@ import envAtlasPS from './common/frag/envAtlas.js';
 import envProcPS from './common/frag/envProc.js';
 // import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
 // import falloffLinearPS from './lit/frag/falloffLinear.js';
-// import floatUnpackingPS from './lit/frag/float-unpacking.js';
 // import floatAsUintPS from './common/frag/float-as-uint.js';
 import fogPS from './common/frag/fog.js';
 // import fresnelSchlickPS from './lit/frag/fresnelSchlick.js';
@@ -246,7 +245,6 @@ const shaderChunksWGSL = {
     envProcPS,
     // falloffInvSquaredPS,
     // falloffLinearPS,
-    // floatUnpackingPS,
     // floatAsUintPS,
     fogPS,
     // fresnelSchlickPS,

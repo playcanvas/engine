@@ -98,6 +98,17 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     value: observer.get('settings.shadowIntensity')
                 })
             ),
+            jsx(
+                LabelGroup,
+                { text: 'Cookie Intensity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.cookieIntensity' },
+                    min: 0,
+                    max: 1,
+                    value: observer.get('settings.cookieIntensity')
+                })
+            ),
             jsx(Button, {
                 text: 'Add Light',
                 onClick: () => observer.emit('add')

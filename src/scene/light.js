@@ -12,10 +12,12 @@ import {
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR,
     shadowTypeInfo,
-    SHADOW_PCF1_16F, SHADOW_PCF3_16F
+    SHADOW_PCF1_16F, SHADOW_PCF3_16F,
+    MASK_AFFECT_LIGHTMAPPED
 } from './constants.js';
 import { ShadowRenderer } from './renderer/shadow-renderer.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
+import { FloatPacking } from '../core/math/float-packing.js';
 
 /**
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
@@ -49,6 +51,14 @@ const directionalCascades = [
     [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5)],
     [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5), new Vec4(0.5, 0.5, 0.5, 0.5)]
 ];
+
+const channelMap = {
+    'rrr': 0b0001,
+    'ggg': 0b0010,
+    'bbb': 0b0100,
+    'aaa': 0b1000,
+    'rgb': 0b0111
+};
 
 let id = 0;
 
@@ -144,6 +154,31 @@ class Light {
     shadowDepthState = DepthState.DEFAULT.clone();
 
     /**
+     * The flags used for clustered lighting. Stored as a bitfield, updated as properties change to
+     * avoid those being updated each frame.
+     *
+     * @type {number}
+     * @ignore
+     */
+    clusteredFlags = 0;
+
+    /**
+     * Storage data for light properties encoded as a Uint32Array.
+     *
+     * @type {Uint32Array}
+     * @ignore
+     */
+    clusteredData = new Uint32Array(3);
+
+    /**
+     * Alias for clusteredData using 16bit unsigned integers.
+     *
+     * @type {Uint16Array}
+     * @ignore
+     */
+    clusteredData16 = new Uint16Array(this.clusteredData.buffer);
+
+    /**
      * @param {GraphicsDevice} graphicsDevice - The graphics device.
      * @param {boolean} clusteredLighting - True if the clustered lighting is enabled.
      */
@@ -221,7 +256,7 @@ class Light {
         this.shadowDistance = 40;
         this._shadowResolution = 1024;
         this._shadowBias = -0.0005;
-        this.shadowIntensity = 1.0;
+        this._shadowIntensity = 1.0;
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
         this.shadowUpdateOverrides = null;
@@ -352,6 +387,7 @@ class Light {
         if (this._mask !== value) {
             this._mask = value;
             this.updateKey();
+            this.updateClusteredFlags();
         }
     }
 
@@ -380,6 +416,7 @@ class Light {
         this._destroyShadowMap();
         this._updateShadowBias();
         this.updateKey();
+        this.updateClusteredFlags();
 
         const stype = this._shadowType;
         this._shadowType = null;
@@ -399,6 +436,7 @@ class Light {
         this._shape = value;
         this._destroyShadowMap();
         this.updateKey();
+        this.updateClusteredFlags();
 
         const stype = this._shadowType;
         this._shadowType = null;
@@ -491,6 +529,17 @@ class Light {
         return this._castShadows && this._mask !== MASK_BAKE && this._mask !== 0;
     }
 
+    set shadowIntensity(value) {
+        if (this._shadowIntensity !== value) {
+            this._shadowIntensity = value;
+            this.updateKey();
+        }
+    }
+
+    get shadowIntensity() {
+        return this._shadowIntensity;
+    }
+
     get bakeShadows() {
         return this._castShadows && this._mask === MASK_BAKE;
     }
@@ -546,6 +595,7 @@ class Light {
 
         this._falloffMode = value;
         this.updateKey();
+        this.updateClusteredFlags();
     }
 
     get falloffMode() {
@@ -559,6 +609,8 @@ class Light {
 
         this._innerConeAngle = value;
         this._innerConeAngleCos = Math.cos(value * Math.PI / 180);
+        this.updateClusterData(false, true);
+
         if (this._usePhysicalUnits) {
             this._updateLinearColor();
         }
@@ -606,6 +658,7 @@ class Light {
         const radAngle = angle * Math.PI / 180;
         this._outerConeAngleCos = Math.cos(radAngle);
         this._outerConeAngleSin = Math.sin(radAngle);
+        this.updateClusterData(false, true);
     }
 
     set intensity(value) {
@@ -695,6 +748,7 @@ class Light {
         }
         this._cookieChannel = value;
         this.updateKey();
+        this.updateClusteredFlags();
     }
 
     get cookieChannel() {
@@ -1004,6 +1058,8 @@ class Light {
         colorLinear[0] = tmpColor.r;
         colorLinear[1] = tmpColor.g;
         colorLinear[2] = tmpColor.b;
+
+        this.updateClusterData(true);
     }
 
     setColor() {
@@ -1076,6 +1132,50 @@ class Light {
         }
 
         this.key = key;
+    }
+
+    /**
+     * Updates 32bit flags used by the clustered lighting. This only stores constant data.
+     * Note: this needs to match shader code in clusteredLight.js
+     */
+    updateClusteredFlags() {
+
+        const isDynamic = !!(this.mask & MASK_AFFECT_DYNAMIC);
+        const isLightmapped = !!(this.mask & MASK_AFFECT_LIGHTMAPPED);
+
+        this.clusteredFlags =
+            ((this.type === LIGHTTYPE_SPOT ? 1 : 0)         << 30) |        // bits 30
+            ((this._shape & 0x3)                            << 28) |        // bits 29 - 28
+            ((this._falloffMode & 0x1)                      << 27) |        // bits 27
+            ((channelMap[this._cookieChannel] ?? 0)         << 23) |        // bits 26 - 23
+            ((isDynamic ? 1 : 0)                            << 22) |        // bits 22
+            ((isLightmapped ? 1 : 0)                        << 21);         // bits 21
+    }
+
+    /**
+     * Adds per-frame dynamic data to the 32bit flags used by the clustered lighting.
+     */
+    getClusteredFlags(castShadows, useCookie) {
+        return this.clusteredFlags |
+            ((castShadows ? Math.floor(this.shadowIntensity * 255) : 0) & 0xFF) << 0 |   // bits 7 - 0
+            ((useCookie ? Math.floor(this.cookieIntensity * 255) : 0) & 0xFF) << 8;      // bits 15 - 8
+    }
+
+    updateClusterData(updateColor, updateAngles) {
+        const { clusteredData16 } = this;
+        const float2Half = FloatPacking.float2Half;
+
+        if (updateColor) {
+            clusteredData16[0] = float2Half(this._colorLinear[0]);
+            clusteredData16[1] = float2Half(this._colorLinear[1]);
+            clusteredData16[2] = float2Half(this._colorLinear[2]);
+            // unused 16bits here
+        }
+
+        if (updateAngles) {
+            clusteredData16[4] = float2Half(this._innerConeAngleCos);
+            clusteredData16[5] = float2Half(this._outerConeAngleCos);
+        }
     }
 }
 
