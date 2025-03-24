@@ -200,7 +200,7 @@ const fragmentShader = /* glsl */ `
 
         #ifdef DOF
             vec2 coc;
-            vec3 blur = dofBlur(uv, coc);
+            vec3 blur = dofBlur(uv0, coc);
             result = mix(result, blur, coc.r + coc.g);
         #endif
 
