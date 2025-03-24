@@ -100,7 +100,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Cookies Intensity' },
+                { text: 'Cookie Intensity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'settings.cookieIntensity' },
