@@ -21,6 +21,7 @@ function SortWorker() {
     let distances;
     let countBuffer;
 
+    // could be increased, but this seems a good compromise between stability and performance
     const numBins = 32;
     const binCount = new Array(numBins).fill(0);
     const binBase = new Array(numBins).fill(0);
@@ -166,7 +167,7 @@ function SortWorker() {
                 countBuffer[sortKey]++;
             }
         } else {
-            // generate per vertex distance to camera
+            // generate per vertex distance to camera for uncompressed data
             const divider = (2 ** compareBits) / range;
             let ii = 0;
             for (let i = 0; i < numVertices; ++i) {
@@ -344,21 +345,24 @@ class GSplatSorter extends EventHandler {
         // get the texture's storage buffer and make a copy
         const orderBuffer = this.orderTexture.lock({
             mode: TEXTURELOCK_READ
-        }).buffer.slice();
+        }).slice();
+        this.orderTexture.unlock();
 
         // initialize order data
         for (let i = 0; i < orderBuffer.length; ++i) {
             orderBuffer[i] = i;
         }
 
-        this.orderTexture.unlock();
-
-        // send the initial buffer to worker
-        this.worker.postMessage({
-            order: orderBuffer,
+        const obj = {
+            order: orderBuffer.buffer,
             centers: centers.buffer,
             chunks: chunks?.buffer
-        }, [orderBuffer, centers.buffer, chunks?.buffer]);
+        };
+
+        const transfer = [orderBuffer.buffer, centers.buffer].concat(chunks ? [chunks.buffer] : []);
+
+        // send the initial buffer to worker
+        this.worker.postMessage(obj, transfer);
     }
 
     setMapping(mapping) {
