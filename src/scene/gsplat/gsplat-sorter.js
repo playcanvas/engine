@@ -5,6 +5,7 @@ import { TEXTURELOCK_READ } from '../../platform/graphics/constants.js';
 function SortWorker() {
     let order;
     let centers;
+    let chunks;
     let mapping;
     let cameraPosition;
     let cameraDirection;
@@ -19,6 +20,11 @@ function SortWorker() {
 
     let distances;
     let countBuffer;
+
+    const numBins = 16;
+    const binCount = new Array(numBins).fill(0);
+    const binBase = new Array(numBins).fill(0);
+    const binDivider = new Array(numBins).fill(0);
 
     const binarySearch = (m, n, compare_fn) => {
         while (m <= n) {
@@ -99,16 +105,59 @@ function SortWorker() {
             countBuffer.fill(0);
         }
 
-        // generate per vertex distance to camera
         const range = maxDist - minDist;
-        const divider = (range < 1e-6) ? 0 : 1 / range * (2 ** compareBits);
+
+        // accumulate chunks into bins
+        if (chunks) {
+            const numChunks = chunks.length / 6;
+
+            // reset counts
+            binCount.fill(0);
+
+            for (let i = 0; i < numChunks; ++i) {
+                const x = chunks[i * 6 + 0];
+                const y = chunks[i * 6 + 1];
+                const z = chunks[i * 6 + 2];
+                const r = chunks[i * 6 + 3];
+                const d = x * dx + y * dy + z * dz - minDist;
+
+                const binMin = Math.max(0, Math.floor((d - r) * numBins / range));
+                const binMax = Math.min(numBins, Math.ceil((d + r) * numBins / range));
+
+                for (let j = binMin; j < binMax; ++j) {
+                    binCount[j]++;
+                }
+            }
+
+            // count total number of bin entries
+            const binTotal = binCount.reduce((a, b) => a + b, 0);
+
+            // calculate per-bin base and divider
+            for (let i = 0; i < numBins; ++i) {
+                binDivider[i] = Math.ceil(binCount[i] / binTotal * bucketCount);
+            }
+            for (let i = 0; i < numBins; ++i) {
+                binBase[i] = i === 0 ? 0 : binBase[i - 1] + binDivider[i - 1];
+            }
+        }
+
+        // generate per vertex distance to camera
+        const divider = (range < 1e-6) ? 0 : (2 ** compareBits) / range;
+        const binRange = range / numBins;
         for (let i = 0; i < numVertices; ++i) {
             const istride = i * 3;
             const x = centers[istride + 0];
             const y = centers[istride + 1];
             const z = centers[istride + 2];
-            const d = x * dx + y * dy + z * dz;
-            const sortKey = Math.floor((d - minDist) * divider);
+            const d = (x * dx + y * dy + z * dz - minDist) / binRange;
+
+            const bin = Math.floor(d);
+            const sortKey = Math.floor(binBase[bin] + binDivider[bin] * (d % 1));
+
+            // TMP
+            if (sortKey < 0 || sortKey >= bucketCount) {
+                console.log(`i=${i} d=${d} bin=${bin} sortKey=${sortKey} bucketCount=${bucketCount}`);
+            }
 
             distances[i] = sortKey;
 
@@ -129,13 +178,15 @@ function SortWorker() {
         }
 
         // find splat with distance 0 to limit rendering behind the camera
-        const tmp = -px * dx - py * dy - pz * dz;
-        const dist = i => distances[order[i]] / divider + minDist + tmp;
+        const tmp = px * dx + py * dy + pz * dz - minDist;
+        const dist = i => distances[order[i]] / divider - tmp;
         const findZero = () => {
             const result = binarySearch(0, numVertices - 1, i => -dist(i));
             return Math.min(numVertices, Math.abs(result));
         };
-        const count = dist(numVertices - 1) >= 0 ? findZero() : numVertices;
+
+        // TOOD: find 0 distance splat
+        const count = numVertices; // dist(numVertices - 1) >= 0 ? findZero() : numVertices;
 
         // apply mapping
         if (mapping) {
@@ -159,6 +210,7 @@ function SortWorker() {
         }
         if (message.data.centers) {
             centers = new Float32Array(message.data.centers);
+            forceUpdate = true;
 
             // calculate bounds
             let initialized = false;
@@ -196,8 +248,25 @@ function SortWorker() {
             if (!initialized) {
                 boundMin.x = boundMax.x = boundMin.y = boundMax.y = boundMin.z = boundMax.z = 0;
             }
-
+        }
+        if (message.data.chunks) {
+            chunks = new Float32Array(message.data.chunks);
             forceUpdate = true;
+
+            // convert chunk min/max to center/radius
+            for (let i = 0; i < chunks.length / 6; ++i) {
+                const mx = chunks[i * 6 + 0];
+                const my = chunks[i * 6 + 1];
+                const mz = chunks[i * 6 + 2];
+                const Mx = chunks[i * 6 + 3];
+                const My = chunks[i * 6 + 4];
+                const Mz = chunks[i * 6 + 5];
+
+                chunks[i * 6 + 0] = (mx + Mx) * 0.5;
+                chunks[i * 6 + 1] = (my + My) * 0.5;
+                chunks[i * 6 + 2] = (mz + Mz) * 0.5;
+                chunks[i * 6 + 3] = Math.sqrt((Mx - mx) ** 2 + (My - my) ** 2 + (Mz - mz) ** 2) * 0.5;
+            }
         }
         if (message.data.hasOwnProperty('mapping')) {
             mapping = message.data.mapping ? new Uint32Array(message.data.mapping) : null;
@@ -247,7 +316,7 @@ class GSplatSorter extends EventHandler {
         this.worker = null;
     }
 
-    init(orderTexture, centers) {
+    init(orderTexture, centers, chunks) {
         this.orderTexture = orderTexture;
         this.centers = centers.slice();
 
@@ -266,8 +335,9 @@ class GSplatSorter extends EventHandler {
         // send the initial buffer to worker
         this.worker.postMessage({
             order: orderBuffer,
-            centers: centers.buffer
-        }, [orderBuffer, centers.buffer]);
+            centers: centers.buffer,
+            chunks: chunks?.buffer
+        }, [orderBuffer, centers.buffer, chunks?.buffer]);
     }
 
     setMapping(mapping) {

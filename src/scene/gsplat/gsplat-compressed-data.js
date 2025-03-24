@@ -221,6 +221,29 @@ class GSplatCompressedData {
         }
     }
 
+    getChunks(result) {
+        const { chunkData, numChunks, chunkSize } = this;
+
+        let mx, my, mz, Mx, My, Mz;
+
+        for (let c = 0; c < numChunks; ++c) {
+            const off = c * chunkSize;
+            mx = chunkData[off + 0];
+            my = chunkData[off + 1];
+            mz = chunkData[off + 2];
+            Mx = chunkData[off + 3];
+            My = chunkData[off + 4];
+            Mz = chunkData[off + 5];
+
+            result[c * 6 + 0] = mx;
+            result[c * 6 + 1] = my;
+            result[c * 6 + 2] = mz;
+            result[c * 6 + 3] = Mx;
+            result[c * 6 + 4] = My;
+            result[c * 6 + 5] = Mz;
+        }
+    }
+
     /**
      * @param {Vec3} result - The result.
      */
