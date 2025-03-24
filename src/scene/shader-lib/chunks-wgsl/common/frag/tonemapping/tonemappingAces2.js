@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 uniform exposure: f32;
 
 // ACES approximation by Stephen Hill

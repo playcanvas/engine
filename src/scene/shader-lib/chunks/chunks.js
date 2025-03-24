@@ -88,6 +88,10 @@ import ltcPS from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
 import msdfPS from './common/frag/msdf.js';
 import metalnessModulatePS from './lit/frag/metalnessModulate.js';
+import morphEvaluationPS from './internal/morph/frag/morphEvaluation.js';
+import morphDeclarationPS from './internal/morph/frag/morphDeclaration.js';
+import morphPS from './internal/morph/frag/morph.js';
+import morphVS from './internal/morph/vert/morph.js';
 import msdfVS from './common/vert/msdf.js';
 import normalVS from './lit/vert/normal.js';
 import normalCoreVS from './common/vert/normalCore.js';
@@ -154,8 +158,8 @@ import reflectionSpherePS from './lit/frag/reflectionSphere.js';
 import reflectionSheenPS from './lit/frag/reflectionSheen.js';
 import refractionCubePS from './lit/frag/refractionCube.js';
 import refractionDynamicPS from './lit/frag/refractionDynamic.js';
-import reprojectPS from './common/frag/reproject.js';
-import reprojectVS from './common/vert/reproject.js';
+import reprojectPS from './internal/frag/reproject.js';
+import reprojectVS from './internal/vert/reproject.js';
 import sampleCatmullRomPS from './common/frag/sampleCatmullRom.js';
 import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/lighting/shadowCascades.js';
@@ -296,6 +300,10 @@ const shaderChunks = {
     ltcPS,
     metalnessPS,
     metalnessModulatePS,
+    morphEvaluationPS,
+    morphDeclarationPS,
+    morphPS,
+    morphVS,
     msdfPS,
     msdfVS,
     normalVS,

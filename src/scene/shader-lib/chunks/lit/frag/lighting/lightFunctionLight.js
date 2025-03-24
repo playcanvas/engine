@@ -3,19 +3,16 @@ export default /* glsl */`
 #if defined(LIGHT{i})
 
 void evaluateLight{i}() {
-    // evaluate area light values
-    #if LIGHT{i}SHAPE != PUNCTUAL
-        #if LIGHT{i}SHAPE == RECT
-            calcRectLightValues(light{i}_position, light{i}_halfWidth, light{i}_halfHeight);
-        #elif LIGHT{i}SHAPE == DISK
-            calcDiskLightValues(light{i}_position, light{i}_halfWidth, light{i}_halfHeight);
-        #elif LIGHT{i}SHAPE == SPHERE
-            calcSphereLightValues(light{i}_position, light{i}_halfWidth, light{i}_halfHeight);
-        #endif
-    #endif
 
     // light color
     vec3 lightColor = light{i}_color;
+
+    #if LIGHT{i}TYPE == DIRECTIONAL && !defined(LIT_SHADOW_CATCHER)
+        // early return if the light color is black (used by shadow catcher - this way this light is very cheap)
+        if (all(equal(lightColor, vec3(0.0)))) {
+            return;
+        }
+    #endif
 
     #if LIGHT{i}TYPE == DIRECTIONAL // directional light
 
@@ -67,15 +64,26 @@ void evaluateLight{i}() {
             dAtten = getFalloffWindow(light{i}_radius, lightDirW);
         #endif
 
-        if (dAtten < 0.00001) {
-            return;
-        }
-
         // spot light angle falloff
         #if LIGHT{i}TYPE == SPOT
             #if !defined(LIGHT{i}COOKIE) || defined(LIGHT{i}COOKIE_FALLOFF)
                 dAtten *= getSpotEffect(light{i}_direction, light{i}_innerConeAngle, light{i}_outerConeAngle, dLightDirNormW);
             #endif
+        #endif
+    #endif
+
+    if (dAtten < 0.00001) {
+        return;
+    }
+
+    // evaluate area light values
+    #if LIGHT{i}SHAPE != PUNCTUAL
+        #if LIGHT{i}SHAPE == RECT
+            calcRectLightValues(light{i}_position, light{i}_halfWidth, light{i}_halfHeight);
+        #elif LIGHT{i}SHAPE == DISK
+            calcDiskLightValues(light{i}_position, light{i}_halfWidth, light{i}_halfHeight);
+        #elif LIGHT{i}SHAPE == SPHERE
+            calcSphereLightValues(light{i}_position, light{i}_halfWidth, light{i}_halfHeight);
         #endif
     #endif
 
@@ -106,11 +114,20 @@ void evaluateLight{i}() {
     #ifdef LIGHT{i}CASTSHADOW
 
         #if LIGHT{i}TYPE == DIRECTIONAL
-            float shadow = getShadow{i}(vec3(0.0)); //////////////////////////////
+            float shadow = getShadow{i}(vec3(0.0));
         #else
             float shadow = getShadow{i}(lightDirW);
         #endif
-        dAtten *= mix(1.0, shadow, light{i}_shadowIntensity);
+
+        // Apply shadow intensity to the shadow value
+        shadow = mix(1.0, shadow, light{i}_shadowIntensity);
+
+        dAtten *= shadow;
+
+        #if defined(LIT_SHADOW_CATCHER) && LIGHT{i}TYPE == DIRECTIONAL
+            // accumulate shadows for directional lights
+            dShadowCatcher *= shadow;
+        #endif            
 
     #endif
 

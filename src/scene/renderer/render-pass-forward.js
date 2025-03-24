@@ -174,7 +174,7 @@ class RenderPassForward extends RenderPass {
                 for (let l = 0; l < shadowDirLights.length; l++) {
                     const light = shadowDirLights[l];
 
-                    // the the shadow map is not already rendered for this light
+                    // the shadow map is not already rendered for this light
                     if (renderer.dirLightShadows.get(light) !== camera) {
                         renderer.dirLightShadows.set(light, camera);
 

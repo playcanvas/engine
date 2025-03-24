@@ -10,7 +10,8 @@ import {
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    DISPLAYFORMAT_LDR
+    DISPLAYFORMAT_LDR,
+    semanticToLocation
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
@@ -18,6 +19,7 @@ import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 import { StencilParameters } from './stencil-parameters.js';
+import { DebugGraphics } from './debug-graphics.js';
 
 /**
  * @import { Compute } from './compute.js'
@@ -29,6 +31,8 @@ import { StencilParameters } from './stencil-parameters.js';
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
  */
+
+const _tempSet = new Set();
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -1010,6 +1014,37 @@ class GraphicsDevice extends EventHandler {
             }
         }
         return undefined;
+    }
+
+    /**
+     * Validate that all attributes required by the shader are present in the currently assigned
+     * vertex buffers.
+     *
+     * @param {Shader} shader - The shader to validate.
+     * @param {VertexFormat} vb0Format - The format of the first vertex buffer.
+     * @param {VertexFormat} vb1Format - The format of the second vertex buffer.
+     * @protected
+     */
+    validateAttributes(shader, vb0Format, vb1Format) {
+
+        Debug.call(() => {
+
+            // add all attribute locations from vertex formats to the set
+            _tempSet.clear();
+            vb0Format?.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
+            vb1Format?.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
+
+            // every location shader needs must be in the vertex buffer
+            for (const [location, name] of shader.attributes) {
+                if (!_tempSet.has(location)) {
+                    Debug.errorOnce(`Vertex attribute [${name}] at location ${location} required by the shader is not present in the currently assigned vertex buffers, while rendering [${DebugGraphics.toString()}]`, {
+                        shader,
+                        vb0Format,
+                        vb1Format
+                    });
+                }
+            }
+        });
     }
 }
 

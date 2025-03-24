@@ -309,6 +309,11 @@ class LitShaderOptions {
      * @type {boolean}
      */
     linearDepth = false;
+
+    /**
+     * Shader outputs the accumulated shadow value, used for shadow catcher materials.
+     */
+    shadowCatcher = false;
 }
 
 export { LitShaderOptions };

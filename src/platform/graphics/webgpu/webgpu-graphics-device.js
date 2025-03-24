@@ -427,8 +427,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // assign current frame's render texture
         wrt.assignColorTexture(this, outColorBuffer);
 
-        WebgpuDebug.end(this);
-        WebgpuDebug.end(this);
+        WebgpuDebug.end(this, 'frameStart');
+        WebgpuDebug.end(this, 'frameStart');
     }
 
     frameEnd() {
@@ -564,6 +564,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 }
             }
 
+            Debug.call(() => this.validateAttributes(this.shader, vb0?.format, vb1?.format));
+
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
                 this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
@@ -585,7 +587,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
             }
 
-            WebgpuDebug.end(this, {
+            WebgpuDebug.end(this, 'Drawing', {
                 vb0,
                 vb1,
                 ib,
@@ -785,8 +787,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
         }
 
-        WebgpuDebug.end(this, { renderPass });
-        WebgpuDebug.end(this, { renderPass });
+        WebgpuDebug.end(this, 'RenderPass', { renderPass });
+        WebgpuDebug.end(this, 'RenderPass', { renderPass });
     }
 
     startComputePass(name) {
@@ -819,8 +821,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // each render pass can use different number of bind groups
         this.bindGroupFormats.length = 0;
 
-        WebgpuDebug.end(this);
-        WebgpuDebug.end(this);
+        WebgpuDebug.end(this, 'ComputePass');
+        WebgpuDebug.end(this, 'ComputePass');
     }
 
     computeDispatch(computes, name = 'Unnamed') {

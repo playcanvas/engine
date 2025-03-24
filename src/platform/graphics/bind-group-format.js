@@ -1,8 +1,8 @@
 import { TRACEID_BINDGROUPFORMAT_ALLOC } from '../../core/constants.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
 import {
-    TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D, TEXTUREDIMENSION_2D_ARRAY,
-    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SAMPLETYPE_INT, SAMPLETYPE_UINT, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
+    TEXTUREDIMENSION_2D,
+    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
 } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 
@@ -12,13 +12,6 @@ import { DebugGraphics } from './debug-graphics.js';
  */
 
 let id = 0;
-
-const textureDimensionInfo = {
-    [TEXTUREDIMENSION_2D]: 'texture2D',
-    [TEXTUREDIMENSION_CUBE]: 'textureCube',
-    [TEXTUREDIMENSION_3D]: 'texture3D',
-    [TEXTUREDIMENSION_2D_ARRAY]: 'texture2DArray'
-};
 
 /**
  * A base class to describe the format of the resource for {@link BindGroupFormat}.
@@ -363,35 +356,6 @@ class BindGroupFormat {
         }
 
         return null;
-    }
-
-    getShaderDeclarationTextures(bindGroup) {
-        let code = '';
-        this.textureFormats.forEach((format) => {
-
-            let textureType = textureDimensionInfo[format.textureDimension];
-            Debug.assert(textureType, 'Unsupported texture type', format.textureDimension);
-            const isArray = textureType === 'texture2DArray';
-
-            const sampleTypePrefix = format.sampleType === SAMPLETYPE_UINT ? 'u' : (format.sampleType === SAMPLETYPE_INT ? 'i' : '');
-            textureType = `${sampleTypePrefix}${textureType}`;
-
-            // handle texture2DArray by renaming the texture object and defining a replacement macro
-            let namePostfix = '';
-            let extraCode = '';
-            if (isArray) {
-                namePostfix = '_texture';
-                extraCode = `#define ${format.name} ${sampleTypePrefix}sampler2DArray(${format.name}${namePostfix}, ${format.name}_sampler)\n`;
-            }
-
-            code += `layout(set = ${bindGroup}, binding = ${format.slot}) uniform ${textureType} ${format.name}${namePostfix};\n`;
-            if (format.hasSampler) {
-                code += `layout(set = ${bindGroup}, binding = ${format.slot + 1}) uniform sampler ${format.name}_sampler;\n`;
-            }
-            code += extraCode;
-        });
-
-        return code;
     }
 
     loseContext() {

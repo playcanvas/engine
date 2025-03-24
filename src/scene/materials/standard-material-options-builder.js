@@ -283,6 +283,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useMetalness = stdMat.useMetalness;
         options.litOptions.useDynamicRefraction = stdMat.useDynamicRefraction;
         options.litOptions.dispersion = stdMat.dispersion > 0;
+        options.litOptions.shadowCatcher = stdMat.shadowCatcher;
     }
 
     _updateEnvOptions(options, stdMat, scene, cameraShaderParams) {

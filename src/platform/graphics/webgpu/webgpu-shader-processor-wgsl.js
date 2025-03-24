@@ -73,6 +73,15 @@ const textureFormat2SampleType = {
     'u32': SAMPLETYPE_UINT
 };
 
+const wrappedArrayTypes = {
+    'f32': 'WrappedF32',
+    'i32': 'WrappedI32',
+    'u32': 'WrappedU32',
+    'vec2f': 'WrappedVec2F',
+    'vec2i': 'WrappedVec2I',
+    'vec2u': 'WrappedVec2U'
+};
+
 const splitToWords = (line) => {
     // remove any double spaces
     line = line.replace(/\s+/g, ' ').trim();
@@ -81,6 +90,10 @@ const splitToWords = (line) => {
     return line.split(/[\s:]+/);
 };
 
+// matches: array<f32, 4>;
+// eslint-disable-next-line
+const UNIFORM_ARRAY_REGEX = /array<([^,]+),\s*([^>]+)>/;
+
 class UniformLine {
     /**
      * A name of the ub buffer which this uniform is assigned to.
@@ -88,6 +101,8 @@ class UniformLine {
      * @type {string|null}
      */
     ubName = null;
+
+    arraySize = 0;
 
     constructor(line, shader) {
         // Save the raw line
@@ -105,6 +120,22 @@ class UniformLine {
         // Extract the name and type
         this.name = parts[0];
         this.type = parts.slice(1).join(' ');
+
+        // array of uniforms (e.g. array<f32, 5>)
+        if (this.type.includes('array<')) {
+
+            const match = UNIFORM_ARRAY_REGEX.exec(this.type);
+            Debug.assert(match, `Array type on line [${line}] is not supported.`);
+
+            // array type
+            this.type = match[1].trim();
+
+            this.arraySize = Number(match[2]);
+            if (isNaN(this.arraySize)) {
+                shader.failed = true;
+                Debug.error(`Only numerically specified uniform array sizes are supported, this uniform is not supported: '${line}'`, shader);
+            }
+        }
     }
 }
 
@@ -244,7 +275,8 @@ class WebgpuShaderProcessorWGSL {
         const fragmentExtracted = WebgpuShaderProcessorWGSL.extract(shaderDefinition.fshader);
 
         // VS - convert a list of attributes to a shader block with fixed locations
-        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, shaderDefinition.processingOptions);
+        const attributesMap = new Map();
+        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions);
 
         // VS - convert a list of varyings to a shader block
         const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true);
@@ -295,6 +327,7 @@ class WebgpuShaderProcessorWGSL {
         return {
             vshader: vshader,
             fshader: fshader,
+            attributes: attributesMap,
             meshUniformBufferFormat: uniformsData.meshUniformBufferFormat,
             meshBindGroupFormat: resourcesData.meshBindGroupFormat
         };
@@ -354,12 +387,11 @@ class WebgpuShaderProcessorWGSL {
     }
 
     /**
-     * Process the lines with uniforms. The function receives the lines containing all uniforms,
-     * both numerical as well as textures/samplers. The function also receives the format of uniform
-     * buffers (numerical) and bind groups (textures) for view and material level. All uniforms that
-     * match any of those are ignored, as those would be supplied by view / material level buffers.
-     * All leftover uniforms create uniform buffer and bind group for the mesh itself, containing
-     * uniforms that change on the level of the mesh.
+     * Process the lines with uniforms. The function receives the lines containing all numerical
+     * uniforms. The function also receives the format of uniform buffers for view and material
+     * level. All uniforms that match any of those are ignored, as those would be supplied by view /
+     * material level buffers. All leftover uniforms create uniform buffer and bind group for the
+     * mesh itself, containing uniforms that change on the level of the mesh.
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Array<UniformLine>} uniforms - Lines containing uniforms.
@@ -517,9 +549,25 @@ class WebgpuShaderProcessorWGSL {
         let code = `struct ${structName} {\n`;
 
         ubFormat.uniforms.forEach((uniform) => {
-            const typeString = uniformTypeToNameWGSL[uniform.type][0];
+            let typeString = uniformTypeToNameWGSL[uniform.type][0];
             Debug.assert(typeString !== undefined, `Uniform type ${uniform.type} is not handled.`);
-            code += `    ${uniform.name}: ${typeString}${uniform.count ? `[${uniform.count}]` : ''},\n`;
+
+            // array uniforms
+            if (uniform.count > 0) {
+
+                // if the type is one of the ones that are not by default 16byte aligned, which is
+                // a requirement for uniform buffers, we need to wrap them in a struct
+                // for example: array<f32, 5> becomes  array<WrappedF32, 5>
+                if (wrappedArrayTypes.hasOwnProperty(typeString)) {
+                    typeString = wrappedArrayTypes[typeString];
+                }
+
+                code += `    ${uniform.shortName}: array<${typeString}, ${uniform.count}>,\n`;
+
+            } else { // not arrays
+
+                code += `    ${uniform.shortName}: ${typeString},\n`;
+            }
         });
 
         code += '};\n';
@@ -623,7 +671,7 @@ class WebgpuShaderProcessorWGSL {
         return `${structCode}};\n`;
     }
 
-    static processAttributes(attributeLines, shaderDefinitionAttributes, processingOptions) {
+    static processAttributes(attributeLines, shaderDefinitionAttributes = {}, attributesMap, processingOptions) {
         let block = '';
         const usedLocations = {};
         attributeLines.forEach((line) => {
@@ -638,6 +686,9 @@ class WebgpuShaderProcessorWGSL {
                 Debug.assert(!usedLocations.hasOwnProperty(location),
                     `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
                 usedLocations[location] = semantic;
+
+                // build a map of used attributes
+                attributesMap.set(location, name);
 
                 // generates: @location(0) position : vec4f
                 block += `    @location(${location}) ${line},\n`;
