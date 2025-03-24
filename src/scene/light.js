@@ -1135,7 +1135,7 @@ class Light {
     }
 
     /**
-     * Updates 32bit flags used by the clsutered lighting. This only stores constant data.
+     * Updates 32bit flags used by the clustered lighting. This only stores constant data.
      * Note: this needs to match shader code in clusteredLight.js
      */
     updateClusteredFlags() {
