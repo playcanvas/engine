@@ -21,7 +21,7 @@ function SortWorker() {
     let distances;
     let countBuffer;
 
-    const numBins = 16;
+    const numBins = 32;
     const binCount = new Array(numBins).fill(0);
     const binBase = new Array(numBins).fill(0);
     const binDivider = new Array(numBins).fill(0);
@@ -107,13 +107,18 @@ function SortWorker() {
 
         const range = maxDist - minDist;
 
-        // accumulate chunks into bins
-        if (chunks) {
+        if (range < 1e-6) {
+            // all points are at the same distance
+            for (let i = 0; i < numVertices; ++i) {
+                distances[i] = 0;
+                countBuffer[0]++;
+            }
+        } else if (chunks) {
+            // handle sort with compressed chunks
             const numChunks = chunks.length / 6;
 
-            // reset counts
+            // calculate a histogram of chunk distances to camera
             binCount.fill(0);
-
             for (let i = 0; i < numChunks; ++i) {
                 const x = chunks[i * 6 + 0];
                 const y = chunks[i * 6 + 1];
@@ -129,7 +134,7 @@ function SortWorker() {
                 }
             }
 
-            // count total number of bin entries
+            // count total number of histogram bin entries
             const binTotal = binCount.reduce((a, b) => a + b, 0);
 
             // calculate per-bin base and divider
@@ -139,30 +144,44 @@ function SortWorker() {
             for (let i = 0; i < numBins; ++i) {
                 binBase[i] = i === 0 ? 0 : binBase[i - 1] + binDivider[i - 1];
             }
-        }
 
-        // generate per vertex distance to camera
-        const divider = (range < 1e-6) ? 0 : (2 ** compareBits) / range;
-        const binRange = range / numBins;
-        for (let i = 0; i < numVertices; ++i) {
-            const istride = i * 3;
-            const x = centers[istride + 0];
-            const y = centers[istride + 1];
-            const z = centers[istride + 2];
-            const d = (x * dx + y * dy + z * dz - minDist) / binRange;
+            // generate per vertex distance key using histogram to distribute bits
+            const binRange = range / numBins;
+            let ii = 0;
+            for (let i = 0; i < numVertices; ++i) {
+                const x = centers[ii++];
+                const y = centers[ii++];
+                const z = centers[ii++];
+                const d = (x * dx + y * dy + z * dz - minDist) / binRange;
+                const bin = d >>> 0;
+                const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
 
-            const bin = Math.floor(d);
-            const sortKey = Math.floor(binBase[bin] + binDivider[bin] * (d % 1));
+                if (sortKey < 0 || sortKey >= bucketCount) {
+                    console.log(`i=${i} d=${d} bin=${bin} sortKey=${sortKey} bucketCount=${bucketCount}`);
+                }
 
-            // TMP
-            if (sortKey < 0 || sortKey >= bucketCount) {
-                console.log(`i=${i} d=${d} bin=${bin} sortKey=${sortKey} bucketCount=${bucketCount}`);
+                distances[i] = sortKey;
+
+                // count occurrences of each distance
+                countBuffer[sortKey]++;
             }
+        } else {
+            // generate per vertex distance to camera
+            const divider = (2 ** compareBits) / range;
+            let ii = 0;
+            for (let i = 0; i < numVertices; ++i) {
+                const x = centers[ii++];
+                const y = centers[ii++];
+                const z = centers[ii++];
 
-            distances[i] = sortKey;
+                const d = (x * dx + y * dy + z * dz - minDist) * divider;
+                const sortKey = d >>> 0;
 
-            // count occurrences of each distance
-            countBuffer[sortKey]++;
+                distances[i] = sortKey;
+
+                // count occurrences of each distance
+                countBuffer[sortKey]++;
+            }
         }
 
         // Change countBuffer[i] so that it contains actual position of this digit in outputArray
@@ -177,16 +196,18 @@ function SortWorker() {
             order[destIndex] = i;
         }
 
-        // find splat with distance 0 to limit rendering behind the camera
-        const tmp = px * dx + py * dy + pz * dz - minDist;
-        const dist = i => distances[order[i]] / divider - tmp;
+        // Find splat with distance 0 to limit rendering behind the camera
+        const cameraDist = px * dx + py * dy + pz * dz;
+        const dist = (i) => {
+            let o = order[i] * 3;
+            return centers[o++] * dx + centers[o++] * dy + centers[o] * dz - cameraDist;
+        };
         const findZero = () => {
             const result = binarySearch(0, numVertices - 1, i => -dist(i));
             return Math.min(numVertices, Math.abs(result));
         };
 
-        // TOOD: find 0 distance splat
-        const count = numVertices; // dist(numVertices - 1) >= 0 ? findZero() : numVertices;
+        const count = dist(numVertices - 1) >= 0 ? findZero() : numVertices;
 
         // apply mapping
         if (mapping) {
