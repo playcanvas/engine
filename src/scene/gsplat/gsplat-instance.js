@@ -132,12 +132,13 @@ class GSplatInstance {
         this.meshInstance.instancingCount = 0;
 
         // clone centers to allow multiple instances of sorter
-        this.centers = new Float32Array(splat.centers);
+        const centers = splat.centers.slice();
+        const chunks = splat.chunks?.slice();
 
         // create sorter
         if (!options.dither || options.dither === DITHER_NONE) {
             this.sorter = new GSplatSorter();
-            this.sorter.init(this.orderTexture, this.centers);
+            this.sorter.init(this.orderTexture, centers, chunks);
             this.sorter.on('updated', (count) => {
                 // limit splat render count to exclude those behind the camera
                 this.meshInstance.instancingCount = Math.ceil(count / splatInstanceSize);
