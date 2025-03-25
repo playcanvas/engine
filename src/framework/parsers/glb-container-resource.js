@@ -71,7 +71,7 @@ class GlbContainerResource {
     }
 
     instantiateModelEntity(options) {
-        const entity = new Entity();
+        const entity = new Entity(undefined, this._assets._loader._app);
         entity.addComponent('model', Object.assign({ type: 'asset', asset: this.model }, options));
         return entity;
     }
@@ -123,7 +123,7 @@ class GlbContainerResource {
         // helper function to recursively clone a hierarchy of GraphNodes to Entities
         const cloneHierarchy = (root, node, glb) => {
 
-            const entity = new Entity();
+            const entity = new Entity(undefined, this._assets._loader._app);
             node._cloneInternal(entity);
 
             // first entity becomes the root
