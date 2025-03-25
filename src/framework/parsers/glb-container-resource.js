@@ -123,7 +123,7 @@ class GlbContainerResource {
         // helper function to recursively clone a hierarchy of GraphNodes to Entities
         const cloneHierarchy = (root, node, glb) => {
 
-            const entity = new Entity();
+            const entity = new Entity('Untitled', this._assets._loader._app);
             node._cloneInternal(entity);
 
             // first entity becomes the root
