@@ -140,7 +140,7 @@ function SortWorker() {
 
             // calculate per-bin base and divider
             for (let i = 0; i < numBins; ++i) {
-                binDivider[i] = Math.ceil(binCount[i] / binTotal * bucketCount);
+                binDivider[i] = (binCount[i] / binTotal * bucketCount) >>> 0;
             }
             for (let i = 0; i < numBins; ++i) {
                 binBase[i] = i === 0 ? 0 : binBase[i - 1] + binDivider[i - 1];
@@ -156,10 +156,6 @@ function SortWorker() {
                 const d = (x * dx + y * dy + z * dz - minDist) / binRange;
                 const bin = d >>> 0;
                 const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
-
-                if (sortKey < 0 || sortKey >= bucketCount) {
-                    console.log(`i=${i} d=${d} bin=${bin} sortKey=${sortKey} bucketCount=${bucketCount}`);
-                }
 
                 distances[i] = sortKey;
 
