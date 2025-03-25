@@ -554,7 +554,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // vertex buffers
             const vb0 = this.vertexBuffers[0];
             const vb1 = this.vertexBuffers[1];
-            this.vertexBuffers.length = 0;
 
             if (vb0) {
                 const vbSlot = this.submitVertexBuffer(vb0, 0);
@@ -580,7 +579,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // draw
             const ib = this.indexBuffer;
             if (ib) {
-                this.indexBuffer = null;
                 passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
                 passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, 0, 0);
             } else {
@@ -596,6 +594,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 pipeline
             });
         }
+
+        this.vertexBuffers.length = 0;
+        this.indexBuffer = null;
     }
 
     setShader(shader, asyncCompile = false) {

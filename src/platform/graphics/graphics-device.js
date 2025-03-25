@@ -724,6 +724,15 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Clears the index buffer set on the graphics device. This is called automatically by the
+     * renderer.
+     * @ignore
+     */
+    clearIndexBuffer() {
+        this.indexBuffer = null;
+    }
+
+    /**
      * Queries the currently set render target on the device.
      *
      * @returns {RenderTarget} The current render target.
