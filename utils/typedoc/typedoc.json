@@ -9,6 +9,7 @@
     "excludeNotDocumented": true,
     "favicon": "favicon.ico",
     "hostedBaseUrl": "https://api.playcanvas.com/",
+    "includeVersion": true,
     "name": "PlayCanvas Engine API Reference",
     "navigationLinks": {
         "Developer Site": "https://developer.playcanvas.com/",
