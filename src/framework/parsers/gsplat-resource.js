@@ -4,6 +4,7 @@ import { GSplat } from '../../scene/gsplat/gsplat.js';
 import { GSplatCompressed } from '../../scene/gsplat/gsplat-compressed.js';
 
 /**
+ * @import { AppBase } from '../app-base.js'
  * @import { GSplatData } from '../../scene/gsplat/gsplat-data.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { SplatMaterialOptions } from '../../scene/gsplat/gsplat-material.js'
@@ -16,10 +17,10 @@ import { GSplatCompressed } from '../../scene/gsplat/gsplat-compressed.js';
  */
 class GSplatResource {
     /**
-     * @type {GraphicsDevice}
+     * @type {AppBase}
      * @ignore
      */
-    device;
+    app;
 
     /**
      * @type {GSplatData}
@@ -40,19 +41,19 @@ class GSplatResource {
     comments = null;
 
     /**
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {AppBase} app - The app.
      * @param {GSplatData} splatData - The splat data.
      * @param {string[]} comments - The PLY file header comments
      * @ignore
      */
-    constructor(device, splatData, comments) {
-        this.device = device;
+    constructor(app, splatData, comments) {
+        this.app = app;
         this.splatData = splatData;
         this.comments = comments;
     }
 
     destroy() {
-        this.device = null;
+        this.app = null;
         this.splatData = null;
         this.splat?.destroy();
         this.splat = null;
@@ -60,7 +61,7 @@ class GSplatResource {
 
     createSplat() {
         if (!this.splat) {
-            this.splat = this.splatData.isCompressed ? new GSplatCompressed(this.device, this.splatData) : new GSplat(this.device, this.splatData);
+            this.splat = this.splatData.isCompressed ? new GSplatCompressed(this.app.graphicsDevice, this.splatData) : new GSplat(this.app.graphicsDevice, this.splatData);
         }
         return this.splat;
     }
@@ -75,7 +76,7 @@ class GSplatResource {
 
         const splatInstance = this.createInstance(options);
 
-        const entity = new Entity();
+        const entity = new Entity(undefined, this.app);
         const component = entity.addComponent('gsplat', {
             instance: splatInstance
         });
