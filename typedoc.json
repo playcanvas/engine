@@ -14,7 +14,7 @@
     "favicon": "utils/typedoc/favicon.ico",
     "hostedBaseUrl": "https://api.playcanvas.com/engine/",
     "includeVersion": true,
-    "name": "PlayCanvas Engine API Reference",
+    "name": "Engine API Reference",
     "navigationLinks": {
         "Developer Site": "https://developer.playcanvas.com/",
         "Blog": "https://blog.playcanvas.com/",
