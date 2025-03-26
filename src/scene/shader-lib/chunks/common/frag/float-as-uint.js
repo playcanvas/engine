@@ -29,5 +29,14 @@ float uint2float(vec4 value) {
     return uintBitsToFloat(intBits);
 }
 
+// store a single float value in vec4, assuming either RGBA8 or float renderable texture
+vec4 float2vec4(float value) {
+    #if defined(CAPS_TEXTURE_FLOAT_RENDERABLE)
+        return vec4(value, 1.0, 1.0, 1.0);
+    #else
+        return float2uint(value);
+    #endif
+}
+
 #endif // FLOAT_AS_UINT
 `;
