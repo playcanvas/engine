@@ -1,4 +1,5 @@
 {
+    "$schema": "https://typedoc.org/schema.json",
     "compilerOptions": {
         "allowSyntheticDefaultImports": true,
         "checkJs": false
@@ -21,6 +22,7 @@
         "Forum": "https://forum.playcanvas.com/",
         "GitHub": "https://github.com/playcanvas"
     },
+    "placeInternalsInOwningModule": true,
     "sidebarLinks": {
         "Home": "/"
     },
@@ -32,8 +34,5 @@
     "readme": "none",
     "searchGroupBoosts": {
         "Classes": 2
-    },
-
-    // Options for typedoc-plugin-missing-exports
-    "placeInternalsInOwningModule": true
+    }
 }
