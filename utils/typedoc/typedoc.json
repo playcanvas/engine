@@ -6,6 +6,9 @@
     "entryPoints": [
         "../../src/index.js"
     ],
+    "exclude": [
+        "**/node_modules/**"
+    ],
     "excludeNotDocumented": true,
     "favicon": "favicon.ico",
     "hostedBaseUrl": "https://api.playcanvas.com/",
