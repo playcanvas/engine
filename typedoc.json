@@ -12,7 +12,7 @@
     ],
     "excludeNotDocumented": true,
     "favicon": "utils/typedoc/favicon.ico",
-    "hostedBaseUrl": "https://api.playcanvas.com/",
+    "hostedBaseUrl": "https://api.playcanvas.com/engine/",
     "includeVersion": true,
     "name": "PlayCanvas Engine API Reference",
     "navigationLinks": {
