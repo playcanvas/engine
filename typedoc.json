@@ -1,0 +1,38 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "checkJs": false
+    },
+    "entryPoints": [
+        "./src/index.js"
+    ],
+    "exclude": [
+        "**/node_modules/**"
+    ],
+    "excludeNotDocumented": true,
+    "favicon": "utils/typedoc/favicon.ico",
+    "hostedBaseUrl": "https://api.playcanvas.com/engine/",
+    "includeVersion": true,
+    "name": "Engine API Reference",
+    "navigationLinks": {
+        "Developer Site": "https://developer.playcanvas.com/",
+        "Blog": "https://blog.playcanvas.com/",
+        "Discord": "https://discord.gg/RSaMRzg",
+        "Forum": "https://forum.playcanvas.com/",
+        "GitHub": "https://github.com/playcanvas/engine"
+    },
+    "placeInternalsInOwningModule": true,
+    "sidebarLinks": {
+        "Home": "/"
+    },
+    "plugin": [
+        "./utils/typedoc/typedoc-plugin.mjs",
+        "typedoc-plugin-mdn-links",
+        "typedoc-plugin-missing-exports"
+    ],
+    "readme": "none",
+    "searchGroupBoosts": {
+        "Classes": 2
+    }
+}
