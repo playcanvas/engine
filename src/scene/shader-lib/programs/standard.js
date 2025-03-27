@@ -519,10 +519,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 }
             }
 
-            Debug.assert(!code.code.includes('$texture2DSRGB'), 'Shader chunk macro $texture2DSRGB has been removed.', { code: code.code });
-            Debug.assert(!code.code.includes('$texture2DRGBM'), 'Shader chunk macro $texture2DRGBM has been removed.', { code: code.code });
-            Debug.assert(!code.code.includes('$texture2DRGBE'), 'Shader chunk macro $texture2DRGBE has been removed.', { code: code.code });
-
         } else {
             // all other passes require only opacity
             const opacityShadowDither = options.litOptions.opacityShadowDither;
