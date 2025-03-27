@@ -1,3 +1,4 @@
+import { version } from '../../core/core.js';
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
@@ -418,6 +419,9 @@ class GraphicsDevice extends EventHandler {
         super();
 
         this.canvas = canvas;
+        if ('setAttribute' in canvas) {
+            canvas.setAttribute('data-engine', `PlayCanvas ${version}`);
+        }
 
         // copy options and handle defaults
         this.initOptions = { ...options };
