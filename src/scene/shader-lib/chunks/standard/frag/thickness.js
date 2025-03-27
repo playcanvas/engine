@@ -1,21 +1,21 @@
 export default /* glsl */`
-#ifdef MAPFLOAT
+#ifdef STD_THICKNESS_MATERIAL_ENABLED
 uniform float material_thickness;
 #endif
 
 void getThickness() {
     dThickness = 1.0;
 
-    #ifdef MAPFLOAT
+    #ifdef STD_THICKNESS_MATERIAL_ENABLED
     dThickness *= material_thickness;
     #endif
 
-    #ifdef MAPTEXTURE
-    dThickness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
+    #ifdef STD_THICKNESS_TEXTURE_ENABLED
+    dThickness *= texture2DBias({STD_THICKNESS_TEXTURE}, {STD_THICKNESS_TEXTURE_UV}, textureBias).{STD_THICKNESS_TEXTURE_CHANNEL};
     #endif
 
-    #ifdef MAPVERTEX
-    dThickness *= saturate(vVertexColor.$VC);
+    #ifdef STD_THICKNESS_VERTEX_ENABLED
+    dThickness *= saturate(vVertexColor.{STD_THICKNESS_VERTEX_CHANNEL});
     #endif
 }
 `;

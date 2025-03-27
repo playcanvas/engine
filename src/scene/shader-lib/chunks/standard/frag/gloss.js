@@ -1,24 +1,24 @@
 export default /* glsl */`
-#ifdef MAPFLOAT
+#ifdef STD_GLOSS_MATERIAL_ENABLED
 uniform float material_gloss;
 #endif
 
 void getGlossiness() {
     dGlossiness = 1.0;
 
-    #ifdef MAPFLOAT
+    #ifdef STD_GLOSS_MATERIAL_ENABLED
     dGlossiness *= material_gloss;
     #endif
 
-    #ifdef MAPTEXTURE
-    dGlossiness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
+    #ifdef STD_GLOSS_TEXTURE_ENABLED
+    dGlossiness *= texture2DBias({STD_GLOSS_TEXTURE}, {STD_GLOSS_TEXTURE_UV}, textureBias).{STD_GLOSS_TEXTURE_CHANNEL};
     #endif
 
-    #ifdef MAPVERTEX
-    dGlossiness *= saturate(vVertexColor.$VC);
+    #ifdef STD_GLOSS_VERTEX_ENABLED
+    dGlossiness *= saturate(vVertexColor.{STD_GLOSS_VERTEX_CHANNEL});
     #endif
 
-    #ifdef MAPINVERT
+    #ifdef STD_GLOSS_INVERT
     dGlossiness = 1.0 - dGlossiness;
     #endif
 

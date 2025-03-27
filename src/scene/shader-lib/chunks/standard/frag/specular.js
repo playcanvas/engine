@@ -1,22 +1,22 @@
 export default /* glsl */`
 
-#ifdef MAPCOLOR
+#ifdef STD_SPECULAR_MATERIAL_ENABLED
 uniform vec3 material_specular;
 #endif
 
 void getSpecularity() {
     vec3 specularColor = vec3(1,1,1);
 
-    #ifdef MAPCOLOR
+    #ifdef STD_SPECULAR_MATERIAL_ENABLED
     specularColor *= material_specular;
     #endif
 
-    #ifdef MAPTEXTURE
-    specularColor *= $DECODE(texture2DBias($SAMPLER, $UV, textureBias)).$CH;
+    #ifdef STD_SPECULAR_TEXTURE_ENABLED
+    specularColor *= {STD_SPECULAR_TEXTURE_DECODE}(texture2DBias({STD_SPECULAR_TEXTURE}, {STD_SPECULAR_TEXTURE_UV}, textureBias)).{STD_SPECULAR_TEXTURE_CHANNEL};
     #endif
 
-    #ifdef MAPVERTEX
-    specularColor *= saturate(vVertexColor.$VC);
+    #ifdef STD_SPECULAR_VERTEX_ENABLED
+    specularColor *= saturate(vVertexColor.{STD_SPECULAR_VERTEX_CHANNEL});
     #endif
 
     dSpecularity = specularColor;

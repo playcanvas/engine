@@ -1,5 +1,5 @@
 export default /* glsl */`
-#ifdef MAPTEXTURE
+#ifdef STD_NORMALDETAIL_TEXTURE_ENABLED
 uniform float material_normalDetailMapBumpiness;
 
 vec3 blendNormals(vec3 n1, vec3 n2) {
@@ -11,8 +11,8 @@ vec3 blendNormals(vec3 n1, vec3 n2) {
 #endif
 
 vec3 addNormalDetail(vec3 normalMap) {
-#ifdef MAPTEXTURE
-    vec3 normalDetailMap = unpackNormal(texture2DBias($SAMPLER, $UV, textureBias));
+#ifdef STD_NORMALDETAIL_TEXTURE_ENABLED
+    vec3 normalDetailMap = unpackNormal(texture2DBias({STD_NORMALDETAIL_TEXTURE}, {STD_NORMALDETAIL_TEXTURE_UV}, textureBias));
     normalDetailMap = mix(vec3(0.0, 0.0, 1.0), normalDetailMap, material_normalDetailMapBumpiness);
     return blendNormals(normalMap, normalDetailMap);
 #else

@@ -1,22 +1,22 @@
 export default /* glsl */`
 
-#ifdef MAPFLOAT
+#ifdef STD_REFRACTION_MATERIAL_ENABLED
 uniform float material_refraction;
 #endif
 
 void getRefraction() {
     float refraction = 1.0;
 
-    #ifdef MAPFLOAT
+    #ifdef STD_REFRACTION_MATERIAL_ENABLED
     refraction = material_refraction;
     #endif
 
-    #ifdef MAPTEXTURE
-    refraction *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
+    #ifdef STD_REFRACTION_TEXTURE_ENABLED
+    refraction *= texture2DBias({STD_REFRACTION_TEXTURE}, {STD_REFRACTION_TEXTURE_UV}, textureBias).{STD_REFRACTION_TEXTURE_CHANNEL};
     #endif
 
-    #ifdef MAPVERTEX
-    refraction *= saturate(vVertexColor.$VC);
+    #ifdef STD_REFRACTION_VERTEX_ENABLED
+    refraction *= saturate(vVertexColor.{STD_REFRACTION_VERTEX_CHANNEL});
     #endif
 
     dTransmission = refraction;
