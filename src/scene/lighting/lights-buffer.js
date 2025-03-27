@@ -1,7 +1,7 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
-import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE } from '../constants.js';
+import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE, LIGHT_COLOR_DIVIDER } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { LightCamera } from '../renderer/light-camera.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
@@ -37,7 +37,8 @@ const enums = {
     '{LIGHTSHAPE_PUNCTUAL}': `${LIGHTSHAPE_PUNCTUAL}u`,
     '{LIGHTSHAPE_RECT}': `${LIGHTSHAPE_RECT}u`,
     '{LIGHTSHAPE_DISK}': `${LIGHTSHAPE_DISK}u`,
-    '{LIGHTSHAPE_SPHERE}': `${LIGHTSHAPE_SPHERE}u`
+    '{LIGHTSHAPE_SPHERE}': `${LIGHTSHAPE_SPHERE}u`,
+    '{LIGHT_COLOR_DIVIDER}': `${LIGHT_COLOR_DIVIDER}.0`
 };
 
 // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1"

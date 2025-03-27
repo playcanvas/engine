@@ -13,7 +13,8 @@ import {
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR,
     shadowTypeInfo,
     SHADOW_PCF1_16F, SHADOW_PCF3_16F,
-    MASK_AFFECT_LIGHTMAPPED
+    MASK_AFFECT_LIGHTMAPPED,
+    LIGHT_COLOR_DIVIDER
 } from './constants.js';
 import { ShadowRenderer } from './renderer/shadow-renderer.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
@@ -1166,9 +1167,10 @@ class Light {
         const float2Half = FloatPacking.float2Half;
 
         if (updateColor) {
-            clusteredData16[0] = float2Half(this._colorLinear[0]);
-            clusteredData16[1] = float2Half(this._colorLinear[1]);
-            clusteredData16[2] = float2Half(this._colorLinear[2]);
+            // bring HDR color to half-float range, as those values can be over 65K
+            clusteredData16[0] = float2Half(math.clamp(this._colorLinear[0] / LIGHT_COLOR_DIVIDER, 0, 65504));
+            clusteredData16[1] = float2Half(math.clamp(this._colorLinear[1] / LIGHT_COLOR_DIVIDER, 0, 65504));
+            clusteredData16[2] = float2Half(math.clamp(this._colorLinear[2] / LIGHT_COLOR_DIVIDER, 0, 65504));
             // unused 16bits here
         }
 

@@ -250,6 +250,9 @@ export const lightTypeNames = {
     [LIGHTTYPE_SPOT]: 'SPOT'
 };
 
+// a divider clustered lights use to bring physical light intensity to half-float range
+export const LIGHT_COLOR_DIVIDER = 100;
+
 /**
  * Infinitesimally small point light source shape.
  *
