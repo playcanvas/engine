@@ -169,7 +169,7 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * Implementation of a simple to use camera rendering pass, which supports SSAO, Bloom and
  * other rendering effects.
  *
- * @category Render Pass
+ * @category Graphics
  */
 class CameraFrame {
     /** @private */
