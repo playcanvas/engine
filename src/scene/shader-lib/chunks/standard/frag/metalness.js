@@ -1,12 +1,12 @@
 export default /* glsl */`
-#ifdef STD_METALNESS_MATERIAL_ENABLED
+#ifdef STD_METALNESS_CONSTANT_ENABLED
 uniform float material_metalness;
 #endif
 
 void getMetalness() {
     float metalness = 1.0;
 
-    #ifdef STD_METALNESS_MATERIAL_ENABLED
+    #ifdef STD_METALNESS_CONSTANT_ENABLED
     metalness *= material_metalness;
     #endif
 

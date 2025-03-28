@@ -112,8 +112,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
             // defines
             [
-                ['MAPFLOAT',   `STD_${propName}_MATERIAL_ENABLED`],
-                ['MAPCOLOR',   `STD_${propName}_MATERIAL_ENABLED`],
+                ['MAPFLOAT',   `STD_${propName}_CONSTANT_ENABLED`],
+                ['MAPCOLOR',   `STD_${propName}_CONSTANT_ENABLED`],
                 ['MAPVERTEX',  `STD_${propName}_VERTEX_ENABLED`],
                 ['MAPTEXTURE', `STD_${propName}_TEXTURE_ENABLED`],
                 ['MAPINVERT',  `STD_${propName}_INVERT`]
@@ -209,7 +209,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         }
 
         if (tintOption) {
-            fDefines.set(`STD_${propNameCaps}_MATERIAL_ENABLED`, '');
+            fDefines.set(`STD_${propNameCaps}_CONSTANT_ENABLED`, '');
         }
         if (!!(options[invertName])) {
             fDefines.set(`STD_${propNameCaps}_INVERT`, '');

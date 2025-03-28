@@ -1,13 +1,13 @@
 export default /* glsl */`
 
-#ifdef STD_REFRACTION_MATERIAL_ENABLED
+#ifdef STD_REFRACTION_CONSTANT_ENABLED
 uniform float material_refraction;
 #endif
 
 void getRefraction() {
     float refraction = 1.0;
 
-    #ifdef STD_REFRACTION_MATERIAL_ENABLED
+    #ifdef STD_REFRACTION_CONSTANT_ENABLED
     refraction = material_refraction;
     #endif
 

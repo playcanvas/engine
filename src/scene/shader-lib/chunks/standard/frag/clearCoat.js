@@ -1,12 +1,12 @@
 export default /* glsl */`
-#ifdef STD_CLEARCOAT_MATERIAL_ENABLED
+#ifdef STD_CLEARCOAT_CONSTANT_ENABLED
 uniform float material_clearCoat;
 #endif
 
 void getClearCoat() {
     ccSpecularity = 1.0;
 
-    #ifdef STD_CLEARCOAT_MATERIAL_ENABLED
+    #ifdef STD_CLEARCOAT_CONSTANT_ENABLED
     ccSpecularity *= material_clearCoat;
     #endif
 

@@ -1,12 +1,12 @@
 export default /* glsl */`
-#ifdef STD_THICKNESS_MATERIAL_ENABLED
+#ifdef STD_THICKNESS_CONSTANT_ENABLED
 uniform float material_thickness;
 #endif
 
 void getThickness() {
     dThickness = 1.0;
 
-    #ifdef STD_THICKNESS_MATERIAL_ENABLED
+    #ifdef STD_THICKNESS_CONSTANT_ENABLED
     dThickness *= material_thickness;
     #endif
 

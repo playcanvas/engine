@@ -1,12 +1,12 @@
 export default /* glsl */`
-#ifdef STD_GLOSS_MATERIAL_ENABLED
+#ifdef STD_GLOSS_CONSTANT_ENABLED
 uniform float material_gloss;
 #endif
 
 void getGlossiness() {
     dGlossiness = 1.0;
 
-    #ifdef STD_GLOSS_MATERIAL_ENABLED
+    #ifdef STD_GLOSS_CONSTANT_ENABLED
     dGlossiness *= material_gloss;
     #endif
 

@@ -1,13 +1,13 @@
 export default /* glsl */`
 
-#ifdef STD_SPECULARITYFACTOR_MATERIAL_ENABLED
+#ifdef STD_SPECULARITYFACTOR_CONSTANT_ENABLED
 uniform float material_specularityFactor;
 #endif
 
 void getSpecularityFactor() {
     float specularityFactor = 1.0;
 
-    #ifdef STD_SPECULARITYFACTOR_MATERIAL_ENABLED
+    #ifdef STD_SPECULARITYFACTOR_CONSTANT_ENABLED
     specularityFactor *= material_specularityFactor;
     #endif
 

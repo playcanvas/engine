@@ -1,12 +1,12 @@
 export default /* glsl */`
-#ifdef STD_CLEARCOATGLOSS_MATERIAL_ENABLED
+#ifdef STD_CLEARCOATGLOSS_CONSTANT_ENABLED
 uniform float material_clearCoatGloss;
 #endif
 
 void getClearCoatGlossiness() {
     ccGlossiness = 1.0;
 
-    #ifdef STD_CLEARCOATGLOSS_MATERIAL_ENABLED
+    #ifdef STD_CLEARCOATGLOSS_CONSTANT_ENABLED
     ccGlossiness *= material_clearCoatGloss;
     #endif
 

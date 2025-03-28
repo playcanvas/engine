@@ -1,13 +1,13 @@
 export default /* glsl */`
 
-#ifdef STD_SPECULAR_MATERIAL_ENABLED
+#ifdef STD_SPECULAR_CONSTANT_ENABLED
 uniform vec3 material_specular;
 #endif
 
 void getSpecularity() {
     vec3 specularColor = vec3(1,1,1);
 
-    #ifdef STD_SPECULAR_MATERIAL_ENABLED
+    #ifdef STD_SPECULAR_CONSTANT_ENABLED
     specularColor *= material_specular;
     #endif
 

@@ -1,12 +1,12 @@
 export default /* glsl */`
-#ifdef STD_IRIDESCENCE_MATERIAL_ENABLED
+#ifdef STD_IRIDESCENCE_CONSTANT_ENABLED
 uniform float material_iridescence;
 #endif
 
 void getIridescence() {
     float iridescence = 1.0;
 
-    #ifdef STD_IRIDESCENCE_MATERIAL_ENABLED
+    #ifdef STD_IRIDESCENCE_CONSTANT_ENABLED
     iridescence *= material_iridescence;
     #endif
 
