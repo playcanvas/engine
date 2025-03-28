@@ -132,7 +132,7 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
     // decompress color half-floats
     vec2 colorRG = unpackHalf2x16(floatBitsToUint(halfData.x));
     vec2 colorB_ = unpackHalf2x16(floatBitsToUint(halfData.y));
-    clusterLightData.color = vec3(colorRG, colorB_.x);
+    clusterLightData.color = vec3(colorRG, colorB_.x) * {LIGHT_COLOR_DIVIDER};
 
     // position and range, full floats
     vec4 lightPosRange = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_POSITION_RANGE);
