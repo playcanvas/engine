@@ -104,7 +104,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             [
                 ['$UV',         `{STD_${propName}_TEXTURE_UV}`],
                 ['$CH',         `{STD_${propName}_TEXTURE_CHANNEL}`],
-                ['$SAMPLER',    `{STD_${propName}_TEXTURE}`],
+                ['$SAMPLER',    `{STD_${propName}_TEXTURE_NAME}`],
                 ['$DECODE',     `{STD_${propName}_TEXTURE_DECODE}`],
                 ['$VC',         `{STD_${propName}_VERTEX_CHANNEL}`],
                 ['$DETAILMODE', `{STD_${propName}_DETAILMODE}`]
@@ -112,10 +112,10 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
             // defines
             [
-                ['MAPFLOAT',   `STD_${propName}_CONSTANT_ENABLED`],
-                ['MAPCOLOR',   `STD_${propName}_CONSTANT_ENABLED`],
-                ['MAPVERTEX',  `STD_${propName}_VERTEX_ENABLED`],
-                ['MAPTEXTURE', `STD_${propName}_TEXTURE_ENABLED`],
+                ['MAPFLOAT',   `STD_${propName}_CONSTANT`],
+                ['MAPCOLOR',   `STD_${propName}_CONSTANT`],
+                ['MAPVERTEX',  `STD_${propName}_VERTEX`],
+                ['MAPTEXTURE', `STD_${propName}_TEXTURE`],
                 ['MAPINVERT',  `STD_${propName}_INVERT`]
             ].forEach(([oldSyntax, newSyntax]) => trackChange(oldSyntax, newSyntax));
 
@@ -171,7 +171,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         if (textureOption) {
 
-            fDefines.set(`STD_${propNameCaps}_TEXTURE_ENABLED`, '');
+            fDefines.set(`STD_${propNameCaps}_TEXTURE`, '');
 
             const uv = this._getUvSourceExpression(transformPropName, uVPropName, options);
 
@@ -180,7 +180,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             fDefines.set(`{STD_${propNameCaps}_TEXTURE_CHANNEL}`, options[channelPropName]);
 
             // texture sampler define
-            const textureId = `{STD_${propNameCaps}_TEXTURE}`;
+            const textureId = `{STD_${propNameCaps}_TEXTURE_NAME}`;
             if (mapping && chunkCode.includes(textureId)) {
                 let samplerName = `texture_${mapPropName}`;
                 const alias = mapping[textureIdentifier];
@@ -200,7 +200,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         }
 
         if (vertexColorOption) {
-            fDefines.set(`STD_${propNameCaps}_VERTEX_ENABLED`, '');
+            fDefines.set(`STD_${propNameCaps}_VERTEX`, '');
             fDefines.set(`{STD_${propNameCaps}_VERTEX_CHANNEL}`, options[vertexColorChannelPropName]);
         }
 
@@ -209,7 +209,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         }
 
         if (tintOption) {
-            fDefines.set(`STD_${propNameCaps}_CONSTANT_ENABLED`, '');
+            fDefines.set(`STD_${propNameCaps}_CONSTANT`, '');
         }
         if (!!(options[invertName])) {
             fDefines.set(`STD_${propNameCaps}_INVERT`, '');

@@ -4,11 +4,11 @@ uniform float material_sheenGloss;
 void getSheenGlossiness() {
     float sheenGlossiness = material_sheenGloss;
 
-    #ifdef STD_SHEENGLOSS_TEXTURE_ENABLED
-    sheenGlossiness *= texture2DBias({STD_SHEENGLOSS_TEXTURE}, {STD_SHEENGLOSS_TEXTURE_UV}, textureBias).{STD_SHEENGLOSS_TEXTURE_CHANNEL};
+    #ifdef STD_SHEENGLOSS_TEXTURE
+    sheenGlossiness *= texture2DBias({STD_SHEENGLOSS_TEXTURE_NAME}, {STD_SHEENGLOSS_TEXTURE_UV}, textureBias).{STD_SHEENGLOSS_TEXTURE_CHANNEL};
     #endif
 
-    #ifdef STD_SHEENGLOSS_VERTEX_ENABLED
+    #ifdef STD_SHEENGLOSS_VERTEX
     sheenGlossiness *= saturate(vVertexColor.{STD_SHEENGLOSS_VERTEX_CHANNEL});
     #endif
 
