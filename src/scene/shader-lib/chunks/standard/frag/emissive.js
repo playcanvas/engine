@@ -5,12 +5,12 @@ uniform float material_emissiveIntensity;
 void getEmission() {
     dEmission = material_emissive * material_emissiveIntensity;
 
-    #ifdef MAPTEXTURE
-    dEmission *= $DECODE(texture2DBias($SAMPLER, $UV, textureBias)).$CH;
+    #ifdef STD_EMISSIVE_TEXTURE
+    dEmission *= {STD_EMISSIVE_TEXTURE_DECODE}(texture2DBias({STD_EMISSIVE_TEXTURE_NAME}, {STD_EMISSIVE_TEXTURE_UV}, textureBias)).{STD_EMISSIVE_TEXTURE_CHANNEL};
     #endif
 
-    #ifdef MAPVERTEX
-    dEmission *= gammaCorrectInput(saturate(vVertexColor.$VC));
+    #ifdef STD_EMISSIVE_VERTEX
+    dEmission *= gammaCorrectInput(saturate(vVertexColor.{STD_EMISSIVE_VERTEX_CHANNEL}));
     #endif
 }
 `;
