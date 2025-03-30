@@ -233,8 +233,8 @@ class MeshInstance {
     visible = true;
 
     /**
-     * Read this value in {@link Scene#EVENT_POSTCULL} event to determine if the object is actually
-     * going to be rendered.
+     * Read this value in {@link EVENT_POSTCULL} event to determine if the object is actually going
+     * to be rendered.
      *
      * @type {boolean}
      */

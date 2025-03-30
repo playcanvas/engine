@@ -4,14 +4,14 @@ import { EventHandle } from './event-handle.js';
  * Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
  *
  * @callback HandleEventCallback
- * @param {*} [arg1] - First argument that is passed from caller.
- * @param {*} [arg2] - Second argument that is passed from caller.
- * @param {*} [arg3] - Third argument that is passed from caller.
- * @param {*} [arg4] - Fourth argument that is passed from caller.
- * @param {*} [arg5] - Fifth argument that is passed from caller.
- * @param {*} [arg6] - Sixth argument that is passed from caller.
- * @param {*} [arg7] - Seventh argument that is passed from caller.
- * @param {*} [arg8] - Eighth argument that is passed from caller.
+ * @param {any} [arg1] - First argument that is passed from caller.
+ * @param {any} [arg2] - Second argument that is passed from caller.
+ * @param {any} [arg3] - Third argument that is passed from caller.
+ * @param {any} [arg4] - Fourth argument that is passed from caller.
+ * @param {any} [arg5] - Fifth argument that is passed from caller.
+ * @param {any} [arg6] - Sixth argument that is passed from caller.
+ * @param {any} [arg7] - Seventh argument that is passed from caller.
+ * @param {any} [arg8] - Eighth argument that is passed from caller.
  */
 
 /**
@@ -259,14 +259,14 @@ class EventHandler {
      * Fire an event, all additional arguments are passed on to the event listener.
      *
      * @param {string} name - Name of event to fire.
-     * @param {*} [arg1] - First argument that is passed to the event handler.
-     * @param {*} [arg2] - Second argument that is passed to the event handler.
-     * @param {*} [arg3] - Third argument that is passed to the event handler.
-     * @param {*} [arg4] - Fourth argument that is passed to the event handler.
-     * @param {*} [arg5] - Fifth argument that is passed to the event handler.
-     * @param {*} [arg6] - Sixth argument that is passed to the event handler.
-     * @param {*} [arg7] - Seventh argument that is passed to the event handler.
-     * @param {*} [arg8] - Eighth argument that is passed to the event handler.
+     * @param {any} [arg1] - First argument that is passed to the event handler.
+     * @param {any} [arg2] - Second argument that is passed to the event handler.
+     * @param {any} [arg3] - Third argument that is passed to the event handler.
+     * @param {any} [arg4] - Fourth argument that is passed to the event handler.
+     * @param {any} [arg5] - Fifth argument that is passed to the event handler.
+     * @param {any} [arg6] - Sixth argument that is passed to the event handler.
+     * @param {any} [arg7] - Seventh argument that is passed to the event handler.
+     * @param {any} [arg8] - Eighth argument that is passed to the event handler.
      * @returns {EventHandler} Self for chaining.
      * @example
      * obj.fire('test', 'This is the message');

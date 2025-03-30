@@ -11,10 +11,6 @@ import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
 
 /**
- * @import { Entity } from '../../entity.js'
- */
-
-/**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
@@ -23,32 +19,23 @@ import { Component } from '../component.js';
  */
 
 /**
- * The RenderComponent enables an {@link Entity} to render 3D meshes. The {@link RenderComponent#type}
- * property can be set to one of several predefined shape types (such as `box`, `sphere`, `cone`
- * and so on). Alternatively, the component can be configured to manage an arbitrary array of
- * {@link MeshInstance} objects. These can either be created programmatically or loaded from an
+ * The RenderComponent enables an {@link Entity} to render 3D meshes. The {@link type} property can
+ * be set to one of several predefined shapes (such as `box`, `sphere`, `cone` and so on).
+ * Alternatively, the component can be configured to manage an arbitrary array of
+ * {@link MeshInstance}s. These can either be created programmatically or loaded from an
  * {@link Asset}.
  *
  * You should never need to use the RenderComponent constructor directly. To add a RenderComponent
  * to an Entity, use {@link Entity#addComponent}:
  *
  * ```javascript
- * // Add a render component to an entity with the default options
  * const entity = new pc.Entity();
- * entity.addComponent("render");  // This defaults to a 1x1x1 box
- * ```
- *
- * To create an entity with a specific primitive shape:
- *
- * ```javascript
- * entity.addComponent("render", {
- *     type: "cone",
- *     castShadows: false,
- *     receiveShadows: false
+ * entity.addComponent('render', {
+ *     type: 'box'
  * });
  * ```
  *
- * Once the RenderComponent is added to the entity, you can set and get any of its properties:
+ * Once the RenderComponent is added to the entity, you can access it via the `render` property:
  *
  * ```javascript
  * entity.render.type = 'capsule';  // Set the render component's type
@@ -56,11 +43,11 @@ import { Component } from '../component.js';
  * console.log(entity.render.type); // Get the render component's type and print it
  * ```
  *
- * Relevant examples:
+ * Relevant Engine API examples:
  *
- * - [Spinning Cube](https://playcanvas.github.io/#/misc/hello-world)
- * - [Primitive Shapes](https://playcanvas.github.io/#/graphics/shapes)
  * - [Loading Render Assets](https://playcanvas.github.io/#/graphics/render-asset)
+ * - [Primitive Shapes](https://playcanvas.github.io/#/graphics/shapes)
+ * - [Spinning Cube](https://playcanvas.github.io/#/misc/hello-world)
  *
  * @category Graphics
  */

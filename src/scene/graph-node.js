@@ -653,8 +653,7 @@ class GraphNode extends EventHandler {
      * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
      * const meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
      */
-    findByTag() {
-        const query = arguments;
+    findByTag(...query) {
         const results = [];
 
         const queryNode = (node, checkNode) => {
