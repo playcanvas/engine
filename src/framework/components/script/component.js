@@ -29,6 +29,16 @@ const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
  * entity.addComponent('script');
  * ```
  *
+ * Once the ScriptComponent is added to the entity, you can add scripts to it:
+ *
+ * ```javascript
+ * // Option 1: Add a script using the name registered in the ScriptRegistry
+ * entity.script.create('cameraControls');
+ *
+ * // Option 2: Add a script using the script class
+ * entity.script.create(CameraControls);
+ * ```
+ *
  * For more details on scripting see the [Scripting Section](https://developer.playcanvas.com/user-manual/scripting/)
  * of the User Manual.
  *

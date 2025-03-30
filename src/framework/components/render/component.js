@@ -30,16 +30,8 @@ import { Component } from '../component.js';
  *
  * ```javascript
  * const entity = new pc.Entity();
- * entity.addComponent('render');  // This defaults to a 1x1x1 box
- * ```
- *
- * To add a RenderComponent with a specific configuration, pass an options object:
- *
- * ```javascript
  * entity.addComponent('render', {
- *     type: 'cone',
- *     castShadows: false,
- *     receiveShadows: false
+ *     type: 'box'
  * });
  * ```
  *
