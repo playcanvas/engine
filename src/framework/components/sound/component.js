@@ -23,15 +23,17 @@ import { SoundSlot } from './slot.js';
  * to an Entity, use {@link Entity#addComponent}:
  *
  * ```javascript
- * // Add a sound component to an entity
  * const entity = new pc.Entity();
- * entity.addComponent("sound");
+ * entity.addComponent('sound', {
+ *     volume: 0.8,
+ *     positional: true
+ * });
  * ```
  *
  * Then, to add a sound slot to the component:
  *
  * ```javascript
- * entity.sound.addSlot("beep", {
+ * entity.sound.addSlot('beep', {
  *     asset: asset,
  *     autoPlay: true,
  *     loop: true,
@@ -43,12 +45,12 @@ import { SoundSlot } from './slot.js';
  * Once the SoundComponent is added to the entity, you can set and get any of its properties:
  *
  * ```javascript
- * entity.sound.volume = 0.8;  // Set the volume for all sounds
+ * entity.sound.volume = 0.9;  // Set the volume for all sounds
  *
  * console.log(entity.sound.volume); // Get the volume and print it
  * ```
  *
- * Relevant examples:
+ * Relevant Engine API examples:
  *
  * - [Positional Sound](https://playcanvas.github.io/#/sound/positional)
  *
