@@ -47,7 +47,7 @@ const _quat = new Quat();
  * ```javascript
  * entity.collision.type = 'cylinder'; // Set the collision volume to a cylinder
  *
- * console.log(entity.collision.type);   // Get the collision volume type and print it
+ * console.log(entity.collision.type); // Get the collision volume type and print it
  * ```
  *
  * Relevant Engine API examples:
