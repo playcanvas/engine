@@ -35,7 +35,7 @@ import { Component } from '../component.js';
  *
  * console.log(entity.gsplat.customAabb);
  * ```
- * 
+ *
  * Relevant Engine API examples:
  *
  * - [Loading a Splat](https://playcanvas.github.io/#/loaders/gsplat)
