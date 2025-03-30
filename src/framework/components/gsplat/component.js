@@ -28,7 +28,7 @@ import { Component } from '../component.js';
  * });
  * ```
  *
- * Once the GSplatComponent is added to the entity, you can set and get any of its properties:
+ * Once the GSplatComponent is added to the entity, you can access it via the `gsplat` property:
  *
  * ```javascript
  * entity.gsplat.customAabb = new pc.BoundingBox(new pc.Vec3(), new pc.Vec3(10, 10, 10));

@@ -30,24 +30,20 @@ import { SoundSlot } from './slot.js';
  * });
  * ```
  *
- * Then, to add a sound slot to the component:
- *
- * ```javascript
- * entity.sound.addSlot('beep', {
- *     asset: asset,
- *     autoPlay: true,
- *     loop: true,
- *     overlap: true,
- *     pitch: 1.5
- * });
- * ```
- *
- * Once the SoundComponent is added to the entity, you can set and get any of its properties:
+ * Once the SoundComponent is added to the entity, you can access it via the `sound` property:
  *
  * ```javascript
  * entity.sound.volume = 0.9;  // Set the volume for all sounds
  *
  * console.log(entity.sound.volume); // Get the volume and print it
+ * ```
+ *
+ * Add individual sounds by creating sound slots on the component:
+ *
+ * ```javascript
+ * entity.sound.addSlot('beep', {
+ *     asset: asset
+ * });
  * ```
  *
  * Relevant Engine API examples:

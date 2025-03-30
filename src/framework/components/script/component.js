@@ -29,7 +29,8 @@ const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
  * entity.addComponent('script');
  * ```
  *
- * Once the ScriptComponent is added to the entity, you can add scripts to it:
+ * Once the ScriptComponent is added to the entity, you can access it via the `script` property.
+ * Add scripts to the entity by calling the `create` method:
  *
  * ```javascript
  * // Option 1: Add a script using the name registered in the ScriptRegistry

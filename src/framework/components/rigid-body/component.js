@@ -49,6 +49,13 @@ const _vec3 = new Vec3();
  * });
  * ```
  *
+ * Once the RigidBodyComponent is added to the entity, you can access it via the `rigidbody` property:
+ *
+ * ```javascript
+ * entity.rigidbody.mass = 10;
+ * console.log(entity.rigidbody.mass);
+ * ```
+ *
  * Relevant Engine API examples:
  *
  * - [Falling shapes](https://playcanvas.github.io/#/physics/falling-shapes)

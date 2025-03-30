@@ -66,7 +66,7 @@ const matD = new Mat4();
  * });
  * ```
  *
- * Once the ElementComponent is added to the entity, you can set and get any of its properties:
+ * Once the ElementComponent is added to the entity, you can access it via the `element` property:
  *
  * ```javascript
  * entity.element.color = pc.Color.RED; // Set the element's color to red
