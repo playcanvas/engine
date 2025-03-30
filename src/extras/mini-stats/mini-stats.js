@@ -25,7 +25,8 @@ import { Render2d } from './render2d.js';
 /**
  * @typedef {object} MiniStatsGraphOptions
  * @property {boolean} enabled - Whether to show the graph.
- * @property {number} watermark - Watermark - shown as a line on the graph, useful for displaying a budget.
+ * @property {number} watermark - Watermark - shown as a line on the graph, useful for displaying a
+ * budget.
  */
 
 /**
@@ -34,17 +35,20 @@ import { Render2d } from './render2d.js';
  * @property {string[]} stats - Path to data inside Application.stats.
  * @property {number} [decimalPlaces] - Number of decimal places (defaults to none).
  * @property {string} [unitsName] - Units (defaults to "").
- * @property {number} [watermark] - Watermark - shown as a line on the graph, useful for displaying a budget.
+ * @property {number} [watermark] - Watermark - shown as a line on the graph, useful for displaying
+ * a budget.
  */
 
 /**
  * @typedef {object} MiniStatsOptions
- * @property {MiniStatsSizeOptions[]} sizes - Sizes of area to render individual graphs in and spacing between individual graphs.
+ * @property {MiniStatsSizeOptions[]} sizes - Sizes of area to render individual graphs in and
+ * spacing between individual graphs.
  * @property {number} startSizeIndex - Index into sizes array for initial setting.
  * @property {number} textRefreshRate - Refresh rate of text stats in ms.
  * @property {MiniStatsGraphOptions} cpu - CPU graph options.
  * @property {MiniStatsGraphOptions} gpu - GPU graph options.
- * @property {MiniStatsGenericOptions[]} stats - Array of options to render additional graphs based on stats collected into Application.stats.
+ * @property {MiniStatsGenericOptions[]} stats - Array of options to render additional graphs based
+ * on stats collected into Application.stats.
  */
 
 /**
