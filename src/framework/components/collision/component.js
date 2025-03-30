@@ -15,20 +15,46 @@ const _vec3 = new Vec3();
 const _quat = new Quat();
 
 /**
- * A collision volume. Use this in conjunction with a {@link RigidBodyComponent} to make a
+ * The CollisionComponent enables an {@link Entity} to act as a collision volume. Use it on its own
+ * to define a trigger volume. Or use it in conjunction with a {@link RigidBodyComponent} to make a
  * collision volume that can be simulated using the physics engine.
  *
- * If the {@link Entity} does not have a {@link RigidBodyComponent} then this collision volume will
- * act as a trigger volume. When an entity with a dynamic or kinematic body enters or leaves an
- * entity with a trigger volume, both entities will receive trigger events.
+ * When an entity is configured as a trigger volume, if an entity with a dynamic or kinematic body
+ * enters or leaves that trigger volume, both entities will receive trigger events.
  *
- * The following table shows all the events that can be fired between two Entities:
+ * You should never need to use the CollisionComponent constructor directly. To add an
+ * CollisionComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
- * |                                       | Rigid Body (Static)                                                   | Rigid Body (Dynamic or Kinematic)                                     | Trigger Volume                                      |
- * | ------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------- |
- * | **Rigid Body (Static)**               |                                                                       | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> |                                                     |
- * | **Rigid Body (Dynamic or Kinematic)** | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> | <ul><li>triggerenter</li><li>triggerleave</li></ul> |
- * | **Trigger Volume**                    |                                                                       | <ul><li>triggerenter</li><li>triggerleave</li></ul>                   |                                                     |
+ * ```javascript
+ * const entity = pc.Entity();
+ * entity.addComponent('collision'); // This defaults to 1x1x1 box-shaped trigger volume
+ * ```
+ *
+ * To create a 0.5 radius dynamic rigid body sphere:
+ *
+ * ```javascript
+ * const entity = pc.Entity();
+ * entity.addComponent('collision', {
+ *     type: 'sphere'
+ * });
+ * entity.addComponent('rigidbody', {
+ *     type: 'dynamic'
+ * });
+ * ```
+ *
+ * Once the CollisionComponent is added to the entity, you can access it via the `collision` property:
+ *
+ * ```javascript
+ * entity.collision.type = 'cylinder'; // Set the collision volume to a cylinder
+ *
+ * console.log(entity.collision.type); // Get the collision volume type and print it
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Compound Collision](https://playcanvas.github.io/#/physics/compound-collision)
+ * - [Falling Shapes](https://playcanvas.github.io/#/physics/falling-shapes)
+ * - [Offset Collision](https://playcanvas.github.io/#/physics/offset-collision)
  *
  * @hideconstructor
  * @category Physics

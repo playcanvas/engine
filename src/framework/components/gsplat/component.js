@@ -18,7 +18,25 @@ import { Component } from '../component.js';
  * loaded from {@link Asset}s rather than being created programmatically. The asset type is
  * `gsplat` which are in the `.ply` file format.
  *
- * Relevant examples:
+ * You should never need to use the GSplatComponent constructor directly. To add an
+ * GSplatComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = pc.Entity();
+ * entity.addComponent('gsplat', {
+ *     asset: asset
+ * });
+ * ```
+ *
+ * Once the GSplatComponent is added to the entity, you can access it via the `gsplat` property:
+ *
+ * ```javascript
+ * entity.gsplat.customAabb = new pc.BoundingBox(new pc.Vec3(), new pc.Vec3(10, 10, 10));
+ *
+ * console.log(entity.gsplat.customAabb);
+ * ```
+ *
+ * Relevant Engine API examples:
  *
  * - [Loading a Splat](https://playcanvas.github.io/#/loaders/gsplat)
  * - [Custom Splat Shaders](https://playcanvas.github.io/#/loaders/gsplat-many)

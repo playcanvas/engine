@@ -26,7 +26,17 @@ import { EventHandler } from '../../core/event-handler.js';
  */
 
 /**
- * Store, access and delete instances of the various ComponentSystems.
+ * The ComponentSystemRegistry manages the instances of an application's {@link ComponentSystem}s.
+ * {@link AppBase} maintains a single instance of this class which can be accessed via
+ * {@link AppBase#systems}.
+ *
+ * ```javascript
+ * // Set the gravity to zero
+ * app.systems.rigidbody.gravity = new pc.Vec3(0, 0, 0);
+ *
+ * // Set the volume to 50%
+ * app.systems.sound.volume = 0.5;
+ * ```
  */
 class ComponentSystemRegistry extends EventHandler {
     /**
