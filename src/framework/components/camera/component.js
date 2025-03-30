@@ -54,6 +54,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  *
  * ```javascript
  * entity.camera.nearClip = 2; // Set the near clip of the camera
+ *
  * console.log(entity.camera.nearClip); // Get the near clip of the camera
  * ```
  *

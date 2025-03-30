@@ -21,35 +21,35 @@ const _quat2 = new Quat();
 const _vec3 = new Vec3();
 
 /**
- * The rigidbody component, when combined with a {@link CollisionComponent}, allows your entities
- * to be simulated using realistic physics. A rigidbody component will fall under gravity and
+ * The RigidBodyComponent, when combined with a {@link CollisionComponent}, allows your entities
+ * to be simulated using realistic physics. A RigidBodyComponent will fall under gravity and
  * collide with other rigid bodies. Using scripts, you can apply forces and impulses to rigid
  * bodies.
  *
- * You should never need to use the RigidBodyComponent constructor. To add an RigidBodyComponent to
- * a {@link Entity}, use {@link Entity#addComponent}:
+ * You should never need to use the RigidBodyComponent constructor directly. To add an
+ * RigidBodyComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
  * // Create a static 1x1x1 box-shaped rigid body
  * const entity = pc.Entity();
- * entity.addComponent("rigidbody"); // Without options, this defaults to a 'static' body
- * entity.addComponent("collision"); // Without options, this defaults to a 1x1x1 box shape
+ * entity.addComponent('collision'); // Without options, this defaults to a 1x1x1 box shape
+ * entity.addComponent('rigidbody'); // Without options, this defaults to a 'static' body
  * ```
  *
  * To create a dynamic sphere with mass of 10, do:
  *
  * ```javascript
  * const entity = pc.Entity();
- * entity.addComponent("rigidbody", {
- *     type: pc.BODYTYPE_DYNAMIC,
- *     mass: 10
+ * entity.addComponent('collision', {
+ *     type: 'sphere'
  * });
- * entity.addComponent("collision", {
- *     type: "sphere"
+ * entity.addComponent('rigidbody', {
+ *     type: 'dynamic',
+ *     mass: 10
  * });
  * ```
  *
- * Relevant 'Engine-only' examples:
+ * Relevant Engine API examples:
  *
  * - [Falling shapes](https://playcanvas.github.io/#/physics/falling-shapes)
  * - [Vehicle physics](https://playcanvas.github.io/#/physics/vehicle)
