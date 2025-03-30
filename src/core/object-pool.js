@@ -3,6 +3,7 @@
  * garbage collection.
  *
  * @template {new (...args: any[]) => any} T
+ * @ignore
  */
 class ObjectPool {
     /**

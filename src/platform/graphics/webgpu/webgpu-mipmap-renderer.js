@@ -11,6 +11,8 @@ import { DebugGraphics } from '../debug-graphics.js';
 
 /**
  * A WebGPU helper class implementing texture mipmap generation.
+ *
+ * @ignore
  */
 class WebgpuMipmapRenderer {
     /** @type {WebgpuGraphicsDevice} */

@@ -47,6 +47,8 @@ const _invViewProjMatrices = [];
 
 /**
  * A render pass used to render cookie textures (both 2D and Cubemap) into the texture atlas.
+ *
+ * @ignore
  */
 class RenderPassCookieRenderer extends RenderPass {
     /** @type {QuadRender|null} */

@@ -9,6 +9,8 @@ import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
  * A WebGPU implementation of the BindGroup, which is a wrapper over GPUBindGroup.
+ *
+ * @ignore
  */
 class WebgpuBindGroup {
     /**

@@ -104,6 +104,8 @@ class DepthAttachment {
 
 /**
  * A WebGPU implementation of the RenderTarget.
+ *
+ * @ignore
  */
 class WebgpuRenderTarget {
     /** @type {boolean} */
