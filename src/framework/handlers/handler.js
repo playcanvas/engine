@@ -9,7 +9,7 @@
  *
  * @callback ResourceHandlerCallback
  * @param {string|null} err - The error message in the case where the load fails.
- * @param {*} [response] - The raw data that has been successfully loaded.
+ * @param {any} [response] - The raw data that has been successfully loaded.
  */
 
 /**
