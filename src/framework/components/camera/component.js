@@ -41,14 +41,14 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * You should never need to use the CameraComponent constructor directly. To add a CameraComponent
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
-* ```javascript
+ * ```javascript
  * const entity = new pc.Entity();
  * entity.addComponent('camera', {
  *     nearClip: 1,
  *     farClip: 100,
  *     fov: 55
  * });
- *```
+ * ```
  *
  * Once the CameraComponent is added to the entity, you can set and get any of its properties:
  *
