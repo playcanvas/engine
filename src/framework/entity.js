@@ -74,8 +74,9 @@ const releaseTempArray = (a) => {
  * enables an entity to run code that implements custom behavior.
  *
  * Entity is a subclass of {@link GraphNode} which allows entities to form a tree-like hierarchy
- * (based on parent/child relationships). Entities inherit a 3D transform from {@link GraphNode}
- * which allows them to be positioned, rotated and scaled.
+ * (based on parent/child relationships). The root of the entity hierarchy can be queried with
+ * {@link AppBase#root}. Entities inherit a 3D transform from {@link GraphNode} which allows them
+ * to be positioned, rotated and scaled.
  */
 class Entity extends GraphNode {
     /**
