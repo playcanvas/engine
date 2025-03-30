@@ -281,8 +281,8 @@ class AppBase extends EventHandler {
 
     /**
      * Set to true to render the scene on the next iteration of the main loop. This only has an
-     * effect if {@link AppBase#autoRender} is set to false. The value of renderNextFrame is set
-     * back to false again as soon as the scene has been rendered.
+     * effect if {@link autoRender} is set to false. The value of renderNextFrame is set back to
+     * false again as soon as the scene has been rendered.
      *
      * @type {boolean}
      * @example
