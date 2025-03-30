@@ -19,9 +19,9 @@ import { Component } from '../component.js';
  */
 
 /**
- * The RenderComponent enables an {@link Entity} to render 3D meshes. The {@link RenderComponent#type}
- * property can be set to one of several predefined shape types (such as `box`, `sphere`, `cone`
- * and so on). Alternatively, the component can be configured to manage an arbitrary array of
+ * The RenderComponent enables an {@link Entity} to render 3D meshes. The {@link type} property can
+ * be set to one of several predefined shapes (such as `box`, `sphere`, `cone` and so on).
+ * Alternatively, the component can be configured to manage an arbitrary array of
  * {@link MeshInstance}s. These can either be created programmatically or loaded from an
  * {@link Asset}.
  *
