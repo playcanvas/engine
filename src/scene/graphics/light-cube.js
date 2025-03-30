@@ -13,6 +13,8 @@ const lightCubeDir = [
 /**
  * A lighting cube represented by 6 colors, one per cube direction. Use for simple lighting on the
  * particle system.
+ *
+ * @ignore
  */
 class LightCube {
     colors = new Float32Array(6 * 3);

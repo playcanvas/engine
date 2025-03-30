@@ -12,6 +12,8 @@ import { WebgpuShaderProcessorWGSL } from './webgpu-shader-processor-wgsl.js';
 
 /**
  * A WebGPU implementation of the Shader.
+ *
+ * @ignore
  */
 class WebgpuShader {
     /**
