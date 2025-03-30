@@ -55,6 +55,8 @@ function downsampleImage(image, size) {
 
 /**
  * A WebGL implementation of the Texture.
+ *
+ * @ignore
  */
 class WebglTexture {
     _glTexture = null;

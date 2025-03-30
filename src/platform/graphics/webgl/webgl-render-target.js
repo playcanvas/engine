@@ -10,6 +10,8 @@ import { getMultisampledTextureCache } from '../multi-sampled-texture-cache.js';
 
 /**
  * A private class representing a pair of framebuffers, when MSAA is used.
+ *
+ * @ignore
  */
 class FramebufferPair {
     /**
@@ -53,6 +55,8 @@ class FramebufferPair {
 
 /**
  * A WebGL implementation of the RenderTarget.
+ *
+ * @ignore
  */
 class WebglRenderTarget {
     _glFrameBuffer = null;

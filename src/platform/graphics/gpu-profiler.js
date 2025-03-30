@@ -4,6 +4,8 @@ import { Tracing } from '../../core/tracing.js';
 
 /**
  * Base class of a simple GPU profiler.
+ *
+ * @ignore
  */
 class GpuProfiler {
     /**
@@ -23,8 +25,9 @@ class GpuProfiler {
     pastFrameAllocations = new Map();
 
     /**
-     * The if enabled in the current frame.
-     * @ignore
+     * True if enabled in the current frame.
+     *
+     * @private
      */
     _enabled = false;
 
