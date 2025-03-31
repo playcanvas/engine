@@ -15,7 +15,7 @@
  * custom scripts based on the Engine API.
  *
  * ### 🔍 Searching the API Reference
- * 
+ *
  * You can search the API Reference by clicking the 🔍 icon in the header. The `/` key is a shortcut
  * for opening the search dialog. Press `Escape` to close the search dialog.
  *
