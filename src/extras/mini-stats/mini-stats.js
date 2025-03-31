@@ -23,14 +23,14 @@ import { Render2d } from './render2d.js';
  */
 
 /**
- * @typedef {object} MiniStatsGraphOptions
+ * @typedef {object} MiniStatsProcessorOptions
  * @property {boolean} enabled - Whether to show the graph.
  * @property {number} watermark - Watermark - shown as a line on the graph, useful for displaying a
  * budget.
  */
 
 /**
- * @typedef {object} MiniStatsGenericOptions
+ * @typedef {object} MiniStatsGraphOptions
  * @property {string} name - Display name.
  * @property {string[]} stats - Path to data inside Application.stats.
  * @property {number} [decimalPlaces] - Number of decimal places (defaults to none).
@@ -45,9 +45,9 @@ import { Render2d } from './render2d.js';
  * spacing between individual graphs.
  * @property {number} startSizeIndex - Index into sizes array for initial setting.
  * @property {number} textRefreshRate - Refresh rate of text stats in ms.
- * @property {MiniStatsGraphOptions} cpu - CPU graph options.
- * @property {MiniStatsGraphOptions} gpu - GPU graph options.
- * @property {MiniStatsGenericOptions[]} stats - Array of options to render additional graphs based
+ * @property {MiniStatsProcessorOptions} cpu - CPU graph options.
+ * @property {MiniStatsProcessorOptions} gpu - GPU graph options.
+ * @property {MiniStatsGraphOptions[]} stats - Array of options to render additional graphs based
  * on stats collected into Application.stats.
  */
 
