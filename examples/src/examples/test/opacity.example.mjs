@@ -8,7 +8,11 @@ window.focus();
 const assets = {
     script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
-    rocks: new pc.Asset('rocks', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-diffuse-alpha.png` }, { srgb: true })
+    rocks: new pc.Asset('rocks', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-diffuse-alpha.png` }, { srgb: true }),
+
+
+    opacity: new pc.Asset('rocks', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-roughness.jpg` })
+
 };
 
 const gfxOptions = {
@@ -88,9 +92,9 @@ assetListLoader.load(() => {
         // emissive texture
         material.emissiveMap = assets.rocks.resource;
 
-        // opacity map
-        material.opacityMap = assets.rocks.resource;
-        material.opacityMapChannel = 'a';
+        // opacity map - use a separate texture
+        material.opacityMap = assets.opacity.resource;
+        material.opacityMapChannel = 'r';
 
         // disable culling to see back faces as well
         material.cull = pc.CULLFACE_NONE;
