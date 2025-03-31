@@ -8,9 +8,7 @@ window.focus();
 const assets = {
     script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
-    rocks: new pc.Asset('rocks', 'texture', {
-        url: `${rootPath}/static/assets/textures/seaside-rocks01-diffuse-alpha.png`
-    })
+    rocks: new pc.Asset('rocks', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-diffuse-alpha.png` }, { srgb: true })
 };
 
 const gfxOptions = {
