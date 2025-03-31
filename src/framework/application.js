@@ -68,7 +68,7 @@ import { XrManager } from './xr/xr-manager.js';
  * Application is a subclass of {@link AppBase}, which represents the base functionality for all
  * PlayCanvas applications. It acts as a convenience class by internally registering all
  * {@link ComponentSystem}s and {@link ResourceHandler}s implemented in the PlayCanvas Engine. This
- * makes app setup simple but results in the full engine being included when bundling for your
+ * makes app setup simple but results in the full engine being included when bundling your
  * application.
  */
 class Application extends AppBase {
