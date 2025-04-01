@@ -23,11 +23,13 @@ class GSplatSogsIterator {
 
         // extract means for centers
         const { meta } = data;
-        const { means, quats, scales } = meta;
+        const { means, quats, scales, opacities, sh0 } = meta;
         const means_l_data = p && readImageData(data.means_l._levels[0]);
         const means_u_data = p && readImageData(data.means_u._levels[0]);
         const quats_data = r && readImageData(data.quats._levels[0]);
         const scales_data = s && readImageData(data.scales._levels[0]);
+        const opacities_data = c && readImageData(data.opacities._levels[0]);
+        const sh0_data = sh && readImageData(data.sh0._levels[0]);
 
         this.read = (i) => {
             if (p) {
@@ -44,17 +46,29 @@ class GSplatSogsIterator {
                 const qx = lerp(quats.mins[0], quats.maxs[0], quats_data[i * 4 + 0] / 255);
                 const qy = lerp(quats.mins[1], quats.maxs[1], quats_data[i * 4 + 1] / 255);
                 const qz = lerp(quats.mins[2], quats.maxs[2], quats_data[i * 4 + 2] / 255);
-                const w2 = Math.max(0, Math.min(1, 1 - (qx * qx + qy * qy + qz * qz)));
-                const qw = Math.sqrt(w2);
-
-                r.set(qx, qy, qz, qw);
+                const qw = Math.sqrt(Math.max(0, 1 - (qx * qx + qy * qy + qz * qz)));
+                r.set(qy, qz, qw, qx);
             }
 
             if (s) {
-                const sx = Math.exp(lerp(scales.mins[0], scales.maxs[0], scales_data[i * 4 + 0] / 255));
-                const sy = Math.exp(lerp(scales.mins[1], scales.maxs[1], scales_data[i * 4 + 1] / 255));
-                const sz = Math.exp(lerp(scales.mins[2], scales.maxs[2], scales_data[i * 4 + 2] / 255));
+                const sx = lerp(scales.mins[0], scales.maxs[0], scales_data[i * 4 + 0] / 255);
+                const sy = lerp(scales.mins[1], scales.maxs[1], scales_data[i * 4 + 1] / 255);
+                const sz = lerp(scales.mins[2], scales.maxs[2], scales_data[i * 4 + 2] / 255);
                 s.set(sx, sy, sz);
+            }
+
+            if (c) {
+                const r = lerp(sh0.mins[0], sh0.maxs[0], sh0_data[i * 4 + 0] / 255);
+                const g = lerp(sh0.mins[1], sh0.maxs[1], sh0_data[i * 4 + 1] / 255);
+                const b = lerp(sh0.mins[2], sh0.maxs[2], sh0_data[i * 4 + 2] / 255);
+                const a = lerp(opacities.mins[0], opacities.maxs[0], opacities_data[i * 4 + 0] / 255);
+
+                c.set(
+                    0.5 + r * SH_C0,
+                    0.5 + g * SH_C0,
+                    0.5 + b * SH_C0,
+                    1.0 / (1.0 + Math.exp(a * -1.0))
+                );
             }
         };
     }
