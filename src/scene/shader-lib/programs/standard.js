@@ -107,7 +107,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 ['$SAMPLER',    `{STD_${propName}_TEXTURE_NAME}`],
                 ['$DECODE',     `{STD_${propName}_TEXTURE_DECODE}`],
                 ['$VC',         `{STD_${propName}_VERTEX_CHANNEL}`],
-                ['$DETAILMODE', `{STD_${propName}_DETAILMODE}`]
+                ['$DETAILMODE', `{STD_${propName}_DETAILMODE}`],
+                ['unpackNormal(', `{STD_${propName}_TEXTURE_DECODE}(`]
             ].forEach(([oldSyntax, newSyntax]) => trackChange(oldSyntax, newSyntax));
 
             // defines
@@ -357,6 +358,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
                 // globals
                 vec3 dAlbedo;
+                vec3 dNormalW;
 
                 #ifdef LIT_SCENE_COLOR
                     uniform sampler2D uSceneColorMap;
@@ -388,10 +390,24 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     uniform sampler2D texture_diffuseMap;
                 #endif
 
-                #ifdef STD_DIFFUSE_DETAIL
+                #ifdef STD_DIFFUSEDETAIL_TEXTURE_ALLOCATE
                     uniform sampler2D texture_diffuseDetailMap;
                 #endif
 
+                // normal
+                #ifdef STD_NORMAL_TEXTURE_ALLOCATE
+                    uniform sampler2D texture_normalMap;
+                #endif
+
+                #ifdef STD_NORMALDETAIL_TEXTURE_ALLOCATE
+                    uniform sampler2D texture_normalDetailMap;
+                #endif
+
+                #ifdef LIT_CLEARCOAT
+                    float ccSpecularity;
+                    float ccGlossiness;
+                    vec3 ccNormalW;
+                #endif
             #endif
         `);
 
@@ -415,6 +431,10 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 // diffuse
                 #include  "diffusePS"
 
+                // normal
+                #ifdef LIT_NEEDS_NORMAL
+                    #include "normalMapPS"
+                #endif
             #endif
         `);
 
@@ -446,6 +466,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 getAlbedo();
                 litArgs_albedo = dAlbedo;
 
+                // normal
+                #ifdef LIT_NEEDS_NORMAL
+                    getNormal();
+                    litArgs_worldNormal = dNormalW;
+                #endif
+
             #endif
         `);
 
@@ -463,9 +489,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             // normal
             if (litShader.needsNormal) {
                 if (options.normalMap || options.clearCoatNormalMap) {
-                    // TODO: let each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently decide which unpackNormal to use.
-                    code.append(options.packedNormal ? litShader.chunks.normalXYPS : litShader.chunks.normalXYZPS);
-
                     if (!options.litOptions.hasTangents) {
                         // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently
                         const baseName = options.normalMap ? 'normalMap' : 'clearCoatNormalMap';
@@ -473,11 +496,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     }
                 }
 
-                decl.append('vec3 dNormalW;');
-                code.append(this._addMap(fDefines, 'normalDetail', 'normalDetailMapPS', options, litShader.chunks, textureMapping));
-                code.append(this._addMap(fDefines, 'normal', 'normalMapPS', options, litShader.chunks, textureMapping));
-                func.append('getNormal();');
-                args.append('litArgs_worldNormal = dNormalW;');
+                this._addMap(fDefines, 'normalDetail', 'normalMapPS', options, litShader.chunks, textureMapping, options.normalDetailPackedNormal ? 'xy' : 'xyz');
+                this._addMap(fDefines, 'normal', 'normalMapPS', options, litShader.chunks, textureMapping, options.packedNormal ? 'xy' : 'xyz');
             }
 
             // diffuse
@@ -581,13 +601,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
             // clearcoat
             if (options.litOptions.useClearCoat) {
-                decl.append('float ccSpecularity;');
-                decl.append('float ccGlossiness;');
-                decl.append('vec3 ccNormalW;');
-
                 code.append(this._addMap(fDefines, 'clearCoat', 'clearCoatPS', options, litShader.chunks, textureMapping));
                 code.append(this._addMap(fDefines, 'clearCoatGloss', 'clearCoatGlossPS', options, litShader.chunks, textureMapping));
-                code.append(this._addMap(fDefines, 'clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping));
+                code.append(this._addMap(fDefines, 'clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping, options.clearCoatPackedNormal ? 'xy' : 'xyz'));
 
                 func.append('getClearCoat();');
                 func.append('getClearCoatGlossiness();');
@@ -634,7 +650,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             'texture_heightMap',
             'texture_diffuseMap',
             'texture_diffuseDetailMap',
-            'texture_opacityMap'
+            'texture_opacityMap',
+            'texture_normalDetailMap',
+            'texture_normalMap'
         ];
 
         // TODO: when refactoring is done, this loop will be removed
