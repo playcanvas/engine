@@ -1155,6 +1155,13 @@ export const DITHER_BLUENOISE = 'bluenoise';
  */
 export const DITHER_IGNNOISE = 'ignnoise';
 
+export const ditherNames = {
+    [DITHER_NONE]: 'NONE',
+    [DITHER_BAYER8]: 'BAYER8',
+    [DITHER_BLUENOISE]: 'BLUENOISE',
+    [DITHER_IGNNOISE]: 'IGNNOISE'
+};
+
 /**
  * Name of event fired before the camera renders the scene.
  *

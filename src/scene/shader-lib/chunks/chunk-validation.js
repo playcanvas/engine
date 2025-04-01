@@ -1,6 +1,6 @@
 import {
     CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_60, CHUNKAPI_1_62, CHUNKAPI_1_65,
-    CHUNKAPI_1_70, CHUNKAPI_2_1, CHUNKAPI_2_3, CHUNKAPI_2_5, CHUNKAPI_2_6
+    CHUNKAPI_1_70, CHUNKAPI_2_1, CHUNKAPI_2_3, CHUNKAPI_2_5, CHUNKAPI_2_6, CHUNKAPI_2_7
 } from '../../../platform/graphics/constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
@@ -12,7 +12,6 @@ const chunkVersions = {
     clearCoatGlossPS: CHUNKAPI_1_60,
     clearCoatNormalPS: CHUNKAPI_1_57,
     diffusePS: CHUNKAPI_1_57,
-    diffuseDetailMapPS: CHUNKAPI_1_57,
     emissivePS: CHUNKAPI_1_57,
     glossPS: CHUNKAPI_1_60,
     lightmapDirPS: CHUNKAPI_1_55,
@@ -126,7 +125,8 @@ const removedChunks = {
     ambientConstantPS: CHUNKAPI_2_6,
     ambientEnvPS: CHUNKAPI_2_6,
     ambientSHPS: CHUNKAPI_2_6,
-    shadowSampleCoordPS: CHUNKAPI_2_6
+    shadowSampleCoordPS: CHUNKAPI_2_6,
+    diffuseDetailMapPS: CHUNKAPI_2_7
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.

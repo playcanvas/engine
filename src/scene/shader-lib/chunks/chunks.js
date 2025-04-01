@@ -25,7 +25,6 @@ import debugProcessFrontendPS from './lit/frag/debug-process-frontend.js';
 import decodePS from './common/frag/decode.js';
 import detailModesPS from './standard/frag/detailModes.js';
 import diffusePS from './standard/frag/diffuse.js';
-import diffuseDetailMapPS from './standard/frag/diffuseDetailMap.js';
 import emissivePS from './standard/frag/emissive.js';
 import encodePS from './common/frag/encode.js';
 import endPS from './lit/frag/end.js';
@@ -235,7 +234,6 @@ const shaderChunks = {
     debugProcessFrontendPS,
     detailModesPS,
     diffusePS,
-    diffuseDetailMapPS,
     decodePS,
     emissivePS,
     encodePS,
