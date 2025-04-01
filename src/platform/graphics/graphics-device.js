@@ -693,9 +693,8 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Sets the current index buffer on the graphics device. On subsequent calls to
-     * {@link GraphicsDevice#draw}, the specified index buffer will be used to provide index data
-     * for any indexed primitives.
+     * Sets the current index buffer on the graphics device. For subsequent draw calls, the
+     * specified index buffer will be used to provide index data for any indexed primitives.
      *
      * @param {IndexBuffer|null} indexBuffer - The index buffer to assign to the device.
      */
@@ -705,9 +704,8 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Sets the current vertex buffer on the graphics device. On subsequent calls to
-     * {@link GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex
-     * data for any primitives.
+     * Sets the current vertex buffer on the graphics device. For subsequent draw calls, the
+     * specified vertex buffer(s) will be used to provide vertex data for any primitives.
      *
      * @param {VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
      */
