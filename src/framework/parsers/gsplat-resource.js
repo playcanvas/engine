@@ -8,7 +8,7 @@ import { GSplatSogs } from '../../scene/gsplat/gsplat-sogs.js';
  * @import { AppBase } from '../app-base.js'
  * @import { GSplatData } from '../../scene/gsplat/gsplat-data.js'
  * @import { GSplatCompressedData } from '../../scene/gsplat/gsplat-compressed-data.js'
- * @impotr { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js'
+ * @import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js'
  * @import { SplatMaterialOptions } from '../../scene/gsplat/gsplat-material.js'
  */
 

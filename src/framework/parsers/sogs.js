@@ -44,7 +44,7 @@ class SogsParser {
 
                 const promise = new Promise((resolve, reject) => {
                     texture.on('load', () => resolve(null));
-                    texture.on('error', (err) => reject(err));
+                    texture.on('error', err => reject(err));
                 });
 
                 assets.add(texture);
@@ -122,6 +122,6 @@ class SogsParser {
             });
         }
     }
-};
+}
 
 export { SogsParser };

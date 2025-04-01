@@ -16,6 +16,8 @@ const readImageData = (imageBitmap) => {
     return ctx.getImageData(0, 0, imageBitmap.width, imageBitmap.height).data;
 };
 
+const SH_C0 = 0.28209479177387814;
+
 class GSplatSogsIterator {
     constructor(data, p, r, s, c, sh) {
 
@@ -82,29 +84,36 @@ class GSplatSogsIterator {
                 for (let j = 0; j < 3; ++j) {
                     for (let k = 0; k < 15; ++k) {
                         sh[j * 15 + k] = lerp(shN.mins, shN.maxs, sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)] / 255);
-                    }                        
+                    }
                 }
             }
         };
     }
 }
 
-const SH_C0 = 0.28209479177387814;
-
 class GSplatSogsData {
     meta;
 
     numSplats;
+
     shBands;
 
     means_l;
+
     means_u;
+
     quats;
+
     scales;
+
     opacities;
+
     sh0;
+
     sh_centroids;
+
     sh_labels_l;
+
     sh_labels_u;
 
     createIter(p, r, s, c, sh) {
