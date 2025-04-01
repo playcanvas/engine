@@ -87,15 +87,29 @@ function findNode(node, test) {
  */
 
 /**
- * The `GraphNode` class represents a node within a hierarchical scene graph. Each `GraphNode` can
- * reference a array of child nodes. This creates a tree-like structure that is fundamental for
- * organizing and managing the spatial relationships between objects in a 3D scene. This class
+ * The GraphNode class represents a node within a hierarchical scene graph. Each GraphNode can
+ * reference an array of {@link children}. This creates a tree-like structure that is fundamental
+ * for organizing and managing the spatial relationships between objects in a 3D scene. This class
  * provides a comprehensive API for manipulating the position, rotation, and scale of nodes both
- * locally and in world space.
+ * locally (relative to the {@link parent}) and in world space (relative to the {@link Scene}
+ * origin).
  *
- * `GraphNode` is the superclass of {@link Entity}, which is the primary class for creating objects
- * in a PlayCanvas application. For this reason, `GraphNode` is rarely used directly, but it provides
- * a powerful set of features that are leveraged by the `Entity` class.
+ * During the application's (see {@link AppBase}) main update loop, the engine automatically
+ * synchronizes the entire GraphNode hierarchy each frame. This process ensures that the world
+ * transformation matrices for all nodes are up-to-date. A node's world transformation matrix is
+ * calculated by combining its local transformation matrix (derived from its local position,
+ * rotation, and scale) with the world transformation matrix of its parent node. For the scene
+ * graph's {@link root} node (which has no parent), its world matrix is simply its local matrix.
+ * This hierarchical update mechanism ensures that changes made to a parent node's transform
+ * correctly propagate down to all its children and descendants, accurately reflecting their final
+ * position, orientation, and scale in the world. This synchronized world transform is essential
+ * for systems like rendering and physics.
+ *
+ * GraphNode is the superclass of {@link Entity}, which is the primary class for creating objects
+ * in a PlayCanvas application. For this reason, developers typically interact with the scene
+ * hierarchy and transformations through the Entity interface rather than using GraphNode directly.
+ * However, GraphNode provides the underlying powerful set of features for hierarchical
+ * transformations that Entity leverages.
  */
 class GraphNode extends EventHandler {
     /**
