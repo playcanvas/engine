@@ -40,15 +40,18 @@ class GSplatSogs {
 
         const result = createGSplatMaterial(options);
         result.setDefine('GSPLAT_SOGS_DATA', true);
-        result.setDefine('SH_BANDS', 3);
+        result.setDefine('SH_BANDS', this.gsplatData.shBands);
 
         ['means_l', 'means_u', 'quats', 'scales', 'opacities', 'sh0', 'sh_centroids', 'sh_labels_u', 'sh_labels_l'].forEach((name) => {
             result.setParameter(name, gsplatData[name]);
         });
 
         ['means', 'quats', 'scales', 'opacities', 'sh0', 'shN'].forEach((name) => {
-            result.setParameter(`${name}_mins`, gsplatData.meta[name].mins);
-            result.setParameter(`${name}_maxs`, gsplatData.meta[name].maxs);
+            const v = gsplatData.meta[name];
+            if (v) {
+                result.setParameter(`${name}_mins`, v.mins);
+                result.setParameter(`${name}_maxs`, v.maxs);
+            }
         });
 
         return result;

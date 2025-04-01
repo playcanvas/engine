@@ -29,7 +29,7 @@ class GSplatSogsIterator {
         const quats_data = r && readImageData(data.quats._levels[0]);
         const scales_data = s && readImageData(data.scales._levels[0]);
         const opacities_data = c && readImageData(data.opacities._levels[0]);
-        const sh0_data = sh && readImageData(data.sh0._levels[0]);
+        const sh0_data = c && readImageData(data.sh0._levels[0]);
         const sh_labels_l_data = sh && readImageData(data.sh_labels_l._levels[0]);
         const sh_labels_u_data = sh && readImageData(data.sh_labels_u._levels[0]);
         const sh_centroids_data = sh && readImageData(data.sh_centroids._levels[0]);
@@ -95,6 +95,7 @@ class GSplatSogsData {
     meta;
 
     numSplats;
+    shBands;
 
     means_l;
     means_u;
@@ -157,7 +158,7 @@ class GSplatSogsData {
             'rot_0', 'rot_1', 'rot_2', 'rot_3'
         ];
 
-        const shBands = 3;
+        const { shBands } = this;
 
         // allocate spherical harmonics data
         if (shBands > 0) {

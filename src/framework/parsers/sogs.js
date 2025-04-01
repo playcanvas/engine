@@ -33,7 +33,7 @@ class SogsParser {
         const promises = [];
 
         subs.forEach((sub) => {
-            const files = meta[sub].files ?? [];
+            const files = meta[sub]?.files ?? [];
             textures[sub] = files.map((filename) => {
                 const texture = new Asset(filename, 'texture', {
                     url: asset.options?.mapUrl?.(filename) ?? (new URL(filename, url.load)).toString(),
@@ -58,19 +58,27 @@ class SogsParser {
         // wait for all textures to complete loading
         await Promise.allSettled(promises);
 
+        // sh palette has 64 sh entries per row. use width to calculate number of bands
+        const widths = {
+            192: 1,     // 64 * 3
+            512: 2,     // 64 * 8
+            960: 3      // 64 * 15
+        };
+
         // construct the gsplat resource
         const data = new GSplatSogsData();
         data.meta = meta;
         data.numSplats = meta.means.shape[0];
+        data.shBands = widths[textures.shN?.[0]?.resource?.width] ?? 0;
         data.means_l = textures.means[0].resource;
         data.means_u = textures.means[1].resource;
         data.opacities = textures.opacities[0].resource;
         data.quats = textures.quats[0].resource;
         data.scales = textures.scales[0].resource;
         data.sh0 = textures.sh0[0].resource;
-        data.sh_centroids = textures.shN[0].resource;
-        data.sh_labels_l = textures.shN[1].resource;
-        data.sh_labels_u = textures.shN[2].resource;
+        data.sh_centroids = textures.shN?.[0]?.resource;
+        data.sh_labels_l = textures.shN?.[1]?.resource;
+        data.sh_labels_u = textures.shN?.[2]?.resource;
 
         const resource = new GSplatResource(this.app, asset.data.decompress ? data.decompress() : data, []);
 
