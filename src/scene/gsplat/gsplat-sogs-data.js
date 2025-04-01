@@ -23,13 +23,16 @@ class GSplatSogsIterator {
 
         // extract means for centers
         const { meta } = data;
-        const { means, quats, scales, opacities, sh0 } = meta;
+        const { means, quats, scales, opacities, sh0, shN } = meta;
         const means_l_data = p && readImageData(data.means_l._levels[0]);
         const means_u_data = p && readImageData(data.means_u._levels[0]);
         const quats_data = r && readImageData(data.quats._levels[0]);
         const scales_data = s && readImageData(data.scales._levels[0]);
         const opacities_data = c && readImageData(data.opacities._levels[0]);
         const sh0_data = sh && readImageData(data.sh0._levels[0]);
+        const sh_labels_l_data = sh && readImageData(data.sh_labels_l._levels[0]);
+        const sh_labels_u_data = sh && readImageData(data.sh_labels_u._levels[0]);
+        const sh_centroids_data = sh && readImageData(data.sh_centroids._levels[0]);
 
         this.read = (i) => {
             if (p) {
@@ -69,6 +72,18 @@ class GSplatSogsIterator {
                     0.5 + b * SH_C0,
                     1.0 / (1.0 + Math.exp(a * -1.0))
                 );
+            }
+
+            if (sh) {
+                const n = sh_labels_l_data[i * 4 + 0] + (sh_labels_u_data[i * 4 + 0] << 8);
+                const u = (n % 64) * 15;
+                const v = Math.floor(n / 64);
+
+                for (let j = 0; j < 3; ++j) {
+                    for (let k = 0; k < 15; ++k) {
+                        sh[j * 15 + k] = lerp(shN.mins, shN.maxs, sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)] / 255);
+                    }                        
+                }
             }
         };
     }
