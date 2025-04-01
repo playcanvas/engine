@@ -182,23 +182,8 @@ RenderPhysics.prototype.postUpdate = function (dt) {
                     debugShape._collisionType = collision.type;
                     collision._debugShape = debugShape;
                 }
-
-                // Use the rigid body position if we have it
-                if (collision.entity.rigidbody) {
-                    var body = collision.entity.rigidbody.body;
-                    if (body) {
-                        var t = body.getWorldTransform();
-
-                        var p = t.getOrigin();
-                        var q = t.getRotation();
-                        collision._debugShape.setPosition(p.x(), p.y(), p.z());
-                        collision._debugShape.setRotation(q.x(), q.y(), q.z(), q.w());
-                    }
-                } else {
-                    collision._debugShape.setPosition(collision.entity.getPosition());
-                    collision._debugShape.setRotation(collision.entity.getRotation());
-                }
-
+                collision._debugShape.setPosition(collision.getShapePosition());
+                collision._debugShape.setRotation(collision.getShapeRotation());
                 // If the shape is a capsule, cone or cylinder, rotate it so that its axis is taken into account
                 if (collision.type === 'capsule' || collision.type === 'cone' || collision.type === 'cylinder') {
                     if (collision._debugShape._axis === 0) {

@@ -1,15 +1,15 @@
-import * as pc from 'playcanvas';
-import { data } from 'examples/observer';
 import files from 'examples/files';
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
@@ -47,17 +47,15 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    gallery: new pc.Asset('gallery', 'container', { url: rootPath + '/static/assets/models/vr-gallery.glb' }),
-    guitar: new pc.Asset('gsplat', 'gsplat', { url: rootPath + '/static/assets/splats/guitar.ply' }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: rootPath + '/static/assets/splats/biker.ply' }),
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
+    gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/vr-gallery.glb` }),
+    guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.ply` }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.ply` }),
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
-
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // get the instance of the gallery and set up with render component
     const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
@@ -66,13 +64,13 @@ assetListLoader.load(() => {
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
+        clearColor: new pc.Color(0.2, 0.2, 0.2),
+        toneMapping: pc.TONEMAP_ACES
     });
     camera.setLocalPosition(-3, 1, 2);
 
     // instantiate guitar with a custom shader
     const guitar = assets.guitar.resource.instantiate({
-        fragment: files['shader.frag'],
         vertex: files['shader.vert']
     });
     guitar.name = 'guitar';
@@ -134,7 +132,7 @@ assetListLoader.load(() => {
     });
 
     let currentTime = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         currentTime += dt;
 
         const material = guitar.gsplat?.material;

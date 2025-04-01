@@ -1,32 +1,31 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
-    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
+    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
 });
 
 const assets = {
-    laboratory: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/laboratory.glb' }),
-    orbit: new pc.Asset('orbit', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    ssao: new pc.Asset('ssao', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-ssao.js' }),
+    laboratory: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/laboratory.glb` }),
+    orbit: new pc.Asset('orbit', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -103,9 +102,9 @@ assetListLoader.load(() => {
     const outlineRenderer = new pc.OutlineRenderer(app);
 
     // add entities to the outline renderer
-    outlineRenderer.addEntity(laboratoryEntity.findByName("Weltkugel"), pc.Color.RED);
-    outlineRenderer.addEntity(laboratoryEntity.findByName("Stuhl"), pc.Color.WHITE);
-    outlineRenderer.addEntity(laboratoryEntity.findByName("Teleskop"), pc.Color.GREEN);
+    outlineRenderer.addEntity(laboratoryEntity.findByName('Weltkugel'), pc.Color.RED);
+    outlineRenderer.addEntity(laboratoryEntity.findByName('Stuhl'), pc.Color.WHITE);
+    outlineRenderer.addEntity(laboratoryEntity.findByName('Teleskop'), pc.Color.GREEN);
 
     app.on('update', (/** @type {number} */ dt) => {
 

@@ -222,6 +222,40 @@ class EventHandler {
     }
 
     /**
+     * Detach an event handler from an event using EventHandle instance. More optimal remove
+     * as it does not have to scan callbacks array.
+     *
+     * @param {EventHandle} handle - Handle of event.
+     * @ignore
+     */
+    offByHandle(handle) {
+        const name = handle.name;
+        handle.removed = true;
+
+        // if we are removing a callback from the list that is executing right now
+        // ensure we preserve initial list before modifications
+        if (this._callbackActive.has(name) && this._callbackActive.get(name) === this._callbacks.get(name)) {
+            this._callbackActive.set(name, this._callbackActive.get(name).slice());
+        }
+
+        const callbacks = this._callbacks.get(name);
+        if (!callbacks) {
+            return this;
+        }
+
+        const ind = callbacks.indexOf(handle);
+        if (ind !== -1) {
+            callbacks.splice(ind, 1);
+
+            if (callbacks.length === 0) {
+                this._callbacks.delete(name);
+            }
+        }
+
+        return this;
+    }
+
+    /**
      * Fire an event, all additional arguments are passed on to the event listener.
      *
      * @param {string} name - Name of event to fire.

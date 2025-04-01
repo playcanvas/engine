@@ -2059,7 +2059,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     renderTarget.destroy();
                 }
                 resolve(data);
-            });
+            }).catch(reject);
         });
     }
 

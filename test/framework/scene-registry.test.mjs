@@ -1,22 +1,22 @@
-import { Application } from '../../src/framework/application.js';
-import { SceneRegistry } from '../../src/framework/scene-registry.js';
-import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
-
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
+
+import { SceneRegistry } from '../../src/framework/scene-registry.js';
+import { createApp } from '../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 describe('SceneRegistry', function () {
 
     let app;
 
     beforeEach(function () {
-        const canvas = new Canvas(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        jsdomSetup();
+        app = createApp();
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     describe('#constructor', function () {
@@ -114,7 +114,7 @@ describe('SceneRegistry', function () {
 
     describe('#loadSceneData', function () {
 
-        const assetPath = 'http://localhost:3000/test/test-assets/';
+        const assetPath = 'http://localhost:3000/test/assets/';
 
         it('load and cache, check data is valid, unload data, check data is removed with SceneItem', async () => {
             const registry = new SceneRegistry(app);

@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -7,14 +7,14 @@ window.focus();
 await import('https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js');
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/animation/tween.js' })
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/animation/tween.js` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -153,7 +153,7 @@ assetListLoader.load(() => {
     camera.translate(0.65, -5.5, 20);
     app.root.addChild(camera);
 
-    app.on('update', function () {
+    app.on('update', () => {
         app.drawLines(points, colors);
     });
 });

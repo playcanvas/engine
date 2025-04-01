@@ -48,8 +48,7 @@ class Selector extends pc.EventHandler {
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
 
-        window.addEventListener('pointerdown', this._onPointerDown);
-        window.addEventListener('pointerup', this._onPointerUp);
+        this.bind();
     }
 
     /**
@@ -64,7 +63,7 @@ class Selector extends pc.EventHandler {
      * @param {MouseEvent} e - The event.
      * @private
      */
-    _onPointerUp(e) {
+    async _onPointerUp(e) {
         if (Math.abs(e.clientX - this._start.x) > EPSILON || Math.abs(e.clientY - this._start.y) > EPSILON) {
             return;
         }
@@ -73,7 +72,7 @@ class Selector extends pc.EventHandler {
         this._picker.resize(device.canvas.clientWidth, device.canvas.clientHeight);
         this._picker.prepare(this._camera, this._scene, this._layers);
 
-        const selection = this._picker.getSelection(e.clientX - 1, e.clientY - 1, 2, 2);
+        const selection = await this._picker.getSelectionAsync(e.clientX - 1, e.clientY - 1, 2, 2);
 
         if (!selection[0]) {
             this.fire('deselect');
@@ -83,9 +82,18 @@ class Selector extends pc.EventHandler {
         this.fire('select', selection[0].node, !e.ctrlKey && !e.metaKey);
     }
 
-    destroy() {
+    bind() {
+        window.addEventListener('pointerdown', this._onPointerDown);
+        window.addEventListener('pointerup', this._onPointerUp);
+    }
+
+    unbind() {
         window.removeEventListener('pointerdown', this._onPointerDown);
         window.removeEventListener('pointerup', this._onPointerUp);
+    }
+
+    destroy() {
+        this.unbind();
     }
 }
 

@@ -1,25 +1,25 @@
 // @config WEBGL_DISABLED
-import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
 import files from 'examples/files';
+import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -51,14 +51,15 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 2;
     app.scene.skyboxIntensity = 0.2;
     app.scene.envAtlas = assets.helipad.resource;
 
     // create camera entity
     const cameraEntity = new pc.Entity('camera');
-    cameraEntity.addComponent('camera');
+    cameraEntity.addComponent('camera', {
+        toneMapping: pc.TONEMAP_ACES
+    });
     app.root.addChild(cameraEntity);
     cameraEntity.setPosition(-150, -60, 190);
 
@@ -85,7 +86,7 @@ assetListLoader.load(() => {
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
             cshader: files['shader-shared.wgsl'] + files['shader-simulation.wgsl'],
 
-              // format of a uniform buffer used by the compute shader
+            // format of a uniform buffer used by the compute shader
             computeUniformBufferFormats: {
                 ub: new pc.UniformBufferFormat(device, [
                     new pc.UniformFormat('count', pc.UNIFORMTYPE_UINT),
@@ -94,13 +95,13 @@ assetListLoader.load(() => {
                 ])
             },
 
-              // format of a bind group, providing resources for the compute shader
+            // format of a bind group, providing resources for the compute shader
             computeBindGroupFormat: new pc.BindGroupFormat(device, [
-                  // a uniform buffer we provided the format for
+                // a uniform buffer we provided the format for
                 new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
-                  // particle storage buffer
+                // particle storage buffer
                 new pc.BindStorageBufferFormat('particles', pc.SHADERSTAGE_COMPUTE),
-                  // rad only collision spheres
+                // rad only collision spheres
                 new pc.BindStorageBufferFormat('spheres', pc.SHADERSTAGE_COMPUTE, true)
             ])
         }) :
@@ -207,22 +208,11 @@ assetListLoader.load(() => {
     // ------- Particle rendering -------
 
     // material to render the particles using WGSL shader as GLSL does not have access to storage buffers
-    const shaderSource = files['shader-shared.wgsl'] + files['shader-rendering.wgsl'];
     const material = new pc.ShaderMaterial({
         uniqueName: 'ParticleRenderShader',
-        vertexCode: shaderSource,
-        fragmentCode: shaderSource,
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-
-        // For now WGSL shaders need to provide their own bind group formats as they aren't processed.
-        // This has to match the ub_mesh struct in the shader.
-        meshUniformBufferFormat: new pc.UniformBufferFormat(app.graphicsDevice, [
-            new pc.UniformFormat('matrix_model', pc.UNIFORMTYPE_MAT4)
-        ]),
-        meshBindGroupFormat: new pc.BindGroupFormat(app.graphicsDevice, [
-            // particle storage buffer in read-only mode
-            new pc.BindStorageBufferFormat('particles', pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT, true)
-        ])
+        vertexCode: files['shader-shared.wgsl'] + files['shader-rendering.vertex.wgsl'],
+        fragmentCode: files['shader-shared.wgsl'] + files['shader-rendering.fragment.wgsl'],
+        shaderLanguage: pc.SHADERLANGUAGE_WGSL
     });
 
     // index buffer - two triangles (6 indices) per particle using 4 vertices
@@ -251,7 +241,7 @@ assetListLoader.load(() => {
     });
     app.root.addChild(entity);
 
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         if (device.supportsCompute) {
             // update non-constant parameters each frame
             compute.setParameter('dt', dt);

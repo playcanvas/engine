@@ -1,5 +1,5 @@
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { ChunkUtils } from '../../scene/shader-lib/chunk-utils.js';
 
 /**
  * Render pass implementation of a depth-aware bilateral blur filter.
@@ -8,11 +8,13 @@ import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
  * @ignore
  */
 class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
-    constructor(device, sourceTexture, horizontal) {
+    constructor(device, sourceTexture, cameraComponent, horizontal) {
         super(device);
         this.sourceTexture = sourceTexture;
 
-        this.shader = this.createQuadShader(`DepthAware${horizontal ? 'Horizontal' : 'Vertical'}BlurShader`, `${shaderChunks.screenDepthPS /* glsl */}
+        const screenDepth = ChunkUtils.getScreenDepthChunk(device, cameraComponent.shaderParams);
+        this.shader = this.createQuadShader(`DepthAware${horizontal ? 'Horizontal' : 'Vertical'}BlurShader`,
+            /* glsl */ `${screenDepth}
 
             ${horizontal ? '#define HORIZONTAL' : ''}
 
@@ -27,17 +29,17 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
                 return fract(m.z * fract(dot(w, m.xy)));
             }
 
-            float bilateralWeight(in float depth, in float sampleDepth) {
-                float diff = (sampleDepth - depth);
+            mediump float bilateralWeight(in mediump float depth, in mediump float sampleDepth) {
+                mediump float diff = (sampleDepth - depth);
                 return max(0.0, 1.0 - diff * diff);
             }
 
             void tap(inout float sum, inout float totalWeight, float weight, float depth, vec2 position) {
 
-                float color = texture2D(sourceTexture, position).r;
-                float textureDepth = -getLinearScreenDepth(position);
+                mediump float color = texture2D(sourceTexture, position).r;
+                mediump float textureDepth = -getLinearScreenDepth(position);
             
-                float bilateral = bilateralWeight(depth, textureDepth);
+                mediump float bilateral = bilateralWeight(depth, textureDepth);
 
                 bilateral *= weight;
                 sum += color * bilateral;
@@ -48,13 +50,13 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
             void main() {
 
                 // handle the center pixel separately because it doesn't participate in bilateral filtering
-                float depth = -getLinearScreenDepth(uv0);
-                float totalWeight = 1.0;
-                float color = texture2D(sourceTexture, uv0 ).r;
-                float sum = color * totalWeight;
+                mediump float depth = -getLinearScreenDepth(uv0);
+                mediump float totalWeight = 1.0;
+                mediump float color = texture2D(sourceTexture, uv0 ).r;
+                mediump float sum = color * totalWeight;
 
-                for (int i = -filterSize; i <= filterSize; i++) {
-                    float weight = 1.0;
+                for (mediump int i = -filterSize; i <= filterSize; i++) {
+                    mediump float weight = 1.0;
 
                     #ifdef HORIZONTAL
                         vec2 offset = vec2(i, 0) * sourceInvResolution;
@@ -65,7 +67,7 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
                     tap(sum, totalWeight, weight, depth, uv0 + offset);
                 }
 
-                float ao = sum / totalWeight;
+                mediump float ao = sum / totalWeight;
 
                 // simple dithering helps a lot (assumes 8 bits target)
                 // this is most useful with high quality/large blurs

@@ -5,7 +5,8 @@ import { ShaderGenerator } from './shader-generator.js';
 
 class ShaderGeneratorParticle extends ShaderGenerator {
     generateKey(options) {
-        let key = 'particle';
+        const definesHash = ShaderGenerator.definesHash(options.defines);
+        let key = `particle_${definesHash}_`;
         for (const prop in options) {
             if (options.hasOwnProperty(prop)) {
                 key += options[prop];
@@ -83,9 +84,9 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         if (options.soft) fshader += '\nvarying float vDepth;\n';
 
         fshader += shaderChunks.decodePS;
-        fshader += ShaderGenerator.gammaCode(options.gamma);
-        fshader += ShaderGenerator.tonemapCode(options.toneMap);
-        fshader += ShaderGenerator.fogCode(options.fog);
+        fshader += '#include "gammaPS"\n';
+        fshader += '#include "tonemappingPS"\n';
+        fshader += '#include "fogPS"\n';
 
         if (options.normal === 2) fshader += '\nuniform sampler2D normalMap;\n';
         if (options.soft > 0) fshader += shaderChunks.screenDepthPS;
@@ -104,10 +105,18 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         }
         fshader += shaderChunks.particle_endPS;
 
+        const includes = new Map(Object.entries({
+            ...shaderChunks,
+            ...options.chunks
+        }));
+
         return ShaderUtils.createDefinition(device, {
             name: 'ParticleShader',
             vertexCode: vshader,
-            fragmentCode: fshader
+            fragmentCode: fshader,
+            fragmentDefines: options.defines,
+            fragmentIncludes: includes,
+            vertexDefines: options.defines
         });
     }
 }

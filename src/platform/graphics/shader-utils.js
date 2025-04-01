@@ -3,7 +3,8 @@ import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT,
-    SHADERLANGUAGE_WGSL
+    SHADERLANGUAGE_WGSL,
+    SHADERLANGUAGE_GLSL
 } from './constants.js';
 import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
@@ -135,7 +136,7 @@ class ShaderUtils {
 
         return {
             name: name,
-            shaderLanguage: options.shaderLanguage,
+            shaderLanguage: options.shaderLanguage ?? SHADERLANGUAGE_GLSL,
             attributes: options.attributes,
             vshader: vertCode,
             vincludes: options.vertexIncludes,

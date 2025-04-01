@@ -1,37 +1,37 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/normal-map.png' }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` }),
     xmas_negx: new pc.Asset('xmas_negx', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negx.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negx.png`
     }),
     xmas_negy: new pc.Asset('xmas_negy', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negy.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negy.png`
     }),
     xmas_negz: new pc.Asset('xmas_negz', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negz.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negz.png`
     }),
     xmas_posx: new pc.Asset('xmas_posx', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posx.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posx.png`
     }),
     xmas_posy: new pc.Asset('xmas_posy', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posy.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posy.png`
     }),
     xmas_posz: new pc.Asset('xmas_posz', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posz.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posz.png`
     })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -68,12 +68,9 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     data.set('settings', {
         shadowAtlasResolution: 1300, // shadow map resolution storing all shadows
-        shadowType: pc.SHADOW_PCF3, // shadow filter type
+        shadowType: pc.SHADOW_PCF3_32F, // shadow filter type
         shadowsEnabled: true,
         cookiesEnabled: true
     });
@@ -225,7 +222,8 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         fov: 80,
         clearColor: new pc.Color(0.1, 0.1, 0.1),
-        farClip: 1500
+        farClip: 1500,
+        toneMapping: pc.TONEMAP_ACES
     });
 
     // and position it in the world
@@ -254,7 +252,7 @@ assetListLoader.load(() => {
 
     // Set an update function on the app's update event
     let time = 0;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         time += dt * 0.3;
         const radius = 250;
         for (let i = 0; i < omniLights.length; i++) {

@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,22 +8,22 @@ window.focus();
 pc.Tracing.set(pc.TRACEID_SHADER_COMPILE, true);
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }),
-    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new pc.Asset('gloss', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
-    luts: new pc.Asset('luts', 'json', { url: rootPath + '/static/assets/json/area-light-luts.json' }),
+    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
+    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.jpg` }),
+    gloss: new pc.Asset('gloss', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.jpg` }),
+    luts: new pc.Asset('luts', 'json', { url: `${rootPath}/static/assets/json/area-light-luts.json` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -114,9 +114,6 @@ assetListLoader.load(() => {
     const luts = assets.luts.resource;
     app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     // setup skydome
     app.scene.skyboxMip = 1;
     app.scene.skyboxIntensity = 0.7;
@@ -130,7 +127,8 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
         fov: 60,
-        farClip: 100000
+        farClip: 100000,
+        toneMapping: pc.TONEMAP_ACES
     });
     app.root.addChild(camera);
     camera.setLocalPosition(0, 15, 40);
@@ -176,11 +174,11 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         time += dt;
 
         // orbit spot lights around
-        lights.forEach(function (light, i) {
+        lights.forEach((light, i) => {
             const angle = (i / lights.length) * Math.PI * 2;
             light.setLocalPosition(8 * Math.sin(time + angle), 4, 8 * Math.cos(time + angle));
         });

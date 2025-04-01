@@ -7,9 +7,8 @@ import { properties } from './data.js';
 
 /**
  * @import { Color } from '../../../core/math/color.js'
- * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { LightComponentData } from './data.js'
- * @import { LightComponentSystem } from './system.js'
  * @import { Light } from '../../../scene/light.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
  * @import { Vec2 } from '../../../core/math/vec2.js'
@@ -39,23 +38,39 @@ import { properties } from './data.js';
  * entity.light.range = 20;
  * ```
  *
+ * @hideconstructor
  * @category Graphics
  */
 class LightComponent extends Component {
     /**
-     * Creates a new LightComponent instance.
-     *
-     * @param {LightComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @type {EventHandle|null}
+     * @private
      */
-    constructor(system, entity) {
-        super(system, entity);
+    _evtLayersChanged = null;
 
-        this._cookieAsset = null;
-        this._cookieAssetId = null;
-        this._cookieAssetAdd = false;
-        this._cookieMatrix = null;
-    }
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
+
+    /** @private */
+    _cookieAsset = null;
+
+    /** @private */
+    _cookieAssetId = null;
+
+    /** @private */
+    _cookieAssetAdd = false;
+
+    /** @private */
+    _cookieMatrix = null;
 
     // TODO: Remove this override in upgrading component
     /**
@@ -371,6 +386,28 @@ class LightComponent extends Component {
     }
 
     /**
+     * Sets the blend factor for cascaded shadow maps, defining the fraction of each cascade level
+     * used for blending between adjacent cascades. The value should be between 0 and 1, with
+     * a default of 0, which disables blending between cascades.
+     *
+     * @type {number}
+     */
+    set cascadeBlend(value) {
+        this._setValue('cascadeBlend', value, function (newValue, oldValue) {
+            this.light.cascadeBlend = math.clamp(newValue, 0, 1);
+        });
+    }
+
+    /**
+     * Gets the blend factor for cascaded shadow maps.
+     *
+     * @type {number}
+     */
+    get cascadeBlend() {
+        return this.data.cascadeBlend;
+    }
+
+    /**
      * Sets the number of samples used to bake this light into the lightmap. Defaults to 1. Maximum
      * value is 255.
      *
@@ -547,16 +584,15 @@ class LightComponent extends Component {
     /**
      * Sets the type of shadows being rendered by this light. Can be:
      *
-     * - {@link SHADOW_PCF3}: Render depth, can be used for PCF 3x3 sampling.
-     * - {@link SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast
-     * shadows for this mode to work correctly.
-     * - {@link SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires
-     * OES_texture_half_float extension. Falls back to {@link SHADOW_VSM8}, if not supported.
-     * - {@link SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires
-     * OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
-     * - {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5
-     * sampling.
-     * - {@link SHADOW_PCSS}: Render depth as color, and use the software sampled PCSS method for shadows.
+     * - {@link SHADOW_PCF1_32F}
+     * - {@link SHADOW_PCF3_32F}
+     * - {@link SHADOW_PCF5_32F}
+     * - {@link SHADOW_PCF1_16F}
+     * - {@link SHADOW_PCF3_16F}
+     * - {@link SHADOW_PCF5_16F}
+     * - {@link SHADOW_VSM_16F}
+     * - {@link SHADOW_VSM_32F}
+     * - {@link SHADOW_PCSS_32F}
      *
      * @type {number}
      */
@@ -1084,6 +1120,51 @@ class LightComponent extends Component {
     }
 
     /**
+     * Sets the number of shadow samples used for soft shadows when the shadow type is
+     * {@link SHADOW_PCSS_32F}. This value must be a positive whole number starting at 1. Higher
+     * values result in smoother shadows but can significantly decrease performance. Defaults to 16.
+     *
+     * @type {number}
+     */
+    set shadowSamples(value) {
+        this.light.shadowSamples = value;
+    }
+
+    /**
+     * Gets the number of shadow samples used for soft shadows.
+     *
+     * @type {number}
+     */
+    get shadowSamples() {
+        return this.light.shadowSamples;
+    }
+
+    /**
+     * Sets the number of blocker samples used for soft shadows when the shadow type is
+     * {@link SHADOW_PCSS_32F}. These samples are used to estimate the distance between the shadow
+     * caster and the shadow receiver, which is then used for the estimation of contact hardening in
+     * the shadow. This value must be a positive whole number starting at 0. Higher values improve
+     * shadow quality by considering more occlusion points, but can decrease performance. When set
+     * to 0, contact hardening is disabled and the shadow has constant softness. Defaults to 16. Note
+     * that this values can be lower than shadowSamples to optimize performance, often without large
+     * impact on quality.
+     *
+     * @type {number}
+     */
+    set shadowBlockerSamples(value) {
+        this.light.shadowBlockerSamples = value;
+    }
+
+    /**
+     * Gets the number of blocker samples used for contact hardening shadows.
+     *
+     * @type {number}
+     */
+    get shadowBlockerSamples() {
+        return this.light.shadowBlockerSamples;
+    }
+
+    /**
      * Sets the size of penumbra for contact hardening shadows. For area lights, acts as a
      * multiplier with the dimensions of the area light. For punctual and directional lights it's
      * the area size of the light. Defaults to 1.
@@ -1101,6 +1182,27 @@ class LightComponent extends Component {
      */
     get penumbraSize() {
         return this.light.penumbraSize;
+    }
+
+    /**
+     * Sets the falloff rate for shadow penumbra for contact hardening shadows. This is a value larger
+     * than or equal to 1. This parameter determines how quickly the shadow softens with distance.
+     * Higher values result in a faster softening of the shadow, while lower values produce a more
+     * gradual transition. Defaults to 1.
+     *
+     * @type {number}
+     */
+    set penumbraFalloff(value) {
+        this.light.penumbraFalloff = value;
+    }
+
+    /**
+     * Gets the falloff rate for shadow penumbra for contact hardening shadows.
+     *
+     * @type {number}
+     */
+    get penumbraFalloff() {
+        return this.light.penumbraFalloff;
     }
 
     /** @ignore */
@@ -1227,12 +1329,16 @@ class LightComponent extends Component {
     }
 
     onEnable() {
+        const scene = this.system.app.scene;
+        const layers = scene.layers;
+
         this.light.enabled = true;
 
-        this.system.app.scene.on('set:layers', this.onLayersChanged, this);
-        if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.on('add', this.onLayerAdded, this);
-            this.system.app.scene.layers.on('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
+
+        if (layers) {
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this.enabled && this.entity.enabled) {
@@ -1245,12 +1351,19 @@ class LightComponent extends Component {
     }
 
     onDisable() {
+        const scene = this.system.app.scene;
+        const layers = scene.layers;
+
         this.light.enabled = false;
 
-        this.system.app.scene.off('set:layers', this.onLayersChanged, this);
-        if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.off('add', this.onLayerAdded, this);
-            this.system.app.scene.layers.off('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
+        if (layers) {
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
         this.removeLightFromLayers();

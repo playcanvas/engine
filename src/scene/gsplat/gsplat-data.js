@@ -261,7 +261,7 @@ class GSplatData {
 
     /**
      * @param {Vec3} result - The result.
-     * @param {Function} pred - Predicate given index for skipping.
+     * @param {Function} [pred] - Predicate given index for skipping.
      */
     calcFocalPoint(result, pred) {
         const x = this.getProp('x');
@@ -320,6 +320,24 @@ class GSplatData {
 
     get isCompressed() {
         return false;
+    }
+
+    // return the number of spherical harmonic bands present. value will be between 0 and 3 inclusive.
+    get shBands() {
+        const numProps = () => {
+            for (let i = 0; i < 45; ++i) {
+                if (!this.getProp(`f_rest_${i}`)) {
+                    return i;
+                }
+            }
+            return 45;
+        };
+        const sizes = {
+            9: 1,
+            24: 2,
+            45: 3
+        };
+        return sizes[numProps()] ?? 0;
     }
 
     calcMortonOrder() {

@@ -16,6 +16,7 @@ import { BoxLineShape } from './shape/boxline-shape.js';
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 // constants
@@ -139,7 +140,8 @@ class ScaleGizmo extends TransformGizmo {
             this._storeNodeScales();
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (pointDelta) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
+            const pointDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
             if (this.snap) {
                 pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();
@@ -437,7 +439,7 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {{ point: Vec3, angle: number }} The point and angle.
+     * @returns {Vec3} The point in world space.
      * @protected
      */
     _screenToPoint(x, y) {
@@ -453,7 +455,6 @@ class ScaleGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, isScaleUniform, !isPlane);
 
         const point = new Vec3();
-        const angle = 0;
 
         plane.intersectsRay(ray, point);
 
@@ -489,7 +490,7 @@ class ScaleGizmo extends TransformGizmo {
                 point[axis] = 1;
             }
 
-            return { point, angle };
+            return point;
         }
 
         // rotate point back to world coords
@@ -499,7 +500,7 @@ class ScaleGizmo extends TransformGizmo {
             this._projectToAxis(point, axis);
         }
 
-        return { point, angle };
+        return point;
     }
 }
 

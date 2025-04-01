@@ -337,7 +337,7 @@ body {
     position: absolute;
     right: 8px;
     top: 8px;
-    width: 250px;
+    width: 280px;
     z-index: 9999;
     background-color: rgba(54, 67, 70, 0.64);
     backdrop-filter: blur(32px);

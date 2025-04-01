@@ -1,30 +1,30 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/idle.glb' }),
-    walkAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/walk.glb' }),
-    jogAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/run.glb' }),
+    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/idle.glb` }),
+    walkAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/walk.glb` }),
+    jogAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/run.glb` }),
     danceAnim: new pc.Asset('danceAnim', 'container', {
-        url: rootPath + '/static/assets/animations/bitmoji/win-dance.glb'
+        url: `${rootPath}/static/assets/animations/bitmoji/win-dance.glb`
     }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bloom: new pc.Asset('bloom', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-bloom.js' })
+    bloom: new pc.Asset('bloom', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-bloom.js` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -95,7 +95,7 @@ assetListLoader.load(() => {
         castShadows: true,
         intensity: 1.5,
         normalOffsetBias: 0.02,
-        shadowType: pc.SHADOW_PCF5,
+        shadowType: pc.SHADOW_PCF5_32F,
         shadowDistance: 6,
         shadowResolution: 2048,
         shadowBias: 0.02

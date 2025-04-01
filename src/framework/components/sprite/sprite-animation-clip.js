@@ -4,6 +4,7 @@ import { Asset } from '../../asset/asset.js';
 import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
 
 /**
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { SpriteComponent } from './component.js'
  * @import { Sprite } from '../../../scene/sprite.js'
  */
@@ -79,6 +80,12 @@ class SpriteAnimationClip extends EventHandler {
      * });
      */
     static EVENT_LOOP = 'loop';
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtSetMeshes = null;
 
     /**
      * Create a new SpriteAnimationClip instance.
@@ -170,7 +177,8 @@ class SpriteAnimationClip extends EventHandler {
      */
     set sprite(value) {
         if (this._sprite) {
-            this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
+            this._evtSetMeshes?.off();
+            this._evtSetMeshes = null;
             this._sprite.off('set:pixelsPerUnit', this._onSpritePpuChanged, this);
             this._sprite.off('set:atlas', this._onSpriteMeshesChange, this);
             if (this._sprite.atlas) {
@@ -181,7 +189,7 @@ class SpriteAnimationClip extends EventHandler {
         this._sprite = value;
 
         if (this._sprite) {
-            this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
+            this._evtSetMeshes = this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
             this._sprite.on('set:pixelsPerUnit', this._onSpritePpuChanged, this);
             this._sprite.on('set:atlas', this._onSpriteMeshesChange, this);
 

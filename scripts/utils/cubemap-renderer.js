@@ -67,6 +67,8 @@ CubemapRenderer.prototype.initialize = function () {
     ];
 
     // set up rendering for all 6 faces
+    let firstCamera = null;
+    let lastCamera = null;
     for (var i = 0; i < 6; i++) {
 
         // render target, connected to cubemap texture face
@@ -98,6 +100,9 @@ CubemapRenderer.prototype.initialize = function () {
             farClip: camera.farClip,
             nearClip: camera.nearClip,
             frustumCulling: camera.frustumCulling,
+            gammaCorrection: camera.gammaCorrection,
+            toneMapping: camera.toneMapping,
+            fog: camera.fog,
 
             // this camera renders into texture target
             renderTarget: renderTarget
@@ -109,19 +114,29 @@ CubemapRenderer.prototype.initialize = function () {
         // set up its rotation
         e.setRotation(cameraRotations[i]);
 
-        // Before the first camera renders, trigger onCubemapPreRender event on the entity.
-        if (i === 0) {
-            e.camera.onPreRender = () => {
-                this.entity.fire('onCubemapPreRender');
-            };
-        }
-
-        // When last camera is finished rendering, trigger onCubemapPostRender event on the entity.
-        // This can be listened to by the user, and the resulting cubemap can be further processed (e.g prefiltered)
-        if (i === 5) {
-            e.camera.onPostRender = () => {
-                this.entity.fire('onCubemapPostRender');
-            };
-        }
+        // keep the first and last camera
+        if (i === 0) firstCamera = e.camera;
+        if (i === 5) lastCamera = e.camera;
     }
+
+    // Before the first camera renders, trigger onCubemapPreRender event on the entity.
+    this.evtPreRender = this.app.scene.on('prerender', (cameraComponent) => {
+        if (cameraComponent === firstCamera) {
+            this.entity.fire('onCubemapPreRender');
+        }
+    });
+
+    // When last camera is finished rendering, trigger onCubemapPostRender event on the entity.
+    // This can be listened to by the user, and the resulting cubemap can be further processed (e.g pre-filtering)
+    this.evtPostRender = this.app.scene.on('postrender', (cameraComponent) => {
+        if (cameraComponent === lastCamera) {
+            this.entity.fire('onCubemapPostRender');
+        }
+    });
+
+    // when the script is destroyed, remove event listeners
+    this.on('destroy', () => {
+        this.evtPreRender.off();
+        this.evtPostRender.off();
+    });
 };

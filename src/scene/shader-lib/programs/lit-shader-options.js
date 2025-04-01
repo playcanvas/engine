@@ -302,6 +302,13 @@ class LitShaderOptions {
      * @type {Object<string, string>}
      */
     userAttributes = {};
+
+    /**
+     * Make vLinearDepth available in the shader.
+     *
+     * @type {boolean}
+     */
+    linearDepth = false;
 }
 
 export { LitShaderOptions };

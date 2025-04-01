@@ -1,8 +1,7 @@
 // official package plugins
-import { babel } from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import strip from '@rollup/plugin-strip';
-import terser from '@rollup/plugin-terser';
+import swcPlugin from '@rollup/plugin-swc';
 
 // unofficial package plugins
 import jscc from 'rollup-plugin-jscc';
@@ -17,7 +16,7 @@ import { treeshakeIgnore } from './plugins/rollup-treeshake-ignore.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
-import { babelOptions } from './rollup-babel-options.mjs';
+import { swcOptions } from './rollup-swc-options.mjs';
 
 import { dirname, resolve as pathResolve } from 'path';
 import { fileURLToPath } from 'url';
@@ -125,7 +124,6 @@ function getJSCCOptions(buildType, isUMD) {
  */
 function getOutPlugins() {
     const plugins = [
-        terser()
     ];
 
     if (process.env.treemap) {
@@ -207,6 +205,9 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
          */
         const target = {
             input: release.output.file,
+            plugins: [
+                swcPlugin({ swc: swcOptions(isDebug, isUMD, isMin) })
+            ],
             output: {
                 plugins: getOutPlugins(),
                 file: `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}`
@@ -246,7 +247,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
             !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-            babel(babelOptions(isDebug, isUMD)),
+            swcPlugin({ swc: swcOptions(isDebug, isUMD, isMin) }),
             !isUMD ? dynamicImportBundlerSuppress() : undefined,
             !isDebug ? spacesToTabs() : undefined
         ]

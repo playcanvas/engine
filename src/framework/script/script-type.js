@@ -2,6 +2,11 @@ import { ScriptAttributes } from './script-attributes.js';
 import { Script } from './script.js';
 
 /**
+ * @import { AppBase } from '../app-base.js'
+ * @import { Entity } from '../entity.js'
+ */
+
+/**
  * This is the legacy format for creating PlayCanvas script returned when calling `pc.createScript()`.
  * You should not use this inherit from this class directly.
  *
@@ -19,10 +24,8 @@ class ScriptType extends Script {
      * Create a new ScriptType instance.
      *
      * @param {object} args - The input arguments object.
-     * @param {import('../app-base.js').AppBase} args.app - The {@link AppBase} that is running the
-     * script.
-     * @param {import('../entity.js').Entity} args.entity - The {@link Entity} that the script is
-     * attached to.
+     * @param {AppBase} args.app - The {@link AppBase} that is running the script.
+     * @param {Entity} args.entity - The {@link Entity} that the script is attached to.
      */
     constructor(args) {
         super(args);

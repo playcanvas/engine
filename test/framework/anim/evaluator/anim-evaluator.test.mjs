@@ -1,25 +1,33 @@
+import { expect } from 'chai';
+
+import { DefaultAnimBinder } from '../../../../src/framework/anim/binder/default-anim-binder.js';
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
-import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { AnimClip } from '../../../../src/framework/anim/evaluator/anim-clip.js';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
 import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
-import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
-import { Application } from '../../../../src/framework/application.js';
-import { DefaultAnimBinder } from '../../../../src/framework/anim/binder/default-anim-binder.js';
+import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 import { GraphNode } from '../../../../src/scene/graph-node.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { Canvas } from 'skia-canvas';
-
-import { expect } from 'chai';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('AnimEvaluator', function () {
 
-    it('AnimEvaluator: update with clip blending', function () {
-        const canvas = new Canvas(500, 500);
-        const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+    let app;
 
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+    });
+
+    afterEach(function () {
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
+    });
+
+    it('AnimEvaluator: update with clip blending', function () {
         // build the graph to be animated
         const parent = new GraphNode('parent');
         const child1 = new GraphNode('child1');
@@ -90,9 +98,6 @@ describe('AnimEvaluator', function () {
     });
 
     it('AnimEvaluator: update without clip blending', function () {
-        const canvas = new Canvas(500, 500);
-        const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
-
         // build the graph to be animated
         const parent = new GraphNode('parent');
         const child1 = new GraphNode('child1');

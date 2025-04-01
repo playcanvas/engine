@@ -1,9 +1,10 @@
+import { BlueNoise } from '../../core/math/blue-noise.js';
 import { Color } from '../../core/math/color.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { ChunkUtils } from '../../scene/shader-lib/chunk-utils.js';
 import { RenderPassDepthAwareBlur } from './render-pass-depth-aware-blur.js';
 
 const fs = /* glsl */`
@@ -84,10 +85,10 @@ const fs = /* glsl */`
 
     #define PI (3.14159)
 
-    vec3 tapLocation(float i, const float noise) {
-        float offset = ((2.0 * PI) * 2.4) * noise;
-        float angle = ((i * uSampleCount.y) * uSpiralTurns) * (2.0 * PI) + offset;
-        float radius = (i + noise + 0.5) * uSampleCount.y;
+    mediump vec3 tapLocation(mediump float i, const mediump float noise) {
+        mediump float offset = ((2.0 * PI) * 2.4) * noise;
+        mediump float angle = ((i * uSampleCount.y) * uSpiralTurns) * (2.0 * PI) + offset;
+        mediump float radius = (i + noise + 0.5) * uSampleCount.y;
         return vec3(cos(angle), sin(angle), radius * radius);
     }
 
@@ -103,8 +104,8 @@ const fs = /* glsl */`
         return mat2(t.x, t.y, -t.y, t.x);
     }
 
-    vec3 tapLocationFast(float i, vec2 p, const float noise) {
-        float radius = (i + noise + 0.5) * uSampleCount.y;
+    mediump vec3 tapLocationFast(mediump float i, mediump vec2 p, const mediump float noise) {
+        mediump float radius = (i + noise + 0.5) * uSampleCount.y;
         return vec3(p, radius * radius);
     }
 
@@ -114,18 +115,18 @@ const fs = /* glsl */`
     uniform float uBias;
     uniform float uPeak2;
 
-    void computeAmbientOcclusionSAO(inout float occlusion, float i, float ssDiskRadius,
-            const highp vec2 uv, const highp vec3 origin, const vec3 normal,
-            const vec2 tapPosition, const float noise) {
+    void computeAmbientOcclusionSAO(inout mediump float occlusion, mediump float i, mediump float ssDiskRadius,
+            const highp vec2 uv, const highp vec3 origin, const mediump vec3 normal,
+            const mediump vec2 tapPosition, const float noise) {
 
-        vec3 tap = tapLocationFast(i, tapPosition, noise);
+        mediump vec3 tap = tapLocationFast(i, tapPosition, noise);
 
-        float ssRadius = max(1.0, tap.z * ssDiskRadius); // at least 1 pixel screen-space radius
+        mediump float ssRadius = max(1.0, tap.z * ssDiskRadius); // at least 1 pixel screen-space radius
 
-        vec2 uvSamplePos = uv + vec2(ssRadius * tap.xy) * uInvResolution;
+        mediump vec2 uvSamplePos = uv + vec2(ssRadius * tap.xy) * uInvResolution;
 
         // TODO: level is not used, but could be used with mip-mapped depth texture
-        float level = clamp(floor(log2(ssRadius)) - kLog2LodRate, 0.0, float(uMaxLevel));
+        mediump float level = clamp(floor(log2(ssRadius)) - kLog2LodRate, 0.0, float(uMaxLevel));
         highp float occlusionDepth = -getLinearScreenDepth(uvSamplePos);
         highp vec3 p = computeViewSpacePositionFromDepth(uvSamplePos, occlusionDepth);
 
@@ -136,7 +137,7 @@ const fs = /* glsl */`
 
         // discard samples that are outside of the radius, preventing distant geometry to cast
         // shadows -- there are many functions that work and choosing one is an artistic decision.
-        float w = max(0.0, 1.0 - vv * uInvRadiusSquared);
+        mediump float w = max(0.0, 1.0 - vv * uInvRadiusSquared);
         w = w * w;
 
         // discard samples that are too close to the horizon to reduce shadows cast by geometry
@@ -150,9 +151,10 @@ const fs = /* glsl */`
 
     uniform float uProjectionScaleRadius;
     uniform float uIntensity;
+    uniform float uRandomize;
 
     float scalableAmbientObscurance(highp vec2 uv, highp vec3 origin, vec3 normal) {
-        float noise = random(getFragCoord());
+        float noise = random(getFragCoord()) + uRandomize;
         highp vec2 tapPosition = startPosition(noise);
         highp mat2 angleStep = tapAngleStep();
 
@@ -235,6 +237,12 @@ class RenderPassSsao extends RenderPassShaderQuad {
     minAngle = 5;
 
     /**
+     * Enable randomization of the sample pattern. Useful when TAA is used to remove the noise,
+     * instead of blurring.
+     */
+    randomize = false;
+
+    /**
      * The texture containing the occlusion information in the red channel.
      *
      * @type {Texture}
@@ -245,13 +253,16 @@ class RenderPassSsao extends RenderPassShaderQuad {
     /** @type {number} */
     _scale = 1;
 
+    _blueNoise = new BlueNoise(19);
+
     constructor(device, sourceTexture, cameraComponent, blurEnabled) {
         super(device);
         this.sourceTexture = sourceTexture;
         this.cameraComponent = cameraComponent;
 
         // main SSAO render pass
-        this.shader = this.createQuadShader('SsaoShader', shaderChunks.screenDepthPS + fs);
+        const screenDepth = ChunkUtils.getScreenDepthChunk(device, cameraComponent.shaderParams);
+        this.shader = this.createQuadShader('SsaoShader', screenDepth + fs);
 
         const rt = this.createRenderTarget('SsaoFinalTexture');
         this.ssaoTexture = rt.colorBuffer;
@@ -269,13 +280,13 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
             const blurRT = this.createRenderTarget('SsaoTempTexture');
 
-            const blurPassHorizontal = new RenderPassDepthAwareBlur(device, rt.colorBuffer, true);
+            const blurPassHorizontal = new RenderPassDepthAwareBlur(device, rt.colorBuffer, cameraComponent, true);
             blurPassHorizontal.init(blurRT, {
                 resizeSource: rt.colorBuffer
             });
             blurPassHorizontal.setClearColor(clearColor);
 
-            const blurPassVertical = new RenderPassDepthAwareBlur(device, blurRT.colorBuffer, false);
+            const blurPassVertical = new RenderPassDepthAwareBlur(device, blurRT.colorBuffer, cameraComponent, false);
             blurPassVertical.init(rt, {
                 resizeSource: rt.colorBuffer
             });
@@ -314,8 +325,8 @@ class RenderPassSsao extends RenderPassShaderQuad {
      */
     set scale(value) {
         this._scale = value;
-        this.options.scaleX = value;
-        this.options.scaleY = value;
+        this.scaleX = value;
+        this.scaleY = value;
     }
 
     get scale() {
@@ -355,11 +366,12 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
         const spiralTurns = 10.0;
         const step = (1.0 / (sampleCount - 0.5)) * spiralTurns * 2.0 * 3.141;
-        const radius = this.radius * scale;
+        const radius = this.radius / scale;
+
         const bias = 0.001;
         const peak = 0.1 * radius;
         const intensity = 2 * (peak * 2.0 * 3.141) * this.intensity / sampleCount;
-        const projectionScale = 0.5 * sourceTexture.height * scale;
+        const projectionScale = 0.5 * sourceTexture.height;
         scope.resolve('uSpiralTurns').setValue(spiralTurns);
         scope.resolve('uAngleIncCosSin').setValue([Math.cos(step), Math.sin(step)]);
         scope.resolve('uMaxLevel').setValue(0.0);
@@ -369,6 +381,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
         scope.resolve('uIntensity').setValue(intensity);
         scope.resolve('uPower').setValue(this.power);
         scope.resolve('uProjectionScaleRadius').setValue(projectionScale * radius);
+        scope.resolve('uRandomize').setValue(this.randomize ? this._blueNoise.value() : 0);
 
         super.execute();
     }

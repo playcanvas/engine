@@ -1,18 +1,18 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    checkboard: new pc.Asset('checkboard', 'texture', { url: rootPath + '/static/assets/textures/checkboard.png' }),
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' })
+    checkboard: new pc.Asset('checkboard', 'texture', { url: `${rootPath}/static/assets/textures/checkboard.png` }),
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -147,7 +147,7 @@ assetListLoader.load(() => {
         // normally, this would be taking inputs, running physics simulation, etc
         let angle = startingAngle;
         const height = 0.5;
-        app.on('update', function (dt) {
+        app.on('update', (dt) => {
             angle += dt * speed;
             if (angle > 360) {
                 angle -= 360;
@@ -186,7 +186,7 @@ assetListLoader.load(() => {
         name.addComponent('button', {
             imageEntity: name
         });
-        name.button.on('click', function () {
+        name.button.on('click', () => {
             const color = new pc.Color(Math.random(), Math.random(), Math.random());
             name.element.color = color;
             entity.render.material.setParameter('material_diffuse', [color.r, color.g, color.b]);
@@ -205,7 +205,7 @@ assetListLoader.load(() => {
         playerInfo.addChild(healthBar);
 
         // update the player text's position to always hover the player
-        app.on('update', function () {
+        app.on('update', () => {
             // get the desired world position
             const worldPosition = entity.getPosition();
             worldPosition.y += 0.6; // slightly above the player's head

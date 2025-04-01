@@ -1,17 +1,17 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    heart: new pc.Asset('heart', 'texture', { url: rootPath + '/static/assets/textures/heart.png' })
+    heart: new pc.Asset('heart', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // enable HDR rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR
@@ -45,10 +45,6 @@ assetListLoader.load(() => {
     app.start();
 
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
-
-    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
-    app.scene.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES;
-    app.scene.rendering.gammaCorrection = pc.GAMMA_SRGB;
 
     // create material for the plane
     const planeMaterial = new pc.StandardMaterial();
@@ -86,7 +82,11 @@ assetListLoader.load(() => {
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
+        clearColor: new pc.Color(0.2, 0.2, 0.2),
+
+        // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+        toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
+        gammaCorrection: pc.GAMMA_SRGB
     });
 
     // Add the camera to the hierarchy
