@@ -25,6 +25,11 @@ import { Component } from '../component.js';
  * {@link MeshInstance}s. These can either be created programmatically or loaded from an
  * {@link Asset}.
  *
+ * The {@link MeshInstance}s managed by this component are positioned, rotated, and scaled in world
+ * space by the world transformation matrix of the owner {@link Entity}. This world matrix is
+ * derived by combining the entity's local transformation (position, rotation, and scale) with the
+ * world transformation matrix of its parent entity in the scene hierarchy.
+ *
  * You should never need to use the RenderComponent constructor directly. To add a RenderComponent
  * to an Entity, use {@link Entity#addComponent}:
  *
@@ -52,7 +57,10 @@ import { Component } from '../component.js';
  * @category Graphics
  */
 class RenderComponent extends Component {
-    /** @private */
+    /**
+     * @type {'asset'|'box'|'capsule'|'cone'|'cylinder'|'plane'|'sphere'|'torus'}
+     * @private
+     */
     _type = 'asset';
 
     /** @private */
@@ -252,18 +260,36 @@ class RenderComponent extends Component {
     }
 
     /**
-     * Sets the type of the component. Can be one of the following:
+     * Sets the type of the component, determining the source of the geometry to be rendered.
+     * The geometry, whether it's a primitive shape or originates from an asset, is rendered
+     * using the owning entity's final world transform. This world transform is calculated by
+     * concatenating (multiplying) the local transforms (position, rotation, scale) of the
+     * entity and all its ancestors in the scene hierarchy. This process positions, orientates,
+     * and scales the geometry in world space.
      *
-     * - "asset": The component will render a render asset
-     * - "box": The component will render a box (1 unit in each dimension)
-     * - "capsule": The component will render a capsule (radius 0.5, height 2)
-     * - "cone": The component will render a cone (radius 0.5, height 1)
-     * - "cylinder": The component will render a cylinder (radius 0.5, height 1)
-     * - "plane": The component will render a plane (1 unit in each dimension)
-     * - "sphere": The component will render a sphere (radius 0.5)
-     * - "torus": The component will render a torus (tubeRadius: 0.2, ringRadius: 0.3)
+     * Can be one of the following values:
      *
-     * @type {string}
+     * - **"asset"**: Renders geometry defined in an {@link Asset} of type `render`. This asset,
+     *   assigned to the {@link asset} property, contains one or more {@link MeshInstance}s.
+     *   Alternatively, {@link meshInstances} can be set programmatically.
+     * - **"box"**: A unit cube (sides of length 1) centered at the local space origin.
+     * - **"capsule"**: A shape composed of a cylinder and two hemispherical caps that is aligned
+     *   with the local Y-axis. It is centered at the local space origin and has an unscaled height
+     *   of 2 and a radius of 0.5.
+     * - **"cone"**: A cone aligned with the local Y-axis. It is centered at the local space
+     *   origin, with its base in the local XZ plane at Y = -0.5 and its tip at Y = +0.5. It has
+     *   an unscaled height of 1 and a base radius of 0.5.
+     * - **"cylinder"**: A cylinder aligned with the local Y-axis. It is centered at the local
+     *   space origin with an unscaled height of 1 and a radius of 0.5.
+     * - **"plane"**: A flat plane in the local XZ plane at Y = 0 (normal along +Y). It is
+     *   centered at the local space origin with unscaled dimensions of 1x1 units along local X and
+     *   Z axes.
+     * - **"sphere"**: A sphere with a radius of 0.5. It is centered at the local space origin and
+     *   has poles at Y = -0.5 and Y = +0.5.
+     * - **"torus"**: A doughnut shape lying in the local XZ plane at Y = 0. It is centered at
+     *   the local space origin with a tube radius of 0.2 and a ring radius of 0.3.
+     *
+     * @type {'asset'|'box'|'capsule'|'cone'|'cylinder'|'plane'|'sphere'|'torus'}
      */
     set type(value) {
         if (this._type !== value) {
@@ -290,7 +316,7 @@ class RenderComponent extends Component {
     /**
      * Gets the type of the component.
      *
-     * @type {string}
+     * @type {'asset'|'box'|'capsule'|'cone'|'cylinder'|'plane'|'sphere'|'torus'}
      */
     get type() {
         return this._type;
