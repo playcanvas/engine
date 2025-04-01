@@ -2,11 +2,13 @@ import { Entity } from '../entity.js';
 import { GSplatInstance } from '../../scene/gsplat/gsplat-instance.js';
 import { GSplat } from '../../scene/gsplat/gsplat.js';
 import { GSplatCompressed } from '../../scene/gsplat/gsplat-compressed.js';
+import { GSplatSogs } from '../../scene/gsplat/gsplat-sogs.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
  * @import { GSplatData } from '../../scene/gsplat/gsplat-data.js'
- * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { GSplatCompressedData } from '../../scene/gsplat/gsplat-compressed-data.js'
+ * @impotr { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js'
  * @import { SplatMaterialOptions } from '../../scene/gsplat/gsplat-material.js'
  */
 
@@ -17,19 +19,19 @@ import { GSplatCompressed } from '../../scene/gsplat/gsplat-compressed.js';
  */
 class GSplatResource {
     /**
-     * @type {AppBase}
+     * @type {AppBase | null}
      * @ignore
      */
     app;
 
     /**
-     * @type {GSplatData}
+     * @type {GSplatData | GSplatCompressedData | GSplatSogsData }
      * @ignore
      */
     splatData;
 
     /**
-     * @type {GSplat | GSplatCompressed | null}
+     * @type {GSplat | GSplatCompressed | GSplatSogs | null}
      * @ignore
      */
     splat = null;
@@ -42,7 +44,7 @@ class GSplatResource {
 
     /**
      * @param {AppBase} app - The app.
-     * @param {GSplatData} splatData - The splat data.
+     * @param {GSplatData | GSplatCompressedData | GSplatSogsData} splatData - The splat data.
      * @param {string[]} comments - The PLY file header comments
      * @ignore
      */
@@ -61,7 +63,10 @@ class GSplatResource {
 
     createSplat() {
         if (!this.splat) {
-            this.splat = this.splatData.isCompressed ? new GSplatCompressed(this.app.graphicsDevice, this.splatData) : new GSplat(this.app.graphicsDevice, this.splatData);
+            const { app, splatData } = this;
+            const gsplatClass = splatData.isCompressed ? GSplatCompressed :
+                splatData.isSogs ? GSplatSogs : GSplat;
+            this.splat = new gsplatClass(app.graphicsDevice, splatData);
         }
         return this.splat;
     }
