@@ -1,3 +1,7 @@
+import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Vec4 } from '../../core/math/vec4.js';
+import { GSplatData } from './gsplat-data.js';
 
 let offscreen = null;
 let ctx = null;
@@ -14,12 +18,49 @@ const readImageData = (imageBitmap) => {
 
 class GSplatSogsIterator {
     constructor(data, p, r, s, c, sh) {
-        // TODO
+
+        const lerp = (a, b, t) => a * (1 - t) + b * t;
+
+        // extract means for centers
+        const { meta } = data;
+        const { means, quats, scales } = meta;
+        const means_l_data = p && readImageData(data.means_l._levels[0]);
+        const means_u_data = p && readImageData(data.means_u._levels[0]);
+        const quats_data = r && readImageData(data.quats._levels[0]);
+        const scales_data = s && readImageData(data.scales._levels[0]);
+
         this.read = (i) => {
-            // TODO
+            if (p) {
+                const nx = lerp(means.mins[0], means.maxs[0], ((means_u_data[i * 4 + 0] << 8) + means_l_data[i * 4 + 0]) / 65535);
+                const ny = lerp(means.mins[1], means.maxs[1], ((means_u_data[i * 4 + 1] << 8) + means_l_data[i * 4 + 1]) / 65535);
+                const nz = lerp(means.mins[2], means.maxs[2], ((means_u_data[i * 4 + 2] << 8) + means_l_data[i * 4 + 2]) / 65535);
+
+                p.x = Math.sign(nx) * (Math.exp(Math.abs(nx)) - 1);
+                p.y = Math.sign(ny) * (Math.exp(Math.abs(ny)) - 1);
+                p.z = Math.sign(nz) * (Math.exp(Math.abs(nz)) - 1);
+            }
+
+            if (r) {
+                const qx = lerp(quats.mins[0], quats.maxs[0], quats_data[i * 4 + 0] / 255);
+                const qy = lerp(quats.mins[1], quats.maxs[1], quats_data[i * 4 + 1] / 255);
+                const qz = lerp(quats.mins[2], quats.maxs[2], quats_data[i * 4 + 2] / 255);
+                const w2 = Math.max(0, Math.min(1, 1 - (qx * qx + qy * qy + qz * qz)));
+                const qw = Math.sqrt(w2);
+
+                r.set(qx, qy, qz, qw);
+            }
+
+            if (s) {
+                const sx = Math.exp(lerp(scales.mins[0], scales.maxs[0], scales_data[i * 4 + 0] / 255));
+                const sy = Math.exp(lerp(scales.mins[1], scales.maxs[1], scales_data[i * 4 + 1] / 255));
+                const sz = Math.exp(lerp(scales.mins[2], scales.maxs[2], scales_data[i * 4 + 2] / 255));
+                s.set(sx, sy, sz);
+            }
         };
     }
 }
+
+const SH_C0 = 0.28209479177387814;
 
 class GSplatSogsData {
     meta;
@@ -59,23 +100,15 @@ class GSplatSogsData {
     }
 
     getCenters(result) {
-        const lerp = (a, b, t) => a * (1 - t) + b * t;
+        const p = new Vec3();
+        const iter = this.createIter(p);
 
-        // extract means for centers
-        const { meta, means_l, means_u } = this;
-        const { means } = meta;
-        const meansL = readImageData(means_l._levels[0]);
-        const meansU = readImageData(means_u._levels[0]);
-
-        // combine high and low
         for (let i = 0; i < this.numSplats; i++) {
-            const nx = lerp(means.mins[0], means.maxs[0], ((meansU[i * 4 + 0] << 8) + meansL[i * 4 + 0]) / 65535);
-            const ny = lerp(means.mins[1], means.maxs[1], ((meansU[i * 4 + 1] << 8) + meansL[i * 4 + 1]) / 65535);
-            const nz = lerp(means.mins[2], means.maxs[2], ((meansU[i * 4 + 2] << 8) + meansL[i * 4 + 2]) / 65535);
+            iter.read(i);
 
-            result[i * 3 + 0] = Math.sign(nx) * (Math.exp(Math.abs(nx)) - 1);
-            result[i * 3 + 1] = Math.sign(ny) * (Math.exp(Math.abs(ny)) - 1);
-            result[i * 3 + 2] = Math.sign(nz) * (Math.exp(Math.abs(nz)) - 1);
+            result[i * 3 + 0] = p.x;
+            result[i * 3 + 1] = p.y;
+            result[i * 3 + 2] = p.z;
         }
     }
 
