@@ -1,6 +1,6 @@
 import { Debug } from '../../../core/debug.js';
 import {
-    BLEND_NONE, DITHER_BAYER8, DITHER_NONE, FRESNEL_SCHLICK,
+    BLEND_NONE, DITHER_NONE, ditherNames, FRESNEL_SCHLICK,
     SHADER_FORWARD,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../constants.js';
@@ -107,7 +107,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 ['$SAMPLER',    `{STD_${propName}_TEXTURE_NAME}`],
                 ['$DECODE',     `{STD_${propName}_TEXTURE_DECODE}`],
                 ['$VC',         `{STD_${propName}_VERTEX_CHANNEL}`],
-                ['$DETAILMODE', `{STD_${propName}_DETAILMODE}`]
+                ['$DETAILMODE', `{STD_${propName}_DETAILMODE}`],
+                ['unpackNormal(', `{STD_${propName}_TEXTURE_DECODE}(`]
             ].forEach(([oldSyntax, newSyntax]) => trackChange(oldSyntax, newSyntax));
 
             // defines
@@ -166,7 +167,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         // log errors if the chunk format is deprecated (format changed in engine 2.7)
         Debug.call(() => {
-            this._validateMapChunk(propNameCaps, chunkName, chunks);
+            if (chunkCode) {
+                this._validateMapChunk(propNameCaps, chunkName, chunks);
+            }
         });
 
         if (textureOption) {
@@ -181,13 +184,16 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
             // texture sampler define
             const textureId = `{STD_${propNameCaps}_TEXTURE_NAME}`;
-            if (mapping && chunkCode.includes(textureId)) {
+            if (chunkCode.includes(textureId)) {
                 let samplerName = `texture_${mapPropName}`;
                 const alias = mapping[textureIdentifier];
                 if (alias) {
                     samplerName = alias;
                 } else {
                     mapping[textureIdentifier] = samplerName;
+
+                    // texture is not aliased to existing texture, create a new one
+                    fDefines.set(`STD_${propNameCaps}_TEXTURE_ALLOCATE`, '');
                 }
                 fDefines.set(textureId, samplerName);
             }
@@ -280,6 +286,25 @@ class ShaderGeneratorStandard extends ShaderGenerator {
     }
 
     /**
+     * @param {StandardMaterialOptions} options - The create options.
+     * @param {Map<string, string>} fDefines - The fragment defines.
+     * @param {ShaderPass} shaderPassInfo - The shader pass info.
+     */
+    prepareFragmentDefines(options, fDefines, shaderPassInfo) {
+
+        const fDefineSet = (condition, name, value = '') => {
+            if (condition) {
+                fDefines.set(name, value);
+            }
+        };
+
+        fDefineSet(options.diffuseDetail, 'STD_DIFFUSE_DETAIL', '');
+        fDefineSet(options.aoDetail, 'STD_AO_DETAIL', '');
+        fDefineSet(options.heightMap, 'STD_HEIGHT_MAP', '');
+        fDefineSet(true, 'STD_OPACITY_DITHER', ditherNames[shaderPassInfo.isForward ? options.litOptions.opacityDither : options.litOptions.opacityShadowDither]);
+    }
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {StandardMaterialOptions} options - The create options.
      * @returns {object} Returns the created shader definition.
@@ -290,9 +315,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         const isForwardPass = shaderPassInfo.isForward;
         const litShader = new LitShader(device, options.litOptions);
 
-        // fragment defines
-        const fDefines = litShader.fDefines;
-
         // generate vertex shader
         this.createVertexShader(litShader, options);
 
@@ -301,58 +323,172 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         options.litOptions.fresnelModel = (options.litOptions.fresnelModel === 0) ? FRESNEL_SCHLICK : options.litOptions.fresnelModel;
 
+        // fragment defines
+        const fDefines = litShader.fDefines;
+        this.prepareFragmentDefines(options, fDefines, shaderPassInfo);
+
         const decl = new ChunkBuilder();
         const code = new ChunkBuilder();
         const func = new ChunkBuilder();
         const args = new ChunkBuilder();
         let lightingUv = '';
 
-        // global texture bias for standard textures
-        if (options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
-            decl.append('const float textureBias = -1000.0;');
-        } else {
-            decl.append('uniform float textureBias;');
-        }
+        decl.append(`
+            
+            // global texture bias for standard textures
+            #if LIT_NONE_SLICE_MODE == TILED
+                const float textureBias = -1000.0;
+            #else
+                uniform float textureBias;
+            #endif
+
+            // globals
+            float dAlpha = 1.0;
+
+            #if defined(LIT_ALPHA_TEST)
+                #include "alphaTestPS"
+            #endif
+
+            // dithering
+            #if STD_OPACITY_DITHER != NONE
+                #include "opacityDitherPS"
+            #endif
+
+            #ifdef FORWARD_PASS // ----------------
+
+                // globals
+                vec3 dAlbedo;
+                vec3 dNormalW;
+
+                #ifdef LIT_SCENE_COLOR
+                    uniform sampler2D uSceneColorMap;
+                #endif
+
+                #ifdef LIT_SCREEN_SIZE
+                    uniform vec4 uScreenSize;
+                #endif
+
+                #ifdef LIT_TRANSFORMS
+                    uniform mat4 matrix_viewProjection;
+                    uniform mat4 matrix_model;
+                #endif
+
+                // parallax
+                #ifdef STD_HEIGHT_MAP
+                    vec2 dUvOffset;
+                    #ifdef STD_DIFFUSE_TEXTURE_ALLOCATE
+                        uniform sampler2D texture_heightMap;
+                    #endif
+                #endif
+
+                #if defined(STD_DIFFUSE_DETAIL) || defined(STD_AO_DETAIL)
+                    #include "detailModesPS"
+                #endif
+
+                // diffuse
+                #ifdef STD_DIFFUSE_TEXTURE_ALLOCATE
+                    uniform sampler2D texture_diffuseMap;
+                #endif
+
+                #ifdef STD_DIFFUSEDETAIL_TEXTURE_ALLOCATE
+                    uniform sampler2D texture_diffuseDetailMap;
+                #endif
+
+                // normal
+                #ifdef STD_NORMAL_TEXTURE_ALLOCATE
+                    uniform sampler2D texture_normalMap;
+                #endif
+
+                #ifdef STD_NORMALDETAIL_TEXTURE_ALLOCATE
+                    uniform sampler2D texture_normalDetailMap;
+                #endif
+
+                #ifdef LIT_CLEARCOAT
+                    float ccSpecularity;
+                    float ccGlossiness;
+                    vec3 ccNormalW;
+                #endif
+            #endif
+        `);
+
+        code.append(`
+
+            // all passes handle opacity
+            #if LIT_BLEND_TYPE != NONE || defined(LIT_ALPHA_TEST) || defined(LIT_ALPHA_TO_COVERAGE) || STD_OPACITY_DITHER != NONE
+                #ifdef STD_OPACITY_TEXTURE_ALLOCATE
+                    uniform sampler2D texture_opacityMap;
+                #endif
+                #include "opacityPS"
+            #endif
+
+            #ifdef FORWARD_PASS // ----------------
+
+                // parallax
+                #ifdef STD_HEIGHT_MAP
+                    #include "parallaxPS"
+                #endif
+
+                // diffuse
+                #include  "diffusePS"
+
+                // normal
+                #ifdef LIT_NEEDS_NORMAL
+                    #include "normalMapPS"
+                #endif
+            #endif
+        `);
+
+        func.append(`
+
+            // all passes handle opacity
+            #if LIT_BLEND_TYPE != NONE || defined(LIT_ALPHA_TEST) || defined(LIT_ALPHA_TO_COVERAGE) || STD_OPACITY_DITHER != NONE
+                getOpacity();
+
+                #if defined(LIT_ALPHA_TEST)
+                    alphaTest(dAlpha);
+                #endif
+
+                #if STD_OPACITY_DITHER != NONE
+                    opacityDither(dAlpha, 0.0);
+                #endif
+
+                litArgs_opacity = dAlpha;
+            #endif
+
+            #ifdef FORWARD_PASS // ----------------
+
+                // parallax
+                #ifdef STD_HEIGHT_MAP
+                    getParallax();
+                #endif
+
+                // diffuse
+                getAlbedo();
+                litArgs_albedo = dAlbedo;
+
+                // normal
+                #ifdef LIT_NEEDS_NORMAL
+                    getNormal();
+                    litArgs_worldNormal = dNormalW;
+                #endif
+
+            #endif
+        `);
 
         if (isForwardPass) {
             // parallax
             if (options.heightMap) {
-                decl.append('vec2 dUvOffset;');
-                code.append(this._addMap(fDefines, 'height', 'parallaxPS', options, litShader.chunks, textureMapping));
-                func.append('getParallax();');
+                this._addMap(fDefines, 'height', 'parallaxPS', options, litShader.chunks, textureMapping);
             }
 
             // opacity
             if (options.litOptions.blendType !== BLEND_NONE || options.litOptions.alphaTest || options.litOptions.alphaToCoverage || options.litOptions.opacityDither !== DITHER_NONE) {
-                decl.append('float dAlpha;');
-                code.append(this._addMap(fDefines, 'opacity', 'opacityPS', options, litShader.chunks, textureMapping));
-                func.append('getOpacity();');
-                args.append('litArgs_opacity = dAlpha;');
-
-                if (options.litOptions.alphaTest) {
-                    code.append(litShader.chunks.alphaTestPS);
-                    func.append('alphaTest(dAlpha);');
-                }
-
-                const opacityDither = options.litOptions.opacityDither;
-                if (opacityDither !== DITHER_NONE) {
-                    if (opacityDither === DITHER_BAYER8) {
-                        decl.append(litShader.chunks.bayerPS);
-                    }
-                    decl.append(`#define DITHER_${opacityDither.toUpperCase()}\n`);
-                    decl.append(litShader.chunks.opacityDitherPS);
-                    func.append('opacityDither(dAlpha, 0.0);');
-                }
-            } else {
-                decl.append('float dAlpha = 1.0;');
+                this._addMap(fDefines, 'opacity', 'opacityPS', options, litShader.chunks, textureMapping);
             }
 
             // normal
             if (litShader.needsNormal) {
                 if (options.normalMap || options.clearCoatNormalMap) {
-                    // TODO: let each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently decide which unpackNormal to use.
-                    code.append(options.packedNormal ? litShader.chunks.normalXYPS : litShader.chunks.normalXYZPS);
-
                     if (!options.litOptions.hasTangents) {
                         // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently
                         const baseName = options.normalMap ? 'normalMap' : 'clearCoatNormalMap';
@@ -360,37 +496,16 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     }
                 }
 
-                decl.append('vec3 dNormalW;');
-                code.append(this._addMap(fDefines, 'normalDetail', 'normalDetailMapPS', options, litShader.chunks, textureMapping));
-                code.append(this._addMap(fDefines, 'normal', 'normalMapPS', options, litShader.chunks, textureMapping));
-                func.append('getNormal();');
-                args.append('litArgs_worldNormal = dNormalW;');
+                this._addMap(fDefines, 'normalDetail', 'normalMapPS', options, litShader.chunks, textureMapping, options.normalDetailPackedNormal ? 'xy' : 'xyz');
+                this._addMap(fDefines, 'normal', 'normalMapPS', options, litShader.chunks, textureMapping, options.packedNormal ? 'xy' : 'xyz');
             }
 
-            if (litShader.needsSceneColor) {
-                decl.append('uniform sampler2D uSceneColorMap;');
-            }
-            if (litShader.needsScreenSize) {
-                decl.append('uniform vec4 uScreenSize;');
-            }
-            if (litShader.needsTransforms) {
-                decl.append('uniform mat4 matrix_viewProjection;');
-                decl.append('uniform mat4 matrix_model;');
-            }
-
-            // support for diffuse & ao detail modes
-            if (options.diffuseDetail || options.aoDetail) {
-                code.append(litShader.chunks.detailModesPS);
-            }
-
-            // albedo
-            decl.append('vec3 dAlbedo;');
+            // diffuse
             if (options.diffuseDetail) {
-                code.append(this._addMap(fDefines, 'diffuseDetail', 'diffuseDetailMapPS', options, litShader.chunks, textureMapping, options.diffuseDetailEncoding));
+                this._addMap(fDefines, 'diffuseDetail', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseDetailEncoding);
             }
-            code.append(this._addMap(fDefines, 'diffuse', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseEncoding));
-            func.append('getAlbedo();');
-            args.append('litArgs_albedo = dAlbedo;');
+            this._addMap(fDefines, 'diffuse', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseEncoding);
+
 
             if (options.litOptions.useRefraction) {
                 decl.append('float dTransmission;');
@@ -486,13 +601,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
             // clearcoat
             if (options.litOptions.useClearCoat) {
-                decl.append('float ccSpecularity;');
-                decl.append('float ccGlossiness;');
-                decl.append('vec3 ccNormalW;');
-
                 code.append(this._addMap(fDefines, 'clearCoat', 'clearCoatPS', options, litShader.chunks, textureMapping));
                 code.append(this._addMap(fDefines, 'clearCoatGloss', 'clearCoatGlossPS', options, litShader.chunks, textureMapping));
-                code.append(this._addMap(fDefines, 'clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping));
+                code.append(this._addMap(fDefines, 'clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping, options.clearCoatPackedNormal ? 'xy' : 'xyz'));
 
                 func.append('getClearCoat();');
                 func.append('getClearCoatGlossiness();');
@@ -523,22 +634,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             // all other passes require only opacity
             const opacityShadowDither = options.litOptions.opacityShadowDither;
             if (options.litOptions.alphaTest || opacityShadowDither) {
-                decl.append('float dAlpha;');
-                code.append(this._addMap(fDefines, 'opacity', 'opacityPS', options, litShader.chunks, textureMapping));
-                func.append('getOpacity();');
-                args.append('litArgs_opacity = dAlpha;');
-                if (options.litOptions.alphaTest) {
-                    code.append(litShader.chunks.alphaTestPS);
-                    func.append('alphaTest(dAlpha);');
-                }
-                if (opacityShadowDither !== DITHER_NONE) {
-                    if (opacityShadowDither === DITHER_BAYER8) {
-                        decl.append(litShader.chunks.bayerPS);
-                    }
-                    decl.append(`#define DITHER_${opacityShadowDither.toUpperCase()}\n`);
-                    decl.append(litShader.chunks.opacityDitherPS);
-                    func.append('opacityDither(dAlpha, 0.0);');
-                }
+                this._addMap(fDefines, 'opacity', 'opacityPS', options, litShader.chunks, textureMapping);
             }
         }
 
@@ -550,13 +646,23 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
         `);
 
+        const handled = [
+            'texture_heightMap',
+            'texture_diffuseMap',
+            'texture_diffuseDetailMap',
+            'texture_opacityMap',
+            'texture_normalDetailMap',
+            'texture_normalMap'
+        ];
+
+        // TODO: when refactoring is done, this loop will be removed
         for (const texture in textureMapping) {
+            if (handled.includes(textureMapping[texture])) {
+                continue;
+            }
+
             decl.append(`uniform sampler2D ${textureMapping[texture]};`);
         }
-
-        // decl.append('//-------- frontend decl begin', decl.code, '//-------- frontend decl end');
-        // code.append('//-------- frontend code begin', code.code, '//-------- frontend code end');
-        // func.append('//-------- frontend func begin\n${func}//-------- frontend func end\n`;
 
         litShader.generateFragmentShader(decl.code, code.code, lightingUv);
 

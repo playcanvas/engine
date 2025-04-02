@@ -25,7 +25,6 @@
 import decodePS from './common/frag/decode.js';
 // import detailModesPS from './standard/frag/detailModes.js';
 // import diffusePS from './standard/frag/diffuse.js';
-// import diffuseDetailMapPS from './standard/frag/diffuseDetailMap.js';
 // import emissivePS from './standard/frag/emissive.js';
 import encodePS from './common/frag/encode.js';
 // import endPS from './lit/frag/end.js';
@@ -94,10 +93,7 @@ import morphVS from './internal/morph/vert/morph.js';
 // import msdfVS from './common/vert/msdf.js';
 // import normalVS from './lit/vert/normal.js';
 // import normalCoreVS from './common/vert/normalCore.js';
-// import normalDetailMapPS from './standard/frag/normalDetailMap.js';
 // import normalMapPS from './standard/frag/normalMap.js';
-// import normalXYPS from './standard/frag/normalXY.js';
-// import normalXYZPS from './standard/frag/normalXYZ.js';
 // import opacityPS from './standard/frag/opacity.js';
 // import opacityDitherPS from './standard/frag/opacity-dither.js';
 // import outputPS from './lit/frag/output.js';
@@ -235,7 +231,6 @@ const shaderChunksWGSL = {
     // debugProcessFrontendPS,
     // detailModesPS,
     // diffusePS,
-    // diffuseDetailMapPS,
     decodePS,
     // emissivePS,
     encodePS,
@@ -307,10 +302,7 @@ const shaderChunksWGSL = {
     // msdfVS,
     // normalVS,
     // normalCoreVS,
-    // normalDetailMapPS,
     // normalMapPS,
-    // normalXYPS,
-    // normalXYZPS,
     // opacityPS,
     // opacityDitherPS,
     // outputPS,
