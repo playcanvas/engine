@@ -543,10 +543,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
 
 
-
-
-
-
             if (options.litOptions.useIridescence) {
                 decl.append('float dIridescence;');
                 code.append(this._addMap(fDefines, 'iridescence', 'iridescencePS', options, litShader.chunks, textureMapping));
