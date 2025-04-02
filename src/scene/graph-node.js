@@ -121,7 +121,7 @@ class GraphNode extends EventHandler {
 
     /**
      * Interface for tagging graph nodes. Tag based searches can be performed using the
-     * {@link GraphNode#findByTag} function.
+     * {@link findByTag} function.
      *
      * @type {Tags}
      */
@@ -700,8 +700,8 @@ class GraphNode extends EventHandler {
      * Get the first node found in the graph by its full path in the graph. The full path has this
      * form 'parent/child/sub-child'. The search is depth first.
      *
-     * @param {string|string[]} path - The full path of the {@link GraphNode} as either a string or
-     * array of {@link GraphNode} names.
+     * @param {string|string[]} path - The full path of the GraphNode as either a string or array
+     * of GraphNode names.
      * @returns {GraphNode|null} The first node to be found matching the supplied path. Returns
      * null if no node is found.
      * @example
@@ -785,10 +785,11 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Get the world space rotation for the specified GraphNode in Euler angle form. The rotation
-     * is returned as euler angles in a {@link Vec3}. The value returned by this function should be
-     * considered read-only. In order to set the world space rotation of the graph node, use
-     * {@link GraphNode#setEulerAngles}.
+     * Get the world space rotation for the specified GraphNode in Euler angles. The angles are in
+     * degrees and in XYZ order.
+     *
+     * Important: The value returned by this function should be considered read-only. In order to
+     * set the world space rotation of the graph node, use {@link setEulerAngles}.
      *
      * @returns {Vec3} The world space rotation of the graph node in Euler angle form.
      * @example
@@ -802,11 +803,13 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Get the rotation in local space for the specified GraphNode. The rotation is returned as
-     * euler angles in a {@link Vec3}. The returned vector should be considered read-only. To
-     * update the local rotation, use {@link GraphNode#setLocalEulerAngles}.
+     * Get the local space rotation for the specified GraphNode in Euler angles. The angles are in
+     * degrees and in XYZ order.
      *
-     * @returns {Vec3} The local space rotation of the graph node as euler angles in XYZ order.
+     * Important: The value returned by this function should be considered read-only. In order to
+     * set the local space rotation of the graph node, use {@link setLocalEulerAngles}.
+     *
+     * @returns {Vec3} The local space rotation of the graph node as Euler angles in XYZ order.
      * @example
      * const angles = this.entity.getLocalEulerAngles();
      * angles.y = 180;
@@ -820,7 +823,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the position in local space for the specified GraphNode. The position is returned as a
      * {@link Vec3}. The returned vector should be considered read-only. To update the local
-     * position, use {@link GraphNode#setLocalPosition}.
+     * position, use {@link setLocalPosition}.
      *
      * @returns {Vec3} The local space position of the graph node.
      * @example
@@ -835,7 +838,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the rotation in local space for the specified GraphNode. The rotation is returned as a
      * {@link Quat}. The returned quaternion should be considered read-only. To update the local
-     * rotation, use {@link GraphNode#setLocalRotation}.
+     * rotation, use {@link setLocalRotation}.
      *
      * @returns {Quat} The local space rotation of the graph node as a quaternion.
      * @example
@@ -848,7 +851,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the scale in local space for the specified GraphNode. The scale is returned as a
      * {@link Vec3}. The returned vector should be considered read-only. To update the local scale,
-     * use {@link GraphNode#setLocalScale}.
+     * use {@link setLocalScale}.
      *
      * @returns {Vec3} The local space scale of the graph node.
      * @example
@@ -879,7 +882,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the world space position for the specified GraphNode. The position is returned as a
      * {@link Vec3}. The value returned by this function should be considered read-only. In order
-     * to set the world space position of the graph node, use {@link GraphNode#setPosition}.
+     * to set the world space position of the graph node, use {@link setPosition}.
      *
      * @returns {Vec3} The world space position of the graph node.
      * @example
@@ -895,7 +898,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the world space rotation for the specified GraphNode. The rotation is returned as a
      * {@link Quat}. The value returned by this function should be considered read-only. In order
-     * to set the world space rotation of the graph node, use {@link GraphNode#setRotation}.
+     * to set the world space rotation of the graph node, use {@link setRotation}.
      *
      * @returns {Quat} The world space rotation of the graph node as a quaternion.
      * @example
@@ -987,7 +990,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Sets the local space rotation of the specified graph node using euler angles. Eulers are
+     * Sets the local space rotation of the specified graph node using Euler angles. Eulers are
      * interpreted in XYZ order. Eulers must be specified in degrees. This function has two valid
      * signatures: you can either pass a 3D vector or 3 numbers to specify the local space euler
      * rotation.
@@ -1244,7 +1247,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Sets the world space rotation of the specified graph node using euler angles. Eulers are
+     * Sets the world space rotation of the specified graph node using Euler angles. Eulers are
      * interpreted in XYZ order. Eulers must be specified in degrees. This function has two valid
      * signatures: you can either pass a 3D vector or 3 numbers to specify the world space euler
      * rotation.
@@ -1301,7 +1304,6 @@ class GraphNode extends EventHandler {
      * @ignore
      */
     addChildAndSaveTransform(node) {
-
         const wPos = node.getPosition();
         const wRot = node.getRotation();
 
@@ -1326,7 +1328,6 @@ class GraphNode extends EventHandler {
      * this.entity.insertChild(e, 1);
      */
     insertChild(node, index) {
-
         this._prepareInsertChild(node);
         this._children.splice(index, 0, node);
         this._onInsertChild(node);
@@ -1339,7 +1340,6 @@ class GraphNode extends EventHandler {
      * @private
      */
     _prepareInsertChild(node) {
-
         // remove it from the existing parent
         node.remove();
 
