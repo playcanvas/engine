@@ -994,6 +994,7 @@ class CameraComponent extends Component {
         }
 
         this.camera._enableRenderPassColorGrab(this.system.app.graphicsDevice, this.renderSceneColorMap);
+        this.system.app.scene.layers.markDirty();
     }
 
     /**
@@ -1012,6 +1013,7 @@ class CameraComponent extends Component {
         }
 
         this.camera._enableRenderPassDepthGrab(this.system.app.graphicsDevice, this.system.app.renderer, this.renderSceneDepthMap);
+        this.system.app.scene.layers.markDirty();
     }
 
     dirtyLayerCompositionCameras() {
