@@ -35,6 +35,10 @@ struct SplatCorner {
 #if GSPLAT_COMPRESSED_DATA == true
     #include "gsplatCompressedDataVS"
     #include "gsplatCompressedSHVS"
+#elif GSPLAT_SOGS_DATA == true
+    #include "gsplatSogsDataVS"
+    #include "gsplatSogsColorVS"
+    #include "gsplatSogsSHVS"
 #else
     #include "gsplatDataVS"
     #include "gsplatColorVS"
