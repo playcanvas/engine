@@ -68,10 +68,10 @@ const releaseTempArray = (a) => {
 
 /**
  * The Entity is a core primitive of a PlayCanvas application. Generally speaking, any object in
- * your application will be represented by an {@link Entity}, along with a set of
- * {@link Component}s. Each component enables a particular capability. For example, the
- * {@link RenderComponent} enables an entity to render a 3D model, and the {@link ScriptComponent}
- * enables an entity to run code that implements custom behavior.
+ * your application will be represented by an Entity, along with a set of {@link Component}s. Each
+ * component enables a particular capability. For example, the {@link RenderComponent} enables an
+ * entity to render a 3D model, and the {@link ScriptComponent} enables an entity to run code that
+ * implements custom behavior.
  *
  * Entity is a subclass of {@link GraphNode} which allows entities to form a tree-like hierarchy
  * (based on parent/child relationships). The root of the entity hierarchy can be queried with
