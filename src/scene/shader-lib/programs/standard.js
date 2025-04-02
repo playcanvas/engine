@@ -360,6 +360,11 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 vec3 dAlbedo;
                 vec3 dNormalW;
 
+                #ifdef LIT_REFRACTION
+                    float dTransmission;
+                    float dThickness;
+                #endif
+
                 #ifdef LIT_SCENE_COLOR
                     uniform sampler2D uSceneColorMap;
                 #endif
@@ -403,6 +408,14 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     uniform sampler2D texture_normalDetailMap;
                 #endif
 
+                // refraction
+                #ifdef STD_THICKNESS_TEXTURE_ALLOCATE
+                    uniform sampler2D texture_thicknessMap;
+                #endif
+                #ifdef STD_REFRACTION_TEXTURE_ALLOCATE
+                    uniform sampler2D texture_refractionMap;
+                #endif
+
                 #ifdef LIT_CLEARCOAT
                     float ccSpecularity;
                     float ccGlossiness;
@@ -434,6 +447,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 // normal
                 #ifdef LIT_NEEDS_NORMAL
                     #include "normalMapPS"
+                #endif
+
+                // refraction
+                #ifdef LIT_REFRACTION
+                    #include "transmissionPS"
+                    #include "thicknessPS"
                 #endif
             #endif
         `);
@@ -472,6 +491,18 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     litArgs_worldNormal = dNormalW;
                 #endif
 
+                // refraction
+                #ifdef LIT_REFRACTION
+                    getRefraction();
+                    litArgs_transmission = dTransmission;
+
+                    getThickness();
+                    litArgs_thickness = dThickness;
+
+                    #ifdef LIT_DISPERSION
+                        litArgs_dispersion = material_dispersion;
+                    #endif
+                #endif
             #endif
         `);
 
@@ -506,22 +537,15 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
             this._addMap(fDefines, 'diffuse', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseEncoding);
 
-
             if (options.litOptions.useRefraction) {
-                decl.append('float dTransmission;');
-                code.append(this._addMap(fDefines, 'refraction', 'transmissionPS', options, litShader.chunks, textureMapping));
-                func.append('getRefraction();');
-                args.append('litArgs_transmission = dTransmission;');
-
-                decl.append('float dThickness;');
-                code.append(this._addMap(fDefines, 'thickness', 'thicknessPS', options, litShader.chunks, textureMapping));
-                func.append('getThickness();');
-                args.append('litArgs_thickness = dThickness;');
-
-                if (options.litOptions.dispersion) {
-                    args.append('litArgs_dispersion = material_dispersion;');
-                }
+                this._addMap(fDefines, 'refraction', 'transmissionPS', options, litShader.chunks, textureMapping);
+                this._addMap(fDefines, 'thickness', 'thicknessPS', options, litShader.chunks, textureMapping);
             }
+
+
+
+
+
 
             if (options.litOptions.useIridescence) {
                 decl.append('float dIridescence;');
@@ -652,7 +676,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             'texture_diffuseDetailMap',
             'texture_opacityMap',
             'texture_normalDetailMap',
-            'texture_normalMap'
+            'texture_normalMap',
+            'texture_thicknessMap',
+            'texture_refractionMap'
         ];
 
         // TODO: when refactoring is done, this loop will be removed
