@@ -13,7 +13,8 @@ import {
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 
 /**
- * The Anim Component allows an Entity to playback animations on models and entity properties.
+ * The AnimComponent allows an {@link Entity} to playback animations on models and entity
+ * properties.
  *
  * @hideconstructor
  * @category Animation
@@ -527,7 +528,7 @@ class AnimComponent extends Component {
     }
 
     /**
-     * Finds a {@link AnimComponentLayer} in this component.
+     * Finds an {@link AnimComponentLayer} in this component.
      *
      * @param {string} name - The name of the anim component layer to find.
      * @returns {AnimComponentLayer} Layer.
@@ -576,9 +577,9 @@ class AnimComponent extends Component {
 
     /**
      * Associates an animation with a state or blend tree node in the loaded state graph. If all
-     * states are linked and the {@link AnimComponent#activate} value was set to true then the
-     * component will begin playing. If no state graph is loaded, a default state graph will be
-     * created with a single state based on the provided nodePath parameter.
+     * states are linked and the {@link activate} value was set to true then the component will
+     * begin playing. If no state graph is loaded, a default state graph will be created with a
+     * single state based on the provided nodePath parameter.
      *
      * @param {string} nodePath - Either the state name or the path to a blend tree node that this
      * animation should be associated with. Each section of a blend tree path is split using a
