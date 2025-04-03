@@ -498,6 +498,18 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     uniform sampler2D texture_emissiveMap;
                 #endif
 
+                // clearcoat
+                #ifdef LIT_CLEARCOAT
+                    #ifdef STD_CLEARCOAT_TEXTURE_ALLOCATE
+                        uniform sampler2D texture_clearCoatMap;
+                    #endif
+                    #ifdef STD_CLEARCOATGLOSS_TEXTURE_ALLOCATE
+                        uniform sampler2D texture_clearCoatGlossMap;
+                    #endif
+                    #ifdef STD_CLEARCOATNORMAL_TEXTURE_ALLOCATE
+                        uniform sampler2D texture_clearCoatNormalMap;
+                    #endif
+                #endif
             #endif
         `);
 
@@ -579,6 +591,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 // emission
                 #include "emissivePS"
 
+                // clearcoat
+                #ifdef LIT_CLEARCOAT
+                    #include "clearCoatPS"
+                    #include "clearCoatGlossPS"
+                    #include "clearCoatNormalPS"
+                #endif
             #endif
         `);
 
@@ -679,6 +697,15 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 getEmission();
                 litArgs_emission = dEmission;
 
+                // clearcoat
+                #ifdef LIT_CLEARCOAT
+                    getClearCoat();
+                    getClearCoatGlossiness();
+                    getClearCoatNormal();
+                    litArgs_clearcoat_specularity = ccSpecularity;
+                    litArgs_clearcoat_gloss = ccGlossiness;
+                    litArgs_clearcoat_worldNormal = ccNormalW;
+                #endif
             #endif
         `);
 
@@ -759,24 +786,16 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             // emission
             this._addMap(fDefines, 'emissive', 'emissivePS', options, litShader.chunks, textureMapping, options.emissiveEncoding);
 
+            // clearcoat
+            if (options.litOptions.useClearCoat) {
+                this._addMap(fDefines, 'clearCoat', 'clearCoatPS', options, litShader.chunks, textureMapping);
+                this._addMap(fDefines, 'clearCoatGloss', 'clearCoatGlossPS', options, litShader.chunks, textureMapping);
+                this._addMap(fDefines, 'clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping, options.clearCoatPackedNormal ? 'xy' : 'xyz');
+            }
+
 
             // STILL TO DO -------------
 
-
-            // clearcoat
-            if (options.litOptions.useClearCoat) {
-                code.append(this._addMap(fDefines, 'clearCoat', 'clearCoatPS', options, litShader.chunks, textureMapping));
-                code.append(this._addMap(fDefines, 'clearCoatGloss', 'clearCoatGlossPS', options, litShader.chunks, textureMapping));
-                code.append(this._addMap(fDefines, 'clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping, options.clearCoatPackedNormal ? 'xy' : 'xyz'));
-
-                func.append('getClearCoat();');
-                func.append('getClearCoatGlossiness();');
-                func.append('getClearCoatNormal();');
-
-                args.append('litArgs_clearcoat_specularity = ccSpecularity;');
-                args.append('litArgs_clearcoat_gloss = ccGlossiness;');
-                args.append('litArgs_clearcoat_worldNormal = ccNormalW;');
-            }
 
             // lightmap
             if (options.lightMap || options.lightVertexColor) {
@@ -829,7 +848,10 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             'texture_glossMap',
             'texture_aoMap',
             'texture_aoDetailMap',
-            'texture_emissiveMap'
+            'texture_emissiveMap',
+            'texture_clearCoatMap',
+            'texture_clearCoatGlossMap',
+            'texture_clearCoatNormalMap'
         ];
 
         // TODO: when refactoring is done, this loop will be removed
