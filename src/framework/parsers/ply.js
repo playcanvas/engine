@@ -591,7 +591,7 @@ class PlyParser {
      */
     async load(url, callback, asset) {
         try {
-            const response = await fetch(url.load);
+            const response = await (asset.file?.contents ?? fetch(url.load));
             if (!response || !response.body) {
                 callback('Error loading resource', null);
             } else {
