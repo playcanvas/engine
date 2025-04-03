@@ -1,5 +1,7 @@
 export default /* glsl */`
-    #include "envMultiplyPS"
+    #define LIT_SKYBOX_INTENSITY
+
+    #include "envProcPS"
     #include "gammaPS"
     #include "tonemappingPS"
 
@@ -43,14 +45,14 @@ export default /* glsl */`
             #endif
 
             dir.x *= -1.0;
-            vec3 linear = __INJECT_SKYBOX_DECODE_FNC(textureCube(texture_cubeMap, dir));
+            vec3 linear = {SKYBOX_DECODE_FNC}(textureCube(texture_cubeMap, dir));
 
         #else // env-atlas
 
             vec3 dir = vViewDir * vec3(-1.0, 1.0, 1.0);
             vec2 uv = toSphericalUv(normalize(dir));
 
-            vec3 linear = __INJECT_SKYBOX_DECODE_FNC(texture2D(texture_envAtlas, mapRoughnessUv(uv, mipLevel)));
+            vec3 linear = {SKYBOX_DECODE_FNC}(texture2D(texture_envAtlas, mapRoughnessUv(uv, mipLevel)));
 
         #endif
 

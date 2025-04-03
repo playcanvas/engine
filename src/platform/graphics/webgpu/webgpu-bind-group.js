@@ -29,7 +29,7 @@ class WebgpuBindGroup {
 
         this.bindGroup = device.wgpu.createBindGroup(desc);
 
-        WebgpuDebug.end(device, {
+        WebgpuDebug.end(device, 'BindGroup creation', {
             debugFormat: this.debugFormat,
             desc: desc,
             format: bindGroup.format,

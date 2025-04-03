@@ -132,12 +132,13 @@ class GSplatInstance {
         this.meshInstance.instancingCount = 0;
 
         // clone centers to allow multiple instances of sorter
-        this.centers = new Float32Array(splat.centers);
+        const centers = splat.centers.slice();
+        const chunks = splat.chunks?.slice();
 
         // create sorter
         if (!options.dither || options.dither === DITHER_NONE) {
             this.sorter = new GSplatSorter();
-            this.sorter.init(this.orderTexture, this.centers);
+            this.sorter.init(this.orderTexture, centers, chunks);
             this.sorter.on('updated', (count) => {
                 // limit splat render count to exclude those behind the camera
                 this.meshInstance.instancingCount = Math.ceil(count / splatInstanceSize);
@@ -166,19 +167,18 @@ class GSplatInstance {
         }
     }
 
-    updateViewport() {
-        // TODO: improve, needs to handle render targets of different sizes
-        const device = this.splat.device;
-        viewport[0] = device.width;
-        viewport[1] = device.height;
+    updateViewport(cameraNode) {
+        const camera = cameraNode?.camera;
+        const renderTarget = camera?.renderTarget;
+        const { width, height } = renderTarget ?? this.splat.device;
+
+        viewport[0] = width;
+        viewport[1] = height;
 
         // adjust viewport for stereoscopic VR sessions
-        if (this.cameras.length > 0) {
-            const camera = this.cameras[0];
-            const xr = camera.xr;
-            if (xr && xr.active && xr.views.list.length === 2) {
-                viewport[0] /= 2;
-            }
+        const xr = camera?.xr;
+        if (xr?.active && xr.views.list.length === 2) {
+            viewport[0] *= 0.5;
         }
 
         this.material.setParameter('viewport', viewport);
@@ -207,7 +207,7 @@ class GSplatInstance {
             }
         }
 
-        this.updateViewport();
+        this.updateViewport(cameraNode);
     }
 
     update() {

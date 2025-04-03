@@ -5,7 +5,7 @@ import { FloatPacking } from '../core/math/float-packing.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
 import {
     TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
-    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16U,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16U,
     isIntegerPixelFormat
 } from '../platform/graphics/constants.js';
 import { Texture } from '../platform/graphics/texture.js';
@@ -47,15 +47,13 @@ class Morph extends RefCountedObject {
 
         Debug.assert(graphicsDevice, 'Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.');
         this.device = graphicsDevice;
+        const device = graphicsDevice;
 
         this.preferHighPrecision = preferHighPrecision;
 
         // validation
         Debug.assert(targets.every(target => !target.used), 'A specified target has already been used to create a Morph, use its clone instead.');
         this._targets = targets.slice();
-
-        // default to texture based morphing if available
-        const device = this.device;
 
         // renderable format
         const renderableHalf = device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : undefined;
@@ -68,7 +66,7 @@ class Morph extends RefCountedObject {
         this.intRenderFormat = isIntegerPixelFormat(this._renderTextureFormat);
 
         // source texture format - both are always supported
-        this._textureFormat = this.preferHighPrecision ? PIXELFORMAT_RGB32F : PIXELFORMAT_RGBA16F;
+        this._textureFormat = this.preferHighPrecision ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
 
         this._init();
         this._updateMorphFlags();
@@ -183,11 +181,9 @@ class Morph extends RefCountedObject {
 
         // texture format based vars
         let halfFloat = false;
-        let numComponents = 3;  // RGB32 is used
         const float2Half = FloatPacking.float2Half;
         if (this._textureFormat === PIXELFORMAT_RGBA16F) {
             halfFloat = true;
-            numComponents = 4;  // RGBA16 is used, RGB16 does not work
         }
 
         // create textures
@@ -207,7 +203,7 @@ class Morph extends RefCountedObject {
 
                 for (let v = 0; v < usedDataIndices.length; v++) {
                     const index = usedDataIndices[v] * 3;
-                    const dstIndex = v * numComponents + numComponents;
+                    const dstIndex = v * 4 + 4;
                     textureData[dstIndex] = float2Half(data[index]);
                     textureData[dstIndex + 1] = float2Half(data[index + 1]);
                     textureData[dstIndex + 2] = float2Half(data[index + 2]);
@@ -217,7 +213,7 @@ class Morph extends RefCountedObject {
 
                 for (let v = 0; v < usedDataIndices.length; v++) {
                     const index = usedDataIndices[v] * 3;
-                    const dstIndex = v * numComponents + numComponents;
+                    const dstIndex = v * 4 + 4;
                     textureData[dstIndex] = data[index];
                     textureData[dstIndex + 1] = data[index + 1];
                     textureData[dstIndex + 2] = data[index + 2];

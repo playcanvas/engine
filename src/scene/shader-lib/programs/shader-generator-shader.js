@@ -1,6 +1,7 @@
 import { hashCode } from '../../../core/hash.js';
 import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
+import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
 
@@ -49,51 +50,36 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         const desc = options.shaderDesc;
 
-        if (definitionOptions.shaderLanguage === SHADERLANGUAGE_WGSL) {
+        const includes = new Map(sharedIncludes);
+        const defines = new Map(options.defines);
 
-            // TODO: WGSL doesn't have preprocessor connected at the moment, so we just directly use
-            // the provided code. This will be fixed in the future.
-            definitionOptions.vertexCode = desc.vertexCode;
+        includes.set('userCode', desc.vertexCode);
+        includes.set('transformInstancingVS', ''); // no default instancing, needs to be implemented in the user shader
 
-        } else {
-            const includes = new Map(sharedIncludes);
-            const defines = new Map(options.defines);
-
-            includes.set('transformInstancingVS', ''); // no default instancing, needs to be implemented in the user shader
-
-            if (options.skin) defines.set('SKIN', true);
-            if (options.useInstancing) defines.set('INSTANCING', true);
-            if (options.useMorphPosition || options.useMorphNormal) {
-                defines.set('MORPHING', true);
-                if (options.useMorphTextureBasedInt) defines.set('MORPHING_INT', true);
-                if (options.useMorphPosition) defines.set('MORPHING_POSITION', true);
-                if (options.useMorphNormal) defines.set('MORPHING_NORMAL', true);
-            }
-
-            definitionOptions.vertexCode = desc.vertexCode;
-            definitionOptions.vertexIncludes = includes;
-            definitionOptions.vertexDefines = defines;
+        if (options.skin) defines.set('SKIN', true);
+        if (options.useInstancing) defines.set('INSTANCING', true);
+        if (options.useMorphPosition || options.useMorphNormal) {
+            defines.set('MORPHING', true);
+            if (options.useMorphTextureBasedInt) defines.set('MORPHING_INT', true);
+            if (options.useMorphPosition) defines.set('MORPHING_POSITION', true);
+            if (options.useMorphNormal) defines.set('MORPHING_NORMAL', true);
         }
+
+        definitionOptions.vertexCode = desc.vertexCode;
+        definitionOptions.vertexIncludes = includes;
+        definitionOptions.vertexDefines = defines;
     }
 
     createFragmentDefinition(definitionOptions, options, sharedIncludes) {
 
         const desc = options.shaderDesc;
 
-        if (definitionOptions.shaderLanguage === SHADERLANGUAGE_WGSL) {
+        const includes = new Map(sharedIncludes);
+        const defines = new Map(options.defines);
 
-            // TODO: WGSL doesn't have preprocessor connected at the moment, so we just directly use
-            // the provided code. This will be fixed in the future.
-            definitionOptions.fragmentCode = desc.fragmentCode;
-
-        } else {
-            const includes = new Map(sharedIncludes);
-            const defines = new Map(options.defines);
-
-            definitionOptions.fragmentCode = desc.fragmentCode;
-            definitionOptions.fragmentIncludes = includes;
-            definitionOptions.fragmentDefines = defines;
-        }
+        definitionOptions.fragmentCode = desc.fragmentCode;
+        definitionOptions.fragmentIncludes = includes;
+        definitionOptions.fragmentDefines = defines;
     }
 
     createShaderDefinition(device, options) {
@@ -108,8 +94,9 @@ class ShaderGeneratorShader extends ShaderGenerator {
             meshBindGroupFormat: desc.meshBindGroupFormat
         };
 
+        const chunks = desc.shaderLanguage === SHADERLANGUAGE_WGSL ? shaderChunksWGSL : shaderChunks;
         const sharedIncludes = new Map(Object.entries({
-            ...shaderChunks,  // default chunks
+            ...chunks,  // default chunks
             ...options.chunks // material override chunks
         }));
 

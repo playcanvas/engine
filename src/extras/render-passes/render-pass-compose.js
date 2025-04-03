@@ -13,7 +13,6 @@ import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from
 const fragmentShader = /* glsl */ `
 
     #include "tonemappingPS"
-    #include "decodePS"
     #include "gammaPS"
 
     varying vec2 uv0;
@@ -201,7 +200,7 @@ const fragmentShader = /* glsl */ `
 
         #ifdef DOF
             vec2 coc;
-            vec3 blur = dofBlur(uv, coc);
+            vec3 blur = dofBlur(uv0, coc);
             result = mix(result, blur, coc.r + coc.g);
         #endif
 

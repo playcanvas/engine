@@ -178,18 +178,12 @@ assetListLoader.load(() => {
             cameraFrame.rendering.toneMapping = value;
             cameraFrame.update();
         }
-
-        if (path === 'data.uiTonemapping') {
-            // camera tone mapping is applied to the UI
-            cameraEntity.camera.toneMapping = value;
-        }
     });
 
     // set initial values
     data.set('data', {
         hdr: true,
-        sceneTonemapping: pc.TONEMAP_ACES,
-        uiTonemapping: pc.TONEMAP_NONE
+        sceneTonemapping: pc.TONEMAP_ACES
     });
 });
 

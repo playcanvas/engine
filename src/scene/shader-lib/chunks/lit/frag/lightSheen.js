@@ -1,6 +1,7 @@
 export default /* glsl */`
 
 float sheenD(vec3 normal, vec3 h, float roughness) {
+    const float PI = 3.141592653589793;
     float invR = 1.0 / (roughness * roughness);
     float cos2h = max(dot(normal, h), 0.0);
     cos2h *= cos2h;

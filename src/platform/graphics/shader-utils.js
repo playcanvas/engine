@@ -10,7 +10,10 @@ import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
 import webgpuVS from './shader-chunks/vert/webgpu.js';
-import sharedFS from './shader-chunks/frag/shared.js';
+import wgslFS from './shader-chunks/frag/webgpu-wgsl.js';
+import wgslVS from './shader-chunks/vert/webgpu-wgsl.js';
+import sharedGLSL from './shader-chunks/frag/shared.js';
+import sharedWGSL from './shader-chunks/frag/shared-wgsl.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -107,31 +110,46 @@ class ShaderUtils {
         let vertCode;
         let fragCode;
 
-        if (options.shaderLanguage === SHADERLANGUAGE_WGSL) {
+        const vertexDefinesCode = ShaderUtils.getDefinesCode(device, options.vertexDefines);
+        const fragmentDefinesCode = ShaderUtils.getDefinesCode(device, options.fragmentDefines);
+        const wgsl = options.shaderLanguage === SHADERLANGUAGE_WGSL;
 
-            vertCode = options.vertexCode;
-            fragCode = options.fragmentCode;
+        if (wgsl) {
+
+            vertCode = `
+                ${wgslVS}
+                ${sharedWGSL}
+                ${vertexDefinesCode}
+                ${options.vertexCode}
+            `;
+
+            fragCode = `
+                ${wgslFS}
+                ${sharedWGSL}
+                ${fragmentDefinesCode}
+                ${options.fragmentCode}
+            `;
 
         } else {
 
             // vertex code
             vertCode = `${ShaderUtils.versionCode(device) +
                 getDefines(webgpuVS, gles3VS, true, options) +
-                ShaderUtils.getDefinesCode(options.vertexDefines) +
-                ShaderUtils.precisionCode(device)}\n${
-                sharedFS
-            }${ShaderUtils.getShaderNameCode(name)
-            }${options.vertexCode}`;
+                vertexDefinesCode +
+                ShaderUtils.precisionCode(device)}
+                ${sharedGLSL}
+                ${ShaderUtils.getShaderNameCode(name)}
+                ${options.vertexCode}`;
 
             // fragment code
             fragCode = `${(options.fragmentPreamble || '') +
                 ShaderUtils.versionCode(device) +
                 getDefines(webgpuFS, gles3FS, false, options) +
-                ShaderUtils.getDefinesCode(options.fragmentDefines) +
-                ShaderUtils.precisionCode(device)}\n${
-                sharedFS
-            }${ShaderUtils.getShaderNameCode(name)
-            }${options.fragmentCode || ShaderUtils.dummyFragmentCode()}`;
+                fragmentDefinesCode +
+                ShaderUtils.precisionCode(device)}
+                ${sharedGLSL}
+                ${ShaderUtils.getShaderNameCode(name)}
+                ${options.fragmentCode || ShaderUtils.dummyFragmentCode()}`;
         }
 
         return {
@@ -149,15 +167,24 @@ class ShaderUtils {
     }
 
     /**
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {Map<string, string>} [defines] - A map containing key-value pairs.
      * @returns {string} The shader code for the defines.
      * @private
      */
-    static getDefinesCode(defines) {
+    static getDefinesCode(device, defines) {
         let code = '';
+
+        device.capsDefines.forEach((value, key) => {
+            code += `#define ${key} ${value}\n`;
+        });
+        code += '\n';
+
         defines?.forEach((value, key) => {
             code += `#define ${key} ${value}\n`;
         });
+        code += '\n';
+
         return code;
     }
 

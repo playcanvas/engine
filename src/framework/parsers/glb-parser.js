@@ -1790,7 +1790,8 @@ const createNodes = (gltf, options, nodeInstancingMap) => {
         }
         const node = process(gltfNode, index, nodeInstancingMap);
         if (postprocess) {
-            postprocess(gltfNode, node);
+            // magnopus patched - pass gltf node index as a unique id
+            postprocess(gltfNode, node, index);
         }
         return node;
     });

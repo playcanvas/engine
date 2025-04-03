@@ -172,6 +172,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // WGSL features
         const wgslFeatures = navigator.gpu.wgslLanguageFeatures;
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
+
+        this.initCapsDefines();
     }
 
     async initWebGpu(glslangUrl, twgslUrl) {
@@ -425,8 +427,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // assign current frame's render texture
         wrt.assignColorTexture(this, outColorBuffer);
 
-        WebgpuDebug.end(this);
-        WebgpuDebug.end(this);
+        WebgpuDebug.end(this, 'frameStart');
+        WebgpuDebug.end(this, 'frameStart');
     }
 
     frameEnd() {
@@ -552,7 +554,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // vertex buffers
             const vb0 = this.vertexBuffers[0];
             const vb1 = this.vertexBuffers[1];
-            this.vertexBuffers.length = 0;
 
             if (vb0) {
                 const vbSlot = this.submitVertexBuffer(vb0, 0);
@@ -561,6 +562,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                     this.submitVertexBuffer(vb1, vbSlot);
                 }
             }
+
+            Debug.call(() => this.validateAttributes(this.shader, vb0?.format, vb1?.format));
 
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
@@ -576,14 +579,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // draw
             const ib = this.indexBuffer;
             if (ib) {
-                this.indexBuffer = null;
                 passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
                 passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, 0, 0);
             } else {
                 passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
             }
 
-            WebgpuDebug.end(this, {
+            WebgpuDebug.end(this, 'Drawing', {
                 vb0,
                 vb1,
                 ib,
@@ -592,6 +594,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 pipeline
             });
         }
+
+        this.vertexBuffers.length = 0;
+        this.indexBuffer = null;
     }
 
     setShader(shader, asyncCompile = false) {
@@ -783,8 +788,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
         }
 
-        WebgpuDebug.end(this, { renderPass });
-        WebgpuDebug.end(this, { renderPass });
+        WebgpuDebug.end(this, 'RenderPass', { renderPass });
+        WebgpuDebug.end(this, 'RenderPass', { renderPass });
     }
 
     startComputePass(name) {
@@ -817,8 +822,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // each render pass can use different number of bind groups
         this.bindGroupFormats.length = 0;
 
-        WebgpuDebug.end(this);
-        WebgpuDebug.end(this);
+        WebgpuDebug.end(this, 'ComputePass');
+        WebgpuDebug.end(this, 'ComputePass');
     }
 
     computeDispatch(computes, name = 'Unnamed') {

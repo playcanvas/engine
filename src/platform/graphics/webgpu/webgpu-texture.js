@@ -120,7 +120,7 @@ class WebgpuTexture {
         this.gpuTexture = wgpu.createTexture(this.desc);
         DebugHelper.setLabel(this.gpuTexture, `${texture.name}${texture.cubemap ? '[cubemap]' : ''}${texture.volume ? '[3d]' : ''}`);
 
-        WebgpuDebug.end(device, {
+        WebgpuDebug.end(device, 'Texture creation', {
             desc: this.desc,
             texture
         });

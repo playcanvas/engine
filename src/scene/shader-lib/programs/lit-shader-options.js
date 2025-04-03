@@ -1,4 +1,4 @@
-import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE } from '../../constants.js';
+import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE, REFLECTIONSRC_NONE } from '../../constants.js';
 
 /**
  * The lit shader options determines how the lit-shader gets generated. It specifies a set of
@@ -252,11 +252,11 @@ class LitShaderOptions {
     toneMap = -1;
 
     /**
-     * One of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap".
+     * One of REFLECTIONSRC_*** constants.
      *
      * @type {string}
      */
-    reflectionSource = null;
+    reflectionSource = REFLECTIONSRC_NONE;
 
     reflectionEncoding = null;
 
@@ -309,6 +309,11 @@ class LitShaderOptions {
      * @type {boolean}
      */
     linearDepth = false;
+
+    /**
+     * Shader outputs the accumulated shadow value, used for shadow catcher materials.
+     */
+    shadowCatcher = false;
 }
 
 export { LitShaderOptions };
