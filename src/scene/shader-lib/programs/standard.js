@@ -491,6 +491,13 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                         uniform sampler2D texture_aoDetailMap;
                     #endif
                 #endif
+
+                // emission
+                vec3 dEmission;
+                #ifdef STD_EMISSIVE_TEXTURE_ALLOCATE
+                    uniform sampler2D texture_emissiveMap;
+                #endif
+
             #endif
         `);
 
@@ -568,6 +575,10 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 #ifdef STD_AO
                     #include "aoPS"
                 #endif
+
+                // emission
+                #include "emissivePS"
+
             #endif
         `);
 
@@ -663,6 +674,11 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     getAO();
                     litArgs_ao = dAo;
                 #endif
+
+                // emission
+                getEmission();
+                litArgs_emission = dEmission;
+
             #endif
         `);
 
@@ -740,15 +756,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 this._addMap(fDefines, 'ao', 'aoPS', options, litShader.chunks, textureMapping);
             }
 
+            // emission
+            this._addMap(fDefines, 'emissive', 'emissivePS', options, litShader.chunks, textureMapping, options.emissiveEncoding);
+
 
             // STILL TO DO -------------
 
-
-            // emission
-            decl.append('vec3 dEmission;');
-            code.append(this._addMap(fDefines, 'emissive', 'emissivePS', options, litShader.chunks, textureMapping, options.emissiveEncoding));
-            func.append('getEmission();');
-            args.append('litArgs_emission = dEmission;');
 
             // clearcoat
             if (options.litOptions.useClearCoat) {
@@ -815,7 +828,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             'texture_specularMap',
             'texture_glossMap',
             'texture_aoMap',
-            'texture_aoDetailMap'
+            'texture_aoDetailMap',
+            'texture_emissiveMap'
         ];
 
         // TODO: when refactoring is done, this loop will be removed
