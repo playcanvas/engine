@@ -583,12 +583,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.constantTexSource = this.scope.resolve('source');
 
-        // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
-        this.textureFloatRenderable = !!this.extColorBufferFloat;
-
-        // render to half float buffers support - either of these two extensions
-        this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
-
         this.postInit();
     }
 
@@ -775,7 +769,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.textureRG11B10Renderable = true;
 
+        // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
         this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
+        this.textureFloatRenderable = !!this.extColorBufferFloat;
+
+        // iOS exposes this for half precision render targets on WebGL2 from iOS v 14.5beta
+        this.extColorBufferHalfFloat = this.getExtension('EXT_color_buffer_half_float');
+
+        // render to half float buffers support - either of these two extensions
+        this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
 
         this.extDebugRendererInfo = this.getExtension('WEBGL_debug_renderer_info');
 
@@ -795,9 +797,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
         this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
-
-        // iOS exposes this for half precision render targets on WebGL2 from iOS v 14.5beta
-        this.extColorBufferHalfFloat = this.getExtension('EXT_color_buffer_half_float');
     }
 
     /**
@@ -866,6 +865,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (this.maxTextures <= 8) {
             this.supportsAreaLights = false;
         }
+
+        this.initCapsDefines();
     }
 
     /**
@@ -1727,6 +1728,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
         const samplers = shader.impl.samplers;
         const uniforms = shader.impl.uniforms;
+
+        Debug.call(() => this.validateAttributes(this.shader, this.vertexBuffers[0]?.format, this.vertexBuffers[1]?.format));
 
         // vertex buffers
         if (!keepBuffers) {

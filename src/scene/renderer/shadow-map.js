@@ -47,13 +47,6 @@ class ShadowMap {
         this.renderTargets.length = 0;
     }
 
-    static getShadowFiltering(device, shadowType) {
-        if (shadowType === SHADOW_VSM_32F) {
-            return device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
-        }
-        return FILTER_LINEAR;
-    }
-
     static create(device, light) {
 
         let shadowMap = null;
@@ -91,7 +84,16 @@ class ShadowMap {
             format = PIXELFORMAT_R16F;
         }
         const formatName = pixelFormatInfo.get(format)?.name;
-        const filter = this.getShadowFiltering(device, shadowType);
+
+        let filter = FILTER_LINEAR;
+        if (shadowType === SHADOW_VSM_32F) {
+            filter = device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
+        }
+        if (shadowType === SHADOW_PCSS_32F) {
+            // we're sampling and comparing depth, so need nearest filtering
+            // also note that linear is failing on iOS devices
+            filter = FILTER_NEAREST;
+        }
 
         const texture = new Texture(device, {
             // #if _PROFILER

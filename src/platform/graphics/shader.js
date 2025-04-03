@@ -2,7 +2,7 @@ import { TRACEID_SHADER_ALLOC } from '../../core/constants.js';
 import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
 import { Preprocessor } from '../../core/preprocessor.js';
-import { SHADERLANGUAGE_GLSL } from './constants.js';
+import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { ShaderUtils } from './shader-utils.js';
 
@@ -40,6 +40,15 @@ class Shader {
      * @ignore
      */
     meshBindGroupFormat;
+
+    /**
+     * The attributes that this shader code uses. The location is the key, the value is the name.
+     * These attributes are queried / extracted from the final shader.
+     *
+     * @type {Map<number, string>}
+     * @ignore
+     */
+    attributes = new Map();
 
     /**
      * Creates a new Shader instance.
@@ -118,9 +127,18 @@ class Shader {
             Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
             Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
 
+            // keep reference to unmodified shaders in debug mode
+            Debug.call(() => {
+                this.vUnmodified = definition.vshader;
+                this.fUnmodified = definition.fshader;
+            });
+
+            const wgsl = definition.shaderLanguage === SHADERLANGUAGE_WGSL;
+
             // pre-process vertex shader source
             definition.vshader = Preprocessor.run(definition.vshader, definition.vincludes, {
-                sourceName: `vertex shader for ${this.label}`
+                sourceName: `vertex shader for ${this.label}`,
+                stripDefines: wgsl
             });
 
             // if no attributes are specified, try to extract the default names after the shader has been pre-processed
@@ -136,6 +154,7 @@ class Shader {
             // pre-process fragment shader source
             definition.fshader = Preprocessor.run(definition.fshader, definition.fincludes, {
                 stripUnusedColorAttachments,
+                stripDefines: wgsl,
                 sourceName: `fragment shader for ${this.label}`
             });
         }
@@ -159,7 +178,7 @@ class Shader {
 
     /** @ignore */
     get label() {
-        return `Shader Id ${this.id} ${this.name}`;
+        return `Shader Id ${this.id} (${this.definition.shaderLanguage === SHADERLANGUAGE_WGSL ? 'WGSL' : 'GLSL'}) ${this.name}`;
     }
 
     /**

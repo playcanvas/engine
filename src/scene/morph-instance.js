@@ -1,25 +1,17 @@
 import { Debug } from '../core/debug.js';
-import { BLENDEQUATION_ADD, BLENDMODE_ONE } from '../platform/graphics/constants.js';
+import { BLENDEQUATION_ADD, BLENDMODE_ONE, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from './graphics/quad-render-utils.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { createShaderFromCode } from './shader-lib/utils.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
+import { shaderChunks } from './shader-lib/chunks/chunks.js';
+import { shaderChunksWGSL } from './shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 /**
  * @import { Morph } from './morph.js'
  * @import { Shader } from '../platform/graphics/shader.js'
  */
-
-// vertex shader used to add morph targets from textures into render target
-const textureMorphVertexShader = /* glsl */ `
-    attribute vec2 vertex_position;
-    varying vec2 uv0;
-    void main(void) {
-        gl_Position = vec4(vertex_position, 0.5, 1.0);
-        uv0 = vertex_position.xy * 0.5 + 0.5;
-    }
-    `;
 
 const blendStateAdditive = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
 
@@ -205,50 +197,6 @@ class MorphInstance {
     }
 
     /**
-     * Generate fragment shader to blend a number of textures using specified weights.
-     *
-     * @param {number} numTextures - Number of textures to blend.
-     * @returns {string} Fragment shader.
-     * @private
-     */
-    _getFragmentShader(numTextures) {
-
-        // code to declare textures and blend them together
-        let textureDecl = '';
-        let addingCode = '';
-        for (let i = 0; i < numTextures; i++) {
-            textureDecl += `uniform highp sampler2D morphBlendTex${i};`;
-            addingCode += `color.xyz += morphFactor[${i}] * texture2D(morphBlendTex${i}, uv0).xyz;`;
-        }
-
-        return `
-
-            varying vec2 uv0;
-            ${this.morph.intRenderFormat ? '#define MORPH_INT' : ''}
-            ${numTextures > 0 ? `uniform highp float morphFactor[${numTextures}];` : ''}
-            ${textureDecl}
-
-            #ifdef MORPH_INT
-                uniform vec3 aabbSize;
-                uniform vec3 aabbMin;
-            #endif
-
-            void main (void) {
-                highp vec4 color = vec4(0, 0, 0, 1);
-
-                ${addingCode}
-
-                #ifdef MORPH_INT
-                    color.xyz = (color.xyz - aabbMin) / aabbSize * 65535.0;
-                    gl_FragColor = uvec4(color);
-                #else
-                    gl_FragColor = color;
-                #endif
-            }
-        `;
-    }
-
-    /**
      * Create complete shader for texture based morphing.
      *
      * @param {number} count - Number of textures to blend.
@@ -261,9 +209,28 @@ class MorphInstance {
 
         // if shader is not in cache, generate one
         if (!shader) {
-            const fs = this._getFragmentShader(count);
+
+            const wgsl = this.device.isWebGPU;
+            const chunks = wgsl ? shaderChunksWGSL : shaderChunks;
+
+            const defines = new Map();
+            defines.set('MORPH_TEXTURE_COUNT', count);
+            defines.set('{MORPH_TEXTURE_COUNT}', count);
+            if (this.morph.intRenderFormat) defines.set('MORPH_INT', '');
+
+            const includes = new Map();
+            includes.set('morphDeclarationPS', chunks.morphDeclarationPS);
+            includes.set('morphEvaluationPS', chunks.morphEvaluationPS);
+
             const outputType = this.morph.intRenderFormat ? 'uvec4' : 'vec4';
-            shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, `textureMorph${count}`, undefined, { fragmentOutputTypes: [outputType] });
+            shader = createShaderFromCode(this.device, chunks.morphVS, chunks.morphPS, `textureMorph${count}`, {
+                vertex_position: SEMANTIC_POSITION
+            }, {
+                shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,
+                fragmentIncludes: includes,
+                fragmentDefines: defines,
+                fragmentOutputTypes: [outputType]
+            });
             this.shaderCache[count] = shader;
         }
 

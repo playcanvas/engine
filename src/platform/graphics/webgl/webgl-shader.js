@@ -311,6 +311,7 @@ class WebglShader {
 
         // Query the program for each vertex buffer input (GLSL 'attribute')
         const numAttributes = gl.getProgramParameter(glProgram, gl.ACTIVE_ATTRIBUTES);
+        shader.attributes.clear();
         for (let i = 0; i < numAttributes; i++) {
             const info = gl.getActiveAttrib(glProgram, i);
             const location = gl.getAttribLocation(glProgram, info.name);
@@ -325,8 +326,7 @@ class WebglShader {
                 console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition, shader [${shader.label}]`, shader);
                 shader.failed = true;
             } else {
-                const shaderInput = new WebglShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
-                this.attributes.push(shaderInput);
+                shader.attributes.set(location, info.name);
             }
         }
 
@@ -447,7 +447,8 @@ class WebglShader {
 
             // Chrome reports shader errors on lines indexed from 1
             for (let i = from; i < to; i++) {
-                code += `${i + 1}:\t${lines[i]}\n`;
+                const linePrefix = (i + 1 === error.line) ? '> ' : '  ';
+                code += `${linePrefix}${i + 1}:\t${lines[i]}\n`;
             }
 
             error.source = src;

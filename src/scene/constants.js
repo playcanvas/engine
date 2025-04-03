@@ -94,6 +94,20 @@ export const BLEND_MIN = 9;
  */
 export const BLEND_MAX = 10;
 
+export const blendNames = {
+    [BLEND_SUBTRACTIVE]: 'SUBTRACTIVE',
+    [BLEND_ADDITIVE]: 'ADDITIVE',
+    [BLEND_NORMAL]: 'NORMAL',
+    [BLEND_NONE]: 'NONE',
+    [BLEND_PREMULTIPLIED]: 'PREMULTIPLIED',
+    [BLEND_MULTIPLICATIVE]: 'MULTIPLICATIVE',
+    [BLEND_ADDITIVEALPHA]: 'ADDITIVEALPHA',
+    [BLEND_MULTIPLICATIVE2X]: 'MULTIPLICATIVE2X',
+    [BLEND_SCREEN]: 'SCREEN',
+    [BLEND_MIN]: 'MIN',
+    [BLEND_MAX]: 'MAX'
+};
+
 /**
  * No fog is applied to the scene.
  *
@@ -142,10 +156,14 @@ export const FRESNEL_NONE = 0;
  */
 export const FRESNEL_SCHLICK = 2;
 
+export const fresnelNames = {
+    [FRESNEL_NONE]: 'NONE',
+    [FRESNEL_SCHLICK]: 'SCHLICK'
+};
+
 // Legacy
 export const LAYER_HUD = 0;
 export const LAYER_GIZMO = 1;
-export const LAYER_FX = 2;
 // 3 - 14 are custom user layers
 export const LAYER_WORLD = 15;
 
@@ -226,6 +244,12 @@ export const LIGHTTYPE_SPOT = 2;
 // private - the number of light types
 export const LIGHTTYPE_COUNT = 3;
 
+export const lightTypeNames = {
+    [LIGHTTYPE_DIRECTIONAL]: 'DIRECTIONAL',
+    [LIGHTTYPE_OMNI]: 'OMNI',
+    [LIGHTTYPE_SPOT]: 'SPOT'
+};
+
 /**
  * Infinitesimally small point light source shape.
  *
@@ -258,6 +282,13 @@ export const LIGHTSHAPE_DISK = 2;
  */
 export const LIGHTSHAPE_SPHERE = 3;
 
+export const lightShapeNames = {
+    [LIGHTSHAPE_PUNCTUAL]: 'PUNCTUAL',
+    [LIGHTSHAPE_RECT]: 'RECT',
+    [LIGHTSHAPE_DISK]: 'DISK',
+    [LIGHTSHAPE_SPHERE]: 'SPHERE'
+};
+
 /**
  * Linear distance falloff model for light attenuation.
  *
@@ -273,6 +304,11 @@ export const LIGHTFALLOFF_LINEAR = 0;
  * @category Graphics
  */
 export const LIGHTFALLOFF_INVERSESQUARED = 1;
+
+export const lightFalloffNames = {
+    [LIGHTFALLOFF_LINEAR]: 'LINEAR',
+    [LIGHTFALLOFF_INVERSESQUARED]: 'INVERSESQUARED'
+};
 
 /**
  * A shadow sampling technique using 32bit shadow map that averages depth comparisons from a 3x3
@@ -384,15 +420,15 @@ export const SHADOW_PCF5_16F = 9;
  * @ignore
  */
 export const shadowTypeInfo = new Map([
-    [SHADOW_PCF1_32F,    { name: 'PCF1_32F', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF3_32F,    { name: 'PCF3_32F', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF5_32F,    { name: 'PCF5_32F', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF1_16F,    { name: 'PCF1_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_PCF3_16F,    { name: 'PCF3_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_PCF5_16F,    { name: 'PCF5_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_VSM_16F,     { name: 'VSM_16F', format: PIXELFORMAT_RGBA16F, vsm: true }],
-    [SHADOW_VSM_32F,     { name: 'VSM_32F', format: PIXELFORMAT_RGBA32F, vsm: true }],
-    [SHADOW_PCSS_32F,    { name: 'PCSS_32F', format: PIXELFORMAT_R32F, pcss: true }]
+    [SHADOW_PCF1_32F,    { name: 'PCF1_32F', kind: 'PCF1', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF3_32F,    { name: 'PCF3_32F', kind: 'PCF3', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF5_32F,    { name: 'PCF5_32F', kind: 'PCF5', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF1_16F,    { name: 'PCF1_16F', kind: 'PCF1', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_PCF3_16F,    { name: 'PCF3_16F', kind: 'PCF3', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_PCF5_16F,    { name: 'PCF5_16F', kind: 'PCF5', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_VSM_16F,     { name: 'VSM_16F', kind: 'VSM', format: PIXELFORMAT_RGBA16F, vsm: true }],
+    [SHADOW_VSM_32F,     { name: 'VSM_32F', kind: 'VSM', format: PIXELFORMAT_RGBA32F, vsm: true }],
+    [SHADOW_PCSS_32F,    { name: 'PCSS_32F', kind: 'PCSS', format: PIXELFORMAT_R32F, pcss: true }]
 ]);
 
 /**
@@ -542,6 +578,12 @@ export const CUBEPROJ_NONE = 0;
  * @category Graphics
  */
 export const CUBEPROJ_BOX = 1;
+
+// names of the cubemap projection
+export const cubemaProjectionNames = {
+    [CUBEPROJ_NONE]: 'NONE',
+    [CUBEPROJ_BOX]: 'BOX'
+};
 
 /**
  * Multiply together the primary and secondary colors.
@@ -713,6 +755,38 @@ export const SPECOCC_AO = 1;
  */
 export const SPECOCC_GLOSSDEPENDENT = 2;
 
+export const specularOcclusionNames = {
+    [SPECOCC_NONE]: 'NONE',
+    [SPECOCC_AO]: 'AO',
+    [SPECOCC_GLOSSDEPENDENT]: 'GLOSSDEPENDENT'
+};
+
+// reflection source used by the shader generation
+export const REFLECTIONSRC_NONE = 'none';
+export const REFLECTIONSRC_ENVATLAS = 'envAtlas';
+export const REFLECTIONSRC_ENVATLASHQ = 'envAtlasHQ';
+export const REFLECTIONSRC_CUBEMAP = 'cubeMap';
+export const REFLECTIONSRC_SPHEREMAP = 'sphereMap';
+
+export const reflectionSrcNames = {
+    [REFLECTIONSRC_NONE]: 'NONE',
+    [REFLECTIONSRC_ENVATLAS]: 'ENVATLAS',
+    [REFLECTIONSRC_ENVATLASHQ]: 'ENVATLASHQ',
+    [REFLECTIONSRC_CUBEMAP]: 'CUBEMAP',
+    [REFLECTIONSRC_SPHEREMAP]: 'SPHEREMAP'
+};
+
+// ambient source used by the shader generation
+export const AMBIENTSRC_AMBIENTSH = 'ambientSH';
+export const AMBIENTSRC_ENVALATLAS = 'envAtlas';
+export const AMBIENTSRC_CONSTANT = 'constant';
+
+export const ambientSrcNames = {
+    [AMBIENTSRC_AMBIENTSH]: 'AMBIENTSH',
+    [AMBIENTSRC_ENVALATLAS]: 'ENVALATLAS',
+    [AMBIENTSRC_CONSTANT]: 'CONSTANT'
+};
+
 // 16 bits for shader defs
 export const SHADERDEF_NOSHADOW = 1;
 export const SHADERDEF_SKIN = 2;
@@ -753,9 +827,6 @@ export const SHADOWUPDATE_THISFRAME = 1;
  * @category Graphics
  */
 export const SHADOWUPDATE_REALTIME = 2;
-
-export const SORTKEY_FORWARD = 0;
-export const SORTKEY_DEPTH = 1;
 
 // flags used on the mask property of the Light, and also on mask property of the MeshInstance
 export const MASK_AFFECT_DYNAMIC = 1;
@@ -901,6 +972,12 @@ export const SPRITE_RENDERMODE_SLICED = 1;
  * @category Graphics
  */
 export const SPRITE_RENDERMODE_TILED = 2;
+
+export const spriteRenderModeNames = {
+    [SPRITE_RENDERMODE_SIMPLE]: 'SIMPLE',
+    [SPRITE_RENDERMODE_SLICED]: 'SLICED',
+    [SPRITE_RENDERMODE_TILED]: 'TILED'
+};
 
 /**
  * Single color lightmap.

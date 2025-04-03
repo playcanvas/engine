@@ -376,7 +376,7 @@ float getDiskLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 li
 float getSphereLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 lightDirNorm) {
     // NB: this could be improved further with distance based wrap lighting
     float falloff = dSphereRadius / (dot(lightDir, lightDir) + dSphereRadius);
-    return getLightDiffuse(worldNormal, viewDir, lightDir, lightDirNorm) * falloff;
+    return getLightDiffuse(worldNormal, viewDir, lightDirNorm) * falloff;
 }
 
 mat3 getLTCLightInvMat(vec2 uv)

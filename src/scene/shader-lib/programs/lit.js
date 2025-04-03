@@ -35,18 +35,12 @@ class ShaderGeneratorLit extends ShaderGenerator {
 
         const decl = new ChunkBuilder();
         const code = new ChunkBuilder();
-        const func = new ChunkBuilder();
 
         // global texture bias for standard textures
         decl.append('uniform float textureBias;');
 
         decl.append(litShader.chunks.litShaderArgsPS);
         code.append(options.shaderChunk);
-        func.code = 'evaluateFrontend();';
-
-        func.code = `\n${func.code.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
-        const usedUvSets = options.usedUvs || [true];
-        const mapTransforms = [];
 
         const definitionOptions = {
             name: 'LitShader',
@@ -54,8 +48,11 @@ class ShaderGeneratorLit extends ShaderGenerator {
             tag: litShader.shaderPassInfo.isForward ? SHADERTAG_MATERIAL : undefined
         };
 
+        const usedUvSets = options.usedUvs || [true];
+        const mapTransforms = [];
         litShader.generateVertexShader(usedUvSets, usedUvSets, mapTransforms);
-        litShader.generateFragmentShader(decl.code, code.code, func.code, 'vUv0');
+
+        litShader.generateFragmentShader(decl.code, code.code, 'vUv0');
 
         const includes = new Map(Object.entries({
             ...Object.getPrototypeOf(litShader.chunks), // the prototype stores the default chunks
@@ -63,15 +60,19 @@ class ShaderGeneratorLit extends ShaderGenerator {
             ...options.litOptions.chunks
         }));
 
-        const defines = new Map(options.defines);
+        const vDefines = litShader.vDefines;
+        options.defines.forEach((value, key) => vDefines.set(key, value));
+
+        const fDefines = litShader.fDefines;
+        options.defines.forEach((value, key) => fDefines.set(key, value));
 
         definitionOptions.attributes = litShader.attributes;
         definitionOptions.vertexCode = litShader.vshader;
         definitionOptions.vertexIncludes = includes;
-        definitionOptions.vertexDefines = defines;
+        definitionOptions.vertexDefines = vDefines;
         definitionOptions.fragmentCode = litShader.fshader;
         definitionOptions.fragmentIncludes = includes;
-        definitionOptions.fragmentDefines = defines;
+        definitionOptions.fragmentDefines = fDefines;
 
         return ShaderUtils.createDefinition(device, definitionOptions);
     }

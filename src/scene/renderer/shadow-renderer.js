@@ -12,7 +12,6 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
-    SORTKEY_DEPTH,
     shadowTypeInfo
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
@@ -192,7 +191,18 @@ class ShadowRenderer {
         }
 
         // this sorts the shadow casters by the shader id
-        visible.sort(this.renderer.sortCompareDepth);
+        visible.sort(this.sortCompareShader);
+    }
+
+    sortCompareShader(drawCallA, drawCallB) {
+        const keyA = drawCallA._sortKeyShadow;
+        const keyB = drawCallB._sortKeyShadow;
+
+        if (keyA === keyB) {
+            return drawCallB.mesh.id - drawCallA.mesh.id;
+        }
+
+        return keyB - keyA;
     }
 
     setupRenderState(device, light) {
@@ -280,6 +290,9 @@ class ShadowRenderer {
         const shadowPass = this.getShadowPass(light);
         const cameraShaderParams = camera.shaderParams;
 
+        // reverse face culling when shadow map has flipY set to true which cases reversed winding order
+        const flipFactor = camera.renderTarget.flipY ? -1 : 1;
+
         // Render
         const count = visibleCasters.length;
         for (let i = 0; i < count; i++) {
@@ -300,7 +313,7 @@ class ShadowRenderer {
                 material.dirty = false;
             }
 
-            renderer.setupCullMode(true, 1, meshInstance);
+            renderer.setupCullMode(true, flipFactor, meshInstance);
 
             // Uniforms I (shadow): material
             material.setParameters(device);
@@ -313,7 +326,7 @@ class ShadowRenderer {
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
             // sort shadow casters by shader
-            meshInstance._key[SORTKEY_DEPTH] = shadowShader.id;
+            meshInstance._sortKeyShadow = shadowShader.id;
 
             device.setShader(shadowShader);
 

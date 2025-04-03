@@ -36,23 +36,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     { v: pc.TONEMAP_NEUTRAL, t: 'NEUTRAL' }
                 ]
             })
-        ),
-        jsx(
-            LabelGroup,
-            { text: 'UI Tonemap' },
-            jsx(SelectInput, {
-                binding: new BindingTwoWay(),
-                link: { observer, path: 'data.uiTonemapping' },
-                type: 'number',
-                options: [
-                    { v: pc.TONEMAP_NONE, t: 'NONE' },
-                    { v: pc.TONEMAP_FILMIC, t: 'FILMIC' },
-                    { v: pc.TONEMAP_HEJL, t: 'HEJL' },
-                    { v: pc.TONEMAP_ACES, t: 'ACES' },
-                    { v: pc.TONEMAP_ACES2, t: 'ACES2' },
-                    { v: pc.TONEMAP_NEUTRAL, t: 'NEUTRAL' }
-                ]
-            })
         )
     );
 };

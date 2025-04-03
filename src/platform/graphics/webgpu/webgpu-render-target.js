@@ -275,8 +275,8 @@ class WebgpuRenderTarget {
 
         this.initialized = true;
 
-        WebgpuDebug.end(device, { renderTarget });
-        WebgpuDebug.end(device, { renderTarget });
+        WebgpuDebug.end(device, 'RenderTarget initialization', { renderTarget });
+        WebgpuDebug.end(device, 'RenderTarget initialization', { renderTarget });
     }
 
     initDepthStencil(device, wgpu, renderTarget) {
