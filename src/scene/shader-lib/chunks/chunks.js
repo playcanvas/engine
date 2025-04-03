@@ -1,7 +1,6 @@
 import alphaTestPS from './standard/frag/alphaTest.js';
 import ambientPS from './lit/frag/ambient.js';
 import aoPS from './standard/frag/ao.js';
-import aoDetailMapPS from './standard/frag/aoDetailMap.js';
 import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
 import basePS from './lit/frag/base.js';
@@ -211,7 +210,6 @@ const shaderChunks = {
     alphaTestPS,
     ambientPS,
     aoPS,
-    aoDetailMapPS,
     aoDiffuseOccPS,
     aoSpecOccPS,
     basePS,
