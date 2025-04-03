@@ -1,4 +1,4 @@
-// @config HIDDEN
+// @config DESCRIPTION This example demonstrates the clear coat material. Visually, the Coated column should contain highlights from both the Base and Boating layers.
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -10,10 +10,10 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/NormalTangentTest.glb` })
+    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/ClearCoatTest.glb` })
 };
 
 const gfxOptions = {
@@ -68,12 +68,6 @@ assetListLoader.load(() => {
     leftEntity.setLocalScale(0.8, 0.8, 0.8);
     app.root.addChild(leftEntity);
 
-    const rightEntity = assets.model.resource.instantiateRenderEntity();
-    rightEntity.setLocalEulerAngles(0, 90, 0);
-    rightEntity.setPosition(0, 0, -1);
-    rightEntity.setLocalScale(-0.8, -0.8, -0.8);
-    app.root.addChild(rightEntity);
-
     // Create a camera with an orbit camera script
     const camera = new pc.Entity();
     camera.addComponent('camera', {
@@ -88,19 +82,15 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
-    camera.script.orbitCamera.pitch = 0;
     camera.script.orbitCamera.yaw = 90;
-    camera.script.orbitCamera.distance = 4;
+    camera.script.orbitCamera.distance = 12;
 
     const directionalLight = new pc.Entity();
     directionalLight.addComponent('light', {
         type: 'directional',
-        color: pc.Color.WHITE,
-        castShadows: true,
-        intensity: 1,
-        shadowBias: 0.2,
-        normalOffsetBias: 0.05,
-        shadowResolution: 2048
+        color: pc.Color.YELLOW,
+        castShadows: false,
+        intensity: 1
     });
     directionalLight.setEulerAngles(45, 180, 0);
     app.root.addChild(directionalLight);

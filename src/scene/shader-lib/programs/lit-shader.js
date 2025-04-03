@@ -191,7 +191,7 @@ class LitShader {
             attributes.vertex_normal = SEMANTIC_NORMAL;
             varyings.set('vNormalW', 'vec3');
 
-            if (options.hasTangents && (options.useHeights || options.useNormals || options.enableGGXSpecular)) {
+            if (options.hasTangents && (options.useHeights || options.useNormals || options.useClearCoatNormals || options.enableGGXSpecular)) {
 
                 vDefines.set('TANGENTS', true);
                 attributes.vertex_tangent = SEMANTIC_TANGENT;
