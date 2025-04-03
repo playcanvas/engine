@@ -301,6 +301,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         fDefineSet(options.diffuseDetail, 'STD_DIFFUSE_DETAIL', '');
         fDefineSet(options.aoDetail, 'STD_AO_DETAIL', '');
         fDefineSet(options.heightMap, 'STD_HEIGHT_MAP', '');
+        fDefineSet(options.useSpecularColor, 'STD_SPECULAR_COLOR', '');
         fDefineSet(true, 'STD_OPACITY_DITHER', ditherNames[shaderPassInfo.isForward ? options.litOptions.opacityDither : options.litOptions.opacityShadowDither]);
     }
 
@@ -359,6 +360,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 // globals
                 vec3 dAlbedo;
                 vec3 dNormalW;
+                vec3 dSpecularity = vec3(0.0);
+                float dGlossiness = 0.0;
 
                 #ifdef LIT_REFRACTION
                     float dTransmission;
@@ -434,6 +437,54 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     float ccGlossiness;
                     vec3 ccNormalW;
                 #endif
+
+                // specularity & glossiness
+                #ifdef LIT_SPECULAR_OR_REFLECTION
+
+                    // sheen
+                    #ifdef LIT_SHEEN
+                        vec3 sSpecularity;
+                        float sGlossiness;
+
+                        #ifdef STD_SHEEN_TEXTURE_ALLOCATE
+                            uniform sampler2D texture_sheenMap;
+                        #endif
+                        #ifdef STD_SHEENGLOSS_TEXTURE_ALLOCATE
+                            uniform sampler2D texture_sheenGlossMap;
+                        #endif
+                    #endif
+
+                    // metalness
+                    #ifdef LIT_METALNESS
+                        float dMetalness;
+                        float dIor;
+
+                        #ifdef STD_METALNESS_TEXTURE_ALLOCATE
+                            uniform sampler2D texture_metalnessMap;
+                        #endif
+                    #endif
+
+                    // specularity factor
+                    #ifdef LIT_SPECULARITY_FACTOR
+                        float dSpecularityFactor;
+
+                        #ifdef STD_SPECULARITYFACTOR_TEXTURE_ALLOCATE
+                            uniform sampler2D texture_specularityFactorMap;
+                        #endif
+                    #endif
+
+                    // specular color
+                    #ifdef STD_SPECULAR_COLOR
+                        #ifdef STD_SPECULAR_TEXTURE_ALLOCATE
+                            uniform sampler2D texture_specularMap;
+                        #endif
+                    #endif
+
+                    // gloss
+                    #ifdef STD_GLOSS_TEXTURE_ALLOCATE
+                        uniform sampler2D texture_glossMap;
+                    #endif
+                #endif
             #endif
         `);
 
@@ -472,6 +523,39 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 #ifdef LIT_IRIDESCENCE
                     #include "iridescencePS"
                     #include "iridescenceThicknessPS"
+                #endif
+
+                // specularity & glossiness
+                #ifdef LIT_SPECULAR_OR_REFLECTION
+
+                    // sheen
+                    #ifdef LIT_SHEEN
+                        #include "sheenPS"
+                        #include "sheenGlossPS"
+                    #endif
+
+                    // metalness
+                    #ifdef LIT_METALNESS
+                        #include "metalnessPS"
+                        #include "iorPS"
+                    #endif
+
+                    // specularity factor
+                    #ifdef LIT_SPECULARITY_FACTOR
+                        #include "specularityFactorPS"
+                    #endif
+
+                    // specular color
+                    #ifdef STD_SPECULAR_COLOR
+                        #include "specularPS"
+                    #else
+                        void getSpecularity() { 
+                            dSpecularity = vec3(1);
+                        }
+                    #endif
+
+                    // gloss
+                    #include "glossPS"
                 #endif
             #endif
         `);
@@ -530,6 +614,38 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     litArgs_iridescence_intensity = dIridescence;
                     litArgs_iridescence_thickness = dIridescenceThickness;
                 #endif
+
+                // specularity & glossiness
+                #ifdef LIT_SPECULAR_OR_REFLECTION
+
+                    // sheen
+                    #ifdef LIT_SHEEN
+                        getSheen();
+                        litArgs_sheen_specularity = sSpecularity;
+                        getSheenGlossiness();
+                        litArgs_sheen_gloss = sGlossiness;
+                    #endif
+
+                    // metalness
+                    #ifdef LIT_METALNESS
+                        getMetalness();
+                        litArgs_metalness = dMetalness;
+                        getIor();
+                        litArgs_ior = dIor;
+                    #endif
+
+                    // specularity factor
+                    #ifdef LIT_SPECULARITY_FACTOR
+                        getSpecularityFactor();
+                        litArgs_specularityFactor = dSpecularityFactor;
+                    #endif
+
+                    // gloss
+                    getGlossiness();
+                    getSpecularity();
+                    litArgs_specularity = dSpecularity;
+                    litArgs_gloss = dGlossiness;
+                #endif
             #endif
         `);
 
@@ -576,53 +692,30 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 this._addMap(fDefines, 'iridescenceThickness', 'iridescenceThicknessPS', options, litShader.chunks, textureMapping);
             }
 
-
             // specularity & glossiness
             if ((litShader.lighting && options.litOptions.useSpecular) || litShader.reflections) {
-                decl.append('vec3 dSpecularity;');
-                decl.append('float dGlossiness;');
                 if (options.litOptions.useSheen) {
-                    decl.append('vec3 sSpecularity;');
-                    code.append(this._addMap(fDefines, 'sheen', 'sheenPS', options, litShader.chunks, textureMapping, options.sheenEncoding));
-                    func.append('getSheen();');
-                    args.append('litArgs_sheen_specularity = sSpecularity;');
-
-                    decl.append('float sGlossiness;');
-                    code.append(this._addMap(fDefines, 'sheenGloss', 'sheenGlossPS', options, litShader.chunks, textureMapping));
-                    func.append('getSheenGlossiness();');
-                    args.append('litArgs_sheen_gloss = sGlossiness;');
+                    this._addMap(fDefines, 'sheen', 'sheenPS', options, litShader.chunks, textureMapping, options.sheenEncoding);
+                    this._addMap(fDefines, 'sheenGloss', 'sheenGlossPS', options, litShader.chunks, textureMapping);
                 }
+
                 if (options.litOptions.useMetalness) {
-                    decl.append('float dMetalness;');
-                    code.append(this._addMap(fDefines, 'metalness', 'metalnessPS', options, litShader.chunks, textureMapping));
-                    func.append('getMetalness();');
-                    args.append('litArgs_metalness = dMetalness;');
+                    this._addMap(fDefines, 'metalness', 'metalnessPS', options, litShader.chunks, textureMapping);
+                    this._addMap(fDefines, 'ior', 'iorPS', options, litShader.chunks, textureMapping);
+                }
 
-                    decl.append('float dIor;');
-                    code.append(this._addMap(fDefines, 'ior', 'iorPS', options, litShader.chunks, textureMapping));
-                    func.append('getIor();');
-                    args.append('litArgs_ior = dIor;');
-                }
                 if (options.litOptions.useSpecularityFactor) {
-                    decl.append('float dSpecularityFactor;');
-                    code.append(this._addMap(fDefines, 'specularityFactor', 'specularityFactorPS', options, litShader.chunks, textureMapping));
-                    func.append('getSpecularityFactor();');
-                    args.append('litArgs_specularityFactor = dSpecularityFactor;');
+                    this._addMap(fDefines, 'specularityFactor', 'specularityFactorPS', options, litShader.chunks, textureMapping);
                 }
+
                 if (options.useSpecularColor) {
-                    code.append(this._addMap(fDefines, 'specular', 'specularPS', options, litShader.chunks, textureMapping, options.specularEncoding));
-                } else {
-                    code.append('void getSpecularity() { dSpecularity = vec3(1); }');
+                    this._addMap(fDefines, 'specular', 'specularPS', options, litShader.chunks, textureMapping, options.specularEncoding);
                 }
-                code.append(this._addMap(fDefines, 'gloss', 'glossPS', options, litShader.chunks, textureMapping));
-                func.append('getGlossiness();');
-                func.append('getSpecularity();');
-                args.append('litArgs_specularity = dSpecularity;');
-                args.append('litArgs_gloss = dGlossiness;');
-            } else {
-                decl.append('vec3 dSpecularity = vec3(0.0);');
-                decl.append('float dGlossiness = 0.0;');
+
+                this._addMap(fDefines, 'gloss', 'glossPS', options, litShader.chunks, textureMapping);
             }
+
+            // STILL TO DO -------------
 
             // ao
             if (options.aoDetail) {
@@ -698,7 +791,13 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             'texture_thicknessMap',
             'texture_refractionMap',
             'texture_iridescenceMap',
-            'texture_iridescenceThicknessMap'
+            'texture_iridescenceThicknessMap',
+            'texture_sheenMap',
+            'texture_sheenGlossMap',
+            'texture_metalnessMap',
+            'texture_specularityFactorMap',
+            'texture_specularMap',
+            'texture_glossMap'
         ];
 
         // TODO: when refactoring is done, this loop will be removed

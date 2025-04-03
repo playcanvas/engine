@@ -8,14 +8,7 @@ export default /* glsl */`
 #endif
 
 // ----- specular or reflections -----
-#if defined(LIT_LIGHTING) && defined(LIT_SPECULAR)
-    #define LIT_SPECULAR_OR_REFLECTION
-#elif defined(LIT_REFLECTIONS)
-    #define LIT_SPECULAR_OR_REFLECTION
-#endif
-
 #ifdef LIT_SPECULAR_OR_REFLECTION
-
     #ifdef LIT_METALNESS
         #include "metalnessModulatePS"
     #endif
