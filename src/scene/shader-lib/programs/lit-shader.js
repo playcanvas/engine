@@ -404,7 +404,7 @@ class LitShader {
             this.fDefineSet(options.useSheen, 'LIT_SHEEN');
             this.fDefineSet(options.useIridescence, 'LIT_IRIDESCENCE');
         }
-
+        this.fDefineSet((this.lighting && options.useSpecular) || this.reflections, 'LIT_SPECULAR_OR_REFLECTION');
         this.fDefineSet(this.needsSceneColor, 'LIT_SCENE_COLOR');
         this.fDefineSet(this.needsScreenSize, 'LIT_SCREEN_SIZE');
         this.fDefineSet(this.needsTransforms, 'LIT_TRANSFORMS');
