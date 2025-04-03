@@ -298,10 +298,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
         };
 
-        fDefineSet(options.diffuseDetail, 'STD_DIFFUSE_DETAIL', '');
-        fDefineSet(options.aoDetail, 'STD_AO_DETAIL', '');
         fDefineSet(options.heightMap, 'STD_HEIGHT_MAP', '');
         fDefineSet(options.useSpecularColor, 'STD_SPECULAR_COLOR', '');
+        fDefineSet(options.aoMap || options.aoVertexColor || options.useAO, 'STD_AO', '');
         fDefineSet(true, 'STD_OPACITY_DITHER', ditherNames[shaderPassInfo.isForward ? options.litOptions.opacityDither : options.litOptions.opacityShadowDither]);
     }
 
@@ -387,10 +386,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     #ifdef STD_DIFFUSE_TEXTURE_ALLOCATE
                         uniform sampler2D texture_heightMap;
                     #endif
-                #endif
-
-                #if defined(STD_DIFFUSE_DETAIL) || defined(STD_AO_DETAIL)
-                    #include "detailModesPS"
                 #endif
 
                 // diffuse
@@ -485,6 +480,17 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                         uniform sampler2D texture_glossMap;
                     #endif
                 #endif
+
+                // ao
+                #ifdef STD_AO
+                    float dAo;
+                    #ifdef STD_AO_TEXTURE_ALLOCATE
+                        uniform sampler2D texture_aoMap;
+                    #endif
+                    #ifdef STD_AODETAIL_TEXTURE_ALLOCATE
+                        uniform sampler2D texture_aoDetailMap;
+                    #endif
+                #endif
             #endif
         `);
 
@@ -556,6 +562,11 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
                     // gloss
                     #include "glossPS"
+                #endif
+
+                // ao
+                #ifdef STD_AO
+                    #include "aoPS"
                 #endif
             #endif
         `);
@@ -646,6 +657,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     litArgs_specularity = dSpecularity;
                     litArgs_gloss = dGlossiness;
                 #endif
+
+                // ao
+                #ifdef STD_AO
+                    getAO();
+                    litArgs_ao = dAo;
+                #endif
             #endif
         `);
 
@@ -715,18 +732,17 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 this._addMap(fDefines, 'gloss', 'glossPS', options, litShader.chunks, textureMapping);
             }
 
-            // STILL TO DO -------------
-
             // ao
             if (options.aoDetail) {
-                code.append(this._addMap(fDefines, 'aoDetail', 'aoDetailMapPS', options, litShader.chunks, textureMapping));
+                this._addMap(fDefines, 'aoDetail', 'aoPS', options, litShader.chunks, textureMapping);
             }
             if (options.aoMap || options.aoVertexColor || options.useAO) {
-                decl.append('float dAo;');
-                code.append(this._addMap(fDefines, 'ao', 'aoPS', options, litShader.chunks, textureMapping));
-                func.append('getAO();');
-                args.append('litArgs_ao = dAo;');
+                this._addMap(fDefines, 'ao', 'aoPS', options, litShader.chunks, textureMapping);
             }
+
+
+            // STILL TO DO -------------
+
 
             // emission
             decl.append('vec3 dEmission;');
@@ -797,7 +813,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             'texture_metalnessMap',
             'texture_specularityFactorMap',
             'texture_specularMap',
-            'texture_glossMap'
+            'texture_glossMap',
+            'texture_aoMap',
+            'texture_aoDetailMap'
         ];
 
         // TODO: when refactoring is done, this loop will be removed

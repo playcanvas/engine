@@ -15,7 +15,8 @@ const assets = {
     diffuse: new pc.Asset('diffuse', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
     other: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-height.jpg` }),
     gloss: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.jpg` }),
-    colors: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/colors.webp` })
+    colors: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/colors.webp` }),
+    hatch: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/hatch-0.jpg` })
 };
 
 const gfxOptions = {
@@ -117,11 +118,18 @@ assetListLoader.load(() => {
 
     materialSpecFactor.specularMap = assets.colors.resource;
     materialSpecFactor.glossMap = assets.gloss.resource;
-
     materialSpecFactor.update();
+
+    // blue pill - AO
+    const materialAO = new pc.StandardMaterial();
+    materialAO.diffuse = new pc.Color(0.6, 0.6, 0.9);
+    materialAO.aoMap = assets.gloss.resource;
+    materialAO.aoDetailMap = assets.hatch.resource;
+    materialAO.update();
 
     createObject(-1, 0, 0, materialSheen, 0.7);
     createObject(1, 0, 0, materialSpecFactor, 0.7);
+    createObject(0, 0, 1, materialAO, 0.7);
 
     // update things each frame
     let time = 0;

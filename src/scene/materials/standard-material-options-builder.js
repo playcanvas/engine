@@ -234,7 +234,7 @@ class StandardMaterialOptionsBuilder {
         options.specularEncoding = stdMat.specularEncoding || 'linear';
         options.sheenEncoding = stdMat.sheenEncoding || 'linear';
         options.aoMapUv = stdMat.aoUvSet; // backwards compatibility
-        options.aoDetail = !!stdMat.aoMap;
+        options.aoDetail = !!stdMat.aoDetailMap;
         options.diffuseDetail = !!stdMat.diffuseDetailMap;
         options.normalDetail = !!stdMat.normalMap;
         options.normalDetailPackedNormal = isPackedNormalMap(stdMat.normalDetailMap);
