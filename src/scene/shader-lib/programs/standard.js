@@ -416,6 +416,19 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     uniform sampler2D texture_refractionMap;
                 #endif
 
+                // iridescence
+                #ifdef LIT_IRIDESCENCE
+                    float dIridescence;
+                    float dIridescenceThickness;
+
+                    #ifdef STD_IRIDESCENCE_THICKNESS_TEXTURE_ALLOCATE
+                        uniform sampler2D texture_iridescenceThicknessMap;
+                    #endif
+                    #ifdef STD_IRIDESCENCE_TEXTURE_ALLOCATE
+                        uniform sampler2D texture_iridescenceMap;
+                    #endif
+                #endif
+
                 #ifdef LIT_CLEARCOAT
                     float ccSpecularity;
                     float ccGlossiness;
@@ -453,6 +466,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 #ifdef LIT_REFRACTION
                     #include "transmissionPS"
                     #include "thicknessPS"
+                #endif
+
+                // iridescence
+                #ifdef LIT_IRIDESCENCE
+                    #include "iridescencePS"
+                    #include "iridescenceThicknessPS"
                 #endif
             #endif
         `);
@@ -503,6 +522,14 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                         litArgs_dispersion = material_dispersion;
                     #endif
                 #endif
+
+                // iridescence
+                #ifdef LIT_IRIDESCENCE
+                    getIridescence();
+                    getIridescenceThickness();
+                    litArgs_iridescence_intensity = dIridescence;
+                    litArgs_iridescence_thickness = dIridescenceThickness;
+                #endif
             #endif
         `);
 
@@ -543,18 +570,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 this._addMap(fDefines, 'thickness', 'thicknessPS', options, litShader.chunks, textureMapping);
             }
 
-
+            // iridescence
             if (options.litOptions.useIridescence) {
-                decl.append('float dIridescence;');
-                code.append(this._addMap(fDefines, 'iridescence', 'iridescencePS', options, litShader.chunks, textureMapping));
-                func.append('getIridescence();');
-                args.append('litArgs_iridescence_intensity = dIridescence;');
-
-                decl.append('float dIridescenceThickness;');
-                code.append(this._addMap(fDefines, 'iridescenceThickness', 'iridescenceThicknessPS', options, litShader.chunks, textureMapping));
-                func.append('getIridescenceThickness();');
-                args.append('litArgs_iridescence_thickness = dIridescenceThickness;');
+                this._addMap(fDefines, 'iridescence', 'iridescencePS', options, litShader.chunks, textureMapping);
+                this._addMap(fDefines, 'iridescenceThickness', 'iridescenceThicknessPS', options, litShader.chunks, textureMapping);
             }
+
 
             // specularity & glossiness
             if ((litShader.lighting && options.litOptions.useSpecular) || litShader.reflections) {
@@ -675,7 +696,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             'texture_normalDetailMap',
             'texture_normalMap',
             'texture_thicknessMap',
-            'texture_refractionMap'
+            'texture_refractionMap',
+            'texture_iridescenceMap',
+            'texture_iridescenceThicknessMap'
         ];
 
         // TODO: when refactoring is done, this loop will be removed
