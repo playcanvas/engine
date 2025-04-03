@@ -128,7 +128,8 @@ const removedChunks = {
     diffuseDetailMapPS: CHUNKAPI_2_7,
     normalDetailMapPS: CHUNKAPI_2_7,
     normalXYPS: CHUNKAPI_2_7,
-    normalXYZPS: CHUNKAPI_2_7
+    normalXYZPS: CHUNKAPI_2_7,
+    aoDetailMapPS: CHUNKAPI_2_7
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
