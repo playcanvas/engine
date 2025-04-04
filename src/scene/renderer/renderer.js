@@ -157,6 +157,9 @@ class Renderer {
 
     blueNoise = new BlueNoise(123);
 
+    /** @private */
+    _aabbUpdateIndex = 0;
+
     /**
      * Create a new instance.
      *
@@ -871,7 +874,7 @@ class Renderer {
             const drawCall = drawCalls[i];
             if (drawCall.visible) {
 
-                const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera);
+                const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera, this._aabbUpdateIndex);
                 if (visible) {
                     drawCall.visibleThisFrame = true;
 
@@ -1085,6 +1088,8 @@ class Renderer {
         // #if _PROFILER
         const cullTime = now();
         // #endif
+
+        this._aabbUpdateIndex++;
 
         const { scene } = this;
 
