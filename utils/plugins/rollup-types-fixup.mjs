@@ -195,24 +195,24 @@ const REPLACEMENTS = [{
 
             // Find the jsdoc block description using eg "@property {Type} {name}"
             return contents.replace('reset(): void;', `reset(): void;
-                ${STANDARD_MAT_PROPS.map(prop => {
-                    const typeDefinition = `@property {${prop[1]}} ${prop[0]}`
-                    const typeDescriptionIndex = contents.match(typeDefinition);
-                    const typeDescription = typeDescriptionIndex ? 
-                        contents.slice(typeDescriptionIndex.index + typeDefinition.length, contents.indexOf('\n * @property', typeDescriptionIndex.index + typeDefinition.length)) 
-                        : '';
+                ${STANDARD_MAT_PROPS.map((prop) => {
+        const typeDefinition = `@property {${prop[1]}} ${prop[0]}`;
+        const typeDescriptionIndex = contents.match(typeDefinition);
+        const typeDescription = typeDescriptionIndex ?
+            contents.slice(typeDescriptionIndex.index + typeDefinition.length, contents.indexOf('\n * @property', typeDescriptionIndex.index + typeDefinition.length)) :
+            '';
 
-                    // Strip newlines, asterisks, and tabs from the type description
-                    const cleanTypeDescription = typeDescription
-                        .trim()
-                        .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
-                        .replace(/\s+/g, ' '); // collapse whitespace
+        // Strip newlines, asterisks, and tabs from the type description
+        const cleanTypeDescription = typeDescription
+        .trim()
+        .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
+        .replace(/\s+/g, ' '); // collapse whitespace
 
-                    const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
-                    // console.log(prop[0], contents.match(`@property {${prop[1]}} ${prop[0]}`), cleanTypeDescription);
-                    return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
-                }).join('')}`,
-        )
+        const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
+        // console.log(prop[0], contents.match(`@property {${prop[1]}} ${prop[0]}`), cleanTypeDescription);
+        return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
+    }).join('')}`
+            );
         },
         footer: `
 import { Color } from '../../core/math/color.js';
