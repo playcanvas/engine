@@ -298,6 +298,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
         };
 
+        fDefineSet(options.lightMap, 'STD_LIGHTMAP', '');
+        fDefineSet(options.lightVertexColor, 'STD_LIGHT_VERTEX_COLOR', '');
+        fDefineSet(options.dirLightMap && options.litOptions.useSpecular, 'STD_LIGHTMAP_DIR', '');
         fDefineSet(options.heightMap, 'STD_HEIGHT_MAP', '');
         fDefineSet(options.useSpecularColor, 'STD_SPECULAR_COLOR', '');
         fDefineSet(options.aoMap || options.aoVertexColor || options.useAO, 'STD_AO', '');
@@ -510,6 +513,14 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                         uniform sampler2D texture_clearCoatNormalMap;
                     #endif
                 #endif
+
+                // lightmap
+                #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
+                    vec3 dLightmap;
+                    #ifdef STD_LIGHT_TEXTURE_ALLOCATE
+                        uniform sampler2D texture_lightMap;
+                    #endif
+                #endif
             #endif
         `);
 
@@ -596,6 +607,11 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     #include "clearCoatPS"
                     #include "clearCoatGlossPS"
                     #include "clearCoatNormalPS"
+                #endif
+
+                // lightmap
+                #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
+                    #include "lightmapPS"
                 #endif
             #endif
         `);
@@ -706,6 +722,16 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     litArgs_clearcoat_gloss = ccGlossiness;
                     litArgs_clearcoat_worldNormal = ccNormalW;
                 #endif
+
+                // lightmap
+                #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
+                    getLightMap();
+                    litArgs_lightmap = dLightmap;
+
+                    #ifdef STD_LIGHTMAP_DIR
+                        litArgs_lightmapDir = dLightmapDir;
+                    #endif
+                #endif
             #endif
         `);
 
@@ -793,24 +819,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 this._addMap(fDefines, 'clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping, options.clearCoatPackedNormal ? 'xy' : 'xyz');
             }
 
-
-            // STILL TO DO -------------
-
-
             // lightmap
             if (options.lightMap || options.lightVertexColor) {
-                const lightmapDir = (options.dirLightMap && options.litOptions.useSpecular);
-                const lightmapChunkPropName = lightmapDir ? 'lightmapDirPS' : 'lightmapSinglePS';
-                decl.append('vec3 dLightmap;');
-                if (lightmapDir) {
-                    decl.append('vec3 dLightmapDir;');
-                }
-                code.append(this._addMap(fDefines, 'light', lightmapChunkPropName, options, litShader.chunks, textureMapping, options.lightMapEncoding));
-                func.append('getLightMap();');
-                args.append('litArgs_lightmap = dLightmap;');
-                if (lightmapDir) {
-                    args.append('litArgs_lightmapDir = dLightmapDir;');
-                }
+                this._addMap(fDefines, 'light', 'lightmapPS', options, litShader.chunks, textureMapping, options.lightMapEncoding);
             }
 
         } else {
@@ -851,7 +862,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             'texture_emissiveMap',
             'texture_clearCoatMap',
             'texture_clearCoatGlossMap',
-            'texture_clearCoatNormalMap'
+            'texture_clearCoatNormalMap',
+            'texture_lightMap'
         ];
 
         // TODO: when refactoring is done, this loop will be removed

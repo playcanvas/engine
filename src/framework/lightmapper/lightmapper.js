@@ -248,7 +248,8 @@ class Lightmapper {
                     dDiffuseLight += vec3(${scene.ambientBakeOcclusionBrightness.toFixed(1)});
                     dDiffuseLight = saturate(dDiffuseLight);
                     dDiffuseLight *= dAmbientLight;
-                ${bakeLmEndChunk}`;
+                    ${bakeLmEndChunk}
+                `;
             } else {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
             }
@@ -256,7 +257,11 @@ class Lightmapper {
             material.chunks.endPS = bakeLmEndChunk;
             material.lightMap = this.blackTex;
         } else {
-            material.chunks.basePS = `${shaderChunks.basePS}\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n`;
+            material.chunks.basePS = `
+                #define STD_LIGHTMAP_DIR
+                ${shaderChunks.basePS}
+                uniform float bakeDir;
+            `;
             material.chunks.endPS = shaderChunksLightmapper.bakeDirLmEndPS;
         }
 

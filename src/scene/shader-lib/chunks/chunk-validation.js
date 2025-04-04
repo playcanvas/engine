@@ -14,8 +14,6 @@ const chunkVersions = {
     diffusePS: CHUNKAPI_1_57,
     emissivePS: CHUNKAPI_1_57,
     glossPS: CHUNKAPI_1_60,
-    lightmapDirPS: CHUNKAPI_1_55,
-    lightmapSinglePS: CHUNKAPI_1_55,
     metalnessPS: CHUNKAPI_1_57,
     normalMapPS: CHUNKAPI_1_57,
     opacityPS: CHUNKAPI_1_57,
@@ -129,7 +127,9 @@ const removedChunks = {
     normalDetailMapPS: CHUNKAPI_2_7,
     normalXYPS: CHUNKAPI_2_7,
     normalXYZPS: CHUNKAPI_2_7,
-    aoDetailMapPS: CHUNKAPI_2_7
+    aoDetailMapPS: CHUNKAPI_2_7,
+    lightmapDirPS: CHUNKAPI_2_7,
+    lightmapSinglePS: CHUNKAPI_2_7
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
