@@ -531,7 +531,9 @@ class LitShader {
             `;
         }
 
-        Debug.assert(!this.fshader.includes('litShaderArgs'), 'Automatic compatibility with shaders using litShaderArgs has been removed. Please update the shader to use the new system.');
+        Debug.assert(!this.fshader.includes('litShaderArgs.'), 'Automatic compatibility with shaders using litShaderArgs has been removed. Please update the shader to use the new system.', {
+            fshader: this.fshader
+        });
     }
 }
 

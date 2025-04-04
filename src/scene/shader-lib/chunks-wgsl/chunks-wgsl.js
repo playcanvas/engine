@@ -172,6 +172,8 @@ import sphericalPS from './common/frag/spherical.js';
 // import spotPS from './lit/frag/spot.js';
 // import startNineSlicedPS from './lit/frag/startNineSliced.js';
 // import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
+// import stdDeclarationPS from './standard/frag/stdDeclaration.js';
+// import stdFrontEndPS from './standard/frag/stdFrontEnd.js';
 // import tangentBinormalVS from './lit/vert/tangentBinormal.js';
 // import TBNPS from './lit/frag/TBN.js';
 // import thicknessPS from './standard/frag/thickness.js';
@@ -379,6 +381,8 @@ const shaderChunksWGSL = {
     // spotPS,
     // startNineSlicedPS,
     // startNineSlicedTiledPS,
+    // stdDeclarationPS,
+    // stdFrontEndPS,
     // tangentBinormalVS,
     // TBNPS,
     // thicknessPS,

@@ -6,7 +6,6 @@ import {
 } from '../../constants.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { LitShader } from './lit-shader.js';
-import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
@@ -132,7 +131,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
     }
 
     /**
-     * Add chunk for Map Types (used for all maps except Normal).
+     * Add shader defines for a texture map.
      *
      * @param {Map<string, string>} fDefines - The fragment defines.
      * @param {string} propName - The base name of the map: diffuse | emissive | opacity | light | height | metalness | specular | gloss | ao.
@@ -141,10 +140,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
      * @param {object} chunks - The set of shader chunks to choose from.
      * @param {object} mapping - The mapping between chunk and sampler
      * @param {string|null} encoding - The texture's encoding
-     * @returns {string} The shader code to support this map.
      * @private
      */
-    _addMap(fDefines, propName, chunkName, options, chunks, mapping, encoding = null) {
+    _addMapDefines(fDefines, propName, chunkName, options, chunks, mapping, encoding = null) {
         const mapPropName = `${propName}Map`;
         const propNameCaps = propName.toUpperCase();
         const uVPropName = `${mapPropName}Uv`;
@@ -220,8 +218,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         if (!!(options[invertName])) {
             fDefines.set(`STD_${propNameCaps}_INVERT`, '');
         }
-
-        return chunkCode;
     }
 
     _correctChannel(p, chan, _matTex2D) {
@@ -330,420 +326,17 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         const fDefines = litShader.fDefines;
         this.prepareFragmentDefines(options, fDefines, shaderPassInfo);
 
-        const decl = new ChunkBuilder();
-        const code = new ChunkBuilder();
-        const func = new ChunkBuilder();
-        const args = new ChunkBuilder();
         let lightingUv = '';
-
-        decl.append(`
-            
-            // global texture bias for standard textures
-            #if LIT_NONE_SLICE_MODE == TILED
-                const float textureBias = -1000.0;
-            #else
-                uniform float textureBias;
-            #endif
-
-            // globals
-            float dAlpha = 1.0;
-
-            #if defined(LIT_ALPHA_TEST)
-                #include "alphaTestPS"
-            #endif
-
-            // dithering
-            #if STD_OPACITY_DITHER != NONE
-                #include "opacityDitherPS"
-            #endif
-
-            #ifdef FORWARD_PASS // ----------------
-
-                // globals
-                vec3 dAlbedo;
-                vec3 dNormalW;
-                vec3 dSpecularity = vec3(0.0);
-                float dGlossiness = 0.0;
-
-                #ifdef LIT_REFRACTION
-                    float dTransmission;
-                    float dThickness;
-                #endif
-
-                #ifdef LIT_SCENE_COLOR
-                    uniform sampler2D uSceneColorMap;
-                #endif
-
-                #ifdef LIT_SCREEN_SIZE
-                    uniform vec4 uScreenSize;
-                #endif
-
-                #ifdef LIT_TRANSFORMS
-                    uniform mat4 matrix_viewProjection;
-                    uniform mat4 matrix_model;
-                #endif
-
-                // parallax
-                #ifdef STD_HEIGHT_MAP
-                    vec2 dUvOffset;
-                    #ifdef STD_DIFFUSE_TEXTURE_ALLOCATE
-                        uniform sampler2D texture_heightMap;
-                    #endif
-                #endif
-
-                // diffuse
-                #ifdef STD_DIFFUSE_TEXTURE_ALLOCATE
-                    uniform sampler2D texture_diffuseMap;
-                #endif
-
-                #ifdef STD_DIFFUSEDETAIL_TEXTURE_ALLOCATE
-                    uniform sampler2D texture_diffuseDetailMap;
-                #endif
-
-                // normal
-                #ifdef STD_NORMAL_TEXTURE_ALLOCATE
-                    uniform sampler2D texture_normalMap;
-                #endif
-
-                #ifdef STD_NORMALDETAIL_TEXTURE_ALLOCATE
-                    uniform sampler2D texture_normalDetailMap;
-                #endif
-
-                // refraction
-                #ifdef STD_THICKNESS_TEXTURE_ALLOCATE
-                    uniform sampler2D texture_thicknessMap;
-                #endif
-                #ifdef STD_REFRACTION_TEXTURE_ALLOCATE
-                    uniform sampler2D texture_refractionMap;
-                #endif
-
-                // iridescence
-                #ifdef LIT_IRIDESCENCE
-                    float dIridescence;
-                    float dIridescenceThickness;
-
-                    #ifdef STD_IRIDESCENCE_THICKNESS_TEXTURE_ALLOCATE
-                        uniform sampler2D texture_iridescenceThicknessMap;
-                    #endif
-                    #ifdef STD_IRIDESCENCE_TEXTURE_ALLOCATE
-                        uniform sampler2D texture_iridescenceMap;
-                    #endif
-                #endif
-
-                #ifdef LIT_CLEARCOAT
-                    float ccSpecularity;
-                    float ccGlossiness;
-                    vec3 ccNormalW;
-                #endif
-
-                // specularity & glossiness
-                #ifdef LIT_SPECULAR_OR_REFLECTION
-
-                    // sheen
-                    #ifdef LIT_SHEEN
-                        vec3 sSpecularity;
-                        float sGlossiness;
-
-                        #ifdef STD_SHEEN_TEXTURE_ALLOCATE
-                            uniform sampler2D texture_sheenMap;
-                        #endif
-                        #ifdef STD_SHEENGLOSS_TEXTURE_ALLOCATE
-                            uniform sampler2D texture_sheenGlossMap;
-                        #endif
-                    #endif
-
-                    // metalness
-                    #ifdef LIT_METALNESS
-                        float dMetalness;
-                        float dIor;
-
-                        #ifdef STD_METALNESS_TEXTURE_ALLOCATE
-                            uniform sampler2D texture_metalnessMap;
-                        #endif
-                    #endif
-
-                    // specularity factor
-                    #ifdef LIT_SPECULARITY_FACTOR
-                        float dSpecularityFactor;
-
-                        #ifdef STD_SPECULARITYFACTOR_TEXTURE_ALLOCATE
-                            uniform sampler2D texture_specularityFactorMap;
-                        #endif
-                    #endif
-
-                    // specular color
-                    #ifdef STD_SPECULAR_COLOR
-                        #ifdef STD_SPECULAR_TEXTURE_ALLOCATE
-                            uniform sampler2D texture_specularMap;
-                        #endif
-                    #endif
-
-                    // gloss
-                    #ifdef STD_GLOSS_TEXTURE_ALLOCATE
-                        uniform sampler2D texture_glossMap;
-                    #endif
-                #endif
-
-                // ao
-                #ifdef STD_AO
-                    float dAo;
-                    #ifdef STD_AO_TEXTURE_ALLOCATE
-                        uniform sampler2D texture_aoMap;
-                    #endif
-                    #ifdef STD_AODETAIL_TEXTURE_ALLOCATE
-                        uniform sampler2D texture_aoDetailMap;
-                    #endif
-                #endif
-
-                // emission
-                vec3 dEmission;
-                #ifdef STD_EMISSIVE_TEXTURE_ALLOCATE
-                    uniform sampler2D texture_emissiveMap;
-                #endif
-
-                // clearcoat
-                #ifdef LIT_CLEARCOAT
-                    #ifdef STD_CLEARCOAT_TEXTURE_ALLOCATE
-                        uniform sampler2D texture_clearCoatMap;
-                    #endif
-                    #ifdef STD_CLEARCOATGLOSS_TEXTURE_ALLOCATE
-                        uniform sampler2D texture_clearCoatGlossMap;
-                    #endif
-                    #ifdef STD_CLEARCOATNORMAL_TEXTURE_ALLOCATE
-                        uniform sampler2D texture_clearCoatNormalMap;
-                    #endif
-                #endif
-
-                // lightmap
-                #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
-                    vec3 dLightmap;
-                    #ifdef STD_LIGHT_TEXTURE_ALLOCATE
-                        uniform sampler2D texture_lightMap;
-                    #endif
-                #endif
-            #endif
-        `);
-
-        code.append(`
-
-            // all passes handle opacity
-            #if LIT_BLEND_TYPE != NONE || defined(LIT_ALPHA_TEST) || defined(LIT_ALPHA_TO_COVERAGE) || STD_OPACITY_DITHER != NONE
-                #ifdef STD_OPACITY_TEXTURE_ALLOCATE
-                    uniform sampler2D texture_opacityMap;
-                #endif
-                #include "opacityPS"
-            #endif
-
-            #ifdef FORWARD_PASS // ----------------
-
-                // parallax
-                #ifdef STD_HEIGHT_MAP
-                    #include "parallaxPS"
-                #endif
-
-                // diffuse
-                #include  "diffusePS"
-
-                // normal
-                #ifdef LIT_NEEDS_NORMAL
-                    #include "normalMapPS"
-                #endif
-
-                // refraction
-                #ifdef LIT_REFRACTION
-                    #include "transmissionPS"
-                    #include "thicknessPS"
-                #endif
-
-                // iridescence
-                #ifdef LIT_IRIDESCENCE
-                    #include "iridescencePS"
-                    #include "iridescenceThicknessPS"
-                #endif
-
-                // specularity & glossiness
-                #ifdef LIT_SPECULAR_OR_REFLECTION
-
-                    // sheen
-                    #ifdef LIT_SHEEN
-                        #include "sheenPS"
-                        #include "sheenGlossPS"
-                    #endif
-
-                    // metalness
-                    #ifdef LIT_METALNESS
-                        #include "metalnessPS"
-                        #include "iorPS"
-                    #endif
-
-                    // specularity factor
-                    #ifdef LIT_SPECULARITY_FACTOR
-                        #include "specularityFactorPS"
-                    #endif
-
-                    // specular color
-                    #ifdef STD_SPECULAR_COLOR
-                        #include "specularPS"
-                    #else
-                        void getSpecularity() { 
-                            dSpecularity = vec3(1);
-                        }
-                    #endif
-
-                    // gloss
-                    #include "glossPS"
-                #endif
-
-                // ao
-                #ifdef STD_AO
-                    #include "aoPS"
-                #endif
-
-                // emission
-                #include "emissivePS"
-
-                // clearcoat
-                #ifdef LIT_CLEARCOAT
-                    #include "clearCoatPS"
-                    #include "clearCoatGlossPS"
-                    #include "clearCoatNormalPS"
-                #endif
-
-                // lightmap
-                #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
-                    #include "lightmapPS"
-                #endif
-            #endif
-        `);
-
-        func.append(`
-
-            // all passes handle opacity
-            #if LIT_BLEND_TYPE != NONE || defined(LIT_ALPHA_TEST) || defined(LIT_ALPHA_TO_COVERAGE) || STD_OPACITY_DITHER != NONE
-                getOpacity();
-
-                #if defined(LIT_ALPHA_TEST)
-                    alphaTest(dAlpha);
-                #endif
-
-                #if STD_OPACITY_DITHER != NONE
-                    opacityDither(dAlpha, 0.0);
-                #endif
-
-                litArgs_opacity = dAlpha;
-            #endif
-
-            #ifdef FORWARD_PASS // ----------------
-
-                // parallax
-                #ifdef STD_HEIGHT_MAP
-                    getParallax();
-                #endif
-
-                // diffuse
-                getAlbedo();
-                litArgs_albedo = dAlbedo;
-
-                // normal
-                #ifdef LIT_NEEDS_NORMAL
-                    getNormal();
-                    litArgs_worldNormal = dNormalW;
-                #endif
-
-                // refraction
-                #ifdef LIT_REFRACTION
-                    getRefraction();
-                    litArgs_transmission = dTransmission;
-
-                    getThickness();
-                    litArgs_thickness = dThickness;
-
-                    #ifdef LIT_DISPERSION
-                        litArgs_dispersion = material_dispersion;
-                    #endif
-                #endif
-
-                // iridescence
-                #ifdef LIT_IRIDESCENCE
-                    getIridescence();
-                    getIridescenceThickness();
-                    litArgs_iridescence_intensity = dIridescence;
-                    litArgs_iridescence_thickness = dIridescenceThickness;
-                #endif
-
-                // specularity & glossiness
-                #ifdef LIT_SPECULAR_OR_REFLECTION
-
-                    // sheen
-                    #ifdef LIT_SHEEN
-                        getSheen();
-                        litArgs_sheen_specularity = sSpecularity;
-                        getSheenGlossiness();
-                        litArgs_sheen_gloss = sGlossiness;
-                    #endif
-
-                    // metalness
-                    #ifdef LIT_METALNESS
-                        getMetalness();
-                        litArgs_metalness = dMetalness;
-                        getIor();
-                        litArgs_ior = dIor;
-                    #endif
-
-                    // specularity factor
-                    #ifdef LIT_SPECULARITY_FACTOR
-                        getSpecularityFactor();
-                        litArgs_specularityFactor = dSpecularityFactor;
-                    #endif
-
-                    // gloss
-                    getGlossiness();
-                    getSpecularity();
-                    litArgs_specularity = dSpecularity;
-                    litArgs_gloss = dGlossiness;
-                #endif
-
-                // ao
-                #ifdef STD_AO
-                    getAO();
-                    litArgs_ao = dAo;
-                #endif
-
-                // emission
-                getEmission();
-                litArgs_emission = dEmission;
-
-                // clearcoat
-                #ifdef LIT_CLEARCOAT
-                    getClearCoat();
-                    getClearCoatGlossiness();
-                    getClearCoatNormal();
-                    litArgs_clearcoat_specularity = ccSpecularity;
-                    litArgs_clearcoat_gloss = ccGlossiness;
-                    litArgs_clearcoat_worldNormal = ccNormalW;
-                #endif
-
-                // lightmap
-                #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
-                    getLightMap();
-                    litArgs_lightmap = dLightmap;
-
-                    #ifdef STD_LIGHTMAP_DIR
-                        litArgs_lightmapDir = dLightmapDir;
-                    #endif
-                #endif
-            #endif
-        `);
 
         if (isForwardPass) {
             // parallax
             if (options.heightMap) {
-                this._addMap(fDefines, 'height', 'parallaxPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'height', 'parallaxPS', options, litShader.chunks, textureMapping);
             }
 
             // opacity
             if (options.litOptions.blendType !== BLEND_NONE || options.litOptions.alphaTest || options.litOptions.alphaToCoverage || options.litOptions.opacityDither !== DITHER_NONE) {
-                this._addMap(fDefines, 'opacity', 'opacityPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'opacity', 'opacityPS', options, litShader.chunks, textureMapping);
             }
 
             // normal
@@ -756,126 +349,85 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     }
                 }
 
-                this._addMap(fDefines, 'normalDetail', 'normalMapPS', options, litShader.chunks, textureMapping, options.normalDetailPackedNormal ? 'xy' : 'xyz');
-                this._addMap(fDefines, 'normal', 'normalMapPS', options, litShader.chunks, textureMapping, options.packedNormal ? 'xy' : 'xyz');
+                this._addMapDefines(fDefines, 'normalDetail', 'normalMapPS', options, litShader.chunks, textureMapping, options.normalDetailPackedNormal ? 'xy' : 'xyz');
+                this._addMapDefines(fDefines, 'normal', 'normalMapPS', options, litShader.chunks, textureMapping, options.packedNormal ? 'xy' : 'xyz');
             }
 
             // diffuse
             if (options.diffuseDetail) {
-                this._addMap(fDefines, 'diffuseDetail', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseDetailEncoding);
+                this._addMapDefines(fDefines, 'diffuseDetail', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseDetailEncoding);
             }
-            this._addMap(fDefines, 'diffuse', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseEncoding);
+            this._addMapDefines(fDefines, 'diffuse', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseEncoding);
 
             // refraction
             if (options.litOptions.useRefraction) {
-                this._addMap(fDefines, 'refraction', 'transmissionPS', options, litShader.chunks, textureMapping);
-                this._addMap(fDefines, 'thickness', 'thicknessPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'refraction', 'transmissionPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'thickness', 'thicknessPS', options, litShader.chunks, textureMapping);
             }
 
             // iridescence
             if (options.litOptions.useIridescence) {
-                this._addMap(fDefines, 'iridescence', 'iridescencePS', options, litShader.chunks, textureMapping);
-                this._addMap(fDefines, 'iridescenceThickness', 'iridescenceThicknessPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'iridescence', 'iridescencePS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'iridescenceThickness', 'iridescenceThicknessPS', options, litShader.chunks, textureMapping);
             }
 
             // specularity & glossiness
             if ((litShader.lighting && options.litOptions.useSpecular) || litShader.reflections) {
                 if (options.litOptions.useSheen) {
-                    this._addMap(fDefines, 'sheen', 'sheenPS', options, litShader.chunks, textureMapping, options.sheenEncoding);
-                    this._addMap(fDefines, 'sheenGloss', 'sheenGlossPS', options, litShader.chunks, textureMapping);
+                    this._addMapDefines(fDefines, 'sheen', 'sheenPS', options, litShader.chunks, textureMapping, options.sheenEncoding);
+                    this._addMapDefines(fDefines, 'sheenGloss', 'sheenGlossPS', options, litShader.chunks, textureMapping);
                 }
 
                 if (options.litOptions.useMetalness) {
-                    this._addMap(fDefines, 'metalness', 'metalnessPS', options, litShader.chunks, textureMapping);
-                    this._addMap(fDefines, 'ior', 'iorPS', options, litShader.chunks, textureMapping);
+                    this._addMapDefines(fDefines, 'metalness', 'metalnessPS', options, litShader.chunks, textureMapping);
+                    this._addMapDefines(fDefines, 'ior', 'iorPS', options, litShader.chunks, textureMapping);
                 }
 
                 if (options.litOptions.useSpecularityFactor) {
-                    this._addMap(fDefines, 'specularityFactor', 'specularityFactorPS', options, litShader.chunks, textureMapping);
+                    this._addMapDefines(fDefines, 'specularityFactor', 'specularityFactorPS', options, litShader.chunks, textureMapping);
                 }
 
                 if (options.useSpecularColor) {
-                    this._addMap(fDefines, 'specular', 'specularPS', options, litShader.chunks, textureMapping, options.specularEncoding);
+                    this._addMapDefines(fDefines, 'specular', 'specularPS', options, litShader.chunks, textureMapping, options.specularEncoding);
                 }
 
-                this._addMap(fDefines, 'gloss', 'glossPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'gloss', 'glossPS', options, litShader.chunks, textureMapping);
             }
 
             // ao
             if (options.aoDetail) {
-                this._addMap(fDefines, 'aoDetail', 'aoPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'aoDetail', 'aoPS', options, litShader.chunks, textureMapping);
             }
             if (options.aoMap || options.aoVertexColor || options.useAO) {
-                this._addMap(fDefines, 'ao', 'aoPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'ao', 'aoPS', options, litShader.chunks, textureMapping);
             }
 
             // emission
-            this._addMap(fDefines, 'emissive', 'emissivePS', options, litShader.chunks, textureMapping, options.emissiveEncoding);
+            this._addMapDefines(fDefines, 'emissive', 'emissivePS', options, litShader.chunks, textureMapping, options.emissiveEncoding);
 
             // clearcoat
             if (options.litOptions.useClearCoat) {
-                this._addMap(fDefines, 'clearCoat', 'clearCoatPS', options, litShader.chunks, textureMapping);
-                this._addMap(fDefines, 'clearCoatGloss', 'clearCoatGlossPS', options, litShader.chunks, textureMapping);
-                this._addMap(fDefines, 'clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping, options.clearCoatPackedNormal ? 'xy' : 'xyz');
+                this._addMapDefines(fDefines, 'clearCoat', 'clearCoatPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'clearCoatGloss', 'clearCoatGlossPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping, options.clearCoatPackedNormal ? 'xy' : 'xyz');
             }
 
             // lightmap
             if (options.lightMap || options.lightVertexColor) {
-                this._addMap(fDefines, 'light', 'lightmapPS', options, litShader.chunks, textureMapping, options.lightMapEncoding);
+                this._addMapDefines(fDefines, 'light', 'lightmapPS', options, litShader.chunks, textureMapping, options.lightMapEncoding);
             }
 
         } else {
             // all other passes require only opacity
             const opacityShadowDither = options.litOptions.opacityShadowDither;
             if (options.litOptions.alphaTest || opacityShadowDither) {
-                this._addMap(fDefines, 'opacity', 'opacityPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'opacity', 'opacityPS', options, litShader.chunks, textureMapping);
             }
         }
 
-        decl.append(litShader.chunks.litShaderArgsPS);
-        code.append(`
-            void evaluateFrontend() {
-                ${func.code}
-                ${args.code}
-            }
-        `);
-
-        const handled = [
-            'texture_heightMap',
-            'texture_diffuseMap',
-            'texture_diffuseDetailMap',
-            'texture_opacityMap',
-            'texture_normalDetailMap',
-            'texture_normalMap',
-            'texture_thicknessMap',
-            'texture_refractionMap',
-            'texture_iridescenceMap',
-            'texture_iridescenceThicknessMap',
-            'texture_sheenMap',
-            'texture_sheenGlossMap',
-            'texture_metalnessMap',
-            'texture_specularityFactorMap',
-            'texture_specularMap',
-            'texture_glossMap',
-            'texture_aoMap',
-            'texture_aoDetailMap',
-            'texture_emissiveMap',
-            'texture_clearCoatMap',
-            'texture_clearCoatGlossMap',
-            'texture_clearCoatNormalMap',
-            'texture_lightMap'
-        ];
-
-        // TODO: when refactoring is done, this loop will be removed
-        for (const texture in textureMapping) {
-            if (handled.includes(textureMapping[texture])) {
-                continue;
-            }
-
-            decl.append(`uniform sampler2D ${textureMapping[texture]};`);
-        }
-
-        litShader.generateFragmentShader(decl.code, code.code, lightingUv);
+        // generate fragment shader - supply the front end declaration and code to the lit shader, which will
+        // use the outputs from this standard shader generator as an input to the lit shader generator
+        litShader.generateFragmentShader(litShader.chunks.stdDeclarationPS, litShader.chunks.stdFrontEndPS, lightingUv);
 
         const includes = new Map(Object.entries({
             ...Object.getPrototypeOf(litShader.chunks), // the prototype stores the default chunks
