@@ -176,7 +176,7 @@ class GSplatInstance {
         viewport[1] = height;
 
         // adjust viewport for stereoscopic VR sessions
-        const xr = camera?.xr;
+        const xr = camera?.camera?.xr;
         if (xr?.active && xr.views.list.length === 2) {
             viewport[0] *= 0.5;
         }
