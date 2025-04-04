@@ -58,7 +58,7 @@ class ParticleMaterial extends Material {
             // in Editor, screen space particles (children of 2D Screen) are still rendered in 3d space
             screenSpace: emitter.inTools ? false : this.emitter.screenSpace,
 
-            blend: this.blendType,
+            blend: this.emitter.blendType,
             animTex: this.emitter._isAnimated(),
             animTexLoop: this.emitter.animLoop,
             pack8: this.emitter.pack8,

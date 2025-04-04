@@ -135,6 +135,8 @@ import morphVS from './internal/morph/vert/morph.js';
 // import particle_normalVS from './particle/vert/particle_normal.js';
 // import particle_normalMapPS from './particle/frag/particle_normalMap.js';
 // import particle_pointAlongVS from './particle/vert/particle_pointAlong.js';
+// import particle_shaderPS from './particle/frag/particle-shader.js';
+// import particle_shaderVS from './particle/vert/particle-shader.js';
 // import particle_softPS from './particle/frag/particle_soft.js';
 // import particle_softVS from './particle/vert/particle_soft.js';
 // import particle_stretchVS from './particle/vert/particle_stretch.js';
@@ -344,6 +346,8 @@ const shaderChunksWGSL = {
     // particle_normalVS,
     // particle_normalMapPS,
     // particle_pointAlongVS,
+    // particle_shaderPS,
+    // particle_shaderVS,
     // particle_softPS,
     // particle_softVS,
     // particle_stretchVS,
