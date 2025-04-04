@@ -19,6 +19,8 @@ import { AnimNode } from './anim-node.js';
  * to animate the {@link Entity} while the state is active. An AnimState will stay active and play
  * as long as there is no {@link AnimTransition} with its conditions met that has that AnimState
  * as its source state.
+ *
+ * @category Animation
  */
 class AnimState {
     /** @private */

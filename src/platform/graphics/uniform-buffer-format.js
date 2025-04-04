@@ -42,6 +42,8 @@ uniformTypeToNumComponents[UNIFORMTYPE_UVEC4] = 4;
 
 /**
  * A class storing description of an individual uniform, stored inside a uniform buffer.
+ *
+ * @category Graphics
  */
 class UniformFormat {
     /**
@@ -201,6 +203,8 @@ class UniformFormat {
 
 /**
  * A descriptor that defines the layout of of data inside the uniform buffer.
+ *
+ * @category Graphics
  */
 class UniformBufferFormat {
     /**
