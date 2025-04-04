@@ -7,6 +7,8 @@ import {
  * each frame, the controller tests to see if any of the AnimTransitions have the current AnimState
  * as their source (from) state. If so and the AnimTransitions parameter based conditions are met,
  * the controller will transition to the destination state.
+ *
+ * @category Animation
  */
 class AnimTransition {
     /**

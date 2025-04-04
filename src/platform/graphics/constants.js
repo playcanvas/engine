@@ -1599,6 +1599,7 @@ export const STENCILOP_INVERT = 7;
  * The texture is not in a locked state.
  *
  * @type {number}
+ * @category Graphics
  */
 export const TEXTURELOCK_NONE = 0;
 
