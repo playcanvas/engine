@@ -66,8 +66,7 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import lightFunctionShadowPS from './lit/frag/lighting/lightFunctionShadow.js';
 // import lightingPS from './lit/frag/lighting/lighting.js';
 // import lightmapAddPS from './lit/frag/lightmapAdd.js';
-// import lightmapDirPS from './standard/frag/lightmapDir.js';
-// import lightmapSinglePS from './standard/frag/lightmapSingle.js';
+// import lightmapPS from './standard/frag/lightmap.js';
 // import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 // import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 // import lightSheenPS from './lit/frag/lightSheen.js';
@@ -274,8 +273,7 @@ const shaderChunksWGSL = {
     // lightFunctionShadowPS,
     // lightingPS,
     // lightmapAddPS,
-    // lightmapDirPS,
-    // lightmapSinglePS,
+    // lightmapPS,
     // lightSpecularAnisoGGXPS,
     // lightSpecularBlinnPS,
     // lightSheenPS,
