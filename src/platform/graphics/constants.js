@@ -1599,6 +1599,7 @@ export const STENCILOP_INVERT = 7;
  * The texture is not in a locked state.
  *
  * @type {number}
+ * @category Graphics
  */
 export const TEXTURELOCK_NONE = 0;
 
@@ -2428,3 +2429,4 @@ export const CHUNKAPI_2_1 = '2.1';
 export const CHUNKAPI_2_3 = '2.3';
 export const CHUNKAPI_2_5 = '2.5';
 export const CHUNKAPI_2_6 = '2.6';
+export const CHUNKAPI_2_7 = '2.7';

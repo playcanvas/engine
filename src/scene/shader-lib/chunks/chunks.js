@@ -1,7 +1,6 @@
 import alphaTestPS from './standard/frag/alphaTest.js';
 import ambientPS from './lit/frag/ambient.js';
 import aoPS from './standard/frag/ao.js';
-import aoDetailMapPS from './standard/frag/aoDetailMap.js';
 import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
 import basePS from './lit/frag/base.js';
@@ -25,7 +24,6 @@ import debugProcessFrontendPS from './lit/frag/debug-process-frontend.js';
 import decodePS from './common/frag/decode.js';
 import detailModesPS from './standard/frag/detailModes.js';
 import diffusePS from './standard/frag/diffuse.js';
-import diffuseDetailMapPS from './standard/frag/diffuseDetailMap.js';
 import emissivePS from './standard/frag/emissive.js';
 import encodePS from './common/frag/encode.js';
 import endPS from './lit/frag/end.js';
@@ -47,6 +45,9 @@ import gsplatColorVS from './gsplat/vert/gsplatColor.js';
 import gsplatCommonVS from './gsplat/vert/gsplatCommon.js';
 import gsplatCompressedDataVS from './gsplat/vert/gsplatCompressedData.js';
 import gsplatCompressedSHVS from './gsplat/vert/gsplatCompressedSH.js';
+import gsplatSogsColorVS from './gsplat/vert/gsplatSogsColor.js';
+import gsplatSogsDataVS from './gsplat/vert/gsplatSogsData.js';
+import gsplatSogsSHVS from './gsplat/vert/gsplatSogsSH.js';
 import gsplatCornerVS from './gsplat/vert/gsplatCorner.js';
 import gsplatDataVS from './gsplat/vert/gsplatData.js';
 import gsplatOutputVS from './gsplat/vert/gsplatOutput.js';
@@ -68,8 +69,7 @@ import lightFunctionLightPS from './lit/frag/lighting/lightFunctionLight.js';
 import lightFunctionShadowPS from './lit/frag/lighting/lightFunctionShadow.js';
 import lightingPS from './lit/frag/lighting/lighting.js';
 import lightmapAddPS from './lit/frag/lightmapAdd.js';
-import lightmapDirPS from './standard/frag/lightmapDir.js';
-import lightmapSinglePS from './standard/frag/lightmapSingle.js';
+import lightmapPS from './standard/frag/lightmap.js';
 import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 import lightSheenPS from './lit/frag/lightSheen.js';
@@ -94,10 +94,7 @@ import morphVS from './internal/morph/vert/morph.js';
 import msdfVS from './common/vert/msdf.js';
 import normalVS from './lit/vert/normal.js';
 import normalCoreVS from './common/vert/normalCore.js';
-import normalDetailMapPS from './standard/frag/normalDetailMap.js';
 import normalMapPS from './standard/frag/normalMap.js';
-import normalXYPS from './standard/frag/normalXY.js';
-import normalXYZPS from './standard/frag/normalXYZ.js';
 import opacityPS from './standard/frag/opacity.js';
 import opacityDitherPS from './standard/frag/opacity-dither.js';
 import outputPS from './lit/frag/output.js';
@@ -178,6 +175,8 @@ import specularityFactorPS from './standard/frag/specularityFactor.js';
 import spotPS from './lit/frag/spot.js';
 import startNineSlicedPS from './lit/frag/startNineSliced.js';
 import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
+import stdDeclarationPS from './standard/frag/stdDeclaration.js';
+import stdFrontEndPS from './standard/frag/stdFrontEnd.js';
 import tangentBinormalVS from './lit/vert/tangentBinormal.js';
 import TBNPS from './lit/frag/TBN.js';
 import thicknessPS from './standard/frag/thickness.js';
@@ -212,7 +211,6 @@ const shaderChunks = {
     alphaTestPS,
     ambientPS,
     aoPS,
-    aoDetailMapPS,
     aoDiffuseOccPS,
     aoSpecOccPS,
     basePS,
@@ -235,7 +233,6 @@ const shaderChunks = {
     debugProcessFrontendPS,
     detailModesPS,
     diffusePS,
-    diffuseDetailMapPS,
     decodePS,
     emissivePS,
     encodePS,
@@ -259,6 +256,9 @@ const shaderChunks = {
     gsplatCommonVS,
     gsplatCompressedDataVS,
     gsplatCompressedSHVS,
+    gsplatSogsColorVS,
+    gsplatSogsDataVS,
+    gsplatSogsSHVS,
     gsplatDataVS,
     gsplatOutputVS,
     gsplatPS,
@@ -280,8 +280,7 @@ const shaderChunks = {
     lightFunctionShadowPS,
     lightingPS,
     lightmapAddPS,
-    lightmapDirPS,
-    lightmapSinglePS,
+    lightmapPS,
     lightSpecularAnisoGGXPS,
     lightSpecularBlinnPS,
     lightSheenPS,
@@ -306,10 +305,7 @@ const shaderChunks = {
     msdfVS,
     normalVS,
     normalCoreVS,
-    normalDetailMapPS,
     normalMapPS,
-    normalXYPS,
-    normalXYZPS,
     opacityPS,
     opacityDitherPS,
     outputPS,
@@ -390,6 +386,8 @@ const shaderChunks = {
     spotPS,
     startNineSlicedPS,
     startNineSlicedTiledPS,
+    stdDeclarationPS,
+    stdFrontEndPS,
     tangentBinormalVS,
     TBNPS,
     thicknessPS,

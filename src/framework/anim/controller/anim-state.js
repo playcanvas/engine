@@ -15,9 +15,12 @@ import { AnimNode } from './anim-node.js';
 
 /**
  * Defines a single state that the controller can be in. Each state contains either a single
- * AnimNode or a AnimBlendTree of multiple AnimNodes, which will be used to animate the Entity
- * while the state is active. An AnimState will stay active and play as long as there is no
- * AnimTransition with its conditions met that has that AnimState as its source state.
+ * {@link AnimNode} or an {@link AnimBlendTree} of multiple {@link AnimNode}s, which will be used
+ * to animate the {@link Entity} while the state is active. An AnimState will stay active and play
+ * as long as there is no {@link AnimTransition} with its conditions met that has that AnimState
+ * as its source state.
+ *
+ * @category Animation
  */
 class AnimState {
     /** @private */

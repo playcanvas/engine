@@ -215,7 +215,7 @@ class StandardMaterialOptionsBuilder {
         const specularityFactorTint = useSpecular && stdMat.useMetalnessSpecularColor &&
                                       (stdMat.specularityFactorTint || (stdMat.specularityFactor < 1 && !stdMat.specularityFactorMap));
 
-        const isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === PIXELFORMAT_DXT5 || stdMat.normalMap.type === TEXTURETYPE_SWIZZLEGGGR) : false;
+        const isPackedNormalMap = texture => (texture ? (texture.format === PIXELFORMAT_DXT5 || texture.type === TEXTURETYPE_SWIZZLEGGGR) : false);
 
         const equalish = (a, b) => Math.abs(a - b) < 1e-4;
 
@@ -227,21 +227,23 @@ class StandardMaterialOptionsBuilder {
         options.diffuseDetailEncoding = stdMat.diffuseDetailMap?.encoding;
         options.emissiveEncoding = stdMat.emissiveMap?.encoding;
         options.lightMapEncoding = stdMat.lightMap?.encoding;
-        options.packedNormal = isPackedNormalMap;
+        options.packedNormal = isPackedNormalMap(stdMat.normalMap);
         options.refractionTint = equalish(stdMat.refraction, 1.0);
         options.refractionIndexTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0);
         options.specularEncoding = stdMat.specularEncoding || 'linear';
         options.sheenEncoding = stdMat.sheenEncoding || 'linear';
         options.aoMapUv = stdMat.aoUvSet; // backwards compatibility
-        options.aoDetail = !!stdMat.aoMap;
-        options.diffuseDetail = !!stdMat.diffuseMap;
+        options.aoDetail = !!stdMat.aoDetailMap;
+        options.diffuseDetail = !!stdMat.diffuseDetailMap;
         options.normalDetail = !!stdMat.normalMap;
+        options.normalDetailPackedNormal = isPackedNormalMap(stdMat.normalDetailMap);
         options.diffuseDetailMode = stdMat.diffuseDetailMode;
         options.aoDetailMode = stdMat.aoDetailMode;
         options.clearCoatTint = equalish(stdMat.clearCoat, 1.0);
         options.clearCoatGloss = !!stdMat.clearCoatGloss;
         options.clearCoatGlossTint = (stdMat.clearCoatGloss !== 1.0);
+        options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
         options.iorTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
 
         options.iridescenceTint = stdMat.iridescence !== 1.0;
