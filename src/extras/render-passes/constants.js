@@ -2,6 +2,7 @@
  * SSAO is disabled.
  *
  * @type {string}
+ * @category Graphics
  */
 export const SSAOTYPE_NONE = 'none';
 
@@ -11,6 +12,7 @@ export const SSAOTYPE_NONE = 'none';
  * obstructed, enhancing realism.
  *
  * @type {string}
+ * @category Graphics
  */
 export const SSAOTYPE_LIGHTING = 'lighting';
 
@@ -20,5 +22,6 @@ export const SSAOTYPE_LIGHTING = 'lighting';
  * this may sacrifice some realism, it can be advantageous for achieving specific artistic styles.
  *
  * @type {string}
+ * @category Graphics
  */
 export const SSAOTYPE_COMBINE = 'combine';

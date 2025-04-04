@@ -9,6 +9,8 @@ import { Vec2 } from '../../../core/math/vec2.js';
  * AnimNodes are used to represent a single animation track in the current state. Each state can
  * contain multiple AnimNodes, in which case they are stored in a BlendTree hierarchy, which will
  * control the weight (contribution to the states final animation) of its child AnimNodes.
+ *
+ * @category Animation
  */
 class AnimNode {
     /**
