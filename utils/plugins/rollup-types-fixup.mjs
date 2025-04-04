@@ -209,7 +209,6 @@ const REPLACEMENTS = [{
         .replace(/\s+/g, ' '); // collapse whitespace
 
         const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
-        // console.log(prop[0], contents.match(`@property {${prop[1]}} ${prop[0]}`), cleanTypeDescription);
         return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
     }).join('')}`
             );
