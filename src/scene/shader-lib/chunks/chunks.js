@@ -138,6 +138,7 @@ import particle_meshVS from './particle/vert/particle_mesh.js';
 import particle_normalVS from './particle/vert/particle_normal.js';
 import particle_normalMapPS from './particle/frag/particle_normalMap.js';
 import particle_pointAlongVS from './particle/vert/particle_pointAlong.js';
+import particle_simulationPS from './particle/frag/particle-simulation.js';
 import particle_shaderPS from './particle/frag/particle-shader.js';
 import particle_shaderVS from './particle/vert/particle-shader.js';
 import particle_softPS from './particle/frag/particle_soft.js';
@@ -351,6 +352,7 @@ const shaderChunks = {
     particle_normalVS,
     particle_normalMapPS,
     particle_pointAlongVS,
+    particle_simulationPS,
     particle_shaderPS,
     particle_shaderVS,
     particle_softPS,
