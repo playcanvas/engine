@@ -16,6 +16,9 @@ import clusteredLightCookiesPS from './lit/frag/clusteredLightCookies.js';
 import clusteredLightShadowsPS from './lit/frag/clusteredLightShadows.js';
 import clusteredLightPS from './lit/frag/clusteredLight.js';
 import combinePS from './lit/frag/combine.js';
+import cookieBlit2DPS from './internal/frag/cookie-blit-2d.js';
+import cookieBlitCubePS from './internal/frag/cookie-blit-cube.js';
+import cookieBlitVS from './internal/vert/cookie-blit.js';
 import cookiePS from './lit/frag/cookie.js';
 import cubeMapProjectPS from './lit/frag/cubeMapProject.js';
 import cubeMapRotatePS from './lit/frag/cubeMapRotate.js';
@@ -229,6 +232,9 @@ const shaderChunks = {
     clusteredLightUtilsPS,
     clusteredLightPS,
     combinePS,
+    cookieBlit2DPS,
+    cookieBlitCubePS,
+    cookieBlitVS,
     cookiePS,
     cubeMapProjectPS,
     cubeMapRotatePS,
