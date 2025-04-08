@@ -1,4 +1,4 @@
-// The main code of particle system fragment shader
+// The main code of particle system fragment shader used for rendering
 export default /* glsl */`
     #if NORMAL != NONE
         #if NORMAL == VERTEX
