@@ -370,7 +370,11 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
 // propagage to large areas. I didn't find the actual reason where those come from, so that is still TODO.
 // Note that only disk/sphere lights are causing it, so only handle those.
 float FixNan(float value) {
-    return isnan(value) ? 0.0 : value;
+    #ifdef WEBGPU
+        return value != value ? 0.0 : value;  // isnan does not transpile correctly, use a workaround
+    #else
+        return isnan(value) ? 0.0 : value;
+    #endif
 }
 
 float getRectLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 lightDirNorm) {
