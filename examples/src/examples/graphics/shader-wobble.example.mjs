@@ -70,8 +70,10 @@ assetListLoader.load(() => {
     // Create a new material with a custom shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'wobble',
-        vertexCode: files['shader.vert'],
-        fragmentCode: files['shader.frag'],
+        vertexCodeGLSL: files['shader.glsl.vert'],
+        fragmentCodeGLSL: files['shader.glsl.frag'],
+        vertexCodeWGSL: files['shader.wgsl.vert'],
+        fragmentCodeWGSL: files['shader.wgsl.frag'],
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0

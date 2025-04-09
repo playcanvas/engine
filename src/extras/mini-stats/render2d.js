@@ -155,12 +155,12 @@ class Render2d {
         this.mesh.indexBuffer[0] = this.indexBuffer;
         this.mesh.primitive = [this.prim];
 
-        const wgsl = device.isWebGPU;
         const material = new ShaderMaterial({
             uniqueName: 'MiniStats',
-            vertexCode: wgsl ? vertexShaderWGSL : vertexShaderGLSL,
-            fragmentCode: wgsl ? fragmentShaderWGSL : fragmentShaderGLSL,
-            shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,
+            vertexCodeGLSL: vertexShaderGLSL,
+            fragmentCodeGLSL: fragmentShaderGLSL,
+            vertexCodeWGSL: vertexShaderWGSL,
+            fragmentCodeWGSL: fragmentShaderWGSL,
             attributes: {
                 vertex_position: SEMANTIC_POSITION,
                 vertex_texCoord0: SEMANTIC_TEXCOORD0
