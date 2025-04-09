@@ -7,9 +7,7 @@ import {
     PRIMITIVE_TRIANGLES,
     SEMANTIC_POSITION,
     SEMANTIC_TEXCOORD0,
-    TYPE_FLOAT32,
-    SHADERLANGUAGE_WGSL,
-    SHADERLANGUAGE_GLSL
+    TYPE_FLOAT32
 } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
