@@ -15,22 +15,12 @@ import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 const tempPoints = [];
 const vec = new Vec3();
 
-const lineShaderDescGLSL = {
+const lineShaderDesc = {
     uniqueName: 'ImmediateLine',
-    vertexCode: shaderChunks.immediateLineVS,
-    fragmentCode: shaderChunks.immediateLinePS,
-    shaderLanguage: SHADERLANGUAGE_GLSL,
-    attributes: {
-        vertex_position: SEMANTIC_POSITION,
-        vertex_color: SEMANTIC_COLOR
-    }
-};
-
-const lineShaderDescWGSL = {
-    uniqueName: 'ImmediateLine',
-    vertexCode: shaderChunksWGSL.immediateLineVS,
-    fragmentCode: shaderChunksWGSL.immediateLinePS,
-    shaderLanguage: SHADERLANGUAGE_WGSL,
+    vertexCodeGLSL: shaderChunks.immediateLineVS,
+    fragmentCodeGLSL: shaderChunks.immediateLinePS,
+    vertexCodeWGSL: shaderChunksWGSL.immediateLineVS,
+    fragmentCodeWGSL: shaderChunksWGSL.immediateLinePS,
     attributes: {
         vertex_position: SEMANTIC_POSITION,
         vertex_color: SEMANTIC_COLOR
@@ -67,7 +57,7 @@ class Immediate {
 
     // creates material for line rendering
     createMaterial(depthTest) {
-        const material = new ShaderMaterial(this.device.isWebGPU ? lineShaderDescWGSL : lineShaderDescGLSL);
+        const material = new ShaderMaterial(lineShaderDesc);
         material.blendType = BLEND_NORMAL;
         material.depthTest = depthTest;
         material.update();
@@ -123,8 +113,8 @@ class Immediate {
 
             this.shaderDescs.set(id, {
                 uniqueName: `DebugShader:${id}`,
-                vertexCode: vertex,
-                fragmentCode: fragment,
+                vertexCodeGLSL: vertex,
+                fragmentCodeGLSL: fragment,
                 attributes: { vertex_position: SEMANTIC_POSITION }
             });
         }

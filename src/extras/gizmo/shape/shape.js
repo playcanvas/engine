@@ -43,7 +43,7 @@ const shaderDesc = {
         vertex_position: SEMANTIC_POSITION,
         vertex_color: SEMANTIC_COLOR
     },
-    vertexCode: /* glsl */`
+    vertexCodeGLSL: /* glsl */`
         attribute vec3 vertex_position;
         attribute vec4 vertex_color;
         varying vec4 vColor;
@@ -55,7 +55,7 @@ const shaderDesc = {
             vColor = vertex_color;
         }
     `,
-    fragmentCode: /* glsl */`
+    fragmentCodeGLSL: /* glsl */`
         #include "gammaPS"
         precision highp float;
         varying vec4 vColor;
