@@ -25,8 +25,8 @@ const createGSplatMaterial = (options = {}) => {
 
     const material = new ShaderMaterial({
         uniqueName: 'SplatMaterial',
-        vertexCode: options.vertex ?? shaderChunks.gsplatVS,
-        fragmentCode: options.fragment ?? shaderChunks.gsplatPS,
+        vertexGLSL: options.vertex ?? shaderChunks.gsplatVS,
+        fragmentGLSL: options.fragment ?? shaderChunks.gsplatPS,
         attributes: {
             vertex_position: SEMANTIC_POSITION,
             vertex_id_attrib: SEMANTIC_ATTR13

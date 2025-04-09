@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import { SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_SKIN } from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
@@ -7,21 +8,20 @@ import { getCoreDefines } from '../shader-lib/utils.js';
 import { Material } from './material.js';
 
 /**
- * @typedef {object} ShaderDesc - The description of the shader used by the {@link ShaderMaterial}.
+ * @typedef {object} ShaderDesc - Defines the vertex and fragment shader source for
+ * {@link ShaderMaterial}, supporting both GLSL and WGSL formats. WebGL always uses the GLSL code.
+ * WebGPU prefers the WGSL code if available, otherwise it automatically transpiles the provided
+ * GLSL code at runtime.
  * @property {string} uniqueName - Unique name for the shader. If a shader with this name already
  * exists, it will be returned instead of a new shader instance.
- * @property {string} [shaderLanguage] - The language used by the shader source. Can be:
- *
- * - {@link SHADERLANGUAGE_GLSL}
- * - {@link SHADERLANGUAGE_WGSL}
- *
- * Defaults to {@link SHADERLANGUAGE_GLSL}.
- * @property {string} [vertexCode] - The vertex shader code.
- * @property {string} [fragmentCode] - The fragment shader code.
+ * @property {string} [vertexGLSL] - The vertex shader code in GLSL.
+ * @property {string} [fragmentGLSL] - The fragment shader code in GLSL.
+ * @property {string} [vertexWGSL] - The vertex shader code in WGSL.
+ * @property {string} [fragmentWGSL] - The fragment shader code in WGSL.
  * @property {Object<string, string>} [attributes] - Object detailing the mapping of vertex shader
  * attribute names to semantics SEMANTIC_*. This enables the engine to match vertex buffer data as
  * inputs to the shader. Defaults to undefined, which generates the default attributes.
- * @param {string | string[]} [fragmentOutputTypes] - Fragment shader output types, which default to
+ * @property {string | string[]} [fragmentOutputTypes] - Fragment shader output types, which default to
  * vec4. Passing a string will set the output type for all color attachments. Passing an array will
  * set the output type for each color attachment. @see ShaderUtils.createDefinition
  */
@@ -29,20 +29,21 @@ import { Material } from './material.js';
 /**
  * A ShaderMaterial is a type of material that utilizes a specified shader for rendering purposes.
  *
- * A simple example which creates a material with custom vertex and fragment shaders:
+ * A simple example which creates a material with custom vertex and fragment shaders specified in
+ * GLSL format:
  *
  * ```javascript
  * const material = new pc.ShaderMaterial({
  *     uniqueName: 'MyShader',
  *     attributes: { aPosition: pc.SEMANTIC_POSITION },
- *     vertexCode: `
+ *     vertexGLSL: `
  *         attribute vec3 aPosition;
  *         uniform mat4 matrix_viewProjection;
  *         void main(void)
  *         {
  *             gl_Position = matrix_viewProjection * pos;
  *         }`,
- *     fragmentCode: `
+ *     fragmentGLSL: `
  *         void main(void) {
  *             gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
  *         }`
@@ -75,14 +76,34 @@ class ShaderMaterial extends Material {
      * @type {ShaderDesc|undefined}
      */
     set shaderDesc(value) {
-
+        this._shaderDesc = undefined;
         if (value) {
-            Debug.assert(value.vertexCode, 'ShaderMaterial: shaderDesc must contain vertexCode');
-            Debug.assert(value.fragmentCode, 'ShaderMaterial: shaderDesc must contain fragmentCode');
+
+            // clone the object - only supported properties
+            this._shaderDesc = {
+                uniqueName: value.uniqueName,
+                attributes: value.attributes,
+                fragmentOutputTypes: value.fragmentOutputTypes,
+                vertexGLSL: value.vertexGLSL,
+                fragmentGLSL: value.fragmentGLSL,
+                vertexWGSL: value.vertexWGSL,
+                fragmentWGSL: value.fragmentWGSL
+            };
+
+            // backward compatibility - convert old properties to new
+            if (value.vertexCode || value.fragmentCode || value.shaderLanguage) {
+                Debug.deprecated(`ShaderMaterial [${value.uniqueName}]: vertexCode, fragmentCode and shaderLanguage properties of ShaderDesc is deprecated. Use vertexGLSL, fragmentGLSL, vertexWGSL or fragmentWGSL instead.`);
+                const language = value.shaderLanguage ?? SHADERLANGUAGE_GLSL;
+                if (language === SHADERLANGUAGE_GLSL) {
+                    this._shaderDesc.vertexGLSL = value.vertexCode;
+                    this._shaderDesc.fragmentGLSL = value.fragmentCode;
+                } else if (language === SHADERLANGUAGE_WGSL) {
+                    this._shaderDesc.vertexWGSL = value.vertexCode;
+                    this._shaderDesc.fragmentWGSL = value.fragmentCode;
+                }
+            }
         }
 
-        // shallow clone the object
-        this._shaderDesc = value ? { ...value } : undefined;
         this.clearVariants();
     }
 
