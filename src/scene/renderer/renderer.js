@@ -13,14 +13,13 @@ import {
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH,
     BINDGROUP_MESH_UB
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
-import { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import {
     VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
     LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
@@ -744,7 +743,7 @@ class Renderer {
             const formats = [
 
                 // uniform buffer needs to be first, as the shader processor assumes slot 0 for it
-                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT),
+                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
 
                 // disable view level textures, as they consume texture slots. They get automatically added to mesh bind group
                 // for the meshes that uses them
