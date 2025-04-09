@@ -14,10 +14,10 @@ import { Material } from './material.js';
  * GLSL code at runtime.
  * @property {string} uniqueName - Unique name for the shader. If a shader with this name already
  * exists, it will be returned instead of a new shader instance.
- * @property {string} [vertexCodeGLSL] - The vertex shader code in GLSL.
- * @property {string} [fragmentCodeGLSL] - The fragment shader code in GLSL.
- * @property {string} [vertexCodeWGSL] - The vertex shader code in WGSL.
- * @property {string} [fragmentCodeWGSL] - The fragment shader code in WGSL.
+ * @property {string} [vertexGLSL] - The vertex shader code in GLSL.
+ * @property {string} [fragmentGLSL] - The fragment shader code in GLSL.
+ * @property {string} [vertexWGSL] - The vertex shader code in WGSL.
+ * @property {string} [fragmentWGSL] - The fragment shader code in WGSL.
  * @property {Object<string, string>} [attributes] - Object detailing the mapping of vertex shader
  * attribute names to semantics SEMANTIC_*. This enables the engine to match vertex buffer data as
  * inputs to the shader. Defaults to undefined, which generates the default attributes.
@@ -36,14 +36,14 @@ import { Material } from './material.js';
  * const material = new pc.ShaderMaterial({
  *     uniqueName: 'MyShader',
  *     attributes: { aPosition: pc.SEMANTIC_POSITION },
- *     vertexCodeGLSL: `
+ *     vertexGLSL: `
  *         attribute vec3 aPosition;
  *         uniform mat4 matrix_viewProjection;
  *         void main(void)
  *         {
  *             gl_Position = matrix_viewProjection * pos;
  *         }`,
- *     fragmentCodeGLSL: `
+ *     fragmentGLSL: `
  *         void main(void) {
  *             gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
  *         }`
@@ -84,22 +84,22 @@ class ShaderMaterial extends Material {
                 uniqueName: value.uniqueName,
                 attributes: value.attributes,
                 fragmentOutputTypes: value.fragmentOutputTypes,
-                vertexCodeGLSL: value.vertexCodeGLSL,
-                fragmentCodeGLSL: value.fragmentCodeGLSL,
-                vertexCodeWGSL: value.vertexCodeWGSL,
-                fragmentCodeWGSL: value.fragmentCodeWGSL
+                vertexGLSL: value.vertexGLSL,
+                fragmentGLSL: value.fragmentGLSL,
+                vertexWGSL: value.vertexWGSL,
+                fragmentWGSL: value.fragmentWGSL
             };
 
             // backward compatibility - convert old properties to new
             if (value.vertexCode || value.fragmentCode || value.shaderLanguage) {
-                Debug.deprecated(`ShaderMaterial [${value.uniqueName}]: vertexCode, fragmentCode and shaderLanguage properties of ShaderDesc is deprecated. Use vertexCodeGLSL, fragmentCodeGLSL, vertexCodeWGSL or fragmentCodeWGSL instead.`);
+                Debug.deprecated(`ShaderMaterial [${value.uniqueName}]: vertexCode, fragmentCode and shaderLanguage properties of ShaderDesc is deprecated. Use vertexGLSL, fragmentGLSL, vertexWGSL or fragmentWGSL instead.`);
                 const language = value.shaderLanguage ?? SHADERLANGUAGE_GLSL;
                 if (language === SHADERLANGUAGE_GLSL) {
-                    this._shaderDesc.vertexCodeGLSL = value.vertexCode;
-                    this._shaderDesc.fragmentCodeGLSL = value.fragmentCode;
+                    this._shaderDesc.vertexGLSL = value.vertexCode;
+                    this._shaderDesc.fragmentGLSL = value.fragmentCode;
                 } else if (language === SHADERLANGUAGE_WGSL) {
-                    this._shaderDesc.vertexCodeWGSL = value.vertexCode;
-                    this._shaderDesc.fragmentCodeWGSL = value.fragmentCode;
+                    this._shaderDesc.vertexWGSL = value.vertexCode;
+                    this._shaderDesc.fragmentWGSL = value.fragmentCode;
                 }
             }
         }

@@ -38,10 +38,10 @@ class SkyMesh {
 
         const material = new ShaderMaterial({
             uniqueName: 'SkyMaterial',
-            vertexCodeGLSL: shaderChunks.skyboxVS,
-            fragmentCodeGLSL: shaderChunks.skyboxPS,
-            vertexCodeWGSL: shaderChunksWGSL.skyboxVS,
-            fragmentCodeWGSL: shaderChunksWGSL.skyboxPS,
+            vertexGLSL: shaderChunks.skyboxVS,
+            fragmentGLSL: shaderChunks.skyboxPS,
+            vertexWGSL: shaderChunksWGSL.skyboxVS,
+            fragmentWGSL: shaderChunksWGSL.skyboxPS,
             attributes: {
                 aPosition: SEMANTIC_POSITION
             }

@@ -155,10 +155,10 @@ class Render2d {
 
         const material = new ShaderMaterial({
             uniqueName: 'MiniStats',
-            vertexCodeGLSL: vertexShaderGLSL,
-            fragmentCodeGLSL: fragmentShaderGLSL,
-            vertexCodeWGSL: vertexShaderWGSL,
-            fragmentCodeWGSL: fragmentShaderWGSL,
+            vertexGLSL: vertexShaderGLSL,
+            fragmentGLSL: fragmentShaderGLSL,
+            vertexWGSL: vertexShaderWGSL,
+            fragmentWGSL: fragmentShaderWGSL,
             attributes: {
                 vertex_position: SEMANTIC_POSITION,
                 vertex_texCoord0: SEMANTIC_TEXCOORD0

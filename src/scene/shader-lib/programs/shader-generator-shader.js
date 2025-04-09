@@ -12,15 +12,13 @@ class ShaderGeneratorShader extends ShaderGenerator {
         // from the material when its chunks are modified.
 
         const desc = options.shaderDesc;
-        const vsHash = desc.vertexCode ? hashCode(desc.vertexCode) : 0;
-        const fsHash = desc.fragmentCode ? hashCode(desc.fragmentCode) : 0;
-        const vsHashGLSL = desc.vertexCodeGLSL ? hashCode(desc.vertexCodeGLSL) : 0;
-        const fsHashGLSL = desc.fragmentCodeGLSL ? hashCode(desc.fragmentCodeGLSL) : 0;
-        const vsHashWGSL = desc.vertexCodeWGSL ? hashCode(desc.vertexCodeWGSL) : 0;
-        const fsHashWGSL = desc.fragmentCodeWGSL ? hashCode(desc.fragmentCodeWGSL) : 0;
+        const vsHashGLSL = desc.vertexGLSL ? hashCode(desc.vertexGLSL) : 0;
+        const fsHashGLSL = desc.fragmentGLSL ? hashCode(desc.fragmentGLSL) : 0;
+        const vsHashWGSL = desc.vertexWGSL ? hashCode(desc.vertexWGSL) : 0;
+        const fsHashWGSL = desc.fragmentWGSL ? hashCode(desc.fragmentWGSL) : 0;
         const definesHash = ShaderGenerator.definesHash(options.defines);
 
-        let key = `${desc.uniqueName}_${vsHash}_${fsHash}_${definesHash}_${vsHashGLSL}_${fsHashGLSL}_${vsHashWGSL}_${fsHashWGSL}`;
+        let key = `${desc.uniqueName}_${definesHash}_${vsHashGLSL}_${fsHashGLSL}_${vsHashWGSL}_${fsHashWGSL}`;
 
         if (options.skin)                       key += '_skin';
         if (options.useInstancing)              key += '_inst';
@@ -67,7 +65,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
             if (options.useMorphNormal) defines.set('MORPHING_NORMAL', true);
         }
 
-        definitionOptions.vertexCode = wgsl ? desc.vertexCodeWGSL : desc.vertexCodeGLSL;
+        definitionOptions.vertexCode = wgsl ? desc.vertexWGSL : desc.vertexGLSL;
         definitionOptions.vertexIncludes = includes;
         definitionOptions.vertexDefines = defines;
     }
@@ -79,7 +77,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         const includes = new Map(sharedIncludes);
         const defines = new Map(options.defines);
 
-        definitionOptions.fragmentCode = wgsl ? desc.fragmentCodeWGSL : desc.fragmentCodeGLSL;
+        definitionOptions.fragmentCode = wgsl ? desc.fragmentWGSL : desc.fragmentGLSL;
         definitionOptions.fragmentIncludes = includes;
         definitionOptions.fragmentDefines = defines;
     }
@@ -88,7 +86,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         const desc = options.shaderDesc;
 
-        const wgsl = device.isWebGPU && desc.vertexCodeWGSL && desc.fragmentCodeWGSL;
+        const wgsl = device.isWebGPU && desc.vertexWGSL && desc.fragmentWGSL;
         const definitionOptions = {
             name: `ShaderMaterial-${desc.uniqueName}`,
             shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,

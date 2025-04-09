@@ -17,10 +17,10 @@ const vec = new Vec3();
 
 const lineShaderDesc = {
     uniqueName: 'ImmediateLine',
-    vertexCodeGLSL: shaderChunks.immediateLineVS,
-    fragmentCodeGLSL: shaderChunks.immediateLinePS,
-    vertexCodeWGSL: shaderChunksWGSL.immediateLineVS,
-    fragmentCodeWGSL: shaderChunksWGSL.immediateLinePS,
+    vertexGLSL: shaderChunks.immediateLineVS,
+    fragmentGLSL: shaderChunks.immediateLinePS,
+    vertexWGSL: shaderChunksWGSL.immediateLineVS,
+    fragmentWGSL: shaderChunksWGSL.immediateLinePS,
     attributes: {
         vertex_position: SEMANTIC_POSITION,
         vertex_color: SEMANTIC_COLOR
@@ -113,8 +113,8 @@ class Immediate {
 
             this.shaderDescs.set(id, {
                 uniqueName: `DebugShader:${id}`,
-                vertexCodeGLSL: vertex,
-                fragmentCodeGLSL: fragment,
+                vertexGLSL: vertex,
+                fragmentGLSL: fragment,
                 attributes: { vertex_position: SEMANTIC_POSITION }
             });
         }
