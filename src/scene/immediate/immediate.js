@@ -1,4 +1,4 @@
-import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 
 import { BLEND_NORMAL } from '../constants.js';
 import { GraphNode } from '../graph-node.js';
