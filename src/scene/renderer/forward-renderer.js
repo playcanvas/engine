@@ -479,7 +479,7 @@ class ForwardRenderer extends Renderer {
     renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass) {
 
         // fog params from the scene, or overridden by the camera
-        const fogParams = camera.fog ?? this.scene.fog;
+        const fogParams = camera.fogParams ?? this.scene.fog;
 
         // camera shader params
         const shaderParams = camera.shaderParams;
@@ -763,7 +763,7 @@ class ForwardRenderer extends Renderer {
         // Set the not very clever global variable which is only useful when there's just one camera
         scene._activeCamera = camera;
 
-        const fogParams = camera.fog ?? this.scene.fog;
+        const fogParams = camera.fogParams ?? this.scene.fog;
         this.setFogConstants(fogParams);
 
         const viewCount = this.setCameraUniforms(camera, renderTarget);

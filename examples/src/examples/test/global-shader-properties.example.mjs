@@ -71,12 +71,6 @@ assetListLoader.load(() => {
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
 
-    // for params
-    app.scene.fog.color = new pc.Color(0.8, 0.8, 0.8);
-    app.scene.fog.start = 400;
-    app.scene.fog.end = 800;
-    app.scene.fog.density = 0.001;
-
     // STANDARD MATERIAL ----------
 
     /** @type {pc.Entity} */
@@ -186,11 +180,18 @@ assetListLoader.load(() => {
     // --------
 
     // create an Entity with a camera component
-    const camera = new pc.Entity();
+    const camera = new pc.Entity('MainCamera');
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.9, 0.9, 0.9),
         farClip: 1000,
-        toneMapping: pc.TONEMAP_ACES
+        toneMapping: pc.TONEMAP_ACES,
+        fog: {
+            color: new pc.Color(0.8, 0.8, 0.8),
+            start: 400,
+            end: 800,
+            density: 0.001,
+            type: pc.FOG_LINEAR
+        }
     });
 
     // and position it in the world
@@ -234,7 +235,7 @@ assetListLoader.load(() => {
             camera.camera.toneMapping = value;
         }
         if (propertyName === 'fog') {
-            app.scene.fog.type = value;
+            camera.camera.fog.type = value;
         }
         if (propertyName === 'gamma') {
             camera.camera.gammaCorrection = value ? pc.GAMMA_SRGB : pc.GAMMA_NONE;
