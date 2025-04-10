@@ -37,5 +37,14 @@ fn passThrough(raw: vec4f) -> vec4f {
     return raw;
 }
 
+fn unpackNormalXYZ(nmap: vec4f) -> vec3f {
+    return nmap.xyz * 2.0 - 1.0;
+}
+
+fn unpackNormalXY(nmap: vec4f) -> vec3f {
+    var xy = nmap.wy * 2.0 - 1.0;
+    return vec3f(xy, sqrt(1.0 - clamp(dot(xy, xy), 0.0, 1.0)));
+}
+
 #endif
 `;
