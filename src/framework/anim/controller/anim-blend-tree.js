@@ -27,7 +27,7 @@ class AnimBlendTree extends AnimNode {
      * @param {string[]} parameters - The anim component parameters which are used to calculate the
      * current weights of the blend trees children.
      * @param {object[]} children - The child nodes that this blend tree should create. Can either
-     * be of type {@link AnimNode} or {@link BlendTree}.
+     * be of type {@link AnimNode} or {@link AnimBlendTree}.
      * @param {boolean} syncAnimations - If true, the speed of each blended animation will be
      * synchronized.
      * @param {Function} createTree - Used to create child blend trees of varying types.
