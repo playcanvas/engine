@@ -207,7 +207,6 @@ class Renderer {
         // Uniforms
         const scope = graphicsDevice.scope;
         this.boneTextureId = scope.resolve('texture_poseMap');
-        this.boneTextureSizeId = scope.resolve('texture_poseMapSize');
 
         this.modelMatrixId = scope.resolve('matrix_model');
         this.normalMatrixId = scope.resolve('matrix_normal');
@@ -696,7 +695,6 @@ class Renderer {
 
             const boneTexture = skinInstance.boneTexture;
             this.boneTextureId.setValue(boneTexture);
-            this.boneTextureSizeId.setValue(skinInstance.boneTextureSize);
         }
     }
 

@@ -3,7 +3,7 @@
 // import aoPS from './standard/frag/ao.js';
 // import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
 // import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
-// import basePS from './lit/frag/base.js';
+import basePS from './lit/frag/base.js';
 // import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
 // import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
 // import bayerPS from './common/frag/bayer.js';
@@ -81,7 +81,7 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import litForwardPreCodePS from './lit/frag/main-forward/litForwardPreCode.js';
 // import litMainVS from './lit/vert/litMain.js';
 // import litOtherMainPS from './lit/frag/pass-other/litOtherMain.js';
-// import litShaderArgsPS from './standard/frag/litShaderArgs.js';
+import litShaderArgsPS from './standard/frag/litShaderArgs.js';
 // import litShadowMainPS from './lit/frag/pass-shadow/litShadowMain.js';
 // import ltcPS from './lit/frag/ltc.js';
 // import metalnessPS from './standard/frag/metalness.js';
@@ -93,7 +93,7 @@ import morphPS from './internal/morph/frag/morph.js';
 import morphVS from './internal/morph/vert/morph.js';
 // import msdfVS from './common/vert/msdf.js';
 // import normalVS from './lit/vert/normal.js';
-// import normalCoreVS from './common/vert/normalCore.js';
+import normalCoreVS from './common/vert/normalCore.js';
 // import normalMapPS from './standard/frag/normalMap.js';
 // import opacityPS from './standard/frag/opacity.js';
 // import opacityDitherPS from './standard/frag/opacity-dither.js';
@@ -169,7 +169,7 @@ import reprojectVS from './internal/vert/reproject.js';
 // import shadowPCSSPS from './lit/frag/shadowPCSS.js';
 // import shadowSoftPS from './lit/frag/shadowSoft.js';
 // import skinBatchVS from './common/vert/skinBatch.js';
-// import skinVS from './common/vert/skin.js';
+import skinVS from './common/vert/skin.js';
 import skyboxPS from './skybox/frag/skybox.js';
 import skyboxVS from './skybox/vert/skybox.js';
 // import specularPS from './standard/frag/specular.js';
@@ -192,7 +192,7 @@ import tonemappingLinearPS from './common/frag/tonemapping/tonemappingLinear.js'
 import tonemappingNeutralPS from './common/frag/tonemapping/tonemappingNeutral.js';
 import tonemappingNonePS from './common/frag/tonemapping/tonemappingNone.js';
 // import transformVS from './common/vert/transform.js';
-// import transformCoreVS from './common/vert/transformCore.js';
+import transformCoreVS from './common/vert/transformCore.js';
 // import transformInstancingVS from './common/vert/transformInstancing.js';
 // import transmissionPS from './standard/frag/transmission.js';
 // import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
@@ -216,7 +216,7 @@ const shaderChunksWGSL = {
     // aoPS,
     // aoDiffuseOccPS,
     // aoSpecOccPS,
-    // basePS,
+    basePS,
     // baseNineSlicedPS,
     // baseNineSlicedTiledPS,
     // bayerPS,
@@ -296,7 +296,7 @@ const shaderChunksWGSL = {
     // litForwardPreCodePS,
     // litMainVS,
     // litOtherMainPS,
-    // litShaderArgsPS,
+    litShaderArgsPS,
     // litShadowMainPS,
     // ltcPS,
     // metalnessPS,
@@ -308,7 +308,7 @@ const shaderChunksWGSL = {
     // msdfPS,
     // msdfVS,
     // normalVS,
-    // normalCoreVS,
+    normalCoreVS,
     // normalMapPS,
     // opacityPS,
     // opacityDitherPS,
@@ -384,7 +384,7 @@ const shaderChunksWGSL = {
     // shadowPCSSPS,
     // shadowSoftPS,
     // skinBatchVS,
-    // skinVS,
+    skinVS,
     skyboxPS,
     skyboxVS,
     // specularPS,
@@ -405,9 +405,9 @@ const shaderChunksWGSL = {
     tonemappingHejlPS,
     tonemappingLinearPS,
     tonemappingNeutralPS,
-    tonemappingNonePS
+    tonemappingNonePS,
     // transformVS,
-    // transformCoreVS,
+    transformCoreVS
     // transformInstancingVS,
     // transmissionPS,
     // twoSidedLightingPS,

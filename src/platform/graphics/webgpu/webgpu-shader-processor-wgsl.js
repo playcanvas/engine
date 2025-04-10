@@ -12,7 +12,12 @@ import {
     TEXTUREDIMENSION_1D,
     TEXTUREDIMENSION_CUBE_ARRAY,
     UNIFORMTYPE_FLOAT,
-    UNUSED_UNIFORM_NAME
+    UNUSED_UNIFORM_NAME,
+    TYPE_FLOAT32,
+    TYPE_FLOAT16,
+    TYPE_INT8,
+    TYPE_INT16,
+    TYPE_INT32
 } from '../constants.js';
 import { UniformFormat, UniformBufferFormat } from '../uniform-buffer-format.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindTextureFormat } from '../bind-group-format.js';
@@ -40,6 +45,9 @@ const VARYING = /(?:@interpolate\([^)]*\)\s*)?([\w]+)\s*:/;
 
 // marker for a place in the source code to be replaced by code
 const MARKER = '@@@';
+
+// matches vertex of fragment entry function, extracts the input name. Ends at the start of the function body '{'.
+const ENTRY_FUNCTION = /(@vertex|@fragment)\s*fn\s+\w+\s*\(\s*(\w+)\s*:[\s\S]*?\{/;
 
 const getTextureDimension = (textureType, isArray) => {
     if (isArray) {
@@ -315,6 +323,9 @@ class WebgpuShaderProcessorWGSL {
 
         // generate fragment output struct
         const fOutput = WebgpuShaderProcessorWGSL.generateFragmentOutputStruct(fragmentExtracted.src, device.maxColorAttachments);
+
+        // VS - inject input copy to globals
+        vertexExtracted.src = WebgpuShaderProcessorWGSL.copyInputs(vertexExtracted.src, shader);
 
         // VS - insert the blocks to the source
         const vBlock = `${attributesBlock}\n${vertexVaryingsBlock}\n${uniformsData.code}\n${resourcesData.code}\n`;
@@ -671,12 +682,40 @@ class WebgpuShaderProcessorWGSL {
         return `${structCode}};\n`;
     }
 
+    // convert a float attribute type to matching signed or unsigned int type
+    // for example: vec4f -> vec4u, f32 -> u32
+    static floatAttributeToInt(type, signed) {
+
+        // convert any long-form type to short-form
+        const longToShortMap = {
+            'f32': 'f32',
+            'vec2<f32>': 'vec2f',
+            'vec3<f32>': 'vec3f',
+            'vec4<f32>': 'vec4f'
+        };
+        const shortType = longToShortMap[type] || type;
+
+        // map from float short type to int short type
+        const floatToIntShort = {
+            'f32': signed ? 'i32' : 'u32',
+            'vec2f': signed ? 'vec2i' : 'vec2u',
+            'vec3f': signed ? 'vec3i' : 'vec3u',
+            'vec4f': signed ? 'vec4i' : 'vec4u'
+        };
+
+        return floatToIntShort[shortType] || null;
+    }
+
     static processAttributes(attributeLines, shaderDefinitionAttributes = {}, attributesMap, processingOptions) {
-        let block = '';
+        let blockAttributes = '';
+        let blockPrivates = '';
+        let blockCopy = '';
         const usedLocations = {};
         attributeLines.forEach((line) => {
             const words = splitToWords(line);
             const name = words[0];
+            let type = words[1];
+            const originalType = type;
 
             if (shaderDefinitionAttributes.hasOwnProperty(name)) {
                 const semantic = shaderDefinitionAttributes[name];
@@ -690,18 +729,78 @@ class WebgpuShaderProcessorWGSL {
                 // build a map of used attributes
                 attributesMap.set(location, name);
 
+                // if vertex format for this attribute is not of a float type, but shader specifies float type, convert the shader type
+                // to match the vertex format type, for example: vec4f -> vec4u
+                // Note that we skip normalized elements, as shader receives them as floats already.
+                const element = processingOptions.getVertexElement(semantic);
+                if (element) {
+                    const dataType = element.dataType;
+                    if (dataType !== TYPE_FLOAT32 && dataType !== TYPE_FLOAT16 && !element.normalize && !element.asInt) {
+
+                        // new attribute type, based on the vertex format element type
+                        const isSignedType = dataType === TYPE_INT8 || dataType === TYPE_INT16 || dataType === TYPE_INT32;
+                        type = WebgpuShaderProcessorWGSL.floatAttributeToInt(type, isSignedType);
+                        Debug.assert(type !== null, `Attribute ${name} has a type that cannot be converted to int: ${dataType}`);
+                    }
+                }
+
                 // generates: @location(0) position : vec4f
-                block += `    @location(${location}) ${line},\n`;
+                blockAttributes += `    @location(${location}) ${name}: ${type},\n`;
+
+                // private global variable - this uses the original type
+                blockPrivates += `    var<private> ${line};\n`;
+
+                // copy input variable to the private variable - convert type if needed
+                blockCopy += `    ${name} = ${originalType}(input.${name});\n`;
             } else {
                 Debug.error(`Attribute ${name} is not defined in the shader definition.`, shaderDefinitionAttributes);
             }
         });
 
         // add built-in attributes
-        block += '    @builtin(vertex_index) vertexIndex : u32,\n';     // vertex index
-        block += '    @builtin(instance_index) instanceIndex : u32\n';  // instance index
+        blockAttributes += '    @builtin(vertex_index) vertexIndex : u32,\n';     // vertex index
+        blockAttributes += '    @builtin(instance_index) instanceIndex : u32\n';  // instance index
 
-        return `struct VertexInput {\n${block}};\n`;
+        return `
+            struct VertexInput {
+                ${blockAttributes}
+            };
+
+            ${blockPrivates}
+
+            fn _copyInputs_(input: VertexInput) {
+                ${blockCopy}
+            }
+        `;
+    }
+
+    /**
+     * Injects a call to _copyInputs_ with the function's input parameter right after the opening
+     * brace of a WGSL function marked with `@vertex` or `@fragment`.
+     *
+     * @param {string} src - The source string containing the WGSL code.
+     * @param {Shader} shader - The shader.
+     * @returns {string} - The modified source string.
+     */
+    static copyInputs(src, shader) {
+        // find @vertex or @fragment followed by the function signature and capture the input parameter name
+        const match = src.match(ENTRY_FUNCTION);
+
+        // check if match exists AND the parameter name (Group 2) was captured
+        if (!match || !match[2]) {
+            Debug.warn('No entry function found or input parameter name not captured.', shader);
+            return src;
+        }
+
+        const inputName = match[2];
+        const braceIndex = match.index + match[0].length - 1; // Calculate the index of the '{'
+
+        // inject the line right after the opening brace
+        const beginning = src.slice(0, braceIndex + 1);
+        const end = src.slice(braceIndex + 1);
+
+        const lineToInject = `\n    _copyInputs_(${inputName});`;
+        return beginning + lineToInject + end;
     }
 
     static cutOut(src, start, end, replacement) {
