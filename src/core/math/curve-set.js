@@ -23,7 +23,7 @@ class CurveSet {
      * - No arguments: Creates a CurveSet with a single default curve.
      * - Single number argument: Creates a CurveSet with the specified number of default curves.
      * - Single array argument: An array of arrays, where each sub-array contains keys (pairs of
-     *   numbers with the time first and value second).
+     * numbers with the time first and value second).
      * - Multiple arguments: Each argument becomes a separate curve.
      * @example
      * // Create from an array of arrays of keys
