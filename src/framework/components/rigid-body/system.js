@@ -241,8 +241,8 @@ class ContactPoint {
     pointOther;
 
     /**
-     * The normal vector of the contact on the other entity, in world space.
-     * This vector points away from the surface of the other entity at the point of contact.
+     * The normal vector of the contact on the other entity, in world space. This vector points
+     * away from the surface of the other entity at the point of contact.
      *
      * @type {Vec3}
      */
@@ -250,7 +250,7 @@ class ContactPoint {
 
     /**
      * The total accumulated impulse applied by the constraint solver during the last sub-step.
-     * This value represents how hard two objects collided - higher values indicate stronger impacts.
+     * This value represents how hard two objects collided. Higher values indicate stronger impacts.
      *
      * @type {number}
      */
