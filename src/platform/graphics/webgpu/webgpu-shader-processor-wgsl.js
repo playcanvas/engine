@@ -324,8 +324,9 @@ class WebgpuShaderProcessorWGSL {
         // generate fragment output struct
         const fOutput = WebgpuShaderProcessorWGSL.generateFragmentOutputStruct(fragmentExtracted.src, device.maxColorAttachments);
 
-        // VS - inject input copy to globals
+        // inject the call to the function which copies the shader input globals
         vertexExtracted.src = WebgpuShaderProcessorWGSL.copyInputs(vertexExtracted.src, shader);
+        fragmentExtracted.src = WebgpuShaderProcessorWGSL.copyInputs(fragmentExtracted.src, shader);
 
         // VS - insert the blocks to the source
         const vBlock = `${attributesBlock}\n${vertexVaryingsBlock}\n${uniformsData.code}\n${resourcesData.code}\n`;
@@ -633,6 +634,8 @@ class WebgpuShaderProcessorWGSL {
 
     static processVaryings(varyingLines, varyingMap, isVertex) {
         let block = '';
+        let blockPrivates = '';
+        let blockCopy = '';
         varyingLines.forEach((line, index) => {
             const match = line.match(VARYING);
             Debug.assert(match, `Varying line is not valid: ${line}`);
@@ -650,20 +653,51 @@ class WebgpuShaderProcessorWGSL {
 
                 // generates: `@location(0) @interpolate(perspective, centroid) smoothColor : vec3f`
                 block += `    @location(${index}) ${line},\n`;
+
+                // fragment shader inputs (varyings)
+                if (!isVertex) {
+
+                    // private global variable for fragment varying
+                    blockPrivates += `    var<private> ${line};\n`;
+
+                    // copy input variable to the private variable
+                    blockCopy += `    ${name} = input.${name};\n`;
+                }
             }
         });
 
         // add built-in varyings
         if (isVertex) {
-            block += '    @builtin(position) position : vec4f,\n';      // output position
+            block += '    @builtin(position) position : vec4f,\n';          // output position
         } else {
-            block += '    @builtin(position) position : vec4f,\n';      // interpolated fragment position
+            block += '    @builtin(position) position : vec4f,\n';          // interpolated fragment position
             block += '    @builtin(front_facing) frontFacing : bool,\n';    // front-facing
             block += '    @builtin(sample_index) sampleIndex : u32\n';      // sample index for MSAA
         }
 
+        // global variables for build-in input into fragment shader
+        const fragmentGlobals = isVertex ? '' : `
+            var<private> pcPosition: vec4f;
+            var<private> pcFrontFacing: bool;
+            var<private> pcSampleIndex: u32;
+            ${blockPrivates}
+            
+            // function to copy inputs (varyings) to private global variables
+            fn _pcCopyInputs(input: FragmentInput) {
+                ${blockCopy}
+                pcPosition = input.position;
+                pcFrontFacing = input.frontFacing;
+                pcSampleIndex = input.sampleIndex;
+            }
+        `;
+
         const structName = isVertex ? 'VertexOutput' : 'FragmentInput';
-        return `struct ${structName} {\n${block}};\n`;
+        return `
+            struct ${structName} {
+                ${block}
+            };
+            ${fragmentGlobals}
+        `;
     }
 
     static generateFragmentOutputStruct(src, numRenderTargets) {
@@ -757,25 +791,27 @@ class WebgpuShaderProcessorWGSL {
             }
         });
 
-        // add built-in attributes
-        blockAttributes += '    @builtin(vertex_index) vertexIndex : u32,\n';     // vertex index
-        blockAttributes += '    @builtin(instance_index) instanceIndex : u32\n';  // instance index
-
         return `
             struct VertexInput {
                 ${blockAttributes}
+                @builtin(vertex_index) vertexIndex : u32,       // built-in vertex index
+                @builtin(instance_index) instanceIndex : u32    // built-in instance index
             };
 
             ${blockPrivates}
+            var<private> pcVertexIndex: u32;
+            var<private> pcInstanceIndex: u32;
 
-            fn _copyInputs_(input: VertexInput) {
+            fn _pcCopyInputs(input: VertexInput) {
                 ${blockCopy}
+                pcVertexIndex = input.vertexIndex;
+                pcInstanceIndex = input.instanceIndex;
             }
         `;
     }
 
     /**
-     * Injects a call to _copyInputs_ with the function's input parameter right after the opening
+     * Injects a call to _pcCopyInputs with the function's input parameter right after the opening
      * brace of a WGSL function marked with `@vertex` or `@fragment`.
      *
      * @param {string} src - The source string containing the WGSL code.
@@ -799,7 +835,7 @@ class WebgpuShaderProcessorWGSL {
         const beginning = src.slice(0, braceIndex + 1);
         const end = src.slice(braceIndex + 1);
 
-        const lineToInject = `\n    _copyInputs_(${inputName});`;
+        const lineToInject = `\n    _pcCopyInputs(${inputName});`;
         return beginning + lineToInject + end;
     }
 
