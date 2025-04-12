@@ -132,7 +132,6 @@ const STANDARD_MAT_PROPS = [
     ['occludeDirect', 'number'],
     ['occludeSpecular', 'number'],
     ['occludeSpecularIntensity', 'number'],
-    ['onUpdateShader', 'UpdateShaderCallback'],
     ['opacity', 'number'],
     ['opacityDither', 'string'],
     ['opacityShadowDither', 'string'],
