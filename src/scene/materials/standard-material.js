@@ -49,7 +49,6 @@ const _tempColor = new Color();
  * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
  * which holds some of the options only used by the lit shader backend {@link LitShaderOptions}.
  * @returns {StandardMaterialOptions} Returned settings will be used by the shader.
- * @category Graphics
  */
 
 /**
