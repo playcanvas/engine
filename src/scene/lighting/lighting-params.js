@@ -71,7 +71,7 @@ class LightingParams {
         this.maxLightsPerCell = render.lightingMaxLightsPerCell ?? this.maxLightsPerCell;
         this.shadowType = render.lightingShadowType ?? this.shadowType;
         if (render.lightingCells) {
-            this.cell = new Vec3(render.lightingCells);
+            this.cells = new Vec3(render.lightingCells);
         }
     }
 
