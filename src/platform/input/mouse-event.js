@@ -60,7 +60,7 @@ class MouseEvent {
 
     /**
      * A value representing the amount the mouse wheel has moved, only valid for
-     * {@link EVENT_MOUSEWHEEL} events.
+     * {@link Mouse.EVENT_MOUSEWHEEL} events.
      *
      * @type {number}
      */

@@ -14,6 +14,7 @@ export const AXIS_KEY = 'key';
  * Name of event fired when a key is pressed.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_KEYDOWN = 'keydown';
 
@@ -21,6 +22,7 @@ export const EVENT_KEYDOWN = 'keydown';
  * Name of event fired when a key is released.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_KEYUP = 'keyup';
 
@@ -28,6 +30,7 @@ export const EVENT_KEYUP = 'keyup';
  * Name of event fired when a mouse button is pressed.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_MOUSEDOWN = 'mousedown';
 
@@ -35,6 +38,7 @@ export const EVENT_MOUSEDOWN = 'mousedown';
  * Name of event fired when the mouse is moved.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_MOUSEMOVE = 'mousemove';
 
@@ -42,6 +46,7 @@ export const EVENT_MOUSEMOVE = 'mousemove';
  * Name of event fired when a mouse button is released.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_MOUSEUP = 'mouseup';
 
@@ -49,6 +54,7 @@ export const EVENT_MOUSEUP = 'mouseup';
  * Name of event fired when the mouse wheel is rotated.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_MOUSEWHEEL = 'mousewheel';
 
@@ -56,6 +62,7 @@ export const EVENT_MOUSEWHEEL = 'mousewheel';
  * Name of event fired when a new touch occurs. For example, a finger is placed on the device.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_TOUCHSTART = 'touchstart';
 
@@ -63,6 +70,7 @@ export const EVENT_TOUCHSTART = 'touchstart';
  * Name of event fired when touch ends. For example, a finger is lifted off the device.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_TOUCHEND = 'touchend';
 
@@ -70,6 +78,7 @@ export const EVENT_TOUCHEND = 'touchend';
  * Name of event fired when a touch moves.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_TOUCHMOVE = 'touchmove';
 
@@ -80,6 +89,7 @@ export const EVENT_TOUCHMOVE = 'touchmove';
  * device supports, in which case the earliest touch point is canceled.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_TOUCHCANCEL = 'touchcancel';
 
@@ -87,6 +97,7 @@ export const EVENT_TOUCHCANCEL = 'touchcancel';
  * Name of event fired when a new xr select occurs. For example, primary trigger was pressed.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_SELECT = 'select';
 
@@ -94,6 +105,7 @@ export const EVENT_SELECT = 'select';
  * Name of event fired when a new xr select starts. For example, primary trigger is now pressed.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_SELECTSTART = 'selectstart';
 
@@ -101,6 +113,7 @@ export const EVENT_SELECTSTART = 'selectstart';
  * Name of event fired when xr select ends. For example, a primary trigger is now released.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_SELECTEND = 'selectend';
 
@@ -893,6 +906,7 @@ export const PAD_R_STICK_Y = 3;
  * Name of event fired when a gamepad connects.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_GAMEPADCONNECTED = 'gamepadconnected';
 
@@ -900,6 +914,7 @@ export const EVENT_GAMEPADCONNECTED = 'gamepadconnected';
  * Name of event fired when a gamepad disconnects.
  *
  * @category Input
+ * @ignore
  */
 export const EVENT_GAMEPADDISCONNECTED = 'gamepaddisconnected';
 
