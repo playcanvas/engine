@@ -59,6 +59,8 @@ const _keyCodeToKeyIdentifier = {
  * changes and window blur events by clearing key states. The Keyboard instance must be attached to
  * a DOM element before it can detect key events.
  *
+ * Your application's Keyboard instance is managed and accessible via {@link AppBase#keyboard}.
+ *
  * @category Input
  */
 class Keyboard extends EventHandler {

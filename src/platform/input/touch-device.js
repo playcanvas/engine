@@ -10,6 +10,8 @@ import { TouchEvent } from './touch-event.js';
  * to respond to common touch gestures. The TouchDevice instance must be attached to a DOM element
  * before it can detect touch events.
  *
+ * Your application's TouchDevice instance is managed and accessible via {@link AppBase#touch}.
+ *
  * @category Input
  */
 class TouchDevice extends EventHandler {

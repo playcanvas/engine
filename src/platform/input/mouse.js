@@ -18,6 +18,8 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  * raw mouse movement input and control over the context menu. The Mouse instance must be attached
  * to a DOM element before it can detect mouse events.
  *
+ * Your application's Mouse instance is managed and accessible via {@link AppBase#mouse}.
+ *
  * @category Input
  */
 class Mouse extends EventHandler {
