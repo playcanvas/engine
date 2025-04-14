@@ -53,7 +53,8 @@ import { getApplication } from './globals.js';
  *     scrollview: ScrollViewComponent;
  *     sound: SoundComponent;
  *     sprite: SpriteComponent;
- * }} ComponentMap A map of component names to their class types.
+ * }} ComponentMap A map of component names to their class types. Facilitates typings for
+ * {@link Entity#addComponent}.
  */
 
 /**
