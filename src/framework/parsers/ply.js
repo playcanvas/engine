@@ -3,7 +3,6 @@ import { GSplatCompressedData } from '../../scene/gsplat/gsplat-compressed-data.
 import { GSplatResource } from './gsplat-resource.js';
 
 /**
- * @import { AssetRegistry } from '../asset/asset-registry.js'
  * @import { Asset } from '../asset/asset.js'
  * @import { AppBase } from '../app-base.js'
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
@@ -11,21 +10,26 @@ import { GSplatResource } from './gsplat-resource.js';
 
 /**
  * @typedef {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} DataType
+ * @ignore
  */
 
 /**
- * @typedef {object} PlyProperty
- * @property {string} type - E.g. 'float'.
- * @property {string} name - E.g. 'x', 'y', 'z', 'f_dc_0' etc.
- * @property {DataType} storage - Data type, e.g. instance of Float32Array.
- * @property {number} byteSize - BYTES_PER_ELEMENT of given data type.
+ * @typedef {{
+ *   type: string;
+ *   name: string;
+ *   storage: DataType | null;
+ *   byteSize: number;
+ * }} PlyProperty
+ * @ignore
  */
 
 /**
- * @typedef {object} PlyElement
- * @property {string} name - E.g. 'vertex'.
- * @property {number} count - Given count.
- * @property {PlyProperty[]} properties - The properties.
+ * @typedef {{
+ *   name: string;
+ *   count: number;
+ *   properties: PlyProperty[];
+ * }} PlyElement
+ * @ignore
  */
 
 const magicBytes = new Uint8Array([112, 108, 121, 10]);                                                 // ply\n
