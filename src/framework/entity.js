@@ -363,50 +363,70 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Create a new component and add it to the entity. Use this to add functionality to the entity
-     * like rendering a model, playing sounds and so on.
+     * Add a built-in component to the entity. The associated component system must be registered
+     * with the application.
      *
      * @template {keyof ComponentMap} T
-     * @param {T} type - The name of the component to add. Valid strings are:
-     *
-     * - "anim" - see {@link AnimComponent}
-     * - "animation" - see {@link AnimationComponent}
-     * - "audiolistener" - see {@link AudioListenerComponent}
-     * - "button" - see {@link ButtonComponent}
-     * - "camera" - see {@link CameraComponent}
-     * - "collision" - see {@link CollisionComponent}
-     * - "element" - see {@link ElementComponent}
-     * - "gsplat" - see {@link GSplatComponent}
-     * - "layoutchild" - see {@link LayoutChildComponent}
-     * - "layoutgroup" - see {@link LayoutGroupComponent}
-     * - "light" - see {@link LightComponent}
-     * - "model" - see {@link ModelComponent}
-     * - "particlesystem" - see {@link ParticleSystemComponent}
-     * - "render" - see {@link RenderComponent}
-     * - "rigidbody" - see {@link RigidBodyComponent}
-     * - "screen" - see {@link ScreenComponent}
-     * - "script" - see {@link ScriptComponent}
-     * - "scrollbar" - see {@link ScrollbarComponent}
-     * - "scrollview" - see {@link ScrollViewComponent}
-     * - "sound" - see {@link SoundComponent}
-     * - "sprite" - see {@link SpriteComponent}
-     *
-     * @param {Partial<ComponentMap[T]>} [data] - The initialization data for the specific
-     * component type. Refer to each specific component's API reference page for details on valid
-     * values for this parameter.
-     * @returns {ComponentMap[T] | null} The new Component that was attached to the entity or null
-     * if there was an error.
+     * @overload
+     * @param {T} type - The type of built-in component to add. Can be:
+     * - 'anim' - see {@link AnimComponent}
+     * - 'animation' - see {@link AnimationComponent}
+     * - 'audiolistener' - see {@link AudioListenerComponent}
+     * - 'button' - see {@link ButtonComponent}
+     * - 'camera' - see {@link CameraComponent}
+     * - 'collision' - see {@link CollisionComponent}
+     * - 'element' - see {@link ElementComponent}
+     * - 'gsplat' - see {@link GSplatComponent}
+     * - 'layoutchild' - see {@link LayoutChildComponent}
+     * - 'layoutgroup' - see {@link LayoutGroupComponent}
+     * - 'light' - see {@link LightComponent}
+     * - 'model' - see {@link ModelComponent}
+     * - 'particlesystem' - see {@link ParticleSystemComponent}
+     * - 'render' - see {@link RenderComponent}
+     * - 'rigidbody' - see {@link RigidBodyComponent}
+     * - 'screen' - see {@link ScreenComponent}
+     * - 'script' - see {@link ScriptComponent}
+     * - 'scrollbar' - see {@link ScrollbarComponent}
+     * - 'scrollview' - see {@link ScrollViewComponent}
+     * - 'sound' - see {@link SoundComponent}
+     * - 'sprite' - see {@link SpriteComponent}
+     * @param {Partial<ComponentMap[T]>} [data] - Optional initialization data for the component.
+     * Refer to each specific component's API reference page for details on valid values for this
+     * parameter.
+     * @returns {ComponentMap[T] | null} The newly added component or null in the case of an error.
      * @example
      * const entity = new pc.Entity();
      *
      * // Add a light component with default properties
-     * entity.addComponent("light");
+     * entity.addComponent('light');
      *
-     * // Add a camera component with some specified properties
-     * entity.addComponent("camera", {
+     * // Add a camera component with some initialization data
+     * entity.addComponent('camera', {
      *     fov: 45,
      *     clearColor: new pc.Color(1, 0, 0)
      * });
+     */
+    /**
+     * Add a custom component to the entity. The associated component system must be registered
+     * with the application.
+     *
+     * @overload
+     * @param {string} type - The type of custom component to add.
+     * @param {any} [data] - Optional initialization data for the component.
+     * @returns {Component | null} The newly added component or null in the case of an error.
+     * @example
+     * const entity = new pc.Entity();
+     *
+     * // Add a custom component with some initialization data
+     * entity.addComponent('custom', {
+     *     foo: 'bar'
+     * });
+     */
+    /**
+     * @template {keyof ComponentMap} T
+     * @param {T | string} type - The type of component to add.
+     * @param {Partial<ComponentMap[T]> | any} [data] - Optional initialization data for the component.
+     * @returns {ComponentMap[T] | Component | null} The newly added component or null in the case of an error.
      */
     addComponent(type, data) {
         const system = this._app.systems[type];
