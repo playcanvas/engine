@@ -10,7 +10,13 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  */
 
 /**
- * A Mouse Device, bound to a DOM Element.
+ * Manages mouse input by tracking button states and dispatching events. Extends {@link EventHandler}
+ * to fire `mousedown`, `mouseup`, `mousemove` and `mousewheel` events (see {@link MouseEvent}).
+ *
+ * Allows the state of mouse buttons to be queried to check if they are currently pressed or were
+ * pressed/released since the last update. Provides methods to enable/disable pointer lock for
+ * raw mouse movement input and control over the context menu. The Mouse instance must be attached
+ * to a DOM element before it can detect mouse events.
  *
  * @category Input
  */

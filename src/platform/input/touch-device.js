@@ -3,8 +3,12 @@ import { EventHandler } from '../../core/event-handler.js';
 import { TouchEvent } from './touch-event.js';
 
 /**
- * Attach a TouchDevice to an element and it will receive and fire events when the element is
- * touched. See also {@link Touch} and {@link TouchEvent}.
+ * Manages touch input by handling and dispatching touch events. Extends {@link EventHandler}
+ * to fire `touchstart`, `touchend`, `touchmove`, and `touchcancel` events (see {@link TouchEvent}).
+ *
+ * Detects and processes touch interactions with the attached DOM element, allowing applications
+ * to respond to common touch gestures. The TouchDevice instance must be attached to a DOM element
+ * before it can detect touch events.
  *
  * @category Input
  */
