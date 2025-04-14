@@ -287,7 +287,7 @@ class Mouse extends EventHandler {
         if (!e.event) return;
 
         // send 'mouseup' event
-        this.fire(EVENT_MOUSEUP, e);
+        this.fire('mouseup', e);
     }
 
     _handleDown(event) {
@@ -297,14 +297,14 @@ class Mouse extends EventHandler {
         const e = new MouseEvent(this, event);
         if (!e.event) return;
 
-        this.fire(EVENT_MOUSEDOWN, e);
+        this.fire('mousedown', e);
     }
 
     _handleMove(event) {
         const e = new MouseEvent(this, event);
         if (!e.event) return;
 
-        this.fire(EVENT_MOUSEMOVE, e);
+        this.fire('mousemove', e);
 
         // Store the last offset position to calculate deltas
         this._lastX = e.x;
@@ -315,7 +315,7 @@ class Mouse extends EventHandler {
         const e = new MouseEvent(this, event);
         if (!e.event) return;
 
-        this.fire(EVENT_MOUSEWHEEL, e);
+        this.fire('mousewheel', e);
     }
 
     _getTargetCoords(event) {
