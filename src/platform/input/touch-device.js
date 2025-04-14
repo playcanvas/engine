@@ -43,7 +43,11 @@ class TouchDevice extends EventHandler {
     static EVENT_TOUCHMOVE = 'touchmove';
 
     /**
-     * Fired when a touch is canceled. The handler is passed a {@link TouchEvent}.
+     * Fired when a touch is interrupted in some way. The exact reasons for canceling a touch can
+     * vary from device to device. For example, a modal alert pops up during the interaction; the
+     * touch point leaves the document area, or there are more touch points than the device
+     * supports, in which case the earliest touch point is canceled. The handler is passed a
+     * {@link TouchEvent}.
      *
      * @event
      * @example
