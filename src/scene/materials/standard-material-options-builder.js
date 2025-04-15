@@ -231,8 +231,8 @@ class StandardMaterialOptionsBuilder {
         options.refractionTint = equalish(stdMat.refraction, 1.0);
         options.refractionIndexTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0);
-        options.specularEncoding = stdMat.specularEncoding || 'linear';
-        options.sheenEncoding = stdMat.sheenEncoding || 'linear';
+        options.specularEncoding = stdMat.specularMap?.encoding;
+        options.sheenEncoding = stdMat.sheenMap?.encoding;
         options.aoMapUv = stdMat.aoUvSet; // backwards compatibility
         options.aoDetail = !!stdMat.aoDetailMap;
         options.diffuseDetail = !!stdMat.diffuseDetailMap;
