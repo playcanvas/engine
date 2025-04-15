@@ -928,21 +928,31 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Apply a torque impulse (rotational force applied instantaneously) to the body. This function
-     * has two valid signatures. You can either specify the torque force with a 3D-vector or with 3
-     * numbers.
+     * Apply a torque impulse (rotational force applied instantaneously) to the body.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector representing the torque impulse in
-     * world space or the x-component of the torque impulse in world space.
-     * @param {number} [y] - The y-component of the torque impulse in world space.
-     * @param {number} [z] - The z-component of the torque impulse in world space.
+     * @overload
+     * @param {number} x - X-component of the torque impulse in world space.
+     * @param {number} y - Y-component of the torque impulse in world space.
+     * @param {number} z - Z-component of the torque impulse in world space.
+     * @returns {void}
      * @example
-     * // Apply via vector
+     * entity.rigidbody.applyTorqueImpulse(0, 10, 0);
+     */
+    /**
+     * Apply a torque impulse (rotational force applied instantaneously) to the body.
+     *
+     * @overload
+     * @param {Vec3} torque - Vector representing the torque impulse in world space.
+     * @returns {void}
+     * @example
      * const torque = new pc.Vec3(0, 10, 0);
      * entity.rigidbody.applyTorqueImpulse(torque);
-     * @example
-     * // Apply via numbers
-     * entity.rigidbody.applyTorqueImpulse(0, 10, 0);
+     */
+    /**
+     * @param {number|Vec3} x - X-component of the torque impulse in world space or a vector
+     * representing the torque impulse in world space.
+     * @param {number} [y] - Y-component of the torque impulse in world space.
+     * @param {number} [z] - Z-component of the torque impulse in world space.
      */
     applyTorqueImpulse(x, y, z) {
         const body = this._body;
@@ -1097,33 +1107,65 @@ class RigidBodyComponent extends Component {
 
     /**
      * Teleport an entity to a new world space position, optionally setting orientation. This
-     * function should only be called for rigid bodies that are dynamic. This function has three
-     * valid signatures. The first takes a 3-dimensional vector for the position and an optional
-     * 3-dimensional vector for Euler rotation. The second takes a 3-dimensional vector for the
-     * position and an optional quaternion for rotation. The third takes 3 numbers for the position
-     * and an optional 3 numbers for Euler rotation.
+     * function should only be called for rigid bodies that are dynamic.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector holding the new position or the new position
-     * x-coordinate.
-     * @param {Quat|Vec3|number} [y] - A 3-dimensional vector or quaternion holding the new
-     * rotation or the new position y-coordinate.
-     * @param {number} [z] - The new position z-coordinate.
-     * @param {number} [rx] - The new Euler x-angle value.
-     * @param {number} [ry] - The new Euler y-angle value.
-     * @param {number} [rz] - The new Euler z-angle value.
-     * @example
-     * // Teleport the entity to the origin
-     * entity.rigidbody.teleport(pc.Vec3.ZERO);
+     * @overload
+     * @param {number} x - X-coordinate of the new world space position.
+     * @param {number} y - Y-coordinate of the new world space position.
+     * @param {number} z - Z-coordinate of the new world space position.
+     * @param {number} [rx] - X-rotation of the world space Euler angles in degrees.
+     * @param {number} [ry] - Y-rotation of the world space Euler angles in degrees.
+     * @param {number} [rz] - Z-rotation of the world space Euler angles in degrees.
+     * @returns {void}
      * @example
      * // Teleport the entity to the origin
      * entity.rigidbody.teleport(0, 0, 0);
      * @example
      * // Teleport the entity to world space coordinate [1, 2, 3] and reset orientation
-     * const position = new pc.Vec3(1, 2, 3);
-     * entity.rigidbody.teleport(position, pc.Vec3.ZERO);
+     * entity.rigidbody.teleport(1, 2, 3, 0, 0, 0);
+     */
+    /**
+     * Teleport an entity to a new world space position, optionally setting orientation. This
+     * function should only be called for rigid bodies that are dynamic.
+     *
+     * @overload
+     * @param {Vec3} position - Vector holding the new world space position.
+     * @param {Vec3} [angles] - Vector holding the new world space Euler angles in degrees.
+     * @returns {void}
+     * @example
+     * // Teleport the entity to the origin
+     * entity.rigidbody.teleport(pc.Vec3.ZERO);
      * @example
      * // Teleport the entity to world space coordinate [1, 2, 3] and reset orientation
-     * entity.rigidbody.teleport(1, 2, 3, 0, 0, 0);
+     * const position = new pc.Vec3(1, 2, 3);
+     * entity.rigidbody.teleport(position, pc.Vec3.ZERO);
+     */
+    /**
+     * Teleport an entity to a new world space position, optionally setting orientation. This
+     * function should only be called for rigid bodies that are dynamic.
+     *
+     * @overload
+     * @param {Vec3} position - Vector holding the new world space position.
+     * @param {Quat} [rotation] - Quaternion holding the new world space rotation.
+     * @returns {void}
+     * @example
+     * // Teleport the entity to the origin
+     * entity.rigidbody.teleport(pc.Vec3.ZERO);
+     * @example
+     * // Teleport the entity to world space coordinate [1, 2, 3] and reset orientation
+     * const position = new pc.Vec3(1, 2, 3);
+     * entity.rigidbody.teleport(position, pc.Quat.IDENTITY);
+     */
+    /**
+     * @param {number|Vec3} x - X-coordinate of the new world space position or a vector holding
+     * the new world space position.
+     * @param {number|Quat|Vec3} [y] - Y-coordinate of the new world space position or a
+     * quaternion holding the new world space rotation or a vector holding the new world space
+     * Euler angles in degrees.
+     * @param {number} [z] - Z-coordinate of the new world space position.
+     * @param {number} [rx] - X-rotation of the new world space Euler angles in degrees.
+     * @param {number} [ry] - Y-rotation of the new world space Euler angles in degrees.
+     * @param {number} [rz] - Z-rotation of the new world space Euler angles in degrees.
      */
     teleport(x, y, z, rx, ry, rz) {
         if (x instanceof Vec3) {
