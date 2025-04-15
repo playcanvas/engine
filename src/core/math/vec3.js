@@ -28,12 +28,27 @@ class Vec3 {
     /**
      * Creates a new Vec3 object.
      *
+     * @overload
+     * @param {number} [x] - The x value. Defaults to 0.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @param {number} [z] - The z value. Defaults to 0.
+     * @example
+     * const v1 = new pc.Vec3(); // defaults to 0, 0, 0
+     * const v2 = new pc.Vec3(1, 2, 3);
+     */
+    /**
+     * Creates a new Vec3 object.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the vector values from.
+     * @example
+     * const v = new pc.Vec3([1, 2, 3]);
+     */
+    /**
      * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 3, the
      * array will be used to populate all components.
      * @param {number} [y] - The y value. Defaults to 0.
      * @param {number} [z] - The z value. Defaults to 0.
-     * @example
-     * const v = new pc.Vec3(1, 2, 3);
      */
     constructor(x = 0, y = 0, z = 0) {
         if (x.length === 3) {

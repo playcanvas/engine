@@ -21,13 +21,27 @@ class Vec2 {
     y;
 
     /**
-     * Create a new Vec2 instance.
+     * Creates a new Vec2 object.
      *
+     * @overload
+     * @param {number} [x] - The x value. Defaults to 0.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @example
+     * const v1 = new pc.Vec2(); // defaults to 0, 0
+     * const v2 = new pc.Vec2(1, 2);
+     */
+    /**
+    * Creates a new Vec2 object.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the vector values from.
+     * @example
+     * const v = new pc.Vec2([1, 2]);
+     */
+    /**
      * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 2, the
      * array will be used to populate all components.
      * @param {number} [y] - The y value. Defaults to 0.
-     * @example
-     * const v = new pc.Vec2(1, 2);
      */
     constructor(x = 0, y = 0) {
         if (x.length === 2) {
