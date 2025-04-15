@@ -21,7 +21,7 @@ class Vec2 {
     y;
 
     /**
-     * Creates a new Vec2 object.
+     * Creates a new Vec2 instance.
      *
      * @overload
      * @param {number} [x] - The x value. Defaults to 0.
@@ -31,7 +31,7 @@ class Vec2 {
      * const v2 = new pc.Vec2(1, 2);
      */
     /**
-     * Creates a new Vec2 object.
+     * Creates a new Vec2 instance.
      *
      * @overload
      * @param {number[]} arr - The array to set the vector values from.

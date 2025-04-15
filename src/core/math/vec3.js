@@ -26,7 +26,7 @@ class Vec3 {
     z;
 
     /**
-     * Creates a new Vec3 object.
+     * Creates a new Vec3 instance.
      *
      * @overload
      * @param {number} [x] - The x value. Defaults to 0.
@@ -37,7 +37,7 @@ class Vec3 {
      * const v2 = new pc.Vec3(1, 2, 3);
      */
     /**
-     * Creates a new Vec3 object.
+     * Creates a new Vec3 instance.
      *
      * @overload
      * @param {number[]} arr - The array to set the vector values from.

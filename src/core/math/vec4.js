@@ -33,7 +33,7 @@ class Vec4 {
     w;
 
     /**
-     * Creates a new Vec4 object.
+     * Creates a new Vec4 instance.
      *
      * @overload
      * @param {number} [x] - The x value. Defaults to 0.
@@ -45,7 +45,7 @@ class Vec4 {
      * const v2 = new pc.Vec4(1, 2, 3, 4);
      */
     /**
-     * Creates a new Vec4 object.
+     * Creates a new Vec4 instance.
      *
      * @overload
      * @param {number[]} arr - The array to set the vector values from.
