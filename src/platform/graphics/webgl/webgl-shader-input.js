@@ -27,10 +27,10 @@ class WebglShaderInput {
      * @param {number | WebGLUniformLocation} locationId - The location id of the shader input.
      */
     constructor(graphicsDevice, name, type, locationId) {
-        // Set the shader attribute location
+        // Set the shader uniform location
         this.locationId = locationId;
 
-        // Resolve the ScopeId for the attribute name
+        // Resolve the ScopeId for the uniform name
         this.scopeId = graphicsDevice.scope.resolve(name);
 
         // Create the version

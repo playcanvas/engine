@@ -41,11 +41,11 @@ float calculateEVSM(vec3 moments, float Z, float vsmBias, float exponent) {
 // ------ VSM 16 ------
 
 float VSM16(TEXTURE_ACCEPT(tex), vec2 texCoords, float resolution, float Z, float vsmBias, float exponent) {
-    vec3 moments = texture2D(tex, texCoords).xyz;
+    vec3 moments = texture2DLod(tex, texCoords, 0.0).xyz;
     return calculateEVSM(moments, Z, vsmBias, exponent);
 }
 
-float getShadowVSM16(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, float exponent, vec3 lightDir) {
+float getShadowVSM16(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, float exponent) {
     return VSM16(TEXTURE_PASS(shadowMap), shadowCoord.xy, shadowParams.x, shadowCoord.z, shadowParams.y, exponent);
 }
 
@@ -58,24 +58,25 @@ float getShadowSpotVSM16(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shado
 float VSM32(TEXTURE_ACCEPT(tex), vec2 texCoords, float resolution, float Z, float vsmBias, float exponent) {
 
     #ifdef CAPS_TEXTURE_FLOAT_FILTERABLE
-        vec3 moments = texture2D(tex, texCoords).xyz;
+        vec3 moments = texture2DLod(tex, texCoords, 0.0).xyz;
     #else
         // manual bilinear filtering
         float pixelSize = 1.0 / resolution;
         texCoords -= vec2(pixelSize);
-        vec3 s00 = texture2D(tex, texCoords).xyz;
-        vec3 s10 = texture2D(tex, texCoords + vec2(pixelSize, 0)).xyz;
-        vec3 s01 = texture2D(tex, texCoords + vec2(0, pixelSize)).xyz;
-        vec3 s11 = texture2D(tex, texCoords + vec2(pixelSize)).xyz;
+        vec3 s00 = texture2DLod(tex, texCoords, 0.0).xyz;
+        vec3 s10 = texture2DLod(tex, texCoords + vec2(pixelSize, 0), 0.0).xyz;
+        vec3 s01 = texture2DLod(tex, texCoords + vec2(0, pixelSize), 0.0).xyz;
+        vec3 s11 = texture2DLod(tex, texCoords + vec2(pixelSize), 0.0).xyz;
         vec2 fr = fract(texCoords * resolution);
         vec3 h0 = mix(s00, s10, fr.x);
         vec3 h1 = mix(s01, s11, fr.x);
+        vec3 moments = mix(h0, h1, fr.y);
     #endif
 
     return calculateEVSM(moments, Z, vsmBias, exponent);
 }
 
-float getShadowVSM32(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, float exponent, vec3 lightDir) {
+float getShadowVSM32(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, float exponent) {
     return VSM32(TEXTURE_PASS(shadowMap), shadowCoord.xy, shadowParams.x, shadowCoord.z, shadowParams.y, exponent);
 }
 

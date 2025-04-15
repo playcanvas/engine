@@ -266,7 +266,7 @@ class Texture {
         this._compareOnRead = options.compareOnRead ?? false;
         this._compareFunc = options.compareFunc ?? FUNC_LESS;
 
-        this.type = options.hasOwnProperty('type') ? options.type : TEXTURETYPE_DEFAULT;
+        this._type = options.hasOwnProperty('type') ? options.type : TEXTURETYPE_DEFAULT;
         Debug.assert(!options.hasOwnProperty('rgbm'), 'Use options.type.');
         Debug.assert(!options.hasOwnProperty('swizzleGGGR'), 'Use options.type.');
 
@@ -792,6 +792,31 @@ class Texture {
      */
     get volume() {
         return this._volume;
+    }
+
+    /**
+     * Sets the texture type.
+     *
+     * @type {number}
+     * @ignore
+     */
+    set type(value) {
+        if (this._type !== value) {
+            this._type = value;
+
+            // update all shaders to respect the encoding of the texture (needed by the standard material)
+            this.device._shadersDirty = true;
+        }
+    }
+
+    /**
+     * Gets the texture type.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get type() {
+        return this._type;
     }
 
     /**

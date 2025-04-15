@@ -1,7 +1,13 @@
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
-import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../constants.js';
+import { blendNames } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
+
+const normalTypeNames = [
+    'NONE',
+    'VERTEX',
+    'MAP'
+];
 
 class ShaderGeneratorParticle extends ShaderGenerator {
     generateKey(options) {
@@ -15,95 +21,47 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         return key;
     }
 
-    _animTex(options) {
-        let vshader = '';
-        vshader += options.animTexLoop ? shaderChunks.particleAnimFrameLoopVS : shaderChunks.particleAnimFrameClampVS;
-        vshader += shaderChunks.particleAnimTexVS;
-        return vshader;
+    createVertexDefines(options) {
+        const vDefines = new Map(options.defines);
+
+        if (options.mesh) vDefines.set('USE_MESH', '');
+        if (options.localSpace) vDefines.set('LOCAL_SPACE', '');
+        if (options.screenSpace) vDefines.set('SCREEN_SPACE', '');
+        if (options.animTex) vDefines.set('ANIMTEX', '');
+        if (options.soft > 0) vDefines.set('SOFT', '');
+        if (options.stretch > 0.0) vDefines.set('STRETCH', '');
+        if (options.customFace) vDefines.set('CUSTOM_FACE', '');
+        if (options.pack8) vDefines.set('PACK8', '');
+        if (options.localSpace) vDefines.set('LOCAL_SPACE', '');
+        if (options.animTexLoop) vDefines.set('ANIMTEX_LOOP', '');
+        if (options.wrap) vDefines.set('WRAP', '');
+        if (options.alignToMotion) vDefines.set('ALIGN_TO_MOTION', '');
+
+        vDefines.set('NORMAL', normalTypeNames[options.normal]);
+
+        return vDefines;
+    }
+
+    createFragmentDefines(options) {
+        const fDefines = new Map(options.defines);
+
+        if (options.soft > 0) fDefines.set('SOFT', '');
+        if (options.halflambert) fDefines.set('HALF_LAMBERT', '');
+
+        fDefines.set('NORMAL', normalTypeNames[options.normal]);
+        fDefines.set('BLEND', blendNames[options.blend]);
+
+        return fDefines;
     }
 
     createShaderDefinition(device, options) {
 
-        const executionDefine = `#define PARTICLE_${options.useCpu ? 'CPU' : 'GPU'}\n`;
+        const vDefines = this.createVertexDefines(options);
+        const fDefines = this.createFragmentDefines(options);
 
-        let fshader = `#define PARTICLE\n${executionDefine}`;
-        let vshader = `#define VERTEXSHADER\n${executionDefine}`;
-
-        if (options.mesh) vshader += '#define USE_MESH\n';
-        if (options.localSpace) vshader += '#define LOCAL_SPACE\n';
-        if (options.screenSpace) vshader += '#define SCREEN_SPACE\n';
-
-        if (options.animTex) vshader += '\nuniform vec2 animTexTilesParams;\n';
-        if (options.animTex) vshader += '\nuniform vec4 animTexParams;\n';
-        if (options.animTex) vshader += '\nuniform vec2 animTexIndexParams;\n';
-        if (options.normal === 2) vshader += '\nvarying mat3 ParticleMat;\n';
-        if (options.normal === 1) vshader += '\nvarying vec3 Normal;\n';
-        if (options.soft) vshader += '\nvarying float vDepth;\n';
-
-        const faceVS = options.customFace ? shaderChunks.particle_customFaceVS : shaderChunks.particle_billboardVS;
-
-        if (!options.useCpu) {
-            vshader += shaderChunks.particle_initVS;
-            vshader += (options.pack8 ? shaderChunks.particleInputRgba8PS : shaderChunks.particleInputFloatPS);
-            if (options.soft > 0) vshader += shaderChunks.screenDepthPS;
-            vshader += shaderChunks.particleVS;
-            if (options.localSpace) vshader += shaderChunks.particle_localShiftVS;
-            if (options.animTex) vshader += this._animTex(options);
-            if (options.wrap) vshader += shaderChunks.particle_wrapVS;
-            if (options.alignToMotion) vshader += shaderChunks.particle_pointAlongVS;
-            vshader += options.mesh ? shaderChunks.particle_meshVS : faceVS;
-            if (options.normal === 1) vshader += shaderChunks.particle_normalVS;
-            if (options.normal === 2) vshader += shaderChunks.particle_TBNVS;
-            if (options.stretch > 0.0) vshader += shaderChunks.particle_stretchVS;
-            vshader += shaderChunks.particle_endVS;
-            if (options.soft > 0) vshader += shaderChunks.particle_softVS;
-        } else {
-            if (options.soft > 0) vshader += shaderChunks.screenDepthPS;
-            vshader += shaderChunks.particle_cpuVS;
-            if (options.localSpace) vshader += shaderChunks.particle_localShiftVS;
-            if (options.animTex) vshader += this._animTex(options);
-            // if (options.wrap) vshader += shaderChunks.particle_wrapVS;
-            if (options.alignToMotion) vshader += shaderChunks.particle_pointAlongVS;
-            vshader += options.mesh ? shaderChunks.particle_meshVS : faceVS;
-            if (options.normal === 1) vshader += shaderChunks.particle_normalVS;
-            if (options.normal === 2) vshader += shaderChunks.particle_TBNVS;
-            if (options.stretch > 0.0) vshader += shaderChunks.particle_stretchVS;
-            vshader += shaderChunks.particle_cpu_endVS;
-            if (options.soft > 0) vshader += shaderChunks.particle_softVS;
-        }
-        vshader += '}\n';
-
-        if (options.normal > 0) {
-            if (options.normal === 1) {
-                fshader += '\nvarying vec3 Normal;\n';
-            } else if (options.normal === 2) {
-                fshader += '\nvarying mat3 ParticleMat;\n';
-            }
-            fshader += '\nuniform vec3 lightCube[6];\n';
-        }
-        if (options.soft) fshader += '\nvarying float vDepth;\n';
-
-        fshader += shaderChunks.decodePS;
-        fshader += '#include "gammaPS"\n';
-        fshader += '#include "tonemappingPS"\n';
-        fshader += '#include "fogPS"\n';
-
-        if (options.normal === 2) fshader += '\nuniform sampler2D normalMap;\n';
-        if (options.soft > 0) fshader += shaderChunks.screenDepthPS;
-        fshader += shaderChunks.particlePS;
-        if (options.soft > 0) fshader += shaderChunks.particle_softPS;
-        if (options.normal === 1) fshader += '\nvec3 normal = Normal;\n';
-        if (options.normal === 2) fshader += shaderChunks.particle_normalMapPS;
-        if (options.normal > 0) fshader += options.halflambert ? shaderChunks.particle_halflambertPS : shaderChunks.particle_lambertPS;
-        if (options.normal > 0) fshader += shaderChunks.particle_lightingPS;
-        if (options.blend === BLEND_NORMAL) {
-            fshader += shaderChunks.particle_blendNormalPS;
-        } else if (options.blend === BLEND_ADDITIVE) {
-            fshader += shaderChunks.particle_blendAddPS;
-        } else if (options.blend === BLEND_MULTIPLICATIVE) {
-            fshader += shaderChunks.particle_blendMultiplyPS;
-        }
-        fshader += shaderChunks.particle_endPS;
+        const executionDefine = `PARTICLE_${options.useCpu ? 'CPU' : 'GPU'}\n`;
+        vDefines.set(executionDefine, '');
+        fDefines.set(executionDefine, '');
 
         const includes = new Map(Object.entries({
             ...shaderChunks,
@@ -112,11 +70,12 @@ class ShaderGeneratorParticle extends ShaderGenerator {
 
         return ShaderUtils.createDefinition(device, {
             name: 'ParticleShader',
-            vertexCode: vshader,
-            fragmentCode: fshader,
-            fragmentDefines: options.defines,
+            vertexCode: shaderChunks.particle_shaderVS,
+            fragmentCode: shaderChunks.particle_shaderPS,
+            fragmentDefines: fDefines,
             fragmentIncludes: includes,
-            vertexDefines: options.defines
+            vertexIncludes: includes,
+            vertexDefines: vDefines
         });
     }
 }

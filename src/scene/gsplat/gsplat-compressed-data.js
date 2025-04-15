@@ -48,7 +48,7 @@ class SplatCompressedIterator {
 
         const lerp = (a, b, t) => a * (1 - t) + b * t;
 
-        const { chunkData, chunkSize, vertexData, shData, shBands } = gsplatData;
+        const { chunkData, chunkSize, vertexData, shData0, shData1, shData2, shBands } = gsplatData;
         const shCoeffs = [3, 8, 15][shBands - 1];
 
         this.read = (i) => {
@@ -82,9 +82,10 @@ class SplatCompressedIterator {
             }
 
             if (sh && shBands > 0) {
+                const shData = [shData0, shData1, shData2];
                 for (let j = 0; j < 3; ++j) {
                     for (let k = 0; k < 15; ++k) {
-                        sh[j * 15 + k] = (k < shCoeffs) ? (shData[(i * 3 + j) * shCoeffs + k] * (8 / 255) - 4) : 0;
+                        sh[j * 15 + k] = (k < shCoeffs) ? (shData[j][i * 16 + k] * (8 / 255) - 4) : 0;
                     }
                 }
             }
@@ -118,10 +119,28 @@ class GSplatCompressedData {
     vertexData;
 
     /**
-     * Contains optional quantized spherical harmonic data for up to 3 bands.
+     * Contains optional quantized spherical harmonic data.
      * @type {Uint8Array}
      */
-    shData;
+    shData0;
+
+    /**
+     * Contains optional quantized spherical harmonic data.
+     * @type {Uint8Array}
+     */
+    shData1;
+
+    /**
+     * Contains optional quantized spherical harmonic data.
+     * @type {Uint8Array}
+     */
+    shData2;
+
+    /**
+     * Contains the number of bands of spherical harmonics data.
+     * @type {number}
+     */
+    shBands;
 
     /**
      * Create an iterator for accessing splat data
@@ -202,6 +221,29 @@ class GSplatCompressedData {
         }
     }
 
+    getChunks(result) {
+        const { chunkData, numChunks, chunkSize } = this;
+
+        let mx, my, mz, Mx, My, Mz;
+
+        for (let c = 0; c < numChunks; ++c) {
+            const off = c * chunkSize;
+            mx = chunkData[off + 0];
+            my = chunkData[off + 1];
+            mz = chunkData[off + 2];
+            Mx = chunkData[off + 3];
+            My = chunkData[off + 4];
+            Mz = chunkData[off + 5];
+
+            result[c * 6 + 0] = mx;
+            result[c * 6 + 1] = my;
+            result[c * 6 + 2] = mz;
+            result[c * 6 + 3] = Mx;
+            result[c * 6 + 4] = My;
+            result[c * 6 + 5] = Mz;
+        }
+    }
+
     /**
      * @param {Vec3} result - The result.
      */
@@ -231,15 +273,6 @@ class GSplatCompressedData {
 
     get chunkSize() {
         return this.chunkData.length / this.numChunks;
-    }
-
-    get shBands() {
-        const sizes = {
-            3: 1,
-            8: 2,
-            15: 3
-        };
-        return sizes[this.shData?.length / this.numSplats / 3] ?? 0;
     }
 
     // decompress into GSplatData

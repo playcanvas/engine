@@ -1,7 +1,7 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { SHADERLANGUAGE_WGSL } from '../constants.js';
 import { DebugGraphics } from '../debug-graphics.js';
-import { ShaderProcessor } from '../shader-processor.js';
+import { ShaderProcessorGLSL } from '../shader-processor-glsl.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 import { WebgpuShaderProcessorWGSL } from './webgpu-shader-processor-wgsl.js';
 
@@ -12,6 +12,8 @@ import { WebgpuShaderProcessorWGSL } from './webgpu-shader-processor-wgsl.js';
 
 /**
  * A WebGPU implementation of the Shader.
+ *
+ * @ignore
  */
 class WebgpuShader {
     /**
@@ -118,7 +120,7 @@ class WebgpuShader {
         });
         DebugHelper.setLabel(shaderModule, `${shaderType}:${this.shader.label}`);
 
-        WebgpuDebug.end(device, {
+        WebgpuDebug.endShader(device, shaderModule, code, 6, {
             shaderType,
             source: code,
             shader: this.shader
@@ -143,7 +145,7 @@ class WebgpuShader {
         const shader = this.shader;
 
         // process the shader source to allow for uniforms
-        const processed = ShaderProcessor.run(shader.device, shader.definition, shader);
+        const processed = ShaderProcessorGLSL.run(shader.device, shader.definition, shader);
 
         // keep reference to processed shaders in debug mode
         Debug.call(() => {
@@ -161,6 +163,7 @@ class WebgpuShader {
 
         shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
         shader.meshBindGroupFormat = processed.meshBindGroupFormat;
+        shader.attributes = processed.attributes;
     }
 
     processWGSL() {
@@ -179,6 +182,7 @@ class WebgpuShader {
 
         shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
         shader.meshBindGroupFormat = processed.meshBindGroupFormat;
+        shader.attributes = processed.attributes;
     }
 
     transpile(src, shaderType, originalSrc) {

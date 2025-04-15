@@ -3,7 +3,10 @@ import { random } from '../../core/math/random.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import {
     FILTER_NEAREST,
-    TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE
+    TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE,
+    SHADERLANGUAGE_WGSL,
+    SHADERLANGUAGE_GLSL,
+    SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
@@ -15,6 +18,7 @@ import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
+import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 /**
  * @import { Vec4 } from '../../core/math/vec4.js'
@@ -366,19 +370,6 @@ const generateGGXSamplesTex = (device, numSamples, specularPower, sourceTotalPix
     });
 };
 
-const vsCode = `
-attribute vec2 vertex_position;
-
-uniform vec4 uvMod;
-
-varying vec2 vUv0;
-
-void main(void) {
-    gl_Position = vec4(vertex_position, 0.5, 1.0);
-    vUv0 = getImageEffectUV((vertex_position.xy * 0.5 + 0.5) * uvMod.xy + uvMod.zw);
-}
-`;
-
 /**
  * This function reprojects textures between cubemap, equirectangular and octahedral formats. The
  * function can read and write textures with pixel data in RGBE, RGBM, linear and sRGB formats.
@@ -440,22 +431,39 @@ function reprojectTexture(source, target, options = {}) {
 
     let shader = getProgramLibrary(device).getCachedShader(shaderKey);
     if (!shader) {
-        const defines =
-            `#define PROCESS_FUNC ${processFunc}\n${
-                prefilterSamples ? '#define USE_SAMPLES_TEX\n' : ''
-            }${source.cubemap ? '#define CUBEMAP_SOURCE\n' : ''
-            }#define DECODE_FUNC ${decodeFunc}\n` +
-            `#define ENCODE_FUNC ${encodeFunc}\n` +
-            `#define SOURCE_FUNC ${sourceFunc}\n` +
-            `#define TARGET_FUNC ${targetFunc}\n` +
-            `#define NUM_SAMPLES ${numSamples}\n` +
-            `#define NUM_SAMPLES_SQRT ${Math.round(Math.sqrt(numSamples)).toFixed(1)}\n`;
+        const defines = `
+            ${prefilterSamples ? '#define USE_SAMPLES_TEX' : ''}
+            ${source.cubemap ? '#define CUBEMAP_SOURCE' : ''}
+            #define {PROCESS_FUNC} ${processFunc}
+            #define {DECODE_FUNC} ${decodeFunc}
+            #define {ENCODE_FUNC} ${encodeFunc}
+            #define {SOURCE_FUNC} ${sourceFunc}
+            #define {TARGET_FUNC} ${targetFunc}
+            #define {NUM_SAMPLES} ${numSamples}
+            #define {NUM_SAMPLES_SQRT} ${Math.round(Math.sqrt(numSamples)).toFixed(1)}
+        `;
 
+        const wgsl = device.isWebGPU;
+        const chunks = wgsl ? shaderChunksWGSL : shaderChunks;
+        const includes = new Map();
+        includes.set('decodePS', chunks.decodePS);
+        includes.set('encodePS', chunks.encodePS);
+
+        const vert = chunks.reprojectVS;
+        const frag = chunks.reprojectPS;
         shader = createShaderFromCode(
             device,
-            vsCode,
-            `${defines}\n${shaderChunks.reprojectPS}`,
-            shaderKey
+            vert,
+            `
+                ${defines}
+                ${frag}
+            `,
+            shaderKey, {
+                vertex_position: SEMANTIC_POSITION
+            }, {
+                fragmentIncludes: includes,
+                shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL
+            }
         );
     }
 

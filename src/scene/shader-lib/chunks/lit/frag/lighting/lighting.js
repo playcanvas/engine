@@ -71,25 +71,13 @@ export default /* glsl */`
 
 // clustered lighting
 #ifdef LIT_CLUSTERED_LIGHTS
-
-    #include "lightBufferDefinesPS"
-
-    // include this before shadow / cookie code
-    #include "clusteredLightUtilsPS"
-
-    #ifdef CLUSTER_COOKIES
-        #include "clusteredLightCookiesPS"
-    #endif
-
-    #ifdef CLUSTER_SHADOWS
-        #include "clusteredLightShadowsPS"
-    #endif
-
-    #include "floatUnpackingPS"
     #include "clusteredLightPS"
-
 #endif
 
+// LOOP - generate shadow evaluation functions for all non-clustered lights
+#include "lightFunctionShadowPS, LIGHT_COUNT"
+
 // LOOP - generate light evaluation functions for all non-clustered lights
-#include "lightFunctionPS, LIGHT_COUNT"
+#include "lightFunctionLightPS, LIGHT_COUNT"
+
 `;

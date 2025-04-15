@@ -45,29 +45,28 @@ const matD = new Mat4();
  * {@link ScreenComponent} ancestor, the ElementComponent will be transformed like any other
  * entity.
  *
- * You should never need to use the ElementComponent constructor. To add an ElementComponent to a
- * {@link Entity}, use {@link Entity#addComponent}:
+ * You should never need to use the ElementComponent constructor directly. To add an
+ * ElementComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * // Add an element component to an entity with the default options
  * const entity = pc.Entity();
- * entity.addComponent("element"); // This defaults to a 'group' element
+ * entity.addComponent('element'); // This defaults to a 'group' element
  * ```
  *
  * To create a simple text-based element:
  *
  * ```javascript
- * entity.addComponent("element", {
+ * entity.addComponent('element', {
  *     anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5), // centered anchor
  *     fontAsset: fontAsset,
  *     fontSize: 128,
  *     pivot: new pc.Vec2(0.5, 0.5),            // centered pivot
- *     text: "Hello World!",
+ *     text: 'Hello World!',
  *     type: pc.ELEMENTTYPE_TEXT
  * });
  * ```
  *
- * Once the ElementComponent is added to the entity, you can set and get any of its properties:
+ * Once the ElementComponent is added to the entity, you can access it via the `element` property:
  *
  * ```javascript
  * entity.element.color = pc.Color.RED; // Set the element's color to red
@@ -75,7 +74,7 @@ const matD = new Mat4();
  * console.log(entity.element.color);   // Get the element's color and print it
  * ```
  *
- * Relevant 'Engine-only' examples:
+ * Relevant Engine API examples:
  *
  * - [Basic text rendering](https://playcanvas.github.io/#/user-interface/text)
  * - [Auto font sizing](https://playcanvas.github.io/#/user-interface/text-auto-font-size)

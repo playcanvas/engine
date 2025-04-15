@@ -11,6 +11,8 @@ import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 /**
  * @import { Camera } from '../camera.js'
  * @import { GSplat } from './gsplat.js'
+ * @import { GSplatCompressed } from './gsplat-compressed.js'
+ * @import { GSplatSogs } from './gsplat-sogs.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { Material } from '../materials/material.js'
  * @import { SplatMaterialOptions } from './gsplat-material.js'
@@ -24,7 +26,7 @@ const viewport = [0, 0];
 
 /** @ignore */
 class GSplatInstance {
-    /** @type {GSplat} */
+    /** @type {GSplat | GSplatCompressed | GSplatSogs } */
     splat;
 
     /** @type {Mesh} */
@@ -132,12 +134,13 @@ class GSplatInstance {
         this.meshInstance.instancingCount = 0;
 
         // clone centers to allow multiple instances of sorter
-        this.centers = new Float32Array(splat.centers);
+        const centers = splat.centers.slice();
+        const chunks = splat.chunks?.slice();
 
         // create sorter
         if (!options.dither || options.dither === DITHER_NONE) {
             this.sorter = new GSplatSorter();
-            this.sorter.init(this.orderTexture, this.centers);
+            this.sorter.init(this.orderTexture, centers, chunks);
             this.sorter.on('updated', (count) => {
                 // limit splat render count to exclude those behind the camera
                 this.meshInstance.instancingCount = Math.ceil(count / splatInstanceSize);
@@ -161,24 +164,24 @@ class GSplatInstance {
     createMaterial(options) {
         this.material = this.splat.createMaterial(options);
         this.material.setParameter('splatOrder', this.orderTexture);
+        this.material.setParameter('alphaClip', 0.3);
         if (this.meshInstance) {
             this.meshInstance.material = this.material;
         }
     }
 
-    updateViewport() {
-        // TODO: improve, needs to handle render targets of different sizes
-        const device = this.splat.device;
-        viewport[0] = device.width;
-        viewport[1] = device.height;
+    updateViewport(cameraNode) {
+        const camera = cameraNode?.camera;
+        const renderTarget = camera?.renderTarget;
+        const { width, height } = renderTarget ?? this.splat.device;
+
+        viewport[0] = width;
+        viewport[1] = height;
 
         // adjust viewport for stereoscopic VR sessions
-        if (this.cameras.length > 0) {
-            const camera = this.cameras[0];
-            const xr = camera.xr;
-            if (xr && xr.active && xr.views.list.length === 2) {
-                viewport[0] /= 2;
-            }
+        const xr = camera?.camera?.xr;
+        if (xr?.active && xr.views.list.length === 2) {
+            viewport[0] *= 0.5;
         }
 
         this.material.setParameter('viewport', viewport);
@@ -207,7 +210,7 @@ class GSplatInstance {
             }
         }
 
-        this.updateViewport();
+        this.updateViewport(cameraNode);
     }
 
     update() {

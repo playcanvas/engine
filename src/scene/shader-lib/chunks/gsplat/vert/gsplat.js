@@ -10,6 +10,10 @@ varying mediump vec4 gaussianColor;
 
 mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
+#ifdef PREPASS_PASS
+    varying float vLinearDepth;
+#endif
+
 void main(void) {
     // read gaussian details
     SplatSource source;
@@ -52,6 +56,10 @@ void main(void) {
 
     #ifndef DITHER_NONE
         id = float(source.id);
+    #endif
+
+    #ifdef PREPASS_PASS
+        vLinearDepth = -center.view.z;
     #endif
 }
 `;

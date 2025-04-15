@@ -123,6 +123,10 @@ class LayerComposition extends EventHandler {
         this._renderActions.length = 0;
     }
 
+    markDirty() {
+        this._dirty = true;
+    }
+
     _update() {
         const len = this.layerList.length;
 

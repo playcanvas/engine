@@ -42,6 +42,15 @@ class Shader {
     meshBindGroupFormat;
 
     /**
+     * The attributes that this shader code uses. The location is the key, the value is the name.
+     * These attributes are queried / extracted from the final shader.
+     *
+     * @type {Map<number, string>}
+     * @ignore
+     */
+    attributes = new Map();
+
+    /**
      * Creates a new Shader instance.
      *
      * Consider {@link createShaderFromCode} as a simpler and more powerful way to create

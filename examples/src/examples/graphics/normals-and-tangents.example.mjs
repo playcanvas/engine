@@ -68,12 +68,6 @@ assetListLoader.load(() => {
     leftEntity.setLocalScale(0.8, 0.8, 0.8);
     app.root.addChild(leftEntity);
 
-    const rightEntity = assets.model.resource.instantiateRenderEntity();
-    rightEntity.setLocalEulerAngles(0, 90, 0);
-    rightEntity.setPosition(0, 0, -1);
-    rightEntity.setLocalScale(-0.8, -0.8, -0.8);
-    app.root.addChild(rightEntity);
-
     // Create a camera with an orbit camera script
     const camera = new pc.Entity();
     camera.addComponent('camera', {
@@ -82,7 +76,7 @@ assetListLoader.load(() => {
     camera.addComponent('script');
     camera.script.create('orbitCamera', {
         attributes: {
-            inertiaFactor: 0 // Override default of 0 (no inertia)
+            inertiaFactor: 0.2
         }
     });
     camera.script.create('orbitCameraInputMouse');
@@ -90,7 +84,7 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
     camera.script.orbitCamera.pitch = 0;
     camera.script.orbitCamera.yaw = 90;
-    camera.script.orbitCamera.distance = 4;
+    camera.script.orbitCamera.distance = 3;
 
     const directionalLight = new pc.Entity();
     directionalLight.addComponent('light', {

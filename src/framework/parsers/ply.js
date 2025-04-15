@@ -5,7 +5,7 @@ import { GSplatResource } from './gsplat-resource.js';
 /**
  * @import { AssetRegistry } from '../asset/asset-registry.js'
  * @import { Asset } from '../asset/asset.js'
- * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { AppBase } from '../app-base.js'
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
  */
 
@@ -262,10 +262,12 @@ const readCompressedPly = async (streamBuf, elements) => {
         return width * height;
     };
 
+    const storageSize = evalStorageSize(numVertices);
+
     // allocate result
     result.numSplats = numVertices;
     result.chunkData = new Float32Array(numChunks * numChunkProperties);
-    result.vertexData = new Uint32Array(evalStorageSize(numVertices) * 4);
+    result.vertexData = new Uint32Array(storageSize * 4);
 
     // read length bytes of data into buffer
     const read = async (buffer, length) => {
@@ -294,8 +296,48 @@ const readCompressedPly = async (streamBuf, elements) => {
 
     // read sh data
     if (elements.length === 3) {
-        result.shData = new Uint8Array(elements[2].count * elements[2].properties.length);
-        await read(result.shData.buffer, result.shData.byteLength);
+        // allocate memory for 48 coefficients per gaussian
+        const texStorageSize = storageSize * 16;            // RGBA32U per texel
+        const shData0 = new Uint8Array(texStorageSize);
+        const shData1 = new Uint8Array(texStorageSize);
+        const shData2 = new Uint8Array(texStorageSize);
+
+        // the file contains 1, 2 or 3 bands of SH data (with 9, 24 or 45 coefficients respectively)
+        // we must load the data and pad it for GPU
+        const chunkSize = 1024;
+        const srcCoeffs = elements[2].properties.length / 3;
+        const tmpBuf = new Uint8Array(chunkSize * srcCoeffs * 3);
+
+        // read in chunks of 1k gaussians and write to the padded texture data
+        for (let i = 0; i < result.numSplats; i += chunkSize) {
+            const toRead = Math.min(chunkSize, result.numSplats - i);
+
+            // read the next chunk of data
+            await read(tmpBuf.buffer, toRead * srcCoeffs * 3);
+
+            // pad the data
+            for (let j = 0; j < toRead; ++j) {
+                for (let k = 0; k < 15; ++k) {
+                    const tidx = (i + j) * 16 + k;
+                    if (k < srcCoeffs) {
+                        shData0[tidx] = tmpBuf[(j * 3 + 0) * srcCoeffs + k];
+                        shData1[tidx] = tmpBuf[(j * 3 + 1) * srcCoeffs + k];
+                        shData2[tidx] = tmpBuf[(j * 3 + 2) * srcCoeffs + k];
+                    } else {
+                        shData0[tidx] = 127;
+                        shData1[tidx] = 127;
+                        shData2[tidx] = 127;
+                    }
+                }
+            }
+        }
+
+        result.shData0 = shData0;
+        result.shData1 = shData1;
+        result.shData2 = shData2;
+        result.shBands = { 3: 1, 8: 2, 15: 3 }[srcCoeffs];
+    } else {
+        result.shBands = 0;
     }
 
     return result;
@@ -524,23 +566,18 @@ const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
 const defaultElementFilter = val => true;
 
 class PlyParser {
-    /** @type {GraphicsDevice} */
-    device;
-
-    /** @type {AssetRegistry} */
-    assets;
+    /** @type {AppBase} */
+    app;
 
     /** @type {number} */
     maxRetries;
 
     /**
-     * @param {GraphicsDevice} device - The graphics device.
-     * @param {AssetRegistry} assets - The asset registry.
+     * @param {AppBase} app - The app instance.
      * @param {number} maxRetries - Maximum amount of retries.
      */
-    constructor(device, assets, maxRetries) {
-        this.device = device;
-        this.assets = assets;
+    constructor(app, maxRetries) {
+        this.app = app;
         this.maxRetries = maxRetries;
     }
 
@@ -554,7 +591,8 @@ class PlyParser {
      */
     async load(url, callback, asset) {
         try {
-            const response = await fetch(url.load);
+            // either use the fetch request passed in by the application or initiate it ourselves
+            const response = await (asset.file?.contents ?? fetch(url.load));
             if (!response || !response.body) {
                 callback('Error loading resource', null);
             } else {
@@ -581,7 +619,7 @@ class PlyParser {
 
                 // construct the resource
                 const resource = new GSplatResource(
-                    this.device,
+                    this.app,
                     data.isCompressed && asset.data.decompress ? data.decompress() : data,
                     comments
                 );

@@ -53,7 +53,8 @@ class XrHitTestSource extends EventHandler {
      * Fired when the hit test source receives new results. It provides transform information that
      * tries to match real world geometry. Callback provides the {@link Vec3} position, the
      * {@link Quat} rotation, the {@link XrInputSource} (if it is a transient hit test source)
-     * and the {@link XRHitTestResult} object that is created by WebXR API.
+     * and the [XRHitTestResult](https://developer.mozilla.org/en-US/docs/Web/API/XRHitTestResult)
+     * object that is created by WebXR API.
      *
      * @event
      * @example

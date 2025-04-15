@@ -124,7 +124,26 @@ class Impl {
  */
 
 /**
- * A pure static utility class which supports immediate and lazy loading of wasm modules.
+ * A pure static utility class which supports immediate and lazy loading of
+ * [WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly) modules. Note that you can
+ * load WebAssembly modules even before instantiating your {@link AppBase} instance.
+ *
+ * This class is generally only needed if you are developing against the Engine directly. Editor
+ * projects automatically load WebAssembly modules included in the project's assets.
+ *
+ * Do not use this class to load the Basis WebAssembly module. Instead, please refer to
+ * {@link basisInitialize}.
+ *
+ * @example
+ * // Load the Ammo.js physics engine
+ * pc.WasmModule.setConfig('Ammo', {
+ *     glueUrl: `ammo.wasm.js`,
+ *     wasmUrl: `ammo.wasm.wasm`,
+ *     fallbackUrl: `ammo.js`
+ * });
+ * await new Promise((resolve) => {
+ *     pc.WasmModule.getInstance('Ammo', () => resolve());
+ * });
  */
 class WasmModule {
     /**

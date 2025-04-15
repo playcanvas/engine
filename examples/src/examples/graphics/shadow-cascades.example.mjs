@@ -157,7 +157,7 @@ assetListLoader.load(() => {
 
             // parameters for PCSS
             penumbraSize: 20,
-            penumbraFalloff: 4
+            penumbraFalloff: 8
         },
         ...data.get('settings.light')
     });

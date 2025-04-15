@@ -26,6 +26,8 @@ class NullGraphicsDevice extends GraphicsDevice {
             stencil: this.supportsStencil,
             samples: this.samples
         });
+
+        this.initDeviceCaps();
     }
 
     destroy() {
@@ -50,7 +52,7 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.supportsGpuParticles = false;
         this.textureFloatRenderable = true;
         this.textureHalfFloatRenderable = true;
-        this.supportsImageBitmap = true;
+        this.supportsImageBitmap = false;
     }
 
     postInit() {

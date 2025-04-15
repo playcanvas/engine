@@ -11,7 +11,7 @@ import { math } from '../../core/math/math.js';
  *
  * @callback HttpResponseCallback
  * @param {number|string|Error|null} err - The error code, message, or exception in the case where the request fails.
- * @param {*} [response] - The response data if no errors were encountered. (format depends on response type: text, Object, ArrayBuffer, XML).
+ * @param {any} [response] - The response data if no errors were encountered. (format depends on response type: text, Object, ArrayBuffer, XML).
  */
 
 /**

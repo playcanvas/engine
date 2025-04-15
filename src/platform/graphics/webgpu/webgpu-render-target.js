@@ -104,6 +104,8 @@ class DepthAttachment {
 
 /**
  * A WebGPU implementation of the RenderTarget.
+ *
+ * @ignore
  */
 class WebgpuRenderTarget {
     /** @type {boolean} */
@@ -275,8 +277,8 @@ class WebgpuRenderTarget {
 
         this.initialized = true;
 
-        WebgpuDebug.end(device, { renderTarget });
-        WebgpuDebug.end(device, { renderTarget });
+        WebgpuDebug.end(device, 'RenderTarget initialization', { renderTarget });
+        WebgpuDebug.end(device, 'RenderTarget initialization', { renderTarget });
     }
 
     initDepthStencil(device, wgpu, renderTarget) {

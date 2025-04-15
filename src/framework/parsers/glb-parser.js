@@ -945,6 +945,8 @@ const extensionClearCoat = (data, material, textures) => {
 
         if (clearcoatNormalTexture.hasOwnProperty('scale')) {
             material.clearCoatBumpiness = clearcoatNormalTexture.scale;
+        } else {
+            material.clearCoatBumpiness = 1;
         }
     }
 

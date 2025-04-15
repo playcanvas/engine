@@ -106,28 +106,21 @@ import { getApplication, setApplication } from './globals.js';
 let app = null;
 
 /**
- * An Application represents and manages your PlayCanvas application. If you are developing using
- * the PlayCanvas Editor, the Application is created for you. You can access your Application
- * instance in your scripts. Below is a skeleton script which shows how you can access the
- * application 'app' property inside the initialize and update functions:
+ * AppBase represents the base functionality for all PlayCanvas applications. It is responsible for
+ * initializing and managing the application lifecycle. It coordinates core engine systems such
+ * as:
  *
- * ```javascript
- * // Editor example: accessing the pc.Application from a script
- * var MyScript = pc.createScript('myScript');
+ * - The graphics device - see {@link GraphicsDevice}.
+ * - The asset registry - see {@link AssetRegistry}.
+ * - The component system registry - see {@link ComponentSystemRegistry}.
+ * - The scene - see {@link Scene}.
+ * - Input devices - see {@link Keyboard}, {@link Mouse}, {@link TouchDevice}, and {@link GamePads}.
+ * - The main update/render loop.
  *
- * MyScript.prototype.initialize = function() {
- *     // Every script instance has a property 'this.app' accessible in the initialize...
- *     const app = this.app;
- * };
- *
- * MyScript.prototype.update = function(dt) {
- *     // ...and update functions.
- *     const app = this.app;
- * };
- * ```
- *
- * If you are using the Engine without the Editor, you have to create the application instance
- * manually.
+ * Using AppBase directly requires you to register {@link ComponentSystem}s and
+ * {@link ResourceHandler}s yourself. This facilitates
+ * [tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) when bundling
+ * your application.
  */
 class AppBase extends EventHandler {
     /**
@@ -288,8 +281,8 @@ class AppBase extends EventHandler {
 
     /**
      * Set to true to render the scene on the next iteration of the main loop. This only has an
-     * effect if {@link AppBase#autoRender} is set to false. The value of renderNextFrame is set
-     * back to false again as soon as the scene has been rendered.
+     * effect if {@link autoRender} is set to false. The value of renderNextFrame is set back to
+     * false again as soon as the scene has been rendered.
      *
      * @type {boolean}
      * @example
@@ -449,11 +442,11 @@ class AppBase extends EventHandler {
     /**
      * Create a new AppBase instance.
      *
-     * @param {HTMLCanvasElement} canvas - The canvas element.
+     * @param {HTMLCanvasElement | OffscreenCanvas} canvas - The canvas element.
      * @example
-     * // Engine-only example: create the application manually
-     * const options = new AppOptions();
      * const app = new pc.AppBase(canvas);
+     *
+     * const options = new AppOptions();
      * app.init(options);
      *
      * // Start the application's main loop
