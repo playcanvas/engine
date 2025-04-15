@@ -1753,7 +1753,7 @@ class GraphNode extends EventHandler {
      * @overload
      * @param {number} x - Rotation around world space x-axis in degrees.
      * @param {number} y - Rotation around world space y-axis in degrees.
-     * @param {number} [z] - Rotation around world space z-axis in degrees.
+     * @param {number} z - Rotation around world space z-axis in degrees.
      * @returns {void}
      * @example
      * this.entity.rotate(0, 90, 0);
@@ -1766,7 +1766,7 @@ class GraphNode extends EventHandler {
      * @param {Vec3} rotation - Vector holding world space rotation.
      * @returns {void}
      * @example
-     * const r = new pc.Vec3(0, 90, 0);
+     * const rotation = new pc.Vec3(0, 90, 0);
      * this.entity.rotate(r);
      */
     /**
@@ -1813,8 +1813,8 @@ class GraphNode extends EventHandler {
      * @param {Vec3} rotation - Vector holding local space rotation.
      * @returns {void}
      * @example
-     * const r = new pc.Vec3(0, 90, 0);
-     * this.entity.rotateLocal(r);
+     * const rotation = new pc.Vec3(0, 90, 0);
+     * this.entity.rotateLocal(rotation);
      */
     /**
      * @param {number|Vec3} x - Rotation around local space x-axis in degrees or vector holding local space rotation.
