@@ -80,7 +80,7 @@ class SogsParser {
         data.sh_labels_l = textures.shN?.[1]?.resource;
         data.sh_labels_u = textures.shN?.[2]?.resource;
 
-        const resource = new GSplatResource(this.app, asset.data?.decompress ? data.decompress() : data, []);
+        const resource = new GSplatResource(this.app, (asset.data?.decompress) ? data.decompress() : data, []);
 
         callback(null, resource);
     }
