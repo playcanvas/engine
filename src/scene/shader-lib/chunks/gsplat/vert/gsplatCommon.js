@@ -20,7 +20,9 @@ struct SplatCenter {
 struct SplatCorner {
     vec2 offset;        // corner offset from center in clip space
     vec2 uv;            // corner uv
-    float compensation; // for AA rendering
+    #if GSPLAT_AA
+        float aaFactor; // for scenes generated with antialiasing
+    #endif
 };
 
 #if SH_BANDS > 0
