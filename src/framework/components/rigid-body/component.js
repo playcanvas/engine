@@ -870,22 +870,35 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Apply an impulse (instantaneous change of velocity) to the body at a point. This function
-     * has two valid signatures. You can either specify the impulse (and optional relative point)
-     * via 3D-vector or numbers.
+     * Apply an impulse (instantaneous change of velocity) to the body at a point.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector representing the impulse in world space or
-     * the x-component of the impulse in world space.
-     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point
-     * at which to apply the impulse in the local space of the entity or the y-component of the
-     * impulse to apply in world space.
-     * @param {number} [z] - The z-component of the impulse to apply in world space.
-     * @param {number} [px] - The x-component of the point at which to apply the impulse in the
-     * local space of the entity.
-     * @param {number} [py] - The y-component of the point at which to apply the impulse in the
-     * local space of the entity.
-     * @param {number} [pz] - The z-component of the point at which to apply the impulse in the
-     * local space of the entity.
+     * @overload
+     * @param {number} x - X-component of the impulse in world space.
+     * @param {number} y - Y-component of the impulse in world space.
+     * @param {number} z - Z-component of the impulse in world space.
+     * @param {number} [px] - X-component of the point at which to apply the impulse in the local
+     * space of the entity.
+     * @param {number} [py] - Y-component of the point at which to apply the impulse in the local
+     * space of the entity.
+     * @param {number} [pz] - Z-component of the point at which to apply the impulse in the local
+     * space of the entity.
+     * @returns {void}
+     * @example
+     * // Apply an impulse along the world space positive y-axis at the entity's position.
+     * entity.rigidbody.applyImpulse(0, 10, 0);
+     * @example
+     * // Apply an impulse along the world space positive y-axis at 1 unit down the positive
+     * // z-axis of the entity's local space.
+     * entity.rigidbody.applyImpulse(0, 10, 0, 0, 0, 1);
+     */
+    /**
+     * Apply an impulse (instantaneous change of velocity) to the body at a point.
+     *
+     * @overload
+     * @param {Vec3} impulse - Vector representing the impulse in world space.
+     * @param {Vec3} [relativePoint] - Optional vector representing the relative point at which to
+     * apply the impulse in the local space of the entity.
+     * @returns {void}
      * @example
      * // Apply an impulse along the world space positive y-axis at the entity's position.
      * const impulse = new pc.Vec3(0, 10, 0);
@@ -896,13 +909,19 @@ class RigidBodyComponent extends Component {
      * const impulse = new pc.Vec3(0, 10, 0);
      * const relativePoint = new pc.Vec3(0, 0, 1);
      * entity.rigidbody.applyImpulse(impulse, relativePoint);
-     * @example
-     * // Apply an impulse along the world space positive y-axis at the entity's position.
-     * entity.rigidbody.applyImpulse(0, 10, 0);
-     * @example
-     * // Apply an impulse along the world space positive y-axis at 1 unit down the positive
-     * // z-axis of the entity's local space.
-     * entity.rigidbody.applyImpulse(0, 10, 0, 0, 0, 1);
+     */
+    /**
+     * @param {number|Vec3} x - X-component of the impulse in world space or a vector representing
+     * the impulse in world space.
+     * @param {number|Vec3} [y] - Y-component of the impulse in world space or a vector representing
+     * the relative point at which to apply the impulse in the local space of the entity.
+     * @param {number} [z] - Z-component of the impulse in world space.
+     * @param {number} [px] - X-component of the point at which to apply the impulse in the local
+     * space of the entity.
+     * @param {number} [py] - Y-component of the point at which to apply the impulse in the local
+     * space of the entity.
+     * @param {number} [pz] - Z-component of the point at which to apply the impulse in the local
+     * space of the entity.
      */
     applyImpulse(x, y, z, px, py, pz) {
         const body = this._body;
