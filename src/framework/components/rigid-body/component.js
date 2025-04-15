@@ -741,7 +741,7 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Apply an force to the body at a point. By default, the force is applied at the origin of the
+     * Apply a force to the body at a point. By default, the force is applied at the origin of the
      * body. However, the force can be applied at an offset this point by specifying a world space
      * vector from the body's origin to the point of application.
      *
@@ -764,7 +764,7 @@ class RigidBodyComponent extends Component {
      * this.entity.rigidbody.applyForce(0, -10, 0, 0, 0, 1);
      */
     /**
-     * Apply an force to the body at a point. By default, the force is applied at the origin of the
+     * Apply a force to the body at a point. By default, the force is applied at the origin of the
      * body. However, the force can be applied at an offset this point by specifying a world space
      * vector from the body's origin to the point of application.
      *
