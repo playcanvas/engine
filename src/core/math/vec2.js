@@ -241,8 +241,8 @@ class Vec2 {
      * const r = new pc.Vec2();
      *
      * r.div2(a, b);
-     * // Outputs [2, 3]
      *
+     * // Outputs [2, 3]
      * console.log("The result of the division is: " + r.toString());
      */
     div2(lhs, rhs) {
