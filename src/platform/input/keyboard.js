@@ -51,8 +51,15 @@ const _keyCodeToKeyIdentifier = {
 };
 
 /**
- * A Keyboard device bound to an Element. Allows you to detect the state of the key presses. Note
- * that the Keyboard object must be attached to an Element before it can detect any key presses.
+ * Manages keyboard input by tracking key states and dispatching events. Extends {@link EventHandler}
+ * in order to fire `keydown` and `keyup` events (see {@link KeyboardEvent}).
+ *
+ * Allows the state of individual keys to be queried to check if they are currently pressed or were
+ * pressed/released since the last update. The class automatically handles browser visibility
+ * changes and window blur events by clearing key states. The Keyboard instance must be attached to
+ * a DOM element before it can detect key events.
+ *
+ * Your application's Keyboard instance is managed and accessible via {@link AppBase#keyboard}.
  *
  * @category Input
  */
@@ -69,7 +76,7 @@ class Keyboard extends EventHandler {
      *     e.event.preventDefault(); // Use original browser event to prevent browser action.
      * };
      *
-     * app.keyboard.on("keydown", onKeyDown, this);
+     * app.keyboard.on('keydown', onKeyDown, this);
      */
     static EVENT_KEYDOWN = 'keydown';
 
@@ -85,7 +92,7 @@ class Keyboard extends EventHandler {
      *     e.event.preventDefault(); // Use original browser event to prevent browser action.
      * };
      *
-     * app.keyboard.on("keyup", onKeyUp, this);
+     * app.keyboard.on('keyup', onKeyUp, this);
      */
     static EVENT_KEYUP = 'keyup';
 

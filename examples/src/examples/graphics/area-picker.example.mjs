@@ -76,7 +76,7 @@ assetListLoader.load(() => {
 
     // handle mouse move event and store current mouse position to use as a position to pick from the scene
     new pc.Mouse(document.body).on(
-        pc.EVENT_MOUSEMOVE,
+        'mousemove',
         (event) => {
             mouseX = event.x;
             mouseY = event.y;
