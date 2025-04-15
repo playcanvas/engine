@@ -1767,7 +1767,7 @@ class GraphNode extends EventHandler {
      * @returns {void}
      * @example
      * const rotation = new pc.Vec3(0, 90, 0);
-     * this.entity.rotate(r);
+     * this.entity.rotate(rotation);
      */
     /**
      * @param {number|Vec3} x - Rotation around world space x-axis in degrees or vector holding world space rotation.
