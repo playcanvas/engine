@@ -1729,10 +1729,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const samplers = shader.impl.samplers;
         const uniforms = shader.impl.uniforms;
 
-        Debug.call(() => this.validateAttributes(this.shader, this.vertexBuffers[0]?.format, this.vertexBuffers[1]?.format));
-
         // vertex buffers
         if (!keepBuffers) {
+            Debug.call(() => this.validateAttributes(this.shader, this.vertexBuffers[0]?.format, this.vertexBuffers[1]?.format));
+
             this.setBuffers();
         }
 

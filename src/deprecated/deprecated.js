@@ -751,6 +751,26 @@ Object.defineProperty(XrInputSource.prototype, 'rotation', {
 
 // INPUT
 
+export const EVENT_KEYDOWN = 'keydown';
+export const EVENT_KEYUP = 'keyup';
+
+export const EVENT_MOUSEDOWN = 'mousedown';
+export const EVENT_MOUSEMOVE = 'mousemove';
+export const EVENT_MOUSEUP = 'mouseup';
+export const EVENT_MOUSEWHEEL = 'mousewheel';
+
+export const EVENT_TOUCHSTART = 'touchstart';
+export const EVENT_TOUCHEND = 'touchend';
+export const EVENT_TOUCHMOVE = 'touchmove';
+export const EVENT_TOUCHCANCEL = 'touchcancel';
+
+export const EVENT_GAMEPADCONNECTED = 'gamepadconnected';
+export const EVENT_GAMEPADDISCONNECTED = 'gamepaddisconnected';
+
+export const EVENT_SELECT = 'select';
+export const EVENT_SELECTSTART = 'selectstart';
+export const EVENT_SELECTEND = 'selectend';
+
 Object.defineProperty(ElementInput.prototype, 'wheel', {
     get: function () {
         return this.wheelDelta * -2;
