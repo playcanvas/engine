@@ -31,7 +31,7 @@ class Vec2 {
      * const v2 = new pc.Vec2(1, 2);
      */
     /**
-    * Creates a new Vec2 object.
+     * Creates a new Vec2 object.
      *
      * @overload
      * @param {number[]} arr - The array to set the vector values from.
