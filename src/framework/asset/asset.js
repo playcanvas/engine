@@ -219,7 +219,7 @@ class Asset extends EventHandler {
     /**
      * The type of the asset.
      *
-     * @type {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"}
+     * @type {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"gsplat"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"}
      */
     type;
 
@@ -237,7 +237,7 @@ class Asset extends EventHandler {
      *
      * @param {string} name - A non-unique but human-readable name which can be later used to
      * retrieve the asset.
-     * @param {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"} type - Type of asset.
+     * @param {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"gsplat"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"} type - Type of asset.
      * @param {object} [file] - Details about the file the asset is made from. At the least must
      * contain the 'url' field. For assets that don't contain file data use null.
      * @param {string} [file.url] - The URL of the resource file that contains the asset data.
