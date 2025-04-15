@@ -743,33 +743,41 @@ class RigidBodyComponent extends Component {
     /**
      * Apply an force to the body at a point. By default, the force is applied at the origin of the
      * body. However, the force can be applied at an offset this point by specifying a world space
-     * vector from the body's origin to the point of application. This function has two valid
-     * signatures. You can either specify the force (and optional relative point) via 3D-vector or
-     * numbers.
+     * vector from the body's origin to the point of application.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector representing the force in world space or
-     * the x-component of the force in world space.
-     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point
-     * at which to apply the impulse in world space or the y-component of the force in world space.
-     * @param {number} [z] - The z-component of the force in world space.
-     * @param {number} [px] - The x-component of a world space offset from the body's position
-     * where the force is applied.
-     * @param {number} [py] - The y-component of a world space offset from the body's position
-     * where the force is applied.
-     * @param {number} [pz] - The z-component of a world space offset from the body's position
-     * where the force is applied.
+     * @overload
+     * @param {number} x - X-component of the force in world space.
+     * @param {number} y - Y-component of the force in world space.
+     * @param {number} z - Z-component of the force in world space.
+     * @param {number} [px] - X-component of the relative point at which to apply the force in
+     * world space.
+     * @param {number} [py] - Y-component of the relative point at which to apply the force in
+     * world space.
+     * @param {number} [pz] - Z-component of the relative point at which to apply the force in
+     * world space.
+     * @returns {void}
      * @example
      * // Apply an approximation of gravity at the body's center
      * this.entity.rigidbody.applyForce(0, -10, 0);
      * @example
      * // Apply an approximation of gravity at 1 unit down the world Z from the center of the body
      * this.entity.rigidbody.applyForce(0, -10, 0, 0, 0, 1);
+     */
+    /**
+     * Apply an force to the body at a point. By default, the force is applied at the origin of the
+     * body. However, the force can be applied at an offset this point by specifying a world space
+     * vector from the body's origin to the point of application.
+     *
+     * @overload
+     * @param {Vec3} force - Vector representing the force in world space.
+     * @param {Vec3} [relativePoint] - Optional vector representing the relative point at which to
+     * apply the force in world space.
+     * @returns {void}
      * @example
-     * // Apply a force at the body's center
      * // Calculate a force vector pointing in the world space direction of the entity
      * const force = this.entity.forward.clone().mulScalar(100);
      *
-     * // Apply the force
+     * // Apply the force at the body's center
      * this.entity.rigidbody.applyForce(force);
      * @example
      * // Apply a force at some relative offset from the body's center
@@ -777,12 +785,25 @@ class RigidBodyComponent extends Component {
      * const force = this.entity.forward.clone().mulScalar(100);
      *
      * // Calculate the world space relative offset
-     * const relativePos = new pc.Vec3();
+     * const relativePoint = new pc.Vec3();
      * const childEntity = this.entity.findByName('Engine');
-     * relativePos.sub2(childEntity.getPosition(), this.entity.getPosition());
+     * relativePoint.sub2(childEntity.getPosition(), this.entity.getPosition());
      *
      * // Apply the force
-     * this.entity.rigidbody.applyForce(force, relativePos);
+     * this.entity.rigidbody.applyForce(force, relativePoint);
+     */
+    /**
+     * @param {number|Vec3} x - X-component of the force in world space or a vector representing
+     * the force in world space.
+     * @param {number|Vec3} [y] - Y-component of the force in world space or a vector representing
+     * the force in world space.
+     * @param {number} [z] - Z-component of the force in world space.
+     * @param {number} [px] - X-component of the relative point at which to apply the force in
+     * world space.
+     * @param {number} [py] - Y-component of the relative point at which to apply the force in
+     * world space.
+     * @param {number} [pz] - Z-component of the relative point at which to apply the force in
+     * world space.
      */
     applyForce(x, y, z, px, py, pz) {
         const body = this._body;
@@ -808,20 +829,31 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Apply torque (rotational force) to the body. This function has two valid signatures. You can
-     * either specify the torque force with a 3D-vector or with 3 numbers.
+     * Apply torque (rotational force) to the body.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector representing the torque force in world space
-     * or the x-component of the torque force in world space.
-     * @param {number} [y] - The y-component of the torque force in world space.
-     * @param {number} [z] - The z-component of the torque force in world space.
+     * @overload
+     * @param {number} x - The x-component of the torque force in world space.
+     * @param {number} y - The y-component of the torque force in world space.
+     * @param {number} z - The z-component of the torque force in world space.
+     * @returns {void}
      * @example
-     * // Apply via vector
+     * entity.rigidbody.applyTorque(0, 10, 0);
+     */
+    /**
+     * Apply torque (rotational force) to the body.
+     *
+     * @overload
+     * @param {Vec3} torque - Vector representing the torque force in world space.
+     * @returns {void}
+     * @example
      * const torque = new pc.Vec3(0, 10, 0);
      * entity.rigidbody.applyTorque(torque);
-     * @example
-     * // Apply via numbers
-     * entity.rigidbody.applyTorque(0, 10, 0);
+     */
+    /**
+     * @param {number|Vec3} x - X-component of the torque force in world space or a vector
+     * representing the torque force in world space.
+     * @param {number} [y] - Y-component of the torque force in world space.
+     * @param {number} [z] - Z-component of the torque force in world space.
      */
     applyTorque(x, y, z) {
         const body = this._body;
