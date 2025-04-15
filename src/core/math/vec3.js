@@ -268,8 +268,8 @@ class Vec3 {
      * const r = new pc.Vec3();
      *
      * r.div2(a, b);
-     * // Outputs [2, 3, 4]
      *
+     * // Outputs [2, 3, 4]
      * console.log("The result of the division is: " + r.toString());
      */
     div2(lhs, rhs) {
