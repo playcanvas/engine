@@ -11,6 +11,8 @@ import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 /**
  * @import { Camera } from '../camera.js'
  * @import { GSplat } from './gsplat.js'
+ * @import { GSplatCompressed } from './gsplat-compressed.js'
+ * @import { GSplatSogs } from './gsplat-sogs.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { Material } from '../materials/material.js'
  * @import { SplatMaterialOptions } from './gsplat-material.js'
@@ -24,7 +26,7 @@ const viewport = [0, 0];
 
 /** @ignore */
 class GSplatInstance {
-    /** @type {GSplat} */
+    /** @type {GSplat | GSplatCompressed | GSplatSogs } */
     splat;
 
     /** @type {Mesh} */
@@ -132,12 +134,13 @@ class GSplatInstance {
         this.meshInstance.instancingCount = 0;
 
         // clone centers to allow multiple instances of sorter
-        this.centers = new Float32Array(splat.centers);
+        const centers = splat.centers.slice();
+        const chunks = splat.chunks?.slice();
 
         // create sorter
         if (!options.dither || options.dither === DITHER_NONE) {
             this.sorter = new GSplatSorter();
-            this.sorter.init(this.orderTexture, this.centers);
+            this.sorter.init(this.orderTexture, centers, chunks);
             this.sorter.on('updated', (count) => {
                 // limit splat render count to exclude those behind the camera
                 this.meshInstance.instancingCount = Math.ceil(count / splatInstanceSize);
@@ -176,7 +179,7 @@ class GSplatInstance {
         viewport[1] = height;
 
         // adjust viewport for stereoscopic VR sessions
-        const xr = camera?.xr;
+        const xr = camera?.camera?.xr;
         if (xr?.active && xr.views.list.length === 2) {
             viewport[0] *= 0.5;
         }

@@ -1,22 +1,22 @@
 export default /* glsl */`
 
-#ifdef MAPFLOAT
+#ifdef STD_SPECULARITYFACTOR_CONSTANT
 uniform float material_specularityFactor;
 #endif
 
 void getSpecularityFactor() {
     float specularityFactor = 1.0;
 
-    #ifdef MAPFLOAT
+    #ifdef STD_SPECULARITYFACTOR_CONSTANT
     specularityFactor *= material_specularityFactor;
     #endif
 
-    #ifdef MAPTEXTURE
-    specularityFactor *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
+    #ifdef STD_SPECULARITYFACTOR_TEXTURE
+    specularityFactor *= texture2DBias({STD_SPECULARITYFACTOR_TEXTURE_NAME}, {STD_SPECULARITYFACTOR_TEXTURE_UV}, textureBias).{STD_SPECULARITYFACTOR_TEXTURE_CHANNEL};
     #endif
 
-    #ifdef MAPVERTEX
-    specularityFactor *= saturate(vVertexColor.$VC);
+    #ifdef STD_SPECULARITYFACTOR_VERTEX
+    specularityFactor *= saturate(vVertexColor.{STD_SPECULARITYFACTOR_VERTEX_CHANNEL});
     #endif
 
     dSpecularityFactor = specularityFactor;

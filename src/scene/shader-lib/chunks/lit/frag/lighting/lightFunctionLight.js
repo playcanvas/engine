@@ -2,7 +2,11 @@
 export default /* glsl */`
 #if defined(LIGHT{i})
 
-void evaluateLight{i}() {
+void evaluateLight{i}(
+    #if defined(LIT_IRIDESCENCE)
+        vec3 iridescenceFresnel
+    #endif
+) {
 
     // light color
     vec3 lightColor = light{i}_color;

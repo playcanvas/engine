@@ -191,7 +191,7 @@ class LitShader {
             attributes.vertex_normal = SEMANTIC_NORMAL;
             varyings.set('vNormalW', 'vec3');
 
-            if (options.hasTangents && (options.useHeights || options.useNormals || options.enableGGXSpecular)) {
+            if (options.hasTangents && (options.useHeights || options.useNormals || options.useClearCoatNormals || options.enableGGXSpecular)) {
 
                 vDefines.set('TANGENTS', true);
                 attributes.vertex_tangent = SEMANTIC_TANGENT;
@@ -404,7 +404,10 @@ class LitShader {
             this.fDefineSet(options.useSheen, 'LIT_SHEEN');
             this.fDefineSet(options.useIridescence, 'LIT_IRIDESCENCE');
         }
-
+        this.fDefineSet((this.lighting && options.useSpecular) || this.reflections, 'LIT_SPECULAR_OR_REFLECTION');
+        this.fDefineSet(this.needsSceneColor, 'LIT_SCENE_COLOR');
+        this.fDefineSet(this.needsScreenSize, 'LIT_SCREEN_SIZE');
+        this.fDefineSet(this.needsTransforms, 'LIT_TRANSFORMS');
         this.fDefineSet(this.needsNormal, 'LIT_NEEDS_NORMAL');
         this.fDefineSet(this.lighting, 'LIT_LIGHTING');
         this.fDefineSet(options.useMetalness, 'LIT_METALNESS');
@@ -430,6 +433,7 @@ class LitShader {
         this.fDefineSet(options.useHeights, 'LIT_HEIGHTS');
         this.fDefineSet(options.opacityFadesSpecular, 'LIT_OPACITY_FADES_SPECULAR');
         this.fDefineSet(options.alphaToCoverage, 'LIT_ALPHA_TO_COVERAGE');
+        this.fDefineSet(options.alphaTest, 'LIT_ALPHA_TEST');
         this.fDefineSet(options.useMsdf, 'LIT_MSDF');
         this.fDefineSet(options.ssao, 'LIT_SSAO');
         this.fDefineSet(options.useAo, 'LIT_AO');
@@ -457,6 +461,7 @@ class LitShader {
 
     prepareShadowPass() {
 
+        const { options } = this;
         const lightType = this.shaderPassInfo.lightType;
 
         const shadowType = this.shaderPassInfo.shadowType;
@@ -472,6 +477,7 @@ class LitShader {
         this.fDefineSet(usePerspectiveDepth, 'PERSPECTIVE_DEPTH');
         this.fDefineSet(true, 'LIGHT_TYPE', `${lightTypeNames[lightType]}`);
         this.fDefineSet(true, 'SHADOW_TYPE', `${shadowInfo.name}`);
+        this.fDefineSet(options.alphaTest, 'LIT_ALPHA_TEST');
     }
 
     /**
@@ -525,7 +531,9 @@ class LitShader {
             `;
         }
 
-        Debug.assert(!this.fshader.includes('litShaderArgs'), 'Automatic compatibility with shaders using litShaderArgs has been removed. Please update the shader to use the new system.');
+        Debug.assert(!this.fshader.includes('litShaderArgs.'), 'Automatic compatibility with shaders using litShaderArgs has been removed. Please update the shader to use the new system.', {
+            fshader: this.fshader
+        });
     }
 }
 

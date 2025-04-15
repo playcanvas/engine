@@ -1,5 +1,7 @@
+import { path } from '../../core/path.js';
 import { PlyParser } from '../parsers/ply.js';
 import { ResourceHandler } from './handler.js';
+import { SogsParser } from '../parsers/sogs.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -14,7 +16,19 @@ class GSplatHandler extends ResourceHandler {
      */
     constructor(app) {
         super(app, 'gsplat');
-        this.parser = new PlyParser(app.graphicsDevice, app.assets, 3);
+        this.parsers = {
+            ply: new PlyParser(app, 3),
+            json: new SogsParser(app, 3)
+        };
+    }
+
+    _getUrlWithoutParams(url) {
+        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
+    }
+
+    _getParser(url) {
+        const ext = path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '');
+        return this.parsers[ext] || this.parsers.ply;
     }
 
     load(url, callback, asset) {
@@ -25,11 +39,11 @@ class GSplatHandler extends ResourceHandler {
             };
         }
 
-        this.parser.load(url, callback, asset);
+        this._getParser(url.original).load(url, callback, asset);
     }
 
     open(url, data, asset) {
-        return this.parser.open(url, data, asset);
+        return data;
     }
 }
 

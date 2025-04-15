@@ -69,6 +69,9 @@ class GSplatCompressed {
         this.centers = new Float32Array(numSplats * 3);
         gsplatData.getCenters(this.centers);
 
+        this.chunks = new Float32Array(numChunks * 6);
+        gsplatData.getChunks(this.chunks);
+
         // initialize packed data
         this.packedTexture = this.createTexture('packedData', PIXELFORMAT_RGBA32U, this.evalTextureSize(numSplats), vertexData);
 

@@ -9,6 +9,8 @@ import { EventHandler } from '../core/event-handler.js';
  * scene, and are accessible using the {@link ContainerResource#renders} property. A `Render` is
  * the resource of a Render Asset. They are usually created by the GLB loader and not created by
  * hand.
+ *
+ * @ignore
  */
 class Render extends EventHandler {
     /**

@@ -13,7 +13,7 @@ import { Debug } from '../../core/debug.js';
  *
  * @callback ResourceLoaderCallback
  * @param {string|null} err - The error message in the case where the load fails.
- * @param {*} [resource] - The resource that has been successfully loaded.
+ * @param {any} [resource] - The resource that has been successfully loaded.
  */
 
 /**

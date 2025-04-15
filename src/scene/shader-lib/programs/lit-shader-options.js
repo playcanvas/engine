@@ -236,16 +236,16 @@ class LitShaderOptions {
     fog = FOG_NONE;
 
     /**
-     * The type of gamma correction being applied in the shader. See {@link Scene#gammaCorrection}
-     * for the list of possible values.
+     * The type of gamma correction being applied in the shader. See
+     * {@link CameraComponent#gammaCorrection} for the list of possible values.
      *
      * @type {number}
      */
     gamma = GAMMA_NONE;
 
     /**
-     * The type of tone mapping being applied in the shader. See {@link Scene#toneMapping} for the
-     * list of possible values.
+     * The type of tone mapping being applied in the shader. See {@link CameraComponent#toneMapping}
+     * for the list of possible values.
      *
      * @type {number}
      */

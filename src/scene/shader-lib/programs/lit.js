@@ -1,4 +1,3 @@
-import { ChunkBuilder } from '../chunk-builder.js';
 import { LitShader } from './lit-shader.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
@@ -33,14 +32,10 @@ class ShaderGeneratorLit extends ShaderGenerator {
     createShaderDefinition(device, options) {
         const litShader = new LitShader(device, options.litOptions);
 
-        const decl = new ChunkBuilder();
-        const code = new ChunkBuilder();
-
-        // global texture bias for standard textures
-        decl.append('uniform float textureBias;');
-
-        decl.append(litShader.chunks.litShaderArgsPS);
-        code.append(options.shaderChunk);
+        const decl = `
+            uniform float textureBias;
+            #include "litShaderArgsPS"
+        `;
 
         const definitionOptions = {
             name: 'LitShader',
@@ -52,7 +47,7 @@ class ShaderGeneratorLit extends ShaderGenerator {
         const mapTransforms = [];
         litShader.generateVertexShader(usedUvSets, usedUvSets, mapTransforms);
 
-        litShader.generateFragmentShader(decl.code, code.code, 'vUv0');
+        litShader.generateFragmentShader(decl, options.shaderChunk, 'vUv0');
 
         const includes = new Map(Object.entries({
             ...Object.getPrototypeOf(litShader.chunks), // the prototype stores the default chunks

@@ -51,6 +51,8 @@ const lookupHashes = new Uint32Array(4);
 
 /**
  * Internal data structure used to store data used by hardware instancing.
+ *
+ * @ignore
  */
 class InstancingData {
     /** @type {VertexBuffer|null} */
@@ -80,6 +82,8 @@ class InstancingData {
 
 /**
  * Internal helper class for storing the shader and related mesh bind group in the shader cache.
+ *
+ * @ignore
  */
 class ShaderInstance {
     /**
@@ -229,8 +233,8 @@ class MeshInstance {
     visible = true;
 
     /**
-     * Read this value in {@link Scene#EVENT_POSTCULL} event to determine if the object is actually
-     * going to be rendered.
+     * Read this value in {@link Scene.EVENT_POSTCULL} event to determine if the object is actually going
+     * to be rendered.
      *
      * @type {boolean}
      */

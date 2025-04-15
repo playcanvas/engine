@@ -41,6 +41,8 @@ const dummyUse = (thingOne) => {
 
 /**
  * A WebGPU implementation of the Texture.
+ *
+ * @ignore
  */
 class WebgpuTexture {
     /**
@@ -506,7 +508,7 @@ class WebgpuTexture {
 
         const mipLevel = options.mipLevel ?? 0;
         const face = options.face ?? 0;
-        let data = options.data ?? null;
+        const data = options.data ?? null;
         const immediate = options.immediate ?? false;
 
         const texture = this.texture;
@@ -552,15 +554,15 @@ class WebgpuTexture {
         return device.readBuffer(stagingBuffer, size, null, immediate).then((temp) => {
 
             // remove the 256 alignment padding from the end of each row
-            data ??= new Uint8Array(height * bytesPerRow);
+            const target = (data?.constructor === Uint8Array) ? data : new Uint8Array(data?.buffer ?? height * bytesPerRow);
             for (let i = 0; i < height; i++) {
                 const srcOffset = i * paddedBytesPerRow;
                 const dstOffset = i * bytesPerRow;
                 const sub = temp.subarray(srcOffset, srcOffset + bytesPerRow);
-                data.set(sub, dstOffset);
+                target.set(sub, dstOffset);
             }
 
-            return data;
+            return data ?? target;
         });
     }
 }

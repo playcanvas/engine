@@ -39,8 +39,9 @@ class XrInputSource extends EventHandler {
 
     /**
      * Fired when input source has triggered primary action. This could be pressing a trigger
-     * button, or touching a screen. The handler is passed an {@link XRInputSourceEvent} object
-     * from the WebXR API.
+     * button, or touching a screen. The handler is passed an
+     * [XRInputSourceEvent](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSourceEvent)
+     * object from the WebXR API.
      *
      * @event
      * @example
@@ -56,7 +57,8 @@ class XrInputSource extends EventHandler {
 
     /**
      * Fired when input source has started to trigger primary action. The handler is passed an
-     * {@link XRInputSourceEvent} object from the WebXR API.
+     * [XRInputSourceEvent](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSourceEvent)
+     * object from the WebXR API.
      *
      * @event
      * @example
@@ -68,7 +70,8 @@ class XrInputSource extends EventHandler {
 
     /**
      * Fired when input source has ended triggering primary action. The handler is passed an
-     * {@link XRInputSourceEvent} object from the WebXR API.
+     * [XRInputSourceEvent](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSourceEvent)
+     * object from the WebXR API.
      *
      * @event
      * @example
@@ -80,8 +83,9 @@ class XrInputSource extends EventHandler {
 
     /**
      * Fired when input source has triggered squeeze action. This is associated with "grabbing"
-     * action on the controllers. The handler is passed an {@link XRInputSourceEvent} object from
-     * the WebXR API.
+     * action on the controllers. The handler is passed an
+     * [XRInputSourceEvent](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSourceEvent)
+     * object from the WebXR API.
      *
      * @event
      * @example
@@ -93,7 +97,8 @@ class XrInputSource extends EventHandler {
 
     /**
      * Fired when input source has started to trigger squeeze action. The handler is passed an
-     * {@link XRInputSourceEvent} object from the WebXR API.
+     * [XRInputSourceEvent](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSourceEvent)
+     * object from the WebXR API.
      *
      * @event
      * @example
@@ -107,7 +112,8 @@ class XrInputSource extends EventHandler {
 
     /**
      * Fired when input source has ended triggering squeeze action. The handler is passed an
-     * {@link XRInputSourceEvent} object from the WebXR API.
+     * [XRInputSourceEvent](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSourceEvent)
+     * object from the WebXR API.
      *
      * @event
      * @example
@@ -145,7 +151,8 @@ class XrInputSource extends EventHandler {
      * Fired when hit test source receives new results. It provides transform information that
      * tries to match real world picked geometry. The handler is passed the {@link XrHitTestSource}
      * object that produced the hit result, the {@link Vec3} position, the {@link Quat}
-     * rotation and the {@link XRHitTestResult} object that is created by the WebXR API.
+     * rotation and the [XRHitTestResult](https://developer.mozilla.org/en-US/docs/Web/API/XRHitTestResult)
+     * object that is created by the WebXR API.
      *
      * @event
      * @example
