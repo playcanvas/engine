@@ -273,6 +273,17 @@ class Scene extends EventHandler {
     _fogParams = new FogParams();
 
     /**
+     * Internal flag to indicate that the specular (and sheen) maps of standard materials should be
+     * assumed to be in a linear space, instead of sRGB. This is used by the editor using engine v2
+     * internally to render in a style of engine v1, where spec those textures were specified as
+     * linear, while engine 2 assumes they are in sRGB space. This should be removed when the editor
+     * no longer supports engine v1 projects.
+     *
+     * @ignore
+     */
+    forcePassThroughSpecular = false;
+
+    /**
      * Create a new Scene instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this scene.
