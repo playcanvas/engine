@@ -1,7 +1,6 @@
 export default /* wgsl */`
 
-#ifdef LIT_AMBIENT_SOURCE == AMBIENTSH
-    uniform ambientSH: array<vec3f, 9>;
+#if LIT_AMBIENT_SOURCE == AMBIENTSH
 #endif
 
 #if LIT_AMBIENT_SOURCE == ENVALATLAS
