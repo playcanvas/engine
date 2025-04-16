@@ -1,5 +1,5 @@
 // import alphaTestPS from './standard/frag/alphaTest.js';
-// import ambientPS from './lit/frag/ambient.js';
+import ambientPS from './lit/frag/ambient.js';
 // import aoPS from './standard/frag/ao.js';
 // import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
 // import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
@@ -15,21 +15,21 @@ import basePS from './lit/frag/base.js';
 // import clusteredLightCookiesPS from './lit/frag/clusteredLightCookies.js';
 // import clusteredLightShadowsPS from './lit/frag/clusteredLightShadows.js';
 // import clusteredLightPS from './lit/frag/clusteredLight.js';
-// import combinePS from './lit/frag/combine.js';
+import combinePS from './lit/frag/combine.js';
 import cookieBlit2DPS from './internal/frag/cookie-blit-2d.js';
 import cookieBlitCubePS from './internal/frag/cookie-blit-cube.js';
 import cookieBlitVS from './internal/vert/cookie-blit.js';
 // import cookiePS from './lit/frag/cookie.js';
 // import cubeMapProjectPS from './lit/frag/cubeMapProject.js';
 // import cubeMapRotatePS from './lit/frag/cubeMapRotate.js';
-// import debugOutputPS from './lit/frag/debug-output.js';
-// import debugProcessFrontendPS from './lit/frag/debug-process-frontend.js';
+import debugOutputPS from './lit/frag/debug-output.js';
+import debugProcessFrontendPS from './lit/frag/debug-process-frontend.js';
 import decodePS from './common/frag/decode.js';
 // import detailModesPS from './standard/frag/detailModes.js';
 // import diffusePS from './standard/frag/diffuse.js';
 // import emissivePS from './standard/frag/emissive.js';
 import encodePS from './common/frag/encode.js';
-// import endPS from './lit/frag/end.js';
+import endPS from './lit/frag/end.js';
 import envAtlasPS from './common/frag/envAtlas.js';
 import envProcPS from './common/frag/envProc.js';
 // import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
@@ -67,21 +67,22 @@ import immediateLineVS from './internal/vert/immediateLine.js';
 // import lightEvaluationPS from './lit/frag/lighting/lightEvaluation.js';
 // import lightFunctionLightPS from './lit/frag/lighting/lightFunctionLight.js';
 // import lightFunctionShadowPS from './lit/frag/lighting/lightFunctionShadow.js';
-// import lightingPS from './lit/frag/lighting/lighting.js';
+import lightingPS from './lit/frag/lighting/lighting.js';
 // import lightmapAddPS from './lit/frag/lightmapAdd.js';
 // import lightmapPS from './standard/frag/lightmap.js';
 // import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 // import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 // import lightSheenPS from './lit/frag/lightSheen.js';
 // import linearizeDepthPS from './common/frag/linearizeDepth.js';
-// import litForwardBackendPS from './lit/frag/main/litBackend.js';
-// import litForwardDeclarationPS from './lit/frag/main/litForwardDeclaration.js';
-// import litForwardMainPS from './lit/frag/main/litForwardMain.js';
-// import litForwardPostCodePS from './lit/frag/main-forward/litForwardPostCode.js';
-// import litForwardPreCodePS from './lit/frag/main-forward/litForwardPreCode.js';
-// import litMainVS from './lit/vert/litMain.js';
+import litForwardBackendPS from './lit/frag/pass-forward/litForwardBackend.js';
+import litForwardDeclarationPS from './lit/frag/pass-forward/litForwardDeclaration.js';
+import litForwardMainPS from './lit/frag/pass-forward/litForwardMain.js';
+import litForwardPostCodePS from './lit/frag/pass-forward/litForwardPostCode.js';
+import litForwardPreCodePS from './lit/frag/pass-forward/litForwardPreCode.js';
+import litMainVS from './lit/vert/litMain.js';
 // import litOtherMainPS from './lit/frag/pass-other/litOtherMain.js';
 import litShaderArgsPS from './standard/frag/litShaderArgs.js';
+import litShaderCorePS from './standard/frag/litShaderCore.js';
 // import litShadowMainPS from './lit/frag/pass-shadow/litShadowMain.js';
 // import ltcPS from './lit/frag/ltc.js';
 // import metalnessPS from './standard/frag/metalness.js';
@@ -97,8 +98,8 @@ import normalCoreVS from './common/vert/normalCore.js';
 // import normalMapPS from './standard/frag/normalMap.js';
 // import opacityPS from './standard/frag/opacity.js';
 // import opacityDitherPS from './standard/frag/opacity-dither.js';
-// import outputPS from './lit/frag/output.js';
-// import outputAlphaPS from './lit/frag/outputAlpha.js';
+import outputPS from './lit/frag/output.js';
+import outputAlphaPS from './lit/frag/outputAlpha.js';
 // import outputTex2DPS from './common/frag/outputTex2D.js';
 // import sheenPS from './standard/frag/sheen.js';
 // import sheenGlossPS from './standard/frag/sheenGloss.js';
@@ -191,15 +192,15 @@ import tonemappingHejlPS from './common/frag/tonemapping/tonemappingHejl.js';
 import tonemappingLinearPS from './common/frag/tonemapping/tonemappingLinear.js';
 import tonemappingNeutralPS from './common/frag/tonemapping/tonemappingNeutral.js';
 import tonemappingNonePS from './common/frag/tonemapping/tonemappingNone.js';
-// import transformVS from './common/vert/transform.js';
+import transformVS from './common/vert/transform.js';
 import transformCoreVS from './common/vert/transformCore.js';
 // import transformInstancingVS from './common/vert/transformInstancing.js';
 // import transmissionPS from './standard/frag/transmission.js';
 // import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
-// import uv0VS from './lit/vert/uv0.js';
-// import uv1VS from './lit/vert/uv1.js';
-// import uvTransformPS from './lit/vert/uvTransform.js';
-// import uvTransformUniformsPS from './lit/vert/uvTransformUniforms.js';
+import uv0VS from './lit/vert/uv0.js';
+import uv1VS from './lit/vert/uv1.js';
+import uvTransformVS from './lit/vert/uvTransform.js';
+import uvTransformUniformsPS from './lit/vert/uvTransformUniforms.js';
 // import viewDirPS from './lit/frag/viewDir.js';
 // import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu.js';
 // import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
@@ -212,7 +213,7 @@ import transformCoreVS from './common/vert/transformCore.js';
  */
 const shaderChunksWGSL = {
     // alphaTestPS,
-    // ambientPS,
+    ambientPS,
     // aoPS,
     // aoDiffuseOccPS,
     // aoSpecOccPS,
@@ -228,21 +229,21 @@ const shaderChunksWGSL = {
     // clusteredLightShadowsPS,
     // clusteredLightUtilsPS,
     // clusteredLightPS,
-    // combinePS,
+    combinePS,
     cookieBlit2DPS,
     cookieBlitCubePS,
     cookieBlitVS,
     // cookiePS,
     // cubeMapProjectPS,
     // cubeMapRotatePS,
-    // debugOutputPS,
-    // debugProcessFrontendPS,
+    debugOutputPS,
+    debugProcessFrontendPS,
     // detailModesPS,
     // diffusePS,
     decodePS,
     // emissivePS,
     encodePS,
-    // endPS,
+    endPS,
     envAtlasPS,
     // envConstPS,
     envProcPS,
@@ -282,21 +283,22 @@ const shaderChunksWGSL = {
     // lightEvaluationPS,
     // lightFunctionLightPS,
     // lightFunctionShadowPS,
-    // lightingPS,
+    lightingPS,
     // lightmapAddPS,
     // lightmapPS,
     // lightSpecularAnisoGGXPS,
     // lightSpecularBlinnPS,
     // lightSheenPS,
     // linearizeDepthPS,
-    // litForwardBackendPS,
-    // litForwardDeclarationPS,
-    // litForwardPSMain,
-    // litForwardPostCodePS,
-    // litForwardPreCodePS,
-    // litMainVS,
+    litForwardBackendPS,
+    litForwardDeclarationPS,
+    litForwardMainPS,
+    litForwardPostCodePS,
+    litForwardPreCodePS,
+    litMainVS,
     // litOtherMainPS,
     litShaderArgsPS,
+    litShaderCorePS,
     // litShadowMainPS,
     // ltcPS,
     // metalnessPS,
@@ -312,8 +314,8 @@ const shaderChunksWGSL = {
     // normalMapPS,
     // opacityPS,
     // opacityDitherPS,
-    // outputPS,
-    // outputAlphaPS,
+    outputPS,
+    outputAlphaPS,
     // outputTex2DPS,
     // sheenPS,
     // sheenGlossPS,
@@ -406,15 +408,15 @@ const shaderChunksWGSL = {
     tonemappingLinearPS,
     tonemappingNeutralPS,
     tonemappingNonePS,
-    // transformVS,
-    transformCoreVS
+    transformVS,
+    transformCoreVS,
     // transformInstancingVS,
     // transmissionPS,
     // twoSidedLightingPS,
-    // uv0VS,
-    // uv1VS,
-    // uvTransformPS,
-    // uvTransformUniformsPS,
+    uv0VS,
+    uv1VS,
+    uvTransformVS,
+    uvTransformUniformsPS
     // viewDirPS,
     // webgpuPS,
     // webgpuVS

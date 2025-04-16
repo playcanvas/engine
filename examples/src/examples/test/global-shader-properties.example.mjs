@@ -113,7 +113,8 @@ assetListLoader.load(() => {
     material.hasMetalness = true;
     material.occludeSpecular = pc.SPECOCC_AO;
 
-    const argumentsChunk = `
+    material.shaderChunkGLSL = `
+        #include "litShaderCorePS"
         void evaluateFrontend() {
             litArgs_emission = vec3(0.7, 0.4, 0);
             litArgs_metalness = 0.5;
@@ -124,7 +125,6 @@ assetListLoader.load(() => {
             litArgs_ao = 0.0;
             litArgs_opacity = 1.0;
         }`;
-    material.shaderChunk = argumentsChunk;
     material.update();
 
     // create primitive

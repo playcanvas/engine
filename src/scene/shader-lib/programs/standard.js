@@ -11,7 +11,7 @@ import { StandardMaterialOptions } from '../../materials/standard-material-optio
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
-import { SHADERTAG_MATERIAL } from '../../../platform/graphics/constants.js';
+import { SHADERLANGUAGE_GLSL, SHADERTAG_MATERIAL } from '../../../platform/graphics/constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -312,7 +312,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         const shaderPassInfo = ShaderPass.get(device).getByIndex(options.litOptions.pass);
         const isForwardPass = shaderPassInfo.isForward;
-        const litShader = new LitShader(device, options.litOptions);
+        const litShader = new LitShader(device, options.litOptions, SHADERLANGUAGE_GLSL);
 
         // generate vertex shader
         this.createVertexShader(litShader, options);

@@ -84,6 +84,7 @@ class Preprocessor {
 
         // preprocess defines / ifdefs ..
         source = this._preprocess(source, defines, injectDefines, includes, options.stripDefines);
+        if (source === null) return null;
 
         // extract defines that evaluate to an integer number
         const intDefines = new Map();
@@ -214,7 +215,7 @@ class Preprocessor {
      * @param {Map<string, string>} [includes] - An object containing key-value pairs of include names and their
      * content.
      * @param {boolean} [stripDefines] - If true, strips all defines from the source.
-     * @returns {string} Returns preprocessed source code.
+     * @returns {string|null} Returns preprocessed source code, or null if failed.
      */
     static _preprocess(source, defines = new Map(), injectDefines, includes, stripDefines) {
 
@@ -427,7 +428,11 @@ class Preprocessor {
                     INCLUDE.lastIndex = match.index;
                     const include = INCLUDE.exec(source);
                     error ||= include === null;
-                    Debug.assert(include, `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`);
+                    if (!include) {
+                        Debug.assert(include, `Invalid [${keyword}] while preprocessing ${Preprocessor.sourceName}:\n${source.substring(match.index, match.index + 100)}...`);
+                        error = true;
+                        continue;
+                    }
                     const identifier = include[1].trim();
                     const countIdentifier = include[2]?.trim();
 
@@ -486,7 +491,7 @@ class Preprocessor {
 
         if (error) {
             console.error('Failed to preprocess shader: ', { source: originalSource });
-            return originalSource;
+            return null;
         }
 
         return source;

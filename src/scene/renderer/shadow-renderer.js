@@ -325,6 +325,8 @@ class ShadowRenderer {
             const shadowShader = shaderInstance.shader;
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
+            if (shadowShader.failed) continue;
+
             // sort shadow casters by shader
             meshInstance._sortKeyShadow = shadowShader.id;
 

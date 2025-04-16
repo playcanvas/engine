@@ -11,7 +11,7 @@ fn decodeGammaFloat(raw: f32) -> f32 {
     return pow(raw, 2.2);
 }
 
-fn decodeGammaVec3(raw: vec3f) -> vec3f {
+fn decodeGamma3(raw: vec3f) -> vec3f {
     return pow(raw, vec3f(2.2));
 }
 

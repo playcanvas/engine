@@ -157,6 +157,12 @@ class Shader {
                 stripDefines: wgsl,
                 sourceName: `fragment shader for ${this.label}`
             });
+
+            if (!definition.vshader || !definition.fshader) {
+                Debug.error(`Shader: Failed to create shader ${this.label}. Vertex or fragment shader source is empty.`, this);
+                this.failed = true;
+                return;
+            }
         }
 
         this.impl = graphicsDevice.createShaderImpl(this);

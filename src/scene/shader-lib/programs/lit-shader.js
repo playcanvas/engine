@@ -1,7 +1,9 @@
 import {
     SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
 } from '../../../platform/graphics/constants.js';
 import {
     LIGHTSHAPE_PUNCTUAL,
@@ -17,6 +19,7 @@ import { ChunkUtils } from '../chunk-utils.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { Debug } from '../../../core/debug.js';
+import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -63,12 +66,22 @@ class LitShader {
     options;
 
     /**
+     * The shader language, {@link SHADERLANGUAGE_GLSL} or {@link SHADERLANGUAGE_WGSL}.
+     *
+     * @type {string}
+     */
+    shaderLanguage;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {LitShaderOptions} options - The lit options.
+     * @param {string} shaderLanguage - The shader language, {@link SHADERLANGUAGE_GLSL} or
+     * {@link SHADERLANGUAGE_WGSL}.
      */
-    constructor(device, options) {
+    constructor(device, options, shaderLanguage) {
         this.device = device;
         this.options = options;
+        this.shaderLanguage = shaderLanguage;
 
         // resolve custom chunk attributes
         this.attributes = {
@@ -81,6 +94,7 @@ class LitShader {
             }
         }
 
+        const languageChunks = shaderLanguage === SHADERLANGUAGE_GLSL ? shaderChunks : shaderChunksWGSL;
         if (options.chunks) {
             const userChunks = options.chunks;
 
@@ -88,8 +102,8 @@ class LitShader {
             validateUserChunks(userChunks);
             // #endif
 
-            this.chunks = Object.create(shaderChunks);
-            for (const chunkName in shaderChunks) {
+            this.chunks = Object.create(languageChunks);
+            for (const chunkName in languageChunks) {
                 if (userChunks.hasOwnProperty(chunkName)) {
                     const chunk = userChunks[chunkName];
                     for (const a in builtinAttributes) {
@@ -101,7 +115,7 @@ class LitShader {
                 }
             }
         } else {
-            this.chunks = shaderChunks;
+            this.chunks = languageChunks;
         }
 
         this.shaderPassInfo = ShaderPass.get(this.device).getByIndex(options.pass);
@@ -287,13 +301,15 @@ class LitShader {
         // generate varyings code
         varyings.forEach((type, name) => {
             vDefines.set(`VARYING_${name.toUpperCase()}`, true);
-            const generateWgsl = false; // when we switch generation to WGSL on WebGPU
-            this.varyingsCode += generateWgsl ?
+            this.varyingsCode += this.shaderLanguage === SHADERLANGUAGE_WGSL ?
                 `varying ${name}: ${varyingsWGSLTypes.get(type)};\n` :
                 `varying ${type} ${name};\n`;
         });
 
-        this.vshader = this.varyingsCode + chunks.litMainVS;
+        this.vshader = `
+            ${this.varyingsCode}
+            #include "litMainVS"
+        `;
     }
 
     /**

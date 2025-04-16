@@ -2,13 +2,6 @@
 // by the fragment shader of the standard shader.
 export default /* glsl */`
 
-    // global texture bias for standard textures
-    #if LIT_NONE_SLICE_MODE == TILED
-        const float textureBias = -1000.0;
-    #else
-        uniform float textureBias;
-    #endif
-
     // globals
     float dAlpha = 1.0;
 
@@ -188,5 +181,5 @@ export default /* glsl */`
     #endif
 
     // front end outputs to lit shader
-    #include "litShaderArgsPS"
+    #include "litShaderCorePS"
 `;
