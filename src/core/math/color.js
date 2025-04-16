@@ -39,13 +39,31 @@ class Color {
     a;
 
     /**
-     * Create a new Color object.
+     * Creates a new Color instance.
      *
-     * @param {number|number[]} [r] - The value of the red component (0-1). Defaults to 0. If r is
-     * an array of length 3 or 4, the array will be used to populate all components.
-     * @param {number} [g] - The value of the green component (0-1). Defaults to 0.
-     * @param {number} [b] - The value of the blue component (0-1). Defaults to 0.
-     * @param {number} [a] - The value of the alpha component (0-1). Defaults to 1.
+     * @overload
+     * @param {number} [r] - The r value. Defaults to 0.
+     * @param {number} [g] - The g value. Defaults to 0.
+     * @param {number} [b] - The b value. Defaults to 0.
+     * @param {number} [a] - The a value. Defaults to 1.
+     * @example
+     * const c1 = new pc.Color(); // defaults to 0, 0, 0, 1
+     * const c2 = new pc.Color(0.1, 0.2, 0.3, 0.4);
+     */
+    /**
+     * Creates a new Color instance.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the color values from.
+     * @example
+     * const c = new pc.Color([0.1, 0.2, 0.3, 0.4]);
+     */
+    /**
+     * @param {number|number[]} [r] - The r value. Defaults to 0. If r is an array of length 3 or
+     * 4, the array will be used to populate all components.
+     * @param {number} [g] - The g value. Defaults to 0.
+     * @param {number} [b] - The b value. Defaults to 0.
+     * @param {number} [a] - The a value. Defaults to 1.
      */
     constructor(r = 0, g = 0, b = 0, a = 1) {
         const length = r.length;

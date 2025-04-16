@@ -33,15 +33,31 @@ class Vec4 {
     w;
 
     /**
-     * Creates a new Vec4 object.
+     * Creates a new Vec4 instance.
      *
+     * @overload
+     * @param {number} [x] - The x value. Defaults to 0.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @param {number} [z] - The z value. Defaults to 0.
+     * @param {number} [w] - The w value. Defaults to 0.
+     * @example
+     * const v1 = new pc.Vec4(); // defaults to 0, 0, 0, 0
+     * const v2 = new pc.Vec4(1, 2, 3, 4);
+     */
+    /**
+     * Creates a new Vec4 instance.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the vector values from.
+     * @example
+     * const v = new pc.Vec4([1, 2, 3, 4]);
+     */
+    /**
      * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 4, the
      * array will be used to populate all components.
      * @param {number} [y] - The y value. Defaults to 0.
      * @param {number} [z] - The z value. Defaults to 0.
      * @param {number} [w] - The w value. Defaults to 0.
-     * @example
-     * const v = new pc.Vec4(1, 2, 3, 4);
      */
     constructor(x = 0, y = 0, z = 0, w = 0) {
         if (x.length === 4) {
@@ -222,8 +238,8 @@ class Vec4 {
      * const r = new pc.Vec4();
      *
      * r.div2(a, b);
-     * // Outputs [2, 3, 4, 5]
      *
+     * // Outputs [2, 3, 4, 5]
      * console.log("The result of the division is: " + r.toString());
      */
     div2(lhs, rhs) {
