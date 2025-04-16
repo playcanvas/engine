@@ -268,8 +268,8 @@ class Asset extends EventHandler {
 
         this._name = name || '';
         this.type = type;
-        this._data = data;
-        this.options = options;
+        this._data = data || {};
+        this.options = options || {};
 
         if (file) this.file = file;
     }
