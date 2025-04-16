@@ -107,8 +107,8 @@ assetListLoader.load(() => {
     // This is in the excluded layer so it does not render into reflection texture
     const groundMaterial = new pc.ShaderMaterial({
         uniqueName: 'MyShader',
-        vertexCode: files['shader.vert'],
-        fragmentCode: files['shader.frag'],
+        vertexGLSL: files['shader.vert'],
+        fragmentGLSL: files['shader.frag'],
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0
