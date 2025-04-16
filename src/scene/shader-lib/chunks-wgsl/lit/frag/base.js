@@ -11,7 +11,7 @@ fn saturate(x: f32) -> f32 {
     return clamp(x, 0.0, 1.0);
 }
 
-fn saturate(x: vec3f) -> vec3f {
+fn saturate3(x: vec3f) -> vec3f {
     return clamp(x, vec3f(0.0), vec3f(1.0));
 }
 `;

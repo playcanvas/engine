@@ -577,6 +577,8 @@ class ForwardRenderer extends Renderer {
             const material = drawCall.material;
             const lightMask = drawCall.mask;
 
+            if (shaderInstance.shader.failed) continue;
+
             if (newMaterial) {
 
                 const asyncCompile = false;

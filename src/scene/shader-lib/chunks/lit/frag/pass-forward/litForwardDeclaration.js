@@ -48,7 +48,9 @@ vec3 sSpecularLight;
 #endif
 
 // LOOP - uniform declarations for all non-clustered lights
-#include "lightDeclarationPS, LIGHT_COUNT"
+#if LIGHT_COUNT > 0
+    #include "lightDeclarationPS, LIGHT_COUNT"
+#endif
 
 #ifdef LIT_SPECULAR
     #if LIT_FRESNEL_MODEL == NONE && !defined(LIT_REFLECTIONS) && !defined(LIT_DIFFUSE_MAP) 

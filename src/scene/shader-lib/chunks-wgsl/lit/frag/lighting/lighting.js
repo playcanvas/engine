@@ -1,5 +1,5 @@
 // functionality includes for lighting / shadowing code.
-export default /* glsl */`
+export default /* wgsl */`
 
 #ifdef LIT_CLUSTERED_LIGHTS
     // all this functionality that needs to be included for clustered lighting
@@ -10,8 +10,10 @@ export default /* glsl */`
 #endif
 
 #ifdef AREA_LIGHTS
-    uniform highp sampler2D areaLightsLutTex1;
-    uniform highp sampler2D areaLightsLutTex2;
+    var areaLightsLutTex1: texture_2d<f32>;
+    var areaLightsLutTex1Sampler: sampler;
+    var areaLightsLutTex2: texture_2d<f32>;
+    var areaLightsLutTex2Sampler: sampler;
 #endif
 
 #ifdef LIT_LIGHTING

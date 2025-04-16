@@ -1,10 +1,12 @@
 // backend shader implementing material / lighting for the lit material for forward rendering
-export default /* glsl */`
-void evaluateBackend() {
+export default /* wgsl */`
+fn evaluateBackend() -> FragmentOutput {
+
+    var output: FragmentOutput;
 
     // apply SSAO during lighting
     #ifdef LIT_SSAO
-        litArgs_ao *= texture2DLod(ssaoTexture, gl_FragCoord.xy * ssaoTextureSizeInv, 0.0).r;
+        litArgs_ao = litArgs_ao * textureSampleLevel(ssaoTexture, ssaoTextureSampler, pcPosition.xy * ssaoTextureSizeInv, 0.0).r;
     #endif
 
     // transform tangent space normals to world space
@@ -20,15 +22,15 @@ void evaluateBackend() {
 
     #ifdef LIT_SPECULAR_OR_REFLECTION
         #ifdef LIT_METALNESS
-            float f0 = 1.0 / litArgs_ior;
+            var f0: f32 = 1.0 / litArgs_ior;
             f0 = (f0 - 1.0) / (f0 + 1.0);
-            f0 *= f0;
+            f0 = f0 * f0;
             litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0);
             litArgs_albedo = getAlbedoModulate(litArgs_albedo, litArgs_metalness);
         #endif
 
         #ifdef LIT_IRIDESCENCE
-            vec3 iridescenceFresnel = getIridescence(saturate(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence_thickness);
+            var iridescenceFresnel: vec3f = getIridescence(saturate3(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence_thickness);
         #endif
     #endif
 
@@ -42,13 +44,13 @@ void evaluateBackend() {
 
         // move ambient color out of diffuse (used by Lightmapper, to multiply ambient color by accumulated AO)
         #ifdef LIT_SEPARATE_AMBIENT
-            vec3 dAmbientLight = dDiffuseLight;
-            dDiffuseLight = vec3(0);
+            var dAmbientLight: vec3f = dDiffuseLight;
+            dDiffuseLight = vec3(0.0);
         #endif
     #endif
 
     #ifndef LIT_OLD_AMBIENT
-        dDiffuseLight *= material_ambient;
+        dDiffuseLight = dDiffuseLight * uniform.material_ambient;
     #endif
 
     #ifdef LIT_AO
@@ -84,14 +86,14 @@ void evaluateBackend() {
             
                 #ifdef LIT_SPECULAR_FRESNEL
                     ccFresnel = getFresnelCC(dot(dViewDirW, litArgs_clearcoat_worldNormal));
-                    ccReflection.rgb *= ccFresnel;
+                    ccReflection.rgb = ccReflection.rgb * ccFresnel;
                 #else
                     ccFresnel = 0.0;
                 #endif
             #endif
 
             #ifdef LIT_SPECULARITY_FACTOR
-                ccReflection.rgb *= litArgs_specularityFactor;
+                ccReflection.rgb = ccReflection.rgb * litArgs_specularityFactor;
             #endif
 
             #ifdef LIT_SHEEN
@@ -103,7 +105,7 @@ void evaluateBackend() {
 
             #ifdef LIT_FRESNEL_MODEL
 
-                dReflection.rgb *= getFresnel(
+                dReflection.rgb = dReflection.rgb * getFresnel(
                     dot(dViewDirW, litArgs_worldNormal), 
                     litArgs_gloss, 
                     litArgs_specularity
@@ -115,19 +117,19 @@ void evaluateBackend() {
 
             #else
 
-                dReflection.rgb *= litArgs_specularity;
+                dReflection.rgb = dReflection.rgb * litArgs_specularity;
 
             #endif
 
             #ifdef LIT_SPECULARITY_FACTOR
-                dReflection.rgb *= litArgs_specularityFactor;
+                dReflection.rgb = dReflection.rgb * litArgs_specularityFactor;
             #endif
 
         #endif
 
         #ifdef AREA_LIGHTS
             // specular has to be accumulated differently if we want area lights to look correct
-            dSpecularLight *= litArgs_specularity;
+            dSpecularLight = dSpecularLight * litArgs_specularity;
 
             #ifdef LIT_SPECULAR
                 // evaluate material based area lights data, shared by all area lights
@@ -160,7 +162,7 @@ void evaluateBackend() {
             #endif
 
             #ifdef LIT_SPECULAR
-                litArgs_specularity = vec3(1);
+                litArgs_specularity = vec3(1.0);
             #endif
 
         #endif
@@ -196,22 +198,22 @@ void evaluateBackend() {
     #endif
 
     #ifdef LIT_SPECULARITY_FACTOR
-        dSpecularLight *= litArgs_specularityFactor;
+        dSpecularLight = dSpecularLight * litArgs_specularityFactor;
     #endif
 
     #if !defined(LIT_OPACITY_FADES_SPECULAR)
 
         #if LIT_BLEND_TYPE == NORMAL || LIT_BLEND_TYPE == PREMULTIPLIED
 
-            float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a), vec3( 0.2126, 0.7152, 0.0722 ));
+            var specLum: f32 = dot((dSpecularLight + dReflection.rgb * dReflection.a), vec3f( 0.2126, 0.7152, 0.0722 ));
             #ifdef LIT_CLEARCOAT
-                specLum += dot(ccSpecularLight * litArgs_clearcoat_specularity + ccReflection.rgb * litArgs_clearcoat_specularity, vec3( 0.2126, 0.7152, 0.0722 ));
+                specLum = specLum + dot(ccSpecularLight * litArgs_clearcoat_specularity + ccReflection.rgb * litArgs_clearcoat_specularity, vec3f( 0.2126, 0.7152, 0.0722 ));
             #endif
             litArgs_opacity = clamp(litArgs_opacity + gammaCorrectInput(specLum), 0.0, 1.0);
 
         #endif
 
-        litArgs_opacity *= material_alphaFade;
+        litArgs_opacity = litArgs_opacity * material_alphaFade;
 
     #endif
 
@@ -219,7 +221,7 @@ void evaluateBackend() {
     #include "outputAlphaPS"
 
     #ifdef LIT_MSDF
-        gl_FragColor = applyMsdf(gl_FragColor);
+        output.color = applyMsdf(gl_FragColor);
     #endif
 
     #include "outputPS"
@@ -227,7 +229,9 @@ void evaluateBackend() {
 
     #ifdef LIT_SHADOW_CATCHER
         // output when the shadow catcher is enabled - accumulated shadows
-        gl_FragColor.rgb = vec3(dShadowCatcher);
+        output.color = vec4f(dShadowCatcher, output.color.a);
     #endif
+
+    return output;
 }
 `;

@@ -824,7 +824,7 @@ class WebgpuShaderProcessorWGSL {
 
         // check if match exists AND the parameter name (Group 2) was captured
         if (!match || !match[2]) {
-            Debug.warn('No entry function found or input parameter name not captured.', shader);
+            Debug.warn('No entry function found or input parameter name not captured.', { shader, src });
             return src;
         }
 

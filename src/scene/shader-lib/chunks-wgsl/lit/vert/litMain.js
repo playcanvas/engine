@@ -1,32 +1,32 @@
 // main shader of the lit vertex shader
-export default /* glsl */`
+export default /* wgsl */`
 #ifdef VERTEX_COLOR
-    attribute vec4 vertex_color;
+    attribute vertex_color: vec4f;
 #endif
 
 #ifdef NINESLICED
 
-    varying vec2 vMask;
-    varying vec2 vTiledUv;
+    varying vMask: vec2f;
+    varying vTiledUv: vec2f;
 
-    uniform mediump vec4 innerOffset;
-    uniform mediump vec2 outerScale;
-    uniform mediump vec4 atlasRect;
+    uniform innerOffset: vec4f;
+    uniform outerScale: vec2f;
+    uniform atlasRect: vec4f;
 
 #endif
 
-vec3 dPositionW;
-mat4 dModelMatrix;
+var<private> dPositionW: vec3f;
+var<private> dModelMatrix: mat4x4f;
 
 #include "transformCoreVS"
 
 #ifdef UV0
-    attribute vec2 vertex_texCoord0;
+    attribute vertex_texCoord0: vec2f;
     #include "uv0VS"
 #endif
 
 #ifdef UV1
-    attribute vec2 vertex_texCoord1;
+    attribute vertex_texCoord1: vec2f;
     #include "uv1VS"
 #endif
 
@@ -34,7 +34,7 @@ mat4 dModelMatrix;
 #ifdef LINEAR_DEPTH
     #ifndef VIEWMATRIX
     #define VIEWMATRIX
-        uniform mat4 matrix_view;
+        uniform matrix_view: mat4x4f;
     #endif
 #endif
 
@@ -46,7 +46,7 @@ mat4 dModelMatrix;
 #endif
 
 #ifdef TANGENTS
-    attribute vec4 vertex_tangent;
+    attribute vertex_tangent: vec4f;
     #include "tangentBinormalVS"
 #endif
 
@@ -57,32 +57,34 @@ mat4 dModelMatrix;
     #include "msdfVS"
 #endif
 
-void main(void) {
-    gl_Position = getPosition();
-    vPositionW = getWorldPosition();
+@vertex
+fn vertexMain(input : VertexInput) -> VertexOutput {
+    var output : VertexOutput;
+    output.position = getPosition();
+    output.vPositionW = getWorldPosition();
 
     #ifdef NORMALS
-        vNormalW = getNormal();
+        output.vNormalW = getNormal();
     #endif
 
     #ifdef TANGENTS
-        vTangentW = getTangent();
-        vBinormalW = getBinormal();
+        output.vTangentW = getTangent();
+        output.vBinormalW = getBinormal();
     #elif defined(GGX_SPECULAR)
-        vObjectSpaceUpW = normalize(dNormalMatrix * vec3(0, 1, 0));
+        output.vObjectSpaceUpW = normalize(dNormalMatrix * vec3f(0.0, 1.0, 0.0));
     #endif
 
     #ifdef UV0
-        vec2 uv0 = getUv0();
+        var uv0: vec2f = getUv0();
         #ifdef UV0_UNMODIFIED
-            vUv0 = uv0;
+            output.vUv0 = uv0;
         #endif
     #endif
 
     #ifdef UV1
-        vec2 uv1 = getUv1();
+        var uv1: vec2f = getUv1();
         #ifdef UV1_UNMODIFIED
-            vUv1 = uv1;
+            output.vUv1 = uv1;
         #endif
     #endif
 
@@ -90,16 +92,18 @@ void main(void) {
     #include "uvTransformVS, UV_TRANSFORMS_COUNT"
 
     #ifdef VERTEX_COLOR
-        vVertexColor = vertex_color;
+        output.vVertexColor = vertex_color;
     #endif
 
     #ifdef LINEAR_DEPTH
         // linear depth from the worldPosition, see getLinearDepth
-        vLinearDepth = -(matrix_view * vec4(vPositionW, 1.0)).z;
+        output.vLinearDepth = -(matrix_view * vec4f(vPositionW, 1.0)).z;
     #endif
 
     #ifdef MSDF
         unpackMsdfParams();
     #endif
+
+    return output;
 }
 `;

@@ -22,7 +22,9 @@ const options = new LitMaterialOptions();
 class LitMaterial extends Material {
     usedUvs = [true];
 
-    shaderChunk = 'void evaluateFrontend() {}\n';
+    shaderChunkGLSL = null;
+
+    shaderChunkWGSL = null;
 
     useLighting = true;
 
@@ -88,7 +90,8 @@ class LitMaterial extends Material {
     getShaderVariant(params) {
 
         options.usedUvs = this.usedUvs.slice();
-        options.shaderChunk = this.shaderChunk;
+        options.shaderChunkGLSL = this.shaderChunkGLSL;
+        options.shaderChunkWGSL = this.shaderChunkWGSL;
         options.defines = getCoreDefines(this, params);
 
         LitMaterialOptionsBuilder.update(options.litOptions, this, params.scene, params.cameraShaderParams, params.objDefs, params.pass, params.sortedLights);
