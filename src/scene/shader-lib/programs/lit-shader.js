@@ -172,7 +172,7 @@ class LitShader {
      */
     generateVertexShader(useUv, useUnmodifiedUv, mapTransforms) {
 
-        const { options, vDefines, attributes, chunks } = this;
+        const { options, vDefines, attributes } = this;
 
         // varyings
         const varyings = new Map();
