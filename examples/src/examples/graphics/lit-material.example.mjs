@@ -113,7 +113,7 @@ assetListLoader.load(() => {
 
     material.hasSpecularityFactor = true;
     material.hasNormals = true;
-//    material.hasMetalness = true;
+    //    material.hasMetalness = true;
     material.hasMetalness = false;
     material.occludeSpecular = pc.SPECOCC_AO;
 
