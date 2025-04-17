@@ -70,11 +70,12 @@ export default /* wgsl */`
 
         #if LIGHT{i}TYPE == OMNI
             NOT SUPPORTED
-            // #if defined(LIGHT{i}SHADOW_PCF)
-            //     uniform samplerCubeShadow light{i}_shadowMap;
-            // #else
-            //     uniform samplerCube light{i}_shadowMap;
-            // #endif
+/*            #if defined(LIGHT{i}SHADOW_PCF)
+                uniform samplerCubeShadow light{i}_shadowMap;
+            #else
+                uniform samplerCube light{i}_shadowMap;
+            #endif
+*/            
         #else
             #if defined(LIGHT{i}SHADOW_PCF)
                 uniform sampler2DShadow light{i}_shadowMap;
@@ -92,24 +93,27 @@ export default /* wgsl */`
 
         #if LIGHT{i}TYPE == OMNI
             NOT SUPPORTED
-            // uniform samplerCube light{i}_cookie;
-            // uniform float light{i}_cookieIntensity;
-            // #if !defined(LIGHT{i}CASTSHADOW)
-            //     uniform mat4 light{i}_shadowMatrix;
-            // #endif
+/*        
+            uniform samplerCube light{i}_cookie;
+            uniform float light{i}_cookieIntensity;
+            #if !defined(LIGHT{i}CASTSHADOW)
+                uniform mat4 light{i}_shadowMatrix;
+            #endif
+*/
         #endif
 
         #if LIGHT{i}TYPE == SPOT
             NOT SUPPORTED
-            // uniform sampler2D light{i}_cookie;
-            // uniform float light{i}_cookieIntensity;
-            // #if !defined(LIGHT{i}CASTSHADOW)
-            //     uniform mat4 light{i}_shadowMatrix;
-            // #endif
-            // #if defined(LIGHT{i}COOKIE_TRANSFORM)
-            //     uniform vec4 light{i}_cookieMatrix;
-            //     uniform vec2 light{i}_cookieOffset;
-            // #endif
+/*            uniform sampler2D light{i}_cookie;
+            uniform float light{i}_cookieIntensity;
+            #if !defined(LIGHT{i}CASTSHADOW)
+                uniform mat4 light{i}_shadowMatrix;
+            #endif
+            #if defined(LIGHT{i}COOKIE_TRANSFORM)
+                uniform vec4 light{i}_cookieMatrix;
+                uniform vec2 light{i}_cookieOffset;
+            #endif
+*/
         #endif
     #endif
 #endif
