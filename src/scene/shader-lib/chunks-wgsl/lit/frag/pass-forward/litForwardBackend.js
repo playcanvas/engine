@@ -86,14 +86,14 @@ fn evaluateBackend() -> FragmentOutput {
             
                 #ifdef LIT_SPECULAR_FRESNEL
                     ccFresnel = getFresnelCC(dot(dViewDirW, litArgs_clearcoat_worldNormal));
-                    ccReflection.rgb = ccReflection.rgb * ccFresnel;
+                    ccReflection = ccReflection * ccFresnel;
                 #else
                     ccFresnel = 0.0;
                 #endif
             #endif
 
             #ifdef LIT_SPECULARITY_FACTOR
-                ccReflection.rgb = ccReflection.rgb * litArgs_specularityFactor;
+                ccReflection = ccReflection * litArgs_specularityFactor;
             #endif
 
             #ifdef LIT_SHEEN
@@ -105,24 +105,27 @@ fn evaluateBackend() -> FragmentOutput {
 
             #ifdef LIT_FRESNEL_MODEL
 
-                dReflection.rgb = dReflection.rgb * getFresnel(
-                    dot(dViewDirW, litArgs_worldNormal), 
-                    litArgs_gloss, 
-                    litArgs_specularity
-                #if defined(LIT_IRIDESCENCE)
-                    , iridescenceFresnel,
-                    litArgs_iridescence_intensity
-                #endif
-                    );
+                dReflection = vec4f(
+                    dReflection.rgb * getFresnel(
+                        dot(dViewDirW, litArgs_worldNormal),
+                        litArgs_gloss,
+                        litArgs_specularity
+                    #if defined(LIT_IRIDESCENCE)
+                        , iridescenceFresnel,
+                        litArgs_iridescence_intensity
+                    #endif
+                        ),
+                    dReflection.a
+                );
 
             #else
 
-                dReflection.rgb = dReflection.rgb * litArgs_specularity;
+                dReflection = vec4f(dReflection.rgb * litArgs_specularity, dReflection.a);
 
             #endif
 
             #ifdef LIT_SPECULARITY_FACTOR
-                dReflection.rgb = dReflection.rgb * litArgs_specularityFactor;
+                dReflection = vec4f(dReflection.rgb * litArgs_specularityFactor, dReflection.a);
             #endif
 
         #endif
@@ -138,7 +141,9 @@ fn evaluateBackend() -> FragmentOutput {
         #endif
         
         // LOOP - evaluate all non-clustered lights
-        #include "lightEvaluationPS, LIGHT_COUNT"
+        #ifdef LIGHT_COUNT > 0
+            #include "lightEvaluationPS, LIGHT_COUNT"
+        #endif
 
         // clustered lighting
         #ifdef LIT_CLUSTERED_LIGHTS
@@ -207,7 +212,7 @@ fn evaluateBackend() -> FragmentOutput {
 
             var specLum: f32 = dot((dSpecularLight + dReflection.rgb * dReflection.a), vec3f( 0.2126, 0.7152, 0.0722 ));
             #ifdef LIT_CLEARCOAT
-                specLum = specLum + dot(ccSpecularLight * litArgs_clearcoat_specularity + ccReflection.rgb * litArgs_clearcoat_specularity, vec3f( 0.2126, 0.7152, 0.0722 ));
+                specLum = specLum + dot(ccSpecularLight * litArgs_clearcoat_specularity + ccReflection * litArgs_clearcoat_specularity, vec3f( 0.2126, 0.7152, 0.0722 ));
             #endif
             litArgs_opacity = clamp(litArgs_opacity + gammaCorrectInput(specLum), 0.0, 1.0);
 

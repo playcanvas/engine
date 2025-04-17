@@ -34,17 +34,17 @@ const TextureIndexFloat = {
 
 // enums supplied to the shader as inject-defines
 const enums = {
-    '{LIGHTSHAPE_PUNCTUAL}': `${LIGHTSHAPE_PUNCTUAL}u`,
-    '{LIGHTSHAPE_RECT}': `${LIGHTSHAPE_RECT}u`,
-    '{LIGHTSHAPE_DISK}': `${LIGHTSHAPE_DISK}u`,
-    '{LIGHTSHAPE_SPHERE}': `${LIGHTSHAPE_SPHERE}u`,
-    '{LIGHT_COLOR_DIVIDER}': `${LIGHT_COLOR_DIVIDER}.0`
+    'LIGHTSHAPE_PUNCTUAL': `${LIGHTSHAPE_PUNCTUAL}u`,
+    'LIGHTSHAPE_RECT': `${LIGHTSHAPE_RECT}u`,
+    'LIGHTSHAPE_DISK': `${LIGHTSHAPE_DISK}u`,
+    'LIGHTSHAPE_SPHERE': `${LIGHTSHAPE_SPHERE}u`,
+    'LIGHT_COLOR_DIVIDER': `${LIGHT_COLOR_DIVIDER}.0`
 };
 
-// converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1"
+// converts object with properties to a list of these as an example: "#define {CLUSTER_TEXTURE_8_BLAH} 1"
 const buildShaderDefines = (object, prefix) => {
     return Object.keys(object)
-    .map(key => `#define ${prefix}${key} ${object[key]}`)
+    .map(key => `#define {${prefix}${key}} ${object[key]}`)
     .join('\n');
 };
 

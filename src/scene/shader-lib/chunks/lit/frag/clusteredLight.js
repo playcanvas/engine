@@ -123,7 +123,7 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
     clusterLightData.lightIndex = int(lightIndex);
 
     // sample data encoding half-float values into 32bit uints
-    vec4 halfData = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_COLOR_ANGLES_BIAS);
+    vec4 halfData = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_COLOR_ANGLES_BIAS});
 
     // store floats we decode later as needed
     clusterLightData.anglesData = halfData.z;
@@ -135,12 +135,12 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
     clusterLightData.color = vec3(colorRG, colorB_.x) * {LIGHT_COLOR_DIVIDER};
 
     // position and range, full floats
-    vec4 lightPosRange = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_POSITION_RANGE);
+    vec4 lightPosRange = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_POSITION_RANGE});
     clusterLightData.position = lightPosRange.xyz;
     clusterLightData.range = lightPosRange.w;
 
     // spot direction & flags data
-    vec4 lightDir_Flags = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_DIRECTION_FLAGS);
+    vec4 lightDir_Flags = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_DIRECTION_FLAGS});
 
     // spot light direction
     clusterLightData.direction = lightDir_Flags.xyz;
@@ -165,21 +165,21 @@ void decodeClusterLightSpot(inout ClusterLightData clusterLightData) {
 }
 
 void decodeClusterLightOmniAtlasViewport(inout ClusterLightData clusterLightData) {
-    clusterLightData.omniAtlasViewport = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_PROJ_MAT_0).xyz;
+    clusterLightData.omniAtlasViewport = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_PROJ_MAT_0}).xyz;
 }
 
 void decodeClusterLightAreaData(inout ClusterLightData clusterLightData) {
-    clusterLightData.halfWidth = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_AREA_DATA_WIDTH).xyz;
-    clusterLightData.halfHeight = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_AREA_DATA_HEIGHT).xyz;
+    clusterLightData.halfWidth = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_AREA_DATA_WIDTH}).xyz;
+    clusterLightData.halfHeight = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_AREA_DATA_HEIGHT}).xyz;
 }
 
 void decodeClusterLightProjectionMatrixData(inout ClusterLightData clusterLightData) {
     
     // shadow matrix
-    vec4 m0 = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_PROJ_MAT_0);
-    vec4 m1 = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_PROJ_MAT_1);
-    vec4 m2 = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_PROJ_MAT_2);
-    vec4 m3 = sampleLightTextureF(clusterLightData, CLUSTER_TEXTURE_PROJ_MAT_3);
+    vec4 m0 = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_PROJ_MAT_0});
+    vec4 m1 = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_PROJ_MAT_1});
+    vec4 m2 = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_PROJ_MAT_2});
+    vec4 m3 = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_PROJ_MAT_3});
     lightProjectionMatrix = mat4(m0, m1, m2, m3);
 }
 
@@ -225,9 +225,8 @@ void evaluateLight(
     float falloffAttenuation = 1.0;
 
     // evaluate omni part of the light
-    vec3 lightDirW;
-    vec3 lightDirNormW;
-    evalOmniLight(light.position, lightDirW, lightDirNormW);
+    vec3 lightDirW = evalOmniLight(light.position);
+    vec3 lightDirNormW = normalize(lightDirW);
 
     #ifdef CLUSTER_AREALIGHTS
 
@@ -576,11 +575,11 @@ void addClusteredLights(
         // loop over maximum number of light cells
         for (int lightCellIndex = 0; lightCellIndex < clusterMaxCells; lightCellIndex++) {
 
-            // using a single channel texture with data in alpha channel
+            // using a single channel texture with data in red channel
             float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
 
             if (lightIndex <= 0.0)
-                    return;
+                break;
 
             evaluateClusterLight(
                 lightIndex * 255.0, 

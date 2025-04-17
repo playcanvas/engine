@@ -19,7 +19,7 @@ vec3 combineColor(vec3 albedo, vec3 sheenSpecularity, float clearcoatSpecularity
 #endif
 #ifdef LIT_CLEARCOAT
     float clearCoatScaling = 1.0 - ccFresnel * clearcoatSpecularity;
-    ret = ret * clearCoatScaling + (ccSpecularLight + ccReflection.rgb) * clearcoatSpecularity;
+    ret = ret * clearCoatScaling + (ccSpecularLight + ccReflection) * clearcoatSpecularity;
 #endif
 
     return ret;
