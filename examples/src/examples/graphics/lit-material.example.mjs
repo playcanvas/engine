@@ -98,7 +98,7 @@ assetListLoader.load(() => {
         range: 10
     });
     light.translate(0, 1, 0);
-    // app.root.addChild(light);
+    app.root.addChild(light);
 
     const material = new pc.LitMaterial();
     material.setParameter('texture_envAtlas', assets.helipad.resource);
