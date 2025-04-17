@@ -266,7 +266,7 @@ class Texture {
         this._compareOnRead = options.compareOnRead ?? false;
         this._compareFunc = options.compareFunc ?? FUNC_LESS;
 
-        this._type = options.hasOwnProperty('type') ? options.type : TEXTURETYPE_DEFAULT;
+        this._type = options.type ?? TEXTURETYPE_DEFAULT;
         Debug.assert(!options.hasOwnProperty('rgbm'), 'Use options.type.');
         Debug.assert(!options.hasOwnProperty('swizzleGGGR'), 'Use options.type.');
 
@@ -797,7 +797,7 @@ class Texture {
     /**
      * Sets the texture type.
      *
-     * @type {number}
+     * @type {TEXTURETYPE_DEFAULT|TEXTURETYPE_RGBM|TEXTURETYPE_RGBE|TEXTURETYPE_RGBP}
      * @ignore
      */
     set type(value) {
@@ -812,7 +812,7 @@ class Texture {
     /**
      * Gets the texture type.
      *
-     * @type {number}
+     * @type {TEXTURETYPE_DEFAULT|TEXTURETYPE_RGBM|TEXTURETYPE_RGBE|TEXTURETYPE_RGBP}
      * @ignore
      */
     get type() {
