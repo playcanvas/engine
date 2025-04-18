@@ -508,6 +508,7 @@ class LitShader {
 
         if (options.pass === SHADER_PICK || options.pass === SHADER_DEPTH || options.pass === SHADER_PREPASS) {
 
+            Debug.assert(this.varyingsCode !== undefined && frontendCode !== undefined && frontendDecl !== undefined);
             this.fshader = `
 
                 ${this.varyingsCode}
@@ -518,6 +519,7 @@ class LitShader {
 
         } else if (this.shadowPass) { // SHADOW PASS
 
+            Debug.assert(this.varyingsCode !== undefined && frontendCode !== undefined && frontendDecl !== undefined);
             this.prepareShadowPass();
             this.fshader = `
                 ${this.varyingsCode}
@@ -528,6 +530,7 @@ class LitShader {
 
         } else if (options.customFragmentShader) {   // CUSTOM FRAGMENT SHADER
 
+            Debug.assert(options.customFragmentShader);
             this.fshader = `
                 ${options.customFragmentShader}
             `;
@@ -535,6 +538,7 @@ class LitShader {
         } else { // FORWARD PASS
 
             this.prepareForwardPass(lightingUv);
+            Debug.assert(this.varyingsCode !== undefined && frontendCode !== undefined && frontendDecl !== undefined);
             this.fshader = `
                 ${this.varyingsCode}
                 ${frontendDecl}
