@@ -461,7 +461,7 @@ class Preprocessor {
                                     includeSource = result;
 
                                 } else {
-                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
+                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { originalSource: originalSource, source: source });
                                     error = true;
                                 }
                             }
@@ -472,7 +472,7 @@ class Preprocessor {
                             // process the just included test
                             KEYWORD.lastIndex = include.index - 1;
                         } else {
-                            console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`, { source: originalSource });
+                            console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`, { originalSource: originalSource, source: source });
                             error = true;
                             continue;
                         }

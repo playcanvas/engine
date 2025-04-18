@@ -8,6 +8,9 @@ void evaluateLight{i}(
     #endif
 ) {
 
+    NON-CLUSTERED LIGHTS ARE NOT SUPPORTED YET
+/*
+
     // light color
     vec3 lightColor = light{i}_color;
 
@@ -219,6 +222,7 @@ void evaluateLight{i}(
             #endif
         #endif
     #endif
+*/
 }
 #endif
 `;

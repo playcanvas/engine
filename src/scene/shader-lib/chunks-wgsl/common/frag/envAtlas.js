@@ -1,4 +1,8 @@
 export default /* wgsl */`
+
+#ifndef _ENVATLAS_INCLUDED_
+#define _ENVATLAS_INCLUDED_
+
 // the envAtlas is fixed at 512 pixels. every equirect is generated with 1 pixel boundary.
 const atlasSize : f32 = 512.0;
 const seamSize : f32 = 1.0 / atlasSize;
@@ -20,4 +24,6 @@ fn mapShinyUv(uv : vec2f, level : f32) -> vec2f {
     let t : f32 = 1.0 / exp2(level);
     return mapUv(uv, vec4f(1.0 - t, 1.0 - t, t, t * 0.5));
 }
+
+#endif
 `;
