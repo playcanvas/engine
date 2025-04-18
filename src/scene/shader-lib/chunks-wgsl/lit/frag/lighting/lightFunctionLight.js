@@ -8,7 +8,7 @@ void evaluateLight{i}(
     #endif
 ) {
 
-    NONE-CLUSTERED LIGHTS ARE NOT SUPPORTED YET
+    NON-CLUSTERED LIGHTS ARE NOT SUPPORTED YET
 /*
 
     // light color
