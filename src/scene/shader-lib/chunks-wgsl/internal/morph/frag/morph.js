@@ -4,22 +4,22 @@ export default /* wgsl */`
 
     varying uv0: vec2f;
 
-    // LOOP - source morph target textures
-    #include "morphDeclarationPS, MORPH_TEXTURE_COUNT"
-
-    #if MORPH_TEXTURE_COUNT > 0
-        uniform morphFactor: array<f32, {MORPH_TEXTURE_COUNT}>;
-    #endif
+    var morphTexture: texture_2d_array<f32>;
+    var morphTextureSampler : sampler;
+    uniform morphFactor: array<f32, {MORPH_TEXTURE_MAX_COUNT}>;
+    uniform morphIndex: array<u32, {MORPH_TEXTURE_MAX_COUNT}>;
+    uniform count: u32;
 
     @fragment
     fn fragmentMain(input : FragmentInput) -> FragmentOutput {
-        var output: FragmentOutput;
-
         var color = vec3f(0, 0, 0);
+        for (var i: u32 = 0; i < uniform.count; i = i + 1) {
+            var textureIndex: u32 = uniform.morphIndex[i].element;
+            var delta = textureSample(morphTexture, morphTextureSampler, input.uv0, textureIndex).xyz;
+            color += uniform.morphFactor[i].element * delta;
+        }
 
-        // LOOP - source morph target textures
-        #include "morphEvaluationPS, MORPH_TEXTURE_COUNT"
-
+        var output: FragmentOutput;
         output.color = vec4f(color, 1.0);
         return output;
     }
