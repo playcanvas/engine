@@ -91,8 +91,6 @@ import ltcPS from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
 import msdfPS from './common/frag/msdf.js';
 import metalnessModulatePS from './lit/frag/metalnessModulate.js';
-import morphEvaluationPS from './internal/morph/frag/morphEvaluation.js';
-import morphDeclarationPS from './internal/morph/frag/morphDeclaration.js';
 import morphPS from './internal/morph/frag/morph.js';
 import morphVS from './internal/morph/vert/morph.js';
 import msdfVS from './common/vert/msdf.js';
@@ -308,8 +306,6 @@ const shaderChunks = {
     ltcPS,
     metalnessPS,
     metalnessModulatePS,
-    morphEvaluationPS,
-    morphDeclarationPS,
     morphPS,
     morphVS,
     msdfPS,

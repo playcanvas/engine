@@ -49,18 +49,13 @@ const MARKER = '@@@';
 // matches vertex of fragment entry function, extracts the input name. Ends at the start of the function body '{'.
 const ENTRY_FUNCTION = /(@vertex|@fragment)\s*fn\s+\w+\s*\(\s*(\w+)\s*:[\s\S]*?\{/;
 
-const getTextureDimension = (textureType, isArray) => {
-    if (isArray) {
-        if (textureType === '2d') return TEXTUREDIMENSION_2D_ARRAY;
-        else if (textureType === 'cube')  return TEXTUREDIMENSION_CUBE_ARRAY;
-    } else {
-        switch (textureType) {
-            case '1d': return TEXTUREDIMENSION_1D;
-            case '2d': return TEXTUREDIMENSION_2D;
-            case '3d': return TEXTUREDIMENSION_3D;
-            case 'cube': return TEXTUREDIMENSION_CUBE;
-        }
-    }
+const textureType2Dimension = {
+    '1d': TEXTUREDIMENSION_1D,
+    '2d': TEXTUREDIMENSION_2D,
+    '3d': TEXTUREDIMENSION_3D,
+    'cube': TEXTUREDIMENSION_CUBE,
+    '2d_array': TEXTUREDIMENSION_2D_ARRAY,
+    'cube_array': TEXTUREDIMENSION_CUBE_ARRAY
 };
 
 const getTextureTypeCode = (dimension, sampleType) => {
@@ -149,14 +144,13 @@ class UniformLine {
 
 // regex constants for resource lines, for example:
 //     var diffuseTexture : texture_2d<f32>;
-//     var textureArray: array<texture_2d<f32>, 5>;
+//     var diffuseTextures : texture_2d_array<f32>;
+//     var shadowMap : texture_depth_2d;
 //     var diffuseSampler : sampler;
 //     var<storage, read> particles: array<Particle>;
 //     var<storage, read_write> storageBuffer : Buffer;
 //     var storageTexture : texture_storage_2d<rgba8unorm, write>;
 //     var videoTexture : texture_external;
-// eslint-disable-next-line
-const ARRAY_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*array<([\w\d_<>]+),\s*(\d+)>;\s*$/;
 // eslint-disable-next-line
 const TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*texture_(\w+)<([a-zA-Z0-9_,<>]*)>;\s*$/;
 // eslint-disable-next-line
@@ -181,25 +175,10 @@ class ResourceLine {
         this.isStorageTexture = false;
         this.isStorageBuffer = false;
         this.isExternalTexture = false;
-        this.arraySize = 0;
         this.type = '';
         this.matchedElements = [];
 
-        // handle array format like 'array<texture_2d<f32>, 5>'
-        const arrayMatch = line.match(ARRAY_REGEX);
-        if (arrayMatch) {
-            this.name = arrayMatch[1]; // Extract the variable name
-            this.arraySize = parseInt(arrayMatch[3], 10); // Extract the array size
-            this.line = `var ${this.name} : ${arrayMatch[2]};`; // Simplify line (remove array part)
-            this.matchedElements.push(...arrayMatch);
-
-            if (isNaN(this.arraySize)) {
-                Debug.error(`Invalid array size in resource line: ${line}`, shader);
-                shader.failed = true;
-            }
-        }
-
-        // handle texture type / simplified line from the array above
+        // handle texture type
         const textureMatch = this.line.match(TEXTURE_REGEX);
         if (textureMatch) {
             this.name = textureMatch[1];
@@ -208,7 +187,7 @@ class ResourceLine {
             this.isTexture = true;
             this.matchedElements.push(...textureMatch);
 
-            this.textureDimension = getTextureDimension(this.type, this.arraySize > 0);
+            this.textureDimension = textureType2Dimension[this.type];
             Debug.assert(this.textureDimension);
 
             this.sampleType = textureFormat2SampleType[this.textureFormat];
