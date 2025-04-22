@@ -4,8 +4,6 @@ export default /* glsl */`
 // shadow casting functionality
 #ifdef LIGHT{i}CASTSHADOW
 
-    SHADOWS ARE NOT SUPPORTED YET
-/*
     // generate shadow coordinates function, based on per light defines:
     // - _SHADOW_SAMPLE_NORMAL_OFFSET
     // - _SHADOW_SAMPLE_ORTHO
@@ -192,6 +190,5 @@ export default /* glsl */`
 
         #endif
     }
-*/
 #endif
 `;
