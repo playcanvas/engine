@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 // http://the-witness.net/news/2013/09/shadow-mapping-summary-part-1/
 fn _getShadowPCF5x5(shadowMap: texture_depth_2d, shadowMapSampler: sampler_comparison, shadowCoord: vec3f, shadowParams: vec3f) -> f32 {
 
