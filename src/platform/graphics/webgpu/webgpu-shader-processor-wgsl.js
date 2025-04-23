@@ -196,7 +196,7 @@ class UniformLine {
 //     var<storage, read_write> storageBuffer : Buffer;
 //     var storageTexture : texture_storage_2d<rgba8unorm, write>;
 //     var videoTexture : texture_external;
-// eslint-disable-next-line
+
 const TEXTURE_REGEX = /^\s*var\s+(\w+)\s*:\s*(texture_\w+)(?:<(\w+)>)?;\s*$/;
 // eslint-disable-next-line
 const STORAGE_TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*(texture_storage_2d|texture_storage_2d_array)<([\w\d_]+),\s*(\w+)>\s*;\s*$/;
