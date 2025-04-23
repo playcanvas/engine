@@ -7,7 +7,7 @@ float _getShadowPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shado
     float shadowMapSizeInv = 1.0 / shadowParams.x;
     vec2 base_uv = floor(uv + 0.5);
     float s = (uv.x + 0.5 - base_uv.x);
-    float t = (uv.y + 0.5 - base_uv.y);
+    float t = (uv.y + 0.5 - base_uv.y); 
     base_uv -= vec2(0.5);
     base_uv *= shadowMapSizeInv;
 

@@ -52,7 +52,6 @@ float _getShadowPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shado
     sum += uw2 * vw2 * textureShadow(shadowMap, vec3(u2, v2, z));
 
     sum *= 1.0f / 144.0;
-
     sum = saturate(sum);
 
     return sum;
