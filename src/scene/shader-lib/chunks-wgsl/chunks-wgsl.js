@@ -12,7 +12,7 @@ import clearCoatPS from './standard/frag/clearCoat.js';
 import clearCoatGlossPS from './standard/frag/clearCoatGloss.js';
 import clearCoatNormalPS from './standard/frag/clearCoatNormal.js';
 import clusteredLightUtilsPS from './lit/frag/clusteredLightUtils.js';
-// import clusteredLightCookiesPS from './lit/frag/clusteredLightCookies.js';
+import clusteredLightCookiesPS from './lit/frag/clusteredLightCookies.js';
 import clusteredLightShadowsPS from './lit/frag/clusteredLightShadows.js';
 import clusteredLightPS from './lit/frag/clusteredLight.js';
 import combinePS from './lit/frag/combine.js';
@@ -221,7 +221,7 @@ const shaderChunksWGSL = {
     clearCoatPS,
     clearCoatGlossPS,
     clearCoatNormalPS,
-    // clusteredLightCookiesPS,
+    clusteredLightCookiesPS,
     clusteredLightShadowsPS,
     clusteredLightUtilsPS,
     clusteredLightPS,
