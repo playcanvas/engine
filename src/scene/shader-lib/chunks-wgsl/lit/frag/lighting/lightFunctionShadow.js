@@ -1,5 +1,5 @@
 // functions used to evaluate the light shadow
-export default /* glsl */`
+export default /* wgsl */`
 
 // shadow casting functionality
 #ifdef LIGHT{i}CASTSHADOW
@@ -9,16 +9,16 @@ export default /* glsl */`
     // - _SHADOW_SAMPLE_ORTHO
     // - _SHADOW_SAMPLE_POINT
     // - _SHADOW_SAMPLE_SOURCE_ZBUFFER
-    vec3 getShadowSampleCoord{i}(mat4 shadowTransform, vec4 shadowParams, vec3 worldPosition, vec3 lightPos, inout vec3 lightDir, vec3 lightDirNorm, vec3 normal) {
+    fn getShadowSampleCoord{i}(shadowTransform: mat4x4f, shadowParams: vec4f, worldPosition: vec3f, lightPos: vec3f, lightDir: ptr<function, vec3f>, lightDirNorm: vec3f, normal: vec3f) -> vec3f {
 
-        vec3 surfacePosition = worldPosition;
+        var surfacePosition = worldPosition;
 
         #ifdef LIGHT{i}_SHADOW_SAMPLE_POINT
             #ifdef LIGHT{i}_SHADOW_SAMPLE_NORMAL_OFFSET
-                float distScale = length(lightDir);
+                let distScale: f32 = length(*lightDir);
                 surfacePosition = surfacePosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
-                lightDir = surfacePosition - lightPos;
-                return lightDir;
+                *lightDir = surfacePosition - lightPos;
+                return *lightDir;
             #endif
         #else
             #ifdef LIGHT{i}_SHADOW_SAMPLE_SOURCE_ZBUFFER
@@ -28,30 +28,32 @@ export default /* glsl */`
             #else
                 #ifdef LIGHT{i}_SHADOW_SAMPLE_NORMAL_OFFSET
                     #ifdef LIGHT{i}_SHADOW_SAMPLE_ORTHO
-                        float distScale = 1.0;
+                        var distScale: f32 = 1.0;
                     #else
-                        float distScale = abs(dot(vPositionW - lightPos, lightDirNorm));
+                        var distScale: f32 = abs(dot(vPositionW - lightPos, lightDirNorm));
                     #endif
                     surfacePosition = surfacePosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
                 #endif
             #endif
 
-            vec4 positionInShadowSpace = shadowTransform * vec4(surfacePosition, 1.0);
+            // Use var for modification
+            var positionInShadowSpace: vec4f = shadowTransform * vec4f(surfacePosition, 1.0);
             #ifdef LIGHT{i}_SHADOW_SAMPLE_ORTHO
                 positionInShadowSpace.z = saturate(positionInShadowSpace.z) - 0.0001;
             #else
                 #ifdef LIGHT{i}_SHADOW_SAMPLE_SOURCE_ZBUFFER
-                    positionInShadowSpace.xyz /= positionInShadowSpace.w;
+                    positionInShadowSpace.xyz = positionInShadowSpace.xyz / positionInShadowSpace.w;
                 #else
-                    positionInShadowSpace.xy /= positionInShadowSpace.w;
-                    positionInShadowSpace.z = length(lightDir) * shadowParams.w;
+                    positionInShadowSpace.xy = positionInShadowSpace.xy / positionInShadowSpace.w;
+                    positionInShadowSpace.z = length(*lightDir) * shadowParams.w;
                 #endif
             #endif
 
             // this is currently unused
-            /*#ifdef SHADOW_SAMPLE_Z_BIAS
-                positionInShadowSpace.z += getShadowBias(shadowParams.x, shadowParams.z);
-            #endif*/
+            #ifdef SHADOW_SAMPLE_Z_BIAS
+                // positionInShadowSpace.z += getShadowBias(shadowParams.x, shadowParams.z);
+            #endif
+
             surfacePosition = positionInShadowSpace.xyz;
         #endif
 
@@ -59,36 +61,39 @@ export default /* glsl */`
     }
 
     // shadow evaluation function
-    float getShadow{i}(vec3 lightDirW) {
+    fn getShadow{i}(lightDirW_in: vec3f) -> f32 {
 
         // directional shadow cascades
         #ifdef LIGHT{i}_SHADOW_CASCADES
 
             // select shadow cascade matrix
-            int cascadeIndex = getShadowCascadeIndex(light{i}_shadowCascadeDistances, light{i}_shadowCascadeCount);
+            var cascadeIndex: i32 = getShadowCascadeIndex(uniform.light{i}_shadowCascadeDistances, uniform.light{i}_shadowCascadeCount);
 
             #ifdef LIGHT{i}_SHADOW_CASCADE_BLEND
-                cascadeIndex = ditherShadowCascadeIndex(cascadeIndex, light{i}_shadowCascadeDistances, light{i}_shadowCascadeCount, light{i}_shadowCascadeBlend);
+                cascadeIndex = ditherShadowCascadeIndex(cascadeIndex, uniform.light{i}_shadowCascadeDistances, uniform.light{i}_shadowCascadeCount, uniform.light{i}_shadowCascadeBlend);
             #endif
 
-            mat4 shadowMatrix = light{i}_shadowMatrixPalette[cascadeIndex];
+            var shadowMatrix: mat4x4f = uniform.light{i}_shadowMatrixPalette[cascadeIndex];
 
         #else
 
-            mat4 shadowMatrix = light{i}_shadowMatrix;
+            var shadowMatrix: mat4x4f = uniform.light{i}_shadowMatrix;
 
         #endif
+
+        var lightDirArg = lightDirW_in;
 
         #if LIGHT{i}TYPE == DIRECTIONAL
             // directional light does not have a position
-            vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, vec3(0.0), lightDirW, dLightDirNormW, dVertexNormalW);
+            var shadowCoord: vec3f = getShadowSampleCoord{i}(shadowMatrix, uniform.light{i}_shadowParams, vPositionW, vec3f(0.0), &lightDirArg, dLightDirNormW, dVertexNormalW);
         #else
-            vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, light{i}_position, lightDirW, dLightDirNormW, dVertexNormalW);
+             var shadowCoord: vec3f = getShadowSampleCoord{i}(shadowMatrix, uniform.light{i}_shadowParams, vPositionW, uniform.light{i}_position, &lightDirArg, dLightDirNormW, dVertexNormalW);
         #endif
+
 
         // Fade directional shadow at the far distance
         #if LIGHT{i}TYPE == DIRECTIONAL
-            shadowCoord = fadeShadow(shadowCoord, light{i}_shadowCascadeDistances);
+            shadowCoord = fadeShadow(shadowCoord, uniform.light{i}_shadowCascadeDistances);
         #endif
 
         // ----- sample the shadow -----
@@ -96,34 +101,34 @@ export default /* glsl */`
         #if LIGHT{i}TYPE == DIRECTIONAL // ----- directional light -----
 
             #if LIGHT{i}SHADOWTYPE == VSM_16F
-                return getShadowVSM16(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, 5.54);
+                return getShadowVSM16(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, 5.54);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == VSM_32F
-                return getShadowVSM32(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, 15.0);
+                return getShadowVSM32(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, 15.0);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCSS_32F
 
                 #if LIGHT{i}SHAPE != PUNCTUAL
-                    vec2 shadowSearchArea = vec2(length(light{i}_halfWidth), length(light{i}_halfHeight)) * light{i}_shadowSearchArea;
-                    return getShadowPCSS(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, light{i}_cameraParams, shadowSearchArea, lightDirW);
+                    let shadowSearchArea = vec2f(length(uniform.light{i}_halfWidth), length(uniform.light{i}_halfHeight)) * uniform.light{i}_shadowSearchArea;
+                    return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord,uniform.light{i}_shadowParams, uniform.light{i}_cameraParams, shadowSearchArea, lightDirW_in);
                 #else
-                    return getShadowPCSS(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, light{i}_cameraParams, light{i}_softShadowParams, lightDirW);
+                    return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, light{i}_shadowParams, uniform.light{i}_cameraParams, uniform.light{i}_softShadowParams, lightDirW_in);
                 #endif
 
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCF1_16F || LIGHT{i}SHADOWTYPE == PCF1_32F
-                return getShadowPCF1x1(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams);
+                return getShadowPCF1x1(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCF3_16F || LIGHT{i}SHADOWTYPE == PCF3_32F
-                return getShadowPCF3x3(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams);
+                return getShadowPCF3x3(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCF5_16F || LIGHT{i}SHADOWTYPE == PCF5_32F
-                return getShadowPCF5x5(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams);
+                return getShadowPCF5x5(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams);
             #endif
 
         #endif
@@ -132,35 +137,34 @@ export default /* glsl */`
         #if LIGHT{i}TYPE == SPOT // ----- spot light -----
 
             #if LIGHT{i}SHADOWTYPE == VSM_16F
-                return getShadowSpotVSM16(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, 5.54, lightDirW);
+                return getShadowSpotVSM16(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, 5.54, lightDirW_in);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == VSM_32F
-                return getShadowSpotVSM32(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, 15.0, lightDirW);
+                return getShadowSpotVSM32(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, 15.0, lightDirW_in);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCSS_32F
 
                 #if LIGHT{i}SHAPE != PUNCTUAL
-                    vec2 shadowSearchArea = vec2(length(light{i}_halfWidth), length(light{i}_halfHeight)) * light{i}_shadowSearchArea;
+                    var shadowSearchArea: vec2f = vec2f(length(uniform.light{i}_halfWidth), length(uniform.light{i}_halfHeight)) * uniform.light{i}_shadowSearchArea;
                 #else
-                    vec2 shadowSearchArea = vec2(light{i}_shadowSearchArea);
+                    var shadowSearchArea: vec2f = vec2f(uniform.light{i}_shadowSearchArea);
                 #endif
-
-                return getShadowSpotPCSS(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, light{i}_cameraParams, shadowSearchArea, lightDirW);
+                return getShadowSpotPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, uniform.light{i}_cameraParams, shadowSearchArea, lightDirW_in);
 
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCF1_16F || LIGHT{i}SHADOWTYPE == PCF1_32F
-                return getShadowSpotPCF1x1(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams);
+                return getShadowSpotPCF1x1(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCF3_16F || LIGHT{i}SHADOWTYPE == PCF3_32F
-                return getShadowSpotPCF3x3(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams);
+                return getShadowSpotPCF3x3(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCF5_16F || LIGHT{i}SHADOWTYPE == PCF5_32F
-                return getShadowSpotPCF5x5(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams);
+                return getShadowSpotPCF5x5(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams);
             #endif
 
         #endif
@@ -170,22 +174,23 @@ export default /* glsl */`
 
             #if LIGHT{i}SHADOWTYPE == PCSS_32F
 
-                #if LIGHT{i}SHAPE != PUNCTUAL
-                    vec2 shadowSearchArea = vec2(length(light{i}_halfWidth), length(light{i}_halfHeight)) * light{i}_shadowSearchArea;
+                 var shadowSearchArea: vec2f; // Use var because assigned in if/else
+                 #if LIGHT{i}SHAPE != PUNCTUAL
+                    var shadowSearchArea: vec2f = vec2f(length(uniform.light{i}_halfWidth), length(uniform.light{i}_halfHeight)) * uniform.light{i}_shadowSearchArea;
                 #else
-                    vec2 shadowSearchArea = vec2(light{i}_shadowSearchArea);
+                    var shadowSearchArea: vec2f = vec2f(uniform.light{i}_shadowSearchArea);
                 #endif
 
-                return getShadowOmniPCSS(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, light{i}_cameraParams, shadowSearchArea, lightDirW);
+                return getShadowOmniPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, uniform.light{i}_cameraParams, shadowSearchArea, lightDirW_in);
 
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCF1_16F || LIGHT{i}SHADOWTYPE == PCF1_32F
-                return getShadowOmniPCF1x1(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, lightDirW);
+                return getShadowOmniPCF1x1(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, lightDirW_in);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCF3_16F || LIGHT{i}SHADOWTYPE == PCF3_32F
-                return getShadowOmniPCF3x3(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, lightDirW);
+                return getShadowOmniPCF3x3(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, lightDirW_in);
             #endif
 
         #endif
