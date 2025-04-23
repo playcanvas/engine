@@ -2946,8 +2946,8 @@ describe('ScriptComponent', function () {
         a.addComponent('script', { enabled: true });
         a.script.create(TestScript);
 
-        expect(a.script.testScript).to.not.exist;
-        expect(a.script.myTestScript).to.exist;
+        expect(a.script.has('testScript')).to.equal(false);
+        expect(a.script.has('myTestScript')).to.equal(true);
     });
 
     it('falls back to camelCase script name if scriptName is not defined', function () {
@@ -2956,8 +2956,27 @@ describe('ScriptComponent', function () {
         a.addComponent('script', { enabled: true });
         a.script.create(TestScript);
 
-        expect(a.script.testScript).to.exist;
-        expect(a.script.myTestScript).to.not.exist;
+        expect(a.script.has('testScript')).to.equal(true);
+        expect(a.script.has('myTestScript')).to.equal(false);
+    });
+
+    it('does not warn when a ScriptType is used', function () {
+        Debug._loggedMessages.clear();
+        createScript('nullScript');
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['nullScript'],
+            scripts: {
+                nullScript: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        expect(Debug._loggedMessages.size).to.equal(0);
+        expect(e.script.has('nullScript')).to.equal(true);
     });
 
 });
