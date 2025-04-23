@@ -165,7 +165,7 @@ import shadowPCF3PS from './lit/frag/lighting/shadowPCF3.js';
 import shadowPCF5PS from './lit/frag/lighting/shadowPCF5.js';
 // import shadowPCSSPS from './lit/frag/lighting/shadowPCSS.js';
 // import shadowSoftPS from './lit/frag/lighting/shadowSoft.js';
-// import skinBatchVS from './common/vert/skinBatch.js';
+import skinBatchVS from './common/vert/skinBatch.js';
 import skinVS from './common/vert/skin.js';
 import skyboxPS from './skybox/frag/skybox.js';
 import skyboxVS from './skybox/vert/skybox.js';
@@ -376,7 +376,7 @@ const shaderChunksWGSL = {
     shadowPCF5PS,
     // shadowPCSSPS,
     // shadowSoftPS,
-    // skinBatchVS,
+    skinBatchVS,
     skinVS,
     skyboxPS,
     skyboxVS,
