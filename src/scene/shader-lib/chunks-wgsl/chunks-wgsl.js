@@ -152,7 +152,7 @@ import reflectionCCPS from './lit/frag/reflectionCC.js';
 import reflectionEnvPS from './lit/frag/reflectionEnv.js';
 // import reflectionSpherePS from './lit/frag/reflectionSphere.js';
 import reflectionSheenPS from './lit/frag/reflectionSheen.js';
-// import refractionCubePS from './lit/frag/refractionCube.js';
+import refractionCubePS from './lit/frag/refractionCube.js';
 import refractionDynamicPS from './lit/frag/refractionDynamic.js';
 import reprojectPS from './internal/frag/reproject.js';
 import reprojectVS from './internal/vert/reproject.js';
@@ -363,7 +363,7 @@ const shaderChunksWGSL = {
     reflectionEnvPS,
     // reflectionSpherePS,
     reflectionSheenPS,
-    // refractionCubePS,
+    refractionCubePS,
     refractionDynamicPS,
     reprojectPS,
     reprojectVS,
