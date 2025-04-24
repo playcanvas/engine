@@ -5,7 +5,7 @@ uniform cubeMapRotationMatrix: mat3x3f;
 
 fn cubeMapRotate(refDir: vec3f) -> vec3f {
 #ifdef CUBEMAP_ROTATION
-    return refDir * cubeMapRotationMatrix;
+    return refDir * uniform.cubeMapRotationMatrix;
 #else
     return refDir;
 #endif

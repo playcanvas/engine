@@ -1,10 +1,7 @@
+// Soft directional shadows PCSS - with and without blocker search.
 export default /* glsl */`
 
-/**
- * Soft directional shadows PCSS - with and without blocker search.
- */
-
-highp float fractSinRand( const in vec2 uv ) {
+highp float fractSinRand(const in vec2 uv) {
     const float PI = 3.141592653589793;
     const highp float a = 12.9898, b = 78.233, c = 43758.5453;
     highp float dt = dot(uv.xy, vec2(a, b)), sn = mod(dt, PI);
@@ -19,16 +16,16 @@ struct VogelDiskData {
 };
 
 // prepare the Vogel disk constants and initialize the current state in the struct
-void prepareDiskConstants(out VogelDiskData data, int sampleCount, int numRings, float randomSeed) {
+void prepareDiskConstants(out VogelDiskData data, int sampleCount, float randomSeed) {
     const float pi2 = 6.28318530718;
     data.invNumSamples = 1.0 / float(sampleCount);
     data.initialAngle = randomSeed * pi2;
     data.currentPointId = 0.0;
 }
 
-#define GOLDEN_ANGLE 2.399963
 
 vec2 generateDiskSample(inout VogelDiskData data) {
+    const float GOLDEN_ANGLE = 2.399963;
     float r = sqrt((data.currentPointId + 0.5) * data.invNumSamples);
     float theta = data.currentPointId * GOLDEN_ANGLE + data.initialAngle;
 
@@ -42,7 +39,7 @@ void PCSSFindBlocker(TEXTURE_ACCEPT(shadowMap), out float avgBlockerDepth, out i
     vec2 shadowCoords, float z, int shadowBlockerSamples, float penumbraSize, float invShadowMapSize, float randomSeed) {
 
     VogelDiskData diskData;
-    prepareDiskConstants(diskData, shadowBlockerSamples, 11, randomSeed);
+    prepareDiskConstants(diskData, shadowBlockerSamples, randomSeed);
 
     float searchWidth = penumbraSize * invShadowMapSize;
     float blockerSum = 0.0;
@@ -63,7 +60,7 @@ void PCSSFindBlocker(TEXTURE_ACCEPT(shadowMap), out float avgBlockerDepth, out i
 float PCSSFilter(TEXTURE_ACCEPT(shadowMap), vec2 uv, float receiverDepth, int shadowSamples, float filterRadius, float randomSeed) {
 
     VogelDiskData diskData;
-    prepareDiskConstants(diskData, shadowSamples, 11, randomSeed);
+    prepareDiskConstants(diskData, shadowSamples, randomSeed);
 
     float sum = 0.0;
     for (int i = 0; i < shadowSamples; i++) {

@@ -21,7 +21,7 @@ void main(void) {
             // spot/omni shadows currently use linear depth.
             // TODO: use perspective depth for spot/omni the same way as directional
             #if LIGHT_TYPE != DIRECTIONAL
-                depth = linearizeDepth(depth, camera_params);
+                depth = linearizeDepthWithParams(depth, camera_params);
             #endif
         #endif
 
