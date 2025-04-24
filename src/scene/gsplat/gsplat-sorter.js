@@ -225,7 +225,7 @@ function SortWorker() {
                 boundMax.z = chunksSrc[5];
 
                 // convert chunk min/max to center/radius
-                for (let i = 0; i < chunks.length / 6; ++i) {
+                for (let i = 0; i < chunksSrc.length / 6; ++i) {
                     const mx = chunksSrc[i * 6 + 0];
                     const my = chunksSrc[i * 6 + 1];
                     const mz = chunksSrc[i * 6 + 2];
