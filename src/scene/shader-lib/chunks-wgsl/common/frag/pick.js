@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 uniform meshInstanceId: u32;
 
 fn getPickOutput() -> vec4f {
