@@ -347,6 +347,7 @@ const funcNameRegex = /^\s*function(?:\s|\s*\/\*.*\*\/\s*)+([^(\s\/]*)\s*/;
  */
 export function getScriptName(constructorFn) {
     if (typeof constructorFn !== 'function') return undefined;
+    if (constructorFn.scriptName) return constructorFn.scriptName;
     if ('name' in Function.prototype) return constructorFn.name;
     if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
     const match = (`${constructorFn}`).match(funcNameRegex);
