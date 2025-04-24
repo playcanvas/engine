@@ -28,8 +28,13 @@ import { TextureUtils } from './texture-utils.js';
 let id = 0;
 
 /**
- * A texture is a container for texel data that can be utilized in a fragment shader. Typically,
- * the texel data represents an image that is mapped over geometry.
+ * Represents a texture, which is typically an image composed of pixels (texels). Textures are
+ * fundamental resources for rendering graphical objects. They are commonly used by
+ * {@link Material}s and sampled in {@link Shader}s (usually fragment shaders) to define the visual
+ * appearance of a 3D model's surface. Beyond storing color images, textures can hold various data
+ * types like normal maps, environment maps (cubemaps), or custom data for shader computations. Key
+ * properties control how the texture data is sampled, including filtering modes and coordinate
+ * wrapping.
  *
  * Note on **HDR texture format** support:
  * 1. **As textures**:
@@ -597,7 +602,7 @@ class Texture {
     }
 
     /**
-     * Sets the comparison function when compareOnRead is enabled. Possible values:
+     * Sets the comparison function when {@link compareOnRead} is enabled. Possible values:
      *
      * - {@link FUNC_LESS}
      * - {@link FUNC_LESSEQUAL}
@@ -616,7 +621,7 @@ class Texture {
     }
 
     /**
-     * Sets the comparison function when compareOnRead is enabled.
+     * Gets the comparison function when {@link compareOnRead} is enabled.
      *
      * @type {number}
      */
@@ -625,8 +630,9 @@ class Texture {
     }
 
     /**
-     * Sets the integer value specifying the level of anisotropy to apply to the texture ranging
-     * from 1 (no anisotropic filtering) to the {@link GraphicsDevice} property maxAnisotropy.
+     * Sets the integer value specifying the level of anisotropy to apply to the texture. The value
+     * ranges from 1 (no anisotropic filtering) to the maximum anisotropy supported by the graphics
+     * device (see {@link GraphicsDevice#maxAnisotropy}).
      *
      * @type {number}
      */
@@ -743,7 +749,7 @@ class Texture {
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
      * - {@link PIXELFORMAT_111110F}
-     * - {@link PIXELFORMAT_ASTC_4x4}>/li>
+     * - {@link PIXELFORMAT_ASTC_4x4}
      * - {@link PIXELFORMAT_ATC_RGB}
      * - {@link PIXELFORMAT_ATC_RGBA}
      *
@@ -1127,10 +1133,10 @@ class Texture {
 
     /**
      * Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
-     * is called by internally by {@link Texture#setSource} and {@link Texture#unlock}. However, it
-     * still needs to be called explicitly in the case where an HTMLVideoElement is set as the
-     * source of the texture.  Normally, this is done once every frame before video textured
-     * geometry is rendered.
+     * is called by internally by {@link setSource} and {@link unlock}. However, it still needs to
+     * be called explicitly in the case where an HTMLVideoElement is set as the source of the
+     * texture.  Normally, this is done once every frame before video textured geometry is
+     * rendered.
      */
     upload() {
         this._needsUpload = true;
