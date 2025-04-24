@@ -3,9 +3,10 @@ import { math } from './math.js';
 /**
  * An RGBA color.
  *
- * Each color component is a floating point value in the range 0 to 1. The `r` (red), `g` (green)
- * and `b` (blue) components define a color in RGB color space. The `a` (alpha) component defines
- * transparency. An alpha of 1 is fully opaque. An alpha of 0 is fully transparent.
+ * Each color component is a floating point value in the range 0 to 1. The {@link r} (red),
+ * {@link g} (green) and {@link b} (blue) components define a color in RGB color space. The
+ * {@link a} (alpha) component defines transparency. An alpha of 1 is fully opaque. An alpha of
+ * 0 is fully transparent.
  *
  * @category Math
  */
