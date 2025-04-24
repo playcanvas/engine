@@ -771,11 +771,11 @@ export const SHADER_FORWARD = 0;
 
 export const SHADER_PREPASS = 1;
 
+// shadow pass used by the shadow rendering code
+export const SHADER_SHADOW = 2;
+
 // shader pass used by the Picker class to render mesh ID
 export const SHADER_PICK = 3;
-
-// shadow pass used by the shadow rendering code
-export const SHADER_SHADOW = 4;
 
 /**
  * Shader that performs forward rendering.
