@@ -1,413 +1,538 @@
-import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math } from 'playcanvas';
+import {
+    math,
+    GamepadInput,
+    JoystickDoubleInput,
+    JoystickTouchInput,
+    KeyboardMouseInput,
+    MultiTouchInput,
+    FlyController,
+    OrbitController,
+    Script,
+    Mat4,
+    Vec2,
+    Vec3
+} from 'playcanvas';
 
-/** @import { AppBase, Entity, CameraComponent } from 'playcanvas' */
+/** @import { CameraComponent, EventHandler } from 'playcanvas' */
 
 /**
- * @typedef {object} ScriptArgs
- * @property {AppBase} app - The app.
- * @property {Entity} entity - The entity.
- * @property {boolean} [enabled] - The enabled state.
- * @property {object} [attributes] - The attributes.
+ * @typedef {object} CameraControlsFrame
+ * @property {Vec3} move - The move delta.
+ * @property {Vec2} rotate - The rotate delta.
+ * @property {Vec2} drag - The drag delta.
+ * @property {number} zoom - The zoom delta.
+ * @property {boolean} pan - The pan flag.
  */
 
+/**
+ * @typedef {object} CameraControlsState
+ * @property {Vec3} axis - The axis.
+ * @property {number} shift - The shift.
+ * @property {number} ctrl - The ctrl.
+ * @property {number[]} mouse - The mouse.
+ * @property {number} touches - The touches.
+ */
+
+const tmpM1 = new Mat4();
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpM1 = new Mat4();
-const tmpQ1 = new Quat();
-const tmpR1 = new Ray();
-const tmpP1 = new Plane();
 
-/** @type {AddEventListenerOptions & EventListenerOptions} */
-const PASSIVE = { passive: false };
-const ZOOM_SCALE_SCENE_MULT = 10;
-const EPSILON = 0.0001;
-
-/**
- * Calculate the lerp rate.
- *
- * @param {number} damping - The damping.
- * @param {number} dt - The delta time.
- * @returns {number} - The lerp rate.
- */
-const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
+const ZOOM_SCALE_MULT = 10;
 
 class CameraControls extends Script {
     /**
-     * Fired to clamp the position (Vec3).
-     *
-     * @event
-     * @example
-     * cameraControls.on('clamp:position', (position) => {
-     *     position.y = Math.max(0, position.y);
-     * });
+     * @type {string}
+     * @static
      */
-    static EVENT_CLAMP_POSITION = 'clamp:position';
+    static MODE_FLY = 'fly';
 
     /**
-     * Fired to clamp the angles (Vec2).
-     *
-     * @event
-     * @example
-     * cameraControls.on('clamp:angles', (angles) => {
-     *    angles.x = Math.max(-90, Math.min(90, angles.x));
-     * });
+     * @type {string}
+     * @static
      */
-    static EVENT_CLAMP_ANGLES = 'clamp:angles';
+    static MODE_ORBIT = 'orbit';
 
     /**
+     * @type {CameraComponent}
      * @private
-     * @type {CameraComponent | null}
      */
-    _camera = null;
+    _camera;
 
     /**
+     * @type {boolean}
      * @private
-     * @type {Vec3}
      */
-    _origin = new Vec3();
+    _enableOrbit = true;
 
     /**
+     * @type {boolean}
      * @private
-     * @type {Vec3}
      */
-    _position = new Vec3();
+    _enableFly = true;
 
     /**
+     * @type {number}
      * @private
+     */
+    _startZoomDist = 0;
+
+    /**
      * @type {Vec2}
-     */
-    _dir = new Vec2();
-
-    /**
      * @private
-     * @type {Vec3}
-     */
-    _angles = new Vec3();
-
-    /**
-     * @private
-     * @type {Vec2}
      */
     _pitchRange = new Vec2(-360, 360);
 
     /**
-     * @private
-     * @type {number}
-     */
-    _zoomMin = 0;
-
-    /**
-     * @private
-     * @type {number}
-     */
-    _zoomMax = 0;
-
-    /**
-     * @type {number}
+     * @type {Vec2}
      * @private
      */
-    _zoomDist = 0;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _cameraDist = 0;
-
-    /**
-     * @type {Map<number, PointerEvent>}
-     * @private
-     */
-    _pointerEvents = new Map();
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _lastPinchDist = -1;
+    _yawRange = new Vec2(-360, 360);
 
     /**
      * @type {Vec2}
      * @private
      */
-    _lastPosition = new Vec2();
+    _zoomRange = new Vec2();
 
     /**
      * @type {boolean}
      * @private
      */
-    _dragging = false;
+    _useVirtualGamepad = false;
 
     /**
-     * @type {boolean}
+     * @type {KeyboardMouseInput}
      * @private
      */
-    _orbiting = true;
+    _desktopInput = new KeyboardMouseInput();
 
     /**
-     * @type {boolean}
+     * @type {JoystickDoubleInput | JoystickTouchInput | MultiTouchInput}
      * @private
      */
-    _panning = false;
+    _mobileInput;
 
     /**
-     * @type {boolean}
+     * @type {MultiTouchInput}
      * @private
      */
-    _flying = false;
+    _orbitMobileInput = new MultiTouchInput();
 
     /**
-     * @type {boolean}
+     * @type {JoystickTouchInput}
      * @private
      */
-    _moving = false;
+    _flyMobileTouchInput = new JoystickTouchInput();
 
     /**
-     * @type {boolean}
+     * @type {JoystickDoubleInput}
      * @private
      */
-    _focusing = false;
+    _flyMobileGamepadInput = new JoystickDoubleInput();
 
     /**
-     * @type {Record<string, boolean>}
+     * @type {GamepadInput}
      * @private
      */
-    _key = {
-        forward: false,
-        backward: false,
-        left: false,
-        right: false,
-        up: false,
-        down: false,
-        sprint: false,
-        crouch: false
+    _gamepadInput = new GamepadInput();
+
+    /**
+     * @type {FlyController}
+     * @private
+     */
+    _flyController = new FlyController();
+
+    /**
+     * @type {OrbitController}
+     * @private
+     */
+    _orbitController = new OrbitController();
+
+    /**
+     * @type {FlyController|OrbitController}
+     * @private
+     */
+    _controller;
+
+    /**
+     * @type {CameraControls.MODE_ORBIT|CameraControls.MODE_FLY}
+     * @private
+     */
+    _mode;
+
+    /**
+     * @type {CameraControlsFrame}
+     * @private
+     */
+    _frame = {
+        move: new Vec3(),
+        rotate: new Vec2(),
+        drag: new Vec2(),
+        zoom: 0,
+        pan: false
     };
 
     /**
-     * @type {HTMLElement}
+     * @type {CameraControlsState}
      * @private
      */
-    _element = this.app.graphicsDevice.canvas;
+    _state = {
+        axis: new Vec3(),
+        shift: 0,
+        ctrl: 0,
+        mouse: [0, 0, 0],
+        touches: 0
+    };
 
     /**
-     * @type {Mat4}
-     * @private
+     * Whether to skip the update.
+     *
+     * @attribute
+     * @title Skip Update
+     * @type {boolean}
      */
-    _cameraTransform = new Mat4();
+    skipUpdate = false;
 
     /**
-     * @type {Mat4}
-     * @private
+     * Enable panning.
+     *
+     * @attribute
+     * @title Enable Panning
+     * @type {boolean}
      */
-    _baseTransform = new Mat4();
+    enablePan = true;
 
     /**
+     * The scene size. The zoom, pan and fly speeds are relative to this size.
+     *
      * @attribute
      * @title Scene Size
-     * @description The scene size. The zoom, pan and fly speeds are relative to this size.
      * @type {number}
      */
     sceneSize = 100;
+
+    /**
+     * The rotation speed.
+     *
+     * @attribute
+     * @title Rotate Speed
+     * @type {number}
+     */
+    rotateSpeed = 0.2;
+
+    /**
+     * The rotation joystick sensitivity.
+     *
+     * @attribute
+     * @title Rotate Joystick Sensitivity
+     * @type {number}
+     */
+    rotateJoystickSens = 2;
+
+    /**
+     * The fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Speed
+     * @type {number}
+     */
+    moveSpeed = 2;
+
+    /**
+     * The fast fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Fast Speed
+     * @type {number}
+     */
+    moveFastSpeed = 4;
+
+    /**
+     * The slow fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Slow Speed
+     * @type {number}
+     */
+    moveSlowSpeed = 1;
+
+    /**
+     * The zoom speed relative to the scene size.
+     *
+     * @attribute
+     * @title Zoom Speed
+     * @type {number}
+     */
+    zoomSpeed = 0.005;
+
+    /**
+     * The touch zoom pinch sensitivity.
+     *
+     * @attribute
+     * @title Zoom
+     * @type {number}
+     */
+    zoomPinchSens = 5;
+
+    /**
+     * The minimum scale the camera can zoom (absolute value).
+     *
+     * @attribute
+     * @title Zoom Scale Min
+     * @type {number}
+     */
+    zoomScaleMin = 0.001;
+
+    /**
+     * The gamepad dead zone.
+     *
+     * @attribute
+     * @title Gamepad Dead Zone
+     * @type {Vec2}
+     */
+    gamepadDeadZone = new Vec2(0.3, 0.6);
+
+    /**
+     * The joystick event name for the base position.
+     * The event name is appended with the side: 'left' or 'right'.
+     *
+     * @attribute
+     * @title Joystick Base Event Name
+     * @type {string}
+     */
+    joystickBaseEventName = 'joystick:base';
+
+    /**
+     * The joystick event name for the stick position.
+     * The event name is appended with the side: 'left' or 'right'.
+     *
+     * @attribute
+     * @title Joystick Stick Event Name
+     * @type {string}
+     */
+    joystickStickEventName = 'joystick:stick';
+
+    /**
+     * The joystick event name for the reset event.
+     * The event name is appended with the side: 'left' or 'right'.
+     *
+     * @attribute
+     * @title Joystick Reset Event Name
+     * @type {string}
+     */
+    joystickResetEventName = 'joystick:reset';
+
+    initialize() {
+        if (!this.entity.camera) {
+            console.error('CameraControls: camera component not found');
+            return;
+        }
+        this._camera = this.entity.camera;
+
+        // attach input
+        this._desktopInput.attach(this.app.graphicsDevice.canvas);
+        this._gamepadInput.attach(this.app.graphicsDevice.canvas);
+
+        // expose ui events
+        this._exposeJoystickEvents(this._flyMobileTouchInput.joystick, 'left');
+        this._exposeJoystickEvents(this._flyMobileGamepadInput.leftJoystick, 'left');
+        this._exposeJoystickEvents(this._flyMobileGamepadInput.rightJoystick, 'right');
+
+        // mode
+        this.mode = this._mode ?? CameraControls.MODE_ORBIT;
+
+        // destroy
+        this.on('destroy', this._destroy, this);
+
+        console.log('CameraControls: initialized');
+    }
 
     /**
      * Enable orbit camera controls.
      *
      * @attribute
      * @title Enable Orbit
-     * @description Enable orbit camera controls.
      * @type {boolean}
      */
-    enableOrbit = true;
+    set enableOrbit(enable) {
+        this._enableOrbit = enable;
+
+        if (!this._enableOrbit && this._mode === CameraControls.MODE_ORBIT) {
+            this.mode = CameraControls.MODE_FLY;
+        }
+    }
+
+    get enableOrbit() {
+        return this._enableOrbit;
+    }
 
     /**
-     * @attribute
-     * @title Enable Pan
-     * @description Enable pan camera controls.
-     * @type {boolean}
-     */
-    enablePan = true;
-
-    /**
+     * Enable fly camera controls.
+     *
      * @attribute
      * @title Enable Fly
-     * @description Enable fly camera controls.
      * @type {boolean}
      */
-    enableFly = true;
+    set enableFly(enable) {
+        this._enableFly = enable;
 
-    /**
-     * @attribute
-     * @title Focus Damping
-     * @description The damping applied when calling {@link CameraControls#focus}. A higher value means
-     * more damping. A value of 0 means no damping.
-     * @type {number}
-     */
-    focusDamping = 0.98;
-
-    /**
-     * @attribute
-     * @title Rotate Speed
-     * @description The rotation speed.
-     * @enabledif {enableOrbit}
-     * @type {number}
-     */
-    rotateSpeed = 0.2;
-
-    /**
-     * @attribute
-     * @title Rotate Damping
-     * @description The rotation damping. A higher value means more damping. A value of 0 means no damping.
-     * @enabledif {enableOrbit}
-     * @type {number}
-     */
-    rotateDamping = 0.98;
-
-    /**
-     * @attribute
-     * @title Move Speed
-     * @description The fly move speed relative to the scene size.
-     * @enabledif {enableFly || enablePan}
-     * @type {number}
-     */
-    moveSpeed = 2;
-
-    /**
-     * @attribute
-     * @title Move Fast Speed
-     * @description The fast fly move speed relative to the scene size.
-     * @enabledif {enableFly || enablePan}
-     * @type {number}
-     */
-    moveFastSpeed = 4;
-
-    /**
-     * @attribute
-     * @title Move Slow Speed
-     * @description The slow fly move speed relative to the scene size.
-     * @enabledif {enableFly || enablePan}
-     * @type {number}
-     */
-    moveSlowSpeed = 1;
-
-    /**
-     * @attribute
-     * @title Move Damping
-     * @description The movement damping. A higher value means more damping. A value of 0 means no damping.
-     * @enabledif {enableFly || enablePan}
-     * @type {number}
-     */
-    moveDamping = 0.98;
-
-    /**
-     * @attribute
-     * @title Zoom Speed
-     * @description The zoom speed relative to the scene size.
-     * @type {number}
-     */
-    zoomSpeed = 0.005;
-
-    /**
-     * @attribute
-     * @title Zoom Pinch Sensitivity
-     * @description The touch zoom pinch sensitivity.
-     * @type {number}
-     */
-    zoomPinchSens = 5;
-
-    /**
-     * @attribute
-     * @title Zoom Damping
-     * @description The zoom damping. A higher value means more damping. A value of 0 means no damping.
-     * @type {number}
-     */
-    zoomDamping = 0.98;
-
-    /**
-     * @attribute
-     * @title Zoom Scale Min
-     * @description The minimum scale the camera can zoom (absolute value).
-     * @type {number}
-     */
-    zoomScaleMin = 0;
-
-    initialize() {
-        this._onWheel = this._onWheel.bind(this);
-        this._onKeyDown = this._onKeyDown.bind(this);
-        this._onKeyUp = this._onKeyUp.bind(this);
-        this._onPointerDown = this._onPointerDown.bind(this);
-        this._onPointerMove = this._onPointerMove.bind(this);
-        this._onPointerUp = this._onPointerUp.bind(this);
-        this._onContextMenu = this._onContextMenu.bind(this);
-
-        if (!this.entity.camera) {
-            throw new Error('CameraControls script requires a camera component');
+        if (!this._enableFly && this._mode === CameraControls.MODE_FLY) {
+            this.mode = CameraControls.MODE_ORBIT;
         }
-        this.attach(this.entity.camera);
+    }
 
-        this.focusPoint = this._origin ?? this.focusPoint;
-        this.pitchRange = this._pitchRange ?? this.pitchRange;
-        this.zoomMin = this._zoomMin ?? this.zoomMin;
-        this.zoomMax = this._zoomMax ?? this.zoomMax;
-
-        this.on('destroy', this.destroy, this);
+    get enableFly() {
+        return this._enableFly;
     }
 
     /**
-     * The element to attach the camera controls to.
+     * The camera controls mode.
      *
-     * @type {HTMLElement}
-     */
-    set element(value) {
-        this._element = value;
-
-        const camera = this._camera;
-        this.detach();
-        if (camera) {
-            this.attach(camera);
-        }
-    }
-
-    get element() {
-        return this._element;
-    }
-
-    /**
      * @attribute
-     * @title Focus Point
-     * @description The camera's focus point.
-     * @type {Vec3}
-     * @default [0, 0, 0]
+     * @title Mode
+     * @type {string}
      */
-    set focusPoint(point) {
-        if (!this._camera) {
-            if (point instanceof Vec3) {
-                this._origin.copy(point);
-            }
+    set mode(mode) {
+        // check if mode is the same
+        if (this._mode === mode) {
             return;
         }
-        this.focus(point, this.entity.getPosition(), false);
+
+        // set mode
+        switch (true) {
+            case this.enableFly && this.enableOrbit: {
+                this._mode = mode;
+                break;
+            }
+            case this.enableFly && !this.enableOrbit: {
+                this._mode = CameraControls.MODE_FLY;
+                break;
+            }
+            case !this.enableFly && this.enableOrbit: {
+                this._mode = CameraControls.MODE_ORBIT;
+                break;
+            }
+            case !this.enableFly && !this.enableOrbit: {
+                console.warn('CameraControls: both fly and orbit modes are disabled');
+                return;
+            }
+        }
+
+        // mobile input reattach
+        this._reattachMobileInput();
+
+        // controller reattach
+        this._reattachController();
+    }
+
+    get mode() {
+        return this._mode;
+    }
+
+    /**
+     * The focus point.
+     *
+     * @attribute
+     * @title Focus Point
+     * @type {Vec3}
+     */
+    set focusPoint(point) {
+        this.mode = CameraControls.MODE_ORBIT;
+
+        if (this._controller instanceof OrbitController) {
+            const start = this._camera.entity.getPosition();
+            this._startZoomDist = start.distance(point);
+            this._controller.focus(point, start, false);
+            this.update(0);
+        }
     }
 
     get focusPoint() {
-        return this._origin;
+        this.mode = CameraControls.MODE_ORBIT;
+
+        if (this._controller instanceof OrbitController) {
+            return this._controller.point;
+        }
+        return this._camera.entity.getPosition();
     }
 
     /**
+     * The focus damping. A higher value means more damping. A value of 0 means no damping.
+     * The damping is applied to the orbit mode.
+     *
+     * @attribute
+     * @title Rotate Damping
+     * @type {number}
+     */
+    set focusDamping(damping) {
+        this._orbitController.focusDamping = damping;
+    }
+
+    get focusDamping() {
+        return this._orbitController.focusDamping;
+    }
+
+    /**
+     * The rotate damping. A higher value means more damping. A value of 0 means no damping.
+     * The damping is applied to both the fly and orbit modes.
+     *
+     * @attribute
+     * @title Rotate Damping
+     * @type {number}
+     */
+    set rotateDamping(damping) {
+        this._flyController.rotateDamping = damping;
+        this._orbitController.rotateDamping = damping;
+    }
+
+    get rotateDamping() {
+        return this._controller.rotateDamping;
+    }
+
+    /**
+     * The move damping. A higher value means more damping. A value of 0 means no damping.
+     * The damping is applied to the fly mode and the orbit mode when panning.
+     *
+     * @attribute
+     * @title Move Damping
+     * @type {number}
+     */
+    set moveDamping(damping) {
+        this._flyController.moveDamping = damping;
+    }
+
+    get moveDamping() {
+        return this._flyController.moveDamping;
+    }
+
+    /**
+     * The zoom damping. A higher value means more damping. A value of 0 means no damping.
+     * The damping is applied to the orbit mode.
+     *
+     * @attribute
+     * @title Zoom Damping
+     * @type {number}
+     */
+    set zoomDamping(damping) {
+        this._orbitController.zoomDamping = damping;
+    }
+
+    get zoomDamping() {
+        return this._orbitController.zoomDamping;
+    }
+
+    /**
+     * The pitch range.
+     *
      * @attribute
      * @title Pitch Range
-     * @description The camera's pitch range. Having a value of -360 means no minimum pitch and 360
-     * means no maximum pitch.
      * @type {Vec2}
-     * @default [-360, 360]
      */
-    set pitchRange(value) {
-        if (!(value instanceof Vec2)) {
-            return;
-        }
-        this._pitchRange.copy(value);
-        this._clampAngles(this._dir);
-        this._smoothTransform(-1);
+    set pitchRange(range) {
+        this._pitchRange.x = math.clamp(range.x, -360, 360);
+        this._pitchRange.y = math.clamp(range.y, -360, 360);
+        this._flyController.pitchRange = this._pitchRange;
+        this._orbitController.pitchRange = this._pitchRange;
     }
 
     get pitchRange() {
@@ -415,746 +540,358 @@ class CameraControls extends Script {
     }
 
     /**
-     * @attribute
-     * @title Zoom Min
-     * @description The minimum zoom distance relative to the scene size.
-     * @type {number}
-     * @default 0
-     */
-    set zoomMin(value) {
-        this._zoomMin = value ?? this._zoomMin;
-        this._zoomDist = this._clampZoom(this._zoomDist);
-        this._smoothZoom(-1);
-    }
-
-    get zoomMin() {
-        return this._zoomMin;
-    }
-
-    /**
-     * @attribute
-     * @title Zoom Max
-     * @description The maximum zoom distance relative to the scene size. Having a value less than
-     * or equal to zoomMin means no maximum zoom.
-     * @type {number}
-     * @default 0
-     */
-    set zoomMax(value) {
-        this._zoomMax = value ?? this._zoomMax;
-        this._zoomDist = this._clampZoom(this._zoomDist);
-        this._smoothZoom(-1);
-
-    }
-
-    get zoomMax() {
-        return this._zoomMax;
-    }
-
-    /**
-     * @param {Vec3} out - The output vector.
-     * @returns {Vec3} - The focus vector.
-     */
-    _focusDir(out) {
-        return out.copy(this.entity.forward).mulScalar(this._zoomDist);
-    }
-
-    /**
-     * @private
-     * @param {Vec2} angles - The value to clamp.
-     */
-    _clampAngles(angles) {
-        const min = this._pitchRange.x === -360 ? -Infinity : this._pitchRange.x;
-        const max = this._pitchRange.y === 360 ? Infinity : this._pitchRange.y;
-        angles.x = math.clamp(angles.x, min, max);
-
-        // emit clamp event
-        this.fire(CameraControls.EVENT_CLAMP_ANGLES, angles);
-    }
-
-    /**
-     * @private
-     * @param {Vec3} position - The position to clamp.
-     */
-    _clampPosition(position) {
-        if (this._flying) {
-            tmpV1.set(0, 0, 0);
-        } else {
-            this._focusDir(tmpV1);
-        }
-
-        // emit clamp event
-        position.sub(tmpV1);
-        this.fire(CameraControls.EVENT_CLAMP_POSITION, position);
-        position.add(tmpV1);
-    }
-
-    /**
-     * @private
-     * @param {number} value - The value to clamp.
-     * @returns {number} - The clamped value.
-     */
-    _clampZoom(value) {
-        const min = (this._camera?.nearClip ?? 0) + this.zoomMin * this.sceneSize;
-        const max = this.zoomMax <= this.zoomMin ? Infinity : this.zoomMax * this.sceneSize;
-        return math.clamp(value, min, max);
-    }
-
-    /**
-     * @private
-     * @param {MouseEvent} event - The mouse event.
-     */
-    _onContextMenu(event) {
-        event.preventDefault();
-    }
-
-    /**
-     * @private
-     * @param {PointerEvent} event - The pointer event.
-     * @returns {boolean} Whether the mouse pan should start.
-     */
-    _isStartMousePan(event) {
-        if (!this.enablePan) {
-            return false;
-        }
-        if (event.shiftKey) {
-            return true;
-        }
-        if (!this.enableOrbit && !this.enableFly) {
-            return event.button === 0 || event.button === 1 || event.button === 2;
-        }
-        if (!this.enableOrbit || !this.enableFly) {
-            return event.button === 1 || event.button === 2;
-        }
-        return event.button === 1;
-    }
-
-    /**
-     * @private
-     * @param {PointerEvent} event - The pointer event.
-     * @returns {boolean} Whether the fly should start.
-     */
-    _isStartFly(event) {
-        if (!this.enableFly) {
-            return false;
-        }
-        if (!this.enableOrbit && !this.enablePan) {
-            return event.button === 0 || event.button === 1 || event.button === 2;
-        }
-        if (!this.enableOrbit) {
-            return event.button === 0;
-        }
-        return event.button === 2;
-    }
-
-    /**
-     * @param {PointerEvent} event - The pointer event.
-     * @returns {boolean} Whether the orbit should start.
-     * @private
-     */
-    _isStartOrbit(event) {
-        if (!this.enableOrbit) {
-            return false;
-        }
-        if (!this.enableFly && !this.enablePan) {
-            return event.button === 0 || event.button === 1 || event.button === 2;
-        }
-        return event.button === 0;
-    }
-
-    /**
-     * @private
-     * @returns {boolean} Whether the switch to orbit was successful.
-     */
-    _switchToOrbit() {
-        if (!this.enableOrbit) {
-            return false;
-        }
-        if (this._flying) {
-            this._flying = false;
-            this._focusDir(tmpV1);
-            this._origin.add(tmpV1);
-            this._position.add(tmpV1);
-        }
-        this._orbiting = true;
-        return true;
-    }
-
-    /**
-     * @private
-     * @returns {boolean} Whether the switch to fly was successful.
-     */
-    _switchToFly() {
-        if (!this.enableFly) {
-            return false;
-        }
-        if (this._orbiting) {
-            this._orbiting = false;
-            this._zoomDist = this._cameraDist;
-            this._origin.copy(this.entity.getPosition());
-            this._position.copy(this._origin);
-            this._cameraTransform.setTranslate(0, 0, 0);
-        }
-        this._flying = true;
-        return true;
-    }
-
-    /**
-     * @private
-     * @param {PointerEvent} event - The pointer event.
-     */
-    _onPointerDown(event) {
-        if (!this._camera) {
-            return;
-        }
-        this._element.setPointerCapture(event.pointerId);
-        this._pointerEvents.set(event.pointerId, event);
-
-        const startTouchPan = this.enablePan && this._pointerEvents.size === 2;
-        const startMousePan = this._isStartMousePan(event);
-        const startFly = this._isStartFly(event);
-        const startOrbit = this._isStartOrbit(event);
-
-        if (this._focusing) {
-            this._cancelSmoothTransform();
-            this._focusing = false;
-        }
-
-        if (startTouchPan) {
-            // start touch pan
-            this._lastPinchDist = this._getPinchDist();
-            this._getMidPoint(this._lastPosition);
-            this._panning = true;
-        }
-        if (startMousePan) {
-            // start mouse pan
-            this._lastPosition.set(event.clientX, event.clientY);
-            this._panning = true;
-            this._dragging = true;
-        }
-        if (startFly) {
-            // start fly
-            this._switchToFly();
-            this._dragging = true;
-        }
-        if (startOrbit) {
-            // start orbit
-            this._switchToOrbit();
-            this._dragging = true;
-        }
-    }
-
-    /**
-     * @private
-     * @param {PointerEvent} event - The pointer event.
-     */
-    _onPointerMove(event) {
-        if (this._pointerEvents.size === 0) {
-            return;
-        }
-        this._pointerEvents.set(event.pointerId, event);
-
-        if (this._focusing) {
-            this._cancelSmoothTransform();
-            this._focusing = false;
-        }
-
-        if (this._pointerEvents.size === 1) {
-            if (this._panning) {
-                // mouse pan
-                this._pan(tmpVa.set(event.clientX, event.clientY));
-            } else if (this._orbiting || this._flying) {
-                this._look(event);
-            }
-            return;
-        }
-
-        if (this._pointerEvents.size === 2) {
-            // touch pan
-            if (this._panning) {
-                this._pan(this._getMidPoint(tmpVa));
-            }
-
-            // pinch zoom
-            const pinchDist = this._getPinchDist();
-            if (this._lastPinchDist > 0) {
-                this._zoom((this._lastPinchDist - pinchDist) * this.zoomPinchSens);
-            }
-            this._lastPinchDist = pinchDist;
-        }
-
-    }
-
-    /**
-     * @private
-     * @param {PointerEvent} event - The pointer event.
-     */
-    _onPointerUp(event) {
-        this._element.releasePointerCapture(event.pointerId);
-        this._pointerEvents.delete(event.pointerId);
-        if (this._pointerEvents.size < 2) {
-            this._lastPinchDist = -1;
-            this._panning = false;
-        }
-        if (this._panning) {
-            this._panning = false;
-        }
-        if (this._dragging) {
-            this._dragging = false;
-        }
-    }
-
-    /**
-     * @private
-     * @param {WheelEvent} event - The wheel event.
-     */
-    _onWheel(event) {
-        event.preventDefault();
-        this._zoom(event.deltaY);
-    }
-
-    /**
-     * @private
-     * @param {KeyboardEvent} event - The keyboard event.
-     */
-    _onKeyDown(event) {
-        event.stopPropagation();
-        switch (event.key.toLowerCase()) {
-            case 'w':
-            case 'arrowup':
-                this._key.forward = true;
-                break;
-            case 's':
-            case 'arrowdown':
-                this._key.backward = true;
-                break;
-            case 'a':
-            case 'arrowleft':
-                this._key.left = true;
-                break;
-            case 'd':
-            case 'arrowright':
-                this._key.right = true;
-                break;
-            case 'q':
-                this._key.up = true;
-                break;
-            case 'e':
-                this._key.down = true;
-                break;
-            case 'shift':
-                this._key.sprint = true;
-                break;
-            case 'control':
-                this._key.crouch = true;
-                break;
-        }
-    }
-
-    /**
-     * @private
-     * @param {KeyboardEvent} event - The keyboard event.
-     */
-    _onKeyUp(event) {
-        event.stopPropagation();
-        switch (event.key.toLowerCase()) {
-            case 'w':
-            case 'arrowup':
-                this._key.forward = false;
-                break;
-            case 's':
-            case 'arrowdown':
-                this._key.backward = false;
-                break;
-            case 'a':
-            case 'arrowleft':
-                this._key.left = false;
-                break;
-            case 'd':
-            case 'arrowright':
-                this._key.right = false;
-                break;
-            case 'q':
-                this._key.up = false;
-                break;
-            case 'e':
-                this._key.down = false;
-                break;
-            case 'shift':
-                this._key.sprint = false;
-                break;
-            case 'control':
-                this._key.crouch = false;
-                break;
-        }
-    }
-
-    /**
-     * @private
-     * @param {PointerEvent} event - The pointer event.
-     */
-    _look(event) {
-        if (event.target !== this.app.graphicsDevice.canvas) {
-            return;
-        }
-        const movementX = event.movementX || 0;
-        const movementY = event.movementY || 0;
-        this._dir.x -= movementY * this.rotateSpeed;
-        this._dir.y -= movementX * this.rotateSpeed;
-        this._clampAngles(this._dir);
-    }
-
-    /**
-     * @param {number} dt - The delta time.
-     */
-    _move(dt) {
-        if (!this.enableFly) {
-            return;
-        }
-
-        tmpV1.set(0, 0, 0);
-        if (this._key.forward) {
-            tmpV1.add(this.entity.forward);
-        }
-        if (this._key.backward) {
-            tmpV1.sub(this.entity.forward);
-        }
-        if (this._key.left) {
-            tmpV1.sub(this.entity.right);
-        }
-        if (this._key.right) {
-            tmpV1.add(this.entity.right);
-        }
-        if (this._key.up) {
-            tmpV1.add(this.entity.up);
-        }
-        if (this._key.down) {
-            tmpV1.sub(this.entity.up);
-        }
-        tmpV1.normalize();
-        this._moving = tmpV1.length() > 0;
-        const speed = this._key.crouch ? this.moveSlowSpeed : this._key.sprint ? this.moveFastSpeed : this.moveSpeed;
-        tmpV1.mulScalar(this.sceneSize * speed * dt);
-        this._origin.add(tmpV1);
-
-        // clamp movement if locked
-        if (this._moving) {
-            if (this._focusing) {
-                this._cancelSmoothTransform();
-                this._focusing = false;
-            }
-
-            this._clampPosition(this._origin);
-        }
-    }
-
-    /**
-     * @private
-     * @param {Vec2} out - The output vector.
-     * @returns {Vec2} The mid point.
-     */
-    _getMidPoint(out) {
-        const [a, b] = this._pointerEvents.values();
-        const dx = a.clientX - b.clientX;
-        const dy = a.clientY - b.clientY;
-        return out.set(b.clientX + dx * 0.5, b.clientY + dy * 0.5);
-    }
-
-    /**
-     * @private
-     * @returns {number} The pinch distance.
-     */
-    _getPinchDist() {
-        const [a, b] = this._pointerEvents.values();
-        const dx = a.clientX - b.clientX;
-        const dy = a.clientY - b.clientY;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    /**
-     * @private
-     * @param {Vec2} pos - The screen position.
-     * @param {Vec3} point - The output point.
-     */
-    _screenToWorldPan(pos, point) {
-        if (!this._camera) {
-            return;
-        }
-        const mouseW = this._camera.screenToWorld(pos.x, pos.y, 1);
-        const cameraPos = this.entity.getPosition();
-
-        const focusDir = this._focusDir(tmpV1);
-        const focalPos = tmpV2.add2(cameraPos, focusDir);
-        const planeNormal = focusDir.mulScalar(-1).normalize();
-
-        const plane = tmpP1.setFromPointNormal(focalPos, planeNormal);
-        const ray = tmpR1.set(cameraPos, mouseW.sub(cameraPos).normalize());
-
-        plane.intersectsRay(ray, point);
-    }
-
-    /**
-     * @private
-     * @param {Vec2} pos - The screen position.
-     */
-    _pan(pos) {
-        if (!this.enablePan) {
-            return;
-        }
-
-        const start = new Vec3();
-        const end = new Vec3();
-
-        this._screenToWorldPan(this._lastPosition, start);
-        this._screenToWorldPan(pos, end);
-
-        tmpV1.sub2(start, end);
-        this._origin.add(tmpV1);
-
-        this._lastPosition.copy(pos);
-    }
-
-    /**
-     * @private
-     * @param {number} delta - The delta.
-     */
-    _zoom(delta) {
-        if (!this.enableOrbit && !this.enablePan) {
-            return;
-        }
-        if (this._flying) {
-            if (this._dragging) {
-                return;
-            }
-            if (!this._switchToOrbit()) {
-                return;
-            }
-        }
-
-        if (!this._camera) {
-            return;
-        }
-        const distNormalized = this._zoomDist / (ZOOM_SCALE_SCENE_MULT * this.sceneSize);
-        const scale = math.clamp(distNormalized, this.zoomScaleMin, 1);
-        this._zoomDist += (delta * this.zoomSpeed * this.sceneSize * scale);
-        this._zoomDist = this._clampZoom(this._zoomDist);
-    }
-
-    /**
-     * @private
-     * @param {number} dt - The delta time.
-     */
-    _smoothZoom(dt) {
-        const a = dt === -1 ? 1 : lerpRate(this.zoomDamping, dt);
-        this._cameraDist = math.lerp(this._cameraDist, this._zoomDist, a);
-        this._cameraTransform.setTranslate(0, 0, this._cameraDist);
-    }
-
-    /**
-     * @private
-     * @param {number} dt - The delta time.
-     */
-    _smoothTransform(dt) {
-        const ar = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.rotateDamping, dt);
-        const am = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.moveDamping, dt);
-        this._angles.x = math.lerpAngle(this._angles.x % 360, this._dir.x % 360, ar);
-        this._angles.y = math.lerpAngle(this._angles.y % 360, this._dir.y % 360, ar);
-        this._position.lerp(this._position, this._origin, am);
-        this._baseTransform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
-
-        const focusDelta = this._position.distance(this._origin) +
-            Math.abs(this._angles.x - this._dir.x) +
-            Math.abs(this._angles.y - this._dir.y);
-        if (this._focusing && focusDelta < EPSILON) {
-            this._focusing = false;
-        }
-    }
-
-    /**
-     * @private
-     */
-    _cancelSmoothZoom() {
-        this._cameraDist = this._zoomDist;
-    }
-
-    /**
-     * @private
-     */
-    _cancelSmoothTransform() {
-        this._origin.copy(this._position);
-        this._dir.set(this._angles.x, this._angles.y);
-    }
-
-    /**
-     * @private
-     */
-    _updateTransform() {
-        tmpM1.copy(this._baseTransform).mul(this._cameraTransform);
-        this.entity.setPosition(tmpM1.getTranslation());
-        this.entity.setEulerAngles(tmpM1.getEulerAngles());
-    }
-
-    /**
-     * Focus the camera on a point.
+     * The yaw range.
      *
+     * @attribute
+     * @title Yaw Range
+     * @type {Vec2}
+     */
+    set yawRange(range) {
+        this._yawRange.x = math.clamp(range.x, -360, 360);
+        this._yawRange.y = math.clamp(range.y, -360, 360);
+        this._flyController.yawRange = this._yawRange;
+        this._orbitController.yawRange = this._yawRange;
+    }
+
+    get yawRange() {
+        return this._yawRange;
+    }
+
+    /**
+     * The zoom range.
+     *
+     * @attribute
+     * @title Zoom Range
+     * @type {Vec2}
+     */
+    set zoomRange(range) {
+        this._zoomRange.x = range.x;
+        this._zoomRange.y = range.y <= range.x ? Infinity : range.y;
+        this._orbitController.zoomRange = this._zoomRange;
+    }
+
+    get zoomRange() {
+        return this._zoomRange;
+    }
+
+    /**
+     * Whether to use the virtual gamepad or touch joystick for mobile fly mode.
+     *
+     * @attribute
+     * @title Use Virtual Gamepad
+     * @type {boolean}
+     */
+    set useVirtualGamepad(use) {
+        this._useVirtualGamepad = use;
+        this._reattachMobileInput();
+    }
+
+    get useVirtualGamepad() {
+        return this._useVirtualGamepad;
+    }
+
+    /**
+     * @private
+     */
+    _destroy() {
+        this._desktopInput.destroy();
+        this._orbitMobileInput.destroy();
+        this._flyMobileTouchInput.destroy();
+        this._flyMobileGamepadInput.destroy();
+        this._gamepadInput.destroy();
+
+        this._flyController.destroy();
+        this._orbitController.destroy();
+    }
+
+    /**
+     * @param {EventHandler} joystick - The joystick.
+     * @param {string} side - The chirality.
+     * @private
+     */
+    _exposeJoystickEvents(joystick, side) {
+        joystick.on('position:base', (x, y) => {
+            this.app.fire(`${this.joystickBaseEventName}:${side}`, x, y);
+        });
+        joystick.on('position:stick', (x, y) => {
+            this.app.fire(`${this.joystickStickEventName}:${side}`, x, y);
+        });
+        joystick.on('reset', () => {
+            this.app.fire(`${this.joystickResetEventName}:${side}`);
+        });
+    }
+
+    /**
+     * @private
+     */
+    _reattachMobileInput() {
+        const mobileInput = this._mode === CameraControls.MODE_FLY ?
+            this._useVirtualGamepad ?
+                this._flyMobileGamepadInput :
+                this._flyMobileTouchInput :
+            this._orbitMobileInput;
+        if (mobileInput !== this._mobileInput) {
+            if (this._mobileInput) {
+                this._mobileInput.detach();
+            }
+            this._mobileInput = mobileInput;
+            this._mobileInput.attach(this.app.graphicsDevice.canvas);
+
+            // reset state
+            this._resetState();
+        }
+    }
+
+    /**
+     * @private
+     */
+    _reattachController() {
+        const controller = this._mode === CameraControls.MODE_FLY ? this._flyController : this._orbitController;
+        const currZoomDist = this._orbitController.zoom;
+        if (controller !== this._controller) {
+            if (this._controller) {
+                this._controller.detach();
+            }
+            this._controller = controller;
+            this._controller.attach(this._camera.entity.getWorldTransform());
+        }
+
+        // refocus if orbit mode
+        if (this._controller instanceof OrbitController) {
+            const start = this._camera.entity.getPosition();
+            const point = tmpV1.copy(this._camera.entity.forward).mulScalar(currZoomDist).add(start);
+            this._controller.focus(point, start, false);
+        }
+    }
+
+    /**
+     * @private
+     */
+    _resetFrame() {
+        this._frame.move.set(0, 0, 0);
+        this._frame.rotate.set(0, 0);
+        this._frame.drag.set(0, 0);
+        this._frame.zoom = 0;
+        this._frame.pan = false;
+    }
+
+    /**
+     * @private
+     */
+    _resetState() {
+        this._state.axis.set(0, 0, 0);
+        this._state.shift = 0;
+        this._state.ctrl = 0;
+        this._state.mouse.fill(0);
+        this._state.touches = 0;
+    }
+
+    /**
+     * @param {Vec2} stick - The stick
+     * @returns {Vec2} The remapped stick.
+     * @private
+     */
+    _applyDeadZone(stick) {
+        const mag = stick.length();
+        if (mag < this.gamepadDeadZone.x) {
+            return stick.set(0, 0);
+        }
+        const scale = (mag - this.gamepadDeadZone.x) / (this.gamepadDeadZone.y - this.gamepadDeadZone.x);
+        return stick.normalize().mulScalar(scale);
+    }
+
+    /**
+     * @param {Vec3} move - The move delta.
+     * @returns {Vec3} The scaled delta.
+     * @private
+     */
+    _scaleMove(move) {
+        const speed = this._state.shift ?
+            this.moveFastSpeed : this._state.ctrl ?
+                this.moveSlowSpeed : this.moveSpeed;
+        return move.mulScalar(speed * this.sceneSize);
+    }
+
+    /**
+     * @param {number} zoom - The delta.
+     * @returns {number} The scaled delta.
+     * @private
+     */
+    _scaleZoom(zoom) {
+        const scale = math.clamp(this._orbitController.zoom / (ZOOM_SCALE_MULT * this.sceneSize), this.zoomScaleMin, 1);
+        return zoom * scale * this.zoomSpeed * this.sceneSize;
+    }
+
+    /**
+     * @private
+     */
+    _addDesktopInputs() {
+        const { key, button, mouse, wheel } = this._desktopInput.frame();
+        const [forward, back, left, right, up, down, /** space */, shift, ctrl] = key;
+
+        // left mouse button, middle mouse button, mouse wheel
+        const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
+
+        // right mouse button or any key
+        const switchToFly = button[2] === 1 ||
+            forward === 1 || back === 1 || left === 1 || right === 1 || up === 1 || down === 1;
+
+        if (switchToOrbit) {
+            this.mode = CameraControls.MODE_ORBIT;
+        } else if (switchToFly) {
+            this.mode = CameraControls.MODE_FLY;
+        }
+
+        // update state
+        this._state.axis.add(tmpV1.set(right - left, up - down, forward - back));
+        this._state.shift += shift;
+        this._state.ctrl += ctrl;
+        for (let i = 0; i < this._state.mouse.length; i++) {
+            this._state.mouse[i] += button[i];
+        }
+
+        this._frame.move.add(this._scaleMove(tmpV1.copy(this._state.axis).normalize()));
+        this._frame.rotate.add(tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed));
+
+        const _pan = (!!this._state.shift || !!this._state.mouse[1]) && this.enablePan;
+        this._frame.drag.add(tmpVa.fromArray(mouse).mulScalar(_pan ? 1 : this.rotateSpeed));
+        this._frame.zoom += this._scaleZoom(wheel[0]);
+        this._frame.pan ||= _pan;
+    }
+
+    /**
+     * @private
+     */
+    _addMobileInputs() {
+        if (this._mobileInput instanceof MultiTouchInput) {
+            const { touch, pinch, count } = this._mobileInput.frame();
+            this._state.touches += count[0];
+
+            const _pan = this._state.touches > 1 && this.enablePan;
+            this._frame.drag.add(tmpVa.fromArray(touch).mulScalar(_pan ? 1 : this.rotateSpeed));
+            this._frame.zoom += this._scaleZoom(pinch[0]) * this.zoomPinchSens;
+            this._frame.pan ||= _pan;
+        }
+
+        if (this._mobileInput instanceof JoystickTouchInput) {
+            const { stick, touch } = this._mobileInput.frame();
+
+            this._frame.rotate.add(tmpVa.fromArray(touch).mulScalar(this.rotateSpeed));
+            this._frame.move.add(this._scaleMove(tmpV1.set(stick[0], 0, -stick[1])));
+        }
+
+        if (this._mobileInput instanceof JoystickDoubleInput) {
+            const { leftStick, rightStick } = this._mobileInput.frame();
+
+            this._frame.rotate.add(tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+            this._frame.move.add(this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1])));
+        }
+    }
+
+    /**
+     * @private
+     */
+    _addGamepadInputs() {
+        const { leftStick, rightStick } = this._gamepadInput.frame();
+
+        const right = this._applyDeadZone(tmpVa.set(rightStick[0], -rightStick[1]));
+        this._frame.rotate.add(right.mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+
+        const left = this._applyDeadZone(tmpVa.fromArray(leftStick));
+        this._frame.move.add(this._scaleMove(tmpV1.set(left.x, 0, left.y)));
+    }
+
+    /**
+     * @param {number} dt - The time delta.
+     * @private
+     */
+    _updateController(dt) {
+        if (this._controller instanceof OrbitController) {
+            tmpM1.copy(this._controller.update(this._frame, this._camera, dt));
+            this._camera.entity.setPosition(tmpM1.getTranslation());
+            this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
+        }
+
+        if (this._controller instanceof FlyController) {
+            tmpM1.copy(this._controller.update(this._frame, dt));
+            this._camera.entity.setPosition(tmpM1.getTranslation());
+            this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
+        }
+    }
+
+    /**
      * @param {Vec3} point - The focus point.
-     * @param {Vec3} [start] - The camera start position.
-     * @param {boolean} [smooth] - Whether to smooth the focus.
+     * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
-    focus(point, start, smooth = true) {
-        if (!this._camera) {
-            return;
-        }
-        if (this._flying) {
-            if (this._dragging) {
-                return;
+    focus(point, resetZoom = false) {
+        this.mode = CameraControls.MODE_ORBIT;
+
+        if (this._controller instanceof OrbitController) {
+            if (resetZoom) {
+                const start = tmpV1.copy(this._camera.entity.forward)
+                .mulScalar(-this._startZoomDist)
+                .add(point);
+                this._controller.focus(point, start);
+            } else {
+                this._controller.focus(point);
             }
-            if (!this._switchToOrbit()) {
-                return;
-            }
-        }
-
-        if (start) {
-            tmpV1.sub2(start, point);
-            const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
-            const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-            this._clampAngles(this._dir.set(-elev, azim));
-
-            this._origin.copy(point);
-
-            this._cameraTransform.setTranslate(0, 0, 0);
-
-            const pos = this.entity.getPosition();
-            const rot = this.entity.getRotation();
-            this._baseTransform.setTRS(pos, rot, Vec3.ONE);
-
-            this._zoomDist = this._clampZoom(tmpV1.length());
-
-            if (!smooth) {
-                this._smoothZoom(-1);
-                this._smoothTransform(-1);
-            }
-
-            this._updateTransform();
-        } else {
-            this._origin.copy(point);
-            if (!smooth) {
-                this._position.copy(point);
-            }
-        }
-
-        if (smooth) {
-            this._focusing = true;
         }
     }
 
     /**
-     * Reset the zoom. For orbit and panning only.
-     *
-     * @param {number} [zoomDist] - The zoom distance.
-     * @param {boolean} [smooth] - Whether to smooth the zoom.
+     * @param {Vec3} point - The focus point.
+     * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
-    resetZoom(zoomDist = 0, smooth = true) {
-        this._zoomDist = zoomDist;
-        if (!smooth) {
-            this._cameraDist = zoomDist;
+    look(point, resetZoom = false) {
+        this.mode = CameraControls.MODE_ORBIT;
+
+        if (this._controller instanceof OrbitController) {
+            if (resetZoom) {
+                const start = tmpV1.copy(this._camera.entity.getPosition())
+                .sub(point)
+                .normalize()
+                .mulScalar(this._startZoomDist)
+                .add(point);
+                this._controller.focus(point, start);
+            } else {
+                this._controller.focus(point, this._camera.entity.getPosition());
+            }
         }
     }
 
     /**
-     * Refocus the camera.
-     *
-     * @param {Vec3} point - The point.
-     * @param {Vec3} [start] - The start.
-     * @param {number} [zoomDist] - The zoom distance.
-     * @param {boolean} [smooth] - Whether to smooth the refocus.
+     * @param {Vec3} point - The focus point.
+     * @param {Vec3} start - The start point.
      */
-    refocus(point, start, zoomDist, smooth = true) {
-        if (typeof zoomDist === 'number') {
-            this.resetZoom(zoomDist, smooth);
+    reset(point, start) {
+        this.mode = CameraControls.MODE_ORBIT;
+
+        if (this._controller instanceof OrbitController) {
+            this._controller.focus(point, start);
         }
-        this.focus(point, start, smooth);
     }
 
     /**
-     * @param {CameraComponent} camera - The camera component.
-     */
-    attach(camera) {
-        if (this._camera === camera) {
-            return;
-        }
-        this._camera = camera;
-
-        // Attach events to canvas instead of window
-        this._element.addEventListener('wheel', this._onWheel, PASSIVE);
-        this._element.addEventListener('pointerdown', this._onPointerDown);
-        this._element.addEventListener('pointermove', this._onPointerMove);
-        this._element.addEventListener('pointerup', this._onPointerUp);
-        this._element.addEventListener('contextmenu', this._onContextMenu);
-
-        // These can stay on window since they're keyboard events
-        window.addEventListener('keydown', this._onKeyDown, false);
-        window.addEventListener('keyup', this._onKeyUp, false);
-    }
-
-    detach() {
-        if (!this._camera) {
-            return;
-        }
-
-        // Remove from canvas instead of window
-        this._element.removeEventListener('wheel', this._onWheel, PASSIVE);
-        this._element.removeEventListener('pointermove', this._onPointerMove);
-        this._element.removeEventListener('pointerdown', this._onPointerDown);
-        this._element.removeEventListener('pointerup', this._onPointerUp);
-        this._element.removeEventListener('contextmenu', this._onContextMenu);
-
-        // Remove keyboard events from window
-        window.removeEventListener('keydown', this._onKeyDown, false);
-        window.removeEventListener('keyup', this._onKeyUp, false);
-
-        this._camera = null;
-
-        this._cancelSmoothZoom();
-        this._cancelSmoothTransform();
-
-        this._pointerEvents.clear();
-        this._lastPinchDist = -1;
-        this._panning = false;
-        this._key = {
-            forward: false,
-            backward: false,
-            left: false,
-            right: false,
-            up: false,
-            down: false,
-            sprint: false,
-            crouch: false
-        };
-    }
-
-    /**
-     * @param {number} dt - The delta time.
+     * @param {number} dt - The time delta.
      */
     update(dt) {
+        this._resetFrame();
+
+        // accumulate inputs
+        this._addDesktopInputs();
+        this._addMobileInputs();
+        this._addGamepadInputs();
+
+        if (this.skipUpdate) {
+            return;
+        }
+
         if (this.app.xr?.active) {
             return;
         }
 
-        if (!this._camera) {
-            return;
-        }
-
-        this._move(dt);
-
-        if (!this._flying) {
-            this._smoothZoom(dt);
-        }
-        this._smoothTransform(dt);
-        this._updateTransform();
-    }
-
-    destroy() {
-        this.detach();
+        // update controller
+        this._updateController(dt);
     }
 }
 
