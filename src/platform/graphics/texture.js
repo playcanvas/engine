@@ -630,9 +630,9 @@ class Texture {
     }
 
     /**
-     * Sets the integer value specifying the level of anisotropy to apply to the texture ranging
-     * from 1 (no anisotropic filtering) to the maximum anisotropy supported by the graphics device
-     * (see {@link GraphicsDevice#maxAnisotropy}).
+     * Sets the integer value specifying the level of anisotropy to apply to the texture. The value
+     * ranges from 1 (no anisotropic filtering) to the maximum anisotropy supported by the graphics
+     * device (see {@link GraphicsDevice#maxAnisotropy}).
      *
      * @type {number}
      */
