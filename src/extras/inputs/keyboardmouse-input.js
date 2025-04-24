@@ -70,13 +70,7 @@ class KeyboardMouseInput extends Input {
         }
         this._element?.setPointerCapture(event.pointerId);
 
-        for (let i = 0; i < this._button.length; i++) {
-            if (this._button[i] === 1) {
-                this._button[i] = -1;
-                continue;
-            }
-            this._button[i] = 0;
-        }
+        this._clearButtons();
         this._button[event.button] = 1;
         this.deltas.button.add(this._button);
 
@@ -113,13 +107,7 @@ class KeyboardMouseInput extends Input {
         }
         this._element?.releasePointerCapture(event.pointerId);
 
-        for (let i = 0; i < this._button.length; i++) {
-            if (this._button[i] === 1) {
-                this._button[i] = -1;
-                continue;
-            }
-            this._button[i] = 0;
-        }
+        this._clearButtons();
         this.deltas.button.add(this._button);
 
         if (this._pointerId !== event.pointerId) {
@@ -152,6 +140,19 @@ class KeyboardMouseInput extends Input {
     _onKeyUp(event) {
         event.stopPropagation();
         this._setKey(event.code, 0);
+    }
+
+    /**
+     * @private
+     */
+    _clearButtons() {
+        for (let i = 0; i < this._button.length; i++) {
+            if (this._button[i] === 1) {
+                this._button[i] = -1;
+                continue;
+            }
+            this._button[i] = 0;
+        }
     }
 
     /**
