@@ -49,7 +49,7 @@ export default /* wgsl */`
     #if defined(LIGHT{i}CASTSHADOW)
 
         uniform light{i}_shadowMatrix: mat4x4f;
-        uniform float light{i}_shadowIntensity: f32;
+        uniform light{i}_shadowIntensity: f32;
         uniform light{i}_shadowParams: vec4f; // width, height, bias, radius
 
         #if LIGHT{i}SHADOWTYPE == PCSS_32F
@@ -62,7 +62,7 @@ export default /* wgsl */`
 
         // directional (cascaded) shadows
         #if LIGHT{i}TYPE == DIRECTIONAL
-            uniform light{i}_shadowMatrixPalette[4]: mat4x4f;
+            uniform light{i}_shadowMatrixPalette: array<mat4x4f, 4>;
             uniform light{i}_shadowCascadeDistances: vec4f;
             uniform light{i}_shadowCascadeCount: i32;
             uniform light{i}_shadowCascadeBlend: f32;
@@ -78,9 +78,11 @@ export default /* wgsl */`
 */            
         #else
             #if defined(LIGHT{i}SHADOW_PCF)
-                uniform sampler2DShadow light{i}_shadowMap;
+                var light{i}_shadowMap: texture_depth_2d;
+                var light{i}_shadowMapSampler: sampler_comparison;
             #else
-                uniform sampler2D light{i}_shadowMap;
+                var light{i}_shadowMap texture_2D<f32>;
+                var light{i}_shadowMapSampler: sampler;
             #endif
         #endif
 

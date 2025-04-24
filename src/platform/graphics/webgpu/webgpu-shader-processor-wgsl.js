@@ -4,20 +4,15 @@ import {
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     SAMPLETYPE_FLOAT,
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
-    SAMPLETYPE_INT, SAMPLETYPE_UINT,
+    TEXTUREDIMENSION_1D, TEXTUREDIMENSION_CUBE_ARRAY,
+    SAMPLETYPE_INT, SAMPLETYPE_UINT, SAMPLETYPE_DEPTH, SAMPLETYPE_UNFILTERABLE_FLOAT,
     BINDGROUP_MESH_UB,
     uniformTypeToNameWGSL,
     uniformTypeToNameMapWGSL,
     bindGroupNames,
-    TEXTUREDIMENSION_1D,
-    TEXTUREDIMENSION_CUBE_ARRAY,
     UNIFORMTYPE_FLOAT,
     UNUSED_UNIFORM_NAME,
-    TYPE_FLOAT32,
-    TYPE_FLOAT16,
-    TYPE_INT8,
-    TYPE_INT16,
-    TYPE_INT32
+    TYPE_FLOAT32, TYPE_FLOAT16, TYPE_INT8, TYPE_INT16, TYPE_INT32
 } from '../constants.js';
 import { UniformFormat, UniformBufferFormat } from '../uniform-buffer-format.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindTextureFormat } from '../bind-group-format.js';
@@ -49,31 +44,81 @@ const MARKER = '@@@';
 // matches vertex of fragment entry function, extracts the input name. Ends at the start of the function body '{'.
 const ENTRY_FUNCTION = /(@vertex|@fragment)\s*fn\s+\w+\s*\(\s*(\w+)\s*:[\s\S]*?\{/;
 
-const textureType2Dimension = {
-    '1d': TEXTUREDIMENSION_1D,
-    '2d': TEXTUREDIMENSION_2D,
-    '3d': TEXTUREDIMENSION_3D,
-    'cube': TEXTUREDIMENSION_CUBE,
-    '2d_array': TEXTUREDIMENSION_2D_ARRAY,
-    'cube_array': TEXTUREDIMENSION_CUBE_ARRAY
+const textureBaseInfo = {
+    'texture_1d': { viewDimension: TEXTUREDIMENSION_1D, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_2d_array': { viewDimension: TEXTUREDIMENSION_2D_ARRAY, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_3d': { viewDimension: TEXTUREDIMENSION_3D, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_cube': { viewDimension: TEXTUREDIMENSION_CUBE, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_cube_array': { viewDimension: TEXTUREDIMENSION_CUBE_ARRAY, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_multisampled_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_depth_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_DEPTH },
+    'texture_depth_2d_array': { viewDimension: TEXTUREDIMENSION_2D_ARRAY, baseSampleType: SAMPLETYPE_DEPTH },
+    'texture_depth_cube': { viewDimension: TEXTUREDIMENSION_CUBE, baseSampleType: SAMPLETYPE_DEPTH },
+    'texture_depth_cube_array': { viewDimension: TEXTUREDIMENSION_CUBE_ARRAY, baseSampleType: SAMPLETYPE_DEPTH },
+    'texture_external': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_UNFILTERABLE_FLOAT }
 };
 
-const getTextureTypeCode = (dimension, sampleType) => {
-    const sampleFormat = sampleType === SAMPLETYPE_FLOAT ? 'f32' : (sampleType === SAMPLETYPE_INT ? 'i32' : 'u32');
-    switch (dimension) {
-        case TEXTUREDIMENSION_1D: return `texture_1d<${sampleFormat}>`;
-        case TEXTUREDIMENSION_2D: return `texture_2d<${sampleFormat}>`;
-        case TEXTUREDIMENSION_3D: return `texture_3d<${sampleFormat}>`;
-        case TEXTUREDIMENSION_CUBE: return `texture_cube<${sampleFormat}>`;
-        case TEXTUREDIMENSION_2D_ARRAY: return `texture_2d_array<${sampleFormat}>`;
-        case TEXTUREDIMENSION_CUBE_ARRAY: return `texture_cube_array<${sampleFormat}>`;
+// get the view dimension and sample type for a given texture type
+// example: texture_2d_array<u32> -> 2d_array & uint
+const getTextureInfo = (baseType, componentType) => {
+    const baseInfo = textureBaseInfo[baseType];
+    Debug.assert(baseInfo);
+
+    let finalSampleType = baseInfo.baseSampleType;
+    if (baseInfo.baseSampleType === SAMPLETYPE_FLOAT && baseType !== 'texture_multisampled_2d') {
+        switch (componentType) {
+            case 'u32': finalSampleType = SAMPLETYPE_UINT; break;
+            case 'i32': finalSampleType = SAMPLETYPE_INT; break;
+            case 'f32': finalSampleType = SAMPLETYPE_FLOAT; break;
+        }
     }
+
+    return {
+        viewDimension: baseInfo.viewDimension,
+        sampleType: finalSampleType
+    };
 };
 
-const textureFormat2SampleType = {
-    'f32': SAMPLETYPE_FLOAT,
-    'i32': SAMPLETYPE_INT,
-    'u32': SAMPLETYPE_UINT
+// reverse to getTextureInfo, convert view dimension and sample type to texture declaration
+// example: 2d_array & float -> texture_2d_array<f32>
+const getTextureDeclarationType = (viewDimension, sampleType) => {
+
+    // types without template specifiers
+    if (sampleType === SAMPLETYPE_DEPTH) {
+        switch (viewDimension) {
+            case TEXTUREDIMENSION_2D:         return 'texture_depth_2d';
+            case TEXTUREDIMENSION_2D_ARRAY:   return 'texture_depth_2d_array';
+            case TEXTUREDIMENSION_CUBE:       return 'texture_depth_cube';
+            case TEXTUREDIMENSION_CUBE_ARRAY: return 'texture_depth_cube_array';
+            default: Debug.assert(false);
+        }
+    }
+
+    // the base texture type string based on dimension
+    let baseTypeString;
+    switch (viewDimension) {
+        case TEXTUREDIMENSION_1D:         baseTypeString = 'texture_1d'; break;
+        case TEXTUREDIMENSION_2D:         baseTypeString = 'texture_2d'; break;
+        case TEXTUREDIMENSION_2D_ARRAY:   baseTypeString = 'texture_2d_array'; break;
+        case TEXTUREDIMENSION_3D:         baseTypeString = 'texture_3d'; break;
+        case TEXTUREDIMENSION_CUBE:       baseTypeString = 'texture_cube'; break;
+        case TEXTUREDIMENSION_CUBE_ARRAY: baseTypeString = 'texture_cube_array'; break;
+        default: Debug.assert(false);
+    }
+
+    // component format string ('f32', 'u32', 'i32')
+    let coreFormatString;
+    switch (sampleType) {
+        case SAMPLETYPE_FLOAT:
+        case SAMPLETYPE_UNFILTERABLE_FLOAT: coreFormatString = 'f32'; break;
+        case SAMPLETYPE_UINT: coreFormatString = 'u32'; break;
+        case SAMPLETYPE_INT: coreFormatString = 'i32'; break;
+        default: Debug.assert(false);
+    }
+
+    // final type
+    return `${baseTypeString}<${coreFormatString}>`;
 };
 
 const wrappedArrayTypes = {
@@ -151,8 +196,8 @@ class UniformLine {
 //     var<storage, read_write> storageBuffer : Buffer;
 //     var storageTexture : texture_storage_2d<rgba8unorm, write>;
 //     var videoTexture : texture_external;
-// eslint-disable-next-line
-const TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*texture_(\w+)<([a-zA-Z0-9_,<>]*)>;\s*$/;
+
+const TEXTURE_REGEX = /^\s*var\s+(\w+)\s*:\s*(texture_\w+)(?:<(\w+)>)?;\s*$/;
 // eslint-disable-next-line
 const STORAGE_TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*(texture_storage_2d|texture_storage_2d_array)<([\w\d_]+),\s*(\w+)>\s*;\s*$/;
 // eslint-disable-next-line
@@ -182,16 +227,16 @@ class ResourceLine {
         const textureMatch = this.line.match(TEXTURE_REGEX);
         if (textureMatch) {
             this.name = textureMatch[1];
-            this.type = textureMatch[2]; // texture type (e.g., texture_2d)
+            this.type = textureMatch[2]; // texture type (e.g., texture_2d or texture_cube_array)
             this.textureFormat = textureMatch[3]; // texture format (e.g., f32)
             this.isTexture = true;
             this.matchedElements.push(...textureMatch);
 
-            this.textureDimension = textureType2Dimension[this.type];
-            Debug.assert(this.textureDimension);
-
-            this.sampleType = textureFormat2SampleType[this.textureFormat];
-            Debug.assert(this.sampleType !== undefined);
+            // get dimension and sample type
+            const info = getTextureInfo(this.type, this.textureFormat);
+            Debug.assert(info);
+            this.textureDimension = info.viewDimension;
+            this.sampleType = info.sampleType;
         }
 
         // storage texture (e.g., texture_storage_2d<rgba8unorm, write>)
@@ -477,7 +522,7 @@ class WebgpuShaderProcessorWGSL {
                 const sampler = resources[i + 1];
                 const hasSampler = sampler?.isSampler;
 
-                // TODO: handle depth texture, external, and storage types
+                // TODO: handle external, and storage types
                 const sampleType = resource.sampleType;
                 const dimension = resource.textureDimension;
 
@@ -585,14 +630,13 @@ class WebgpuShaderProcessorWGSL {
 
         format.textureFormats.forEach((format) => {
 
-            // convert TEXTUREDIMENSION_2D to 'texture_2d<f32>' and similar
-            const typeCode = getTextureTypeCode(format.textureDimension, format.sampleType);
-
-            code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.name}: ${typeCode};\n`;
+            const textureTypeName = getTextureDeclarationType(format.textureDimension, format.sampleType);
+            code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.name}: ${textureTypeName};\n`;
             bindIndex++;
 
             if (format.hasSampler) {
-                code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.samplerName}: sampler;\n`;
+                const samplerName = format.sampleType === SAMPLETYPE_DEPTH ? 'sampler_comparison' : 'sampler';
+                code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.samplerName}: ${samplerName};\n`;
                 bindIndex++;
             }
         });

@@ -12,8 +12,8 @@ import clearCoatPS from './standard/frag/clearCoat.js';
 import clearCoatGlossPS from './standard/frag/clearCoatGloss.js';
 import clearCoatNormalPS from './standard/frag/clearCoatNormal.js';
 import clusteredLightUtilsPS from './lit/frag/clusteredLightUtils.js';
-// import clusteredLightCookiesPS from './lit/frag/clusteredLightCookies.js';
-// import clusteredLightShadowsPS from './lit/frag/clusteredLightShadows.js';
+import clusteredLightCookiesPS from './lit/frag/clusteredLightCookies.js';
+import clusteredLightShadowsPS from './lit/frag/clusteredLightShadows.js';
 import clusteredLightPS from './lit/frag/clusteredLight.js';
 import combinePS from './lit/frag/combine.js';
 import cookieBlit2DPS from './internal/frag/cookie-blit-2d.js';
@@ -40,8 +40,6 @@ import fresnelSchlickPS from './lit/frag/fresnelSchlick.js';
 // import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
 // import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gammaPS from './common/frag/gamma.js';
-// import gles3PS from '../../../platform/graphics/shader-chunks/frag/gles3.js';
-// import gles3VS from '../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
 // import gsplatCenterVS from './gsplat/vert/gsplatCenter.js';
 // import gsplatColorVS from './gsplat/vert/gsplatColor.js';
@@ -83,7 +81,7 @@ import litMainVS from './lit/vert/litMain.js';
 // import litOtherMainPS from './lit/frag/pass-other/litOtherMain.js';
 import litShaderArgsPS from './standard/frag/litShaderArgs.js';
 import litShaderCorePS from './standard/frag/litShaderCore.js';
-// import litShadowMainPS from './lit/frag/pass-shadow/litShadowMain.js';
+import litShadowMainPS from './lit/frag/pass-shadow/litShadowMain.js';
 // import ltcPS from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
 // import msdfPS from './common/frag/msdf.js';
@@ -154,20 +152,20 @@ import reflectionCCPS from './lit/frag/reflectionCC.js';
 import reflectionEnvPS from './lit/frag/reflectionEnv.js';
 // import reflectionSpherePS from './lit/frag/reflectionSphere.js';
 import reflectionSheenPS from './lit/frag/reflectionSheen.js';
-// import refractionCubePS from './lit/frag/refractionCube.js';
+import refractionCubePS from './lit/frag/refractionCube.js';
 import refractionDynamicPS from './lit/frag/refractionDynamic.js';
 import reprojectPS from './internal/frag/reproject.js';
 import reprojectVS from './internal/vert/reproject.js';
 // import sampleCatmullRomPS from './common/frag/sampleCatmullRom.js';
 // import screenDepthPS from './common/frag/screenDepth.js';
-// import shadowCascadesPS from './lit/frag/shadowCascades.js';
-// import shadowEVSMPS from './lit/frag/shadowEVSM.js';
-// import shadowPCF1PS from './lit/frag/shadowPCF1.js';
-// import shadowPCF3PS from './lit/frag/shadowPCF3.js';
-// import shadowPCF5PS from './lit/frag/shadowPCF5.js';
-// import shadowPCSSPS from './lit/frag/shadowPCSS.js';
-// import shadowSoftPS from './lit/frag/shadowSoft.js';
-// import skinBatchVS from './common/vert/skinBatch.js';
+import shadowCascadesPS from './lit/frag/lighting/shadowCascades.js';
+// import shadowEVSMPS from './lit/frag/lighting/shadowEVSM.js';
+import shadowPCF1PS from './lit/frag/lighting/shadowPCF1.js';
+import shadowPCF3PS from './lit/frag/lighting/shadowPCF3.js';
+import shadowPCF5PS from './lit/frag/lighting/shadowPCF5.js';
+// import shadowPCSSPS from './lit/frag/lighting/shadowPCSS.js';
+// import shadowSoftPS from './lit/frag/lighting/shadowSoft.js';
+import skinBatchVS from './common/vert/skinBatch.js';
 import skinVS from './common/vert/skin.js';
 import skyboxPS from './skybox/frag/skybox.js';
 import skyboxVS from './skybox/vert/skybox.js';
@@ -223,8 +221,8 @@ const shaderChunksWGSL = {
     clearCoatPS,
     clearCoatGlossPS,
     clearCoatNormalPS,
-    // clusteredLightCookiesPS,
-    // clusteredLightShadowsPS,
+    clusteredLightCookiesPS,
+    clusteredLightShadowsPS,
     clusteredLightUtilsPS,
     clusteredLightPS,
     combinePS,
@@ -243,7 +241,6 @@ const shaderChunksWGSL = {
     encodePS,
     endPS,
     envAtlasPS,
-    // envConstPS,
     envProcPS,
     falloffInvSquaredPS,
     falloffLinearPS,
@@ -253,8 +250,6 @@ const shaderChunksWGSL = {
     // fullscreenQuadPS,
     // fullscreenQuadVS,
     gammaPS,
-    // gles3PS,
-    // gles3VS,
     glossPS,
     // gsplatCenterVS,
     // gsplatCornerVS,
@@ -297,7 +292,7 @@ const shaderChunksWGSL = {
     // litOtherMainPS,
     litShaderArgsPS,
     litShaderCorePS,
-    // litShadowMainPS,
+    litShadowMainPS,
     // ltcPS,
     metalnessPS,
     metalnessModulatePS,
@@ -368,20 +363,20 @@ const shaderChunksWGSL = {
     reflectionEnvPS,
     // reflectionSpherePS,
     reflectionSheenPS,
-    // refractionCubePS,
+    refractionCubePS,
     refractionDynamicPS,
     reprojectPS,
     reprojectVS,
     // sampleCatmullRomPS,
     // screenDepthPS,
-    // shadowCascadesPS,
+    shadowCascadesPS,
     // shadowEVSMPS,
-    // shadowPCF1PS,
-    // shadowPCF3PS
-    // shadowPCF5PS,
+    shadowPCF1PS,
+    shadowPCF3PS,
+    shadowPCF5PS,
     // shadowPCSSPS,
     // shadowSoftPS,
-    // skinBatchVS,
+    skinBatchVS,
     skinVS,
     skyboxPS,
     skyboxVS,

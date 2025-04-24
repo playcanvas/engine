@@ -303,8 +303,8 @@ fn evaluateLight(
                     decodeClusterLightOmniAtlasViewport(light);
                 }
 
-                let shadowTextureResolution: f32 = shadowAtlasParams.x;
-                let shadowEdgePixels: f32 = shadowAtlasParams.y;
+                let shadowTextureResolution: f32 = uniform.shadowAtlasParams.x;
+                let shadowEdgePixels: f32 = uniform.shadowAtlasParams.y;
 
                 #ifdef CLUSTER_COOKIES
 
