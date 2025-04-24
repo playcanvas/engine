@@ -100,8 +100,8 @@ class ShaderPass {
         // add default passes in the required order, to match the constants
         add('forward', SHADER_FORWARD, { isForward: true });
         add('prepass', SHADER_PREPASS);
-        add('pick', SHADER_PICK);
         add('shadow', SHADER_SHADOW);
+        add('pick', SHADER_PICK);
     }
 
     /**
