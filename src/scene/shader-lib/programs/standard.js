@@ -11,7 +11,7 @@ import { StandardMaterialOptions } from '../../materials/standard-material-optio
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
-import { SHADERTAG_MATERIAL } from '../../../platform/graphics/constants.js';
+import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL, SHADERTAG_MATERIAL } from '../../../platform/graphics/constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -162,6 +162,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         const detailModeOption = options[detailModePropName];
 
         const chunkCode = chunks[chunkName];
+        Debug.assert(chunkCode, `Shader chunk ${chunkName} not found.`);
 
         // log errors if the chunk format is deprecated (format changed in engine 2.7)
         Debug.call(() => {
@@ -312,7 +313,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         const shaderPassInfo = ShaderPass.get(device).getByIndex(options.litOptions.pass);
         const isForwardPass = shaderPassInfo.isForward;
-        const litShader = new LitShader(device, options.litOptions);
+        const shaderLanguage = (device.isWebGPU && options.useWGSL) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        const litShader = new LitShader(device, options.litOptions, shaderLanguage);
 
         // generate vertex shader
         this.createVertexShader(litShader, options);
@@ -443,6 +445,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         const definition = ShaderUtils.createDefinition(device, {
             name: 'StandardShader',
             attributes: litShader.attributes,
+            shaderLanguage: shaderLanguage,
             vertexCode: litShader.vshader,
             fragmentCode: litShader.fshader,
             vertexIncludes: includes,

@@ -11,7 +11,6 @@ vec2 getCubemapFaceCoordinates(const vec3 dir, out float faceIndex, out vec2 til
         faceIndex = dir.z < 0.0 ? 5.0 : 4.0;
         ma = 0.5 / vAbs.z;
         uv = vec2(dir.z < 0.0 ? -dir.x : dir.x, -dir.y);
-
         tileOffset.x = 2.0;
         tileOffset.y = dir.z < 0.0 ? 1.0 : 0.0;
 
@@ -20,7 +19,6 @@ vec2 getCubemapFaceCoordinates(const vec3 dir, out float faceIndex, out vec2 til
         faceIndex = dir.y < 0.0 ? 3.0 : 2.0;
         ma = 0.5 / vAbs.y;
         uv = vec2(dir.x, dir.y < 0.0 ? -dir.z : dir.z);
-
         tileOffset.x = 1.0;
         tileOffset.y = dir.y < 0.0 ? 1.0 : 0.0;
 
@@ -29,7 +27,6 @@ vec2 getCubemapFaceCoordinates(const vec3 dir, out float faceIndex, out vec2 til
         faceIndex = dir.x < 0.0 ? 1.0 : 0.0;
         ma = 0.5 / vAbs.x;
         uv = vec2(dir.x < 0.0 ? dir.z : -dir.z, -dir.y);
-
         tileOffset.x = 0.0;
         tileOffset.y = dir.x < 0.0 ? 1.0 : 0.0;
 

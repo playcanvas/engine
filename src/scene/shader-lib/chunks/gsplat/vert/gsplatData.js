@@ -32,7 +32,7 @@ mat3 quatToMat3(vec4 R) {
 }
 
 vec4 unpackRotation(vec3 packed) {
-    return vec4(packed.xyz, sqrt(1.0 - dot(packed, packed)));
+    return vec4(packed.xyz, sqrt(max(0.0, 1.0 - dot(packed, packed))));
 }
 
 // sample covariance vectors

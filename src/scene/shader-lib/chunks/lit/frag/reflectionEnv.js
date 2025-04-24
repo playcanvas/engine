@@ -1,7 +1,7 @@
 export default /* glsl */`
 #ifndef ENV_ATLAS
 #define ENV_ATLAS
-uniform sampler2D texture_envAtlas;
+    uniform sampler2D texture_envAtlas;
 #endif
 uniform float material_reflectivity;
 

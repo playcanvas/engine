@@ -85,13 +85,12 @@ import litForwardPreCodePS from './lit/frag/pass-forward/litForwardPreCode.js';
 import litMainVS from './lit/vert/litMain.js';
 import litOtherMainPS from './lit/frag/pass-other/litOtherMain.js';
 import litShaderArgsPS from './standard/frag/litShaderArgs.js';
+import litShaderCorePS from './standard/frag/litShaderCore.js';
 import litShadowMainPS from './lit/frag/pass-shadow/litShadowMain.js';
 import ltcPS from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
 import msdfPS from './common/frag/msdf.js';
 import metalnessModulatePS from './lit/frag/metalnessModulate.js';
-import morphEvaluationPS from './internal/morph/frag/morphEvaluation.js';
-import morphDeclarationPS from './internal/morph/frag/morphDeclaration.js';
 import morphPS from './internal/morph/frag/morph.js';
 import morphVS from './internal/morph/vert/morph.js';
 import msdfVS from './common/vert/msdf.js';
@@ -201,7 +200,7 @@ import transmissionPS from './standard/frag/transmission.js';
 import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
-import uvTransformPS from './lit/vert/uvTransform.js';
+import uvTransformVS from './lit/vert/uvTransform.js';
 import uvTransformUniformsPS from './lit/vert/uvTransformUniforms.js';
 import viewDirPS from './lit/frag/viewDir.js';
 import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu.js';
@@ -302,12 +301,11 @@ const shaderChunks = {
     litMainVS,
     litOtherMainPS,
     litShaderArgsPS,
+    litShaderCorePS,
     litShadowMainPS,
     ltcPS,
     metalnessPS,
     metalnessModulatePS,
-    morphEvaluationPS,
-    morphDeclarationPS,
     morphPS,
     morphVS,
     msdfPS,
@@ -418,7 +416,7 @@ const shaderChunks = {
     twoSidedLightingPS,
     uv0VS,
     uv1VS,
-    uvTransformPS,
+    uvTransformVS,
     uvTransformUniformsPS,
     viewDirPS,
     webgpuPS,

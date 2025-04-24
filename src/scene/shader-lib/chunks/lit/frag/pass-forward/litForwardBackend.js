@@ -20,7 +20,9 @@ void evaluateBackend() {
 
     #ifdef LIT_SPECULAR_OR_REFLECTION
         #ifdef LIT_METALNESS
-            float f0 = 1.0 / litArgs_ior; f0 = (f0 - 1.0) / (f0 + 1.0); f0 *= f0;
+            float f0 = 1.0 / litArgs_ior;
+            f0 = (f0 - 1.0) / (f0 + 1.0);
+            f0 *= f0;
             litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0);
             litArgs_albedo = getAlbedoModulate(litArgs_albedo, litArgs_metalness);
         #endif
@@ -82,14 +84,14 @@ void evaluateBackend() {
             
                 #ifdef LIT_SPECULAR_FRESNEL
                     ccFresnel = getFresnelCC(dot(dViewDirW, litArgs_clearcoat_worldNormal));
-                    ccReflection.rgb *= ccFresnel;
+                    ccReflection *= ccFresnel;
                 #else
                     ccFresnel = 0.0;
                 #endif
             #endif
 
             #ifdef LIT_SPECULARITY_FACTOR
-                ccReflection.rgb *= litArgs_specularityFactor;
+                ccReflection *= litArgs_specularityFactor;
             #endif
 
             #ifdef LIT_SHEEN
@@ -134,7 +136,9 @@ void evaluateBackend() {
         #endif
         
         // LOOP - evaluate all non-clustered lights
-        #include "lightEvaluationPS, LIGHT_COUNT"
+        #ifdef LIGHT_COUNT > 0
+            #include "lightEvaluationPS, LIGHT_COUNT"
+        #endif
 
         // clustered lighting
         #ifdef LIT_CLUSTERED_LIGHTS
@@ -203,7 +207,7 @@ void evaluateBackend() {
 
             float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a), vec3( 0.2126, 0.7152, 0.0722 ));
             #ifdef LIT_CLEARCOAT
-                specLum += dot(ccSpecularLight * litArgs_clearcoat_specularity + ccReflection.rgb * litArgs_clearcoat_specularity, vec3( 0.2126, 0.7152, 0.0722 ));
+                specLum += dot(ccSpecularLight * litArgs_clearcoat_specularity + ccReflection * litArgs_clearcoat_specularity, vec3( 0.2126, 0.7152, 0.0722 ));
             #endif
             litArgs_opacity = clamp(litArgs_opacity + gammaCorrectInput(specLum), 0.0, 1.0);
 

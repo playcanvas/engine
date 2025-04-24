@@ -93,8 +93,8 @@ assetListLoader.load(() => {
     const light = new pc.Entity();
     light.addComponent('light', {
         type: 'omni',
-        color: pc.Color.WHITE,
-        intensity: 1,
+        color: pc.Color.RED,
+        intensity: 2,
         range: 10
     });
     light.translate(0, 1, 0);
@@ -107,19 +107,30 @@ assetListLoader.load(() => {
     material.setParameter('texture_diffuseMap', assets.color.resource);
     material.setParameter('texture_glossMap', assets.gloss.resource);
     material.setParameter('texture_normalMap', assets.normal.resource);
+
     material.useSkybox = true;
     material.hasSpecular = true;
+
     material.hasSpecularityFactor = true;
     material.hasNormals = true;
-    material.hasMetalness = true;
+    //    material.hasMetalness = true;
+    material.hasMetalness = false;
     material.occludeSpecular = pc.SPECOCC_AO;
 
-    const argumentsChunk = `
+    // shadows not ported yet
+    app.scene.lighting.shadowsEnabled = false;
+    app.scene.lighting.cookiesEnabled = false;
+
+    material.shaderChunkGLSL = /* glsl */`
+
+        #include "litShaderCorePS"
+
         uniform sampler2D texture_diffuseMap;
         uniform sampler2D texture_glossMap;
         uniform sampler2D texture_normalMap;
         uniform float material_normalMapIntensity;
         uniform vec3 material_specularRgb;
+
         void evaluateFrontend() {
             litArgs_emission = vec3(0, 0, 0);
             litArgs_metalness = 0.5;
@@ -136,7 +147,37 @@ assetListLoader.load(() => {
             litArgs_ao = 0.0;
             litArgs_opacity = 1.0;
         }`;
-    material.shaderChunk = argumentsChunk;
+
+    material.shaderChunkWGSL = /* wgsl */`
+
+        #include "litShaderCorePS"
+
+        var texture_diffuseMap : texture_2d<f32>;
+        var texture_diffuseMapSampler : sampler;
+        var texture_glossMap : texture_2d<f32>;
+        var texture_glossMapSampler : sampler;
+        var texture_normalMap : texture_2d<f32>;
+        var texture_normalMapSampler : sampler;
+        uniform material_normalMapIntensity: f32;
+        uniform material_specularRgb: vec3f;
+
+        fn evaluateFrontend() {
+            litArgs_emission = vec3f(0.0, 0, 0);
+            litArgs_metalness = 0.5;
+            litArgs_specularity = uniform.material_specularRgb;
+            litArgs_specularityFactor = 1.0;
+            litArgs_gloss = textureSample(texture_glossMap, texture_glossMapSampler, vUv0).r;
+
+            litArgs_ior = 0.1;
+
+            var normalMap: vec3f = textureSample(texture_normalMap, texture_normalMapSampler, vUv0).xyz * 2.0 - 1.0;
+            litArgs_worldNormal = normalize(dTBN * mix(vec3(0,0,1), normalMap, uniform.material_normalMapIntensity));
+            litArgs_albedo = vec3f(0.5) + textureSample(texture_diffuseMap, texture_diffuseMapSampler, vUv0).xyz;
+
+            litArgs_ao = 0.0;
+            litArgs_opacity = 1.0;
+        }`;
+
     material.update();
 
     // create primitive

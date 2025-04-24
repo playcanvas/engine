@@ -72,6 +72,20 @@ class Morph extends RefCountedObject {
         this._updateMorphFlags();
     }
 
+    /**
+     * Frees video memory allocated by this object.
+     */
+    destroy() {
+        this.vertexBufferIds?.destroy();
+        this.vertexBufferIds = null;
+
+        this.targetsTexturePositions?.destroy();
+        this.targetsTexturePositions = null;
+
+        this.targetsTextureNormals?.destroy();
+        this.targetsTextureNormals = null;
+    }
+
     get aabb() {
 
         // lazy evaluation, which allows us to skip this completely if customAABB is used
@@ -149,15 +163,16 @@ class Morph extends RefCountedObject {
 
         // collect all source delta arrays to find sparse set of vertices
         const deltaArrays = [], deltaInfos = [];
-        for (let i = 0; i < this._targets.length; i++) {
-            const target = this._targets[i];
+        const targets = this._targets;
+        for (let i = 0; i < targets.length; i++) {
+            const target = targets[i];
             if (target.options.deltaPositions) {
                 deltaArrays.push(target.options.deltaPositions);
-                deltaInfos.push({ target: target, name: 'texturePositions' });
+                deltaInfos.push(true);  // position
             }
             if (target.options.deltaNormals) {
                 deltaArrays.push(target.options.deltaNormals);
-                deltaInfos.push({ target: target, name: 'textureNormals' });
+                deltaInfos.push(false); // normal
             }
         }
 
@@ -173,7 +188,8 @@ class Morph extends RefCountedObject {
 
         // if data cannot fit into max size texture, fail this set up
         if (morphTextureHeight > maxTextureSize) {
-            return false;
+            Debug.warnOnce(`Morph target data is too large to fit into a texture array. Required texture size: ${morphTextureWidth}x${morphTextureHeight}, max texture size: ${maxTextureSize}x${maxTextureSize}.`);
+            return;
         }
 
         this.morphTextureWidth = morphTextureWidth;
@@ -186,17 +202,14 @@ class Morph extends RefCountedObject {
             halfFloat = true;
         }
 
-        // create textures
-        const textures = [];
-        for (let i = 0; i < deltaArrays.length; i++) {
-            textures.push(this._createTexture('MorphTarget', this._textureFormat));
-        }
-
-        // build texture for each delta array, all textures are the same size
+        // build texture data for each delta array, to be used as a texture array
+        const texturesDataPositions = [];
+        const texturesDataNormals = [];
+        const textureDataSize = morphTextureWidth * morphTextureHeight * 4;
         for (let i = 0; i < deltaArrays.length; i++) {
             const data = deltaArrays[i];
-            const texture = textures[i];
-            const textureData = texture.lock();
+            const textureData = this._textureFormat === PIXELFORMAT_RGBA16F ? new Uint16Array(textureDataSize) : new Float32Array(textureDataSize);
+            (deltaInfos[i] ? texturesDataPositions : texturesDataNormals).push(textureData);
 
             // copy full arrays into sparse arrays and convert format (skip 0th pixel - used by non-morphed vertices)
             if (halfFloat) {
@@ -219,11 +232,17 @@ class Morph extends RefCountedObject {
                     textureData[dstIndex + 2] = data[index + 2];
                 }
             }
+        }
 
-            // assign texture to target
-            texture.unlock();
-            const target = deltaInfos[i].target;
-            target._setTexture(deltaInfos[i].name, texture);
+        // allocate texture arrays to store data from all morph targets
+        if (texturesDataPositions.length > 0) {
+            this.targetsTexturePositions = this._createTexture('MorphPositionsTexture', this._textureFormat, targets.length, [texturesDataPositions]);
+            this.targetsTexturePositions.upload();
+        }
+
+        if (texturesDataNormals.length > 0) {
+            this.targetsTextureNormals = this._createTexture('MorphNormalsTexture', this._textureFormat, targets.length, [texturesDataNormals]);
+            this.targetsTextureNormals.upload();
         }
 
         // create vertex stream with vertex_id used to map vertex to texture
@@ -233,19 +252,6 @@ class Morph extends RefCountedObject {
         });
 
         return true;
-    }
-
-    /**
-     * Frees video memory allocated by this object.
-     */
-    destroy() {
-        this.vertexBufferIds?.destroy();
-        this.vertexBufferIds = null;
-
-        for (let i = 0; i < this._targets.length; i++) {
-            this._targets[i].destroy();
-        }
-        this._targets.length = 0;
     }
 
     /**
@@ -274,16 +280,20 @@ class Morph extends RefCountedObject {
     }
 
     /**
-     * Creates texture. Used to create both source morph target data, as well as render target used
-     * to morph these into, positions and normals.
+     * Creates a texture / texture array. Used to create both source morph target data, as well as
+     * render target used to morph these into, positions and normals.
      *
      * @param {string} name - The name of the texture.
      * @param {number} format - The format of the texture.
+     * @param {Array} [levels] - The levels of the texture.
+     * @param {number} [arrayLength] - The length of the texture array.
      * @returns {Texture} The created texture.
      * @private
      */
-    _createTexture(name, format) {
+    _createTexture(name, format, arrayLength, levels) {
         return new Texture(this.device, {
+            levels: levels,
+            arrayLength: arrayLength,
             width: this.morphTextureWidth,
             height: this.morphTextureHeight,
             format: format,

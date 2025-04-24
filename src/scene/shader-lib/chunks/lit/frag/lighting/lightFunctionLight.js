@@ -25,8 +25,8 @@ void evaluateLight{i}(
 
     #else // omni or spot light
         
-        vec3 lightDirW;
-        evalOmniLight(light{i}_position, lightDirW, dLightDirNormW);
+        vec3 lightDirW = evalOmniLight(light{i}_position);
+        dLightDirNormW = normalize(lightDirW);
 
         // cookie attenuation
         #if defined(LIGHT{i}COOKIE)

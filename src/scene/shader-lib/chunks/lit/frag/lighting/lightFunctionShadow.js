@@ -49,9 +49,9 @@ export default /* glsl */`
             #endif
 
             // this is currently unused
-            /*#ifdef SHADOW_SAMPLE_Z_BIAS
-                positionInShadowSpace.z += getShadowBias(shadowParams.x, shadowParams.z);
-            #endif*/
+            #ifdef SHADOW_SAMPLE_Z_BIAS
+                // positionInShadowSpace.z += getShadowBias(shadowParams.x, shadowParams.z);
+            #endif
             surfacePosition = positionInShadowSpace.xyz;
         #endif
 
@@ -190,6 +190,5 @@ export default /* glsl */`
 
         #endif
     }
-
 #endif
 `;

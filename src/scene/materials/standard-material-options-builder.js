@@ -54,7 +54,7 @@ class StandardMaterialOptionsBuilder {
     updateRef(options, scene, cameraShaderParams, stdMat, objDefs, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateEnvOptions(options, stdMat, scene, cameraShaderParams);
-        this._updateMaterialOptions(options, stdMat);
+        this._updateMaterialOptions(options, stdMat, scene);
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights);
         this._updateUVOptions(options, stdMat, objDefs, false, cameraShaderParams);
@@ -201,7 +201,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.lights = [];
     }
 
-    _updateMaterialOptions(options, stdMat) {
+    _updateMaterialOptions(options, stdMat, scene) {
         const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
                             notBlack(stdMat.specular) || (stdMat.specularityFactor > 0 && stdMat.useMetalness) ||
                             stdMat.enableGGXSpecular ||
@@ -231,8 +231,8 @@ class StandardMaterialOptionsBuilder {
         options.refractionTint = equalish(stdMat.refraction, 1.0);
         options.refractionIndexTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0);
-        options.specularEncoding = stdMat.specularEncoding || 'linear';
-        options.sheenEncoding = stdMat.sheenEncoding || 'linear';
+        options.specularEncoding = stdMat.specularMap?.encoding;
+        options.sheenEncoding = stdMat.sheenMap?.encoding;
         options.aoMapUv = stdMat.aoUvSet; // backwards compatibility
         options.aoDetail = !!stdMat.aoDetailMap;
         options.diffuseDetail = !!stdMat.diffuseDetailMap;
@@ -245,6 +245,12 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatGlossTint = (stdMat.clearCoatGloss !== 1.0);
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
         options.iorTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
+
+        // hack, see Scene.forcePassThroughSpecular description
+        if (scene.forcePassThroughSpecular) {
+            options.specularEncoding = 'linear';
+            options.sheenEncoding = 'linear';
+        }
 
         options.iridescenceTint = stdMat.iridescence !== 1.0;
 

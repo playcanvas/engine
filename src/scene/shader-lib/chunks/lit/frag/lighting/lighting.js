@@ -74,10 +74,11 @@ export default /* glsl */`
     #include "clusteredLightPS"
 #endif
 
-// LOOP - generate shadow evaluation functions for all non-clustered lights
-#include "lightFunctionShadowPS, LIGHT_COUNT"
+#ifdef LIGHT_COUNT > 0
+    // LOOP - generate shadow evaluation functions for all non-clustered lights
+    #include "lightFunctionShadowPS, LIGHT_COUNT"
 
-// LOOP - generate light evaluation functions for all non-clustered lights
-#include "lightFunctionLightPS, LIGHT_COUNT"
-
+    // LOOP - generate light evaluation functions for all non-clustered lights
+    #include "lightFunctionLightPS, LIGHT_COUNT"
+#endif
 `;
