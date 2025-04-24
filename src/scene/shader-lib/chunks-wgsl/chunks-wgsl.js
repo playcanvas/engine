@@ -7,7 +7,7 @@ import basePS from './lit/frag/base.js';
 // import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
 // import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
 import bayerPS from './common/frag/bayer.js';
-// import blurVSMPS from './lit/frag/blurVSM.js';
+import blurVSMPS from './lit/frag/blurVSM.js';
 import clearCoatPS from './standard/frag/clearCoat.js';
 import clearCoatGlossPS from './standard/frag/clearCoatGloss.js';
 import clearCoatNormalPS from './standard/frag/clearCoatNormal.js';
@@ -38,7 +38,7 @@ import falloffLinearPS from './lit/frag/falloffLinear.js';
 import fogPS from './common/frag/fog.js';
 import fresnelSchlickPS from './lit/frag/fresnelSchlick.js';
 // import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
-// import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
+import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gammaPS from './common/frag/gamma.js';
 import glossPS from './standard/frag/gloss.js';
 // import gsplatCenterVS from './gsplat/vert/gsplatCenter.js';
@@ -159,7 +159,7 @@ import reprojectVS from './internal/vert/reproject.js';
 // import sampleCatmullRomPS from './common/frag/sampleCatmullRom.js';
 // import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/lighting/shadowCascades.js';
-// import shadowEVSMPS from './lit/frag/lighting/shadowEVSM.js';
+import shadowEVSMPS from './lit/frag/lighting/shadowEVSM.js';
 import shadowPCF1PS from './lit/frag/lighting/shadowPCF1.js';
 import shadowPCF3PS from './lit/frag/lighting/shadowPCF3.js';
 import shadowPCF5PS from './lit/frag/lighting/shadowPCF5.js';
@@ -217,7 +217,7 @@ const shaderChunksWGSL = {
     // baseNineSlicedPS,
     // baseNineSlicedTiledPS,
     bayerPS,
-    // blurVSMPS,
+    blurVSMPS,
     clearCoatPS,
     clearCoatGlossPS,
     clearCoatNormalPS,
@@ -248,7 +248,7 @@ const shaderChunksWGSL = {
     fogPS,
     fresnelSchlickPS,
     // fullscreenQuadPS,
-    // fullscreenQuadVS,
+    fullscreenQuadVS,
     gammaPS,
     glossPS,
     // gsplatCenterVS,
@@ -370,7 +370,7 @@ const shaderChunksWGSL = {
     // sampleCatmullRomPS,
     // screenDepthPS,
     shadowCascadesPS,
-    // shadowEVSMPS,
+    shadowEVSMPS,
     shadowPCF1PS,
     shadowPCF3PS,
     shadowPCF5PS,

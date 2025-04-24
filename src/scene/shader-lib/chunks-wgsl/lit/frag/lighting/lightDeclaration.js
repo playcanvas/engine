@@ -81,7 +81,7 @@ export default /* wgsl */`
                 var light{i}_shadowMap: texture_depth_2d;
                 var light{i}_shadowMapSampler: sampler_comparison;
             #else
-                var light{i}_shadowMap texture_2D<f32>;
+                var light{i}_shadowMap: texture_2d<f32>;
                 var light{i}_shadowMapSampler: sampler;
             #endif
         #endif
