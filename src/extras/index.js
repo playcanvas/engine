@@ -37,7 +37,6 @@ export { GamepadInput } from './inputs/gamepad-input.js';
 // CONTROLLERS
 export { FlyController } from './controllers/fly-controller.js';
 export { OrbitController } from './controllers/orbit-controller.js';
-export { FirstPersonController } from './controllers/first-person-controller.js';
 
 // GIZMOS
 export {
