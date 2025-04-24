@@ -185,6 +185,15 @@ class CameraControls extends Script {
     };
 
     /**
+     * Whether to skip the update.
+     *
+     * @attribute
+     * @title Skip Update
+     * @type {boolean}
+     */
+    skipUpdate = false;
+
+    /**
      * Enable panning.
      *
      * @attribute
@@ -334,6 +343,8 @@ class CameraControls extends Script {
 
         // destroy
         this.on('destroy', this._destroy, this);
+
+        console.log('CameraControls: initialized');
     }
 
     /**
@@ -864,16 +875,20 @@ class CameraControls extends Script {
      * @param {number} dt - The time delta.
      */
     update(dt) {
-        if (this.app.xr?.active) {
-            return;
-        }
-
         this._resetFrame();
 
         // accumulate inputs
         this._addDesktopInputs();
         this._addMobileInputs();
         this._addGamepadInputs();
+
+        if (this.skipUpdate) {
+            return;
+        }
+
+        if (this.app.xr?.active) {
+            return;
+        }
 
         // update controller
         this._updateController(dt);
