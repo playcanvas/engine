@@ -78,7 +78,7 @@ import litForwardMainPS from './lit/frag/pass-forward/litForwardMain.js';
 import litForwardPostCodePS from './lit/frag/pass-forward/litForwardPostCode.js';
 import litForwardPreCodePS from './lit/frag/pass-forward/litForwardPreCode.js';
 import litMainVS from './lit/vert/litMain.js';
-// import litOtherMainPS from './lit/frag/pass-other/litOtherMain.js';
+import litOtherMainPS from './lit/frag/pass-other/litOtherMain.js';
 import litShaderArgsPS from './standard/frag/litShaderArgs.js';
 import litShaderCorePS from './standard/frag/litShaderCore.js';
 import litShadowMainPS from './lit/frag/pass-shadow/litShadowMain.js';
@@ -143,7 +143,7 @@ import parallaxPS from './standard/frag/parallax.js';
 // import particle_stretchVS from './particle/vert/particle_stretch.js';
 // import particle_TBNVS from './particle/vert/particle_TBN.js';
 // import particle_wrapVS from './particle/vert/particle_wrap.js';
-// import pickPS from './common/frag/pick.js';
+import pickPS from './common/frag/pick.js';
 import reflDirPS from './lit/frag/reflDir.js';
 import reflDirAnisoPS from './lit/frag/reflDirAniso.js';
 import reflectionCCPS from './lit/frag/reflectionCC.js';
@@ -289,7 +289,7 @@ const shaderChunksWGSL = {
     litForwardPostCodePS,
     litForwardPreCodePS,
     litMainVS,
-    // litOtherMainPS,
+    litOtherMainPS,
     litShaderArgsPS,
     litShaderCorePS,
     litShadowMainPS,
@@ -354,7 +354,7 @@ const shaderChunksWGSL = {
     // particle_stretchVS,
     // particle_TBNVS,
     // particle_wrapVS,
-    // pickPS,
+    pickPS,
     reflDirPS,
     reflDirAnisoPS,
     reflectionCCPS,
