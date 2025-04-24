@@ -112,9 +112,9 @@ export default /* wgsl */`
 
                 #if LIGHT{i}SHAPE != PUNCTUAL
                     let shadowSearchArea = vec2f(length(uniform.light{i}_halfWidth), length(uniform.light{i}_halfHeight)) * uniform.light{i}_shadowSearchArea;
-                    return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord,uniform.light{i}_shadowParams, uniform.light{i}_cameraParams, shadowSearchArea, lightDirW_in);
+                    return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, uniform.light{i}_cameraParams, shadowSearchArea, lightDirW_in);
                 #else
-                    return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, light{i}_shadowParams, uniform.light{i}_cameraParams, uniform.light{i}_softShadowParams, lightDirW_in);
+                    return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, uniform.light{i}_cameraParams, uniform.light{i}_softShadowParams, lightDirW_in);
                 #endif
 
             #endif

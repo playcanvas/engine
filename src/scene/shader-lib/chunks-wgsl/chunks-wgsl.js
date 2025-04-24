@@ -70,7 +70,7 @@ import lightingPS from './lit/frag/lighting/lighting.js';
 // import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 import lightSheenPS from './lit/frag/lightSheen.js';
-// import linearizeDepthPS from './common/frag/linearizeDepth.js';
+import linearizeDepthPS from './common/frag/linearizeDepth.js';
 import litForwardBackendPS from './lit/frag/pass-forward/litForwardBackend.js';
 import litForwardDeclarationPS from './lit/frag/pass-forward/litForwardDeclaration.js';
 import litForwardMainPS from './lit/frag/pass-forward/litForwardMain.js';
@@ -162,8 +162,8 @@ import shadowEVSMPS from './lit/frag/lighting/shadowEVSM.js';
 import shadowPCF1PS from './lit/frag/lighting/shadowPCF1.js';
 import shadowPCF3PS from './lit/frag/lighting/shadowPCF3.js';
 import shadowPCF5PS from './lit/frag/lighting/shadowPCF5.js';
-// import shadowPCSSPS from './lit/frag/lighting/shadowPCSS.js';
-// import shadowSoftPS from './lit/frag/lighting/shadowSoft.js';
+// import shadowPCSSPS from './lit/frag/lighting/shadowPCSS.js';  // omni / spot PCSS is not supported on WebGPU currently, as this is only for non-clustered lights
+import shadowSoftPS from './lit/frag/lighting/shadowSoft.js';
 import skinBatchVS from './common/vert/skinBatch.js';
 import skinVS from './common/vert/skin.js';
 import skyboxPS from './skybox/frag/skybox.js';
@@ -280,7 +280,7 @@ const shaderChunksWGSL = {
     // lightSpecularAnisoGGXPS,
     lightSpecularBlinnPS,
     lightSheenPS,
-    // linearizeDepthPS,
+    linearizeDepthPS,
     litForwardBackendPS,
     litForwardDeclarationPS,
     litForwardMainPS,
@@ -373,7 +373,7 @@ const shaderChunksWGSL = {
     shadowPCF3PS,
     shadowPCF5PS,
     // shadowPCSSPS,
-    // shadowSoftPS,
+    shadowSoftPS,
     skinBatchVS,
     skinVS,
     skyboxPS,

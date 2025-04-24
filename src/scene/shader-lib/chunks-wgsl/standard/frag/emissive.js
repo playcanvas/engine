@@ -10,7 +10,7 @@ fn getEmission() {
     #endif
 
     #ifdef STD_EMISSIVE_VERTEX
-    dEmission = dEmission * gammaCorrectInput(saturate(vVertexColor.{STD_EMISSIVE_VERTEX_CHANNEL}));
+    dEmission = dEmission * gammaCorrectInputVec3(saturate3(vVertexColor.{STD_EMISSIVE_VERTEX_CHANNEL}));
     #endif
 }
 `;
