@@ -771,13 +771,6 @@ export const SHADER_FORWARD = 0;
 
 export const SHADER_PREPASS = 1;
 
-/**
- * Render RGBA-encoded depth value.
- *
- * @category Graphics
- */
-export const SHADER_DEPTH = 2;
-
 // shader pass used by the Picker class to render mesh ID
 export const SHADER_PICK = 3;
 

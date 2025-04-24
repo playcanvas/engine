@@ -19,10 +19,6 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         output.color = getPickOutput();
     #endif
 
-    #ifdef DEPTH_PASS
-        output.color = vec4(1.0, 1.0, 1.0, 1.0);
-    #endif
-
     #ifdef PREPASS_PASS
         output.color = float2vec4(vLinearDepth);
     #endif

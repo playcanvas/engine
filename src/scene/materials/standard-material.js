@@ -8,7 +8,7 @@ import {
     DETAILMODE_MUL,
     DITHER_NONE,
     FRESNEL_SCHLICK,
-    SHADER_DEPTH, SHADER_PICK,
+    SHADER_PICK,
     SHADER_PREPASS,
     SPECOCC_AO,
     tonemapNames
@@ -836,7 +836,7 @@ class StandardMaterial extends Material {
 
         // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
+        const minimalOptions = pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
         options.defines = getCoreDefines(this, params);
 
