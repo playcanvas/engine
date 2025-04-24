@@ -8,7 +8,7 @@ import {
 import {
     LIGHTSHAPE_PUNCTUAL,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADER_DEPTH, SHADER_PICK,
+    SHADER_PICK,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames, lightFalloffNames,
     cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
@@ -506,7 +506,7 @@ class LitShader {
     generateFragmentShader(frontendDecl, frontendCode, lightingUv) {
         const options = this.options;
 
-        if (options.pass === SHADER_PICK || options.pass === SHADER_DEPTH || options.pass === SHADER_PREPASS) {
+        if (options.pass === SHADER_PICK || options.pass === SHADER_PREPASS) {
 
             Debug.assert(this.varyingsCode !== undefined && frontendCode !== undefined && frontendDecl !== undefined);
             this.fshader = `
