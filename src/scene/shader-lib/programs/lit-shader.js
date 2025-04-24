@@ -193,7 +193,8 @@ class LitShader {
 
             // only attach these if the default instancing chunk is used, otherwise it is expected
             // for the user to provide required attributes using material.setAttribute
-            if (this.chunks.transformInstancingVS === shaderChunks.transformInstancingVS) {
+            const languageChunks = this.shaderLanguage === SHADERLANGUAGE_GLSL ? shaderChunks : shaderChunksWGSL;
+            if (this.chunks.transformInstancingVS === languageChunks.transformInstancingVS) {
                 attributes.instance_line1 = SEMANTIC_ATTR12;
                 attributes.instance_line2 = SEMANTIC_ATTR13;
                 attributes.instance_line3 = SEMANTIC_ATTR14;

@@ -189,7 +189,7 @@ import tonemappingNeutralPS from './common/frag/tonemapping/tonemappingNeutral.j
 import tonemappingNonePS from './common/frag/tonemapping/tonemappingNone.js';
 import transformVS from './common/vert/transform.js';
 import transformCoreVS from './common/vert/transformCore.js';
-// import transformInstancingVS from './common/vert/transformInstancing.js';
+import transformInstancingVS from './common/vert/transformInstancing.js';
 import transmissionPS from './standard/frag/transmission.js';
 // import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 import uv0VS from './lit/vert/uv0.js';
@@ -399,7 +399,7 @@ const shaderChunksWGSL = {
     tonemappingNonePS,
     transformVS,
     transformCoreVS,
-    // transformInstancingVS,
+    transformInstancingVS,
     transmissionPS,
     // twoSidedLightingPS,
     uv0VS,
