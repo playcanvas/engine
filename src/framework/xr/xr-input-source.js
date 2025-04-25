@@ -668,7 +668,7 @@ class XrInputSource extends EventHandler {
      *
      * @param {object} [options] - Object for passing optional arguments.
      * @param {string[]} [options.entityTypes] - Optional list of underlying entity types against
-     * which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ]. Can be any
+     * which hit tests will be performed. Defaults to [{@link XRTRACKABLE_PLANE}]. Can be any
      * combination of the following:
      *
      * - {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed
@@ -682,11 +682,11 @@ class XrInputSource extends EventHandler {
      * @param {XrHitTestStartCallback} [options.callback] - Optional callback function called once
      * hit test source is created or failed.
      * @example
-     * app.xr.input.on('add', function (inputSource) {
+     * app.xr.input.on('add', (inputSource) => {
      *     inputSource.hitTestStart({
-     *         callback: function (err, hitTestSource) {
+     *         callback: (err, hitTestSource) => {
      *             if (err) return;
-     *             hitTestSource.on('result', function (position, rotation, inputSource, hitTestResult) {
+     *             hitTestSource.on('result', (position, rotation, inputSource, hitTestResult) => {
      *                 // position and rotation of hit test result
      *                 // that will be created from touch on mobile devices
      *             });
