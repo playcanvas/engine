@@ -318,9 +318,9 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the aspect ratio (width divided by height) of the camera. If `aspectRatioMode` is
+     * Sets the aspect ratio (width divided by height) of the camera. If {@link aspectRatioMode} is
      * {@link ASPECT_AUTO}, then this value will be automatically calculated every frame, and you
-     * can only read it. If it's ASPECT_MANUAL, you can set the value.
+     * can only read it. If it's {@link ASPECT_MANUAL}, you can set the value.
      *
      * @type {number}
      */
@@ -498,8 +498,8 @@ class CameraComponent extends Component {
 
     /**
      * Sets whether the camera will cull triangle faces. If true, the camera will take
-     * `material.cull` into account. Otherwise both front and back faces will be rendered. Defaults
-     * to true.
+     * {@link Material#cull} into account. Otherwise both front and back faces will be rendered.
+     * Defaults to true.
      *
      * @type {boolean}
      */
@@ -578,9 +578,9 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the field of view of the camera in degrees. Usually this is the Y-axis field of view,
-     * see {@link CameraComponent#horizontalFov}. Used for {@link PROJECTION_PERSPECTIVE} cameras
-     * only. Defaults to 45.
+     * Sets the field of view of the camera in degrees. Usually this is the Y-axis field of view
+     * (see {@link horizontalFov}). Used for {@link PROJECTION_PERSPECTIVE} cameras only. Defaults to
+     * 45.
      *
      * @type {number}
      */
@@ -607,10 +607,10 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets whether frustum culling is enabled. This controls the culling of mesh instances against
-     * the camera frustum, i.e. if objects outside of the camera's frustum should be omitted from
-     * rendering. If false, all mesh instances in the scene are rendered by the camera, regardless
-     * of visibility. Defaults to false.
+     * Sets whether frustum culling is enabled. This controls the culling of {@link MeshInstance}s
+     * against the camera frustum, i.e. if objects outside of the camera's frustum should be
+     * omitted from rendering. If false, all mesh instances in the scene are rendered by the
+     * camera, regardless of visibility. Defaults to false.
      *
      * @type {boolean}
      */
@@ -628,7 +628,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets whether the camera's field of view (`fov`) is horizontal or vertical. Defaults to
+     * Sets whether the camera's field of view ({@link fov}) is horizontal or vertical. Defaults to
      * false (meaning it is vertical by default).
      *
      * @type {boolean}
@@ -638,7 +638,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Gets whether the camera's field of view (`fov`) is horizontal or vertical.
+     * Gets whether the camera's field of view ({@link fov}) is horizontal or vertical.
      *
      * @type {boolean}
      */
@@ -648,8 +648,9 @@ class CameraComponent extends Component {
 
     /**
      * Sets the array of layer IDs ({@link Layer#id}) to which this camera should belong. Don't
-     * push, pop, splice or modify this array, if you want to change it, set a new one instead.
-     * Defaults to `[LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE]`.
+     * push, pop, splice or modify this array. If you want to change it, set a new one instead.
+     * Defaults to [{@link LAYERID_WORLD}, {@link LAYERID_DEPTH}, {@link LAYERID_SKYBOX},
+     * {@link LAYERID_UI}, {@link LAYERID_IMMEDIATE}].
      *
      * @type {number[]}
      */
