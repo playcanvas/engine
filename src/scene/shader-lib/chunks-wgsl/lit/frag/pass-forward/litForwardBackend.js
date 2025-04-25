@@ -30,7 +30,7 @@ fn evaluateBackend() -> FragmentOutput {
         #endif
 
         #ifdef LIT_IRIDESCENCE
-            var iridescenceFresnel: vec3f = getIridescence(saturate3(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence_thickness);
+            var iridescenceFresnel: vec3f = getIridescenceDiffraction(saturate(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence_thickness);
         #endif
     #endif
 
@@ -218,7 +218,7 @@ fn evaluateBackend() -> FragmentOutput {
 
         #endif
 
-        litArgs_opacity = litArgs_opacity * material_alphaFade;
+        litArgs_opacity = litArgs_opacity * uniform.material_alphaFade;
 
     #endif
 
@@ -226,7 +226,7 @@ fn evaluateBackend() -> FragmentOutput {
     #include "outputAlphaPS"
 
     #ifdef LIT_MSDF
-        output.color = applyMsdf(gl_FragColor);
+        output.color = applyMsdf(output.color);
     #endif
 
     #include "outputPS"

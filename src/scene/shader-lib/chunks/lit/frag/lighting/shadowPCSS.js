@@ -61,7 +61,7 @@ float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMP
 }
 
 float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2 shadowSearchArea) {
-    float receiverDepth = linearizeDepth(shadowCoords.z, cameraParams);
+    float receiverDepth = linearizeDepthWithParams(shadowCoords.z, cameraParams);
 
     vec2 samplePoints[PCSS_SAMPLE_COUNT];
     const float PI = 3.141592653589793;

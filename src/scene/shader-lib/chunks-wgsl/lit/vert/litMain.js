@@ -9,6 +9,9 @@ export default /* wgsl */`
     varying vMask: vec2f;
     varying vTiledUv: vec2f;
 
+    var<private> dMaskGlobal: vec2f;
+    var<private> dTiledUvGlobal: vec2f;
+
     uniform innerOffset: vec4f;
     uniform outerScale: vec2f;
     uniform atlasRect: vec4f;
@@ -47,7 +50,6 @@ var<private> dModelMatrix: mat4x4f;
 
 #ifdef TANGENTS
     attribute vertex_tangent: vec4f;
-    #include "tangentBinormalVS"
 #endif
 
 // expand uniforms for uv transforms
@@ -68,8 +70,8 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
     #endif
 
     #ifdef TANGENTS
-        output.vTangentW = getTangent();
-        output.vBinormalW = getBinormal();
+        output.vTangentW = normalize(dNormalMatrix * vertex_tangent.xyz);
+        output.vBinormalW = cross(output.vNormalW, output.vTangentW) * vertex_tangent.w;
     #elif defined(GGX_SPECULAR)
         output.vObjectSpaceUpW = normalize(dNormalMatrix * vec3f(0.0, 1.0, 0.0));
     #endif
@@ -102,6 +104,16 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
 
     #ifdef MSDF
         unpackMsdfParams();
+
+        output.outline_color = dOutlineColor;
+        output.outline_thickness = dOutlineThickness;
+        output.shadow_color = dShadowColor;
+        output.shadow_offset = dShadowOffset;
+    #endif
+
+    #ifdef NINESLICED
+        output.vMask = dMaskGlobal;
+        output.vTiledUv = dTiledUvGlobal;
     #endif
 
     return output;

@@ -803,7 +803,7 @@ class Texture {
     /**
      * Sets the texture type.
      *
-     * @type {TEXTURETYPE_DEFAULT|TEXTURETYPE_RGBM|TEXTURETYPE_RGBE|TEXTURETYPE_RGBP}
+     * @type {string}
      * @ignore
      */
     set type(value) {
@@ -818,7 +818,7 @@ class Texture {
     /**
      * Gets the texture type.
      *
-     * @type {TEXTURETYPE_DEFAULT|TEXTURETYPE_RGBM|TEXTURETYPE_RGBE|TEXTURETYPE_RGBP}
+     * @type {string}
      * @ignore
      */
     get type() {

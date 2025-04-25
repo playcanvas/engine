@@ -37,7 +37,6 @@ import falloffLinearPS from './lit/frag/falloffLinear.js';
 import floatAsUintPS from './common/frag/float-as-uint.js';
 import fogPS from './common/frag/fog.js';
 import fresnelSchlickPS from './lit/frag/fresnelSchlick.js';
-import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
 import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gammaPS from './common/frag/gamma.js';
 import gles3PS from '../../../platform/graphics/shader-chunks/frag/gles3.js';
@@ -182,7 +181,6 @@ import startNineSlicedPS from './lit/frag/startNineSliced.js';
 import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
 import stdDeclarationPS from './standard/frag/stdDeclaration.js';
 import stdFrontEndPS from './standard/frag/stdFrontEnd.js';
-import tangentBinormalVS from './lit/vert/tangentBinormal.js';
 import TBNPS from './lit/frag/TBN.js';
 import thicknessPS from './standard/frag/thickness.js';
 import tonemappingPS from './common/frag/tonemapping/tonemapping.js';
@@ -252,7 +250,6 @@ const shaderChunks = {
     floatAsUintPS,
     fogPS,
     fresnelSchlickPS,
-    fullscreenQuadPS,
     fullscreenQuadVS,
     gammaPS,
     gles3PS,
@@ -398,7 +395,6 @@ const shaderChunks = {
     startNineSlicedTiledPS,
     stdDeclarationPS,
     stdFrontEndPS,
-    tangentBinormalVS,
     TBNPS,
     thicknessPS,
     tonemappingPS,

@@ -16,7 +16,7 @@ fn getSpecularity() {
     #endif
 
     #ifdef STD_SPECULAR_VERTEX
-    specularColor = specularColor * saturate(vVertexColor.{STD_SPECULAR_VERTEX_CHANNEL});
+    specularColor = specularColor * saturate3(vVertexColor.{STD_SPECULAR_VERTEX_CHANNEL});
     #endif
 
     dSpecularity = specularColor;

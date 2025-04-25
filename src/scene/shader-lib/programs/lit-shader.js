@@ -8,7 +8,7 @@ import {
 import {
     LIGHTSHAPE_PUNCTUAL,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADER_DEPTH, SHADER_PICK,
+    SHADER_PICK,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames, lightFalloffNames,
     cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
@@ -193,7 +193,8 @@ class LitShader {
 
             // only attach these if the default instancing chunk is used, otherwise it is expected
             // for the user to provide required attributes using material.setAttribute
-            if (this.chunks.transformInstancingVS === shaderChunks.transformInstancingVS) {
+            const languageChunks = this.shaderLanguage === SHADERLANGUAGE_GLSL ? shaderChunks : shaderChunksWGSL;
+            if (this.chunks.transformInstancingVS === languageChunks.transformInstancingVS) {
                 attributes.instance_line1 = SEMANTIC_ATTR12;
                 attributes.instance_line2 = SEMANTIC_ATTR13;
                 attributes.instance_line3 = SEMANTIC_ATTR14;
@@ -506,7 +507,7 @@ class LitShader {
     generateFragmentShader(frontendDecl, frontendCode, lightingUv) {
         const options = this.options;
 
-        if (options.pass === SHADER_PICK || options.pass === SHADER_DEPTH || options.pass === SHADER_PREPASS) {
+        if (options.pass === SHADER_PICK || options.pass === SHADER_PREPASS) {
 
             Debug.assert(this.varyingsCode !== undefined && frontendCode !== undefined && frontendDecl !== undefined);
             this.fshader = `
