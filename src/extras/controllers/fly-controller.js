@@ -27,26 +27,26 @@ const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class FlyController extends Controller {
     /**
-     * @private
      * @type {Vec3}
+     * @private
      */
     _targetPosition = new Vec3();
 
     /**
-     * @private
      * @type {Vec3}
+     * @private
      */
     _position = new Vec3();
 
     /**
-     * @private
      * @type {Vec3}
+     * @private
      */
     _targetAngles = new Vec3();
 
     /**
-     * @private
      * @type {Vec3}
+     * @private
      */
     _angles = new Vec3();
 

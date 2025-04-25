@@ -27,8 +27,8 @@ class GamepadInput extends Input {
     }
 
     /**
-     * @override
      * @returns {{ [K in keyof GamepadInput["deltas"]]: number[] }} - The deltas.
+     * @override
      */
     frame() {
         const gamepads = navigator.getGamepads();

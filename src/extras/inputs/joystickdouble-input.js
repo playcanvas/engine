@@ -48,8 +48,8 @@ class JoystickDoubleInput extends Input {
     }
 
     /**
-     * @private
      * @param {PointerEvent} event - The pointer event.
+     * @private
      */
     _onPointerDown(event) {
         this._element?.setPointerCapture(event.pointerId);
@@ -71,8 +71,8 @@ class JoystickDoubleInput extends Input {
     }
 
     /**
-     * @private
      * @param {PointerEvent} event - The pointer event.
+     * @private
      */
     _onPointerMove(event) {
         if (event.target !== this._element) {
@@ -95,8 +95,8 @@ class JoystickDoubleInput extends Input {
     }
 
     /**
-     * @private
      * @param {PointerEvent} event - The pointer event.
+     * @private
      */
     _onPointerUp(event) {
         this._element?.releasePointerCapture(event.pointerId);
@@ -144,8 +144,8 @@ class JoystickDoubleInput extends Input {
     }
 
     /**
-     * @override
      * @returns {{ [K in keyof JoystickDoubleInput["deltas"]]: number[] }} - The deltas.
+     * @override
      */
     frame() {
         this.deltas.leftStick.add([this._leftJoystick.value.x, this._leftJoystick.value.y]);

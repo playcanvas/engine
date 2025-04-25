@@ -42,32 +42,32 @@ class OrbitController extends Controller {
     _focusing = false;
 
     /**
-     * @private
      * @type {Vec3}
+     * @private
      */
     _targetPosition = new Vec3();
 
     /**
-     * @private
      * @type {Vec3}
+     * @private
      */
     _position = new Vec3();
 
     /**
-     * @private
      * @type {Vec3}
+     * @private
      */
     _targetAngles = new Vec3();
 
     /**
-     * @private
      * @type {Vec3}
+     * @private
      */
     _angles = new Vec3();
 
     /**
-     * @type {number}
      * @private
+     * @type {number}
      */
     _targetZoomDist = 0;
 

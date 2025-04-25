@@ -60,8 +60,8 @@ class JoystickTouchInput extends Input {
     }
 
     /**
-     * @private
      * @param {PointerEvent} event - The pointer event.
+     * @private
      */
     _onPointerMove(event) {
         if (event.pointerType !== 'touch') {
@@ -87,8 +87,8 @@ class JoystickTouchInput extends Input {
     }
 
     /**
-     * @private
      * @param {PointerEvent} event - The pointer event.
+     * @private
      */
     _onPointerUp(event) {
         if (event.pointerType !== 'touch') {
@@ -137,8 +137,8 @@ class JoystickTouchInput extends Input {
     }
 
     /**
-     * @override
      * @returns {{ [K in keyof JoystickTouchInput["deltas"]]: number[] }} - The deltas.
+     * @override
      */
     frame() {
         this.deltas.stick.add([this._joystick.value.x, this._joystick.value.y]);

@@ -117,8 +117,8 @@ class KeyboardMouseInput extends Input {
     }
 
     /**
-     * @private
      * @param {MouseEvent} event - The mouse event.
+     * @private
      */
     _onContextMenu(event) {
         event.preventDefault();
@@ -235,8 +235,8 @@ class KeyboardMouseInput extends Input {
     }
 
     /**
-     * @override
      * @returns {{ [K in keyof KeyboardMouseInput["deltas"]]: number[] }} - The deltas.
+     * @override
      */
     frame() {
         for (let i = 0; i < array9.length; i++) {
