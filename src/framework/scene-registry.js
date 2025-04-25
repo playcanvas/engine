@@ -9,42 +9,42 @@ import { SceneRegistryItem } from './scene-registry-item.js';
  */
 
 /**
- * Callback used by {@link SceneRegistry#loadSceneHierarchy}.
- *
  * @callback LoadHierarchyCallback
+ * Callback used by {@link SceneRegistry#loadSceneHierarchy}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
+ * @returns {void}
  */
 
 /**
- * Callback used by {@link SceneRegistry#loadSceneSettings}.
- *
  * @callback LoadSettingsCallback
+ * Callback used by {@link SceneRegistry#loadSceneSettings}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ * @returns {void}
  */
 
 /**
- * Callback used by {@link SceneRegistry#changeScene}.
- *
  * @callback ChangeSceneCallback
+ * Callback used by {@link SceneRegistry#changeScene}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
+ * @returns {void}
  */
 
 /**
- * Callback used by {@link SceneRegistry#loadScene}.
- *
  * @callback LoadSceneCallback
+ * Callback used by {@link SceneRegistry#loadScene}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
+ * @returns {void}
  */
 
 /**
- * Callback used by {@link SceneRegistry#loadSceneData}.
- *
  * @callback LoadSceneDataCallback
+ * Callback used by {@link SceneRegistry#loadSceneData}.
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  * @param {SceneRegistryItem} [sceneItem] - The scene registry item if no errors were encountered.
+ * @returns {void}
  */
 
 /**

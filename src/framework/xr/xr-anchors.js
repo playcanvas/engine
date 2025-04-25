@@ -10,11 +10,11 @@ import { XrAnchor } from './xr-anchor.js';
  */
 
 /**
- * Callback used by {@link XrAnchors#create}.
- *
  * @callback XrAnchorCreateCallback
+ * Callback used by {@link XrAnchors#create}.
  * @param {Error|null} err - The Error object if failed to create an anchor or null.
  * @param {XrAnchor|null} anchor - The anchor that is tracked against real world geometry.
+ * @returns {void}
  */
 
 /**

@@ -4,9 +4,9 @@ import { EventHandler } from '../../core/event-handler.js';
 import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 
 /**
- * Callback used by {@link Mouse#enablePointerLock} and {@link Application#disablePointerLock}.
- *
  * @callback LockMouseCallback
+ * Callback used by {@link Mouse#enablePointerLock} and {@link Mouse#disablePointerLock}.
+ * @returns {void}
  */
 
 /**
