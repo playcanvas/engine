@@ -30,7 +30,7 @@ fn evaluateBackend() -> FragmentOutput {
         #endif
 
         #ifdef LIT_IRIDESCENCE
-            var iridescenceFresnel: vec3f = getIridescence(saturate3(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence_thickness);
+            var iridescenceFresnel: vec3f = getIridescenceDiffraction(saturate(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence_thickness);
         #endif
     #endif
 
