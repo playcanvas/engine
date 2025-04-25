@@ -9,6 +9,9 @@ export default /* wgsl */`
     varying vMask: vec2f;
     varying vTiledUv: vec2f;
 
+    var<private> dMaskGlobal: vec2f;
+    var<private> dTiledUvGlobal: vec2f;
+
     uniform innerOffset: vec4f;
     uniform outerScale: vec2f;
     uniform atlasRect: vec4f;
@@ -102,6 +105,16 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
 
     #ifdef MSDF
         unpackMsdfParams();
+
+        output.outline_color = dOutlineColor;
+        output.outline_thickness = dOutlineThickness;
+        output.shadow_color = dShadowColor;
+        output.shadow_offset = dShadowOffset;
+    #endif
+
+    #ifdef NINESLICED
+        output.vMask = dMaskGlobal;
+        output.vTiledUv = dTiledUvGlobal;
     #endif
 
     return output;

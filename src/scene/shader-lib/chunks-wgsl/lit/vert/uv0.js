@@ -12,7 +12,7 @@ export default /* wgsl */`
         uv = uv * -0.5 + vec2f(0.5, 0.5);
         uv = uv * uniform.atlasRect.zw + uniform.atlasRect.xy;
 
-        vMask = vertex_texCoord0.xy;
+        dMaskGlobal = vertex_texCoord0.xy;
 
         return uv;
     }

@@ -4,8 +4,8 @@ import aoPS from './standard/frag/ao.js';
 import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
 import basePS from './lit/frag/base.js';
-// import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
-// import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
+import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
+import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
 import bayerPS from './common/frag/bayer.js';
 import blurVSMPS from './lit/frag/blurVSM.js';
 import clearCoatPS from './standard/frag/clearCoat.js';
@@ -83,11 +83,11 @@ import litShaderCorePS from './standard/frag/litShaderCore.js';
 import litShadowMainPS from './lit/frag/pass-shadow/litShadowMain.js';
 // import ltcPS from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
-// import msdfPS from './common/frag/msdf.js';
+import msdfPS from './common/frag/msdf.js';
 import metalnessModulatePS from './lit/frag/metalnessModulate.js';
 import morphPS from './internal/morph/frag/morph.js';
 import morphVS from './internal/morph/vert/morph.js';
-// import msdfVS from './common/vert/msdf.js';
+import msdfVS from './common/vert/msdf.js';
 import normalVS from './lit/vert/normal.js';
 import normalCoreVS from './common/vert/normalCore.js';
 import normalMapPS from './standard/frag/normalMap.js';
@@ -172,8 +172,8 @@ import specularPS from './standard/frag/specular.js';
 import sphericalPS from './common/frag/spherical.js';
 import specularityFactorPS from './standard/frag/specularityFactor.js';
 import spotPS from './lit/frag/spot.js';
-// import startNineSlicedPS from './lit/frag/startNineSliced.js';
-// import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
+import startNineSlicedPS from './lit/frag/startNineSliced.js';
+import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
 import stdDeclarationPS from './standard/frag/stdDeclaration.js';
 import stdFrontEndPS from './standard/frag/stdFrontEnd.js';
 // import tangentBinormalVS from './lit/vert/tangentBinormal.js';
@@ -213,8 +213,8 @@ const shaderChunksWGSL = {
     aoDiffuseOccPS,
     aoSpecOccPS,
     basePS,
-    // baseNineSlicedPS,
-    // baseNineSlicedTiledPS,
+    baseNineSlicedPS,
+    baseNineSlicedTiledPS,
     bayerPS,
     blurVSMPS,
     clearCoatPS,
@@ -296,8 +296,8 @@ const shaderChunksWGSL = {
     metalnessModulatePS,
     morphPS,
     morphVS,
-    // msdfPS,
-    // msdfVS,
+    msdfPS,
+    msdfVS,
     normalVS,
     normalCoreVS,
     normalMapPS,
@@ -382,8 +382,8 @@ const shaderChunksWGSL = {
     sphericalPS,
     specularityFactorPS,
     spotPS,
-    // startNineSlicedPS,
-    // startNineSlicedTiledPS,
+    startNineSlicedPS,
+    startNineSlicedTiledPS,
     stdDeclarationPS,
     stdFrontEndPS,
     // tangentBinormalVS,
