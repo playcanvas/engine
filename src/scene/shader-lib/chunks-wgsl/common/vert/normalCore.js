@@ -4,11 +4,11 @@ attribute vertex_normal: vec3f;
 
 #ifdef MORPHING_NORMAL
     #ifdef MORPHING_INT
-        uniform morphNormalTex: texture_2d<u32>;
-        uniform morphNormalTexSampler: sampler;
+        var morphNormalTex: texture_2d<u32>;
+        var morphNormalTexSampler: sampler;
     #else
-        uniform morphNormalTex: texture_2d<f32>;
-        uniform morphNormalTexSampler: sampler;
+        var morphNormalTex: texture_2d<f32>;
+        var morphNormalTexSampler: sampler;
     #endif
 #endif
 

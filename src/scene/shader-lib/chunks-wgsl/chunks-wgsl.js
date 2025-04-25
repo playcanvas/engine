@@ -67,7 +67,7 @@ import lightFunctionShadowPS from './lit/frag/lighting/lightFunctionShadow.js';
 import lightingPS from './lit/frag/lighting/lighting.js';
 // import lightmapAddPS from './lit/frag/lightmapAdd.js';
 // import lightmapPS from './standard/frag/lightmap.js';
-// import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
+import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 import lightSheenPS from './lit/frag/lightSheen.js';
 import linearizeDepthPS from './common/frag/linearizeDepth.js';
@@ -176,7 +176,6 @@ import startNineSlicedPS from './lit/frag/startNineSliced.js';
 import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
 import stdDeclarationPS from './standard/frag/stdDeclaration.js';
 import stdFrontEndPS from './standard/frag/stdFrontEnd.js';
-// import tangentBinormalVS from './lit/vert/tangentBinormal.js';
 import TBNPS from './lit/frag/TBN.js';
 import thicknessPS from './standard/frag/thickness.js';
 import tonemappingPS from './common/frag/tonemapping/tonemapping.js';
@@ -191,7 +190,7 @@ import transformVS from './common/vert/transform.js';
 import transformCoreVS from './common/vert/transformCore.js';
 import transformInstancingVS from './common/vert/transformInstancing.js';
 import transmissionPS from './standard/frag/transmission.js';
-// import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
+import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
 import uvTransformVS from './lit/vert/uvTransform.js';
@@ -277,7 +276,7 @@ const shaderChunksWGSL = {
     lightingPS,
     // lightmapAddPS,
     // lightmapPS,
-    // lightSpecularAnisoGGXPS,
+    lightSpecularAnisoGGXPS,
     lightSpecularBlinnPS,
     lightSheenPS,
     linearizeDepthPS,
@@ -386,7 +385,6 @@ const shaderChunksWGSL = {
     startNineSlicedTiledPS,
     stdDeclarationPS,
     stdFrontEndPS,
-    // tangentBinormalVS,
     TBNPS,
     thicknessPS,
     tonemappingPS,
@@ -401,7 +399,7 @@ const shaderChunksWGSL = {
     transformCoreVS,
     transformInstancingVS,
     transmissionPS,
-    // twoSidedLightingPS,
+    twoSidedLightingPS,
     uv0VS,
     uv1VS,
     uvTransformVS,

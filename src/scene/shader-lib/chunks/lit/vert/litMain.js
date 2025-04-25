@@ -47,7 +47,6 @@ mat4 dModelMatrix;
 
 #ifdef TANGENTS
     attribute vec4 vertex_tangent;
-    #include "tangentBinormalVS"
 #endif
 
 // expand uniforms for uv transforms
@@ -66,8 +65,8 @@ void main(void) {
     #endif
 
     #ifdef TANGENTS
-        vTangentW = getTangent();
-        vBinormalW = getBinormal();
+        vTangentW = normalize(dNormalMatrix * vertex_tangent.xyz);
+        vBinormalW = cross(vNormalW, vTangentW) * vertex_tangent.w;
     #elif defined(GGX_SPECULAR)
         vObjectSpaceUpW = normalize(dNormalMatrix * vec3(0, 1, 0));
     #endif
