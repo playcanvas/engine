@@ -1,6 +1,7 @@
 import {
     CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_60, CHUNKAPI_1_62, CHUNKAPI_1_65,
-    CHUNKAPI_1_70, CHUNKAPI_2_1, CHUNKAPI_2_3, CHUNKAPI_2_5, CHUNKAPI_2_6, CHUNKAPI_2_7
+    CHUNKAPI_1_70, CHUNKAPI_2_1, CHUNKAPI_2_3, CHUNKAPI_2_5, CHUNKAPI_2_6, CHUNKAPI_2_7,
+    CHUNKAPI_2_8
 } from '../../../platform/graphics/constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
@@ -129,7 +130,8 @@ const removedChunks = {
     normalXYZPS: CHUNKAPI_2_7,
     aoDetailMapPS: CHUNKAPI_2_7,
     lightmapDirPS: CHUNKAPI_2_7,
-    lightmapSinglePS: CHUNKAPI_2_7
+    lightmapSinglePS: CHUNKAPI_2_7,
+    tangentBinormalVS: CHUNKAPI_2_8
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.

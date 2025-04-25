@@ -218,7 +218,7 @@ fn evaluateBackend() -> FragmentOutput {
 
         #endif
 
-        litArgs_opacity = litArgs_opacity * material_alphaFade;
+        litArgs_opacity = litArgs_opacity * uniform.material_alphaFade;
 
     #endif
 
