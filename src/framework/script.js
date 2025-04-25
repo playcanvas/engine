@@ -5,19 +5,10 @@ import { getApplication } from './globals.js';
  */
 
 /**
- * Callback used by {@link script.createLoadingScreen}.
- *
  * @callback CreateScreenCallback
+ * Callback used by {@link script.createLoadingScreen}.
  * @param {AppBase} app - The application.
- */
-
-/**
- * Callback used by {@link script.create}.
- *
- * @callback CreateScriptCallback
- * @param {AppBase} app - The application.
- * @returns {object} Return the Type of the script resource to be instanced for each Entity.
- * @ignore
+ * @returns {void}
  */
 
 // flag to avoid creating multiple loading screens e.g. when

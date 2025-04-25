@@ -6,34 +6,32 @@ import { standardMaterialTextureParameters } from '../../scene/materials/standar
 import { Asset } from './asset.js';
 
 /**
- * @import { Bundle } from '../bundle/bundle.js'
  * @import { BundleRegistry } from '../bundle/bundle-registry.js'
  * @import { ResourceLoader } from '../handlers/loader.js'
  */
 
 /**
- * Callback used by {@link AssetRegistry#filter} to filter assets.
- *
  * @callback FilterAssetCallback
+ * Callback used by {@link AssetRegistry#filter} to filter assets.
  * @param {Asset} asset - The current asset to filter.
  * @returns {boolean} Return `true` to include asset to result list.
  */
 
 /**
+ * @callback LoadAssetCallback
  * Callback used by {@link AssetRegistry#loadFromUrl} and called when an asset is loaded (or an
  * error occurs).
- *
- * @callback LoadAssetCallback
  * @param {string|null} err - The error message is null if no errors were encountered.
  * @param {Asset} [asset] - The loaded asset if no errors were encountered.
+ * @returns {void}
  */
 
 /**
+ * @callback BundlesFilterCallback
  * Callback used by {@link ResourceLoader#load} and called when an asset is choosing a bundle
  * to load from. Return a single bundle to ensure asset is loaded from it.
- *
- * @callback BundlesFilterCallback
- * @param {Bundle[]} bundles - List of bundles which contain the asset.
+ * @param {Asset[]} bundles - List of bundle assets which contain the asset.
+ * @returns {Asset} Return a single bundle asset to ensure asset is loaded from it.
  */
 
 /**

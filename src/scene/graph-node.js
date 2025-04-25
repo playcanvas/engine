@@ -69,21 +69,20 @@ function findNode(node, test) {
 }
 
 /**
+ * @callback FindNodeCallback
  * Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph
  * node and all of its descendants.
- *
- * @callback FindNodeCallback
  * @param {GraphNode} node - The current graph node.
  * @returns {boolean} Returning `true` will result in that node being returned from
  * {@link GraphNode#find} or {@link GraphNode#findOne}.
  */
 
 /**
+ * @callback ForEachNodeCallback
  * Callback used by {@link GraphNode#forEach} to iterate through a graph node and all of its
  * descendants.
- *
- * @callback ForEachNodeCallback
  * @param {GraphNode} node - The current graph node.
+ * @returns {void}
  */
 
 /**

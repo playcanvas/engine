@@ -26,10 +26,10 @@ const VARIANT_SUPPORT = {
 const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
 /**
- * Callback used by {@link Asset#ready} and called when an asset is ready.
- *
  * @callback AssetReadyCallback
+ * Callback used by {@link Asset#ready} and called when an asset is ready.
  * @param {Asset} asset - The ready asset.
+ * @returns {void}
  */
 
 /**
