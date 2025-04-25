@@ -146,10 +146,10 @@ import pickPS from './common/frag/pick.js';
 import reflDirPS from './lit/frag/reflDir.js';
 import reflDirAnisoPS from './lit/frag/reflDirAniso.js';
 import reflectionCCPS from './lit/frag/reflectionCC.js';
-// import reflectionCubePS from './lit/frag/reflectionCube.js';
-// import reflectionEnvHQPS from './lit/frag/reflectionEnvHQ.js';
+import reflectionCubePS from './lit/frag/reflectionCube.js';
+import reflectionEnvHQPS from './lit/frag/reflectionEnvHQ.js';
 import reflectionEnvPS from './lit/frag/reflectionEnv.js';
-// import reflectionSpherePS from './lit/frag/reflectionSphere.js';
+import reflectionSpherePS from './lit/frag/reflectionSphere.js';
 import reflectionSheenPS from './lit/frag/reflectionSheen.js';
 import refractionCubePS from './lit/frag/refractionCube.js';
 import refractionDynamicPS from './lit/frag/refractionDynamic.js';
@@ -356,10 +356,10 @@ const shaderChunksWGSL = {
     reflDirPS,
     reflDirAnisoPS,
     reflectionCCPS,
-    // reflectionCubePS,
-    // reflectionEnvHQPS,
+    reflectionCubePS,
+    reflectionEnvHQPS,
     reflectionEnvPS,
-    // reflectionSpherePS,
+    reflectionSpherePS,
     reflectionSheenPS,
     refractionCubePS,
     refractionDynamicPS,
