@@ -226,7 +226,7 @@ fn evaluateBackend() -> FragmentOutput {
     #include "outputAlphaPS"
 
     #ifdef LIT_MSDF
-        output.color = applyMsdf(gl_FragColor);
+        output.color = applyMsdf(output.color);
     #endif
 
     #include "outputPS"
