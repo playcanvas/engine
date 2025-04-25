@@ -95,7 +95,7 @@ import opacityPS from './standard/frag/opacity.js';
 import opacityDitherPS from './standard/frag/opacity-dither.js';
 import outputPS from './lit/frag/output.js';
 import outputAlphaPS from './lit/frag/outputAlpha.js';
-// import outputTex2DPS from './common/frag/outputTex2D.js';
+import outputTex2DPS from './common/frag/outputTex2D.js';
 import sheenPS from './standard/frag/sheen.js';
 import sheenGlossPS from './standard/frag/sheenGloss.js';
 import parallaxPS from './standard/frag/parallax.js';
@@ -304,7 +304,7 @@ const shaderChunksWGSL = {
     opacityDitherPS,
     outputPS,
     outputAlphaPS,
-    // outputTex2DPS,
+    outputTex2DPS,
     sheenPS,
     sheenGlossPS,
     parallaxPS,

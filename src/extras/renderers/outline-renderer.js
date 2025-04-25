@@ -4,7 +4,10 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_SRC_ALPHA,
     CULLFACE_NONE,
-    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8,
+    SEMANTIC_POSITION,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
 } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -13,6 +16,7 @@ import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
 import { StandardMaterialOptions } from '../../scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
+import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
@@ -114,7 +118,12 @@ class OutlineRenderer {
 
         const device = this.app.graphicsDevice;
         this.shaderExtend = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderOutlineExtendPS, 'OutlineExtendShader');
-        this.shaderBlend = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.outputTex2DPS, 'OutlineBlendShader');
+
+        this.shaderBlend = device.isWebGPU ?
+            createShaderFromCode(device, shaderChunksWGSL.fullscreenQuadVS, shaderChunksWGSL.outputTex2DPS, 'OutlineBlendShader',
+                { vertex_position: SEMANTIC_POSITION }, { shaderLanguage: SHADERLANGUAGE_WGSL }) :
+            createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.outputTex2DPS, 'OutlineBlendShader',
+                { vertex_position: SEMANTIC_POSITION }, { shaderLanguage: SHADERLANGUAGE_GLSL });
 
         this.quadRenderer = new QuadRender(this.shaderBlend);
 
