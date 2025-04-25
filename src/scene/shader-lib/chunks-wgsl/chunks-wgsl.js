@@ -54,7 +54,7 @@ import glossPS from './standard/frag/gloss.js';
 // import gsplatVS from './gsplat/vert/gsplat.js';
 import immediateLinePS from './internal/frag/immediateLine.js';
 import immediateLineVS from './internal/vert/immediateLine.js';
-// import iridescenceDiffractionPS from './lit/frag/iridescenceDiffraction.js';
+import iridescenceDiffractionPS from './lit/frag/iridescenceDiffraction.js';
 import iridescencePS from './standard/frag/iridescence.js';
 import iridescenceThicknessPS from './standard/frag/iridescenceThickness.js';
 import iorPS from './standard/frag/ior.js';
@@ -262,7 +262,7 @@ const shaderChunksWGSL = {
     // gsplatVS,
     immediateLinePS,
     immediateLineVS,
-    // iridescenceDiffractionPS,
+    iridescenceDiffractionPS,
     iridescencePS,
     iridescenceThicknessPS,
     iorPS,
