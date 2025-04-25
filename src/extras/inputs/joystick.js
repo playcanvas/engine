@@ -6,20 +6,17 @@ const tmpVa = new Vec2();
 
 class Joystick extends EventHandler {
     /**
-     * @type {string}
-     * @static
+     * @event
      */
     static EVENT_POSITIONBASE = 'position:base';
 
     /**
-     * @type {string}
-     * @static
+     * @event
      */
     static EVENT_POSITIONSTICK = 'position:stick';
 
     /**
-     * @type {string}
-     * @static
+     * @event
      */
     static EVENT_RESET = 'reset';
 
