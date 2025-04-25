@@ -1,14 +1,4 @@
 /**
- * Callback function that the {@link AnimEvaluator} uses to set final animation values. These
- * callbacks are stored in {@link AnimTarget} instances which are constructed by an
- * {@link AnimBinder}.
- *
- * @callback AnimSetter
- * @param {number[]} value - Updated animation value.
- * @ignore
- */
-
-/**
  * Stores the information required by {@link AnimEvaluator} for updating a target value.
  *
  * @ignore
@@ -17,7 +7,7 @@ class AnimTarget {
     /**
      * Create a new AnimTarget instance.
      *
-     * @param {AnimSetter} func - This function will be called when a new animation value is output
+     * @param {(value: number[]) => void} func - This function will be called when a new animation value is output
      * by the {@link AnimEvaluator}.
      * @param {'vector'|'quaternion'} type - The type of animation data this target expects.
      * @param {number} components - The number of components on this target (this should ideally

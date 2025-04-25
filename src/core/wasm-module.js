@@ -110,17 +110,17 @@ class Impl {
 }
 
 /**
- * Callback used by {@link Module#setConfig}.
- *
  * @callback ModuleErrorCallback
+ * Callback used by {@link WasmModule.setConfig}.
  * @param {string} error - If the instance fails to load this will contain a description of the error.
+ * @returns {void}
  */
 
 /**
- * Callback used by {@link Module#getInstance}.
- *
  * @callback ModuleInstanceCallback
+ * Callback used by {@link WasmModule.getInstance}.
  * @param {any} moduleInstance - The module instance.
+ * @returns {void}
  */
 
 /**
