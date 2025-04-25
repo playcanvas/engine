@@ -16,7 +16,11 @@ bool initCenter(vec3 modelCenter, out SplatCenter center) {
     vec4 centerProj = matrix_projection * centerView;
 
     // ensure gaussians are not clipped by camera near and far
+#if WEBGPU
+    centerProj.z = clamp(centerProj.z, 0, abs(centerProj.w));
+#else
     centerProj.z = clamp(centerProj.z, -abs(centerProj.w), abs(centerProj.w));
+#endif
 
     center.view = centerView.xyz / centerView.w;
     center.proj = centerProj;
