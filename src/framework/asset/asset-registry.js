@@ -364,8 +364,8 @@ class AssetRegistry extends EventHandler {
      * is already loaded is bypassed, which forces loading of asset regardless.
      * @param {BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
      * when loading an asset that is contained in any of the bundles. It provides an array of
-     * bundles and will ensure asset is loaded from bundle returned from a callback. By default
-     * smallest filesize bundle is chosen.
+     * bundles and will ensure asset is loaded from bundle returned from a callback. By default,
+     * the smallest filesize bundle is chosen.
      * @example
      * // load some assets
      * const assetsToLoad = [
