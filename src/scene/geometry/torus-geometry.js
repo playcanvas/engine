@@ -5,11 +5,13 @@ import { Geometry } from './geometry.js';
 /**
  * A procedural torus-shaped geometry.
  *
- * The size, shape and tesselation properties of the torus can be controlled via constructor
- * parameters. By default, the function will create a torus in the XZ-plane with a tube radius of
- * 0.2, a ring radius of 0.3, 30 segments and 20 sides.
+ * Typically, you would:
  *
- * Note that the torus is created with UVs in the range of 0 to 1.
+ * 1. Create a TorusGeometry instance.
+ * 2. Generate a {@link Mesh} from the geometry.
+ * 3. Create a {@link MeshInstance} referencing the mesh.
+ * 4. Create an {@link Entity} with a {@link RenderComponent} and assign the {@link MeshInstance} to it.
+ * 5. Add the entity to the {@link Scene}.
  *
  * ```javascript
  * // Create a mesh instance
@@ -33,6 +35,9 @@ import { Geometry } from './geometry.js';
 class TorusGeometry extends Geometry {
     /**
      * Create a new TorusGeometry instance.
+     *
+     * By default, the constructor creates a torus in the XZ-plane with a tube radius of 0.2, a ring
+     * radius of 0.3, 30 segments and 20 sides. The torus is created with UVs in the range of 0 to 1.
      *
      * @param {object} [opts] - Options object.
      * @param {number} [opts.tubeRadius] - The radius of the tube forming the body of the torus.

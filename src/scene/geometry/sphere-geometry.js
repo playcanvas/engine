@@ -4,11 +4,13 @@ import { Geometry } from './geometry.js';
 /**
  * A procedural sphere-shaped geometry.
  *
- * The size and tesselation properties of the sphere can be controlled via constructor parameters. By
- * default, the function will create a sphere centered on the object space origin with a radius of
- * 0.5 and 16 segments in both longitude and latitude.
+ * Typically, you would:
  *
- * Note that the sphere is created with UVs in the range of 0 to 1.
+ * 1. Create a SphereGeometry instance.
+ * 2. Generate a {@link Mesh} from the geometry.
+ * 3. Create a {@link MeshInstance} referencing the mesh.
+ * 4. Create an {@link Entity} with a {@link RenderComponent} and assign the {@link MeshInstance} to it.
+ * 5. Add the entity to the {@link Scene}.
  *
  * ```javascript
  * // Create a mesh instance
@@ -32,6 +34,10 @@ import { Geometry } from './geometry.js';
 class SphereGeometry extends Geometry {
     /**
      * Create a new SphereGeometry instance.
+     *
+     * By default, the constructor creates a sphere centered on the object space origin with a radius
+     * of 0.5 and 16 segments in both longitude and latitude. The sphere is created with UVs in the
+     * range of 0 to 1.
      *
      * @param {object} [opts] - Options object.
      * @param {number} [opts.radius] - The radius of the sphere. Defaults to 0.5.
