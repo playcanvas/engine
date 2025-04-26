@@ -10,19 +10,42 @@ import { Geometry } from './geometry.js';
  *
  * Note that the sphere is created with UVs in the range of 0 to 1.
  *
+ * ```javascript
+ * // Create a mesh instance
+ * const geometry = new pc.SphereGeometry();
+ * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new pc.StandardMaterial();
+ * const meshInstance = new pc.MeshInstance(mesh, material);
+ *
+ * // Create an entity
+ * const entity = new pc.Entity();
+ * entity.addComponent('render', {
+ *     meshInstances: [meshInstance]
+ * });
+ *
+ * // Add the entity to the scene hierarchy
+ * app.scene.root.addChild(entity);
+ * ```
+ *
  * @category Graphics
  */
 class SphereGeometry extends Geometry {
     /**
      * Create a new SphereGeometry instance.
      *
-     * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
-     * @param {number} [opts.radius] - The radius of the sphere (defaults to 0.5).
-     * @param {number} [opts.latitudeBands] - The number of divisions along the latitudinal axis of the
-     * sphere (defaults to 16).
+     * @param {object} [opts] - Options object. 
+     * @param {number} [opts.radius] - The radius of the sphere. Defaults to 0.5.
+     * @param {number} [opts.latitudeBands] - The number of divisions along the latitudinal axis of
+     * the sphere. Defaults to 16.
      * @param {number} [opts.longitudeBands] - The number of divisions along the longitudinal axis of
-     * the sphere (defaults to 16).
-     * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+     * the sphere. Defaults to 16.
+     * @param {boolean} [opts.calculateTangents] - Generate tangent information. Defaults to false.
+     * @example
+     * const geometry = new pc.SphereGeometry({
+     *     radius: 1,
+     *     latitudeBands: 32,
+     *     longitudeBands: 32
+     * });
      */
     constructor(opts = {}) {
         super();
