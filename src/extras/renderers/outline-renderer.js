@@ -4,7 +4,10 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_SRC_ALPHA,
     CULLFACE_NONE,
-    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8,
+    SEMANTIC_POSITION,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
 } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -13,6 +16,7 @@ import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
 import { StandardMaterialOptions } from '../../scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
+import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
@@ -97,11 +101,12 @@ class OutlineRenderer {
         this.outlineShaderPass = this.outlineCameraEntity.camera.setShaderPass('OutlineShaderPass');
 
         // function called after the camera has rendered the outline objects to the texture
-        app.scene.on('postrender', (cameraComponent) => {
+        this.postRender = (cameraComponent) => {
             if (this.outlineCameraEntity.camera === cameraComponent) {
                 this.onPostRender();
             }
-        });
+        };
+        app.scene.on('postrender', this.postRender);
 
         // add the camera to the scene
         this.app.root.addChild(this.outlineCameraEntity);
@@ -113,7 +118,12 @@ class OutlineRenderer {
 
         const device = this.app.graphicsDevice;
         this.shaderExtend = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderOutlineExtendPS, 'OutlineExtendShader');
-        this.shaderBlend = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.outputTex2DPS, 'OutlineBlendShader');
+
+        this.shaderBlend = device.isWebGPU ?
+            createShaderFromCode(device, shaderChunksWGSL.fullscreenQuadVS, shaderChunksWGSL.outputTex2DPS, 'OutlineBlendShader',
+                { vertex_position: SEMANTIC_POSITION }, { shaderLanguage: SHADERLANGUAGE_WGSL }) :
+            createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.outputTex2DPS, 'OutlineBlendShader',
+                { vertex_position: SEMANTIC_POSITION }, { shaderLanguage: SHADERLANGUAGE_GLSL });
 
         this.quadRenderer = new QuadRender(this.shaderBlend);
 
@@ -148,6 +158,8 @@ class OutlineRenderer {
         this.tempRt.destroy();
         this.tempRt = null;
 
+        this.app.scene.off('postrender', this.postRender);
+
         this.quadRenderer?.destroy();
         this.quadRenderer = null;
     }
@@ -157,14 +169,14 @@ class OutlineRenderer {
 
         const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
         renders.forEach((render) => {
-            if (render.entity.enabled && render.enabled) {
+            if (render.meshInstances) {
                 meshInstances.push(...render.meshInstances);
             }
         });
 
         const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
         models.forEach((model) => {
-            if (model.entity.enabled && model.enabled) {
+            if (model.meshInstances) {
                 meshInstances.push(...model.meshInstances);
             }
         });

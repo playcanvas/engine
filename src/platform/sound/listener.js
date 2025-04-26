@@ -7,6 +7,8 @@ import { Vec3 } from '../../core/math/vec3.js';
 
 /**
  * Represents an audio listener - used internally.
+ *
+ * @ignore
  */
 class Listener {
     /**

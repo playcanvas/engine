@@ -176,11 +176,16 @@ class GSplatData {
                 continue;
             }
 
-            const scaleVal = 2.0 * Math.exp(Math.max(sx[i], sy[i], sz[i]));
-
             const px = x[i];
             const py = y[i];
             const pz = z[i];
+            const scale = Math.max(sx[i], sy[i], sz[i]);
+
+            if (!isFinite(px) || !isFinite(py) || !isFinite(pz) || !isFinite(scale)) {
+                continue;
+            }
+
+            const scaleVal = 2.0 * Math.exp(scale);
 
             if (first) {
                 first = false;
@@ -261,7 +266,7 @@ class GSplatData {
 
     /**
      * @param {Vec3} result - The result.
-     * @param {Function} pred - Predicate given index for skipping.
+     * @param {Function} [pred] - Predicate given index for skipping.
      */
     calcFocalPoint(result, pred) {
         const x = this.getProp('x');
@@ -281,10 +286,18 @@ class GSplatData {
                 continue;
             }
 
+            const px = x[i];
+            const py = y[i];
+            const pz = z[i];
+
+            if (!isFinite(px) || !isFinite(py) || !isFinite(pz)) {
+                continue;
+            }
+
             const weight = 1.0 / (1.0 + Math.exp(Math.max(sx[i], sy[i], sz[i])));
-            result.x += x[i] * weight;
-            result.y += y[i] * weight;
-            result.z += z[i] * weight;
+            result.x += px * weight;
+            result.y += py * weight;
+            result.z += pz * weight;
             sum += weight;
         }
         result.mulScalar(1 / sum);

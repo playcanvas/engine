@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 #if (TONEMAP == NONE)
     #include "tonemappingNonePS"
 #elif TONEMAP == FILMIC

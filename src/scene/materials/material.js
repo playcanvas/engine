@@ -62,8 +62,9 @@ let id = 0;
  */
 
 /**
- * A material determines how a particular mesh instance is rendered. It specifies the shader and
- * render state that is set before the mesh instance is submitted to the graphics device.
+ * A material determines how a particular {@link MeshInstance} is rendered. It specifies the
+ * {@link Shader} and render state that is set before the mesh instance is submitted to the
+ * {@link GraphicsDevice}.
  *
  * @category Graphics
  */

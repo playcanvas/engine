@@ -15,28 +15,44 @@ import { properties } from './data.js';
  */
 
 /**
- * The Light Component enables the Entity to light the scene. There are three types of light:
- * directional, omni and spot. Directional lights are global in that they are considered to be
- * infinitely far away and light the entire scene. Omni and spot lights are local in that they have
- * a position and a range. A spot light is a specialization of an omni light where light is emitted
- * in a cone rather than in all directions. Lights also have the ability to cast shadows to add
- * realism to your scenes.
+ * The LightComponent enables an {@link Entity} to light the scene. There are three types of light:
+ *
+ * - `directional`: A global light that emits light in the direction of the negative y-axis of the
+ * owner entity. Emulates light sources that appear to be infinitely far away such as the sun. The
+ * owner entity's position is effectively ignored.
+ * - `omni`: A local light that emits light in all directions from the owner entity's position.
+ * Emulates candles, lamps, bulbs, etc.
+ * - `spot`: A local light that emits light similarly to an omni light but is bounded by a cone
+ * centered on the owner entity's negative y-axis. Emulates flashlights, spotlights, etc.
+ *
+ * You should never need to use the LightComponent constructor directly. To add an LightComponent
+ * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * // Add a pc.LightComponent to an entity
  * const entity = new pc.Entity();
  * entity.addComponent('light', {
- *     type: "omni",
+ *     type: 'omni',
  *     color: new pc.Color(1, 0, 0),
- *     range: 10
+ *     intensity: 2
  * });
- *
- * // Get the pc.LightComponent on an entity
- * const lightComponent = entity.light;
- *
- * // Update a property on a light component
- * entity.light.range = 20;
  * ```
+ *
+ * Once the LightComponent is added to the entity, you can access it via the `light` property:
+ *
+ * ```javascript
+ * entity.light.intensity = 3; // Set the intensity of the light
+ *
+ * console.log(entity.light.intensity); // Get the intensity of the light
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Area Lights](https://playcanvas.github.io/#/graphics/area-lights)
+ * - [Clustered Area Lights](https://playcanvas.github.io/#/graphics/clustered-area-lights)
+ * - [Clustered Lighting](https://playcanvas.github.io/#/graphics/clustered-lighting)
+ * - [Clustered Onmi Shadows](https://playcanvas.github.io/#/graphics/clustered-omni-shadows)
+ * - [Clustered Spot Shadows](https://playcanvas.github.io/#/graphics/clustered-spot-shadows)
+ * - [Lights](https://playcanvas.github.io/#/graphics/lights)
  *
  * @hideconstructor
  * @category Graphics

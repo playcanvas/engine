@@ -53,9 +53,8 @@ assetListLoader.load(() => {
 
     const material = new pc.ShaderMaterial({
         uniqueName: 'MyWGSLShader',
-        vertexCode: files['shader.vert.wgsl'],
-        fragmentCode: files['shader.frag.wgsl'],
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+        vertexWGSL: files['shader.vert.wgsl'],
+        fragmentWGSL: files['shader.frag.wgsl'],
         attributes: {
             position: pc.SEMANTIC_POSITION,
             texCoords: pc.SEMANTIC_TEXCOORD0

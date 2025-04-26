@@ -10,6 +10,8 @@ import { getMultisampledTextureCache } from '../multi-sampled-texture-cache.js';
 
 /**
  * A private class representing a pair of framebuffers, when MSAA is used.
+ *
+ * @ignore
  */
 class FramebufferPair {
     /**
@@ -53,6 +55,8 @@ class FramebufferPair {
 
 /**
  * A WebGL implementation of the RenderTarget.
+ *
+ * @ignore
  */
 class WebglRenderTarget {
     _glFrameBuffer = null;
@@ -150,6 +154,12 @@ class WebglRenderTarget {
 
         } else {
 
+            Debug.call(() => {
+                if (target.width <= 0 || target.height <= 0) {
+                    Debug.warnOnce(`Invalid render target size: ${target.width} x ${target.height}`, target);
+                }
+            });
+
             // ##### Create main FBO #####
             this._glFrameBuffer = gl.createFramebuffer();
             device.setFramebuffer(this._glFrameBuffer);
@@ -223,12 +233,6 @@ class WebglRenderTarget {
 
         // ##### Create MSAA FBO #####
         if (target._samples > 1) {
-
-            Debug.call(() => {
-                if (target.width <= 0 || target.height <= 0) {
-                    Debug.warnOnce(`Invalid render target size: ${target.width} x ${target.height}`, target);
-                }
-            });
 
             // Use previous FBO for resolves
             this._glResolveFrameBuffer = this._glFrameBuffer;

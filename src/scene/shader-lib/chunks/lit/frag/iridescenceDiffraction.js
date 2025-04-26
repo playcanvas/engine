@@ -1,10 +1,6 @@
 export default /* glsl */`
 uniform float material_iridescenceRefractionIndex;
 
-#ifndef PI
-#define PI 3.14159265
-#endif
-
 float iridescence_iorToFresnel(float transmittedIor, float incidentIor) {
     return pow((transmittedIor - incidentIor) / (transmittedIor + incidentIor), 2.0);
 }
@@ -19,6 +15,7 @@ vec3 iridescence_fresnelToIor(vec3 f0) {
 }
 
 vec3 iridescence_sensitivity(float opd, vec3 shift) {
+    float PI = 3.141592653589793;
     float phase = 2.0 * PI * opd * 1.0e-9;
     const vec3 val = vec3(5.4856e-13, 4.4201e-13, 5.2481e-13);
     const vec3 pos = vec3(1.6810e+06, 1.7953e+06, 2.2084e+06);
@@ -52,6 +49,7 @@ vec3 iridescence_fresnel(float cosTheta, vec3 f0) {
 }
 
 vec3 calcIridescence(float outsideIor, float cosTheta, vec3 base_f0, float iridescenceThickness) {
+    float PI = 3.141592653589793;
 
     float iridescenceIor = mix(outsideIor, material_iridescenceRefractionIndex, smoothstep(0.0, 0.03, iridescenceThickness));
     float sinTheta2Sq = pow(outsideIor / iridescenceIor, 2.0) * (1.0 - pow(cosTheta, 2.0));

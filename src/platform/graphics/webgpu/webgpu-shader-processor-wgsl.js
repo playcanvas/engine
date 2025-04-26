@@ -4,15 +4,15 @@ import {
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     SAMPLETYPE_FLOAT,
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
-    SAMPLETYPE_INT, SAMPLETYPE_UINT,
+    TEXTUREDIMENSION_1D, TEXTUREDIMENSION_CUBE_ARRAY,
+    SAMPLETYPE_INT, SAMPLETYPE_UINT, SAMPLETYPE_DEPTH, SAMPLETYPE_UNFILTERABLE_FLOAT,
     BINDGROUP_MESH_UB,
     uniformTypeToNameWGSL,
     uniformTypeToNameMapWGSL,
     bindGroupNames,
-    TEXTUREDIMENSION_1D,
-    TEXTUREDIMENSION_CUBE_ARRAY,
     UNIFORMTYPE_FLOAT,
-    UNUSED_UNIFORM_NAME
+    UNUSED_UNIFORM_NAME,
+    TYPE_FLOAT32, TYPE_FLOAT16, TYPE_INT8, TYPE_INT16, TYPE_INT32
 } from '../constants.js';
 import { UniformFormat, UniformBufferFormat } from '../uniform-buffer-format.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindTextureFormat } from '../bind-group-format.js';
@@ -41,36 +41,93 @@ const VARYING = /(?:@interpolate\([^)]*\)\s*)?([\w]+)\s*:/;
 // marker for a place in the source code to be replaced by code
 const MARKER = '@@@';
 
-const getTextureDimension = (textureType, isArray) => {
-    if (isArray) {
-        if (textureType === '2d') return TEXTUREDIMENSION_2D_ARRAY;
-        else if (textureType === 'cube')  return TEXTUREDIMENSION_CUBE_ARRAY;
-    } else {
-        switch (textureType) {
-            case '1d': return TEXTUREDIMENSION_1D;
-            case '2d': return TEXTUREDIMENSION_2D;
-            case '3d': return TEXTUREDIMENSION_3D;
-            case 'cube': return TEXTUREDIMENSION_CUBE;
+// matches vertex of fragment entry function, extracts the input name. Ends at the start of the function body '{'.
+const ENTRY_FUNCTION = /(@vertex|@fragment)\s*fn\s+\w+\s*\(\s*(\w+)\s*:[\s\S]*?\{/;
+
+const textureBaseInfo = {
+    'texture_1d': { viewDimension: TEXTUREDIMENSION_1D, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_2d_array': { viewDimension: TEXTUREDIMENSION_2D_ARRAY, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_3d': { viewDimension: TEXTUREDIMENSION_3D, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_cube': { viewDimension: TEXTUREDIMENSION_CUBE, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_cube_array': { viewDimension: TEXTUREDIMENSION_CUBE_ARRAY, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_multisampled_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_depth_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_DEPTH },
+    'texture_depth_2d_array': { viewDimension: TEXTUREDIMENSION_2D_ARRAY, baseSampleType: SAMPLETYPE_DEPTH },
+    'texture_depth_cube': { viewDimension: TEXTUREDIMENSION_CUBE, baseSampleType: SAMPLETYPE_DEPTH },
+    'texture_depth_cube_array': { viewDimension: TEXTUREDIMENSION_CUBE_ARRAY, baseSampleType: SAMPLETYPE_DEPTH },
+    'texture_external': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_UNFILTERABLE_FLOAT }
+};
+
+// get the view dimension and sample type for a given texture type
+// example: texture_2d_array<u32> -> 2d_array & uint
+const getTextureInfo = (baseType, componentType) => {
+    const baseInfo = textureBaseInfo[baseType];
+    Debug.assert(baseInfo);
+
+    let finalSampleType = baseInfo.baseSampleType;
+    if (baseInfo.baseSampleType === SAMPLETYPE_FLOAT && baseType !== 'texture_multisampled_2d') {
+        switch (componentType) {
+            case 'u32': finalSampleType = SAMPLETYPE_UINT; break;
+            case 'i32': finalSampleType = SAMPLETYPE_INT; break;
+            case 'f32': finalSampleType = SAMPLETYPE_FLOAT; break;
         }
     }
+
+    return {
+        viewDimension: baseInfo.viewDimension,
+        sampleType: finalSampleType
+    };
 };
 
-const getTextureTypeCode = (dimension, sampleType) => {
-    const sampleFormat = sampleType === SAMPLETYPE_FLOAT ? 'f32' : (sampleType === SAMPLETYPE_INT ? 'i32' : 'u32');
-    switch (dimension) {
-        case TEXTUREDIMENSION_1D: return `texture_1d<${sampleFormat}>`;
-        case TEXTUREDIMENSION_2D: return `texture_2d<${sampleFormat}>`;
-        case TEXTUREDIMENSION_3D: return `texture_3d<${sampleFormat}>`;
-        case TEXTUREDIMENSION_CUBE: return `texture_cube<${sampleFormat}>`;
-        case TEXTUREDIMENSION_2D_ARRAY: return `texture_2d_array<${sampleFormat}>`;
-        case TEXTUREDIMENSION_CUBE_ARRAY: return `texture_cube_array<${sampleFormat}>`;
+// reverse to getTextureInfo, convert view dimension and sample type to texture declaration
+// example: 2d_array & float -> texture_2d_array<f32>
+const getTextureDeclarationType = (viewDimension, sampleType) => {
+
+    // types without template specifiers
+    if (sampleType === SAMPLETYPE_DEPTH) {
+        switch (viewDimension) {
+            case TEXTUREDIMENSION_2D:         return 'texture_depth_2d';
+            case TEXTUREDIMENSION_2D_ARRAY:   return 'texture_depth_2d_array';
+            case TEXTUREDIMENSION_CUBE:       return 'texture_depth_cube';
+            case TEXTUREDIMENSION_CUBE_ARRAY: return 'texture_depth_cube_array';
+            default: Debug.assert(false);
+        }
     }
+
+    // the base texture type string based on dimension
+    let baseTypeString;
+    switch (viewDimension) {
+        case TEXTUREDIMENSION_1D:         baseTypeString = 'texture_1d'; break;
+        case TEXTUREDIMENSION_2D:         baseTypeString = 'texture_2d'; break;
+        case TEXTUREDIMENSION_2D_ARRAY:   baseTypeString = 'texture_2d_array'; break;
+        case TEXTUREDIMENSION_3D:         baseTypeString = 'texture_3d'; break;
+        case TEXTUREDIMENSION_CUBE:       baseTypeString = 'texture_cube'; break;
+        case TEXTUREDIMENSION_CUBE_ARRAY: baseTypeString = 'texture_cube_array'; break;
+        default: Debug.assert(false);
+    }
+
+    // component format string ('f32', 'u32', 'i32')
+    let coreFormatString;
+    switch (sampleType) {
+        case SAMPLETYPE_FLOAT:
+        case SAMPLETYPE_UNFILTERABLE_FLOAT: coreFormatString = 'f32'; break;
+        case SAMPLETYPE_UINT: coreFormatString = 'u32'; break;
+        case SAMPLETYPE_INT: coreFormatString = 'i32'; break;
+        default: Debug.assert(false);
+    }
+
+    // final type
+    return `${baseTypeString}<${coreFormatString}>`;
 };
 
-const textureFormat2SampleType = {
-    'f32': SAMPLETYPE_FLOAT,
-    'i32': SAMPLETYPE_INT,
-    'u32': SAMPLETYPE_UINT
+const wrappedArrayTypes = {
+    'f32': 'WrappedF32',
+    'i32': 'WrappedI32',
+    'u32': 'WrappedU32',
+    'vec2f': 'WrappedVec2F',
+    'vec2i': 'WrappedVec2I',
+    'vec2u': 'WrappedVec2U'
 };
 
 const splitToWords = (line) => {
@@ -81,6 +138,10 @@ const splitToWords = (line) => {
     return line.split(/[\s:]+/);
 };
 
+// matches: array<f32, 4>;
+// eslint-disable-next-line
+const UNIFORM_ARRAY_REGEX = /array<([^,]+),\s*([^>]+)>/;
+
 class UniformLine {
     /**
      * A name of the ub buffer which this uniform is assigned to.
@@ -88,6 +149,8 @@ class UniformLine {
      * @type {string|null}
      */
     ubName = null;
+
+    arraySize = 0;
 
     constructor(line, shader) {
         // Save the raw line
@@ -105,21 +168,36 @@ class UniformLine {
         // Extract the name and type
         this.name = parts[0];
         this.type = parts.slice(1).join(' ');
+
+        // array of uniforms (e.g. array<f32, 5>)
+        if (this.type.includes('array<')) {
+
+            const match = UNIFORM_ARRAY_REGEX.exec(this.type);
+            Debug.assert(match, `Array type on line [${line}] is not supported.`);
+
+            // array type
+            this.type = match[1].trim();
+
+            this.arraySize = Number(match[2]);
+            if (isNaN(this.arraySize)) {
+                shader.failed = true;
+                Debug.error(`Only numerically specified uniform array sizes are supported, this uniform is not supported: '${line}'`, shader);
+            }
+        }
     }
 }
 
 // regex constants for resource lines, for example:
 //     var diffuseTexture : texture_2d<f32>;
-//     var textureArray: array<texture_2d<f32>, 5>;
+//     var diffuseTextures : texture_2d_array<f32>;
+//     var shadowMap : texture_depth_2d;
 //     var diffuseSampler : sampler;
 //     var<storage, read> particles: array<Particle>;
 //     var<storage, read_write> storageBuffer : Buffer;
 //     var storageTexture : texture_storage_2d<rgba8unorm, write>;
 //     var videoTexture : texture_external;
-// eslint-disable-next-line
-const ARRAY_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*array<([\w\d_<>]+),\s*(\d+)>;\s*$/;
-// eslint-disable-next-line
-const TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*texture_(\w+)<([a-zA-Z0-9_,<>]*)>;\s*$/;
+
+const TEXTURE_REGEX = /^\s*var\s+(\w+)\s*:\s*(texture_\w+)(?:<(\w+)>)?;\s*$/;
 // eslint-disable-next-line
 const STORAGE_TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*(texture_storage_2d|texture_storage_2d_array)<([\w\d_]+),\s*(\w+)>\s*;\s*$/;
 // eslint-disable-next-line
@@ -142,38 +220,23 @@ class ResourceLine {
         this.isStorageTexture = false;
         this.isStorageBuffer = false;
         this.isExternalTexture = false;
-        this.arraySize = 0;
         this.type = '';
         this.matchedElements = [];
 
-        // handle array format like 'array<texture_2d<f32>, 5>'
-        const arrayMatch = line.match(ARRAY_REGEX);
-        if (arrayMatch) {
-            this.name = arrayMatch[1]; // Extract the variable name
-            this.arraySize = parseInt(arrayMatch[3], 10); // Extract the array size
-            this.line = `var ${this.name} : ${arrayMatch[2]};`; // Simplify line (remove array part)
-            this.matchedElements.push(...arrayMatch);
-
-            if (isNaN(this.arraySize)) {
-                Debug.error(`Invalid array size in resource line: ${line}`, shader);
-                shader.failed = true;
-            }
-        }
-
-        // handle texture type / simplified line from the array above
+        // handle texture type
         const textureMatch = this.line.match(TEXTURE_REGEX);
         if (textureMatch) {
             this.name = textureMatch[1];
-            this.type = textureMatch[2]; // texture type (e.g., texture_2d)
+            this.type = textureMatch[2]; // texture type (e.g., texture_2d or texture_cube_array)
             this.textureFormat = textureMatch[3]; // texture format (e.g., f32)
             this.isTexture = true;
             this.matchedElements.push(...textureMatch);
 
-            this.textureDimension = getTextureDimension(this.type, this.arraySize > 0);
-            Debug.assert(this.textureDimension);
-
-            this.sampleType = textureFormat2SampleType[this.textureFormat];
-            Debug.assert(this.sampleType !== undefined);
+            // get dimension and sample type
+            const info = getTextureInfo(this.type, this.textureFormat);
+            Debug.assert(info);
+            this.textureDimension = info.viewDimension;
+            this.sampleType = info.sampleType;
         }
 
         // storage texture (e.g., texture_storage_2d<rgba8unorm, write>)
@@ -244,7 +307,8 @@ class WebgpuShaderProcessorWGSL {
         const fragmentExtracted = WebgpuShaderProcessorWGSL.extract(shaderDefinition.fshader);
 
         // VS - convert a list of attributes to a shader block with fixed locations
-        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, shaderDefinition.processingOptions);
+        const attributesMap = new Map();
+        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions);
 
         // VS - convert a list of varyings to a shader block
         const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true);
@@ -284,6 +348,10 @@ class WebgpuShaderProcessorWGSL {
         // generate fragment output struct
         const fOutput = WebgpuShaderProcessorWGSL.generateFragmentOutputStruct(fragmentExtracted.src, device.maxColorAttachments);
 
+        // inject the call to the function which copies the shader input globals
+        vertexExtracted.src = WebgpuShaderProcessorWGSL.copyInputs(vertexExtracted.src, shader);
+        fragmentExtracted.src = WebgpuShaderProcessorWGSL.copyInputs(fragmentExtracted.src, shader);
+
         // VS - insert the blocks to the source
         const vBlock = `${attributesBlock}\n${vertexVaryingsBlock}\n${uniformsData.code}\n${resourcesData.code}\n`;
         const vshader = vertexExtracted.src.replace(MARKER, vBlock);
@@ -295,6 +363,7 @@ class WebgpuShaderProcessorWGSL {
         return {
             vshader: vshader,
             fshader: fshader,
+            attributes: attributesMap,
             meshUniformBufferFormat: uniformsData.meshUniformBufferFormat,
             meshBindGroupFormat: resourcesData.meshBindGroupFormat
         };
@@ -354,12 +423,11 @@ class WebgpuShaderProcessorWGSL {
     }
 
     /**
-     * Process the lines with uniforms. The function receives the lines containing all uniforms,
-     * both numerical as well as textures/samplers. The function also receives the format of uniform
-     * buffers (numerical) and bind groups (textures) for view and material level. All uniforms that
-     * match any of those are ignored, as those would be supplied by view / material level buffers.
-     * All leftover uniforms create uniform buffer and bind group for the mesh itself, containing
-     * uniforms that change on the level of the mesh.
+     * Process the lines with uniforms. The function receives the lines containing all numerical
+     * uniforms. The function also receives the format of uniform buffers for view and material
+     * level. All uniforms that match any of those are ignored, as those would be supplied by view /
+     * material level buffers. All leftover uniforms create uniform buffer and bind group for the
+     * mesh itself, containing uniforms that change on the level of the mesh.
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Array<UniformLine>} uniforms - Lines containing uniforms.
@@ -454,7 +522,7 @@ class WebgpuShaderProcessorWGSL {
                 const sampler = resources[i + 1];
                 const hasSampler = sampler?.isSampler;
 
-                // TODO: handle depth texture, external, and storage types
+                // TODO: handle external, and storage types
                 const sampleType = resource.sampleType;
                 const dimension = resource.textureDimension;
 
@@ -517,9 +585,25 @@ class WebgpuShaderProcessorWGSL {
         let code = `struct ${structName} {\n`;
 
         ubFormat.uniforms.forEach((uniform) => {
-            const typeString = uniformTypeToNameWGSL[uniform.type][0];
+            let typeString = uniformTypeToNameWGSL[uniform.type][0];
             Debug.assert(typeString !== undefined, `Uniform type ${uniform.type} is not handled.`);
-            code += `    ${uniform.name}: ${typeString}${uniform.count ? `[${uniform.count}]` : ''},\n`;
+
+            // array uniforms
+            if (uniform.count > 0) {
+
+                // if the type is one of the ones that are not by default 16byte aligned, which is
+                // a requirement for uniform buffers, we need to wrap them in a struct
+                // for example: array<f32, 5> becomes  array<WrappedF32, 5>
+                if (wrappedArrayTypes.hasOwnProperty(typeString)) {
+                    typeString = wrappedArrayTypes[typeString];
+                }
+
+                code += `    ${uniform.shortName}: array<${typeString}, ${uniform.count}>,\n`;
+
+            } else { // not arrays
+
+                code += `    ${uniform.shortName}: ${typeString},\n`;
+            }
         });
 
         code += '};\n';
@@ -546,14 +630,13 @@ class WebgpuShaderProcessorWGSL {
 
         format.textureFormats.forEach((format) => {
 
-            // convert TEXTUREDIMENSION_2D to 'texture_2d<f32>' and similar
-            const typeCode = getTextureTypeCode(format.textureDimension, format.sampleType);
-
-            code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.name}: ${typeCode};\n`;
+            const textureTypeName = getTextureDeclarationType(format.textureDimension, format.sampleType);
+            code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.name}: ${textureTypeName};\n`;
             bindIndex++;
 
             if (format.hasSampler) {
-                code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.samplerName}: sampler;\n`;
+                const samplerName = format.sampleType === SAMPLETYPE_DEPTH ? 'sampler_comparison' : 'sampler';
+                code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.samplerName}: ${samplerName};\n`;
                 bindIndex++;
             }
         });
@@ -574,6 +657,8 @@ class WebgpuShaderProcessorWGSL {
 
     static processVaryings(varyingLines, varyingMap, isVertex) {
         let block = '';
+        let blockPrivates = '';
+        let blockCopy = '';
         varyingLines.forEach((line, index) => {
             const match = line.match(VARYING);
             Debug.assert(match, `Varying line is not valid: ${line}`);
@@ -591,20 +676,51 @@ class WebgpuShaderProcessorWGSL {
 
                 // generates: `@location(0) @interpolate(perspective, centroid) smoothColor : vec3f`
                 block += `    @location(${index}) ${line},\n`;
+
+                // fragment shader inputs (varyings)
+                if (!isVertex) {
+
+                    // private global variable for fragment varying
+                    blockPrivates += `    var<private> ${line};\n`;
+
+                    // copy input variable to the private variable
+                    blockCopy += `    ${name} = input.${name};\n`;
+                }
             }
         });
 
         // add built-in varyings
         if (isVertex) {
-            block += '    @builtin(position) position : vec4f,\n';      // output position
+            block += '    @builtin(position) position : vec4f,\n';          // output position
         } else {
-            block += '    @builtin(position) position : vec4f,\n';      // interpolated fragment position
+            block += '    @builtin(position) position : vec4f,\n';          // interpolated fragment position
             block += '    @builtin(front_facing) frontFacing : bool,\n';    // front-facing
             block += '    @builtin(sample_index) sampleIndex : u32\n';      // sample index for MSAA
         }
 
+        // global variables for build-in input into fragment shader
+        const fragmentGlobals = isVertex ? '' : `
+            var<private> pcPosition: vec4f;
+            var<private> pcFrontFacing: bool;
+            var<private> pcSampleIndex: u32;
+            ${blockPrivates}
+            
+            // function to copy inputs (varyings) to private global variables
+            fn _pcCopyInputs(input: FragmentInput) {
+                ${blockCopy}
+                pcPosition = input.position;
+                pcFrontFacing = input.frontFacing;
+                pcSampleIndex = input.sampleIndex;
+            }
+        `;
+
         const structName = isVertex ? 'VertexOutput' : 'FragmentInput';
-        return `struct ${structName} {\n${block}};\n`;
+        return `
+            struct ${structName} {
+                ${block}
+            };
+            ${fragmentGlobals}
+        `;
     }
 
     static generateFragmentOutputStruct(src, numRenderTargets) {
@@ -623,12 +739,40 @@ class WebgpuShaderProcessorWGSL {
         return `${structCode}};\n`;
     }
 
-    static processAttributes(attributeLines, shaderDefinitionAttributes, processingOptions) {
-        let block = '';
+    // convert a float attribute type to matching signed or unsigned int type
+    // for example: vec4f -> vec4u, f32 -> u32
+    static floatAttributeToInt(type, signed) {
+
+        // convert any long-form type to short-form
+        const longToShortMap = {
+            'f32': 'f32',
+            'vec2<f32>': 'vec2f',
+            'vec3<f32>': 'vec3f',
+            'vec4<f32>': 'vec4f'
+        };
+        const shortType = longToShortMap[type] || type;
+
+        // map from float short type to int short type
+        const floatToIntShort = {
+            'f32': signed ? 'i32' : 'u32',
+            'vec2f': signed ? 'vec2i' : 'vec2u',
+            'vec3f': signed ? 'vec3i' : 'vec3u',
+            'vec4f': signed ? 'vec4i' : 'vec4u'
+        };
+
+        return floatToIntShort[shortType] || null;
+    }
+
+    static processAttributes(attributeLines, shaderDefinitionAttributes = {}, attributesMap, processingOptions) {
+        let blockAttributes = '';
+        let blockPrivates = '';
+        let blockCopy = '';
         const usedLocations = {};
         attributeLines.forEach((line) => {
             const words = splitToWords(line);
             const name = words[0];
+            let type = words[1];
+            const originalType = type;
 
             if (shaderDefinitionAttributes.hasOwnProperty(name)) {
                 const semantic = shaderDefinitionAttributes[name];
@@ -639,18 +783,83 @@ class WebgpuShaderProcessorWGSL {
                     `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
                 usedLocations[location] = semantic;
 
+                // build a map of used attributes
+                attributesMap.set(location, name);
+
+                // if vertex format for this attribute is not of a float type, but shader specifies float type, convert the shader type
+                // to match the vertex format type, for example: vec4f -> vec4u
+                // Note that we skip normalized elements, as shader receives them as floats already.
+                const element = processingOptions.getVertexElement(semantic);
+                if (element) {
+                    const dataType = element.dataType;
+                    if (dataType !== TYPE_FLOAT32 && dataType !== TYPE_FLOAT16 && !element.normalize && !element.asInt) {
+
+                        // new attribute type, based on the vertex format element type
+                        const isSignedType = dataType === TYPE_INT8 || dataType === TYPE_INT16 || dataType === TYPE_INT32;
+                        type = WebgpuShaderProcessorWGSL.floatAttributeToInt(type, isSignedType);
+                        Debug.assert(type !== null, `Attribute ${name} has a type that cannot be converted to int: ${dataType}`);
+                    }
+                }
+
                 // generates: @location(0) position : vec4f
-                block += `    @location(${location}) ${line},\n`;
+                blockAttributes += `    @location(${location}) ${name}: ${type},\n`;
+
+                // private global variable - this uses the original type
+                blockPrivates += `    var<private> ${line};\n`;
+
+                // copy input variable to the private variable - convert type if needed
+                blockCopy += `    ${name} = ${originalType}(input.${name});\n`;
             } else {
                 Debug.error(`Attribute ${name} is not defined in the shader definition.`, shaderDefinitionAttributes);
             }
         });
 
-        // add built-in attributes
-        block += '    @builtin(vertex_index) vertexIndex : u32,\n';     // vertex index
-        block += '    @builtin(instance_index) instanceIndex : u32\n';  // instance index
+        return `
+            struct VertexInput {
+                ${blockAttributes}
+                @builtin(vertex_index) vertexIndex : u32,       // built-in vertex index
+                @builtin(instance_index) instanceIndex : u32    // built-in instance index
+            };
 
-        return `struct VertexInput {\n${block}};\n`;
+            ${blockPrivates}
+            var<private> pcVertexIndex: u32;
+            var<private> pcInstanceIndex: u32;
+
+            fn _pcCopyInputs(input: VertexInput) {
+                ${blockCopy}
+                pcVertexIndex = input.vertexIndex;
+                pcInstanceIndex = input.instanceIndex;
+            }
+        `;
+    }
+
+    /**
+     * Injects a call to _pcCopyInputs with the function's input parameter right after the opening
+     * brace of a WGSL function marked with `@vertex` or `@fragment`.
+     *
+     * @param {string} src - The source string containing the WGSL code.
+     * @param {Shader} shader - The shader.
+     * @returns {string} - The modified source string.
+     */
+    static copyInputs(src, shader) {
+        // find @vertex or @fragment followed by the function signature and capture the input parameter name
+        const match = src.match(ENTRY_FUNCTION);
+
+        // check if match exists AND the parameter name (Group 2) was captured
+        if (!match || !match[2]) {
+            Debug.warn('No entry function found or input parameter name not captured.', { shader, src });
+            return src;
+        }
+
+        const inputName = match[2];
+        const braceIndex = match.index + match[0].length - 1; // Calculate the index of the '{'
+
+        // inject the line right after the opening brace
+        const beginning = src.slice(0, braceIndex + 1);
+        const end = src.slice(braceIndex + 1);
+
+        const lineToInject = `\n    _pcCopyInputs(${inputName});`;
+        return beginning + lineToInject + end;
     }
 
     static cutOut(src, start, end, replacement) {

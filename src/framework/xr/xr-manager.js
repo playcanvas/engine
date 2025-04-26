@@ -22,17 +22,17 @@ import { XrViews } from './xr-views.js';
  */
 
 /**
- * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
- *
  * @callback XrErrorCallback
+ * Callback used by {@link XrManager#start} and {@link XrManager#end}.
  * @param {Error|null} err - The Error object or null if operation was successful.
+ * @returns {void}
  */
 
 /**
- * Callback used by manual room capturing.
- *
  * @callback XrRoomCaptureCallback
+ * Callback used by manual room capturing.
  * @param {Error|null} err - The Error object or null if manual room capture was successful.
+ * @returns {void}
  */
 
 /**
@@ -992,7 +992,7 @@ class XrManager extends EventHandler {
     /**
      * Provides access to XRSession of WebXR.
      *
-     * @type {object|null}
+     * @type {XRSession|null}
      */
     get session() {
         return this._session;

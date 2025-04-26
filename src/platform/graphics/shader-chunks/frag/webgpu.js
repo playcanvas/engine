@@ -28,25 +28,16 @@ export default /* glsl */`
 #define outType_7 vec4
 #endif
 
-layout(location = 0) out highp outType_0 pc_fragColor;
-layout(location = 1) out highp outType_1 pc_fragColor1;
-layout(location = 2) out highp outType_2 pc_fragColor2;
-layout(location = 3) out highp outType_3 pc_fragColor3;
-layout(location = 4) out highp outType_4 pc_fragColor4;
-layout(location = 5) out highp outType_5 pc_fragColor5;
-layout(location = 6) out highp outType_6 pc_fragColor6;
-layout(location = 7) out highp outType_7 pc_fragColor7;
+layout(location = 0) out highp outType_0 pcFragColor0;
+layout(location = 1) out highp outType_1 pcFragColor1;
+layout(location = 2) out highp outType_2 pcFragColor2;
+layout(location = 3) out highp outType_3 pcFragColor3;
+layout(location = 4) out highp outType_4 pcFragColor4;
+layout(location = 5) out highp outType_5 pcFragColor5;
+layout(location = 6) out highp outType_6 pcFragColor6;
+layout(location = 7) out highp outType_7 pcFragColor7;
 
-#define gl_FragColor pc_fragColor
-
-#define pcFragColor0 pc_fragColor
-#define pcFragColor1 pc_fragColor1
-#define pcFragColor2 pc_fragColor2
-#define pcFragColor3 pc_fragColor3
-#define pcFragColor4 pc_fragColor4
-#define pcFragColor5 pc_fragColor5
-#define pcFragColor6 pc_fragColor6
-#define pcFragColor7 pc_fragColor7
+#define gl_FragColor pcFragColor0
 
 #define texture2D(res, uv) texture(sampler2D(res, res ## _sampler), uv)
 #define texture2DBias(res, uv, bias) texture(sampler2D(res, res ## _sampler), uv, bias)

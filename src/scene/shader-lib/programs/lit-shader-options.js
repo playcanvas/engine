@@ -1,4 +1,4 @@
-import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE } from '../../constants.js';
+import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE, REFLECTIONSRC_NONE } from '../../constants.js';
 
 /**
  * The lit shader options determines how the lit-shader gets generated. It specifies a set of
@@ -236,27 +236,27 @@ class LitShaderOptions {
     fog = FOG_NONE;
 
     /**
-     * The type of gamma correction being applied in the shader. See {@link Scene#gammaCorrection}
-     * for the list of possible values.
+     * The type of gamma correction being applied in the shader. See
+     * {@link CameraComponent#gammaCorrection} for the list of possible values.
      *
      * @type {number}
      */
     gamma = GAMMA_NONE;
 
     /**
-     * The type of tone mapping being applied in the shader. See {@link Scene#toneMapping} for the
-     * list of possible values.
+     * The type of tone mapping being applied in the shader. See {@link CameraComponent#toneMapping}
+     * for the list of possible values.
      *
      * @type {number}
      */
     toneMap = -1;
 
     /**
-     * One of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap".
+     * One of REFLECTIONSRC_*** constants.
      *
      * @type {string}
      */
-    reflectionSource = null;
+    reflectionSource = REFLECTIONSRC_NONE;
 
     reflectionEncoding = null;
 
@@ -309,6 +309,11 @@ class LitShaderOptions {
      * @type {boolean}
      */
     linearDepth = false;
+
+    /**
+     * Shader outputs the accumulated shadow value, used for shadow catcher materials.
+     */
+    shadowCatcher = false;
 }
 
 export { LitShaderOptions };

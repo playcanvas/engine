@@ -4,7 +4,10 @@ import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-import { SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from '../../platform/graphics/constants.js';
+import {
+    SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX,
+    UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME
+} from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 import {
@@ -12,7 +15,6 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
-    SORTKEY_DEPTH,
     shadowTypeInfo
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
@@ -22,6 +24,7 @@ import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
+import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -89,7 +92,8 @@ class ShadowRenderer {
         this.sourceId = scope.resolve('source');
         this.pixelOffsetId = scope.resolve('pixelOffset');
         this.weightId = scope.resolve('weight[0]');
-        this.blurVsmShaderCode = [shaderChunks.blurVSMPS, `#define GAUSS\n${shaderChunks.blurVSMPS}`];
+        const chunks = this.device.isWebGPU ? shaderChunksWGSL : shaderChunks;
+        this.blurVsmShaderCode = [chunks.blurVSMPS, `#define GAUSS\n${chunks.blurVSMPS}`];
 
         // cache for vsm blur shaders
         this.blurVsmShader = [{}, {}];
@@ -192,7 +196,18 @@ class ShadowRenderer {
         }
 
         // this sorts the shadow casters by the shader id
-        visible.sort(this.renderer.sortCompareDepth);
+        visible.sort(this.sortCompareShader);
+    }
+
+    sortCompareShader(drawCallA, drawCallB) {
+        const keyA = drawCallA._sortKeyShadow;
+        const keyB = drawCallB._sortKeyShadow;
+
+        if (keyA === keyB) {
+            return drawCallB.mesh.id - drawCallA.mesh.id;
+        }
+
+        return keyB - keyA;
     }
 
     setupRenderState(device, light) {
@@ -280,6 +295,9 @@ class ShadowRenderer {
         const shadowPass = this.getShadowPass(light);
         const cameraShaderParams = camera.shaderParams;
 
+        // reverse face culling when shadow map has flipY set to true which cases reversed winding order
+        const flipFactor = camera.renderTarget.flipY ? -1 : 1;
+
         // Render
         const count = visibleCasters.length;
         for (let i = 0; i < count; i++) {
@@ -300,7 +318,7 @@ class ShadowRenderer {
                 material.dirty = false;
             }
 
-            renderer.setupCullMode(true, 1, meshInstance);
+            renderer.setupCullMode(true, flipFactor, meshInstance);
 
             // Uniforms I (shadow): material
             material.setParameters(device);
@@ -312,8 +330,10 @@ class ShadowRenderer {
             const shadowShader = shaderInstance.shader;
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
+            if (shadowShader.failed) continue;
+
             // sort shadow casters by shader
-            meshInstance._key[SORTKEY_DEPTH] = shadowShader.id;
+            meshInstance._sortKeyShadow = shadowShader.id;
 
             device.setShader(shadowShader);
 
@@ -475,11 +495,14 @@ class ShadowRenderer {
         if (!blurShader) {
             this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
 
-            const blurVS = shaderChunks.fullscreenQuadVS;
-            let blurFS = `#define SAMPLES ${filterSize}\n`;
+            const chunks = this.device.isWebGPU ? shaderChunksWGSL : shaderChunks;
+            const blurVS = chunks.fullscreenQuadVS;
+            let blurFS = `#define {SAMPLES} ${filterSize}\n`;
             blurFS += this.blurVsmShaderCode[blurMode];
             const blurShaderName = `blurVsm${blurMode}${filterSize}`;
-            blurShader = createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
+            blurShader = createShaderFromCode(this.device, blurVS, blurFS, blurShaderName, { vertex_position: SEMANTIC_POSITION }, undefined, {
+                shaderLanguage: this.device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL
+            });
             cache[blurMode][filterSize] = blurShader;
         }
 

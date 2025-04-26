@@ -45,26 +45,26 @@ vec4 getPosition() {
 
     vec4 screenPos;
     #ifdef UV1LAYOUT
-    screenPos = vec4(vertex_texCoord1.xy * 2.0 - 1.0, 0.5, 1);
+        screenPos = vec4(vertex_texCoord1.xy * 2.0 - 1.0, 0.5, 1);
         #ifdef WEBGPU
-        screenPos.y *= -1.0;
+            screenPos.y *= -1.0;
         #endif
     #else
-    #ifdef SCREENSPACE
-    screenPos = posW;
-    screenPos.y *= projectionFlipY;
-    #else
-    screenPos = matrix_viewProjection * posW;
-    #endif
+        #ifdef SCREENSPACE
+            screenPos = posW;
+            screenPos.y *= projectionFlipY;
+        #else
+            screenPos = matrix_viewProjection * posW;
+        #endif
 
-    #ifdef PIXELSNAP
-    // snap vertex to a pixel boundary
-    screenPos.xy = (screenPos.xy * 0.5) + 0.5;
-    screenPos.xy *= uScreenSize.xy;
-    screenPos.xy = floor(screenPos.xy);
-    screenPos.xy *= uScreenSize.zw;
-    screenPos.xy = (screenPos.xy * 2.0) - 1.0;
-    #endif
+        #ifdef PIXELSNAP
+            // snap vertex to a pixel boundary
+            screenPos.xy = (screenPos.xy * 0.5) + 0.5;
+            screenPos.xy *= uScreenSize.xy;
+            screenPos.xy = floor(screenPos.xy);
+            screenPos.xy *= uScreenSize.zw;
+            screenPos.xy = (screenPos.xy * 2.0) - 1.0;
+        #endif
     #endif
 
     return screenPos;

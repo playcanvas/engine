@@ -42,13 +42,31 @@ class Quat {
     w;
 
     /**
-     * Create a new Quat instance.
+     * Creates a new Quat instance.
      *
-     * @param {number|number[]} [x] - The quaternion's x component. Defaults to 0. If x is an array
-     * of length 4, the array will be used to populate all components.
-     * @param {number} [y] - The quaternion's y component. Defaults to 0.
-     * @param {number} [z] - The quaternion's z component. Defaults to 0.
-     * @param {number} [w] - The quaternion's w component. Defaults to 1.
+     * @overload
+     * @param {number} [x] - The x value. Defaults to 0.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @param {number} [z] - The z value. Defaults to 0.
+     * @param {number} [w] - The w value. Defaults to 1.
+     * @example
+     * const q1 = new pc.Quat(); // defaults to 0, 0, 0, 1
+     * const q2 = new pc.Quat(1, 2, 3, 4);
+     */
+    /**
+     * Creates a new Quat instance.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the vector values from.
+     * @example
+     * const q = new pc.Quat([1, 2, 3, 4]);
+     */
+    /**
+     * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 4, the
+     * array will be used to populate all components.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @param {number} [z] - The z value. Defaults to 0.
+     * @param {number} [w] - The w value. Defaults to 1.
      */
     constructor(x = 0, y = 0, z = 0, w = 1) {
         if (x.length === 4) {
@@ -194,14 +212,19 @@ class Quat {
     }
 
     /**
-     * Converts the supplied quaternion to Euler angles.
+     * Converts this quaternion to Euler angles, specified in degrees. The decomposition uses an
+     * **intrinsic XYZ** order, representing the angles required to achieve the quaternion's
+     * orientation by rotating sequentially: first around the X-axis, then around the newly
+     * transformed Y-axis, and finally around the resulting Z-axis.
      *
-     * @param {Vec3} [eulers] - The 3-dimensional vector to receive the Euler angles.
-     * @returns {Vec3} The 3-dimensional vector holding the Euler angles that
-     * correspond to the supplied quaternion.
+     * @param {Vec3} [eulers] - An optional 3-dimensional vector to receive the calculated
+     * Euler angles (output parameter). If not provided, a new Vec3 object will be allocated
+     * and returned.
+     * @returns {Vec3} The 3-dimensional vector holding the Euler angles in degrees. This will be
+     * the same object passed in as the `eulers` parameter (if one was provided).
      * @example
      * const q = new pc.Quat();
-     * q.setFromAxisAngle(new pc.Vec3(0, 1, 0), 90);
+     * q.setFromAxisAngle(pc.Vec3.UP, 90);
      * const e = new pc.Vec3();
      * q.getEulerAngles(e);
      * // Outputs [0, 90, 0]
@@ -441,22 +464,30 @@ class Quat {
     }
 
     /**
-     * Sets a quaternion from Euler angles specified in XYZ order.
+     * Sets this quaternion to represent a rotation specified by Euler angles in degrees.
+     * The rotation is applied using an **intrinsic XYZ** order: first around the X-axis, then
+     * around the newly transformed Y-axis, and finally around the resulting Z-axis.
      *
-     * @param {number|Vec3} ex - Angle to rotate around X axis in degrees. If ex is a Vec3, the
-     * three angles will be read from it instead.
-     * @param {number} [ey] - Angle to rotate around Y axis in degrees.
-     * @param {number} [ez] - Angle to rotate around Z axis in degrees.
-     * @returns {Quat} Self for chaining.
+     * @param {number|Vec3} ex - The angle to rotate around the X-axis in degrees, or a Vec3
+     * object containing the X, Y, and Z angles in degrees in its respective components (`ex.x`,
+     * `ex.y`, `ex.z`).
+     * @param {number} [ey] - The angle to rotate around the Y-axis in degrees. This parameter is
+     * only used if `ex` is provided as a number.
+     * @param {number} [ez] - The angle to rotate around the Z-axis in degrees. This parameter is
+     * only used if `ex` is provided as a number.
+     * @returns {Quat} The quaternion itself (this), now representing the orientation from the
+     * specified XYZ Euler angles. Allows for method chaining.
      * @example
-     * // Create a quaternion from 3 euler angles
-     * const q = new pc.Quat();
-     * q.setFromEulerAngles(45, 90, 180);
-     *
-     * // Create the same quaternion from a vector containing the same 3 euler angles
-     * const v = new pc.Vec3(45, 90, 180);
-     * const r = new pc.Quat();
-     * r.setFromEulerAngles(v);
+     * // Create a quaternion from 3 individual Euler angles (interpreted as X, Y, Z order)
+     * const q1 = new pc.Quat();
+     * q1.setFromEulerAngles(45, 90, 180); // 45 deg around X, then 90 deg around Y', then 180 deg around Z''
+     * console.log("From numbers:", q1.toString());
+     * @example
+     * // Create the same quaternion from a Vec3 containing the angles (X, Y, Z)
+     * const anglesVec = new pc.Vec3(45, 90, 180);
+     * const q2 = new pc.Quat();
+     * q2.setFromEulerAngles(anglesVec);
+     * console.log("From Vec3:", q2.toString()); // Should match q1
      */
     setFromEulerAngles(ex, ey, ez) {
         if (ex instanceof Vec3) {

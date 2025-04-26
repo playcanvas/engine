@@ -6,12 +6,14 @@ import { URI } from '../../core/uri.js';
 import { math } from '../../core/math/math.js';
 
 /**
+ * @callback HttpResponseCallback
  * Callback used by {@link Http#get}, {@link Http#post}, {@link Http#put}, {@link Http#del}, and
  * {@link Http#request}.
- *
- * @callback HttpResponseCallback
- * @param {number|string|Error|null} err - The error code, message, or exception in the case where the request fails.
- * @param {*} [response] - The response data if no errors were encountered. (format depends on response type: text, Object, ArrayBuffer, XML).
+ * @param {number|string|Error|null} err - The error code, message, or exception in the case where
+ * the request fails.
+ * @param {any} [response] - The response data if no errors were encountered. Format depends on
+ * response type: text, Object, ArrayBuffer, XML.
+ * @returns {void}
  */
 
 /**

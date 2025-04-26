@@ -126,7 +126,7 @@ class TranslateGizmo extends TransformGizmo {
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
-     * const gizmo = new pc.TranslateGizmo(app, camera, layer);
+     * const gizmo = new pc.TranslateGizmo(camera, layer);
      */
     constructor(camera, layer) {
         super(camera, layer);

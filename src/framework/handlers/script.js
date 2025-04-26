@@ -1,4 +1,5 @@
 import { platform } from '../../core/platform.js';
+import { Debug } from '../../core/debug.js';
 import { script } from '../script.js';
 import { ScriptTypes } from '../script/script-types.js';
 import { registerScript } from '../script/script-create.js';
@@ -121,7 +122,8 @@ class ScriptHandler extends ResourceHandler {
     _loadModule(url, callback) {
 
         // if we're in the browser, we need to use the full URL
-        const baseUrl = platform.browser ? window.location.origin + window.location.pathname : import.meta.url;
+        const isBrowserWithOrigin = platform.browser && window.location.origin !== 'null';
+        const baseUrl = isBrowserWithOrigin ? window.location.origin + window.location.pathname : import.meta.url;
         const importUrl = new URL(url, baseUrl);
 
         // @ts-ignore
@@ -136,7 +138,13 @@ class ScriptHandler extends ResourceHandler {
 
                 if (extendsScriptType) {
 
-                    const scriptName = toLowerCamelCase(scriptClass.name);
+                    const lowerCamelCaseName = toLowerCamelCase(scriptClass.name);
+
+                    if (!scriptClass.scriptName) {
+                        Debug.warnOnce(`The Script class "${scriptClass.name}" must have a static "scriptName" property: \`${scriptClass.name}.scriptName = "${lowerCamelCaseName}";\`. This will be an error in future versions of PlayCanvas.`);
+                    }
+
+                    const scriptName = scriptClass.scriptName ?? lowerCamelCaseName;
 
                     // Register the script name
                     registerScript(scriptClass, scriptName);

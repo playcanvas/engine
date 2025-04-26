@@ -42,6 +42,15 @@ class Shader {
     meshBindGroupFormat;
 
     /**
+     * The attributes that this shader code uses. The location is the key, the value is the name.
+     * These attributes are queried / extracted from the final shader.
+     *
+     * @type {Map<number, string>}
+     * @ignore
+     */
+    attributes = new Map();
+
+    /**
      * Creates a new Shader instance.
      *
      * Consider {@link createShaderFromCode} as a simpler and more powerful way to create
@@ -118,6 +127,12 @@ class Shader {
             Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
             Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
 
+            // keep reference to unmodified shaders in debug mode
+            Debug.call(() => {
+                this.vUnmodified = definition.vshader;
+                this.fUnmodified = definition.fshader;
+            });
+
             const wgsl = definition.shaderLanguage === SHADERLANGUAGE_WGSL;
 
             // pre-process vertex shader source
@@ -142,6 +157,12 @@ class Shader {
                 stripDefines: wgsl,
                 sourceName: `fragment shader for ${this.label}`
             });
+
+            if (!definition.vshader || !definition.fshader) {
+                Debug.error(`Shader: Failed to create shader ${this.label}. Vertex or fragment shader source is empty.`, this);
+                this.failed = true;
+                return;
+            }
         }
 
         this.impl = graphicsDevice.createShaderImpl(this);
@@ -163,7 +184,7 @@ class Shader {
 
     /** @ignore */
     get label() {
-        return `Shader Id ${this.id} ${this.name}`;
+        return `Shader Id ${this.id} (${this.definition.shaderLanguage === SHADERLANGUAGE_WGSL ? 'WGSL' : 'GLSL'}) ${this.name}`;
     }
 
     /**

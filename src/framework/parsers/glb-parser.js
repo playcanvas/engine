@@ -903,7 +903,6 @@ const extensionPbrSpecGlossiness = (data, material, textures) => {
     }
     if (data.hasOwnProperty('specularGlossinessTexture')) {
         const specularGlossinessTexture = data.specularGlossinessTexture;
-        material.specularEncoding = 'srgb';
         material.specularMap = material.glossMap = textures[specularGlossinessTexture.index];
         material.specularMapChannel = 'rgb';
         material.glossMapChannel = 'a';
@@ -945,6 +944,8 @@ const extensionClearCoat = (data, material, textures) => {
 
         if (clearcoatNormalTexture.hasOwnProperty('scale')) {
             material.clearCoatBumpiness = clearcoatNormalTexture.scale;
+        } else {
+            material.clearCoatBumpiness = 1;
         }
     }
 
@@ -979,7 +980,6 @@ const extensionSpecular = (data, material, textures) => {
     material.useMetalnessSpecularColor = true;
 
     if (data.hasOwnProperty('specularColorTexture')) {
-        material.specularEncoding = 'srgb';
         material.specularMap = textures[data.specularColorTexture.index];
         material.specularMapChannel = 'rgb';
         extractTextureTransform(data.specularColorTexture, material, ['specular']);
@@ -1041,7 +1041,6 @@ const extensionSheen = (data, material, textures) => {
     }
     if (data.hasOwnProperty('sheenColorTexture')) {
         material.sheenMap = textures[data.sheenColorTexture.index];
-        material.sheenEncoding = 'srgb';
         extractTextureTransform(data.sheenColorTexture, material, ['sheen']);
     }
 
@@ -2083,6 +2082,36 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
                     const gltfTexture = gltf.textures[gltfMaterial.emissiveTexture.index];
                     set.add(getTextureSource(gltfTexture));
+                }
+
+                if (gltfMaterial.hasOwnProperty('extensions')) {
+
+                    // sheen
+                    const sheen = gltfMaterial.extensions.KHR_materials_sheen;
+                    if (sheen) {
+                        if (sheen.hasOwnProperty('sheenColorTexture')) {
+                            const gltfTexture = gltf.textures[sheen.sheenColorTexture.index];
+                            set.add(getTextureSource(gltfTexture));
+                        }
+                    }
+
+                    // specular glossiness
+                    const specularGlossiness = gltfMaterial.extensions.KHR_materials_pbrSpecularGlossiness;
+                    if (specularGlossiness) {
+                        if (specularGlossiness.hasOwnProperty('specularGlossinessTexture')) {
+                            const gltfTexture = gltf.textures[specularGlossiness.specularGlossinessTexture.index];
+                            set.add(getTextureSource(gltfTexture));
+                        }
+                    }
+
+                    // specular
+                    const specular = gltfMaterial.extensions.KHR_materials_specular;
+                    if (specular) {
+                        if (specular.hasOwnProperty('specularColorTexture')) {
+                            const gltfTexture = gltf.textures[specular.specularColorTexture.index];
+                            set.add(getTextureSource(gltfTexture));
+                        }
+                    }
                 }
             });
         }

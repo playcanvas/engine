@@ -251,7 +251,7 @@ assetListLoader.load(() => {
 
     // Reset on space bar, select brush on 1-4
     keyboard.on(
-        pc.EVENT_KEYUP,
+        'keyup',
         (event) => {
             switch (event.key) {
                 case pc.KEY_SPACE:
@@ -275,7 +275,7 @@ assetListLoader.load(() => {
     );
 
     let mouseState = 0;
-    mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
+    mouse.on('mousedown', (event) => {
         if (event.button === pc.MOUSEBUTTON_LEFT) {
             if (keyboard.isPressed(pc.KEY_SHIFT)) {
                 mouseState = 2;
@@ -286,7 +286,7 @@ assetListLoader.load(() => {
             mouseState = 2;
         }
     });
-    mouse.on(pc.EVENT_MOUSEUP, () => {
+    mouse.on('mouseup', () => {
         mouseState = 0;
     });
 
@@ -294,7 +294,7 @@ assetListLoader.load(() => {
     const planePoint = new pc.Vec3();
     const mousePos = new pc.Vec2();
     const mouseUniform = new Float32Array(2);
-    mouse.on(pc.EVENT_MOUSEMOVE, (event) => {
+    mouse.on('mousemove', (event) => {
         const x = event.x;
         const y = event.y;
 

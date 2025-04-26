@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 uniform exposure: f32;
 
 fn toneMap(color: vec3f) -> vec3f {

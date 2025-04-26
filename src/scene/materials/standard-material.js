@@ -8,9 +8,10 @@ import {
     DETAILMODE_MUL,
     DITHER_NONE,
     FRESNEL_SCHLICK,
-    SHADER_DEPTH, SHADER_PICK,
+    SHADER_PICK,
     SHADER_PREPASS,
-    SPECOCC_AO
+    SPECOCC_AO,
+    tonemapNames
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { EnvLighting } from '../graphics/env-lighting.js';
@@ -51,10 +52,10 @@ const _tempColor = new Color();
  */
 
 /**
- * A Standard material is the main, general purpose material that is most often used for rendering.
+ * A standard material is the main, general purpose material that is most often used for rendering.
  * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
- * Most maps can use 3 types of input values in any combination: constant (color or number), mesh
- * vertex colors and a texture. All enabled inputs are multiplied together.
+ * Most maps can use 3 types of input values in any combination: constant ({@link Color} or number),
+ * mesh vertex colors and a {@link Texture}. All enabled inputs are multiplied together.
  *
  * @property {Color} ambient The ambient color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
@@ -519,16 +520,8 @@ const _tempColor = new Color();
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
  * backfaces.
- * @property {UpdateShaderCallback} onUpdateShader A custom function that will be called after all
- * shader generator properties are collected and before shader code is generated. This function
- * will receive an object with shader generator settings (based on current material and scene
- * properties), that you can change and then return. Returned value will be used instead. This is
- * mostly useful when rendering the same set of objects, but with different shader variations based
- * on the same material. For example, you may wish to render a depth or normal pass using textures
- * assigned to the material, a reflection pass with simpler shaders and so on. These properties are
- * split into two sections, generic standard material options and lit options. Properties of the
- * standard material options are {@link StandardMaterialOptions} and the options for the lit options
- * are {@link LitShaderOptions}.
+ * @property {boolean} shadowCatcher When enabled, the material will output accumulated directional
+ * shadow value in linear space as the color.
  *
  * @category Graphics
  */
@@ -538,6 +531,22 @@ class StandardMaterial extends Material {
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
     userAttributes = new Map();
+
+    /**
+     * A custom function that will be called after all shader generator properties are collected
+     * and before shader code is generated. This function will receive an object with shader
+     * generator settings (based on current material and scene properties), that you can change and
+     * then return. Returned value will be used instead. This is mostly useful when rendering the
+     * same set of objects, but with different shader variations based on the same material. For
+     * example, you may wish to render a depth or normal pass using textures assigned to the
+     * material, a reflection pass with simpler shaders and so on. These properties are split into
+     * two sections, generic standard material options and lit options. Properties of the standard
+     * material options are {@link StandardMaterialOptions} and the options for the lit options are
+     * {@link LitShaderOptions}.
+     *
+     * @type {UpdateShaderCallback|undefined}
+     */
+    onUpdateShader;
 
     /**
      * Create a new StandardMaterial instance.
@@ -827,7 +836,7 @@ class StandardMaterial extends Material {
 
         // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
+        const minimalOptions = pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
         options.defines = getCoreDefines(this, params);
 
@@ -836,6 +845,12 @@ class StandardMaterial extends Material {
         } else {
             this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, sortedLights);
         }
+
+        // standard material can overwrite camera's fog setting
+        if (!this.useFog) options.defines.set('FOG', 'NONE');
+
+        // standard material can overwrite camera's tonemapping setting
+        options.defines.set('TONEMAP', tonemapNames[options.litOptions.toneMap]);
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {
@@ -1176,6 +1191,7 @@ function _defineMaterialProps() {
     _defineFlag('clearCoatGlossInvert', false);
     _defineFlag('opacityDither', DITHER_NONE);
     _defineFlag('opacityShadowDither', DITHER_NONE);
+    _defineFlag('shadowCatcher', false);
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');

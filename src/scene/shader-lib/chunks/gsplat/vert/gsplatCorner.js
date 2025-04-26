@@ -29,6 +29,13 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
     mat3 T = W * J;
     mat3 cov = transpose(T) * Vrk * T;
 
+    #if GSPLAT_AA
+        // calculate AA factor
+        float detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[0][1];
+        float detBlur = (cov[0][0] + 0.3) * (cov[1][1] + 0.3) - cov[0][1] * cov[0][1];
+        corner.aaFactor = sqrt(max(detOrig / detBlur, 0.0));
+    #endif
+
     float diagonal1 = cov[0][0] + 0.3;
     float offDiagonal = cov[0][1];
     float diagonal2 = cov[1][1] + 0.3;
@@ -46,8 +53,10 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
         return false;
     }
 
-    // perform cull against x/y axes
-    if (any(greaterThan(abs(center.proj.xy) - vec2(l1, l2) / viewport * center.proj.w, center.proj.ww))) {
+    vec2 c = center.proj.ww / viewport;
+
+    // cull against frustum x/y axes
+    if (any(greaterThan(abs(center.proj.xy) - vec2(max(l1, l2)) * c, center.proj.ww))) {
         return false;
     }
 
@@ -55,7 +64,7 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
     vec2 v1 = l1 * diagonalVector;
     vec2 v2 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
 
-    corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) / viewport * center.proj.w;
+    corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) * c;
     corner.uv = source.cornerUV;
 
     return true;

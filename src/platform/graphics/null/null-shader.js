@@ -1,5 +1,7 @@
 /**
  * A Null implementation of the Shader.
+ *
+ * @ignore
  */
 class NullShader {
     destroy(shader) {

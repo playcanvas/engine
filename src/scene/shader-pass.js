@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
-    SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS
+    SHADER_FORWARD, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS
 } from './constants.js';
 
 /**
@@ -15,6 +15,8 @@ const shaderPassDeviceCache = new DeviceCache();
  * Info about a shader pass. Shader pass is represented by a unique index and a name, and the
  * index is used to access the shader required for the pass, from an array stored in the
  * material or mesh instance.
+ *
+ * @ignore
  */
 class ShaderPassInfo {
     /** @type {number} */
@@ -56,8 +58,6 @@ class ShaderPassInfo {
             keyword = 'SHADOW';
         } else if (this.isForward) {
             keyword = 'FORWARD';
-        } else if (this.index === SHADER_DEPTH) {
-            keyword = 'DEPTH';
         } else if (this.index === SHADER_PICK) {
             keyword = 'PICK';
         }
@@ -100,9 +100,8 @@ class ShaderPass {
         // add default passes in the required order, to match the constants
         add('forward', SHADER_FORWARD, { isForward: true });
         add('prepass', SHADER_PREPASS);
-        add('depth', SHADER_DEPTH);
-        add('pick', SHADER_PICK);
         add('shadow', SHADER_SHADOW);
+        add('pick', SHADER_PICK);
     }
 
     /**

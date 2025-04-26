@@ -61,6 +61,7 @@ const STRIP_FUNCTIONS = [
     'WebgpuDebug.memory',
     'WebgpuDebug.internal',
     'WebgpuDebug.end',
+    'WebgpuDebug.endShader',
     'WorldClustersDebug.render'
 ];
 

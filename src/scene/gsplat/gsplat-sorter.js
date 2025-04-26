@@ -5,6 +5,7 @@ import { TEXTURELOCK_READ } from '../../platform/graphics/constants.js';
 function SortWorker() {
     let order;
     let centers;
+    let chunks;
     let mapping;
     let cameraPosition;
     let cameraDirection;
@@ -19,6 +20,12 @@ function SortWorker() {
 
     let distances;
     let countBuffer;
+
+    // could be increased, but this seems a good compromise between stability and performance
+    const numBins = 32;
+    const binCount = new Array(numBins).fill(0);
+    const binBase = new Array(numBins).fill(0);
+    const binDivider = new Array(numBins).fill(0);
 
     const binarySearch = (m, n, compare_fn) => {
         while (m <= n) {
@@ -70,9 +77,9 @@ function SortWorker() {
         let minDist;
         let maxDist;
         for (let i = 0; i < 8; ++i) {
-            const x = (i & 1 ? boundMin.x : boundMax.x) - px;
-            const y = (i & 2 ? boundMin.y : boundMax.y) - py;
-            const z = (i & 4 ? boundMin.z : boundMax.z) - pz;
+            const x = (i & 1 ? boundMin.x : boundMax.x);
+            const y = (i & 2 ? boundMin.y : boundMax.y);
+            const z = (i & 4 ? boundMin.z : boundMax.z);
             const d = x * dx + y * dy + z * dz;
             if (i === 0) {
                 minDist = maxDist = d;
@@ -99,24 +106,61 @@ function SortWorker() {
             countBuffer.fill(0);
         }
 
-        // generate per vertex distance to camera
         const range = maxDist - minDist;
-        const divider = (range < 1e-6) ? 0 : 1 / range * (2 ** compareBits);
-        for (let i = 0; i < numVertices; ++i) {
-            const istride = i * 3;
-            const x = centers[istride + 0] - px;
-            const y = centers[istride + 1] - py;
-            const z = centers[istride + 2] - pz;
-            const d = x * dx + y * dy + z * dz;
-            if (isNaN(d)) {
-                continue;
+
+        if (range < 1e-6) {
+            // all points are at the same distance
+            for (let i = 0; i < numVertices; ++i) {
+                distances[i] = 0;
+                countBuffer[0]++;
             }
-            const sortKey = Math.floor((d - minDist) * divider);
+        } else {
+            // use chunks to calculate rough histogram of splats per distance
+            const numChunks = chunks.length / 4;
 
-            distances[i] = sortKey;
+            binCount.fill(0);
+            for (let i = 0; i < numChunks; ++i) {
+                const x = chunks[i * 4 + 0];
+                const y = chunks[i * 4 + 1];
+                const z = chunks[i * 4 + 2];
+                const r = chunks[i * 4 + 3];
+                const d = x * dx + y * dy + z * dz - minDist;
 
-            // count occurrences of each distance
-            countBuffer[sortKey]++;
+                const binMin = Math.max(0, Math.floor((d - r) * numBins / range));
+                const binMax = Math.min(numBins, Math.ceil((d + r) * numBins / range));
+
+                for (let j = binMin; j < binMax; ++j) {
+                    binCount[j]++;
+                }
+            }
+
+            // count total number of histogram bin entries
+            const binTotal = binCount.reduce((a, b) => a + b, 0);
+
+            // calculate per-bin base and divider
+            for (let i = 0; i < numBins; ++i) {
+                binDivider[i] = (binCount[i] / binTotal * bucketCount) >>> 0;
+            }
+            for (let i = 0; i < numBins; ++i) {
+                binBase[i] = i === 0 ? 0 : binBase[i - 1] + binDivider[i - 1];
+            }
+
+            // generate per vertex distance key using histogram to distribute bits
+            const binRange = range / numBins;
+            let ii = 0;
+            for (let i = 0; i < numVertices; ++i) {
+                const x = centers[ii++];
+                const y = centers[ii++];
+                const z = centers[ii++];
+                const d = (x * dx + y * dy + z * dz - minDist) / binRange;
+                const bin = d >>> 0;
+                const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
+
+                distances[i] = sortKey;
+
+                // count occurrences of each distance
+                countBuffer[sortKey]++;
+            }
         }
 
         // Change countBuffer[i] so that it contains actual position of this digit in outputArray
@@ -131,12 +175,17 @@ function SortWorker() {
             order[destIndex] = i;
         }
 
-        // find splat with distance 0 to limit rendering behind the camera
-        const dist = i => distances[order[i]] / divider + minDist;
+        // Find splat with distance 0 to limit rendering behind the camera
+        const cameraDist = px * dx + py * dy + pz * dz;
+        const dist = (i) => {
+            let o = order[i] * 3;
+            return centers[o++] * dx + centers[o++] * dy + centers[o] * dz - cameraDist;
+        };
         const findZero = () => {
             const result = binarySearch(0, numVertices - 1, i => -dist(i));
             return Math.min(numVertices, Math.abs(result));
         };
+
         const count = dist(numVertices - 1) >= 0 ? findZero() : numVertices;
 
         // apply mapping
@@ -161,39 +210,92 @@ function SortWorker() {
         }
         if (message.data.centers) {
             centers = new Float32Array(message.data.centers);
-
-            // calculate bounds
-            let initialized = false;
-            const numVertices = centers.length / 3;
-            for (let i = 0; i < numVertices; ++i) {
-                const x = centers[i * 3 + 0];
-                const y = centers[i * 3 + 1];
-                const z = centers[i * 3 + 2];
-
-                if (isNaN(x) || isNaN(y) || isNaN(z)) {
-                    continue;
-                }
-
-                if (!initialized) {
-                    initialized = true;
-                    boundMin.x = boundMax.x = x;
-                    boundMin.y = boundMax.y = y;
-                    boundMin.z = boundMax.z = z;
-                } else {
-                    boundMin.x = Math.min(boundMin.x, x);
-                    boundMax.x = Math.max(boundMax.x, x);
-                    boundMin.y = Math.min(boundMin.y, y);
-                    boundMax.y = Math.max(boundMax.y, y);
-                    boundMin.z = Math.min(boundMin.z, z);
-                    boundMax.z = Math.max(boundMax.z, z);
-                }
-            }
-
-            if (!initialized) {
-                boundMin.x = boundMax.x = boundMin.y = boundMax.y = boundMin.z = boundMax.z = 0;
-            }
-
             forceUpdate = true;
+
+            if (message.data.chunks) {
+                const chunksSrc = new Float32Array(message.data.chunks);
+                // reuse chunks memory, but we only need 4 floats per chunk
+                chunks = new Float32Array(message.data.chunks, 0, chunksSrc.length * 4 / 6);
+
+                boundMin.x = chunksSrc[0];
+                boundMin.y = chunksSrc[1];
+                boundMin.z = chunksSrc[2];
+                boundMax.x = chunksSrc[3];
+                boundMax.y = chunksSrc[4];
+                boundMax.z = chunksSrc[5];
+
+                // convert chunk min/max to center/radius
+                for (let i = 0; i < chunksSrc.length / 6; ++i) {
+                    const mx = chunksSrc[i * 6 + 0];
+                    const my = chunksSrc[i * 6 + 1];
+                    const mz = chunksSrc[i * 6 + 2];
+                    const Mx = chunksSrc[i * 6 + 3];
+                    const My = chunksSrc[i * 6 + 4];
+                    const Mz = chunksSrc[i * 6 + 5];
+
+                    chunks[i * 4 + 0] = (mx + Mx) * 0.5;
+                    chunks[i * 4 + 1] = (my + My) * 0.5;
+                    chunks[i * 4 + 2] = (mz + Mz) * 0.5;
+                    chunks[i * 4 + 3] = Math.sqrt((Mx - mx) ** 2 + (My - my) ** 2 + (Mz - mz) ** 2) * 0.5;
+
+                    if (mx < boundMin.x) boundMin.x = mx;
+                    if (my < boundMin.y) boundMin.y = my;
+                    if (mz < boundMin.z) boundMin.z = mz;
+                    if (Mx > boundMax.x) boundMax.x = Mx;
+                    if (My > boundMax.y) boundMax.y = My;
+                    if (Mz > boundMax.z) boundMax.z = Mz;
+                }
+            } else {
+                // chunk bounds weren't provided, so calculate them from the centers
+                const numVertices = centers.length / 3;
+                const numChunks = Math.ceil(numVertices / 256);
+
+                // allocate storage for one bounding sphere per 256-vertex chunk
+                chunks = new Float32Array(numChunks * 4);
+
+                boundMin.x = boundMin.y = boundMin.z = Infinity;
+                boundMax.x = boundMax.y = boundMax.z = -Infinity;
+
+                // calculate bounds
+                let mx, my, mz, Mx, My, Mz;
+                for (let c = 0; c < numChunks; ++c) {
+                    mx = my = mz = Infinity;
+                    Mx = My = Mz = -Infinity;
+
+                    const start = c * 256;
+                    const end = Math.min(numVertices, (c + 1) * 256);
+                    for (let i = start; i < end; ++i) {
+                        const x = centers[i * 3 + 0];
+                        const y = centers[i * 3 + 1];
+                        const z = centers[i * 3 + 2];
+
+                        const validX = Number.isFinite(x);
+                        const validY = Number.isFinite(y);
+                        const validZ = Number.isFinite(z);
+
+                        if (!validX) centers[i * 3 + 0] = 0;
+                        if (!validY) centers[i * 3 + 1] = 0;
+                        if (!validZ) centers[i * 3 + 2] = 0;
+                        if (!validX || !validY || !validZ) {
+                            continue;
+                        }
+
+                        if (x < mx) mx = x; else if (x > Mx) Mx = x;
+                        if (y < my) my = y; else if (y > My) My = y;
+                        if (z < mz) mz = z; else if (z > Mz) Mz = z;
+
+                        if (x < boundMin.x) boundMin.x = x; else if (x > boundMax.x) boundMax.x = x;
+                        if (y < boundMin.y) boundMin.y = y; else if (y > boundMax.y) boundMax.y = y;
+                        if (z < boundMin.z) boundMin.z = z; else if (z > boundMax.z) boundMax.z = z;
+                    }
+
+                    // calculate chunk center and radius from bound min/max
+                    chunks[c * 4 + 0] = (mx + Mx) * 0.5;
+                    chunks[c * 4 + 1] = (my + My) * 0.5;
+                    chunks[c * 4 + 2] = (mz + Mz) * 0.5;
+                    chunks[c * 4 + 3] = Math.sqrt((Mx - mx) ** 2 + (My - my) ** 2 + (Mz - mz) ** 2) * 0.5;
+                }
+            }
         }
         if (message.data.hasOwnProperty('mapping')) {
             mapping = message.data.mapping ? new Uint32Array(message.data.mapping) : null;
@@ -243,27 +345,31 @@ class GSplatSorter extends EventHandler {
         this.worker = null;
     }
 
-    init(orderTexture, centers) {
+    init(orderTexture, centers, chunks) {
         this.orderTexture = orderTexture;
         this.centers = centers.slice();
 
         // get the texture's storage buffer and make a copy
         const orderBuffer = this.orderTexture.lock({
             mode: TEXTURELOCK_READ
-        }).buffer.slice();
+        }).slice();
+        this.orderTexture.unlock();
 
         // initialize order data
         for (let i = 0; i < orderBuffer.length; ++i) {
             orderBuffer[i] = i;
         }
 
-        this.orderTexture.unlock();
+        const obj = {
+            order: orderBuffer.buffer,
+            centers: centers.buffer,
+            chunks: chunks?.buffer
+        };
+
+        const transfer = [orderBuffer.buffer, centers.buffer].concat(chunks ? [chunks.buffer] : []);
 
         // send the initial buffer to worker
-        this.worker.postMessage({
-            order: orderBuffer,
-            centers: centers.buffer
-        }, [orderBuffer, centers.buffer]);
+        this.worker.postMessage(obj, transfer);
     }
 
     setMapping(mapping) {
