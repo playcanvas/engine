@@ -33,7 +33,7 @@ class SphereGeometry extends Geometry {
     /**
      * Create a new SphereGeometry instance.
      *
-     * @param {object} [opts] - Options object. 
+     * @param {object} [opts] - Options object.
      * @param {number} [opts.radius] - The radius of the sphere. Defaults to 0.5.
      * @param {number} [opts.latitudeBands] - The number of divisions along the latitudinal axis of
      * the sphere. Defaults to 16.

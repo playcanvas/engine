@@ -33,7 +33,7 @@ import { Geometry } from './geometry.js';
  */
 class PlaneGeometry extends Geometry {
     /**
-     * Create a new PlaneGeometry instance. 
+     * Create a new PlaneGeometry instance.
      *
      * @param {object} [opts] - Options object.
      * @param {Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes.
