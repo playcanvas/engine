@@ -191,7 +191,7 @@ class ScreenComponent extends Component {
     }
 
     /**
-     * Sets the width and height of the ScreenComponent. When {@link screenSpace} is true the
+     * Sets the width and height of the ScreenComponent. When {@link screenSpace} is true, the
      * resolution will always be equal to {@link GraphicsDevice#width} by
      * {@link GraphicsDevice#height}.
      *
