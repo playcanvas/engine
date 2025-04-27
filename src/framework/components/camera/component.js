@@ -51,7 +51,8 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * });
  * ```
  *
- * Once the CameraComponent is added to the entity, you can access it via the `camera` property:
+ * Once the CameraComponent is added to the entity, you can access it via the {@link Entity#camera}
+ * property:
  *
  * ```javascript
  * entity.camera.nearClip = 2; // Set the near clip of the camera

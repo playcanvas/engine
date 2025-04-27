@@ -49,7 +49,8 @@ const _vec3 = new Vec3();
  * });
  * ```
  *
- * Once the RigidBodyComponent is added to the entity, you can access it via the `rigidbody` property:
+ * Once the RigidBodyComponent is added to the entity, you can access it via the
+ * {@link Entity#rigidbody} property:
  *
  * ```javascript
  * entity.rigidbody.mass = 10;
