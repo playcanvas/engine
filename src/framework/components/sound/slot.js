@@ -30,7 +30,8 @@ const instanceOptions = {
 };
 
 /**
- * The SoundSlot controls playback of an audio asset.
+ * The SoundSlot controls playback of an audio asset. A {@link SoundComponent} can have multiple
+ * slots that can be queried via {@link SoundComponent#slot}.
  *
  * @category Sound
  */
