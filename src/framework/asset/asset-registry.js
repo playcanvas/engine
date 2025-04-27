@@ -373,8 +373,8 @@ class AssetRegistry extends EventHandler {
      *     app.assets.find("Another Asset")
      * ];
      * let count = 0;
-     * assetsToLoad.forEach(function (assetToLoad) {
-     *     assetToLoad.ready(function (asset) {
+     * assetsToLoad.forEach((assetToLoad) => {
+     *     assetToLoad.ready((asset) => {
      *         count++;
      *         if (count === assetsToLoad.length) {
      *             // done
