@@ -24,7 +24,7 @@ const _transform = new Mat4();
  * - {@link ScrollbarComponent}
  * - {@link ScrollViewComponent}
  *
- * You should never need to use the ScreenComponent constructor directly. To add an ScreenComponent
+ * You should never need to use the ScreenComponent constructor directly. To add a ScreenComponent
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
