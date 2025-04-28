@@ -3,26 +3,16 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import {
+    FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8,
+    SEMANTIC_POSITION, SHADERLANGUAGE_WGSL, SHADERLANGUAGE_GLSL
+} from '../../platform/graphics/constants.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 /**
  * @import { Color } from '../../core/math/color.js'
  */
-
-const textureBlitVertexShader = /* glsl */`
-    attribute vec2 vertex_position;
-    varying vec2 uv0;
-    void main(void) {
-        gl_Position = vec4(vertex_position, 0.5, 1.0);
-        uv0 = vertex_position.xy * 0.5 + 0.5;
-    }`;
-
-const textureBlitFragmentShader = /* glsl */`
-    varying vec2 uv0;
-    uniform sampler2D blitTexture;
-    void main(void) {
-        gl_FragColor = texture2D(blitTexture, uv0);
-    }`;
 
 /**
  * The base class for the exporters, implementing shared functionality.
@@ -113,8 +103,14 @@ class CoreExporter {
         });
 
         // render to a render target using a blit shader
-        const shader = createShaderFromCode(device, textureBlitVertexShader, textureBlitFragmentShader, 'ShaderCoreExporterBlit');
-        device.scope.resolve('blitTexture').setValue(texture);
+        const shader = device.isWebGPU ?
+            createShaderFromCode(device, shaderChunksWGSL.fullscreenQuadVS, shaderChunksWGSL.outputTex2DPS, 'ShaderCoreExporterBlit',
+                { vertex_position: SEMANTIC_POSITION }, { shaderLanguage: SHADERLANGUAGE_WGSL }
+            ) :
+            createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.outputTex2DPS, 'ShaderCoreExporterBlit',
+                { vertex_position: SEMANTIC_POSITION }, { shaderLanguage: SHADERLANGUAGE_GLSL }
+            );
+        device.scope.resolve('source').setValue(texture);
         device.setBlendState(BlendState.NOBLEND);
         drawQuadWithShader(device, renderTarget, shader);
 
