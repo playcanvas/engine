@@ -81,7 +81,7 @@ import litOtherMainPS from './lit/frag/pass-other/litOtherMain.js';
 import litShaderArgsPS from './standard/frag/litShaderArgs.js';
 import litShaderCorePS from './standard/frag/litShaderCore.js';
 import litShadowMainPS from './lit/frag/pass-shadow/litShadowMain.js';
-// import ltcPS from './lit/frag/ltc.js';
+import ltcPS from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
 import msdfPS from './common/frag/msdf.js';
 import metalnessModulatePS from './lit/frag/metalnessModulate.js';
@@ -290,7 +290,7 @@ const shaderChunksWGSL = {
     litShaderArgsPS,
     litShaderCorePS,
     litShadowMainPS,
-    // ltcPS,
+    ltcPS,
     metalnessPS,
     metalnessModulatePS,
     morphPS,

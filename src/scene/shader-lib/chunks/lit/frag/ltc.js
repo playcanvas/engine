@@ -113,19 +113,21 @@ Coords getSphereLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 // used for LTC LUT texture lookup
 vec2 dLTCUV;
 #ifdef LIT_CLEARCOAT
-vec2 ccLTCUV;
+    vec2 ccLTCUV;
 #endif
+
 vec2 getLTCLightUV(float gloss, vec3 worldNormal, vec3 viewDir)
 {
     float roughness = max((1.0 - gloss) * (1.0 - gloss), 0.001);
     return LTC_Uv( worldNormal, viewDir, roughness );
 }
 
-//used for energy conservation and to modulate specular
+// used for energy conservation and to modulate specular
 vec3 dLTCSpecFres;
 #ifdef LIT_CLEARCOAT
-vec3 ccLTCSpecFres;
+    vec3 ccLTCSpecFres;
 #endif
+
 vec3 getLTCLightSpecFres(vec2 uv, vec3 specularity)
 {
     vec4 t2 = texture2DLod(areaLightsLutTex2, uv, 0.0);
@@ -143,21 +145,17 @@ void calcLTCLightValues(float gloss, vec3 worldNormal, vec3 viewDir, vec3 specul
 #endif
 }
 
-void calcRectLightValues(vec3 lightPos, vec3 halfWidth, vec3 halfHeight)
-{
+void calcRectLightValues(vec3 lightPos, vec3 halfWidth, vec3 halfHeight) {
     dLTCCoords = getLTCLightCoords(lightPos, halfWidth, halfHeight);
 }
-void calcDiskLightValues(vec3 lightPos, vec3 halfWidth, vec3 halfHeight)
-{
+void calcDiskLightValues(vec3 lightPos, vec3 halfWidth, vec3 halfHeight) {
     calcRectLightValues(lightPos, halfWidth, halfHeight);
 }
-void calcSphereLightValues(vec3 lightPos, vec3 halfWidth, vec3 halfHeight)
-{
+void calcSphereLightValues(vec3 lightPos, vec3 halfWidth, vec3 halfHeight) {
     dLTCCoords = getSphereLightCoords(lightPos, halfWidth, halfHeight);
 }
 
-// An extended version of the implementation from
-// "How to solve a cubic equation, revisited"
+// An extended version of the implementation from "How to solve a cubic equation, revisited"
 // http://momentsingraphics.de/?p=105
 vec3 SolveCubic(vec4 Coefficient)
 {
@@ -180,8 +178,6 @@ vec3 SolveCubic(vec4 Coefficient)
     );
 
     float Discriminant = dot(vec2(4.0 * Delta.x, -Delta.y), Delta.zy);
-
-    vec3 RootsA, RootsD;
 
     vec2 xlc, xsc;
 
@@ -246,9 +242,8 @@ vec3 SolveCubic(vec4 Coefficient)
 float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
 {
     // construct orthonormal basis around N
-    vec3 T1, T2;
-    T1 = normalize(V - N * dot(V, N));
-    T2 = cross(N, T1);
+    vec3 T1 = normalize(V - N * dot(V, N));
+    vec3 T2 = cross(N, T1);
 
     // rotate area light in (T1, T2, N) basis
     //mat3 R = transpose(mat3(T1, T2, N));
@@ -258,8 +253,6 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     L_[ 0 ] = R * ( points.coord0 - P );
     L_[ 1 ] = R * ( points.coord1 - P );
     L_[ 2 ] = R * ( points.coord2 - P );
-
-    vec3 Lo_i = vec3(0);
 
     // init ellipse
     vec3 C  = 0.5 * (L_[0] + L_[2]);
@@ -367,7 +360,7 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
 
 // LTC_EvaluateDisk in some rare cases genereates NaN values in a or b, just before 'float c0 = a * b;'
 // Get rid of those Nan values before they propagate further, as in case of bloom / DOF blurs they
-// propagage to large areas. I didn't find the actual reason where those come from, so that is still TODO.
+// propagate to large areas. I didn't find the actual reason where those come from, so that is still TODO.
 // Note that only disk/sphere lights are causing it, so only handle those.
 float FixNan(float value) {
     #ifdef WEBGPU
