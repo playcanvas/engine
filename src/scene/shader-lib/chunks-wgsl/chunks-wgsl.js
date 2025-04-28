@@ -196,8 +196,8 @@ import uv1VS from './lit/vert/uv1.js';
 import uvTransformVS from './lit/vert/uvTransform.js';
 import uvTransformUniformsPS from './lit/vert/uvTransformUniforms.js';
 import viewDirPS from './lit/frag/viewDir.js';
-// import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu.js';
-// import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
+import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu-wgsl.js';
+import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu-wgsl.js';
 
 /**
  * Object containing all default WGSL shader chunks used by shader generators.
@@ -404,9 +404,9 @@ const shaderChunksWGSL = {
     uv1VS,
     uvTransformVS,
     uvTransformUniformsPS,
-    viewDirPS
-    // webgpuPS,
-    // webgpuVS
+    viewDirPS,
+    webgpuPS,
+    webgpuVS
 };
 
 export { shaderChunksWGSL };
