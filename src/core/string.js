@@ -224,7 +224,7 @@ const string = {
      * @ignore
      */
     fromCodePoint(...args) {
-        return args.map(codePoint => {
+        return args.map((codePoint) => {
             if (codePoint > 0xFFFF) {
                 codePoint -= 0x10000;
                 return String.fromCharCode(

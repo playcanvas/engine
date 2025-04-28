@@ -52,7 +52,7 @@ describe('string', function () {
         it('handles code points beyond the BMP (Basic Multilingual Plane)', function () {
             // Emoji: 😀 (U+1F600 GRINNING FACE)
             expect(string.fromCodePoint(0x1F600)).to.equal('😀');
-            
+
             // Musical note: 𝄞 (U+1D11E MUSICAL SYMBOL G CLEF)
             expect(string.fromCodePoint(0x1D11E)).to.equal('𝄞');
         });
@@ -60,11 +60,11 @@ describe('string', function () {
         it('handles multiple code points including surrogate pairs', function () {
             // Mix of BMP and astral code points
             expect(string.fromCodePoint(65, 0x1F600, 66)).to.equal('A😀B');
-            
+
             // Multiple astral code points: 💩 (U+1F4A9) and 🚀 (U+1F680)
             expect(string.fromCodePoint(0x1F4A9, 0x1F680)).to.equal('💩🚀');
         });
-        
+
         it('matches native String.fromCodePoint behavior', function () {
             // Only run if native method is available
             if (String.fromCodePoint) {
