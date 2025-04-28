@@ -9,8 +9,7 @@ vec3 getFresnel(
         float iridescenceIntensity
 #endif
     ) {
-    float safeCosTheta = clamp(cosTheta, 0.0, 1.0);
-    float fresnel = pow(1.0 - safeCosTheta, 5.0);
+    float fresnel = pow(1.0 - saturate(cosTheta), 5.0);
     float glossSq = gloss * gloss;
     vec3 ret = specularity + (max(vec3(glossSq), specularity) - specularity) * fresnel;
 #if defined(LIT_IRIDESCENCE)
@@ -21,8 +20,7 @@ vec3 getFresnel(
 }
 
 float getFresnelCC(float cosTheta) {
-    float safeCosTheta = clamp(cosTheta, 0.0, 1.0);
-    float fresnel = pow(1.0 - safeCosTheta, 5.0);
+    float fresnel = pow(1.0 - saturate(cosTheta), 5.0);
     return 0.04 + (1.0 - 0.04) * fresnel;
 }
 `;
