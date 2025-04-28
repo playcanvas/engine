@@ -42,7 +42,7 @@ describe('string', function () {
 
     });
 
-    describe.only('#fromCodePoint', function () {
+    describe('#fromCodePoint', function () {
         it('converts basic ASCII code points to characters', function () {
             expect(string.fromCodePoint(65)).to.equal('A');
             expect(string.fromCodePoint(66, 67)).to.equal('BC');
