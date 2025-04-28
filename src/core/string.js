@@ -221,6 +221,7 @@ const string = {
      *
      * @param {...number} args - The code points to convert to a string.
      * @returns {string} The converted string.
+     * @ignore
      */
     fromCodePoint(...args) {
         return args.map(codePoint => {
