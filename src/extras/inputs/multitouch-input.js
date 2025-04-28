@@ -156,6 +156,7 @@ class MultiTouchInput extends Input {
         this._element.addEventListener('pointerdown', this._onPointerDown);
         this._element.addEventListener('pointermove', this._onPointerMove);
         this._element.addEventListener('pointerup', this._onPointerUp);
+        this._element.addEventListener('pointercancel', this._onPointerUp);
         this._element.addEventListener('contextmenu', this._onContextMenu);
     }
 
@@ -166,6 +167,7 @@ class MultiTouchInput extends Input {
         this._element.removeEventListener('pointerdown', this._onPointerDown);
         this._element.removeEventListener('pointermove', this._onPointerMove);
         this._element.removeEventListener('pointerup', this._onPointerUp);
+        this._element.removeEventListener('pointercancel', this._onPointerUp);
         this._element.removeEventListener('contextmenu', this._onContextMenu);
 
         this._pointerEvents.clear();
