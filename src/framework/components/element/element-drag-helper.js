@@ -244,7 +244,7 @@ class ElementDragHelper extends EventHandler {
     /**
      * This method is linked to `_element` events: `mousemove` and `touchmove`
      *
-     * @param {ElementTouchEvent} event - The event.
+     * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
      * @private
      */
     _onMove(event) {

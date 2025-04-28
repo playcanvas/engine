@@ -9,7 +9,7 @@ class AnimTarget {
      *
      * @param {(value: number[]) => void} func - This function will be called when a new animation value is output
      * by the {@link AnimEvaluator}.
-     * @param {'vector'|'quaternion'} type - The type of animation data this target expects.
+     * @param {'vector'|'quaternion'|'number'} type - The type of animation data this target expects.
      * @param {number} components - The number of components on this target (this should ideally
      * match the number of components found on all attached animation curves).
      * @param {string} targetPath - The path to the target value.
