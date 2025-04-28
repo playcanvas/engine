@@ -9,7 +9,7 @@ html, body, #app {
 
 body {
     margin: 0;
-    overflow: hidden;
+    /*overflow: hidden;*/
     background-color: #171E20;
 }
 
@@ -219,6 +219,21 @@ body {
 
 #sideBar .categoryPanel.pcui-collapsed {
     margin-bottom: 8px;
+}
+
+#bottomBar {
+    position: absolute;
+    left: 0;
+    top: 100vh;
+    width: 100vw;
+    height: 100vh;
+}
+
+#bottomBar > .pcui-panel > .pcui-panel-content {
+    width: calc(100% - 32px);
+    position: fixed;
+    height: 280px;
+    margin-top: 32px;
 }
 
 .nav-item {

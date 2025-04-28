@@ -5,11 +5,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npm run -s build:metadata && cross-env NODE_ENV=production rollup -c",
+    "build": "npm run -s build:metadata && cross-env NODE_ENV=production RTI=on rollup -c",
     "build:metadata": "node ./scripts/build-metadata.mjs",
     "build:thumbnails": "node ./scripts/build-thumbnails.mjs",
     "clean": "node ./scripts/clean.mjs",
     "develop": "cross-env NODE_ENV=development concurrently --kill-others \"npm run watch\" \"npm run serve\"",
+    "develop:rti": "RTI=on npm run develop",
     "lint": "eslint .",
     "serve": "serve dist -l 5555 --no-request-logging --config ../serve.json",
     "watch": "npm run -s build:metadata && cross-env NODE_ENV=development rollup -c -w"

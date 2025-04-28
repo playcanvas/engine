@@ -13,6 +13,9 @@ const EXAMPLE_TEMPLATE = fs.readFileSync('templates/example.html', 'utf-8');
  * @returns {string} - The build file.
  */
 export const engineUrl = (type) => {
+    if (process.env.RTI === 'on') {
+        return './ENGINE_PATH/playcanvas.rti.mjs';
+    }
     switch (type) {
         case 'development':
             return './ENGINE_PATH/index.js';

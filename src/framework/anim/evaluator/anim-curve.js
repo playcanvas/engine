@@ -1,4 +1,25 @@
 /**
+ * @example
+ * [
+ *     {
+ *         "entityPath": [
+ *             "RootNode",
+ *             "AVATAR",
+ *             "C_spine0001_bind_JNT"
+ *         ],
+ *         "component": "graph",
+ *         "propertyPath": [
+ *             "localPosition"
+ *         ]
+ *     }
+ * ]
+ * @typedef {object} AnimCurveTarget
+ * @property {string[]} entityPath - The path to the entity.
+ * @property {string} component - The component name.
+ * @property {string[]} propertyPath - The path to the property.
+ */
+
+/**
  * Animation curve links an input data set to an output data set and defines the interpolation
  * method to use.
  *
@@ -8,7 +29,7 @@ class AnimCurve {
     /**
      * Create a new animation curve.
      *
-     * @param {string[]} paths - Array of path strings identifying the targets of this curve, for
+     * @param {(string|AnimCurveTarget)[]} paths - Array of path strings identifying the targets of this curve, for
      * example "rootNode.translation".
      * @param {number} input - Index of the curve which specifies the key data.
      * @param {number} output - Index of the curve which specifies the value data.
@@ -28,7 +49,7 @@ class AnimCurve {
     /**
      * The list of paths which identify targets of this curve.
      *
-     * @type {string[]}
+     * @type {(string|AnimCurveTarget)[]}
      */
     get paths() {
         return this._paths;

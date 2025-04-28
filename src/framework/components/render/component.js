@@ -680,7 +680,7 @@ class RenderComponent extends Component {
      * Sets the render asset (or asset id) for the render component. This only applies to render components with
      * type 'asset'.
      *
-     * @type {Asset|number}
+     * @type {Asset|number|null}
      */
     set asset(value) {
         const id = value instanceof Asset ? value.id : value;

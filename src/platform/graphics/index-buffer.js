@@ -37,7 +37,7 @@ class IndexBuffer {
      * - {@link BUFFER_STREAM}
      *
      * Defaults to {@link BUFFER_STATIC}.
-     * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the index buffer
+     * @param {ArrayBuffer|Uint16Array} [initialData] - Initial data. If left unspecified, the index buffer
      * will be initialized to zeros.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.storage] - Defines if the index buffer can be used as a storage
@@ -160,7 +160,7 @@ class IndexBuffer {
     /**
      * Set preallocated data on the index buffer.
      *
-     * @param {ArrayBuffer} data - The index data to set.
+     * @param {ArrayBuffer|Uint16Array} data - The index data to set.
      * @returns {boolean} True if the data was set successfully, false otherwise.
      * @ignore
      */

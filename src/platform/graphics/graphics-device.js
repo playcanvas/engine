@@ -1033,7 +1033,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @param {Shader} shader - The shader to validate.
      * @param {VertexFormat} vb0Format - The format of the first vertex buffer.
-     * @param {VertexFormat} vb1Format - The format of the second vertex buffer.
+     * @param {VertexFormat} [vb1Format] - The format of the second vertex buffer.
      * @protected
      */
     validateAttributes(shader, vb0Format, vb1Format) {

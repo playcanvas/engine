@@ -28,7 +28,7 @@ class VertexBuffer {
      * @param {object} [options] - Object for passing optional arguments.
      * @param {number} [options.usage] - The usage type of the vertex buffer (see BUFFER_*).
      * Defaults to BUFFER_STATIC.
-     * @param {ArrayBuffer} [options.data] - Initial data.
+     * @param {ArrayBuffer|Float32Array} [options.data] - Initial data.
      * @param {boolean} [options.storage] - Defines if the vertex buffer can be used as a storage
      * buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      */
@@ -146,7 +146,7 @@ class VertexBuffer {
     /**
      * Copies data into vertex buffer's memory.
      *
-     * @param {ArrayBuffer} [data] - Source data to copy.
+     * @param {ArrayBuffer|Float32Array} [data] - Source data to copy.
      * @returns {boolean} True if function finished successfully, false otherwise.
      */
     setData(data) {

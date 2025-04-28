@@ -36,8 +36,8 @@ class KeyboardEvent {
     /**
      * Create a new KeyboardEvent.
      *
-     * @param {Keyboard} keyboard - The keyboard object which is firing the event.
-     * @param {globalThis.KeyboardEvent} event - The original browser event that was fired.
+     * @param {Keyboard} [keyboard] - The keyboard object which is firing the event.
+     * @param {globalThis.KeyboardEvent} [event] - The original browser event that was fired.
      * @example
      * const onKeyDown = function (e) {
      *     if (e.key === pc.KEY_SPACE) {

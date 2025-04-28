@@ -11,6 +11,7 @@ import { exampleMetaData } from './cache/metadata.mjs';
 import { copy } from './utils/plugins/rollup-copy.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
+import { buildTargetRTI } from '../utils/rollup-build-target-rti.mjs';
 import { buildTarget } from '../utils/rollup-build-target.mjs';
 import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
 import { buildShare } from './utils/plugins/rollup-build-share.mjs';
@@ -21,6 +22,7 @@ import { removePc } from './utils/plugins/rollup-remove-pc.mjs';
 const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
     '../src/index.js' : process.env.ENGINE_PATH ?? '';
+const { RTI = '' } = process.env;
 
 /**
  * Get the engine path files.
@@ -233,6 +235,9 @@ const engineRollupOptions = () => {
 
     /** @type {RollupOptions[]} */
     const options = [];
+    if (RTI === 'on') {
+        options.push(buildTargetRTI('es', '../src/index.rti.js', 'dist/iframe/ENGINE_PATH'));
+    }
     if (ENGINE_PATH) {
         return options;
     }

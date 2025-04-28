@@ -102,7 +102,7 @@ class AssetReference {
      * Sets the asset id which this references. One of either id or url must be set to
      * initialize an asset reference.
      *
-     * @type {number}
+     * @type {number|null}
      */
     set id(value) {
         if (this.url) throw Error('Can\'t set id and url');
@@ -110,7 +110,7 @@ class AssetReference {
         this._unbind();
 
         this._id = value;
-        this.asset = this._registry.get(this._id);
+        this.asset = this._id === null ? null : this._registry.get(this._id);
 
         this._bind();
     }
@@ -136,7 +136,7 @@ class AssetReference {
         this._unbind();
 
         this._url = value;
-        this.asset = this._registry.getByUrl(this._url);
+        this.asset = this._url === null ? null : this._registry.getByUrl(this._url);
 
         this._bind();
     }

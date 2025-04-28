@@ -123,8 +123,6 @@ class VertexIteratorAccessor {
      * that are not relevant to this attribute.
      * @param {number} vertexElement.stride - The number of total bytes that are between the start
      * of one vertex, and the start of the next.
-     * @param {ScopeId} vertexElement.scopeId - The shader input variable corresponding to the
-     * attribute.
      * @param {number} vertexElement.size - The size of the attribute in bytes.
      * @param {VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data
      * inside the buffer.
