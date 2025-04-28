@@ -238,8 +238,8 @@ const createGoochMaterial = (texture, color) => {
                 // shader based on the current fog / tone-mapping / gamma settings
                 vec3 fogged = addFog(colorLinear);
                 vec3 toneMapped = toneMap(fogged);
-                gl_FragColor.rgb = gammaCorrectOutput(toneMapped);
-                gl_FragColor.a = alpha;
+                pcFragColor0.rgb = gammaCorrectOutput(toneMapped);
+                pcFragColor0.a = alpha;
             }
         `,
         attributes: {
