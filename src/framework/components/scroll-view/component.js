@@ -601,8 +601,6 @@ class ScrollViewComponent extends Component {
 
     /**
      * @param {string} onOrOff - 'on' or 'off'.
-     * @param {ScrollViewComponentSystem} system - The ComponentSystem that
-     * created this Component.
      * @private
      */
     _toggleLifecycleListeners(onOrOff) {

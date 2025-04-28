@@ -35,10 +35,10 @@ const script = {
      * @param {CreateScreenCallback} callback - A function which can set up and tear down a
      * customized loading screen.
      * @example
-     * pc.script.createLoadingScreen(function (app) {
-     *     var showSplashScreen = function () {};
-     *     var hideSplashScreen = function () {};
-     *     var showProgress = function (progress) {};
+     * pc.script.createLoadingScreen((app) => {
+     *     const showSplashScreen = () => {};
+     *     const hideSplashScreen = () => {};
+     *     const showProgress = (progress) => {};
      *     app.on("preload:start", showSplashScreen);
      *     app.on("preload:progress", showProgress);
      *     app.on("start", hideSplashScreen);

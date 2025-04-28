@@ -51,7 +51,8 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * });
  * ```
  *
- * Once the CameraComponent is added to the entity, you can access it via the `camera` property:
+ * Once the CameraComponent is added to the entity, you can access it via the {@link Entity#camera}
+ * property:
  *
  * ```javascript
  * entity.camera.nearClip = 2; // Set the near clip of the camera
@@ -1259,7 +1260,7 @@ class CameraComponent extends Component {
      * @example
      * // On an entity with a camera component
      * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
-     *     callback: function (err) {
+     *     callback: (err) => {
      *         if (err) {
      *             // failed to start XR session
      *         } else {
@@ -1279,7 +1280,7 @@ class CameraComponent extends Component {
      * ended. The callback has one argument Error - it is null if successfully ended XR session.
      * @example
      * // On an entity with a camera component
-     * this.entity.camera.endXr(function (err) {
+     * this.entity.camera.endXr((err) => {
      *     // not anymore in XR
      * });
      */

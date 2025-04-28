@@ -2,29 +2,30 @@ export default /* glsl */`
 uniform highp sampler2D uSceneDepthMap;
 
 #ifndef SCREENSIZE
-#define SCREENSIZE
-uniform vec4 uScreenSize;
+    #define SCREENSIZE
+    uniform vec4 uScreenSize;
 #endif
 
 #ifndef VIEWMATRIX
-#define VIEWMATRIX
-uniform mat4 matrix_view;
+    #define VIEWMATRIX
+    uniform mat4 matrix_view;
 #endif
 
 #ifndef LINEARIZE_DEPTH
-#ifndef CAMERAPLANES
-#define CAMERAPLANES
-uniform vec4 camera_params; // x: 1 / camera_far,      y: camera_far,     z: camera_near,        w: is_ortho
-#endif
+    #define LINEARIZE_DEPTH
+    
+    #ifndef CAMERAPLANES
+        #define CAMERAPLANES
+        uniform vec4 camera_params; // x: 1 / camera_far,      y: camera_far,     z: camera_near,        w: is_ortho
+    #endif
 
-#define LINEARIZE_DEPTH
-float linearizeDepth(float z) {
-    if (camera_params.w == 0.0)
-        return (camera_params.z * camera_params.y) / (camera_params.y + z * (camera_params.z - camera_params.y));
-    else
-        return camera_params.z + z * (camera_params.y - camera_params.z);
-}
-#endif // LINEARIZE_DEPTH
+    float linearizeDepth(float z) {
+        if (camera_params.w == 0.0)
+            return (camera_params.z * camera_params.y) / (camera_params.y + z * (camera_params.z - camera_params.y));
+        else
+            return camera_params.z + z * (camera_params.y - camera_params.z);
+    }
+#endif
 
 float delinearizeDepth(float linearDepth) {
     if (camera_params.w == 0.0) {
@@ -59,11 +60,11 @@ float getLinearScreenDepth(vec2 uv) {
 }
 
 #ifndef VERTEXSHADER
-// Retrieves rendered linear camera depth under the current pixel
-float getLinearScreenDepth() {
-    vec2 uv = gl_FragCoord.xy * uScreenSize.zw;
-    return getLinearScreenDepth(uv);
-}
+    // Retrieves rendered linear camera depth under the current pixel
+    float getLinearScreenDepth() {
+        vec2 uv = gl_FragCoord.xy * uScreenSize.zw;
+        return getLinearScreenDepth(uv);
+    }
 #endif
 
 // Generates linear camera depth for the given world position

@@ -234,7 +234,7 @@ fn evaluateBackend() -> FragmentOutput {
 
     #ifdef LIT_SHADOW_CATCHER
         // output when the shadow catcher is enabled - accumulated shadows
-        output.color = vec4f(dShadowCatcher, output.color.a);
+        output.color = vec4f(vec3f(dShadowCatcher), output.color.a);
     #endif
 
     return output;

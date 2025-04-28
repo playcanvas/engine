@@ -37,7 +37,8 @@ import { properties } from './data.js';
  * });
  * ```
  *
- * Once the LightComponent is added to the entity, you can access it via the `light` property:
+ * Once the LightComponent is added to the entity, you can access it via the {@link Entity#light}
+ * property:
  *
  * ```javascript
  * entity.light.intensity = 3; // Set the intensity of the light

@@ -42,7 +42,8 @@ const _quat = new Quat();
  * });
  * ```
  *
- * Once the CollisionComponent is added to the entity, you can access it via the `collision` property:
+ * Once the CollisionComponent is added to the entity, you can access it via the
+ * {@link Entity#collision} property:
  *
  * ```javascript
  * entity.collision.type = 'cylinder'; // Set the collision volume to a cylinder

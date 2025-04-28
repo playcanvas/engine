@@ -255,7 +255,7 @@ class SceneRegistry {
      * passed (err, sceneItem) where err is null if no errors occurred.
      * @example
      * const sceneItem = app.scenes.find("Scene Name");
-     * app.scenes.loadSceneData(sceneItem, function (err, sceneItem) {
+     * app.scenes.loadSceneData(sceneItem, (err, sceneItem) => {
      *     if (err) {
      *         // error
      *     }
@@ -339,7 +339,7 @@ class SceneRegistry {
      * passed (err, entity) where err is null if no errors occurred.
      * @example
      * const sceneItem = app.scenes.find("Scene Name");
-     * app.scenes.loadSceneHierarchy(sceneItem, function (err, entity) {
+     * app.scenes.loadSceneHierarchy(sceneItem, (err, entity) => {
      *     if (!err) {
      *         const e = app.root.find("My New Entity");
      *     } else {
@@ -360,7 +360,7 @@ class SceneRegistry {
      * are applied. Passed (err) where err is null if no error occurred.
      * @example
      * const sceneItem = app.scenes.find("Scene Name");
-     * app.scenes.loadSceneSettings(sceneItem, function (err) {
+     * app.scenes.loadSceneSettings(sceneItem, (err) => {
      *     if (!err) {
      *         // success
      *     } else {
@@ -392,7 +392,7 @@ class SceneRegistry {
      * @param {ChangeSceneCallback} [callback] - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
-     * app.scenes.changeScene("Scene Name", function (err, entity) {
+     * app.scenes.changeScene("Scene Name", (err, entity) => {
      *     if (!err) {
      *         // success
      *     } else {

@@ -95,7 +95,7 @@ import opacityPS from './standard/frag/opacity.js';
 import opacityDitherPS from './standard/frag/opacity-dither.js';
 import outputPS from './lit/frag/output.js';
 import outputAlphaPS from './lit/frag/outputAlpha.js';
-// import outputTex2DPS from './common/frag/outputTex2D.js';
+import outputTex2DPS from './common/frag/outputTex2D.js';
 import sheenPS from './standard/frag/sheen.js';
 import sheenGlossPS from './standard/frag/sheenGloss.js';
 import parallaxPS from './standard/frag/parallax.js';
@@ -156,7 +156,7 @@ import refractionDynamicPS from './lit/frag/refractionDynamic.js';
 import reprojectPS from './internal/frag/reproject.js';
 import reprojectVS from './internal/vert/reproject.js';
 // import sampleCatmullRomPS from './common/frag/sampleCatmullRom.js';
-// import screenDepthPS from './common/frag/screenDepth.js';
+import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/lighting/shadowCascades.js';
 import shadowEVSMPS from './lit/frag/lighting/shadowEVSM.js';
 import shadowPCF1PS from './lit/frag/lighting/shadowPCF1.js';
@@ -196,8 +196,8 @@ import uv1VS from './lit/vert/uv1.js';
 import uvTransformVS from './lit/vert/uvTransform.js';
 import uvTransformUniformsPS from './lit/vert/uvTransformUniforms.js';
 import viewDirPS from './lit/frag/viewDir.js';
-// import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu.js';
-// import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
+import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu-wgsl.js';
+import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu-wgsl.js';
 
 /**
  * Object containing all default WGSL shader chunks used by shader generators.
@@ -304,7 +304,7 @@ const shaderChunksWGSL = {
     opacityDitherPS,
     outputPS,
     outputAlphaPS,
-    // outputTex2DPS,
+    outputTex2DPS,
     sheenPS,
     sheenGlossPS,
     parallaxPS,
@@ -365,7 +365,7 @@ const shaderChunksWGSL = {
     reprojectPS,
     reprojectVS,
     // sampleCatmullRomPS,
-    // screenDepthPS,
+    screenDepthPS,
     shadowCascadesPS,
     shadowEVSMPS,
     shadowPCF1PS,
@@ -404,9 +404,9 @@ const shaderChunksWGSL = {
     uv1VS,
     uvTransformVS,
     uvTransformUniformsPS,
-    viewDirPS
-    // webgpuPS,
-    // webgpuVS
+    viewDirPS,
+    webgpuPS,
+    webgpuVS
 };
 
 export { shaderChunksWGSL };
