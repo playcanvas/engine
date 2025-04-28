@@ -40,7 +40,8 @@ import { Component } from '../component.js';
  * });
  * ```
  *
- * Once the RenderComponent is added to the entity, you can access it via the `render` property:
+ * Once the RenderComponent is added to the entity, you can access it via the {@link Entity#render}
+ * property:
  *
  * ```javascript
  * entity.render.type = 'capsule';  // Set the render component's type
