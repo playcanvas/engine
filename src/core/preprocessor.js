@@ -37,7 +37,8 @@ const COMPARISON = /([a-z_]\w*)\s*(==|!=|<|<=|>|>=)\s*([\w"']+)/i;
 const INVALID = /[+\-]/g;
 
 // #include "identifier" or optional second identifier #include "identifier1, identifier2"
-const INCLUDE = /include[ \t]+"([\w-]+)(?:\s*,\s*([\w-]+))?"\r?(?:\n|$)/g;
+// Matches only up to the closing quote of the include directive
+const INCLUDE = /include[ \t]+"([\w-]+)(?:\s*,\s*([\w-]+))?"/g;
 
 // loop index to replace, in the format {i}
 const LOOP_INDEX = /\{i\}/g;
