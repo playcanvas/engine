@@ -13,6 +13,6 @@ export default /* glsl */`
         }
     } else {
         gl_FragColor.rgb = dirLm.xyz;
-        gl_FragColor.a = max(dirLm.w, dAtten > 0.00001? (1.0/255.0) : 0.0);
+        gl_FragColor.a = max(dirLm.w, dAtten > 0.00001 ? (1.0/255.0) : 0.0);
     }
 `;

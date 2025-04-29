@@ -3,10 +3,13 @@ import ambientPS from './lit/frag/ambient.js';
 import aoPS from './standard/frag/ao.js';
 import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
+import bakeDirLmEndPS from './lightmapper/frag/bakeDirLmEnd.js';
+import bakeLmEndPS from './lightmapper/frag/bakeLmEnd.js';
 import basePS from './lit/frag/base.js';
 import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
 import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
 import bayerPS from './common/frag/bayer.js';
+import bilateralDeNoisePS from './lightmapper/frag/bilateralDeNoise.js';
 import blurVSMPS from './lit/frag/blurVSM.js';
 import clearCoatPS from './standard/frag/clearCoat.js';
 import clearCoatGlossPS from './standard/frag/clearCoatGloss.js';
@@ -26,6 +29,7 @@ import debugOutputPS from './lit/frag/debug-output.js';
 import debugProcessFrontendPS from './lit/frag/debug-process-frontend.js';
 import decodePS from './common/frag/decode.js';
 import detailModesPS from './standard/frag/detailModes.js';
+import dilatePS from './lightmapper/frag/dilate.js';
 import diffusePS from './standard/frag/diffuse.js';
 import emissivePS from './standard/frag/emissive.js';
 import encodePS from './common/frag/encode.js';
@@ -65,8 +69,8 @@ import lightEvaluationPS from './lit/frag/lighting/lightEvaluation.js';
 import lightFunctionLightPS from './lit/frag/lighting/lightFunctionLight.js';
 import lightFunctionShadowPS from './lit/frag/lighting/lightFunctionShadow.js';
 import lightingPS from './lit/frag/lighting/lighting.js';
-// import lightmapAddPS from './lit/frag/lightmapAdd.js';
-// import lightmapPS from './standard/frag/lightmap.js';
+import lightmapAddPS from './lit/frag/lightmapAdd.js';
+import lightmapPS from './standard/frag/lightmap.js';
 import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 import lightSheenPS from './lit/frag/lightSheen.js';
@@ -211,10 +215,13 @@ const shaderChunksWGSL = {
     aoPS,
     aoDiffuseOccPS,
     aoSpecOccPS,
+    bakeDirLmEndPS,
+    bakeLmEndPS,
     basePS,
     baseNineSlicedPS,
     baseNineSlicedTiledPS,
     bayerPS,
+    bilateralDeNoisePS,
     blurVSMPS,
     clearCoatPS,
     clearCoatGlossPS,
@@ -233,6 +240,7 @@ const shaderChunksWGSL = {
     debugOutputPS,
     debugProcessFrontendPS,
     detailModesPS,
+    dilatePS,
     diffusePS,
     decodePS,
     emissivePS,
@@ -274,8 +282,8 @@ const shaderChunksWGSL = {
     lightFunctionLightPS,
     lightFunctionShadowPS,
     lightingPS,
-    // lightmapAddPS,
-    // lightmapPS,
+    lightmapAddPS,
+    lightmapPS,
     lightSpecularAnisoGGXPS,
     lightSpecularBlinnPS,
     lightSheenPS,
