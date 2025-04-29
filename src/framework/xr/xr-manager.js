@@ -569,7 +569,7 @@ class XrManager extends EventHandler {
      * session.
      * @example
      * app.keyboard.on('keydown', (evt) => {
-     *     if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+     *     if (evt.key === pc.Key.Escape && app.xr.active) {
      *         app.xr.end();
      *     }
      * });
