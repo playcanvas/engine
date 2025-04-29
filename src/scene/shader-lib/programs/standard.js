@@ -89,7 +89,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
     _validateMapChunk(propName, chunkName, chunks) {
         Debug.call(() => {
-            const code = chunks[chunkName];
+            // strip comments from the chunk
+            const code = chunks[chunkName].replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+
             const requiredChangeStrings = [];
 
             // Helper function to add a formatted change string if the old syntax is found
