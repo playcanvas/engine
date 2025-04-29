@@ -49,15 +49,12 @@ bool isUsed(vec4 pixel) {
     #endif
 }
 
-// filter size
-#define MSIZE 15
-
 varying vec2 vUv0;
 uniform sampler2D source;
 uniform vec2 pixelOffset;
 uniform vec2 sigmas;
 uniform float bZnorm;
-uniform float kernel[MSIZE];
+uniform float kernel[{MSIZE}];
 
 void main(void) {
     
@@ -82,7 +79,7 @@ void main(void) {
     float accumulatedFactor = 0.000001;  // avoid division by zero
 
     // read out the texels
-    const int kSize = (MSIZE-1)/2;
+    const int kSize = ({MSIZE} - 1) / 2;
     for (int i = -kSize; i <= kSize; ++i) {
         for (int j = -kSize; j <= kSize; ++j) {
             
