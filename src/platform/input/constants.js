@@ -593,34 +593,6 @@ export const KEY_CLOSE_BRACKET = 221;
 export const KEY_META = 224;
 
 /**
- * No mouse buttons pressed.
- *
- * @category Input
- */
-export const MOUSEBUTTON_NONE = -1;
-
-/**
- * The left mouse button.
- *
- * @category Input
- */
-export const MOUSEBUTTON_LEFT = 0;
-
-/**
- * The middle mouse button.
- *
- * @category Input
- */
-export const MOUSEBUTTON_MIDDLE = 1;
-
-/**
- * The right mouse button.
- *
- * @category Input
- */
-export const MOUSEBUTTON_RIGHT = 2;
-
-/**
  * Index for pad 1.
  *
  * @category Input

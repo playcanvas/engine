@@ -1,5 +1,3 @@
-import { MOUSEBUTTON_NONE } from './constants.js';
-
 /**
  * @import { Mouse } from './mouse.js'
  */
@@ -54,15 +52,11 @@ class MouseEvent {
     dy = 0;
 
     /**
-     * The mouse button associated with this event. Can be:
+     * The mouse button associated with this event.
      *
-     * - {@link MOUSEBUTTON_LEFT}
-     * - {@link MOUSEBUTTON_MIDDLE}
-     * - {@link MOUSEBUTTON_RIGHT}
-     *
-     * @type {number}
+     * @type {MouseButton}
      */
-    button = MOUSEBUTTON_NONE;
+    button = MouseButton.NONE;
 
     /**
      * A value representing the amount the mouse wheel has moved, only valid for

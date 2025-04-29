@@ -45,6 +45,7 @@ import { AssetRegistry } from '../framework/asset/asset-registry.js';
 import { XrInputSource } from '../framework/xr/xr-input-source.js';
 
 import { ElementInput } from '../framework/input/element-input.js';
+import { MouseButton } from '../platform/input/mouse-button.js';
 import { MouseEvent } from '../platform/input/mouse-event.js';
 
 import { AppBase } from '../framework/app-base.js';
@@ -770,6 +771,11 @@ export const EVENT_GAMEPADDISCONNECTED = 'gamepaddisconnected';
 export const EVENT_SELECT = 'select';
 export const EVENT_SELECTSTART = 'selectstart';
 export const EVENT_SELECTEND = 'selectend';
+
+export const MOUSEBUTTON_NONE = MouseButton.None;
+export const MOUSEBUTTON_LEFT = MouseButton.Left;
+export const MOUSEBUTTON_MIDDLE = MouseButton.Middle;
+export const MOUSEBUTTON_RIGHT = MouseButton.Right;
 
 Object.defineProperty(ElementInput.prototype, 'wheel', {
     get: function () {
