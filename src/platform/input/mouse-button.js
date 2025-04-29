@@ -2,7 +2,7 @@
  * Mouse buttons.
  *
  * @readonly
- * @enum {ValueOf<typeof MouseButton>}
+ * @enum {typeof MouseButton[keyof typeof MouseButton]}
  * @category Input
  */
 export const MouseButton = Object.freeze({
