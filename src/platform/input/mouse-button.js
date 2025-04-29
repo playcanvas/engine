@@ -6,7 +6,7 @@
  * @category Input
  */
 export const MouseButton = Object.freeze({
-    /** No specific projection format is used. */
+    /** No button. */
     None: -1,
 
     /** The left mouse button. */
