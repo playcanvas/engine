@@ -11,7 +11,7 @@ import { MouseButton } from './mouse-button.js';
  */
 const isMousePointerLocked = () => {
     return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
-}
+};
 
 /**
  * The MouseEvent object is passed into all event handlers registered on the {@link Mouse}. The

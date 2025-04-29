@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
-import { Mouse } from '../../../src/platform/input/mouse.js';
 import { MouseButton } from '../../../src/platform/input/mouse-button.js';
+import { Mouse } from '../../../src/platform/input/mouse.js';
 
 const buttons = [MouseButton.Left, MouseButton.Middle, MouseButton.Right];
 
