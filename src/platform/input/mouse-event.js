@@ -1,3 +1,5 @@
+import { MouseButton } from './mouse-button.js';
+
 /**
  * @import { Mouse } from './mouse.js'
  */
@@ -7,7 +9,7 @@
  *
  * @returns {boolean} True if pointer lock is currently enabled.
  */
-function isMousePointerLocked() {
+const isMousePointerLocked = () => {
     return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
 }
 
