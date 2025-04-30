@@ -13,6 +13,8 @@ import { Color, Script, Vec3 } from 'playcanvas';
  * the controllers.
  */
 class XrNavigation extends Script {
+    static scriptName = 'xr-navigation';
+
     /** @type {Set<XrInputSource>} */
     inputSources = new Set();
 
