@@ -2,6 +2,9 @@
 export default /* glsl */`
 
 void main(void) {
+
+    #include "litUserMainStartPS"
+
     dReflection = vec4(0);
 
     #ifdef LIT_CLEARCOAT
@@ -42,5 +45,7 @@ void main(void) {
     #include "debugProcessFrontendPS"
 
     evaluateBackend();
+
+    #include "litUserMainEndPS"
 }
 `;

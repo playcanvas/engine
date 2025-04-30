@@ -4,6 +4,8 @@ export default /* wgsl */`
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
+    #include "litUserMainStartPS"
+
     dReflection = vec4f(0.0);
 
     #ifdef LIT_CLEARCOAT
@@ -44,6 +46,8 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     #include "debugProcessFrontendPS"
 
     var output: FragmentOutput = evaluateBackend();
+
+    #include "litUserMainEndPS"
 
     return output;
 }

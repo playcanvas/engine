@@ -1,5 +1,10 @@
 // main shader of the lit vertex shader
 export default /* glsl */`
+
+#include "varyingsVS"
+
+#include  "litUserDeclarationVS"
+
 #ifdef VERTEX_COLOR
     attribute vec4 vertex_color;
 #endif
@@ -56,7 +61,12 @@ mat4 dModelMatrix;
     #include "msdfVS"
 #endif
 
+#include  "litUserCodeVS"
+
 void main(void) {
+
+    #include "litUserMainStartVS"
+
     gl_Position = getPosition();
     vPositionW = getWorldPosition();
 
@@ -100,5 +110,7 @@ void main(void) {
     #ifdef MSDF
         unpackMsdfParams();
     #endif
+
+    #include "litUserMainEndVS"
 }
 `;
