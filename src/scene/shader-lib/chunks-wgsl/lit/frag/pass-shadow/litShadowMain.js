@@ -12,6 +12,9 @@ export default /* wgsl */`
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+
+    #include "litUserMainStartPS"
+
     var output: FragmentOutput;
 
     evaluateFrontend();
@@ -57,6 +60,8 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         #endif
     #endif
 
+    #include "litUserMainEndPS"
+    
     return output;
 }
 `;

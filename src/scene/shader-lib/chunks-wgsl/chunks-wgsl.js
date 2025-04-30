@@ -80,6 +80,7 @@ import litForwardDeclarationPS from './lit/frag/pass-forward/litForwardDeclarati
 import litForwardMainPS from './lit/frag/pass-forward/litForwardMain.js';
 import litForwardPostCodePS from './lit/frag/pass-forward/litForwardPostCode.js';
 import litForwardPreCodePS from './lit/frag/pass-forward/litForwardPreCode.js';
+import litMainPS from './lit/frag/litMain.js';
 import litMainVS from './lit/vert/litMain.js';
 import litOtherMainPS from './lit/frag/pass-other/litOtherMain.js';
 import litShaderArgsPS from './standard/frag/litShaderArgs.js';
@@ -253,6 +254,8 @@ const shaderChunksWGSL = {
     floatAsUintPS,
     fogPS,
     fresnelSchlickPS,
+    frontendCodePS: '',  // empty chunk, supplied by the shader generator
+    frontendDeclPS: '',  // empty chunk, supplied by the shader generator
     fullscreenQuadVS,
     gammaPS,
     glossPS,
@@ -293,11 +296,20 @@ const shaderChunksWGSL = {
     litForwardMainPS,
     litForwardPostCodePS,
     litForwardPreCodePS,
+    litMainPS,
     litMainVS,
     litOtherMainPS,
     litShaderArgsPS,
     litShaderCorePS,
     litShadowMainPS,
+    litUserDeclarationPS: '',  // empty chunk allowing user to add custom code
+    litUserDeclarationVS: '',  // empty chunk allowing user to add custom code
+    litUserCodePS: '',  // empty chunk allowing user to add custom code
+    litUserCodeVS: '',  // empty chunk allowing user to add custom code
+    litUserMainStartPS: '',  // empty chunk allowing user to add custom code
+    litUserMainStartVS: '',  // empty chunk allowing user to add custom code
+    litUserMainEndPS: '',  // empty chunk allowing user to add custom code
+    litUserMainEndVS: '',  // empty chunk allowing user to add custom code
     ltcPS,
     metalnessPS,
     metalnessModulatePS,

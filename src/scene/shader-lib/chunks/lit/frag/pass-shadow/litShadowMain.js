@@ -11,6 +11,9 @@ export default /* glsl */`
 #endif
 
 void main(void) {
+
+    #include "litUserMainStartPS"
+
     evaluateFrontend();
 
     // using non-standard depth, i.e gl_FragCoord.z
@@ -53,5 +56,7 @@ void main(void) {
             gl_FragColor = vec4(1.0);
         #endif
     #endif
+
+    #include "litUserMainEndPS"
 }
 `;
