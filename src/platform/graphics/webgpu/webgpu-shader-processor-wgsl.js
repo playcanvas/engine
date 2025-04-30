@@ -32,7 +32,7 @@ const KEYWORD_LINE = /^[ \t]*(attribute|varying|uniform)[ \t]*([^;]+)(;+)/gm;
 
 // match global variables of type texture, storage buffer, storage texture or external texture
 // eslint-disable-next-line
-const KEYWORD_RESOURCE = /^[ \t]*var\s*(<[^>]+>)?\s*[\w\d_]+\s*:\s*(texture_.*|storage_texture_.*|storage.*|external_texture|array<.*>|sampler|sampler_comparison).*;\s*$/gm;
+const KEYWORD_RESOURCE = /^[ \t]*var\s*(<[^>]+>)?\s*[\w\d_]+\s*:\s*(texture_.*|storage_texture_.*|storage.*|external_texture|sampler|sampler_comparison).*;\s*$/gm;
 
 // match varying name from string like: '@interpolate(perspective, centroid) smoothColor : vec3f;'
 // eslint-disable-next-line

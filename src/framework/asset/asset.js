@@ -26,10 +26,10 @@ const VARIANT_SUPPORT = {
 const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
 /**
- * Callback used by {@link Asset#ready} and called when an asset is ready.
- *
  * @callback AssetReadyCallback
+ * Callback used by {@link Asset#ready} and called when an asset is ready.
  * @param {Asset} asset - The ready asset.
+ * @returns {void}
  */
 
 /**
@@ -564,8 +564,8 @@ class Asset extends EventHandler {
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
      * const asset = app.assets.find("My Asset");
-     * asset.ready(function (asset) {
-     *   // asset loaded
+     * asset.ready((asset) => {
+     *     // asset loaded
      * });
      * app.assets.load(asset);
      */

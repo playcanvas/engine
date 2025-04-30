@@ -93,13 +93,6 @@ class LitShaderOptions {
 
     diffuseMapEnabled = false;
 
-    /**
-     * Replaced the whole fragment shader with this string.
-     *
-     * @type {string}
-     */
-    customFragmentShader = null;
-
     pixelSnap = false;
 
     /**

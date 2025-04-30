@@ -29,7 +29,36 @@ const FACING_THRESHOLD = 0.9;
 const GUIDE_ANGLE_COLOR = new Color(0, 0, 0, 0.3);
 
 /**
- * Rotation gizmo.
+ * The RotateGizmo provides interactive 3D manipulation handles for rotating/reorienting
+ * {@link Entity}s in a {@link Scene}. It creates a visual widget with a draggable ring for each
+ * axis of rotation, plus a fourth ring for rotation in the camera's view plane, allowing precise
+ * control over object orientation through direct manipulation. The gizmo's visual appearance can
+ * be customized away from the defaults as required.
+ *
+ * Note that the gizmo can be driven by both mouse+keyboard and touch input.
+ *
+ * ```javascript
+ * // Create a layer for rendering all gizmos
+ * const gizmoLayer = pc.Gizmo.createLayer(app);
+ *
+ * // Create a rotate gizmo
+ * const gizmo = new pc.RotateGizmo(cameraComponent, gizmoLayer);
+ *
+ * // Create an entity to attach the gizmo to
+ * const entity = new pc.Entity();
+ * entity.addComponent('render', {
+ *     type: 'box'
+ * });
+ * app.root.addChild(entity);
+ *
+ * // Attach the gizmo to the entity
+ * gizmo.attach([entity]);
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Rotate Gizmo](https://playcanvas.github.io/#/gizmos/transform-rotate)
+ * - [Editor](https://playcanvas.github.io/#/misc/editor)
  *
  * @category Gizmo
  */
@@ -142,10 +171,11 @@ class RotateGizmo extends TransformGizmo {
     orbitRotation = false;
 
     /**
-     * Creates a new RotateGizmo object.
+     * Creates a new RotateGizmo object. Use {@link Gizmo.createLayer} to create the layer
+     * required to display the gizmo.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The render layer.
+     * @param {Layer} layer - The layer responsible for rendering the gizmo.
      * @example
      * const gizmo = new pc.RotateGizmo(camera, layer);
      */

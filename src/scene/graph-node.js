@@ -69,21 +69,20 @@ function findNode(node, test) {
 }
 
 /**
+ * @callback FindNodeCallback
  * Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph
  * node and all of its descendants.
- *
- * @callback FindNodeCallback
  * @param {GraphNode} node - The current graph node.
  * @returns {boolean} Returning `true` will result in that node being returned from
  * {@link GraphNode#find} or {@link GraphNode#findOne}.
  */
 
 /**
+ * @callback ForEachNodeCallback
  * Callback used by {@link GraphNode#forEach} to iterate through a graph node and all of its
  * descendants.
- *
- * @callback ForEachNodeCallback
  * @param {GraphNode} node - The current graph node.
+ * @returns {void}
  */
 
 /**
@@ -597,7 +596,7 @@ class GraphNode extends EventHandler {
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
      * // Finds all nodes that have a model component and have 'door' in their lower-cased name
-     * const doors = house.find(function (node) {
+     * const doors = house.find((node) => {
      *     return node.model && node.name.toLowerCase().indexOf('door') !== -1;
      * });
      * @example
@@ -634,7 +633,7 @@ class GraphNode extends EventHandler {
      * node is found.
      * @example
      * // Find the first node that is called 'head' and has a model component
-     * const head = player.findOne(function (node) {
+     * const head = player.findOne((node) => {
      *     return node.model && node.name === 'head';
      * });
      * @example
@@ -734,7 +733,7 @@ class GraphNode extends EventHandler {
      * @param {object} [thisArg] - Optional value to use as this when executing callback function.
      * @example
      * // Log the path and name of each node in descendant tree starting with "parent"
-     * parent.forEach(function (node) {
+     * parent.forEach((node) => {
      *     console.log(node.path + "/" + node.name);
      * });
      */

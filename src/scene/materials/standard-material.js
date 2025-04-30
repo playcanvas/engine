@@ -8,7 +8,7 @@ import {
     DETAILMODE_MUL,
     DITHER_NONE,
     FRESNEL_SCHLICK,
-    SHADER_DEPTH, SHADER_PICK,
+    SHADER_PICK,
     SHADER_PREPASS,
     SPECOCC_AO,
     tonemapNames
@@ -41,9 +41,8 @@ let _params = new Set();
 const _tempColor = new Color();
 
 /**
- * Callback used by {@link StandardMaterial#onUpdateShader}.
- *
  * @callback UpdateShaderCallback
+ * Callback used by {@link StandardMaterial#onUpdateShader}.
  * @param {StandardMaterialOptions} options - An object with shader generator settings (based on current
  * material and scene properties), that you can change and then return. Properties of the object passed
  * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
@@ -52,10 +51,10 @@ const _tempColor = new Color();
  */
 
 /**
- * A Standard material is the main, general purpose material that is most often used for rendering.
+ * A standard material is the main, general purpose material that is most often used for rendering.
  * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
- * Most maps can use 3 types of input values in any combination: constant (color or number), mesh
- * vertex colors and a texture. All enabled inputs are multiplied together.
+ * Most maps can use 3 types of input values in any combination: constant ({@link Color} or number),
+ * mesh vertex colors and a {@link Texture}. All enabled inputs are multiplied together.
  *
  * @property {Color} ambient The ambient color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
@@ -836,7 +835,7 @@ class StandardMaterial extends Material {
 
         // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
+        const minimalOptions = pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
         options.defines = getCoreDefines(this, params);
 

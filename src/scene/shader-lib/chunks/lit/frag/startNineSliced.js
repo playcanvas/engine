@@ -1,5 +1,3 @@
 export default /* glsl */`
-    nineSlicedUv = vUv0;
-    nineSlicedUv.y = 1.0 - nineSlicedUv.y;
-
+    nineSlicedUv = vec2(vUv0.x, 1.0 - vUv0.y);
 `;

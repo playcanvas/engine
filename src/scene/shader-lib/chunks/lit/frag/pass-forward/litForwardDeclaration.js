@@ -57,4 +57,13 @@ vec3 sSpecularLight;
         #define LIT_OLD_AMBIENT
     #endif
 #endif
+
+// lightmap baking
+#ifdef STD_LIGHTMAP_DIR
+    uniform float bakeDir;
+#endif
+#ifdef LIT_LIGHTMAP_BAKING_ADD_AMBIENT
+    uniform float ambientBakeOcclusionContrast;
+    uniform float ambientBakeOcclusionBrightness;
+#endif
 `;
