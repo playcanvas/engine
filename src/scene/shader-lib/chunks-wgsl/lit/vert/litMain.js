@@ -99,7 +99,7 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
 
     #ifdef LINEAR_DEPTH
         // linear depth from the worldPosition, see getLinearDepth
-        output.vLinearDepth = -(matrix_view * vec4f(vPositionW, 1.0)).z;
+        output.vLinearDepth = -(uniform.matrix_view * vec4f(output.vPositionW, 1.0)).z;
     #endif
 
     #ifdef MSDF
