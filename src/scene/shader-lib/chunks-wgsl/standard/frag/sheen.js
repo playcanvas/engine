@@ -10,7 +10,7 @@ fn getSheen() {
     #endif
 
     #ifdef STD_SHEEN_VERTEX
-    sheenColor = sheenColor * saturate(vVertexColor.{STD_SHEEN_VERTEX_CHANNEL});
+    sheenColor = sheenColor * saturate3(vVertexColor.{STD_SHEEN_VERTEX_CHANNEL});
     #endif
 
     sSpecularity = sheenColor;

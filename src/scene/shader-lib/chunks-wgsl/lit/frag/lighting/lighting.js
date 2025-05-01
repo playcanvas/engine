@@ -43,7 +43,9 @@ export default /* wgsl */`
 
 #if defined(SHADOW_KIND_PCSS)
     #include "linearizeDepthPS"
-    #include "shadowPCSSPS"
+
+    // omni / spot PCSS is not supported on WebGPU currently, as this is only for non-clustered lights
+    // #include "shadowPCSSPS"
     #include "shadowSoftPS"
 #endif
 

@@ -3,10 +3,13 @@ import ambientPS from './lit/frag/ambient.js';
 import aoPS from './standard/frag/ao.js';
 import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
+import bakeDirLmEndPS from './lightmapper/frag/bakeDirLmEnd.js';
+import bakeLmEndPS from './lightmapper/frag/bakeLmEnd.js';
 import basePS from './lit/frag/base.js';
 import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
 import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
 import bayerPS from './common/frag/bayer.js';
+import bilateralDeNoisePS from './lightmapper/frag/bilateralDeNoise.js';
 import blurVSMPS from './lit/frag/blurVSM.js';
 import clearCoatPS from './standard/frag/clearCoat.js';
 import clearCoatGlossPS from './standard/frag/clearCoatGloss.js';
@@ -26,6 +29,7 @@ import debugOutputPS from './lit/frag/debug-output.js';
 import debugProcessFrontendPS from './lit/frag/debug-process-frontend.js';
 import decodePS from './common/frag/decode.js';
 import detailModesPS from './standard/frag/detailModes.js';
+import dilatePS from './lightmapper/frag/dilate.js';
 import diffusePS from './standard/frag/diffuse.js';
 import emissivePS from './standard/frag/emissive.js';
 import encodePS from './common/frag/encode.js';
@@ -37,7 +41,6 @@ import falloffLinearPS from './lit/frag/falloffLinear.js';
 import floatAsUintPS from './common/frag/float-as-uint.js';
 import fogPS from './common/frag/fog.js';
 import fresnelSchlickPS from './lit/frag/fresnelSchlick.js';
-import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
 import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gammaPS from './common/frag/gamma.js';
 import gles3PS from '../../../platform/graphics/shader-chunks/frag/gles3.js';
@@ -82,6 +85,7 @@ import litForwardDeclarationPS from './lit/frag/pass-forward/litForwardDeclarati
 import litForwardMainPS from './lit/frag/pass-forward/litForwardMain.js';
 import litForwardPostCodePS from './lit/frag/pass-forward/litForwardPostCode.js';
 import litForwardPreCodePS from './lit/frag/pass-forward/litForwardPreCode.js';
+import litMainPS from './lit/frag/litMain.js';
 import litMainVS from './lit/vert/litMain.js';
 import litOtherMainPS from './lit/frag/pass-other/litOtherMain.js';
 import litShaderArgsPS from './standard/frag/litShaderArgs.js';
@@ -182,7 +186,6 @@ import startNineSlicedPS from './lit/frag/startNineSliced.js';
 import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
 import stdDeclarationPS from './standard/frag/stdDeclaration.js';
 import stdFrontEndPS from './standard/frag/stdFrontEnd.js';
-import tangentBinormalVS from './lit/vert/tangentBinormal.js';
 import TBNPS from './lit/frag/TBN.js';
 import thicknessPS from './standard/frag/thickness.js';
 import tonemappingPS from './common/frag/tonemapping/tonemapping.js';
@@ -218,10 +221,13 @@ const shaderChunks = {
     aoPS,
     aoDiffuseOccPS,
     aoSpecOccPS,
+    bakeDirLmEndPS,
+    bakeLmEndPS,
     basePS,
     baseNineSlicedPS,
     baseNineSlicedTiledPS,
     bayerPS,
+    bilateralDeNoisePS,
     blurVSMPS,
     clearCoatPS,
     clearCoatGlossPS,
@@ -240,6 +246,7 @@ const shaderChunks = {
     debugOutputPS,
     debugProcessFrontendPS,
     detailModesPS,
+    dilatePS,
     diffusePS,
     decodePS,
     emissivePS,
@@ -252,7 +259,8 @@ const shaderChunks = {
     floatAsUintPS,
     fogPS,
     fresnelSchlickPS,
-    fullscreenQuadPS,
+    frontendCodePS: '',  // empty chunk, supplied by the shader generator
+    frontendDeclPS: '',  // empty chunk, supplied by the shader generator
     fullscreenQuadVS,
     gammaPS,
     gles3PS,
@@ -298,11 +306,20 @@ const shaderChunks = {
     litForwardMainPS,
     litForwardPostCodePS,
     litForwardPreCodePS,
+    litMainPS,
     litMainVS,
     litOtherMainPS,
     litShaderArgsPS,
     litShaderCorePS,
     litShadowMainPS,
+    litUserDeclarationPS: '',  // empty chunk allowing user to add custom code
+    litUserDeclarationVS: '',  // empty chunk allowing user to add custom code
+    litUserCodePS: '',  // empty chunk allowing user to add custom code
+    litUserCodeVS: '',  // empty chunk allowing user to add custom code
+    litUserMainStartPS: '',  // empty chunk allowing user to add custom code
+    litUserMainStartVS: '',  // empty chunk allowing user to add custom code
+    litUserMainEndPS: '',  // empty chunk allowing user to add custom code
+    litUserMainEndVS: '',  // empty chunk allowing user to add custom code
     ltcPS,
     metalnessPS,
     metalnessModulatePS,
@@ -398,7 +415,6 @@ const shaderChunks = {
     startNineSlicedTiledPS,
     stdDeclarationPS,
     stdFrontEndPS,
-    tangentBinormalVS,
     TBNPS,
     thicknessPS,
     tonemappingPS,
@@ -419,6 +435,8 @@ const shaderChunks = {
     uvTransformVS,
     uvTransformUniformsPS,
     viewDirPS,
+    varyingsPS: '',  // empty chunk, supplied by the shader generator
+    varyingsVS: '',  // empty chunk, supplied by the shader generator
     webgpuPS,
     webgpuVS
 };

@@ -1,5 +1,16 @@
 export default /* glsl */`
+
+#ifdef LIT_LIGHTMAP_BAKING_ADD_AMBIENT
+    // diffuse light stores accumulated AO, apply contrast and brightness to it
+    // and multiply ambient light color by the AO
+    dDiffuseLight = ((dDiffuseLight - 0.5) * max(ambientBakeOcclusionContrast + 1.0, 0.0)) + 0.5;
+    dDiffuseLight += vec3(ambientBakeOcclusionBrightness);
+    dDiffuseLight = saturate(dDiffuseLight);
+    dDiffuseLight *= dAmbientLight;
+#endif
+
 #ifdef LIGHTMAP_RGBM
+    // encode to RGBM
     gl_FragColor.rgb = dDiffuseLight;
     gl_FragColor.rgb = pow(gl_FragColor.rgb, vec3(0.5));
     gl_FragColor.rgb /= 8.0;

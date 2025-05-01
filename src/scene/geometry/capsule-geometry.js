@@ -4,11 +4,30 @@ import { calculateTangents } from './geometry-utils.js';
 /**
  * A procedural capsule-shaped geometry.
  *
- * The size, shape and tesselation properties of the capsule can be controlled via constructor
- * parameters. By default, the function will create a capsule standing vertically centered on the
- * XZ-plane with a radius of 0.3, a height of 1.0, 1 height segment and 20 cap segments.
+ * Typically, you would:
  *
- * Note that the capsule is created with UVs in the range of 0 to 1.
+ * 1. Create a CapsuleGeometry instance.
+ * 2. Generate a {@link Mesh} from the geometry.
+ * 3. Create a {@link MeshInstance} referencing the mesh.
+ * 4. Create an {@link Entity} with a {@link RenderComponent} and assign the {@link MeshInstance} to it.
+ * 5. Add the entity to the {@link Scene}.
+ *
+ * ```javascript
+ * // Create a mesh instance
+ * const geometry = new pc.CapsuleGeometry();
+ * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new pc.StandardMaterial();
+ * const meshInstance = new pc.MeshInstance(mesh, material);
+ *
+ * // Create an entity
+ * const entity = new pc.Entity();
+ * entity.addComponent('render', {
+ *     meshInstances: [meshInstance]
+ * });
+ *
+ * // Add the entity to the scene hierarchy
+ * app.scene.root.addChild(entity);
+ * ```
  *
  * @category Graphics
  */
@@ -16,16 +35,27 @@ class CapsuleGeometry extends ConeBaseGeometry {
     /**
      * Create a new CapsuleGeometry instance.
      *
-     * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
-     * @param {number} [opts.radius] - The radius of the tube forming the body of the capsule (defaults
-     * to 0.3).
-     * @param {number} [opts.height] - The length of the body of the capsule from tip to tip (defaults
-     * to 1.0).
-     * @param {number} [opts.heightSegments] - The number of divisions along the tubular length of the
-     * capsule (defaults to 1).
-     * @param {number} [opts.sides] - The number of divisions around the tubular body of the capsule
-     * (defaults to 20).
-     * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+     * By default, the constructor creates a capsule standing vertically centered on the XZ-plane
+     * with a radius of 0.3, a height of 1.0, 1 height segment and 20 cap segments. The capsule is
+     * created with UVs in the range of 0 to 1.
+     *
+     * @param {object} [opts] - Options object.
+     * @param {number} [opts.radius] - The radius of the tube forming the body of the capsule.
+     * Defaults to 0.3.
+     * @param {number} [opts.height] - The length of the body of the capsule from tip to tip.
+     * Defaults to 1.
+     * @param {number} [opts.heightSegments] - The number of divisions along the tubular length of
+     * the capsule. Defaults to 1.
+     * @param {number} [opts.sides] - The number of divisions around the tubular body of the capsule.
+     * Defaults to 20.
+     * @param {boolean} [opts.calculateTangents] - Generate tangent information. Defaults to false.
+     * @example
+     * const geometry = new pc.CapsuleGeometry({
+     *     radius: 1,
+     *     height: 2,
+     *     heightSegments: 2,
+     *     sides: 20
+     * });
      */
     constructor(opts = {}) {
 

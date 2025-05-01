@@ -13,24 +13,25 @@ fn evalWorldPosition(vertexPosition: vec3f, modelMatrix: mat4x4f) -> vec4f {
 
     #ifdef NINESLICED
         // outer and inner vertices are at the same position, scale both
-        localPos.xz *= uniform.outerScale;
+        var localPosXZ: vec2f = localPos.xz;
+        localPosXZ = localPosXZ * uniform.outerScale;
 
         // offset inner vertices inside
         // (original vertices must be in [-1;1] range)
         let positiveUnitOffset: vec2f = clamp(vertexPosition.xz, vec2f(0.0), vec2f(1.0));
         let negativeUnitOffset: vec2f = clamp(-vertexPosition.xz, vec2f(0.0), vec2f(1.0));
-        localPos.xz += (-positiveUnitOffset * uniform.innerOffset.xy + negativeUnitOffset * uniform.innerOffset.zw) * vertex_texCoord0.xy;
+        localPosXZ = localPosXZ + (-positiveUnitOffset * uniform.innerOffset.xy + negativeUnitOffset * uniform.innerOffset.zw) * vertex_texCoord0.xy;
 
-        vTiledUv = (localPos.xz - outerScale + uniform.innerOffset.xy) * -0.5 + 1.0; // uv = local pos - inner corner
+        dTiledUvGlobal = (localPosXZ - uniform.outerScale + uniform.innerOffset.xy) * -0.5 + 1.0; // uv = local pos - inner corner
 
-        localPos.xz *= -0.5; // move from -1;1 to -0.5;0.5
-        localPos = localPos.xzy;
+        localPosXZ = localPosXZ * -0.5;
+        localPos = vec3f(localPosXZ.x, localPosXZ.y, localPos.y);
     #endif
 
     var posW: vec4f = modelMatrix * vec4f(localPos, 1.0);
 
     #ifdef SCREENSPACE
-        posW.zw = vec2f(0.0, 1.0);
+        posW = vec4f(posW.xy, 0.0, 1.0);
     #endif
 
     return posW;
@@ -50,7 +51,7 @@ fn getPosition() -> vec4f {
     #else
         #ifdef SCREENSPACE
             screenPos = posW;
-            screenPos.y *= uniforms.projectionFlipY;
+            screenPos.y *= uniform.projectionFlipY;
         #else
             screenPos = uniform.matrix_viewProjection * posW;
         #endif

@@ -10,18 +10,19 @@ export default /* glsl */`
 #endif
 
 void main(void) {
+
+    #include "litUserMainStartPS"
+
     evaluateFrontend();
 
     #ifdef PICK_PASS
         gl_FragColor = getPickOutput();
     #endif
 
-    #ifdef DEPTH_PASS
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-    #endif
-
     #ifdef PREPASS_PASS
         gl_FragColor = float2vec4(vLinearDepth);
     #endif
+
+    #include "litUserMainEndPS"
 }
 `;

@@ -12,6 +12,9 @@ export default /* wgsl */`
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+
+    #include "litUserMainStartPS"
+
     var output: FragmentOutput;
 
     evaluateFrontend();
@@ -24,7 +27,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             // spot/omni shadows currently use linear depth.
             // TODO: use perspective depth for spot/omni the same way as directional
             #if LIGHT_TYPE != DIRECTIONAL
-                depth = linearizeDepth(depth, camera_params);
+                depth = linearizeDepthWithParams(depth, camera_params);
             #endif
         #endif
 
@@ -57,6 +60,8 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         #endif
     #endif
 
+    #include "litUserMainEndPS"
+    
     return output;
 }
 `;

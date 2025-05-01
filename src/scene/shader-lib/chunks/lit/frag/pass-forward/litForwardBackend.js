@@ -217,8 +217,19 @@ void evaluateBackend() {
 
     #endif
 
-    #include "endPS"
-    #include "outputAlphaPS"
+    // end chunks - when baking lightmap
+    #ifdef LIT_LIGHTMAP_BAKING
+        #ifdef LIT_LIGHTMAP_BAKING_COLOR
+            #include "bakeLmEndPS"
+        #endif
+        #ifdef LIT_LIGHTMAP_BAKING_DIR
+            #include "bakeDirLmEndPS"
+        #endif
+    #else
+        // end chunks - in all other cases
+        #include "endPS"
+        #include "outputAlphaPS"
+    #endif
 
     #ifdef LIT_MSDF
         gl_FragColor = applyMsdf(gl_FragColor);

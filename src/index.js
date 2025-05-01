@@ -165,7 +165,6 @@ export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
-export { CameraShaderParams } from './scene/camera-shader-params.js'; // needed by the Editor
 export { WorldClusters } from './scene/lighting/world-clusters.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
@@ -228,7 +227,6 @@ export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js'
 export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
 export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
-export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
 export { ChunkUtils } from './scene/shader-lib/chunk-utils.js';
 
 // SCENE / SKY

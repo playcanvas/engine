@@ -36,6 +36,7 @@ vec4 applyMsdf(vec4 color) {
     vec3 tsample = texture2D(texture_msdfMap, vUv0).rgb;
     vec2 uvShdw = vUv0 - shadow_offset;
     vec3 ssample = texture2D(texture_msdfMap, uvShdw).rgb;
+
     // get the signed distance value
     float sigDist = median(tsample.r, tsample.g, tsample.b);
     float sigDistShdw = median(ssample.r, ssample.g, ssample.b);

@@ -1,5 +1,10 @@
 // main shader of the lit vertex shader
 export default /* wgsl */`
+
+#include "varyingsVS"
+
+#include  "litUserDeclarationVS"
+
 #ifdef VERTEX_COLOR
     attribute vertex_color: vec4f;
 #endif
@@ -8,6 +13,9 @@ export default /* wgsl */`
 
     varying vMask: vec2f;
     varying vTiledUv: vec2f;
+
+    var<private> dMaskGlobal: vec2f;
+    var<private> dTiledUvGlobal: vec2f;
 
     uniform innerOffset: vec4f;
     uniform outerScale: vec2f;
@@ -47,7 +55,6 @@ var<private> dModelMatrix: mat4x4f;
 
 #ifdef TANGENTS
     attribute vertex_tangent: vec4f;
-    #include "tangentBinormalVS"
 #endif
 
 // expand uniforms for uv transforms
@@ -57,8 +64,13 @@ var<private> dModelMatrix: mat4x4f;
     #include "msdfVS"
 #endif
 
+#include  "litUserCodeVS"
+
 @vertex
 fn vertexMain(input : VertexInput) -> VertexOutput {
+
+    #include "litUserMainStartVS"
+
     var output : VertexOutput;
     output.position = getPosition();
     output.vPositionW = getWorldPosition();
@@ -68,8 +80,8 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
     #endif
 
     #ifdef TANGENTS
-        output.vTangentW = getTangent();
-        output.vBinormalW = getBinormal();
+        output.vTangentW = normalize(dNormalMatrix * vertex_tangent.xyz);
+        output.vBinormalW = cross(output.vNormalW, output.vTangentW) * vertex_tangent.w;
     #elif defined(GGX_SPECULAR)
         output.vObjectSpaceUpW = normalize(dNormalMatrix * vec3f(0.0, 1.0, 0.0));
     #endif
@@ -97,12 +109,24 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
 
     #ifdef LINEAR_DEPTH
         // linear depth from the worldPosition, see getLinearDepth
-        output.vLinearDepth = -(matrix_view * vec4f(vPositionW, 1.0)).z;
+        output.vLinearDepth = -(uniform.matrix_view * vec4f(output.vPositionW, 1.0)).z;
     #endif
 
     #ifdef MSDF
         unpackMsdfParams();
+
+        output.outline_color = dOutlineColor;
+        output.outline_thickness = dOutlineThickness;
+        output.shadow_color = dShadowColor;
+        output.shadow_offset = dShadowOffset;
     #endif
+
+    #ifdef NINESLICED
+        output.vMask = dMaskGlobal;
+        output.vTiledUv = dTiledUvGlobal;
+    #endif
+
+    #include "litUserMainEndVS"
 
     return output;
 }

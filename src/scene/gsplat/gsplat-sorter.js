@@ -114,17 +114,16 @@ function SortWorker() {
                 distances[i] = 0;
                 countBuffer[0]++;
             }
-        } else if (chunks) {
-            // handle sort with compressed chunks
-            const numChunks = chunks.length / 6;
+        } else {
+            // use chunks to calculate rough histogram of splats per distance
+            const numChunks = chunks.length / 4;
 
-            // calculate a histogram of chunk distances to camera
             binCount.fill(0);
             for (let i = 0; i < numChunks; ++i) {
-                const x = chunks[i * 6 + 0];
-                const y = chunks[i * 6 + 1];
-                const z = chunks[i * 6 + 2];
-                const r = chunks[i * 6 + 3];
+                const x = chunks[i * 4 + 0];
+                const y = chunks[i * 4 + 1];
+                const z = chunks[i * 4 + 2];
+                const r = chunks[i * 4 + 3];
                 const d = x * dx + y * dy + z * dz - minDist;
 
                 const binMin = Math.max(0, Math.floor((d - r) * numBins / range));
@@ -156,23 +155,6 @@ function SortWorker() {
                 const d = (x * dx + y * dy + z * dz - minDist) / binRange;
                 const bin = d >>> 0;
                 const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
-
-                distances[i] = sortKey;
-
-                // count occurrences of each distance
-                countBuffer[sortKey]++;
-            }
-        } else {
-            // generate per vertex distance to camera for uncompressed data
-            const divider = (2 ** compareBits) / range;
-            let ii = 0;
-            for (let i = 0; i < numVertices; ++i) {
-                const x = centers[ii++];
-                const y = centers[ii++];
-                const z = centers[ii++];
-
-                const d = (x * dx + y * dy + z * dz - minDist) * divider;
-                const sortKey = d >>> 0;
 
                 distances[i] = sortKey;
 
@@ -230,60 +212,89 @@ function SortWorker() {
             centers = new Float32Array(message.data.centers);
             forceUpdate = true;
 
-            // calculate bounds
-            let initialized = false;
-            const numVertices = centers.length / 3;
-            for (let i = 0; i < numVertices; ++i) {
-                let x = centers[i * 3 + 0];
-                let y = centers[i * 3 + 1];
-                let z = centers[i * 3 + 2];
+            if (message.data.chunks) {
+                const chunksSrc = new Float32Array(message.data.chunks);
+                // reuse chunks memory, but we only need 4 floats per chunk
+                chunks = new Float32Array(message.data.chunks, 0, chunksSrc.length * 4 / 6);
 
-                if (isNaN(x)) {
-                    x = centers[i * 3 + 0] = 0;
+                boundMin.x = chunksSrc[0];
+                boundMin.y = chunksSrc[1];
+                boundMin.z = chunksSrc[2];
+                boundMax.x = chunksSrc[3];
+                boundMax.y = chunksSrc[4];
+                boundMax.z = chunksSrc[5];
+
+                // convert chunk min/max to center/radius
+                for (let i = 0; i < chunksSrc.length / 6; ++i) {
+                    const mx = chunksSrc[i * 6 + 0];
+                    const my = chunksSrc[i * 6 + 1];
+                    const mz = chunksSrc[i * 6 + 2];
+                    const Mx = chunksSrc[i * 6 + 3];
+                    const My = chunksSrc[i * 6 + 4];
+                    const Mz = chunksSrc[i * 6 + 5];
+
+                    chunks[i * 4 + 0] = (mx + Mx) * 0.5;
+                    chunks[i * 4 + 1] = (my + My) * 0.5;
+                    chunks[i * 4 + 2] = (mz + Mz) * 0.5;
+                    chunks[i * 4 + 3] = Math.sqrt((Mx - mx) ** 2 + (My - my) ** 2 + (Mz - mz) ** 2) * 0.5;
+
+                    if (mx < boundMin.x) boundMin.x = mx;
+                    if (my < boundMin.y) boundMin.y = my;
+                    if (mz < boundMin.z) boundMin.z = mz;
+                    if (Mx > boundMax.x) boundMax.x = Mx;
+                    if (My > boundMax.y) boundMax.y = My;
+                    if (Mz > boundMax.z) boundMax.z = Mz;
                 }
-                if (isNaN(y)) {
-                    y = centers[i * 3 + 1] = 0;
+            } else {
+                // chunk bounds weren't provided, so calculate them from the centers
+                const numVertices = centers.length / 3;
+                const numChunks = Math.ceil(numVertices / 256);
+
+                // allocate storage for one bounding sphere per 256-vertex chunk
+                chunks = new Float32Array(numChunks * 4);
+
+                boundMin.x = boundMin.y = boundMin.z = Infinity;
+                boundMax.x = boundMax.y = boundMax.z = -Infinity;
+
+                // calculate bounds
+                let mx, my, mz, Mx, My, Mz;
+                for (let c = 0; c < numChunks; ++c) {
+                    mx = my = mz = Infinity;
+                    Mx = My = Mz = -Infinity;
+
+                    const start = c * 256;
+                    const end = Math.min(numVertices, (c + 1) * 256);
+                    for (let i = start; i < end; ++i) {
+                        const x = centers[i * 3 + 0];
+                        const y = centers[i * 3 + 1];
+                        const z = centers[i * 3 + 2];
+
+                        const validX = Number.isFinite(x);
+                        const validY = Number.isFinite(y);
+                        const validZ = Number.isFinite(z);
+
+                        if (!validX) centers[i * 3 + 0] = 0;
+                        if (!validY) centers[i * 3 + 1] = 0;
+                        if (!validZ) centers[i * 3 + 2] = 0;
+                        if (!validX || !validY || !validZ) {
+                            continue;
+                        }
+
+                        if (x < mx) mx = x; else if (x > Mx) Mx = x;
+                        if (y < my) my = y; else if (y > My) My = y;
+                        if (z < mz) mz = z; else if (z > Mz) Mz = z;
+
+                        if (x < boundMin.x) boundMin.x = x; else if (x > boundMax.x) boundMax.x = x;
+                        if (y < boundMin.y) boundMin.y = y; else if (y > boundMax.y) boundMax.y = y;
+                        if (z < boundMin.z) boundMin.z = z; else if (z > boundMax.z) boundMax.z = z;
+                    }
+
+                    // calculate chunk center and radius from bound min/max
+                    chunks[c * 4 + 0] = (mx + Mx) * 0.5;
+                    chunks[c * 4 + 1] = (my + My) * 0.5;
+                    chunks[c * 4 + 2] = (mz + Mz) * 0.5;
+                    chunks[c * 4 + 3] = Math.sqrt((Mx - mx) ** 2 + (My - my) ** 2 + (Mz - mz) ** 2) * 0.5;
                 }
-                if (isNaN(z)) {
-                    z = centers[i * 3 + 2] = 0;
-                }
-
-                if (!initialized) {
-                    initialized = true;
-                    boundMin.x = boundMax.x = x;
-                    boundMin.y = boundMax.y = y;
-                    boundMin.z = boundMax.z = z;
-                } else {
-                    boundMin.x = Math.min(boundMin.x, x);
-                    boundMax.x = Math.max(boundMax.x, x);
-                    boundMin.y = Math.min(boundMin.y, y);
-                    boundMax.y = Math.max(boundMax.y, y);
-                    boundMin.z = Math.min(boundMin.z, z);
-                    boundMax.z = Math.max(boundMax.z, z);
-                }
-            }
-
-            if (!initialized) {
-                boundMin.x = boundMax.x = boundMin.y = boundMax.y = boundMin.z = boundMax.z = 0;
-            }
-        }
-        if (message.data.chunks) {
-            chunks = new Float32Array(message.data.chunks);
-            forceUpdate = true;
-
-            // convert chunk min/max to center/radius
-            for (let i = 0; i < chunks.length / 6; ++i) {
-                const mx = chunks[i * 6 + 0];
-                const my = chunks[i * 6 + 1];
-                const mz = chunks[i * 6 + 2];
-                const Mx = chunks[i * 6 + 3];
-                const My = chunks[i * 6 + 4];
-                const Mz = chunks[i * 6 + 5];
-
-                chunks[i * 6 + 0] = (mx + Mx) * 0.5;
-                chunks[i * 6 + 1] = (my + My) * 0.5;
-                chunks[i * 6 + 2] = (mz + Mz) * 0.5;
-                chunks[i * 6 + 3] = Math.sqrt((Mx - mx) ** 2 + (My - my) ** 2 + (Mz - mz) ** 2) * 0.5;
             }
         }
         if (message.data.hasOwnProperty('mapping')) {
