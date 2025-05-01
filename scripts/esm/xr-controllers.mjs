@@ -1,6 +1,8 @@
 import { Script } from 'playcanvas';
 
 class XrControllers extends Script {
+    static scriptName = 'xrControllers';
+
     /**
      * The base URL for fetching the WebXR input profiles.
      *
