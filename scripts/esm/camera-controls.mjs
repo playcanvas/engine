@@ -33,7 +33,7 @@ const EPSILON = 0.0001;
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class CameraControls extends Script {
-    static scriptName = 'camera-controls';
+    static scriptName = 'cameraControls';
 
     /**
      * Fired to clamp the position (Vec3).

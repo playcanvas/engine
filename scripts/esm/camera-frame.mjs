@@ -333,7 +333,7 @@ class Dof {
 }
 
 class CameraFrame extends Script {
-    static scriptName = 'camera-frame';
+    static scriptName = 'cameraFrame';
 
     /**
      * @attribute

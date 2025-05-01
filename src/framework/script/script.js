@@ -28,7 +28,7 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  * @example
  * ```javascript
  * class EntityRotator extends Script {
- *     static scriptName = 'entity-rotator';
+ *     static scriptName = 'entityRotator';
  *
  *     update(dt) {
  *         this.entity.rotateLocal(0, 1, 0);
@@ -50,7 +50,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
-     *     static scriptName = 'player-controller';
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('enable', () => {
      *             // Script Instance is now enabled
@@ -66,7 +66,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
-     *     static scriptName = 'player-controller';
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('disable', () => {
      *             // Script Instance is now disabled
@@ -83,7 +83,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
-     *     static scriptName = 'player-controller';
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('state', (enabled) => {
      *             console.log(`Script Instance is now ${enabled ? 'enabled' : 'disabled'}`);
@@ -99,7 +99,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
-     *     static scriptName = 'player-controller';
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('destroy', () => {
      *             // no longer part of the entity
@@ -123,7 +123,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
-     *     static scriptName = 'player-controller';
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('attr', (name, newValue, oldValue) => {
      *             console.log(`Attribute '${name}' changed from '${oldValue}' to '${newValue}'`);
@@ -132,7 +132,7 @@ export class Script extends EventHandler {
      * };
      * @example
      * export class PlayerController extends Script {
-     *     static scriptName = 'player-controller';
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('attr:speed', (newValue, oldValue) => {
      *             console.log(`Attribute 'speed' changed from '${oldValue}' to '${newValue}'`);
@@ -150,7 +150,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
-     *     static scriptName = 'player-controller';
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('error', (err, method) => {
      *             // caught an exception

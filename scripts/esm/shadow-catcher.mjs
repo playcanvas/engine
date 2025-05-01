@@ -30,7 +30,7 @@ import {
  * app.root.addChild(shadowCatcher);
  */
 class ShadowCatcher extends Script {
-    static scriptName = 'shadow-catcher';
+    static scriptName = 'shadowCatcher';
 
     /**
      * The scale of the shadow catcher.
