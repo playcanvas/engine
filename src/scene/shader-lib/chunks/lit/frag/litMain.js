@@ -5,7 +5,7 @@ export default /* glsl */`
 #include "litUserDeclarationPS"
 #include "frontendDeclPS"
 
-#if defined(PICK_PASS) || definde(PREPASS_PASS)
+#if defined(PICK_PASS) || defined(PREPASS_PASS)
 
     #include "frontendCodePS"
     #include "litUserCodePS"
