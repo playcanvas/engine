@@ -48,7 +48,7 @@ assetListLoader.load(() => {
     const camera = new pc.Entity();
     camera.addComponent('camera', {
         toneMapping: pc.TONEMAP_ACES,
-        clearColor: new pc.Color(0.95, 0.95, 0.95),
+        clearColor: new pc.Color(0.95, 0.95, 0.95)
     });
     app.root.addChild(camera);
 
