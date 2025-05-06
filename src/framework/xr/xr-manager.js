@@ -30,13 +30,20 @@ import { XrViews } from './xr-views.js';
 
 /**
  * @callback XrRoomCaptureCallback
- * Callback used by manual room capturing.
+ * Callback used by {@link XrManager#initiateRoomCapture}.
  * @param {Error|null} err - The Error object or null if manual room capture was successful.
  * @returns {void}
  */
 
 /**
- * Manage and update XR session and its states.
+ * XrManager provides a comprehensive interface for WebXR integration in PlayCanvas applications.
+ * It manages the full lifecycle of XR sessions (VR/AR), handles device capabilities, and provides
+ * access to various XR features through specialized subsystems.
+ *
+ * In order for XR to be available, ensure that your application is served over HTTPS or localhost.
+ *
+ * The {@link AppBase} class automatically creates an instance of this class and makes it available
+ * as {@link AppBase#xr}.
  *
  * @category XR
  */
@@ -229,7 +236,7 @@ class XrManager extends EventHandler {
     anchors;
 
     /**
-     * @type {CameraComponent}
+     * @type {CameraComponent|null}
      * @private
      */
     _camera = null;
@@ -349,6 +356,9 @@ class XrManager extends EventHandler {
      * Attempts to start XR session for provided {@link CameraComponent} and optionally fires
      * callback when session is created or failed to create. Integrated XR APIs need to be enabled
      * by providing relevant options.
+     *
+     * Note that the start method needs to be called in response to user action, such as a button
+     * click. It will not work if called in response to a timer or other event.
      *
      * @param {CameraComponent} camera - It will be used to render XR session and manipulated based
      * on pose tracking.

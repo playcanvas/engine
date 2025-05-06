@@ -258,7 +258,7 @@ class XrAnchors extends EventHandler {
      * @example
      * // create an anchor from a hit test result
      * hitTestSource.on('result', (position, rotation, inputSource, hitTestResult) => {
-     *     app.xr.anchors.create(hitTestResult, function (err, anchor) {
+     *     app.xr.anchors.create(hitTestResult, (err, anchor) => {
      *         if (!err) {
      *             // new anchor has been created
      *         }
@@ -311,7 +311,7 @@ class XrAnchors extends EventHandler {
      * failed to be created.
      * @example
      * // restore an anchor using uuid string
-     * app.xr.anchors.restore(uuid, function (err, anchor) {
+     * app.xr.anchors.restore(uuid, (err, anchor) => {
      *     if (!err) {
      *         // new anchor has been created
      *     }

@@ -41,9 +41,8 @@ let _params = new Set();
 const _tempColor = new Color();
 
 /**
- * Callback used by {@link StandardMaterial#onUpdateShader}.
- *
  * @callback UpdateShaderCallback
+ * Callback used by {@link StandardMaterial#onUpdateShader}.
  * @param {StandardMaterialOptions} options - An object with shader generator settings (based on current
  * material and scene properties), that you can change and then return. Properties of the object passed
  * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
