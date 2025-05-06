@@ -940,7 +940,7 @@ class ParticleEmitter {
             // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
             elements.push({ semantic: SEMANTIC_ATTR0, components: 4, type: TYPE_FLOAT32 });
             if (this.useMesh) {
-                elements.push({ semantic: SEMANTIC_ATTR1,components: 2, type: TYPE_FLOAT32 });
+                elements.push({ semantic: SEMANTIC_ATTR1, components: 2, type: TYPE_FLOAT32 });
             }
         } else {
             elements.push(
