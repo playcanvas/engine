@@ -20,7 +20,10 @@ import {
     TYPE_FLOAT32,
     typedArrayIndexFormats,
     requiresManualGamma,
-    PIXELFORMAT_SRGBA8
+    PIXELFORMAT_SRGBA8,
+    SHADERLANGUAGE_WGSL,
+    SHADERLANGUAGE_GLSL,
+    SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
@@ -40,6 +43,7 @@ import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';
 import { ParticleMaterial } from './particle-material.js';
@@ -662,27 +666,38 @@ class ParticleEmitter {
         if (this.pack8) defines.set('PACK8', '');
         if (this.emitterShape === EMITTERSHAPE_BOX) defines.set('EMITTERSHAPE_BOX', '');
 
-        const includes = new Map(Object.entries(shaderChunks));
+        const shaderLanguage = gd.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        const chunks = shaderLanguage === SHADERLANGUAGE_WGSL ? shaderChunksWGSL : shaderChunks;
+        const includes = new Map(Object.entries(chunks));
 
-        const shaderCodeRespawn = `#define RESPAWN\n ${shaderChunks.particle_simulationPS}`;
-        const shaderCodeNoRespawn = `#define NO_RESPAWN\n ${shaderChunks.particle_simulationPS}`;
-        const shaderCodeOnStop = `#define ON_STOP\n ${shaderChunks.particle_simulationPS}`;
+        const shaderCodeRespawn = `#define RESPAWN\n ${chunks.particle_simulationPS}`;
+        const shaderCodeNoRespawn = `#define NO_RESPAWN\n ${chunks.particle_simulationPS}`;
+        const shaderCodeOnStop = `#define ON_STOP\n ${chunks.particle_simulationPS}`;
 
         // Note: createShaderFromCode can return a shader from the cache (not a new shader) so we *should not* delete these shaders
         // when the particle emitter is destroyed
         const params = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
-        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, `ParticleUpdateRespawn-${params}`, undefined, false, {
-            fragmentDefines: defines,
-            fragmentIncludes: includes
-        });
-        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, `ParticleUpdateNoRespawn-${params}`, undefined, false, {
-            fragmentDefines: defines,
-            fragmentIncludes: includes
-        });
-        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, `ParticleUpdateStop-${params}`, undefined, false, {
-            fragmentDefines: defines,
-            fragmentIncludes: includes
-        });
+        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, `ParticleUpdateRespawn-${params}`,
+            { vertex_position: SEMANTIC_POSITION }, {
+                fragmentDefines: defines,
+                fragmentIncludes: includes,
+                shaderLanguage: shaderLanguage
+            }
+        );
+        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, `ParticleUpdateNoRespawn-${params}`,
+            { vertex_position: SEMANTIC_POSITION }, {
+                fragmentDefines: defines,
+                fragmentIncludes: includes,
+                shaderLanguage: shaderLanguage
+            }
+        );
+        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, `ParticleUpdateStop-${params}`,
+            { vertex_position: SEMANTIC_POSITION }, {
+                fragmentDefines: defines,
+                fragmentIncludes: includes,
+                shaderLanguage: shaderLanguage
+            }
+        );
 
         this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
         this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
@@ -919,6 +934,27 @@ class ParticleEmitter {
         this.material.setParameter('faceBinorm', binormal);
     }
 
+    getVertexInfo() {
+        const elements = [];
+        if (!this.useCpu) {
+            // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
+            elements.push({ semantic: SEMANTIC_ATTR0, components: 4, type: TYPE_FLOAT32 });
+            if (this.useMesh) {
+                elements.push({ semantic: SEMANTIC_ATTR1, components: 2, type: TYPE_FLOAT32 });
+            }
+        } else {
+            elements.push(
+                { semantic: SEMANTIC_ATTR0, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR1, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR2, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR3, components: 1, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR4, components: this.useMesh ? 4 : 2, type: TYPE_FLOAT32 }
+            );
+        }
+
+        return elements;
+    }
+
     // Declares vertex format, creates VB and IB
     _allocate(numParticles) {
         const psysVertCount = numParticles * this.numParticleVerts;
@@ -926,45 +962,7 @@ class ParticleEmitter {
 
         if ((this.vertexBuffer === undefined) || (this.vertexBuffer.getNumVertices() !== psysVertCount)) {
             // Create the particle vertex format
-            const elements = [];
-            if (!this.useCpu) {
-                // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
-                elements.push({
-                    semantic: SEMANTIC_ATTR0,
-                    components: 4,
-                    type: TYPE_FLOAT32
-                });
-                if (this.useMesh) {
-                    elements.push({
-                        semantic: SEMANTIC_ATTR1,
-                        components: 2,
-                        type: TYPE_FLOAT32
-                    });
-                }
-            } else {
-                elements.push({
-                    semantic: SEMANTIC_ATTR0,
-                    components: 4,
-                    type: TYPE_FLOAT32
-                }, {
-                    semantic: SEMANTIC_ATTR1,
-                    components: 4,
-                    type: TYPE_FLOAT32
-                }, {
-                    semantic: SEMANTIC_ATTR2,
-                    components: 4,
-                    type: TYPE_FLOAT32
-                }, {
-                    semantic: SEMANTIC_ATTR3,
-                    components: 1,
-                    type: TYPE_FLOAT32
-                }, {
-                    semantic: SEMANTIC_ATTR4,
-                    components: this.useMesh ? 4 : 2,
-                    type: TYPE_FLOAT32
-                });
-            }
-
+            const elements = this.getVertexInfo();
             const vertexFormat = new VertexFormat(this.graphicsDevice, elements);
 
             this.vertexBuffer = new VertexBuffer(this.graphicsDevice, vertexFormat, psysVertCount, {

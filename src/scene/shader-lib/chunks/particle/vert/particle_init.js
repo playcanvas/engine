@@ -1,7 +1,12 @@
 export default /* glsl */`
 attribute vec4 particle_vertexData; // XYZ = particle position, W = particle ID + random factor
-#ifdef USE_MESH
-attribute vec2 particle_uv;         // mesh UV
+
+#if defined(USE_MESH)
+    #if defined(USE_MESH_UV)
+        attribute vec2 particle_uv;         // mesh UV
+    #else
+        vec2 particle_uv = vec2(0.0, 0.0);
+    #endif
 #endif
 
 uniform mat4 matrix_viewProjection;
@@ -10,8 +15,8 @@ uniform mat3 matrix_normal;
 uniform mat4 matrix_viewInverse;
 
 #ifndef VIEWMATRIX
-#define VIEWMATRIX
-uniform mat4 matrix_view;
+    #define VIEWMATRIX
+    uniform mat4 matrix_view;
 #endif
 
 uniform float numParticles;
@@ -42,8 +47,8 @@ uniform sampler2D particleTexIN;
 #endif
 
 #ifndef CAMERAPLANES
-#define CAMERAPLANES
-uniform vec4 camera_params;
+    #define CAMERAPLANES
+    uniform vec4 camera_params;
 #endif
 
 varying vec4 texCoordsAlphaLife;

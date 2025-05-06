@@ -7,17 +7,17 @@ attribute float particle_vertexData4; // particle id
 // type depends on useMesh property. Start with X = velocity.z, Y = particle ID and for mesh particles proceeds with Z = mesh UV.x, W = mesh UV.y
 // Note: This generates a duplicate attribute warning, as the scanning we do is very simple.
 #ifndef USE_MESH
-attribute vec2 particle_vertexData5;
+    attribute vec2 particle_vertexData5;
 #else
-attribute vec4 particle_vertexData5;
+    attribute vec4 particle_vertexData5;
 #endif
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
 
 #ifndef VIEWMATRIX
-#define VIEWMATRIX
-uniform mat4 matrix_view;
+    #define VIEWMATRIX
+    uniform mat4 matrix_view;
 #endif
 
 uniform mat3 matrix_normal;

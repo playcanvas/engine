@@ -7,8 +7,8 @@ uniform float graphSampleSize;
 uniform float graphNumSamples;
 
 #ifndef CAMERAPLANES
-#define CAMERAPLANES
-uniform vec4 camera_params;
+    #define CAMERAPLANES
+    uniform vec4 camera_params;
 #endif
 
 uniform float softening;
