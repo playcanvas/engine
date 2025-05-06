@@ -300,7 +300,7 @@ class LitShader {
 
         // generate varyings code
         varyings.forEach((type, name) => {
-            vDefines.set(`VARYING_${name.toUpperCase()}`, true);
+            this.varyingsCode += `#define VARYING_${name.toUpperCase()}\n`;
             this.varyingsCode += this.shaderLanguage === SHADERLANGUAGE_WGSL ?
                 `varying ${name}: ${varyingsWGSLTypes.get(type)};\n` :
                 `varying ${type} ${name};\n`;
