@@ -11,113 +11,6 @@ export const AXIS_PAD_R_Y = 'padry';
 export const AXIS_KEY = 'key';
 
 /**
- * Name of event fired when a key is pressed.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_KEYDOWN = 'keydown';
-
-/**
- * Name of event fired when a key is released.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_KEYUP = 'keyup';
-
-/**
- * Name of event fired when a mouse button is pressed.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_MOUSEDOWN = 'mousedown';
-
-/**
- * Name of event fired when the mouse is moved.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_MOUSEMOVE = 'mousemove';
-
-/**
- * Name of event fired when a mouse button is released.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_MOUSEUP = 'mouseup';
-
-/**
- * Name of event fired when the mouse wheel is rotated.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_MOUSEWHEEL = 'mousewheel';
-
-/**
- * Name of event fired when a new touch occurs. For example, a finger is placed on the device.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_TOUCHSTART = 'touchstart';
-
-/**
- * Name of event fired when touch ends. For example, a finger is lifted off the device.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_TOUCHEND = 'touchend';
-
-/**
- * Name of event fired when a touch moves.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_TOUCHMOVE = 'touchmove';
-
-/**
- * Name of event fired when a touch point is interrupted in some way. The exact reasons for
- * canceling a touch can vary from device to device. For example, a modal alert pops up during the
- * interaction; the touch point leaves the document area, or there are more touch points than the
- * device supports, in which case the earliest touch point is canceled.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_TOUCHCANCEL = 'touchcancel';
-
-/**
- * Name of event fired when a new xr select occurs. For example, primary trigger was pressed.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_SELECT = 'select';
-
-/**
- * Name of event fired when a new xr select starts. For example, primary trigger is now pressed.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_SELECTSTART = 'selectstart';
-
-/**
- * Name of event fired when xr select ends. For example, a primary trigger is now released.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_SELECTEND = 'selectend';
-
-/**
  * @type {number}
  * @category Input
  */
@@ -702,7 +595,6 @@ export const KEY_META = 224;
 /**
  * No mouse buttons pressed.
  *
- * @type {number}
  * @category Input
  */
 export const MOUSEBUTTON_NONE = -1;
@@ -710,7 +602,6 @@ export const MOUSEBUTTON_NONE = -1;
 /**
  * The left mouse button.
  *
- * @type {number}
  * @category Input
  */
 export const MOUSEBUTTON_LEFT = 0;
@@ -718,7 +609,6 @@ export const MOUSEBUTTON_LEFT = 0;
 /**
  * The middle mouse button.
  *
- * @type {number}
  * @category Input
  */
 export const MOUSEBUTTON_MIDDLE = 1;
@@ -726,7 +616,6 @@ export const MOUSEBUTTON_MIDDLE = 1;
 /**
  * The right mouse button.
  *
- * @type {number}
  * @category Input
  */
 export const MOUSEBUTTON_RIGHT = 2;
@@ -734,7 +623,6 @@ export const MOUSEBUTTON_RIGHT = 2;
 /**
  * Index for pad 1.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_1 = 0;
@@ -742,7 +630,6 @@ export const PAD_1 = 0;
 /**
  * Index for pad 2.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_2 = 1;
@@ -750,7 +637,6 @@ export const PAD_2 = 1;
 /**
  * Index for pad 3.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_3 = 2;
@@ -758,7 +644,6 @@ export const PAD_3 = 2;
 /**
  * Index for pad 4.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_4 = 3;
@@ -766,7 +651,6 @@ export const PAD_4 = 3;
 /**
  * The first face button, from bottom going clockwise.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_FACE_1 = 0;
@@ -774,7 +658,6 @@ export const PAD_FACE_1 = 0;
 /**
  * The second face button, from bottom going clockwise.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_FACE_2 = 1;
@@ -782,7 +665,6 @@ export const PAD_FACE_2 = 1;
 /**
  * The third face button, from bottom going clockwise.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_FACE_3 = 2;
@@ -790,7 +672,6 @@ export const PAD_FACE_3 = 2;
 /**
  * The fourth face button, from bottom going clockwise.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_FACE_4 = 3;
@@ -798,7 +679,6 @@ export const PAD_FACE_4 = 3;
 /**
  * The first shoulder button on the left.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_L_SHOULDER_1 = 4;
@@ -806,7 +686,6 @@ export const PAD_L_SHOULDER_1 = 4;
 /**
  * The first shoulder button on the right.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_R_SHOULDER_1 = 5;
@@ -814,7 +693,6 @@ export const PAD_R_SHOULDER_1 = 5;
 /**
  * The second shoulder button on the left.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_L_SHOULDER_2 = 6;
@@ -822,7 +700,6 @@ export const PAD_L_SHOULDER_2 = 6;
 /**
  * The second shoulder button on the right.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_R_SHOULDER_2 = 7;
@@ -830,7 +707,6 @@ export const PAD_R_SHOULDER_2 = 7;
 /**
  * The select button.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_SELECT = 8;
@@ -838,7 +714,6 @@ export const PAD_SELECT = 8;
 /**
  * The start button.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_START = 9;
@@ -846,7 +721,6 @@ export const PAD_START = 9;
 /**
  * The button when depressing the left analogue stick.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_L_STICK_BUTTON = 10;
@@ -854,7 +728,6 @@ export const PAD_L_STICK_BUTTON = 10;
 /**
  * The button when depressing the right analogue stick.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_R_STICK_BUTTON = 11;
@@ -862,7 +735,6 @@ export const PAD_R_STICK_BUTTON = 11;
 /**
  * Direction pad up.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_UP = 12;
@@ -870,7 +742,6 @@ export const PAD_UP = 12;
 /**
  * Direction pad down.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_DOWN = 13;
@@ -878,7 +749,6 @@ export const PAD_DOWN = 13;
 /**
  * Direction pad left.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_LEFT = 14;
@@ -886,7 +756,6 @@ export const PAD_LEFT = 14;
 /**
  * Direction pad right.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_RIGHT = 15;
@@ -894,7 +763,6 @@ export const PAD_RIGHT = 15;
 /**
  * Vendor specific button.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_VENDOR = 16;
@@ -902,7 +770,6 @@ export const PAD_VENDOR = 16;
 /**
  * Horizontal axis on the left analogue stick.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_L_STICK_X = 0;
@@ -910,7 +777,6 @@ export const PAD_L_STICK_X = 0;
 /**
  * Vertical axis on the left analogue stick.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_L_STICK_Y = 1;
@@ -918,7 +784,6 @@ export const PAD_L_STICK_Y = 1;
 /**
  * Horizontal axis on the right analogue stick.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_R_STICK_X = 2;
@@ -926,31 +791,13 @@ export const PAD_R_STICK_X = 2;
 /**
  * Vertical axis on the right analogue stick.
  *
- * @type {number}
  * @category Input
  */
 export const PAD_R_STICK_Y = 3;
 
 /**
- * Name of event fired when a gamepad connects.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_GAMEPADCONNECTED = 'gamepadconnected';
-
-/**
- * Name of event fired when a gamepad disconnects.
- *
- * @type {string}
- * @category Input
- */
-export const EVENT_GAMEPADDISCONNECTED = 'gamepaddisconnected';
-
-/**
  * Horizontal axis on the touchpad of a XR pad.
  *
- * @type {number}
  * @category Input
  */
 export const XRPAD_TOUCHPAD_X = 0;
@@ -958,7 +805,6 @@ export const XRPAD_TOUCHPAD_X = 0;
 /**
  * Vertical axis on the thouchpad of a XR pad.
  *
- * @type {number}
  * @category Input
  */
 export const XRPAD_TOUCHPAD_Y = 1;
@@ -966,7 +812,6 @@ export const XRPAD_TOUCHPAD_Y = 1;
 /**
  * Horizontal axis on the stick of a XR pad.
  *
- * @type {number}
  * @category Input
  */
 export const XRPAD_STICK_X = 2;
@@ -974,7 +819,6 @@ export const XRPAD_STICK_X = 2;
 /**
  * Vertical axis on the stick of a XR pad.
  *
- * @type {number}
  * @category Input
  */
 export const XRPAD_STICK_Y = 3;
@@ -982,7 +826,6 @@ export const XRPAD_STICK_Y = 3;
 /**
  * The button when pressing the XR pad's touchpad.
  *
- * @type {number}
  * @category Input
  */
 export const XRPAD_TOUCHPAD_BUTTON = 2;
@@ -990,7 +833,6 @@ export const XRPAD_TOUCHPAD_BUTTON = 2;
 /**
  * The trigger button from XR pad.
  *
- * @type {number}
  * @category Input
  */
 export const XRPAD_TRIGGER = 0;
@@ -998,7 +840,6 @@ export const XRPAD_TRIGGER = 0;
 /**
  * The squeeze button from XR pad.
  *
- * @type {number}
  * @category Input
  */
 export const XRPAD_SQUEEZE = 1;
@@ -1006,7 +847,6 @@ export const XRPAD_SQUEEZE = 1;
 /**
  * The button when pressing the XR pad's stick.
  *
- * @type {number}
  * @category Input
  */
 export const XRPAD_STICK_BUTTON = 3;
@@ -1014,7 +854,6 @@ export const XRPAD_STICK_BUTTON = 3;
 /**
  * The A button from XR pad.
  *
- * @type {number}
  * @category Input
  */
 export const XRPAD_A = 4;
@@ -1022,7 +861,6 @@ export const XRPAD_A = 4;
 /**
  * The B button from XR pad.
  *
- * @type {number}
  * @category Input
  */
 export const XRPAD_B = 5;

@@ -1,4 +1,8 @@
 export default /* glsl */`
+
+#ifndef _DETAILMODES_INCLUDED_
+#define _DETAILMODES_INCLUDED_
+
 vec3 detailMode_mul(vec3 c1, vec3 c2) {
     return c1 * c2;
 }
@@ -24,4 +28,6 @@ vec3 detailMode_min(vec3 c1, vec3 c2) {
 vec3 detailMode_max(vec3 c1, vec3 c2) {
     return max(c1, c2);
 }
+
+#endif
 `;

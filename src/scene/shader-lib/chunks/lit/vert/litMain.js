@@ -124,7 +124,7 @@ void main(void) {
     #endif
 
     // expand code for uv transforms
-    #include "uvTransformPS, UV_TRANSFORMS_COUNT"
+    #include "uvTransformVS, UV_TRANSFORMS_COUNT"
 
     #ifdef VERTEX_COLOR
         vVertexColor = vertex_color;

@@ -2,6 +2,8 @@ import { WebglBuffer } from './webgl-buffer.js';
 
 /**
  * A WebGL implementation of the VertexBuffer.
+ *
+ * @ignore
  */
 class WebglVertexBuffer extends WebglBuffer {
     // vertex array object

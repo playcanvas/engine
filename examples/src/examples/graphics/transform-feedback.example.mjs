@@ -121,8 +121,8 @@ assetListLoader.load(() => {
         // Create the material from the vertex and fragment shaders which is used to render point sprites
         const material = new pc.ShaderMaterial({
             uniqueName: 'TransformFeerback',
-            vertexCode: files['shaderCloud.vert'],
-            fragmentCode: files['shaderCloud.frag'],
+            vertexGLSL: files['shaderCloud.vert'],
+            fragmentGLSL: files['shaderCloud.frag'],
             attributes: { aPosition: pc.SEMANTIC_POSITION }
         });
 

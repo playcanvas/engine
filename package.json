@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "2.6.1",
+  "version": "2.7.0",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -90,8 +90,9 @@
     "rollup-plugin-visualizer": "5.14.0",
     "serve": "14.2.4",
     "sinon": "19.0.2",
-    "typedoc": "0.27.9",
-    "typedoc-plugin-mdn-links": "4.0.15",
+    "typedoc": "^0.28.1",
+    "typedoc-plugin-mdn-links": "^5.0.1",
+    "typedoc-plugin-missing-exports": "^4.0.0",
     "typescript": "5.8.2"
   },
   "optionalDependencies": {
@@ -125,7 +126,7 @@
     "lint": "eslint scripts src test utils build.mjs eslint.config.mjs rollup.config.mjs",
     "publint": "publint --level error",
     "serve": "serve build -l 51000 --cors",
-    "test": "mocha --ignore 'test/assets/scripts/**' --recursive --require test/fixtures.mjs --timeout 5000",
+    "test": "mocha --ignore \"test/assets/scripts/*.js\" --recursive --require test/fixtures.mjs --timeout 5000",
     "test:coverage": "c8 npm test",
     "test:types": "tsc --pretty false build/playcanvas.d.ts"
   },

@@ -3,8 +3,11 @@
  */
 
 /**
- * The KeyboardEvent is passed into all event callbacks from the {@link Keyboard}. It corresponds
- * to a key press or release.
+ * The KeyboardEvent is passed into all event handlers registered on the {@link Keyboard}. The
+ * events are:
+ *
+ * - {@link Keyboard.EVENT_KEYDOWN}
+ * - {@link Keyboard.EVENT_KEYUP}
  *
  * @category Input
  */

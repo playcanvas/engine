@@ -1016,7 +1016,7 @@ class XrManager extends EventHandler {
     /**
      * Provides access to XRSession of WebXR.
      *
-     * @type {object|null}
+     * @type {XRSession|null}
      */
     get session() {
         return this._session;

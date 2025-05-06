@@ -35,7 +35,7 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * used together at a higher cost. Defaults to 1.
  * @property {boolean} sceneColorMap - Whether rendering generates a scene color map. Defaults to false.
  * @property {boolean} sceneDepthMap - Whether rendering generates a scene depth map. Defaults to false.
- * @property {number} toneMapping - The tone mapping. Defaults to {@link ToneMapping.LINEAR}. Can be:
+ * @property {number} toneMapping - The tone mapping. Can be:
  *
  * - {@link TONEMAP_LINEAR}
  * - {@link TONEMAP_FILMIC}
@@ -44,6 +44,7 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * - {@link TONEMAP_ACES2}
  * - {@link TONEMAP_NEUTRAL}
  *
+ * Defaults to {@link TONEMAP_LINEAR}.
  * @property {number} sharpness - The sharpening intensity, 0-1 range. This can be used to increase
  * the sharpness of the rendered image. Often used to counteract the blurriness of the TAA effect,
  * but also blurriness caused by rendering to a lower resolution render target by using
@@ -169,7 +170,7 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * Implementation of a simple to use camera rendering pass, which supports SSAO, Bloom and
  * other rendering effects.
  *
- * @category Render Pass
+ * @category Graphics
  */
 class CameraFrame {
     /** @private */

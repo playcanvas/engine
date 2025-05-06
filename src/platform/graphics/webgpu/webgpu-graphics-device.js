@@ -565,8 +565,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             Debug.call(() => this.validateAttributes(this.shader, vb0?.format, vb1?.format));
 
+            const ib = this.indexBuffer;
+
             // render pipeline
-            const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
+            const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, ib?.format, this.shader, this.renderTarget,
                 this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
                 this.stencilEnabled, this.stencilFront, this.stencilBack);
             Debug.assert(pipeline);
@@ -577,7 +579,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
 
             // draw
-            const ib = this.indexBuffer;
             if (ib) {
                 passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
                 passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, 0, 0);

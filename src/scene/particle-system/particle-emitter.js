@@ -656,21 +656,33 @@ class ParticleEmitter {
             this.swapTex = false;
         }
 
-        const shaderCodeStart = (this.localSpace ? '#define LOCAL_SPACE\n' : '') + shaderChunks.particleUpdaterInitPS +
-        (this.pack8 ? (shaderChunks.particleInputRgba8PS + shaderChunks.particleOutputRgba8PS) :
-            (shaderChunks.particleInputFloatPS + shaderChunks.particleOutputFloatPS)) +
-        (this.emitterShape === EMITTERSHAPE_BOX ? shaderChunks.particleUpdaterAABBPS : shaderChunks.particleUpdaterSpherePS) +
-        shaderChunks.particleUpdaterStartPS;
-        const shaderCodeRespawn = shaderCodeStart + shaderChunks.particleUpdaterRespawnPS + shaderChunks.particleUpdaterEndPS;
-        const shaderCodeNoRespawn = shaderCodeStart + shaderChunks.particleUpdaterNoRespawnPS + shaderChunks.particleUpdaterEndPS;
-        const shaderCodeOnStop = shaderCodeStart + shaderChunks.particleUpdaterOnStopPS + shaderChunks.particleUpdaterEndPS;
+        // create 3 simulation shaders
+        const defines = new Map();
+        if (this.localSpace) defines.set('LOCAL_SPACE', '');
+        if (this.pack8) defines.set('PACK8', '');
+        if (this.emitterShape === EMITTERSHAPE_BOX) defines.set('EMITTERSHAPE_BOX', '');
+
+        const includes = new Map(Object.entries(shaderChunks));
+
+        const shaderCodeRespawn = `#define RESPAWN\n ${shaderChunks.particle_simulationPS}`;
+        const shaderCodeNoRespawn = `#define NO_RESPAWN\n ${shaderChunks.particle_simulationPS}`;
+        const shaderCodeOnStop = `#define ON_STOP\n ${shaderChunks.particle_simulationPS}`;
 
         // Note: createShaderFromCode can return a shader from the cache (not a new shader) so we *should not* delete these shaders
         // when the particle emitter is destroyed
         const params = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
-        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, `ParticleUpdateRespawn-${params}`);
-        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, `ParticleUpdateNoRespawn-${params}`);
-        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, `ParticleUpdateStop-${params}`);
+        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, `ParticleUpdateRespawn-${params}`, undefined, false, {
+            fragmentDefines: defines,
+            fragmentIncludes: includes
+        });
+        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, `ParticleUpdateNoRespawn-${params}`, undefined, false, {
+            fragmentDefines: defines,
+            fragmentIncludes: includes
+        });
+        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, `ParticleUpdateStop-${params}`, undefined, false, {
+            fragmentDefines: defines,
+            fragmentIncludes: includes
+        });
 
         this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
         this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;

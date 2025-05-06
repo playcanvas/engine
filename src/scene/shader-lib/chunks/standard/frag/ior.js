@@ -1,10 +1,10 @@
 export default /* glsl */`
-#ifdef MAPFLOAT
+#ifdef STD_IOR_CONSTANT
 uniform float material_refractionIndex;
 #endif
 
 void getIor() {
-#ifdef MAPFLOAT
+#ifdef STD_IOR_CONSTANT
     dIor = material_refractionIndex;
 #else
     dIor = 1.0 / 1.5;

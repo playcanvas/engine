@@ -127,8 +127,8 @@ assetListLoader.load(() => {
     // Create a new material with a fog shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'GroundFogShader',
-        vertexCode: `#define VERTEXSHADER\n${pc.shaderChunks.screenDepthPS}${files['shader.vert']}`,
-        fragmentCode: pc.shaderChunks.screenDepthPS + files['shader.frag']
+        vertexGLSL: `#define VERTEXSHADER\n${pc.shaderChunks.screenDepthPS}${files['shader.vert']}`,
+        fragmentGLSL: pc.shaderChunks.screenDepthPS + files['shader.frag']
     });
     material.setParameter('uTexture', assets.texture.resource);
     material.depthWrite = false;

@@ -9,7 +9,6 @@ import { GraphNode } from '../../../scene/graph-node.js';
 import { ElementDragHelper } from '../element/element-drag-helper.js';
 import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_VISIBILITY_SHOW_ALWAYS, SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED } from './constants.js';
 import { Component } from '../component.js';
-import { EVENT_MOUSEWHEEL } from '../../../platform/input/constants.js';
 
 /**
  * @import { Entity } from '../../entity.js'
@@ -624,7 +623,7 @@ class ScrollViewComponent extends Component {
             }
 
             this.entity.element[onOrOff]('resize', this._syncAll, this);
-            this.entity.element[onOrOff](EVENT_MOUSEWHEEL, this._onMouseWheel, this);
+            this.entity.element[onOrOff]('mousewheel', this._onMouseWheel, this);
 
             this._hasElementListeners = onOrOff === 'on';
         }

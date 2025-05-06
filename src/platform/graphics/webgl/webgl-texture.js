@@ -55,6 +55,8 @@ function downsampleImage(image, size) {
 
 /**
  * A WebGL implementation of the Texture.
+ *
+ * @ignore
  */
 class WebglTexture {
     _glTexture = null;
@@ -142,17 +144,17 @@ class WebglTexture {
                 break;
             case PIXELFORMAT_RGB565:
                 this._glFormat = gl.RGB;
-                this._glInternalFormat = gl.RGB;
+                this._glInternalFormat = gl.RGB565;
                 this._glPixelType = gl.UNSIGNED_SHORT_5_6_5;
                 break;
             case PIXELFORMAT_RGBA5551:
                 this._glFormat = gl.RGBA;
-                this._glInternalFormat = gl.RGBA;
+                this._glInternalFormat = gl.RGB5_A1;
                 this._glPixelType = gl.UNSIGNED_SHORT_5_5_5_1;
                 break;
             case PIXELFORMAT_RGBA4:
                 this._glFormat = gl.RGBA;
-                this._glInternalFormat = gl.RGBA;
+                this._glInternalFormat = gl.RGBA4;
                 this._glPixelType = gl.UNSIGNED_SHORT_4_4_4_4;
                 break;
             case PIXELFORMAT_RGB8:

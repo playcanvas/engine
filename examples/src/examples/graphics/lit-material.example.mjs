@@ -107,14 +107,34 @@ assetListLoader.load(() => {
     material.setParameter('texture_diffuseMap', assets.color.resource);
     material.setParameter('texture_glossMap', assets.gloss.resource);
     material.setParameter('texture_normalMap', assets.normal.resource);
-    material.useSkybox = true;
-    material.hasSpecular = true;
-    material.hasSpecularityFactor = true;
-    material.hasNormals = true;
-    material.hasMetalness = true;
-    material.occludeSpecular = pc.SPECOCC_AO;
 
-    const argumentsChunk = `
+    if (app.graphicsDevice.isWebGPU) {
+
+        material.useSkybox = false;
+        material.useLighting = false;
+        material.useFog = true;
+        material.useTonemap = true;
+        material.opacityFadesSpecular = true;
+        material.hasSpecular = false;
+        material.hasSpecularityFactor = true;
+        material.hasNormals = true;
+        material.hasMetalness = true;
+        material.occludeSpecular = pc.SPECOCC_AO;
+
+    } else {
+
+        material.useSkybox = true;
+        material.hasSpecular = true;
+        material.hasSpecularityFactor = true;
+        material.hasNormals = true;
+        material.hasMetalness = true;
+        material.occludeSpecular = pc.SPECOCC_AO;
+    }
+
+    material.shaderChunkGLSL = `
+
+        #include "litShaderCorePS"
+
         uniform sampler2D texture_diffuseMap;
         uniform sampler2D texture_glossMap;
         uniform sampler2D texture_normalMap;
@@ -136,7 +156,15 @@ assetListLoader.load(() => {
             litArgs_ao = 0.0;
             litArgs_opacity = 1.0;
         }`;
-    material.shaderChunk = argumentsChunk;
+
+    material.shaderChunkWGSL = `
+
+        #include "litShaderCorePS"
+
+        fn evaluateFrontend() {
+            litArgs_emission = vec3f(0.7, 0, 0);
+        }`;
+
     material.update();
 
     // create primitive

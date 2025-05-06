@@ -20,6 +20,9 @@ struct SplatCenter {
 struct SplatCorner {
     vec2 offset;        // corner offset from center in clip space
     vec2 uv;            // corner uv
+    #if GSPLAT_AA
+        float aaFactor; // for scenes generated with antialiasing
+    #endif
 };
 
 #if SH_BANDS > 0
@@ -35,6 +38,10 @@ struct SplatCorner {
 #if GSPLAT_COMPRESSED_DATA == true
     #include "gsplatCompressedDataVS"
     #include "gsplatCompressedSHVS"
+#elif GSPLAT_SOGS_DATA == true
+    #include "gsplatSogsDataVS"
+    #include "gsplatSogsColorVS"
+    #include "gsplatSogsSHVS"
 #else
     #include "gsplatDataVS"
     #include "gsplatColorVS"

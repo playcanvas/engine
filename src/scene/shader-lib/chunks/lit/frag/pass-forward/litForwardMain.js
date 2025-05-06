@@ -19,7 +19,7 @@ void main(void) {
         dVertexNormalW = normalize(vNormalW);
 
         #ifdef LIT_TANGENTS
-            #if defined(LIT_HEIGHTS) || defined(LIT_USE_NORMALS)
+            #if defined(LIT_HEIGHTS) || defined(LIT_USE_NORMALS) || defined(LIT_USE_CLEARCOAT_NORMALS)
                 dTangentW = vTangentW;
                 dBinormalW = vBinormalW;
             #endif

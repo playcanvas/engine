@@ -61,6 +61,7 @@ class CameraComponentSystem extends ComponentSystem {
             'cullFaces',
             'farClip',
             'flipFaces',
+            'fog',
             'fov',
             'frustumCulling',
             'horizontalFov',

@@ -188,8 +188,8 @@ class Grid extends Script {
         // create shader material
         this._material = new ShaderMaterial({
             uniqueName: 'grid-shader',
-            vertexCode,
-            fragmentCode,
+            vertexGLSL: vertexCode,
+            fragmentGLSL: fragmentCode,
             attributes: {
                 vertex_position: SEMANTIC_POSITION,
                 aUv0: SEMANTIC_TEXCOORD0

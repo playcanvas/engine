@@ -2,21 +2,18 @@ export default /* glsl */`
 attribute float vertex_boneIndices;
 
 uniform highp sampler2D texture_poseMap;
-uniform vec4 texture_poseMapSize;
 
-mat4 getBoneMatrix(const in float i) {
-    float j = i * 3.0;
-    float dx = texture_poseMapSize.z;
-    float dy = texture_poseMapSize.w;
+mat4 getBoneMatrix(const in float indexFloat) {
 
-    float y = floor(j * dx);
-    float x = j - (y * texture_poseMapSize.x);
-    y = dy * (y + 0.5);
+    int width = textureSize(texture_poseMap, 0).x;
+    int index = int(indexFloat + 0.5) * 3;
+    int iy = index / width;
+    int ix = index % width;
 
     // read elements of 4x3 matrix
-    vec4 v1 = texture2D(texture_poseMap, vec2(dx * (x + 0.5), y));
-    vec4 v2 = texture2D(texture_poseMap, vec2(dx * (x + 1.5), y));
-    vec4 v3 = texture2D(texture_poseMap, vec2(dx * (x + 2.5), y));
+    vec4 v1 = texelFetch(texture_poseMap, ivec2(ix + 0, iy), 0);
+    vec4 v2 = texelFetch(texture_poseMap, ivec2(ix + 1, iy), 0);
+    vec4 v3 = texelFetch(texture_poseMap, ivec2(ix + 2, iy), 0);
 
     // transpose to 4x4 matrix
     return mat4(

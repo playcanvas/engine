@@ -31,24 +31,31 @@ import { PostEffectQueue } from './post-effect-queue.js';
  */
 
 /**
- * The Camera Component enables an Entity to render the scene. A scene requires at least one
- * enabled camera component to be rendered. Note that multiple camera components can be enabled
- * simultaneously (for split-screen or offscreen rendering, for example).
+ * The CameraComponent enables an {@link Entity} to render the scene. A scene requires at least
+ * one enabled camera component to be rendered. The camera's view direction is along the negative
+ * z-axis of the owner entity.
+ *
+ * Note that multiple camera components can be enabled simultaneously (for split-screen or
+ * offscreen rendering, for example).
+ *
+ * You should never need to use the CameraComponent constructor directly. To add a CameraComponent
+ * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * // Add a pc.CameraComponent to an entity
  * const entity = new pc.Entity();
  * entity.addComponent('camera', {
  *     nearClip: 1,
  *     farClip: 100,
  *     fov: 55
  * });
+ * ```
  *
- * // Get the pc.CameraComponent on an entity
- * const cameraComponent = entity.camera;
+ * Once the CameraComponent is added to the entity, you can access it via the `camera` property:
  *
- * // Update a property on a camera component
- * entity.camera.nearClip = 2;
+ * ```javascript
+ * entity.camera.nearClip = 2; // Set the near clip of the camera
+ *
+ * console.log(entity.camera.nearClip); // Get the near clip of the camera
  * ```
  *
  * @hideconstructor
@@ -987,6 +994,7 @@ class CameraComponent extends Component {
         }
 
         this.camera._enableRenderPassColorGrab(this.system.app.graphicsDevice, this.renderSceneColorMap);
+        this.system.app.scene.layers.markDirty();
     }
 
     /**
@@ -1005,6 +1013,7 @@ class CameraComponent extends Component {
         }
 
         this.camera._enableRenderPassDepthGrab(this.system.app.graphicsDevice, this.system.app.renderer, this.renderSceneDepthMap);
+        this.system.app.scene.layers.markDirty();
     }
 
     dirtyLayerCompositionCameras() {

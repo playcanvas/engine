@@ -10,6 +10,8 @@ import { DebugGraphics } from '../debug-graphics.js';
 
 /**
  * A WebGPU helper class implementing custom resolve of multi-sampled textures.
+ *
+ * @ignore
  */
 class WebgpuResolver {
     /** @type {WebgpuGraphicsDevice} */

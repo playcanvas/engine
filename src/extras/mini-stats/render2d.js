@@ -7,9 +7,7 @@ import {
     PRIMITIVE_TRIANGLES,
     SEMANTIC_POSITION,
     SEMANTIC_TEXCOORD0,
-    TYPE_FLOAT32,
-    SHADERLANGUAGE_WGSL,
-    SHADERLANGUAGE_GLSL
+    TYPE_FLOAT32
 } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
@@ -155,12 +153,12 @@ class Render2d {
         this.mesh.indexBuffer[0] = this.indexBuffer;
         this.mesh.primitive = [this.prim];
 
-        const wgsl = device.isWebGPU;
         const material = new ShaderMaterial({
             uniqueName: 'MiniStats',
-            vertexCode: wgsl ? vertexShaderWGSL : vertexShaderGLSL,
-            fragmentCode: wgsl ? fragmentShaderWGSL : fragmentShaderGLSL,
-            shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,
+            vertexGLSL: vertexShaderGLSL,
+            fragmentGLSL: fragmentShaderGLSL,
+            vertexWGSL: vertexShaderWGSL,
+            fragmentWGSL: fragmentShaderWGSL,
             attributes: {
                 vertex_position: SEMANTIC_POSITION,
                 vertex_texCoord0: SEMANTIC_TEXCOORD0

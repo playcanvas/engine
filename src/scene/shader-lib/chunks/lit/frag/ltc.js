@@ -365,18 +365,30 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     return formFactor*scale;
 }
 
+// LTC_EvaluateDisk in some rare cases genereates NaN values in a or b, just before 'float c0 = a * b;'
+// Get rid of those Nan values before they propagate further, as in case of bloom / DOF blurs they
+// propagage to large areas. I didn't find the actual reason where those come from, so that is still TODO.
+// Note that only disk/sphere lights are causing it, so only handle those.
+float FixNan(float value) {
+    #ifdef WEBGPU
+        return value != value ? 0.0 : value;  // isnan does not transpile correctly, use a workaround
+    #else
+        return isnan(value) ? 0.0 : value;
+    #endif
+}
+
 float getRectLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 lightDirNorm) {
     return LTC_EvaluateRect( worldNormal, viewDir, vPositionW, mat3( 1.0 ), dLTCCoords );
 }
 
 float getDiskLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 lightDirNorm) {
-    return LTC_EvaluateDisk( worldNormal, viewDir, vPositionW, mat3( 1.0 ), dLTCCoords );
+    return FixNan(LTC_EvaluateDisk( worldNormal, viewDir, vPositionW, mat3( 1.0 ), dLTCCoords ));
 }
 
 float getSphereLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 lightDirNorm) {
     // NB: this could be improved further with distance based wrap lighting
     float falloff = dSphereRadius / (dot(lightDir, lightDir) + dSphereRadius);
-    return getLightDiffuse(worldNormal, viewDir, lightDirNorm) * falloff;
+    return FixNan(getLightDiffuse(worldNormal, viewDir, lightDirNorm) * falloff);
 }
 
 mat3 getLTCLightInvMat(vec2 uv)

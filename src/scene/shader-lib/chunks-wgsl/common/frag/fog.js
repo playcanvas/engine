@@ -1,5 +1,7 @@
 export default /* wgsl */`
 
+var<private> dBlendModeFogFactor : f32 = 1.0;
+
 #if (FOG != NONE)
     uniform fog_color : vec3f;
     
@@ -11,13 +13,9 @@ export default /* wgsl */`
     #endif
 #endif
 
-uniform dBlendModeFogFactor : f32;
-
 fn getFogFactor() -> f32 {
 
-    // TODO: find a way to do this in WGSL, for now the fog is not working
-    // let depth = gl_FragCoord.z / gl_FragCoord.w;
-    let depth = 1.0;
+    let depth = pcPosition.z / pcPosition.w;
 
     var fogFactor : f32 = 0.0;
 
@@ -34,7 +32,7 @@ fn getFogFactor() -> f32 {
 
 fn addFog(color : vec3f) -> vec3f {
     #if (FOG != NONE)
-        return mix(uniform.fog_color * uniform.dBlendModeFogFactor, color, getFogFactor());
+        return mix(uniform.fog_color * dBlendModeFogFactor, color, getFogFactor());
     #else
         return color;
     #endif

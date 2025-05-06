@@ -5,7 +5,7 @@ import { GSplatResource } from './gsplat-resource.js';
 /**
  * @import { AssetRegistry } from '../asset/asset-registry.js'
  * @import { Asset } from '../asset/asset.js'
- * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { AppBase } from '../app-base.js'
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
  */
 
@@ -566,23 +566,18 @@ const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
 const defaultElementFilter = val => true;
 
 class PlyParser {
-    /** @type {GraphicsDevice} */
-    device;
-
-    /** @type {AssetRegistry} */
-    assets;
+    /** @type {AppBase} */
+    app;
 
     /** @type {number} */
     maxRetries;
 
     /**
-     * @param {GraphicsDevice} device - The graphics device.
-     * @param {AssetRegistry} assets - The asset registry.
+     * @param {AppBase} app - The app instance.
      * @param {number} maxRetries - Maximum amount of retries.
      */
-    constructor(device, assets, maxRetries) {
-        this.device = device;
-        this.assets = assets;
+    constructor(app, maxRetries) {
+        this.app = app;
         this.maxRetries = maxRetries;
     }
 
@@ -596,7 +591,8 @@ class PlyParser {
      */
     async load(url, callback, asset) {
         try {
-            const response = await fetch(url.load);
+            // either use the fetch request passed in by the application or initiate it ourselves
+            const response = await (asset.file?.contents ?? fetch(url.load));
             if (!response || !response.body) {
                 callback('Error loading resource', null);
             } else {
@@ -623,7 +619,7 @@ class PlyParser {
 
                 // construct the resource
                 const resource = new GSplatResource(
-                    this.device,
+                    this.app,
                     data.isCompressed && asset.data.decompress ? data.decompress() : data,
                     comments
                 );
