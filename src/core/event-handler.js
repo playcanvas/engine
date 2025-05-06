@@ -1,9 +1,8 @@
 import { EventHandle } from './event-handle.js';
 
 /**
- * Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
- *
  * @callback HandleEventCallback
+ * Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
  * @param {any} [arg1] - First argument that is passed from caller.
  * @param {any} [arg2] - Second argument that is passed from caller.
  * @param {any} [arg3] - Third argument that is passed from caller.
@@ -12,6 +11,7 @@ import { EventHandle } from './event-handle.js';
  * @param {any} [arg6] - Sixth argument that is passed from caller.
  * @param {any} [arg7] - Seventh argument that is passed from caller.
  * @param {any} [arg8] - Eighth argument that is passed from caller.
+ * @returns {void}
  */
 
 /**
