@@ -4,6 +4,7 @@ import {
     GAMMA_NONE,
     PARTICLEORIENTATION_SCREEN,
     SHADER_FORWARD,
+    SHADERDEF_UV0,
     TONEMAP_LINEAR
 } from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
@@ -37,7 +38,7 @@ class ParticleMaterial extends Material {
 
     getShaderVariant(params) {
 
-        const { device, scene, cameraShaderParams } = params;
+        const { device, scene, cameraShaderParams, objDefs } = params;
         const { emitter } = this;
         const options = {
             defines: getCoreDefines(this, params),
@@ -49,6 +50,7 @@ class ParticleMaterial extends Material {
             alignToMotion: this.emitter.alignToMotion,
             soft: this.emitter.depthSoftening,
             mesh: this.emitter.useMesh,
+            meshUv: objDefs & SHADERDEF_UV0,
             gamma: cameraShaderParams?.shaderOutputGamma ?? GAMMA_NONE,
             toneMap: cameraShaderParams?.toneMapping ?? TONEMAP_LINEAR,
             fog: (scene && !this.emitter.noFog) ? scene.fog.type : 'none',

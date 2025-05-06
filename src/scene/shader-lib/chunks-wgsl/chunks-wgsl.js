@@ -104,49 +104,49 @@ import outputTex2DPS from './common/frag/outputTex2D.js';
 import sheenPS from './standard/frag/sheen.js';
 import sheenGlossPS from './standard/frag/sheenGloss.js';
 import parallaxPS from './standard/frag/parallax.js';
-// import particlePS from './particle/frag/particle.js';
-// import particleVS from './particle/vert/particle.js';
-// import particleAnimFrameClampVS from './particle/vert/particleAnimFrameClamp.js';
-// import particleAnimFrameLoopVS from './particle/vert/particleAnimFrameLoop.js';
-// import particleAnimTexVS from './particle/vert/particleAnimTex.js';
-// import particleInputFloatPS from './particle/frag/particleInputFloat.js';
-// import particleInputRgba8PS from './particle/frag/particleInputRgba8.js';
-// import particleOutputFloatPS from './particle/frag/particleOutputFloat.js';
-// import particleOutputRgba8PS from './particle/frag/particleOutputRgba8.js';
-// import particleUpdaterAABBPS from './particle/frag/particleUpdaterAABB.js';
-// import particleUpdaterEndPS from './particle/frag/particleUpdaterEnd.js';
-// import particleUpdaterInitPS from './particle/frag/particleUpdaterInit.js';
-// import particleUpdaterNoRespawnPS from './particle/frag/particleUpdaterNoRespawn.js';
-// import particleUpdaterOnStopPS from './particle/frag/particleUpdaterOnStop.js';
-// import particleUpdaterRespawnPS from './particle/frag/particleUpdaterRespawn.js';
-// import particleUpdaterSpherePS from './particle/frag/particleUpdaterSphere.js';
-// import particleUpdaterStartPS from './particle/frag/particleUpdaterStart.js';
-// import particle_billboardVS from './particle/vert/particle_billboard.js';
-// import particle_blendAddPS from './particle/frag/particle_blendAdd.js';
-// import particle_blendMultiplyPS from './particle/frag/particle_blendMultiply.js';
-// import particle_blendNormalPS from './particle/frag/particle_blendNormal.js';
-// import particle_cpuVS from './particle/vert/particle_cpu.js';
-// import particle_cpu_endVS from './particle/vert/particle_cpu_end.js';
-// import particle_customFaceVS from './particle/vert/particle_customFace.js';
-// import particle_endPS from './particle/frag/particle_end.js';
-// import particle_endVS from './particle/vert/particle_end.js';
-// import particle_halflambertPS from './particle/frag/particle_halflambert.js';
-// import particle_initVS from './particle/vert/particle_init.js';
-// import particle_lambertPS from './particle/frag/particle_lambert.js';
-// import particle_lightingPS from './particle/frag/particle_lighting.js';
-// import particle_localShiftVS from './particle/vert/particle_localShift.js';
-// import particle_meshVS from './particle/vert/particle_mesh.js';
-// import particle_normalVS from './particle/vert/particle_normal.js';
-// import particle_normalMapPS from './particle/frag/particle_normalMap.js';
-// import particle_pointAlongVS from './particle/vert/particle_pointAlong.js';
-// import particle_simulationPS from './particle/frag/particle-simulation.js';
-// import particle_shaderPS from './particle/frag/particle-shader.js';
-// import particle_shaderVS from './particle/vert/particle-shader.js';
-// import particle_softPS from './particle/frag/particle_soft.js';
-// import particle_softVS from './particle/vert/particle_soft.js';
-// import particle_stretchVS from './particle/vert/particle_stretch.js';
-// import particle_TBNVS from './particle/vert/particle_TBN.js';
-// import particle_wrapVS from './particle/vert/particle_wrap.js';
+import particlePS from './particle/frag/particle.js';
+import particleVS from './particle/vert/particle.js';
+import particleAnimFrameClampVS from './particle/vert/particleAnimFrameClamp.js';
+import particleAnimFrameLoopVS from './particle/vert/particleAnimFrameLoop.js';
+import particleAnimTexVS from './particle/vert/particleAnimTex.js';
+import particleInputFloatPS from './particle/frag/particleInputFloat.js';
+import particleInputRgba8PS from './particle/frag/particleInputRgba8.js';
+import particleOutputFloatPS from './particle/frag/particleOutputFloat.js';
+import particleOutputRgba8PS from './particle/frag/particleOutputRgba8.js';
+import particleUpdaterAABBPS from './particle/frag/particleUpdaterAABB.js';
+import particleUpdaterEndPS from './particle/frag/particleUpdaterEnd.js';
+import particleUpdaterInitPS from './particle/frag/particleUpdaterInit.js';
+import particleUpdaterNoRespawnPS from './particle/frag/particleUpdaterNoRespawn.js';
+import particleUpdaterOnStopPS from './particle/frag/particleUpdaterOnStop.js';
+import particleUpdaterRespawnPS from './particle/frag/particleUpdaterRespawn.js';
+import particleUpdaterSpherePS from './particle/frag/particleUpdaterSphere.js';
+import particleUpdaterStartPS from './particle/frag/particleUpdaterStart.js';
+import particle_billboardVS from './particle/vert/particle_billboard.js';
+import particle_blendAddPS from './particle/frag/particle_blendAdd.js';
+import particle_blendMultiplyPS from './particle/frag/particle_blendMultiply.js';
+import particle_blendNormalPS from './particle/frag/particle_blendNormal.js';
+import particle_cpuVS from './particle/vert/particle_cpu.js';
+import particle_cpu_endVS from './particle/vert/particle_cpu_end.js';
+import particle_customFaceVS from './particle/vert/particle_customFace.js';
+import particle_endPS from './particle/frag/particle_end.js';
+import particle_endVS from './particle/vert/particle_end.js';
+import particle_halflambertPS from './particle/frag/particle_halflambert.js';
+import particle_initVS from './particle/vert/particle_init.js';
+import particle_lambertPS from './particle/frag/particle_lambert.js';
+import particle_lightingPS from './particle/frag/particle_lighting.js';
+import particle_localShiftVS from './particle/vert/particle_localShift.js';
+import particle_meshVS from './particle/vert/particle_mesh.js';
+import particle_normalVS from './particle/vert/particle_normal.js';
+import particle_normalMapPS from './particle/frag/particle_normalMap.js';
+import particle_pointAlongVS from './particle/vert/particle_pointAlong.js';
+import particle_simulationPS from './particle/frag/particle-simulation.js';
+import particle_shaderPS from './particle/frag/particle-shader.js';
+import particle_shaderVS from './particle/vert/particle-shader.js';
+import particle_softPS from './particle/frag/particle_soft.js';
+import particle_softVS from './particle/vert/particle_soft.js';
+import particle_stretchVS from './particle/vert/particle_stretch.js';
+import particle_TBNVS from './particle/vert/particle_TBN.js';
+import particle_wrapVS from './particle/vert/particle_wrap.js';
 import pickPS from './common/frag/pick.js';
 import reflDirPS from './lit/frag/reflDir.js';
 import reflDirAnisoPS from './lit/frag/reflDirAniso.js';
@@ -328,49 +328,49 @@ const shaderChunksWGSL = {
     sheenPS,
     sheenGlossPS,
     parallaxPS,
-    // particlePS,
-    // particleVS,
-    // particleAnimFrameClampVS,
-    // particleAnimFrameLoopVS,
-    // particleAnimTexVS,
-    // particleInputFloatPS,
-    // particleInputRgba8PS,
-    // particleOutputFloatPS,
-    // particleOutputRgba8PS,
-    // particleUpdaterAABBPS,
-    // particleUpdaterEndPS,
-    // particleUpdaterInitPS,
-    // particleUpdaterNoRespawnPS,
-    // particleUpdaterOnStopPS,
-    // particleUpdaterRespawnPS,
-    // particleUpdaterSpherePS,
-    // particleUpdaterStartPS,
-    // particle_billboardVS,
-    // particle_blendAddPS,
-    // particle_blendMultiplyPS,
-    // particle_blendNormalPS,
-    // particle_cpuVS,
-    // particle_cpu_endVS,
-    // particle_customFaceVS,
-    // particle_endPS,
-    // particle_endVS,
-    // particle_halflambertPS,
-    // particle_initVS,
-    // particle_lambertPS,
-    // particle_lightingPS,
-    // particle_localShiftVS,
-    // particle_meshVS,
-    // particle_normalVS,
-    // particle_normalMapPS,
-    // particle_pointAlongVS,
-    // particle_simulationPS,
-    // particle_shaderPS,
-    // particle_shaderVS,
-    // particle_softPS,
-    // particle_softVS,
-    // particle_stretchVS,
-    // particle_TBNVS,
-    // particle_wrapVS,
+    particlePS,
+    particleVS,
+    particleAnimFrameClampVS,
+    particleAnimFrameLoopVS,
+    particleAnimTexVS,
+    particleInputFloatPS,
+    particleInputRgba8PS,
+    particleOutputFloatPS,
+    particleOutputRgba8PS,
+    particleUpdaterAABBPS,
+    particleUpdaterEndPS,
+    particleUpdaterInitPS,
+    particleUpdaterNoRespawnPS,
+    particleUpdaterOnStopPS,
+    particleUpdaterRespawnPS,
+    particleUpdaterSpherePS,
+    particleUpdaterStartPS,
+    particle_billboardVS,
+    particle_blendAddPS,
+    particle_blendMultiplyPS,
+    particle_blendNormalPS,
+    particle_cpuVS,
+    particle_cpu_endVS,
+    particle_customFaceVS,
+    particle_endPS,
+    particle_endVS,
+    particle_halflambertPS,
+    particle_initVS,
+    particle_lambertPS,
+    particle_lightingPS,
+    particle_localShiftVS,
+    particle_meshVS,
+    particle_normalVS,
+    particle_normalMapPS,
+    particle_pointAlongVS,
+    particle_simulationPS,
+    particle_shaderPS,
+    particle_shaderVS,
+    particle_softPS,
+    particle_softVS,
+    particle_stretchVS,
+    particle_TBNVS,
+    particle_wrapVS,
     pickPS,
     reflDirPS,
     reflDirAnisoPS,

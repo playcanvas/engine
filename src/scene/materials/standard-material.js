@@ -1174,7 +1174,6 @@ function _defineMaterialProps() {
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
     _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
-    _defineFlag('customFragmentShader', null);
     _defineFlag('useFog', true);
     _defineFlag('useLighting', true);
     _defineFlag('useTonemap', true);

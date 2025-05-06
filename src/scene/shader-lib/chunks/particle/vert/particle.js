@@ -73,7 +73,8 @@ void main(void) {
 
     float particleLifetime = lifetime;
 
-    if (inLife <= 0.0 || inLife > particleLifetime || !inShow) meshLocalPos = vec3(0.0);
+    if (inLife <= 0.0 || inLife > particleLifetime || !inShow)
+        meshLocalPos = vec3(0.0);
     vec2 quadXY = meshLocalPos.xy;
     float nlife = clamp(inLife / particleLifetime, 0.0, 1.0);
 
