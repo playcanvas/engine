@@ -1,6 +1,6 @@
 import { hashCode } from '../../../core/hash.js';
 import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
-import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
+import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
@@ -105,7 +105,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         this.createVertexDefinition(definitionOptions, options, sharedIncludes, wgsl);
         this.createFragmentDefinition(definitionOptions, options, sharedIncludes, wgsl);
 
-        return ShaderUtils.createDefinition(device, definitionOptions);
+        return ShaderDefinitionUtils.createDefinition(device, definitionOptions);
     }
 }
 

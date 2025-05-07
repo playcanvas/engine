@@ -41,7 +41,7 @@ const _attrib2Semantic = {
  *
  * @ignore
  */
-class ShaderUtils {
+class ShaderDefinitionUtils {
     /**
      * Creates a shader definition.
      *
@@ -110,8 +110,8 @@ class ShaderUtils {
         let vertCode;
         let fragCode;
 
-        const vertexDefinesCode = ShaderUtils.getDefinesCode(device, options.vertexDefines);
-        const fragmentDefinesCode = ShaderUtils.getDefinesCode(device, options.fragmentDefines);
+        const vertexDefinesCode = ShaderDefinitionUtils.getDefinesCode(device, options.vertexDefines);
+        const fragmentDefinesCode = ShaderDefinitionUtils.getDefinesCode(device, options.fragmentDefines);
         const wgsl = options.shaderLanguage === SHADERLANGUAGE_WGSL;
 
         if (wgsl) {
@@ -133,22 +133,22 @@ class ShaderUtils {
         } else {
 
             // vertex code
-            vertCode = `${ShaderUtils.versionCode(device) +
+            vertCode = `${ShaderDefinitionUtils.versionCode(device) +
                 getDefines(webgpuVS, gles3VS, true, options) +
                 vertexDefinesCode +
-                ShaderUtils.precisionCode(device)}
+                ShaderDefinitionUtils.precisionCode(device)}
                 ${sharedGLSL}
-                ${ShaderUtils.getShaderNameCode(name)}
+                ${ShaderDefinitionUtils.getShaderNameCode(name)}
                 ${options.vertexCode}`;
 
             // fragment code
             fragCode = `${(options.fragmentPreamble || '') +
-                ShaderUtils.versionCode(device) +
+                ShaderDefinitionUtils.versionCode(device) +
                 getDefines(webgpuFS, gles3FS, false, options) +
                 fragmentDefinesCode +
-                ShaderUtils.precisionCode(device)}
+                ShaderDefinitionUtils.precisionCode(device)}
                 ${sharedGLSL}
-                ${ShaderUtils.getShaderNameCode(name)}
+                ${ShaderDefinitionUtils.getShaderNameCode(name)}
                 ${options.fragmentCode}`;
         }
 
@@ -279,4 +279,4 @@ class ShaderUtils {
     }
 }
 
-export { ShaderUtils };
+export { ShaderDefinitionUtils };

@@ -2,7 +2,7 @@ import { LitShader } from './lit-shader.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL, SHADERTAG_MATERIAL } from '../../../platform/graphics/constants.js';
-import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
+import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { hashCode } from '../../../core/hash.js';
 
 /**
@@ -68,7 +68,7 @@ class ShaderGeneratorLit extends ShaderGenerator {
         definitionOptions.fragmentIncludes = includes;
         definitionOptions.fragmentDefines = fDefines;
 
-        return ShaderUtils.createDefinition(device, definitionOptions);
+        return ShaderDefinitionUtils.createDefinition(device, definitionOptions);
     }
 }
 
