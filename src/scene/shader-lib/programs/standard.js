@@ -10,7 +10,7 @@ import { ChunkUtils } from '../chunk-utils.js';
 import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
-import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
+import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL, SHADERTAG_MATERIAL } from '../../../platform/graphics/constants.js';
 
 /**
@@ -445,7 +445,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         options.defines.forEach((value, key) => fDefines.set(key, value));
 
-        const definition = ShaderUtils.createDefinition(device, {
+        const definition = ShaderDefinitionUtils.createDefinition(device, {
             name: 'StandardShader',
             attributes: litShader.attributes,
             shaderLanguage: shaderLanguage,

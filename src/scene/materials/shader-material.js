@@ -23,7 +23,7 @@ import { Material } from './material.js';
  * inputs to the shader. Defaults to undefined, which generates the default attributes.
  * @property {string | string[]} [fragmentOutputTypes] - Fragment shader output types, which default to
  * vec4. Passing a string will set the output type for all color attachments. Passing an array will
- * set the output type for each color attachment. @see ShaderUtils.createDefinition
+ * set the output type for each color attachment. @see ShaderDefinitionUtils.createDefinition
  */
 
 /**

@@ -1,5 +1,5 @@
 import { Shader } from '../../platform/graphics/shader.js';
-import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
+import { ShaderDefinitionUtils } from '../../platform/graphics/shader-definition-utils.js';
 import { shaderChunks } from './chunks/chunks.js';
 import { getProgramLibrary } from './get-program-library.js';
 import { Debug } from '../../core/debug.js';
@@ -28,7 +28,7 @@ import { ShaderPass } from '../shader-pass.js';
  * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader
  * output types, which default to vec4. Passing a string will set the output type for all color
  * attachments. Passing an array will set the output type for each color attachment.
- * @see ShaderUtils.createDefinition
+ * @see ShaderDefinitionUtils.createDefinition
  * @returns {Shader} The newly created shader.
  * @category Graphics
  */
@@ -44,7 +44,7 @@ function createShader(device, vsName, fsName, useTransformFeedback = false, shad
         };
     }
 
-    return new Shader(device, ShaderUtils.createDefinition(device, {
+    return new Shader(device, ShaderDefinitionUtils.createDefinition(device, {
         ...shaderDefinitionOptions,
         name: `${vsName}_${fsName}`,
         vertexCode: shaderChunks[vsName],
@@ -75,7 +75,7 @@ function createShader(device, vsName, fsName, useTransformFeedback = false, shad
  * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader
  * output types, which default to vec4. Passing a string will set the output type for all color
  * attachments. Passing an array will set the output type for each color attachment.
- * @see ShaderUtils.createDefinition
+ * @see ShaderDefinitionUtils.createDefinition
  * @returns {Shader} The newly created shader.
  * @category Graphics
  */
@@ -97,7 +97,7 @@ function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, us
     const programLibrary = getProgramLibrary(device);
     let shader = programLibrary.getCachedShader(uniqueName);
     if (!shader) {
-        shader = new Shader(device, ShaderUtils.createDefinition(device, {
+        shader = new Shader(device, ShaderDefinitionUtils.createDefinition(device, {
             ...shaderDefinitionOptions,
             name: uniqueName,
             vertexCode: vsCode,

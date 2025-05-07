@@ -1,5 +1,5 @@
 import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
-import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
+import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { blendNames } from '../../constants.js';
 import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
 import { shaderChunks } from '../chunks/chunks.js';
@@ -81,7 +81,7 @@ class ShaderGeneratorParticle extends ShaderGenerator {
             ...options.chunks
         }));
 
-        return ShaderUtils.createDefinition(device, {
+        return ShaderDefinitionUtils.createDefinition(device, {
             name: 'ParticleShader',
             shaderLanguage: shaderLanguage,
             attributes: attributes,
