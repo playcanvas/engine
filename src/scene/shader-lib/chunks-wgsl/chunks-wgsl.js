@@ -44,17 +44,17 @@ import fresnelSchlickPS from './lit/frag/fresnelSchlick.js';
 import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gammaPS from './common/frag/gamma.js';
 import glossPS from './standard/frag/gloss.js';
-// import gsplatCenterVS from './gsplat/vert/gsplatCenter.js';
-// import gsplatColorVS from './gsplat/vert/gsplatColor.js';
+import gsplatCenterVS from './gsplat/vert/gsplatCenter.js';
+import gsplatColorVS from './gsplat/vert/gsplatColor.js';
 import gsplatCommonVS from './gsplat/vert/gsplatCommon.js';
-// import gsplatCompressedDataVS from './gsplat/vert/gsplatCompressedData.js';
-// import gsplatCompressedSHVS from './gsplat/vert/gsplatCompressedSH.js';
-// import gsplatCornerVS from './gsplat/vert/gsplatCorner.js';
-// import gsplatDataVS from './gsplat/vert/gsplatData.js';
-// import gsplatOutputVS from './gsplat/vert/gsplatOutput.js';
+import gsplatCompressedDataVS from './gsplat/vert/gsplatCompressedData.js';
+import gsplatCompressedSHVS from './gsplat/vert/gsplatCompressedSH.js';
+import gsplatCornerVS from './gsplat/vert/gsplatCorner.js';
+import gsplatDataVS from './gsplat/vert/gsplatData.js';
+import gsplatOutputVS from './gsplat/vert/gsplatOutput.js';
 import gsplatPS from './gsplat/frag/gsplat.js';
-// import gsplatSHVS from './gsplat/vert/gsplatSH.js';
-// import gsplatSourceVS from './gsplat/vert/gsplatSource.js';
+import gsplatSHVS from './gsplat/vert/gsplatSH.js';
+import gsplatSourceVS from './gsplat/vert/gsplatSource.js';
 import gsplatVS from './gsplat/vert/gsplat.js';
 import immediateLinePS from './internal/frag/immediateLine.js';
 import immediateLineVS from './internal/vert/immediateLine.js';
@@ -259,17 +259,17 @@ const shaderChunksWGSL = {
     fullscreenQuadVS,
     gammaPS,
     glossPS,
-    // gsplatCenterVS,
-    // gsplatCornerVS,
-    // gsplatColorVS,
+    gsplatCenterVS,
+    gsplatCornerVS,
+    gsplatColorVS,
     gsplatCommonVS,
-    // gsplatCompressedDataVS,
-    // gsplatCompressedSHVS,
-    // gsplatDataVS,
-    // gsplatOutputVS,
+    gsplatCompressedDataVS,
+    gsplatCompressedSHVS,
+    gsplatDataVS,
+    gsplatOutputVS,
     gsplatPS,
-    // gsplatSHVS,
-    // gsplatSourceVS,
+    gsplatSHVS,
+    gsplatSourceVS,
     gsplatVS,
     immediateLinePS,
     immediateLineVS,
