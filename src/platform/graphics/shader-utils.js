@@ -149,7 +149,7 @@ class ShaderUtils {
                 ShaderUtils.precisionCode(device)}
                 ${sharedGLSL}
                 ${ShaderUtils.getShaderNameCode(name)}
-                ${options.fragmentCode || ShaderUtils.dummyFragmentCode()}`;
+                ${options.fragmentCode}`;
         }
 
         return {
@@ -191,10 +191,6 @@ class ShaderUtils {
     // SpectorJS integration
     static getShaderNameCode(name) {
         return `#define SHADER_NAME ${name}\n`;
-    }
-
-    static dummyFragmentCode() {
-        return 'void main(void) {gl_FragColor = vec4(0.0);}';
     }
 
     static versionCode(device) {
