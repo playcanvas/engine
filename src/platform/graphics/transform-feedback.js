@@ -123,7 +123,8 @@ class TransformFeedback {
         return new Shader(graphicsDevice, ShaderUtils.createDefinition(graphicsDevice, {
             name,
             vertexCode,
-            useTransformFeedback: true
+            useTransformFeedback: true,
+            fragmentCode: 'void main(void) {gl_FragColor = vec4(0.0);}'
         }));
     }
 
