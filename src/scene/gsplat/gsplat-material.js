@@ -1,6 +1,7 @@
 import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { BLEND_NONE, BLEND_PREMULTIPLIED, DITHER_NONE } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
+import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 
 /**
@@ -27,6 +28,8 @@ const createGSplatMaterial = (options = {}) => {
         uniqueName: 'SplatMaterial',
         vertexGLSL: options.vertex ?? shaderChunks.gsplatVS,
         fragmentGLSL: options.fragment ?? shaderChunks.gsplatPS,
+        vertexWGSL: shaderChunksWGSL.gsplatVS,
+        fragmentWGSL: shaderChunksWGSL.gsplatPS,
         attributes: {
             vertex_position: SEMANTIC_POSITION,
             vertex_id_attrib: SEMANTIC_ATTR13
