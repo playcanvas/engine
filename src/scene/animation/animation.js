@@ -1,4 +1,4 @@
-class Key {
+class AnimationKey {
     constructor(time, position, rotation, scale) {
         this.time = time;
         this.position = position;
@@ -12,9 +12,9 @@ class Key {
  *
  * @category Animation
  */
-class Node {
+class AnimationNode {
     /**
-     * Create a new Node instance.
+     * Create a new AnimationNode instance.
      */
     constructor() {
         this._name = '';
@@ -52,10 +52,10 @@ class Animation {
     }
 
     /**
-     * Gets a {@link Node} by name.
+     * Gets a {@link AnimationNode} by name.
      *
-     * @param {string} name - The name of the {@link Node}.
-     * @returns {Node} The {@link Node} with the specified name.
+     * @param {string} name - The name of the {@link AnimationNode}.
+     * @returns {AnimationNode} The {@link AnimationNode} with the specified name.
      */
     getNode(name) {
         return this._nodeDict[name];
@@ -64,7 +64,7 @@ class Animation {
     /**
      * Adds a node to the internal nodes array.
      *
-     * @param {Node} node - The node to add.
+     * @param {AnimationNode} node - The node to add.
      */
     addNode(node) {
         this._nodes.push(node);
@@ -74,11 +74,11 @@ class Animation {
     /**
      * A read-only property to get array of animation nodes.
      *
-     * @type {Node[]}
+     * @type {AnimationNode[]}
      */
     get nodes() {
         return this._nodes;
     }
 }
 
-export { Animation, Key, Node };
+export { Animation, AnimationKey, AnimationNode };
