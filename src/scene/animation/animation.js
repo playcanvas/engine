@@ -25,8 +25,11 @@ class AnimationNode {
 }
 
 /**
- * An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy. It
- * controls how the nodes of the hierarchy are transformed over time.
+ * An Animation contains the data that defines how a {@link Skeleton} animates over time. The
+ * Animation contains an array of {@link AnimationNode}s, where each AnimationNode targets a
+ * specific {@link GraphNode} referenced by a {@link Skeleton}.
+ *
+ * An Animation can be played back by an {@link AnimationComponent}.
  *
  * @category Animation
  */
