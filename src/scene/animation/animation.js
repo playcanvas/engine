@@ -8,7 +8,9 @@ class AnimationKey {
 }
 
 /**
- * A animation node has a name and contains an array of keyframes.
+ * AnimationNode represents an array of keyframes that animate the transform of a {@link GraphNode}
+ * over time. Typically, an {@link Animation} maintains a collection of AnimationNodes, one for
+ * each GraphNode in a {@link Skeleton}.
  *
  * @category Animation
  */
