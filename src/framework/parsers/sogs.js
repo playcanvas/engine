@@ -27,7 +27,7 @@ class SogsParser {
     async loadTextures(url, callback, asset, meta) {
         const { assets } = this.app;
 
-        const subs = ['means', 'opacities', 'quats', 'scales', 'sh0', 'shN'];
+        const subs = ['means', 'quats', 'scales', 'sh0', 'shN'];
 
         const textures = {};
         const promises = [];
@@ -72,13 +72,11 @@ class SogsParser {
         data.shBands = widths[textures.shN?.[0]?.resource?.width] ?? 0;
         data.means_l = textures.means[0].resource;
         data.means_u = textures.means[1].resource;
-        data.opacities = textures.opacities[0].resource;
         data.quats = textures.quats[0].resource;
         data.scales = textures.scales[0].resource;
         data.sh0 = textures.sh0[0].resource;
         data.sh_centroids = textures.shN?.[0]?.resource;
-        data.sh_labels_l = textures.shN?.[1]?.resource;
-        data.sh_labels_u = textures.shN?.[2]?.resource;
+        data.sh_labels = textures.shN?.[1]?.resource;
 
         const resource = new GSplatResource(this.app, (asset.data?.decompress) ? data.decompress() : data, []);
 

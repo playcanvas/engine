@@ -25,15 +25,13 @@ class GSplatSogsIterator {
 
         // extract means for centers
         const { meta } = data;
-        const { means, quats, scales, opacities, sh0, shN } = meta;
+        const { means, quats, scales, sh0, shN } = meta;
         const means_l_data = p && readImageData(data.means_l._levels[0]);
         const means_u_data = p && readImageData(data.means_u._levels[0]);
         const quats_data = r && readImageData(data.quats._levels[0]);
         const scales_data = s && readImageData(data.scales._levels[0]);
-        const opacities_data = c && readImageData(data.opacities._levels[0]);
         const sh0_data = c && readImageData(data.sh0._levels[0]);
-        const sh_labels_l_data = sh && readImageData(data.sh_labels_l._levels[0]);
-        const sh_labels_u_data = sh && readImageData(data.sh_labels_u._levels[0]);
+        const sh_labels_data = sh && readImageData(data.sh_labels._levels[0]);
         const sh_centroids_data = sh && readImageData(data.sh_centroids._levels[0]);
 
         this.read = (i) => {
@@ -66,7 +64,7 @@ class GSplatSogsIterator {
                 const r = lerp(sh0.mins[0], sh0.maxs[0], sh0_data[i * 4 + 0] / 255);
                 const g = lerp(sh0.mins[1], sh0.maxs[1], sh0_data[i * 4 + 1] / 255);
                 const b = lerp(sh0.mins[2], sh0.maxs[2], sh0_data[i * 4 + 2] / 255);
-                const a = lerp(opacities.mins[0], opacities.maxs[0], opacities_data[i * 4 + 0] / 255);
+                const a = lerp(sh0.mins[3], sh0.maxs[3], sh0_data[i * 4 + 3] / 255);
 
                 c.set(
                     0.5 + r * SH_C0,
@@ -77,7 +75,7 @@ class GSplatSogsIterator {
             }
 
             if (sh) {
-                const n = sh_labels_l_data[i * 4 + 0] + (sh_labels_u_data[i * 4 + 0] << 8);
+                const n = sh_labels_data[i * 4 + 0] + (sh_labels_data[i * 4 + 1] << 8);
                 const u = (n % 64) * 15;
                 const v = Math.floor(n / 64);
 
@@ -106,15 +104,11 @@ class GSplatSogsData {
 
     scales;
 
-    opacities;
-
     sh0;
 
     sh_centroids;
 
-    sh_labels_l;
-
-    sh_labels_u;
+    sh_labels;
 
     createIter(p, r, s, c, sh) {
         return new GSplatSogsIterator(this, p, r, s, c, sh);
