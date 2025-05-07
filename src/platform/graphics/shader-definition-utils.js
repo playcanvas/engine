@@ -37,7 +37,7 @@ const _attrib2Semantic = {
 };
 
 /**
- * A class providing utility functions for shader creation.
+ * A class providing utility functions for shader definition creation.
  *
  * @ignore
  */
