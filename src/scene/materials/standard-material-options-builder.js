@@ -299,6 +299,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.gamma = cameraShaderParams.shaderOutputGamma;
         options.litOptions.toneMap = stdMat.useTonemap ? cameraShaderParams.toneMapping : TONEMAP_NONE;
 
+
         // source of environment reflections is as follows:
         if (stdMat.envAtlas && stdMat.cubeMap) {
             options.litOptions.reflectionSource = REFLECTIONSRC_ENVATLASHQ;
@@ -317,15 +318,12 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.reflectionSource = REFLECTIONSRC_ENVATLASHQ;
             options.litOptions.reflectionEncoding = scene.envAtlas.encoding;
             options.litOptions.reflectionCubemapEncoding = scene.skybox.encoding;
-            usingSceneEnv = true;
         } else if (stdMat.useSkybox && scene.envAtlas) {
             options.litOptions.reflectionSource = REFLECTIONSRC_ENVATLAS;
             options.litOptions.reflectionEncoding = scene.envAtlas.encoding;
-            usingSceneEnv = true;
         } else if (stdMat.useSkybox && scene.skybox) {
             options.litOptions.reflectionSource = REFLECTIONSRC_CUBEMAP;
             options.litOptions.reflectionEncoding = scene.skybox.encoding;
-            usingSceneEnv = true;
         } else {
             options.litOptions.reflectionSource = REFLECTIONSRC_NONE;
             options.litOptions.reflectionEncoding = null;
