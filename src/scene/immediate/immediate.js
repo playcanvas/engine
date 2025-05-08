@@ -174,7 +174,7 @@ class Immediate {
         `, /* wgsl */`
 
             varying uv0: vec2f;
-            var colorMap: texture_2d<f32>;
+            var colorMap: texture_2d<uf32>;
             @fragment fn fragmentMain(input : FragmentInput) -> FragmentOutput {
                 var output: FragmentOutput;
                 let uv : vec2<i32> = vec2<i32>(input.uv0 * vec2f(textureDimensions(colorMap, 0)));
