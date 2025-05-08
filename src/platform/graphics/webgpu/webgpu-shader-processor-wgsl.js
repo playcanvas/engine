@@ -72,8 +72,8 @@ const getTextureInfo = (baseType, componentType) => {
             case 'i32': finalSampleType = SAMPLETYPE_INT; break;
             case 'f32': finalSampleType = SAMPLETYPE_FLOAT; break;
 
-            // custom uf32 type for unfilterable float, allowing us to create correct bind, which is automatically generated based on the shader
-            case 'uf32': finalSampleType = SAMPLETYPE_UNFILTERABLE_FLOAT; break;
+            // custom 'uff' type for unfilterable float, allowing us to create correct bind, which is automatically generated based on the shader
+            case 'uff': finalSampleType = SAMPLETYPE_UNFILTERABLE_FLOAT; break;
         }
     }
 
