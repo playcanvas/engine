@@ -321,9 +321,9 @@ class ZoneComponent extends Component {
         let entities;
         // only check entities that have moved unless this zone has also moved
         if (dirtyEntities && !this.entity._dirtyZone) {
-          entities = dirtyEntities;
+            entities = dirtyEntities;
         } else {
-          entities = Object.values(this.system.app._entityIndex);
+            entities = Object.values(this.system.app._entityIndex);
         }
         const results = new Set();
         const resultsToRemove = new Set();

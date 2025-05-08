@@ -136,7 +136,9 @@ class ZoneComponentSystem extends ComponentSystem {
         for (let i = 0, l = zones.length; i < l; i++) {
             zones[i].checkEntities(this.app._dirtyZoneEntities);
         }
-        this.app._dirtyZoneEntities.forEach(e => {e._dirtyZone = false;});
+        this.app._dirtyZoneEntities.forEach((e) => {
+            e._dirtyZone = false;
+        });
         this.app._dirtyZoneEntities.length = 0;
     }
 
