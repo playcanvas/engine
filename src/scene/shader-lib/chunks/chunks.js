@@ -203,6 +203,10 @@ import transmissionPS from './standard/frag/transmission.js';
 import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
+// magnopus patched additional UVS
+import uv2VS from './lit/vert/uv2.js';
+import uv3VS from './lit/vert/uv3.js';
+import uv4VS from './lit/vert/uv4.js';
 import uvTransformVS from './lit/vert/uvTransform.js';
 import uvTransformUniformsPS from './lit/vert/uvTransformUniforms.js';
 import viewDirPS from './lit/frag/viewDir.js';
@@ -422,6 +426,9 @@ const shaderChunks = {
     twoSidedLightingPS,
     uv0VS,
     uv1VS,
+    uv2VS,
+    uv3VS,
+    uv4VS,
     uvTransformVS,
     uvTransformUniformsPS,
     viewDirPS,

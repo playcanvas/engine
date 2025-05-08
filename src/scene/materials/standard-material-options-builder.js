@@ -14,7 +14,11 @@ import {
     SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
     FOG_NONE,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP,
-    AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT
+    AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
+    // magnopus patched
+    SHADERDEF_UV2,
+    SHADERDEF_UV3,
+    SHADERDEF_UV4
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -101,10 +105,16 @@ class StandardMaterialOptionsBuilder {
     _updateUVOptions(options, stdMat, objDefs, minimalOptions, cameraShaderParams) {
         let hasUv0 = false;
         let hasUv1 = false;
+        let hasUv2 = false;
+        let hasUv3 = false;
+        let hasUv4 = false;
         let hasVcolor = false;
         if (objDefs) {
             hasUv0 = (objDefs & SHADERDEF_UV0) !== 0;
             hasUv1 = (objDefs & SHADERDEF_UV1) !== 0;
+            hasUv2 = (objDefs & SHADERDEF_UV2) !== 0;
+            hasUv3 = (objDefs & SHADERDEF_UV3) !== 0;
+            hasUv4 = (objDefs & SHADERDEF_UV4) !== 0;
             hasVcolor = (objDefs & SHADERDEF_VCOLOR) !== 0;
         }
 
@@ -113,7 +123,7 @@ class StandardMaterialOptionsBuilder {
 
         const uniqueTextureMap = {};
         for (const p in _matTex2D) {
-            this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap);
+            this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasUv2, hasUv3, hasUv4, hasVcolor, minimalOptions, uniqueTextureMap);
         }
         this._mapXForms = null;
 
@@ -131,7 +141,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 
-    _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap) {
+    _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasUv2, hasUv3, hasUv4, hasVcolor, minimalOptions, uniqueTextureMap) {
         const isOpacity = p === 'opacity';
 
         if (!minimalOptions || isOpacity) {
@@ -169,6 +179,9 @@ class StandardMaterialOptionsBuilder {
                 let allow = true;
                 if (stdMat[uname] === 0 && !hasUv0) allow = false;
                 if (stdMat[uname] === 1 && !hasUv1) allow = false;
+                if (stdMat[uname] === 2 && !hasUv2) allow = false;
+                if (stdMat[uname] === 3 && !hasUv3) allow = false;
+                if (stdMat[uname] === 4 && !hasUv4) allow = false;
                 if (allow) {
 
                     // create an intermediate map between the textures and their slots

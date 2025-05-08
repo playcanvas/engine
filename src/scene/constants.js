@@ -744,6 +744,10 @@ export const SHADERDEF_MORPH_NORMAL = 2048;
 export const SHADERDEF_LMAMBIENT = 4096; // lightmaps contain ambient
 export const SHADERDEF_MORPH_TEXTURE_BASED_INT = 8192;
 export const SHADERDEF_BATCH = 16384;
+// magnopus patched additional UVS
+export const SHADERDEF_UV2 = SHADERDEF_BATCH * 2;
+export const SHADERDEF_UV3 = SHADERDEF_UV2 * 2;
+export const SHADERDEF_UV4 = SHADERDEF_UV3 * 2;
 
 /**
  * The shadow map is not to be updated.

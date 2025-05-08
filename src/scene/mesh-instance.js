@@ -9,7 +9,11 @@ import {
     RENDERSTYLE_SOLID,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    // magnopus patched additional UVS
+    SHADERDEF_UV2,
+    SHADERDEF_UV3,
+    SHADERDEF_UV4
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
@@ -439,6 +443,9 @@ class MeshInstance {
             const format = mesh.vertexBuffer.format;
             this._shaderDefs |= format.hasUv0 ? SHADERDEF_UV0 : 0;
             this._shaderDefs |= format.hasUv1 ? SHADERDEF_UV1 : 0;
+            this._shaderDefs |= format.hasUv2 ? SHADERDEF_UV2 : 0;
+            this._shaderDefs |= format.hasUv3 ? SHADERDEF_UV3 : 0;
+            this._shaderDefs |= format.hasUv4 ? SHADERDEF_UV4 : 0;
             this._shaderDefs |= format.hasColor ? SHADERDEF_VCOLOR : 0;
             this._shaderDefs |= format.hasTangents ? SHADERDEF_TANGENTS : 0;
         }
