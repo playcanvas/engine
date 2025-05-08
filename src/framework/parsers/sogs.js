@@ -78,6 +78,10 @@ class SogsParser {
         data.sh_centroids = textures.shN?.[0]?.resource;
         data.sh_labels = textures.shN?.[1]?.resource;
 
+        if (asset.data?.reorder ?? true) {
+            data.reorderData();
+        }
+
         const resource = new GSplatResource(this.app, (asset.data?.decompress) ? data.decompress() : data, []);
 
         callback(null, resource);
