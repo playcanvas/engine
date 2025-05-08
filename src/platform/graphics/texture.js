@@ -19,7 +19,6 @@ import {
     requiresManualGamma, pixelFormatInfo, isSrgbPixelFormat, pixelFormatLinearToGamma, pixelFormatGammaToLinear
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
-import { RenderTarget } from './render-target.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -237,6 +236,7 @@ class Texture {
 
         this._width = Math.floor(options.width ?? 4);
         this._height = Math.floor(options.height ?? 4);
+        // eslint-disable-next-line no-debugger
         if (this.name.includes('HQ')) debugger;
         this._format = options.format ?? PIXELFORMAT_RGBA8;
         this._compressed = isCompressedPixelFormat(this._format);

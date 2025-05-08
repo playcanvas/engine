@@ -70,21 +70,23 @@ const builtinAttributes = {
     vertex_boneIndices: SEMANTIC_BLENDINDICES
 };
 
-const builtinVaryings = {
-    vVertexColor: 'vec4',
-    vPositionW: 'vec3',
-    vNormalV: 'vec3',
-    vNormalW: 'vec3',
-    vTangentW: 'vec3',
-    vBinormalW: 'vec3',
-    vObjectSpaceUpW: 'vec3',
-    vUv0: 'vec2',
-    vUv1: 'vec2',
-    vUv2: 'vec2',
-    vUv3: 'vec2',
-    vUv4: 'vec2',
-    vLinearDepth: 'float'
-};
+// Magnopus patched: Unused variable
+// const builtinVaryings = {
+//     vVertexColor: 'vec4',
+//     vPositionW: 'vec3',
+//     vNormalV: 'vec3',
+//     vNormalW: 'vec3',
+//     vTangentW: 'vec3',
+//     vBinormalW: 'vec3',
+//     vObjectSpaceUpW: 'vec3',
+//     vUv0: 'vec2',
+//     vUv1: 'vec2',
+//     vUv2: 'vec2',
+//     vUv3: 'vec2',
+//     vUv4: 'vec2',
+//     vLinearDepth: 'float'
+// };
+
 export const varyingsWGSLTypes = new Map([
     ['vec4', 'vec4f'],
     ['vec3', 'vec3f'],

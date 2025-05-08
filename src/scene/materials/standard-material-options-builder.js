@@ -1,5 +1,5 @@
 import {
-    PIXELFORMAT_DXT5, PIXELFORMAT_RGBA8, TEXTURETYPE_SWIZZLEGGGR
+    PIXELFORMAT_DXT5, TEXTURETYPE_SWIZZLEGGGR
 } from '../../platform/graphics/constants.js';
 
 import {
@@ -298,8 +298,6 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.fog = stdMat.useFog ? cameraShaderParams.fog : FOG_NONE;
         options.litOptions.gamma = cameraShaderParams.shaderOutputGamma;
         options.litOptions.toneMap = stdMat.useTonemap ? cameraShaderParams.toneMapping : TONEMAP_NONE;
-
-        let usingSceneEnv = false;
 
         // source of environment reflections is as follows:
         if (stdMat.envAtlas && stdMat.cubeMap) {
