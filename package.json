@@ -128,7 +128,10 @@
     "serve": "serve build -l 51000 --cors",
     "test": "mocha --ignore \"test/assets/scripts/*.js\" --recursive --require test/fixtures.mjs --timeout 5000",
     "test:coverage": "c8 npm test",
-    "test:types": "tsc --pretty false build/playcanvas.d.ts"
+    "test:types": "tsc --pretty false playcanvas.d.ts"
+  },
+  "scriptsComments": {
+    "test:types": "Modified by Magnopus to target the source playcanvas.d.ts file instead of the build one."
   },
   "engines": {
     "node": ">=18.0.0"
