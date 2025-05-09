@@ -21,8 +21,6 @@ import {
     typedArrayIndexFormats,
     requiresManualGamma,
     PIXELFORMAT_SRGBA8,
-    SHADERLANGUAGE_WGSL,
-    SHADERLANGUAGE_GLSL,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
@@ -41,7 +39,7 @@ import {
 } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
-import { createShaderFromCode } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { ParticleCPUUpdater } from './cpu-updater.js';
@@ -361,8 +359,8 @@ class ParticleEmitter {
         this.worldBoundsMul = new Vec3();
         this.worldBoundsAdd = new Vec3();
         this.timeToSwitchBounds = 0;
-        // this.prevPos = new Vec3();
 
+        // simulation shaders - do not destroy those, as they're cached and shared between emitters
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
         this.shaderParticleUpdateOnStop = null;
@@ -596,7 +594,6 @@ class ParticleEmitter {
         this.resetWorldBounds();
 
         if (this.node) {
-            // this.prevPos.copy(this.node.getPosition());
             this.worldBounds.setFromTransformedAabb(
                 this.localBounds, this.localSpace ? Mat4.IDENTITY : this.node.getWorldTransform());
 
@@ -665,40 +662,39 @@ class ParticleEmitter {
         if (this.localSpace) defines.set('LOCAL_SPACE', '');
         if (this.pack8) defines.set('PACK8', '');
         if (this.emitterShape === EMITTERSHAPE_BOX) defines.set('EMITTERSHAPE_BOX', '');
+        const shaderUniqueId = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
 
-        const shaderLanguage = gd.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
-        const chunks = shaderLanguage === SHADERLANGUAGE_WGSL ? shaderChunksWGSL : shaderChunks;
-        const includes = new Map(Object.entries(chunks));
+        const includes = new Map(Object.entries(gd.isWebGPU ? shaderChunksWGSL : shaderChunks));
 
-        const shaderCodeRespawn = `#define RESPAWN\n ${chunks.particle_simulationPS}`;
-        const shaderCodeNoRespawn = `#define NO_RESPAWN\n ${chunks.particle_simulationPS}`;
-        const shaderCodeOnStop = `#define ON_STOP\n ${chunks.particle_simulationPS}`;
+        // shader options shared by all 3 shaders
+        const shaderOptions = {
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexGLSL: shaderChunks.fullscreenQuadVS,
+            vertexWGSL: shaderChunksWGSL.fullscreenQuadVS,
+            fragmentGLSL: shaderChunks.particle_simulationPS,
+            fragmentWGSL: shaderChunksWGSL.particle_simulationPS,
+            fragmentDefines: defines,
+            fragmentIncludes: includes
+        };
 
-        // Note: createShaderFromCode can return a shader from the cache (not a new shader) so we *should not* delete these shaders
-        // when the particle emitter is destroyed
-        const params = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
-        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, `ParticleUpdateRespawn-${params}`,
-            { vertex_position: SEMANTIC_POSITION }, {
-                fragmentDefines: defines,
-                fragmentIncludes: includes,
-                shaderLanguage: shaderLanguage
-            }
-        );
-        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, `ParticleUpdateNoRespawn-${params}`,
-            { vertex_position: SEMANTIC_POSITION }, {
-                fragmentDefines: defines,
-                fragmentIncludes: includes,
-                shaderLanguage: shaderLanguage
-            }
-        );
-        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, `ParticleUpdateStop-${params}`,
-            { vertex_position: SEMANTIC_POSITION }, {
-                fragmentDefines: defines,
-                fragmentIncludes: includes,
-                shaderLanguage: shaderLanguage
-            }
-        );
+        // shader 1
+        shaderOptions.uniqueName = `ParticleUpdateRespawn-${shaderUniqueId}`;
+        defines.set('RESPAWN', '');
+        this.shaderParticleUpdateRespawn = ShaderUtils.createShader(gd, shaderOptions);
+        defines.delete('RESPAWN');
 
+        // shader 2
+        shaderOptions.uniqueName = `ParticleUpdateNoRespawn-${shaderUniqueId}`;
+        defines.set('NO_RESPAWN', '');
+        this.shaderParticleUpdateNoRespawn = ShaderUtils.createShader(gd, shaderOptions);
+        defines.delete('NO_RESPAWN');
+
+        // shader 3
+        shaderOptions.uniqueName = `ParticleUpdateStop-${shaderUniqueId}`;
+        defines.set('ON_STOP', '');
+        this.shaderParticleUpdateNoRespawn = ShaderUtils.createShader(gd, shaderOptions);
+
+        // allocate various buffers
         this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
         this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
         this._allocate(this.numParticles);

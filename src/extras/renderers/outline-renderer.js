@@ -5,9 +5,7 @@ import {
     ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_SRC_ALPHA,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8,
-    SEMANTIC_POSITION,
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL
+    SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -18,7 +16,7 @@ import { StandardMaterialOptions } from '../../scene/materials/standard-material
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
@@ -117,13 +115,22 @@ class OutlineRenderer {
         this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA);
 
         const device = this.app.graphicsDevice;
-        this.shaderExtend = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderOutlineExtendPS, 'OutlineExtendShader');
 
-        this.shaderBlend = device.isWebGPU ?
-            createShaderFromCode(device, shaderChunksWGSL.fullscreenQuadVS, shaderChunksWGSL.outputTex2DPS, 'OutlineBlendShader',
-                { vertex_position: SEMANTIC_POSITION }, { shaderLanguage: SHADERLANGUAGE_WGSL }) :
-            createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.outputTex2DPS, 'OutlineBlendShader',
-                { vertex_position: SEMANTIC_POSITION }, { shaderLanguage: SHADERLANGUAGE_GLSL });
+        this.shaderExtend = ShaderUtils.createShader(device, {
+            uniqueName: 'OutlineExtendShader',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexGLSL: shaderChunks.fullscreenQuadVS,
+            fragmentGLSL: shaderOutlineExtendPS
+        });
+
+        this.shaderBlend = ShaderUtils.createShader(device, {
+            uniqueName: 'OutlineBlendShader',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexGLSL: shaderChunks.fullscreenQuadVS,
+            fragmentGLSL: shaderChunks.outputTex2DPS,
+            vertexWGSL: shaderChunksWGSL.fullscreenQuadVS,
+            fragmentWGSL: shaderChunksWGSL.outputTex2DPS
+        });
 
         this.quadRenderer = new QuadRender(this.shaderBlend);
 

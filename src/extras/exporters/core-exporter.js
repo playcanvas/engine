@@ -1,11 +1,11 @@
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import {
     FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8,
-    SEMANTIC_POSITION, SHADERLANGUAGE_WGSL, SHADERLANGUAGE_GLSL
+    SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
@@ -102,14 +102,15 @@ class CoreExporter {
             depth: false
         });
 
-        // render to a render target using a blit shader
-        const shader = device.isWebGPU ?
-            createShaderFromCode(device, shaderChunksWGSL.fullscreenQuadVS, shaderChunksWGSL.outputTex2DPS, 'ShaderCoreExporterBlit',
-                { vertex_position: SEMANTIC_POSITION }, { shaderLanguage: SHADERLANGUAGE_WGSL }
-            ) :
-            createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.outputTex2DPS, 'ShaderCoreExporterBlit',
-                { vertex_position: SEMANTIC_POSITION }, { shaderLanguage: SHADERLANGUAGE_GLSL }
-            );
+        const shader = ShaderUtils.createShader(device, {
+            uniqueName: 'ShaderCoreExporterBlit',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexGLSL: shaderChunks.fullscreenQuadVS,
+            fragmentGLSL: shaderChunks.outputTex2DPS,
+            vertexWGSL: shaderChunksWGSL.fullscreenQuadVS,
+            fragmentWGSL: shaderChunksWGSL.outputTex2DPS
+        });
+
         device.scope.resolve('source').setValue(texture);
         device.setBlendState(BlendState.NOBLEND);
         drawQuadWithShader(device, renderTarget, shader);

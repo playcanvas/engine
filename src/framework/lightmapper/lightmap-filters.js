@@ -1,7 +1,7 @@
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
-import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 
 // size of the kernel - needs to match the constant in the shader
 const DENOISE_FILTER_SIZE = 15;
@@ -41,18 +41,21 @@ class LightmapFilters {
 
         const index = bakeHDR ? 0 : 1;
         if (!this.shaderDenoise[index]) {
-            const wgsl = this.device.isWebGPU;
-            const chunks = wgsl ? shaderChunksWGSL : shaderChunks;
-            const name = `lmBilateralDeNoise-${bakeHDR ? 'hdr' : 'rgbm'}`;
 
             const defines = new Map();
             defines.set('{MSIZE}', 15);
             if (bakeHDR) defines.set('HDR', '');
 
-            this.shaderDenoise[index] = createShaderFromCode(this.device, chunks.fullscreenQuadVS, chunks.bilateralDeNoisePS, name, { vertex_position: SEMANTIC_POSITION }, undefined, {
-                shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,
+            this.shaderDenoise[index] = ShaderUtils.createShader(this.device, {
+                uniqueName: `lmBilateralDeNoise-${bakeHDR ? 'hdr' : 'rgbm'}`,
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexGLSL: shaderChunks.fullscreenQuadVS,
+                vertexWGSL: shaderChunksWGSL.fullscreenQuadVS,
+                fragmentGLSL: shaderChunks.bilateralDeNoisePS,
+                fragmentWGSL: shaderChunksWGSL.bilateralDeNoisePS,
                 fragmentDefines: defines
             });
+
             this.sigmas = new Float32Array(2);
             this.constantSigmas = this.device.scope.resolve('sigmas');
             this.constantKernel = this.device.scope.resolve('kernel[0]');
@@ -74,12 +77,14 @@ class LightmapFilters {
     getDilate(device, bakeHDR) {
         const index = bakeHDR ? 0 : 1;
         if (!this.shaderDilate[index]) {
-            const wgsl = this.device.isWebGPU;
-            const chunks = wgsl ? shaderChunksWGSL : shaderChunks;
-            const name = `lmDilate-${bakeHDR ? 'hdr' : 'rgbm'}`;
             const define = bakeHDR ? '#define HDR\n' : '';
-            this.shaderDilate[index] = createShaderFromCode(device, chunks.fullscreenQuadVS, define + chunks.dilatePS, name, { vertex_position: SEMANTIC_POSITION }, undefined, {
-                shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL
+            this.shaderDilate[index] = ShaderUtils.createShader(device, {
+                uniqueName: `lmDilate-${bakeHDR ? 'hdr' : 'rgbm'}`,
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexGLSL: shaderChunks.fullscreenQuadVS,
+                vertexWGSL: shaderChunksWGSL.fullscreenQuadVS,
+                fragmentGLSL: define + shaderChunks.dilatePS,
+                fragmentWGSL: define + shaderChunksWGSL.dilatePS
             });
         }
         return this.shaderDilate[index];

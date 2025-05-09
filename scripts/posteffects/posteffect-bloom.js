@@ -137,9 +137,26 @@ function BloomEffect(graphicsDevice) {
         '}'
     ].join('\n');
 
-    this.extractShader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, extractFrag, 'BloomExtractShader', attributes);
-    this.blurShader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, gaussianBlurFrag, 'BloomBlurShader', attributes);
-    this.combineShader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, combineFrag, 'BloomCombineShader', attributes);
+    this.extractShader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'BloomExtractShader',
+        attributes: attributes,
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: extractFrag
+    });
+
+    this.blurShader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'BloomBlurShader',
+        attributes: attributes,
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: gaussianBlurFrag
+    });
+
+    this.combineShader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'BloomCombineShader',
+        attributes: attributes,
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: combineFrag
+    });
 
     this.targets = [];
 

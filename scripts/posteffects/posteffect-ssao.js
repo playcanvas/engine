@@ -316,9 +316,27 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         aPosition: pc.SEMANTIC_POSITION
     };
 
-    this.ssaoShader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fSsao, 'SsaoShader', attributes);
-    this.blurShader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fblur, 'SsaoBlurShader', attributes);
-    this.outputShader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, foutput, 'SsaoOutputShader', attributes);
+    this.ssaoShader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'SsaoShader',
+        attributes: attributes,
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: fSsao
+    });
+
+    this.blurShader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'SsaoBlurShader',
+        attributes: attributes,
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: fblur
+    });
+
+    this.outputShader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'SsaoOutputShader',
+        attributes: attributes,
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: foutput
+    });
+
 
     // Uniforms
     this.radius = 4;
