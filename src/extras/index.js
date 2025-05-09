@@ -27,6 +27,17 @@ export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 export { CameraFrame } from './render-passes/camera-frame.js';
 
+// INPUTS
+export { JoystickDoubleInput } from './inputs/joystickdouble-input.js';
+export { JoystickTouchInput } from './inputs/joysticktouch-input.js';
+export { KeyboardMouseInput } from './inputs/keyboardmouse-input.js';
+export { MultiTouchInput } from './inputs/multitouch-input.js';
+export { GamepadInput } from './inputs/gamepad-input.js';
+
+// CONTROLLERS
+export { FlyController } from './controllers/fly-controller.js';
+export { OrbitController } from './controllers/orbit-controller.js';
+
 // GIZMOS
 export {
     GIZMOSPACE_LOCAL,
