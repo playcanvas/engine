@@ -7,7 +7,7 @@ import {
     FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks-glsl/chunks.js';
 import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 /**

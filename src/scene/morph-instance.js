@@ -5,7 +5,7 @@ import { RenderTarget } from '../platform/graphics/render-target.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { ShaderUtils } from './shader-lib/shader-utils.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
-import { shaderChunks } from './shader-lib/chunks/chunks.js';
+import { shaderChunks } from './shader-lib/chunks-glsl/chunks.js';
 import { shaderChunksWGSL } from './shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 /**

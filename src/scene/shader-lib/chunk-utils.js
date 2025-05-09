@@ -1,4 +1,4 @@
-import { shaderChunks } from './chunks/chunks.js';
+import { shaderChunks } from './chunks-glsl/chunks.js';
 
 /**
  * @import { CameraShaderParams } from '../camera-shader-params.js'

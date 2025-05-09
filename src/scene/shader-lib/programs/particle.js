@@ -2,7 +2,7 @@ import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SHADERLANGUAGE_GLSL, SHADERLANGU
 import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { blendNames } from '../../constants.js';
 import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
-import { shaderChunks } from '../chunks/chunks.js';
+import { shaderChunks } from '../chunks-glsl/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
 
 const normalTypeNames = [

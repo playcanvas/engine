@@ -11,7 +11,7 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
 } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
-import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
+import { shaderChunks } from '../scene/shader-lib/chunks-glsl/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';

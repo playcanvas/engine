@@ -4,7 +4,7 @@ import { FloatPacking } from '../../core/math/float-packing.js';
 import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE, LIGHT_COLOR_DIVIDER } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { LightCamera } from '../renderer/light-camera.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
 import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 const tempVec3 = new Vec3();

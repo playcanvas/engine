@@ -4,7 +4,7 @@ import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
 import { SkyGeometry } from './sky-geometry.js';
 
 /**

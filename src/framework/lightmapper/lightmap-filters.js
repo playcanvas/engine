@@ -1,5 +1,5 @@
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks-glsl/chunks.js';
 import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 

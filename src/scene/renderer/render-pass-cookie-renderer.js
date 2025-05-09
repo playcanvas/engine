@@ -10,7 +10,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { QuadRender } from '../graphics/quad-render.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
 import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 const _viewport = new Vec4();

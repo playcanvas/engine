@@ -15,7 +15,7 @@ import { QuadRender } from '../../scene/graphics/quad-render.js';
 import { StandardMaterialOptions } from '../../scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks-glsl/chunks.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 /**

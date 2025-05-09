@@ -2,7 +2,7 @@ import { hashCode } from '../../../core/hash.js';
 import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
-import { shaderChunks } from '../chunks/chunks.js';
+import { shaderChunks } from '../chunks-glsl/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
 
 class ShaderGeneratorShader extends ShaderGenerator {
