@@ -5,9 +5,7 @@ import {
     ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_SRC_ALPHA,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8,
-    SEMANTIC_POSITION,
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL
+    SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -18,7 +16,7 @@ import { StandardMaterialOptions } from '../../scene/materials/standard-material
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { createShaderFromCode, ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
