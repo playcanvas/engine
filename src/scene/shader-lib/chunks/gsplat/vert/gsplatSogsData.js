@@ -23,28 +23,20 @@ vec3 readCenter(SplatSource source) {
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
-mat3 quatToMat3(vec3 R) {
-    float x = R.x;
-    float y = R.y;
-    float z = R.z;
-    float w2 = clamp(1.0 - (x*x + y*y + z*z), 0.0, 1.0);
-    float w  = sqrt(w2);
-    return mat3(
-        1.0 - 2.0 * (z * z + w2),
-              2.0 * (y * z + x * w),
-              2.0 * (y * w - x * z),
-              2.0 * (y * z - x * w),
-        1.0 - 2.0 * (y * y + w2),
-              2.0 * (z * w + x * y),
-              2.0 * (y * w + x * z),
-              2.0 * (z * w - x * y),
-        1.0 - 2.0 * (y * y + z * z)
-    );
-}
+const float norm = 2.0 / sqrt(2.0);
 
 // sample covariance vectors
 void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
-    vec3 quat = mix(quats_mins, quats_maxs, texelFetch(quats, source.uv, 0).xyz);
+    vec4 qdata = texelFetch(quats, source.uv, 0);
+    vec3 abc = (qdata.xyz - 0.5) * norm;
+    float d = sqrt(max(0.0, 1.0 - dot(abc, abc)));
+
+    uint mode = uint(qdata.w * 255.0 + 0.5) - 252u;
+
+    vec4 quat = (mode == 0u) ? vec4(d, abc) :
+                ((mode == 1u) ? vec4(abc.x, d, abc.yz) :
+                ((mode == 2u) ? vec4(abc.xy, d, abc.z) : vec4(abc, d)));
+
     mat3 rot = quatToMat3(quat);
     vec3 scale = exp(mix(scales_mins, scales_maxs, texelFetch(scales, source.uv, 0).xyz));
 
