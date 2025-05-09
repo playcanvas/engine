@@ -127,31 +127,29 @@ const outputRenderTarget = createPixelRenderTarget(2, outputTexture);
 
 // This is shader runs the sand simulation
 // It uses integer textures to store the state of each pixel
-const sandShader = pc.createShaderFromCode(
-    device,
-    pc.RenderPassShaderQuad.quadVertexShader,
-    files['sandSimulation.frag'],
-    'SandShader',
-    { aPosition: pc.SEMANTIC_POSITION },
+const sandShader = pc.ShaderUtils.createShader(device, {
+    uniqueName: 'SandShader',
+    attributes: { aPosition: pc.SEMANTIC_POSITION },
+    vertexGLSL: pc.RenderPassShaderQuad.quadVertexShader,
+    fragmentGLSL: files['sandSimulation.frag'],
     // Note that we are changing the shader output type to 'uint'
     // This means we only have to return a single integer value from the shader,
     // whereas the default is to return a vec4. This option allows you to pass
     // an array of types to specify the output type for each color attachment.
     // Unspecified types are assumed to be 'vec4'.
-    { fragmentOutputTypes: ['uint'] }
-);
+    fragmentOutputTypes: ['uint']
+});
 
 // This shader reads the integer textures
 // and renders a visual representation of the simulation
-const outputShader = pc.createShaderFromCode(
-    device,
-    pc.RenderPassShaderQuad.quadVertexShader,
-    files['renderOutput.frag'],
-    'RenderOutputShader',
-    { aPosition: pc.SEMANTIC_POSITION }
+const outputShader = pc.ShaderUtils.createShader(device, {
+    uniqueName: 'RenderOutputShader',
+    attributes: { aPosition: pc.SEMANTIC_POSITION },
+    vertexGLSL: pc.RenderPassShaderQuad.quadVertexShader,
+    fragmentGLSL: files['renderOutput.frag']
     // For the output shader, we don't need to specify the output type,
     // as we are returning a vec4 by default.
-);
+});
 
 // Write the initial simulation state to the integer texture
 const resetData = () => {

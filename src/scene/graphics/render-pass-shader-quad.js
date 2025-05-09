@@ -3,7 +3,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { CULLFACE_NONE, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { createShaderFromCode } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 
 /**
  * @import { Shader } from '../../platform/graphics/shader.js'
@@ -109,14 +109,18 @@ class RenderPassShaderQuad extends RenderPass {
      * @returns {object} Returns the created shader.
      */
     createQuadShader(name, fs, shaderDefinitionOptions = {}) {
-        return createShaderFromCode(
-            this.device,
-            RenderPassShaderQuad.quadVertexShader,
-            fs,
-            name,
-            { aPosition: SEMANTIC_POSITION },
-            shaderDefinitionOptions
-        );
+        return ShaderUtils.createShader(this.device, {
+            uniqueName: name,
+            attributes: { aPosition: SEMANTIC_POSITION },
+            useTransformFeedback: shaderDefinitionOptions.useTransformFeedback,
+            vertexGLSL: RenderPassShaderQuad.quadVertexShader,
+            vertexIncludes: shaderDefinitionOptions.vertexIncludes,
+            vertexDefines: shaderDefinitionOptions.vertexDefines,
+            fragmentGLSL: fs,
+            fragmentIncludes: shaderDefinitionOptions.fragmentIncludes,
+            fragmentDefines: shaderDefinitionOptions.fragmentDefines,
+            fragmentOutputTypes: shaderDefinitionOptions.fragmentOutputTypes
+        });
     }
 
     execute() {

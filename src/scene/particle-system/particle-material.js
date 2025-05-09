@@ -10,7 +10,7 @@ import {
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { Material } from '../materials/material.js';
 import { particle } from '../shader-lib/programs/particle.js';
-import { getCoreDefines } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 
 /**
  * @import { ParticleEmitter } from './particle-emitter.js'
@@ -41,7 +41,7 @@ class ParticleMaterial extends Material {
         const { device, scene, cameraShaderParams, objDefs } = params;
         const { emitter } = this;
         const options = {
-            defines: getCoreDefines(this, params),
+            defines: ShaderUtils.getCoreDefines(this, params),
             pass: SHADER_FORWARD,
             useCpu: this.emitter.useCpu,
             normal: emitter.lighting ? ((emitter.normalMap !== null) ? 2 : 1) : 0,

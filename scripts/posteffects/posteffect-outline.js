@@ -46,8 +46,11 @@ function OutlineEffect(graphicsDevice, thickness) {
         '}'
     ].join('\n');
 
-    this.shader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fshader, 'OutlineShader', {
-        aPosition: pc.SEMANTIC_POSITION
+    this.shader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'OutlineShader',
+        attributes: { aPosition: pc.SEMANTIC_POSITION },
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: fshader
     });
 
     // Uniforms

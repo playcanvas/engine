@@ -29,8 +29,11 @@ function SepiaEffect(graphicsDevice) {
         '}'
     ].join('\n');
 
-    this.shader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fshader, 'SepiaShader', {
-        aPosition: pc.SEMANTIC_POSITION
+    this.shader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'SepiaShader',
+        attributes: { aPosition: pc.SEMANTIC_POSITION },
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: fshader
     });
 
     // Uniforms

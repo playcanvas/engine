@@ -1,10 +1,10 @@
 import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { CULLFACE_NONE, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI } from '../constants.js';
-import { createShaderFromCode } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { LightCamera } from './light-camera.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { QuadRender } from '../graphics/quad-render.js';
@@ -112,12 +112,13 @@ class RenderPassCookieRenderer extends RenderPass {
 
     get quadRenderer2D() {
         if (!this._quadRenderer2D) {
-            const wgsl = this.device.isWebGPU;
-            const chunks = wgsl ? shaderChunksWGSL : shaderChunks;
-            const shader = createShaderFromCode(this.device, chunks.cookieBlitVS, chunks.cookieBlit2DPS, 'cookieRenderer2d', {
-                vertex_position: SEMANTIC_POSITION
-            }, {
-                shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL
+            const shader = ShaderUtils.createShader(this.device, {
+                uniqueName: 'cookieRenderer2d',
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexGLSL: shaderChunks.cookieBlitVS,
+                vertexWGSL: shaderChunksWGSL.cookieBlitVS,
+                fragmentGLSL: shaderChunks.cookieBlit2DPS,
+                fragmentWGSL: shaderChunksWGSL.cookieBlit2DPS
             });
             this._quadRenderer2D = new QuadRender(shader);
         }
@@ -126,12 +127,13 @@ class RenderPassCookieRenderer extends RenderPass {
 
     get quadRendererCube() {
         if (!this._quadRendererCube) {
-            const wgsl = this.device.isWebGPU;
-            const chunks = wgsl ? shaderChunksWGSL : shaderChunks;
-            const shader = createShaderFromCode(this.device, chunks.cookieBlitVS, chunks.cookieBlitCubePS, 'cookieRendererCube', {
-                vertex_position: SEMANTIC_POSITION
-            }, {
-                shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL
+            const shader = ShaderUtils.createShader(this.device, {
+                uniqueName: 'cookieRendererCube',
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexGLSL: shaderChunks.cookieBlitVS,
+                vertexWGSL: shaderChunksWGSL.cookieBlitVS,
+                fragmentGLSL: shaderChunks.cookieBlitCubePS,
+                fragmentWGSL: shaderChunksWGSL.cookieBlitCubePS
             });
             this._quadRendererCube = new QuadRender(shader);
         }
