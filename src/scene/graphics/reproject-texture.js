@@ -11,7 +11,7 @@ import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';

@@ -3,7 +3,7 @@ import {
     ADDRESS_CLAMP_TO_EDGE
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks-glsl/chunks.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';

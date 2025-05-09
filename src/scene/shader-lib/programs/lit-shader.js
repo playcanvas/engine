@@ -14,10 +14,10 @@ import {
     cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
     REFLECTIONSRC_NONE
 } from '../../constants.js';
-import { shaderChunks } from '../chunks/chunks.js';
+import { shaderChunks } from '../chunks-glsl/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { ShaderPass } from '../../shader-pass.js';
-import { validateUserChunks } from '../chunks/chunk-validation.js';
+import { validateUserChunks } from '../chunks-glsl/chunk-validation.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
 
