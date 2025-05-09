@@ -1,4 +1,4 @@
-class Key {
+class AnimationKey {
     constructor(time, position, rotation, scale) {
         this.time = time;
         this.position = position;
@@ -8,13 +8,15 @@ class Key {
 }
 
 /**
- * A animation node has a name and contains an array of keyframes.
+ * AnimationNode represents an array of keyframes that animate the transform of a {@link GraphNode}
+ * over time. Typically, an {@link Animation} maintains a collection of AnimationNodes, one for
+ * each GraphNode in a {@link Skeleton}.
  *
  * @category Animation
  */
-class Node {
+class AnimationNode {
     /**
-     * Create a new Node instance.
+     * Create a new AnimationNode instance.
      */
     constructor() {
         this._name = '';
@@ -23,8 +25,11 @@ class Node {
 }
 
 /**
- * An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy. It
- * controls how the nodes of the hierarchy are transformed over time.
+ * An Animation contains the data that defines how a {@link Skeleton} animates over time. The
+ * Animation contains an array of {@link AnimationNode}s, where each AnimationNode targets a
+ * specific {@link GraphNode} referenced by a {@link Skeleton}.
+ *
+ * An Animation can be played back by an {@link AnimationComponent}.
  *
  * @category Animation
  */
@@ -52,10 +57,10 @@ class Animation {
     }
 
     /**
-     * Gets a {@link Node} by name.
+     * Gets a {@link AnimationNode} by name.
      *
-     * @param {string} name - The name of the {@link Node}.
-     * @returns {Node} The {@link Node} with the specified name.
+     * @param {string} name - The name of the {@link AnimationNode}.
+     * @returns {AnimationNode} The {@link AnimationNode} with the specified name.
      */
     getNode(name) {
         return this._nodeDict[name];
@@ -64,7 +69,7 @@ class Animation {
     /**
      * Adds a node to the internal nodes array.
      *
-     * @param {Node} node - The node to add.
+     * @param {AnimationNode} node - The node to add.
      */
     addNode(node) {
         this._nodes.push(node);
@@ -74,11 +79,11 @@ class Animation {
     /**
      * A read-only property to get array of animation nodes.
      *
-     * @type {Node[]}
+     * @type {AnimationNode[]}
      */
     get nodes() {
         return this._nodes;
     }
 }
 
-export { Animation, Key, Node };
+export { Animation, AnimationKey, AnimationNode };

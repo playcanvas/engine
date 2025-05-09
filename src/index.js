@@ -189,7 +189,7 @@ export { StencilParameters } from './platform/graphics/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
 // SCENE / ANIMATION
-export { Animation, Key, Node } from './scene/animation/animation.js';
+export { Animation, AnimationKey, AnimationNode } from './scene/animation/animation.js';
 export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
