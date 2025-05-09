@@ -115,7 +115,7 @@ class ShaderUtils {
     }
 
     /**
-     * Process shader using shader processing options, utilizing cache of the ProgramLibrary
+     * Process shader using shader processing options, utilizing the cache of the ProgramLibrary.
      *
      * @param {Shader} shader - The shader to be processed.
      * @param {ShaderProcessorOptions} processingOptions - The shader processing options.
