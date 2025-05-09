@@ -268,7 +268,7 @@ const fragmentShader = /* glsl */ `
         result = gammaCorrectOutput(result);
 
         // magnopus patched - fix black boxes appearing on the screen when using bloom
-        // gl_FragColor = vec4(max(vec3(0.0), result), scene.a);
+        gl_FragColor = vec4(max(vec3(0.0), result), scene.a);
     }
 `;
 
