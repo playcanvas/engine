@@ -63,7 +63,7 @@ class GSplatSogsIterator {
 
         // extract means for centers
         const { meta } = data;
-        const { means, quats, scales, sh0, shN } = meta;
+        const { means, scales, sh0, shN } = meta;
         const means_l_data = p && readImageData(data.means_l._levels[0]);
         const means_u_data = p && readImageData(data.means_u._levels[0]);
         const quats_data = r && readImageData(data.quats._levels[0]);
@@ -71,6 +71,8 @@ class GSplatSogsIterator {
         const sh0_data = c && readImageData(data.sh0._levels[0]);
         const sh_labels_data = sh && readImageData(data.sh_labels._levels[0]);
         const sh_centroids_data = sh && readImageData(data.sh_centroids._levels[0]);
+
+        const norm = 2.0 / Math.sqrt(2.0);
 
         this.read = (i) => {
             if (p) {
@@ -84,11 +86,18 @@ class GSplatSogsIterator {
             }
 
             if (r) {
-                const qx = lerp(quats.mins[0], quats.maxs[0], quats_data[i * 4 + 0] / 255);
-                const qy = lerp(quats.mins[1], quats.maxs[1], quats_data[i * 4 + 1] / 255);
-                const qz = lerp(quats.mins[2], quats.maxs[2], quats_data[i * 4 + 2] / 255);
-                const qw = Math.sqrt(Math.max(0, 1 - (qx * qx + qy * qy + qz * qz)));
-                r.set(qy, qz, qw, qx);
+                const a = (quats_data[i * 4 + 0] / 255 - 0.5) * norm;
+                const b = (quats_data[i * 4 + 1] / 255 - 0.5) * norm;
+                const c = (quats_data[i * 4 + 2] / 255 - 0.5) * norm;
+                const d = Math.sqrt(Math.max(0, 1 - (a * a + b * b + c * c)));
+                const mode = quats_data[i * 4 + 3] - 252;
+
+                switch (mode) {
+                    case 0: r.set(a, b, c, d); break;
+                    case 1: r.set(d, b, c, a); break;
+                    case 2: r.set(b, d, c, a); break;
+                    case 3: r.set(b, c, d, a); break;
+                }
             }
 
             if (s) {
@@ -367,25 +376,24 @@ class GSplatSogsData {
         const { means_l, means_u } = this;
         const means_l_data = readImageData(means_l._levels[0]);
         const means_u_data = readImageData(means_u._levels[0]);
-        const codes = new Uint32Array(this.numSplats);
+        const codes = new BigUint64Array(this.numSplats);
 
         // generate Morton codes for each splat based on the means directly (i.e. the log-space coordinates)
         for (let i = 0; i < this.numSplats; ++i) {
             const ix = (means_u_data[i * 4 + 0] << 2) | (means_l_data[i * 4 + 0] >>> 6);
             const iy = (means_u_data[i * 4 + 1] << 2) | (means_l_data[i * 4 + 1] >>> 6);
             const iz = (means_u_data[i * 4 + 2] << 2) | (means_l_data[i * 4 + 2] >>> 6);
-            codes[i] = encodeMorton3(ix, iy, iz);
+            codes[i] = BigInt(encodeMorton3(ix, iy, iz)) << BigInt(32) | BigInt(i);
         }
+
+        codes.sort();
 
         // allocate data for the order buffer, but make it texture-memory sized
         const order = new Uint32Array(means_l.width * means_l.height);
         for (let i = 0; i < this.numSplats; ++i) {
-            order[i] = i;
+            order[i] = Number(codes[i] & BigInt(0xffffffff));
         }
     
-        // sort the in-range codes
-        new Uint32Array(order.buffer, 0, this.numSplats).sort((a, b) => codes[a] - codes[b]);
-
         return order;
     }
 

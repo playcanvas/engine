@@ -46,7 +46,7 @@ class GSplatSogs {
             result.setParameter(name, gsplatData[name]);
         });
 
-        ['means', 'quats', 'scales', 'sh0', 'shN'].forEach((name) => {
+        ['means', 'scales', 'sh0', 'shN'].forEach((name) => {
             const v = gsplatData.meta[name];
             if (v) {
                 result.setParameter(`${name}_mins`, v.mins);
