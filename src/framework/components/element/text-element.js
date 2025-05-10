@@ -11,6 +11,7 @@ import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { LocalizedAsset } from '../../asset/asset-localized.js';
+import { I18n } from '../../i18n/i18n.js';
 import { FONT_BITMAP, FONT_MSDF } from '../../font/constants.js';
 import { Markup } from './markup.js';
 
@@ -213,7 +214,7 @@ class TextElement {
         element.on('set:draworder', this._onDrawOrderChange, this);
         element.on('set:pivot', this._onPivotChange, this);
 
-        this._system.app.i18n.on('set:locale', this._onLocaleSet, this);
+        this._system.app.i18n.on(I18n.EVENT_CHANGE, this._onLocaleSet, this);
         this._system.app.i18n.on('data:add', this._onLocalizationData, this);
         this._system.app.i18n.on('data:remove', this._onLocalizationData, this);
 
@@ -240,7 +241,7 @@ class TextElement {
         this._element.off('set:draworder', this._onDrawOrderChange, this);
         this._element.off('set:pivot', this._onPivotChange, this);
 
-        this._system.app.i18n.off('set:locale', this._onLocaleSet, this);
+        this._system.app.i18n.off(I18n.EVENT_CHANGE, this._onLocaleSet, this);
         this._system.app.i18n.off('data:add', this._onLocalizationData, this);
         this._system.app.i18n.off('data:remove', this._onLocalizationData, this);
     }

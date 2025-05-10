@@ -15,6 +15,17 @@ import { I18nParser } from './i18n-parser.js';
  */
 class I18n extends EventHandler {
     /**
+     * Fired when when the locale is changed.
+     *
+     * @event
+     * @example
+     * app.i18n.on('change', (newLocale, oldLocale) => {
+     *    console.log(`Locale changed from ${oldLocale} to ${newLocale}`);
+     * });
+     */
+    static EVENT_CHANGE = 'change';
+
+    /**
      * Create a new I18n instance.
      *
      * @param {AppBase} app - The application.
@@ -114,7 +125,7 @@ class I18n extends EventHandler {
         this._pluralFn = getPluralFn(this._lang);
 
         // raise event
-        this.fire('set:locale', value, old);
+        this.fire(I18n.EVENT_CHANGE, value, old);
     }
 
     /**

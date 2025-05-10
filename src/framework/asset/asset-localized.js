@@ -1,4 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
+import { I18n } from '../i18n/i18n.js';
 
 import { Asset } from './asset.js';
 
@@ -7,7 +8,7 @@ class LocalizedAsset extends EventHandler {
         super();
 
         this._app = app;
-        app.i18n.on('set:locale', this._onSetLocale, this);
+        app.i18n.on(I18n.EVENT_CHANGE, this._onSetLocale, this);
 
         this._autoLoad = false;
         this._disableLocalization = false;
@@ -223,7 +224,7 @@ class LocalizedAsset extends EventHandler {
 
     destroy() {
         this.defaultAsset = null;
-        this._app.i18n.off('set:locale', this._onSetLocale, this);
+        this._app.i18n.off(I18n.EVENT_CHANGE, this._onSetLocale, this);
         this.off();
     }
 }
