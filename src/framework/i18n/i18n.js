@@ -19,11 +19,11 @@ class I18n extends EventHandler {
      *
      * @event
      * @example
-     * app.i18n.on('set:locale', (newLocale, oldLocale) => {
+     * app.i18n.on('change', (newLocale, oldLocale) => {
      *    console.log(`Locale changed from ${oldLocale} to ${newLocale}`);
      * });
      */
-    static EVENT_LOCALE_CHANGED = 'set:locale';
+    static EVENT_CHANGE = 'change';
 
     /**
      * Create a new I18n instance.
@@ -125,7 +125,7 @@ class I18n extends EventHandler {
         this._pluralFn = getPluralFn(this._lang);
 
         // raise event
-        this.fire(I18n.EVENT_LOCALE_CHANGED, value, old);
+        this.fire(I18n.EVENT_CHANGE, value, old);
     }
 
     /**
