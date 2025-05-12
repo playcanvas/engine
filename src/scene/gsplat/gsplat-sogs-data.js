@@ -11,14 +11,14 @@ import { createShaderFromCode } from '../shader-lib/utils.js';
 
 const SH_C0 = 0.28209479177387814;
 
-const reorderVS = /*glsl */`
+const reorderVS = /* glsl */`
     attribute vec2 vertex_position;
     void main(void) {
         gl_Position = vec4(vertex_position, 0.0, 1.0);
     }
 `;
 
-const reorderFS = /*glsl */`
+const reorderFS = /* glsl */`
     uniform usampler2D orderTexture;
     uniform sampler2D sourceTexture;
     uniform highp uint numSplats;
@@ -292,7 +292,7 @@ class GSplatSogsData {
             width: means_l.width,
             height: means_l.height,
             format: PIXELFORMAT_RGBA8,
-            mipmaps: false,
+            mipmaps: false
         });
 
         const members = ['means_l', 'means_u', 'quats', 'scales', 'sh0', 'sh_labels'];
@@ -380,7 +380,7 @@ class GSplatSogsData {
         for (let i = 0; i < this.numSplats; ++i) {
             order[i] = Number(codes[i] & BigInt(0xffffffff));
         }
-    
+
         return order;
     }
 

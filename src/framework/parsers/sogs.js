@@ -8,7 +8,7 @@ import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
  */
 
-const readImageDataAsync = async (texture) => {
+const readImageDataAsync = (texture) => {
     return texture.read(0, 0, texture.width, texture.height, {
         mipLevel: 0,
         face: 0,
