@@ -4,11 +4,23 @@ MAIN_BRANCH="main"
 RELEASE_PREFIX="release-"
 RELEASE_REGEX="^$RELEASE_PREFIX[0-9]+.[0-9]+$"
 
+# Help
+HELP=$1
+if [[ "$HELP" == "--help" || "$HELP" == "-h" ]]; then
+    echo """
+Run this script on either '$MAIN_BRANCH' or '${RELEASE_PREFIX}X.X' branch.
+
+    For minor releases:
+        On '$MAIN_BRANCH' branch, it will create a new release branch '${RELEASE_PREFIX}X.X' and bump the minor version on '$MAIN_BRANCH'.
+
+    For patch or prereleases:
+        On '${RELEASE_PREFIX}X.X' branch, it ask for a type (patch or prerelease) and create a tag.
+    """
+    exit 0
+fi
+
 BRANCH=$(git branch --show-current)
 VERSION=$(npm pkg get version | sed 's/"//g')
-
-echo "Release [BRANCH=$BRANCH, VERSION=$VERSION]"
-
 PARTS=(${VERSION//./ })
 MAJOR=${PARTS[0]}
 MINOR=${PARTS[1]}
@@ -20,7 +32,7 @@ fi
 
 # Checked out on main branch
 if [[ "$BRANCH" == "$MAIN_BRANCH" ]]; then
-    echo "Creating release branch from $BRANCH"
+    echo "Create release [BRANCH=$BRANCH, VERSION=$VERSION]"
 
     RELEASE_BRANCH="$RELEASE_PREFIX$MAJOR.$MINOR"
     RELEASE_MESSAGE="Branch $MAJOR.$MINOR"
@@ -49,7 +61,14 @@ fi
 
 # Checked out on release branch
 if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
-    echo "Finalizing release branch $BRANCH"
+    TYPE=$1
+    if [[ ! " patch prerelease " =~ " $TYPE " ]]; then
+        echo "Usage: $0 <patch|prerelease>"
+        echo "Run '--help' for more information."
+        exit 1
+    fi
+
+    echo "Finalize release [BRANCH=$BRANCH, VERSION=$VERSION, TYPE=$TYPE]"
 
     # Fetch all remote tags
     git fetch --tags
@@ -61,9 +80,10 @@ if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
     fi
 
     # Bump patch version (with tag)
-    npm version patch
+    npm version $TYPE
     exit 0
 fi
 
 echo "Unrecognized branch '$BRANCH'."
+echo "Run '--help' for more information."
 exit 1
