@@ -27,7 +27,6 @@ jobs:
           echo "Detected tag: $TAG_NAME"
           if [[ "$TAG_NAME" == *-preview.* ]]; then
             echo "tag=preview" >> $GITHUB_ENV
-            npm version --no-git-tag-version $TAG_NAME
           else
             echo "tag=latest" >> $GITHUB_ENV
           fi
