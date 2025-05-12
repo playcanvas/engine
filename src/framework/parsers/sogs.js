@@ -8,6 +8,14 @@ import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
  */
 
+const readImageDataAsync = (texture) => {
+    return texture.read(0, 0, texture.width, texture.height, {
+        mipLevel: 0,
+        face: 0,
+        immediate: true
+    });
+};
+
 class SogsParser {
     /** @type {AppBase} */
     app;
@@ -27,7 +35,7 @@ class SogsParser {
     async loadTextures(url, callback, asset, meta) {
         const { assets } = this.app;
 
-        const subs = ['means', 'opacities', 'quats', 'scales', 'sh0', 'shN'];
+        const subs = ['means', 'quats', 'scales', 'sh0', 'shN'];
 
         const textures = {};
         const promises = [];
@@ -72,15 +80,34 @@ class SogsParser {
         data.shBands = widths[textures.shN?.[0]?.resource?.width] ?? 0;
         data.means_l = textures.means[0].resource;
         data.means_u = textures.means[1].resource;
-        data.opacities = textures.opacities[0].resource;
         data.quats = textures.quats[0].resource;
         data.scales = textures.scales[0].resource;
         data.sh0 = textures.sh0[0].resource;
         data.sh_centroids = textures.shN?.[0]?.resource;
-        data.sh_labels_l = textures.shN?.[1]?.resource;
-        data.sh_labels_u = textures.shN?.[2]?.resource;
+        data.sh_labels = textures.shN?.[1]?.resource;
 
-        const resource = new GSplatResource(this.app, (asset.data?.decompress) ? data.decompress() : data, []);
+        if (asset.data?.reorder ?? true) {
+            // copy back means_l and means_u data from gpu so cpu reorder has access to it
+            data.means_l._levels[0] = await readImageDataAsync(data.means_l);
+            data.means_u._levels[0] = await readImageDataAsync(data.means_u);
+            data.reorderData();
+        }
+
+        let resource;
+        if (asset.data?.decompress) {
+            // copy back gpu texture data so cpu iterator has access to it
+            const { means_l, means_u, quats, scales, sh0, sh_labels, sh_centroids } = data;
+            means_l._levels[0] = await readImageDataAsync(means_l);
+            means_u._levels[0] = await readImageDataAsync(means_u);
+            quats._levels[0] = await readImageDataAsync(quats);
+            scales._levels[0] = await readImageDataAsync(scales);
+            sh0._levels[0] = await readImageDataAsync(sh0);
+            sh_labels._levels[0] = await readImageDataAsync(sh_labels);
+            sh_centroids._levels[0] = await readImageDataAsync(sh_centroids);
+            resource = new GSplatResource(this.app, data.decompress(), []);
+        } else {
+            resource = new GSplatResource(this.app, data, []);
+        }
 
         callback(null, resource);
     }

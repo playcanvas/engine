@@ -13,24 +13,6 @@ vec3 readCenter(SplatSource source) {
     return uintBitsToFloat(tA.xyz);
 }
 
-mat3 quatToMat3(vec4 R) {
-    float x = R.w;
-    float y = R.x;
-    float z = R.y;
-    float w = R.z;
-    return mat3(
-        1.0 - 2.0 * (z * z + w * w),
-              2.0 * (y * z + x * w),
-              2.0 * (y * w - x * z),
-              2.0 * (y * z - x * w),
-        1.0 - 2.0 * (y * y + w * w),
-              2.0 * (z * w + x * y),
-              2.0 * (y * w + x * z),
-              2.0 * (z * w - x * y),
-        1.0 - 2.0 * (y * y + z * z)
-    );
-}
-
 vec4 unpackRotation(vec3 packed) {
     return vec4(packed.xyz, sqrt(max(0.0, 1.0 - dot(packed, packed))));
 }
@@ -39,7 +21,7 @@ vec4 unpackRotation(vec3 packed) {
 void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
     vec4 tB = texelFetch(transformB, source.uv, 0);
 
-    mat3 rot = quatToMat3(unpackRotation(vec3(unpackHalf2x16(tAw), tB.w)));
+    mat3 rot = quatToMat3(unpackRotation(vec3(unpackHalf2x16(tAw), tB.w)).wxyz);
     vec3 scale = tB.xyz;
     
     // M = S * R

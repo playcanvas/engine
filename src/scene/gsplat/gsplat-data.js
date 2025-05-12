@@ -392,9 +392,9 @@ class GSplatData {
 
         const codes = new Map();
         for (let i = 0; i < this.numSplats; i++) {
-            const ix = Math.floor((x[i] - minX) * sizeX);
-            const iy = Math.floor((y[i] - minY) * sizeY);
-            const iz = Math.floor((z[i] - minZ) * sizeZ);
+            const ix = Math.min(1023, Math.floor((x[i] - minX) * sizeX));
+            const iy = Math.min(1023, Math.floor((y[i] - minY) * sizeY));
+            const iz = Math.min(1023, Math.floor((z[i] - minZ) * sizeZ));
             const code = encodeMorton3(ix, iy, iz);
 
             const val = codes.get(code);
