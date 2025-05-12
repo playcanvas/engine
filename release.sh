@@ -74,7 +74,7 @@ if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
     # Fetch all remote tags
     git fetch --tags
 
-    read -p "About to finalize and tag branch '$BRANCH' with version '$MAJOR.$MINOR.$PATCH'. Continue? (y/N) " -r
+    read -p "About to finalize and tag branch '$BRANCH' for '$TYPE' release. Continue? (y/N) " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo "Aborted."
         exit 1
