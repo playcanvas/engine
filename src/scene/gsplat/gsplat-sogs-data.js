@@ -8,7 +8,7 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { CULLFACE_NONE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
-import { createShaderFromCode } from '../shader-lib/utils.js';
+import { createShaderFromCode } from '../shader-lib/shader-utils.js';
 
 const SH_C0 = 0.28209479177387814;
 
