@@ -39,6 +39,18 @@ export default [
         }
     },
     {
+        files: ['**/*.cjs'],
+        languageOptions: {
+            ecmaVersion: 2022,
+            sourceType: 'commonjs',
+            globals: {
+                ...globals.browser,
+                ...globals.mocha,
+                ...globals.node
+            }
+        }
+    },
+    {
         files: ['scripts/**/*.js'],
         rules: {
             'no-var': 'off'

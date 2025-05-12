@@ -1,6 +1,8 @@
+'use strict';
+
 const { execSync } = require('child_process');
-const readline = require('readline');
 const fs = require('fs');
+const readline = require('readline');
 
 const releaseBranchName = 'release-';
 
@@ -113,14 +115,14 @@ const getUserConfirmation = (question, callback) => {
 const createRelease = (mainBranch) => {
     // check branch name
     if (mainBranch !== 'main') {
-        console.log(`warning: source branch is not 'main'.`);
+        console.log('warning: source branch is not \'main\'.');
     }
 
     // read current package version. this contains the version we're releasing.
     const mainVersion = readPackageVersion();
     if (mainVersion.build !== 'main') {
         // say something?
-        console.warn(`warning: package isn't tagged as 'main' build.`);
+        console.warn('warning: package isn\'t tagged as \'main\' build.');
     }
 
     // build release branch string
@@ -226,7 +228,7 @@ const run = () => {
                 return 1;
         }
     } else {
-        console.log(`Prepare the engine for release.`);
+        console.log('Prepare the engine for release.');
         printUsage();
         return 1;
     }
