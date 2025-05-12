@@ -3,9 +3,10 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 
@@ -104,7 +105,7 @@ class GSplatSogsIterator {
                     0.5 + r * SH_C0,
                     0.5 + g * SH_C0,
                     0.5 + b * SH_C0,
-                    1.0 / (1.0 + Math.exp(a * -1.0))
+                    1.0 / (1.0 + Math.exp(-a))
                 );
             }
 
@@ -144,7 +145,8 @@ class GSplatSogsData {
 
     sh_labels;
 
-    cachedCenters;
+    // if data is reordered at load, this texture stores the reorder indices.
+    orderTexture;
 
     createIter(p, r, s, c, sh) {
         return new GSplatSogsIterator(this, p, r, s, c, sh);
@@ -169,19 +171,16 @@ class GSplatSogsData {
     }
 
     getCenters(result) {
-        if (this.cachedCenters) {
-            result.set(this.cachedCenters);
-        } else {
-            const p = new Vec3();
-            const iter = this.createIter(p);
+        const p = new Vec3();
+        const iter = this.createIter(p);
+        const order = this.orderTexture?._levels[0];
 
-            for (let i = 0; i < this.numSplats; i++) {
-                iter.read(i);
+        for (let i = 0; i < this.numSplats; i++) {
+            iter.read(order ? order[i] : i);
 
-                result[i * 3 + 0] = p.x;
-                result[i * 3 + 1] = p.y;
-                result[i * 3 + 2] = p.z;
-            }
+            result[i * 3 + 0] = p.x;
+            result[i * 3 + 1] = p.y;
+            result[i * 3 + 2] = p.z;
         }
     }
 
@@ -269,82 +268,61 @@ class GSplatSogsData {
         }]);
     }
 
-    // reorder the sogs texture data in gpu memory for better cache coherency during rendering
-    reorder(order) {
-        const { means_l } = this;
-        const { device } = means_l;
+    // reorder the sogs texture data in gpu memory given the ordering encoded in texture data
+    reorderGpuMemory() {
+        const { orderTexture, numSplats } = this;
+        const { device, height, width } = orderTexture;
         const { scope } = device;
 
         const shader = createShaderFromCode(device, reorderVS, reorderFS, 'reorderShader', {
             vertex_position: SEMANTIC_POSITION
         });
 
-        const orderTexture = new Texture(device, {
-            name: 'orderTexture',
-            width: means_l.width,
-            height: means_l.height,
-            format: PIXELFORMAT_R32U,
-            mipmaps: false,
-            levels: [order]
-        });
-
         let targetTexture = new Texture(device, {
-            width: means_l.width,
-            height: means_l.height,
+            width: width,
+            height: height,
             format: PIXELFORMAT_RGBA8,
             mipmaps: false
         });
 
         const members = ['means_l', 'means_u', 'quats', 'scales', 'sh0', 'sh_labels'];
 
-        // temp start
-        const getCenters = (result) => {
-            const p = new Vec3();
-            const iter = this.createIter(p);
-
-            for (let i = 0; i < this.numSplats; i++) {
-                iter.read(order[i]);
-
-                result[i * 3 + 0] = p.x;
-                result[i * 3 + 1] = p.y;
-                result[i * 3 + 2] = p.z;
-            }
-        };
-        this.cachedCenters = new Float32Array(this.numSplats * 3);
-        getCenters(this.cachedCenters);
-        // temp end
+        device.setBlendState(BlendState.NOBLEND);
+        device.setCullMode(CULLFACE_NONE);
+        device.setDepthState(DepthState.NODEPTH);
 
         members.forEach((member) => {
             const sourceTexture = this[member];
 
             const renderTarget = new RenderTarget({
                 colorBuffer: targetTexture,
-                depth: false
+                depth: false,
+                mipLevel: 0
             });
 
             resolve(scope, {
-                orderTexture: orderTexture,
-                sourceTexture: sourceTexture,
-                numSplats: this.numSplats
+                orderTexture,
+                sourceTexture,
+                numSplats
             });
-
-            device.setBlendState(BlendState.NOBLEND);
 
             drawQuadWithShader(device, renderTarget, shader);
 
-            targetTexture.name = `sogs-${member}`;
-            targetTexture._levels = sourceTexture._levels;
             this[member] = targetTexture;
-
+            targetTexture.name = sourceTexture.name;
+            targetTexture._levels = sourceTexture._levels;
+            sourceTexture._levels = [];
             targetTexture = sourceTexture;
+
+            renderTarget.destroy();
         });
 
-        shader.destroy();
-        orderTexture.destroy();
         targetTexture.destroy();
+        shader.destroy();
     }
 
     // construct an array containing the Morton order of the splats
+    // returns an array of 32-bit unsigned integers
     calcMortonOrder() {
         // https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/
         const encodeMorton3 = (x, y, z) => {
@@ -385,7 +363,24 @@ class GSplatSogsData {
     }
 
     reorderData() {
-        this.reorder(this.calcMortonOrder());
+        if (!this.orderTexture) {
+            const { device, height, width } = this.means_l;
+
+            this.orderTexture = new Texture(device, {
+                name: 'orderTexture',
+                width,
+                height,
+                format: PIXELFORMAT_R32U,
+                mipmaps: false,
+                levels: [this.calcMortonOrder()]
+            });
+
+            device.on('devicerestored', () => {
+                this.reorderGpuMemory();
+            });
+        }
+
+        this.reorderGpuMemory();
     }
 }
 
