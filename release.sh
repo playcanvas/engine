@@ -1,5 +1,6 @@
 #!/bin/bash -e
 
+MAIN_BRANCH="main"
 RELEASE_PREFIX="release-"
 RELEASE_REGEX="^$RELEASE_PREFIX[0-9]+.[0-9]+$"
 
@@ -18,7 +19,7 @@ if [[ $PATCH == $BUILD ]]; then
 fi
 
 # Checked out on main branch
-if [[ "$BRANCH" == "version" ]]; then
+if [[ "$BRANCH" == "$MAIN_BRANCH" ]]; then
     echo "Creating release branch from $BRANCH"
 
     RELEASE_BRANCH="$RELEASE_PREFIX$MAJOR.$MINOR"
