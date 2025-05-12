@@ -9,19 +9,6 @@ import { PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../pl
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 
-let offscreen = null;
-let ctx = null;
-
-const readImageData = (imageBitmap) => {
-    if (!offscreen || offscreen.width !== imageBitmap.width || offscreen.height !== imageBitmap.height) {
-        offscreen = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
-        ctx = offscreen.getContext('2d');
-        ctx.globalCompositeOperation = 'copy';
-    }
-    ctx.drawImage(imageBitmap, 0, 0);
-    return ctx.getImageData(0, 0, imageBitmap.width, imageBitmap.height).data;
-};
-
 const SH_C0 = 0.28209479177387814;
 
 const reorderVS = /*glsl */`
@@ -64,13 +51,13 @@ class GSplatSogsIterator {
         // extract means for centers
         const { meta } = data;
         const { means, scales, sh0, shN } = meta;
-        const means_l_data = p && readImageData(data.means_l._levels[0]);
-        const means_u_data = p && readImageData(data.means_u._levels[0]);
-        const quats_data = r && readImageData(data.quats._levels[0]);
-        const scales_data = s && readImageData(data.scales._levels[0]);
-        const sh0_data = c && readImageData(data.sh0._levels[0]);
-        const sh_labels_data = sh && readImageData(data.sh_labels._levels[0]);
-        const sh_centroids_data = sh && readImageData(data.sh_centroids._levels[0]);
+        const means_l_data = p && data.means_l._levels[0];
+        const means_u_data = p && data.means_u._levels[0];
+        const quats_data = r && data.quats._levels[0];
+        const scales_data = s && data.scales._levels[0];
+        const sh0_data = c && data.sh0._levels[0];
+        const sh_labels_data = sh && data.sh_labels._levels[0];
+        const sh_centroids_data = sh && data.sh_centroids._levels[0];
 
         const norm = 2.0 / Math.sqrt(2.0);
 
@@ -282,7 +269,7 @@ class GSplatSogsData {
         }]);
     }
 
-    // reorder the gpu data given the ordering into GPU-friendly order
+    // reorder the sogs texture data in gpu memory for better cache coherency during rendering
     reorder(order) {
         const { means_l } = this;
         const { device } = means_l;
@@ -374,8 +361,8 @@ class GSplatSogsData {
         };
 
         const { means_l, means_u } = this;
-        const means_l_data = readImageData(means_l._levels[0]);
-        const means_u_data = readImageData(means_u._levels[0]);
+        const means_l_data = means_l._levels[0];
+        const means_u_data = means_u._levels[0];
         const codes = new BigUint64Array(this.numSplats);
 
         // generate Morton codes for each splat based on the means directly (i.e. the log-space coordinates)
