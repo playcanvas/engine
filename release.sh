@@ -61,6 +61,7 @@ fi
 
 # Checked out on release branch
 if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
+    # Determine which release type
     TYPE=$1
     if [[ ! " patch prerelease " =~ " $TYPE " ]]; then
         echo "Usage: $0 <patch|prerelease>"
