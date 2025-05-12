@@ -24,7 +24,7 @@ if [[ "$BRANCH" == "version" ]]; then
     RELEASE_BRANCH="$RELEASE_PREFIX$MAJOR.$MINOR"
     RELEASE_MESSAGE="Branch $MAJOR.$MINOR"
 
-    read -p "About to create minor release branch '$RELEASE_BRANCH' taken from '$BRANCH' branch. Continue? (Y/n) " -r
+    read -p "About to create minor release branch '$RELEASE_BRANCH' taken from '$BRANCH' branch. Continue? (y/N) " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo "Aborted."
         exit 1
@@ -53,7 +53,7 @@ if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
     # Fetch all remote tags
     git fetch --tags
 
-    read -p "About to finalize and tag branch '$BRANCH' with version '$MAJOR.$MINOR.$PATCH'. Continue? (Y/n) " -r
+    read -p "About to finalize and tag branch '$BRANCH' with version '$MAJOR.$MINOR.$PATCH'. Continue? (y/N) " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo "Aborted."
         exit 1
