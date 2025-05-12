@@ -23,6 +23,12 @@ Run this script on either '$MAIN_BRANCH' or '${RELEASE_PREFIX}X.X' branch.
     exit 0
 fi
 
+# Check for any uncommitted changes (unstaged or staged)
+if [[ $(git status --porcelain) ]]; then
+    echo "There are uncommitted changes. Please commit or stash them before running this script."
+    exit 1
+fi
+
 BRANCH=$(git branch --show-current)
 VERSION=$(npm pkg get version | sed 's/"//g')
 
@@ -77,15 +83,9 @@ if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
     git fetch --tags
 
     # Calculate the next version
-    if [[ "$TYPE" == "patch" ]]; then
-        NEXT_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
-    elif [[ "$TYPE" == "prerelease" ]]; then
-        if [[ -z "$BUILD" ]]; then
-            NEXT_VERSION="$MAJOR.$MINOR.$((PATCH + 1))-$PRE_ID_PREVIEW.0"
-        else
-            NEXT_VERSION="$MAJOR.$MINOR.$PATCH-$PRE_ID_PREVIEW.$((BUILD + 1))"
-        fi
-    fi
+    npm version $TYPE --preid=$PRE_ID_PREVIEW --no-git-tag-version >> /dev/null
+    NEXT_VERSION=$(npm pkg get version | sed 's/"//g')
+    git reset --hard >> /dev/null
 
     read -p "About to finalize and tag branch '$BRANCH' for 'v$NEXT_VERSION'. Continue? (y/N) " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
