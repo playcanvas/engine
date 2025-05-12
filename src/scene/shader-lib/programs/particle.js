@@ -1,6 +1,8 @@
-import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
+import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
+import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { blendNames } from '../../constants.js';
-import { shaderChunks } from '../chunks/chunks.js';
+import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
+import { shaderChunks } from '../chunks-glsl/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
 
 const normalTypeNames = [
@@ -21,10 +23,11 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         return key;
     }
 
-    createVertexDefines(options) {
+    createVertexDefines(options, attributes) {
         const vDefines = new Map(options.defines);
 
         if (options.mesh) vDefines.set('USE_MESH', '');
+        if (options.meshUv) vDefines.set('USE_MESH_UV', '');
         if (options.localSpace) vDefines.set('LOCAL_SPACE', '');
         if (options.screenSpace) vDefines.set('SCREEN_SPACE', '');
         if (options.animTex) vDefines.set('ANIMTEX', '');
@@ -38,6 +41,12 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         if (options.alignToMotion) vDefines.set('ALIGN_TO_MOTION', '');
 
         vDefines.set('NORMAL', normalTypeNames[options.normal]);
+
+        // attributes
+        attributes.particle_vertexData = SEMANTIC_POSITION;
+        if (options.mesh && options.meshUv) {
+            attributes.particle_uv = SEMANTIC_TEXCOORD0;
+        }
 
         return vDefines;
     }
@@ -56,7 +65,11 @@ class ShaderGeneratorParticle extends ShaderGenerator {
 
     createShaderDefinition(device, options) {
 
-        const vDefines = this.createVertexDefines(options);
+        const shaderLanguage = device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        const chunks = device.isWebGPU ? shaderChunksWGSL : shaderChunks;
+
+        const attributes = {};
+        const vDefines = this.createVertexDefines(options, attributes);
         const fDefines = this.createFragmentDefines(options);
 
         const executionDefine = `PARTICLE_${options.useCpu ? 'CPU' : 'GPU'}\n`;
@@ -64,14 +77,16 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         fDefines.set(executionDefine, '');
 
         const includes = new Map(Object.entries({
-            ...shaderChunks,
+            ...chunks,
             ...options.chunks
         }));
 
-        return ShaderUtils.createDefinition(device, {
+        return ShaderDefinitionUtils.createDefinition(device, {
             name: 'ParticleShader',
-            vertexCode: shaderChunks.particle_shaderVS,
-            fragmentCode: shaderChunks.particle_shaderPS,
+            shaderLanguage: shaderLanguage,
+            attributes: attributes,
+            vertexCode: chunks.particle_shaderVS,
+            fragmentCode: chunks.particle_shaderPS,
             fragmentDefines: fDefines,
             fragmentIncludes: includes,
             vertexIncludes: includes,

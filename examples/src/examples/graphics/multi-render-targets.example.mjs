@@ -140,7 +140,7 @@ assetListLoader.load(() => {
     // override output shader chunk for the material of the chess board, to inject our
     // custom shader chunk which outputs to multiple render targets during our custom
     // shader pass
-    const outputChunk = files['output.frag'];
+    const outputChunk = app.graphicsDevice.isWebGPU ? files['output-wgsl.frag'] : files['output-glsl.frag'];
     /** @type {Array<pc.RenderComponent>} */
     const renders = boardEntity.findComponents('render');
     renders.forEach((render) => {

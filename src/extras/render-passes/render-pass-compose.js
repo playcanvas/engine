@@ -1,7 +1,7 @@
 import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks-glsl/chunks.js';
 import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
 
 // Contrast Adaptive Sharpening (CAS) is used to apply the sharpening. It's based on AMD's

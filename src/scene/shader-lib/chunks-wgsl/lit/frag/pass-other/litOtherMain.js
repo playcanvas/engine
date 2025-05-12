@@ -11,6 +11,9 @@ export default /* wgsl */`
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+
+    #include "litUserMainStartPS"
+
     var output: FragmentOutput;
     
     evaluateFrontend();
@@ -22,6 +25,8 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     #ifdef PREPASS_PASS
         output.color = float2vec4(vLinearDepth);
     #endif
+
+    #include "litUserMainEndPS"
 
     return output;
 }

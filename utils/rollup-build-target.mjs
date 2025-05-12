@@ -210,6 +210,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
                 swcPlugin({ swc: swcOptions(isDebug, isUMD, isMin) })
             ],
             output: {
+                banner: isUMD ? getBanner(BANNER[buildType]) : undefined,
                 plugins: getOutPlugins(),
                 file: `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}`
             },

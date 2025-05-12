@@ -30,7 +30,7 @@ fn evaluateBackend() -> FragmentOutput {
         #endif
 
         #ifdef LIT_IRIDESCENCE
-            var iridescenceFresnel: vec3f = getIridescence(saturate3(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence_thickness);
+            var iridescenceFresnel: vec3f = getIridescenceDiffraction(saturate(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence_thickness);
         #endif
     #endif
 
@@ -222,8 +222,19 @@ fn evaluateBackend() -> FragmentOutput {
 
     #endif
 
-    #include "endPS"
-    #include "outputAlphaPS"
+    // end chunks - when baking lightmap
+    #ifdef LIT_LIGHTMAP_BAKING
+        #ifdef LIT_LIGHTMAP_BAKING_COLOR
+            #include "bakeLmEndPS"
+        #endif
+        #ifdef LIT_LIGHTMAP_BAKING_DIR
+            #include "bakeDirLmEndPS"
+        #endif
+    #else
+        // end chunks - in all other cases
+        #include "endPS"
+        #include "outputAlphaPS"
+    #endif
 
     #ifdef LIT_MSDF
         output.color = applyMsdf(output.color);
@@ -234,7 +245,7 @@ fn evaluateBackend() -> FragmentOutput {
 
     #ifdef LIT_SHADOW_CATCHER
         // output when the shadow catcher is enabled - accumulated shadows
-        output.color = vec4f(dShadowCatcher, output.color.a);
+        output.color = vec4f(vec3f(dShadowCatcher), output.color.a);
     #endif
 
     return output;

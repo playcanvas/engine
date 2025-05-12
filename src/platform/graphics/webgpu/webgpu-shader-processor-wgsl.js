@@ -32,7 +32,7 @@ const KEYWORD_LINE = /^[ \t]*(attribute|varying|uniform)[ \t]*([^;]+)(;+)/gm;
 
 // match global variables of type texture, storage buffer, storage texture or external texture
 // eslint-disable-next-line
-const KEYWORD_RESOURCE = /^[ \t]*var\s*(<[^>]+>)?\s*[\w\d_]+\s*:\s*(texture_.*|storage_texture_.*|storage.*|external_texture|array<.*>|sampler|sampler_comparison).*;\s*$/gm;
+const KEYWORD_RESOURCE = /^[ \t]*var\s*(<[^>]+>)?\s*[\w\d_]+\s*:\s*(texture_.*|storage_texture_.*|storage.*|external_texture|sampler|sampler_comparison).*;\s*$/gm;
 
 // match varying name from string like: '@interpolate(perspective, centroid) smoothColor : vec3f;'
 // eslint-disable-next-line
@@ -71,6 +71,9 @@ const getTextureInfo = (baseType, componentType) => {
             case 'u32': finalSampleType = SAMPLETYPE_UINT; break;
             case 'i32': finalSampleType = SAMPLETYPE_INT; break;
             case 'f32': finalSampleType = SAMPLETYPE_FLOAT; break;
+
+            // custom 'uff' type for unfilterable float, allowing us to create correct bind, which is automatically generated based on the shader
+            case 'uff': finalSampleType = SAMPLETYPE_UNFILTERABLE_FLOAT; break;
         }
     }
 
@@ -282,6 +285,25 @@ class ResourceLine {
             shader.failed = true;
         }
     }
+
+    equals(other) {
+        if (this.name !== other.name) return false;
+        if (this.type !== other.type) return false;
+        if (this.isTexture !== other.isTexture) return false;
+        if (this.isSampler !== other.isSampler) return false;
+        if (this.isStorageTexture !== other.isStorageTexture) return false;
+        if (this.isStorageBuffer !== other.isStorageBuffer) return false;
+        if (this.isExternalTexture !== other.isExternalTexture) return false;
+        if (this.textureFormat !== other.textureFormat) return false;
+        if (this.textureDimension !== other.textureDimension) return false;
+        if (this.sampleType !== other.sampleType) return false;
+        if (this.textureType !== other.textureType) return false;
+        if (this.format !== other.format) return false;
+        if (this.access !== other.access) return false;
+        if (this.accessMode !== other.accessMode) return false;
+        if (this.samplerType !== other.samplerType) return false;
+        return true;
+    }
 }
 
 /**
@@ -340,9 +362,7 @@ class WebgpuShaderProcessorWGSL {
         fragmentExtracted.src = WebgpuShaderProcessorWGSL.renameUniformAccess(fragmentExtracted.src, parsedUniforms);
 
         // parse resource lines
-        const concatResources = vertexExtracted.resources.concat(fragmentExtracted.resources);
-        const resources = Array.from(new Set(concatResources));
-        const parsedResources = resources.map(line => new ResourceLine(line, shader));
+        const parsedResources = WebgpuShaderProcessorWGSL.mergeResources(vertexExtracted.resources, fragmentExtracted.resources, shader);
         const resourcesData = WebgpuShaderProcessorWGSL.processResources(device, parsedResources, shaderDefinition.processingOptions, shader);
 
         // generate fragment output struct
@@ -506,6 +526,34 @@ class WebgpuShaderProcessorWGSL {
             source = source.replace(regex, dstName);
         });
         return source;
+    }
+
+    static mergeResources(vertex, fragment, shader) {
+
+        const resources = vertex.map(line => new ResourceLine(line, shader));
+        const fragmentResources = fragment.map(line => new ResourceLine(line, shader));
+
+        // merge fragment list to resources, removing exact duplicates
+        fragmentResources.forEach((fragmentResource) => {
+            const existing = resources.find(resource => resource.name === fragmentResource.name);
+            if (existing) {
+                // if the resource is already in the list, check if it matches
+                if (!existing.equals(fragmentResource)) {
+                    Debug.error(`Resource '${fragmentResource.name}' is declared with different types in vertex and fragment shaders.`, {
+                        vertexLine: existing.line,
+                        fragmentLine: fragmentResource.line,
+                        shader,
+                        vertexResource: existing,
+                        fragmentResource
+                    });
+                    shader.failed = true;
+                }
+            } else {
+                resources.push(fragmentResource);
+            }
+        });
+
+        return resources;
     }
 
     static processResources(device, resources, processingOptions, shader) {
@@ -810,7 +858,7 @@ class WebgpuShaderProcessorWGSL {
                 // copy input variable to the private variable - convert type if needed
                 blockCopy += `    ${name} = ${originalType}(input.${name});\n`;
             } else {
-                Debug.error(`Attribute ${name} is not defined in the shader definition.`, shaderDefinitionAttributes);
+                Debug.error(`Attribute ${name} is specified in the shader source, but is not defined in the shader definition, and so will be removed from the shader, as it cannot be used without a known semantic.`, shaderDefinitionAttributes);
             }
         });
 

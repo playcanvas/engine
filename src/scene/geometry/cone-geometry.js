@@ -4,11 +4,30 @@ import { calculateTangents } from './geometry-utils.js';
 /**
  * A procedural cone-shaped geometry.
  *
- * The size, shape and tesselation properties of the cone can be controlled via constructor
- * parameters. By default, the function will create a cone standing vertically centered on the
- * XZ-plane with a base radius of 0.5, a height of 1.0, 5 height segments and 18 cap segments.
+ * Typically, you would:
  *
- * Note that the cone is created with UVs in the range of 0 to 1.
+ * 1. Create a ConeGeometry instance.
+ * 2. Generate a {@link Mesh} from the geometry.
+ * 3. Create a {@link MeshInstance} referencing the mesh.
+ * 4. Create an {@link Entity} with a {@link RenderComponent} and assign the {@link MeshInstance} to it.
+ * 5. Add the entity to the {@link Scene}.
+ *
+ * ```javascript
+ * // Create a mesh instance
+ * const geometry = new pc.ConeGeometry();
+ * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new pc.StandardMaterial();
+ * const meshInstance = new pc.MeshInstance(mesh, material);
+ *
+ * // Create an entity
+ * const entity = new pc.Entity();
+ * entity.addComponent('render', {
+ *     meshInstances: [meshInstance]
+ * });
+ *
+ * // Add the entity to the scene hierarchy
+ * app.scene.root.addChild(entity);
+ * ```
  *
  * @category Graphics
  */
@@ -16,15 +35,26 @@ class ConeGeometry extends ConeBaseGeometry {
     /**
      * Create a new ConeGeometry instance.
      *
-     * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
-     * @param {number} [opts.baseRadius] - The base radius of the cone (defaults to 0.5).
-     * @param {number} [opts.peakRadius] - The peak radius of the cone (defaults to 0.0).
-     * @param {number} [opts.height] - The length of the body of the cone (defaults to 1.0).
-     * @param {number} [opts.heightSegments] - The number of divisions along the length of the cone
-     * (defaults to 5).
-     * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cone
-     * (defaults to 18).
-     * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+     * By default, the constructor creates a cone standing vertically centered on the XZ-plane with
+     * a base radius of 0.5, a height of 1.0, 5 height segments and 18 cap segments. The cone is
+     * created with UVs in the range of 0 to 1.
+     *
+     * @param {object} [opts] - Options object.
+     * @param {number} [opts.baseRadius] - The base radius of the cone. Defaults to 0.5.
+     * @param {number} [opts.peakRadius] - The peak radius of the cone. Defaults to 0.
+     * @param {number} [opts.height] - The length of the body of the cone. Defaults to 1.
+     * @param {number} [opts.heightSegments] - The number of divisions along the length of the cone.
+     * Defaults to 5.
+     * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the
+     * cone. Defaults to 18.
+     * @param {boolean} [opts.calculateTangents] - Generate tangent information. Defaults to false.
+     * @example
+     * const geometry = new pc.ConeGeometry({
+     *     baseRadius: 1,
+     *     height: 2,
+     *     heightSegments: 2,
+     *     capSegments: 20
+     * });
      */
     constructor(opts = {}) {
 

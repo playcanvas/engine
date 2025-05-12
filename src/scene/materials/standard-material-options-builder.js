@@ -262,7 +262,6 @@ class StandardMaterialOptionsBuilder {
 
         // LIT OPTIONS
         options.litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
-        options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
         options.litOptions.ambientSH = !!stdMat.ambientSH;

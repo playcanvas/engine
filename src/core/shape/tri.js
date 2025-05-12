@@ -14,7 +14,7 @@ const q = new Vec3();
 const EPSILON = 1e-6;
 
 /**
- * A triangle.
+ * A triangle defined by three {@link Vec3} vectors.
  *
  * @category Math
  */

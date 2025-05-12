@@ -29,7 +29,36 @@ const tmpQ1 = new Quat();
 const GLANCE_EPSILON = 0.98;
 
 /**
- * Translation gizmo.
+ * The TranslateGizmo provides interactive 3D manipulation handles for translating/moving
+ * {@link Entity}s in a {@link Scene}. It creates a visual widget with arrows along the X, Y
+ * and Z axes, planes at their intersections, and a center sphere, allowing precise control over
+ * object positioning through direct manipulation. The gizmo's visual appearance can be customized
+ * away from the defaults as required.
+ *
+ * Note that the gizmo can be driven by both mouse+keyboard and touch input.
+ *
+ * ```javascript
+ * // Create a layer for rendering all gizmos
+ * const gizmoLayer = pc.Gizmo.createLayer(app);
+ *
+ * // Create a translate gizmo
+ * const gizmo = new pc.TranslateGizmo(cameraComponent, gizmoLayer);
+ *
+ * // Create an entity to attach the gizmo to
+ * const entity = new pc.Entity();
+ * entity.addComponent('render', {
+ *     type: 'box'
+ * });
+ * app.root.addChild(entity);
+ *
+ * // Attach the gizmo to the entity
+ * gizmo.attach([entity]);
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Translate Gizmo](https://playcanvas.github.io/#/gizmos/transform-translate)
+ * - [Editor](https://playcanvas.github.io/#/misc/editor)
  *
  * @category Gizmo
  */
@@ -121,10 +150,11 @@ class TranslateGizmo extends TransformGizmo {
     flipShapes = true;
 
     /**
-     * Creates a new TranslateGizmo object.
+     * Creates a new TranslateGizmo object. Use {@link Gizmo.createLayer} to create the layer
+     * required to display the gizmo.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The render layer.
+     * @param {Layer} layer - The layer responsible for rendering the gizmo.
      * @example
      * const gizmo = new pc.TranslateGizmo(camera, layer);
      */

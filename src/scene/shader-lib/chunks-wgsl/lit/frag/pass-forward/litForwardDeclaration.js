@@ -58,4 +58,13 @@ var<private> sSpecularLight: vec3f;
         #define LIT_OLD_AMBIENT
     #endif
 #endif
+
+// lightmap baking
+#ifdef STD_LIGHTMAP_DIR
+    uniform bakeDir: f32;
+#endif
+#ifdef LIT_LIGHTMAP_BAKING_ADD_AMBIENT
+    uniform ambientBakeOcclusionContrast: f32;
+    uniform ambientBakeOcclusionBrightness: f32;
+#endif
 `;

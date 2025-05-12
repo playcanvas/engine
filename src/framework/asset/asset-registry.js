@@ -193,7 +193,7 @@ class AssetRegistry extends EventHandler {
      *
      * @private
      */
-    _tags = new TagsCache('_id');
+    _tags = new TagsCache('id');
 
     /**
      * A URL prefix that will be added to all asset loading requests.
@@ -373,8 +373,8 @@ class AssetRegistry extends EventHandler {
      *     app.assets.find("Another Asset")
      * ];
      * let count = 0;
-     * assetsToLoad.forEach(function (assetToLoad) {
-     *     assetToLoad.ready(function (asset) {
+     * assetsToLoad.forEach((assetToLoad) => {
+     *     assetToLoad.ready((asset) => {
      *         count++;
      *         if (count === assetsToLoad.length) {
      *             // done
