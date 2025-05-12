@@ -50,16 +50,7 @@ fi
 if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
     echo "Finalizing release branch $BRANCH"
 
-    FINALIZED_VERSION="$MAJOR.$MINOR.$PATCH"
-
-    # Check if tag already exists
-    git fetch --tags
-    if git tag | grep -q "$FINALIZED_VERSION"; then
-        echo "$FINALIZED_VERSION tag already exists. Aborting."
-        exit 1
-    fi
-
-    read -p "About to finalize and tag branch '$BRANCH' with version '$FINALIZED_VERSION'. Continue? (Y/n) " -r
+    read -p "About to finalize and tag branch '$BRANCH' with version '$MAJOR.$MINOR.$PATCH'. Continue? (Y/n) " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo "Aborted."
         exit 1
