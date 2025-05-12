@@ -50,6 +50,9 @@ fi
 if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
     echo "Finalizing release branch $BRANCH"
 
+    # Fetch all remote tags
+    git fetch --tags
+
     read -p "About to finalize and tag branch '$BRANCH' with version '$MAJOR.$MINOR.$PATCH'. Continue? (Y/n) " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo "Aborted."
