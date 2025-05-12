@@ -17,6 +17,7 @@ if [[ $PATCH == $BUILD ]]; then
     BUILD=""
 fi
 
+# Checked out on main branch
 if [[ "$BRANCH" == "version" ]]; then
     echo "Creating release branch from $BRANCH"
 
@@ -45,6 +46,7 @@ if [[ "$BRANCH" == "version" ]]; then
     exit 0
 fi
 
+# Checked out on release branch
 if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
     echo "Finalizing release branch $BRANCH"
 
