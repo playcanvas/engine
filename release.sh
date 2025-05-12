@@ -17,9 +17,7 @@ if [[ $PATCH == $BUILD ]]; then
     BUILD=""
 fi
 
-echo "Version [MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH, BUILD=$BUILD]"
-
-if [ "$BRANCH" == "version" ]; then
+if [[ "$BRANCH" == "version" ]]; then
     echo "Creating release branch from $BRANCH"
 
     RELEASE_BRANCH="$RELEASE_PREFIX$MAJOR.$MINOR"
