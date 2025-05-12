@@ -1,6 +1,10 @@
 #!/bin/bash -e
 
 MAIN_BRANCH="main"
+
+PRE_ID_DEV="dev"
+PRE_ID_PREVIEW="preview"
+
 RELEASE_PREFIX="release-"
 RELEASE_REGEX="^$RELEASE_PREFIX[0-9]+.[0-9]+$"
 
@@ -21,14 +25,12 @@ fi
 
 BRANCH=$(git branch --show-current)
 VERSION=$(npm pkg get version | sed 's/"//g')
+
 PARTS=(${VERSION//./ })
 MAJOR=${PARTS[0]}
 MINOR=${PARTS[1]}
 PATCH=${PARTS[2]//-*/}
-BUILD=${PARTS[2]//*-/}
-if [[ $PATCH == $BUILD ]]; then
-    BUILD=""
-fi
+BUILD=${PARTS[3]}
 
 # Checked out on main branch
 if [[ "$BRANCH" == "$MAIN_BRANCH" ]]; then
@@ -47,14 +49,14 @@ if [[ "$BRANCH" == "$MAIN_BRANCH" ]]; then
     git branch $RELEASE_BRANCH $BRANCH
 
     # Bump minor prelease version on main 
-    npm version preminor --preid=dev --no-git-tag-version
+    npm version preminor --preid=$PRE_ID_DEV --no-git-tag-version
     git commit -m "$RELEASE_MESSAGE" -- package.json package-lock.json
 
     # Switch to release branch
     git checkout $RELEASE_BRANCH
 
     # Change prerelease version to preview
-    npm version prerelease --preid=preview --no-git-tag-version
+    npm version prerelease --preid=$PRE_ID_PREVIEW --no-git-tag-version
     git commit -m "$RELEASE_MESSAGE" -- package.json package-lock.json
     exit 0
 fi
@@ -74,14 +76,25 @@ if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
     # Fetch all remote tags
     git fetch --tags
 
-    read -p "About to finalize and tag branch '$BRANCH' for $TYPE. Continue? (y/N) " -r
+    # Calculate the next version
+    if [[ "$TYPE" == "patch" ]]; then
+        NEXT_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+    elif [[ "$TYPE" == "prerelease" ]]; then
+        if [[ -z "$BUILD" ]]; then
+            NEXT_VERSION="$MAJOR.$MINOR.$((PATCH + 1))-$PRE_ID_PREVIEW.0"
+        else
+            NEXT_VERSION="$MAJOR.$MINOR.$PATCH-$PRE_ID_PREVIEW.$((BUILD + 1))"
+        fi
+    fi
+
+    read -p "About to finalize and tag branch '$BRANCH' for 'v$NEXT_VERSION'. Continue? (y/N) " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo "Aborted."
         exit 1
     fi
 
     # Bump patch version (with tag)
-    npm version $TYPE --preid=preview
+    npm version $TYPE --preid=$PRE_ID_PREVIEW
     exit 0
 fi
 
