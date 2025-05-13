@@ -181,20 +181,16 @@ assetListLoader.load(() => {
     // ------ End of shader chunks ------
 
     // apply all these chunks to the tree material
-    meshInstance.material.chunks = {
-        diffusePS,
-        litUserMainEndPS,
-        litUserDeclarationPS,
-        transformCoreVS
-    };
+    meshInstance.material.shaderChunks.glsl.set('diffusePS', diffusePS);
+    meshInstance.material.shaderChunks.glsl.set('litUserMainEndPS', litUserMainEndPS);
+    meshInstance.material.shaderChunks.glsl.set('litUserDeclarationPS', litUserDeclarationPS);
+    meshInstance.material.shaderChunks.glsl.set('transformCoreVS', transformCoreVS);
 
     // create a ground material - all chunks apart from swaying in the wind, so fog and color blending
     const groundMaterial = new pc.StandardMaterial();
-    groundMaterial.chunks = {
-        diffusePS,
-        litUserDeclarationPS,
-        litUserMainEndPS
-    };
+    groundMaterial.shaderChunks.glsl.set('diffusePS', diffusePS);
+    groundMaterial.shaderChunks.glsl.set('litUserMainEndPS', litUserMainEndPS);
+    groundMaterial.shaderChunks.glsl.set('litUserDeclarationPS', litUserDeclarationPS);
 
     const ground = new pc.Entity('Ground');
     ground.addComponent('render', {
@@ -208,7 +204,6 @@ assetListLoader.load(() => {
     // update things every frame
     let time = 0;
     app.on('update', (dt) => {
-
         time += dt;
 
         // update uniforms once per frame. Note that this needs to use unique uniform names, to make sure

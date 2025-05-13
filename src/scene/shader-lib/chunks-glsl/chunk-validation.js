@@ -141,14 +141,12 @@ const semverLess = (a, b) => {
     return (aver[0] < bver[0]) || ((aver[0] === bver[0]) && (aver[1] < bver[1]));
 };
 
-// validate user chunks
-const validateUserChunks = (userChunks) => {
-    const userAPIVersion = userChunks.APIVersion;
-    for (const chunkName in userChunks) {
-        if (chunkName === 'APIVersion') {
-            continue;
-        }
-
+/**
+ * @param {Map<string, string>} userChunks - User-defined shader chunks, stored in a Map.
+ * @param {string} userAPIVersion - The API version of the user-defined shader chunks.
+ */
+const validateUserChunks = (userChunks, userAPIVersion) => {
+    for (const chunkName of userChunks.keys()) {
         if (!shaderChunks.hasOwnProperty(chunkName)) {
             const removedVersion = removedChunks[chunkName];
             if (removedVersion) {
@@ -161,12 +159,10 @@ const validateUserChunks = (userChunks) => {
             const chunkIsOutdated = engineAPIVersion && (!userAPIVersion || semverLess(userAPIVersion, engineAPIVersion));
 
             if (chunkIsOutdated) {
-                Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || '-'}. Please update to the latest API: https://developer.playcanvas.com/user-manual/graphics/shader-chunk-migrations/`);
+                Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || 'undefined'}. Please update to the latest API: https://developer.playcanvas.com/user-manual/graphics/shader-chunk-migrations/`);
             }
         }
     }
 };
 
-export {
-    validateUserChunks
-};
+export { validateUserChunks };

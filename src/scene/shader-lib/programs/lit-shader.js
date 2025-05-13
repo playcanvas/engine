@@ -96,13 +96,15 @@ class LitShader {
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {LitShaderOptions} options - The lit options.
-     * @param {string} shaderLanguage - The shader language, {@link SHADERLANGUAGE_GLSL} or
-     * {@link SHADERLANGUAGE_WGSL}.
+     * @param {boolean} [allowWGSL] - Whether to allow WGSL shader language.
      */
-    constructor(device, options, shaderLanguage) {
+    constructor(device, options, allowWGSL = true) {
         this.device = device;
         this.options = options;
-        this.shaderLanguage = shaderLanguage;
+
+        // shader language
+        const userChunks = options.shaderChunks;
+        this.shaderLanguage = (device.isWebGPU && allowWGSL && userChunks?.useWGSL) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
 
         // resolve custom chunk attributes
         this.attributes = {
@@ -115,28 +117,33 @@ class LitShader {
             }
         }
 
-        const languageChunks = shaderLanguage === SHADERLANGUAGE_GLSL ? shaderChunks : shaderChunksWGSL;
-        if (options.chunks) {
-            const userChunks = options.chunks;
+        const engineChunks = this.shaderLanguage === SHADERLANGUAGE_GLSL ? shaderChunks : shaderChunksWGSL;
 
-            // #if _DEBUG
-            validateUserChunks(userChunks);
-            // #endif
+        if (userChunks) {
+            const userChunkMap = this.shaderLanguage === SHADERLANGUAGE_GLSL ? userChunks.glsl : userChunks.wgsl;
 
-            this.chunks = Object.create(languageChunks);
-            for (const chunkName in languageChunks) {
-                if (userChunks.hasOwnProperty(chunkName)) {
-                    const chunk = userChunks[chunkName];
-                    for (const a in builtinAttributes) {
-                        if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
-                            this.attributes[a] = builtinAttributes[a];
-                        }
+            Debug.call(() => {
+                validateUserChunks(userChunkMap, userChunks.APIVersion);
+            });
+
+            this.chunks = Object.create(engineChunks);
+
+            userChunkMap.forEach((chunk, chunkName) => {
+
+                // extract attribute names from the used chunk
+                for (const a in builtinAttributes) {
+                    if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
+                        this.attributes[a] = builtinAttributes[a];
                     }
-                    this.chunks[chunkName] = chunk;
                 }
-            }
+
+                // add used chunk as an attribute
+                this.chunks[chunkName] = chunk;
+            });
+
+
         } else {
-            this.chunks = languageChunks;
+            this.chunks = engineChunks;
         }
 
         this.shaderPassInfo = ShaderPass.get(this.device).getByIndex(options.pass);

@@ -8,7 +8,7 @@ import { ShaderGenerator } from './shader-generator.js';
 class ShaderGeneratorShader extends ShaderGenerator {
     generateKey(options) {
 
-        // Note: options.chunks are not included in the key as currently shader variants are removed
+        // Note: options.shaderChunks are not included in the key as currently shader variants are removed
         // from the material when its chunks are modified.
 
         const desc = options.shaderDesc;
@@ -97,8 +97,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         const chunks = wgsl ? shaderChunksWGSL : shaderChunks;
         const sharedIncludes = new Map(Object.entries({
-            ...chunks,  // default chunks
-            ...options.chunks // material override chunks
+            ...chunks  // default chunks
         }));
 
         this.createAttributesDefinition(definitionOptions, options);

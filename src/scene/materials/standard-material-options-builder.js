@@ -68,7 +68,7 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.userAttributes = Object.fromEntries(stdMat.userAttributes.entries());
         }
 
-        options.litOptions.chunks = stdMat.chunks || {};
+        options.litOptions.shaderChunks = stdMat.shaderChunks;
         options.litOptions.pass = pass;
         options.litOptions.alphaTest = stdMat.alphaTest > 0;
         options.litOptions.blendType = stdMat.blendType;

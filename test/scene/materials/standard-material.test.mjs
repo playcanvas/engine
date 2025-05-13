@@ -43,7 +43,7 @@ describe('StandardMaterial', function () {
         expect(material.aoVertexColorChannel).to.equal('g');
 
         expect(material.bumpiness).to.equal(1);
-        expect(material.chunks).to.be.empty;
+        expect(material.sgaderChunks).to.be.null;
 
         expect(material.clearCoat).to.equal(0);
         expect(material.clearCoatBumpiness).to.equal(1);

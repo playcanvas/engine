@@ -6,7 +6,6 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    CHUNKAPI_1_65,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_RGBA8,
@@ -233,7 +232,6 @@ class Lightmapper {
     createMaterialForPass(scene, pass, addAmbient) {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
-        material.chunks.APIVersion = CHUNKAPI_1_65;
         material.setDefine('UV1LAYOUT', '');    // draw into UV1 texture space
         material.setDefine('LIT_LIGHTMAP_BAKING', '');
 

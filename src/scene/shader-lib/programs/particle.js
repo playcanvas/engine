@@ -65,6 +65,7 @@ class ShaderGeneratorParticle extends ShaderGenerator {
 
     createShaderDefinition(device, options) {
 
+        // TODO: considering adding support for material shader chunk overrides
         const shaderLanguage = device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
         const chunks = device.isWebGPU ? shaderChunksWGSL : shaderChunks;
 
@@ -77,8 +78,7 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         fDefines.set(executionDefine, '');
 
         const includes = new Map(Object.entries({
-            ...chunks,
-            ...options.chunks
+            ...chunks
         }));
 
         return ShaderDefinitionUtils.createDefinition(device, {
