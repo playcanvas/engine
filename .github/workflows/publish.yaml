@@ -48,7 +48,7 @@ jobs:
 
       - name: Publish to code.playcanvas.com
         run: |
-          curl -X POST \
+          curl -sS -X POST \
             -H "Content-Type: application/json" \
             -d '{ "engineVersion": "${{ env.VERSION }}" }' \
             https://dev.playcanvas.com/api/engine/upload?webhook_secret=${{ secrets.PLAYCANVAS_WEBHOOK }} \
