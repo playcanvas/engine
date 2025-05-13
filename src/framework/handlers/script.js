@@ -82,7 +82,7 @@ class ScriptHandler extends ResourceHandler {
         const isEsmScript = basePath.endsWith('.mjs');
 
         if (isEsmScript) {
-            this._loadModule(basePath, onScriptLoad);
+            this._loadModule(url.load, onScriptLoad);
         } else {
             this._loadScript(url.load, onScriptLoad);
         }
