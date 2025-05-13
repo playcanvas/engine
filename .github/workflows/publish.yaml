@@ -37,7 +37,7 @@ jobs:
 
       - name: Publish to npm
         run: |
-          if [[ "${{ env.TAG }}" == *-preview.* ]]; then
+          if [[ "${{ env.TAG }}" =~ "preview" ]]; then
             tag=preview
           else
             tag=latest
