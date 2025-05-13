@@ -38,27 +38,6 @@ fn unpackRotation(bits: u32) -> vec4f {
     return vec4f(a, b, c, m);
 }
 
-fn quatToMat3(R: vec4f) -> mat3x3f {
-    let qw_scalar = R.x;
-    let qx_vec = R.y;
-    let qy_vec = R.z;
-    let qz_vec = R.w;
-
-    return mat3x3f(
-        vec3f(1.0 - 2.0 * (qy_vec * qy_vec + qz_vec * qz_vec),
-              2.0 * (qx_vec * qy_vec + qw_scalar * qz_vec),
-              2.0 * (qx_vec * qz_vec - qw_scalar * qy_vec)),
-
-        vec3f(2.0 * (qx_vec * qy_vec - qw_scalar * qz_vec),
-              1.0 - 2.0 * (qx_vec * qx_vec + qz_vec * qz_vec),
-              2.0 * (qy_vec * qz_vec + qw_scalar * qx_vec)),
-
-        vec3f(2.0 * (qx_vec * qz_vec + qw_scalar * qy_vec),
-              2.0 * (qy_vec * qz_vec - qw_scalar * qx_vec),
-              1.0 - 2.0 * (qx_vec * qx_vec + qy_vec * qy_vec))
-    );
-}
-
 // read center
 fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
     let tex_size_u = textureDimensions(chunkTexture, 0);
