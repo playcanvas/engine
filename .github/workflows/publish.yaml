@@ -47,7 +47,8 @@ jobs:
 
       - name: Publish to code.playcanvas.com
         run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
           curl -X POST \
             -H "Content-Type: application/json" \
-            -d '{ "engineVersion": "${{ env.tag }}" }' \
+            -d '{ "engineVersion": "$TAG_NAME" }' \
             https://dev.playcanvas.com/api/engine/upload?webhook_secret=${{ secrets.PLAYCANVAS_WEBHOOK }} \
