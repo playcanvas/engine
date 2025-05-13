@@ -1,4 +1,4 @@
-import { MOUSEBUTTON_NONE } from './constants.js';
+import { MouseButton } from './mouse-button.js';
 
 /**
  * @import { Mouse } from './mouse.js'
@@ -9,9 +9,9 @@ import { MOUSEBUTTON_NONE } from './constants.js';
  *
  * @returns {boolean} True if pointer lock is currently enabled.
  */
-function isMousePointerLocked() {
+const isMousePointerLocked = () => {
     return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
-}
+};
 
 /**
  * The MouseEvent object is passed into all event handlers registered on the {@link Mouse}. The
@@ -54,15 +54,11 @@ class MouseEvent {
     dy = 0;
 
     /**
-     * The mouse button associated with this event. Can be:
+     * The mouse button associated with this event.
      *
-     * - {@link MOUSEBUTTON_LEFT}
-     * - {@link MOUSEBUTTON_MIDDLE}
-     * - {@link MOUSEBUTTON_RIGHT}
-     *
-     * @type {number}
+     * @type {MouseButton}
      */
-    button = MOUSEBUTTON_NONE;
+    button = MouseButton.NONE;
 
     /**
      * A value representing the amount the mouse wheel has moved, only valid for
