@@ -11,7 +11,7 @@ import { StandardMaterialOptions } from '../../materials/standard-material-optio
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
-import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL, SHADERTAG_MATERIAL } from '../../../platform/graphics/constants.js';
+import { SHADERTAG_MATERIAL } from '../../../platform/graphics/constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'

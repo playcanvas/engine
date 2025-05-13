@@ -1,4 +1,4 @@
-import { hashCode } from "../../core/hash.js";
+import { hashCode } from '../../core/hash.js';
 
 /**
  * A collection of shader chunks, used by {@link ShaderChunks}. This is a map of shader chunk names
