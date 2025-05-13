@@ -20,7 +20,9 @@ void evaluateBackend() {
 
     #ifdef LIT_SPECULAR_OR_REFLECTION
         #ifdef LIT_METALNESS
-            float f0 = 1.0 / litArgs_ior; f0 = (f0 - 1.0) / (f0 + 1.0); f0 *= f0;
+            float f0 = 1.0 / litArgs_ior;
+            f0 = (f0 - 1.0) / (f0 + 1.0);
+            f0 *= f0;
             litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0);
             litArgs_albedo = getAlbedoModulate(litArgs_albedo, litArgs_metalness);
         #endif

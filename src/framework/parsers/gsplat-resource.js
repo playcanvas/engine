@@ -2,10 +2,13 @@ import { Entity } from '../entity.js';
 import { GSplatInstance } from '../../scene/gsplat/gsplat-instance.js';
 import { GSplat } from '../../scene/gsplat/gsplat.js';
 import { GSplatCompressed } from '../../scene/gsplat/gsplat-compressed.js';
+import { GSplatSogs } from '../../scene/gsplat/gsplat-sogs.js';
 
 /**
+ * @import { AppBase } from '../app-base.js'
  * @import { GSplatData } from '../../scene/gsplat/gsplat-data.js'
- * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { GSplatCompressedData } from '../../scene/gsplat/gsplat-compressed-data.js'
+ * @import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js'
  * @import { SplatMaterialOptions } from '../../scene/gsplat/gsplat-material.js'
  */
 
@@ -16,19 +19,19 @@ import { GSplatCompressed } from '../../scene/gsplat/gsplat-compressed.js';
  */
 class GSplatResource {
     /**
-     * @type {GraphicsDevice}
+     * @type {AppBase | null}
      * @ignore
      */
-    device;
+    app;
 
     /**
-     * @type {GSplatData}
+     * @type {GSplatData | GSplatCompressedData | GSplatSogsData }
      * @ignore
      */
     splatData;
 
     /**
-     * @type {GSplat | GSplatCompressed | null}
+     * @type {GSplat | GSplatCompressed | GSplatSogs | null}
      * @ignore
      */
     splat = null;
@@ -40,19 +43,19 @@ class GSplatResource {
     comments = null;
 
     /**
-     * @param {GraphicsDevice} device - The graphics device.
-     * @param {GSplatData} splatData - The splat data.
+     * @param {AppBase} app - The app.
+     * @param {GSplatData | GSplatCompressedData | GSplatSogsData} splatData - The splat data.
      * @param {string[]} comments - The PLY file header comments
      * @ignore
      */
-    constructor(device, splatData, comments) {
-        this.device = device;
+    constructor(app, splatData, comments) {
+        this.app = app;
         this.splatData = splatData;
         this.comments = comments;
     }
 
     destroy() {
-        this.device = null;
+        this.app = null;
         this.splatData = null;
         this.splat?.destroy();
         this.splat = null;
@@ -60,7 +63,10 @@ class GSplatResource {
 
     createSplat() {
         if (!this.splat) {
-            this.splat = this.splatData.isCompressed ? new GSplatCompressed(this.device, this.splatData) : new GSplat(this.device, this.splatData);
+            const { app, splatData } = this;
+            const gsplatClass = splatData.isCompressed ? GSplatCompressed :
+                splatData.isSogs ? GSplatSogs : GSplat;
+            this.splat = new gsplatClass(app.graphicsDevice, splatData);
         }
         return this.splat;
     }
@@ -75,7 +81,7 @@ class GSplatResource {
 
         const splatInstance = this.createInstance(options);
 
-        const entity = new Entity();
+        const entity = new Entity(undefined, this.app);
         const component = entity.addComponent('gsplat', {
             instance: splatInstance
         });

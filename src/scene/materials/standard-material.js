@@ -41,9 +41,8 @@ let _params = new Set();
 const _tempColor = new Color();
 
 /**
- * Callback used by {@link StandardMaterial#onUpdateShader}.
- *
  * @callback UpdateShaderCallback
+ * Callback used by {@link StandardMaterial#onUpdateShader}.
  * @param {StandardMaterialOptions} options - An object with shader generator settings (based on current
  * material and scene properties), that you can change and then return. Properties of the object passed
  * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
@@ -52,10 +51,10 @@ const _tempColor = new Color();
  */
 
 /**
- * A Standard material is the main, general purpose material that is most often used for rendering.
+ * A standard material is the main, general purpose material that is most often used for rendering.
  * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
- * Most maps can use 3 types of input values in any combination: constant (color or number), mesh
- * vertex colors and a texture. All enabled inputs are multiplied together.
+ * Most maps can use 3 types of input values in any combination: constant ({@link Color} or number),
+ * mesh vertex colors and a {@link Texture}. All enabled inputs are multiplied together.
  *
  * @property {Color} ambient The ambient color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
@@ -522,16 +521,6 @@ const _tempColor = new Color();
  * backfaces.
  * @property {boolean} shadowCatcher When enabled, the material will output accumulated directional
  * shadow value in linear space as the color.
- * @property {UpdateShaderCallback} onUpdateShader A custom function that will be called after all
- * shader generator properties are collected and before shader code is generated. This function
- * will receive an object with shader generator settings (based on current material and scene
- * properties), that you can change and then return. Returned value will be used instead. This is
- * mostly useful when rendering the same set of objects, but with different shader variations based
- * on the same material. For example, you may wish to render a depth or normal pass using textures
- * assigned to the material, a reflection pass with simpler shaders and so on. These properties are
- * split into two sections, generic standard material options and lit options. Properties of the
- * standard material options are {@link StandardMaterialOptions} and the options for the lit options
- * are {@link LitShaderOptions}.
  *
  * @category Graphics
  */
@@ -541,6 +530,22 @@ class StandardMaterial extends Material {
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
     userAttributes = new Map();
+
+    /**
+     * A custom function that will be called after all shader generator properties are collected
+     * and before shader code is generated. This function will receive an object with shader
+     * generator settings (based on current material and scene properties), that you can change and
+     * then return. Returned value will be used instead. This is mostly useful when rendering the
+     * same set of objects, but with different shader variations based on the same material. For
+     * example, you may wish to render a depth or normal pass using textures assigned to the
+     * material, a reflection pass with simpler shaders and so on. These properties are split into
+     * two sections, generic standard material options and lit options. Properties of the standard
+     * material options are {@link StandardMaterialOptions} and the options for the lit options are
+     * {@link LitShaderOptions}.
+     *
+     * @type {UpdateShaderCallback|undefined}
+     */
+    onUpdateShader;
 
     /**
      * Create a new StandardMaterial instance.

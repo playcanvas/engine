@@ -33,7 +33,7 @@ const createHatchMaterial = (device, textures) => {
     // create a new material with a custom shader
     const material = new ShaderMaterial({
         uniqueName: 'HatchShader',
-        vertexCode: /* glsl */ `
+        vertexGLSL: /* glsl */ `
 
             // include code transform shader functionality provided by the engine. It automatically
             // declares vertex_position attribute, and handles skinning and morphing if necessary.
@@ -90,7 +90,7 @@ const createHatchMaterial = (device, textures) => {
                 gl_Position = matrix_viewProjection * worldPos;
             }
         `,
-        fragmentCode: /* glsl */ `
+        fragmentGLSL: /* glsl */ `
             // this gives us gamma correction functions, such as gammaCorrectOutput
             #include "gammaPS"
 

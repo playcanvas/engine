@@ -133,8 +133,8 @@ assetListLoader.load(() => {
     // Create a decal material with a custom shader
     const decalMaterial = new pc.ShaderMaterial({
         uniqueName: 'DecalShader',
-        vertexCode: files['shader.vert'],
-        fragmentCode: files['shader.frag'],
+        vertexGLSL: files['shader.vert'],
+        fragmentGLSL: files['shader.frag'],
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0

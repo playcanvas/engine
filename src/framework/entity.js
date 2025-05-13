@@ -68,17 +68,16 @@ const releaseTempArray = (a) => {
 };
 
 /**
- * The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game
- * will consist of an {@link Entity}, and a set of {@link Component}s which are managed by their
- * respective {@link ComponentSystem}s. One of those components maybe a {@link ScriptComponent}
- * which allows you to write custom code to attach to your Entity.
+ * The Entity is a core primitive of a PlayCanvas application. Generally speaking, any object in
+ * your application will be represented by an Entity, along with a set of {@link Component}s. Each
+ * component enables a particular capability. For example, the {@link RenderComponent} enables an
+ * entity to render a 3D model, and the {@link ScriptComponent} enables an entity to run code that
+ * implements custom behavior.
  *
- * The Entity uniquely identifies the object and also provides a transform for position and
- * orientation which it inherits from {@link GraphNode} so can be added into the scene graph. The
- * Component and ComponentSystem provide the logic to give an Entity a specific type of behavior.
- * e.g. the ability to render a model or play a sound. Components are specific to an instance of an
- * Entity and are attached (e.g. `this.entity.model`) ComponentSystems allow access to all Entities
- * and Components and are attached to the {@link AppBase}.
+ * Entity is a subclass of {@link GraphNode} which allows entities to form a tree-like hierarchy
+ * (based on parent/child relationships). The root of the entity hierarchy can be queried with
+ * {@link AppBase#root}. Entities inherit a 3D transform from {@link GraphNode} which allows them
+ * to be positioned, rotated and scaled.
  */
 class Entity extends GraphNode {
     /**
@@ -314,7 +313,7 @@ class Entity extends GraphNode {
      * const entity = new pc.Entity();
      *
      * // Add a Component to the Entity
-     * entity.addComponent("camera", {
+     * entity.addComponent('camera', {
      *     fov: 45,
      *     nearClip: 1,
      *     farClip: 10000
@@ -343,8 +342,7 @@ class Entity extends GraphNode {
         Debug.assert(app, 'Could not find current application');
         this._app = app;
     }
-    
-    
+
     /**
      * magnopus patched: Fired when the entity enters a zone.
      *
@@ -369,11 +367,13 @@ class Entity extends GraphNode {
 
     /**
      * magnopus patched: List of all zones this entity is currently within.
-     * 
+     *
      * @type {import('./components/zone/component').ZoneComponent[]}
      */
     get zones() {
-        return this._app.systems.zone.zones.filter(z => z.entities.indexOf(this) !== -1);
+        return this._app.systems.zone.zones.filter(
+            z => z.entities.indexOf(this) !== -1
+        );
     }
 
     /**
@@ -482,7 +482,9 @@ class Entity extends GraphNode {
      * const lights = entity.findComponents("light");
      */
     findComponents(type) {
-        return this.find(entity => entity.c?.[type]).map(entity => entity.c[type]);
+        return this.find(entity => entity.c?.[type]).map(
+            entity => entity.c[type]
+        );
     }
 
     /**
@@ -522,7 +524,7 @@ class Entity extends GraphNode {
      * @ignore
      */
     getGuid() {
-        // if the guid hasn't been set yet then set it now before returning it
+    // if the guid hasn't been set yet then set it now before returning it
         if (!this._guid) {
             this.setGuid(guid.create());
         }
@@ -538,7 +540,7 @@ class Entity extends GraphNode {
      * @ignore
      */
     setGuid(guid) {
-        // remove current guid from entityIndex
+    // remove current guid from entityIndex
         const index = this._app._entityIndex;
         if (this._guid) {
             delete index[this._guid];
@@ -611,7 +613,7 @@ class Entity extends GraphNode {
 
     /** @private */
     _onHierarchyStatePostChanged() {
-        // post enable all the components
+    // post enable all the components
         const components = this._getSortedComponents();
         for (let i = 0; i < components.length; i++) {
             components[i].onPostStateChange();
@@ -687,7 +689,12 @@ class Entity extends GraphNode {
         const clone = this._cloneRecursively(duplicatedIdsMap);
         duplicatedIdsMap[this.getGuid()] = clone;
 
-        resolveDuplicatedEntityReferenceProperties(this, this, clone, duplicatedIdsMap);
+        resolveDuplicatedEntityReferenceProperties(
+            this,
+            this,
+            clone,
+            duplicatedIdsMap
+        );
 
         return clone;
     }
@@ -718,7 +725,7 @@ class Entity extends GraphNode {
      * @private
      */
     _cloneRecursively(duplicatedIdsMap) {
-        /** @type {this} */
+    /** @type {this} */
         const clone = new this.constructor(undefined, this._app);
         super._cloneInternal(clone);
 
@@ -757,7 +764,12 @@ class Entity extends GraphNode {
  * entities.
  * @private
  */
-function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, newEntity, duplicatedIdsMap) {
+function resolveDuplicatedEntityReferenceProperties(
+    oldSubtreeRoot,
+    oldEntity,
+    newEntity,
+    duplicatedIdsMap
+) {
     if (oldEntity instanceof Entity) {
         const components = oldEntity.c;
 
@@ -770,15 +782,19 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
                 const propertyDescriptor = entityProperties[i];
                 const propertyName = propertyDescriptor.name;
                 const oldEntityReferenceId = component[propertyName];
-                const entityIsWithinOldSubtree = !!oldSubtreeRoot.findByGuid(oldEntityReferenceId);
+                const entityIsWithinOldSubtree =
+          !!oldSubtreeRoot.findByGuid(oldEntityReferenceId);
 
                 if (entityIsWithinOldSubtree) {
-                    const newEntityReferenceId = duplicatedIdsMap[oldEntityReferenceId].getGuid();
+                    const newEntityReferenceId =
+            duplicatedIdsMap[oldEntityReferenceId].getGuid();
 
                     if (newEntityReferenceId) {
                         newEntity.c[componentName][propertyName] = newEntityReferenceId;
                     } else {
-                        Debug.warn('Could not find corresponding entity id when resolving duplicated entity references');
+                        Debug.warn(
+                            'Could not find corresponding entity id when resolving duplicated entity references'
+                        );
                     }
                 }
             }
@@ -786,32 +802,50 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
 
         // Handle entity script attributes
         if (components.script) {
-            newEntity.script.resolveDuplicatedEntityReferenceProperties(components.script, duplicatedIdsMap);
+            newEntity.script.resolveDuplicatedEntityReferenceProperties(
+                components.script,
+                duplicatedIdsMap
+            );
         }
 
         // Handle entity render attributes
         if (components.render) {
-            newEntity.render.resolveDuplicatedEntityReferenceProperties(components.render, duplicatedIdsMap);
+            newEntity.render.resolveDuplicatedEntityReferenceProperties(
+                components.render,
+                duplicatedIdsMap
+            );
         }
 
         // Handle entity button attributes
         if (components.button) {
-            newEntity.button.resolveDuplicatedEntityReferenceProperties(components.button, duplicatedIdsMap);
+            newEntity.button.resolveDuplicatedEntityReferenceProperties(
+                components.button,
+                duplicatedIdsMap
+            );
         }
 
         // Handle entity scrollview attributes
         if (components.scrollview) {
-            newEntity.scrollview.resolveDuplicatedEntityReferenceProperties(components.scrollview, duplicatedIdsMap);
+            newEntity.scrollview.resolveDuplicatedEntityReferenceProperties(
+                components.scrollview,
+                duplicatedIdsMap
+            );
         }
 
         // Handle entity scrollbar attributes
         if (components.scrollbar) {
-            newEntity.scrollbar.resolveDuplicatedEntityReferenceProperties(components.scrollbar, duplicatedIdsMap);
+            newEntity.scrollbar.resolveDuplicatedEntityReferenceProperties(
+                components.scrollbar,
+                duplicatedIdsMap
+            );
         }
 
         // Handle entity anim attributes
         if (components.anim) {
-            newEntity.anim.resolveDuplicatedEntityReferenceProperties(components.anim, duplicatedIdsMap);
+            newEntity.anim.resolveDuplicatedEntityReferenceProperties(
+                components.anim,
+                duplicatedIdsMap
+            );
         }
 
         // Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`, in
@@ -821,7 +855,12 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
         const _new = newEntity.children.filter(e => e instanceof Entity);
 
         for (let i = 0, len = _old.length; i < len; i++) {
-            resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, _old[i], _new[i], duplicatedIdsMap);
+            resolveDuplicatedEntityReferenceProperties(
+                oldSubtreeRoot,
+                _old[i],
+                _new[i],
+                duplicatedIdsMap
+            );
         }
     }
 }

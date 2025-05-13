@@ -21,11 +21,7 @@ void main(void) {
     #endif
 
     #ifdef PREPASS_PASS
-        #if defined(CAPS_TEXTURE_FLOAT_RENDERABLE)
-            gl_FragColor = vec4(vLinearDepth, 1.0, 1.0, 1.0);
-        #else
-            gl_FragColor = float2uint(vLinearDepth);
-        #endif
+        gl_FragColor = float2vec4(vLinearDepth);
     #endif
 }
 `;

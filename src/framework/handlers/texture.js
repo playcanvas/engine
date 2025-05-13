@@ -225,6 +225,7 @@ class TextureHandler extends ResourceHandler {
             }
 
             // extract asset type (this is bit of a mess)
+            options.type = TEXTURETYPE_DEFAULT;
             if (assetData.hasOwnProperty('type')) {
                 options.type = JSON_TEXTURE_TYPE[assetData.type];
             } else if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {

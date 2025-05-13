@@ -122,7 +122,7 @@ assetListLoader.load(() => {
     const dish = createVisual(assets.dish.resource, new pc.Vec3(-4, -0.5, 0), 9);
     createText(
         assets.font,
-        'KHR_materials_specular\nKHR_materials_volume\nKHR_materials_ior\nKHR_materials_transmission',
+        'KHR_materials_iridescence\nKHR_materials_volume\nKHR_materials_ior\nKHR_materials_transmission',
         -4,
         2
     );

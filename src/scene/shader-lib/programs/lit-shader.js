@@ -1,19 +1,47 @@
 import {
-    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
-    SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
-    // Magnopus patched
+    SEMANTIC_ATTR8,
+    SEMANTIC_ATTR9,
+    SEMANTIC_ATTR12,
+    SEMANTIC_ATTR13,
+    SEMANTIC_ATTR14,
+    SEMANTIC_ATTR15,
+    SEMANTIC_BLENDINDICES,
+    SEMANTIC_BLENDWEIGHT,
+    SEMANTIC_COLOR,
+    SEMANTIC_NORMAL,
+    SEMANTIC_POSITION,
+    SEMANTIC_TANGENT,
+    SEMANTIC_TEXCOORD0,
+    SEMANTIC_TEXCOORD1,
+    // Magnopus patched start
     SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3,
-    SEMANTIC_TEXCOORD4
+    SEMANTIC_TEXCOORD4,
+    // Magnopus patched end
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
 } from '../../../platform/graphics/constants.js';
 import {
     LIGHTSHAPE_PUNCTUAL,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADER_DEPTH, SHADER_PICK,
-    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
-    lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames, lightFalloffNames,
-    cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
+    LIGHTTYPE_DIRECTIONAL,
+    LIGHTTYPE_OMNI,
+    LIGHTTYPE_SPOT,
+    SHADER_DEPTH,
+    SHADER_PICK,
+    SPRITE_RENDERMODE_SLICED,
+    SPRITE_RENDERMODE_TILED,
+    shadowTypeInfo,
+    SHADER_PREPASS,
+    lightTypeNames,
+    lightShapeNames,
+    spriteRenderModeNames,
+    fresnelNames,
+    blendNames,
+    lightFalloffNames,
+    cubemaProjectionNames,
+    specularOcclusionNames,
+    reflectionSrcNames,
+    ambientSrcNames,
     REFLECTIONSRC_NONE
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
@@ -21,6 +49,7 @@ import { ChunkUtils } from '../chunk-utils.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { Debug } from '../../../core/debug.js';
+import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -41,21 +70,23 @@ const builtinAttributes = {
     vertex_boneIndices: SEMANTIC_BLENDINDICES
 };
 
-const builtinVaryings = {
-    vVertexColor: 'vec4',
-    vPositionW: 'vec3',
-    vNormalV: 'vec3',
-    vNormalW: 'vec3',
-    vTangentW: 'vec3',
-    vBinormalW: 'vec3',
-    vObjectSpaceUpW: 'vec3',
-    vUv0: 'vec2',
-    vUv1: 'vec2',
-    vUv2: 'vec2',
-    vUv3: 'vec2',
-    vUv4: 'vec2',
-    vLinearDepth: 'float'
-};
+// Magnopus patched: Unused variable
+// const builtinVaryings = {
+//     vVertexColor: 'vec4',
+//     vPositionW: 'vec3',
+//     vNormalV: 'vec3',
+//     vNormalW: 'vec3',
+//     vTangentW: 'vec3',
+//     vBinormalW: 'vec3',
+//     vObjectSpaceUpW: 'vec3',
+//     vUv0: 'vec2',
+//     vUv1: 'vec2',
+//     vUv2: 'vec2',
+//     vUv3: 'vec2',
+//     vUv4: 'vec2',
+//     vLinearDepth: 'float'
+// };
+
 export const varyingsWGSLTypes = new Map([
     ['vec4', 'vec4f'],
     ['vec3', 'vec3f'],
@@ -86,12 +117,22 @@ class LitShader {
     options;
 
     /**
+     * The shader language, {@link SHADERLANGUAGE_GLSL} or {@link SHADERLANGUAGE_WGSL}.
+     *
+     * @type {string}
+     */
+    shaderLanguage;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {LitShaderOptions} options - The lit options.
+     * @param {string} shaderLanguage - The shader language, {@link SHADERLANGUAGE_GLSL} or
+     * {@link SHADERLANGUAGE_WGSL}.
      */
-    constructor(device, options) {
+    constructor(device, options, shaderLanguage) {
         this.device = device;
         this.options = options;
+        this.shaderLanguage = shaderLanguage;
 
         // resolve custom chunk attributes
         this.attributes = {
@@ -104,6 +145,8 @@ class LitShader {
             }
         }
 
+        const languageChunks =
+      shaderLanguage === SHADERLANGUAGE_GLSL ? shaderChunks : shaderChunksWGSL;
         if (options.chunks) {
             const userChunks = options.chunks;
 
@@ -111,8 +154,8 @@ class LitShader {
             validateUserChunks(userChunks);
             // #endif
 
-            this.chunks = Object.create(shaderChunks);
-            for (const chunkName in shaderChunks) {
+            this.chunks = Object.create(languageChunks);
+            for (const chunkName in languageChunks) {
                 if (userChunks.hasOwnProperty(chunkName)) {
                     const chunk = userChunks[chunkName];
                     for (const a in builtinAttributes) {
@@ -124,23 +167,26 @@ class LitShader {
                 }
             }
         } else {
-            this.chunks = shaderChunks;
+            this.chunks = languageChunks;
         }
 
         this.shaderPassInfo = ShaderPass.get(this.device).getByIndex(options.pass);
         this.shadowPass = this.shaderPassInfo.isShadow;
 
-        this.lighting = (options.lights.length > 0) || options.dirLightMapEnabled || options.clusteredLightingEnabled;
+        this.lighting =
+      options.lights.length > 0 ||
+      options.dirLightMapEnabled ||
+      options.clusteredLightingEnabled;
         this.reflections = options.reflectionSource !== REFLECTIONSRC_NONE;
         this.needsNormal =
-            this.lighting ||
-            this.reflections ||
-            options.useSpecular ||
-            options.ambientSH ||
-            options.useHeights ||
-            options.enableGGXSpecular ||
-            (options.clusteredLightingEnabled && !this.shadowPass) ||
-            options.useClearCoatNormals;
+      this.lighting ||
+      this.reflections ||
+      options.useSpecular ||
+      options.ambientSH ||
+      options.useHeights ||
+      options.enableGGXSpecular ||
+      (options.clusteredLightingEnabled && !this.shadowPass) ||
+      options.useClearCoatNormals;
         this.needsNormal = this.needsNormal && !this.shadowPass;
         this.needsSceneColor = options.useDynamicRefraction;
         this.needsScreenSize = options.useDynamicRefraction;
@@ -180,14 +226,16 @@ class LitShader {
      * @param {any} mapTransforms - Info about used texture transforms.
      */
     generateVertexShader(useUv, useUnmodifiedUv, mapTransforms) {
-
-        const { options, vDefines, attributes, chunks } = this;
+        const { options, vDefines, attributes } = this;
 
         // varyings
         const varyings = new Map();
         varyings.set('vPositionW', 'vec3');
 
-        if (options.nineSlicedMode === SPRITE_RENDERMODE_SLICED || options.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
+        if (
+            options.nineSlicedMode === SPRITE_RENDERMODE_SLICED ||
+      options.nineSlicedMode === SPRITE_RENDERMODE_TILED
+        ) {
             vDefines.set('NINESLICED', true);
         }
 
@@ -199,10 +247,11 @@ class LitShader {
         if (this.needsNormal) vDefines.set('NORMALS', true);
 
         if (this.options.useInstancing) {
-
             // only attach these if the default instancing chunk is used, otherwise it is expected
             // for the user to provide required attributes using material.setAttribute
-            if (this.chunks.transformInstancingVS === shaderChunks.transformInstancingVS) {
+            if (
+                this.chunks.transformInstancingVS === shaderChunks.transformInstancingVS
+            ) {
                 attributes.instance_line1 = SEMANTIC_ATTR12;
                 attributes.instance_line2 = SEMANTIC_ATTR13;
                 attributes.instance_line3 = SEMANTIC_ATTR14;
@@ -214,15 +263,18 @@ class LitShader {
             attributes.vertex_normal = SEMANTIC_NORMAL;
             varyings.set('vNormalW', 'vec3');
 
-            if (options.hasTangents && (options.useHeights || options.useNormals || options.enableGGXSpecular)) {
-
+            if (
+                options.hasTangents &&
+        (options.useHeights ||
+          options.useNormals ||
+          options.useClearCoatNormals ||
+          options.enableGGXSpecular)
+            ) {
                 vDefines.set('TANGENTS', true);
                 attributes.vertex_tangent = SEMANTIC_TANGENT;
                 varyings.set('vTangentW', 'vec3');
                 varyings.set('vBinormalW', 'vec3');
-
             } else if (options.enableGGXSpecular) {
-
                 vDefines.set('GGX_SPECULAR', true);
                 varyings.set('vObjectSpaceUpW', 'vec3');
             }
@@ -245,7 +297,6 @@ class LitShader {
         let numTransforms = 0;
         const transformDone = new Set();
         mapTransforms.forEach((mapTransform) => {
-
             const { id, uv, name } = mapTransform;
             const checkId = id + uv * 100; // make sure each UV set is transformed by each unique transform only once
 
@@ -282,7 +333,6 @@ class LitShader {
 
         // morphing
         if (options.useMorphPosition || options.useMorphNormal) {
-
             vDefines.set('MORPHING', true);
             if (options.useMorphTextureBasedInt) vDefines.set('MORPHING_INT', true);
             if (options.useMorphPosition) vDefines.set('MORPHING_POSITION', true);
@@ -293,7 +343,6 @@ class LitShader {
         }
 
         if (options.skin) {
-
             attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
 
             if (options.batch) {
@@ -311,13 +360,16 @@ class LitShader {
         // generate varyings code
         varyings.forEach((type, name) => {
             vDefines.set(`VARYING_${name.toUpperCase()}`, true);
-            const generateWgsl = false; // when we switch generation to WGSL on WebGPU
-            this.varyingsCode += generateWgsl ?
-                `varying ${name}: ${varyingsWGSLTypes.get(type)};\n` :
-                `varying ${type} ${name};\n`;
+            this.varyingsCode +=
+        this.shaderLanguage === SHADERLANGUAGE_WGSL ?
+            `varying ${name}: ${varyingsWGSLTypes.get(type)};\n` :
+            `varying ${type} ${name};\n`;
         });
 
-        this.vshader = this.varyingsCode + chunks.litMainVS;
+        this.vshader = `
+            ${this.varyingsCode}
+            #include "litMainVS"
+        `;
     }
 
     /**
@@ -327,7 +379,6 @@ class LitShader {
      * @param {boolean} clusteredLightingEnabled - Whether clustered lighting is enabled.
      */
     _setupLightingDefines(hasAreaLights, clusteredLightingEnabled) {
-
         const fDefines = this.fDefines;
         const options = this.options;
 
@@ -337,13 +388,21 @@ class LitShader {
         // clustered lights defines
         if (clusteredLightingEnabled && this.lighting) {
             fDefines.set('LIT_CLUSTERED_LIGHTS', true);
-            if (options.clusteredLightingCookiesEnabled) fDefines.set('CLUSTER_COOKIES', true);
-            if (options.clusteredLightingAreaLightsEnabled) fDefines.set('CLUSTER_AREALIGHTS', true);
-            if (options.lightMaskDynamic) fDefines.set('CLUSTER_MESH_DYNAMIC_LIGHTS', true);
+            if (options.clusteredLightingCookiesEnabled) {
+                fDefines.set('CLUSTER_COOKIES', true);
+            }
+            if (options.clusteredLightingAreaLightsEnabled) {
+                fDefines.set('CLUSTER_AREALIGHTS', true);
+            }
+            if (options.lightMaskDynamic) {
+                fDefines.set('CLUSTER_MESH_DYNAMIC_LIGHTS', true);
+            }
 
             // shadows
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
-                const clusteredShadowInfo = shadowTypeInfo.get(options.clusteredLightingShadowType);
+                const clusteredShadowInfo = shadowTypeInfo.get(
+                    options.clusteredLightingShadowType
+                );
                 fDefines.set('CLUSTER_SHADOWS', true);
                 fDefines.set(`SHADOW_KIND_${clusteredShadowInfo.kind}`, true);
                 fDefines.set(`CLUSTER_SHADOW_TYPE_${clusteredShadowInfo.kind}`, true);
@@ -360,7 +419,8 @@ class LitShader {
                 continue;
             }
 
-            const lightShape = (hasAreaLights && light._shape) ? light._shape : LIGHTSHAPE_PUNCTUAL;
+            const lightShape =
+        hasAreaLights && light._shape ? light._shape : LIGHTSHAPE_PUNCTUAL;
             const shadowType = light._shadowType;
             const castShadow = light.castShadows && !options.noShadow;
             const shadowInfo = shadowTypeInfo.get(shadowType);
@@ -371,17 +431,28 @@ class LitShader {
             fDefines.set(`LIGHT${i}TYPE`, `${lightTypeNames[lightType]}`);
             fDefines.set(`LIGHT${i}SHADOWTYPE`, `${shadowInfo.name}`);
             fDefines.set(`LIGHT${i}SHAPE`, `${lightShapeNames[lightShape]}`);
-            fDefines.set(`LIGHT${i}FALLOFF`, `${lightFalloffNames[light._falloffMode]}`);
-            if (light.affectSpecularity) fDefines.set(`LIGHT${i}AFFECT_SPECULARITY`, true);
+            fDefines.set(
+                `LIGHT${i}FALLOFF`,
+                `${lightFalloffNames[light._falloffMode]}`
+            );
+            if (light.affectSpecularity) {
+                fDefines.set(`LIGHT${i}AFFECT_SPECULARITY`, true);
+            }
 
             if (light._cookie) {
-                if (lightType === LIGHTTYPE_SPOT && !light._cookie._cubemap ||
-                    lightType === LIGHTTYPE_OMNI && light._cookie._cubemap) {
+                if (
+                    (lightType === LIGHTTYPE_SPOT && !light._cookie._cubemap) ||
+          (lightType === LIGHTTYPE_OMNI && light._cookie._cubemap)
+                ) {
                     fDefines.set(`LIGHT${i}COOKIE`, true);
                     fDefines.set(`{LIGHT${i}COOKIE_CHANNEL}`, light._cookieChannel);
                     if (lightType === LIGHTTYPE_SPOT) {
-                        if (light._cookieTransform) fDefines.set(`LIGHT${i}COOKIE_TRANSFORM`, true);
-                        if (light._cookieFalloff) fDefines.set(`LIGHT${i}COOKIE_FALLOFF`, true);
+                        if (light._cookieTransform) {
+                            fDefines.set(`LIGHT${i}COOKIE_TRANSFORM`, true);
+                        }
+                        if (light._cookieFalloff) {
+                            fDefines.set(`LIGHT${i}COOKIE_FALLOFF`, true);
+                        }
                     }
                 }
             }
@@ -391,20 +462,32 @@ class LitShader {
                 if (shadowInfo.pcf) fDefines.set(`LIGHT${i}SHADOW_PCF`, true);
 
                 // shadow addressing defines, used by lightFunctionShadowPS
-                if (light._normalOffsetBias && !light._isVsm) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_NORMAL_OFFSET`, true);
+                if (light._normalOffsetBias && !light._isVsm) {
+                    fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_NORMAL_OFFSET`, true);
+                }
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_ORTHO`, true);
-                    if (light.cascadeBlend > 0) fDefines.set(`LIGHT${i}_SHADOW_CASCADE_BLEND`, true);
-                    if (light.numCascades > 1) fDefines.set(`LIGHT${i}_SHADOW_CASCADES`, true);
+                    if (light.cascadeBlend > 0) {
+                        fDefines.set(`LIGHT${i}_SHADOW_CASCADE_BLEND`, true);
+                    }
+                    if (light.numCascades > 1) {
+                        fDefines.set(`LIGHT${i}_SHADOW_CASCADES`, true);
+                    }
                 }
-                if (shadowInfo.pcf || shadowInfo.pcss || this.device.isWebGPU) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_SOURCE_ZBUFFER`, true);
-                if (lightType === LIGHTTYPE_OMNI) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_POINT`, true);
+                if (shadowInfo.pcf || shadowInfo.pcss || this.device.isWebGPU) {
+                    fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_SOURCE_ZBUFFER`, true);
+                }
+                if (lightType === LIGHTTYPE_OMNI) {
+                    fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_POINT`, true);
+                }
             }
 
             // global lighting defines
             if (castShadow) {
                 fDefines.set(`SHADOW_KIND_${shadowInfo.kind}`, true);
-                if (lightType === LIGHTTYPE_DIRECTIONAL) fDefines.set('SHADOW_DIRECTIONAL', true);
+                if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                    fDefines.set('SHADOW_DIRECTIONAL', true);
+                }
             }
         }
     }
@@ -413,12 +496,21 @@ class LitShader {
         const { options } = this;
 
         // area lights are used when clustered area lights are enabled or any lights have area shape
-        const clusteredAreaLights = options.clusteredLightingEnabled && options.clusteredLightingAreaLightsEnabled;
-        const hasAreaLights = clusteredAreaLights || options.lights.some((light) => {
-            return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
-        });
-        const addAmbient = !options.lightMapEnabled || options.lightMapWithoutAmbient;
-        const hasTBN = this.needsNormal && (options.useNormals || options.useClearCoatNormals || (options.enableGGXSpecular && !options.useHeights));
+        const clusteredAreaLights =
+      options.clusteredLightingEnabled &&
+      options.clusteredLightingAreaLightsEnabled;
+        const hasAreaLights =
+      clusteredAreaLights ||
+      options.lights.some((light) => {
+          return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
+      });
+        const addAmbient =
+      !options.lightMapEnabled || options.lightMapWithoutAmbient;
+        const hasTBN =
+      this.needsNormal &&
+      (options.useNormals ||
+        options.useClearCoatNormals ||
+        (options.enableGGXSpecular && !options.useHeights));
 
         if (options.useSpecular) {
             this.fDefineSet(true, 'LIT_SPECULAR');
@@ -428,7 +520,13 @@ class LitShader {
             this.fDefineSet(options.useSheen, 'LIT_SHEEN');
             this.fDefineSet(options.useIridescence, 'LIT_IRIDESCENCE');
         }
-
+        this.fDefineSet(
+            (this.lighting && options.useSpecular) || this.reflections,
+            'LIT_SPECULAR_OR_REFLECTION'
+        );
+        this.fDefineSet(this.needsSceneColor, 'LIT_SCENE_COLOR');
+        this.fDefineSet(this.needsScreenSize, 'LIT_SCREEN_SIZE');
+        this.fDefineSet(this.needsTransforms, 'LIT_TRANSFORMS');
         this.fDefineSet(this.needsNormal, 'LIT_NEEDS_NORMAL');
         this.fDefineSet(this.lighting, 'LIT_LIGHTING');
         this.fDefineSet(options.useMetalness, 'LIT_METALNESS');
@@ -441,8 +539,14 @@ class LitShader {
         this.fDefineSet(options.lightMapEnabled, 'LIT_LIGHTMAP');
         this.fDefineSet(options.dirLightMapEnabled, 'LIT_DIR_LIGHTMAP');
         this.fDefineSet(options.skyboxIntensity > 0, 'LIT_SKYBOX_INTENSITY');
-        this.fDefineSet(options.clusteredLightingShadowsEnabled, 'LIT_CLUSTERED_SHADOWS');
-        this.fDefineSet(options.clusteredLightingAreaLightsEnabled, 'LIT_CLUSTERED_AREA_LIGHTS');
+        this.fDefineSet(
+            options.clusteredLightingShadowsEnabled,
+            'LIT_CLUSTERED_SHADOWS'
+        );
+        this.fDefineSet(
+            options.clusteredLightingAreaLightsEnabled,
+            'LIT_CLUSTERED_AREA_LIGHTS'
+        );
         this.fDefineSet(hasTBN, 'LIT_TBN');
         this.fDefineSet(addAmbient, 'LIT_ADD_AMBIENT');
         this.fDefineSet(options.hasTangents, 'LIT_TANGENTS');
@@ -454,6 +558,7 @@ class LitShader {
         this.fDefineSet(options.useHeights, 'LIT_HEIGHTS');
         this.fDefineSet(options.opacityFadesSpecular, 'LIT_OPACITY_FADES_SPECULAR');
         this.fDefineSet(options.alphaToCoverage, 'LIT_ALPHA_TO_COVERAGE');
+        this.fDefineSet(options.alphaTest, 'LIT_ALPHA_TEST');
         this.fDefineSet(options.useMsdf, 'LIT_MSDF');
         this.fDefineSet(options.ssao, 'LIT_SSAO');
         this.fDefineSet(options.useAo, 'LIT_AO');
@@ -461,26 +566,62 @@ class LitShader {
         this.fDefineSet(options.msdfTextAttribute, 'LIT_MSDF_TEXT_ATTRIBUTE');
         this.fDefineSet(options.diffuseMapEnabled, 'LIT_DIFFUSE_MAP');
         this.fDefineSet(options.shadowCatcher, 'LIT_SHADOW_CATCHER');
-        this.fDefineSet(true, 'LIT_FRESNEL_MODEL', fresnelNames[options.fresnelModel]);
-        this.fDefineSet(true, 'LIT_NONE_SLICE_MODE', spriteRenderModeNames[options.nineSlicedMode]);
+        this.fDefineSet(
+            true,
+            'LIT_FRESNEL_MODEL',
+            fresnelNames[options.fresnelModel]
+        );
+        this.fDefineSet(
+            true,
+            'LIT_NONE_SLICE_MODE',
+            spriteRenderModeNames[options.nineSlicedMode]
+        );
         this.fDefineSet(true, 'LIT_BLEND_TYPE', blendNames[options.blendType]);
-        this.fDefineSet(true, 'LIT_CUBEMAP_PROJECTION', cubemaProjectionNames[options.cubeMapProjection]);
-        this.fDefineSet(true, 'LIT_OCCLUDE_SPECULAR', specularOcclusionNames[options.occludeSpecular]);
-        this.fDefineSet(true, 'LIT_REFLECTION_SOURCE', reflectionSrcNames[options.reflectionSource]);
-        this.fDefineSet(true, 'LIT_AMBIENT_SOURCE', ambientSrcNames[options.ambientSource]);
+        this.fDefineSet(
+            true,
+            'LIT_CUBEMAP_PROJECTION',
+            cubemaProjectionNames[options.cubeMapProjection]
+        );
+        this.fDefineSet(
+            true,
+            'LIT_OCCLUDE_SPECULAR',
+            specularOcclusionNames[options.occludeSpecular]
+        );
+        this.fDefineSet(
+            true,
+            'LIT_REFLECTION_SOURCE',
+            reflectionSrcNames[options.reflectionSource]
+        );
+        this.fDefineSet(
+            true,
+            'LIT_AMBIENT_SOURCE',
+            ambientSrcNames[options.ambientSource]
+        );
 
         // injection defines
         this.fDefineSet(true, '{lightingUv}', lightingUv ?? ''); // example: vUV0_1
-        this.fDefineSet(true, '{reflectionDecode}', ChunkUtils.decodeFunc(options.reflectionEncoding));
-        this.fDefineSet(true, '{reflectionCubemapDecode}', ChunkUtils.decodeFunc(options.reflectionCubemapEncoding));
-        this.fDefineSet(true, '{ambientDecode}', ChunkUtils.decodeFunc(options.ambientEncoding));
+        this.fDefineSet(
+            true,
+            '{reflectionDecode}',
+            ChunkUtils.decodeFunc(options.reflectionEncoding)
+        );
+        this.fDefineSet(
+            true,
+            '{reflectionCubemapDecode}',
+            ChunkUtils.decodeFunc(options.reflectionCubemapEncoding)
+        );
+        this.fDefineSet(
+            true,
+            '{ambientDecode}',
+            ChunkUtils.decodeFunc(options.ambientEncoding)
+        );
 
         // lighting defines
         this._setupLightingDefines(hasAreaLights, options.clusteredLightingEnabled);
     }
 
     prepareShadowPass() {
-
+        const { options } = this;
         const lightType = this.shaderPassInfo.lightType;
 
         const shadowType = this.shaderPassInfo.shadowType;
@@ -491,11 +632,14 @@ class LitShader {
         // - Directional: Always since light has no position
         // - Spot: If not using VSM
         // - Point: Never
-        const usePerspectiveDepth = (lightType === LIGHTTYPE_DIRECTIONAL || (!shadowInfo.vsm && lightType === LIGHTTYPE_SPOT));
+        const usePerspectiveDepth =
+      lightType === LIGHTTYPE_DIRECTIONAL ||
+      (!shadowInfo.vsm && lightType === LIGHTTYPE_SPOT);
 
         this.fDefineSet(usePerspectiveDepth, 'PERSPECTIVE_DEPTH');
         this.fDefineSet(true, 'LIGHT_TYPE', `${lightTypeNames[lightType]}`);
         this.fDefineSet(true, 'SHADOW_TYPE', `${shadowInfo.name}`);
+        this.fDefineSet(options.alphaTest, 'LIT_ALPHA_TEST');
     }
 
     /**
@@ -508,8 +652,11 @@ class LitShader {
     generateFragmentShader(frontendDecl, frontendCode, lightingUv) {
         const options = this.options;
 
-        if (options.pass === SHADER_PICK || options.pass === SHADER_DEPTH || options.pass === SHADER_PREPASS) {
-
+        if (
+            options.pass === SHADER_PICK ||
+      options.pass === SHADER_DEPTH ||
+      options.pass === SHADER_PREPASS
+        ) {
             this.fshader = `
 
                 ${this.varyingsCode}
@@ -517,8 +664,8 @@ class LitShader {
                 ${frontendCode}
                 #include "litOtherMainPS"
             `;
-
-        } else if (this.shadowPass) { // SHADOW PASS
+        } else if (this.shadowPass) {
+            // SHADOW PASS
 
             this.prepareShadowPass();
             this.fshader = `
@@ -527,14 +674,14 @@ class LitShader {
                 ${frontendCode}
                 #include "litShadowMainPS"
             `;
-
-        } else if (options.customFragmentShader) {   // CUSTOM FRAGMENT SHADER
+        } else if (options.customFragmentShader) {
+            // CUSTOM FRAGMENT SHADER
 
             this.fshader = `
                 ${options.customFragmentShader}
             `;
-
-        } else { // FORWARD PASS
+        } else {
+            // FORWARD PASS
 
             this.prepareForwardPass(lightingUv);
             this.fshader = `
@@ -549,7 +696,13 @@ class LitShader {
             `;
         }
 
-        Debug.assert(!this.fshader.includes('litShaderArgs'), 'Automatic compatibility with shaders using litShaderArgs has been removed. Please update the shader to use the new system.');
+        Debug.assert(
+            !this.fshader.includes('litShaderArgs.'),
+            'Automatic compatibility with shaders using litShaderArgs has been removed. Please update the shader to use the new system.',
+            {
+                fshader: this.fshader
+            }
+        );
     }
 }
 

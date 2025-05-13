@@ -25,7 +25,7 @@ class Bundle extends EventHandler {
      *
      * @event
      * @example
-     * bundle.on("add", function (url, data) {
+     * bundle.on("add", (url, data) => {
      *     console.log("file added: " + url);
      * });
      */
@@ -36,7 +36,7 @@ class Bundle extends EventHandler {
      *
      * @event
      * @example
-     * bundle.on("load", function () {
+     * bundle.on("load", () => {
      *     console.log("All Bundle files has been loaded");
      * });
      */

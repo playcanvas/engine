@@ -9,7 +9,11 @@ import {
     RENDERSTYLE_SOLID,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    // magnopus patched additional UVS
+    SHADERDEF_UV2,
+    SHADERDEF_UV3,
+    SHADERDEF_UV4
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
@@ -51,6 +55,8 @@ const lookupHashes = new Uint32Array(4);
 
 /**
  * Internal data structure used to store data used by hardware instancing.
+ *
+ * @ignore
  */
 class InstancingData {
     /** @type {VertexBuffer|null} */
@@ -80,6 +86,8 @@ class InstancingData {
 
 /**
  * Internal helper class for storing the shader and related mesh bind group in the shader cache.
+ *
+ * @ignore
  */
 class ShaderInstance {
     /**
@@ -163,13 +171,13 @@ class ShaderInstance {
 }
 
 /**
+ * @callback CalculateSortDistanceCallback
  * Callback used by {@link Layer} to calculate the "sort distance" for a {@link MeshInstance},
  * which determines its place in the render order.
- *
- * @callback CalculateSortDistanceCallback
  * @param {MeshInstance} meshInstance - The mesh instance.
  * @param {Vec3} cameraPosition - The position of the camera.
  * @param {Vec3} cameraForward - The forward vector of the camera.
+ * @returns {void}
  */
 
 /**
@@ -229,8 +237,8 @@ class MeshInstance {
     visible = true;
 
     /**
-     * Read this value in {@link Scene#EVENT_POSTCULL} event to determine if the object is actually
-     * going to be rendered.
+     * Read this value in {@link Scene.EVENT_POSTCULL} event to determine if the object is actually going
+     * to be rendered.
      *
      * @type {boolean}
      */
@@ -435,6 +443,9 @@ class MeshInstance {
             const format = mesh.vertexBuffer.format;
             this._shaderDefs |= format.hasUv0 ? SHADERDEF_UV0 : 0;
             this._shaderDefs |= format.hasUv1 ? SHADERDEF_UV1 : 0;
+            this._shaderDefs |= format.hasUv2 ? SHADERDEF_UV2 : 0;
+            this._shaderDefs |= format.hasUv3 ? SHADERDEF_UV3 : 0;
+            this._shaderDefs |= format.hasUv4 ? SHADERDEF_UV4 : 0;
             this._shaderDefs |= format.hasColor ? SHADERDEF_VCOLOR : 0;
             this._shaderDefs |= format.hasTangents ? SHADERDEF_TANGENTS : 0;
         }

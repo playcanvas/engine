@@ -1,9 +1,6 @@
 import { expect } from 'chai';
 
-import {
-    EVENT_MOUSEDOWN, EVENT_MOUSEUP,
-    MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT
-} from '../../../src/platform/input/constants.js';
+import { MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT } from '../../../src/platform/input/constants.js';
 import { Mouse } from '../../../src/platform/input/mouse.js';
 
 const buttons = [MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT];
@@ -61,7 +58,7 @@ describe('Mouse', function () {
     describe('#on', function () {
 
         it('should handle mousedown events', (done) => {
-            mouse.on(EVENT_MOUSEDOWN, (event) => {
+            mouse.on('mousedown', (event) => {
                 expect(event.button).to.equal(MOUSEBUTTON_LEFT);
                 expect(event.event).to.be.an.instanceOf(MouseEvent);
 
@@ -73,7 +70,7 @@ describe('Mouse', function () {
         });
 
         it('should handle mouseup events', (done) => {
-            mouse.on(EVENT_MOUSEUP, (event) => {
+            mouse.on('mouseup', (event) => {
                 expect(event.button).to.equal(MOUSEBUTTON_LEFT);
                 expect(event.event).to.be.an.instanceOf(MouseEvent);
 

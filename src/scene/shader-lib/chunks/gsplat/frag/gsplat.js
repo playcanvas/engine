@@ -7,7 +7,16 @@ export default /* glsl */`
 #endif
 
 #ifdef PICK_PASS
-    uniform vec4 uColor;
+    #include "pickPS"
+#endif
+
+#if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
+    uniform float alphaClip;
+#endif
+
+#ifdef PREPASS_PASS
+    varying float vLinearDepth;
+    #include "floatAsUintPS"
 #endif
 
 varying mediump vec2 gaussianUV;
@@ -22,11 +31,24 @@ void main(void) {
     // evaluate alpha
     mediump float alpha = exp(-A * 4.0) * gaussianColor.a;
 
-    #ifdef PICK_PASS
-        if (alpha < 0.3) {
+    #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
+        if (alpha < alphaClip) {
             discard;
         }
-        gl_FragColor = uColor;
+    #endif
+
+    #ifdef PICK_PASS
+
+        gl_FragColor = getPickOutput();
+
+    #elif SHADOW_PASS
+
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+
+    #elif PREPASS_PASS
+
+        gl_FragColor = float2vec4(vLinearDepth);
+
     #else
         if (alpha < 1.0 / 255.0) {
             discard;

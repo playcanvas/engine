@@ -10,7 +10,9 @@ const decodeTable = {
     'srgb': 'decodeGamma',
     'rgbm': 'decodeRGBM',
     'rgbe': 'decodeRGBE',
-    'rgbp': 'decodeRGBP'
+    'rgbp': 'decodeRGBP',
+    'xy': 'unpackNormalXY',
+    'xyz': 'unpackNormalXYZ'
 };
 
 const encodeTable = {

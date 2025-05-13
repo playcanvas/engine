@@ -151,7 +151,7 @@ class AnimComponentSystem extends ComponentSystem {
                     return;
                 }
                 if (!animComponent.setupDelayed) {
-                    var _animComponent$animat;
+                    let _animComponent$animat; // Magnopus patched
                     const divisor =
                   Math.round(
                       (_animComponent$animat = animComponent.animationFrameSkip) != null ? _animComponent$animat : -1

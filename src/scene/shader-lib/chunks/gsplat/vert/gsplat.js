@@ -10,6 +10,10 @@ varying mediump vec4 gaussianColor;
 
 mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
+#ifdef PREPASS_PASS
+    varying float vLinearDepth;
+#endif
+
 void main(void) {
     // read gaussian details
     SplatSource source;
@@ -36,6 +40,11 @@ void main(void) {
     // read color
     vec4 clr = readColor(source);
 
+    #if GSPLAT_AA
+        // apply AA compensation
+        clr.a *= corner.aaFactor;
+    #endif
+
     // evaluate spherical harmonics
     #if SH_BANDS > 0
         // calculate the model-space view direction
@@ -52,6 +61,10 @@ void main(void) {
 
     #ifndef DITHER_NONE
         id = float(source.id);
+    #endif
+
+    #ifdef PREPASS_PASS
+        vLinearDepth = -center.view.z;
     #endif
 }
 `;

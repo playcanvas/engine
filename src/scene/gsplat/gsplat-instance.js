@@ -11,6 +11,8 @@ import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 /**
  * @import { Camera } from '../camera.js'
  * @import { GSplat } from './gsplat.js'
+ * @import { GSplatCompressed } from './gsplat-compressed.js'
+ * @import { GSplatSogs } from './gsplat-sogs.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { Material } from '../materials/material.js'
  * @import { SplatMaterialOptions } from './gsplat-material.js'
@@ -24,7 +26,7 @@ const viewport = [0, 0];
 
 /** @ignore */
 class GSplatInstance {
-    /** @type {GSplat} */
+    /** @type {GSplat | GSplatCompressed | GSplatSogs } */
     splat;
 
     /** @type {Mesh} */
@@ -162,6 +164,7 @@ class GSplatInstance {
     createMaterial(options) {
         this.material = this.splat.createMaterial(options);
         this.material.setParameter('splatOrder', this.orderTexture);
+        this.material.setParameter('alphaClip', 0.3);
         if (this.meshInstance) {
             this.meshInstance.material = this.material;
         }
@@ -176,7 +179,7 @@ class GSplatInstance {
         viewport[1] = height;
 
         // adjust viewport for stereoscopic VR sessions
-        const xr = camera?.xr;
+        const xr = camera?.camera?.xr;
         if (xr?.active && xr.views.list.length === 2) {
             viewport[0] *= 0.5;
         }

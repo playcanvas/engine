@@ -1,4 +1,4 @@
-import { CULLFACE_FRONT, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { CULLFACE_FRONT, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { LAYERID_SKYBOX, SKYTYPE_INFINITE } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
@@ -16,6 +16,8 @@ import { SkyGeometry } from './sky-geometry.js';
 
 /**
  * A visual representation of the sky.
+ *
+ * @ignore
  */
 class SkyMesh {
     /**
@@ -34,12 +36,12 @@ class SkyMesh {
      */
     constructor(device, scene, node, texture, type) {
 
-        const wgsl = device.isWebGPU;
         const material = new ShaderMaterial({
             uniqueName: 'SkyMaterial',
-            vertexCode: wgsl ? shaderChunksWGSL.skyboxVS : shaderChunks.skyboxVS,
-            fragmentCode: wgsl ? shaderChunksWGSL.skyboxPS : shaderChunks.skyboxPS,
-            shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,
+            vertexGLSL: shaderChunks.skyboxVS,
+            fragmentGLSL: shaderChunks.skyboxPS,
+            vertexWGSL: shaderChunksWGSL.skyboxVS,
+            fragmentWGSL: shaderChunksWGSL.skyboxPS,
             attributes: {
                 aPosition: SEMANTIC_POSITION
             }

@@ -41,5 +41,16 @@ vec4 passThrough(vec4 raw) {
     return raw;
 }
 
+vec3 unpackNormalXYZ(vec4 nmap) {
+    return nmap.xyz * 2.0 - 1.0;
+}
+
+vec3 unpackNormalXY(vec4 nmap) {
+    vec3 normal;
+    normal.xy = nmap.wy * 2.0 - 1.0;
+    normal.z = sqrt(1.0 - clamp(dot(normal.xy, normal.xy), 0.0, 1.0));
+    return normal;
+}
+
 #endif
 `;

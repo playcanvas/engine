@@ -13,6 +13,7 @@ function swcOptions(isDebug, isUMD, minify) {
     return {
         minify,
         jsc: {
+            target: isUMD ? 'es5' : 'es2022',
             minify: {
                 format: {
                     comments: !isDebug || minify ? false : 'all'
@@ -25,9 +26,6 @@ function swcOptions(isDebug, isUMD, minify) {
             },
             externalHelpers: false,
             loose: true
-        },
-        env: {
-            targets: isUMD ? 'fully supports webgl and > 0.1% and not dead' : 'supports es6-module'
         }
     };
 

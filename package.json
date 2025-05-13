@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "2.6.1",
+  "version": "2.7.4",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -90,8 +90,9 @@
     "rollup-plugin-visualizer": "5.14.0",
     "serve": "14.2.4",
     "sinon": "19.0.2",
-    "typedoc": "0.27.9",
-    "typedoc-plugin-mdn-links": "4.0.15",
+    "typedoc": "^0.28.1",
+    "typedoc-plugin-mdn-links": "^5.0.1",
+    "typedoc-plugin-missing-exports": "^4.0.0",
     "typescript": "5.8.2"
   },
   "optionalDependencies": {
@@ -100,6 +101,7 @@
   "scripts": {
     "build": "node build.mjs",
     "deploy": "npm run build:esm:profiler && npm run build:types && cp -rf build/playcanvas.d.ts ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.d.ts && cp -rf build/playcanvas.prf.mjs ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.mjs && cp LICENSE ../oly-web-client/libs/overrides/playcanvas && rm -rf ../oly-web-client/libs/overrides/playcanvas/scripts && cp -rf scripts ../oly-web-client/libs/overrides/playcanvas && cat package.json | sed -e 's?\"module\": \"build/playcanvas/src/index.js\"?\"module\": \"build/playcanvas.mjs\"?' > ../oly-web-client/libs/overrides/playcanvas/package.json",
+    "deploy-mwr": "npm run build:esm:profiler && npm run build:types && cp -rf build/playcanvas.d.ts ../magnopus-web-renderer/libs/overrides/playcanvas-engine/build/playcanvas.d.ts && cp -rf build/playcanvas.prf.mjs ../magnopus-web-renderer/libs/overrides/playcanvas-engine/build/playcanvas.mjs && cp LICENSE ../magnopus-web-renderer/libs/overrides/playcanvas-engine && rm -rf ../magnopus-web-renderer/libs/overrides/magnopus-web-renderer/scripts && cp -rf scripts ../magnopus-web-renderer/libs/overrides/magnopus-web-renderer && cat package.json | sed -e 's?\"module\": \"build/playcanvas/src/index.js\"?\"module\": \"build/playcanvas.mjs\"?' > ../magnopus-web-renderer/libs/overrides/playcanvas-engine/package.json",
     "build:release": "npm run build target:release",
     "build:debug": "npm run build target:debug",
     "build:profiler": "npm run build target:profiler",
@@ -125,9 +127,12 @@
     "lint": "eslint scripts src test utils build.mjs eslint.config.mjs rollup.config.mjs",
     "publint": "publint --level error",
     "serve": "serve build -l 51000 --cors",
-    "test": "mocha --ignore 'test/assets/scripts/**' --recursive --require test/fixtures.mjs --timeout 5000",
+    "test": "mocha --ignore \"test/assets/scripts/*.js\" --recursive --require test/fixtures.mjs --timeout 5000",
     "test:coverage": "c8 npm test",
-    "test:types": "tsc --pretty false build/playcanvas.d.ts"
+    "test:types": "tsc --pretty false playcanvas.d.ts"
+  },
+  "scriptsComments": {
+    "test:types": "Modified by Magnopus to target the source playcanvas.d.ts file instead of the build one."
   },
   "engines": {
     "node": ">=18.0.0"

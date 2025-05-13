@@ -131,8 +131,8 @@ assetListLoader.load(() => {
     // reflection material using the shader
     const refractionMaterial = new pc.ShaderMaterial({
         uniqueName: 'RefractionShader',
-        vertexCode: files['shader.vert'],
-        fragmentCode: files['shader.frag']
+        vertexGLSL: files['shader.vert'],
+        fragmentGLSL: files['shader.frag']
     });
     glass.render.material = refractionMaterial;
 

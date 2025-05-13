@@ -23,7 +23,36 @@ const tmpQ1 = new Quat();
 const GLANCE_EPSILON = 0.98;
 
 /**
- * Scaling gizmo.
+ * The ScaleGizmo provides interactive 3D manipulation handles for scaling/resizing
+ * {@link Entity}s in a {@link Scene}. It creates a visual widget with box-tipped lines along the
+ * X, Y and Z axes, planes at their intersections, and a center box, allowing precise control over
+ * object scaling through direct manipulation. The gizmo's visual appearance can be customized
+ * away from the defaults as required.
+ *
+ * Note that the gizmo can be driven by both mouse+keyboard and touch input.
+ *
+ * ```javascript
+ * // Create a layer for rendering all gizmos
+ * const gizmoLayer = pc.Gizmo.createLayer(app);
+ *
+ * // Create a scale gizmo
+ * const gizmo = new pc.ScaleGizmo(cameraComponent, gizmoLayer);
+ *
+ * // Create an entity to attach the gizmo to
+ * const entity = new pc.Entity();
+ * entity.addComponent('render', {
+ *     type: 'box'
+ * });
+ * app.root.addChild(entity);
+ *
+ * // Attach the gizmo to the entity
+ * gizmo.attach([entity]);
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Scale Gizmo](https://playcanvas.github.io/#/gizmos/transform-scale)
+ * - [Editor](https://playcanvas.github.io/#/misc/editor)
  *
  * @category Gizmo
  */
@@ -124,10 +153,11 @@ class ScaleGizmo extends TransformGizmo {
     lowerBoundScale = new Vec3(-Infinity, -Infinity, -Infinity);
 
     /**
-     * Creates a new ScaleGizmo object.
+     * Creates a new ScaleGizmo object. Use {@link Gizmo.createLayer} to create the layer
+     * required to display the gizmo.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The render layer.
+     * @param {Layer} layer - The layer responsible for rendering the gizmo.
      * @example
      * const gizmo = new pc.ScaleGizmo(camera, layer);
      */

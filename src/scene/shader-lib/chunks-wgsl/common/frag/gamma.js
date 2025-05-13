@@ -9,11 +9,11 @@ export default /* wgsl */`
     }
 
     fn gammaCorrectInputVec3(color: vec3f) -> vec3f {
-        return decodeGammaVec3(color);
+        return decodeGamma3(color);
     }
 
     fn gammaCorrectInputVec4(color: vec4f) -> vec4f {
-        return vec4f(decodeGammaVec3(color.xyz), color.w);
+        return vec4f(decodeGamma3(color.xyz), color.w);
     }
 
     fn gammaCorrectOutput(color: vec3f) -> vec3f {

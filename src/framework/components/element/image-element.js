@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { TRACE_ID_ELEMENT } from '../../../core/constants.js';
+import { TRACEID_ELEMENT } from '../../../core/constants.js';
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
@@ -200,7 +200,7 @@ class ImageRenderable {
             } else {
                 this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + this._element.getMaskOffset();
             }
-            Debug.trace(TRACE_ID_ELEMENT, 'setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
+            Debug.trace(TRACEID_ELEMENT, 'setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
         }
     }
 
@@ -209,7 +209,7 @@ class ImageRenderable {
             return;
         }
 
-        Debug.trace(TRACE_ID_ELEMENT, 'setDrawOrder: ', this.meshInstance.name, drawOrder);
+        Debug.trace(TRACEID_ELEMENT, 'setDrawOrder: ', this.meshInstance.name, drawOrder);
 
         this.meshInstance.drawOrder = drawOrder;
     }

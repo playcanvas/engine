@@ -278,9 +278,6 @@ class Layer {
          *
          * - The layer is created with {@link Layer#enabled} set to true (which is the default value).
          * - {@link Layer#enabled} was changed from false to true
-         * - {@link Layer#incrementCounter} was called and incremented the counter above zero.
-         *
-         * Useful for allocating resources this layer will use (e.g. creating render targets).
          *
          * @type {Function}
          */
@@ -458,8 +455,7 @@ class Layer {
 
     /**
      * Decrements the usage counter of this layer. Decrementing the counter from 1 to 0 will
-     * disable the layer and call {@link Layer.onDisable}. See {@link Layer#incrementCounter} for
-     * more details.
+     * disable the layer and call {@link Layer.onDisable}.
      *
      * @ignore
      */

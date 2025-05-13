@@ -23,32 +23,41 @@ import { PostEffectQueue } from './post-effect-queue.js';
  */
 
 /**
- * Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
- *
  * @callback CalculateMatrixCallback
+ * Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
  * @param {Mat4} transformMatrix - Output of the function.
- * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
+ * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or
+ * {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
+ * @returns {void}
  */
 
 /**
- * The Camera Component enables an Entity to render the scene. A scene requires at least one
- * enabled camera component to be rendered. Note that multiple camera components can be enabled
- * simultaneously (for split-screen or offscreen rendering, for example).
+ * The CameraComponent enables an {@link Entity} to render the scene. A scene requires at least
+ * one enabled camera component to be rendered. The camera's view direction is along the negative
+ * z-axis of the owner entity.
+ *
+ * Note that multiple camera components can be enabled simultaneously (for split-screen or
+ * offscreen rendering, for example).
+ *
+ * You should never need to use the CameraComponent constructor directly. To add a CameraComponent
+ * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * // Add a pc.CameraComponent to an entity
  * const entity = new pc.Entity();
  * entity.addComponent('camera', {
  *     nearClip: 1,
  *     farClip: 100,
  *     fov: 55
  * });
+ * ```
  *
- * // Get the pc.CameraComponent on an entity
- * const cameraComponent = entity.camera;
+ * Once the CameraComponent is added to the entity, you can access it via the {@link Entity#camera}
+ * property:
  *
- * // Update a property on a camera component
- * entity.camera.nearClip = 2;
+ * ```javascript
+ * entity.camera.nearClip = 2; // Set the near clip of the camera
+ *
+ * console.log(entity.camera.nearClip); // Get the near clip of the camera
  * ```
  *
  * @hideconstructor
@@ -310,9 +319,9 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the aspect ratio (width divided by height) of the camera. If `aspectRatioMode` is
+     * Sets the aspect ratio (width divided by height) of the camera. If {@link aspectRatioMode} is
      * {@link ASPECT_AUTO}, then this value will be automatically calculated every frame, and you
-     * can only read it. If it's ASPECT_MANUAL, you can set the value.
+     * can only read it. If it's {@link ASPECT_MANUAL}, you can set the value.
      *
      * @type {number}
      */
@@ -490,8 +499,8 @@ class CameraComponent extends Component {
 
     /**
      * Sets whether the camera will cull triangle faces. If true, the camera will take
-     * `material.cull` into account. Otherwise both front and back faces will be rendered. Defaults
-     * to true.
+     * {@link Material#cull} into account. Otherwise both front and back faces will be rendered.
+     * Defaults to true.
      *
      * @type {boolean}
      */
@@ -570,9 +579,9 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the field of view of the camera in degrees. Usually this is the Y-axis field of view,
-     * see {@link CameraComponent#horizontalFov}. Used for {@link PROJECTION_PERSPECTIVE} cameras
-     * only. Defaults to 45.
+     * Sets the field of view of the camera in degrees. Usually this is the Y-axis field of view
+     * (see {@link horizontalFov}). Used for {@link PROJECTION_PERSPECTIVE} cameras only. Defaults to
+     * 45.
      *
      * @type {number}
      */
@@ -599,10 +608,10 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets whether frustum culling is enabled. This controls the culling of mesh instances against
-     * the camera frustum, i.e. if objects outside of the camera's frustum should be omitted from
-     * rendering. If false, all mesh instances in the scene are rendered by the camera, regardless
-     * of visibility. Defaults to false.
+     * Sets whether frustum culling is enabled. This controls the culling of {@link MeshInstance}s
+     * against the camera frustum, i.e. if objects outside of the camera's frustum should be
+     * omitted from rendering. If false, all mesh instances in the scene are rendered by the
+     * camera, regardless of visibility. Defaults to false.
      *
      * @type {boolean}
      */
@@ -620,7 +629,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets whether the camera's field of view (`fov`) is horizontal or vertical. Defaults to
+     * Sets whether the camera's field of view ({@link fov}) is horizontal or vertical. Defaults to
      * false (meaning it is vertical by default).
      *
      * @type {boolean}
@@ -630,7 +639,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Gets whether the camera's field of view (`fov`) is horizontal or vertical.
+     * Gets whether the camera's field of view ({@link fov}) is horizontal or vertical.
      *
      * @type {boolean}
      */
@@ -640,8 +649,9 @@ class CameraComponent extends Component {
 
     /**
      * Sets the array of layer IDs ({@link Layer#id}) to which this camera should belong. Don't
-     * push, pop, splice or modify this array, if you want to change it, set a new one instead.
-     * Defaults to `[LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE]`.
+     * push, pop, splice or modify this array. If you want to change it, set a new one instead.
+     * Defaults to [{@link LAYERID_WORLD}, {@link LAYERID_DEPTH}, {@link LAYERID_SKYBOX},
+     * {@link LAYERID_UI}, {@link LAYERID_IMMEDIATE}].
      *
      * @type {number[]}
      */
@@ -987,6 +997,7 @@ class CameraComponent extends Component {
         }
 
         this.camera._enableRenderPassColorGrab(this.system.app.graphicsDevice, this.renderSceneColorMap);
+        this.system.app.scene.layers.markDirty();
     }
 
     /**
@@ -1005,6 +1016,7 @@ class CameraComponent extends Component {
         }
 
         this.camera._enableRenderPassDepthGrab(this.system.app.graphicsDevice, this.system.app.renderer, this.renderSceneDepthMap);
+        this.system.app.scene.layers.markDirty();
     }
 
     dirtyLayerCompositionCameras() {
@@ -1248,7 +1260,7 @@ class CameraComponent extends Component {
      * @example
      * // On an entity with a camera component
      * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
-     *     callback: function (err) {
+     *     callback: (err) => {
      *         if (err) {
      *             // failed to start XR session
      *         } else {
@@ -1268,7 +1280,7 @@ class CameraComponent extends Component {
      * ended. The callback has one argument Error - it is null if successfully ended XR session.
      * @example
      * // On an entity with a camera component
-     * this.entity.camera.endXr(function (err) {
+     * this.entity.camera.endXr((err) => {
      *     // not anymore in XR
      * });
      */

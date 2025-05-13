@@ -8,6 +8,8 @@ import { math } from '../../core/math/math.js';
 
 /**
  * A container for storing the used areas of a pair of staging and gpu buffers.
+ *
+ * @ignore
  */
 class UsedBuffer {
     /** @type {DynamicBuffer} */
@@ -34,6 +36,8 @@ class UsedBuffer {
 
 /**
  * A container for storing the return values of an allocation function.
+ *
+ * @ignore
  */
 class DynamicBufferAllocation {
     /**
@@ -66,6 +70,8 @@ class DynamicBufferAllocation {
  * command buffers that require these buffers, the system automatically uploads the data to the GPU
  * buffers. This approach ensures efficient memory management and smooth data transfer between the
  * CPU and GPU.
+ *
+ * @ignore
  */
 class DynamicBuffers {
     /**

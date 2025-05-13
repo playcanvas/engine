@@ -122,8 +122,8 @@ const updateShader = (array, float) => {
 
     materialDepth.shaderDesc = {
         uniqueName: key,
-        vertexCode: vertShader,
-        fragmentCode: fragShader,
+        vertexGLSL: vertShader,
+        fragmentGLSL: fragShader,
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0

@@ -26,6 +26,23 @@ export const jsdomSetup = () => {
     global.MouseEvent = jsdom.window.MouseEvent;
     global.XMLHttpRequest = jsdom.window.XMLHttpRequest;
 
+    // Worker shim
+    global.Worker = class {
+        constructor(stringUrl) {
+            this.url = stringUrl;
+        }
+
+        postMessage(msg) {}
+
+        terminate() {}
+
+        onmessage = null;
+
+        addEventListener() {}
+
+        removeEventListener() {}
+    };
+
     // Copy the PlayCanvas API to global scope (only required for 'classic' scripts)
     jsdom.window.pc = pc;
 };
