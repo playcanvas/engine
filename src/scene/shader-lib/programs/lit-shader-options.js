@@ -1,7 +1,7 @@
 import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE, REFLECTIONSRC_NONE } from '../../constants.js';
 
 /**
- * import { ShaderChunks } from '../shader-chunks.js';
+ * @import { ShaderChunks } from '../shader-chunks.js';
  */
 
 /**

@@ -18,7 +18,7 @@ class ShaderChunkMap extends Map {
      *
      * @param {string} name - The name of the shader chunk.
      * @param {string} code - The shader source code.
-     * @returns {ShaderChunkMap} The ShaderChunkMap instance.
+     * @returns {this} The ShaderChunkMap instance.
      */
     set(name, code) {
         if (!this.has(name) || this.get(name) !== code) {
@@ -85,7 +85,7 @@ class ShaderChunkMap extends Map {
      * Copy the shader chunk map.
      *
      * @param {ShaderChunkMap} source - The instance to copy.
-     * @returns {ShaderChunkMap} The destination instance.
+     * @returns {this} The destination instance.
      * @ignore
      */
     copy(source) {
