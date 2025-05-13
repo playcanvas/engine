@@ -44,3 +44,10 @@ jobs:
         run: npm publish --tag ${{ env.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to code.playcanvas.com
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{ "engineVersion": "${{ env.tag }}" }' \
+            https://dev.playcanvas.com/api/engine/upload?webhook_secret=${{ secrets.PLAYCANVAS_WEBHOOK }} \
