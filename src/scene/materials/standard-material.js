@@ -142,6 +142,8 @@ const _tempColor = new Color();
  *
  * @property {number} anisotropyRotation Defines the rotation of anisotropy.
  * @property {Texture|null} anisotropyMap The anisotropy map of the material (default is null).
+ * @property {string} anisotropyMapChannel Color channel of the anisotropy strength map to use. Can
+ * be "r", "g", "b" or "a".
  * @property {number} clearCoat Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer
  * is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {Texture|null} clearCoatMap Monochrome clearcoat intensity map (default is null). If

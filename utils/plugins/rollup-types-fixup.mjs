@@ -12,6 +12,7 @@ const STANDARD_MAT_PROPS = [
     ['anisotropy', 'number'],
     ['anisotropyRotation', 'number'],
     ['anisotropyMap', 'Texture|null'],
+    ['anisotropyMapChannel', 'string'],
     ['aoIntensity', 'number'],
     ['aoMap', 'Texture|null'],
     ['aoMapChannel', 'string'],
