@@ -175,6 +175,13 @@ export default /* glsl */`
                 uniform sampler2D texture_clearCoatNormalMap;
             #endif
         #endif
+        
+        // anisotropy
+        #ifdef LIT_GGX_SPECULAR
+            #ifdef STD_ANISOTROPY_TEXTURE_ALLOCATE
+                uniform sampler2D texture_anisotropyMap;
+            #endif
+        #endif
 
         // lightmap
         #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
