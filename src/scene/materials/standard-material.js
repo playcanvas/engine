@@ -144,6 +144,8 @@ const _tempColor = new Color();
  * @property {Texture|null} anisotropyMap The anisotropy map of the material (default is null).
  * @property {string} anisotropyMapChannel Color channel of the anisotropy strength map to use. Can
  * be "r", "g", "b" or "a".
+ * @property {Texture|null} anisotropyRotationMap The anisotropy rotation map of the material (default is null).
+ * @property {string} anisotropyRotationMapChannel Color channel of the anisotropy rotation map to use. (default is 'rg')
  * @property {number} clearCoat Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer
  * is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {Texture|null} clearCoatMap Monochrome clearcoat intensity map (default is null). If
@@ -1222,6 +1224,7 @@ function _defineMaterialProps() {
     _defineTex2D('iridescence', 'g');
     _defineTex2D('iridescenceThickness', 'g');
     _defineTex2D('anisotropy', 'b');
+    _defineTex2D('anisotropyRotation', 'rg');
 
     _defineFlag('diffuseDetailMode', DETAILMODE_MUL);
     _defineFlag('aoDetailMode', DETAILMODE_MUL);

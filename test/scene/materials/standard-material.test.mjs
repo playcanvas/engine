@@ -17,8 +17,11 @@ describe('StandardMaterial', function () {
         expect(material.ambient.g).to.equal(1);
         expect(material.ambient.b).to.equal(1);
         expect(material.anisotropy).to.equal(0);
+        expect(material.anisotropyMap).to.be.null;
         expect(material.anisotropyMapChannel).to.equal('b');
-
+        expect(material.anisotropyRotation).to.equal(0);
+        expect(material.anisotropyRotationMap).to.be.null;
+        expect(material.anisotropyRotationMapChannel).to.equal('rg');
         expect(material.aoDetailMap).to.be.null;
         expect(material.aoDetailMapChannel).to.equal('g');
         expect(material.aoDetailMapOffset).to.be.an.instanceof(Vec2);
