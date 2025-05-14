@@ -18,7 +18,7 @@ Run this script on either '$MAIN_BRANCH' or '${RELEASE_PREFIX}X.X' branch.
         On '$MAIN_BRANCH' branch, it will create a new release branch '${RELEASE_PREFIX}X.X' and bump the minor version on '$MAIN_BRANCH'.
 
     For patch or prereleases:
-        On '${RELEASE_PREFIX}X.X' branch, it ask for a type (patch or prerelease) and create a tag.
+        On '${RELEASE_PREFIX}X.X' branch, it asks for a type (patch or prerelease) and creates a tag.
     """
     exit 0
 fi
