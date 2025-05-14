@@ -133,19 +133,26 @@ const _tempColor = new Color();
  * {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
  * @property {number} anisotropy Defines amount of anisotropy. Requires
  * {@link StandardMaterial#enableGGXSpecular} is set to true.
- *
  * - When anisotropy == 0, specular is isotropic.
- * - When anisotropy < 0, anisotropy direction aligns with the tangent, and specular anisotropy
- * increases as the anisotropy value decreases to minimum of -1.
- * - When anisotropy > 0, anisotropy direction aligns with the bi-normal, and specular anisotropy
- * increases as anisotropy value increases to maximum of 1.
- *
+ * - Specular anisotropy increases as anisotropy value increases to maximum of 1.
  * @property {number} anisotropyRotation Defines the rotation of anisotropy.
  * @property {Texture|null} anisotropyMap The anisotropy map of the material (default is null).
  * @property {string} anisotropyMapChannel Color channel of the anisotropy strength map to use. Can
  * be "r", "g", "b" or "a".
+ * @property {number} anisotropyMapUv Anisotropy strength map UV channel.
+ * @property {Vec2} anisotropyMapTiling Controls the 2D tiling of the anisotropy strength map.
+ * @property {Vec2} anisotropyMapOffset Controls the 2D offset of the anisotropy strength map. Each
+ * component is between 0 and 1.
+ * @property {number} anisotropyMapRotation Controls the 2D rotation (in degrees) of the anisotropy
+ * strength map.
  * @property {Texture|null} anisotropyRotationMap The anisotropy rotation map of the material (default is null).
  * @property {string} anisotropyRotationMapChannel Color channel of the anisotropy rotation map to use. (default is 'rg')
+ * @property {number} anisotropyRotationMapUv Anisotropy rotation map UV channel.
+ * @property {Vec2} anisotropyRotationMapTiling Controls the 2D tiling of the anisotropy rotation map.
+ * @property {Vec2} anisotropyRotationMapOffset Controls the 2D offset of the anisotropy rotation map. Each
+ * component is between 0 and 1.
+ * @property {number} anisotropyRotationMapRotation Controls the 2D rotation (in degrees) of the anisotropy
+ * rotation map.
  * @property {number} clearCoat Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer
  * is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {Texture|null} clearCoatMap Monochrome clearcoat intensity map (default is null). If
