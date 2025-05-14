@@ -238,6 +238,7 @@ export { Sky } from './scene/skybox/sky.js';
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
 export { GSplat } from './scene/gsplat/gsplat.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
