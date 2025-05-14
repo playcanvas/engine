@@ -14,11 +14,11 @@ if [[ "$HELP" == "--help" || "$HELP" == "-h" ]]; then
     echo """
 Run this script on either '$MAIN_BRANCH' or '${RELEASE_PREFIX}X.X' branch.
 
-    For minor releases:
+    For creating a new release:
         On '$MAIN_BRANCH' branch, it will create a new release branch '${RELEASE_PREFIX}X.X' and bump the minor version on '$MAIN_BRANCH'.
 
-    For patch or prereleases:
-        On '${RELEASE_PREFIX}X.X' branch, it asks for a type (patch or prerelease) and creates a tag.
+    For finalizing a minor or patch releases or prereleases:
+        On '${RELEASE_PREFIX}X.X' branch, it asks for a type (minor/patch/prerelease) and creates a tag.
     """
     exit 0
 fi
@@ -71,10 +71,18 @@ fi
 if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
     # Determine which release type
     TYPE=$1
-    if [[ ! " patch prerelease " =~ " $TYPE " ]]; then
-        echo "Usage: $0 <patch|prerelease>"
+    if [[ ! " minor patch prerelease " =~ " $TYPE " ]]; then
+        echo "Usage: $0 <minor|patch|prerelease>"
         echo "Run '--help' for more information."
         exit 1
+    fi
+
+    # Check if minor release then check if patch version is 0 and is preview
+    if [[ "$TYPE" == "minor" ]]; then
+        if [[ "$PATCH" != "0" || "$VERSION" != *"$PRE_ID_PREVIEW"* ]]; then
+            echo "Minor release is only allowed if the current version is 'X.X.0-$PRE_ID_PREVIEW.X'."
+            exit 1
+        fi
     fi
 
     echo "Finalize release [BRANCH=$BRANCH, VERSION=$VERSION, TYPE=$TYPE]"
