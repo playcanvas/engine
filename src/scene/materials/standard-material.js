@@ -140,6 +140,8 @@ const _tempColor = new Color();
  * - When anisotropy > 0, anisotropy direction aligns with the bi-normal, and specular anisotropy
  * increases as anisotropy value increases to maximum of 1.
  *
+ * @property {number} anisotropyRotation Defines the rotation of anisotropy.
+ * @property {Texture|null} anisotropyMap The anisotropy map of the material (default is null).
  * @property {number} clearCoat Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer
  * is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {Texture|null} clearCoatMap Monochrome clearcoat intensity map (default is null). If
@@ -715,6 +717,7 @@ class StandardMaterial extends Material {
 
         if (this.enableGGXSpecular) {
             this._setParameter('material_anisotropy', this.anisotropy);
+            this._setParameter('material_anisotropyRotation', [Math.cos(this.anisotropyRotation), Math.sin(this.anisotropyRotation)]);
         }
 
         if (this.clearCoat > 0) {
@@ -1124,6 +1127,7 @@ function _defineMaterialProps() {
     _defineFloat('attenuationDistance', 0);
     _defineFloat('metalness', 1);
     _defineFloat('anisotropy', 0);
+    _defineFloat('anisotropyRotation', 0);
     _defineFloat('clearCoat', 0);
     _defineFloat('clearCoatGloss', 1);
     _defineFloat('clearCoatBumpiness', 1);
@@ -1215,6 +1219,7 @@ function _defineMaterialProps() {
     _defineTex2D('sheenGloss', 'g');
     _defineTex2D('iridescence', 'g');
     _defineTex2D('iridescenceThickness', 'g');
+    _defineTex2D('anisotropy', 'b');
 
     _defineFlag('diffuseDetailMode', DETAILMODE_MUL);
     _defineFlag('aoDetailMode', DETAILMODE_MUL);
