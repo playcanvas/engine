@@ -48,10 +48,8 @@ jobs:
 
       - name: Publish to code.playcanvas.com
         run: |
-          if ! curl -sS -X POST \
-            -H "Content-Type: application/json" \
-            -d '{ "engineVersion": "${{ env.VERSION }}" }' \
-            https://dev.playcanvas.com/api/engine/upload?webhook_secret=${{ secrets.PLAYCANVAS_WEBHOOK }} then
+          if ! curl -sS -X POST -H "Content-Type: application/json" \
+            -d '{ "engineVersion": "${{ env.VERSION }}" }' ${{ secrets.PUBLISH_ENDPOINT }} then
             echo "Failed to publish to code.playcanvas.com"
             exit 1
           fi
