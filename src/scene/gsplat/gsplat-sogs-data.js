@@ -38,6 +38,14 @@ const reorderFS = /* glsl */`
     }
 `;
 
+const readImageDataAsync = (texture) => {
+    return texture.read(0, 0, texture.width, texture.height, {
+        mipLevel: 0,
+        face: 0,
+        immediate: true
+    });
+};
+
 const resolve = (scope, values) => {
     for (const key in values) {
         scope.resolve(key).setValue(values[key]);
@@ -129,8 +137,6 @@ class GSplatSogsData {
 
     numSplats;
 
-    shBands;
-
     means_l;
 
     means_u;
@@ -192,7 +198,17 @@ class GSplatSogsData {
         return true;
     }
 
-    decompress() {
+    get shBands() {
+        // sh palette has 64 sh entries per row. use width to calculate number of bands
+        const widths = {
+            192: 1,     // 64 * 3
+            512: 2,     // 64 * 8
+            960: 3      // 64 * 15
+        };
+        return widths[this.sh_centroids?.resource?.width] ?? 0;
+    }
+
+    async decompress() {
         const members = [
             'x', 'y', 'z',
             'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity',
@@ -201,6 +217,16 @@ class GSplatSogsData {
         ];
 
         const { shBands } = this;
+
+        // copy back gpu texture data so cpu iterator has access to it
+        const { means_l, means_u, quats, scales, sh0, sh_labels, sh_centroids } = this;
+        means_l._levels[0] = await readImageDataAsync(means_l);
+        means_u._levels[0] = await readImageDataAsync(means_u);
+        quats._levels[0] = await readImageDataAsync(quats);
+        scales._levels[0] = await readImageDataAsync(scales);
+        sh0._levels[0] = await readImageDataAsync(sh0);
+        sh_labels._levels[0] = await readImageDataAsync(sh_labels);
+        sh_centroids._levels[0] = await readImageDataAsync(sh_centroids);
 
         // allocate spherical harmonics data
         if (shBands > 0) {
@@ -362,23 +388,25 @@ class GSplatSogsData {
         return order;
     }
 
-    reorderData() {
-        if (!this.orderTexture) {
-            const { device, height, width } = this.means_l;
+    async reorderData() {
+        const { device, height, width } = this.means_l;
 
-            this.orderTexture = new Texture(device, {
-                name: 'orderTexture',
-                width,
-                height,
-                format: PIXELFORMAT_R32U,
-                mipmaps: false,
-                levels: [this.calcMortonOrder()]
-            });
+        // copy back means_l and means_u data from gpu so cpu reorder has access to it
+        this.means_l._levels[0] = await readImageDataAsync(this.means_l);
+        this.means_u._levels[0] = await readImageDataAsync(this.means_u);
 
-            device.on('devicerestored', () => {
-                this.reorderGpuMemory();
-            });
-        }
+        this.orderTexture = new Texture(device, {
+            name: 'orderTexture',
+            width,
+            height,
+            format: PIXELFORMAT_R32U,
+            mipmaps: false,
+            levels: [this.calcMortonOrder()]
+        });
+
+        device.on('devicerestored', () => {
+            this.reorderGpuMemory();
+        });
 
         this.reorderGpuMemory();
     }

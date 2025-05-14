@@ -8,14 +8,6 @@ import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
  */
 
-const readImageDataAsync = (texture) => {
-    return texture.read(0, 0, texture.width, texture.height, {
-        mipLevel: 0,
-        face: 0,
-        immediate: true
-    });
-};
-
 class SogsParser {
     /** @type {AppBase} */
     app;
@@ -66,18 +58,10 @@ class SogsParser {
         // wait for all textures to complete loading
         await Promise.allSettled(promises);
 
-        // sh palette has 64 sh entries per row. use width to calculate number of bands
-        const widths = {
-            192: 1,     // 64 * 3
-            512: 2,     // 64 * 8
-            960: 3      // 64 * 15
-        };
-
         // construct the gsplat resource
         const data = new GSplatSogsData();
         data.meta = meta;
         data.numSplats = meta.means.shape[0];
-        data.shBands = widths[textures.shN?.[0]?.resource?.width] ?? 0;
         data.means_l = textures.means[0].resource;
         data.means_u = textures.means[1].resource;
         data.quats = textures.quats[0].resource;
@@ -87,27 +71,10 @@ class SogsParser {
         data.sh_labels = textures.shN?.[1]?.resource;
 
         if (asset.data?.reorder ?? true) {
-            // copy back means_l and means_u data from gpu so cpu reorder has access to it
-            data.means_l._levels[0] = await readImageDataAsync(data.means_l);
-            data.means_u._levels[0] = await readImageDataAsync(data.means_u);
-            data.reorderData();
+            await data.reorderData();
         }
 
-        let resource;
-        if (asset.data?.decompress) {
-            // copy back gpu texture data so cpu iterator has access to it
-            const { means_l, means_u, quats, scales, sh0, sh_labels, sh_centroids } = data;
-            means_l._levels[0] = await readImageDataAsync(means_l);
-            means_u._levels[0] = await readImageDataAsync(means_u);
-            quats._levels[0] = await readImageDataAsync(quats);
-            scales._levels[0] = await readImageDataAsync(scales);
-            sh0._levels[0] = await readImageDataAsync(sh0);
-            sh_labels._levels[0] = await readImageDataAsync(sh_labels);
-            sh_centroids._levels[0] = await readImageDataAsync(sh_centroids);
-            resource = new GSplatResource(this.app, data.decompress(), []);
-        } else {
-            resource = new GSplatResource(this.app, data, []);
-        }
+        const resource = new GSplatResource(this.app, (asset.data?.decompress) ? (await data.decompress()) : data, []);
 
         callback(null, resource);
     }
