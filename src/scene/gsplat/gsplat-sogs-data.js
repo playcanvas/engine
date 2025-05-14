@@ -177,16 +177,39 @@ class GSplatSogsData {
     }
 
     getCenters(result) {
-        const p = new Vec3();
-        const iter = this.createIter(p);
+        const { meta, means_l, means_u, numSplats } = this;
+        const { means } = meta;
+        const means_u_data = new Uint32Array(means_u._levels[0].buffer);
+        const means_l_data = new Uint32Array(means_l._levels[0].buffer);
         const order = this.orderTexture?._levels[0];
 
-        for (let i = 0; i < this.numSplats; i++) {
-            iter.read(order ? order[i] : i);
+        const mx = means.mins[0] / 65535;
+        const my = means.mins[1] / 65535;
+        const mz = means.mins[2] / 65535;
+        const Mx = means.maxs[0] / 65535;
+        const My = means.maxs[1] / 65535;
+        const Mz = means.maxs[2] / 65535;
 
-            result[i * 3 + 0] = p.x;
-            result[i * 3 + 1] = p.y;
-            result[i * 3 + 2] = p.z;
+        for (let i = 0; i < numSplats; i++) {
+            const idx = order ? order[i] : i;
+
+            const means_u = means_u_data[idx];
+            const means_l = means_l_data[idx];
+
+            const wx = ((means_u <<  8) & 0xff00) |  (means_l         & 0xff);
+            const wy =  (means_u        & 0xff00) | ((means_l >>> 8)  & 0xff);
+            const wz = ((means_u >>> 8) & 0xff00) | ((means_l >>> 16) & 0xff);
+
+            const nx = mx * (65535 - wx) + Mx * wx;
+            const ny = my * (65535 - wy) + My * wy;
+            const nz = mz * (65535 - wz) + Mz * wz;
+
+            const ax = nx < 0 ? -nx : nx;
+            const ay = ny < 0 ? -ny : ny;
+            const az = nz < 0 ? -nz : nz;
+            result[i * 3]     = (nx < 0 ? -1 : 1) * (Math.exp(ax) - 1);
+            result[i * 3 + 1] = (ny < 0 ? -1 : 1) * (Math.exp(ay) - 1);
+            result[i * 3 + 2] = (nz < 0 ? -1 : 1) * (Math.exp(az) - 1);
         }
     }
 
