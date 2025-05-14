@@ -54,7 +54,7 @@ if [[ "$BRANCH" == "$MAIN_BRANCH" ]]; then
     # Create release branch from main branch
     git branch $RELEASE_BRANCH $BRANCH
 
-    # Bump minor prelease version on main 
+    # Bump minor prerelease version on main 
     npm version preminor --preid=$PRE_ID_DEV --no-git-tag-version
     git commit -m "$RELEASE_MESSAGE" -- package.json package-lock.json
 
