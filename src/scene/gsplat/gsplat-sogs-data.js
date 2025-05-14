@@ -207,7 +207,7 @@ class GSplatSogsData {
             const ax = nx < 0 ? -nx : nx;
             const ay = ny < 0 ? -ny : ny;
             const az = nz < 0 ? -nz : nz;
-            result[i * 3    ] = (nx < 0 ? -1 : 1) * (Math.exp(ax) - 1);
+            result[i * 3]     = (nx < 0 ? -1 : 1) * (Math.exp(ax) - 1);
             result[i * 3 + 1] = (ny < 0 ? -1 : 1) * (Math.exp(ay) - 1);
             result[i * 3 + 2] = (nz < 0 ? -1 : 1) * (Math.exp(az) - 1);
         }
