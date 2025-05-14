@@ -4,8 +4,8 @@ float calcLightSpecular(float gloss, vec3 worldNormal, vec3 viewDir, vec3 h, vec
     float PI = 3.141592653589793;
     float roughness = max((1.0 - gloss) * (1.0 - gloss), 0.001);
     float alphaRoughness = roughness * roughness;
-    float anisotropy = material_anisotropy;
-    vec2 direction = material_anisotropyRotation;
+    float anisotropy = dAnisotropy;
+    vec2 direction = dAnisotropyRotation;
 
     float at = mix(alphaRoughness, 1.0, anisotropy * anisotropy);
     float ab = alphaRoughness;

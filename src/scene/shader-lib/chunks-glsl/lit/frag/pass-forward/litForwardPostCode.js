@@ -62,11 +62,6 @@ export default /* glsl */`
     #include "lightSheenPS"
 #endif
 
-#ifdef LIT_GGX_SPECULAR
-    uniform float material_anisotropy;
-    uniform vec2 material_anisotropyRotation;
-#endif
-
 uniform vec3 material_ambient;
 
 #ifdef LIT_SPECULAR

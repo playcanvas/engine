@@ -93,6 +93,11 @@ export default /* glsl */`
             vec3 ccNormalW;
         #endif
 
+        #ifdef LIT_GGX_SPECULAR
+            float dAnisotropy;
+            vec2 dAnisotropyRotation;
+        #endif
+
         // specularity & glossiness
         #ifdef LIT_SPECULAR_OR_REFLECTION
 
