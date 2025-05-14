@@ -1108,6 +1108,28 @@ const extensionIridescence = (data, material, textures) => {
     }
 };
 
+const extensionAnisotropy = (data, material, textures) => {
+    if (data.hasOwnProperty('anisotropyStrength')) {
+        material.clearCoat = data.anisotropyStrength;
+    } else {
+        material.clearCoat = 0;
+    }
+    if (data.hasOwnProperty('anisotropyTexture')) {
+        const anisotropyTexture = data.anisotropyTexture;
+        material.anisotropyMap = textures[anisotropyTexture.index];
+        material.anisotropyRotationMap = textures[anisotropyTexture.index];
+        material.anisotropyMapChannel = 'b';
+        material.anisotropyRotationMapChannel = 'rg';
+
+        extractTextureTransform(anisotropyTexture, material, ['anisotropy', 'anisotropyRotation']);
+    }
+    if (data.hasOwnProperty('anisotropyRotation')) {
+        material.anisotropyRotation = data.anisotropyRotation;
+    } else {
+        material.anisotropyRotation = 0;
+    }
+};
+
 const createMaterial = (gltfMaterial, textures) => {
     const material = new StandardMaterial();
 
@@ -1243,7 +1265,8 @@ const createMaterial = (gltfMaterial, textures) => {
         'KHR_materials_specular': extensionSpecular,
         'KHR_materials_transmission': extensionTransmission,
         'KHR_materials_unlit': extensionUnlit,
-        'KHR_materials_volume': extensionVolume
+        'KHR_materials_volume': extensionVolume,
+        'KHR_materials_anisotropy': extensionAnisotropy
     };
 
     // Handle extensions
