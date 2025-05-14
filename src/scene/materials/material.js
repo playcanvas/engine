@@ -181,6 +181,9 @@ class Material {
      */
     _shaderChunks = null;
 
+    // this is deprecated, keeping for backwards compatibility
+    _oldChunks = {};
+
     _dirtyShader = true;
 
     /** @protected */
@@ -245,24 +248,15 @@ class Material {
         return this._shaderChunks;
     }
 
-    /**
-     * Sets the object containing custom shader chunks that will replace default ones.
-     *
-     * @type {Object<string, string>}
-     */
     set chunks(value) {
-        Debug.removed('Material.chunks has been removed, please use Material.shaderChunks instead. For example: material.shaderChunks.glsl.set("chunkName", "chunkCode")');
+        Debug.deprecated('Material.chunks has been removed, please use Material.shaderChunks instead. For example: material.shaderChunks.glsl.set("chunkName", "chunkCode")');
+        this._oldChunks = value;
     }
 
-    /**
-     * Gets the object containing custom shader chunks.
-     *
-     * @type {Object<string, string>}
-     */
     get chunks() {
-        Debug.removed('Material.chunks has been removed, please use Material.shaderChunks instead. For example: material.shaderChunks.glsl.set("chunkName", "chunkCode")');
-        return {};
-
+        Debug.deprecated('Material.chunks has been removed, please use Material.shaderChunks instead. For example: material.shaderChunks.glsl.set("chunkName", "chunkCode")');
+        Object.assign(this._oldChunks, Object.fromEntries(this.shaderChunks.glsl));
+        return this._oldChunks;
     }
 
     /**
@@ -661,6 +655,14 @@ class Material {
      * Applies any changes made to the material's properties.
      */
     update() {
+
+        // handle deprecated chunks for backwards compatibility
+        if (Object.keys(this._oldChunks).length > 0) {
+            for (const [key, value] of Object.entries(this._oldChunks)) {
+                this.shaderChunks.glsl.set(key, value);
+                delete this._oldChunks[key];
+            }
+        }
 
         // if the defines or chunks were modified, we need to rebuild the shaders
         if (this._definesDirty || this._shaderChunks?.isDirty()) {
