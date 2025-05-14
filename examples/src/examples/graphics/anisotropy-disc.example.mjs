@@ -63,7 +63,7 @@ assetListLoader.load(() => {
     app.scene.skyboxIntensity = 1.5;
 
     const leftEntity = assets.model.resource.instantiateRenderEntity();
-    leftEntity.setLocalEulerAngles(40, 90, 0);
+    leftEntity.setLocalEulerAngles(30, 90, 0);
     leftEntity.setPosition(0, 0, 1);
     leftEntity.setLocalScale(0.8, 0.8, 0.8);
     app.root.addChild(leftEntity);
