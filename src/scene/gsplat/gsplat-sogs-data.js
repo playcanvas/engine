@@ -196,17 +196,20 @@ class GSplatSogsData {
             const means_u = means_u_data[idx];
             const means_l = means_l_data[idx];
 
-            const wx = ((means_u <<  8) & 0xff00) + ((means_l >>> 0) & 0xff);
-            const wy = ((means_u <<  0) & 0xff00) + ((means_l >>> 8) & 0xff);
-            const wz = ((means_u >>> 8) & 0xff00) + ((means_l >>> 16) & 0xff);
+            const wx = ((means_u <<  8) & 0xff00) |  (means_l         & 0xff);
+            const wy =  (means_u        & 0xff00) | ((means_l >>> 8)  & 0xff);
+            const wz = ((means_u >>> 8) & 0xff00) | ((means_l >>> 16) & 0xff);
 
             const nx = mx * (65535 - wx) + Mx * wx;
             const ny = my * (65535 - wy) + My * wy;
             const nz = mz * (65535 - wz) + Mz * wz;
 
-            result[i * 3 + 0] = Math.sign(nx) * (Math.exp(Math.abs(nx)) - 1);
-            result[i * 3 + 1] = Math.sign(ny) * (Math.exp(Math.abs(ny)) - 1);
-            result[i * 3 + 2] = Math.sign(nz) * (Math.exp(Math.abs(nz)) - 1);
+            const ax = nx < 0 ? -nx : nx;
+            const ay = ny < 0 ? -ny : ny;
+            const az = nz < 0 ? -nz : nz;
+            result[i * 3    ] = (nx < 0 ? -1 : 1) * (Math.exp(ax) - 1);
+            result[i * 3 + 1] = (ny < 0 ? -1 : 1) * (Math.exp(ay) - 1);
+            result[i * 3 + 2] = (nz < 0 ? -1 : 1) * (Math.exp(az) - 1);
         }
     }
 
