@@ -193,7 +193,7 @@ class AssetRegistry extends EventHandler {
      *
      * @private
      */
-    _tags = new TagsCache('_id');
+    _tags = new TagsCache('id');
 
     /**
      * A URL prefix that will be added to all asset loading requests.

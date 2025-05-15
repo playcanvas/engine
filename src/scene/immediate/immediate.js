@@ -5,7 +5,7 @@ import { GraphNode } from '../graph-node.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
 import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { ImmediateBatches } from './immediate-batches.js';
 
@@ -174,7 +174,7 @@ class Immediate {
         `, /* wgsl */`
 
             varying uv0: vec2f;
-            var colorMap: texture_2d<f32>;
+            var colorMap: texture_2d<uff>;
             @fragment fn fragmentMain(input : FragmentInput) -> FragmentOutput {
                 var output: FragmentOutput;
                 let uv : vec2<i32> = vec2<i32>(input.uv0 * vec2f(textureDimensions(colorMap, 0)));

@@ -40,6 +40,8 @@ const tmpV1 = new Vec3();
 const ZOOM_SCALE_MULT = 10;
 
 class CameraControls extends Script {
+    static scriptName = 'cameraControls';
+
     /**
      * @type {string}
      * @static

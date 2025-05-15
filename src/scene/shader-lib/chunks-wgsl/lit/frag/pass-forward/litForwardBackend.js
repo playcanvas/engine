@@ -6,7 +6,7 @@ fn evaluateBackend() -> FragmentOutput {
 
     // apply SSAO during lighting
     #ifdef LIT_SSAO
-        litArgs_ao = litArgs_ao * textureSampleLevel(ssaoTexture, ssaoTextureSampler, pcPosition.xy * ssaoTextureSizeInv, 0.0).r;
+        litArgs_ao = litArgs_ao * textureSampleLevel(ssaoTexture, ssaoTextureSampler, pcPosition.xy * uniform.ssaoTextureSizeInv, 0.0).r;
     #endif
 
     // transform tangent space normals to world space
@@ -222,8 +222,19 @@ fn evaluateBackend() -> FragmentOutput {
 
     #endif
 
-    #include "endPS"
-    #include "outputAlphaPS"
+    // end chunks - when baking lightmap
+    #ifdef LIT_LIGHTMAP_BAKING
+        #ifdef LIT_LIGHTMAP_BAKING_COLOR
+            #include "bakeLmEndPS"
+        #endif
+        #ifdef LIT_LIGHTMAP_BAKING_DIR
+            #include "bakeDirLmEndPS"
+        #endif
+    #else
+        // end chunks - in all other cases
+        #include "endPS"
+        #include "outputAlphaPS"
+    #endif
 
     #ifdef LIT_MSDF
         output.color = applyMsdf(output.color);

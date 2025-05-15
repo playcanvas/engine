@@ -30,6 +30,8 @@ import {
  * app.root.addChild(shadowCatcher);
  */
 class ShadowCatcher extends Script {
+    static scriptName = 'shadowCatcher';
+
     /**
      * The scale of the shadow catcher.
      * @type {Vec3}

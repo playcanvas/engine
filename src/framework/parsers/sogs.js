@@ -27,7 +27,7 @@ class SogsParser {
     async loadTextures(url, callback, asset, meta) {
         const { assets } = this.app;
 
-        const subs = ['means', 'opacities', 'quats', 'scales', 'sh0', 'shN'];
+        const subs = ['means', 'quats', 'scales', 'sh0', 'shN'];
 
         const textures = {};
         const promises = [];
@@ -58,29 +58,23 @@ class SogsParser {
         // wait for all textures to complete loading
         await Promise.allSettled(promises);
 
-        // sh palette has 64 sh entries per row. use width to calculate number of bands
-        const widths = {
-            192: 1,     // 64 * 3
-            512: 2,     // 64 * 8
-            960: 3      // 64 * 15
-        };
-
         // construct the gsplat resource
         const data = new GSplatSogsData();
         data.meta = meta;
         data.numSplats = meta.means.shape[0];
-        data.shBands = widths[textures.shN?.[0]?.resource?.width] ?? 0;
         data.means_l = textures.means[0].resource;
         data.means_u = textures.means[1].resource;
-        data.opacities = textures.opacities[0].resource;
         data.quats = textures.quats[0].resource;
         data.scales = textures.scales[0].resource;
         data.sh0 = textures.sh0[0].resource;
         data.sh_centroids = textures.shN?.[0]?.resource;
-        data.sh_labels_l = textures.shN?.[1]?.resource;
-        data.sh_labels_u = textures.shN?.[2]?.resource;
+        data.sh_labels = textures.shN?.[1]?.resource;
 
-        const resource = new GSplatResource(this.app, (asset.data?.decompress) ? data.decompress() : data, []);
+        if (asset.data?.reorder ?? true) {
+            await data.reorderData();
+        }
+
+        const resource = new GSplatResource(this.app, (asset.data?.decompress) ? (await data.decompress()) : data, []);
 
         callback(null, resource);
     }

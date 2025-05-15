@@ -1,4 +1,5 @@
 export default /* wgsl */`
+
 var uSceneDepthMap: texture_2d<f32>;
 var uSceneDepthMapSampler: sampler;
 
@@ -61,7 +62,7 @@ fn getLinearScreenDepth(uv: vec2f) -> f32 {
 
 #ifndef VERTEXSHADER
     // Retrieves rendered linear camera depth under the current pixel
-    fn getLinearScreenDepthFragCoord() -> f32 {
+    fn getLinearScreenDepthFrag() -> f32 {
         let uv: vec2f = pcPosition.xy * uniform.uScreenSize.zw;
         return getLinearScreenDepth(uv);
     }

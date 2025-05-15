@@ -1,5 +1,10 @@
 // main shader of the lit vertex shader
 export default /* wgsl */`
+
+#include "varyingsVS"
+
+#include  "litUserDeclarationVS"
+
 #ifdef VERTEX_COLOR
     attribute vertex_color: vec4f;
 #endif
@@ -59,8 +64,13 @@ var<private> dModelMatrix: mat4x4f;
     #include "msdfVS"
 #endif
 
+#include  "litUserCodeVS"
+
 @vertex
 fn vertexMain(input : VertexInput) -> VertexOutput {
+
+    #include "litUserMainStartVS"
+
     var output : VertexOutput;
     output.position = getPosition();
     output.vPositionW = getWorldPosition();
@@ -99,7 +109,7 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
 
     #ifdef LINEAR_DEPTH
         // linear depth from the worldPosition, see getLinearDepth
-        output.vLinearDepth = -(matrix_view * vec4f(vPositionW, 1.0)).z;
+        output.vLinearDepth = -(uniform.matrix_view * vec4f(output.vPositionW, 1.0)).z;
     #endif
 
     #ifdef MSDF
@@ -115,6 +125,8 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
         output.vMask = dMaskGlobal;
         output.vTiledUv = dTiledUvGlobal;
     #endif
+
+    #include "litUserMainEndVS"
 
     return output;
 }

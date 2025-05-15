@@ -122,6 +122,8 @@ const fragmentCode = /* glsl */ `
 `;
 
 class Grid extends Script {
+    static scriptName = 'grid';
+
     /**
      * @type {number}
      */

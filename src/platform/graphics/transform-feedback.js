@@ -3,7 +3,7 @@ import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { Shader } from './shader.js';
-import { ShaderUtils } from './shader-utils.js';
+import { ShaderDefinitionUtils } from './shader-definition-utils.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -120,10 +120,11 @@ class TransformFeedback {
      * @returns {Shader} A shader to use in the process() function.
      */
     static createShader(graphicsDevice, vertexCode, name) {
-        return new Shader(graphicsDevice, ShaderUtils.createDefinition(graphicsDevice, {
+        return new Shader(graphicsDevice, ShaderDefinitionUtils.createDefinition(graphicsDevice, {
             name,
             vertexCode,
-            useTransformFeedback: true
+            useTransformFeedback: true,
+            fragmentCode: 'void main(void) {gl_FragColor = vec4(0.0);}'
         }));
     }
 

@@ -42,11 +42,11 @@ class GSplatSogs {
         result.setDefine('GSPLAT_SOGS_DATA', true);
         result.setDefine('SH_BANDS', this.gsplatData.shBands);
 
-        ['means_l', 'means_u', 'quats', 'scales', 'opacities', 'sh0', 'sh_centroids', 'sh_labels_u', 'sh_labels_l'].forEach((name) => {
+        ['means_l', 'means_u', 'quats', 'scales', 'sh0', 'sh_centroids', 'sh_labels'].forEach((name) => {
             result.setParameter(name, gsplatData[name]);
         });
 
-        ['means', 'quats', 'scales', 'opacities', 'sh0', 'shN'].forEach((name) => {
+        ['means', 'scales', 'sh0', 'shN'].forEach((name) => {
             const v = gsplatData.meta[name];
             if (v) {
                 result.setParameter(`${name}_mins`, v.mins);

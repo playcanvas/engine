@@ -21,7 +21,7 @@ import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { getCoreDefines } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 
 /**
  * @import { BoundingBox } from '../../core/shape/bounding-box.js'
@@ -837,7 +837,7 @@ class StandardMaterial extends Material {
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
         const minimalOptions = pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
-        options.defines = getCoreDefines(this, params);
+        options.defines = ShaderUtils.getCoreDefines(this, params);
 
         if (minimalOptions) {
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
@@ -1174,7 +1174,6 @@ function _defineMaterialProps() {
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
     _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
-    _defineFlag('customFragmentShader', null);
     _defineFlag('useFog', true);
     _defineFlag('useLighting', true);
     _defineFlag('useTonemap', true);

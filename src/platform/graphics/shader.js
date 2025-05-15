@@ -4,7 +4,7 @@ import { platform } from '../../core/platform.js';
 import { Preprocessor } from '../../core/preprocessor.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
-import { ShaderUtils } from './shader-utils.js';
+import { ShaderDefinitionUtils } from './shader-definition-utils.js';
 
 /**
  * @import { BindGroupFormat } from './bind-group-format.js'
@@ -53,7 +53,7 @@ class Shader {
     /**
      * Creates a new Shader instance.
      *
-     * Consider {@link createShaderFromCode} as a simpler and more powerful way to create
+     * Consider {@link ShaderUtils#createShader} as a simpler and more powerful way to create
      * a shader.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
@@ -143,7 +143,7 @@ class Shader {
 
             // if no attributes are specified, try to extract the default names after the shader has been pre-processed
             if (definition.shaderLanguage === SHADERLANGUAGE_GLSL) {
-                definition.attributes ??= ShaderUtils.collectAttributes(definition.vshader);
+                definition.attributes ??= ShaderDefinitionUtils.collectAttributes(definition.vshader);
             }
 
             // Strip unused color attachments from fragment shader.

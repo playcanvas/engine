@@ -189,7 +189,7 @@ export { StencilParameters } from './platform/graphics/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
 // SCENE / ANIMATION
-export { Animation, Key, Node } from './scene/animation/animation.js';
+export { Animation, AnimationKey, AnimationNode } from './scene/animation/animation.js';
 export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
@@ -223,11 +223,10 @@ export { FogParams } from './scene/fog-params.js';
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
-export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';
+export { ShaderUtils, createShader, createShaderFromCode } from './scene/shader-lib/shader-utils.js';
 export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
-export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
-export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
+export { shaderChunks } from './scene/shader-lib/chunks-glsl/chunks.js';
 export { ChunkUtils } from './scene/shader-lib/chunk-utils.js';
 
 // SCENE / SKY
@@ -237,6 +236,7 @@ export { Sky } from './scene/skybox/sky.js';
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
 export { GSplat } from './scene/gsplat/gsplat.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
