@@ -14,12 +14,11 @@ import {
     cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
     REFLECTIONSRC_NONE
 } from '../../constants.js';
-import { shaderChunks } from '../chunks-glsl/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../chunks-glsl/chunk-validation.js';
 import { Debug } from '../../../core/debug.js';
-import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
+import { ShaderUtils } from '../shader-utils.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -117,7 +116,7 @@ class LitShader {
             }
         }
 
-        const engineChunks = this.shaderLanguage === SHADERLANGUAGE_GLSL ? shaderChunks : shaderChunksWGSL;
+        const engineChunks = this.shaderLanguage === SHADERLANGUAGE_GLSL ? ShaderUtils.shaderChunks.glsl : ShaderUtils.shaderChunks.wgsl;
 
         if (userChunks) {
             const userChunkMap = this.shaderLanguage === SHADERLANGUAGE_GLSL ? userChunks.glsl : userChunks.wgsl;
@@ -126,7 +125,7 @@ class LitShader {
                 validateUserChunks(userChunkMap, userChunks.APIVersion);
             });
 
-            this.chunks = Object.create(engineChunks);
+            this.chunks = Object.fromEntries(engineChunks);
 
             userChunkMap.forEach((chunk, chunkName) => {
 
@@ -143,7 +142,7 @@ class LitShader {
 
 
         } else {
-            this.chunks = engineChunks;
+            this.chunks = Object.fromEntries(engineChunks);
         }
 
         this.shaderPassInfo = ShaderPass.get(this.device).getByIndex(options.pass);
@@ -217,8 +216,8 @@ class LitShader {
 
             // only attach these if the default instancing chunk is used, otherwise it is expected
             // for the user to provide required attributes using material.setAttribute
-            const languageChunks = this.shaderLanguage === SHADERLANGUAGE_GLSL ? shaderChunks : shaderChunksWGSL;
-            if (this.chunks.transformInstancingVS === languageChunks.transformInstancingVS) {
+            const languageChunks = this.shaderLanguage === SHADERLANGUAGE_GLSL ? ShaderUtils.shaderChunks.glsl : ShaderUtils.shaderChunks.wgsl;
+            if (this.chunks.transformInstancingVS === languageChunks.get('transformInstancingVS')) {
                 attributes.instance_line1 = SEMANTIC_ATTR12;
                 attributes.instance_line2 = SEMANTIC_ATTR13;
                 attributes.instance_line3 = SEMANTIC_ATTR14;

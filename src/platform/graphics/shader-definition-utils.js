@@ -132,6 +132,8 @@ class ShaderDefinitionUtils {
 
         } else {
 
+            Debug.assert(options.vertexCode);
+
             // vertex code
             vertCode = `${ShaderDefinitionUtils.versionCode(device) +
                 getDefines(webgpuVS, gles3VS, true, options) +
@@ -140,6 +142,8 @@ class ShaderDefinitionUtils {
                 ${sharedGLSL}
                 ${ShaderDefinitionUtils.getShaderNameCode(name)}
                 ${options.vertexCode}`;
+
+            Debug.assert(options.fragmentCode);
 
             // fragment code
             fragCode = `${(options.fragmentPreamble || '') +

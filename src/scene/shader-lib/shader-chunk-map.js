@@ -28,6 +28,21 @@ class ShaderChunkMap extends Map {
     }
 
     /**
+     * Adds multiple shader chunks to the Map. This method accepts an object where the keys are the
+     * names of the shader chunks and the values are the shader source code. If an element with the
+     * same name already exists, the element will be updated.
+     *
+     * @param {Object} object - Object containing shader chunks.
+     * @returns {this} The ShaderChunkMap instance.
+     */
+    add(object) {
+        for (const [key, value] of Object.entries(object)) {
+            this.set(key, value);
+        }
+        return this;
+    }
+
+    /**
      * Removes a shader chunk by name from the Map. If the element does not exist, no action is
      * taken.
      *

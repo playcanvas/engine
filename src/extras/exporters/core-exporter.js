@@ -7,8 +7,6 @@ import {
     FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks-glsl/chunks.js';
-import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 /**
  * @import { Color } from '../../core/math/color.js'
@@ -105,10 +103,10 @@ class CoreExporter {
         const shader = ShaderUtils.createShader(device, {
             uniqueName: 'ShaderCoreExporterBlit',
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: shaderChunks.fullscreenQuadVS,
-            fragmentGLSL: shaderChunks.outputTex2DPS,
-            vertexWGSL: shaderChunksWGSL.fullscreenQuadVS,
-            fragmentWGSL: shaderChunksWGSL.outputTex2DPS
+            vertexGLSL: ShaderUtils.shaderChunks.glsl.get('fullscreenQuadVS'),
+            fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('outputTex2DPS'),
+            vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('fullscreenQuadVS'),
+            fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('outputTex2DPS')
         });
 
         device.scope.resolve('source').setValue(texture);

@@ -4,8 +4,7 @@ import { FloatPacking } from '../../core/math/float-packing.js';
 import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE, LIGHT_COLOR_DIVIDER } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { LightCamera } from '../renderer/light-camera.js';
-import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
-import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 
 const tempVec3 = new Vec3();
 const tempAreaLightSizes = new Float32Array(6);
@@ -49,10 +48,13 @@ const buildShaderDefines = (object, prefix) => {
 };
 
 // create a shader chunk with defines for the light buffer textures
-shaderChunks.lightBufferDefinesPS = shaderChunksWGSL.lightBufferDefinesPS = `\n
+const lightBufferDefines = `\n
     ${buildShaderDefines(TextureIndexFloat, 'CLUSTER_TEXTURE_')}
     ${buildShaderDefines(enums, '')}
 `;
+
+ShaderUtils.shaderChunks.glsl.set('lightBufferDefinesPS', lightBufferDefines);
+ShaderUtils.shaderChunks.wgsl.set('lightBufferDefinesPS', lightBufferDefines);
 
 // A class used by clustered lighting, responsible for encoding light properties into textures for the use on the GPU
 class LightsBuffer {

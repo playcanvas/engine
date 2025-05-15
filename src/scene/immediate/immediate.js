@@ -5,27 +5,15 @@ import { GraphNode } from '../graph-node.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
-import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
-import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { ImmediateBatches } from './immediate-batches.js';
 
 import { Vec3 } from '../../core/math/vec3.js';
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import { shaderChunksWGSL } from '../shader-lib/collections/shader-chunks-wgsl.js';
 
 const tempPoints = [];
 const vec = new Vec3();
-
-const lineShaderDesc = {
-    uniqueName: 'ImmediateLine',
-    vertexGLSL: shaderChunks.immediateLineVS,
-    fragmentGLSL: shaderChunks.immediateLinePS,
-    vertexWGSL: shaderChunksWGSL.immediateLineVS,
-    fragmentWGSL: shaderChunksWGSL.immediateLinePS,
-    attributes: {
-        vertex_position: SEMANTIC_POSITION,
-        vertex_color: SEMANTIC_COLOR
-    }
-};
 
 class Immediate {
     shaderDescs = new Map();
@@ -57,7 +45,17 @@ class Immediate {
 
     // creates material for line rendering
     createMaterial(depthTest) {
-        const material = new ShaderMaterial(lineShaderDesc);
+        const material = new ShaderMaterial({
+            uniqueName: 'ImmediateLine',
+            vertexGLSL: ShaderUtils.shaderChunks.glsl.get('immediateLineVS'),
+            fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('immediateLinePS'),
+            vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('immediateLineVS'),
+            fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('immediateLinePS'),
+            attributes: {
+                vertex_position: SEMANTIC_POSITION,
+                vertex_color: SEMANTIC_COLOR
+            }
+        });
         material.blendType = BLEND_NORMAL;
         material.depthTest = depthTest;
         material.update();

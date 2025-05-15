@@ -21,9 +21,13 @@ class ShaderChunks {
     wgsl = new ShaderChunkMap();
 
     /**
-     * The API version of the shader chunks. This specifies the version of the shader chunks. If the
-     * specified version is no longer supported, the engine will warn about it. This needs to be
-     * set when shader chunks are provided to one of the `CHUNKAPI_***` constants.
+     * Specifies the API version of the shader chunks.
+     *
+     * This should match one of the `CHUNKAPI_***` constants and ensures compatibility with the
+     * current engine version. When providing custom shader chunks, set this to the latest supported
+     * version. If a future engine release no longer supports the specified version, a warning will
+     * be issued. In that case, update your shader chunks to match the new format and set this to
+     * the latest version accordingly.
      *
      * @type {string}
      */

@@ -14,8 +14,6 @@ import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
 import { StandardMaterialOptions } from '../../scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
-import { shaderChunksWGSL } from '../../scene/shader-lib/chunks-wgsl/chunks-wgsl.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks-glsl/chunks.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 /**
@@ -119,17 +117,17 @@ class OutlineRenderer {
         this.shaderExtend = ShaderUtils.createShader(device, {
             uniqueName: 'OutlineExtendShader',
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: shaderChunks.fullscreenQuadVS,
+            vertexGLSL: ShaderUtils.shaderChunks.glsl.get('fullscreenQuadVS'),
             fragmentGLSL: shaderOutlineExtendPS
         });
 
         this.shaderBlend = ShaderUtils.createShader(device, {
             uniqueName: 'OutlineBlendShader',
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: shaderChunks.fullscreenQuadVS,
-            fragmentGLSL: shaderChunks.outputTex2DPS,
-            vertexWGSL: shaderChunksWGSL.fullscreenQuadVS,
-            fragmentWGSL: shaderChunksWGSL.outputTex2DPS
+            vertexGLSL: ShaderUtils.shaderChunks.glsl.get('fullscreenQuadVS'),
+            fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('outputTex2DPS'),
+            vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('fullscreenQuadVS'),
+            fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('outputTex2DPS')
         });
 
         this.quadRenderer = new QuadRender(this.shaderBlend);

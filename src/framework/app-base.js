@@ -52,6 +52,9 @@ import { SceneRegistry } from './scene-registry.js';
 import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
 import { getApplication, setApplication } from './globals.js';
+import { ShaderUtils } from '../scene/shader-lib/shader-utils.js';
+import { shaderChunksGLSL } from '../scene/shader-lib/collections/shader-chunks-glsl.js';
+import { shaderChunksWGSL } from '../scene/shader-lib/collections/shader-chunks-wgsl.js';
 
 /**
  * @import { AppOptions } from './app-options.js'
@@ -466,6 +469,10 @@ class AppBase extends EventHandler {
 
         this.root = new Entity();
         this.root._enabledInHierarchy = true;
+
+        // register shader chunks
+        ShaderUtils.shaderChunks.glsl.add(shaderChunksGLSL);
+        ShaderUtils.shaderChunks.wgsl.add(shaderChunksWGSL);
     }
 
     /**

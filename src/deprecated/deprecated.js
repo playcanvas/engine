@@ -11,7 +11,6 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
 } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
-import { shaderChunks } from '../scene/shader-lib/chunks-glsl/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
@@ -59,6 +58,7 @@ import { RigidBodyComponent } from '../framework/components/rigid-body/component
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { Geometry } from '../scene/geometry/geometry.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
+import { ShaderUtils } from '../scene/shader-lib/shader-utils.js';
 
 // MATH
 
@@ -152,32 +152,6 @@ export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
 
     drawQuadWithShader(device, target, shader, viewport);
 }
-
-const deprecatedChunks = {
-    'ambientPrefilteredCube.frag': 'ambientEnv.frag',
-    'ambientPrefilteredCubeLod.frag': 'ambientEnv.frag',
-    'dpAtlasQuad.frag': null,
-    'genParaboloid.frag': null,
-    'prefilterCubemap.frag': null,
-    'reflectionDpAtlas.frag': 'reflectionEnv.frag',
-    'reflectionPrefilteredCube.frag': 'reflectionEnv.frag',
-    'reflectionPrefilteredCubeLod.frag': 'reflectionEnv.frag'
-};
-
-Object.keys(deprecatedChunks).forEach((chunkName) => {
-    const replacement = deprecatedChunks[chunkName];
-    const useInstead = replacement ? ` Use pc.shaderChunks['${replacement}'] instead.` : '';
-    const msg = `pc.shaderChunks['${chunkName}'] is deprecated.${useInstead}}`;
-    Object.defineProperty(shaderChunks, chunkName, {
-        get: function () {
-            Debug.error(msg);
-            return null;
-        },
-        set: function () {
-            Debug.error(msg);
-        }
-    });
-});
 
 // Note: This was never public interface, but has been used in external scripts
 Object.defineProperties(RenderTarget.prototype, {
@@ -409,6 +383,19 @@ GraphicsDevice.prototype.getCullMode = function () {
 // SCENE
 
 export const LitOptions = LitShaderOptions;
+
+// deprecated access to global shader chunks
+export const shaderChunks = new Proxy({}, {
+    get(target, prop) {
+        Debug.deprecated(`Using pc.shaderChunks to access a shader chunks is deprecated. Use pc.ShaderUtils.shaderChunks instead, for example: pc.ShaderUtils.shaderChunks.glsl.get('${prop}');`);
+        return ShaderUtils.shaderChunks.glsl.get(prop);
+    },
+    set(target, prop, value) {
+        Debug.deprecated(`Using pc.shaderChunks to override a shader chunks is deprecated. Use pc.ShaderUtils.shaderChunks instead, for example: pc.ShaderUtils.shaderChunks.glsl.set('${prop}', 'chunk code');`);
+        ShaderUtils.shaderChunks.glsl.set(prop, value);
+        return true;
+    }
+});
 
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {

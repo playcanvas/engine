@@ -5,8 +5,6 @@ import { RenderTarget } from '../platform/graphics/render-target.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { ShaderUtils } from './shader-lib/shader-utils.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
-import { shaderChunks } from './shader-lib/chunks-glsl/chunks.js';
-import { shaderChunksWGSL } from './shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 /**
  * @import { Morph } from './morph.js'
@@ -200,10 +198,10 @@ class MorphInstance {
         return ShaderUtils.createShader(this.device, {
             uniqueName: 'TextureMorphShader',
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: shaderChunks.morphVS,
-            vertexWGSL: shaderChunksWGSL.morphVS,
-            fragmentGLSL: shaderChunks.morphPS,
-            fragmentWGSL: shaderChunksWGSL.morphPS,
+            vertexGLSL: ShaderUtils.shaderChunks.glsl.get('morphVS'),
+            vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('morphVS'),
+            fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('morphPS'),
+            fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('morphPS'),
             fragmentDefines: defines,
             fragmentOutputTypes: [outputType]
         });

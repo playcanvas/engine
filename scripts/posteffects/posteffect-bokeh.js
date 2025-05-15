@@ -20,7 +20,7 @@ function BokehEffect(graphicsDevice) {
     // ported from GLSL shader by Martins Upitis
     // http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
     var fshader = [
-        pc.shaderChunks.screenDepthPS,
+        pc.ShaderUtils.shaderChunks.glsl.get('screenDepthPS'),
         '',
         'varying vec2 vUv0;',
         '',

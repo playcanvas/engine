@@ -4,7 +4,6 @@ import {
     CHUNKAPI_2_8
 } from '../../../platform/graphics/constants.js';
 import { Debug } from '../../../core/debug.js';
-import { shaderChunks } from './chunks.js';
 
 const chunkVersions = {
     // frontend
@@ -147,13 +146,9 @@ const semverLess = (a, b) => {
  */
 const validateUserChunks = (userChunks, userAPIVersion) => {
     for (const chunkName of userChunks.keys()) {
-        if (!shaderChunks.hasOwnProperty(chunkName)) {
+        if (removedChunks.hasOwnProperty(chunkName)) {
             const removedVersion = removedChunks[chunkName];
-            if (removedVersion) {
-                Debug.warnOnce(`Shader chunk '${chunkName}' was removed in API ${removedVersion} and is no longer supported.`);
-            } else {
-                Debug.warnOnce(`Shader chunk '${chunkName}' is not supported.`);
-            }
+            Debug.warnOnce(`Shader chunk '${chunkName}' was removed in API ${removedVersion} and is no longer supported.`);
         } else {
             const engineAPIVersion = chunkVersions[chunkName];
             const chunkIsOutdated = engineAPIVersion && (!userAPIVersion || semverLess(userAPIVersion, engineAPIVersion));

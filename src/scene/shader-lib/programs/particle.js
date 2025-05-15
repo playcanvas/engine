@@ -1,9 +1,10 @@
 import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { blendNames } from '../../constants.js';
-import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
-import { shaderChunks } from '../chunks-glsl/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
+import { ShaderUtils } from '../shader-utils.js';
+import { particleChunksGLSL } from '../collections/particle-chunks-glsl.js';
+import { particleChunksWGSL } from '../collections/particle-chunks-wgsl.js';
 
 const normalTypeNames = [
     'NONE',
@@ -12,6 +13,14 @@ const normalTypeNames = [
 ];
 
 class ShaderGeneratorParticle extends ShaderGenerator {
+    constructor() {
+        super();
+
+        // register particle shader chunks
+        ShaderUtils.shaderChunks.glsl.add(particleChunksGLSL);
+        ShaderUtils.shaderChunks.wgsl.add(particleChunksWGSL);
+    }
+
     generateKey(options) {
         const definesHash = ShaderGenerator.definesHash(options.defines);
         let key = `particle_${definesHash}_`;
@@ -67,7 +76,7 @@ class ShaderGeneratorParticle extends ShaderGenerator {
 
         // TODO: considering adding support for material shader chunk overrides
         const shaderLanguage = device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
-        const chunks = device.isWebGPU ? shaderChunksWGSL : shaderChunks;
+        const engineChunks = device.isWebGPU ? ShaderUtils.shaderChunks.wgsl : ShaderUtils.shaderChunks.glsl;
 
         const attributes = {};
         const vDefines = this.createVertexDefines(options, attributes);
@@ -77,16 +86,14 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         vDefines.set(executionDefine, '');
         fDefines.set(executionDefine, '');
 
-        const includes = new Map(Object.entries({
-            ...chunks
-        }));
+        const includes = new Map(engineChunks);
 
         return ShaderDefinitionUtils.createDefinition(device, {
             name: 'ParticleShader',
             shaderLanguage: shaderLanguage,
             attributes: attributes,
-            vertexCode: chunks.particle_shaderVS,
-            fragmentCode: chunks.particle_shaderPS,
+            vertexCode: engineChunks.get('particle_shaderVS'),
+            fragmentCode: engineChunks.get('particle_shaderPS'),
             fragmentDefines: fDefines,
             fragmentIncludes: includes,
             vertexIncludes: includes,
