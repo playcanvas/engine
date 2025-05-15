@@ -1,12 +1,12 @@
-import { Delta, Input } from './input.js';
+import { InputDelta, InputDevice } from './input.js';
 
-class GamepadInput extends Input {
+class GamepadInput extends InputDevice {
     /**
      * @override
      */
     deltas = {
-        leftStick: new Delta(2),
-        rightStick: new Delta(2)
+        leftStick: new InputDelta(2),
+        rightStick: new InputDelta(2)
     };
 
     /**

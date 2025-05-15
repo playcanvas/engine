@@ -1,4 +1,4 @@
-class Delta {
+class InputDelta {
     /**
      * @type {number[]}
      */
@@ -29,7 +29,7 @@ class Delta {
     }
 }
 
-class Input {
+class InputDevice {
     /**
      * @type {HTMLElement | null}
      * @protected
@@ -81,4 +81,4 @@ class Input {
     }
 }
 
-export { Delta, Input };
+export { InputDelta, InputDevice };

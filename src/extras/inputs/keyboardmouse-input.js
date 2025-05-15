@@ -1,11 +1,11 @@
-import { Delta, Input } from './input.js';
+import { InputDelta, InputDevice } from './input.js';
 
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
 
 const array9 = new Array(9).fill(0);
 
-class KeyboardMouseInput extends Input {
+class KeyboardMouseInput extends InputDevice {
     /**
      * @type {number}
      * @private
@@ -33,10 +33,10 @@ class KeyboardMouseInput extends Input {
      * @override
      */
     deltas = {
-        key: new Delta(9),
-        button: new Delta(3),
-        mouse: new Delta(2),
-        wheel: new Delta()
+        key: new InputDelta(9),
+        button: new InputDelta(3),
+        mouse: new InputDelta(2),
+        wheel: new InputDelta()
     };
 
     constructor() {

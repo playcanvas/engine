@@ -1,7 +1,7 @@
-import { Delta, Input } from './input.js';
+import { InputDelta, InputDevice } from './input.js';
 import { Joystick } from './joystick.js';
 
-class JoystickTouchInput extends Input {
+class JoystickTouchInput extends InputDevice {
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
      * @private
@@ -18,8 +18,8 @@ class JoystickTouchInput extends Input {
      * @override
      */
     deltas = {
-        stick: new Delta(2),
-        touch: new Delta(2)
+        stick: new InputDelta(2),
+        touch: new InputDelta(2)
     };
 
     constructor() {

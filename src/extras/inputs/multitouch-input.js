@@ -1,9 +1,9 @@
 import { Vec2 } from '../../core/math/vec2.js';
-import { Delta, Input } from './input.js';
+import { InputDelta, InputDevice } from './input.js';
 
 const tmpVa = new Vec2();
 
-class MultiTouchInput extends Input {
+class MultiTouchInput extends InputDevice {
     /**
      * @type {Map<number, PointerEvent>}
      * @private
@@ -26,9 +26,9 @@ class MultiTouchInput extends Input {
      * @override
      */
     deltas = {
-        touch: new Delta(2),
-        count: new Delta(),
-        pinch: new Delta()
+        touch: new InputDelta(2),
+        count: new InputDelta(),
+        pinch: new InputDelta()
     };
 
     constructor() {
