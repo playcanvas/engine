@@ -19,6 +19,8 @@ import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
+import { AnimationKey, AnimationNode } from '../scene/animation/animation.js';
+import { Geometry } from '../scene/geometry/geometry.js';
 import { CylinderGeometry } from '../scene/geometry/cylinder-geometry.js';
 import { BoxGeometry } from '../scene/geometry/box-geometry.js';
 import { CapsuleGeometry } from '../scene/geometry/capsule-geometry.js';
@@ -56,7 +58,6 @@ import {
 } from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
-import { Geometry } from '../scene/geometry/geometry.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
 import { ShaderUtils } from '../scene/shader-lib/shader-utils.js';
 
@@ -381,6 +382,9 @@ GraphicsDevice.prototype.getCullMode = function () {
 };
 
 // SCENE
+
+export const Key = AnimationKey;
+export const Node = AnimationNode;
 
 export const LitOptions = LitShaderOptions;
 
