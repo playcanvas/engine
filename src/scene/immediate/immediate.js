@@ -10,7 +10,6 @@ import { ImmediateBatches } from './immediate-batches.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import { shaderChunksWGSL } from '../shader-lib/collections/shader-chunks-wgsl.js';
 
 const tempPoints = [];
 const vec = new Vec3();
