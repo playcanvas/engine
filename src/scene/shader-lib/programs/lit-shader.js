@@ -93,6 +93,13 @@ class LitShader {
     includes = new Map();
 
     /**
+     * The shader chunks to use for the shader generation.
+     *
+     * @type {Map<string, string>}
+     */
+    chunks = null;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {LitShaderOptions} options - The lit options.
      * @param {boolean} [allowWGSL] - Whether to allow WGSL shader language.
@@ -116,16 +123,17 @@ class LitShader {
             }
         }
 
+        // start with the default engine chunks
         const engineChunks = this.shaderLanguage === SHADERLANGUAGE_GLSL ? ShaderUtils.shaderChunks.glsl : ShaderUtils.shaderChunks.wgsl;
+        this.chunks = new Map(engineChunks);
 
+        // optionally add user chunks
         if (userChunks) {
             const userChunkMap = this.shaderLanguage === SHADERLANGUAGE_GLSL ? userChunks.glsl : userChunks.wgsl;
 
             Debug.call(() => {
                 validateUserChunks(userChunkMap, userChunks.APIVersion);
             });
-
-            this.chunks = Object.fromEntries(engineChunks);
 
             userChunkMap.forEach((chunk, chunkName) => {
 
@@ -136,13 +144,9 @@ class LitShader {
                     }
                 }
 
-                // add used chunk as an attribute
-                this.chunks[chunkName] = chunk;
+                // add user chunk
+                this.chunks.set(chunkName, chunk);
             });
-
-
-        } else {
-            this.chunks = Object.fromEntries(engineChunks);
         }
 
         this.shaderPassInfo = ShaderPass.get(this.device).getByIndex(options.pass);
@@ -217,7 +221,7 @@ class LitShader {
             // only attach these if the default instancing chunk is used, otherwise it is expected
             // for the user to provide required attributes using material.setAttribute
             const languageChunks = this.shaderLanguage === SHADERLANGUAGE_GLSL ? ShaderUtils.shaderChunks.glsl : ShaderUtils.shaderChunks.wgsl;
-            if (this.chunks.transformInstancingVS === languageChunks.get('transformInstancingVS')) {
+            if (this.chunks.get('transformInstancingVS') === languageChunks.get('transformInstancingVS')) {
                 attributes.instance_line1 = SEMANTIC_ATTR12;
                 attributes.instance_line2 = SEMANTIC_ATTR13;
                 attributes.instance_line3 = SEMANTIC_ATTR14;
