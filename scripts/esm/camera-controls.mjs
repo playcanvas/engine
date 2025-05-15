@@ -341,7 +341,7 @@ class CameraControls extends Script {
         this._exposeJoystickEvents(this._flyMobileGamepadInput.rightJoystick, 'right');
 
         // mode
-        this.mode = this._mode ?? CameraControls.MODE_ORBIT;
+        this._switchMode(this._mode ?? CameraControls.MODE_ORBIT);
 
         // destroy
         this.on('destroy', this._destroy, this);
@@ -360,7 +360,7 @@ class CameraControls extends Script {
         this._enableOrbit = enable;
 
         if (!this._enableOrbit && this._mode === CameraControls.MODE_ORBIT) {
-            this.mode = CameraControls.MODE_FLY;
+            this._switchMode(CameraControls.MODE_FLY);
         }
     }
 
@@ -379,56 +379,12 @@ class CameraControls extends Script {
         this._enableFly = enable;
 
         if (!this._enableFly && this._mode === CameraControls.MODE_FLY) {
-            this.mode = CameraControls.MODE_ORBIT;
+            this._switchMode(CameraControls.MODE_ORBIT);
         }
     }
 
     get enableFly() {
         return this._enableFly;
-    }
-
-    /**
-     * The camera controls mode.
-     *
-     * @attribute
-     * @title Mode
-     * @type {string}
-     */
-    set mode(mode) {
-        // check if mode is the same
-        if (this._mode === mode) {
-            return;
-        }
-
-        // set mode
-        switch (true) {
-            case this.enableFly && this.enableOrbit: {
-                this._mode = mode;
-                break;
-            }
-            case this.enableFly && !this.enableOrbit: {
-                this._mode = CameraControls.MODE_FLY;
-                break;
-            }
-            case !this.enableFly && this.enableOrbit: {
-                this._mode = CameraControls.MODE_ORBIT;
-                break;
-            }
-            case !this.enableFly && !this.enableOrbit: {
-                console.warn('CameraControls: both fly and orbit modes are disabled');
-                return;
-            }
-        }
-
-        // mobile input reattach
-        this._reattachMobileInput();
-
-        // controller reattach
-        this._reattachController();
-    }
-
-    get mode() {
-        return this._mode;
     }
 
     /**
@@ -439,7 +395,7 @@ class CameraControls extends Script {
      * @type {Vec3}
      */
     set focusPoint(point) {
-        this.mode = CameraControls.MODE_ORBIT;
+        this._switchMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
             const start = this._camera.entity.getPosition();
@@ -450,7 +406,7 @@ class CameraControls extends Script {
     }
 
     get focusPoint() {
-        this.mode = CameraControls.MODE_ORBIT;
+        this._switchMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
             return this._controller.point;
@@ -624,6 +580,43 @@ class CameraControls extends Script {
     }
 
     /**
+     * @param {CameraControls.MODE_ORBIT|CameraControls.MODE_FLY} mode - The mode.
+     * @private
+     */
+    _switchMode(mode) {
+        // check if mode is the same
+        if (this._mode === mode) {
+            return;
+        }
+
+        // set mode
+        switch (true) {
+            case this.enableFly && this.enableOrbit: {
+                this._mode = mode;
+                break;
+            }
+            case this.enableFly && !this.enableOrbit: {
+                this._mode = CameraControls.MODE_FLY;
+                break;
+            }
+            case !this.enableFly && this.enableOrbit: {
+                this._mode = CameraControls.MODE_ORBIT;
+                break;
+            }
+            case !this.enableFly && !this.enableOrbit: {
+                console.warn('CameraControls: both fly and orbit modes are disabled');
+                return;
+            }
+        }
+
+        // mobile input reattach
+        this._reattachMobileInput();
+
+        // controller reattach
+        this._reattachController();
+    }
+
+    /**
      * @private
      */
     _reattachMobileInput() {
@@ -739,9 +732,9 @@ class CameraControls extends Script {
             forward === 1 || back === 1 || left === 1 || right === 1 || up === 1 || down === 1;
 
         if (switchToOrbit) {
-            this.mode = CameraControls.MODE_ORBIT;
+            this._switchMode(CameraControls.MODE_ORBIT);
         } else if (switchToFly) {
-            this.mode = CameraControls.MODE_FLY;
+            this._switchMode(CameraControls.MODE_FLY);
         }
 
         // update state
@@ -826,7 +819,7 @@ class CameraControls extends Script {
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
     focus(point, resetZoom = false) {
-        this.mode = CameraControls.MODE_ORBIT;
+        this._switchMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
             if (resetZoom) {
@@ -845,7 +838,7 @@ class CameraControls extends Script {
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
     look(point, resetZoom = false) {
-        this.mode = CameraControls.MODE_ORBIT;
+        this._switchMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
             if (resetZoom) {
@@ -866,7 +859,7 @@ class CameraControls extends Script {
      * @param {Vec3} start - The start point.
      */
     reset(point, start) {
-        this.mode = CameraControls.MODE_ORBIT;
+        this._switchMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
             this._controller.focus(point, start);
