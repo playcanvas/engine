@@ -125,20 +125,15 @@ camera.setPosition(cameraOffset, cameraOffset, cameraOffset);
 app.root.addChild(camera);
 
 // camera controls
-const cameraControls = /** @type {CameraControls} */ (camera.script.create(CameraControls, {
-    properties: {
-        focusPoint: pc.Vec3.ZERO,
-        sceneSize: 5,
-        rotateDamping: 0,
-        moveDamping: 0
-    }
-}));
+const cc = /** @type {CameraControls} */ (camera.script.create(CameraControls));
+Object.assign(cc, {
+    focusPoint: pc.Vec3.ZERO,
+    sceneSize: 5,
+    rotateDamping: 0,
+    moveDamping: 0
+});
 app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
-    if (hasPointer) {
-        cameraControls.detach();
-    } else {
-        cameraControls.attach(camera.camera);
-    }
+    cc.skipUpdate = hasPointer;
 });
 
 // outline renderer
@@ -205,10 +200,10 @@ data.set('viewCube', {
 const tmpV1 = new pc.Vec3();
 viewCube.on(pc.ViewCube.EVENT_CAMERAALIGN, (/** @type {pc.Vec3} */ dir) => {
     const cameraPos = camera.getPosition();
-    const focusPoint = cameraControls.focusPoint;
+    const focusPoint = cc.focusPoint;
     const cameraDist = focusPoint.distance(cameraPos);
     const cameraStart = tmpV1.copy(dir).mulScalar(cameraDist).add(focusPoint);
-    cameraControls.refocus(focusPoint, cameraStart);
+    cc.reset(focusPoint, cameraStart);
 });
 app.on('prerender', () => {
     viewCube.update(camera.getWorldTransform());
@@ -245,12 +240,17 @@ const keydown = (/** @type {KeyboardEvent} */ e) => {
     gizmoHandler.gizmo.snap = !!e.shiftKey;
     gizmoHandler.gizmo.uniform = !e.ctrlKey;
 
-    if (e.key === 'f') {
-        cameraControls.refocus(
-            gizmoHandler.gizmo.root.getPosition(),
-            null,
-            cameraOffset
-        );
+    switch (e.key) {
+        case 'f': {
+            const point = gizmoHandler.gizmo.root.getPosition();
+            const start = tmpV1.copy(camera.forward).mulScalar(-cameraOffset).add(point);
+            cc.reset(point, start);
+            break;
+        }
+        case 'r': {
+            cc.focus(pc.Vec3.ZERO, true);
+            break;
+        }
     }
 };
 const keyup = (/** @type {KeyboardEvent} */ e) => {
