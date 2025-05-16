@@ -85,6 +85,22 @@ export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = BLENDMODE_ONE_MINUS_CONSTANT;
 export const BLENDMODE_CONSTANT_ALPHA = BLENDMODE_CONSTANT;
 export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = BLENDMODE_ONE_MINUS_CONSTANT;
 
+export const CHUNKAPI_1_51 = '1.51';
+export const CHUNKAPI_1_55 = '1.55';
+export const CHUNKAPI_1_56 = '1.56';
+export const CHUNKAPI_1_57 = '1.57';
+export const CHUNKAPI_1_58 = '1.58';
+export const CHUNKAPI_1_60 = '1.60';
+export const CHUNKAPI_1_62 = '1.62';
+export const CHUNKAPI_1_65 = '1.65';
+export const CHUNKAPI_1_70 = '1.70';
+export const CHUNKAPI_2_1 = '2.1';
+export const CHUNKAPI_2_3 = '2.3';
+export const CHUNKAPI_2_5 = '2.5';
+export const CHUNKAPI_2_6 = '2.6';
+export const CHUNKAPI_2_7 = '2.7';
+export const CHUNKAPI_2_8 = '2.8';
+
 const _viewport = new Vec4();
 
 export function createSphere(device, opts) {

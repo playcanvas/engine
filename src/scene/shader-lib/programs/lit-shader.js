@@ -132,7 +132,7 @@ class LitShader {
             const userChunkMap = this.shaderLanguage === SHADERLANGUAGE_GLSL ? userChunks.glsl : userChunks.wgsl;
 
             Debug.call(() => {
-                validateUserChunks(userChunkMap, userChunks.APIVersion);
+                validateUserChunks(userChunkMap, userChunks.version);
             });
 
             userChunkMap.forEach((chunk, chunkName) => {

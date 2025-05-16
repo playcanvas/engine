@@ -181,18 +181,20 @@ assetListLoader.load(() => {
     // ------ End of shader chunks ------
 
     // apply all these chunks to the tree material
-    meshInstance.material.shaderChunks.APIVersion = pc.CHUNKAPI_2_8;
-    meshInstance.material.shaderChunks.glsl.set('diffusePS', diffusePS);
-    meshInstance.material.shaderChunks.glsl.set('litUserMainEndPS', litUserMainEndPS);
-    meshInstance.material.shaderChunks.glsl.set('litUserDeclarationPS', litUserDeclarationPS);
-    meshInstance.material.shaderChunks.glsl.set('transformCoreVS', transformCoreVS);
+    const treeChunksGLSL = meshInstance.material.getShaderChunks(pc.SHADERLANGUAGE_GLSL);
+    treeChunksGLSL.set('diffusePS', diffusePS);
+    treeChunksGLSL.set('litUserMainEndPS', litUserMainEndPS);
+    treeChunksGLSL.set('litUserDeclarationPS', litUserDeclarationPS);
+    treeChunksGLSL.set('transformCoreVS', transformCoreVS);
+    meshInstance.material.shaderChunksVersion = '2.8';
 
     // create a ground material - all chunks apart from swaying in the wind, so fog and color blending
     const groundMaterial = new pc.StandardMaterial();
-    groundMaterial.shaderChunks.APIVersion = pc.CHUNKAPI_2_8;
-    groundMaterial.shaderChunks.glsl.set('diffusePS', diffusePS);
-    groundMaterial.shaderChunks.glsl.set('litUserMainEndPS', litUserMainEndPS);
-    groundMaterial.shaderChunks.glsl.set('litUserDeclarationPS', litUserDeclarationPS);
+    const groundChunksGLSL = groundMaterial.getShaderChunks(pc.SHADERLANGUAGE_GLSL);
+    groundChunksGLSL.set('diffusePS', diffusePS);
+    groundChunksGLSL.set('litUserMainEndPS', litUserMainEndPS);
+    groundChunksGLSL.set('litUserDeclarationPS', litUserDeclarationPS);
+    groundMaterial.shaderChunksVersion = '2.8';
 
     const ground = new pc.Entity('Ground');
     ground.addComponent('render', {

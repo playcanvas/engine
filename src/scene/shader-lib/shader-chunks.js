@@ -3,7 +3,7 @@ import { ShaderChunkMap } from './shader-chunk-map.js';
 /**
  * A collection of GLSL and WGSL shader chunks, used by {@link Material#shaderChunks}.
  *
- * @category Graphics
+ * @ignore
  */
 class ShaderChunks {
     /**
@@ -23,15 +23,15 @@ class ShaderChunks {
     /**
      * Specifies the API version of the shader chunks.
      *
-     * This should match one of the `CHUNKAPI_***` constants and ensures compatibility with the
-     * current engine version. When providing custom shader chunks, set this to the latest supported
-     * version. If a future engine release no longer supports the specified version, a warning will
-     * be issued. In that case, update your shader chunks to match the new format and set this to
-     * the latest version accordingly.
+     * This should be a string containing the current engine major and minor version (e.g., '2.8'
+     * for engine v2.8.1) and ensures compatibility with the current engine version. When providing
+     * custom shader chunks, set this to the latest supported version. If a future engine release no
+     * longer supports the specified version, a warning will be issued. In that case, update your
+     * shader chunks to match the new format and set this to the latest version accordingly.
      *
      * @type {string}
      */
-    APIVersion = '';
+    version = '';
 
     get useWGSL() {
         // if we have no glsl overrides, or have wgsl overrides, wgsl is used on WebGPU
@@ -39,7 +39,7 @@ class ShaderChunks {
     }
 
     get key() {
-        return `GLSL:${this.glsl.key}|WGSL:${this.wgsl.key}|API:${this.APIVersion}`;
+        return `GLSL:${this.glsl.key}|WGSL:${this.wgsl.key}|API:${this.version}`;
     }
 
     /**
@@ -67,7 +67,7 @@ class ShaderChunks {
      * @ignore
      */
     copy(source) {
-        this.APIVersion = source.APIVersion;
+        this.version = source.version;
         this.glsl.copy(source.glsl);
         this.wgsl.copy(source.wgsl);
 
