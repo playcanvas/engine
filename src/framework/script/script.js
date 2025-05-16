@@ -27,8 +27,8 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  * Below is a simple example of a script that rotates an entity every frame.
  * @example
  * ```javascript
- * class EntityRotator extends Script {
- *     static scriptName = 'entityRotator';
+ * export class Rotator extends Script {
+ *     static scriptName = 'rotator';
  *
  *     update(dt) {
  *         this.entity.rotateLocal(0, 1, 0);
