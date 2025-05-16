@@ -254,11 +254,12 @@ class Material {
      * // call update to apply the changes
      * material.update();
      * ```
-     * 
-     * @param {string} shaderLanguage 
-     * @returns {ShaderChunkMap} 
+     *
+     * @param {string} [shaderLanguage] - Specifies the shader language of shaders. Defaults to
+     * {@link SHADERLANGUAGE_GLSL}.
+     * @returns {ShaderChunkMap} - The shader chunks for the specified shader language.
      */
-    getShaderChunks(shaderLanguage) {
+    getShaderChunks(shaderLanguage = SHADERLANGUAGE_GLSL) {
         const chunks = this.shaderChunks;
         return shaderLanguage === SHADERLANGUAGE_GLSL ? chunks.glsl : chunks.wgsl;
     }
@@ -286,7 +287,7 @@ class Material {
     get shaderChunksVersion() {
         return this.shaderChunks.version;
     }
-    
+
     set chunks(value) {
         Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
         this._oldChunks = value;
