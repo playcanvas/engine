@@ -3,9 +3,8 @@ import { LAYERID_SKYBOX, SKYTYPE_INFINITE } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
-import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
-import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
 import { SkyGeometry } from './sky-geometry.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 
 /**
  * @import { GraphNode } from '../graph-node.js'
@@ -38,10 +37,10 @@ class SkyMesh {
 
         const material = new ShaderMaterial({
             uniqueName: 'SkyMaterial',
-            vertexGLSL: shaderChunks.skyboxVS,
-            fragmentGLSL: shaderChunks.skyboxPS,
-            vertexWGSL: shaderChunksWGSL.skyboxVS,
-            fragmentWGSL: shaderChunksWGSL.skyboxPS,
+            vertexGLSL: ShaderUtils.shaderChunks.glsl.get('skyboxVS'),
+            fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('skyboxPS'),
+            vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('skyboxVS'),
+            fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('skyboxPS'),
             attributes: {
                 aPosition: SEMANTIC_POSITION
             }

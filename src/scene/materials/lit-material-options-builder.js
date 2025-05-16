@@ -18,7 +18,7 @@ class LitMaterialOptionsBuilder {
     }
 
     static updateSharedOptions(litOptions, material, scene, objDefs, pass) {
-        litOptions.chunks = material.chunks;
+        litOptions.shaderChunks = material.shaderChunks;
         litOptions.pass = pass;
         litOptions.alphaTest = material.alphaTest > 0;
         litOptions.blendType = material.blendType;

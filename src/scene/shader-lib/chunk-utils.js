@@ -1,4 +1,4 @@
-import { shaderChunks } from './chunks-glsl/chunks.js';
+import { ShaderUtils } from './shader-utils.js';
 
 /**
  * @import { CameraShaderParams } from '../camera-shader-params.js'
@@ -46,7 +46,7 @@ class ChunkUtils {
         return `
             ${cameraShaderParams.sceneDepthMapLinear ? '#define SCENE_DEPTHMAP_LINEAR' : ''}
             ${device.textureFloatRenderable ? '#define SCENE_DEPTHMAP_FLOAT' : ''}
-            ${shaderChunks.screenDepthPS}
+            ${ShaderUtils.shaderChunks.glsl.get('screenDepthPS')}
         `;
     }
 }

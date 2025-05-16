@@ -226,7 +226,6 @@ export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 export { ShaderUtils, createShader, createShaderFromCode } from './scene/shader-lib/shader-utils.js';
 export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
-export { shaderChunks } from './scene/shader-lib/chunks-glsl/chunks.js';
 export { ChunkUtils } from './scene/shader-lib/chunk-utils.js';
 
 // SCENE / SKY

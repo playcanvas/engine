@@ -40,8 +40,6 @@ import {
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
-import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';
 import { ParticleMaterial } from './particle-material.js';
@@ -664,15 +662,16 @@ class ParticleEmitter {
         if (this.emitterShape === EMITTERSHAPE_BOX) defines.set('EMITTERSHAPE_BOX', '');
         const shaderUniqueId = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
 
-        const includes = new Map(Object.entries(gd.isWebGPU ? shaderChunksWGSL : shaderChunks));
+        const engineChunks = gd.isWebGPU ? ShaderUtils.shaderChunks.wgsl : ShaderUtils.shaderChunks.glsl;
+        const includes = new Map(engineChunks);
 
         // shader options shared by all 3 shaders
         const shaderOptions = {
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: shaderChunks.fullscreenQuadVS,
-            vertexWGSL: shaderChunksWGSL.fullscreenQuadVS,
-            fragmentGLSL: shaderChunks.particle_simulationPS,
-            fragmentWGSL: shaderChunksWGSL.particle_simulationPS,
+            vertexGLSL: ShaderUtils.shaderChunks.glsl.get('fullscreenQuadVS'),
+            vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('fullscreenQuadVS'),
+            fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('particle_simulationPS'),
+            fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('particle_simulationPS'),
             fragmentDefines: defines,
             fragmentIncludes: includes
         };

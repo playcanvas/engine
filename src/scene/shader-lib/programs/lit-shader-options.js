@@ -1,6 +1,10 @@
 import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE, REFLECTIONSRC_NONE } from '../../constants.js';
 
 /**
+ * @import { ShaderChunks } from '../shader-chunks.js';
+ */
+
+/**
  * The lit shader options determines how the lit-shader gets generated. It specifies a set of
  * parameters which triggers different fragment and vertex shader generation in the backend.
  *
@@ -10,11 +14,11 @@ class LitShaderOptions {
     hasTangents = false;
 
     /**
-     * Object containing custom shader chunks that will replace default ones.
+     * Custom shader chunks that will replace default ones.
      *
-     * @type {Object<string, string>}
+     * @type {ShaderChunks|null}
      */
-    chunks = {};
+    shaderChunks = null;
 
     // one of the SHADER_ constants
     pass = 0;

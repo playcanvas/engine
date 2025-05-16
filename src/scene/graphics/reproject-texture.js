@@ -11,12 +11,10 @@ import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
-import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
-import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 /**
  * @import { Vec4 } from '../../core/math/vec4.js'
@@ -441,18 +439,18 @@ function reprojectTexture(source, target, options = {}) {
         defines.set('{NUM_SAMPLES_SQRT}', Math.round(Math.sqrt(numSamples)).toFixed(1));
 
         const wgsl = device.isWebGPU;
-        const chunks = wgsl ? shaderChunksWGSL : shaderChunks;
+        const chunks = wgsl ? ShaderUtils.shaderChunks.wgsl : ShaderUtils.shaderChunks.glsl;
         const includes = new Map();
-        includes.set('decodePS', chunks.decodePS);
-        includes.set('encodePS', chunks.encodePS);
+        includes.set('decodePS', chunks.get('decodePS'));
+        includes.set('encodePS', chunks.get('encodePS'));
 
         shader = ShaderUtils.createShader(device, {
             uniqueName: shaderKey,
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: shaderChunks.reprojectVS,
-            vertexWGSL: shaderChunksWGSL.reprojectVS,
-            fragmentGLSL: shaderChunks.reprojectPS,
-            fragmentWGSL: shaderChunksWGSL.reprojectPS,
+            vertexGLSL: ShaderUtils.shaderChunks.glsl.get('reprojectVS'),
+            vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('reprojectVS'),
+            fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('reprojectPS'),
+            fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('reprojectPS'),
             fragmentIncludes: includes,
             fragmentDefines: defines
         });
