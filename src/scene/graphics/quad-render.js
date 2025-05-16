@@ -14,6 +14,7 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
 const _quadPrimitive = {
     type: PRIMITIVE_TRISTRIP,
     base: 0,
+    baseVertex: 0,
     count: 4,
     indexed: false
 };
