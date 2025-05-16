@@ -419,7 +419,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             // anisotropy
             if (options.litOptions.enableGGXSpecular) {
                 this._addMapDefines(fDefines, 'anisotropy', 'anisotropyPS', options, litShader.chunks, textureMapping);
-                this._addMapDefines(fDefines, 'anisotropyRotation', 'anisotropyRotationPS', options, litShader.chunks, textureMapping);
             }
 
             // lightmap

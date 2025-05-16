@@ -88,7 +88,6 @@ export default /* glsl */`
             #ifdef LIT_LIGHTING
                 #ifdef LIT_GGX_SPECULAR
                     #include "anisotropyPS"
-                    #include "anisotropyRotationPS"
                 #endif
             #endif
         #endif
@@ -210,7 +209,6 @@ export default /* glsl */`
                 #ifdef LIT_LIGHTING
                     #ifdef LIT_GGX_SPECULAR
                         getAnisotropy();
-                        getAnisotropyRotation();
                     #endif
                 #endif
             #endif

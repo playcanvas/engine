@@ -15,7 +15,6 @@ import clearCoatPS from './standard/frag/clearCoat.js';
 import clearCoatGlossPS from './standard/frag/clearCoatGloss.js';
 import clearCoatNormalPS from './standard/frag/clearCoatNormal.js';
 import anisotropyPS from './standard/frag/anisotropy.js';
-import anisotropyRotationPS from './standard/frag/anisotropyRotation.js';
 import clusteredLightUtilsPS from './lit/frag/clusteredLightUtils.js';
 import clusteredLightCookiesPS from './lit/frag/clusteredLightCookies.js';
 import clusteredLightShadowsPS from './lit/frag/clusteredLightShadows.js';
@@ -235,7 +234,6 @@ const shaderChunks = {
     clearCoatGlossPS,
     clearCoatNormalPS,
     anisotropyPS,
-    anisotropyRotationPS,
     clusteredLightCookiesPS,
     clusteredLightShadowsPS,
     clusteredLightUtilsPS,
