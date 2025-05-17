@@ -1,13 +1,18 @@
 export default /* glsl */`
 
 #ifdef LIT_GGX_SPECULAR
-    uniform float material_anisotropy;
+    uniform float material_anisotropyIntensity;
     uniform vec2 material_anisotropyRotation;
 #endif
 
 void getAnisotropy() {
-    dAnisotropy = material_anisotropy;
+    dAnisotropy = 0.0;
+    dAnisotropyRotation = vec2(1.0,0.0);
+
+#ifdef LIT_GGX_SPECULAR
+    dAnisotropy = material_anisotropyIntensity;
     dAnisotropyRotation = material_anisotropyRotation;
+#endif
 
     #ifdef STD_ANISOTROPY_TEXTURE
     dAnisotropy *= texture2DBias({STD_ANISOTROPY_TEXTURE_NAME}, {STD_ANISOTROPY_TEXTURE_UV}, textureBias).b;

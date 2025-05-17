@@ -10,6 +10,7 @@ const STANDARD_MAT_PROPS = [
     ['alphaFade', 'boolean'],
     ['ambient', 'Color'],
     ['anisotropy', 'number'],
+    ['anisotropyIntensity', 'number'],
     ['anisotropyRotation', 'number'],
     ['anisotropyMap', 'Texture|null'],
     ['anisotropyMapOffset', 'Vec2'],

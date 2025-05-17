@@ -16,7 +16,7 @@ describe('StandardMaterial', function () {
         expect(material.ambient.r).to.equal(1);
         expect(material.ambient.g).to.equal(1);
         expect(material.ambient.b).to.equal(1);
-        expect(material.anisotropy).to.equal(0);
+        expect(material.anisotropyIntensity).to.equal(0);
         expect(material.anisotropyMap).to.be.null;
         expect(material.anisotropyMapOffset).to.be.an.instanceof(Vec2);
         expect(material.anisotropyMapOffset.x).to.equal(0);

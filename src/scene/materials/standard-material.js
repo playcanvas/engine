@@ -130,11 +130,11 @@ const _tempColor = new Color();
  * @property {string} specularityFactorVertexColorChannel Vertex color channels to use for specularity factor. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
- * {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
- * @property {number} anisotropy Defines amount of anisotropy. Requires
+ * {@link StandardMaterial#anisotropyIntensity}  parameter to set material anisotropy.
+ * @property {number} anisotropyIntensity Defines amount of anisotropy. Requires
  * {@link StandardMaterial#enableGGXSpecular} is set to true.
- * - When anisotropy == 0, specular is isotropic.
- * - Specular anisotropy increases as anisotropy value increases to maximum of 1.
+ * - When anisotropyIntensity == 0, specular is isotropic.
+ * - Specular anisotropy increases as anisotropyIntensity value increases to maximum of 1.
  * @property {number} anisotropyRotation Defines the rotation of anisotropy.
  * @property {Texture|null} anisotropyMap The anisotropy map of the material (default is null).
  * @property {number} anisotropyMapUv Anisotropy map UV channel.
@@ -716,7 +716,7 @@ class StandardMaterial extends Material {
         }
 
         if (this.enableGGXSpecular) {
-            this._setParameter('material_anisotropy', this.anisotropy);
+            this._setParameter('material_anisotropyIntensity', this.anisotropyIntensity);
             this._setParameter('material_anisotropyRotation', [Math.cos(this.anisotropyRotation), Math.sin(this.anisotropyRotation)]);
         }
 
@@ -1126,7 +1126,7 @@ function _defineMaterialProps() {
     _defineFloat('thickness', 0);
     _defineFloat('attenuationDistance', 0);
     _defineFloat('metalness', 1);
-    _defineFloat('anisotropy', 0);
+    _defineFloat('anisotropyIntensity', 0);
     _defineFloat('anisotropyRotation', 0);
     _defineFloat('clearCoat', 0);
     _defineFloat('clearCoatGloss', 1);
