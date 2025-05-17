@@ -135,7 +135,7 @@ const _tempColor = new Color();
  * {@link StandardMaterial#enableGGXSpecular} is set to true.
  * - When anisotropyIntensity == 0, specular is isotropic.
  * - Specular anisotropy increases as anisotropyIntensity value increases to maximum of 1.
- * @property {number} anisotropyRotation Defines the rotation of anisotropy.
+ * @property {number} anisotropyRotation Defines the rotation of anisotropy. The value is in radians.
  * @property {Texture|null} anisotropyMap The anisotropy map of the material (default is null).
  * @property {number} anisotropyMapUv Anisotropy map UV channel.
  * @property {Vec2} anisotropyMapTiling Controls the 2D tiling of the anisotropy map.
