@@ -654,6 +654,21 @@ Object.defineProperty(StandardMaterial.prototype, 'useGammaTonemap', {
     }
 });
 
+Object.defineProperty(StandardMaterial.prototype, 'anisotropy', {
+    get: function () {
+        const sign = Math.sign(Math.cos(this.anisotropyRotation * 2));
+        return this.anisotropyIntensity * sign;
+    },
+    set: function (value) {
+        this.anisotropyIntensity = Math.abs(value);
+        if (value >= 0) {
+            this.anisotropyRotation = 0;
+        } else {
+            this.anisotropyRotation = Math.PI / 2;
+        }
+    }
+});
+
 function _defineAlias(newName, oldName) {
     Object.defineProperty(StandardMaterial.prototype, oldName, {
         get: function () {
