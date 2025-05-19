@@ -131,8 +131,14 @@ assetListLoader.load(() => {
     // reflection material using the shader
     const refractionMaterial = new pc.ShaderMaterial({
         uniqueName: 'RefractionShader',
-        vertexGLSL: files['shader.vert'],
-        fragmentGLSL: files['shader.frag']
+        vertexGLSL: files['shader.glsl.vert'],
+        fragmentGLSL: files['shader.glsl.frag'],
+        vertexWGSL: files['shader.wgsl.vert'],
+        fragmentWGSL: files['shader.wgsl.frag'],
+        attributes: {
+            vertex_position: pc.SEMANTIC_POSITION,
+            vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
+        }
     });
     glass.render.material = refractionMaterial;
 

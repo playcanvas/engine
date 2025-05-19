@@ -724,8 +724,8 @@ class Material {
      * parts of the shader code.
      *
      * @param {string} name - The name of the define to set.
-     * @param {string|undefined|false} value - The value of the define. If undefined or false, the
-     * define is removed.
+     * @param {string|undefined|boolean} value - The value of the define. If undefined or false, the
+     * define is removed. If the value is true, the define is added without a specified value.
      */
     setDefine(name, value) {
         let modified = false;

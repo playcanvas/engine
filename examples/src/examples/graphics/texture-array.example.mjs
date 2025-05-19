@@ -142,8 +142,10 @@ assetListLoader.load(() => {
     // Create a new material with the new shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'MyShader',
-        vertexGLSL: files['shader.vert'],
-        fragmentGLSL: files['shader.frag'],
+        vertexGLSL: files['shader.glsl.vert'],
+        fragmentGLSL: files['shader.glsl.frag'],
+        vertexWGSL: files['shader.wgsl.vert'],
+        fragmentWGSL: files['shader.wgsl.frag'],
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0,
@@ -156,8 +158,10 @@ assetListLoader.load(() => {
     // Create a another material with the new shader
     const groundMaterial = new pc.ShaderMaterial({
         uniqueName: 'MyShaderGround',
-        vertexGLSL: files['shader.vert'],
-        fragmentGLSL: files['ground.frag'],
+        vertexGLSL: files['shader.glsl.vert'],
+        fragmentGLSL: files['ground.glsl.frag'],
+        vertexWGSL: files['shader.wgsl.vert'],
+        fragmentWGSL: files['ground.wgsl.frag'],
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0,
