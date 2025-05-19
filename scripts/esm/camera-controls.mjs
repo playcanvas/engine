@@ -142,19 +142,19 @@ class CameraControls extends Script {
      * @type {FlyTransformer}
      * @private
      */
-    _flyController = new FlyTransformer();
+    _flyTransformer = new FlyTransformer();
 
     /**
      * @type {OrbitTransformer}
      * @private
      */
-    _orbitController = new OrbitTransformer();
+    _orbitTransformer = new OrbitTransformer();
 
     /**
      * @type {FlyTransformer|OrbitTransformer}
      * @private
      */
-    _controller;
+    _transformer;
 
     /**
      * @type {CameraControls.MODE_ORBIT|CameraControls.MODE_FLY}
@@ -397,10 +397,10 @@ class CameraControls extends Script {
     set focusPoint(point) {
         this._switchMode(CameraControls.MODE_ORBIT);
 
-        if (this._controller instanceof OrbitTransformer) {
+        if (this._transformer instanceof OrbitTransformer) {
             const start = this._camera.entity.getPosition();
             this._startZoomDist = start.distance(point);
-            this._controller.focus(point, start, false);
+            this._transformer.focus(point, start, false);
             this.update(0);
         }
     }
@@ -408,8 +408,8 @@ class CameraControls extends Script {
     get focusPoint() {
         this._switchMode(CameraControls.MODE_ORBIT);
 
-        if (this._controller instanceof OrbitTransformer) {
-            return this._controller.point;
+        if (this._transformer instanceof OrbitTransformer) {
+            return this._transformer.point;
         }
         return this._camera.entity.getPosition();
     }
@@ -423,11 +423,11 @@ class CameraControls extends Script {
      * @type {number}
      */
     set focusDamping(damping) {
-        this._orbitController.focusDamping = damping;
+        this._orbitTransformer.focusDamping = damping;
     }
 
     get focusDamping() {
-        return this._orbitController.focusDamping;
+        return this._orbitTransformer.focusDamping;
     }
 
     /**
@@ -439,12 +439,12 @@ class CameraControls extends Script {
      * @type {number}
      */
     set rotateDamping(damping) {
-        this._flyController.rotateDamping = damping;
-        this._orbitController.rotateDamping = damping;
+        this._flyTransformer.rotateDamping = damping;
+        this._orbitTransformer.rotateDamping = damping;
     }
 
     get rotateDamping() {
-        return this._controller.rotateDamping;
+        return this._transformer.rotateDamping;
     }
 
     /**
@@ -456,11 +456,11 @@ class CameraControls extends Script {
      * @type {number}
      */
     set moveDamping(damping) {
-        this._flyController.moveDamping = damping;
+        this._flyTransformer.moveDamping = damping;
     }
 
     get moveDamping() {
-        return this._flyController.moveDamping;
+        return this._flyTransformer.moveDamping;
     }
 
     /**
@@ -472,11 +472,11 @@ class CameraControls extends Script {
      * @type {number}
      */
     set zoomDamping(damping) {
-        this._orbitController.zoomDamping = damping;
+        this._orbitTransformer.zoomDamping = damping;
     }
 
     get zoomDamping() {
-        return this._orbitController.zoomDamping;
+        return this._orbitTransformer.zoomDamping;
     }
 
     /**
@@ -489,8 +489,8 @@ class CameraControls extends Script {
     set pitchRange(range) {
         this._pitchRange.x = math.clamp(range.x, -360, 360);
         this._pitchRange.y = math.clamp(range.y, -360, 360);
-        this._flyController.pitchRange = this._pitchRange;
-        this._orbitController.pitchRange = this._pitchRange;
+        this._flyTransformer.pitchRange = this._pitchRange;
+        this._orbitTransformer.pitchRange = this._pitchRange;
     }
 
     get pitchRange() {
@@ -507,8 +507,8 @@ class CameraControls extends Script {
     set yawRange(range) {
         this._yawRange.x = math.clamp(range.x, -360, 360);
         this._yawRange.y = math.clamp(range.y, -360, 360);
-        this._flyController.yawRange = this._yawRange;
-        this._orbitController.yawRange = this._yawRange;
+        this._flyTransformer.yawRange = this._yawRange;
+        this._orbitTransformer.yawRange = this._yawRange;
     }
 
     get yawRange() {
@@ -525,7 +525,7 @@ class CameraControls extends Script {
     set zoomRange(range) {
         this._zoomRange.x = range.x;
         this._zoomRange.y = range.y <= range.x ? Infinity : range.y;
-        this._orbitController.zoomRange = this._zoomRange;
+        this._orbitTransformer.zoomRange = this._zoomRange;
     }
 
     get zoomRange() {
@@ -558,8 +558,8 @@ class CameraControls extends Script {
         this._flyMobileGamepadInput.destroy();
         this._gamepadInput.destroy();
 
-        this._flyController.destroy();
-        this._orbitController.destroy();
+        this._flyTransformer.destroy();
+        this._orbitTransformer.destroy();
     }
 
     /**
@@ -612,8 +612,8 @@ class CameraControls extends Script {
         // mobile input reattach
         this._reattachMobileInput();
 
-        // controller reattach
-        this._reattachController();
+        // transformer reattach
+        this._reattachTransformer();
     }
 
     /**
@@ -640,22 +640,22 @@ class CameraControls extends Script {
     /**
      * @private
      */
-    _reattachController() {
-        const controller = this._mode === CameraControls.MODE_FLY ? this._flyController : this._orbitController;
-        const currZoomDist = this._orbitController.zoom;
-        if (controller !== this._controller) {
-            if (this._controller) {
-                this._controller.detach();
+    _reattachTransformer() {
+        const transformer = this._mode === CameraControls.MODE_FLY ? this._flyTransformer : this._orbitTransformer;
+        const currZoomDist = this._orbitTransformer.zoom;
+        if (transformer !== this._transformer) {
+            if (this._transformer) {
+                this._transformer.detach();
             }
-            this._controller = controller;
-            this._controller.attach(this._camera.entity.getWorldTransform());
+            this._transformer = transformer;
+            this._transformer.attach(this._camera.entity.getWorldTransform());
         }
 
         // refocus if orbit mode
-        if (this._controller instanceof OrbitTransformer) {
+        if (this._transformer instanceof OrbitTransformer) {
             const start = this._camera.entity.getPosition();
             const point = tmpV1.copy(this._camera.entity.forward).mulScalar(currZoomDist).add(start);
-            this._controller.focus(point, start, false);
+            this._transformer.focus(point, start, false);
         }
     }
 
@@ -713,7 +713,7 @@ class CameraControls extends Script {
      * @private
      */
     _scaleZoom(zoom) {
-        const scale = math.clamp(this._orbitController.zoom / (ZOOM_SCALE_MULT * this.sceneSize), this.zoomScaleMin, 1);
+        const scale = math.clamp(this._orbitTransformer.zoom / (ZOOM_SCALE_MULT * this.sceneSize), this.zoomScaleMin, 1);
         return zoom * scale * this.zoomSpeed * this.sceneSize;
     }
 
@@ -800,15 +800,15 @@ class CameraControls extends Script {
      * @param {number} dt - The time delta.
      * @private
      */
-    _updateController(dt) {
-        if (this._controller instanceof OrbitTransformer) {
-            tmpM1.copy(this._controller.update(this._frame, this._camera, dt));
+    _updateTransformer(dt) {
+        if (this._transformer instanceof OrbitTransformer) {
+            tmpM1.copy(this._transformer.update(this._frame, this._camera, dt));
             this._camera.entity.setPosition(tmpM1.getTranslation());
             this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
         }
 
-        if (this._controller instanceof FlyTransformer) {
-            tmpM1.copy(this._controller.update(this._frame, dt));
+        if (this._transformer instanceof FlyTransformer) {
+            tmpM1.copy(this._transformer.update(this._frame, dt));
             this._camera.entity.setPosition(tmpM1.getTranslation());
             this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
         }
@@ -821,14 +821,14 @@ class CameraControls extends Script {
     focus(point, resetZoom = false) {
         this._switchMode(CameraControls.MODE_ORBIT);
 
-        if (this._controller instanceof OrbitTransformer) {
+        if (this._transformer instanceof OrbitTransformer) {
             if (resetZoom) {
                 const start = tmpV1.copy(this._camera.entity.forward)
                 .mulScalar(-this._startZoomDist)
                 .add(point);
-                this._controller.focus(point, start);
+                this._transformer.focus(point, start);
             } else {
-                this._controller.focus(point);
+                this._transformer.focus(point);
             }
         }
     }
@@ -840,16 +840,16 @@ class CameraControls extends Script {
     look(point, resetZoom = false) {
         this._switchMode(CameraControls.MODE_ORBIT);
 
-        if (this._controller instanceof OrbitTransformer) {
+        if (this._transformer instanceof OrbitTransformer) {
             if (resetZoom) {
                 const start = tmpV1.copy(this._camera.entity.getPosition())
                 .sub(point)
                 .normalize()
                 .mulScalar(this._startZoomDist)
                 .add(point);
-                this._controller.focus(point, start);
+                this._transformer.focus(point, start);
             } else {
-                this._controller.focus(point, this._camera.entity.getPosition());
+                this._transformer.focus(point, this._camera.entity.getPosition());
             }
         }
     }
@@ -861,8 +861,8 @@ class CameraControls extends Script {
     reset(point, start) {
         this._switchMode(CameraControls.MODE_ORBIT);
 
-        if (this._controller instanceof OrbitTransformer) {
-            this._controller.focus(point, start);
+        if (this._transformer instanceof OrbitTransformer) {
+            this._transformer.focus(point, start);
         }
     }
 
@@ -885,8 +885,8 @@ class CameraControls extends Script {
             return;
         }
 
-        // update controller
-        this._updateController(dt);
+        // update transformer
+        this._updateTransformer(dt);
     }
 }
 
