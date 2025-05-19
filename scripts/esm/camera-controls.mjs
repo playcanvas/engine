@@ -431,8 +431,8 @@ class CameraControls extends Script {
     }
 
     /**
-     * The rotate damping. A higher value means more damping. A value of 0 means no damping.
-     * The damping is applied to both the fly and orbit modes.
+     * The rotate damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
+     * damping. The damping is applied to both the fly and orbit modes.
      *
      * @attribute
      * @title Rotate Damping
@@ -448,8 +448,8 @@ class CameraControls extends Script {
     }
 
     /**
-     * The move damping. A higher value means more damping. A value of 0 means no damping.
-     * The damping is applied to the fly mode and the orbit mode when panning.
+     * The move damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
+     * damping. The damping is applied to the fly mode and the orbit mode when panning.
      *
      * @attribute
      * @title Move Damping
@@ -464,8 +464,8 @@ class CameraControls extends Script {
     }
 
     /**
-     * The zoom damping. A higher value means more damping. A value of 0 means no damping.
-     * The damping is applied to the orbit mode.
+     * The zoom damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
+     * damping. The damping is applied to the orbit mode.
      *
      * @attribute
      * @title Zoom Damping
