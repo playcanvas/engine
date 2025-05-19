@@ -5,6 +5,10 @@ import { Asset } from '../../asset/asset.js';
 import { ComponentSystem } from '../system.js';
 import { ParticleSystemComponent } from './component.js';
 import { ParticleSystemComponentData } from './data.js';
+import { particleChunksGLSL } from '../../../scene/shader-lib/collections/particle-chunks-glsl.js';
+import { particleChunksWGSL } from '../../../scene/shader-lib/collections/particle-chunks-wgsl.js';
+import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
+import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -121,6 +125,10 @@ class ParticleSystemComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.systems.on('update', this.onUpdate, this);
+
+        // register particle shader chunks
+        ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).add(particleChunksGLSL);
+        ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_WGSL).add(particleChunksWGSL);
     }
 
     initializeComponentData(component, _data, properties) {

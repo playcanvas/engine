@@ -5,8 +5,11 @@ import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import {
     FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8,
-    SEMANTIC_POSITION
+    SEMANTIC_POSITION,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
 } from '../../platform/graphics/constants.js';
+import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 /**
  * @import { Color } from '../../core/math/color.js'
@@ -103,10 +106,10 @@ class CoreExporter {
         const shader = ShaderUtils.createShader(device, {
             uniqueName: 'ShaderCoreExporterBlit',
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: ShaderUtils.shaderChunks.glsl.get('fullscreenQuadVS'),
-            fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('outputTex2DPS'),
-            vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('fullscreenQuadVS'),
-            fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('outputTex2DPS')
+            vertexGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('fullscreenQuadVS'),
+            fragmentGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('outputTex2DPS'),
+            vertexWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('fullscreenQuadVS'),
+            fragmentWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('outputTex2DPS')
         });
 
         device.scope.resolve('source').setValue(texture);

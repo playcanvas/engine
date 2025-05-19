@@ -227,6 +227,7 @@ export { ShaderUtils, createShader, createShaderFromCode } from './scene/shader-
 export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
 export { ChunkUtils } from './scene/shader-lib/chunk-utils.js';
+export { ShaderChunks } from './scene/shader-lib/shader-chunks.js';
 
 // SCENE / SKY
 export { Sky } from './scene/skybox/sky.js';

@@ -1,9 +1,10 @@
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
-import { SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import glslBilateralDeNoisePS from '../../scene/shader-lib/chunks-glsl/lightmapper/frag/bilateralDeNoise.js';
 import glslDilatePS from '../../scene/shader-lib/chunks-glsl/lightmapper/frag/dilate.js';
 import wgslBilateralDeNoisePS from '../../scene/shader-lib/chunks-wgsl/lightmapper/frag/bilateralDeNoise.js';
 import wgslDilatePS from '../../scene/shader-lib/chunks-wgsl/lightmapper/frag/dilate.js';
+import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 // size of the kernel - needs to match the constant in the shader
 const DENOISE_FILTER_SIZE = 15;
@@ -30,8 +31,8 @@ class LightmapFilters {
         this.device = device;
 
         // register shader chunks
-        ShaderUtils.shaderChunks.glsl.add(lightmapFiltersChunksGLSL);
-        ShaderUtils.shaderChunks.wgsl.add(lightmapFiltersChunksWLSL);
+        ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).add(lightmapFiltersChunksGLSL);
+        ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).add(lightmapFiltersChunksWLSL);
 
         this.constantTexSource = device.scope.resolve('source');
 
@@ -67,10 +68,10 @@ class LightmapFilters {
             this.shaderDenoise[index] = ShaderUtils.createShader(this.device, {
                 uniqueName: `lmBilateralDeNoise-${bakeHDR ? 'hdr' : 'rgbm'}`,
                 attributes: { vertex_position: SEMANTIC_POSITION },
-                vertexGLSL: ShaderUtils.shaderChunks.glsl.get('fullscreenQuadVS'),
-                vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('fullscreenQuadVS'),
-                fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('glslBilateralDeNoisePS'),
-                fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('wgslBilateralDeNoisePS'),
+                vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('fullscreenQuadVS'),
+                vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('fullscreenQuadVS'),
+                fragmentGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('glslBilateralDeNoisePS'),
+                fragmentWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('wgslBilateralDeNoisePS'),
                 fragmentDefines: defines
             });
 
@@ -99,10 +100,10 @@ class LightmapFilters {
             this.shaderDilate[index] = ShaderUtils.createShader(device, {
                 uniqueName: `lmDilate-${bakeHDR ? 'hdr' : 'rgbm'}`,
                 attributes: { vertex_position: SEMANTIC_POSITION },
-                vertexGLSL: ShaderUtils.shaderChunks.glsl.get('fullscreenQuadVS'),
-                vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('fullscreenQuadVS'),
-                fragmentGLSL: define + ShaderUtils.shaderChunks.glsl.get('glslDilatePS'),
-                fragmentWGSL: define + ShaderUtils.shaderChunks.wgsl.get('wgslDilatePS')
+                vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('fullscreenQuadVS'),
+                vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('fullscreenQuadVS'),
+                fragmentGLSL: define + ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('glslDilatePS'),
+                fragmentWGSL: define + ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('wgslDilatePS')
             });
         }
         return this.shaderDilate[index];

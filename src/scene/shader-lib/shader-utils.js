@@ -5,7 +5,6 @@ import { Debug } from '../../core/debug.js';
 import { ShaderGenerator } from './programs/shader-generator.js';
 import { ShaderPass } from '../shader-pass.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
-import { ShaderChunks } from './shader-chunks.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -30,13 +29,6 @@ class ShaderGeneratorPassThrough extends ShaderGenerator {
 }
 
 class ShaderUtils {
-    /**
-     * Object containing all default shader chunks used by shader generators.
-     *
-     * @type {ShaderChunks}
-     */
-    static shaderChunks = new ShaderChunks();
-
     /**
      * Creates a shader. When the active graphics device is WebGL, the provided GLSL vertex and
      * fragment source code is used. For WebGPU, if WGSL vertex and fragment source code is

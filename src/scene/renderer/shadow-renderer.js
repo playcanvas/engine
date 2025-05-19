@@ -5,7 +5,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import {
-    SEMANTIC_POSITION, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX,
+    SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX,
     UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
@@ -23,6 +23,7 @@ import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -498,10 +499,10 @@ class ShadowRenderer {
             blurShader = ShaderUtils.createShader(this.device, {
                 uniqueName: `blurVsm${blurMode}${filterSize}`,
                 attributes: { vertex_position: SEMANTIC_POSITION },
-                vertexGLSL: ShaderUtils.shaderChunks.glsl.get('fullscreenQuadVS'),
-                vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('fullscreenQuadVS'),
-                fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('blurVSMPS'),
-                fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('blurVSMPS'),
+                vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('fullscreenQuadVS'),
+                vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('fullscreenQuadVS'),
+                fragmentGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('blurVSMPS'),
+                fragmentWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('blurVSMPS'),
                 fragmentDefines: defines
             });
 

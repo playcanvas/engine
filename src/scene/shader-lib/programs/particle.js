@@ -2,9 +2,7 @@ import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SHADERLANGUAGE_GLSL, SHADERLANGU
 import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { blendNames } from '../../constants.js';
 import { ShaderGenerator } from './shader-generator.js';
-import { ShaderUtils } from '../shader-utils.js';
-import { particleChunksGLSL } from '../collections/particle-chunks-glsl.js';
-import { particleChunksWGSL } from '../collections/particle-chunks-wgsl.js';
+import { ShaderChunks } from '../shader-chunks.js';
 
 const normalTypeNames = [
     'NONE',
@@ -13,14 +11,6 @@ const normalTypeNames = [
 ];
 
 class ShaderGeneratorParticle extends ShaderGenerator {
-    constructor() {
-        super();
-
-        // register particle shader chunks
-        ShaderUtils.shaderChunks.glsl.add(particleChunksGLSL);
-        ShaderUtils.shaderChunks.wgsl.add(particleChunksWGSL);
-    }
-
     generateKey(options) {
         const definesHash = ShaderGenerator.definesHash(options.defines);
         let key = `particle_${definesHash}_`;
@@ -76,7 +66,7 @@ class ShaderGeneratorParticle extends ShaderGenerator {
 
         // TODO: considering adding support for material shader chunk overrides
         const shaderLanguage = device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
-        const engineChunks = device.isWebGPU ? ShaderUtils.shaderChunks.wgsl : ShaderUtils.shaderChunks.glsl;
+        const engineChunks = ShaderChunks.get(device, shaderLanguage);
 
         const attributes = {};
         const vDefines = this.createVertexDefines(options, attributes);

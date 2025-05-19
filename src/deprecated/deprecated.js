@@ -8,7 +8,8 @@ import {
     BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
     PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
+    SHADERLANGUAGE_GLSL
 } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
@@ -60,6 +61,7 @@ import { RigidBodyComponent } from '../framework/components/rigid-body/component
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
 import { ShaderUtils } from '../scene/shader-lib/shader-utils.js';
+import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 // MATH
 
@@ -407,12 +409,12 @@ export const LitOptions = LitShaderOptions;
 // deprecated access to global shader chunks
 export const shaderChunks = new Proxy({}, {
     get(target, prop) {
-        Debug.deprecated(`Using pc.shaderChunks to access a shader chunks is deprecated. Use pc.ShaderUtils.shaderChunks instead, for example: pc.ShaderUtils.shaderChunks.glsl.get('${prop}');`);
-        return ShaderUtils.shaderChunks.glsl.get(prop);
+        Debug.deprecated(`Using pc.shaderChunks to access global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('${prop}');`);
+        return ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).get(prop);
     },
     set(target, prop, value) {
-        Debug.deprecated(`Using pc.shaderChunks to override a shader chunks is deprecated. Use pc.ShaderUtils.shaderChunks instead, for example: pc.ShaderUtils.shaderChunks.glsl.set('${prop}', 'chunk code');`);
-        ShaderUtils.shaderChunks.glsl.set(prop, value);
+        Debug.deprecated(`Using pc.shaderChunks to override global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).set('${prop}');`);
+        ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).set(prop, value);
         return true;
     }
 });

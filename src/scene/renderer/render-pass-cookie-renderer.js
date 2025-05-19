@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { CULLFACE_NONE, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI } from '../constants.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
@@ -10,6 +10,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { QuadRender } from '../graphics/quad-render.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 const _viewport = new Vec4();
 
@@ -113,10 +114,10 @@ class RenderPassCookieRenderer extends RenderPass {
             const shader = ShaderUtils.createShader(this.device, {
                 uniqueName: 'cookieRenderer2d',
                 attributes: { vertex_position: SEMANTIC_POSITION },
-                vertexGLSL: ShaderUtils.shaderChunks.glsl.get('cookieBlitVS'),
-                vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('cookieBlitVS'),
-                fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('cookieBlit2DPS'),
-                fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('cookieBlit2DPS')
+                vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('cookieBlitVS'),
+                vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('cookieBlitVS'),
+                fragmentGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('cookieBlit2DPS'),
+                fragmentWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('cookieBlit2DPS')
             });
             this._quadRenderer2D = new QuadRender(shader);
         }
@@ -128,10 +129,10 @@ class RenderPassCookieRenderer extends RenderPass {
             const shader = ShaderUtils.createShader(this.device, {
                 uniqueName: 'cookieRendererCube',
                 attributes: { vertex_position: SEMANTIC_POSITION },
-                vertexGLSL: ShaderUtils.shaderChunks.glsl.get('cookieBlitVS'),
-                vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('cookieBlitVS'),
-                fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('cookieBlitCubePS'),
-                fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('cookieBlitCubePS')
+                vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('cookieBlitVS'),
+                vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('cookieBlitVS'),
+                fragmentGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('cookieBlitCubePS'),
+                fragmentWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('cookieBlitCubePS')
             });
             this._quadRendererCube = new QuadRender(shader);
         }

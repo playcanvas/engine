@@ -125,7 +125,7 @@ assetListLoader.load(() => {
     dirLight.setLocalEulerAngles(45, 350, 20);
 
     // Create a new material with a fog shader
-    const screenDepthChunk = pc.ShaderUtils.shaderChunks.glsl.get('screenDepthPS');
+    const screenDepthChunk = pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_GLSL).get('screenDepthPS');
     const material = new pc.ShaderMaterial({
         uniqueName: 'GroundFogShader',
         vertexGLSL: `#define VERTEXSHADER\n${screenDepthChunk}${files['shader.vert']}`,

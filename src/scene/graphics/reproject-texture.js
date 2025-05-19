@@ -4,7 +4,9 @@ import { Vec3 } from '../../core/math/vec3.js';
 import {
     FILTER_NEAREST,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE,
-    SEMANTIC_POSITION
+    SEMANTIC_POSITION,
+    SHADERLANGUAGE_WGSL,
+    SHADERLANGUAGE_GLSL
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
@@ -15,6 +17,7 @@ import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
  * @import { Vec4 } from '../../core/math/vec4.js'
@@ -439,7 +442,7 @@ function reprojectTexture(source, target, options = {}) {
         defines.set('{NUM_SAMPLES_SQRT}', Math.round(Math.sqrt(numSamples)).toFixed(1));
 
         const wgsl = device.isWebGPU;
-        const chunks = wgsl ? ShaderUtils.shaderChunks.wgsl : ShaderUtils.shaderChunks.glsl;
+        const chunks = ShaderChunks.get(device, wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
         const includes = new Map();
         includes.set('decodePS', chunks.get('decodePS'));
         includes.set('encodePS', chunks.get('encodePS'));
@@ -447,10 +450,10 @@ function reprojectTexture(source, target, options = {}) {
         shader = ShaderUtils.createShader(device, {
             uniqueName: shaderKey,
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: ShaderUtils.shaderChunks.glsl.get('reprojectVS'),
-            vertexWGSL: ShaderUtils.shaderChunks.wgsl.get('reprojectVS'),
-            fragmentGLSL: ShaderUtils.shaderChunks.glsl.get('reprojectPS'),
-            fragmentWGSL: ShaderUtils.shaderChunks.wgsl.get('reprojectPS'),
+            vertexGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('reprojectVS'),
+            vertexWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('reprojectVS'),
+            fragmentGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('reprojectPS'),
+            fragmentWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('reprojectPS'),
             fragmentIncludes: includes,
             fragmentDefines: defines
         });

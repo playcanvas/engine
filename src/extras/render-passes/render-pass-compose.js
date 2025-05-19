@@ -3,6 +3,8 @@ import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
+import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
+import { SHADERLANGUAGE_GLSL } from '../../platform/graphics/constants.js';
 
 // Contrast Adaptive Sharpening (CAS) is used to apply the sharpening. It's based on AMD's
 // FidelityFX CAS, WebGL implementation: https://www.shadertoy.com/view/wtlSWB. It's best to run it
@@ -518,7 +520,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 if (this.isSharpnessEnabled) defines.set('CAS', true);
                 if (this._debug) defines.set('DEBUG_COMPOSE', this._debug);
 
-                const includes = new Map(ShaderUtils.shaderChunks.glsl);
+                const includes = new Map(ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL));
 
                 this.shader = this.createQuadShader(`ComposeShader-${key}`, fragmentShader, {
                     fragmentIncludes: includes,

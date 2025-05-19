@@ -1,15 +1,24 @@
+import { SHADERLANGUAGE_GLSL } from '../../platform/graphics/constants.js';
+import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { ShaderChunkMap } from './shader-chunk-map.js';
 
 /**
- * A collection of GLSL and WGSL shader chunks, used by {@link Material#shaderChunks}.
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ */
+
+const _chunksCache = new DeviceCache();
+
+/**
+ * A collection of GLSL and WGSL shader chunks, used to generate shaders.
  *
- * @ignore
+ * @category Graphics
  */
 class ShaderChunks {
     /**
      * A map of shader chunks for GLSL.
      *
      * @type {ShaderChunkMap}
+     * @ignore
      */
     glsl = new ShaderChunkMap();
 
@@ -17,8 +26,23 @@ class ShaderChunks {
      * A map of shader chunks for WGSL.
      *
      * @type {ShaderChunkMap}
+     * @ignore
      */
     wgsl = new ShaderChunkMap();
+
+    /**
+     * Returns a shader chunks map for the given device and shader language.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {string} shaderLanguage - The shader language to use (GLSL or WGSL).
+     * @returns {ShaderChunkMap} The shader chunks for the specified language.
+     */
+    static get(device, shaderLanguage = SHADERLANGUAGE_GLSL) {
+        const cache = _chunksCache.get(device, () => {
+            return new ShaderChunks();
+        });
+        return shaderLanguage === SHADERLANGUAGE_GLSL ? cache.glsl : cache.wgsl;
+    }
 
     /**
      * Specifies the API version of the shader chunks.
@@ -40,14 +64,6 @@ class ShaderChunks {
 
     get key() {
         return `GLSL:${this.glsl.key}|WGSL:${this.wgsl.key}|API:${this.version}`;
-    }
-
-    /**
-     * Removes all shader chunks.
-     */
-    clear() {
-        this.glsl.clear();
-        this.wgsl.clear();
     }
 
     isDirty() {

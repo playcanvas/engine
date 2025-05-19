@@ -2,7 +2,7 @@ import { hashCode } from '../../../core/hash.js';
 import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
-import { ShaderUtils } from '../shader-utils.js';
+import { ShaderChunks } from '../shader-chunks.js';
 
 class ShaderGeneratorShader extends ShaderGenerator {
     generateKey(options) {
@@ -95,7 +95,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         };
 
         // includes - default chunks
-        const sharedIncludes = new Map(wgsl ? ShaderUtils.shaderChunks.wgsl : ShaderUtils.shaderChunks.glsl);
+        const sharedIncludes = new Map(ShaderChunks.get(device, wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL));
 
         this.createAttributesDefinition(definitionOptions, options);
         this.createVertexDefinition(definitionOptions, options, sharedIncludes, wgsl);

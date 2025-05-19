@@ -18,7 +18,7 @@ import { ChunkUtils } from '../chunk-utils.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../chunks-glsl/chunk-validation.js';
 import { Debug } from '../../../core/debug.js';
-import { ShaderUtils } from '../shader-utils.js';
+import { ShaderChunks } from '../shader-chunks.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -124,7 +124,7 @@ class LitShader {
         }
 
         // start with the default engine chunks
-        const engineChunks = this.shaderLanguage === SHADERLANGUAGE_GLSL ? ShaderUtils.shaderChunks.glsl : ShaderUtils.shaderChunks.wgsl;
+        const engineChunks = ShaderChunks.get(device, this.shaderLanguage);
         this.chunks = new Map(engineChunks);
 
         // optionally add user chunks
@@ -220,7 +220,7 @@ class LitShader {
 
             // only attach these if the default instancing chunk is used, otherwise it is expected
             // for the user to provide required attributes using material.setAttribute
-            const languageChunks = this.shaderLanguage === SHADERLANGUAGE_GLSL ? ShaderUtils.shaderChunks.glsl : ShaderUtils.shaderChunks.wgsl;
+            const languageChunks = ShaderChunks.get(this.device, this.shaderLanguage);
             if (this.chunks.get('transformInstancingVS') === languageChunks.get('transformInstancingVS')) {
                 attributes.instance_line1 = SEMANTIC_ATTR12;
                 attributes.instance_line2 = SEMANTIC_ATTR13;
