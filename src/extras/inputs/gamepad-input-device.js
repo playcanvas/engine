@@ -1,6 +1,12 @@
 import { InputDelta, InputDevice } from './input.js';
 
-class GamepadInput extends InputDevice {
+/**
+ * Game pad input device class
+ *
+ * @category InputDevice
+ * @alpha
+ */
+class GamepadInputDevice extends InputDevice {
     /**
      * @override
      */
@@ -27,7 +33,7 @@ class GamepadInput extends InputDevice {
     }
 
     /**
-     * @returns {{ [K in keyof GamepadInput["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof GamepadInputDevice["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
@@ -47,4 +53,4 @@ class GamepadInput extends InputDevice {
     }
 }
 
-export { GamepadInput };
+export { GamepadInputDevice };

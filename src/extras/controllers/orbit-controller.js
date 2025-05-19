@@ -34,6 +34,12 @@ const EPSILON = 0.001;
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
+/**
+ * The orbit controller.
+ *
+ * @category Controllers
+ * @alpha
+ */
 class OrbitController extends Controller {
     /**
      * @type {boolean}

@@ -8,9 +8,7 @@
         "./src/index.js"
     ],
     "exclude": [
-        "**/node_modules/**",
-        "./src/extras/controllers/**",
-        "./src/extras/inputs/**"
+        "**/node_modules/**"
     ],
     "excludeNotDocumented": true,
     "favicon": "utils/typedoc/favicon.ico",

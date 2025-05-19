@@ -27,12 +27,12 @@ export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 export { CameraFrame } from './render-passes/camera-frame.js';
 
-// INPUTS
-export { JoystickDoubleInput } from './inputs/joystickdouble-input.js';
-export { JoystickTouchInput } from './inputs/joysticktouch-input.js';
-export { KeyboardMouseInput } from './inputs/keyboardmouse-input.js';
-export { MultiTouchInput } from './inputs/multitouch-input.js';
-export { GamepadInput } from './inputs/gamepad-input.js';
+// INPUT DEVICES
+export { JoystickDoubleInputDevice } from './inputs/joystickdouble-input-device.js';
+export { JoystickTouchInputDevice } from './inputs/joysticktouch-input-device.js';
+export { KeyboardMouseInputDevice } from './inputs/keyboardmouse-input-device.js';
+export { MultiTouchInputDevice } from './inputs/multitouch-input-device.js';
+export { GamepadInputDevice } from './inputs/gamepad-input-device.js';
 
 // CONTROLLERS
 export { FlyController } from './controllers/fly-controller.js';

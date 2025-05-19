@@ -25,6 +25,12 @@ const tmpQ1 = new Quat();
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
+/**
+ * The fly controller.
+ *
+ * @category Controllers
+ * @alpha
+ */
 class FlyController extends Controller {
     /**
      * @type {Vec3}

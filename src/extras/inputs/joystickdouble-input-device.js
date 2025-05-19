@@ -1,7 +1,13 @@
 import { InputDelta, InputDevice } from './input.js';
 import { Joystick } from './joystick.js';
 
-class JoystickTouchInput extends InputDevice {
+/**
+ * Double joystick input device class
+ *
+ * @category InputDevice
+ * @alpha
+ */
+class JoystickDoubleInputDevice extends InputDevice {
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
      * @private
@@ -12,38 +18,46 @@ class JoystickTouchInput extends InputDevice {
      * @type {Joystick}
      * @private
      */
-    _joystick;
+    _leftJoystick;
+
+    /**
+     * @type {Joystick}
+     * @private
+     */
+    _rightJoystick;
 
     /**
      * @override
      */
     deltas = {
-        stick: new InputDelta(2),
-        touch: new InputDelta(2)
+        leftStick: new InputDelta(2),
+        rightStick: new InputDelta(2)
     };
 
     constructor() {
         super();
 
-        this._joystick = new Joystick();
+        this._leftJoystick = new Joystick();
+        this._rightJoystick = new Joystick();
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
     }
 
-    get joystick() {
-        return this._joystick;
+    get leftJoystick() {
+        return this._leftJoystick;
+    }
+
+    get rightJoystick() {
+        return this._rightJoystick;
     }
 
     /**
-     * @private
      * @param {PointerEvent} event - The pointer event.
+     * @private
      */
     _onPointerDown(event) {
-        if (event.pointerType !== 'touch') {
-            return;
-        }
         this._element?.setPointerCapture(event.pointerId);
 
         const left = event.clientX < window.innerWidth * 0.5;
@@ -54,8 +68,11 @@ class JoystickTouchInput extends InputDevice {
         });
 
         if (left) {
-            this._joystick.setBase(event.clientX, event.clientY);
-            this._joystick.setStick(event.clientX, event.clientY);
+            this._leftJoystick.setBase(event.clientX, event.clientY);
+            this._leftJoystick.setStick(event.clientX, event.clientY);
+        } else {
+            this._rightJoystick.setBase(event.clientX, event.clientY);
+            this._rightJoystick.setStick(event.clientX, event.clientY);
         }
     }
 
@@ -64,9 +81,6 @@ class JoystickTouchInput extends InputDevice {
      * @private
      */
     _onPointerMove(event) {
-        if (event.pointerType !== 'touch') {
-            return;
-        }
         if (event.target !== this._element) {
             return;
         }
@@ -79,9 +93,9 @@ class JoystickTouchInput extends InputDevice {
         data.y = event.clientY;
 
         if (left) {
-            this._joystick.setStick(event.clientX, event.clientY);
+            this._leftJoystick.setStick(event.clientX, event.clientY);
         } else {
-            this.deltas.touch.add([event.movementX, event.movementY]);
+            this._rightJoystick.setStick(event.clientX, event.clientY);
         }
 
     }
@@ -91,9 +105,6 @@ class JoystickTouchInput extends InputDevice {
      * @private
      */
     _onPointerUp(event) {
-        if (event.pointerType !== 'touch') {
-            return;
-        }
         this._element?.releasePointerCapture(event.pointerId);
 
         const data = this._pointerData.get(event.pointerId);
@@ -104,7 +115,9 @@ class JoystickTouchInput extends InputDevice {
         this._pointerData.delete(event.pointerId);
 
         if (left) {
-            this._joystick.reset();
+            this._leftJoystick.reset();
+        } else {
+            this._rightJoystick.reset();
         }
 
     }
@@ -139,20 +152,22 @@ class JoystickTouchInput extends InputDevice {
     }
 
     /**
-     * @returns {{ [K in keyof JoystickTouchInput["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof JoystickDoubleInputDevice["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
-        this.deltas.stick.add([this._joystick.value.x, this._joystick.value.y]);
+        this.deltas.leftStick.add([this._leftJoystick.value.x, this._leftJoystick.value.y]);
+        this.deltas.rightStick.add([this._rightJoystick.value.x, this._rightJoystick.value.y]);
 
         return super.frame();
     }
 
     destroy() {
-        this._joystick.reset();
+        this._leftJoystick.reset();
+        this._rightJoystick.reset();
 
         super.destroy();
     }
 }
 
-export { JoystickTouchInput };
+export { JoystickDoubleInputDevice };

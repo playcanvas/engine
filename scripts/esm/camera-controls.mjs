@@ -1,10 +1,10 @@
 import {
     math,
-    GamepadInput,
-    JoystickDoubleInput,
-    JoystickTouchInput,
-    KeyboardMouseInput,
-    MultiTouchInput,
+    GamepadInputDevice,
+    JoystickDoubleInputDevice,
+    JoystickTouchInputDevice,
+    KeyboardMouseInputDevice,
+    MultiTouchInputDevice,
     FlyController,
     OrbitController,
     Script,
@@ -103,40 +103,40 @@ class CameraControls extends Script {
     _useVirtualGamepad = false;
 
     /**
-     * @type {KeyboardMouseInput}
+     * @type {KeyboardMouseInputDevice}
      * @private
      */
-    _desktopInput = new KeyboardMouseInput();
+    _desktopInput = new KeyboardMouseInputDevice();
 
     /**
-     * @type {JoystickDoubleInput | JoystickTouchInput | MultiTouchInput}
+     * @type {JoystickDoubleInputDevice | JoystickTouchInputDevice | MultiTouchInputDevice}
      * @private
      */
     _mobileInput;
 
     /**
-     * @type {MultiTouchInput}
+     * @type {MultiTouchInputDevice}
      * @private
      */
-    _orbitMobileInput = new MultiTouchInput();
+    _orbitMobileInput = new MultiTouchInputDevice();
 
     /**
-     * @type {JoystickTouchInput}
+     * @type {JoystickTouchInputDevice}
      * @private
      */
-    _flyMobileTouchInput = new JoystickTouchInput();
+    _flyMobileTouchInput = new JoystickTouchInputDevice();
 
     /**
-     * @type {JoystickDoubleInput}
+     * @type {JoystickDoubleInputDevice}
      * @private
      */
-    _flyMobileGamepadInput = new JoystickDoubleInput();
+    _flyMobileGamepadInput = new JoystickDoubleInputDevice();
 
     /**
-     * @type {GamepadInput}
+     * @type {GamepadInputDevice}
      * @private
      */
-    _gamepadInput = new GamepadInput();
+    _gamepadInput = new GamepadInputDevice();
 
     /**
      * @type {FlyController}
@@ -758,7 +758,7 @@ class CameraControls extends Script {
      * @private
      */
     _addMobileInputs() {
-        if (this._mobileInput instanceof MultiTouchInput) {
+        if (this._mobileInput instanceof MultiTouchInputDevice) {
             const { touch, pinch, count } = this._mobileInput.frame();
             this._state.touches += count[0];
 
@@ -768,14 +768,14 @@ class CameraControls extends Script {
             this._frame.pan ||= _pan;
         }
 
-        if (this._mobileInput instanceof JoystickTouchInput) {
+        if (this._mobileInput instanceof JoystickTouchInputDevice) {
             const { stick, touch } = this._mobileInput.frame();
 
             this._frame.rotate.add(tmpVa.fromArray(touch).mulScalar(this.rotateSpeed));
             this._frame.move.add(this._scaleMove(tmpV1.set(stick[0], 0, -stick[1])));
         }
 
-        if (this._mobileInput instanceof JoystickDoubleInput) {
+        if (this._mobileInput instanceof JoystickDoubleInputDevice) {
             const { leftStick, rightStick } = this._mobileInput.frame();
 
             this._frame.rotate.add(tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
