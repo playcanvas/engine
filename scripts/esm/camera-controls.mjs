@@ -1,14 +1,14 @@
 import {
     math,
+    FlyTransformer,
     GamepadInputDevice,
     JoystickDoubleInputDevice,
     JoystickTouchInputDevice,
     KeyboardMouseInputDevice,
+    Mat4,
     MultiTouchInputDevice,
-    FlyTransformer,
     OrbitTransformer,
     Script,
-    Mat4,
     Vec2,
     Vec3
 } from 'playcanvas';
