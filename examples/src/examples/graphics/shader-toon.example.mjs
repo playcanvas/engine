@@ -70,8 +70,10 @@ assetListLoader.load(() => {
     // Create a new material with a custom shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'toon',
-        vertexGLSL: files['shader.vert'],
-        fragmentGLSL: files['shader.frag'],
+        vertexGLSL: files['shader.glsl.vert'],
+        fragmentGLSL: files['shader.glsl.frag'],
+        vertexWGSL: files['shader.wgsl.vert'],
+        fragmentWGSL: files['shader.wgsl.frag'],
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aNormal: pc.SEMANTIC_NORMAL,

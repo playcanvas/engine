@@ -200,7 +200,6 @@ class ParticleSystemComponentSystem extends ComponentSystem {
 
     onUpdate(dt) {
         const components = this.store;
-        let numSteps;
         const stats = this.app.stats.particles;
         const composition = this.app.scene.layers;
 
@@ -231,6 +230,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
                     }
 
                     if (!data.paused) {
+                        let numSteps = 0;
                         emitter.simTime += dt;
                         if (emitter.simTime > emitter.fixedTimeStep) {
                             numSteps = Math.floor(emitter.simTime / emitter.fixedTimeStep);

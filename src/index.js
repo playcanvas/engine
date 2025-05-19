@@ -189,7 +189,7 @@ export { StencilParameters } from './platform/graphics/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
 // SCENE / ANIMATION
-export { Animation, Key, Node } from './scene/animation/animation.js';
+export { Animation, AnimationKey, AnimationNode } from './scene/animation/animation.js';
 export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
@@ -236,6 +236,7 @@ export { Sky } from './scene/skybox/sky.js';
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
 export { GSplat } from './scene/gsplat/gsplat.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';

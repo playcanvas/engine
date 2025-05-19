@@ -29,8 +29,8 @@ export function shaderChunks({
         transform(source, shader) {
             if (!filter(shader)) return;
 
-            source = source.replace(/\/\* *glsl *\*\/\s*(`.*?`)/gs, (match, glsl) => {
-                return glsl
+            source = source.replace(/\/\* *(glsl|wgsl) *\*\/\s*(`.*?`)/gs, (match, type, code) => {
+                return code
                 .trim() // trim whitespace
                 .replace(/\r/g, '') // Remove carriage returns
                 .replace(/ {4}/g, '\t') // 4 spaces to tabs

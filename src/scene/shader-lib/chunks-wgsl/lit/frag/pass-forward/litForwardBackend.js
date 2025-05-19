@@ -6,7 +6,7 @@ fn evaluateBackend() -> FragmentOutput {
 
     // apply SSAO during lighting
     #ifdef LIT_SSAO
-        litArgs_ao = litArgs_ao * textureSampleLevel(ssaoTexture, ssaoTextureSampler, pcPosition.xy * ssaoTextureSizeInv, 0.0).r;
+        litArgs_ao = litArgs_ao * textureSampleLevel(ssaoTexture, ssaoTextureSampler, pcPosition.xy * uniform.ssaoTextureSizeInv, 0.0).r;
     #endif
 
     // transform tangent space normals to world space
