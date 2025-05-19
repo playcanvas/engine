@@ -4,6 +4,7 @@ import { InputDelta, InputDevice } from './input.js';
 const PASSIVE = { passive: false };
 
 const array9 = new Array(9).fill(0);
+
 /**
  * Keyboard and mouse input device class
  *
