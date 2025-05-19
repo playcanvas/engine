@@ -60,7 +60,6 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
-import { ShaderUtils } from '../scene/shader-lib/shader-utils.js';
 import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 // MATH
