@@ -1,12 +1,13 @@
 import {
     CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL
 } from '../../platform/graphics/constants.js';
+
 import { BLEND_NONE, BLEND_PREMULTIPLIED, DITHER_NONE } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
- * @import { GraphicsDevice } from '../../../playcanvas.js'
+ * import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
 /**
