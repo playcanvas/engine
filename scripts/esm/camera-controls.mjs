@@ -480,7 +480,8 @@ class CameraControls extends Script {
     }
 
     /**
-     * The pitch range.
+     * The pitch range. In the range -360 to 360 degrees. The pitch range is applied to the fly mode
+     * and the orbit mode.
      *
      * @attribute
      * @title Pitch Range
@@ -498,7 +499,8 @@ class CameraControls extends Script {
     }
 
     /**
-     * The yaw range.
+     * The yaw range. In the range -360 to 360 degrees. The pitch range is applied to the fly mode
+     * and the orbit mode.
      *
      * @attribute
      * @title Yaw Range
