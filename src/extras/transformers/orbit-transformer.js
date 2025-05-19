@@ -5,7 +5,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Plane } from '../../core/shape/plane.js';
-import { Controller } from './controller.js';
+import { Transformer } from './transformer.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -35,12 +35,12 @@ const EPSILON = 0.001;
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 /**
- * The orbit controller.
+ * The orbit transformer.
  *
- * @category Controllers
+ * @category Transformers
  * @alpha
  */
-class OrbitController extends Controller {
+class OrbitTransformer extends Transformer {
     /**
      * @type {boolean}
      * @private
@@ -397,4 +397,4 @@ class OrbitController extends Controller {
     }
 }
 
-export { OrbitController };
+export { OrbitTransformer };

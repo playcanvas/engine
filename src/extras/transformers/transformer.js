@@ -1,6 +1,12 @@
 import { Mat4 } from '../../core/math/mat4.js';
 
-class Controller {
+/**
+ * The base class for all transformers.
+ *
+ * @category Transformers
+ * @alpha
+ */
+class Transformer {
     /**
      * @type {Mat4}
      * @protected
@@ -28,4 +34,4 @@ class Controller {
     }
 }
 
-export { Controller };
+export { Transformer };

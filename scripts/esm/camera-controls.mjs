@@ -5,8 +5,8 @@ import {
     JoystickTouchInputDevice,
     KeyboardMouseInputDevice,
     MultiTouchInputDevice,
-    FlyController,
-    OrbitController,
+    FlyTransformer,
+    OrbitTransformer,
     Script,
     Mat4,
     Vec2,
@@ -139,19 +139,19 @@ class CameraControls extends Script {
     _gamepadInput = new GamepadInputDevice();
 
     /**
-     * @type {FlyController}
+     * @type {FlyTransformer}
      * @private
      */
-    _flyController = new FlyController();
+    _flyController = new FlyTransformer();
 
     /**
-     * @type {OrbitController}
+     * @type {OrbitTransformer}
      * @private
      */
-    _orbitController = new OrbitController();
+    _orbitController = new OrbitTransformer();
 
     /**
-     * @type {FlyController|OrbitController}
+     * @type {FlyTransformer|OrbitTransformer}
      * @private
      */
     _controller;
@@ -397,7 +397,7 @@ class CameraControls extends Script {
     set focusPoint(point) {
         this._switchMode(CameraControls.MODE_ORBIT);
 
-        if (this._controller instanceof OrbitController) {
+        if (this._controller instanceof OrbitTransformer) {
             const start = this._camera.entity.getPosition();
             this._startZoomDist = start.distance(point);
             this._controller.focus(point, start, false);
@@ -408,7 +408,7 @@ class CameraControls extends Script {
     get focusPoint() {
         this._switchMode(CameraControls.MODE_ORBIT);
 
-        if (this._controller instanceof OrbitController) {
+        if (this._controller instanceof OrbitTransformer) {
             return this._controller.point;
         }
         return this._camera.entity.getPosition();
@@ -652,7 +652,7 @@ class CameraControls extends Script {
         }
 
         // refocus if orbit mode
-        if (this._controller instanceof OrbitController) {
+        if (this._controller instanceof OrbitTransformer) {
             const start = this._camera.entity.getPosition();
             const point = tmpV1.copy(this._camera.entity.forward).mulScalar(currZoomDist).add(start);
             this._controller.focus(point, start, false);
@@ -801,13 +801,13 @@ class CameraControls extends Script {
      * @private
      */
     _updateController(dt) {
-        if (this._controller instanceof OrbitController) {
+        if (this._controller instanceof OrbitTransformer) {
             tmpM1.copy(this._controller.update(this._frame, this._camera, dt));
             this._camera.entity.setPosition(tmpM1.getTranslation());
             this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
         }
 
-        if (this._controller instanceof FlyController) {
+        if (this._controller instanceof FlyTransformer) {
             tmpM1.copy(this._controller.update(this._frame, dt));
             this._camera.entity.setPosition(tmpM1.getTranslation());
             this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
@@ -821,7 +821,7 @@ class CameraControls extends Script {
     focus(point, resetZoom = false) {
         this._switchMode(CameraControls.MODE_ORBIT);
 
-        if (this._controller instanceof OrbitController) {
+        if (this._controller instanceof OrbitTransformer) {
             if (resetZoom) {
                 const start = tmpV1.copy(this._camera.entity.forward)
                 .mulScalar(-this._startZoomDist)
@@ -840,7 +840,7 @@ class CameraControls extends Script {
     look(point, resetZoom = false) {
         this._switchMode(CameraControls.MODE_ORBIT);
 
-        if (this._controller instanceof OrbitController) {
+        if (this._controller instanceof OrbitTransformer) {
             if (resetZoom) {
                 const start = tmpV1.copy(this._camera.entity.getPosition())
                 .sub(point)
@@ -861,7 +861,7 @@ class CameraControls extends Script {
     reset(point, start) {
         this._switchMode(CameraControls.MODE_ORBIT);
 
-        if (this._controller instanceof OrbitController) {
+        if (this._controller instanceof OrbitTransformer) {
             this._controller.focus(point, start);
         }
     }

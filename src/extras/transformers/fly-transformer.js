@@ -2,7 +2,7 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 import { math } from '../../core/math/math.js';
-import { Controller } from './controller.js';
+import { Transformer } from './transformer.js';
 
 /** @import { Mat4 } from '../../core/math/mat4.js'; */
 
@@ -28,10 +28,10 @@ const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 /**
  * The fly controller.
  *
- * @category Controllers
+ * @category Transformers
  * @alpha
  */
-class FlyController extends Controller {
+class FlyTransformer extends Transformer {
     /**
      * @type {Vec3}
      * @private
@@ -202,4 +202,4 @@ class FlyController extends Controller {
     }
 }
 
-export { FlyController };
+export { FlyTransformer };

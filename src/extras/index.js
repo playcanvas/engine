@@ -34,9 +34,10 @@ export { KeyboardMouseInputDevice } from './inputs/keyboardmouse-input-device.js
 export { MultiTouchInputDevice } from './inputs/multitouch-input-device.js';
 export { GamepadInputDevice } from './inputs/gamepad-input-device.js';
 
-// CONTROLLERS
-export { FlyController } from './controllers/fly-controller.js';
-export { OrbitController } from './controllers/orbit-controller.js';
+// TRANSFORMERS
+export { Transformer } from './transformers/transformer.js';
+export { FlyTransformer } from './transformers/fly-transformer.js';
+export { OrbitTransformer } from './transformers/orbit-transformer.js';
 
 // GIZMOS
 export {
