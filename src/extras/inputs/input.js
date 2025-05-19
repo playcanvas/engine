@@ -1,3 +1,9 @@
+/**
+ * Represents an input delta.
+ *
+ * @category InputDevice
+ * @alpha
+ */
 class InputDelta {
     /**
      * @type {number[]}
@@ -29,6 +35,12 @@ class InputDelta {
     }
 }
 
+/**
+ * The base class for all input devices.
+ *
+ * @category InputDevice
+ * @alpha
+ */
 class InputDevice {
     /**
      * @type {HTMLElement | null}
