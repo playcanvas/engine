@@ -1,4 +1,4 @@
-// @config DESCRIPTION This example demonstrates the clear coat material. Visually, the Coated column should contain highlights from both the Base and Boating layers.
+// @config DESCRIPTION This example demonstrates anisotropy on a disc model. It showcases the rendering of anisotropic highlights and material properties.
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
