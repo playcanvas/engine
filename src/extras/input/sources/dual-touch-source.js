@@ -71,15 +71,6 @@ class DualTouchSource extends InputSource {
     }
 
     /**
-     * The layout of the dual touch input source. The layout can be one of the following:
-     *
-     * - `joystick-joystick`: Two virtual joysticks.
-     * - `joystick-touch`: One virtual joystick and one touch.
-     * - `touch-joystick`: One touch and one virtual joystick.
-     * - `touch-touch`: Two touches.
-     *
-     * Default is `joystick-touch`.
-     *
      * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
      */
     set layout(value) {
