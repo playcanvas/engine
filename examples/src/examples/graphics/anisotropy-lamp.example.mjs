@@ -84,6 +84,7 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
     camera.script.orbitCamera.yaw = 90;
     camera.script.orbitCamera.distance = 0.3;
+    camera.camera.requestSceneColorMap(true);
 
     const directionalLight = new pc.Entity();
     directionalLight.addComponent('light', {
