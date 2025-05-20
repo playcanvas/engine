@@ -77,7 +77,7 @@ fi
 
 # Checked out on release branch
 if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
-    # Determine which release type
+    # Determine which release type (defaults to patch)
     TYPE=$1
     if [[ -z "$TYPE" ]]; then
         TYPE="patch"
@@ -87,9 +87,12 @@ if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
         echo "Run '--help' for more information."
         exit 1
     fi
+
+    # Convert custom preview type to prerelease
     if [[ "$TYPE" == "preview" ]]; then
         TYPE="prerelease"
     fi
+
     echo "Finalize release [BRANCH=$BRANCH, VERSION=$VERSION, TYPE=$TYPE]"
 
     # Fetch all remote tags
