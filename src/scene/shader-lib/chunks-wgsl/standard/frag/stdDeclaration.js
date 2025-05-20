@@ -103,6 +103,11 @@ export default /* wgsl */`
             var<private> ccNormalW: vec3f;
         #endif
 
+        #ifdef LIT_GGX_SPECULAR
+            var<private> dAnisotropy: f32;
+            var<private> dAnisotropyRotation: vec2f;
+        #endif
+
         // specularity & glossiness
         #ifdef LIT_SPECULAR_OR_REFLECTION
 
@@ -190,6 +195,14 @@ export default /* wgsl */`
             #ifdef STD_CLEARCOATNORMAL_TEXTURE_ALLOCATE
                 var texture_clearCoatNormalMap : texture_2d<f32>;
                 var texture_clearCoatNormalMapSampler : sampler;
+            #endif
+        #endif
+
+        // anisotropy
+        #ifdef LIT_GGX_SPECULAR
+            #ifdef STD_ANISOTROPY_TEXTURE_ALLOCATE
+                var texture_anisotropyMap : texture_2d<f32>;
+                var texture_anisotropyMapSampler : sampler;
             #endif
         #endif
 

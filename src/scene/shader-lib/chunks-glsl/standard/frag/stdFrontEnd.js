@@ -84,6 +84,7 @@ export default /* glsl */`
             #include "clearCoatNormalPS"
         #endif
 
+        // anisotropy
         #ifdef LIT_SPECULAR
             #ifdef LIT_LIGHTING
                 #ifdef LIT_GGX_SPECULAR

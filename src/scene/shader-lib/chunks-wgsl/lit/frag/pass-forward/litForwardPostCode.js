@@ -62,10 +62,6 @@ export default /* wgsl */`
     #include "lightSheenPS"
 #endif
 
-#ifdef LIT_GGX_SPECULAR
-    uniform material_anisotropy: f32;
-#endif
-
 uniform material_ambient: vec3f;
 
 #ifdef LIT_SPECULAR
