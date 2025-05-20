@@ -209,8 +209,6 @@ class DualTouchSource extends InputSource {
 
         this._pointerData.clear();
 
-        this._camera = null;
-
         super.detach();
     }
 

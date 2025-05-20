@@ -27,8 +27,6 @@ class GamepadSource extends InputSource {
             return;
         }
 
-        this._camera = null;
-
         super.detach();
     }
 
