@@ -1,4 +1,6 @@
-attribute vec3 vertex_position;
+#include "screenDepthPS"
+
+attribute vec4 vertex_position;
 attribute vec2 vertex_texCoord0;
 
 uniform mat4 matrix_model;
@@ -24,7 +26,7 @@ void main(void)
     float offset = texture2D(uTexture, offsetTexCoord).r;
 
     // vertex in the world space
-    vec4 pos = matrix_model * vec4(vertex_position, 1.0);
+    vec4 pos = matrix_model * vertex_position;
 
     // move it up based on the offset
     pos.y += offset * 25.0;

@@ -74,8 +74,10 @@ assetListLoader.load(() => {
     // Create a new material with the custom shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'burn',
-        vertexGLSL: files['shader.vert'],
-        fragmentGLSL: files['shader.frag'],
+        vertexGLSL: files['shader.glsl.vert'],
+        fragmentGLSL: files['shader.glsl.frag'],
+        vertexWGSL: files['shader.wgsl.vert'],
+        fragmentWGSL: files['shader.wgsl.frag'],
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0
