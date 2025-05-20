@@ -3,7 +3,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 /**
  * Represents an input delta.
  *
- * @category Input
+ * @category Input Source
  * @alpha
  */
 class InputDelta {
@@ -40,7 +40,7 @@ class InputDelta {
 /**
  * The base class for all input devices.
  *
- * @category Input
+ * @category Input Source
  * @alpha
  */
 class InputSource {
@@ -98,7 +98,7 @@ class InputSource {
 /**
  * The base class for all input controllers.
  *
- * @category Input
+ * @category Input Controller
  * @alpha
  */
 class InputController {
