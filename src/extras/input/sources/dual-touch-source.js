@@ -55,7 +55,7 @@ class DualTouchSource extends InputSource {
     };
 
     /**
-     * @param {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`} layout - The layout of the dual touch input.
+     * @param {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`} layout - The layout of the dual touch input source.
      */
     constructor(layout) {
         super();
@@ -71,11 +71,11 @@ class DualTouchSource extends InputSource {
     }
 
     /**
-     * The layout of the dual touch input. The layout can be one of the following:
+     * The layout of the dual touch input source. The layout can be one of the following:
      *
-     * - `joystick-joystick`: Two joysticks.
-     * - `joystick-touch`: One joystick and one touch.
-     * - `touch-joystick`: One touch and one joystick.
+     * - `joystick-joystick`: Two virtual joysticks.
+     * - `joystick-touch`: One virtual joystick and one touch.
+     * - `touch-joystick`: One touch and one virtual joystick.
      * - `touch-touch`: Two touches.
      *
      * Default is `joystick-touch`.
@@ -148,7 +148,7 @@ class DualTouchSource extends InputSource {
             if (startsWith(this._layout, 'joystick')) {
                 this._leftJoystick.setStick(event.clientX, event.clientY);
             } else {
-                this.deltas.right.add([event.movementX, event.movementY]);
+                this.deltas.left.add([event.movementX, event.movementY]);
             }
         } else {
             if (endsWith(this._layout, 'joystick')) {
