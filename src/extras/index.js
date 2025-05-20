@@ -27,17 +27,19 @@ export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 export { CameraFrame } from './render-passes/camera-frame.js';
 
-// INPUTS
-export { DoubleJoystick } from './inputs/double-joystick.js';
-export { JoystickTouch } from './inputs/joystick-touch.js';
-export { KeyboardMouse } from './inputs/keyboard-mouse.js';
-export { MultiTouch } from './inputs/multi-touch.js';
-export { Gamepad } from './inputs/gamepad.js';
+// INPUT
+export { InputDelta, InputSource, InputController } from './input/input.js';
 
-// TRANSFORMERS
-export { Transformer } from './transformers/transformer.js';
-export { FlyTransformer } from './transformers/fly-transformer.js';
-export { OrbitTransformer } from './transformers/orbit-transformer.js';
+// INPUT SOURCES
+export { DoubleJoystick } from './input/sources/double-joystick.js';
+export { JoystickTouch } from './input/sources/joystick-touch.js';
+export { KeyboardMouse } from './input/sources/keyboard-mouse.js';
+export { MultiTouch } from './input/sources/multi-touch.js';
+export { Gamepad } from './input/sources/gamepad.js';
+
+// INPUT CONTROLLERS
+export { FlyController } from './input/controllers/fly-controller.js';
+export { OrbitController } from './input/controllers/orbit-controller.js';
 
 // GIZMOS
 export {

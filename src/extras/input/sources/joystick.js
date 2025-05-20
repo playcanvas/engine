@@ -1,6 +1,6 @@
-import { math } from '../../core/math/math.js';
-import { Vec2 } from '../../core/math/vec2.js';
-import { EventHandler } from '../../core/event-handler.js';
+import { math } from '../../../core/math/math.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { EventHandler } from '../../../core/event-handler.js';
 
 const tmpVa = new Vec2();
 

@@ -1,14 +1,14 @@
-import { Vec2 } from '../../core/math/vec2.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { Quat } from '../../core/math/quat.js';
-import { Mat4 } from '../../core/math/mat4.js';
-import { math } from '../../core/math/math.js';
-import { Ray } from '../../core/shape/ray.js';
-import { Plane } from '../../core/shape/plane.js';
-import { Transformer } from './transformer.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Mat4 } from '../../../core/math/mat4.js';
+import { math } from '../../../core/math/math.js';
+import { Ray } from '../../../core/shape/ray.js';
+import { Plane } from '../../../core/shape/plane.js';
+import { InputController } from '../input.js';
 
 /**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
  */
 
 /**
@@ -35,12 +35,12 @@ const EPSILON = 0.001;
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 /**
- * The orbit transformer.
+ * The orbit controller.
  *
- * @category Transformers
+ * @category Input
  * @alpha
  */
-class OrbitTransformer extends Transformer {
+class OrbitController extends InputController {
     /**
      * @type {boolean}
      * @private
@@ -400,4 +400,4 @@ class OrbitTransformer extends Transformer {
     }
 }
 
-export { OrbitTransformer };
+export { OrbitController };

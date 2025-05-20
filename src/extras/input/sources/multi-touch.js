@@ -1,5 +1,5 @@
-import { Vec2 } from '../../core/math/vec2.js';
-import { InputDelta, InputSource } from './input.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { InputDelta, InputSource } from '../input.js';
 
 const tmpVa = new Vec2();
 

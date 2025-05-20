@@ -1,10 +1,10 @@
-import { Vec2 } from '../../core/math/vec2.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { Quat } from '../../core/math/quat.js';
-import { math } from '../../core/math/math.js';
-import { Transformer } from './transformer.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Quat } from '../../../core/math/quat.js';
+import { math } from '../../../core/math/math.js';
+import { InputController } from '../input.js';
 
-/** @import { Mat4 } from '../../core/math/mat4.js'; */
+/** @import { Mat4 } from '../../../core/math/mat4.js'; */
 
 /**
  * @typedef {object} FlyInputFrame
@@ -28,10 +28,10 @@ const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 /**
  * The fly controller.
  *
- * @category Transformers
+ * @category Input
  * @alpha
  */
-class FlyTransformer extends Transformer {
+class FlyController extends InputController {
     /**
      * @type {Vec3}
      * @private
@@ -204,4 +204,4 @@ class FlyTransformer extends Transformer {
     }
 }
 
-export { FlyTransformer };
+export { FlyController };

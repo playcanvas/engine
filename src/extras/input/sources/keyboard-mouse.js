@@ -1,4 +1,4 @@
-import { InputDelta, InputSource } from './input.js';
+import { InputDelta, InputSource } from '../input.js';
 
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
