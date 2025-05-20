@@ -4,7 +4,7 @@ import { EventHandler } from '../../../core/event-handler.js';
 
 const tmpVa = new Vec2();
 
-class Joystick extends EventHandler {
+class VirtualJoystick extends EventHandler {
     /**
      * @event
      */
@@ -60,7 +60,7 @@ class Joystick extends EventHandler {
     setBase(x, y) {
         // base position
         this._basePos.set(x, y);
-        this.fire(Joystick.EVENT_POSITIONBASE, this._basePos.x, this._basePos.y);
+        this.fire(VirtualJoystick.EVENT_POSITIONBASE, this._basePos.x, this._basePos.y);
     }
 
     /**
@@ -75,7 +75,7 @@ class Joystick extends EventHandler {
             tmpVa.normalize().mulScalar(this._displacement);
             this._stickPos.add2(this._basePos, tmpVa);
         }
-        this.fire(Joystick.EVENT_POSITIONSTICK, this._stickPos.x, this._stickPos.y);
+        this.fire(VirtualJoystick.EVENT_POSITIONSTICK, this._stickPos.x, this._stickPos.y);
 
         const vx = math.clamp(tmpVa.x / this._displacement, -1, 1);
         const vy = math.clamp(tmpVa.y / this._displacement, -1, 1);
@@ -84,7 +84,7 @@ class Joystick extends EventHandler {
 
     reset() {
         this._value.set(0, 0);
-        this.fire(Joystick.EVENT_RESET);
+        this.fire(VirtualJoystick.EVENT_RESET);
     }
 
     get value() {
@@ -92,4 +92,4 @@ class Joystick extends EventHandler {
     }
 }
 
-export { Joystick };
+export { VirtualJoystick };
