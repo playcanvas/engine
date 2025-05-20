@@ -11,7 +11,7 @@ float calcLightSpecular(float gloss, vec3 worldNormal, vec3 viewDir, vec3 h, vec
     float ab = clamp(alphaRoughness, 0.001, 1.0);
 
     vec3 anisotropicT = normalize(tbn * vec3(direction, 0.0));
-    vec3 anisotropicB = normalize(cross(worldNormal, anisotropicT));
+    vec3 anisotropicB = normalize(cross(tbn[2], anisotropicT));
 
     float NoH = dot(worldNormal, h);
     float ToH = dot(anisotropicT, h);

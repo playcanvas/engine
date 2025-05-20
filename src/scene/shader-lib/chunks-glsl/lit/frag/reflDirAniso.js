@@ -4,7 +4,7 @@ void getReflDir(vec3 worldNormal, vec3 viewDir, float gloss, mat3 tbn) {
 
     vec2 direction = dAnisotropyRotation;
     vec3 anisotropicT = normalize(tbn * vec3(direction, 0.0));
-    vec3 anisotropicB = normalize(cross(worldNormal, anisotropicT));
+    vec3 anisotropicB = normalize(cross(tbn[2], anisotropicT));
 
     float anisotropy = dAnisotropy;
     vec3 anisotropicDirection = anisotropicB;
