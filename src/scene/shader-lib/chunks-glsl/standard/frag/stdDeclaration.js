@@ -181,9 +181,6 @@ export default /* glsl */`
             #ifdef STD_ANISOTROPY_TEXTURE_ALLOCATE
                 uniform sampler2D texture_anisotropyMap;
             #endif
-            #ifdef STD_ANISOTROPYROTATION_TEXTURE_ALLOCATE
-                uniform sampler2D texture_anisotropyRotationMap;
-            #endif
         #endif
 
         // lightmap
