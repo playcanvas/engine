@@ -96,10 +96,10 @@ class CameraControls extends Script {
     _zoomRange = new Vec2();
 
     /**
-     * @type {boolean}
+     * @type {'joystick-touch' | 'joystick-joystick'}
      * @private
      */
-    _useVirtualGamepad = false;
+    _mobileInputLayout = 'joystick-touch';
 
     /**
      * @type {KeyboardMouse}
@@ -123,13 +123,7 @@ class CameraControls extends Script {
      * @type {DualTouch}
      * @private
      */
-    _flyMobileTouchInput = new DualTouch('joystick', 'touch');
-
-    /**
-     * @type {DualTouch}
-     * @private
-     */
-    _flyMobileGamepadInput = new DualTouch('joystick', 'joystick');
+    _flyMobileInput = new DualTouch(this._mobileInputLayout);
 
     /**
      * @type {Gamepad}
@@ -335,9 +329,8 @@ class CameraControls extends Script {
         this._gamepadInput.attach(this.app.graphicsDevice.canvas);
 
         // expose ui events
-        this._exposeJoystickEvents(this._flyMobileTouchInput.leftJoystick, 'left');
-        this._exposeJoystickEvents(this._flyMobileGamepadInput.leftJoystick, 'left');
-        this._exposeJoystickEvents(this._flyMobileGamepadInput.rightJoystick, 'right');
+        this._exposeJoystickEvents(this._flyMobileInput.leftJoystick, 'left');
+        this._exposeJoystickEvents(this._flyMobileInput.rightJoystick, 'right');
 
         // mode
         this._switchMode(this._mode ?? CameraControls.MODE_ORBIT);
@@ -534,19 +527,17 @@ class CameraControls extends Script {
     }
 
     /**
-     * Whether to use the virtual gamepad or touch joystick for mobile fly mode.
-     *
      * @attribute
      * @title Use Virtual Gamepad
-     * @type {boolean}
+     * @type {string}
      */
-    set useVirtualGamepad(use) {
-        this._useVirtualGamepad = use;
+    set mobileInputLayout(layout) {
+        this._mobileInputLayout = layout;
         this._reattachMobileInput();
     }
 
-    get useVirtualGamepad() {
-        return this._useVirtualGamepad;
+    get mobileInputLayout() {
+        return this._mobileInputLayout;
     }
 
     /**
@@ -555,8 +546,7 @@ class CameraControls extends Script {
     _destroy() {
         this._desktopInput.destroy();
         this._orbitMobileInput.destroy();
-        this._flyMobileTouchInput.destroy();
-        this._flyMobileGamepadInput.destroy();
+        this._flyMobileInput.destroy();
         this._gamepadInput.destroy();
 
         this._flyController.destroy();
@@ -621,12 +611,8 @@ class CameraControls extends Script {
      * @private
      */
     _reattachMobileInput() {
-        const mobileInput = this._mode === CameraControls.MODE_FLY ?
-            this._useVirtualGamepad ?
-                this._flyMobileGamepadInput :
-                this._flyMobileTouchInput :
-            this._orbitMobileInput;
-        if (mobileInput !== this._mobileInput) {
+        const mobileInput = this._mode === CameraControls.MODE_FLY ? this._flyMobileInput : this._orbitMobileInput;
+        if (mobileInput !== this._mobileInput || (mobileInput instanceof DualTouch && this._mobileInputLayout !== mobileInput.layout)) {
             if (this._mobileInput) {
                 this._mobileInput.detach();
             }
@@ -772,7 +758,7 @@ class CameraControls extends Script {
         if (this._mobileInput instanceof DualTouch) {
             const { left, right } = this._mobileInput.frame();
 
-            switch (this._mobileInput.type) {
+            switch (this._mobileInput.layout) {
                 case 'joystick-touch': {
                     this._frame.rotate.add(tmpVa.fromArray(right).mulScalar(this.rotateSpeed));
                     this._frame.move.add(this._scaleMove(tmpV1.set(left[0], 0, -left[1])));

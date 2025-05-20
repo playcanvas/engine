@@ -2,6 +2,20 @@ import { InputDelta, InputSource } from '../input.js';
 import { Joystick } from './virtual-joystick.js';
 
 /**
+ * @param {string} str - The string to check.
+ * @param {string} prefix - The prefix to check for.
+ * @returns {boolean} - True if the string starts with the prefix, false otherwise.
+ */
+const startsWith = (str, prefix) => str.indexOf(prefix) === 0;
+
+/**
+ * @param {string} str - The string to check.
+ * @param {string} suffix - The suffix to check for.
+ * @returns {boolean} - True if the string ends with the suffix, false otherwise.
+ */
+const endsWith = (str, suffix) => str.indexOf(suffix) === str.length - suffix.length;
+
+/**
  * Dual touch input source.
  *
  * @category Input
@@ -9,16 +23,10 @@ import { Joystick } from './virtual-joystick.js';
  */
 class DualTouch extends InputSource {
     /**
-     * @type {'joystick' | 'touch'}
+     * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
      * @private
      */
-    _leftType;
-
-    /**
-     * @type {'joystick' | 'touch'}
-     * @private
-     */
-    _rightType;
+    _layout = 'joystick-touch';
 
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
@@ -47,14 +55,12 @@ class DualTouch extends InputSource {
     };
 
     /**
-     * @param {'joystick' | 'touch'} leftType - The type of the left joystick.
-     * @param {'joystick' | 'touch'} rightType - The type of the right joystick.
+     * @param {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`} layout - The layout of the dual touch input.
      */
-    constructor(leftType, rightType) {
+    constructor(layout) {
         super();
 
-        this._leftType = leftType;
-        this._rightType = rightType;
+        this.layout = layout;
 
         this._leftJoystick = new Joystick();
         this._rightJoystick = new Joystick();
@@ -65,10 +71,23 @@ class DualTouch extends InputSource {
     }
 
     /**
+     * The layout of the dual touch input. The layout can be one of the following:
+     *
+     * - `joystick-joystick`: Two joysticks.
+     * - `joystick-touch`: One joystick and one touch.
+     * - `touch-joystick`: One touch and one joystick.
+     * - `touch-touch`: Two touches.
+     *
+     * Default is `joystick-touch`.
+     *
      * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
      */
-    get type() {
-        return `${this._leftType}-${this._rightType}`;
+    set layout(value) {
+        this._layout = value;
+    }
+
+    get layout() {
+        return this._layout;
     }
 
     get leftJoystick() {
@@ -96,11 +115,11 @@ class DualTouch extends InputSource {
             left
         });
 
-        if (left && this._leftType === 'joystick') {
+        if (left && startsWith(this._layout, 'joystick')) {
             this._leftJoystick.setBase(event.clientX, event.clientY);
             this._leftJoystick.setStick(event.clientX, event.clientY);
         }
-        if (!left && this._rightType === 'joystick') {
+        if (!left && endsWith(this._layout, 'joystick')) {
             this._rightJoystick.setBase(event.clientX, event.clientY);
             this._rightJoystick.setStick(event.clientX, event.clientY);
         }
@@ -126,13 +145,13 @@ class DualTouch extends InputSource {
         data.y = event.clientY;
 
         if (left) {
-            if (this._leftType === 'joystick') {
+            if (startsWith(this._layout, 'joystick')) {
                 this._leftJoystick.setStick(event.clientX, event.clientY);
             } else {
                 this.deltas.right.add([event.movementX, event.movementY]);
             }
         } else {
-            if (this._rightType === 'joystick') {
+            if (endsWith(this._layout, 'joystick')) {
                 this._rightJoystick.setStick(event.clientX, event.clientY);
             } else {
                 this.deltas.right.add([event.movementX, event.movementY]);
@@ -157,10 +176,10 @@ class DualTouch extends InputSource {
         const { left } = data;
         this._pointerData.delete(event.pointerId);
 
-        if (left && this._leftType === 'joystick') {
+        if (left && startsWith(this._layout, 'joystick')) {
             this._leftJoystick.reset();
         }
-        if (!left && this._rightType === 'joystick') {
+        if (!left && endsWith(this._layout, 'joystick')) {
             this._rightJoystick.reset();
         }
 
