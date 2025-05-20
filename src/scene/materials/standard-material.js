@@ -130,7 +130,7 @@ const _tempColor = new Color();
  * @property {string} specularityFactorVertexColorChannel Vertex color channels to use for specularity factor. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
- * {@link StandardMaterial#anisotropyIntensity}  parameter to set material anisotropy.
+ * {@link StandardMaterial#anisotropyIntensity} parameter to set material anisotropy.
  * @property {number} anisotropyIntensity Defines amount of anisotropy. Requires
  * {@link StandardMaterial#enableGGXSpecular} is set to true.
  * - When anisotropyIntensity == 0, specular is isotropic.
