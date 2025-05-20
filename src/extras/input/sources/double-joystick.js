@@ -1,5 +1,5 @@
 import { InputDelta, InputSource } from '../input.js';
-import { Joystick } from './joystick.js';
+import { Joystick } from './virtual-joystick.js';
 
 /**
  * Double joystick input source class
