@@ -1,4 +1,4 @@
-// @config DESCRIPTION This example demonstrates the clear coat material. Visually, the Coated column should contain highlights from both the Base and Boating layers.
+// @config DESCRIPTION This example demonstrates anisotropy rotation. Visually, the model showcases the effects of anisotropic highlights as the light interacts with the surface.
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
