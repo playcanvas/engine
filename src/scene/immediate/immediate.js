@@ -1,31 +1,18 @@
-import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 
 import { BLEND_NORMAL } from '../constants.js';
 import { GraphNode } from '../graph-node.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
-import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
-import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { ImmediateBatches } from './immediate-batches.js';
 
 import { Vec3 } from '../../core/math/vec3.js';
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 const tempPoints = [];
 const vec = new Vec3();
-
-const lineShaderDesc = {
-    uniqueName: 'ImmediateLine',
-    vertexGLSL: shaderChunks.immediateLineVS,
-    fragmentGLSL: shaderChunks.immediateLinePS,
-    vertexWGSL: shaderChunksWGSL.immediateLineVS,
-    fragmentWGSL: shaderChunksWGSL.immediateLinePS,
-    attributes: {
-        vertex_position: SEMANTIC_POSITION,
-        vertex_color: SEMANTIC_COLOR
-    }
-};
 
 class Immediate {
     shaderDescs = new Map();
@@ -57,7 +44,17 @@ class Immediate {
 
     // creates material for line rendering
     createMaterial(depthTest) {
-        const material = new ShaderMaterial(lineShaderDesc);
+        const material = new ShaderMaterial({
+            uniqueName: 'ImmediateLine',
+            vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('immediateLineVS'),
+            fragmentGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('immediateLinePS'),
+            vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('immediateLineVS'),
+            fragmentWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('immediateLinePS'),
+            attributes: {
+                vertex_position: SEMANTIC_POSITION,
+                vertex_color: SEMANTIC_COLOR
+            }
+        });
         material.blendType = BLEND_NORMAL;
         material.depthTest = depthTest;
         material.update();

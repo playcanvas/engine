@@ -144,7 +144,7 @@ class ShaderMaterial extends Material {
             toneMapping: params.cameraShaderParams.toneMapping,
             fog: params.cameraShaderParams.fog,
             shaderDesc: this.shaderDesc,
-            chunks: this.chunks ?? {} // override chunks from the material
+            shaderChunks: this.shaderChunks // override chunks from the material
         };
 
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);

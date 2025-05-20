@@ -9,7 +9,6 @@ import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphic
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js'
- * @import { CameraShaderParams } from '../camera-shader-params.js'
  * @import { Material, ShaderVariantParams } from '../materials/material.js'
  */
 

@@ -1,13 +1,14 @@
 import {
     FILTER_LINEAR,
-    ADDRESS_CLAMP_TO_EDGE
+    ADDRESS_CLAMP_TO_EDGE,
+    SHADERLANGUAGE_GLSL
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks-glsl/chunks.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 import { ChunkUtils } from '../../scene/shader-lib/chunk-utils.js';
+import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 const fs = /* glsl */ `
     uniform sampler2D sourceTexture;
@@ -145,7 +146,7 @@ class RenderPassTAA extends RenderPassShaderQuad {
             #define QUALITY_HIGH
         `;
         const screenDepth = ChunkUtils.getScreenDepthChunk(device, cameraComponent.shaderParams);
-        const fsChunks = shaderChunks.sampleCatmullRomPS + screenDepth;
+        const fsChunks = ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('sampleCatmullRomPS') + screenDepth;
         this.shader = this.createQuadShader('TaaResolveShader', defines + fsChunks + fs);
 
         const { scope } = device;
