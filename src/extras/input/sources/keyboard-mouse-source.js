@@ -11,7 +11,7 @@ const array9 = new Array(9).fill(0);
  * @category Input Source
  * @alpha
  */
-class KeyboardMouse extends InputSource {
+class KeyboardMouseSource extends InputSource {
     /**
      * @type {number}
      * @private
@@ -243,7 +243,7 @@ class KeyboardMouse extends InputSource {
     }
 
     /**
-     * @returns {{ [K in keyof KeyboardMouse["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof KeyboardMouseSource["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
@@ -257,4 +257,4 @@ class KeyboardMouse extends InputSource {
     }
 }
 
-export { KeyboardMouse };
+export { KeyboardMouseSource };

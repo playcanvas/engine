@@ -21,7 +21,7 @@ const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length
  * @category Input Source
  * @alpha
  */
-class DualTouch extends InputSource {
+class DualTouchSource extends InputSource {
     /**
      * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
      * @private
@@ -215,7 +215,7 @@ class DualTouch extends InputSource {
     }
 
     /**
-     * @returns {{ [K in keyof DualTouch["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof DualTouchSource["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
@@ -233,4 +233,4 @@ class DualTouch extends InputSource {
     }
 }
 
-export { DualTouch };
+export { DualTouchSource };

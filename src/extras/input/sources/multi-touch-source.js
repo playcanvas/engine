@@ -9,7 +9,7 @@ const tmpVa = new Vec2();
  * @category Input Source
  * @alpha
  */
-class MultiTouch extends InputSource {
+class MultiTouchSource extends InputSource {
     /**
      * @type {Map<number, PointerEvent>}
      * @private
@@ -182,7 +182,7 @@ class MultiTouch extends InputSource {
     }
 
     /**
-     * @returns {{ [K in keyof MultiTouch["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof MultiTouchSource["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
@@ -190,4 +190,4 @@ class MultiTouch extends InputSource {
     }
 }
 
-export { MultiTouch };
+export { MultiTouchSource };

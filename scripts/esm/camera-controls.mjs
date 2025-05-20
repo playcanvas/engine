@@ -1,11 +1,11 @@
 import {
     math,
-    DualTouch,
+    DualTouchSource,
     FlyController,
-    Gamepad,
-    KeyboardMouse,
+    GamepadSource,
+    KeyboardMouseSource,
     Mat4,
-    MultiTouch,
+    MultiTouchSource,
     OrbitController,
     Script,
     Vec2,
@@ -96,34 +96,34 @@ class CameraControls extends Script {
     _zoomRange = new Vec2();
 
     /**
-     * @type {KeyboardMouse}
+     * @type {KeyboardMouseSource}
      * @private
      */
-    _desktopInput = new KeyboardMouse();
+    _desktopInput = new KeyboardMouseSource();
 
     /**
-     * @type {DualTouch | MultiTouch}
+     * @type {DualTouchSource | MultiTouchSource}
      * @private
      */
     _mobileInput;
 
     /**
-     * @type {MultiTouch}
+     * @type {MultiTouchSource}
      * @private
      */
-    _orbitMobileInput = new MultiTouch();
+    _orbitMobileInput = new MultiTouchSource();
 
     /**
-     * @type {DualTouch}
+     * @type {DualTouchSource}
      * @private
      */
-    _flyMobileInput = new DualTouch('joystick-touch');
+    _flyMobileInput = new DualTouchSource('joystick-touch');
 
     /**
-     * @type {Gamepad}
+     * @type {GamepadSource}
      * @private
      */
-    _gamepadInput = new Gamepad();
+    _gamepadInput = new GamepadSource();
 
     /**
      * @type {FlyController}
@@ -758,7 +758,7 @@ class CameraControls extends Script {
      * @private
      */
     _addMobileInputs() {
-        if (this._mobileInput instanceof MultiTouch) {
+        if (this._mobileInput instanceof MultiTouchSource) {
             const { touch, pinch, count } = this._mobileInput.frame();
             this._state.touches += count[0];
 
@@ -768,7 +768,7 @@ class CameraControls extends Script {
             this._frame.pan ||= _pan;
         }
 
-        if (this._mobileInput instanceof DualTouch) {
+        if (this._mobileInput instanceof DualTouchSource) {
             const { left, right } = this._mobileInput.frame();
 
             switch (this._mobileInput.layout) {
