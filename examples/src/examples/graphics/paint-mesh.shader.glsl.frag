@@ -1,4 +1,3 @@
-precision lowp float;
 varying vec4 decalPos;
 uniform sampler2D uDecalMap;
 
