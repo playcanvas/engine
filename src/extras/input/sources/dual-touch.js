@@ -18,7 +18,7 @@ const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length
 /**
  * Dual touch input source.
  *
- * @category Input
+ * @category Input Source
  * @alpha
  */
 class DualTouch extends InputSource {

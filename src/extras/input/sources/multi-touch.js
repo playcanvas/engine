@@ -6,7 +6,7 @@ const tmpVa = new Vec2();
 /**
  * Multi-touch input source class
  *
- * @category Input
+ * @category Input Source
  * @alpha
  */
 class MultiTouch extends InputSource {

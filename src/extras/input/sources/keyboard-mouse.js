@@ -8,7 +8,7 @@ const array9 = new Array(9).fill(0);
 /**
  * Keyboard and mouse input source class
  *
- * @category Input
+ * @category Input Source
  * @alpha
  */
 class KeyboardMouse extends InputSource {

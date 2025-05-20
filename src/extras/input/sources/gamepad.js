@@ -3,7 +3,7 @@ import { InputDelta, InputSource } from '../input.js';
 /**
  * Game pad input source class
  *
- * @category Input
+ * @category Input Source
  * @alpha
  */
 class Gamepad extends InputSource {
