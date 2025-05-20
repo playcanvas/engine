@@ -2,12 +2,24 @@ import { InputDelta, InputSource } from '../input.js';
 import { Joystick } from './virtual-joystick.js';
 
 /**
- * Joystick and touch input source class
+ * Dual touch input source.
  *
  * @category Input
  * @alpha
  */
-class JoystickTouch extends InputSource {
+class DualTouch extends InputSource {
+    /**
+     * @type {'joystick' | 'touch'}
+     * @private
+     */
+    _leftType;
+
+    /**
+     * @type {'joystick' | 'touch'}
+     * @private
+     */
+    _rightType;
+
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
      * @private
@@ -18,28 +30,46 @@ class JoystickTouch extends InputSource {
      * @type {Joystick}
      * @private
      */
-    _joystick;
+    _leftJoystick;
+
+    /**
+     * @type {Joystick}
+     * @private
+     */
+    _rightJoystick;
 
     /**
      * @override
      */
     deltas = {
-        stick: new InputDelta(2),
-        touch: new InputDelta(2)
+        left: new InputDelta(2),
+        right: new InputDelta(2)
     };
 
-    constructor() {
+    /**
+     * @param {'joystick' | 'touch'} leftType - The type of the left joystick.
+     * @param {'joystick' | 'touch'} rightType - The type of the right joystick.
+     */
+    constructor(leftType, rightType) {
         super();
 
-        this._joystick = new Joystick();
+        this._leftType = leftType;
+        this._rightType = rightType;
+
+        this._leftJoystick = new Joystick();
+        this._rightJoystick = new Joystick();
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
     }
 
-    get joystick() {
-        return this._joystick;
+    get leftJoystick() {
+        return this._leftJoystick;
+    }
+
+    get rightJoystick() {
+        return this._rightJoystick;
     }
 
     /**
@@ -59,9 +89,13 @@ class JoystickTouch extends InputSource {
             left
         });
 
-        if (left) {
-            this._joystick.setBase(event.clientX, event.clientY);
-            this._joystick.setStick(event.clientX, event.clientY);
+        if (left && this._leftType === 'joystick') {
+            this._leftJoystick.setBase(event.clientX, event.clientY);
+            this._leftJoystick.setStick(event.clientX, event.clientY);
+        }
+        if (!left && this._rightType === 'joystick') {
+            this._rightJoystick.setBase(event.clientX, event.clientY);
+            this._rightJoystick.setStick(event.clientX, event.clientY);
         }
     }
 
@@ -85,11 +119,18 @@ class JoystickTouch extends InputSource {
         data.y = event.clientY;
 
         if (left) {
-            this._joystick.setStick(event.clientX, event.clientY);
+            if (this._leftType === 'joystick') {
+                this._leftJoystick.setStick(event.clientX, event.clientY);
+            } else {
+                this.deltas.right.add([event.movementX, event.movementY]);
+            }
         } else {
-            this.deltas.touch.add([event.movementX, event.movementY]);
+            if (this._rightType === 'joystick') {
+                this._rightJoystick.setStick(event.clientX, event.clientY);
+            } else {
+                this.deltas.right.add([event.movementX, event.movementY]);
+            }
         }
-
     }
 
     /**
@@ -109,8 +150,11 @@ class JoystickTouch extends InputSource {
         const { left } = data;
         this._pointerData.delete(event.pointerId);
 
-        if (left) {
-            this._joystick.reset();
+        if (left && this._leftType === 'joystick') {
+            this._leftJoystick.reset();
+        }
+        if (!left && this._rightType === 'joystick') {
+            this._rightJoystick.reset();
         }
 
     }
@@ -145,20 +189,22 @@ class JoystickTouch extends InputSource {
     }
 
     /**
-     * @returns {{ [K in keyof JoystickTouch["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof DualTouch["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
-        this.deltas.stick.add([this._joystick.value.x, this._joystick.value.y]);
+        this.deltas.left.add([this._leftJoystick.value.x, this._leftJoystick.value.y]);
+        this.deltas.right.add([this._rightJoystick.value.x, this._rightJoystick.value.y]);
 
         return super.frame();
     }
 
     destroy() {
-        this._joystick.reset();
+        this._leftJoystick.reset();
+        this._rightJoystick.reset();
 
         super.destroy();
     }
 }
 
-export { JoystickTouch };
+export { DualTouch };

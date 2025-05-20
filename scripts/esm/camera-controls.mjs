@@ -1,9 +1,9 @@
 import {
     math,
     DoubleJoystick,
+    DualTouch,
     FlyController,
     Gamepad,
-    JoystickTouch,
     KeyboardMouse,
     Mat4,
     MultiTouch,
@@ -109,7 +109,7 @@ class CameraControls extends Script {
     _desktopInput = new KeyboardMouse();
 
     /**
-     * @type {DoubleJoystick | JoystickTouch | MultiTouch}
+     * @type {DoubleJoystick | DualTouch | MultiTouch}
      * @private
      */
     _mobileInput;
@@ -121,10 +121,10 @@ class CameraControls extends Script {
     _orbitMobileInput = new MultiTouch();
 
     /**
-     * @type {JoystickTouch}
+     * @type {DualTouch}
      * @private
      */
-    _flyMobileTouchInput = new JoystickTouch();
+    _flyMobileTouchInput = new DualTouch('joystick', 'touch');
 
     /**
      * @type {DoubleJoystick}
@@ -336,7 +336,7 @@ class CameraControls extends Script {
         this._gamepadInput.attach(this.app.graphicsDevice.canvas);
 
         // expose ui events
-        this._exposeJoystickEvents(this._flyMobileTouchInput.joystick, 'left');
+        this._exposeJoystickEvents(this._flyMobileTouchInput.leftJoystick, 'left');
         this._exposeJoystickEvents(this._flyMobileGamepadInput.leftJoystick, 'left');
         this._exposeJoystickEvents(this._flyMobileGamepadInput.rightJoystick, 'right');
 
@@ -770,11 +770,11 @@ class CameraControls extends Script {
             this._frame.pan ||= _pan;
         }
 
-        if (this._mobileInput instanceof JoystickTouch) {
-            const { stick, touch } = this._mobileInput.frame();
+        if (this._mobileInput instanceof DualTouch) {
+            const { left, right } = this._mobileInput.frame();
 
-            this._frame.rotate.add(tmpVa.fromArray(touch).mulScalar(this.rotateSpeed));
-            this._frame.move.add(this._scaleMove(tmpV1.set(stick[0], 0, -stick[1])));
+            this._frame.rotate.add(tmpVa.fromArray(right).mulScalar(this.rotateSpeed));
+            this._frame.move.add(this._scaleMove(tmpV1.set(left[0], 0, -left[1])));
         }
 
         if (this._mobileInput instanceof DoubleJoystick) {
