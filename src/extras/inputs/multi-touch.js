@@ -1,15 +1,15 @@
 import { Vec2 } from '../../core/math/vec2.js';
-import { InputDelta, InputDevice } from './input.js';
+import { InputDelta, InputSource } from './input.js';
 
 const tmpVa = new Vec2();
 
 /**
- * Multi-touch input device class
+ * Multi-touch input source class
  *
- * @category InputDevice
+ * @category Input
  * @alpha
  */
-class MultiTouchInputDevice extends InputDevice {
+class MultiTouch extends InputSource {
     /**
      * @type {Map<number, PointerEvent>}
      * @private
@@ -182,7 +182,7 @@ class MultiTouchInputDevice extends InputDevice {
     }
 
     /**
-     * @returns {{ [K in keyof MultiTouchInputDevice["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof MultiTouch["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
@@ -190,4 +190,4 @@ class MultiTouchInputDevice extends InputDevice {
     }
 }
 
-export { MultiTouchInputDevice };
+export { MultiTouch };

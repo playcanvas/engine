@@ -1,13 +1,13 @@
-import { InputDelta, InputDevice } from './input.js';
+import { InputDelta, InputSource } from './input.js';
 import { Joystick } from './joystick.js';
 
 /**
- * Double joystick input device class
+ * Double joystick input source class
  *
- * @category InputDevice
+ * @category Input
  * @alpha
  */
-class JoystickDoubleInputDevice extends InputDevice {
+class DoubleJoystick extends InputSource {
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
      * @private
@@ -152,7 +152,7 @@ class JoystickDoubleInputDevice extends InputDevice {
     }
 
     /**
-     * @returns {{ [K in keyof JoystickDoubleInputDevice["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof DoubleJoystick["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
@@ -170,4 +170,4 @@ class JoystickDoubleInputDevice extends InputDevice {
     }
 }
 
-export { JoystickDoubleInputDevice };
+export { DoubleJoystick };

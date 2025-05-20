@@ -27,12 +27,12 @@ export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 export { CameraFrame } from './render-passes/camera-frame.js';
 
-// INPUT DEVICES
-export { JoystickDoubleInputDevice } from './inputs/joystickdouble-input-device.js';
-export { JoystickTouchInputDevice } from './inputs/joysticktouch-input-device.js';
-export { KeyboardMouseInputDevice } from './inputs/keyboardmouse-input-device.js';
-export { MultiTouchInputDevice } from './inputs/multitouch-input-device.js';
-export { GamepadInputDevice } from './inputs/gamepad-input-device.js';
+// INPUTS
+export { DoubleJoystick } from './inputs/double-joystick.js';
+export { JoystickTouch } from './inputs/joystick-touch.js';
+export { KeyboardMouse } from './inputs/keyboard-mouse.js';
+export { MultiTouch } from './inputs/multi-touch.js';
+export { Gamepad } from './inputs/gamepad.js';
 
 // TRANSFORMERS
 export { Transformer } from './transformers/transformer.js';

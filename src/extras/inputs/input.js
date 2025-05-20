@@ -1,7 +1,7 @@
 /**
  * Represents an input delta.
  *
- * @category InputDevice
+ * @category Input
  * @alpha
  */
 class InputDelta {
@@ -38,10 +38,10 @@ class InputDelta {
 /**
  * The base class for all input devices.
  *
- * @category InputDevice
+ * @category Input
  * @alpha
  */
-class InputDevice {
+class InputSource {
     /**
      * @type {HTMLElement | null}
      * @protected
@@ -93,4 +93,4 @@ class InputDevice {
     }
 }
 
-export { InputDelta, InputDevice };
+export { InputDelta, InputSource };

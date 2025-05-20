@@ -1,4 +1,4 @@
-import { InputDelta, InputDevice } from './input.js';
+import { InputDelta, InputSource } from './input.js';
 
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
@@ -6,12 +6,12 @@ const PASSIVE = { passive: false };
 const array9 = new Array(9).fill(0);
 
 /**
- * Keyboard and mouse input device class
+ * Keyboard and mouse input source class
  *
- * @category InputDevice
+ * @category Input
  * @alpha
  */
-class KeyboardMouseInputDevice extends InputDevice {
+class KeyboardMouse extends InputSource {
     /**
      * @type {number}
      * @private
@@ -243,7 +243,7 @@ class KeyboardMouseInputDevice extends InputDevice {
     }
 
     /**
-     * @returns {{ [K in keyof KeyboardMouseInputDevice["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof KeyboardMouse["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
@@ -257,4 +257,4 @@ class KeyboardMouseInputDevice extends InputDevice {
     }
 }
 
-export { KeyboardMouseInputDevice };
+export { KeyboardMouse };
