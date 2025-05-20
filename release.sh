@@ -83,7 +83,7 @@ if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
         TYPE="patch"
     fi
     if [[ ! " patch preview " =~ " $TYPE " ]]; then
-        echo "Usage: $0 [preview]"
+        echo "Usage: $0 (patch|preview)         (default: patch)"
         echo "Run '--help' for more information."
         exit 1
     fi
