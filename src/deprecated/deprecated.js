@@ -3,6 +3,7 @@ import { Debug } from '../core/debug.js';
 import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
+import { math } from '../core/math/math.js';
 
 import {
     BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
@@ -660,7 +661,7 @@ Object.defineProperty(StandardMaterial.prototype, 'useGammaTonemap', {
 
 Object.defineProperty(StandardMaterial.prototype, 'anisotropy', {
     get: function () {
-        const sign = Math.sign(Math.cos(this.anisotropyRotation * 2));
+        const sign = Math.sign(Math.cos(this.anisotropyRotation * math.DEG_TO_RAD * 2));
         return this.anisotropyIntensity * sign;
     },
     set: function (value) {
@@ -668,7 +669,7 @@ Object.defineProperty(StandardMaterial.prototype, 'anisotropy', {
         if (value >= 0) {
             this.anisotropyRotation = 0;
         } else {
-            this.anisotropyRotation = Math.PI / 2;
+            this.anisotropyRotation = 90;
         }
     }
 });

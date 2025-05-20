@@ -1124,7 +1124,7 @@ const extensionAnisotropy = (data, material, textures) => {
         extractTextureTransform(anisotropyTexture, material, ['anisotropy']);
     }
     if (data.hasOwnProperty('anisotropyRotation')) {
-        material.anisotropyRotation = data.anisotropyRotation;
+        material.anisotropyRotation = data.anisotropyRotation * math.RAD_TO_DEG;
     } else {
         material.anisotropyRotation = 0;
     }
