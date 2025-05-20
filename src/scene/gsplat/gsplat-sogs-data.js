@@ -343,6 +343,7 @@ class GSplatSogsData {
         members.forEach((member) => {
             const sourceTexture = this[member];
 
+            // spherical harmonics labels are missing when no SH data is present
             if (!sourceTexture) {
                 return;
             }
