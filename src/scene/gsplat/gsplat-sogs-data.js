@@ -343,6 +343,10 @@ class GSplatSogsData {
         members.forEach((member) => {
             const sourceTexture = this[member];
 
+            if (!sourceTexture) {
+                return;
+            }
+
             const renderTarget = new RenderTarget({
                 colorBuffer: targetTexture,
                 depth: false,
