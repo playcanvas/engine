@@ -14,11 +14,15 @@ if [[ "$HELP" == "--help" || "$HELP" == "-h" ]]; then
     echo """
 Run this script on either '$MAIN_BRANCH' or '${RELEASE_PREFIX}X.X' branch.
 
-    For creating a new release:
-        On '$MAIN_BRANCH' branch, it will create a new release branch '${RELEASE_PREFIX}X.X' and bump the minor version on '$MAIN_BRANCH'.
+    On the '$MAIN_BRANCH' branch:
+        1. Bumps the minor version on '$MAIN_BRANCH'
+        2. Creates a new release branch '${RELEASE_PREFIX}X.X'
+        3. Creates a tag 'vX.X.X-$PRE_ID_PREVIEW-0'.
 
-    For finalizing a minor or patch releases or prereleases:
-        On '${RELEASE_PREFIX}X.X' branch, it asks for a type (minor/patch/prerelease) and creates a tag.
+    On the '${RELEASE_PREFIX}X.X' branch:
+        1. Determines the release type - patch (default) or preview
+        2. Bumps the version on the '${RELEASE_PREFIX}X.X' branch
+        3. Creates a tag - patch ('vX.X.X') or preview ('vX.X.X-$PRE_ID_PREVIEW-X').
     """
     exit 0
 fi
@@ -45,7 +49,12 @@ if [[ "$BRANCH" == "$MAIN_BRANCH" ]]; then
     RELEASE_BRANCH="$RELEASE_PREFIX$MAJOR.$MINOR"
     RELEASE_MESSAGE="Branch $MAJOR.$MINOR"
 
-    read -p "About to create minor release branch '$RELEASE_BRANCH' taken from '$BRANCH' branch. Continue? (y/N) " -r
+    # Calculate the next version
+    npm version prerelease --preid=$PRE_ID_PREVIEW --no-git-tag-version >> /dev/null
+    NEXT_VERSION=$(npm pkg get version | sed 's/"//g')
+    git reset --hard >> /dev/null
+
+    read -p "About to create release branch '$RELEASE_BRANCH' from '$BRANCH' branch for 'v$NEXT_VERSION'. Continue? (y/N) " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo "Aborted."
         exit 1
@@ -62,8 +71,7 @@ if [[ "$BRANCH" == "$MAIN_BRANCH" ]]; then
     git checkout $RELEASE_BRANCH
 
     # Change prerelease version to preview
-    npm version prerelease --preid=$PRE_ID_PREVIEW --no-git-tag-version
-    git commit -m "$RELEASE_MESSAGE" -- package.json package-lock.json
+    npm version prerelease --preid=$PRE_ID_PREVIEW
     exit 0
 fi
 
@@ -71,20 +79,17 @@ fi
 if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
     # Determine which release type
     TYPE=$1
-    if [[ ! " minor patch prerelease " =~ " $TYPE " ]]; then
-        echo "Usage: $0 <minor|patch|prerelease>"
+    if [[ -z "$TYPE" ]]; then
+        TYPE="patch"
+    fi
+    if [[ ! " patch preview " =~ " $TYPE " ]]; then
+        echo "Usage: $0 [preview]"
         echo "Run '--help' for more information."
         exit 1
     fi
-
-    # Check if minor release then check if patch version is 0 and is preview
-    if [[ "$TYPE" == "minor" ]]; then
-        if [[ "$PATCH" != "0" || "$VERSION" != *"$PRE_ID_PREVIEW"* ]]; then
-            echo "Minor release is only allowed if the current version is 'X.X.0-$PRE_ID_PREVIEW.X'."
-            exit 1
-        fi
+    if [[ "$TYPE" == "preview" ]]; then
+        TYPE="prerelease"
     fi
-
     echo "Finalize release [BRANCH=$BRANCH, VERSION=$VERSION, TYPE=$TYPE]"
 
     # Fetch all remote tags
