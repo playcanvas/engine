@@ -1,4 +1,4 @@
-// @config DESCRIPTION This example demonstrates the clear coat material. Visually, the Coated column should contain highlights from both the Base and Boating layers.
+// @config DESCRIPTION This example demonstrates anisotropy effects on the lamp model. The anisotropic highlights on the lamp's surface showcase the material's directional properties.
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
