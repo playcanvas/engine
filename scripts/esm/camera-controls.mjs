@@ -96,12 +96,6 @@ class CameraControls extends Script {
     _zoomRange = new Vec2();
 
     /**
-     * @type {'joystick-touch' | 'joystick-joystick'}
-     * @private
-     */
-    _mobileInputLayout = 'joystick-touch';
-
-    /**
      * @type {KeyboardMouse}
      * @private
      */
@@ -123,7 +117,7 @@ class CameraControls extends Script {
      * @type {DualTouch}
      * @private
      */
-    _flyMobileInput = new DualTouch(this._mobileInputLayout);
+    _flyMobileInput = new DualTouch('joystick-touch');
 
     /**
      * @type {Gamepad}
@@ -532,12 +526,25 @@ class CameraControls extends Script {
      * @type {string}
      */
     set mobileInputLayout(layout) {
-        this._mobileInputLayout = layout;
-        this._reattachMobileInput();
+        if (!/(?:joystick|touch)-(?:joystick|touch)/.test(layout)) {
+            console.warn(`CameraControls: invalid mobile input layout: ${layout}`);
+            return;
+        }
+        if (this._flyMobileInput.layout !== layout) {
+            // update layout
+            this._flyMobileInput.layout = layout;
+
+            // reattach input (clears pointer events)
+            this._flyMobileInput.detach();
+            this._flyMobileInput.attach(this.app.graphicsDevice.canvas);
+
+            // reset state
+            this._resetState();
+        }
     }
 
     get mobileInputLayout() {
-        return this._mobileInputLayout;
+        return this._flyMobileInput.layout;
     }
 
     /**
@@ -612,10 +619,13 @@ class CameraControls extends Script {
      */
     _reattachMobileInput() {
         const mobileInput = this._mode === CameraControls.MODE_FLY ? this._flyMobileInput : this._orbitMobileInput;
-        if (mobileInput !== this._mobileInput || (mobileInput instanceof DualTouch && this._mobileInputLayout !== mobileInput.layout)) {
+        if (mobileInput !== this._mobileInput) {
+            // detach old input
             if (this._mobileInput) {
                 this._mobileInput.detach();
             }
+
+            // attach new input
             this._mobileInput = mobileInput;
             this._mobileInput.attach(this.app.graphicsDevice.canvas);
 
@@ -631,9 +641,12 @@ class CameraControls extends Script {
         const controller = this._mode === CameraControls.MODE_FLY ? this._flyController : this._orbitController;
         const currZoomDist = this._orbitController.zoom;
         if (controller !== this._controller) {
+            // detach old controller
             if (this._controller) {
                 this._controller.detach();
             }
+
+            // attach new controller
             this._controller = controller;
             this._controller.attach(this._camera.entity.getWorldTransform());
         }

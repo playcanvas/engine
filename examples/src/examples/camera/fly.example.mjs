@@ -181,7 +181,7 @@ data.set('attr', [
     'pitchRange',
     'yawRange',
     'gamepadDeadZone',
-    'useVirtualGamepad'
+    'mobileInputLayout'
 ].reduce((/** @type {Record<string, any>} */ obj, key) => {
     const value = cc[key];
 

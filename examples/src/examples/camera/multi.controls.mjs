@@ -3,7 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, SliderInput, VectorInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, SliderInput, VectorInput, TextInput } = ReactPCUI;
 
     return fragment(
         jsx(
@@ -211,11 +211,10 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Use Virtual Gamepad' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+                { text: 'Mobile input layout' },
+                jsx(TextInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.useVirtualGamepad' }
+                    link: { observer, path: 'attr.mobileInputLayout' }
                 })
             )
         )

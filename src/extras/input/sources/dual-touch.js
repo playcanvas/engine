@@ -1,5 +1,5 @@
 import { InputDelta, InputSource } from '../input.js';
-import { Joystick } from './virtual-joystick.js';
+import { VirtualJoystick } from './virtual-joystick.js';
 
 /**
  * @param {string} str - The string to check.
@@ -13,7 +13,7 @@ const startsWith = (str, prefix) => str.indexOf(prefix) === 0;
  * @param {string} suffix - The suffix to check for.
  * @returns {boolean} - True if the string ends with the suffix, false otherwise.
  */
-const endsWith = (str, suffix) => str.indexOf(suffix) === str.length - suffix.length;
+const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length) !== -1;
 
 /**
  * Dual touch input source.
@@ -35,13 +35,13 @@ class DualTouch extends InputSource {
     _pointerData = new Map();
 
     /**
-     * @type {Joystick}
+     * @type {VirtualJoystick}
      * @private
      */
     _leftJoystick;
 
     /**
-     * @type {Joystick}
+     * @type {VirtualJoystick}
      * @private
      */
     _rightJoystick;
@@ -62,8 +62,8 @@ class DualTouch extends InputSource {
 
         this.layout = layout;
 
-        this._leftJoystick = new Joystick();
-        this._rightJoystick = new Joystick();
+        this._leftJoystick = new VirtualJoystick();
+        this._rightJoystick = new VirtualJoystick();
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
