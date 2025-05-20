@@ -2,34 +2,20 @@ import { InputDelta, InputSource } from '../input.js';
 import { VirtualJoystick } from './virtual-joystick.js';
 
 /**
- * @param {string} str - The string to check.
- * @param {string} prefix - The prefix to check for.
- * @returns {boolean} - True if the string starts with the prefix, false otherwise.
- */
-const startsWith = (str, prefix) => str.indexOf(prefix) === 0;
-
-/**
- * @param {string} str - The string to check.
- * @param {string} suffix - The suffix to check for.
- * @returns {boolean} - True if the string ends with the suffix, false otherwise.
- */
-const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length) !== -1;
-
-/**
- * Dual touch input source.
+ * Single guesture input source.
  *
  * @category Input Source
  * @alpha
  */
-class DualTouchSource extends InputSource {
+class SingleGuestureSource extends InputSource {
     /**
-     * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
+     * @type {'joystick' | 'touch'}
      * @private
      */
-    _layout = 'touch-joystick';
+    _layout = 'joystick';
 
     /**
-     * @type {Map<number, { x: number, y: number, left: boolean }>}
+     * @type {Map<number, { x: number, y: number }>}
      * @private
      */
     _pointerData = new Map();
@@ -38,27 +24,19 @@ class DualTouchSource extends InputSource {
      * @type {VirtualJoystick}
      * @private
      */
-    _leftJoystick;
-
-    /**
-     * @type {VirtualJoystick}
-     * @private
-     */
-    _rightJoystick;
+    _joystick;
 
     /**
      * @override
      */
     deltas = {
-        left: new InputDelta(2),
-        right: new InputDelta(2)
+        input: new InputDelta(2)
     };
 
     constructor() {
         super();
 
-        this._leftJoystick = new VirtualJoystick();
-        this._rightJoystick = new VirtualJoystick();
+        this._joystick = new VirtualJoystick();
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
@@ -66,7 +44,14 @@ class DualTouchSource extends InputSource {
     }
 
     /**
-     * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
+     * The layout of the single touch input source. The layout can be one of the following:
+     *
+     * - `joystick`: A virtual joystick.
+     * - `touch`: A touch.
+     *
+     * Default is `joystick`.
+     *
+     * @type {'joystick' | 'touch'}
      */
     set layout(value) {
         this._layout = value;
@@ -76,12 +61,8 @@ class DualTouchSource extends InputSource {
         return this._layout;
     }
 
-    get leftJoystick() {
-        return this._leftJoystick;
-    }
-
-    get rightJoystick() {
-        return this._rightJoystick;
+    get joystick() {
+        return this._joystick;
     }
 
     /**
@@ -94,20 +75,14 @@ class DualTouchSource extends InputSource {
         }
         this._element?.setPointerCapture(event.pointerId);
 
-        const left = event.clientX < window.innerWidth * 0.5;
         this._pointerData.set(event.pointerId, {
             x: event.clientX,
-            y: event.clientY,
-            left
+            y: event.clientY
         });
 
-        if (left && startsWith(this._layout, 'joystick')) {
-            this._leftJoystick.setBase(event.clientX, event.clientY);
-            this._leftJoystick.setStick(event.clientX, event.clientY);
-        }
-        if (!left && endsWith(this._layout, 'joystick')) {
-            this._rightJoystick.setBase(event.clientX, event.clientY);
-            this._rightJoystick.setStick(event.clientX, event.clientY);
+        if (this._layout === 'joystick') {
+            this._joystick.setBase(event.clientX, event.clientY);
+            this._joystick.setStick(event.clientX, event.clientY);
         }
     }
 
@@ -126,22 +101,13 @@ class DualTouchSource extends InputSource {
         if (!data) {
             return;
         }
-        const { left } = data;
         data.x = event.clientX;
         data.y = event.clientY;
 
-        if (left) {
-            if (startsWith(this._layout, 'joystick')) {
-                this._leftJoystick.setStick(event.clientX, event.clientY);
-            } else {
-                this.deltas.left.add([event.movementX, event.movementY]);
-            }
+        if (this._layout === 'joystick') {
+            this._joystick.setStick(event.clientX, event.clientY);
         } else {
-            if (endsWith(this._layout, 'joystick')) {
-                this._rightJoystick.setStick(event.clientX, event.clientY);
-            } else {
-                this.deltas.right.add([event.movementX, event.movementY]);
-            }
+            this.deltas.input.add([event.movementX, event.movementY]);
         }
     }
 
@@ -159,16 +125,11 @@ class DualTouchSource extends InputSource {
         if (!data) {
             return;
         }
-        const { left } = data;
         this._pointerData.delete(event.pointerId);
 
-        if (left && startsWith(this._layout, 'joystick')) {
-            this._leftJoystick.reset();
+        if (this._layout === 'joystick') {
+            this._joystick.reset();
         }
-        if (!left && endsWith(this._layout, 'joystick')) {
-            this._rightJoystick.reset();
-        }
-
     }
 
     /**
@@ -199,22 +160,20 @@ class DualTouchSource extends InputSource {
     }
 
     /**
-     * @returns {{ [K in keyof DualTouchSource["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof SingleGuestureSource["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
-        this.deltas.left.add([this._leftJoystick.value.x, this._leftJoystick.value.y]);
-        this.deltas.right.add([this._rightJoystick.value.x, this._rightJoystick.value.y]);
+        this.deltas.input.add([this._joystick.value.x, this._joystick.value.y]);
 
         return super.frame();
     }
 
     destroy() {
-        this._leftJoystick.reset();
-        this._rightJoystick.reset();
+        this._joystick.reset();
 
         super.destroy();
     }
 }
 
-export { DualTouchSource };
+export { SingleGuestureSource };

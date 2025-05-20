@@ -1,6 +1,6 @@
 import {
     math,
-    DualTouchSource,
+    DualGuestureSource,
     FlyController,
     GamepadSource,
     KeyboardMouseSource,
@@ -102,7 +102,7 @@ class CameraControls extends Script {
     _desktopInput = new KeyboardMouseSource();
 
     /**
-     * @type {DualTouchSource | MultiTouchSource}
+     * @type {DualGuestureSource | MultiTouchSource}
      * @private
      */
     _mobileInput;
@@ -114,10 +114,10 @@ class CameraControls extends Script {
     _orbitMobileInput = new MultiTouchSource();
 
     /**
-     * @type {DualTouchSource}
+     * @type {DualGuestureSource}
      * @private
      */
-    _flyMobileInput = new DualTouchSource();
+    _flyMobileInput = new DualGuestureSource();
 
     /**
      * @type {GamepadSource}
@@ -777,7 +777,7 @@ class CameraControls extends Script {
             this._frame.pan ||= _pan;
         }
 
-        if (this._mobileInput instanceof DualTouchSource) {
+        if (this._mobileInput instanceof DualGuestureSource) {
             const { left, right } = this._mobileInput.frame();
 
             switch (this._mobileInput.layout) {
