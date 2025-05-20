@@ -33,13 +33,8 @@ class SingleTouchSource extends InputSource {
         input: new InputDelta(2)
     };
 
-    /**
-     * @param {'joystick' | 'touch'} layout - The layout of the single touch input source.
-     */
-    constructor(layout) {
+    constructor() {
         super();
-
-        this.layout = layout;
 
         this._joystick = new VirtualJoystick();
 

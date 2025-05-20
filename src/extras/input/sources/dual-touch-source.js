@@ -26,7 +26,7 @@ class DualTouchSource extends InputSource {
      * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
      * @private
      */
-    _layout = 'joystick-touch';
+    _layout = 'touch-joystick';
 
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
@@ -54,13 +54,8 @@ class DualTouchSource extends InputSource {
         right: new InputDelta(2)
     };
 
-    /**
-     * @param {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`} layout - The layout of the dual touch input source.
-     */
-    constructor(layout) {
+    constructor() {
         super();
-
-        this.layout = layout;
 
         this._leftJoystick = new VirtualJoystick();
         this._rightJoystick = new VirtualJoystick();

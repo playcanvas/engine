@@ -117,7 +117,7 @@ class CameraControls extends Script {
      * @type {DualTouchSource}
      * @private
      */
-    _flyMobileInput = new DualTouchSource('joystick-touch');
+    _flyMobileInput = new DualTouchSource();
 
     /**
      * @type {GamepadSource}
@@ -781,14 +781,16 @@ class CameraControls extends Script {
             const { left, right } = this._mobileInput.frame();
 
             switch (this._mobileInput.layout) {
-                case 'joystick-touch': {
-                    this._frame.rotate.add(tmpVa.fromArray(right).mulScalar(this.rotateSpeed));
-                    this._frame.move.add(this._scaleMove(tmpV1.set(left[0], 0, -left[1])));
+                case 'joystick-touch':
+                case 'joystick-joystick': {
+                    this._frame.rotate.add(tmpVa.fromArray(left).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+                    this._frame.move.add(this._scaleMove(tmpV1.set(right[0], 0, -right[1])));
                     break;
                 }
-                case 'joystick-joystick': {
-                    this._frame.rotate.add(tmpVa.fromArray(right).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
-                    this._frame.move.add(this._scaleMove(tmpV1.set(left[0], 0, -left[1])));
+                case 'touch-joystick':
+                case 'touch-touch': {
+                    this._frame.rotate.add(tmpVa.fromArray(left).mulScalar(this.rotateSpeed));
+                    this._frame.move.add(this._scaleMove(tmpV1.set(right[0], 0, -right[1])));
                     break;
                 }
             }
