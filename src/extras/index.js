@@ -31,9 +31,10 @@ export { CameraFrame } from './render-passes/camera-frame.js';
 export { InputDelta, InputSource, InputController } from './input/input.js';
 
 // INPUT SOURCES
-export { KeyboardMouseSource } from './input/sources/keyboard-mouse-source.js';
+export { SingleTouchSource } from './input/sources/single-touch-source.js';
 export { DualTouchSource } from './input/sources/dual-touch-source.js';
 export { MultiTouchSource } from './input/sources/multi-touch-source.js';
+export { KeyboardMouseSource } from './input/sources/keyboard-mouse-source.js';
 export { GamepadSource } from './input/sources/gamepad-source.js';
 
 // INPUT CONTROLLERS
