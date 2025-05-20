@@ -821,7 +821,7 @@ class Material {
      * parts of the shader code.
      *
      * @param {string} name - The name of the define to set.
-     * @param {string|undefined|false} value - The value of the define. If undefined or false, the
+     * @param {string|undefined|boolean} value - The value of the define. If undefined or false, the
      * define is removed.
      *
      * A simple example on how to set a custom shader define value used by the shader processor.

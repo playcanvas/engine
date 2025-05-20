@@ -1,3 +1,5 @@
+#include "screenDepthPS"
+
 uniform sampler2D uTexture;
 uniform float uSoftening;
 

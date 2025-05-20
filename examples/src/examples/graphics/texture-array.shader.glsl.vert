@@ -1,4 +1,4 @@
-attribute vec3 aPosition;
+attribute vec4 aPosition;
 attribute vec2 aUv0;
 attribute vec3 aNormal;
 
@@ -13,5 +13,5 @@ void main(void)
 {
     vUv0 = aUv0;
     worldNormal = normalize(matrix_normal * aNormal);
-    gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
+    gl_Position = matrix_viewProjection * matrix_model * aPosition;
 }
