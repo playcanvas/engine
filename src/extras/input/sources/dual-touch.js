@@ -64,6 +64,13 @@ class DualTouch extends InputSource {
         this._onPointerUp = this._onPointerUp.bind(this);
     }
 
+    /**
+     * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
+     */
+    get type() {
+        return `${this._leftType}-${this._rightType}`;
+    }
+
     get leftJoystick() {
         return this._leftJoystick;
     }

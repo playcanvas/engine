@@ -31,7 +31,6 @@ export { CameraFrame } from './render-passes/camera-frame.js';
 export { InputDelta, InputSource, InputController } from './input/input.js';
 
 // INPUT SOURCES
-export { DoubleJoystick } from './input/sources/double-joystick.js';
 export { KeyboardMouse } from './input/sources/keyboard-mouse.js';
 export { DualTouch } from './input/sources/dual-touch.js';
 export { MultiTouch } from './input/sources/multi-touch.js';

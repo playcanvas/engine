@@ -1,6 +1,5 @@
 import {
     math,
-    DoubleJoystick,
     DualTouch,
     FlyController,
     Gamepad,
@@ -109,7 +108,7 @@ class CameraControls extends Script {
     _desktopInput = new KeyboardMouse();
 
     /**
-     * @type {DoubleJoystick | DualTouch | MultiTouch}
+     * @type {DualTouch | MultiTouch}
      * @private
      */
     _mobileInput;
@@ -127,10 +126,10 @@ class CameraControls extends Script {
     _flyMobileTouchInput = new DualTouch('joystick', 'touch');
 
     /**
-     * @type {DoubleJoystick}
+     * @type {DualTouch}
      * @private
      */
-    _flyMobileGamepadInput = new DoubleJoystick();
+    _flyMobileGamepadInput = new DualTouch('joystick', 'joystick');
 
     /**
      * @type {Gamepad}
@@ -773,15 +772,18 @@ class CameraControls extends Script {
         if (this._mobileInput instanceof DualTouch) {
             const { left, right } = this._mobileInput.frame();
 
-            this._frame.rotate.add(tmpVa.fromArray(right).mulScalar(this.rotateSpeed));
-            this._frame.move.add(this._scaleMove(tmpV1.set(left[0], 0, -left[1])));
-        }
-
-        if (this._mobileInput instanceof DoubleJoystick) {
-            const { leftStick, rightStick } = this._mobileInput.frame();
-
-            this._frame.rotate.add(tmpVa.fromArray(rightStick).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
-            this._frame.move.add(this._scaleMove(tmpV1.set(leftStick[0], 0, -leftStick[1])));
+            switch (this._mobileInput.type) {
+                case 'joystick-touch': {
+                    this._frame.rotate.add(tmpVa.fromArray(right).mulScalar(this.rotateSpeed));
+                    this._frame.move.add(this._scaleMove(tmpV1.set(left[0], 0, -left[1])));
+                    break;
+                }
+                case 'joystick-joystick': {
+                    this._frame.rotate.add(tmpVa.fromArray(right).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+                    this._frame.move.add(this._scaleMove(tmpV1.set(left[0], 0, -left[1])));
+                    break;
+                }
+            }
         }
     }
 
