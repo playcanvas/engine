@@ -2,12 +2,12 @@ import { InputDelta, InputSource } from '../input.js';
 import { VirtualJoystick } from './virtual-joystick.js';
 
 /**
- * Single guesture input source.
+ * Single gesture input source.
  *
  * @category Input Source
  * @alpha
  */
-class SingleGuestureSource extends InputSource {
+class SingleGestureSource extends InputSource {
     /**
      * @type {'joystick' | 'touch'}
      * @private
@@ -160,7 +160,7 @@ class SingleGuestureSource extends InputSource {
     }
 
     /**
-     * @returns {{ [K in keyof SingleGuestureSource["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof SingleGestureSource["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
@@ -176,4 +176,4 @@ class SingleGuestureSource extends InputSource {
     }
 }
 
-export { SingleGuestureSource };
+export { SingleGestureSource };

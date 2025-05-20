@@ -16,12 +16,12 @@ const startsWith = (str, prefix) => str.indexOf(prefix) === 0;
 const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length) !== -1;
 
 /**
- * Dual guesture input source.
+ * Dual gesture input source.
  *
  * @category Input Source
  * @alpha
  */
-class DualGuestureSource extends InputSource {
+class DualGestureSource extends InputSource {
     /**
      * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
      * @private
@@ -199,7 +199,7 @@ class DualGuestureSource extends InputSource {
     }
 
     /**
-     * @returns {{ [K in keyof DualGuestureSource["deltas"]]: number[] }} - The deltas.
+     * @returns {{ [K in keyof DualGestureSource["deltas"]]: number[] }} - The deltas.
      * @override
      */
     frame() {
@@ -217,4 +217,4 @@ class DualGuestureSource extends InputSource {
     }
 }
 
-export { DualGuestureSource };
+export { DualGestureSource };
