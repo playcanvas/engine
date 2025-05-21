@@ -671,10 +671,8 @@ class ParticleEmitter {
         // shader options shared by all 3 shaders
         const shaderOptions = {
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: ShaderChunks.get(gd, SHADERLANGUAGE_GLSL).get('fullscreenQuadVS'),
-            vertexWGSL: ShaderChunks.get(gd, SHADERLANGUAGE_WGSL).get('fullscreenQuadVS'),
-            fragmentGLSL: ShaderChunks.get(gd, SHADERLANGUAGE_GLSL).get('particle_simulationPS'),
-            fragmentWGSL: ShaderChunks.get(gd, SHADERLANGUAGE_WGSL).get('particle_simulationPS'),
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentChunk: 'particle_simulationPS',
             fragmentDefines: defines,
             fragmentIncludes: includes
         };

@@ -6,8 +6,7 @@ import {
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8,
     SEMANTIC_POSITION,
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL
+    SHADERLANGUAGE_GLSL
 } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -127,10 +126,8 @@ class OutlineRenderer {
         this.shaderBlend = ShaderUtils.createShader(device, {
             uniqueName: 'OutlineBlendShader',
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('fullscreenQuadVS'),
-            fragmentGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('outputTex2DPS'),
-            vertexWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('fullscreenQuadVS'),
-            fragmentWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('outputTex2DPS')
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentChunk: 'outputTex2DPS'
         });
 
         this.quadRenderer = new QuadRender(this.shaderBlend);
