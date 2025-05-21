@@ -14,7 +14,7 @@ class RenderPassTint extends pc.RenderPassShaderQuad {
         this.shader = pc.ShaderUtils.createShader(device, {
             uniqueName: 'TintShader',
             attributes: { aPosition: pc.SEMANTIC_POSITION },
-            vertexChunk: 'RenderPassQuadVS',
+            vertexChunk: 'quadVS',
 
             fragmentGLSL: /* glsl */ `
                 uniform sampler2D sourceTexture;

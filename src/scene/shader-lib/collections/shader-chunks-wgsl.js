@@ -55,6 +55,7 @@ import gsplatPS from '../chunks-wgsl/gsplat/frag/gsplat.js';
 import gsplatSHVS from '../chunks-wgsl/gsplat/vert/gsplatSH.js';
 import gsplatSourceVS from '../chunks-wgsl/gsplat/vert/gsplatSource.js';
 import gsplatVS from '../chunks-wgsl/gsplat/vert/gsplat.js';
+import quadVS from '../chunks-wgsl/common/vert/quad.js';
 import immediateLinePS from '../chunks-wgsl/internal/frag/immediateLine.js';
 import immediateLineVS from '../chunks-wgsl/internal/vert/immediateLine.js';
 import iridescenceDiffractionPS from '../chunks-wgsl/lit/frag/iridescenceDiffraction.js';
@@ -226,6 +227,7 @@ const shaderChunksWGSL = {
     gsplatSHVS,
     gsplatSourceVS,
     gsplatVS,
+    quadVS,
     immediateLinePS,
     immediateLineVS,
     iridescenceDiffractionPS,

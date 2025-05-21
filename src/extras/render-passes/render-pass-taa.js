@@ -65,7 +65,7 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.shader = ShaderUtils.createShader(device, {
             uniqueName: 'TaaResolveShader',
             attributes: { aPosition: SEMANTIC_POSITION },
-            vertexChunk: 'RenderPassQuadVS',
+            vertexChunk: 'quadVS',
             fragmentChunk: 'taaResolvePS',
             fragmentDefines: defines
         });
