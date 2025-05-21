@@ -21,6 +21,9 @@ import wgslQuadVS from '../shader-lib/chunks-wgsl/render-pass/vert/quad.js';
  * @ignore
  */
 class RenderPassShaderQuad extends RenderPass {
+    /**
+     * @type {Shader}
+     */
     _shader = null;
 
     quadRender = null;
