@@ -2,8 +2,8 @@ import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import glslBilateralDeNoisePS from '../../scene/shader-lib/chunks-glsl/lightmapper/frag/bilateralDeNoise.js';
 import glslDilatePS from '../../scene/shader-lib/chunks-glsl/lightmapper/frag/dilate.js';
-import wgslBilateralDeNoisePS from '../../scene/shader-lib/chunks-wgsl/lightmapper/frag/bilateralDeNoise.js';
-import wgslDilatePS from '../../scene/shader-lib/chunks-wgsl/lightmapper/frag/dilate.js';
+import wgslBilateralDeNoisePS from '../../scene/shader-lib/wgsl/chunks/lightmapper/frag/bilateralDeNoise.js';
+import wgslDilatePS from '../../scene/shader-lib/wgsl/chunks/lightmapper/frag/dilate.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 // size of the kernel - needs to match the constant in the shader

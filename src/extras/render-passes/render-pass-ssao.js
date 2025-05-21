@@ -11,7 +11,7 @@ import { RenderPassDepthAwareBlur } from './render-pass-depth-aware-blur.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import glslSsaoPS from '../../scene/shader-lib/chunks-glsl/render-pass/frag/ssao.js';
-import wgslSsaoPS from '../../scene/shader-lib/chunks-wgsl/render-pass/frag/ssao.js';
+import wgslSsaoPS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/ssao.js';
 
 /**
  * Render pass implementation of Screen-Space Ambient Occlusion (SSAO) based on the non-linear depth

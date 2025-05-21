@@ -11,9 +11,9 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import glslSampleCatmullRomPS from '../../scene/shader-lib/chunks-glsl/render-pass/frag/sampleCatmullRom.js';
-import wgslSampleCatmullRomPS from '../../scene/shader-lib/chunks-wgsl/render-pass/frag/sampleCatmullRom.js';
+import wgslSampleCatmullRomPS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/sampleCatmullRom.js';
 import glsltaaResolvePS from '../../scene/shader-lib/chunks-glsl/render-pass/frag/taaResolve.js';
-import wgsltaaResolvePS from '../../scene/shader-lib/chunks-wgsl/render-pass/frag/taaResolve.js';
+import wgsltaaResolvePS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/taaResolve.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 /**
