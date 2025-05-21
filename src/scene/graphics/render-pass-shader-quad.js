@@ -1,13 +1,16 @@
 import { QuadRender } from './quad-render.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
-import { CULLFACE_NONE, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
+import glslQuadVS from '../shader-lib/chunks-glsl/render-pass/vert/quad.js';
+import wgslQuadVS from '../shader-lib/chunks-wgsl/render-pass/vert/quad.js';
 
 /**
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
+ * @import { GraphicsDevice } from '../../../playcanvas.js';
  */
 
 /**
@@ -18,6 +21,9 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
  * @ignore
  */
 class RenderPassShaderQuad extends RenderPass {
+    /**
+     * @type {Shader}
+     */
     _shader = null;
 
     quadRender = null;
@@ -56,20 +62,18 @@ class RenderPassShaderQuad extends RenderPass {
     stencilBack = null;
 
     /**
-     * A simple vertex shader used to render a quad, which requires 'vec2 aPosition' in the vertex
-     * buffer, and generates uv coordinates uv0 for use in the fragment shader.
+     * Creates an instance of the RenderPass.
      *
-     * @type {string}
+     * @param {GraphicsDevice} graphicsDevice - The
+     * graphics device.
      */
-    static quadVertexShader = `
-        attribute vec2 aPosition;
-        varying vec2 uv0;
-        void main(void)
-        {
-            gl_Position = vec4(aPosition, 0.0, 1.0);
-            uv0 = getImageEffectUV((aPosition.xy + 1.0) * 0.5);
-        }
-    `;
+    constructor(graphicsDevice) {
+        super(graphicsDevice);
+
+        // register shader chunks
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).set('RenderPassQuadVS', glslQuadVS);
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).set('RenderPassQuadVS', wgslQuadVS);
+    }
 
     /**
      * Sets the shader used to render the quad.
@@ -92,35 +96,6 @@ class RenderPassShaderQuad extends RenderPass {
 
     get shader() {
         return this._shader;
-    }
-
-    /**
-     * Creates a quad shader from the supplied fragment shader code.
-     *
-     * @param {string} name - A name of the shader.
-     * @param {string} fs - Fragment shader source code.
-     * @param {object} [shaderDefinitionOptions] - Additional options that will be added to the
-     * shader definition.
-     * @param {boolean} [shaderDefinitionOptions.useTransformFeedback] - Whether to use transform
-     * feedback. Defaults to false.
-     * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader
-     * output types, which default to vec4. Passing a string will set the output type for all color
-     * attachments. Passing an array will set the output type for each color attachment.
-     * @returns {object} Returns the created shader.
-     */
-    createQuadShader(name, fs, shaderDefinitionOptions = {}) {
-        return ShaderUtils.createShader(this.device, {
-            uniqueName: name,
-            attributes: { aPosition: SEMANTIC_POSITION },
-            useTransformFeedback: shaderDefinitionOptions.useTransformFeedback,
-            vertexGLSL: RenderPassShaderQuad.quadVertexShader,
-            vertexIncludes: shaderDefinitionOptions.vertexIncludes,
-            vertexDefines: shaderDefinitionOptions.vertexDefines,
-            fragmentGLSL: fs,
-            fragmentIncludes: shaderDefinitionOptions.fragmentIncludes,
-            fragmentDefines: shaderDefinitionOptions.fragmentDefines,
-            fragmentOutputTypes: shaderDefinitionOptions.fragmentOutputTypes
-        });
     }
 
     execute() {

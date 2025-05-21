@@ -1,11 +1,10 @@
 import { Vec3 } from '../../core/math/vec3.js';
-import { PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
 import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE, LIGHT_COLOR_DIVIDER } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { LightCamera } from '../renderer/light-camera.js';
-import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
-import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 const tempVec3 = new Vec3();
 const tempAreaLightSizes = new Float32Array(6);
@@ -49,7 +48,7 @@ const buildShaderDefines = (object, prefix) => {
 };
 
 // create a shader chunk with defines for the light buffer textures
-shaderChunks.lightBufferDefinesPS = shaderChunksWGSL.lightBufferDefinesPS = `\n
+const lightBufferDefines = `\n
     ${buildShaderDefines(TextureIndexFloat, 'CLUSTER_TEXTURE_')}
     ${buildShaderDefines(enums, '')}
 `;
@@ -61,6 +60,10 @@ class LightsBuffer {
     constructor(device) {
 
         this.device = device;
+
+        // shader chunk with defines
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('lightBufferDefinesPS', lightBufferDefines);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('lightBufferDefinesPS', lightBufferDefines);
 
         // features
         this.cookiesEnabled = false;
