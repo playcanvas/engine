@@ -16,7 +16,7 @@ import {
 } from '../../constants.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { ShaderPass } from '../../shader-pass.js';
-import { validateUserChunks } from '../chunks-glsl/chunk-validation.js';
+import { validateUserChunks } from '../glsl/chunks/chunk-validation.js';
 import { Debug } from '../../../core/debug.js';
 import { ShaderChunks } from '../shader-chunks.js';
 
