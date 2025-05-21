@@ -85,12 +85,8 @@ export default /* glsl */`
         #endif
 
         // anisotropy
-        #ifdef LIT_SPECULAR
-            #ifdef LIT_LIGHTING
-                #ifdef LIT_GGX_SPECULAR
-                    #include "anisotropyPS"
-                #endif
-            #endif
+        #if defined(LIT_SPECULAR) && defined(LIT_LIGHTING) && defined(LIT_GGX_SPECULAR)
+            #include "anisotropyPS"
         #endif
 
         // lightmap
@@ -206,12 +202,9 @@ export default /* glsl */`
                 litArgs_clearcoat_worldNormal = ccNormalW;
             #endif
 
-            #ifdef LIT_SPECULAR
-                #ifdef LIT_LIGHTING
-                    #ifdef LIT_GGX_SPECULAR
-                        getAnisotropy();
-                    #endif
-                #endif
+            // anisotropy
+            #if defined(LIT_SPECULAR) && defined(LIT_LIGHTING) && defined(LIT_GGX_SPECULAR)
+                getAnisotropy();
             #endif
 
             // lightmap

@@ -86,12 +86,8 @@ export default /* wgsl */`
         #endif
 
         // anisotropy
-        #ifdef LIT_SPECULAR
-            #ifdef LIT_LIGHTING
-                #ifdef LIT_GGX_SPECULAR
-                    #include "anisotropyPS"
-                #endif
-            #endif
+        #if defined(LIT_SPECULAR) && defined(LIT_LIGHTING) && defined(LIT_GGX_SPECULAR)
+            #include "anisotropyPS"
         #endif
 
         // lightmap
@@ -208,12 +204,8 @@ export default /* wgsl */`
             #endif
 
             // anisotropy
-            #ifdef LIT_SPECULAR
-                #ifdef LIT_LIGHTING
-                    #ifdef LIT_GGX_SPECULAR
-                        getAnisotropy();
-                    #endif
-                #endif
+            #if defined(LIT_SPECULAR) && defined(LIT_LIGHTING) && defined(LIT_GGX_SPECULAR)
+                getAnisotropy();
             #endif
 
             // lightmap
