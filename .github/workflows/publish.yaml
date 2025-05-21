@@ -9,7 +9,7 @@ on:
 jobs:
   publish-npm:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'playcanvas'
+    if: github.repository == 'playcanvas/engine'
     steps:
       - name: Check out code
         uses: actions/checkout@v4
