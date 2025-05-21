@@ -289,7 +289,7 @@ class AppBase extends EventHandler {
      * @type {boolean}
      * @example
      * // Render the scene only while space key is pressed
-     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+     * if (this.app.keyboard.isPressed(pc.Key.Space)) {
      *     this.app.renderNextFrame = true;
      * }
      */
