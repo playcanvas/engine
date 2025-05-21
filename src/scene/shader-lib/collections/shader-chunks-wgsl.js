@@ -13,6 +13,7 @@ import blurVSMPS from '../chunks-wgsl/lit/frag/blurVSM.js';
 import clearCoatPS from '../chunks-wgsl/standard/frag/clearCoat.js';
 import clearCoatGlossPS from '../chunks-wgsl/standard/frag/clearCoatGloss.js';
 import clearCoatNormalPS from '../chunks-wgsl/standard/frag/clearCoatNormal.js';
+import anisotropyPS from '../chunks-wgsl/standard/frag/anisotropy.js';
 import clusteredLightUtilsPS from '../chunks-wgsl/lit/frag/clusteredLightUtils.js';
 import clusteredLightCookiesPS from '../chunks-wgsl/lit/frag/clusteredLightCookies.js';
 import clusteredLightShadowsPS from '../chunks-wgsl/lit/frag/clusteredLightShadows.js';
@@ -182,6 +183,7 @@ const shaderChunksWGSL = {
     clearCoatPS,
     clearCoatGlossPS,
     clearCoatNormalPS,
+    anisotropyPS,
     clusteredLightCookiesPS,
     clusteredLightShadowsPS,
     clusteredLightUtilsPS,

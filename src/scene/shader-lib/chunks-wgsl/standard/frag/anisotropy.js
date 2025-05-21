@@ -1,5 +1,4 @@
 export default /* wgsl */`
-
 #ifdef LIT_GGX_SPECULAR
     uniform material_anisotropyIntensity: f32;
     uniform material_anisotropyRotation: vec2f;
@@ -10,15 +9,15 @@ fn getAnisotropy() {
     dAnisotropyRotation = vec2f(1.0, 0.0);
 
 #ifdef LIT_GGX_SPECULAR
-    dAnisotropy = material_anisotropyIntensity;
-    dAnisotropyRotation = material_anisotropyRotation;
+    dAnisotropy = uniform.material_anisotropyIntensity;
+    dAnisotropyRotation = uniform.material_anisotropyRotation;
 #endif
 
 #ifdef STD_ANISOTROPY_TEXTURE
-    dAnisotropy *= texture2DBias({STD_ANISOTROPY_TEXTURE_NAME}, {STD_ANISOTROPY_TEXTURE_NAME}Sampler, {STD_ANISOTROPY_TEXTURE_UV}, textureBias).b;
+    dAnisotropy *= textureSampleBias({STD_ANISOTROPY_TEXTURE_NAME}, {STD_ANISOTROPY_TEXTURE_NAME}Sampler, {STD_ANISOTROPY_TEXTURE_UV}, uniform.textureBias).b;
 
-    let anisotropyRotationFromTex: vec2f = texture2DBias({STD_ANISOTROPY_TEXTURE_NAME}, {STD_ANISOTROPY_TEXTURE_NAME}Sampler, {STD_ANISOTROPY_TEXTURE_UV}, textureBias).rg * 2.0 - vec2f(1.0);
-    mat2 rotationMatrix: mat2x2f = mat2x2f(dAnisotropyRotation.x, dAnisotropyRotation.y, -dAnisotropyRotation.y, dAnisotropyRotation.x);
+    let anisotropyRotationFromTex: vec2f = textureSampleBias({STD_ANISOTROPY_TEXTURE_NAME}, {STD_ANISOTROPY_TEXTURE_NAME}Sampler, {STD_ANISOTROPY_TEXTURE_UV}, uniform.textureBias).rg * 2.0 - vec2f(1.0);
+    let rotationMatrix: mat2x2f = mat2x2f(dAnisotropyRotation.x, dAnisotropyRotation.y, -dAnisotropyRotation.y, dAnisotropyRotation.x);
     dAnisotropyRotation = rotationMatrix * anisotropyRotationFromTex;
 #endif
 
