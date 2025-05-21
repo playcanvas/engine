@@ -129,7 +129,7 @@ const outputRenderTarget = createPixelRenderTarget(2, outputTexture);
 const sandShader = pc.ShaderUtils.createShader(device, {
     uniqueName: 'SandShader',
     attributes: { aPosition: pc.SEMANTIC_POSITION },
-    vertexGLSL: pc.RenderPassShaderQuad.quadVertexShader,
+    vertexChunk: 'quadVS',
     fragmentGLSL: files['sandSimulation.frag'],
     // Note that we are changing the shader output type to 'uint'
     // This means we only have to return a single integer value from the shader,
@@ -144,7 +144,7 @@ const sandShader = pc.ShaderUtils.createShader(device, {
 const outputShader = pc.ShaderUtils.createShader(device, {
     uniqueName: 'RenderOutputShader',
     attributes: { aPosition: pc.SEMANTIC_POSITION },
-    vertexGLSL: pc.RenderPassShaderQuad.quadVertexShader,
+    vertexChunk: 'quadVS',
     fragmentGLSL: files['renderOutput.frag']
     // For the output shader, we don't need to specify the output type,
     // as we are returning a vec4 by default.

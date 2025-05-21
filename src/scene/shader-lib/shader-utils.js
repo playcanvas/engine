@@ -86,8 +86,8 @@ class ShaderUtils {
 
             // use WGSL language on WebGPU: if user provided WGSL code, or if named chunks are used
             const wgsl = device.isWebGPU &&
-                (options.vertexWGSL || options.vertexChunk) &&
-                (options.fragmentWGSL || options.fragmentChunk);
+                (!!options.vertexWGSL || !!options.vertexChunk) &&
+                (!!options.fragmentWGSL || !!options.fragmentChunk);
 
             // chunks map
             const chunksMap = ShaderChunks.get(device, wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);

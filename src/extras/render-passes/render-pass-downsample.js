@@ -46,7 +46,7 @@ class RenderPassDownsample extends RenderPassShaderQuad {
         this.shader = ShaderUtils.createShader(device, {
             uniqueName: `DownSampleShader:${key}`,
             attributes: { aPosition: SEMANTIC_POSITION },
-            vertexChunk: 'RenderPassQuadVS',
+            vertexChunk: 'quadVS',
             fragmentChunk: 'downsamplePS',
             fragmentDefines: defines
         });

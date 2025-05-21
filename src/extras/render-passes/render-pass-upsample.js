@@ -23,10 +23,9 @@ class RenderPassUpsample extends RenderPassShaderQuad {
         this.shader = ShaderUtils.createShader(device, {
             uniqueName: 'UpSampleShader',
             attributes: { aPosition: SEMANTIC_POSITION },
-            vertexChunk: 'RenderPassQuadVS',
+            vertexChunk: 'quadVS',
             fragmentChunk: 'upsamplePS'
         });
-
 
         this.sourceTextureId = device.scope.resolve('sourceTexture');
         this.sourceInvResolutionId = device.scope.resolve('sourceInvResolution');

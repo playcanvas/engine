@@ -29,7 +29,7 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
         this.shader = ShaderUtils.createShader(device, {
             uniqueName: `DepthAware${horizontal ? 'Horizontal' : 'Vertical'}BlurShader`,
             attributes: { aPosition: SEMANTIC_POSITION },
-            vertexChunk: 'RenderPassQuadVS',
+            vertexChunk: 'quadVS',
             fragmentChunk: 'depthAwareBlurPS',
             fragmentDefines: defines
         });

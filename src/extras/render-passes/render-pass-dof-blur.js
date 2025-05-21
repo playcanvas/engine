@@ -89,7 +89,7 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
         this.shader = ShaderUtils.createShader(this.device, {
             uniqueName: `DofBlurShader-${kernelCount}-${nearBlur ? 'nearBlur' : 'noNearBlur'}`,
             attributes: { aPosition: SEMANTIC_POSITION },
-            vertexChunk: 'RenderPassQuadVS',
+            vertexChunk: 'quadVS',
             fragmentChunk: 'dofBlurPS',
             fragmentDefines: defines
         });
