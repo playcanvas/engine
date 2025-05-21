@@ -1113,9 +1113,9 @@ const extensionAnisotropy = (data, material, textures) => {
     material.enableGGXSpecular = true;
 
     if (data.hasOwnProperty('anisotropyStrength')) {
-        material.anisotropy = data.anisotropyStrength;
+        material.anisotropyIntensity = data.anisotropyStrength;
     } else {
-        material.anisotropy = 0;
+        material.anisotropyIntensity = 0;
     }
     if (data.hasOwnProperty('anisotropyTexture')) {
         const anisotropyTexture = data.anisotropyTexture;
