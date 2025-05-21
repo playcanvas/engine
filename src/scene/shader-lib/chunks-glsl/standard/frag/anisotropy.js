@@ -7,7 +7,7 @@ export default /* glsl */`
 
 void getAnisotropy() {
     dAnisotropy = 0.0;
-    dAnisotropyRotation = vec2(1.0,0.0);
+    dAnisotropyRotation = vec2(1.0, 0.0);
 
 #ifdef LIT_GGX_SPECULAR
     dAnisotropy = material_anisotropyIntensity;
