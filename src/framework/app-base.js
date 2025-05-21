@@ -54,8 +54,8 @@ import { SceneRegistry } from './scene-registry.js';
 import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
 import { getApplication, setApplication } from './globals.js';
-import { shaderChunksGLSL } from '../scene/shader-lib/collections/shader-chunks-glsl.js';
-import { shaderChunksWGSL } from '../scene/shader-lib/collections/shader-chunks-wgsl.js';
+import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
+import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 /**

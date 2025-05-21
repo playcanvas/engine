@@ -1,8 +1,8 @@
 import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
-import glslUpsamplePS from '../../scene/shader-lib/chunks-glsl/render-pass/frag/upsample.js';
-import wgslUpsamplePS from '../../scene/shader-lib/chunks-wgsl/render-pass/frag/upsample.js';
+import glslUpsamplePS from '../../scene/shader-lib/glsl/chunks/render-pass/frag/upsample.js';
+import wgslUpsamplePS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/upsample.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 /**
