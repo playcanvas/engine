@@ -665,10 +665,12 @@ Object.defineProperty(StandardMaterial.prototype, 'useGammaTonemap', {
 
 Object.defineProperty(StandardMaterial.prototype, 'anisotropy', {
     get: function () {
+        Debug.deprecated(`pc.StandardMaterial#anisotropy is deprecated. Use pc.StandardMaterial#anisotropyIntensity and pc.StandardMaterial#anisotropyRotation instead.`);
         const sign = Math.sign(Math.cos(this.anisotropyRotation * math.DEG_TO_RAD * 2));
         return this.anisotropyIntensity * sign;
     },
     set: function (value) {
+        Debug.deprecated(`pc.StandardMaterial#anisotropy is deprecated. Use pc.StandardMaterial#anisotropyIntensity and pc.StandardMaterial#anisotropyRotation instead.`);
         this.anisotropyIntensity = Math.abs(value);
         if (value >= 0) {
             this.anisotropyRotation = 0;
