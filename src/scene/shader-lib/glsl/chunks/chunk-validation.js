@@ -1,4 +1,4 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug } from '../../../../core/debug.js';
 
 const chunkVersions = {
     // frontend

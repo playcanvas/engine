@@ -5,7 +5,7 @@ import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL } from '../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
-import glslComposePS from '../../scene/shader-lib/chunks-glsl/render-pass/frag/compose.js';
+import glslComposePS from '../../scene/shader-lib/glsl/chunks/render-pass/frag/compose.js';
 
 /**
  * Render pass implementation of the final post-processing composition.

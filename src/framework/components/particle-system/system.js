@@ -5,8 +5,8 @@ import { Asset } from '../../asset/asset.js';
 import { ComponentSystem } from '../system.js';
 import { ParticleSystemComponent } from './component.js';
 import { ParticleSystemComponentData } from './data.js';
-import { particleChunksGLSL } from '../../../scene/shader-lib/collections/particle-chunks-glsl.js';
-import { particleChunksWGSL } from '../../../scene/shader-lib/collections/particle-chunks-wgsl.js';
+import { particleChunksGLSL } from '../../../scene/shader-lib/glsl/collections/particle-chunks-glsl.js';
+import { particleChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/particle-chunks-wgsl.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 
