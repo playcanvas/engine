@@ -450,10 +450,8 @@ function reprojectTexture(source, target, options = {}) {
         shader = ShaderUtils.createShader(device, {
             uniqueName: shaderKey,
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('reprojectVS'),
-            vertexWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('reprojectVS'),
-            fragmentGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('reprojectPS'),
-            fragmentWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('reprojectPS'),
+            vertexChunk: 'reprojectVS',
+            fragmentChunk: 'reprojectPS',
             fragmentIncludes: includes,
             fragmentDefines: defines
         });
