@@ -1,14 +1,12 @@
 import { QuadRender } from './quad-render.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
-import { CULLFACE_NONE, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 /**
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
- * @import { GraphicsDevice } from '../../../playcanvas.js';
  */
 
 /**
