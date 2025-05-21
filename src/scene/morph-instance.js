@@ -199,10 +199,8 @@ class MorphInstance {
         return ShaderUtils.createShader(this.device, {
             uniqueName: 'TextureMorphShader',
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('morphVS'),
-            vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('morphVS'),
-            fragmentGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('morphPS'),
-            fragmentWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('morphPS'),
+            vertexChunk: 'morphVS',
+            fragmentChunk: 'morphPS',
             fragmentDefines: defines,
             fragmentOutputTypes: [outputType]
         });

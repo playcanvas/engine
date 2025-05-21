@@ -115,7 +115,6 @@ import refractionCubePS from '../chunks-wgsl/lit/frag/refractionCube.js';
 import refractionDynamicPS from '../chunks-wgsl/lit/frag/refractionDynamic.js';
 import reprojectPS from '../chunks-wgsl/internal/frag/reproject.js';
 import reprojectVS from '../chunks-wgsl/internal/vert/reproject.js';
-// import sampleCatmullRomPS from './common/frag/sampleCatmullRom.js';
 import screenDepthPS from '../chunks-wgsl/common/frag/screenDepth.js';
 import shadowCascadesPS from '../chunks-wgsl/lit/frag/lighting/shadowCascades.js';
 import shadowEVSMPS from '../chunks-wgsl/lit/frag/lighting/shadowEVSM.js';
@@ -294,7 +293,6 @@ const shaderChunksWGSL = {
     refractionDynamicPS,
     reprojectPS,
     reprojectVS,
-    // sampleCatmullRomPS,
     screenDepthPS,
     shadowCascadesPS,
     shadowEVSMPS,
