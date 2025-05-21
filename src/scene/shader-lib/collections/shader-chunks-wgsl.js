@@ -1,5 +1,6 @@
 import alphaTestPS from '../chunks-wgsl/standard/frag/alphaTest.js';
 import ambientPS from '../chunks-wgsl/lit/frag/ambient.js';
+import anisotropyPS from '../chunks-wgsl/standard/frag/anisotropy.js';
 import aoPS from '../chunks-wgsl/standard/frag/ao.js';
 import aoDiffuseOccPS from '../chunks-wgsl/lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from '../chunks-wgsl/lit/frag/aoSpecOcc.js';
@@ -13,7 +14,6 @@ import blurVSMPS from '../chunks-wgsl/lit/frag/blurVSM.js';
 import clearCoatPS from '../chunks-wgsl/standard/frag/clearCoat.js';
 import clearCoatGlossPS from '../chunks-wgsl/standard/frag/clearCoatGloss.js';
 import clearCoatNormalPS from '../chunks-wgsl/standard/frag/clearCoatNormal.js';
-import anisotropyPS from '../chunks-wgsl/standard/frag/anisotropy.js';
 import clusteredLightUtilsPS from '../chunks-wgsl/lit/frag/clusteredLightUtils.js';
 import clusteredLightCookiesPS from '../chunks-wgsl/lit/frag/clusteredLightCookies.js';
 import clusteredLightShadowsPS from '../chunks-wgsl/lit/frag/clusteredLightShadows.js';
@@ -170,6 +170,7 @@ import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu-wgsl.
 const shaderChunksWGSL = {
     alphaTestPS,
     ambientPS,
+    anisotropyPS,
     aoPS,
     aoDiffuseOccPS,
     aoSpecOccPS,
@@ -183,7 +184,6 @@ const shaderChunksWGSL = {
     clearCoatPS,
     clearCoatGlossPS,
     clearCoatNormalPS,
-    anisotropyPS,
     clusteredLightCookiesPS,
     clusteredLightShadowsPS,
     clusteredLightUtilsPS,
