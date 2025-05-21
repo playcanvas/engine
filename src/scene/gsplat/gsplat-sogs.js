@@ -38,7 +38,7 @@ class GSplatSogs {
     createMaterial(options) {
         const { gsplatData } = this;
 
-        const result = createGSplatMaterial(options);
+        const result = createGSplatMaterial(this.device, options);
         result.setDefine('GSPLAT_SOGS_DATA', true);
         result.setDefine('SH_BANDS', this.gsplatData.shBands);
 

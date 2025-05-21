@@ -120,7 +120,7 @@ class GSplatCompressed {
      * @returns {Material} material - The material to set up for the splat rendering.
      */
     createMaterial(options) {
-        const result = createGSplatMaterial(options);
+        const result = createGSplatMaterial(this.device, options);
         result.setDefine('GSPLAT_COMPRESSED_DATA', true);
         result.setParameter('packedTexture', this.packedTexture);
         result.setParameter('chunkTexture', this.chunkTexture);

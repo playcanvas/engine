@@ -1,14 +1,13 @@
 import { hashCode } from '../../../core/hash.js';
 import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
-import { shaderChunksWGSL } from '../chunks-wgsl/chunks-wgsl.js';
-import { shaderChunks } from '../chunks-glsl/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
+import { ShaderChunks } from '../shader-chunks.js';
 
 class ShaderGeneratorShader extends ShaderGenerator {
     generateKey(options) {
 
-        // Note: options.chunks are not included in the key as currently shader variants are removed
+        // Note: options.shaderChunks are not included in the key as currently shader variants are removed
         // from the material when its chunks are modified.
 
         const desc = options.shaderDesc;
@@ -94,11 +93,8 @@ class ShaderGeneratorShader extends ShaderGenerator {
             meshBindGroupFormat: desc.meshBindGroupFormat
         };
 
-        const chunks = wgsl ? shaderChunksWGSL : shaderChunks;
-        const sharedIncludes = new Map(Object.entries({
-            ...chunks,  // default chunks
-            ...options.chunks // material override chunks
-        }));
+        // includes - default chunks
+        const sharedIncludes = new Map(ShaderChunks.get(device, wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL));
 
         this.createAttributesDefinition(definitionOptions, options);
         this.createVertexDefinition(definitionOptions, options, sharedIncludes, wgsl);

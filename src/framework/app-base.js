@@ -14,7 +14,9 @@ import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
 
 import {
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE
+    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
 } from '../platform/graphics/constants.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { http } from '../platform/net/http.js';
@@ -52,6 +54,9 @@ import { SceneRegistry } from './scene-registry.js';
 import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
 import { getApplication, setApplication } from './globals.js';
+import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
+import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
+import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 /**
  * @import { AppOptions } from './app-options.js'
@@ -480,8 +485,12 @@ class AppBase extends EventHandler {
         } = appOptions;
 
         Debug.assert(graphicsDevice, 'The application cannot be created without a valid GraphicsDevice');
-
         this.graphicsDevice = graphicsDevice;
+
+        // register shader chunks
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).add(shaderChunksGLSL);
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
+
         this._initDefaultMaterial();
         this._initProgramLibrary();
         this.stats = new ApplicationStats(graphicsDevice);

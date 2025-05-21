@@ -1,6 +1,10 @@
+import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
-import { ChunkUtils } from '../../scene/shader-lib/chunk-utils.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
+import glslCocPS from '../../scene/shader-lib/glsl/chunks/render-pass/frag/coc.js';
+import wgslCocPS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/coc.js';
+import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 /**
  * Render pass implementation of a Circle of Confusion texture generation, used by Depth of Field.
@@ -19,37 +23,23 @@ class RenderPassCoC extends RenderPassShaderQuad {
         super(device);
         this.cameraComponent = cameraComponent;
 
-        const screenDepth = ChunkUtils.getScreenDepthChunk(device, cameraComponent.shaderParams);
-        this.shader = this.createQuadShader(`CocShader-${nearBlur}`, /* glsl */`
+        // register shader chunks
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('cocPS', glslCocPS);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('cocPS', wgslCocPS);
 
-            ${nearBlur ? '#define NEAR_BLUR' : ''}
-            ${screenDepth}
-            varying vec2 uv0;
-            uniform vec3 params;
+        const defines = new Map();
+        if (nearBlur) defines.set('NEAR_BLUR', '');
 
-            void main()
-            {
-                float depth = getLinearScreenDepth(uv0);
+        // add defines needed for correct use of screenDepthPS chunk
+        ShaderUtils.addScreenDepthChunkDefines(device, cameraComponent.shaderParams, defines);
 
-                // near and far focus ranges
-                float focusDistance = params.x;
-                float focusRange = params.y;
-                float invRange = params.z;
-                float farRange = focusDistance + focusRange * 0.5;
-                
-                // near and far CoC
-                float cocFar = min((depth - farRange) * invRange, 1.0);
-
-                #ifdef NEAR_BLUR
-                    float nearRange = focusDistance - focusRange * 0.5;
-                    float cocNear = min((nearRange - depth) * invRange, 1.0);
-                #else
-                    float cocNear = 0.0;
-                #endif
-
-                gl_FragColor = vec4(cocFar, cocNear, 0.0, 0.0);
-            }`
-        );
+        this.shader = ShaderUtils.createShader(device, {
+            uniqueName: `CocShader-${nearBlur}`,
+            attributes: { aPosition: SEMANTIC_POSITION },
+            vertexChunk: 'quadVS',
+            fragmentChunk: 'cocPS',
+            fragmentDefines: defines
+        });
 
         this.paramsId = device.scope.resolve('params');
         this.paramsValue = new Float32Array(3);

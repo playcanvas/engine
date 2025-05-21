@@ -10,8 +10,6 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { QuadRender } from '../graphics/quad-render.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
-import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 
 const _viewport = new Vec4();
 
@@ -115,10 +113,8 @@ class RenderPassCookieRenderer extends RenderPass {
             const shader = ShaderUtils.createShader(this.device, {
                 uniqueName: 'cookieRenderer2d',
                 attributes: { vertex_position: SEMANTIC_POSITION },
-                vertexGLSL: shaderChunks.cookieBlitVS,
-                vertexWGSL: shaderChunksWGSL.cookieBlitVS,
-                fragmentGLSL: shaderChunks.cookieBlit2DPS,
-                fragmentWGSL: shaderChunksWGSL.cookieBlit2DPS
+                vertexChunk: 'cookieBlitVS',
+                fragmentChunk: 'cookieBlit2DPS'
             });
             this._quadRenderer2D = new QuadRender(shader);
         }
@@ -130,10 +126,8 @@ class RenderPassCookieRenderer extends RenderPass {
             const shader = ShaderUtils.createShader(this.device, {
                 uniqueName: 'cookieRendererCube',
                 attributes: { vertex_position: SEMANTIC_POSITION },
-                vertexGLSL: shaderChunks.cookieBlitVS,
-                vertexWGSL: shaderChunksWGSL.cookieBlitVS,
-                fragmentGLSL: shaderChunks.cookieBlitCubePS,
-                fragmentWGSL: shaderChunksWGSL.cookieBlitCubePS
+                vertexChunk: 'cookieBlitVS',
+                fragmentChunk: 'cookieBlitCubePS'
             });
             this._quadRendererCube = new QuadRender(shader);
         }

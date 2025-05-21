@@ -97,7 +97,8 @@ assetListLoader.load(() => {
     material.setAttribute('aInstScale', pc.SEMANTIC_ATTR13);
 
     // and a custom instancing shader chunk, which will be used in case the mesh instance has instancing enabled
-    material.chunks.transformInstancingVS = `
+    material.shaderChunksVersion = '2.8';
+    material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('transformInstancingVS', `
 
         // instancing attributes
         attribute vec3 aInstPosition;
@@ -124,7 +125,7 @@ assetListLoader.load(() => {
                 vec4(worldPos, 1.0)
             );
         }
-    `;
+    `);
 
     material.update();
 
