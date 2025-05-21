@@ -332,7 +332,7 @@ class WebgpuShaderProcessorWGSL {
 
         // VS - convert a list of attributes to a shader block with fixed locations
         const attributesMap = new Map();
-        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions);
+        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions, shader);
 
         // VS - convert a list of varyings to a shader block
         const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true);
@@ -813,7 +813,7 @@ class WebgpuShaderProcessorWGSL {
         return floatToIntShort[shortType] || null;
     }
 
-    static processAttributes(attributeLines, shaderDefinitionAttributes = {}, attributesMap, processingOptions) {
+    static processAttributes(attributeLines, shaderDefinitionAttributes = {}, attributesMap, processingOptions, shader) {
         let blockAttributes = '';
         let blockPrivates = '';
         let blockCopy = '';
@@ -860,7 +860,7 @@ class WebgpuShaderProcessorWGSL {
                 // copy input variable to the private variable - convert type if needed
                 blockCopy += `    ${name} = ${originalType}(input.${name});\n`;
             } else {
-                Debug.error(`Attribute ${name} is specified in the shader source, but is not defined in the shader definition, and so will be removed from the shader, as it cannot be used without a known semantic.`, shaderDefinitionAttributes);
+                Debug.error(`Attribute ${name} is specified in the shader source, but is not defined in the shader definition, and so will be removed from the shader, as it cannot be used without a known semantic.`, { shaderDefinitionAttributes, shader });
             }
         });
 

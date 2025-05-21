@@ -36,7 +36,7 @@ class RenderPassCoC extends RenderPassShaderQuad {
         this.shader = ShaderUtils.createShader(device, {
             uniqueName: `CocShader-${nearBlur}`,
             attributes: { aPosition: SEMANTIC_POSITION },
-            vertexChunk: 'RenderPassQuadVS',
+            vertexChunk: 'quadVS',
             fragmentChunk: 'cocPS',
             fragmentDefines: defines
         });

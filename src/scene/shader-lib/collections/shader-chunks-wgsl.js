@@ -1,5 +1,6 @@
 import alphaTestPS from '../chunks-wgsl/standard/frag/alphaTest.js';
 import ambientPS from '../chunks-wgsl/lit/frag/ambient.js';
+import anisotropyPS from '../chunks-wgsl/standard/frag/anisotropy.js';
 import aoPS from '../chunks-wgsl/standard/frag/ao.js';
 import aoDiffuseOccPS from '../chunks-wgsl/lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from '../chunks-wgsl/lit/frag/aoSpecOcc.js';
@@ -54,6 +55,7 @@ import gsplatPS from '../chunks-wgsl/gsplat/frag/gsplat.js';
 import gsplatSHVS from '../chunks-wgsl/gsplat/vert/gsplatSH.js';
 import gsplatSourceVS from '../chunks-wgsl/gsplat/vert/gsplatSource.js';
 import gsplatVS from '../chunks-wgsl/gsplat/vert/gsplat.js';
+import quadVS from '../chunks-wgsl/common/vert/quad.js';
 import immediateLinePS from '../chunks-wgsl/internal/frag/immediateLine.js';
 import immediateLineVS from '../chunks-wgsl/internal/vert/immediateLine.js';
 import iridescenceDiffractionPS from '../chunks-wgsl/lit/frag/iridescenceDiffraction.js';
@@ -168,6 +170,7 @@ import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu-wgsl.
 const shaderChunksWGSL = {
     alphaTestPS,
     ambientPS,
+    anisotropyPS,
     aoPS,
     aoDiffuseOccPS,
     aoSpecOccPS,
@@ -224,6 +227,7 @@ const shaderChunksWGSL = {
     gsplatSHVS,
     gsplatSourceVS,
     gsplatVS,
+    quadVS,
     immediateLinePS,
     immediateLineVS,
     iridescenceDiffractionPS,

@@ -23,7 +23,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         dVertexNormalW = normalize(vNormalW);
 
         #ifdef LIT_TANGENTS
-            #if defined(LIT_HEIGHTS) || defined(LIT_USE_NORMALS) || defined(LIT_USE_CLEARCOAT_NORMALS)
+            #if defined(LIT_HEIGHTS) || defined(LIT_USE_NORMALS) || defined(LIT_USE_CLEARCOAT_NORMALS) || defined(LIT_GGX_SPECULAR)
                 dTangentW = vTangentW;
                 dBinormalW = vBinormalW;
             #endif

@@ -1,16 +1,12 @@
 import { QuadRender } from './quad-render.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
-import { CULLFACE_NONE, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
-import glslQuadVS from '../shader-lib/chunks-glsl/render-pass/vert/quad.js';
-import wgslQuadVS from '../shader-lib/chunks-wgsl/render-pass/vert/quad.js';
 
 /**
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
- * @import { GraphicsDevice } from '../../../playcanvas.js';
  */
 
 /**
@@ -60,20 +56,6 @@ class RenderPassShaderQuad extends RenderPass {
      * @type {StencilParameters|null}
      */
     stencilBack = null;
-
-    /**
-     * Creates an instance of the RenderPass.
-     *
-     * @param {GraphicsDevice} graphicsDevice - The
-     * graphics device.
-     */
-    constructor(graphicsDevice) {
-        super(graphicsDevice);
-
-        // register shader chunks
-        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).set('RenderPassQuadVS', glslQuadVS);
-        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).set('RenderPassQuadVS', wgslQuadVS);
-    }
 
     /**
      * Sets the shader used to render the quad.

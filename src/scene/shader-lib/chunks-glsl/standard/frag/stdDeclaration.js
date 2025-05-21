@@ -93,6 +93,11 @@ export default /* glsl */`
             vec3 ccNormalW;
         #endif
 
+        #ifdef LIT_GGX_SPECULAR
+            float dAnisotropy;
+            vec2 dAnisotropyRotation;
+        #endif
+
         // specularity & glossiness
         #ifdef LIT_SPECULAR_OR_REFLECTION
 
@@ -168,6 +173,13 @@ export default /* glsl */`
             #endif
             #ifdef STD_CLEARCOATNORMAL_TEXTURE_ALLOCATE
                 uniform sampler2D texture_clearCoatNormalMap;
+            #endif
+        #endif
+        
+        // anisotropy
+        #ifdef LIT_GGX_SPECULAR
+            #ifdef STD_ANISOTROPY_TEXTURE_ALLOCATE
+                uniform sampler2D texture_anisotropyMap;
             #endif
         #endif
 

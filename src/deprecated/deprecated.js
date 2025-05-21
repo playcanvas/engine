@@ -3,6 +3,7 @@ import { Debug } from '../core/debug.js';
 import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
+import { math } from '../core/math/math.js';
 
 import {
     BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
@@ -659,6 +660,23 @@ Object.defineProperty(StandardMaterial.prototype, 'useGammaTonemap', {
     },
     set: function (value) {
         this.useTonemap = value;
+    }
+});
+
+Object.defineProperty(StandardMaterial.prototype, 'anisotropy', {
+    get: function () {
+        Debug.deprecated('pc.StandardMaterial#anisotropy is deprecated. Use pc.StandardMaterial#anisotropyIntensity and pc.StandardMaterial#anisotropyRotation instead.');
+        const sign = Math.sign(Math.cos(this.anisotropyRotation * math.DEG_TO_RAD * 2));
+        return this.anisotropyIntensity * sign;
+    },
+    set: function (value) {
+        Debug.deprecated('pc.StandardMaterial#anisotropy is deprecated. Use pc.StandardMaterial#anisotropyIntensity and pc.StandardMaterial#anisotropyRotation instead.');
+        this.anisotropyIntensity = Math.abs(value);
+        if (value >= 0) {
+            this.anisotropyRotation = 0;
+        } else {
+            this.anisotropyRotation = 90;
+        }
     }
 });
 

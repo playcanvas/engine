@@ -259,7 +259,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 this.shader = ShaderUtils.createShader(this.device, {
                     uniqueName: `ComposeShader-${key}`,
                     attributes: { aPosition: SEMANTIC_POSITION },
-                    vertexChunk: 'RenderPassQuadVS',
+                    vertexChunk: 'quadVS',
                     fragmentGLSL: glslComposePS,
                     fragmentDefines: defines,
                     fragmentIncludes: includes

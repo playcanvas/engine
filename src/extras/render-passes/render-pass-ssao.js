@@ -95,7 +95,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
         this.shader = ShaderUtils.createShader(device, {
             uniqueName: 'SsaoShader',
             attributes: { aPosition: SEMANTIC_POSITION },
-            vertexChunk: 'RenderPassQuadVS',
+            vertexChunk: 'quadVS',
             fragmentChunk: 'ssaoPS',
             fragmentDefines: defines
         });

@@ -3,14 +3,19 @@ export default /* glsl */`
 float calcLightSpecular(float gloss, vec3 worldNormal, vec3 viewDir, vec3 h, vec3 lightDirNorm, mat3 tbn) {
     float PI = 3.141592653589793;
     float roughness = max((1.0 - gloss) * (1.0 - gloss), 0.001);
-    float anisotropy = material_anisotropy * roughness;
- 
-    float at = max((roughness + anisotropy), roughness / 4.0);
-    float ab = max((roughness - anisotropy), roughness / 4.0);
+    float alphaRoughness = roughness * roughness;
+    float anisotropy = dAnisotropy;
+    vec2 direction = dAnisotropyRotation;
+
+    float at = mix(alphaRoughness, 1.0, anisotropy * anisotropy);
+    float ab = clamp(alphaRoughness, 0.001, 1.0);
+
+    vec3 anisotropicT = normalize(tbn * vec3(direction, 0.0));
+    vec3 anisotropicB = normalize(cross(tbn[2], anisotropicT));
 
     float NoH = dot(worldNormal, h);
-    float ToH = dot(tbn[0], h);
-    float BoH = dot(tbn[1], h);
+    float ToH = dot(anisotropicT, h);
+    float BoH = dot(anisotropicB, h);
 
     float a2 = at * ab;
     vec3 v = vec3(ab * ToH, at * BoH, a2 * NoH);
@@ -18,10 +23,10 @@ float calcLightSpecular(float gloss, vec3 worldNormal, vec3 viewDir, vec3 h, vec
     float w2 = a2 / v2;
     float D = a2 * w2 * w2 * (1.0 / PI);
 
-    float ToV = dot(tbn[0], viewDir);
-    float BoV = dot(tbn[1], viewDir);
-    float ToL = dot(tbn[0], -lightDirNorm);
-    float BoL = dot(tbn[1], -lightDirNorm);
+    float ToV = dot(anisotropicT, viewDir);
+    float BoV = dot(anisotropicB, viewDir);
+    float ToL = dot(anisotropicT, -lightDirNorm);
+    float BoL = dot(anisotropicB, -lightDirNorm);
     float NoV = dot(worldNormal, viewDir);
     float NoL = dot(worldNormal, -lightDirNorm);
 
