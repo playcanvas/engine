@@ -46,8 +46,10 @@ fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCen
     let lambda1 = mid + radius;
     let lambda2 = max(mid - radius, 0.1);
 
-    let l1 = 2.0 * min(sqrt(2.0 * lambda1), 1024.0);
-    let l2 = 2.0 * min(sqrt(2.0 * lambda2), 1024.0);
+    let vmin = min(uniform.viewport.x, uniform.viewport.y);
+
+    let l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
+    let l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
 
     // early-out gaussians smaller than 2 pixels
     if (l1 < 2.0 && l2 < 2.0) {
