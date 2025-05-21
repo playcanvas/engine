@@ -84,6 +84,11 @@ export default /* glsl */`
             #include "clearCoatNormalPS"
         #endif
 
+        // anisotropy
+        #if defined(LIT_SPECULAR) && defined(LIT_LIGHTING) && defined(LIT_GGX_SPECULAR)
+            #include "anisotropyPS"
+        #endif
+
         // lightmap
         #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
             #include "lightmapPS"
@@ -195,6 +200,11 @@ export default /* glsl */`
                 litArgs_clearcoat_specularity = ccSpecularity;
                 litArgs_clearcoat_gloss = ccGlossiness;
                 litArgs_clearcoat_worldNormal = ccNormalW;
+            #endif
+
+            // anisotropy
+            #if defined(LIT_SPECULAR) && defined(LIT_LIGHTING) && defined(LIT_GGX_SPECULAR)
+                getAnisotropy();
             #endif
 
             // lightmap

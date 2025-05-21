@@ -1,5 +1,6 @@
 import alphaTestPS from '../chunks-glsl/standard/frag/alphaTest.js';
 import ambientPS from '../chunks-glsl/lit/frag/ambient.js';
+import anisotropyPS from '../chunks-glsl/standard/frag/anisotropy.js';
 import aoPS from '../chunks-glsl/standard/frag/ao.js';
 import aoDiffuseOccPS from '../chunks-glsl/lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from '../chunks-glsl/lit/frag/aoSpecOcc.js';
@@ -173,6 +174,7 @@ import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
 const shaderChunksGLSL = {
     alphaTestPS,
     ambientPS,
+    anisotropyPS,
     aoPS,
     aoDiffuseOccPS,
     aoSpecOccPS,

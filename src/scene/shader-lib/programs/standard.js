@@ -415,6 +415,11 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 this._addMapDefines(fDefines, 'clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping, options.clearCoatPackedNormal ? 'xy' : 'xyz');
             }
 
+            // anisotropy
+            if (options.litOptions.enableGGXSpecular) {
+                this._addMapDefines(fDefines, 'anisotropy', 'anisotropyPS', options, litShader.chunks, textureMapping);
+            }
+
             // lightmap
             if (options.lightMap || options.lightVertexColor) {
                 this._addMapDefines(fDefines, 'light', 'lightmapPS', options, litShader.chunks, textureMapping, options.lightMapEncoding);
