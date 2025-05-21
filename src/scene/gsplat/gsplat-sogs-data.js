@@ -228,7 +228,7 @@ class GSplatSogsData {
             512: 2,     // 64 * 8
             960: 3      // 64 * 15
         };
-        return widths[this.sh_centroids?.resource?.width] ?? 0;
+        return widths[this.sh_centroids?.width] ?? 0;
     }
 
     async decompress() {
@@ -342,6 +342,11 @@ class GSplatSogsData {
 
         members.forEach((member) => {
             const sourceTexture = this[member];
+
+            // spherical harmonics labels are missing when no SH data is present
+            if (!sourceTexture) {
+                return;
+            }
 
             const renderTarget = new RenderTarget({
                 colorBuffer: targetTexture,

@@ -127,8 +127,14 @@ assetListLoader.load(() => {
     // Create a new material with a fog shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'GroundFogShader',
-        vertexGLSL: `#define VERTEXSHADER\n${pc.shaderChunks.screenDepthPS}${files['shader.vert']}`,
-        fragmentGLSL: pc.shaderChunks.screenDepthPS + files['shader.frag']
+        vertexGLSL: files['shader.glsl.vert'],
+        fragmentGLSL: files['shader.glsl.frag'],
+        vertexWGSL: files['shader.wgsl.vert'],
+        fragmentWGSL: files['shader.wgsl.frag'],
+        attributes: {
+            vertex_position: pc.SEMANTIC_POSITION,
+            vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
+        }
     });
     material.setParameter('uTexture', assets.texture.resource);
     material.depthWrite = false;

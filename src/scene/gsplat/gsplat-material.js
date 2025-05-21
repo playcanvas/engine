@@ -1,8 +1,14 @@
-import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import {
+    CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL
+} from '../../platform/graphics/constants.js';
+
 import { BLEND_NONE, BLEND_PREMULTIPLIED, DITHER_NONE } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
-import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
-import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
+
+/**
+ * import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ */
 
 /**
  * @typedef {object} SplatMaterialOptions - The options.
@@ -16,20 +22,21 @@ import { shaderChunks } from '../shader-lib/chunks-glsl/chunks.js';
  */
 
 /**
+ * @param {GraphicsDevice} device - The graphics device.
  * @param {SplatMaterialOptions} [options] - The options.
  * @returns {ShaderMaterial} The GS material.
  */
-const createGSplatMaterial = (options = {}) => {
+const createGSplatMaterial = (device, options = {}) => {
 
     const ditherEnum = options.dither ?? DITHER_NONE;
     const dither = ditherEnum !== DITHER_NONE;
 
     const material = new ShaderMaterial({
         uniqueName: 'SplatMaterial',
-        vertexGLSL: options.vertex ?? shaderChunks.gsplatVS,
-        fragmentGLSL: options.fragment ?? shaderChunks.gsplatPS,
-        vertexWGSL: shaderChunksWGSL.gsplatVS,
-        fragmentWGSL: shaderChunksWGSL.gsplatPS,
+        vertexGLSL: options.vertex ?? ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('gsplatVS'),
+        fragmentGLSL: options.fragment ?? ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('gsplatPS'),
+        vertexWGSL: options.vertex ? '' : ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('gsplatVS'),
+        fragmentWGSL: options.vertex ? '' : ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('gsplatPS'),
         attributes: {
             vertex_position: SEMANTIC_POSITION,
             vertex_id_attrib: SEMANTIC_ATTR13

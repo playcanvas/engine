@@ -9,10 +9,10 @@ import {
     BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
     PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
+    SHADERLANGUAGE_GLSL
 } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
-import { shaderChunks } from '../scene/shader-lib/chunks-glsl/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
@@ -61,6 +61,7 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
+import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 // MATH
 
@@ -85,6 +86,22 @@ export const BLENDMODE_CONSTANT_COLOR = BLENDMODE_CONSTANT;
 export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = BLENDMODE_ONE_MINUS_CONSTANT;
 export const BLENDMODE_CONSTANT_ALPHA = BLENDMODE_CONSTANT;
 export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = BLENDMODE_ONE_MINUS_CONSTANT;
+
+export const CHUNKAPI_1_51 = '1.51';
+export const CHUNKAPI_1_55 = '1.55';
+export const CHUNKAPI_1_56 = '1.56';
+export const CHUNKAPI_1_57 = '1.57';
+export const CHUNKAPI_1_58 = '1.58';
+export const CHUNKAPI_1_60 = '1.60';
+export const CHUNKAPI_1_62 = '1.62';
+export const CHUNKAPI_1_65 = '1.65';
+export const CHUNKAPI_1_70 = '1.70';
+export const CHUNKAPI_2_1 = '2.1';
+export const CHUNKAPI_2_3 = '2.3';
+export const CHUNKAPI_2_5 = '2.5';
+export const CHUNKAPI_2_6 = '2.6';
+export const CHUNKAPI_2_7 = '2.7';
+export const CHUNKAPI_2_8 = '2.8';
 
 const _viewport = new Vec4();
 
@@ -154,32 +171,6 @@ export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
 
     drawQuadWithShader(device, target, shader, viewport);
 }
-
-const deprecatedChunks = {
-    'ambientPrefilteredCube.frag': 'ambientEnv.frag',
-    'ambientPrefilteredCubeLod.frag': 'ambientEnv.frag',
-    'dpAtlasQuad.frag': null,
-    'genParaboloid.frag': null,
-    'prefilterCubemap.frag': null,
-    'reflectionDpAtlas.frag': 'reflectionEnv.frag',
-    'reflectionPrefilteredCube.frag': 'reflectionEnv.frag',
-    'reflectionPrefilteredCubeLod.frag': 'reflectionEnv.frag'
-};
-
-Object.keys(deprecatedChunks).forEach((chunkName) => {
-    const replacement = deprecatedChunks[chunkName];
-    const useInstead = replacement ? ` Use pc.shaderChunks['${replacement}'] instead.` : '';
-    const msg = `pc.shaderChunks['${chunkName}'] is deprecated.${useInstead}}`;
-    Object.defineProperty(shaderChunks, chunkName, {
-        get: function () {
-            Debug.error(msg);
-            return null;
-        },
-        set: function () {
-            Debug.error(msg);
-        }
-    });
-});
 
 // Note: This was never public interface, but has been used in external scripts
 Object.defineProperties(RenderTarget.prototype, {
@@ -414,6 +405,19 @@ export const Key = AnimationKey;
 export const Node = AnimationNode;
 
 export const LitOptions = LitShaderOptions;
+
+// deprecated access to global shader chunks
+export const shaderChunks = new Proxy({}, {
+    get(target, prop) {
+        Debug.deprecated(`Using pc.shaderChunks to access global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('${prop}');`);
+        return ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).get(prop);
+    },
+    set(target, prop, value) {
+        Debug.deprecated(`Using pc.shaderChunks to override global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).set('${prop}');`);
+        ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).set(prop, value);
+        return true;
+    }
+});
 
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {

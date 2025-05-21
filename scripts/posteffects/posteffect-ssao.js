@@ -18,7 +18,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     this.needsDepthBuffer = true;
 
     var fSsao = [
-        pc.shaderChunks.screenDepthPS,
+        pc.ShaderChunks.get(graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('screenDepthPS'),
         '',
         'varying vec2 vUv0;',
         '',
@@ -234,7 +234,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     ].join('\n');
 
     var fblur = [
-        pc.shaderChunks.screenDepthPS,
+        pc.ShaderChunks.get(graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('screenDepthPS'),
         '',
         'varying vec2 vUv0;',
         '',

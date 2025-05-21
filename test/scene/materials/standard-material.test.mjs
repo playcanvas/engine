@@ -5,6 +5,7 @@ import { Vec2 } from '../../../src/core/math/vec2.js';
 import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../../../src/scene/constants.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
+import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
 
 describe('StandardMaterial', function () {
 
@@ -51,7 +52,8 @@ describe('StandardMaterial', function () {
         expect(material.aoVertexColorChannel).to.equal('g');
 
         expect(material.bumpiness).to.equal(1);
-        expect(material.chunks).to.be.empty;
+        expect(material._shaderChunks).to.be.null;
+        expect(material.shaderChunks).to.be.an.instanceof(ShaderChunks);
 
         expect(material.clearCoat).to.equal(0);
         expect(material.clearCoatBumpiness).to.equal(1);

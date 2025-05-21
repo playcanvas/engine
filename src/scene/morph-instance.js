@@ -1,12 +1,11 @@
 import { Debug } from '../core/debug.js';
-import { SEMANTIC_POSITION } from '../platform/graphics/constants.js';
+import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from './graphics/quad-render-utils.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { ShaderUtils } from './shader-lib/shader-utils.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
-import { shaderChunks } from './shader-lib/chunks-glsl/chunks.js';
-import { shaderChunksWGSL } from './shader-lib/chunks-wgsl/chunks-wgsl.js';
+import { ShaderChunks } from './shader-lib/shader-chunks.js';
 
 /**
  * @import { Morph } from './morph.js'
@@ -200,10 +199,10 @@ class MorphInstance {
         return ShaderUtils.createShader(this.device, {
             uniqueName: 'TextureMorphShader',
             attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexGLSL: shaderChunks.morphVS,
-            vertexWGSL: shaderChunksWGSL.morphVS,
-            fragmentGLSL: shaderChunks.morphPS,
-            fragmentWGSL: shaderChunksWGSL.morphPS,
+            vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('morphVS'),
+            vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('morphVS'),
+            fragmentGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('morphPS'),
+            fragmentWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('morphPS'),
             fragmentDefines: defines,
             fragmentOutputTypes: [outputType]
         });
