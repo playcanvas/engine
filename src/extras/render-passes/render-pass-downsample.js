@@ -41,7 +41,7 @@ class RenderPassDownsample extends RenderPassShaderQuad {
         const defines = new Map();
         if (boxFilter) defines.set('BOXFILTER', '');
         if (options.premultiplyTexture) defines.set('PREMULTIPLY', '');
-        defines.set(`{PREMULTIPLY_SRC_CHANNEL}`, options.premultiplySrcChannel ?? 'x');
+        defines.set('{PREMULTIPLY_SRC_CHANNEL}', options.premultiplySrcChannel ?? 'x');
 
         this.shader = ShaderUtils.createShader(device, {
             uniqueName: `DownSampleShader:${key}`,

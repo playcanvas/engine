@@ -6,12 +6,12 @@ import { ShaderGenerator } from './programs/shader-generator.js';
 import { ShaderPass } from '../shader-pass.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderChunks } from './shader-chunks.js';
-import { CameraShaderParams } from '../camera-shader-params.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js'
  * @import { Material, ShaderVariantParams } from '../materials/material.js'
+ * @import { CameraShaderParams } from '../camera-shader-params.js';
  */
 
 class ShaderGeneratorPassThrough extends ShaderGenerator {
@@ -88,10 +88,10 @@ class ShaderUtils {
             const wgsl = device.isWebGPU &&
                 (options.vertexWGSL || options.vertexChunk) &&
                 (options.fragmentWGSL || options.fragmentChunk);
-            
+
             // chunks map
             const chunksMap = ShaderChunks.get(device, wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
-            
+
             // source code
             const vertexCode = options.vertexChunk ? chunksMap.get(options.vertexChunk) : (wgsl ? options.vertexWGSL : options.vertexGLSL);
             const fragmentCode = options.fragmentChunk ? chunksMap.get(options.fragmentChunk) : (wgsl ? options.fragmentWGSL : options.fragmentGLSL);
