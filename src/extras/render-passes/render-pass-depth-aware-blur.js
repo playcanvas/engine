@@ -17,8 +17,8 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
         this.sourceTexture = sourceTexture;
 
         // register shader chunks
-        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('DepthAwareBlurPS', glslDepthAwareBlurPS);
-        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('DepthAwareBlurPS', wgslDepthAwareBlurPS);
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('depthAwareBlurPS', glslDepthAwareBlurPS);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('depthAwareBlurPS', wgslDepthAwareBlurPS);
 
         const defines = new Map();
         if (horizontal) defines.set('HORIZONTAL', '');
@@ -30,7 +30,7 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
             uniqueName: `DepthAware${horizontal ? 'Horizontal' : 'Vertical'}BlurShader`,
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'RenderPassQuadVS',
-            fragmentChunk: 'DepthAwareBlurPS',
+            fragmentChunk: 'depthAwareBlurPS',
             fragmentDefines: defines
         });
 

@@ -24,8 +24,8 @@ class RenderPassCoC extends RenderPassShaderQuad {
         this.cameraComponent = cameraComponent;
 
         // register shader chunks
-        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('CocPS', glslCocPS);
-        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('CocPS', wgslCocPS);
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('cocPS', glslCocPS);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('cocPS', wgslCocPS);
 
         const defines = new Map();
         if (nearBlur) defines.set('NEAR_BLUR', '');
@@ -37,7 +37,7 @@ class RenderPassCoC extends RenderPassShaderQuad {
             uniqueName: `CocShader-${nearBlur}`,
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'RenderPassQuadVS',
-            fragmentChunk: 'CocPS',
+            fragmentChunk: 'cocPS',
             fragmentDefines: defines
         });
 

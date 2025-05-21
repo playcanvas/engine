@@ -82,8 +82,8 @@ class RenderPassSsao extends RenderPassShaderQuad {
         this.cameraComponent = cameraComponent;
 
         // register shader chunks
-        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('SsaoPS', glslSsaoPS);
-        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('SsaoPS', wgslSsaoPS);
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('ssaoPS', glslSsaoPS);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('ssaoPS', wgslSsaoPS);
 
         // main SSAO render pass
 
@@ -96,7 +96,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
             uniqueName: 'SsaoShader',
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'RenderPassQuadVS',
-            fragmentChunk: 'SsaoPS',
+            fragmentChunk: 'ssaoPS',
             fragmentDefines: defines
         });
 

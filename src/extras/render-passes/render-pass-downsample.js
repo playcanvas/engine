@@ -32,8 +32,8 @@ class RenderPassDownsample extends RenderPassShaderQuad {
         this.premultiplyTexture = options.premultiplyTexture;
 
         // register shader chunks
-        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('DownsamplePS', glslDownsamplePS);
-        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('DownsamplePS', wgslDownsamplePS);
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('downsamplePS', glslDownsamplePS);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('downsamplePS', wgslDownsamplePS);
 
         const boxFilter = options.boxFilter ?? false;
         const key = `${boxFilter ? 'Box' : ''}-${options.premultiplyTexture ? 'Premultiply' : ''}-${options.premultiplySrcChannel ?? ''}}`;
@@ -47,7 +47,7 @@ class RenderPassDownsample extends RenderPassShaderQuad {
             uniqueName: `DownSampleShader:${key}`,
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'RenderPassQuadVS',
-            fragmentChunk: 'DownsamplePS',
+            fragmentChunk: 'downsamplePS',
             fragmentDefines: defines
         });
 

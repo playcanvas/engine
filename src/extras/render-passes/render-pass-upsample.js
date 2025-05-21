@@ -17,14 +17,14 @@ class RenderPassUpsample extends RenderPassShaderQuad {
         this.sourceTexture = sourceTexture;
 
         // register shader chunks
-        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('UpsamplePS', glslUpsamplePS);
-        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('UpsamplePS', wgslUpsamplePS);
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('upsamplePS', glslUpsamplePS);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('upsamplePS', wgslUpsamplePS);
 
         this.shader = ShaderUtils.createShader(device, {
             uniqueName: 'UpSampleShader',
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'RenderPassQuadVS',
-            fragmentChunk: 'UpsamplePS'
+            fragmentChunk: 'upsamplePS'
         });
 
 

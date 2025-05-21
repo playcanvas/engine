@@ -40,8 +40,8 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
         this.cocTexture = cocTexture;
 
         // register shader chunks
-        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('DofBlurPS', glsldofBlurPS);
-        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('DofBlurPS', wgsldofBlurPS);
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('dofBlurPS', glsldofBlurPS);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('dofBlurPS', wgsldofBlurPS);
 
         const { scope } = device;
         this.kernelId = scope.resolve('kernel[0]');
@@ -90,7 +90,7 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
             uniqueName: `DofBlurShader-${kernelCount}-${nearBlur ? 'nearBlur' : 'noNearBlur'}`,
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'RenderPassQuadVS',
-            fragmentChunk: 'DofBlurPS',
+            fragmentChunk: 'dofBlurPS',
             fragmentDefines: defines
         });
     }

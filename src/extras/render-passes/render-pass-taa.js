@@ -53,8 +53,8 @@ class RenderPassTAA extends RenderPassShaderQuad {
         // register shader chunks
         ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('sampleCatmullRomPS', glslSampleCatmullRomPS);
         ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('sampleCatmullRomPS', wgslSampleCatmullRomPS);
-        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('TaaResolvePS', glsltaaResolvePS);
-        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('TaaResolvePS', wgsltaaResolvePS);
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('taaResolvePS', glsltaaResolvePS);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('taaResolvePS', wgsltaaResolvePS);
 
         const defines = new Map();
         defines.set('QUALITY_HIGH', true);
@@ -66,7 +66,7 @@ class RenderPassTAA extends RenderPassShaderQuad {
             uniqueName: 'TaaResolveShader',
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'RenderPassQuadVS',
-            fragmentChunk: 'TaaResolvePS',
+            fragmentChunk: 'taaResolvePS',
             fragmentDefines: defines
         });
 
