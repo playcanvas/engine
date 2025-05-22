@@ -3,9 +3,10 @@ import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
-import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL } from '../../platform/graphics/constants.js';
+import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
-import glslComposePS from '../../scene/shader-lib/glsl/chunks/render-pass/frag/compose.js';
+import { composeChunksGLSL } from '../../scene/shader-lib/glsl/collections/compose-chunks-glsl.js';
+import { composeChunksWGSL } from '../../scene/shader-lib/wgsl/collections/compose-chunks-wgsl.js';
 
 /**
  * Render pass implementation of the final post-processing composition.
@@ -68,6 +69,10 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     constructor(graphicsDevice) {
         super(graphicsDevice);
+
+        // register compose shader chunks
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).add(composeChunksGLSL);
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).add(composeChunksWGSL);
 
         const { scope } = graphicsDevice;
         this.sceneTextureId = scope.resolve('sceneTexture');
@@ -254,13 +259,13 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 if (this.isSharpnessEnabled) defines.set('CAS', true);
                 if (this._debug) defines.set('DEBUG_COMPOSE', this._debug);
 
-                const includes = new Map(ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL));
+                const includes = new Map(ShaderChunks.get(this.device, this.device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL));
 
                 this.shader = ShaderUtils.createShader(this.device, {
                     uniqueName: `ComposeShader-${key}`,
                     attributes: { aPosition: SEMANTIC_POSITION },
                     vertexChunk: 'quadVS',
-                    fragmentGLSL: glslComposePS,
+                    fragmentChunk: 'composePS',
                     fragmentDefines: defines,
                     fragmentIncludes: includes
                 });
