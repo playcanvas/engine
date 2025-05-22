@@ -18,10 +18,13 @@ import { RenderPass } from '../../platform/graphics/render-pass.js';
  */
 class RenderPassShaderQuad extends RenderPass {
     /**
-     * @type {Shader}
+     * @type {Shader|null}
      */
     _shader = null;
 
+    /**
+     * @type {QuadRender|null}
+     */
     quadRender = null;
 
     /**
