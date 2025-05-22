@@ -155,6 +155,10 @@ function getOutPlugins(type) {
 /**
  * Build a target that Rollup is supposed to build (bundled and unbundled).
  *
+ * For faster subsequent builds, the unbundled and release builds are cached in the HISTORY map to
+ * be used for bundled and minified builds. They are stored in the HISTORY map with the key:
+ * `<debug|release|profiler>-<umd|esm>-<bundled>`.
+ *
  * @param {object} options - The build target options.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
  * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
@@ -214,7 +218,6 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
             ],
             output: {
                 banner: isUMD ? getBanner(BANNER[buildType]) : undefined,
-                plugins: undefined,
                 file: `${dir}/${file}`
             },
             context: isUMD ? 'this' : undefined
@@ -233,7 +236,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
         input,
         output: {
             banner: bundled ? getBanner(BANNER[buildType]) : undefined,
-            plugins: isMin ? undefined : getOutPlugins(isUMD ? 'umd' : 'es'),
+            plugins: buildType === 'release' ? getOutPlugins(isUMD ? 'umd' : 'es') : undefined,
             format: isUMD ? 'umd' : 'es',
             indent: '\t',
             sourcemap: bundled && isDebug && 'inline',
