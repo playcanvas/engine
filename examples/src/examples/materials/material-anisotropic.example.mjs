@@ -87,7 +87,8 @@ assetListLoader.load(() => {
         material.metalness = 1.0;
         material.gloss = z / (NUM_SPHERES_Z - 1);
         material.useMetalness = true;
-        material.anisotropy = ((2 * x) / (NUM_SPHERES_X - 1) - 1.0) * -1.0;
+        material.anisotropyIntensity = x / (NUM_SPHERES_X - 1);
+
         material.enableGGXSpecular = true;
         material.update();
 
