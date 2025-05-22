@@ -9,9 +9,9 @@
  *     - bundleState (unbundled, bundled)
  * Example: target:esm:release:bundled
  *
- * treemap - Enable treemap build visualization.
- * treenet - Enable treenet build visualization.
- * treesun - Enable treesun build visualization.
+ * treemap - Enable treemap build visualization (release only).
+ * treenet - Enable treenet build visualization (release only).
+ * treesun - Enable treesun build visualization (release only).
  */
 
 import { execSync } from 'child_process';
