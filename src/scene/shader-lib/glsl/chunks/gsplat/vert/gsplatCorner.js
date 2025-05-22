@@ -45,8 +45,11 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
     float lambda1 = mid + radius;
     float lambda2 = max(mid - radius, 0.1);
 
-    float l1 = 2.0 * min(sqrt(2.0 * lambda1), 1024.0);
-    float l2 = 2.0 * min(sqrt(2.0 * lambda2), 1024.0);
+    // Use the smaller viewport dimension to limit the kernel size relative to the screen resolution.
+    float vmin = min(viewport.x, viewport.y);
+
+    float l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
+    float l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
 
     // early-out gaussians smaller than 2 pixels
     if (l1 < 2.0 && l2 < 2.0) {
