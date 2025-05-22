@@ -62,7 +62,7 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         toneMapping: pc.TONEMAP_ACES
     });
-    camera.translate(0, 6, 6);
+    camera.translate(0, 9, 9);
     camera.rotate(-48, 0, 0);
     app.root.addChild(camera);
 

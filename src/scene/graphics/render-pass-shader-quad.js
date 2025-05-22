@@ -22,6 +22,9 @@ class RenderPassShaderQuad extends RenderPass {
      */
     _shader = null;
 
+    /**
+     * @type {QuadRender}
+     */
     quadRender = null;
 
     /**
