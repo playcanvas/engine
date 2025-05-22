@@ -121,15 +121,15 @@ function getJSCCOptions(buildType, isUMD) {
 }
 
 /**
+ * @param {string} type - The type of the output (e.g., 'umd', 'es').
  * @returns {OutputOptions['plugins']} - The output plugins.
  */
-function getOutPlugins() {
-    const plugins = [
-    ];
+function getOutPlugins(type) {
+    const plugins = [];
 
     if (process.env.treemap) {
         plugins.push(visualizer({
-            filename: 'treemap.html',
+            filename: `treemap.${type}.html`,
             brotliSize: true,
             gzipSize: true
         }));
@@ -137,14 +137,14 @@ function getOutPlugins() {
 
     if (process.env.treenet) {
         plugins.push(visualizer({
-            filename: 'treenet.html',
+            filename: `treenet.${type}.html`,
             template: 'network'
         }));
     }
 
     if (process.env.treesun) {
         plugins.push(visualizer({
-            filename: 'treesun.html',
+            filename: `treesun.${type}.html`,
             template: 'sunburst'
         }));
     }
@@ -169,6 +169,9 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
     const isMin = buildType === 'min';
     const bundled = isUMD || isMin || bundleState === 'bundled';
 
+    const prefix = `${OUT_PREFIX[buildType]}`;
+    const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
+
     const targets = [];
 
     // bundle from unbundled
@@ -187,7 +190,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
                 sourcemap: isDebug && 'inline',
                 name: 'pc',
                 preserveModules: false,
-                file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
+                file: `${dir}/${prefix}.mjs`
             }
         };
 
@@ -211,8 +214,8 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
             ],
             output: {
                 banner: isUMD ? getBanner(BANNER[buildType]) : undefined,
-                plugins: getOutPlugins(),
-                file: `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}`
+                plugins: undefined,
+                file: `${dir}/${file}`
             },
             context: isUMD ? 'this' : undefined
         };
@@ -230,15 +233,15 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
         input,
         output: {
             banner: bundled ? getBanner(BANNER[buildType]) : undefined,
-            plugins: isMin ? getOutPlugins() : undefined,
+            plugins: isMin ? undefined : getOutPlugins(isUMD ? 'umd' : 'es'),
             format: isUMD ? 'umd' : 'es',
             indent: '\t',
             sourcemap: bundled && isDebug && 'inline',
             name: 'pc',
             preserveModules: !bundled,
             preserveModulesRoot: !bundled ? rootDir : undefined,
-            file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}` : undefined,
-            dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined,
+            file: bundled ? `${dir}/${file}` : undefined,
+            dir: !bundled ? `${dir}/${prefix}` : undefined,
             entryFileNames: chunkInfo => `${chunkInfo.name.replace(/node_modules/g, 'modules')}.js`
         },
         plugins: [
