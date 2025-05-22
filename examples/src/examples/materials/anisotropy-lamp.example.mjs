@@ -60,7 +60,7 @@ assetListLoader.load(() => {
     // Setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
-    app.scene.skyboxIntensity = 1.5;
+    app.scene.skyboxIntensity = 0.5;
 
     const leftEntity = assets.model.resource.instantiateRenderEntity();
     leftEntity.setLocalEulerAngles(0, 0, 0);
@@ -85,16 +85,6 @@ assetListLoader.load(() => {
     camera.script.orbitCamera.yaw = 90;
     camera.script.orbitCamera.distance = 0.3;
     camera.camera.requestSceneColorMap(true);
-
-    const directionalLight = new pc.Entity();
-    directionalLight.addComponent('light', {
-        type: 'directional',
-        color: pc.Color.YELLOW,
-        castShadows: false,
-        intensity: 1
-    });
-    directionalLight.setEulerAngles(45, 180, 0);
-    app.root.addChild(directionalLight);
 });
 
 export { app };
