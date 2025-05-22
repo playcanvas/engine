@@ -25,11 +25,11 @@ fn RRTAndODTFit(v: vec3f) -> vec3f {
 
 fn toneMap(color: vec3f) -> vec3f {
     var c: vec3f = color * (uniform.exposure / 0.6);
-    c = ACESInputMat * c;
+    c = c * ACESInputMat;
 
     // Apply RRT and ODT
     c = RRTAndODTFit(c);
-    c = ACESOutputMat * c;
+    c = c * ACESOutputMat;
 
     // Clamp to [0, 1]
     return clamp(c, vec3f(0.0), vec3f(1.0));
