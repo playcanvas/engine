@@ -6,6 +6,7 @@ import { ShaderGenerator } from './programs/shader-generator.js';
 import { ShaderPass } from '../shader-pass.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderChunks } from './shader-chunks.js';
+import { MapUtils } from '../../core/map-utils.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -99,8 +100,8 @@ class ShaderUtils {
             Debug.assert(fragmentCode, 'ShaderUtils.createShader: fragment shader code not provided', options);
 
             // add default shader chunks to includes
-            const fragmentIncludes = options.fragmentIncludes ? new Map([...chunksMap, ...options.fragmentIncludes]) : new Map(chunksMap);
-            const vertexIncludes = options.vertexIncludes ? new Map([...chunksMap, ...options.vertexIncludes]) : new Map(chunksMap);
+            const fragmentIncludes = MapUtils.merge(chunksMap, options.fragmentIncludes);
+            const vertexIncludes = MapUtils.merge(chunksMap, options.vertexIncludes);
 
             shader = new Shader(device, ShaderDefinitionUtils.createDefinition(device, {
                 name: options.uniqueName,
