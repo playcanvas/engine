@@ -128,6 +128,7 @@
     "serve": "serve build -l 51000 --cors",
     "test": "mocha --ignore \"test/assets/scripts/*.js\" --recursive --require test/fixtures.mjs --timeout 5000",
     "test:e2e": "mocha --recursive examples/test",
+    "test:e2e:update": "SNAPSHOT_UPDATE=true mocha --recursive examples/test",
     "test:coverage": "c8 npm test",
     "test:types": "tsc --pretty false build/playcanvas.d.ts"
   },
