@@ -67,6 +67,9 @@ void main(void) {
 
     #include "litUserMainStartVS"
 
+    // default point size to 1 in case the shader is used with points
+    gl_PointSize = 1.0;
+
     gl_Position = getPosition();
     vPositionW = getWorldPosition();
 
