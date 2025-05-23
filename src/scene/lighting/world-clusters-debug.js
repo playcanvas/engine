@@ -161,6 +161,7 @@ class WorldClustersDebug {
 
         if (cubes) {
             mesh.setPositions(positions);
+            mesh.setNormals(new Float32Array(positions.length));
             mesh.setColors32(colors);
             mesh.setIndices(indices);
             mesh.update(PRIMITIVE_TRIANGLES, false);
