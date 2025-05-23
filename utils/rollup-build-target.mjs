@@ -149,6 +149,13 @@ function getOutPlugins(type) {
         }));
     }
 
+    if (process.env.treeflame) {
+        plugins.push(visualizer({
+            filename: `treeflame.${type}.html`,
+            template: 'flamegraph'
+        }));
+    }
+
     return plugins;
 }
 

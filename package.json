@@ -111,6 +111,7 @@
     "build:treemap": "npm run build target:release treemap",
     "build:treenet": "npm run build target:release treenet",
     "build:treesun": "npm run build target:release treesun",
+    "build:treeflame": "npm run build target:release treeflame",
     "build:sourcemaps": "npm run build -- -m",
     "watch": "npm run build -- -w",
     "watch:release": "npm run build target:release -- -w",
