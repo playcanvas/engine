@@ -76,7 +76,7 @@ assetListLoader.load(() => {
     camera.addComponent('script');
     camera.script.create('orbitCamera', {
         attributes: {
-            inertiaFactor: 0
+            inertiaFactor: 0.2
         }
     });
     camera.script.create('orbitCameraInputMouse');
