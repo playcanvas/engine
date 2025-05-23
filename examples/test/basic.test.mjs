@@ -1,6 +1,7 @@
 import expect from 'expect';
 import { toMatchImageSnapshot } from 'expect-mocha-image-snapshot';
 import puppeteer from 'puppeteer';
+import { exampleMetaData } from '../cache/metadata.mjs';
 
 expect.extend({ toMatchImageSnapshot });
 
@@ -22,38 +23,41 @@ describe('Serve-based static server tests', function () {
         await browser.close();
     });
 
-    it('hello-world', async function () {
-        this.timeout(30000);
+    for (const example of exampleMetaData) {
+        makeTest(example.categoryKebab, example.exampleNameKebab);
+    }
 
-        await page.goto('http://localhost:5555', {
-            waitUntil: 'networkidle0',
-            timeout: 20000
+    function makeTest(category, exampleName) {
+        it(`${category}/${exampleName}`, async function () {
+            this.timeout(30000);
+
+            await page.goto(`http://localhost:5555/#/${category}/${exampleName}`, {
+                waitUntil: 'networkidle0',
+                timeout: 20000
+            });
+
+            await page.waitForSelector('#app', { timeout: 10000 });
+
+            await page.waitForFunction(() => {
+                const app = document.querySelector('#app');
+                return app && app.children.length > 0;
+            }, { timeout: 10000 });
+
+            // get canvas element
+            const iFrame = await page.$('#exampleIframe');
+            // get canvas element from iframe
+            const iframe = await iFrame.contentFrame();
+            // get screenshot from canvas
+            const canvas = await iframe.$('#application-canvas');
+
+            const screenshot = await canvas.screenshot({ type: 'png' });
+
+            // https://github.com/americanexpress/jest-image-snapshot/issues/272#issuecomment-2696064217
+            expect(Buffer.from(screenshot)).toMatchImageSnapshot(this, {
+                failureThreshold: 0.01,
+                failureThresholdType: 'percent',
+                runInProcess: true
+            });
         });
-
-        await page.waitForSelector('#app', { timeout: 10000 });
-
-        await page.waitForFunction(() => {
-            const app = document.querySelector('#app');
-            return app && app.children.length > 0;
-        }, { timeout: 10000 });
-
-        // get canvas element
-        const iFrame = await page.$('#exampleIframe');
-        // get canvas element from iframe
-        const iframe = await iFrame.contentFrame();
-        // get screenshot from canvas
-        const canvas = await iframe.$('#application-canvas');
-
-        const screenshot = await canvas.screenshot({ type: 'png' });
-        console.log(screenshot);
-
-        // https://github.com/americanexpress/jest-image-snapshot/issues/272#issuecomment-2696064217
-        expect(Buffer.from(screenshot)).toMatchImageSnapshot(this, {
-            // customSnapshotsDir: '__image_snapshots__',
-            // customDiffDir: '__image_diff_output__',
-            failureThreshold: 0.01,
-            failureThresholdType: 'percent',
-            runInProcess: true
-        });
-    });
+    }
 });
