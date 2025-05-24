@@ -88,7 +88,11 @@ describe('E2E tests', function () {
         const path = process.env.EXAMPLE_PATH.split('/');
         const category = path[0];
         const exampleName = path[1];
-        makeTest(category, exampleName);
+        for (const example of e2eTestMetaData) {
+            if (example.categoryKebab === category && example.exampleNameKebab === exampleName) {
+                makeTest(category, exampleName);
+            }
+        }
     } else {
         for (const example of e2eTestMetaData) {
             makeTest(example.categoryKebab, example.exampleNameKebab);
