@@ -58,13 +58,11 @@ describe('E2E tests', function () {
         await serverReadyPromise;
 
         browser = await puppeteer.launch({
-            headless: false,
+            headless: 'new',
             devtools: false,
             defaultViewport: { width: 1920, height: 1080 },
             args: [
-                '--use-gl=angle',
-                '--use-angle=swiftshader',
-                '--enable-unsafe-swiftshader',
+                '--use-vulkan=swiftshader',
                 '--no-sandbox',
                 '--disable-audio-output'
             ]
