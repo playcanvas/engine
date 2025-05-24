@@ -64,22 +64,37 @@ describe('E2E tests', function () {
         // Shutting down local server
         if (serverProcess) {
             console.log('Shutting down local server...');
-            serverProcess.kill('SIGTERM');
 
-            // Wait for the process to definitely close
+            // Ensure all child processes are terminated on Windows
+            if (process.platform === 'win32') {
+                spawn('taskkill', ['/pid', serverProcess.pid, '/T', '/F']);
+            } else {
+                serverProcess.kill('SIGTERM');
+            }
+
+            // Wait for the process to exit
             await new Promise((resolve) => {
-                serverProcess.on('close', () => {
-                    console.log('Local server has shut down');
-                    resolve();
-                });
-
-                // Timeout for forced shutdown
-                setTimeout(() => {
-                    if (!serverProcess.killed) {
+                const timeout = setTimeout(() => {
+                    console.log('Forced shutdown after timeout');
+                    if (process.platform === 'win32') {
+                        spawn('taskkill', ['/pid', serverProcess.pid, '/T', '/F']);
+                    } else {
                         serverProcess.kill('SIGKILL');
                     }
                     resolve();
                 }, 5000);
+
+                serverProcess.on('exit', () => {
+                    clearTimeout(timeout);
+                    console.log('Local server has shut down');
+                    resolve();
+                });
+
+                serverProcess.on('close', () => {
+                    clearTimeout(timeout);
+                    console.log('Local server has shut down');
+                    resolve();
+                });
             });
         }
     });
