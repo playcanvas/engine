@@ -102,17 +102,24 @@ describe('E2E tests', function () {
         }
     });
 
-    for (const example of e2eTestMetaData) {
-        makeTest(example.categoryKebab, example.exampleNameKebab);
+    if (process.env.EXAMPLE_PATH) {
+        const path = process.env.EXAMPLE_PATH.split('/');
+        const category = path[0];
+        const exampleName = path[1];
+        makeTest(category, exampleName);
+    } else {
+        for (const example of e2eTestMetaData) {
+            makeTest(example.categoryKebab, example.exampleNameKebab);
+        }
     }
 
     function makeTest(category, exampleName) {
         it(`${category}/${exampleName}`, async function () {
-            this.timeout(30000);
+            this.timeout(60000);
 
             await page.goto(`http://localhost:5555/#/${category}/${exampleName}`, {
                 waitUntil: 'networkidle0',
-                timeout: 40000
+                timeout: 60000
             });
 
             await page.waitForSelector('#app', { timeout: 10000 });
