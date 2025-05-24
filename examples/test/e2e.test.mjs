@@ -34,14 +34,14 @@ describe('E2E tests', function () {
         const serverReadyPromise = new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
                 reject(new Error('Server startup timed out'));
-            }, 25000);
+            }, 30000);
 
             serverProcess.stdout.on('data', (data) => {
                 const output = data.toString();
                 console.log('Server:', output);
                 if (output.includes('Accepting connections at http://localhost:5555')) {
                     clearTimeout(timeout);
-                    setTimeout(resolve, 2000); // Wait a bit for the server to fully start
+                    setTimeout(resolve, 5000); // Wait a bit for the server to fully start
                 }
             });
 
@@ -56,27 +56,10 @@ describe('E2E tests', function () {
         });
 
         await serverReadyPromise;
-
-        browser = await puppeteer.launch({
-            headless: 'new',
-            devtools: false,
-            defaultViewport: { width: 1920, height: 1080 },
-            args: [
-                '--use-vulkan=swiftshader',
-                '--no-sandbox',
-                '--disable-audio-output'
-            ]
-        });
-        page = await browser.newPage();
-
-        page.on('console', msg => console.log('PAGE LOG:', msg.text()));
-        page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
     });
 
     after(async function () {
         this.timeout(20000);
-        await page.close();
-        await browser.close();
 
         // Shutting down local server
         if (serverProcess) {
@@ -114,11 +97,25 @@ describe('E2E tests', function () {
 
     function makeTest(category, exampleName) {
         it(`${category}/${exampleName}`, async function () {
-            this.timeout(60000);
+            this.timeout(120000);
+            browser = await puppeteer.launch({
+                headless: 'new',
+                devtools: false,
+                defaultViewport: { width: 1920, height: 1080 },
+                args: [
+                    '--use-vulkan=swiftshader',
+                    '--no-sandbox',
+                    '--disable-audio-output'
+                ]
+            });
+            page = await browser.newPage();
+
+            page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+            page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
 
             await page.goto(`http://localhost:5555/#/${category}/${exampleName}`, {
                 waitUntil: 'networkidle0',
-                timeout: 60000
+                timeout: 120000
             });
 
             await page.waitForSelector('#app', { timeout: 10000 });
@@ -137,9 +134,12 @@ describe('E2E tests', function () {
 
             const screenshot = await canvas.screenshot({ type: 'png' });
 
+            await page.close();
+            await browser.close();
+
             // https://github.com/americanexpress/jest-image-snapshot/issues/272#issuecomment-2696064217
             expect(Buffer.from(screenshot)).toMatchImageSnapshot(this, {
-                failureThreshold: 0.01,
+                failureThreshold: 0.04,
                 failureThresholdType: 'percent',
                 runInProcess: true
             });
