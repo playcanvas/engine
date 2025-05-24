@@ -76,6 +76,7 @@ describe('E2E tests', function () {
     });
 
     after(async function () {
+        this.timeout(20000);
         await page.close();
         await browser.close();
 
