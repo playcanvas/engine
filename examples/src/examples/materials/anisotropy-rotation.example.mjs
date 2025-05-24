@@ -1,4 +1,5 @@
 // @config DESCRIPTION This example demonstrates anisotropy rotation. Visually, the model showcases the effects of anisotropic highlights as the light interacts with the surface.
+// @config E2E_TEST
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 

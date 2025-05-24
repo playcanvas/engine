@@ -1,4 +1,5 @@
 // @config HIDDEN
+// @config E2E_TEST
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';

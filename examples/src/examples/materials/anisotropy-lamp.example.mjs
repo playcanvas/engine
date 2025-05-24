@@ -1,4 +1,5 @@
 // @config DESCRIPTION This example demonstrates anisotropy effects on the lamp model. The anisotropic highlights on the lamp's surface showcase the material's directional properties.
+// @config E2E_TEST
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 

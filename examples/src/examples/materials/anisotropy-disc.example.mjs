@@ -1,4 +1,5 @@
 // @config DESCRIPTION This example demonstrates anisotropy on a disc model. It showcases the rendering of anisotropic highlights and material properties.
+// @config E2E_TEST
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 

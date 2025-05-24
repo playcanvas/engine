@@ -32,6 +32,7 @@ export const isModuleWithExternalDependencies = (content) => {
  * @property {boolean} [NO_MINISTATS] - No ministats.
  * @property {boolean} [WEBGPU_DISABLED] - If webgpu is disabled.
  * @property {boolean} [WEBGL_DISABLED] - If webgl is disabled.
+ * @property {boolean} [E2E_TEST] - If E2E test is enabled.
  */
 
 /**
