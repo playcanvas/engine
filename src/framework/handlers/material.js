@@ -35,7 +35,8 @@ const PLACEHOLDER_MAP = {
     thicknessMap: 'black',
     iridescenceMap: 'black',
     iridescenceThicknessMap: 'black',
-    envAtlas: 'black'
+    envAtlas: 'black',
+    anisotropyMap: 'black'
 };
 
 /**
