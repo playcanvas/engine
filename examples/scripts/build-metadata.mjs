@@ -15,8 +15,8 @@ const exampleMetaData = [];
 
 /**
  * @type {{
-*      categoryKebab: string,
-*      exampleNameKebab: string
+ *      categoryKebab: string,
+ *      exampleNameKebab: string
  * }[]}
  */
 const e2eTestMetaData = [];
