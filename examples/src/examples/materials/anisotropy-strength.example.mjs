@@ -1,4 +1,5 @@
 // @config DESCRIPTION This example demonstrates anisotropy strength. Visually, the model showcases the effect of anisotropic highlights based on material properties.
+// @config E2E_TEST
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 

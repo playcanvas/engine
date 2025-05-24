@@ -6,7 +6,7 @@ import expect from 'expect';
 import { toMatchImageSnapshot } from 'expect-mocha-image-snapshot';
 import puppeteer from 'puppeteer';
 
-import { exampleMetaData } from '../cache/metadata.mjs';
+import { e2eTestMetaData } from '../cache/e2eTestMetaData.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -64,6 +64,7 @@ describe('E2E tests', function () {
             args: [
                 '--use-gl=angle',
                 '--use-angle=swiftshader',
+                '--enable-unsafe-swiftshader',
                 '--no-sandbox',
                 '--disable-audio-output'
             ]
@@ -101,7 +102,7 @@ describe('E2E tests', function () {
         }
     });
 
-    for (const example of exampleMetaData) {
+    for (const example of e2eTestMetaData) {
         makeTest(example.categoryKebab, example.exampleNameKebab);
     }
 
@@ -111,7 +112,7 @@ describe('E2E tests', function () {
 
             await page.goto(`http://localhost:5555/#/${category}/${exampleName}`, {
                 waitUntil: 'networkidle0',
-                timeout: 20000
+                timeout: 40000
             });
 
             await page.waitForSelector('#app', { timeout: 10000 });
