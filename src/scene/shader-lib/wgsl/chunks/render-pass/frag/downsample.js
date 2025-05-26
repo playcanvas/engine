@@ -49,6 +49,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         value = value + (j + k + l + m) * 0.125;
     #endif
 
+    #ifdef REMOVE_INVALID
+        value = max(value, vec3f(0.0));
+    #endif
+
     output.color = vec4f(value, 1.0);
     return output;
 }

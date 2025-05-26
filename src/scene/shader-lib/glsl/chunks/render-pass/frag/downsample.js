@@ -46,6 +46,10 @@ void main()
         value += (j + k + l + m) * 0.125;
     #endif
 
+    #ifdef REMOVE_INVALID
+        value = max(value, vec3(0.0));
+    #endif
+
     gl_FragColor = vec4(value, 1.0);
 }
 `;

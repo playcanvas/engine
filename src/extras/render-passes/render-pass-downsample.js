@@ -25,6 +25,7 @@ class RenderPassDownsample extends RenderPassShaderQuad {
      * @param {Texture|null} [options.premultiplyTexture] - The texture to premultiply the source texture
      * with. Only supported when boxFilter is true.
      * @param {string} [options.premultiplySrcChannel] - The source channel to premultiply.
+     * @param {boolean} [options.removeInvalid] - Whether to remove invalid pixels from the output.
      */
     constructor(device, sourceTexture, options = {}) {
         super(device);
@@ -36,11 +37,12 @@ class RenderPassDownsample extends RenderPassShaderQuad {
         ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('downsamplePS', wgslDownsamplePS);
 
         const boxFilter = options.boxFilter ?? false;
-        const key = `${boxFilter ? 'Box' : ''}-${options.premultiplyTexture ? 'Premultiply' : ''}-${options.premultiplySrcChannel ?? ''}}`;
+        const key = `${boxFilter ? 'Box' : ''}-${options.premultiplyTexture ? 'Premultiply' : ''}-${options.premultiplySrcChannel ?? ''}-${options.removeInvalid ? 'RemoveInvalid' : ''}`;
 
         const defines = new Map();
         if (boxFilter) defines.set('BOXFILTER', '');
         if (options.premultiplyTexture) defines.set('PREMULTIPLY', '');
+        if (options.removeInvalid) defines.set('REMOVE_INVALID', '');
         defines.set('{PREMULTIPLY_SRC_CHANNEL}', options.premultiplySrcChannel ?? 'x');
 
         this.shader = ShaderUtils.createShader(device, {
