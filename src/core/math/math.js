@@ -190,7 +190,7 @@ const math = {
      * @returns {number} The nearest power of 2.
      */
     nearestPowerOfTwo(val) {
-        return Math.pow(2, Math.round(Math.log(val) / Math.log(2)));
+        return Math.pow(2, Math.round(Math.log2(val)));
     },
 
     /**
