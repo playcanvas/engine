@@ -1,6 +1,10 @@
 // Camera Frame v 1.1
 
-import { CameraFrame as EngineCameraFrame, Script, Color, Asset } from 'playcanvas';
+import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
+
+/**
+ * @import { Asset } from 'playcanvas';
+ */
 
 /** @enum {number} */
 const ToneMapping = {
