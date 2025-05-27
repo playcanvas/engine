@@ -481,9 +481,11 @@ class CameraFrame extends Script {
 
         // colorLUT
         const dstColorLUT = cf.colorLUT;
-        dstColorLUT.texture = colorLUT.texture;
-        if (colorLUT.texture) {
+        if (colorLUT.texture?.resource) {
+            dstColorLUT.texture = colorLUT.texture.resource;
             dstColorLUT.intensity = colorLUT.intensity;
+        } else {
+            dstColorLUT.texture = null;
         }
 
         // vignette
