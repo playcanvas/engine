@@ -675,6 +675,8 @@ class CameraComponent extends Component {
                 layer?.addCamera(this);
             });
         }
+
+        this.fire('set:layers');
     }
 
     /**

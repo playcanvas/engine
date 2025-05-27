@@ -299,6 +299,11 @@ class CameraFrame {
 
         this.updateOptions();
         this.enable();
+
+        // handle layer changes on the camera - render passes need to be update to reflect the changes
+        this.cameraLayersChanged = cameraComponent.on('set:layers', () => {
+            if (this.renderPassCamera) this.renderPassCamera.layersDirty = true;
+        });
     }
 
     /**
@@ -306,6 +311,8 @@ class CameraFrame {
      */
     destroy() {
         this.disable();
+
+        this.cameraLayersChanged.off();
     }
 
     enable() {
