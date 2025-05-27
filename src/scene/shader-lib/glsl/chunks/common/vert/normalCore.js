@@ -31,7 +31,7 @@ vec3 getLocalNormal(vec3 vertexNormal) {
     return localNormal;
 }
 
-#ifdef SKIN
+#if defined(SKIN) || defined(BATCH)
     mat3 getNormalMatrix(mat4 modelMatrix) {
         return mat3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);
     }
