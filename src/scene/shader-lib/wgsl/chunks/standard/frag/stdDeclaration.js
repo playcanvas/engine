@@ -5,13 +5,12 @@ export default /* wgsl */`
     // globals
     var<private> dAlpha: f32 = 1.0;
 
-    #if defined(LIT_ALPHA_TEST)
-        #include "alphaTestPS"
-    #endif
-
-    // dithering
-    #if STD_OPACITY_DITHER != NONE
-        #include "opacityDitherPS"
+    // all passes handle opacity
+    #if LIT_BLEND_TYPE != NONE || defined(LIT_ALPHA_TEST) || defined(LIT_ALPHA_TO_COVERAGE) || STD_OPACITY_DITHER != NONE
+        #ifdef STD_OPACITY_TEXTURE_ALLOCATE
+            var texture_opacityMap : texture_2d<f32>;
+            var texture_opacityMapSampler : sampler;
+        #endif
     #endif
 
     #ifdef FORWARD_PASS // ----------------
