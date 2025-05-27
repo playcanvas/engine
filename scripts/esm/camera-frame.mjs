@@ -1,6 +1,6 @@
 // Camera Frame v 1.1
 
-import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
+import { CameraFrame as EngineCameraFrame, Script, Color, Asset } from 'playcanvas';
 
 /** @enum {number} */
 const ToneMapping = {
@@ -229,6 +229,7 @@ class ColorLUT {
     texture = null;
 
     /**
+     * @visibleif {texture}
      * @range [0, 1]
      * @precision 3
      * @step 0.001
