@@ -6,6 +6,7 @@ import composeGradingPS from '../chunks/render-pass/frag/compose/compose-grading
 import composeVignettePS from '../chunks/render-pass/frag/compose/compose-vignette.js';
 import composeFringingPS from '../chunks/render-pass/frag/compose/compose-fringing.js';
 import composeCasPS from '../chunks/render-pass/frag/compose/compose-cas.js';
+import composeColorLutPS from '../chunks/render-pass/frag/compose/compose-color-lut.js';
 
 export const composeChunksGLSL = {
     composePS,
@@ -15,5 +16,6 @@ export const composeChunksGLSL = {
     composeGradingPS,
     composeVignettePS,
     composeFringingPS,
-    composeCasPS
+    composeCasPS,
+    composeColorLutPS
 };

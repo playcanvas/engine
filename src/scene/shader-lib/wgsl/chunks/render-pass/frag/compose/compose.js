@@ -14,6 +14,7 @@ export default /* wgsl */`
     #include "composeVignettePS"
     #include "composeFringingPS"
     #include "composeCasPS"
+    #include "composeColorLutPS"
 
     @fragment
     fn fragmentMain(input: FragmentInput) -> FragmentOutput {
@@ -60,6 +61,11 @@ export default /* wgsl */`
 
         // Apply Tone Mapping
         result = toneMap(result);
+
+        // Apply Color LUT after tone mapping, in LDR space
+        #ifdef COLOR_LUT
+            result = applyColorLUT(result);
+        #endif
 
         // Apply Vignette
         #ifdef VIGNETTE
