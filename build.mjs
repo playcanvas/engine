@@ -12,6 +12,7 @@
  * treemap - Enable treemap build visualization (release only).
  * treenet - Enable treenet build visualization (release only).
  * treesun - Enable treesun build visualization (release only).
+ * treeflame - Enable treeflame build visualization (release only).
  */
 
 import { execSync } from 'child_process';
@@ -22,7 +23,8 @@ const ENV_START_MATCHES = [
     'target',
     'treemap',
     'treenet',
-    'treesun'
+    'treesun',
+    'treeflame'
 ];
 
 const env = [];
