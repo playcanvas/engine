@@ -9,6 +9,10 @@ import { composeChunksGLSL } from '../../scene/shader-lib/glsl/collections/compo
 import { composeChunksWGSL } from '../../scene/shader-lib/wgsl/collections/compose-chunks-wgsl.js';
 
 /**
+ * @import { Texture } from '../../platform/graphics/texture.js';
+ */
+
+/**
  * Render pass implementation of the final post-processing composition.
  *
  * @category Graphics
@@ -63,6 +67,13 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _gammaCorrection = GAMMA_SRGB;
 
+    /**
+     * @type {Texture|null}
+     */
+    _colorLUT = null;
+
+    colorLUTIntensity = 1;
+
     _key = '';
 
     _debug = null;
@@ -88,6 +99,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.sceneTextureInvResId = scope.resolve('sceneTextureInvRes');
         this.sceneTextureInvResValue = new Float32Array(2);
         this.sharpnessId = scope.resolve('sharpness');
+        this.colorLUTId = scope.resolve('colorLUT');
+        this.colorLUTParams = new Float32Array(4);
+        this.colorLUTParamsId = scope.resolve('colorLUTParams');
     }
 
     set debug(value) {
@@ -99,6 +113,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     get debug() {
         return this._debug;
+    }
+
+    set colorLUT(value) {
+        if (this._colorLUT !== value) {
+            this._colorLUT = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get colorLUT() {
+        return this._colorLUT;
     }
 
     set bloomTexture(value) {
@@ -236,6 +261,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
                 `-${this.ssaoTexture ? 'ssao' : 'nossao'}` +
                 `-${this.gradingEnabled ? 'grading' : 'nograding'}` +
+                `-${this.colorLUT ? 'colorlut' : 'nocolorlut'}` +
                 `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
                 `-${this.taaEnabled ? 'taa' : 'notaa'}` +
@@ -253,6 +279,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 if (this.blurTextureUpscale) defines.set('DOF_UPSCALE', true);
                 if (this.ssaoTexture) defines.set('SSAO', true);
                 if (this.gradingEnabled) defines.set('GRADING', true);
+                if (this.colorLUT) defines.set('COLOR_LUT', true);
                 if (this.vignetteEnabled) defines.set('VIGNETTE', true);
                 if (this.fringingEnabled) defines.set('FRINGING', true);
                 if (this.taaEnabled) defines.set('TAA', true);
@@ -297,6 +324,16 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._gradingEnabled) {
             this.bcsId.setValue([this.gradingBrightness, this.gradingContrast, this.gradingSaturation]);
             this.tintId.setValue([this.gradingTint.r, this.gradingTint.g, this.gradingTint.b]);
+        }
+
+        const lutTexture = this._colorLUT;
+        if (lutTexture) {
+            this.colorLUTParams[0] = lutTexture.width;
+            this.colorLUTParams[1] = lutTexture.height;
+            this.colorLUTParams[2] = lutTexture.height - 1.0;
+            this.colorLUTParams[3] = this.colorLUTIntensity;
+            this.colorLUTParamsId.setValue(this.colorLUTParams);
+            this.colorLUTId.setValue(lutTexture);
         }
 
         if (this._vignetteEnabled) {
