@@ -62,7 +62,7 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         toneMapping: pc.TONEMAP_ACES
     });
-    camera.translate(0, 6, 6);
+    camera.translate(0, 9, 9);
     camera.rotate(-48, 0, 0);
     app.root.addChild(camera);
 
@@ -87,7 +87,8 @@ assetListLoader.load(() => {
         material.metalness = 1.0;
         material.gloss = z / (NUM_SPHERES_Z - 1);
         material.useMetalness = true;
-        material.anisotropy = ((2 * x) / (NUM_SPHERES_X - 1) - 1.0) * -1.0;
+        material.anisotropyIntensity = x / (NUM_SPHERES_X - 1);
+
         material.enableGGXSpecular = true;
         material.update();
 

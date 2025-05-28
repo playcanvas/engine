@@ -3,10 +3,16 @@ export default /* glsl */`
 
     // all passes handle opacity
     #if LIT_BLEND_TYPE != NONE || defined(LIT_ALPHA_TEST) || defined(LIT_ALPHA_TO_COVERAGE) || STD_OPACITY_DITHER != NONE
-        #ifdef STD_OPACITY_TEXTURE_ALLOCATE
-            uniform sampler2D texture_opacityMap;
-        #endif
         #include "opacityPS"
+
+        #if defined(LIT_ALPHA_TEST)
+            #include "alphaTestPS"
+        #endif
+
+        // dithering
+        #if STD_OPACITY_DITHER != NONE
+            #include "opacityDitherPS"
+        #endif
     #endif
 
     #ifdef FORWARD_PASS // ----------------

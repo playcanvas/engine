@@ -186,9 +186,20 @@ class WebgpuShader {
     }
 
     transpile(src, shaderType, originalSrc) {
+
+        // make sure shader transpilers are available
+        const device = this.shader.device;
+        if (!device.glslang || !device.twgsl) {
+            console.error(`Cannot transpile shader [${this.shader.label}] - shader transpilers (glslang/twgsl) are not available. Make sure to provide glslangUrl and twgslUrl when creating the device.`, {
+                shader: this.shader
+            });
+            return null;
+        }
+
+        // transpile
         try {
-            const spirv = this.shader.device.glslang.compileGLSL(src, shaderType);
-            const wgsl = this.shader.device.twgsl.convertSpirV2WGSL(spirv);
+            const spirv = device.glslang.compileGLSL(src, shaderType);
+            const wgsl = device.twgsl.convertSpirV2WGSL(spirv);
             return wgsl;
         } catch (err) {
             console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU while rendering ${DebugGraphics.toString()}, error:\n [${err.stack}]`, {

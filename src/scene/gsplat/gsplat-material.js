@@ -7,7 +7,7 @@ import { ShaderMaterial } from '../materials/shader-material.js';
 import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
- * import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
 /**

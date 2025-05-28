@@ -60,7 +60,7 @@ assetListLoader.load(() => {
     // Setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
-    app.scene.skyboxIntensity = 1.5;
+    app.scene.skyboxIntensity = 0.5;
 
     const leftEntity = assets.model.resource.instantiateRenderEntity();
     leftEntity.setLocalEulerAngles(40, 90, 0);
@@ -76,7 +76,7 @@ assetListLoader.load(() => {
     camera.addComponent('script');
     camera.script.create('orbitCamera', {
         attributes: {
-            inertiaFactor: 0
+            inertiaFactor: 0.2
         }
     });
     camera.script.create('orbitCameraInputMouse');
