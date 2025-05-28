@@ -149,7 +149,7 @@ class Preprocessor {
     }
 
     static stripComments(source) {
-        return source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+        return source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '');
     }
 
     static processArraySize(source, intDefines) {

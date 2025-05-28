@@ -99,6 +99,16 @@ class Entity extends GraphNode {
      */
     anim;
 
+    // magnopus patched
+    /**
+     * a lookup table of object model pointers, used to get entities by a unique path
+     * a lookup table of object model pointers, used to get entities by a unique path
+     *
+     * @type {Map|undefined}
+     * @readonly
+     */
+    _objectModelPointers = undefined;
+
     /**
      * Gets the {@link AnimationComponent} attached to this entity.
      *

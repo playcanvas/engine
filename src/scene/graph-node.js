@@ -313,6 +313,7 @@ class GraphNode extends EventHandler {
         // Magnopus Patched OB-3070
         this._appRef = app ?? getApplication();
         this.name = name;
+        this._objectModelPointer = undefined;
     }
 
     /**
@@ -527,6 +528,7 @@ class GraphNode extends EventHandler {
 
         // false as this node is not in the hierarchy yet
         clone._enabledInHierarchy = false;
+        clone._objectModelPointer = this._objectModelPointer;
     }
 
     /**
