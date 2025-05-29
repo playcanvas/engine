@@ -8,6 +8,31 @@ import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
  */
 
+/**
+ * @typedef {'float32' | 'uint8' | 'int32'} DType
+ */
+
+/**
+ * @typedef {Object} SogsTexture
+ * @property {number[]} shape - The dimensions of the texture data array
+ * @property {DType} dtype - The data type of the texture values
+ * @property {string[]} files - Array of file paths containing the texture data
+ * @property {number | number[]} [mins] - Minimum values for normalization
+ * @property {number | number[]} [maxs] - Maximum values for normalization
+ * @property {string} [encoding] - The encoding format of the texture data
+ * @property {number} [quantization] - The quantization level of the texture data
+ */
+
+/**
+ * @typedef {Object} SogsMeta
+ * @property {SogsTexture} means - The k-means index for each splat
+ * @property {SogsTexture} scales - The scale factors for each splat
+ * @property {SogsTexture} quats - The quaternion rotations for each splat
+ * @property {SogsTexture} sh0 - The zeroth order spherical harmonics coefficients
+ * @property {SogsTexture} shN - The higher order spherical harmonics coefficients
+ */
+
+
 class SogsParser {
     /** @type {AppBase} */
     app;
@@ -24,6 +49,15 @@ class SogsParser {
         this.maxRetries = maxRetries;
     }
 
+    /**
+     * Loads the textures for the SOGS data.
+     *
+     * @param {string} url - The URL of the resource to load.
+     * @param {ResourceHandlerCallback} callback - The callback used when
+     * the resource is loaded or an error occurs.
+     * @param {Asset} asset - Container asset.
+     * @param {SogsMeta} meta - The metadata for the SOGS data.
+     */
     async loadTextures(url, callback, asset, meta) {
         const { assets } = this.app;
 
