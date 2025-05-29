@@ -740,16 +740,59 @@ class Quat {
     }
 
     /**
+     * Set the values of the quaternion from an array.
+     *
+     * @param {number[]|ArrayBufferView} arr - The array to set the quaternion values from.
+     * @param {number} [offset] - The zero-based index at which to start copying elements from the
+     * array. Default is 0.
+     * @returns {Quat} Self for chaining.
+     * @example
+     * const q = new pc.Quat();
+     * q.fromArray([20, 10, 5, 0]);
+     * // q is set to [20, 10, 5, 0]
+     */
+    fromArray(arr, offset = 0) {
+        this.x = arr[offset] ?? this.x;
+        this.y = arr[offset + 1] ?? this.y;
+        this.z = arr[offset + 2] ?? this.z;
+        this.w = arr[offset + 3] ?? this.w;
+
+        return this;
+    }
+
+    /**
      * Converts the quaternion to string form.
      *
      * @returns {string} The quaternion in string form.
      * @example
-     * const v = new pc.Quat(0, 0, 0, 1);
+     * const q = new pc.Quat(0, 0, 0, 1);
      * // Outputs [0, 0, 0, 1]
-     * console.log(v.toString());
+     * console.log(q.toString());
      */
     toString() {
         return `[${this.x}, ${this.y}, ${this.z}, ${this.w}]`;
+    }
+
+    /**
+     * Converts the quaternion to an array.
+     *
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the quaternion's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]|ArrayBufferView} The quaternion as an array.
+     * @example
+     * const q = new pc.Quat(20, 10, 5, 1);
+     * // Outputs [20, 10, 5, 1]
+     * console.log(q.toArray());
+     */
+    toArray(arr = [], offset = 0) {
+        arr[offset] = this.x;
+        arr[offset + 1] = this.y;
+        arr[offset + 2] = this.z;
+        arr[offset + 3] = this.w;
+
+        return arr;
     }
 
     /**
