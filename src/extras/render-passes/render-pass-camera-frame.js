@@ -392,7 +392,8 @@ class RenderPassCameraFrame extends RenderPass {
 
         if (this._sceneHalfEnabled) {
             this.scenePassHalf = new RenderPassDownsample(this.device, this.sceneTexture, {
-                boxFilter: true
+                boxFilter: true,
+                removeInvalid: true // remove invalid pixels to avoid bloom / dof artifacts
             });
             this.scenePassHalf.name = 'RenderPassSceneHalf';
             this.scenePassHalf.init(this.rtHalf, {
