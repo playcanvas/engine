@@ -7,9 +7,6 @@ var scales: texture_2d<f32>;
 uniform means_mins: vec3f;
 uniform means_maxs: vec3f;
 
-uniform quats_mins: vec3f;
-uniform quats_maxs: vec3f;
-
 uniform scales_mins: vec3f;
 uniform scales_maxs: vec3f;
 
@@ -19,7 +16,7 @@ fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
     let l: vec3f = textureLoad(means_l, source.uv, 0).xyz;
     let n: vec3f = (l * 255.0 + u * 255.0 * 256.0) / 65535.0;
 
-    let v: vec3f = mix(means_mins, means_maxs, n);
+    let v: vec3f = mix(uniform.means_mins, uniform.means_maxs, n);
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
@@ -46,7 +43,7 @@ fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, ve
 
 
     let rot: mat3x3f = quatToMat3(quat);
-    let scale: vec3f = exp(mix(scales_mins, scales_maxs, textureLoad(scales, source.uv, 0).xyz));
+    let scale: vec3f = exp(mix(uniform.scales_mins, uniform.scales_maxs, textureLoad(scales, source.uv, 0).xyz));
 
     // M = S * R
     let M: mat3x3f = transpose(mat3x3f(

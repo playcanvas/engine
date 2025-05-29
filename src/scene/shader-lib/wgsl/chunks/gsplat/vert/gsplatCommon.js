@@ -39,17 +39,33 @@ fn quatToMat3(R: vec4<f32>) -> mat3x3<f32> {
     );
 }
 
-#if GSPLAT_COMPRESSED_DATA == true
+#if SH_BANDS == 1
+    const SH_COEFFS: i32 = 3;
+#elif SH_BANDS == 2
+    const SH_COEFFS: i32 = 8;
+#elif SH_BANDS == 3
+    const SH_COEFFS: i32 = 15;
+#else
+    const SH_COEFFS: i32 = 0;
+#endif
+
+#if GSPLAT_COMPRESSED_DATA
     #include "gsplatCompressedDataVS"
-    #include "gsplatCompressedSHVS"
-#elif GSPLAT_SOGS_DATA == true
+    #if SH_BANDS > 0
+        #include "gsplatCompressedSHVS"
+    #endif
+#elif GSPLAT_SOGS_DATA
     #include "gsplatSogsDataVS"
     #include "gsplatSogsColorVS"
-    #include "gsplatSogsSHVS"
+    #if SH_BANDS > 0
+        #include "gsplatSogsSHVS"
+    #endif
 #else
     #include "gsplatDataVS"
     #include "gsplatColorVS"
-    #include "gsplatSHVS"
+    #if SH_BANDS > 0
+        #include "gsplatSHVS"
+    #endif
 #endif
 
 #include "gsplatSourceVS"
@@ -90,15 +106,7 @@ fn clipCorner(corner: ptr<function, SplatCorner>, alpha: f32) {
     // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
     fn evalSH(source: ptr<function, SplatSource>, dir: vec3f) -> vec3f {
 
-        #if SH_BANDS > 0
-            #if SH_BANDS == 1
-                var sh: array<vec3f, 3>;
-            #elif SH_BANDS == 2
-                var sh: array<vec3f, 8>;
-            #elif SH_BANDS == 3
-                var sh: array<vec3f, 15>;
-            #endif
-        #endif
+        var sh: array<vec3f, SH_COEFFS>;
 
         var scale: f32;
         readSHData(source, &sh, &scale);

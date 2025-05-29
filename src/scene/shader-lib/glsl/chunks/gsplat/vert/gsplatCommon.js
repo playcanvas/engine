@@ -45,17 +45,33 @@ struct SplatCorner {
     #endif
 };
 
+#if SH_BANDS == 1
+    #define SH_COEFFS 3
+#elif SH_BANDS == 2
+    #define SH_COEFFS 8
+#elif SH_BANDS == 3
+    #define SH_COEFFS 15
+#else
+    #define SH_COEFFS 0
+#endif
+
 #if GSPLAT_COMPRESSED_DATA == true
     #include "gsplatCompressedDataVS"
-    #include "gsplatCompressedSHVS"
+    #if SH_COEFFS > 0
+        #include "gsplatCompressedSHVS"
+    #endif
 #elif GSPLAT_SOGS_DATA == true
     #include "gsplatSogsDataVS"
     #include "gsplatSogsColorVS"
-    #include "gsplatSogsSHVS"
+    #if SH_COEFFS > 0
+        #include "gsplatSogsSHVS"
+    #endif
 #else
     #include "gsplatDataVS"
     #include "gsplatColorVS"
-    #include "gsplatSHVS"
+    #if SH_COEFFS > 0
+        #include "gsplatSHVS"
+    #endif
 #endif
 
 #include "gsplatSourceVS"
@@ -97,15 +113,7 @@ void clipCorner(inout SplatCorner corner, float alpha) {
     // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
     vec3 evalSH(in SplatSource source, in vec3 dir) {
 
-        #if SH_BANDS > 0
-            #if SH_BANDS == 1
-                vec3 sh[3];
-            #elif SH_BANDS == 2
-                vec3 sh[8];
-            #elif SH_BANDS == 3
-                vec3 sh[15];
-            #endif
-        #endif
+        vec3 sh[SH_COEFFS];
 
         // read sh coefficients
         float scale;
