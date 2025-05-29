@@ -26,7 +26,7 @@ class DualGestureSource extends InputSource {
      * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
      * @private
      */
-    _layout = 'touch-joystick';
+    _layout = 'joystick-touch';
 
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
@@ -54,8 +54,16 @@ class DualGestureSource extends InputSource {
         right: new InputDelta(2)
     };
 
-    constructor() {
+    /**
+     * @param {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`} [layout] - The layout of the dual
+     * gesture source.
+     */
+    constructor(layout) {
         super();
+
+        if (layout) {
+            this.layout = layout;
+        }
 
         this._leftJoystick = new VirtualJoystick();
         this._rightJoystick = new VirtualJoystick();
