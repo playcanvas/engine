@@ -65,6 +65,7 @@ Examples can also contain comments which allow you to define the default configu
 // @config NO_MINISTATS
 // @config WEBGPU_DISABLED
 // @config WEBGL_DISABLED
+// @config E2E_TEST
 import * as pc from 'playcanvas';
 ...
 ```
