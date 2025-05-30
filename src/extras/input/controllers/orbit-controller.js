@@ -153,7 +153,7 @@ class OrbitController extends InputController {
     }
 
     get zoom() {
-        return this._targetZoomDist;
+        return this._zoomDist;
     }
 
     set pitchRange(range) {
