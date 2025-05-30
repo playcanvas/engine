@@ -3,33 +3,15 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, SliderInput, VectorInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, SliderInput, VectorInput, TextInput } = ReactPCUI;
 
     return fragment(
-        jsx(
-            LabelGroup,
-            { text: 'Zoom reset' },
-            jsx(BooleanInput, {
-                type: 'toggle',
-                binding: new BindingTwoWay(),
-                link: { observer, path: 'example.zoomReset' }
-            })
-        ),
-        jsx(
-            LabelGroup,
-            { text: 'Smoothed focus' },
-            jsx(BooleanInput, {
-                type: 'toggle',
-                binding: new BindingTwoWay(),
-                link: { observer, path: 'example.smoothedFocus' }
-            })
-        ),
         jsx(
             Panel,
             { headerText: 'Attributes' },
             jsx(
                 LabelGroup,
-                { text: 'Enable Orbit' },
+                { text: 'Enable orbit' },
                 jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
@@ -38,16 +20,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Enable Pan' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.enablePan' }
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Enable Fly' },
+                { text: 'Enable fly' },
                 jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
@@ -56,23 +29,11 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Focus damping' },
-                jsx(SliderInput, {
+                { text: 'Enable pan' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.focusDamping' },
-                    min: 0,
-                    max: 0.999,
-                    step: 0.001,
-                    precision: 3
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Pitch range' },
-                jsx(VectorInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.pitchRange' },
-                    dimensions: 2
+                    link: { observer, path: 'attr.enablePan' }
                 })
             ),
             jsx(
@@ -88,14 +49,14 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Rotate damping' },
+                { text: 'Rotate joystick sensitivity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.rotateDamping' },
+                    link: { observer, path: 'attr.rotateJoystickSens' },
                     min: 0,
-                    max: 0.999,
-                    step: 0.001,
-                    precision: 3
+                    max: 10,
+                    step: 0.01,
+                    precision: 2
                 })
             ),
             jsx(
@@ -130,18 +91,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Move damping' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.moveDamping' },
-                    min: 0,
-                    max: 0.999,
-                    step: 0.001,
-                    precision: 3
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'Zoom speed' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -154,7 +103,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Zoom Pinch Sensitivity' },
+                { text: 'Zoom pinch sensitivity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.zoomPinchSens' },
@@ -162,6 +111,42 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     max: 10,
                     step: 0.01,
                     precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Focus damping' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.focusDamping' },
+                    min: 0,
+                    max: 0.999,
+                    step: 0.001,
+                    precision: 3
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Rotate damping' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.rotateDamping' },
+                    min: 0,
+                    max: 0.999,
+                    step: 0.001,
+                    precision: 3
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Move damping' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.moveDamping' },
+                    min: 0,
+                    max: 0.999,
+                    step: 0.001,
+                    precision: 3
                 })
             ),
             jsx(
@@ -178,22 +163,29 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Zoom min' },
-                jsx(SliderInput, {
+                { text: 'Pitch range' },
+                jsx(VectorInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.zoomMin' },
-                    min: 0,
-                    max: 10
+                    link: { observer, path: 'attr.pitchRange' },
+                    dimensions: 2
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Zoom max' },
-                jsx(SliderInput, {
+                { text: 'Yaw range' },
+                jsx(VectorInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.zoomMax' },
-                    min: 0,
-                    max: 20
+                    link: { observer, path: 'attr.yawRange' },
+                    dimensions: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Zoom range' },
+                jsx(VectorInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.zoomRange' },
+                    dimensions: 2
                 })
             ),
             jsx(
@@ -206,6 +198,23 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     max: 1,
                     step: 0.001,
                     precision: 3
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Gamepad deadzone' },
+                jsx(VectorInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.gamepadDeadZone' },
+                    dimensions: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Mobile input layout' },
+                jsx(TextInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.mobileInputLayout' }
                 })
             )
         )
