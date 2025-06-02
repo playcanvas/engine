@@ -139,6 +139,20 @@ class Quat {
     }
 
     /**
+     * Calculates the dot product of two quaternions.
+     *
+     * @param {Quat} other - The quaternion to calculate the dot product with.
+     * @returns {number} The dot product of the two quaternions.
+     * @example
+     * const a = new pc.Quat(1, 0, 0, 0);
+     * const b = new pc.Quat(0, 1, 0, 0);
+     * console.log("Dot product: " + a.dot(b)); // Outputs 0
+     */
+    dot(other) {
+        return this.x * other.x + this.y * other.y + this.z * other.z + this.w * other.w;
+    }
+
+    /**
      * Reports whether two quaternions are equal.
      *
      * @param {Quat} rhs - The quaternion to be compared against.
@@ -299,6 +313,35 @@ class Quat {
      */
     lengthSq() {
         return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+    }
+
+
+    /**
+     * Performs a linear interpolation between two quaternions. The result of the interpolation
+     * is written to the quaternion calling the function.
+     *
+     * @param {Quat} lhs - The quaternion to interpolate from.
+     * @param {Quat} rhs - The quaternion to interpolate to.
+     * @param {number} alpha - The value controlling the interpolation in relation to the two input
+     * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
+     * in between generating a linear interpolation between the two.
+     * @returns {Quat} Self for chaining.
+     * @example
+     * const q1 = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
+     * const q2 = new pc.Quat(-0.21, -0.21, -0.67, 0.68);
+     *
+     * const result = new pc.Quat();
+     * result.lerp(q1, q2, 0);   // Return q1
+     * result.lerp(q1, q2, 0.5); // Return the midpoint interpolant
+     * result.lerp(q1, q2, 1);   // Return q2
+     */
+    lerp(lhs, rhs, alpha) {
+        const omt = (1 - alpha) * (lhs.dot(rhs) < 0 ? -1 : 1);
+        this.x = lhs.x * omt + rhs.x * alpha;
+        this.y = lhs.y * omt + rhs.y * alpha;
+        this.z = lhs.z * omt + rhs.z * alpha;
+        this.w = lhs.w * omt + rhs.w * alpha;
+        return this.normalize();
     }
 
     /**
@@ -740,16 +783,59 @@ class Quat {
     }
 
     /**
+     * Set the values of the quaternion from an array.
+     *
+     * @param {number[]|ArrayBufferView} arr - The array to set the quaternion values from.
+     * @param {number} [offset] - The zero-based index at which to start copying elements from the
+     * array. Default is 0.
+     * @returns {Quat} Self for chaining.
+     * @example
+     * const q = new pc.Quat();
+     * q.fromArray([20, 10, 5, 0]);
+     * // q is set to [20, 10, 5, 0]
+     */
+    fromArray(arr, offset = 0) {
+        this.x = arr[offset] ?? this.x;
+        this.y = arr[offset + 1] ?? this.y;
+        this.z = arr[offset + 2] ?? this.z;
+        this.w = arr[offset + 3] ?? this.w;
+
+        return this;
+    }
+
+    /**
      * Converts the quaternion to string form.
      *
      * @returns {string} The quaternion in string form.
      * @example
-     * const v = new pc.Quat(0, 0, 0, 1);
+     * const q = new pc.Quat(0, 0, 0, 1);
      * // Outputs [0, 0, 0, 1]
-     * console.log(v.toString());
+     * console.log(q.toString());
      */
     toString() {
         return `[${this.x}, ${this.y}, ${this.z}, ${this.w}]`;
+    }
+
+    /**
+     * Converts the quaternion to an array.
+     *
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the quaternion's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]|ArrayBufferView} The quaternion as an array.
+     * @example
+     * const q = new pc.Quat(20, 10, 5, 1);
+     * // Outputs [20, 10, 5, 1]
+     * console.log(q.toArray());
+     */
+    toArray(arr = [], offset = 0) {
+        arr[offset] = this.x;
+        arr[offset + 1] = this.y;
+        arr[offset + 2] = this.z;
+        arr[offset + 3] = this.w;
+
+        return arr;
     }
 
     /**

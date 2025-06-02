@@ -256,10 +256,11 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
      * @param {boolean} stencilEnabled - Whether stencil is enabled.
      * @param {StencilParameters} stencilFront - The stencil state for front faces.
      * @param {StencilParameters} stencilBack - The stencil state for back faces.
+     * @param {string} primitiveTopology - The primitive topology.
      * @returns {object} Returns the depth stencil state.
      * @private
      */
-    getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack) {
+    getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack, primitiveTopology) {
 
         /** @type {GPUDepthStencilState} */
         let depthStencil;
@@ -275,8 +276,10 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             if (depth) {
                 depthStencil.depthWriteEnabled = depthState.write;
                 depthStencil.depthCompare = _compareFunction[depthState.func];
-                depthStencil.depthBias = depthState.depthBias;
-                depthStencil.depthBiasSlopeScale = depthState.depthBiasSlope;
+
+                const biasAllowed = primitiveTopology === 'triangle-list' || primitiveTopology === 'triangle-strip';
+                depthStencil.depthBias = biasAllowed ? depthState.depthBias : 0;
+                depthStencil.depthBiasSlopeScale = biasAllowed ? depthState.depthBiasSlope : 0;
             } else {
                 // if render target does not have depth buffer
                 depthStencil.depthWriteEnabled = false;
@@ -331,7 +334,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
                 cullMode: _cullModes[cullMode]
             },
 
-            depthStencil: this.getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack),
+            depthStencil: this.getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack, primitiveTopology),
 
             multisample: {
                 count: renderTarget.samples
