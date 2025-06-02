@@ -297,6 +297,26 @@ class CameraControls extends Script {
      */
     joystickResetEventName = 'joystick:reset';
 
+    /**
+     * @type {number}
+     * @private
+     */
+    get _moveMult() {
+        const speed = this._state.shift ?
+            this.moveFastSpeed : this._state.ctrl ?
+                this.moveSlowSpeed : this.moveSpeed;
+        return speed * this.sceneSize;
+    }
+
+    /**
+     * @type {number}
+     * @private
+     */
+    get _zoomMult() {
+        const scale = math.clamp(this._orbitController.zoom / (ZOOM_SCALE_MULT * this.sceneSize), this.zoomScaleMin, 1);
+        return scale * this.zoomSpeed * this.sceneSize;
+    }
+
     initialize() {
         if (!this.entity.camera) {
             console.error('CameraControls: camera component not found');
@@ -661,8 +681,8 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {Vec2} stick - The stick
-     * @returns {Vec2} The remapped stick.
+     * @param {number[]} stick - The stick
+     * @returns {number[]} The remapped stick.
      * @private
      */
     _applyDeadZone(stick) {
@@ -672,28 +692,6 @@ class CameraControls extends Script {
         }
         const scale = (mag - this.gamepadDeadZone.x) / (this.gamepadDeadZone.y - this.gamepadDeadZone.x);
         return stick.normalize().mulScalar(scale);
-    }
-
-    /**
-     * @param {number} val - The move delta.
-     * @returns {number} The scaled delta.
-     * @private
-     */
-    _scaleMove(val) {
-        const speed = this._state.shift ?
-            this.moveFastSpeed : this._state.ctrl ?
-                this.moveSlowSpeed : this.moveSpeed;
-        return val * speed * this.sceneSize;
-    }
-
-    /**
-     * @param {number} val - The delta.
-     * @returns {number} The scaled delta.
-     * @private
-     */
-    _scaleZoom(val) {
-        const scale = math.clamp(this._orbitController.zoom / (ZOOM_SCALE_MULT * this.sceneSize), this.zoomScaleMin, 1);
-        return val * scale * this.zoomSpeed * this.sceneSize;
     }
 
     /**
@@ -738,9 +736,9 @@ class CameraControls extends Script {
 
         // update desktop
         this._frame.move.add([
-            this._scaleMove(axis.x),
-            this._scaleMove(axis.y),
-            this._scaleMove(axis.z)
+            axis.x * this._moveMult,
+            axis.y * this._moveMult,
+            axis.z * this._moveMult
         ]);
         this._frame.rotate.add([
             mouse[0] * this.rotateSpeed,
@@ -751,7 +749,7 @@ class CameraControls extends Script {
             mouse[1] * (pan ? 1 : this.rotateSpeed)
         ]);
         this._frame.zoom.add([
-            this._scaleZoom(wheel[0])
+            wheel[0] * this._zoomMult
         ]);
         this._frame.pan.add([
             pan
@@ -765,7 +763,7 @@ class CameraControls extends Script {
                     touch[1] * (pan ? 1 : this.rotateSpeed)
                 ]);
                 this._frame.zoom.add([
-                    this._scaleZoom(pinch[0]) * this.zoomPinchSens
+                    pinch[0] * this._zoomMult * this.zoomPinchSens
                 ]);
                 this._frame.pan.add([
                     pan
@@ -774,9 +772,9 @@ class CameraControls extends Script {
             }
             case CameraControls.MODE_FLY: {
                 this._frame.move.add([
-                    this._scaleMove(leftInput[0]),
+                    leftInput[0] * this._moveMult,
                     0,
-                    this._scaleMove(-leftInput[1])
+                    -leftInput[1] * this._moveMult
                 ]);
                 this._frame.rotate.add([
                     rightInput[0] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens),
@@ -788,9 +786,9 @@ class CameraControls extends Script {
 
         // update gamepad
         this._frame.move.add([
-            this._scaleMove(leftNoDead.x),
-            this._scaleMove(0),
-            this._scaleMove(leftNoDead.y)
+            leftNoDead.x * this._moveMult,
+            0,
+            leftNoDead.y * this._moveMult
         ]);
         this._frame.rotate.add([
             rightNoDead.x * this.rotateSpeed * this.rotateJoystickSens,

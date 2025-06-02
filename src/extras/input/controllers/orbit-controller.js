@@ -319,7 +319,7 @@ class OrbitController extends InputController {
         if (!this._focusing) {
             return;
         }
-        const length = dv[0] * dv[0] + dv[1] * dv[1];
+        const length = Math.sqrt(dv[0] * dv[0] + dv[1] * dv[1]);
         const inputDelta = length + Math.abs(dw[0]);
         if (inputDelta > 0) {
             this._cancelSmoothTransform();
