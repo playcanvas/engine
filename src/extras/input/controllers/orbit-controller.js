@@ -372,21 +372,21 @@ class OrbitController extends InputController {
 
     /**
      * @param {object} frame - The input frame.
-     * @param {InputDelta} frame.drag - The drag input delta.
+     * @param {InputDelta} frame.rotate - The rotate input delta.
      * @param {InputDelta} frame.zoom - The zoom input delta.
      * @param {InputDelta} frame.pan - The pan input delta.
      * @param {number} dt - The delta time.
      * @returns {Mat4} - The camera transform.
      */
     update(frame, dt) {
-        const { drag, zoom, pan } = frame;
+        const { rotate, zoom, pan } = frame;
 
-        this._checkCancelFocus(drag.value, zoom.value);
+        this._checkCancelFocus(rotate.value, zoom.value);
 
         if (pan.value[0]) {
-            this._pan(drag.value);
+            this._pan(rotate.value);
         } else {
-            this._look(drag.value);
+            this._look(rotate.value);
         }
         this._zoom(zoom.value);
 

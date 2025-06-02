@@ -142,7 +142,6 @@ class CameraControls extends Script {
     _frame = {
         move: new InputDelta(3),
         rotate: new InputDelta(2),
-        drag: new InputDelta(2),
         zoom: new InputDelta(1),
         pan: new InputDelta(1)
     };
@@ -664,7 +663,6 @@ class CameraControls extends Script {
     _resetFrame() {
         this._frame.move.flush();
         this._frame.rotate.flush();
-        this._frame.drag.flush();
         this._frame.zoom.flush();
         this._frame.pan.flush();
     }
@@ -746,10 +744,6 @@ class CameraControls extends Script {
             mouse[0] * this.rotateSpeed,
             mouse[1] * this.rotateSpeed
         ]);
-        this._frame.drag.add([
-            mouse[0] * (pan ? 1 : this.rotateSpeed),
-            mouse[1] * (pan ? 1 : this.rotateSpeed)
-        ]);
         this._frame.zoom.add([
             wheel[0] * this._zoomMult
         ]);
@@ -760,7 +754,7 @@ class CameraControls extends Script {
         // update mobile
         switch (this._mode) {
             case CameraControls.MODE_ORBIT: {
-                this._frame.drag.add([
+                this._frame.rotate.add([
                     touch[0] * (pan ? 1 : this.rotateSpeed),
                     touch[1] * (pan ? 1 : this.rotateSpeed)
                 ]);
