@@ -26,13 +26,13 @@ const tmpP1 = new Plane();
 const EPSILON = 0.001;
 
 /**
- * Calculate the lerp rate.
+ * Calculate the damp rate.
  *
  * @param {number} damping - The damping.
  * @param {number} dt - The delta time.
  * @returns {number} - The lerp rate.
  */
-const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
+const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 /**
  * The orbit controller.
@@ -261,8 +261,8 @@ class OrbitController extends InputController {
      * @private
      */
     _smoothTransform(dt) {
-        const ar = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.rotateDamping, dt);
-        const am = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.moveDamping, dt);
+        const ar = dt === -1 ? 1 : damp(this._focusing ? this.focusDamping : this.rotateDamping, dt);
+        const am = dt === -1 ? 1 : damp(this._focusing ? this.focusDamping : this.moveDamping, dt);
 
         this._angles.x = math.lerpAngle(this._angles.x, this._targetAngles.x, ar) % 360;
         this._angles.y = math.lerpAngle(this._angles.y, this._targetAngles.y, ar) % 360;
@@ -283,7 +283,7 @@ class OrbitController extends InputController {
      * @private
      */
     _smoothZoom(dt) {
-        const a = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.zoomDamping, dt);
+        const a = dt === -1 ? 1 : damp(this._focusing ? this.focusDamping : this.zoomDamping, dt);
         this._zoomDist = math.lerp(this._zoomDist, this._targetZoomDist, a);
         this._orbitTransform.setTranslate(0, 0, this._zoomDist);
     }

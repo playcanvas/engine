@@ -17,13 +17,13 @@ const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
 /**
- * Calculate the lerp rate.
+ * Calculate the damp rate.
  *
  * @param {number} damping - The damping.
  * @param {number} dt - The delta time.
  * @returns {number} - The lerp rate.
  */
-const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
+const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 /**
  * The fly controller.
@@ -146,8 +146,8 @@ class FlyController extends InputController {
      * @private
      */
     _smoothTransform(dt) {
-        const ar = dt === -1 ? 1 : lerpRate(this.rotateDamping, dt);
-        const am = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
+        const ar = dt === -1 ? 1 : damp(this.rotateDamping, dt);
+        const am = dt === -1 ? 1 : damp(this.moveDamping, dt);
 
         this._angles.x = math.lerpAngle(this._angles.x % 360, this._targetAngles.x % 360, ar);
         this._angles.y = math.lerpAngle(this._angles.y % 360, this._targetAngles.y % 360, ar);
