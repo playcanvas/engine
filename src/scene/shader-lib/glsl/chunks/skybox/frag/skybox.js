@@ -5,6 +5,11 @@ export default /* glsl */`
     #include "gammaPS"
     #include "tonemappingPS"
 
+    #ifdef PREPASS_PASS
+        varying float vLinearDepth;
+        #include "floatAsUintPS"
+    #endif
+
     varying vec3 vViewDir;
     uniform float skyboxHighlightMultiplier;
 
@@ -30,37 +35,46 @@ export default /* glsl */`
 
     void main(void) {
 
-        #ifdef SKY_CUBEMAP
+        #ifdef PREPASS_PASS
 
-            #ifdef SKYMESH
+            // output linear depth during prepass
+            gl_FragColor = float2vec4(vLinearDepth);
 
-                // get vector from world space pos to tripod origin
-                vec3 envDir = normalize(vWorldPos - projectedSkydomeCenter);
-                vec3 dir = envDir * cubeMapRotationMatrix;
+        #else
 
-            #else
+            #ifdef SKY_CUBEMAP
 
-                vec3 dir = vViewDir;
+                #ifdef SKYMESH
+
+                    // get vector from world space pos to tripod origin
+                    vec3 envDir = normalize(vWorldPos - projectedSkydomeCenter);
+                    vec3 dir = envDir * cubeMapRotationMatrix;
+
+                #else
+
+                    vec3 dir = vViewDir;
+
+                #endif
+
+                dir.x *= -1.0;
+                vec3 linear = {SKYBOX_DECODE_FNC}(textureCube(texture_cubeMap, dir));
+
+            #else // env-atlas
+
+                vec3 dir = vViewDir * vec3(-1.0, 1.0, 1.0);
+                vec2 uv = toSphericalUv(normalize(dir));
+
+                vec3 linear = {SKYBOX_DECODE_FNC}(texture2D(texture_envAtlas, mapRoughnessUv(uv, mipLevel)));
 
             #endif
 
-            dir.x *= -1.0;
-            vec3 linear = {SKYBOX_DECODE_FNC}(textureCube(texture_cubeMap, dir));
+            // our HDR encodes values up to 64, so allow extra brightness for the clipped values
+            if (any(greaterThanEqual(linear, vec3(64.0)))) {
+                linear *= skyboxHighlightMultiplier;
+            }
 
-        #else // env-atlas
-
-            vec3 dir = vViewDir * vec3(-1.0, 1.0, 1.0);
-            vec2 uv = toSphericalUv(normalize(dir));
-
-            vec3 linear = {SKYBOX_DECODE_FNC}(texture2D(texture_envAtlas, mapRoughnessUv(uv, mipLevel)));
+            gl_FragColor = vec4(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
 
         #endif
-
-        // our HDR encodes values up to 64, so allow extra brightness for the clipped values
-        if (any(greaterThanEqual(linear, vec3(64.0)))) {
-            linear *= skyboxHighlightMultiplier;
-        }
-
-        gl_FragColor = vec4(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
     }
 `;
