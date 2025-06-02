@@ -738,8 +738,8 @@ class CameraControls extends Script {
             axis.z * this._moveMult + wheel[0] * this._zoomMult
         ]);
         this._frame.rotate.add([
-            mouse[0] * this.rotateSpeed,
-            mouse[1] * this.rotateSpeed
+            mouse[0] * (pan ? 1 : this.rotateSpeed),
+            mouse[1] * (pan ? 1 : this.rotateSpeed)
         ]);
         this._frame.pan.add([
             pan
