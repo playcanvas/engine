@@ -95,12 +95,6 @@ class CameraControls extends Script {
     _desktopInput = new KeyboardMouseSource();
 
     /**
-     * @type {DualGestureSource | MultiTouchSource}
-     * @private
-     */
-    _mobileInput;
-
-    /**
      * @type {MultiTouchSource}
      * @private
      */
@@ -315,6 +309,8 @@ class CameraControls extends Script {
 
         // attach input
         this._desktopInput.attach(this.app.graphicsDevice.canvas);
+        this._orbitMobileInput.attach(this.app.graphicsDevice.canvas);
+        this._flyMobileInput.attach(this.app.graphicsDevice.canvas);
         this._gamepadInput.attach(this.app.graphicsDevice.canvas);
 
         // expose ui events
@@ -611,37 +607,7 @@ class CameraControls extends Script {
             }
         }
 
-        // mobile input reattach
-        this._reattachMobileInput();
-
         // controller reattach
-        this._reattachController();
-    }
-
-    /**
-     * @private
-     */
-    _reattachMobileInput() {
-        const mobileInput = this._mode === CameraControls.MODE_FLY ? this._flyMobileInput : this._orbitMobileInput;
-        if (mobileInput !== this._mobileInput) {
-            // detach old input
-            if (this._mobileInput) {
-                this._mobileInput.detach();
-            }
-
-            // attach new input
-            this._mobileInput = mobileInput;
-            this._mobileInput.attach(this.app.graphicsDevice.canvas);
-
-            // reset state
-            this._resetState();
-        }
-    }
-
-    /**
-     * @private
-     */
-    _reattachController() {
         const controller = this._mode === CameraControls.MODE_FLY ? this._flyController : this._orbitController;
         const currZoomDist = this._orbitController.zoom;
         if (controller !== this._controller) {
@@ -699,8 +665,6 @@ class CameraControls extends Script {
         return stick.normalize().mulScalar(scale);
     }
 
-    _
-
     /**
      * @param {number} val - The move delta.
      * @returns {number} The scaled delta.
@@ -714,19 +678,19 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {number} zoom - The delta.
+     * @param {number} val - The delta.
      * @returns {number} The scaled delta.
      * @private
      */
-    _scaleZoom(zoom) {
+    _scaleZoom(val) {
         const scale = math.clamp(this._orbitController.zoom / (ZOOM_SCALE_MULT * this.sceneSize), this.zoomScaleMin, 1);
-        return zoom * scale * this.zoomSpeed * this.sceneSize;
+        return val * scale * this.zoomSpeed * this.sceneSize;
     }
 
     /**
      * @private
      */
-    _addDesktopInputs() {
+    _accumulateInputs() {
         const { key, button, mouse, wheel } = this._desktopInput.frame();
         const [forward, back, left, right, down, up, /** space */, shift, ctrl] = key;
 
@@ -754,7 +718,7 @@ class CameraControls extends Script {
         const axis = tmpV1.copy(this._state.axis).normalize();
         const pan = +((!!this._state.shift || !!this._state.mouse[1]) && this.enablePan);
 
-        // update frame
+        // update desktop
         this._frame.move.add([
             this._scaleMove(axis.x),
             this._scaleMove(axis.y),
@@ -774,61 +738,56 @@ class CameraControls extends Script {
         this._frame.pan.add([
             pan
         ]);
-    }
 
-    /**
-     * @private
-     */
-    _addMobileInputs() {
-        if (this._mobileInput instanceof MultiTouchSource) {
-            const { touch, pinch, count } = this._mobileInput.frame();
-            this._state.touches += count[0];
+        // update mobile
+        const { touch, pinch, count } = this._orbitMobileInput.frame();
+        const { leftInput, rightInput } = this._flyMobileInput.frame();
+        switch (this._mode) {
+            case CameraControls.MODE_ORBIT: {
+                this._state.touches += count[0];
 
-            const pan = +(this._state.touches > 1 && this.enablePan);
-            this._frame.drag.add([
-                touch[0] * (pan ? 1 : this.rotateSpeed),
-                touch[1] * (pan ? 1 : this.rotateSpeed)
-            ]);
-            this._frame.zoom.add([
-                this._scaleZoom(pinch[0]) * this.zoomPinchSens
-            ]);
-            this._frame.pan.add([
-                pan
-            ]);
+                const pan = +(this._state.touches > 1 && this.enablePan);
+                this._frame.drag.add([
+                    touch[0] * (pan ? 1 : this.rotateSpeed),
+                    touch[1] * (pan ? 1 : this.rotateSpeed)
+                ]);
+                this._frame.zoom.add([
+                    this._scaleZoom(pinch[0]) * this.zoomPinchSens
+                ]);
+                this._frame.pan.add([
+                    pan
+                ]);
+                break;
+            }
+            case CameraControls.MODE_FLY: {
+
+                const axis = tmpV1.set(leftInput[0], 0, -leftInput[1]);
+                const lookJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
+
+                this._frame.move.add([
+                    this._scaleMove(axis.x),
+                    this._scaleMove(axis.y),
+                    this._scaleMove(axis.z)
+                ]);
+                this._frame.rotate.add([
+                    rightInput[0] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens),
+                    rightInput[1] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens)
+                ]);
+                break;
+            }
         }
 
-        if (this._mobileInput instanceof DualGestureSource) {
-            const { leftInput, rightInput } = this._mobileInput.frame();
-
-            const axis = tmpV1.set(leftInput[0], 0, -leftInput[1]);
-            const lookJoystick = +(this._mobileInput.layout.endsWith('joystick'));
-
-            this._frame.move.add([
-                this._scaleMove(axis.x),
-                this._scaleMove(axis.y),
-                this._scaleMove(axis.z)
-            ]);
-            this._frame.rotate.add([
-                rightInput[0] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens),
-                rightInput[1] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens)
-            ]);
-        }
-    }
-
-    /**
-     * @private
-     */
-    _addGamepadInputs() {
+        // update gamepad
         const { leftStick, rightStick } = this._gamepadInput.frame();
 
         const leftNoDead = this._applyDeadZone(tmpVa.set(leftStick[0], -leftStick[1]));
         const rightNoDead = this._applyDeadZone(tmpVb.set(rightStick[0], -rightStick[1]));
-        const axis = tmpV1.set(leftNoDead.x, 0, leftNoDead.y);
+        const stickAxis = tmpV1.set(leftNoDead.x, 0, leftNoDead.y);
 
         this._frame.move.add([
-            this._scaleMove(axis.x),
-            this._scaleMove(axis.y),
-            this._scaleMove(axis.z)
+            this._scaleMove(stickAxis.x),
+            this._scaleMove(stickAxis.y),
+            this._scaleMove(stickAxis.z)
         ]);
         this._frame.rotate.add([
             rightNoDead.x * this.rotateSpeed * this.rotateJoystickSens,
@@ -905,9 +864,7 @@ class CameraControls extends Script {
         this._resetFrame();
 
         // accumulate inputs
-        this._addDesktopInputs();
-        this._addMobileInputs();
-        this._addGamepadInputs();
+        this._accumulateInputs();
 
         if (this.skipUpdate) {
             return;
