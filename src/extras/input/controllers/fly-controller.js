@@ -5,12 +5,7 @@ import { math } from '../../../core/math/math.js';
 import { InputController } from '../input.js';
 
 /** @import { Mat4 } from '../../../core/math/mat4.js'; */
-
-/**
- * @typedef {object} FlyInputFrame
- * @property {Vec3} move - The move deltas.
- * @property {Vec2} rotate - The rotate deltas.
- */
+/** @import { InputDelta } from '../input.js'; */
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -113,17 +108,17 @@ class FlyController extends InputController {
     }
 
     /**
-     * @param {Vec2} dv - The delta.
+     * @param {number[]} dv - The delta.
      * @private
      */
     _look(dv) {
-        this._targetAngles.x -= dv.y;
-        this._targetAngles.y -= dv.x;
+        this._targetAngles.x -= dv[1];
+        this._targetAngles.y -= dv[0];
         this._clampAngles();
     }
 
     /**
-     * @param {Vec3} dv - The delta vector.
+     * @param {number[]} dv - The delta vector.
      * @param {number} dt - The delta time.
      * @private
      */
@@ -133,9 +128,9 @@ class FlyController extends InputController {
         const up = this._transform.getY();
 
         tmpV1.set(0, 0, 0);
-        tmpV1.sub(tmpV2.copy(back).mulScalar(dv.z));
-        tmpV1.add(tmpV2.copy(right).mulScalar(dv.x));
-        tmpV1.add(tmpV2.copy(up).mulScalar(dv.y));
+        tmpV1.sub(tmpV2.copy(back).mulScalar(dv[2]));
+        tmpV1.add(tmpV2.copy(right).mulScalar(dv[0]));
+        tmpV1.add(tmpV2.copy(up).mulScalar(dv[1]));
         tmpV1.mulScalar(dt);
 
         this._targetPosition.add(tmpV1);
@@ -185,14 +180,16 @@ class FlyController extends InputController {
     }
 
     /**
-     * @param {FlyInputFrame} frame - The input frame.
+     * @param {object} frame - The input frame.
+     * @param {InputDelta} frame.move - The movement input delta.
+     * @param {InputDelta} frame.rotate - The rotation input delta.
      * @param {number} dt - The delta time.
      * @returns {Mat4} - The camera transform.
      */
     update(frame, dt) {
         const { move, rotate } = frame;
-        this._look(rotate);
-        this._move(move, dt);
+        this._look(rotate.value);
+        this._move(move.value, dt);
 
         this._smoothTransform(dt);
 

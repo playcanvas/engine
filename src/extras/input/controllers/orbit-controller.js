@@ -7,18 +7,11 @@ import { Ray } from '../../../core/shape/ray.js';
 import { Plane } from '../../../core/shape/plane.js';
 import { InputController } from '../input.js';
 
-/**
- * @import { CameraComponent } from '../../../framework/components/camera/component.js'
- */
-
-/**
- * @typedef {object} OrbitInputFrame
- * @property {Vec2} drag - The drag deltas.
- * @property {number} zoom - The zoom delta.
- * @property {boolean} pan - The pan state.
- */
+/** @import { CameraComponent } from '../../../framework/components/camera/component.js' */
+/** @import { InputDelta } from '../input.js'; */
 
 const tmpV1 = new Vec3();
+const tmpVa = new Vec2();
 const tmpQ1 = new Quat();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
@@ -207,19 +200,19 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {Vec2} dv - The delta vector.
+     * @param {number[]} dv - The delta vector.
      * @private
      */
     _look(dv) {
-        this._targetAngles.x -= dv.y;
-        this._targetAngles.y -= dv.x;
+        this._targetAngles.x -= dv[1];
+        this._targetAngles.y -= dv[0];
         this._targetAngles.x %= 360;
         this._targetAngles.y %= 360;
         this._clampAngles();
     }
 
     /**
-     * @param {Vec2} dv - The delta vector.
+     * @param {number[]} dv - The delta vector.
      * @private
      */
     _pan(dv) {
@@ -227,18 +220,18 @@ class OrbitController extends InputController {
             return;
         }
         const start = this._screenToWorldPan(this.camera, Vec2.ZERO, new Vec3());
-        const end = this._screenToWorldPan(this.camera, dv, new Vec3());
+        const end = this._screenToWorldPan(this.camera, tmpVa.fromArray(dv), new Vec3());
         tmpV1.sub2(start, end);
 
         this._targetPosition.add(tmpV1);
     }
 
     /**
-     * @param {number} delta - The delta value.
+     * @param {number[]} dv - The delta value.
      * @private
      */
-    _zoom(delta) {
-        this._targetZoomDist += delta;
+    _zoom(dv) {
+        this._targetZoomDist += dv[0];
         this._clampZoom();
     }
 
@@ -318,15 +311,16 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {Vec2} drag - The drag deltas.
-     * @param {number} zoom - The zoom delta.
+     * @param {number[]} dv - The drag deltas.
+     * @param {number[]} dw - The zoom delta.
      * @private
      */
-    _checkCancelFocus(drag, zoom) {
+    _checkCancelFocus(dv, dw) {
         if (!this._focusing) {
             return;
         }
-        const inputDelta = drag.length() + Math.abs(zoom);
+        const length = dv[0] * dv[0] + dv[1] * dv[1];
+        const inputDelta = length + Math.abs(dw[0]);
         if (inputDelta > 0) {
             this._cancelSmoothTransform();
             this._cancelSmoothZoom();
@@ -377,21 +371,24 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {OrbitInputFrame} frame - The input frame.
+     * @param {object} frame - The input frame.
+     * @param {InputDelta} frame.drag - The drag input delta.
+     * @param {InputDelta} frame.zoom - The zoom input delta.
+     * @param {InputDelta} frame.pan - The pan input delta.
      * @param {number} dt - The delta time.
      * @returns {Mat4} - The camera transform.
      */
     update(frame, dt) {
         const { drag, zoom, pan } = frame;
 
-        this._checkCancelFocus(drag, zoom);
+        this._checkCancelFocus(drag.value, zoom.value);
 
-        if (pan) {
-            this._pan(drag);
+        if (pan.value[0]) {
+            this._pan(drag.value);
         } else {
-            this._look(drag);
+            this._look(drag.value);
         }
-        this._zoom(zoom);
+        this._zoom(zoom.value);
 
         this._smoothTransform(dt);
         this._smoothZoom(dt);

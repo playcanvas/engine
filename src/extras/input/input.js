@@ -118,7 +118,7 @@ class InputController {
     }
 
     /**
-     * @param {any} frame - The input frame.
+     * @param {Record<string, InputDelta>} frame - The input frame.
      * @param {number} dt - The delta time.
      * @returns {Mat4} - The camera transform.
      */

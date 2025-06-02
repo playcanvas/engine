@@ -9,19 +9,11 @@ import {
     OrbitController,
     Script,
     Vec2,
-    Vec3
+    Vec3,
+    InputDelta
 } from 'playcanvas';
 
 /** @import { CameraComponent, EventHandler } from 'playcanvas' */
-
-/**
- * @typedef {object} CameraControlsFrame
- * @property {Vec3} move - The move delta.
- * @property {Vec2} rotate - The rotate delta.
- * @property {Vec2} drag - The drag delta.
- * @property {number} zoom - The zoom delta.
- * @property {boolean} pan - The pan flag.
- */
 
 /**
  * @typedef {object} CameraControlsState
@@ -34,6 +26,7 @@ import {
 
 const tmpM1 = new Mat4();
 const tmpVa = new Vec2();
+const tmpVb = new Vec2();
 const tmpV1 = new Vec3();
 
 const ZOOM_SCALE_MULT = 10;
@@ -150,15 +143,14 @@ class CameraControls extends Script {
     _mode;
 
     /**
-     * @type {CameraControlsFrame}
      * @private
      */
     _frame = {
-        move: new Vec3(),
-        rotate: new Vec2(),
-        drag: new Vec2(),
-        zoom: 0,
-        pan: false
+        move: new InputDelta(3),
+        rotate: new InputDelta(2),
+        drag: new InputDelta(2),
+        zoom: new InputDelta(1),
+        pan: new InputDelta(1)
     };
 
     /**
@@ -330,7 +322,7 @@ class CameraControls extends Script {
         this._exposeJoystickEvents(this._flyMobileInput.rightJoystick, 'right');
 
         // mode
-        this._switchMode(this._mode ?? CameraControls.MODE_ORBIT);
+        this._switchMode(this._mode ?? CameraControls.MODE_FLY);
 
         // destroy
         this.on('destroy', this._destroy, this);
@@ -675,11 +667,11 @@ class CameraControls extends Script {
      * @private
      */
     _resetFrame() {
-        this._frame.move.set(0, 0, 0);
-        this._frame.rotate.set(0, 0);
-        this._frame.drag.set(0, 0);
-        this._frame.zoom = 0;
-        this._frame.pan = false;
+        this._frame.move.flush();
+        this._frame.rotate.flush();
+        this._frame.drag.flush();
+        this._frame.zoom.flush();
+        this._frame.pan.flush();
     }
 
     /**
@@ -757,13 +749,29 @@ class CameraControls extends Script {
             this._state.mouse[i] += button[i];
         }
 
-        this._frame.move.add(this._scaleMove(tmpV1.copy(this._state.axis).normalize()));
-        this._frame.rotate.add(tmpVa.fromArray(mouse).mulScalar(this.rotateSpeed));
+        const axis = this._scaleMove(tmpV1.copy(this._state.axis).normalize());
+        const pan = +((!!this._state.shift || !!this._state.mouse[1]) && this.enablePan);
 
-        const _pan = (!!this._state.shift || !!this._state.mouse[1]) && this.enablePan;
-        this._frame.drag.add(tmpVa.fromArray(mouse).mulScalar(_pan ? 1 : this.rotateSpeed));
-        this._frame.zoom += this._scaleZoom(wheel[0]);
-        this._frame.pan ||= _pan;
+        // update frame
+        this._frame.move.add([
+            axis.x,
+            axis.y,
+            axis.z
+        ]);
+        this._frame.rotate.add([
+            mouse[0] * this.rotateSpeed,
+            mouse[1] * this.rotateSpeed
+        ]);
+        this._frame.drag.add([
+            mouse[0] * (pan ? 1 : this.rotateSpeed),
+            mouse[1] * (pan ? 1 : this.rotateSpeed)
+        ]);
+        this._frame.zoom.add([
+            this._scaleZoom(wheel[0])
+        ]);
+        this._frame.pan.add([
+            pan
+        ]);
     }
 
     /**
@@ -774,29 +782,34 @@ class CameraControls extends Script {
             const { touch, pinch, count } = this._mobileInput.frame();
             this._state.touches += count[0];
 
-            const _pan = this._state.touches > 1 && this.enablePan;
-            this._frame.drag.add(tmpVa.fromArray(touch).mulScalar(_pan ? 1 : this.rotateSpeed));
-            this._frame.zoom += this._scaleZoom(pinch[0]) * this.zoomPinchSens;
-            this._frame.pan ||= _pan;
+            const pan = +(this._state.touches > 1 && this.enablePan);
+            this._frame.drag.add([
+                touch[0] * (pan ? 1 : this.rotateSpeed),
+                touch[1] * (pan ? 1 : this.rotateSpeed)
+            ]);
+            this._frame.zoom.add([
+                this._scaleZoom(pinch[0]) * this.zoomPinchSens
+            ]);
+            this._frame.pan.add([
+                pan
+            ]);
         }
 
         if (this._mobileInput instanceof DualGestureSource) {
             const { leftInput, rightInput } = this._mobileInput.frame();
 
-            switch (this._mobileInput.layout) {
-                case 'joystick-touch':
-                case 'joystick-joystick': {
-                    this._frame.move.add(this._scaleMove(tmpV1.set(leftInput[0], 0, -leftInput[1])));
-                    this._frame.rotate.add(tmpVa.fromArray(rightInput).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
-                    break;
-                }
-                case 'touch-joystick':
-                case 'touch-touch': {
-                    this._frame.move.add(this._scaleMove(tmpV1.set(leftInput[0], 0, -leftInput[1])));
-                    this._frame.rotate.add(tmpVa.fromArray(rightInput).mulScalar(this.rotateSpeed));
-                    break;
-                }
-            }
+            const axis = this._scaleMove(tmpV1.set(leftInput[0], 0, -leftInput[1]));
+            const lookJoystick = +(this._mobileInput.layout.endsWith('joystick'));
+
+            this._frame.move.add([
+                axis.x,
+                axis.y,
+                axis.z
+            ]);
+            this._frame.rotate.add([
+                rightInput[0] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens),
+                rightInput[1] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens)
+            ]);
         }
     }
 
@@ -806,11 +819,19 @@ class CameraControls extends Script {
     _addGamepadInputs() {
         const { leftStick, rightStick } = this._gamepadInput.frame();
 
-        const right = this._applyDeadZone(tmpVa.set(rightStick[0], -rightStick[1]));
-        this._frame.rotate.add(right.mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+        const leftStickMapped = this._applyDeadZone(tmpVa.set(leftStick[0], -leftStick[1]));
+        const rightStickMapped = this._applyDeadZone(tmpVb.set(rightStick[0], -rightStick[1]));
+        const axis = this._scaleMove(tmpV1.set(leftStickMapped.x, 0, leftStickMapped.y));
 
-        const left = this._applyDeadZone(tmpVa.fromArray(leftStick));
-        this._frame.move.add(this._scaleMove(tmpV1.set(left.x, 0, left.y)));
+        this._frame.move.add([
+            axis.x,
+            axis.y,
+            axis.z
+        ]);
+        this._frame.rotate.add([
+            rightStickMapped.x * this.rotateSpeed * this.rotateJoystickSens,
+            rightStickMapped.y * this.rotateSpeed * this.rotateJoystickSens
+        ]);
     }
 
     /**
