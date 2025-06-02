@@ -781,19 +781,19 @@ class CameraControls extends Script {
         }
 
         if (this._mobileInput instanceof DualGestureSource) {
-            const { left, right } = this._mobileInput.frame();
+            const { leftInput, rightInput } = this._mobileInput.frame();
 
             switch (this._mobileInput.layout) {
                 case 'joystick-touch':
                 case 'joystick-joystick': {
-                    this._frame.move.add(this._scaleMove(tmpV1.set(left[0], 0, -left[1])));
-                    this._frame.rotate.add(tmpVa.fromArray(right).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
+                    this._frame.move.add(this._scaleMove(tmpV1.set(leftInput[0], 0, -leftInput[1])));
+                    this._frame.rotate.add(tmpVa.fromArray(rightInput).mulScalar(this.rotateSpeed * this.rotateJoystickSens));
                     break;
                 }
                 case 'touch-joystick':
                 case 'touch-touch': {
-                    this._frame.move.add(this._scaleMove(tmpV1.set(left[0], 0, -left[1])));
-                    this._frame.rotate.add(tmpVa.fromArray(right).mulScalar(this.rotateSpeed));
+                    this._frame.move.add(this._scaleMove(tmpV1.set(leftInput[0], 0, -leftInput[1])));
+                    this._frame.rotate.add(tmpVa.fromArray(rightInput).mulScalar(this.rotateSpeed));
                     break;
                 }
             }
