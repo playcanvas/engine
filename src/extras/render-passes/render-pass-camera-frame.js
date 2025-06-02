@@ -94,6 +94,14 @@ class RenderPassCameraFrame extends RenderPass {
     _renderTargetScale = 1;
 
     /**
+     * True if the render pass needs to be re-created because layers have been added or removed.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    layersDirty = false;
+
+    /**
      * @type {RenderTarget|null}
      * @private
      */
@@ -199,7 +207,8 @@ class RenderPassCameraFrame extends RenderPass {
         options = this.sanitizeOptions(options);
 
         // destroy existing passes if they need to be re-created
-        if (this.needsReset(options)) {
+        if (this.needsReset(options) || this.layersDirty) {
+            this.layersDirty = false;
             this.reset();
         }
 
@@ -464,6 +473,11 @@ class RenderPassCameraFrame extends RenderPass {
     }
 
     frameUpdate() {
+
+        // trigger update if layers were added or removed
+        if (this.layersDirty) {
+            this.update(this.options);
+        }
 
         super.frameUpdate();
 
