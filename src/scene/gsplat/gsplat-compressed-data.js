@@ -96,6 +96,9 @@ class SplatCompressedIterator {
 class GSplatCompressedData {
     numSplats;
 
+    /** @type string[] */
+    meta;
+
     /**
      * Contains either 12 or 18 floats per chunk:
      *      min_x, min_y, min_z,

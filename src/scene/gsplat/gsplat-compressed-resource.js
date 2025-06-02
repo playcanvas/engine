@@ -1,10 +1,10 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U
+    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
 import { createGSplatMaterial } from './gsplat-material.js';
+import { GSplatResourceBase } from './gsplat-resource-base.js';
 
 /**
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
@@ -22,19 +22,7 @@ const strideCopy = (target, targetStride, src, srcStride, numEntries) => {
     }
 };
 
-class GSplatCompressed {
-    device;
-
-    numSplats;
-
-    numSplatsVisible;
-
-    /** @type {BoundingBox} */
-    aabb;
-
-    /** @type {Float32Array} */
-    centers;
-
+class GSplatCompressedResource extends GSplatResourceBase {
     /** @type {Texture} */
     packedTexture;
 
@@ -55,19 +43,9 @@ class GSplatCompressed {
      * @param {GSplatCompressedData} gsplatData - The splat data.
      */
     constructor(device, gsplatData) {
+        super(device, gsplatData);
+
         const { chunkData, chunkSize, numChunks, numSplats, vertexData, shBands } = gsplatData;
-
-        this.device = device;
-        this.numSplats = numSplats;
-        this.numSplatsVisible = numSplats;
-
-        // initialize aabb
-        this.aabb = new BoundingBox();
-        gsplatData.calcAabb(this.aabb);
-
-        // initialize centers
-        this.centers = new Float32Array(numSplats * 3);
-        gsplatData.getCenters(this.centers);
 
         this.chunks = new Float32Array(numChunks * 6);
         gsplatData.getChunks(this.chunks);
@@ -124,7 +102,6 @@ class GSplatCompressed {
         result.setDefine('GSPLAT_COMPRESSED_DATA', true);
         result.setParameter('packedTexture', this.packedTexture);
         result.setParameter('chunkTexture', this.chunkTexture);
-        result.setParameter('numSplats', this.numSplatsVisible);
         if (this.shTexture0) {
             result.setDefine('SH_BANDS', 3);
             result.setParameter('shTexture0', this.shTexture0);
@@ -149,31 +126,6 @@ class GSplatCompressed {
         const height = Math.ceil(count / width);
         return new Vec2(width, height);
     }
-
-    /**
-     * Creates a new texture with the specified parameters.
-     *
-     * @param {string} name - The name of the texture to be created.
-     * @param {number} format - The pixel format of the texture.
-     * @param {Vec2} size - The width and height of the texture.
-     * @param {Uint8Array|Uint16Array|Uint32Array} [data] - The initial data to fill the texture with.
-     * @returns {Texture} The created texture instance.
-     */
-    createTexture(name, format, size, data) {
-        return new Texture(this.device, {
-            name: name,
-            width: size.x,
-            height: size.y,
-            format: format,
-            cubemap: false,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            ...(data ? { levels: [data] } : { })
-        });
-    }
 }
 
-export { GSplatCompressed };
+export { GSplatCompressedResource };

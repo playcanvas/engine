@@ -98,6 +98,9 @@ class GSplatData {
 
     numSplats;
 
+    /** @type string[] */
+    meta;
+
     /**
      * @param {PlyElement[]} elements - The elements.
      */

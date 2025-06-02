@@ -1,6 +1,7 @@
 import { GSplatData } from '../../scene/gsplat/gsplat-data.js';
 import { GSplatCompressedData } from '../../scene/gsplat/gsplat-compressed-data.js';
-import { GSplatResource } from './gsplat-resource.js';
+import { GSplatCompressedResource } from '../../scene/gsplat/gsplat-compressed-resource.js';
+import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 
 /**
  * @import { AssetRegistry } from '../asset/asset-registry.js'
@@ -618,11 +619,9 @@ class PlyParser {
                 }
 
                 // construct the resource
-                const resource = new GSplatResource(
-                    this.app,
-                    data.isCompressed && asset.data.decompress ? data.decompress() : data,
-                    comments
-                );
+                const resource = data.isCompressed && asset.data.decompress ? 
+                    new GSplatCompressedResource(this.app.graphicsDevice, data.decompress()) :
+                        new GSplatResource(this.app.graphicsDevice, data, comments);
 
                 callback(null, resource);
             }
