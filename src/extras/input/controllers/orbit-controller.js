@@ -200,38 +200,38 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {number[]} dv - The delta vector.
+     * @param {number[]} rotate - The rotate deltas.
      * @private
      */
-    _look(dv) {
-        this._targetAngles.x -= dv[1];
-        this._targetAngles.y -= dv[0];
+    _look(rotate) {
+        this._targetAngles.x -= rotate[1];
+        this._targetAngles.y -= rotate[0];
         this._targetAngles.x %= 360;
         this._targetAngles.y %= 360;
         this._clampAngles();
     }
 
     /**
-     * @param {number[]} dv - The delta vector.
+     * @param {number[]} rotate - The rotate deltas.
      * @private
      */
-    _pan(dv) {
+    _pan(rotate) {
         if (!this.camera) {
             return;
         }
         const start = this._screenToWorldPan(this.camera, Vec2.ZERO, new Vec3());
-        const end = this._screenToWorldPan(this.camera, tmpVa.fromArray(dv), new Vec3());
+        const end = this._screenToWorldPan(this.camera, tmpVa.fromArray(rotate), new Vec3());
         tmpV1.sub2(start, end);
 
         this._targetPosition.add(tmpV1);
     }
 
     /**
-     * @param {number[]} dv - The delta value.
+     * @param {number[]} move - The move deltas.
      * @private
      */
-    _zoom(dv) {
-        this._targetZoomDist += dv[0];
+    _zoom(move) {
+        this._targetZoomDist += move[2];
         this._clampZoom();
     }
 
@@ -311,16 +311,16 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {number[]} dv - The drag deltas.
-     * @param {number[]} dw - The zoom delta.
+     * @param {number[]} move - The move delta.
+     * @param {number[]} rotate - The drag deltas.
      * @private
      */
-    _checkCancelFocus(dv, dw) {
+    _checkCancelFocus(move, rotate) {
         if (!this._focusing) {
             return;
         }
-        const length = Math.sqrt(dv[0] * dv[0] + dv[1] * dv[1]);
-        const inputDelta = length + Math.abs(dw[0]);
+        const length = Math.sqrt(rotate[0] * rotate[0] + rotate[1] * rotate[1]);
+        const inputDelta = length + Math.abs(move[2]);
         if (inputDelta > 0) {
             this._cancelSmoothTransform();
             this._cancelSmoothZoom();
@@ -372,23 +372,23 @@ class OrbitController extends InputController {
 
     /**
      * @param {object} frame - The input frame.
+     * @param {InputDelta} frame.move - The move input delta.
      * @param {InputDelta} frame.rotate - The rotate input delta.
-     * @param {InputDelta} frame.zoom - The zoom input delta.
      * @param {InputDelta} frame.pan - The pan input delta.
      * @param {number} dt - The delta time.
      * @returns {Mat4} - The camera transform.
      */
     update(frame, dt) {
-        const { rotate, zoom, pan } = frame;
+        const { move, rotate, pan } = frame;
 
-        this._checkCancelFocus(rotate.value, zoom.value);
+        this._checkCancelFocus(move.value, rotate.value);
 
         if (pan.value[0]) {
             this._pan(rotate.value);
         } else {
             this._look(rotate.value);
         }
-        this._zoom(zoom.value);
+        this._zoom(move.value);
 
         this._smoothTransform(dt);
         this._smoothZoom(dt);

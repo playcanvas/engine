@@ -25,8 +25,6 @@ import {
  */
 
 const tmpM1 = new Mat4();
-const tmpVa = new Vec2();
-const tmpVb = new Vec2();
 const tmpV1 = new Vec3();
 
 const ZOOM_SCALE_MULT = 10;
@@ -137,12 +135,12 @@ class CameraControls extends Script {
     _mode;
 
     /**
+     * @type {{ move: InputDelta, rotate: InputDelta, pan: InputDelta }}
      * @private
      */
     _frame = {
         move: new InputDelta(3),
         rotate: new InputDelta(2),
-        zoom: new InputDelta(1),
         pan: new InputDelta(1)
     };
 
@@ -663,7 +661,6 @@ class CameraControls extends Script {
     _resetFrame() {
         this._frame.move.flush();
         this._frame.rotate.flush();
-        this._frame.zoom.flush();
         this._frame.pan.flush();
     }
 
@@ -738,14 +735,11 @@ class CameraControls extends Script {
         this._frame.move.add([
             axis.x * this._moveMult,
             axis.y * this._moveMult,
-            axis.z * this._moveMult
+            axis.z * this._moveMult + wheel[0] * this._zoomMult
         ]);
         this._frame.rotate.add([
             mouse[0] * this.rotateSpeed,
             mouse[1] * this.rotateSpeed
-        ]);
-        this._frame.zoom.add([
-            wheel[0] * this._zoomMult
         ]);
         this._frame.pan.add([
             pan
@@ -754,12 +748,14 @@ class CameraControls extends Script {
         // update mobile
         switch (this._mode) {
             case CameraControls.MODE_ORBIT: {
+                this._frame.move.add([
+                    0,
+                    0,
+                    pinch[0] * this._zoomMult * this.zoomPinchSens
+                ]);
                 this._frame.rotate.add([
                     touch[0] * (pan ? 1 : this.rotateSpeed),
                     touch[1] * (pan ? 1 : this.rotateSpeed)
-                ]);
-                this._frame.zoom.add([
-                    pinch[0] * this._zoomMult * this.zoomPinchSens
                 ]);
                 this._frame.pan.add([
                     pan
