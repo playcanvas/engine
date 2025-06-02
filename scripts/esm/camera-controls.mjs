@@ -699,16 +699,18 @@ class CameraControls extends Script {
         return stick.normalize().mulScalar(scale);
     }
 
+    _
+
     /**
-     * @param {Vec3} move - The move delta.
-     * @returns {Vec3} The scaled delta.
+     * @param {number} val - The move delta.
+     * @returns {number} The scaled delta.
      * @private
      */
-    _scaleMove(move) {
+    _scaleMove(val) {
         const speed = this._state.shift ?
             this.moveFastSpeed : this._state.ctrl ?
                 this.moveSlowSpeed : this.moveSpeed;
-        return move.mulScalar(speed * this.sceneSize);
+        return val * speed * this.sceneSize;
     }
 
     /**
@@ -749,14 +751,14 @@ class CameraControls extends Script {
             this._state.mouse[i] += button[i];
         }
 
-        const axis = this._scaleMove(tmpV1.copy(this._state.axis).normalize());
+        const axis = tmpV1.copy(this._state.axis).normalize();
         const pan = +((!!this._state.shift || !!this._state.mouse[1]) && this.enablePan);
 
         // update frame
         this._frame.move.add([
-            axis.x,
-            axis.y,
-            axis.z
+            this._scaleMove(axis.x),
+            this._scaleMove(axis.y),
+            this._scaleMove(axis.z)
         ]);
         this._frame.rotate.add([
             mouse[0] * this.rotateSpeed,
@@ -798,13 +800,13 @@ class CameraControls extends Script {
         if (this._mobileInput instanceof DualGestureSource) {
             const { leftInput, rightInput } = this._mobileInput.frame();
 
-            const axis = this._scaleMove(tmpV1.set(leftInput[0], 0, -leftInput[1]));
+            const axis = tmpV1.set(leftInput[0], 0, -leftInput[1]);
             const lookJoystick = +(this._mobileInput.layout.endsWith('joystick'));
 
             this._frame.move.add([
-                axis.x,
-                axis.y,
-                axis.z
+                this._scaleMove(axis.x),
+                this._scaleMove(axis.y),
+                this._scaleMove(axis.z)
             ]);
             this._frame.rotate.add([
                 rightInput[0] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens),
@@ -819,18 +821,18 @@ class CameraControls extends Script {
     _addGamepadInputs() {
         const { leftStick, rightStick } = this._gamepadInput.frame();
 
-        const leftStickMapped = this._applyDeadZone(tmpVa.set(leftStick[0], -leftStick[1]));
-        const rightStickMapped = this._applyDeadZone(tmpVb.set(rightStick[0], -rightStick[1]));
-        const axis = this._scaleMove(tmpV1.set(leftStickMapped.x, 0, leftStickMapped.y));
+        const leftNoDead = this._applyDeadZone(tmpVa.set(leftStick[0], -leftStick[1]));
+        const rightNoDead = this._applyDeadZone(tmpVb.set(rightStick[0], -rightStick[1]));
+        const axis = tmpV1.set(leftNoDead.x, 0, leftNoDead.y);
 
         this._frame.move.add([
-            axis.x,
-            axis.y,
-            axis.z
+            this._scaleMove(axis.x),
+            this._scaleMove(axis.y),
+            this._scaleMove(axis.z)
         ]);
         this._frame.rotate.add([
-            rightStickMapped.x * this.rotateSpeed * this.rotateJoystickSens,
-            rightStickMapped.y * this.rotateSpeed * this.rotateJoystickSens
+            rightNoDead.x * this.rotateSpeed * this.rotateJoystickSens,
+            rightNoDead.y * this.rotateSpeed * this.rotateJoystickSens
         ]);
     }
 
