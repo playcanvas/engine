@@ -682,16 +682,17 @@ class CameraControls extends Script {
 
     /**
      * @param {number[]} stick - The stick
-     * @returns {number[]} The remapped stick.
      * @private
      */
     _applyDeadZone(stick) {
-        const mag = stick.length();
+        const mag = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
         if (mag < this.gamepadDeadZone.x) {
-            return stick.set(0, 0);
+            stick.fill(0);
+            return;
         }
         const scale = (mag - this.gamepadDeadZone.x) / (this.gamepadDeadZone.y - this.gamepadDeadZone.x);
-        return stick.normalize().mulScalar(scale);
+        stick[0] *= scale / mag;
+        stick[1] *= scale / mag;
     }
 
     /**
@@ -731,8 +732,9 @@ class CameraControls extends Script {
         const axis = tmpV1.copy(this._state.axis).normalize();
         const pan = +(this.enablePan && (this._state.shift || this._state.mouse[1] || this._state.touches > 1));
         const lookJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
-        const leftNoDead = this._applyDeadZone(tmpVa.set(leftStick[0], -leftStick[1]));
-        const rightNoDead = this._applyDeadZone(tmpVb.set(rightStick[0], -rightStick[1]));
+
+        this._applyDeadZone(leftStick);
+        this._applyDeadZone(rightStick);
 
         // update desktop
         this._frame.move.add([
@@ -786,13 +788,13 @@ class CameraControls extends Script {
 
         // update gamepad
         this._frame.move.add([
-            leftNoDead.x * this._moveMult,
+            leftStick[0] * this._moveMult,
             0,
-            leftNoDead.y * this._moveMult
+            -leftStick[1] * this._moveMult
         ]);
         this._frame.rotate.add([
-            rightNoDead.x * this.rotateSpeed * this.rotateJoystickSens,
-            rightNoDead.y * this.rotateSpeed * this.rotateJoystickSens
+            rightStick[0] * this.rotateSpeed * this.rotateJoystickSens,
+            -rightStick[1] * this.rotateSpeed * this.rotateJoystickSens
         ]);
     }
 
