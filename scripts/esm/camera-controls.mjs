@@ -567,12 +567,21 @@ class CameraControls extends Script {
      */
     _exposeJoystickEvents(joystick, side) {
         joystick.on('position:base', (x, y) => {
+            if (this._mode !== CameraControls.MODE_FLY) {
+                return;
+            }
             this.app.fire(`${this.joystickBaseEventName}:${side}`, x, y);
         });
         joystick.on('position:stick', (x, y) => {
+            if (this._mode !== CameraControls.MODE_FLY) {
+                return;
+            }
             this.app.fire(`${this.joystickStickEventName}:${side}`, x, y);
         });
         joystick.on('reset', () => {
+            if (this._mode !== CameraControls.MODE_FLY) {
+                return;
+            }
             this.app.fire(`${this.joystickResetEventName}:${side}`);
         });
     }
@@ -692,6 +701,11 @@ class CameraControls extends Script {
      */
     _accumulateInputs() {
         const { key, button, mouse, wheel } = this._desktopInput.frame();
+        const { touch, pinch, count } = this._orbitMobileInput.frame();
+        const { leftInput, rightInput } = this._flyMobileInput.frame();
+        const { leftStick, rightStick } = this._gamepadInput.frame();
+
+        // destructure keys
         const [forward, back, left, right, down, up, /** space */, shift, ctrl] = key;
 
         // left mouse button, middle mouse button, mouse wheel
@@ -714,9 +728,13 @@ class CameraControls extends Script {
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }
+        this._state.touches += count[0];
 
         const axis = tmpV1.copy(this._state.axis).normalize();
-        const pan = +((!!this._state.shift || !!this._state.mouse[1]) && this.enablePan);
+        const pan = +(this.enablePan && (this._state.shift || this._state.mouse[1] || this._state.touches > 1));
+        const lookJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
+        const leftNoDead = this._applyDeadZone(tmpVa.set(leftStick[0], -leftStick[1]));
+        const rightNoDead = this._applyDeadZone(tmpVb.set(rightStick[0], -rightStick[1]));
 
         // update desktop
         this._frame.move.add([
@@ -740,13 +758,8 @@ class CameraControls extends Script {
         ]);
 
         // update mobile
-        const { touch, pinch, count } = this._orbitMobileInput.frame();
-        const { leftInput, rightInput } = this._flyMobileInput.frame();
         switch (this._mode) {
             case CameraControls.MODE_ORBIT: {
-                this._state.touches += count[0];
-
-                const pan = +(this._state.touches > 1 && this.enablePan);
                 this._frame.drag.add([
                     touch[0] * (pan ? 1 : this.rotateSpeed),
                     touch[1] * (pan ? 1 : this.rotateSpeed)
@@ -760,14 +773,10 @@ class CameraControls extends Script {
                 break;
             }
             case CameraControls.MODE_FLY: {
-
-                const axis = tmpV1.set(leftInput[0], 0, -leftInput[1]);
-                const lookJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
-
                 this._frame.move.add([
-                    this._scaleMove(axis.x),
-                    this._scaleMove(axis.y),
-                    this._scaleMove(axis.z)
+                    this._scaleMove(leftInput[0]),
+                    0,
+                    this._scaleMove(-leftInput[1])
                 ]);
                 this._frame.rotate.add([
                     rightInput[0] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens),
@@ -778,16 +787,10 @@ class CameraControls extends Script {
         }
 
         // update gamepad
-        const { leftStick, rightStick } = this._gamepadInput.frame();
-
-        const leftNoDead = this._applyDeadZone(tmpVa.set(leftStick[0], -leftStick[1]));
-        const rightNoDead = this._applyDeadZone(tmpVb.set(rightStick[0], -rightStick[1]));
-        const stickAxis = tmpV1.set(leftNoDead.x, 0, leftNoDead.y);
-
         this._frame.move.add([
-            this._scaleMove(stickAxis.x),
-            this._scaleMove(stickAxis.y),
-            this._scaleMove(stickAxis.z)
+            this._scaleMove(leftNoDead.x),
+            this._scaleMove(0),
+            this._scaleMove(leftNoDead.y)
         ]);
         this._frame.rotate.add([
             rightNoDead.x * this.rotateSpeed * this.rotateJoystickSens,
