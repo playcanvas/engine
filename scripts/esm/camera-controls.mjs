@@ -140,7 +140,7 @@ class CameraControls extends Script {
      */
     _frame = {
         move: new InputDelta(3),
-        rotate: new InputDelta(2),
+        rotate: new InputDelta(3),
         pan: new InputDelta(1)
     };
 
@@ -739,7 +739,8 @@ class CameraControls extends Script {
         ]);
         this._frame.rotate.add([
             mouse[0] * (pan ? 1 : this.rotateSpeed),
-            mouse[1] * (pan ? 1 : this.rotateSpeed)
+            mouse[1] * (pan ? 1 : this.rotateSpeed),
+            0
         ]);
         this._frame.pan.add([
             pan
@@ -755,7 +756,8 @@ class CameraControls extends Script {
                 ]);
                 this._frame.rotate.add([
                     touch[0] * (pan ? 1 : this.rotateSpeed),
-                    touch[1] * (pan ? 1 : this.rotateSpeed)
+                    touch[1] * (pan ? 1 : this.rotateSpeed),
+                    0
                 ]);
                 this._frame.pan.add([
                     pan
@@ -770,7 +772,8 @@ class CameraControls extends Script {
                 ]);
                 this._frame.rotate.add([
                     rightInput[0] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens),
-                    rightInput[1] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens)
+                    rightInput[1] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens),
+                    0
                 ]);
                 break;
             }
@@ -784,7 +787,8 @@ class CameraControls extends Script {
         ]);
         this._frame.rotate.add([
             rightStick[0] * this.rotateSpeed * this.rotateJoystickSens,
-            -rightStick[1] * this.rotateSpeed * this.rotateJoystickSens
+            -rightStick[1] * this.rotateSpeed * this.rotateJoystickSens,
+            0
         ]);
     }
 
