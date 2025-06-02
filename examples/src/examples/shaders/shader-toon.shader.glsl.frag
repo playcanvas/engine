@@ -1,6 +1,5 @@
 #include "gammaPS"
 
-precision mediump float;
 varying float vertOutTexCoord;
 varying vec2 texCoord;
 void main(void)
