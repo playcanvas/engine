@@ -29,6 +29,22 @@ const tmpV1 = new Vec3();
 
 const ZOOM_SCALE_MULT = 10;
 
+/**
+ * @param {number[]} stick - The stick
+ * @param {number} low - The low dead zone
+ * @param {number} high - The high dead zone
+ */
+const applyDeadZone = (stick, low, high) => {
+    const mag = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
+    if (mag < low) {
+        stick.fill(0);
+        return;
+    }
+    const scale = (mag - low) / (high - low);
+    stick[0] *= scale / mag;
+    stick[1] *= scale / mag;
+};
+
 class CameraControls extends Script {
     static scriptName = 'cameraControls';
 
@@ -676,21 +692,6 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {number[]} stick - The stick
-     * @private
-     */
-    _applyDeadZone(stick) {
-        const mag = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
-        if (mag < this.gamepadDeadZone.x) {
-            stick.fill(0);
-            return;
-        }
-        const scale = (mag - this.gamepadDeadZone.x) / (this.gamepadDeadZone.y - this.gamepadDeadZone.x);
-        stick[0] *= scale / mag;
-        stick[1] *= scale / mag;
-    }
-
-    /**
      * @private
      */
     _accumulateInputs() {
@@ -701,6 +702,10 @@ class CameraControls extends Script {
 
         // destructure keys
         const [forward, back, left, right, down, up, /** space */, shift, ctrl] = key;
+
+        // apply dead zone to gamepad sticks
+        applyDeadZone(leftStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
+        applyDeadZone(rightStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
 
         // left mouse button, middle mouse button, mouse wheel
         const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
@@ -727,9 +732,6 @@ class CameraControls extends Script {
         const axis = tmpV1.copy(this._state.axis).normalize();
         const pan = +(this.enablePan && (this._state.shift || this._state.mouse[1] || this._state.touches > 1));
         const lookJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
-
-        this._applyDeadZone(leftStick);
-        this._applyDeadZone(rightStick);
 
         // update desktop
         this._frame.move.add([
