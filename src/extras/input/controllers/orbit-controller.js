@@ -114,6 +114,11 @@ class OrbitController extends InputController {
     _zoomRange = new Vec2(0, Infinity);
 
     /**
+     * @type {CameraComponent | undefined}
+     */
+    camera;
+
+    /**
      * The focus damping. In the range 0 to 1, where a value of 0 means no damping and 1 means
      * full damping. Default is 0.98.
      *
@@ -214,13 +219,15 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {CameraComponent} camera - The camera.
      * @param {Vec2} dv - The delta vector.
      * @private
      */
-    _pan(camera, dv) {
-        const start = this._screenToWorldPan(camera, Vec2.ZERO, new Vec3());
-        const end = this._screenToWorldPan(camera, dv, new Vec3());
+    _pan(dv) {
+        if (!this.camera) {
+            return;
+        }
+        const start = this._screenToWorldPan(this.camera, Vec2.ZERO, new Vec3());
+        const end = this._screenToWorldPan(this.camera, dv, new Vec3());
         tmpV1.sub2(start, end);
 
         this._targetPosition.add(tmpV1);
@@ -371,17 +378,16 @@ class OrbitController extends InputController {
 
     /**
      * @param {OrbitInputFrame} frame - The input frame.
-     * @param {CameraComponent} camera - The camera.
      * @param {number} dt - The delta time.
      * @returns {Mat4} - The camera transform.
      */
-    update(frame, camera, dt) {
+    update(frame, dt) {
         const { drag, zoom, pan } = frame;
 
         this._checkCancelFocus(drag, zoom);
 
         if (pan) {
-            this._pan(camera, drag);
+            this._pan(drag);
         } else {
             this._look(drag);
         }

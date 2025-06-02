@@ -118,10 +118,11 @@ class InputController {
     }
 
     /**
-     * @param {any[]} args - The arguments.
+     * @param {any} frame - The input frame.
+     * @param {number} dt - The delta time.
      * @returns {Mat4} - The camera transform.
      */
-    update(...args) {
+    update(frame, dt) {
         return this._transform;
     }
 

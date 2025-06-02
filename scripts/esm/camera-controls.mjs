@@ -318,6 +318,9 @@ class CameraControls extends Script {
         }
         this._camera = this.entity.camera;
 
+        // set orbit controller camera
+        this._orbitController.camera = this._camera;
+
         // attach input
         this._desktopInput.attach(this.app.graphicsDevice.canvas);
         this._gamepadInput.attach(this.app.graphicsDevice.canvas);
@@ -815,17 +818,9 @@ class CameraControls extends Script {
      * @private
      */
     _updateController(dt) {
-        if (this._controller instanceof OrbitController) {
-            tmpM1.copy(this._controller.update(this._frame, this._camera, dt));
-            this._camera.entity.setPosition(tmpM1.getTranslation());
-            this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
-        }
-
-        if (this._controller instanceof FlyController) {
-            tmpM1.copy(this._controller.update(this._frame, dt));
-            this._camera.entity.setPosition(tmpM1.getTranslation());
-            this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
-        }
+        tmpM1.copy(this._controller.update(this._frame, dt));
+        this._camera.entity.setPosition(tmpM1.getTranslation());
+        this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
     }
 
     /**
