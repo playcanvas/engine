@@ -166,6 +166,21 @@ class OrbitController extends InputController {
     }
 
     /**
+     * @param {InputDelta} rotate - The rotation input delta.
+     * @param {Vec3} out - The output target pose.
+     * @returns {Vec3} - The updated target pose.
+     * @private
+     */
+    _pan(rotate, out) {
+        if (!this.camera) {
+            return out.set(0, 0, 0);
+        }
+        const start = this._screenToWorldPan(this.camera, Vec2.ZERO, new Vec3());
+        const end = this._screenToWorldPan(this.camera, tmpVa.fromArray(rotate.value), new Vec3());
+        return out.sub2(start, end);
+    }
+
+    /**
      * @param {CameraComponent} camera - The camera.
      * @param {Vec2} pos - The screen position.
      * @param {Vec3} out - The output point.
@@ -246,15 +261,10 @@ class OrbitController extends InputController {
             }
         }
 
+        // rotate / move
         if (pan.value[0]) {
-            // pan
-            if (this.camera) {
-                const start = this._screenToWorldPan(this.camera, Vec2.ZERO, new Vec3());
-                const end = this._screenToWorldPan(this.camera, tmpVa.fromArray(rotate.value), new Vec3());
-                this._targetPose.move(tmpV1.sub2(start, end));
-            }
+            this._targetPose.move(this._pan(rotate, tmpV1));
         } else {
-            // look
             this._targetPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
         }
 
