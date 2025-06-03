@@ -3,9 +3,9 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Quat } from '../../../core/math/quat.js';
 import { math } from '../../../core/math/math.js';
 import { InputController } from '../input.js';
+import { Pose } from '../pose.js';
 
 /** @import { InputDelta } from '../input.js'; */
-/** @import { Pose } from '../pose.js'; */
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -28,22 +28,16 @@ const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
  */
 class FlyController extends InputController {
     /**
-     * @type {Vec3}
+     * @type {Pose}
      * @private
      */
-    _targetPosition = new Vec3();
+    _targetPose = new Pose();
 
     /**
      * @type {Vec3}
      * @private
      */
     _position = new Vec3();
-
-    /**
-     * @type {Vec3}
-     * @private
-     */
-    _targetAngles = new Vec3();
 
     /**
      * @type {Vec3}
@@ -103,8 +97,8 @@ class FlyController extends InputController {
      * @private
      */
     _clampAngles() {
-        this._targetAngles.x = math.clamp(this._targetAngles.x, this._pitchRange.x, this._pitchRange.y);
-        this._targetAngles.y = math.clamp(this._targetAngles.y, this._yawRange.x, this._yawRange.y);
+        this._targetPose.angles.x = math.clamp(this._targetPose.angles.x, this._pitchRange.x, this._pitchRange.y);
+        this._targetPose.angles.y = math.clamp(this._targetPose.angles.y, this._yawRange.x, this._yawRange.y);
     }
 
     /**
@@ -115,32 +109,32 @@ class FlyController extends InputController {
         const ar = dt === -1 ? 1 : damp(this.rotateDamping, dt);
         const am = dt === -1 ? 1 : damp(this.moveDamping, dt);
 
-        this._angles.x = math.lerpAngle(this._angles.x, this._targetAngles.x, ar) % 360;
-        this._angles.y = math.lerpAngle(this._angles.y, this._targetAngles.y, ar) % 360;
-        this._position.lerp(this._position, this._targetPosition, am);
+        this._angles.x = math.lerpAngle(this._angles.x, this._targetPose.angles.x, ar) % 360;
+        this._angles.y = math.lerpAngle(this._angles.y, this._targetPose.angles.y, ar) % 360;
+        this._position.lerp(this._position, this._targetPose.position, am);
     }
 
     /**
      * @private
      */
     _cancelSmoothTransform() {
-        this._targetPosition.copy(this._position);
-        this._targetAngles.copy(this._angles);
+        this._targetPose.position.copy(this._position);
+        this._targetPose.angles.copy(this._angles);
     }
 
     /**
      * @param {Pose} pose - The pose to attach to.
      */
     attach(pose) {
-        this._targetPosition.copy(pose.position);
+        this._targetPose.position.copy(pose.position);
 
         tmpQ1.setFromEulerAngles(pose.angles).transformVector(Vec3.BACK, tmpV1).normalize();
         const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-        this._targetAngles.set(-elev, azim, 0);
+        this._targetPose.angles.set(-elev, azim, 0);
 
-        this._position.copy(this._targetPosition);
-        this._angles.copy(this._targetAngles);
+        this._position.copy(this._targetPose.position);
+        this._angles.copy(this._targetPose.angles);
 
         this._smoothTransform(-1);
     }
@@ -160,10 +154,10 @@ class FlyController extends InputController {
         const { move, rotate } = frame;
 
         // rotate
-        this._targetAngles.x -= rotate.value[1];
-        this._targetAngles.y -= rotate.value[0];
-        this._targetAngles.x %= 360;
-        this._targetAngles.y %= 360;
+        this._targetPose.angles.x -= rotate.value[1];
+        this._targetPose.angles.y -= rotate.value[0];
+        this._targetPose.angles.x %= 360;
+        this._targetPose.angles.y %= 360;
         this._clampAngles();
 
         // move
@@ -177,7 +171,7 @@ class FlyController extends InputController {
         tmpV1.add(tmpV2.copy(right).mulScalar(move.value[0]));
         tmpV1.add(tmpV2.copy(up).mulScalar(move.value[1]));
         tmpV1.mulScalar(dt);
-        this._targetPosition.add(tmpV1);
+        this._targetPose.position.add(tmpV1);
 
         // smoothing
         this._smoothTransform(dt);
