@@ -120,9 +120,9 @@ class Pose {
      * @returns {Pose} The updated Pose instance.
      */
     look(dir) {
-        tmpV1.copy(dir).normalize();
-        const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
-        const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
+        const facing = tmpV1.copy(dir).mulScalar(-1).normalize();
+        const elev = Math.atan2(tmpV1.y, Math.sqrt(facing.x * facing.x + facing.z * facing.z)) * math.RAD_TO_DEG;
+        const azim = Math.atan2(facing.x, facing.z) * math.RAD_TO_DEG;
         this.angles.set(-elev, azim, 0);
         return this;
     }

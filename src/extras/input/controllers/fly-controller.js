@@ -70,10 +70,7 @@ class FlyController extends InputController {
      */
     attach(pose) {
         this._targetPose.position.copy(pose.position);
-        const dir = tmpQ1.setFromEulerAngles(pose.angles)
-        .transformVector(Vec3.BACK, tmpV1)
-        .normalize();
-        this._targetPose.look(dir);
+        this._targetPose.look(tmpQ1.setFromEulerAngles(pose.angles).transformVector(Vec3.FORWARD, tmpV1));
         this._pose.copy(this._targetPose);
     }
 

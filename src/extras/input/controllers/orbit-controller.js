@@ -203,12 +203,9 @@ class OrbitController extends InputController {
         this._targetPose.position.copy(point);
 
         if (start) {
-            tmpV1.sub2(start, point);
-            const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
-            const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-            this._targetPose.angles.set(-elev, azim, 0);
-
-            this._targetZoomDist = tmpV1.sub2(start, point).length();
+            const offset = tmpV1.sub2(point, start);
+            this._targetPose.look(offset);
+            this._targetZoomDist = offset.length();
         }
 
         if (smooth) {
