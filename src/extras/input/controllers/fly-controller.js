@@ -75,7 +75,7 @@ class FlyController extends InputController {
 
     set pitchRange(value) {
         this._pitchRange.copy(value);
-        this._clampAngles();
+        this._targetPose.rotate(Vec3.ZERO);
         this._smoothTransform(-1);
     }
 
@@ -85,20 +85,12 @@ class FlyController extends InputController {
 
     set yawRange(value) {
         this._yawRange.copy(value);
-        this._clampAngles();
+        this._targetPose.rotate(Vec3.ZERO);
         this._smoothTransform(-1);
     }
 
     get yawRange() {
         return this._yawRange;
-    }
-
-    /**
-     * @private
-     */
-    _clampAngles() {
-        this._targetPose.angles.x = math.clamp(this._targetPose.angles.x, this._pitchRange.x, this._pitchRange.y);
-        this._targetPose.angles.y = math.clamp(this._targetPose.angles.y, this._yawRange.x, this._yawRange.y);
     }
 
     /**
@@ -154,11 +146,7 @@ class FlyController extends InputController {
         const { move, rotate } = frame;
 
         // rotate
-        this._targetPose.angles.x -= rotate.value[1];
-        this._targetPose.angles.y -= rotate.value[0];
-        this._targetPose.angles.x %= 360;
-        this._targetPose.angles.y %= 360;
-        this._clampAngles();
+        this._targetPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
 
         // move
         const rotation = tmpQ1.setFromEulerAngles(this._angles);
@@ -171,7 +159,7 @@ class FlyController extends InputController {
         tmpV1.add(tmpV2.copy(right).mulScalar(move.value[0]));
         tmpV1.add(tmpV2.copy(up).mulScalar(move.value[1]));
         tmpV1.mulScalar(dt);
-        this._targetPose.position.add(tmpV1);
+        this._targetPose.move(tmpV1);
 
         // smoothing
         this._smoothTransform(dt);
