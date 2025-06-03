@@ -237,9 +237,9 @@ class OrbitController extends InputController {
 
         // check focus interrupt
         if (this._focusing) {
-            const length = Math.sqrt(rotate[0] * rotate[0] + rotate[1] * rotate[1]);
-            const inputDelta = length + Math.abs(move[2]);
-            if (inputDelta > 0) {
+            const moveLen = Math.sqrt(move.value[0] * move.value[0] + move.value[1] * move.value[1]);
+            const rotateLen = Math.sqrt(rotate.value[0] * rotate.value[0] + rotate.value[1] * rotate.value[1]);
+            if (moveLen + rotateLen > 0) {
                 this._targetPose.copy(this._rootPose);
                 this._targetZoomDist = this._zoomDist;
                 this._focusing = false;
