@@ -62,8 +62,7 @@ class FlyController extends InputController {
 
     set pitchRange(value) {
         this._pitchRange.copy(value);
-        this._targetPose.rotate(Vec3.ZERO);
-        this._smoothTransform(-1);
+        this._pose.copy(this._targetPose.rotate(Vec3.ZERO));
     }
 
     get pitchRange() {
@@ -72,8 +71,7 @@ class FlyController extends InputController {
 
     set yawRange(value) {
         this._yawRange.copy(value);
-        this._targetPose.rotate(Vec3.ZERO);
-        this._smoothTransform(-1);
+        this._pose.copy(this._targetPose.rotate(Vec3.ZERO));
     }
 
     get yawRange() {
@@ -81,34 +79,14 @@ class FlyController extends InputController {
     }
 
     /**
-     * @param {number} dt - The delta time.
-     * @private
-     */
-    _smoothTransform(dt) {
-        const ar = dt === -1 ? 1 : damp(this.rotateDamping, dt);
-        const am = dt === -1 ? 1 : damp(this.moveDamping, dt);
-        this._pose.lerp(this._pose, this._targetPose, am, ar);
-    }
-
-    /**
-     * @private
-     */
-    _cancelSmoothTransform() {
-        this._targetPose.position.copy(this._pose.position);
-        this._targetPose.angles.copy(this._pose.angles);
-    }
-
-    /**
      * @param {Pose} pose - The pose to attach to.
      */
     attach(pose) {
-        this._targetPose.copy(pose);
-        this._pose.copy(pose);
-        this._smoothTransform(-1);
+        this._pose.copy(this._targetPose.copy(pose));
     }
 
     detach() {
-        this._cancelSmoothTransform();
+        this._targetPose.copy(this._pose);
     }
 
     /**
@@ -138,9 +116,12 @@ class FlyController extends InputController {
         this._targetPose.move(tmpV1);
 
         // smoothing
-        this._smoothTransform(dt);
-
-        return this._pose.set(this._pose.position, this._pose.angles);
+        return this._pose.lerp(
+            this._pose,
+            this._targetPose,
+            damp(this.moveDamping, dt),
+            damp(this.rotateDamping, dt)
+        );
     }
 
     destroy() {

@@ -52,10 +52,14 @@ class Pose {
         this.position.copy(position);
 
         // convert angles to only use pitch and yaw
-        tmpQ1.setFromEulerAngles(angles).transformVector(Vec3.BACK, tmpV1).normalize();
-        const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
-        const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-        this.angles.set(-elev, azim, 0);
+        if (angles.z !== 0) {
+            tmpQ1.setFromEulerAngles(angles).transformVector(Vec3.BACK, tmpV1).normalize();
+            const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
+            const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
+            this.angles.set(-elev, azim, 0);
+        } else {
+            this.angles.copy(angles);
+        }
 
         return this;
     }
