@@ -276,9 +276,9 @@ class OrbitController extends InputController {
 
         // check focus ended
         if (this._focusing) {
-            const focusDelta = this._rootPose.distance(this._targetPose) +
-                Math.abs(this._zoomDist - this._targetZoomDist);
-            if (focusDelta < EPSILON) {
+            const moveDelta = this._rootPose.position.distance(this._targetPose.position);
+            const zoomDelta = Math.abs(this._zoomDist - this._targetZoomDist);
+            if (moveDelta + zoomDelta < EPSILON) {
                 this._focusing = false;
             }
         }
