@@ -200,42 +200,6 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {number[]} rotate - The rotate deltas.
-     * @private
-     */
-    _look(rotate) {
-        this._targetAngles.x -= rotate[1];
-        this._targetAngles.y -= rotate[0];
-        this._targetAngles.x %= 360;
-        this._targetAngles.y %= 360;
-        this._clampAngles();
-    }
-
-    /**
-     * @param {number[]} rotate - The rotate deltas.
-     * @private
-     */
-    _pan(rotate) {
-        if (!this.camera) {
-            return;
-        }
-        const start = this._screenToWorldPan(this.camera, Vec2.ZERO, new Vec3());
-        const end = this._screenToWorldPan(this.camera, tmpVa.fromArray(rotate), new Vec3());
-        tmpV1.sub2(start, end);
-
-        this._targetPosition.add(tmpV1);
-    }
-
-    /**
-     * @param {number[]} move - The move deltas.
-     * @private
-     */
-    _zoom(move) {
-        this._targetZoomDist += move[2];
-        this._clampZoom();
-    }
-
-    /**
      * @param {CameraComponent} camera - The camera.
      * @param {Vec2} pos - The screen position.
      * @param {Vec3} out - The output point.
@@ -295,38 +259,6 @@ class OrbitController extends InputController {
         this._targetZoomDist = this._zoomDist;
     }
 
-    /**
-     * @private
-     */
-    _checkEndFocus() {
-        if (!this._focusing) {
-            return;
-        }
-        const focusDelta = this._position.distance(this._targetPosition) +
-            this._angles.distance(this._targetAngles) +
-            Math.abs(this._zoomDist - this._targetZoomDist);
-        if (focusDelta < EPSILON) {
-            this._focusing = false;
-        }
-    }
-
-    /**
-     * @param {number[]} move - The move delta.
-     * @param {number[]} rotate - The drag deltas.
-     * @private
-     */
-    _checkCancelFocus(move, rotate) {
-        if (!this._focusing) {
-            return;
-        }
-        const length = Math.sqrt(rotate[0] * rotate[0] + rotate[1] * rotate[1]);
-        const inputDelta = length + Math.abs(move[2]);
-        if (inputDelta > 0) {
-            this._cancelSmoothTransform();
-            this._cancelSmoothZoom();
-            this._focusing = false;
-        }
-    }
 
     /**
      * @param {Vec3} point - The focus point.
@@ -381,19 +313,51 @@ class OrbitController extends InputController {
     update(frame, dt) {
         const { move, rotate, pan } = frame;
 
-        this._checkCancelFocus(move.value, rotate.value);
+        // check focus interrupt
+        if (this._focusing) {
+            const length = Math.sqrt(rotate[0] * rotate[0] + rotate[1] * rotate[1]);
+            const inputDelta = length + Math.abs(move[2]);
+            if (inputDelta > 0) {
+                this._cancelSmoothTransform();
+                this._cancelSmoothZoom();
+                this._focusing = false;
+            }
+        }
 
         if (pan.value[0]) {
-            this._pan(rotate.value);
+            // pan
+            if (this.camera) {
+                const start = this._screenToWorldPan(this.camera, Vec2.ZERO, new Vec3());
+                const end = this._screenToWorldPan(this.camera, tmpVa.fromArray(rotate.value), new Vec3());
+                tmpV1.sub2(start, end);
+                this._targetPosition.add(tmpV1);
+            }
         } else {
-            this._look(rotate.value);
+            // look
+            this._targetAngles.x -= rotate.value[1];
+            this._targetAngles.y -= rotate.value[0];
+            this._targetAngles.x %= 360;
+            this._targetAngles.y %= 360;
+            this._clampAngles();
         }
-        this._zoom(move.value);
 
+        // zoom
+        this._targetZoomDist += move.value[2];
+        this._clampZoom();
+
+        // smoothing
         this._smoothTransform(dt);
         this._smoothZoom(dt);
 
-        this._checkEndFocus();
+        // check focus ended
+        if (this._focusing) {
+            const focusDelta = this._position.distance(this._targetPosition) +
+                this._angles.distance(this._targetAngles) +
+                Math.abs(this._zoomDist - this._targetZoomDist);
+            if (focusDelta < EPSILON) {
+                this._focusing = false;
+            }
+        }
 
         return this._transform.mul2(this._rootTransform, this._orbitTransform);
     }

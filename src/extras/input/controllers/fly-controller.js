@@ -108,35 +108,6 @@ class FlyController extends InputController {
     }
 
     /**
-     * @param {number[]} dv - The delta.
-     * @private
-     */
-    _look(dv) {
-        this._targetAngles.x -= dv[1];
-        this._targetAngles.y -= dv[0];
-        this._clampAngles();
-    }
-
-    /**
-     * @param {number[]} dv - The delta vector.
-     * @param {number} dt - The delta time.
-     * @private
-     */
-    _move(dv, dt) {
-        const back = this._transform.getZ();
-        const right = this._transform.getX();
-        const up = this._transform.getY();
-
-        tmpV1.set(0, 0, 0);
-        tmpV1.sub(tmpV2.copy(back).mulScalar(dv[2]));
-        tmpV1.add(tmpV2.copy(right).mulScalar(dv[0]));
-        tmpV1.add(tmpV2.copy(up).mulScalar(dv[1]));
-        tmpV1.mulScalar(dt);
-
-        this._targetPosition.add(tmpV1);
-    }
-
-    /**
      * @param {number} dt - The delta time.
      * @private
      */
@@ -188,9 +159,25 @@ class FlyController extends InputController {
      */
     update(frame, dt) {
         const { move, rotate } = frame;
-        this._look(rotate.value);
-        this._move(move.value, dt);
 
+        // rotate
+        this._targetAngles.x -= rotate.value[1];
+        this._targetAngles.y -= rotate.value[0];
+        this._clampAngles();
+
+        // move
+        const back = this._transform.getZ();
+        const right = this._transform.getX();
+        const up = this._transform.getY();
+
+        tmpV1.set(0, 0, 0);
+        tmpV1.sub(tmpV2.copy(back).mulScalar(move.value[2]));
+        tmpV1.add(tmpV2.copy(right).mulScalar(move.value[0]));
+        tmpV1.add(tmpV2.copy(up).mulScalar(move.value[1]));
+        tmpV1.mulScalar(dt);
+        this._targetPosition.add(tmpV1);
+
+        // smoothing
         this._smoothTransform(dt);
 
         return this._transform;
