@@ -50,17 +50,7 @@ class Pose {
      */
     set(position, angles) {
         this.position.copy(position);
-
-        // convert angles to only use pitch and yaw
-        if (angles.z !== 0) {
-            tmpQ1.setFromEulerAngles(angles).transformVector(Vec3.BACK, tmpV1).normalize();
-            const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
-            const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-            this.angles.set(-elev, azim, 0);
-        } else {
-            this.angles.copy(angles);
-        }
-
+        this.angles.copy(angles);
         return this;
     }
 
@@ -87,6 +77,7 @@ class Pose {
         this.position.lerp(lhs.position, rhs.position, alpha1);
         this.angles.x = math.lerpAngle(lhs.angles.x, rhs.angles.x, alpha2) % 360;
         this.angles.y = math.lerpAngle(lhs.angles.y, rhs.angles.y, alpha2) % 360;
+        this.angles.z = math.lerpAngle(lhs.angles.z, rhs.angles.z, alpha2) % 360;
         return this;
     }
 
@@ -113,11 +104,26 @@ class Pose {
         // wrap angles to [0, 360)
         this.angles.x %= 360;
         this.angles.y %= 360;
+        this.angles.z %= 360;
 
         // clamp pitch and yaw
         this.angles.x = math.clamp(this.angles.x, this.pitchRange.x, this.pitchRange.y);
         this.angles.y = math.clamp(this.angles.y, this.yawRange.x, this.yawRange.y);
 
+        return this;
+    }
+
+    /**
+     * Sets the pose to look in the direction of the given vector.
+     *
+     * @param {Vec3} dir - The direction vector to look at.
+     * @returns {Pose} The updated Pose instance.
+     */
+    look(dir) {
+        tmpV1.copy(dir).normalize();
+        const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
+        const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
+        this.angles.set(-elev, azim, 0);
         return this;
     }
 
