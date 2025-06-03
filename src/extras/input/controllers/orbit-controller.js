@@ -266,7 +266,8 @@ class OrbitController extends InputController {
             this._rootPose,
             this._targetPose,
             damp(this._focusing ? this.focusDamping : this.moveDamping, dt),
-            damp(this._focusing ? this.focusDamping : this.rotateDamping, dt)
+            damp(this._focusing ? this.focusDamping : this.rotateDamping, dt),
+            0
         );
         this._zoomDist = math.lerp(
             this._zoomDist,
@@ -277,14 +278,15 @@ class OrbitController extends InputController {
         // check focus ended
         if (this._focusing) {
             const moveDelta = this._rootPose.position.distance(this._targetPose.position);
+            const rotateDelta = this._rootPose.angles.distance(this._targetPose.angles);
             const zoomDelta = Math.abs(this._zoomDist - this._targetZoomDist);
-            if (moveDelta + zoomDelta < EPSILON) {
+            if (moveDelta + rotateDelta + zoomDelta < EPSILON) {
                 this._focusing = false;
             }
         }
 
         // calculate final pose
-        return this._pose.set(this._getPosition(tmpV1), this._rootPose.angles);
+        return this._pose.set(this._getPosition(tmpV1), this._rootPose.angles, 0);
     }
 
     destroy() {
