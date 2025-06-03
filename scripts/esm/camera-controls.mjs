@@ -732,10 +732,10 @@ class CameraControls extends Script {
         }
         this._state.touches += count[0];
 
-        const axis = tmpV1.copy(this._state.axis).normalize();
-        const pan = +(this.enablePan && (this._state.shift || this._state.mouse[1] || this._state.touches > 1));
-        const lookJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
         const orbit = +(this._mode === CameraControls.MODE_ORBIT);
+        const axis = tmpV1.copy(this._state.axis).normalize();
+        const pan = +(orbit && this.enablePan && (this._state.shift || this._state.mouse[1] || this._state.touches > 1));
+        const lookJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
 
         // update desktop
         this._frame.move.add([
