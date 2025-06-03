@@ -118,8 +118,6 @@ class FlyController extends InputController {
         this._angles.x = math.lerpAngle(this._angles.x, this._targetAngles.x, ar) % 360;
         this._angles.y = math.lerpAngle(this._angles.y, this._targetAngles.y, ar) % 360;
         this._position.lerp(this._position, this._targetPosition, am);
-
-        this._pose.set(this._position, tmpQ1.setFromEulerAngles(this._angles));
     }
 
     /**
@@ -167,11 +165,12 @@ class FlyController extends InputController {
         this._targetAngles.x %= 360;
         this._targetAngles.y %= 360;
         this._clampAngles();
+        const rotation = tmpQ1.setFromEulerAngles(this._angles);
 
         // move
-        const forward = this._pose.rotation.transformVector(Vec3.FORWARD, new Vec3());
-        const right = this._pose.rotation.transformVector(Vec3.RIGHT, new Vec3());
-        const up = this._pose.rotation.transformVector(Vec3.UP, new Vec3());
+        const forward = rotation.transformVector(Vec3.FORWARD, new Vec3());
+        const right = rotation.transformVector(Vec3.RIGHT, new Vec3());
+        const up = rotation.transformVector(Vec3.UP, new Vec3());
 
         tmpV1.set(0, 0, 0);
         tmpV1.add(tmpV2.copy(forward).mulScalar(move.value[2]));
@@ -183,7 +182,7 @@ class FlyController extends InputController {
         // smoothing
         this._smoothTransform(dt);
 
-        return this._pose;
+        return this._pose.set(this._position, rotation);
     }
 
     destroy() {
