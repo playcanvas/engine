@@ -27,6 +27,11 @@ class SkyMesh {
     meshInstance = null;
 
     /**
+     * @type {boolean}
+     */
+    _depthWrite = false;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Scene} scene - The scene owning the sky.
      * @param {GraphNode} node - The graph node of the sky mesh instance.
@@ -60,8 +65,10 @@ class SkyMesh {
             material.setParameter('mipLevel', scene.skyboxMip);
         }
 
+        // render inside of the geometry
         material.cull = CULLFACE_FRONT;
-        material.depthWrite = false;
+
+        material.depthWrite = this._depthWrite;
 
         const skyLayer = scene.layers.getLayerById(LAYERID_SKYBOX);
         if (skyLayer) {
@@ -89,6 +96,17 @@ class SkyMesh {
             this.meshInstance.destroy();
             this.meshInstance = null;
         }
+    }
+
+    set depthWrite(value) {
+        this._depthWrite = value;
+        if (this.meshInstance) {
+            this.meshInstance.material.depthWrite = value;
+        }
+    }
+
+    get depthWrite() {
+        return this._depthWrite;
     }
 }
 
