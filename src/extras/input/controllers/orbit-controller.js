@@ -53,22 +53,10 @@ class OrbitController extends InputController {
     _rootPose = new Pose();
 
     /**
-     * @private
-     * @type {number}
-     */
-    _targetZoomDist = 0;
-
-    /**
      * @type {number}
      * @private
      */
     _zoomDist = 0;
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _zoomRange = new Vec2(0, Infinity);
 
     /**
      * @type {CameraComponent | undefined}
@@ -135,12 +123,13 @@ class OrbitController extends InputController {
     }
 
     set zoomRange(range) {
-        this._zoomRange.copy(range);
-        this._zoomDist = this._zoom(0);
+        this._targetPose.zoomRange.copy(range);
+        this._targetPose.zoom(0);
+        this._zoomDist = this._targetPose.distance;
     }
 
     get zoomRange() {
-        return this._zoomRange;
+        return this._targetPose.zoomRange;
     }
 
     /**
@@ -152,17 +141,6 @@ class OrbitController extends InputController {
         return tmpQ1.setFromEulerAngles(this._rootPose.angles)
         .transformVector(tmpV1.set(0, 0, this._zoomDist), out)
         .add(this._rootPose.position);
-    }
-
-    /**
-     * @param {number} val - The zoom value to add.
-     * @returns {number} - The new zoom distance.
-     * @private
-     */
-    _zoom(val) {
-        this._targetZoomDist += val;
-        this._targetZoomDist = math.clamp(this._targetZoomDist, this._zoomRange.x, this._zoomRange.y);
-        return this._targetZoomDist;
     }
 
     /**
@@ -204,7 +182,7 @@ class OrbitController extends InputController {
 
         if (start) {
             const offset = tmpV1.sub2(point, start);
-            this._targetZoomDist = offset.length();
+            this._targetPose.distance = offset.length();
             this._targetPose.look(offset.normalize());
         }
 
@@ -212,7 +190,7 @@ class OrbitController extends InputController {
             this._focusing = true;
         } else {
             this._rootPose.copy(this._targetPose);
-            this._zoomDist = this._targetZoomDist;
+            this._zoomDist = this._targetPose.distance;
         }
     }
 
@@ -225,7 +203,7 @@ class OrbitController extends InputController {
 
     detach() {
         this._targetPose.copy(this._rootPose);
-        this._targetZoomDist = this._zoomDist;
+        this._targetPose.distance = this._zoomDist;
         this._focusing = false;
     }
 
@@ -246,7 +224,7 @@ class OrbitController extends InputController {
             const rotateLen = Math.sqrt(rotate.value[0] * rotate.value[0] + rotate.value[1] * rotate.value[1]);
             if (moveLen + rotateLen > 0) {
                 this._targetPose.copy(this._rootPose);
-                this._targetZoomDist = this._zoomDist;
+                this._targetPose.distance = this._zoomDist;
                 this._focusing = false;
             }
         }
@@ -259,7 +237,7 @@ class OrbitController extends InputController {
         }
 
         // zoom
-        this._zoom(move.value[2]);
+        this._targetPose.zoom(move.value[2]);
 
         // smoothing
         this._rootPose.lerp(
@@ -271,7 +249,7 @@ class OrbitController extends InputController {
         );
         this._zoomDist = math.lerp(
             this._zoomDist,
-            this._targetZoomDist,
+            this._targetPose.distance,
             damp(this._focusing ? this.focusDamping : this.zoomDamping, dt)
         );
 
@@ -279,7 +257,7 @@ class OrbitController extends InputController {
         if (this._focusing) {
             const moveDelta = this._rootPose.position.distance(this._targetPose.position);
             const rotateDelta = this._rootPose.angles.distance(this._targetPose.angles);
-            const zoomDelta = Math.abs(this._zoomDist - this._targetZoomDist);
+            const zoomDelta = Math.abs(this._zoomDist - this._targetPose.distance);
             if (moveDelta + rotateDelta + zoomDelta < EPSILON) {
                 this._focusing = false;
             }
