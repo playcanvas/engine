@@ -109,7 +109,7 @@ class GSplatData {
      * @param {PlyElement[]} elements - The elements.
      * @param {string[]} comments - File header comments.
      */
-    constructor(elements, comments) {
+    constructor(elements, comments = []) {
         this.elements = elements;
         this.numSplats = this.getElement('vertex').count;
         this.comments = comments;

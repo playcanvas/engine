@@ -21,7 +21,7 @@ const viewport = [0, 0];
 
 /** @ignore */
 class GSplatInstance {
-    /** @type {GSplatResourceBase } */
+    /** @type {GSplatResourceBase} */
     resource;
 
     /** @type {MeshInstance} */
