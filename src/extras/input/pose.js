@@ -120,6 +120,16 @@ class Pose {
 
         return this;
     }
+
+    /**
+     * Calculates the distance to another pose.
+     *
+     * @param {Pose} other - The other pose to compare with.
+     * @returns {number} The distance between the two poses.
+     */
+    distance(other) {
+        return this.position.distance(other.position) + this.angles.distance(other.angles);
+    }
 }
 
 export { Pose };
