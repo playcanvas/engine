@@ -128,7 +128,7 @@ class OrbitController extends InputController {
     set pitchRange(range) {
         this._targetPose.pitchRange.copy(range);
         this._targetPose.rotate(Vec3.ZERO);
-        this._smoothTransform(-1);
+        this._rootPose.copy(this._targetPose);
     }
 
     get pitchRange() {
@@ -138,7 +138,7 @@ class OrbitController extends InputController {
     set yawRange(range) {
         this._targetPose.yawRange.copy(range);
         this._targetPose.rotate(Vec3.ZERO);
-        this._smoothTransform(-1);
+        this._rootPose.copy(this._targetPose);
     }
 
     get yawRange() {
@@ -147,8 +147,7 @@ class OrbitController extends InputController {
 
     set zoomRange(range) {
         this._zoomRange.copy(range);
-        this._clampZoom();
-        this._smoothZoom(-1);
+        this._zoomDist = this._zoom(0);
     }
 
     get zoomRange() {
@@ -156,10 +155,14 @@ class OrbitController extends InputController {
     }
 
     /**
+     * @param {number} val - The zoom value to add.
+     * @returns {number} - The new zoom distance.
      * @private
      */
-    _clampZoom() {
+    _zoom(val) {
+        this._targetZoomDist += val;
         this._targetZoomDist = math.clamp(this._targetZoomDist, this._zoomRange.x, this._zoomRange.y);
+        return this._targetZoomDist;
     }
 
     /**
@@ -184,44 +187,6 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {number} dt - The delta time.
-     * @private
-     */
-    _smoothTransform(dt) {
-        const ar = dt === -1 ? 1 : damp(this._focusing ? this.focusDamping : this.rotateDamping, dt);
-        const am = dt === -1 ? 1 : damp(this._focusing ? this.focusDamping : this.moveDamping, dt);
-
-        this._rootPose.angles.x = math.lerpAngle(this._rootPose.angles.x, this._targetPose.angles.x, ar) % 360;
-        this._rootPose.angles.y = math.lerpAngle(this._rootPose.angles.y, this._targetPose.angles.y, ar) % 360;
-        this._rootPose.position.lerp(this._rootPose.position, this._targetPose.position, am);
-    }
-
-    /**
-     * @private
-     */
-    _cancelSmoothTransform() {
-        this._targetPose.position.copy(this._rootPose.position);
-        this._targetPose.angles.copy(this._rootPose.angles);
-    }
-
-    /**
-     * @param {number} dt - The delta time.
-     * @private
-     */
-    _smoothZoom(dt) {
-        const a = dt === -1 ? 1 : damp(this._focusing ? this.focusDamping : this.zoomDamping, dt);
-        this._zoomDist = math.lerp(this._zoomDist, this._targetZoomDist, a);
-    }
-
-    /**
-     * @private
-     */
-    _cancelSmoothZoom() {
-        this._targetZoomDist = this._zoomDist;
-    }
-
-
-    /**
      * @param {Vec3} point - The focus point.
      * @param {Vec3} [start] - The start point.
      * @param {boolean} [smooth] - Whether to smooth the transition.
@@ -235,18 +200,14 @@ class OrbitController extends InputController {
             const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
             this._targetPose.angles.set(-elev, azim, 0);
 
-            this._targetZoomDist = tmpV1.length();
+            this._targetZoomDist = tmpV1.sub2(start, point).length();
         }
 
         if (smooth) {
             this._focusing = true;
         } else {
-            this._rootPose.position.copy(this._targetPose.position);
-            this._rootPose.angles.copy(this._targetPose.angles);
+            this._rootPose.copy(this._targetPose);
             this._zoomDist = this._targetZoomDist;
-
-            this._smoothZoom(-1);
-            this._smoothTransform(-1);
         }
     }
 
@@ -258,8 +219,8 @@ class OrbitController extends InputController {
     }
 
     detach() {
-        this._cancelSmoothTransform();
-        this._cancelSmoothZoom();
+        this._targetPose.copy(this._rootPose);
+        this._targetZoomDist = this._zoomDist;
         this._focusing = false;
     }
 
@@ -279,8 +240,8 @@ class OrbitController extends InputController {
             const length = Math.sqrt(rotate[0] * rotate[0] + rotate[1] * rotate[1]);
             const inputDelta = length + Math.abs(move[2]);
             if (inputDelta > 0) {
-                this._cancelSmoothTransform();
-                this._cancelSmoothZoom();
+                this._targetPose.copy(this._rootPose);
+                this._targetZoomDist = this._zoomDist;
                 this._focusing = false;
             }
         }
@@ -299,12 +260,20 @@ class OrbitController extends InputController {
         }
 
         // zoom
-        this._targetZoomDist += move.value[2];
-        this._clampZoom();
+        this._zoom(move.value[2]);
 
         // smoothing
-        this._smoothTransform(dt);
-        this._smoothZoom(dt);
+        this._rootPose.lerp(
+            this._rootPose,
+            this._targetPose,
+            damp(this._focusing ? this.focusDamping : this.moveDamping, dt),
+            damp(this._focusing ? this.focusDamping : this.rotateDamping, dt)
+        );
+        this._zoomDist = math.lerp(
+            this._zoomDist,
+            this._targetZoomDist,
+            damp(this._focusing ? this.focusDamping : this.zoomDamping, dt)
+        );
 
         // check focus ended
         if (this._focusing) {
