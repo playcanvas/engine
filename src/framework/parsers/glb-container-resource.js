@@ -129,6 +129,7 @@ class GlbContainerResource {
             // first entity becomes the root
             if (!root) {
                 root = entity;
+                // magnopus patched
                 root._objectModelPointers = new Map();
             }
             root._objectModelPointers.set(entity._objectModelPointer, entity);
