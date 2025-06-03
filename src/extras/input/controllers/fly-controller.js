@@ -106,7 +106,7 @@ class FlyController extends InputController {
             this._pose,
             this._targetPose,
             damp(this.moveDamping, dt),
-            damp(0.99, dt)
+            damp(this.rotateDamping, dt)
         );
     }
 
