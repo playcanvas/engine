@@ -86,7 +86,7 @@ class Pose {
     lerp(lhs, rhs, alpha1, alpha2) {
         this.position.lerp(lhs.position, rhs.position, alpha1);
         this.angles.x = math.lerpAngle(lhs.angles.x, rhs.angles.x, alpha2) % 360;
-        this.angles.y = math.lerpAngle(rhs.angles.y, rhs.angles.y, alpha2) % 360;
+        this.angles.y = math.lerpAngle(lhs.angles.y, rhs.angles.y, alpha2) % 360;
         return this;
     }
 
