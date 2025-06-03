@@ -154,6 +154,16 @@ class GSplatSogsData {
     // if data is reordered at load, this texture stores the reorder indices.
     orderTexture;
 
+    destroy() {
+        this.means_l?.destroy();
+        this.means_u?.destroy();
+        this.quats?.destroy();
+        this.scales?.destroy();
+        this.sh0?.destroy();
+        this.sh_centroids?.destroy();
+        this.sh_labels?.destroy();
+    }
+
     createIter(p, r, s, c, sh) {
         return new GSplatSogsIterator(this, p, r, s, c, sh);
     }

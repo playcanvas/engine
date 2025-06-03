@@ -6,7 +6,7 @@ class GSplatSogsResource extends GSplatResourceBase {
     device;
 
     destroy() {
-
+        this.gsplatData.destroy();
     }
 
     createMaterial(options) {

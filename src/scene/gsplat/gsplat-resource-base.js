@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { ADDRESS_CLAMP_TO_EDGE, BUFFER_STATIC, FILTER_NEAREST, SEMANTIC_ATTR13, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -95,6 +96,11 @@ class GSplatResourceBase {
         });
     }
 
+    destroy() {
+        this.mesh?.destroy();
+        this.instanceIndices?.destroy();
+    }
+
     get instanceSize() {
         return 128; // number of splats per instance
     }
@@ -126,6 +132,10 @@ class GSplatResourceBase {
             addressV: ADDRESS_CLAMP_TO_EDGE,
             ...(data ? { levels: [data] } : { })
         });
+    }
+
+    instantiate() {
+        Debug.removed('GSplatResource.instantiate is removed. Use 'gsplat' component instead');
     }
 }
 
