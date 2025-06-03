@@ -12,7 +12,6 @@ import { Pose } from '../pose.js';
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
-const tmpVa = new Vec2();
 const tmpQ1 = new Quat();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
@@ -107,16 +106,6 @@ class OrbitController extends InputController {
      */
     zoomDamping = 0.98;
 
-    /**
-     * @type {Vec3}
-     * @private
-     */
-    get _position() {
-        return tmpQ1.setFromEulerAngles(this._rootPose.angles)
-        .transformVector(tmpV1.set(0, 0, this._zoomDist), tmpV2)
-        .add(this._rootPose.position);
-    }
-
     get focusPoint() {
         return this._rootPose.position;
     }
@@ -155,6 +144,17 @@ class OrbitController extends InputController {
     }
 
     /**
+     * @private
+     * @param {Vec3} out - The output vector to store the position.
+     * @returns {Vec3} - The current position based on the root pose and zoom distance.
+     */
+    _getPosition(out) {
+        return tmpQ1.setFromEulerAngles(this._rootPose.angles)
+        .transformVector(tmpV1.set(0, 0, this._zoomDist), out)
+        .add(this._rootPose.position);
+    }
+
+    /**
      * @param {number} val - The zoom value to add.
      * @returns {number} - The new zoom distance.
      * @private
@@ -175,30 +175,23 @@ class OrbitController extends InputController {
         if (!this.camera) {
             return out.set(0, 0, 0);
         }
-        const start = this._screenToWorldPan(this.camera, Vec2.ZERO, new Vec3());
-        const end = this._screenToWorldPan(this.camera, tmpVa.fromArray(rotate.value), new Vec3());
-        return out.sub2(start, end);
-    }
 
-    /**
-     * @param {CameraComponent} camera - The camera.
-     * @param {Vec2} pos - The screen position.
-     * @param {Vec3} out - The output point.
-     * @returns {Vec3} - The world point.
-     * @private
-     */
-    _screenToWorldPan(camera, pos, out) {
-        const mouseW = camera.screenToWorld(pos.x, pos.y, 1);
-        const position = this._position;
+        const v1 = new Vec3();
+        const v2 = new Vec3();
+
+        const position = this._getPosition(tmpV2);
         const focus = this.focusPoint;
 
-        const normal = tmpV1.sub2(position, focus).normalize();
+        const normal = out.sub2(position, focus).normalize();
         const plane = tmpP1.setFromPointNormal(focus, normal);
-        const ray = tmpR1.set(position, mouseW.sub(position).normalize());
 
-        plane.intersectsRay(ray, out);
+        const mouseStart = this.camera.screenToWorld(0, 0, 1);
+        const mouseEnd = this.camera.screenToWorld(rotate.value[0], rotate.value[1], 1);
 
-        return out;
+        plane.intersectsRay(tmpR1.set(position, mouseStart.sub(position).normalize()), v1);
+        plane.intersectsRay(tmpR1.set(position, mouseEnd.sub(position).normalize()), v2);
+
+        return out.sub2(v1, v2);
     }
 
     /**
@@ -294,7 +287,7 @@ class OrbitController extends InputController {
         }
 
         // calculate final pose
-        return this._pose.set(this._position, this._rootPose.angles);
+        return this._pose.set(this._getPosition(tmpV1), this._rootPose.angles);
     }
 
     destroy() {
