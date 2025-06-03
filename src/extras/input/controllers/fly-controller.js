@@ -94,7 +94,6 @@ class FlyController extends InputController {
         const forward = rotation.transformVector(Vec3.FORWARD, new Vec3());
         const right = rotation.transformVector(Vec3.RIGHT, new Vec3());
         const up = rotation.transformVector(Vec3.UP, new Vec3());
-
         tmpV1.set(0, 0, 0);
         tmpV1.add(tmpV2.copy(forward).mulScalar(move.value[2]));
         tmpV1.add(tmpV2.copy(right).mulScalar(move.value[0]));
@@ -107,7 +106,7 @@ class FlyController extends InputController {
             this._pose,
             this._targetPose,
             damp(this.moveDamping, dt),
-            damp(this.rotateDamping, dt)
+            damp(0.99, dt)
         );
     }
 
