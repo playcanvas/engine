@@ -144,9 +144,9 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @private
      * @param {Vec3} out - The output vector to store the position.
      * @returns {Vec3} - The current position based on the root pose and zoom distance.
+     * @private
      */
     _getPosition(out) {
         return tmpQ1.setFromEulerAngles(this._rootPose.angles)
