@@ -1,4 +1,5 @@
 import { Mat4 } from '../../core/math/mat4.js';
+import { Pose } from './pose.js';
 
 /**
  * Represents an input delta.
@@ -103,15 +104,15 @@ class InputSource {
  */
 class InputController {
     /**
-     * @type {Mat4}
+     * @type {Pose}
      * @protected
      */
-    _transform = new Mat4();
+    _pose = new Pose();
 
     /**
-     * @param {Mat4} transform - The transform.
+     * @param {Pose} pose - The pose to attach.
      */
-    attach(transform) {
+    attach(pose) {
     }
 
     detach() {
@@ -120,10 +121,10 @@ class InputController {
     /**
      * @param {Record<string, InputDelta>} frame - The input frame.
      * @param {number} dt - The delta time.
-     * @returns {Mat4} - The camera transform.
+     * @returns {Pose} - The controller pose.
      */
     update(frame, dt) {
-        return this._transform;
+        return this._pose;
     }
 
     destroy() {

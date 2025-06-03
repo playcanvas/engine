@@ -4,9 +4,9 @@ import {
     FlyController,
     GamepadSource,
     KeyboardMouseSource,
-    Mat4,
     MultiTouchSource,
     OrbitController,
+    Pose,
     Script,
     Vec2,
     Vec3,
@@ -24,8 +24,8 @@ import {
  * @property {number} touches - The touches.
  */
 
-const tmpM1 = new Mat4();
 const tmpV1 = new Vec3();
+const tmpO1 = new Pose();
 
 const ZOOM_SCALE_MULT = 10;
 
@@ -660,7 +660,10 @@ class CameraControls extends Script {
 
             // attach new controller
             this._controller = controller;
-            this._controller.attach(this._camera.entity.getWorldTransform());
+            this._controller.attach(tmpO1.set(
+                this._camera.entity.getPosition(),
+                this._camera.entity.getRotation()
+            ));
         }
 
         // refocus if orbit mode
@@ -782,9 +785,9 @@ class CameraControls extends Script {
      * @private
      */
     _updateController(dt) {
-        tmpM1.copy(this._controller.update(this._frame, dt));
-        this._camera.entity.setPosition(tmpM1.getTranslation());
-        this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
+        const pose = this._controller.update(this._frame, dt);
+        this._camera.entity.setPosition(pose.position);
+        this._camera.entity.setRotation(pose.rotation);
     }
 
     /**

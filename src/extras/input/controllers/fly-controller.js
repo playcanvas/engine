@@ -4,8 +4,8 @@ import { Quat } from '../../../core/math/quat.js';
 import { math } from '../../../core/math/math.js';
 import { InputController } from '../input.js';
 
-/** @import { Mat4 } from '../../../core/math/mat4.js'; */
 /** @import { InputDelta } from '../input.js'; */
+/** @import { Pose } from '../pose.js'; */
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -115,10 +115,11 @@ class FlyController extends InputController {
         const ar = dt === -1 ? 1 : damp(this.rotateDamping, dt);
         const am = dt === -1 ? 1 : damp(this.moveDamping, dt);
 
-        this._angles.x = math.lerpAngle(this._angles.x % 360, this._targetAngles.x % 360, ar);
-        this._angles.y = math.lerpAngle(this._angles.y % 360, this._targetAngles.y % 360, ar);
+        this._angles.x = math.lerpAngle(this._angles.x, this._targetAngles.x, ar) % 360;
+        this._angles.y = math.lerpAngle(this._angles.y, this._targetAngles.y, ar) % 360;
         this._position.lerp(this._position, this._targetPosition, am);
-        this._transform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
+
+        this._pose.set(this._position, tmpQ1.setFromEulerAngles(this._angles));
     }
 
     /**
@@ -130,12 +131,12 @@ class FlyController extends InputController {
     }
 
     /**
-     * @param {Mat4} transform - The transform.
+     * @param {Pose} pose - The pose to attach to.
      */
-    attach(transform) {
-        this._targetPosition.copy(transform.getTranslation());
+    attach(pose) {
+        this._targetPosition.copy(pose.position);
 
-        transform.getZ(tmpV1).normalize();
+        pose.rotation.transformVector(Vec3.BACK, tmpV1).normalize();
         const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
         this._targetAngles.set(-elev, azim, 0);
@@ -155,7 +156,7 @@ class FlyController extends InputController {
      * @param {InputDelta} frame.move - The movement input delta.
      * @param {InputDelta} frame.rotate - The rotation input delta.
      * @param {number} dt - The delta time.
-     * @returns {Mat4} - The camera transform.
+     * @returns {Pose} - The controller pose.
      */
     update(frame, dt) {
         const { move, rotate } = frame;
@@ -163,15 +164,17 @@ class FlyController extends InputController {
         // rotate
         this._targetAngles.x -= rotate.value[1];
         this._targetAngles.y -= rotate.value[0];
+        this._targetAngles.x %= 360;
+        this._targetAngles.y %= 360;
         this._clampAngles();
 
         // move
-        const back = this._transform.getZ();
-        const right = this._transform.getX();
-        const up = this._transform.getY();
+        const forward = this._pose.rotation.transformVector(Vec3.FORWARD, new Vec3());
+        const right = this._pose.rotation.transformVector(Vec3.RIGHT, new Vec3());
+        const up = this._pose.rotation.transformVector(Vec3.UP, new Vec3());
 
         tmpV1.set(0, 0, 0);
-        tmpV1.sub(tmpV2.copy(back).mulScalar(move.value[2]));
+        tmpV1.add(tmpV2.copy(forward).mulScalar(move.value[2]));
         tmpV1.add(tmpV2.copy(right).mulScalar(move.value[0]));
         tmpV1.add(tmpV2.copy(up).mulScalar(move.value[1]));
         tmpV1.mulScalar(dt);
@@ -180,7 +183,7 @@ class FlyController extends InputController {
         // smoothing
         this._smoothTransform(dt);
 
-        return this._transform;
+        return this._pose;
     }
 
     destroy() {

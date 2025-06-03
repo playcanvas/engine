@@ -1,7 +1,6 @@
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Quat } from '../../../core/math/quat.js';
-import { Mat4 } from '../../../core/math/mat4.js';
 import { math } from '../../../core/math/math.js';
 import { Ray } from '../../../core/shape/ray.js';
 import { Plane } from '../../../core/shape/plane.js';
@@ -9,8 +8,10 @@ import { InputController } from '../input.js';
 
 /** @import { CameraComponent } from '../../../framework/components/camera/component.js' */
 /** @import { InputDelta } from '../input.js'; */
+/** @import { Pose } from '../pose.js'; */
 
 const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
 const tmpVa = new Vec2();
 const tmpQ1 = new Quat();
 const tmpR1 = new Ray();
@@ -77,18 +78,6 @@ class OrbitController extends InputController {
     _zoomDist = 0;
 
     /**
-     * @type {Mat4}
-     * @private
-     */
-    _orbitTransform = new Mat4();
-
-    /**
-     * @type {Mat4}
-     * @private
-     */
-    _rootTransform = new Mat4();
-
-    /**
      * @type {Vec2}
      * @private
      */
@@ -143,11 +132,11 @@ class OrbitController extends InputController {
     zoomDamping = 0.98;
 
     get point() {
-        return this._rootTransform.getTranslation();
+        return this._position;
     }
 
     get view() {
-        return this._transform.getTranslation();
+        return this._pose.position;
     }
 
     get zoom() {
@@ -231,7 +220,6 @@ class OrbitController extends InputController {
         this._angles.x = math.lerpAngle(this._angles.x, this._targetAngles.x, ar) % 360;
         this._angles.y = math.lerpAngle(this._angles.y, this._targetAngles.y, ar) % 360;
         this._position.lerp(this._position, this._targetPosition, am);
-        this._rootTransform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
     }
 
     /**
@@ -249,7 +237,6 @@ class OrbitController extends InputController {
     _smoothZoom(dt) {
         const a = dt === -1 ? 1 : damp(this._focusing ? this.focusDamping : this.zoomDamping, dt);
         this._zoomDist = math.lerp(this._zoomDist, this._targetZoomDist, a);
-        this._orbitTransform.setTranslate(0, 0, this._zoomDist);
     }
 
     /**
@@ -290,10 +277,10 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {Mat4} transform - The transform.
+     * @param {Pose} pose - The pose to attach to.
      */
-    attach(transform) {
-        this.focus(Vec3.ZERO, transform.getTranslation(), false);
+    attach(pose) {
+        this.focus(Vec3.ZERO, pose.position, false);
     }
 
     detach() {
@@ -308,7 +295,7 @@ class OrbitController extends InputController {
      * @param {InputDelta} frame.rotate - The rotate input delta.
      * @param {InputDelta} frame.pan - The pan input delta.
      * @param {number} dt - The delta time.
-     * @returns {Mat4} - The camera transform.
+     * @returns {Pose} - The controller pose.
      */
     update(frame, dt) {
         const { move, rotate, pan } = frame;
@@ -359,7 +346,10 @@ class OrbitController extends InputController {
             }
         }
 
-        return this._transform.mul2(this._rootTransform, this._orbitTransform);
+        // calculate final pose
+        const rotation = tmpQ1.setFromEulerAngles(this._angles);
+        const offset = rotation.transformVector(tmpV1.set(0, 0, this._zoomDist), tmpV2);
+        return this._pose.set(offset.add(this._position), rotation);
     }
 
     destroy() {

@@ -29,6 +29,7 @@ export { CameraFrame } from './render-passes/camera-frame.js';
 
 // INPUT
 export { InputDelta, InputSource, InputController } from './input/input.js';
+export { Pose } from './input/pose.js';
 
 // INPUT SOURCES
 export { SingleGestureSource } from './input/sources/single-gesture-source.js';
