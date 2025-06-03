@@ -96,8 +96,12 @@ class SplatCompressedIterator {
 class GSplatCompressedData {
     numSplats;
 
-    /** @type string[] */
-    meta;
+    /**
+     * File header comments.
+     * 
+     * @type { string[] }
+     */
+    comments;
 
     /**
      * Contains either 12 or 18 floats per chunk:
@@ -352,7 +356,7 @@ class GSplatCompressedData {
                     storage: data[name]
                 };
             })
-        }]);
+        }], this.comments);
     }
 }
 
