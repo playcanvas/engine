@@ -134,7 +134,7 @@ class FlyController extends InputController {
     attach(pose) {
         this._targetPosition.copy(pose.position);
 
-        pose.rotation.transformVector(Vec3.BACK, tmpV1).normalize();
+        tmpQ1.setFromEulerAngles(pose.angles).transformVector(Vec3.BACK, tmpV1).normalize();
         const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
         this._targetAngles.set(-elev, azim, 0);
@@ -165,9 +165,9 @@ class FlyController extends InputController {
         this._targetAngles.x %= 360;
         this._targetAngles.y %= 360;
         this._clampAngles();
-        const rotation = tmpQ1.setFromEulerAngles(this._angles);
 
         // move
+        const rotation = tmpQ1.setFromEulerAngles(this._angles);
         const forward = rotation.transformVector(Vec3.FORWARD, new Vec3());
         const right = rotation.transformVector(Vec3.RIGHT, new Vec3());
         const up = rotation.transformVector(Vec3.UP, new Vec3());
@@ -182,7 +182,7 @@ class FlyController extends InputController {
         // smoothing
         this._smoothTransform(dt);
 
-        return this._pose.set(this._position, rotation);
+        return this._pose.set(this._position, this._angles);
     }
 
     destroy() {

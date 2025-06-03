@@ -349,7 +349,7 @@ class OrbitController extends InputController {
         // calculate final pose
         const rotation = tmpQ1.setFromEulerAngles(this._angles);
         const offset = rotation.transformVector(tmpV1.set(0, 0, this._zoomDist), tmpV2);
-        return this._pose.set(offset.add(this._position), rotation);
+        return this._pose.set(offset.add(this._position), this._angles);
     }
 
     destroy() {

@@ -1,4 +1,3 @@
-import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 class Pose {
@@ -10,32 +9,32 @@ class Pose {
     position = new Vec3();
 
     /**
-     * The rotation of the pose.
+     * The angles of the pose in degrees.
      *
-     * @type {Quat}
+     * @type {Vec3}
      */
-    rotation = new Quat();
+    angles = new Vec3();
 
     /**
      * Creates a new Pose instance.
      *
      * @param {Vec3} [position] - The position of the pose.
-     * @param {Quat} [rotation] - The rotation of the pose.
+     * @param {Vec3} [angles] - The angles of the pose in degrees.
      */
-    constructor(position = Vec3.ZERO, rotation = Quat.IDENTITY) {
-        this.set(position, rotation);
+    constructor(position = Vec3.ZERO, angles = Vec3.ZERO) {
+        this.set(position, angles);
     }
 
     /**
      * Sets the position and rotation of the pose.
      *
      * @param {Vec3} position - The new position.
-     * @param {Quat} rotation - The new rotation.
+     * @param {Vec3} angles - The new angles in degrees.
      * @returns {Pose} The updated Pose instance.
      */
-    set(position, rotation) {
+    set(position, angles) {
         this.position.copy(position);
-        this.rotation.copy(rotation);
+        this.angles.copy(angles);
         return this;
     }
 
@@ -46,7 +45,7 @@ class Pose {
      * @returns {Pose} The updated Pose instance.
      */
     copy(other) {
-        return this.set(other.position, other.rotation);
+        return this.set(other.position, other.angles);
     }
 }
 

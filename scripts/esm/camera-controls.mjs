@@ -662,7 +662,7 @@ class CameraControls extends Script {
             this._controller = controller;
             this._controller.attach(tmpO1.set(
                 this._camera.entity.getPosition(),
-                this._camera.entity.getRotation()
+                this._camera.entity.getEulerAngles()
             ));
         }
 
@@ -787,7 +787,7 @@ class CameraControls extends Script {
     _updateController(dt) {
         const pose = this._controller.update(this._frame, dt);
         this._camera.entity.setPosition(pose.position);
-        this._camera.entity.setRotation(pose.rotation);
+        this._camera.entity.setEulerAngles(pose.angles);
     }
 
     /**
