@@ -69,10 +69,12 @@ class FlyController extends InputController {
      * @param {Pose} pose - The pose to attach to.
      */
     attach(pose) {
+        this._targetPose.position.copy(pose.position);
         const dir = tmpQ1.setFromEulerAngles(pose.angles)
         .transformVector(Vec3.BACK, tmpV1)
         .normalize();
-        this._pose.copy(this._targetPose.set(pose.position, Vec3.ZERO).look(dir));
+        this._targetPose.look(dir);
+        this._pose.copy(this._targetPose);
     }
 
     detach() {
