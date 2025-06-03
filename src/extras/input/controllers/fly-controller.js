@@ -1,4 +1,3 @@
-import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Quat } from '../../../core/math/quat.js';
 import { InputController } from '../input.js';
@@ -33,18 +32,6 @@ class FlyController extends InputController {
     _targetPose = new Pose();
 
     /**
-     * @type {Vec2}
-     * @private
-     */
-    _pitchRange = new Vec2(-Infinity, Infinity);
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _yawRange = new Vec2(-Infinity, Infinity);
-
-    /**
      * The rotation damping. In the range 0 to 1, where a value of 0 means no damping and 1 means
      * full damping. Default is 0.98.
      *
@@ -61,21 +48,21 @@ class FlyController extends InputController {
     moveDamping = 0.98;
 
     set pitchRange(value) {
-        this._pitchRange.copy(value);
+        this._targetPose.pitchRange.copy(value);
         this._pose.copy(this._targetPose.rotate(Vec3.ZERO));
     }
 
     get pitchRange() {
-        return this._pitchRange;
+        return this._targetPose.pitchRange;
     }
 
     set yawRange(value) {
-        this._yawRange.copy(value);
+        this._targetPose.yawRange.copy(value);
         this._pose.copy(this._targetPose.rotate(Vec3.ZERO));
     }
 
     get yawRange() {
-        return this._yawRange;
+        return this._targetPose.yawRange;
     }
 
     /**
