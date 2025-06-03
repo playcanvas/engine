@@ -73,6 +73,8 @@ class GSplatResourceBase {
         this.mesh.setIndices(meshIndices);
         this.mesh.update();
 
+        this.mesh.aabb.copy(this.aabb);
+
         this.instanceIndices = new VertexBuffer(device, vertexFormat, numSplatInstances, {
             usage: BUFFER_STATIC,
             data: indexData.buffer

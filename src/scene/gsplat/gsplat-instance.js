@@ -3,7 +3,6 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
-import { Mesh } from '../mesh.js';
 import { GSplatSorter } from './gsplat-sorter.js';
 
 /**
@@ -24,9 +23,6 @@ const viewport = [0, 0];
 class GSplatInstance {
     /** @type {GSplatResourceBase } */
     splatResource;
-
-    /** @type {Mesh} */
-    mesh;
 
     /** @type {MeshInstance} */
     meshInstance;
@@ -74,10 +70,7 @@ class GSplatInstance {
         // material
         this.createMaterial(options);
 
-        this.mesh = splatResource.mesh;
-        this.mesh.aabb.copy(splatResource.aabb);
-
-        this.meshInstance = new MeshInstance(this.mesh, this.material);
+        this.meshInstance = new MeshInstance(splatResource.mesh, this.material);
         this.meshInstance.setInstancing(splatResource.instanceIndices, true);
         this.meshInstance.gsplatInstance = this;
 
