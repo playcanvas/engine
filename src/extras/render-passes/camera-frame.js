@@ -8,6 +8,7 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
 /**
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 /**
@@ -96,6 +97,14 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * @property {number} contrast - The contrast of the grading effect, 0.5-1.5 range. Defaults to 1.
  * @property {number} saturation - The saturation of the grading effect, 0-2 range. Defaults to 1.
  * @property {Color} tint - The tint color of the grading effect. Defaults to white.
+ */
+
+/**
+ * @typedef {Object} ColorLUT
+ * Properties related to the color lookup table (LUT) effect, a postprocessing technique used to
+ * apply a color transformation to the image.
+ * @property {Texture|null} texture - The texture of the color LUT effect. Defaults to null.
+ * @property {number} intensity - The intensity of the color LUT effect. Defaults to 1.
  */
 
 /**
@@ -222,6 +231,16 @@ class CameraFrame {
         contrast: 1,
         saturation: 1,
         tint: new Color(1, 1, 1, 1)
+    };
+
+    /**
+     * Color LUT settings.
+     *
+     * @type {ColorLUT}
+     */
+    colorLUT = {
+        texture: null,
+        intensity: 1
     };
 
     /**
@@ -443,6 +462,9 @@ class CameraFrame {
             composePass.gradingContrast = grading.contrast;
             composePass.gradingTint = grading.tint;
         }
+
+        composePass.colorLUT = this.colorLUT.texture;
+        composePass.colorLUTIntensity = this.colorLUT.intensity;
 
         composePass.vignetteEnabled = vignette.intensity > 0;
         if (composePass.vignetteEnabled) {

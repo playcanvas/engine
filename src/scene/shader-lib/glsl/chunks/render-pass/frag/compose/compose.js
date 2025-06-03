@@ -13,6 +13,7 @@ export default /* glsl */`
     #include "composeVignettePS"
     #include "composeFringingPS"
     #include "composeCasPS"
+    #include "composeColorLutPS"
 
     void main() {
         vec2 uv = uv0;
@@ -59,6 +60,11 @@ export default /* glsl */`
 
         // Apply Tone Mapping
         result = toneMap(result);
+
+        // Apply Color LUT after tone mapping, in LDR space
+        #ifdef COLOR_LUT
+            result = applyColorLUT(result);
+        #endif
 
         // Apply Vignette
         #ifdef VIGNETTE
