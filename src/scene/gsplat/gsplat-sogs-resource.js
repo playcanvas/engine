@@ -5,10 +5,6 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
 class GSplatSogsResource extends GSplatResourceBase {
     device;
 
-    constructor(device, gsplatData) {
-        super(device, gsplatData);
-    }
-
     destroy() {
 
     }

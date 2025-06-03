@@ -100,7 +100,7 @@ class GSplatData {
 
     /**
      * File header comments.
-     * 
+     *
      * @type { string[] }
      */
     comments;

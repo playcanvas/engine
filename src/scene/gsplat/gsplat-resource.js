@@ -5,13 +5,13 @@ import { Vec3 } from '../../core/math/vec3.js';
 import {
     PIXELFORMAT_RGBA16F, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
-import { Texture } from '../../platform/graphics/texture.js';
 import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 
 /**
  * @import { GSplatData } from './gsplat-data.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Texture } from '../../platform/graphics/texture.js';
  * @import { Material } from '../materials/material.js'
  */
 

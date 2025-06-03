@@ -98,7 +98,7 @@ class GSplatCompressedData {
 
     /**
      * File header comments.
-     * 
+     *
      * @type { string[] }
      */
     comments;

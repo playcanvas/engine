@@ -619,7 +619,7 @@ class PlyParser {
                 // construct the resource
                 const resource = (data.isCompressed && !asset.data.decompress) ?
                     new GSplatCompressedResource(this.app.graphicsDevice, data) :
-                        new GSplatResource(this.app.graphicsDevice, data.isCompressed ? data.decompress() : data);
+                    new GSplatResource(this.app.graphicsDevice, data.isCompressed ? data.decompress() : data);
 
                 callback(null, resource);
             }

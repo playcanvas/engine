@@ -1,4 +1,3 @@
-import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { ADDRESS_CLAMP_TO_EDGE, BUFFER_STATIC, FILTER_NEAREST, SEMANTIC_ATTR13, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -6,9 +5,24 @@ import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { Mesh } from '../mesh.js';
 
+/**
+ * @import { Vec2 } from '../../core/math/vec2.js';
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { GSplatData } from './gsplat-data.js';
+ * @import { GSplatCompressedData } from './gsplat-compressed-data.js';
+ * @import { GSplatSogsData } from './gsplat-sogs-data.js';
+ */
+
+/**
+ * Base class for a GSplat resource and defines common properties.
+ *
+ *  @ignore
+ */
 class GSplatResourceBase {
+    /** @type {GraphicsDevice} */
     device;
 
+    /** @type {GSplatData | GSplatCompressedData | GSplatSogsData} */
     gsplatData;
 
     /** @type {Float32Array} */
@@ -95,7 +109,7 @@ class GSplatResourceBase {
      * @param {string} name - The name of the texture to be created.
      * @param {number} format - The pixel format of the texture.
      * @param {Vec2} size - The size of the texture in a Vec2 object, containing width (x) and height (y).
-     * * @param {Uint8Array|Uint16Array|Uint32Array} [data] - The initial data to fill the texture with.
+     * @param {Uint8Array|Uint16Array|Uint32Array} [data] - The initial data to fill the texture with.
      * @returns {Texture} The created texture instance.
      */
     createTexture(name, format, size, data) {
@@ -113,7 +127,6 @@ class GSplatResourceBase {
             ...(data ? { levels: [data] } : { })
         });
     }
-
-};
+}
 
 export { GSplatResourceBase };

@@ -76,8 +76,8 @@ class SogsParser {
         }
 
         const resource = asset.data?.decompress ?
-            new GSplatResource(this.app .graphicsDevice, await data.decompress()) :
-                new GSplatSogsResource(this.app.graphicsDevice, data);
+            new GSplatResource(this.app.graphicsDevice, await data.decompress()) :
+            new GSplatSogsResource(this.app.graphicsDevice, data);
 
         callback(null, resource);
     }

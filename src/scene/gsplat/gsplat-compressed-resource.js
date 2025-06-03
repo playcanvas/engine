@@ -1,5 +1,4 @@
 import { Vec2 } from '../../core/math/vec2.js';
-import { Texture } from '../../platform/graphics/texture.js';
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
@@ -9,6 +8,7 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
 /**
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Texture } from '../../platform/graphics/texture.js';
  * @import { Material } from '../materials/material.js'
  * @import { SplatMaterialOptions } from './gsplat-material.js'
  */
