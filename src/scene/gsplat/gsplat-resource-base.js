@@ -95,9 +95,10 @@ class GSplatResourceBase {
      * @param {string} name - The name of the texture to be created.
      * @param {number} format - The pixel format of the texture.
      * @param {Vec2} size - The size of the texture in a Vec2 object, containing width (x) and height (y).
+     * * @param {Uint8Array|Uint16Array|Uint32Array} [data] - The initial data to fill the texture with.
      * @returns {Texture} The created texture instance.
      */
-    createTexture(name, format, size) {
+    createTexture(name, format, size, data) {
         return new Texture(this.device, {
             name: name,
             width: size.x,
@@ -108,7 +109,8 @@ class GSplatResourceBase {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            ...(data ? { levels: [data] } : { })
         });
     }
 
