@@ -135,7 +135,7 @@ class GSplatResourceBase {
     }
 
     instantiate() {
-        Debug.removed('GSplatResource.instantiate is removed. Use 'gsplat' component instead');
+        Debug.removed('GSplatResource.instantiate is removed. Use gsplat component instead');
     }
 }
 
