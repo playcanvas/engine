@@ -22,7 +22,7 @@ const viewport = [0, 0];
 /** @ignore */
 class GSplatInstance {
     /** @type {GSplatResourceBase } */
-    splatResource;
+    resource;
 
     /** @type {MeshInstance} */
     meshInstance;
@@ -51,35 +51,35 @@ class GSplatInstance {
     cameras = [];
 
     /**
-     * @param {GSplatResourceBase} splatResource - The splat instance.
+     * @param {GSplatResourceBase} resource - The splat instance.
      * @param {SplatMaterialOptions} options - The options.
      */
-    constructor(splatResource, options) {
-        this.splatResource = splatResource;
+    constructor(resource, options) {
+        this.resource = resource;
 
         // clone options object
         options = Object.assign(this.options, options);
 
         // create the order texture
-        this.orderTexture = this.splatResource.createTexture(
+        this.orderTexture = resource.createTexture(
             'splatOrder',
             PIXELFORMAT_R32U,
-            this.splatResource.evalTextureSize(splatResource.numSplats)
+            resource.evalTextureSize(resource.numSplats)
         );
 
         // material
         this.createMaterial(options);
 
-        this.meshInstance = new MeshInstance(splatResource.mesh, this.material);
-        this.meshInstance.setInstancing(splatResource.instanceIndices, true);
+        this.meshInstance = new MeshInstance(resource.mesh, this.material);
+        this.meshInstance.setInstancing(resource.instanceIndices, true);
         this.meshInstance.gsplatInstance = this;
 
         // only start rendering the splat after we've received the splat order data
         this.meshInstance.instancingCount = 0;
 
         // clone centers to allow multiple instances of sorter
-        const centers = splatResource.centers.slice();
-        const chunks = splatResource.chunks?.slice();
+        const centers = resource.centers.slice();
+        const chunks = resource.chunks?.slice();
 
         // create sorter
         if (!options.dither || options.dither === DITHER_NONE) {
@@ -87,7 +87,7 @@ class GSplatInstance {
             this.sorter.init(this.orderTexture, centers, chunks);
             this.sorter.on('updated', (count) => {
                 // limit splat render count to exclude those behind the camera
-                this.meshInstance.instancingCount = Math.ceil(count / splatResource.instanceSize);
+                this.meshInstance.instancingCount = Math.ceil(count / resource.instanceSize);
 
                 // update splat count on the material
                 this.material.setParameter('numSplats', count);
@@ -102,11 +102,11 @@ class GSplatInstance {
     }
 
     clone() {
-        return new GSplatInstance(this.splatResource, this.options);
+        return new GSplatInstance(this.resource, this.options);
     }
 
     createMaterial(options) {
-        this.material = this.splatResource.createMaterial(options);
+        this.material = this.resource.createMaterial(options);
         this.material.setParameter('splatOrder', this.orderTexture);
         this.material.setParameter('alphaClip', 0.3);
         if (this.meshInstance) {
@@ -117,7 +117,7 @@ class GSplatInstance {
     updateViewport(cameraNode) {
         const camera = cameraNode?.camera;
         const renderTarget = camera?.renderTarget;
-        const { width, height } = renderTarget ?? this.splatResource.device;
+        const { width, height } = renderTarget ?? this.resource.device;
 
         viewport[0] = width;
         viewport[1] = height;

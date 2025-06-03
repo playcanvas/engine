@@ -488,7 +488,7 @@ class GSplatComponent extends Component {
         const asset = this._assetReference.asset;
         if (asset) {
             this.instance = new GSplatInstance(asset.resource, this._materialOptions || {});
-            this.customAabb = this.instance.splatResource.aabb.clone();
+            this.customAabb = this.instance.resource.aabb.clone();
         }
     }
 
