@@ -204,8 +204,8 @@ class OrbitController extends InputController {
 
         if (start) {
             const offset = tmpV1.sub2(point, start);
-            this._targetPose.look(offset);
             this._targetZoomDist = offset.length();
+            this._targetPose.look(offset.normalize());
         }
 
         if (smooth) {
