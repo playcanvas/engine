@@ -136,6 +136,11 @@ class Sky {
         }
     }
 
+    /**
+     * Returns whether depth writing is enabled for the sky.
+     *
+     * @type {boolean}
+     */
     get depthWrite() {
         return this._depthWrite;
     }
