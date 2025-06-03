@@ -1,9 +1,9 @@
 import { GSplatData } from '../../scene/gsplat/gsplat-data.js';
 import { GSplatCompressedData } from '../../scene/gsplat/gsplat-compressed-data.js';
-import { GSplatResource } from './gsplat-resource.js';
+import { GSplatCompressedResource } from '../../scene/gsplat/gsplat-compressed-resource.js';
+import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 
 /**
- * @import { AssetRegistry } from '../asset/asset-registry.js'
  * @import { Asset } from '../asset/asset.js'
  * @import { AppBase } from '../app-base.js'
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
@@ -247,8 +247,10 @@ const isFloatPly = (elements) => {
 };
 
 // read the data of a compressed ply file
-const readCompressedPly = async (streamBuf, elements) => {
+const readCompressedPly = async (streamBuf, elements, comments) => {
     const result = new GSplatCompressedData();
+
+    result.comments = comments;
 
     const numChunks = elements[0].count;
     const numChunkProperties = elements[0].properties.length;
@@ -344,7 +346,7 @@ const readCompressedPly = async (streamBuf, elements) => {
 };
 
 // read the data of a floating point ply file
-const readFloatPly = async (streamBuf, elements) => {
+const readFloatPly = async (streamBuf, elements, comments) => {
     // calculate the size of an input element record
     const element = elements[0];
     const properties = element.properties;
@@ -383,10 +385,10 @@ const readFloatPly = async (streamBuf, elements) => {
         streamBuf.head += toRead * inputSize;
     }
 
-    return new GSplatData(elements);
+    return new GSplatData(elements, comments);
 };
 
-const readGeneralPly = async (streamBuf, elements) => {
+const readGeneralPly = async (streamBuf, elements, comments) => {
     // read and deinterleave the data
     for (let i = 0; i < elements.length; ++i) {
         const element = elements[i];
@@ -433,7 +435,7 @@ const readGeneralPly = async (streamBuf, elements) => {
 
     // console.log(elements);
 
-    return new GSplatData(elements);
+    return new GSplatData(elements, comments);
 };
 
 /**
@@ -442,7 +444,7 @@ const readGeneralPly = async (streamBuf, elements) => {
  * @param {ReadableStreamDefaultReader<Uint8Array>} reader - The reader.
  * @param {Function|null} propertyFilter - Function to filter properties with.
  * @param {Function|null} progressFunc - Function to call with progress updates.
- * @returns {Promise<{ data: GSplatData | GSplatCompressedData, comments: string[] }>} The ply file data.
+ * @returns {Promise<GSplatData | GSplatCompressedData>} The ply file data.
  */
 const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
     /**
@@ -533,7 +535,7 @@ const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
     const readData = async () => {
         // load compressed PLY with fast path
         if (isCompressedPly(elements)) {
-            return await readCompressedPly(streamBuf, elements);
+            return await readCompressedPly(streamBuf, elements, comments);
         }
 
         // allocate element storage
@@ -549,17 +551,14 @@ const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
 
         // load float32 PLY with fast path
         if (isFloatPly(elements)) {
-            return await readFloatPly(streamBuf, elements);
+            return await readFloatPly(streamBuf, elements, comments);
         }
 
         // fallback, general case
-        return await readGeneralPly(streamBuf, elements);
+        return await readGeneralPly(streamBuf, elements, comments);
     };
 
-    return {
-        data: await readData(),
-        comments
-    };
+    return await readData();
 };
 
 // by default load everything
@@ -599,7 +598,7 @@ class PlyParser {
                 const totalLength = parseInt(response.headers.get('content-length') ?? '0', 10);
                 let totalReceived = 0;
 
-                const { data, comments } = await readPly(
+                const data = await readPly(
                     response.body.getReader(),
                     asset.data.elementFilter ?? defaultElementFilter,
                     (bytes) => {
@@ -618,11 +617,9 @@ class PlyParser {
                 }
 
                 // construct the resource
-                const resource = new GSplatResource(
-                    this.app,
-                    data.isCompressed && asset.data.decompress ? data.decompress() : data,
-                    comments
-                );
+                const resource = (data.isCompressed && !asset.data.decompress) ?
+                    new GSplatCompressedResource(this.app.graphicsDevice, data) :
+                    new GSplatResource(this.app.graphicsDevice, data.isCompressed ? data.decompress() : data);
 
                 callback(null, resource);
             }

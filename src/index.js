@@ -234,7 +234,8 @@ export { Sky } from './scene/skybox/sky.js';
 
 // SCENE / SPLAT
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
-export { GSplat } from './scene/gsplat/gsplat.js';
+export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
+export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
 
@@ -365,7 +366,6 @@ export { CssHandler } from './framework/handlers/css.js';
 export { CubemapHandler } from './framework/handlers/cubemap.js';
 export { FolderHandler } from './framework/handlers/folder.js';
 export { FontHandler } from './framework/handlers/font.js';
-export { GSplatResource } from './framework/parsers/gsplat-resource.js';
 export { HierarchyHandler } from './framework/handlers/hierarchy.js';
 export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';
