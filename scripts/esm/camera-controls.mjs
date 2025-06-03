@@ -419,7 +419,7 @@ class CameraControls extends Script {
         this._switchMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
-            return this._controller.point;
+            return this._controller.focusPoint;
         }
         return this._camera.entity.getPosition();
     }
