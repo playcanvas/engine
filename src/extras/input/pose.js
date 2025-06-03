@@ -1,6 +1,10 @@
 import { math } from '../../core/math/math.js';
+import { Quat } from '../../core/math/quat.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
+
+const tmpV1 = new Vec3();
+const tmpQ1 = new Quat();
 
 class Pose {
     /**
@@ -46,7 +50,13 @@ class Pose {
      */
     set(position, angles) {
         this.position.copy(position);
-        this.angles.copy(angles);
+
+        // convert angles to only use pitch and yaw
+        tmpQ1.setFromEulerAngles(angles).transformVector(Vec3.BACK, tmpV1).normalize();
+        const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
+        const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
+        this.angles.set(-elev, azim, 0);
+
         return this;
     }
 
