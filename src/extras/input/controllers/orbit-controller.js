@@ -1,4 +1,3 @@
-import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Quat } from '../../../core/math/quat.js';
 import { math } from '../../../core/math/math.js';
@@ -53,12 +52,6 @@ class OrbitController extends InputController {
     _rootPose = new Pose();
 
     /**
-     * @type {number}
-     * @private
-     */
-    _zoomDist = 0;
-
-    /**
      * @type {CameraComponent | undefined}
      */
     camera;
@@ -99,7 +92,7 @@ class OrbitController extends InputController {
     }
 
     get zoom() {
-        return this._zoomDist;
+        return this._rootPose.distance;
     }
 
     set pitchRange(range) {
@@ -125,7 +118,7 @@ class OrbitController extends InputController {
     set zoomRange(range) {
         this._targetPose.zoomRange.copy(range);
         this._targetPose.zoom(0);
-        this._zoomDist = this._targetPose.distance;
+        this._rootPose.distance = this._targetPose.distance;
     }
 
     get zoomRange() {
@@ -139,7 +132,7 @@ class OrbitController extends InputController {
      */
     _getPosition(out) {
         return tmpQ1.setFromEulerAngles(this._rootPose.angles)
-        .transformVector(tmpV1.set(0, 0, this._zoomDist), out)
+        .transformVector(tmpV1.set(0, 0, this._rootPose.distance), out)
         .add(this._rootPose.position);
     }
 
@@ -190,7 +183,7 @@ class OrbitController extends InputController {
             this._focusing = true;
         } else {
             this._rootPose.copy(this._targetPose);
-            this._zoomDist = this._targetPose.distance;
+            this._rootPose.distance = this._targetPose.distance;
         }
     }
 
@@ -203,7 +196,7 @@ class OrbitController extends InputController {
 
     detach() {
         this._targetPose.copy(this._rootPose);
-        this._targetPose.distance = this._zoomDist;
+        this._targetPose.distance = this._rootPose.distance;
         this._focusing = false;
     }
 
@@ -224,7 +217,7 @@ class OrbitController extends InputController {
             const rotateLen = Math.sqrt(rotate.value[0] * rotate.value[0] + rotate.value[1] * rotate.value[1]);
             if (moveLen + rotateLen > 0) {
                 this._targetPose.copy(this._rootPose);
-                this._targetPose.distance = this._zoomDist;
+                this._targetPose.distance = this._rootPose.distance;
                 this._focusing = false;
             }
         }
@@ -245,11 +238,6 @@ class OrbitController extends InputController {
             this._targetPose,
             damp(this._focusing ? this.focusDamping : this.moveDamping, dt),
             damp(this._focusing ? this.focusDamping : this.rotateDamping, dt),
-            0
-        );
-        this._zoomDist = math.lerp(
-            this._zoomDist,
-            this._targetPose.distance,
             damp(this._focusing ? this.focusDamping : this.zoomDamping, dt)
         );
 
@@ -257,7 +245,7 @@ class OrbitController extends InputController {
         if (this._focusing) {
             const moveDelta = this._rootPose.position.distance(this._targetPose.position);
             const rotateDelta = this._rootPose.angles.distance(this._targetPose.angles);
-            const zoomDelta = Math.abs(this._zoomDist - this._targetPose.distance);
+            const zoomDelta = Math.abs(this._rootPose.distance - this._targetPose.distance);
             if (moveDelta + rotateDelta + zoomDelta < EPSILON) {
                 this._focusing = false;
             }
