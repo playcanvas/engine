@@ -251,8 +251,7 @@ class OrbitController extends InputController {
             if (this.camera) {
                 const start = this._screenToWorldPan(this.camera, Vec2.ZERO, new Vec3());
                 const end = this._screenToWorldPan(this.camera, tmpVa.fromArray(rotate.value), new Vec3());
-                tmpV1.sub2(start, end);
-                this._targetPose.position.add(tmpV1);
+                this._targetPose.move(tmpV1.sub2(start, end));
             }
         } else {
             // look
