@@ -128,6 +128,7 @@ class InputController {
     }
 
     destroy() {
+        this.detach();
     }
 }
 
