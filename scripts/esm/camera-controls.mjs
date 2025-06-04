@@ -354,7 +354,7 @@ class CameraControls extends Script {
         this._exposeJoystickEvents(this._flyMobileInput.rightJoystick, 'right');
 
         // mode
-        this._setMode(this._mode ?? CameraControls.MODE_ORBIT);
+        this._setMode(CameraControls.MODE_ORBIT);
 
         // destroy
         this.on('destroy', this._destroy, this);
