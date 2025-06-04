@@ -111,10 +111,10 @@ class InputController {
     _pose = new Pose();
 
     /**
-     * @param {Pose} pose - The pose to attach.
+     * @param {Vec3} position - The position of the controller.
      * @param {Vec3} focus - The focus point
      */
-    attach(pose, focus) {
+    attach(position, focus) {
     }
 
     detach() {

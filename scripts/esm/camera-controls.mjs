@@ -656,13 +656,14 @@ class CameraControls extends Script {
 
         // calculate new pose and focus
         const position = this._camera.entity.getPosition();
-        const rotation = this._camera.entity.getRotation();
-        const focus = rotation.transformVector(Vec3.FORWARD, tmpV1).mulScalar(this._orbitController.zoom).add(position);
-        const pose = tmpO1.set(position, rotation.getEulerAngles());
+        const focus = this._camera.entity.getRotation()
+        .transformVector(Vec3.FORWARD, tmpV1)
+        .mulScalar(this._orbitController.zoom)
+        .add(position);
 
         // attach new controller
         this._controller = this._mode === CameraControls.MODE_ORBIT ? this._orbitController : this._flyController;
-        this._controller.attach(pose, focus);
+        this._controller.attach(position, focus);
     }
 
     /**

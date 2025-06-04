@@ -66,12 +66,12 @@ class FlyController extends InputController {
     }
 
     /**
-     * @param {Pose} pose - The pose to attach to.
+     * @param {Vec3} position - The position of the controller.
+     * @param {Vec3} focus - The focus point
      */
-    attach(pose) {
-        const rotation = tmpQ1.setFromEulerAngles(pose.angles);
-        this._targetPose.position.copy(pose.position);
-        this._targetPose.look(rotation.transformVector(Vec3.FORWARD, tmpV1).normalize());
+    attach(position, focus) {
+        this._targetPose.position.copy(position);
+        this._targetPose.look(tmpV1.sub2(focus, position).normalize());
         this._pose.copy(this._targetPose);
     }
 
