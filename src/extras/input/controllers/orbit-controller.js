@@ -1,6 +1,5 @@
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Quat } from '../../../core/math/quat.js';
-import { math } from '../../../core/math/math.js';
 import { Ray } from '../../../core/shape/ray.js';
 import { Plane } from '../../../core/shape/plane.js';
 import { InputController } from '../input.js';
