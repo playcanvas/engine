@@ -316,8 +316,7 @@ class CameraControls extends Script {
      */
     get _moveMult() {
         const speed = this._state.shift ?
-            this.moveFastSpeed : this._state.ctrl ?
-                this.moveSlowSpeed : this.moveSpeed;
+            this.moveFastSpeed : this._state.ctrl ? this.moveSlowSpeed : this.moveSpeed;
         return speed * this.sceneSize;
     }
 
@@ -326,7 +325,8 @@ class CameraControls extends Script {
      * @private
      */
     get _zoomMult() {
-        const scale = math.clamp(this._orbitController.zoom / (ZOOM_SCALE_MULT * this.sceneSize), this.zoomScaleMin, 1);
+        const zoom = this._orbitController.zoom / (ZOOM_SCALE_MULT * this.sceneSize);
+        const scale = math.clamp(zoom, this.zoomScaleMin, 1);
         return scale * this.zoomSpeed * this.sceneSize;
     }
 
