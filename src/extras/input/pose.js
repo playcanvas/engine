@@ -1,6 +1,11 @@
 import { math } from '../../core/math/math.js';
+import { Quat } from '../../core/math/quat.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
+
+const tmpV1 = new Vec3();
+const tmpQ1 = new Quat();
+const tmpQ2 = new Quat();
 
 class Pose {
     /**
@@ -141,6 +146,23 @@ class Pose {
         const azim = Math.atan2(-dir.x, -dir.z) * math.RAD_TO_DEG;
         this.angles.set(-elev, azim, 0);
         return this;
+    }
+
+    /**
+     * Multiplies this pose with another pose, combining their positions and rotations.
+     *
+     * @param {Pose} lhs - The left-hand side pose.
+     * @param {Pose} rhs - The right-hand side pose.
+     * @returns {Pose} The updated Pose instance.
+     */
+    mul2(lhs, rhs) {
+        tmpQ1.setFromEulerAngles(lhs.angles);
+        tmpQ2.setFromEulerAngles(rhs.angles);
+
+        tmpQ1.transformVector(rhs.position, tmpV1).add(lhs.position);
+        tmpQ1.mul(tmpQ2);
+
+        return this.set(tmpV1, tmpQ1.getEulerAngles());
     }
 
     /**

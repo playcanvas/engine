@@ -1,5 +1,4 @@
 import { Vec3 } from '../../../core/math/vec3.js';
-import { Quat } from '../../../core/math/quat.js';
 import { Ray } from '../../../core/shape/ray.js';
 import { Plane } from '../../../core/shape/plane.js';
 import { InputController } from '../input.js';
@@ -9,10 +8,9 @@ import { Pose } from '../pose.js';
 /** @import { InputDelta } from '../input.js'; */
 
 const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpQ1 = new Quat();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
+const tmpO1 = new Pose();
 
 const EPSILON = 0.001;
 
@@ -137,17 +135,6 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {Vec3} out - The output vector to store the position.
-     * @returns {Vec3} - The current position based on the root pose and zoom distance.
-     * @private
-     */
-    _getPosition(out) {
-        return tmpQ1.setFromEulerAngles(this._rootPose.angles)
-        .transformVector(this._childPose.position, out)
-        .add(this._rootPose.position);
-    }
-
-    /**
      * @param {InputDelta} rotate - The rotation input delta.
      * @param {Vec3} out - The output target pose.
      * @returns {Vec3} - The updated target pose.
@@ -161,7 +148,7 @@ class OrbitController extends InputController {
         const v1 = new Vec3();
         const v2 = new Vec3();
 
-        const position = this._getPosition(tmpV2);
+        const position = tmpO1.mul2(this._rootPose, this._childPose).position;
         const focus = this.focus;
 
         const normal = out.sub2(position, focus).normalize();
@@ -264,7 +251,7 @@ class OrbitController extends InputController {
         }
 
         // calculate final pose
-        return this._pose.set(this._getPosition(tmpV1), this._rootPose.angles);
+        return this._pose.mul2(this._rootPose, this._childPose);
     }
 
     destroy() {
