@@ -7,6 +7,12 @@ const tmpV1 = new Vec3();
 const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
 
+/**
+ * Represents a pose in 3D space, including position and rotation.
+ *
+ * @category Input
+ * @alpha
+ */
 class Pose {
     /**
      * The position of the pose.
