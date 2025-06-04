@@ -164,11 +164,11 @@ class OrbitController extends InputController {
     }
 
     /**
+     * @param {Vec3} position - The controller position.
      * @param {Vec3} focus - The focus point.
-     * @param {Vec3} position - The start point.
      * @param {boolean} [smooth] - Whether to smooth the transition.
      */
-    reset(focus, position, smooth = true) {
+    reset(position, focus, smooth = true) {
         this._targetRootPose.position.copy(focus);
         this._targetRootPose.look(tmpV1.sub2(focus, position).normalize());
         this._targetChildPose.position.set(0, 0, focus.distance(position));
@@ -182,7 +182,7 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {Vec3} position - The position of the controller.
+     * @param {Vec3} position - The controller position.
      * @param {Vec3} focus - The focus point
      */
     attach(position, focus) {

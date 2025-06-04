@@ -66,7 +66,7 @@ class FlyController extends InputController {
     }
 
     /**
-     * @param {Vec3} position - The position of the controller.
+     * @param {Vec3} position - The controller position.
      * @param {Vec3} focus - The focus point
      */
     attach(position, focus) {

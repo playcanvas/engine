@@ -783,49 +783,49 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {Vec3} point - The focus point.
+     * @param {Vec3} focus - The focus point.
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
-    focus(point, resetZoom = false) {
+    focus(focus, resetZoom = false) {
         this._setMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
             const zoomDist = resetZoom ?
-                this._startZoomDist : this._camera.entity.getPosition().distance(point);
-            const start = tmpV1.copy(this._camera.entity.forward)
+                this._startZoomDist : this._camera.entity.getPosition().distance(focus);
+            const position = tmpV1.copy(this._camera.entity.forward)
             .mulScalar(-zoomDist)
-            .add(point);
-            this._controller.reset(point, start);
+            .add(focus);
+            this._controller.reset(position, focus);
         }
     }
 
     /**
-     * @param {Vec3} point - The focus point.
+     * @param {Vec3} focus - The focus point.
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
-    look(point, resetZoom = false) {
+    look(focus, resetZoom = false) {
         this._setMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
-            const start = resetZoom ?
+            const position = resetZoom ?
                 tmpV1.copy(this._camera.entity.getPosition())
-                .sub(point)
+                .sub(focus)
                 .normalize()
                 .mulScalar(this._startZoomDist)
-                .add(point) : this._camera.entity.getPosition();
-            this._controller.reset(point, start);
+                .add(focus) : this._camera.entity.getPosition();
+            this._controller.reset(position, focus);
         }
     }
 
     /**
-     * @param {Vec3} point - The focus point.
-     * @param {Vec3} start - The start point.
+     * @param {Vec3} focus - The focus point.
+     * @param {Vec3} position - The start point.
      */
-    reset(point, start) {
+    reset(focus, position) {
         this._setMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
-            this._controller.reset(point, start);
+            this._controller.reset(position, focus);
         }
     }
 
