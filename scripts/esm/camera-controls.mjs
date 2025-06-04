@@ -662,8 +662,7 @@ class CameraControls extends Script {
             this._controller = controller;
             this._controller.attach(tmpO1.set(
                 this._camera.entity.getPosition(),
-                this._camera.entity.getEulerAngles(),
-                0
+                this._camera.entity.getEulerAngles()
             ));
         }
 
