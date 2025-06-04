@@ -64,6 +64,7 @@ class CameraControls extends Script {
      * @type {CameraComponent}
      * @private
      */
+    // @ts-ignore
     _camera;
 
     /**
@@ -142,12 +143,14 @@ class CameraControls extends Script {
      * @type {InputController}
      * @private
      */
+    // @ts-ignore
     _controller;
 
     /**
      * @type {CameraControls.MODE_ORBIT|CameraControls.MODE_FLY}
      * @private
      */
+    // @ts-ignore
     _mode;
 
     /**
