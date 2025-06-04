@@ -42,13 +42,25 @@ class OrbitController extends InputController {
      * @type {Pose}
      * @private
      */
-    _targetPose = new Pose();
+    _targetRootPose = new Pose();
 
     /**
      * @type {Pose}
      * @private
      */
     _rootPose = new Pose();
+
+    /**
+     * @type {Pose}
+     * @private
+     */
+    _targetChildPose = new Pose();
+
+    /**
+     * @type {Pose}
+     * @private
+     */
+    _childPose = new Pose();
 
     /**
      * @type {CameraComponent | undefined}
@@ -91,37 +103,37 @@ class OrbitController extends InputController {
     }
 
     get zoom() {
-        return this._rootPose.distance;
+        return this._childPose.position.length();
     }
 
     set pitchRange(range) {
-        this._targetPose.pitchRange.copy(range);
-        this._targetPose.rotate(Vec3.ZERO);
-        this._rootPose.copy(this._targetPose);
+        this._targetRootPose.pitchRange.copy(range);
+        this._targetRootPose.rotate(Vec3.ZERO);
+        this._rootPose.copy(this._targetRootPose);
     }
 
     get pitchRange() {
-        return this._targetPose.pitchRange;
+        return this._targetRootPose.pitchRange;
     }
 
     set yawRange(range) {
-        this._targetPose.yawRange.copy(range);
-        this._targetPose.rotate(Vec3.ZERO);
-        this._rootPose.copy(this._targetPose);
+        this._targetRootPose.yawRange.copy(range);
+        this._targetRootPose.rotate(Vec3.ZERO);
+        this._rootPose.copy(this._targetRootPose);
     }
 
     get yawRange() {
-        return this._targetPose.yawRange;
+        return this._targetRootPose.yawRange;
     }
 
     set zoomRange(range) {
-        this._targetPose.zoomRange.copy(range);
-        this._targetPose.zoom(0);
-        this._rootPose.distance = this._targetPose.distance;
+        this._targetChildPose.zRange.copy(range);
+        this._targetChildPose.move(Vec3.ZERO);
+        this._childPose.copy(this._targetChildPose);
     }
 
     get zoomRange() {
-        return this._targetPose.zoomRange;
+        return this._targetRootPose.zRange;
     }
 
     /**
@@ -131,7 +143,7 @@ class OrbitController extends InputController {
      */
     _getPosition(out) {
         return tmpQ1.setFromEulerAngles(this._rootPose.angles)
-        .transformVector(tmpV1.set(0, 0, this._rootPose.distance), out)
+        .transformVector(this._childPose.position, out)
         .add(this._rootPose.position);
     }
 
@@ -165,20 +177,20 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {Vec3} point - The focus point.
+     * @param {Vec3} focus - The focus point.
      * @param {Vec3} start - The start point.
      * @param {boolean} [smooth] - Whether to smooth the transition.
      */
-    reset(point, start, smooth = true) {
-        this._targetPose.position.copy(point);
-        const offset = tmpV1.sub2(point, start);
-        this._targetPose.distance = offset.length();
-        this._targetPose.look(offset.normalize());
+    reset(focus, start, smooth = true) {
+        this._targetRootPose.position.copy(focus);
+        this._targetRootPose.look(tmpV1.sub2(focus, start).normalize());
+        this._targetChildPose.position.set(0, 0, focus.distance(start));
 
         if (smooth) {
             this._focusing = true;
         } else {
-            this._rootPose.copy(this._targetPose);
+            this._rootPose.copy(this._targetRootPose);
+            this._childPose.copy(this._targetChildPose);
         }
     }
 
@@ -190,7 +202,8 @@ class OrbitController extends InputController {
     }
 
     detach() {
-        this._targetPose.copy(this._rootPose);
+        this._targetRootPose.copy(this._rootPose);
+        this._targetChildPose.copy(this._childPose);
         this._focusing = false;
     }
 
@@ -209,43 +222,49 @@ class OrbitController extends InputController {
         if (this._focusing) {
             const moveLen = Math.sqrt(move.value[0] * move.value[0] + move.value[1] * move.value[1]);
             const rotateLen = Math.sqrt(rotate.value[0] * rotate.value[0] + rotate.value[1] * rotate.value[1]);
-            if (moveLen + rotateLen > 0) {
-                this._targetPose.copy(this._rootPose);
+            const zoomLen = Math.abs(move.value[2]);
+            if (moveLen + rotateLen + zoomLen > 0) {
+                this._targetRootPose.copy(this._rootPose);
+                this._targetChildPose.copy(this._childPose);
                 this._focusing = false;
             }
         }
 
         // rotate / move
         if (pan.value[0]) {
-            this._targetPose.move(this._pan(rotate, tmpV1));
+            this._targetRootPose.move(this._pan(rotate, tmpV1));
         } else {
-            this._targetPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
+            this._targetRootPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
         }
 
         // zoom
-        this._targetPose.zoom(move.value[2]);
+        this._targetChildPose.move(tmpV1.set(0, 0, move.value[2]));
 
         // smoothing
         this._rootPose.lerp(
             this._rootPose,
-            this._targetPose,
+            this._targetRootPose,
             damp(this._focusing ? this.focusDamping : this.moveDamping, dt),
-            damp(this._focusing ? this.focusDamping : this.rotateDamping, dt),
-            damp(this._focusing ? this.focusDamping : this.zoomDamping, dt)
+            damp(this._focusing ? this.focusDamping : this.rotateDamping, dt)
+        );
+        this._childPose.lerp(
+            this._childPose,
+            this._targetChildPose,
+            damp(this._focusing ? this.focusDamping : this.zoomDamping, dt),
+            1
         );
 
         // check focus ended
         if (this._focusing) {
-            const moveDelta = this._rootPose.position.distance(this._targetPose.position);
-            const rotateDelta = this._rootPose.angles.distance(this._targetPose.angles);
-            const zoomDelta = Math.abs(this._rootPose.distance - this._targetPose.distance);
-            if (moveDelta + rotateDelta + zoomDelta < EPSILON) {
+            const rootDelta = this._rootPose.distance(this._targetRootPose);
+            const childDelta = this._childPose.distance(this._targetChildPose);
+            if (rootDelta < EPSILON && childDelta < EPSILON) {
                 this._focusing = false;
             }
         }
 
         // calculate final pose
-        return this._pose.set(this._getPosition(tmpV1), this._rootPose.angles, 0);
+        return this._pose.set(this._getPosition(tmpV1), this._rootPose.angles);
     }
 
     destroy() {
