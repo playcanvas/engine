@@ -1,5 +1,6 @@
-import { Mat4 } from '../../core/math/mat4.js';
 import { Pose } from './pose.js';
+
+/** @import { Vec3 } from '../../core/math/vec3.js'; */
 
 /**
  * Represents an input delta.
@@ -111,8 +112,9 @@ class InputController {
 
     /**
      * @param {Pose} pose - The pose to attach.
+     * @param {Vec3} focus - The focus point
      */
-    attach(pose) {
+    attach(pose, focus) {
     }
 
     detach() {

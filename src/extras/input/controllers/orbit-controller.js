@@ -183,9 +183,10 @@ class OrbitController extends InputController {
 
     /**
      * @param {Pose} pose - The pose to attach to.
+     * @param {Vec3} focus - The focus point.
      */
-    attach(pose) {
-        this.reset(Vec3.ZERO, pose.position, false);
+    attach(pose, focus) {
+        this.reset(focus, pose.position, false);
     }
 
     detach() {

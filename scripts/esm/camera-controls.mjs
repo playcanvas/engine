@@ -13,7 +13,7 @@ import {
     InputDelta
 } from 'playcanvas';
 
-/** @import { CameraComponent, EventHandler } from 'playcanvas' */
+/** @import { CameraComponent, EventHandler, InputController } from 'playcanvas' */
 
 /**
  * @typedef {object} CameraControlsState
@@ -139,7 +139,7 @@ class CameraControls extends Script {
     _orbitController = new OrbitController();
 
     /**
-     * @type {FlyController|OrbitController}
+     * @type {InputController}
      * @private
      */
     _controller;
@@ -454,7 +454,7 @@ class CameraControls extends Script {
     }
 
     get rotateDamping() {
-        return this._controller.rotateDamping;
+        return this._orbitController.rotateDamping;
     }
 
     /**
@@ -646,27 +646,20 @@ class CameraControls extends Script {
         }
         this._mode = mode;
 
-        // save orbit zoom
-        const zoom = this._orbitController.zoom;
-
         // detach old controller
         if (this._controller) {
             this._controller.detach();
         }
 
-        // attach new controller
-        this._controller = this._mode === CameraControls.MODE_FLY ? this._flyController : this._orbitController;
-        this._controller.attach(tmpO1.set(
-            this._camera.entity.getPosition(),
-            this._camera.entity.getEulerAngles()
-        ));
+        // calculate new pose and focus
+        const position = this._camera.entity.getPosition();
+        const rotation = this._camera.entity.getRotation();
+        const focus = rotation.transformVector(Vec3.FORWARD, tmpV1).mulScalar(this._orbitController.zoom).add(position);
+        const pose = tmpO1.set(position, rotation.getEulerAngles());
 
-        // refocus if orbit mode
-        if (this._controller instanceof OrbitController) {
-            const start = this._camera.entity.getPosition();
-            const focus = tmpV1.copy(this._camera.entity.forward).mulScalar(zoom).add(start);
-            this._controller.reset(focus, start, false);
-        }
+        // attach new controller
+        this._controller = this._mode === CameraControls.MODE_ORBIT ? this._orbitController : this._flyController;
+        this._controller.attach(pose, focus);
     }
 
     /**
