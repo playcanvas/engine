@@ -25,7 +25,6 @@ import {
  */
 
 const tmpV1 = new Vec3();
-const tmpO1 = new Pose();
 
 const ZOOM_SCALE_MULT = 10;
 
