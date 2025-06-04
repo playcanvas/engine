@@ -731,13 +731,13 @@ class CameraControls extends Script {
 
         // update desktop
         this._frame.move.add([
-            axis.x * this._moveMult,
-            axis.y * this._moveMult,
+            axis.x * this._moveMult + pan * mouse[0],
+            axis.y * this._moveMult + pan * mouse[1],
             axis.z * this._moveMult + wheel[0] * this._zoomMult
         ]);
         this._frame.rotate.add([
-            mouse[0] * (pan ? 1 : this.rotateSpeed),
-            mouse[1] * (pan ? 1 : this.rotateSpeed),
+            (1 - pan) * mouse[0] * this.rotateSpeed,
+            (1 - pan) * mouse[1] * this.rotateSpeed,
             0
         ]);
         this._frame.pan.add([
@@ -746,17 +746,17 @@ class CameraControls extends Script {
 
         // update mobile
         this._frame.move.add([
-            orbit ? 0 : (leftInput[0] * this._moveMult),
-            0,
+            orbit ? (pan * touch[0]) : (leftInput[0] * this._moveMult),
+            pan * touch[1],
             orbit ? (pinch[0] * this._zoomMult * this.zoomPinchSens) : (-leftInput[1] * this._moveMult)
         ]);
         this._frame.rotate.add([
-            orbit ? (touch[0] * (pan ? 1 : this.rotateSpeed)) : (rightInput[0] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens)),
-            orbit ? (touch[1] * (pan ? 1 : this.rotateSpeed)) : (rightInput[1] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens)),
+            orbit ? ((1 - pan) * touch[0] * this.rotateSpeed) : (rightInput[0] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens)),
+            orbit ? ((1 - pan) * touch[1] * this.rotateSpeed) : (rightInput[1] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens)),
             0
         ]);
         this._frame.pan.add([
-            orbit * pan
+            pan
         ]);
 
         // update gamepad

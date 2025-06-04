@@ -132,12 +132,13 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {InputDelta} rotate - The rotation input delta.
+     * @param {number} dx - The change in x direction.
+     * @param {number} dy - The change in y direction.
      * @param {Vec3} out - The output target pose.
      * @returns {Vec3} - The updated target pose.
      * @private
      */
-    _pan(rotate, out) {
+    _pan(dx, dy, out) {
         if (!this.camera) {
             return out.set(0, 0, 0);
         }
@@ -152,7 +153,7 @@ class OrbitController extends InputController {
         const plane = tmpP1.setFromPointNormal(focus, normal);
 
         const mouseStart = this.camera.screenToWorld(0, 0, 1);
-        const mouseEnd = this.camera.screenToWorld(rotate.value[0], rotate.value[1], 1);
+        const mouseEnd = this.camera.screenToWorld(dx, dy, 1);
 
         plane.intersectsRay(tmpR1.set(position, mouseStart.sub(position).normalize()), v1);
         plane.intersectsRay(tmpR1.set(position, mouseEnd.sub(position).normalize()), v2);
@@ -217,7 +218,7 @@ class OrbitController extends InputController {
 
         // rotate / move
         if (pan.value[0]) {
-            this._targetRootPose.move(this._pan(rotate, tmpV1));
+            this._targetRootPose.move(this._pan(move.value[0], move.value[1], tmpV1));
         } else {
             this._targetRootPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
         }
