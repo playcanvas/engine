@@ -410,7 +410,7 @@ class CameraControls extends Script {
         if (this._controller instanceof OrbitController) {
             const start = this._camera.entity.getPosition();
             this._startZoomDist = start.distance(point);
-            this._controller.focus(point, start, false);
+            this._controller.reset(point, start, false);
             this.update(0);
         }
     }
@@ -419,7 +419,7 @@ class CameraControls extends Script {
         this._switchMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
-            return this._controller.focusPoint;
+            return this._controller.focus;
         }
         return this._camera.entity.getPosition();
     }
@@ -671,7 +671,7 @@ class CameraControls extends Script {
         if (this._controller instanceof OrbitController) {
             const start = this._camera.entity.getPosition();
             const point = tmpV1.copy(this._camera.entity.forward).mulScalar(currZoomDist).add(start);
-            this._controller.focus(point, start, false);
+            this._controller.reset(point, start, false);
         }
     }
 
@@ -799,14 +799,12 @@ class CameraControls extends Script {
         this._switchMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
-            if (resetZoom) {
-                const start = tmpV1.copy(this._camera.entity.forward)
-                .mulScalar(-this._startZoomDist)
-                .add(point);
-                this._controller.focus(point, start);
-            } else {
-                this._controller.focus(point);
-            }
+            const zoomDist = resetZoom ?
+                this._startZoomDist : this._camera.entity.getPosition().distance(point);
+            const start = tmpV1.copy(this._camera.entity.forward)
+            .mulScalar(-zoomDist)
+            .add(point);
+            this._controller.reset(point, start);
         }
     }
 
@@ -818,16 +816,13 @@ class CameraControls extends Script {
         this._switchMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
-            if (resetZoom) {
-                const start = tmpV1.copy(this._camera.entity.getPosition())
+            const start = resetZoom ?
+                tmpV1.copy(this._camera.entity.getPosition())
                 .sub(point)
                 .normalize()
                 .mulScalar(this._startZoomDist)
-                .add(point);
-                this._controller.focus(point, start);
-            } else {
-                this._controller.focus(point, this._camera.entity.getPosition());
-            }
+                .add(point) : this._camera.entity.getPosition();
+            this._controller.reset(point, start);
         }
     }
 
@@ -839,7 +834,7 @@ class CameraControls extends Script {
         this._switchMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
-            this._controller.focus(point, start);
+            this._controller.reset(point, start);
         }
     }
 

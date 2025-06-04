@@ -86,7 +86,7 @@ class OrbitController extends InputController {
      */
     zoomDamping = 0.98;
 
-    get focusPoint() {
+    get focus() {
         return this._rootPose.position;
     }
 
@@ -150,7 +150,7 @@ class OrbitController extends InputController {
         const v2 = new Vec3();
 
         const position = this._getPosition(tmpV2);
-        const focus = this.focusPoint;
+        const focus = this.focus;
 
         const normal = out.sub2(position, focus).normalize();
         const plane = tmpP1.setFromPointNormal(focus, normal);
@@ -166,23 +166,19 @@ class OrbitController extends InputController {
 
     /**
      * @param {Vec3} point - The focus point.
-     * @param {Vec3} [start] - The start point.
+     * @param {Vec3} start - The start point.
      * @param {boolean} [smooth] - Whether to smooth the transition.
      */
-    focus(point, start, smooth = true) {
+    reset(point, start, smooth = true) {
         this._targetPose.position.copy(point);
-
-        if (start) {
-            const offset = tmpV1.sub2(point, start);
-            this._targetPose.distance = offset.length();
-            this._targetPose.look(offset.normalize());
-        }
+        const offset = tmpV1.sub2(point, start);
+        this._targetPose.distance = offset.length();
+        this._targetPose.look(offset.normalize());
 
         if (smooth) {
             this._focusing = true;
         } else {
             this._rootPose.copy(this._targetPose);
-            this._rootPose.distance = this._targetPose.distance;
         }
     }
 
@@ -190,12 +186,11 @@ class OrbitController extends InputController {
      * @param {Pose} pose - The pose to attach to.
      */
     attach(pose) {
-        this.focus(Vec3.ZERO, pose.position, false);
+        this.reset(Vec3.ZERO, pose.position, false);
     }
 
     detach() {
         this._targetPose.copy(this._rootPose);
-        this._targetPose.distance = this._rootPose.distance;
         this._focusing = false;
     }
 
@@ -216,7 +211,6 @@ class OrbitController extends InputController {
             const rotateLen = Math.sqrt(rotate.value[0] * rotate.value[0] + rotate.value[1] * rotate.value[1]);
             if (moveLen + rotateLen > 0) {
                 this._targetPose.copy(this._rootPose);
-                this._targetPose.distance = this._rootPose.distance;
                 this._focusing = false;
             }
         }
