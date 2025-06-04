@@ -106,8 +106,7 @@ class OrbitController extends InputController {
 
     set pitchRange(range) {
         this._targetRootPose.pitchRange.copy(range);
-        this._targetRootPose.rotate(Vec3.ZERO);
-        this._rootPose.copy(this._targetRootPose);
+        this._rootPose.copy(this._targetRootPose.rotate(Vec3.ZERO));
     }
 
     get pitchRange() {
@@ -116,8 +115,7 @@ class OrbitController extends InputController {
 
     set yawRange(range) {
         this._targetRootPose.yawRange.copy(range);
-        this._targetRootPose.rotate(Vec3.ZERO);
-        this._rootPose.copy(this._targetRootPose);
+        this._rootPose.copy(this._targetRootPose.rotate(Vec3.ZERO));
     }
 
     get yawRange() {
@@ -126,8 +124,7 @@ class OrbitController extends InputController {
 
     set zoomRange(range) {
         this._targetChildPose.zRange.copy(range);
-        this._targetChildPose.move(Vec3.ZERO);
-        this._childPose.copy(this._targetChildPose);
+        this._childPose.copy(this._targetChildPose.move(Vec3.ZERO));
     }
 
     get zoomRange() {
