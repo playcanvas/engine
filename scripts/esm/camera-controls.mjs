@@ -351,7 +351,7 @@ class CameraControls extends Script {
         this._exposeJoystickEvents(this._flyMobileInput.rightJoystick, 'right');
 
         // mode
-        this._switchMode(this._mode ?? CameraControls.MODE_FLY);
+        this._switchMode(this._mode ?? CameraControls.MODE_ORBIT);
 
         // destroy
         this.on('destroy', this._destroy, this);
@@ -624,23 +624,14 @@ class CameraControls extends Script {
      * @private
      */
     _switchMode(mode) {
-        // check if mode is the same
-        if (this._mode === mode) {
-            return;
-        }
-
-        // set mode
+        // override mode depending on enabled features
         switch (true) {
-            case this.enableFly && this.enableOrbit: {
-                this._mode = mode;
-                break;
-            }
             case this.enableFly && !this.enableOrbit: {
-                this._mode = CameraControls.MODE_FLY;
+                mode = CameraControls.MODE_FLY;
                 break;
             }
             case !this.enableFly && this.enableOrbit: {
-                this._mode = CameraControls.MODE_ORBIT;
+                mode = CameraControls.MODE_ORBIT;
                 break;
             }
             case !this.enableFly && !this.enableOrbit: {
@@ -649,28 +640,32 @@ class CameraControls extends Script {
             }
         }
 
-        // controller reattach
-        const controller = this._mode === CameraControls.MODE_FLY ? this._flyController : this._orbitController;
-        const currZoomDist = this._orbitController.zoom;
-        if (controller !== this._controller) {
-            // detach old controller
-            if (this._controller) {
-                this._controller.detach();
-            }
-
-            // attach new controller
-            this._controller = controller;
-            this._controller.attach(tmpO1.set(
-                this._camera.entity.getPosition(),
-                this._camera.entity.getEulerAngles()
-            ));
+        // check if mode is the same
+        if (this._mode === mode) {
+            return;
         }
+        this._mode = mode;
+
+        // save orbit zoom
+        const zoom = this._orbitController.zoom;
+
+        // detach old controller
+        if (this._controller) {
+            this._controller.detach();
+        }
+
+        // attach new controller
+        this._controller = this._mode === CameraControls.MODE_FLY ? this._flyController : this._orbitController;
+        this._controller.attach(tmpO1.set(
+            this._camera.entity.getPosition(),
+            this._camera.entity.getEulerAngles()
+        ));
 
         // refocus if orbit mode
         if (this._controller instanceof OrbitController) {
             const start = this._camera.entity.getPosition();
-            const point = tmpV1.copy(this._camera.entity.forward).mulScalar(currZoomDist).add(start);
-            this._controller.reset(point, start, false);
+            const focus = tmpV1.copy(this._camera.entity.forward).mulScalar(zoom).add(start);
+            this._controller.reset(focus, start, false);
         }
     }
 
