@@ -410,9 +410,9 @@ class CameraControls extends Script {
         this._setMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
-            const start = this._camera.entity.getPosition();
-            this._startZoomDist = start.distance(point);
-            this._controller.reset(point, start, false);
+            const position = this._camera.entity.getPosition();
+            this._startZoomDist = position.distance(point);
+            this._controller.reset(position, point, false);
             this.update(0);
         }
     }
