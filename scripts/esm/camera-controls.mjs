@@ -726,14 +726,18 @@ class CameraControls extends Script {
 
         const orbit = +(this._mode === CameraControls.MODE_ORBIT);
         const axis = tmpV1.copy(this._state.axis).normalize();
-        const pan = +(orbit && this.enablePan && (this._state.shift || this._state.mouse[1] || this._state.touches > 1));
-        const lookJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
+        const pan = +(orbit && this.enablePan &&
+            (this._state.shift || this._state.mouse[1] || this._state.touches > 1));
+        const mobileRotateSens = this.rotateSpeed +
+            +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens;
+        const mobileZoomSens = this._zoomMult * this.zoomPinchSens;
+        const gamepadRotateSens = this.rotateSpeed * this.rotateJoystickSens;
 
         // update desktop
         this._frame.move.add([
-            axis.x * this._moveMult + pan * mouse[0],
-            axis.y * this._moveMult + pan * mouse[1],
-            axis.z * this._moveMult + wheel[0] * this._zoomMult
+            (axis.x * this._moveMult) + (pan * mouse[0]),
+            (axis.y * this._moveMult) + (pan * mouse[1]),
+            (axis.z * this._moveMult) + (wheel[0] * this._zoomMult)
         ]);
         this._frame.rotate.add([
             (1 - pan) * mouse[0] * this.rotateSpeed,
@@ -746,13 +750,13 @@ class CameraControls extends Script {
 
         // update mobile
         this._frame.move.add([
-            orbit ? (pan * touch[0]) : (leftInput[0] * this._moveMult),
+            ((1 - orbit) * leftInput[0] * this._moveMult) + (pan * touch[0]),
             pan * touch[1],
-            orbit ? (pinch[0] * this._zoomMult * this.zoomPinchSens) : (-leftInput[1] * this._moveMult)
+            ((1 - orbit) * -leftInput[1] * this._moveMult) + (orbit * pinch[0] * mobileZoomSens)
         ]);
         this._frame.rotate.add([
-            orbit ? ((1 - pan) * touch[0] * this.rotateSpeed) : (rightInput[0] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens)),
-            orbit ? ((1 - pan) * touch[1] * this.rotateSpeed) : (rightInput[1] * (this.rotateSpeed + lookJoystick * this.rotateJoystickSens)),
+            orbit ? ((1 - pan) * touch[0] * this.rotateSpeed) : (rightInput[0] * mobileRotateSens),
+            orbit ? ((1 - pan) * touch[1] * this.rotateSpeed) : (rightInput[1] * mobileRotateSens),
             0
         ]);
         this._frame.pan.add([
@@ -766,8 +770,8 @@ class CameraControls extends Script {
             -leftStick[1] * this._moveMult
         ]);
         this._frame.rotate.add([
-            rightStick[0] * this.rotateSpeed * this.rotateJoystickSens,
-            -rightStick[1] * this.rotateSpeed * this.rotateJoystickSens,
+            rightStick[0] * gamepadRotateSens,
+            -rightStick[1] * gamepadRotateSens,
             0
         ]);
     }
