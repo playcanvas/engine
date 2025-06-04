@@ -705,7 +705,7 @@ class CameraControls extends Script {
         // left mouse button, middle mouse button, mouse wheel
         const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
 
-        // right mouse button or any key
+        // right mouse button or any movement key
         const switchToFly = button[2] === 1 ||
             forward === 1 || back === 1 || left === 1 || right === 1 || up === 1 || down === 1;
 
