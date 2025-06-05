@@ -6,11 +6,11 @@ import {
     KeyboardMouseSource,
     MultiTouchSource,
     OrbitController,
-    Pose,
     Script,
     Vec2,
     Vec3,
-    InputDelta
+    InputDelta,
+    PROJECTION_PERSPECTIVE,
 } from 'playcanvas';
 
 /** @import { CameraComponent, EventHandler, InputController } from 'playcanvas' */
@@ -25,6 +25,9 @@ import {
  */
 
 const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
+const tmpVa = new Vec2();
 
 const ZOOM_SCALE_MULT = 10;
 
@@ -687,6 +690,59 @@ class CameraControls extends Script {
     }
 
     /**
+     * @param {number} dx - The mouse delta x value.
+     * @param {number} dy - The mouse delta y value.
+     * @param {number} dz - The world space zoom delta value.
+     * @param {Vec3} [out] - The output vector to store the pan result.
+     * @returns {Vec3} - The pan vector in world space.
+     * @private
+     */
+    _screenToWorld(dx, dy, dz, out = new Vec3()) {
+        const { system, fov, aspectRatio, horizontalFov, projection, orthoHeight } = this._camera;
+        const { width, height } = system.app.graphicsDevice;
+
+        // normalize deltas to device coord space
+        out.set(
+            -(dx / width) * 2,
+            (dy / height) * 2,
+            0
+        );
+
+        // calculate half size of the view frustum at the current distance
+        const size = tmpV2.set(0, 0, 0);
+        if (projection === PROJECTION_PERSPECTIVE) {
+            const slice = dz * Math.tan(fov * Math.PI / 360);
+            if (horizontalFov) {
+                size.set(
+                    slice,
+                    slice / aspectRatio,
+                    0
+                );
+            } else {
+                size.set(
+                    slice * aspectRatio,
+                    slice,
+                    0
+                );
+            }
+        } else {
+            size.set(
+                orthoHeight * aspectRatio,
+                orthoHeight,
+                0
+            );
+        }
+
+        // convert half size to full size
+        size.mulScalar(2);
+
+        // scale by device coord space
+        out.mul(size);
+
+        return out;
+    }
+
+    /**
      * @private
      */
     _accumulateInputs() {
@@ -724,55 +780,67 @@ class CameraControls extends Script {
         }
         this._state.touches += count[0];
 
+        // flags
         const orbit = +(this._mode === CameraControls.MODE_ORBIT);
-        const axis = tmpV1.copy(this._state.axis).normalize();
+        const fly = 1 - orbit;
         const pan = +(orbit && this.enablePan &&
             (this._state.shift || this._state.mouse[1] || this._state.touches > 1));
-        const mobileRotateSens = this.rotateSpeed +
-            +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens;
-        const mobileZoomSens = this._zoomMult * this.zoomPinchSens;
-        const gamepadRotateSens = this.rotateSpeed * this.rotateJoystickSens;
 
         // update desktop
+        const desktopKeyMove = this._state.axis.clone().normalize().mulScalar(this._moveMult);
+        const desktopPanMove = this._screenToWorld(mouse[0], mouse[1], this._orbitController.zoom);
+        const desktopWheelMove = new Vec3(0, 0, wheel[0]).mulScalar(this._zoomMult);
+        const desktopMouseRotate = new Vec3(mouse[0], mouse[1], 0).mulScalar(this.rotateSpeed);
         this._frame.move.add([
-            (axis.x * this._moveMult) + (pan * mouse[0]),
-            (axis.y * this._moveMult) + (pan * mouse[1]),
-            (axis.z * this._moveMult) + (wheel[0] * this._zoomMult)
+            fly * desktopKeyMove.x + orbit * pan * desktopPanMove.x,
+            fly * desktopKeyMove.y + orbit * pan * desktopPanMove.y,
+            fly * desktopKeyMove.z + orbit * desktopWheelMove.z
         ]);
         this._frame.rotate.add([
-            (1 - pan) * mouse[0] * this.rotateSpeed,
-            (1 - pan) * mouse[1] * this.rotateSpeed,
-            0
+            fly * (1 - pan) * desktopMouseRotate.x,
+            fly * (1 - pan) * desktopMouseRotate.y,
+            fly * (1 - pan) * desktopMouseRotate.z
         ]);
         this._frame.pan.add([
-            pan
+            orbit * pan
         ]);
 
         // update mobile
+        const mobileInputMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(this._moveMult);
+        const mobilePanMove = this._screenToWorld(touch[0], touch[1], this._orbitController.zoom);
+        const mobilePinchMove = new Vec3(0, 0, pinch[0]).mulScalar(this._zoomMult *
+            this.zoomPinchSens);
+        const mobileTouchRotate = new Vec3(touch[0], touch[1], 0).mulScalar(this.rotateSpeed +
+            +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens);
+        const mobileInputRotate = new Vec3(rightInput[0], rightInput[1], 0).mulScalar(this.rotateSpeed +
+            +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens);
         this._frame.move.add([
-            ((1 - orbit) * leftInput[0] * this._moveMult) + (pan * touch[0]),
-            pan * touch[1],
-            ((1 - orbit) * -leftInput[1] * this._moveMult) + (orbit * pinch[0] * mobileZoomSens)
+            fly * mobileInputMove.x + orbit * pan * mobilePanMove.x,
+            fly * mobileInputMove.y + orbit * pan * mobilePanMove.y,
+            fly * mobileInputMove.z + orbit * mobilePinchMove.z
         ]);
         this._frame.rotate.add([
-            orbit ? ((1 - pan) * touch[0] * this.rotateSpeed) : (rightInput[0] * mobileRotateSens),
-            orbit ? ((1 - pan) * touch[1] * this.rotateSpeed) : (rightInput[1] * mobileRotateSens),
-            0
+            orbit * ((1 - pan) * mobileTouchRotate.x) + fly * mobileInputRotate.x,
+            orbit * ((1 - pan) * mobileTouchRotate.y) + fly * mobileInputRotate.y,
+            orbit * ((1 - pan) * mobileTouchRotate.z) + fly * mobileInputRotate.z
         ]);
         this._frame.pan.add([
-            pan
+            orbit * pan
         ]);
 
         // update gamepad
+        const gamepadStickMove = tmpV1.set(leftStick[0], 0, -leftStick[1]).mulScalar(this._moveMult);
+        const gamepadStickRotate = new Vec3(rightStick[0], rightStick[1], 0).mulScalar(this.rotateSpeed *
+            this.rotateJoystickSens);
         this._frame.move.add([
-            leftStick[0] * this._moveMult,
-            0,
-            -leftStick[1] * this._moveMult
+            fly * gamepadStickMove.x,
+            fly * gamepadStickMove.y,
+            fly * gamepadStickMove.z
         ]);
         this._frame.rotate.add([
-            rightStick[0] * gamepadRotateSens,
-            -rightStick[1] * gamepadRotateSens,
-            0
+            fly * gamepadStickRotate.x,
+            fly * gamepadStickRotate.y,
+            fly * gamepadStickRotate.z
         ]);
     }
 

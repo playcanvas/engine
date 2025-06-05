@@ -1,5 +1,3 @@
-import { Mat4 } from '../../../core/math/mat4.js';
-import { math } from '../../../core/math/math.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
@@ -12,8 +10,6 @@ import { Pose } from '../pose.js';
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
-const tmpM1 = new Mat4();
-const tmpO1 = new Pose();
 
 const EPSILON = 0.001;
 
@@ -135,50 +131,6 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {number} dx - The mouse delta x value.
-     * @param {number} dy - The mouse delta y value.
-     * @param {number} dz - The world space zoom delta value.
-     * @param {Vec3} out - The output vector to store the pan result.
-     * @returns {Vec3} - The pan vector in world space.
-     * @private
-     */
-    _pan(dx, dy, dz, out) {
-        if (!this.camera) {
-            return out.set(0, 0, 0);
-        }
-
-        const { width, height } = this.camera.system.app.graphicsDevice;
-        const { fov, aspectRatio, horizontalFov, projection, orthoHeight } = this.camera;
-
-        // normalize deltas to device coord space
-        out.set(
-            -(dx / width) * 2,
-            (dy / height) * 2,
-            0
-        );
-
-        // calculate half size of the view frustum at the current distance
-        const size = tmpV2.set(0, 0, 0);
-        if (projection === PROJECTION_PERSPECTIVE) {
-            Mat4._getPerspectiveHalfSize(size, fov, aspectRatio, dz, horizontalFov);
-        } else {
-            size.set(
-                orthoHeight * aspectRatio,
-                orthoHeight,
-                0
-            );
-        }
-
-        // convert half size to full size
-        size.mulScalar(2);
-
-        // scale by device coord space
-        out.mul(size);
-
-        return out;
-    }
-
-    /**
      * @param {Vec3} position - The controller position.
      * @param {Vec3} focus - The focus point.
      * @param {boolean} [smooth] - Whether to smooth the transition.
@@ -233,20 +185,18 @@ class OrbitController extends InputController {
             }
         }
 
-        // zoom
-        this._targetChildPose.move(tmpV1.set(0, 0, move.value[2]));
-
         // rotate / move
         if (pan.value[0]) {
-            const position = tmpO1.mul2(this._rootPose, this._childPose).position;
-            const focus = this.focus;
-            this._pan(move.value[0], move.value[1], position.distance(focus), tmpV1);
+            tmpV1.set(move.value[0], move.value[1], 0);
             const rotation = tmpQ1.setFromEulerAngles(this._rootPose.angles);
             rotation.transformVector(tmpV1, tmpV1);
             this._targetRootPose.move(tmpV1);
         } else {
             this._targetRootPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
         }
+
+        // zoom
+        this._targetChildPose.move(tmpV1.set(0, 0, move.value[2]));
 
         // smoothing
         this._rootPose.lerp(
