@@ -135,22 +135,20 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {number} dx - The delta x value.
-     * @param {number} dy - The delta y value.
+     * @param {number} dx - The mouse delta x value.
+     * @param {number} dy - The mouse delta y value.
+     * @param {number} dz - The world space zoom delta value.
      * @param {Vec3} out - The output vector to store the pan result.
      * @returns {Vec3} - The pan vector in world space.
      * @private
      */
-    _pan(dx, dy, out) {
+    _pan(dx, dy, dz, out) {
         if (!this.camera) {
             return out.set(0, 0, 0);
         }
 
         const { width, height } = this.camera.system.app.graphicsDevice;
         const { fov, aspectRatio, horizontalFov, projection } = this.camera;
-
-        const position = tmpO1.mul2(this._rootPose, this._childPose).position;
-        const focus = this.focus;
 
         // normalize deltas to device coord space
         out.set(
@@ -161,15 +159,14 @@ class OrbitController extends InputController {
 
         if (projection === PROJECTION_PERSPECTIVE) {
             // calculate half size of the view frustum at the current distance
-            const z = position.distance(focus);
-            const halfSize = tmpV2.set(0, 0, 0);
-            Mat4._getPerspectiveHalfSize(halfSize, fov, aspectRatio, z, horizontalFov);
+            const size = tmpV2.set(0, 0, 0);
+            Mat4._getPerspectiveHalfSize(size, fov, aspectRatio, dz, horizontalFov);
+
+            // convert half size to full size
+            size.mulScalar(2);
 
             // scale by device coord space
-            out.mul(halfSize);
-
-            // rescale half to full range
-            out.mulScalar(2);
+            out.mul(size);
         }
 
         return out;
@@ -230,18 +227,20 @@ class OrbitController extends InputController {
             }
         }
 
+        // zoom
+        this._targetChildPose.move(tmpV1.set(0, 0, move.value[2]));
+
         // rotate / move
         if (pan.value[0]) {
+            const position = tmpO1.mul2(this._rootPose, this._childPose).position;
+            const focus = this.focus;
+            this._pan(move.value[0], move.value[1], position.distance(focus), tmpV1);
             const rotation = tmpQ1.setFromEulerAngles(this._rootPose.angles);
-            this._pan(move.value[0], move.value[1], tmpV1);
             rotation.transformVector(tmpV1, tmpV1);
             this._targetRootPose.move(tmpV1);
         } else {
             this._targetRootPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
         }
-
-        // zoom
-        this._targetChildPose.move(tmpV1.set(0, 0, move.value[2]));
 
         // smoothing
         this._rootPose.lerp(
