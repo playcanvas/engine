@@ -166,12 +166,11 @@ class OrbitController extends InputController {
      * @param {object} frame - The input frame.
      * @param {InputDelta} frame.move - The move input delta.
      * @param {InputDelta} frame.rotate - The rotate input delta.
-     * @param {InputDelta} frame.pan - The pan input delta.
      * @param {number} dt - The delta time.
      * @returns {Pose} - The controller pose.
      */
     update(frame, dt) {
-        const { move, rotate, pan } = frame;
+        const { move, rotate } = frame;
 
         // check focus interrupt
         if (this._focusing) {
