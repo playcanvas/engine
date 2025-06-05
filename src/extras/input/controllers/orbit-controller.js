@@ -1,6 +1,5 @@
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 import { InputController } from '../input.js';
 import { Pose } from '../pose.js';
 
@@ -8,7 +7,6 @@ import { Pose } from '../pose.js';
 /** @import { InputDelta } from '../input.js'; */
 
 const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
 const EPSILON = 0.001;
