@@ -14,6 +14,14 @@ import { parseConfig } from '../utils/utils.mjs';
 const exampleMetaData = [];
 
 /**
+ * @type {{
+ *      categoryKebab: string,
+ *      exampleNameKebab: string
+ * }[]}
+ */
+const e2eTestMetaData = [];
+
+/**
  * @param {object} obj - The object.
  * @returns {string} - The stringified object
  */
@@ -65,6 +73,13 @@ const main = () => {
                 categoryKebab,
                 exampleNameKebab
             });
+
+            if (config.E2E_TEST) {
+                e2eTestMetaData.push({
+                    categoryKebab,
+                    exampleNameKebab
+                });
+            }
         });
     });
 
@@ -73,5 +88,6 @@ const main = () => {
     }
 
     fs.writeFileSync('cache/metadata.mjs', `export const exampleMetaData = ${objStringify(exampleMetaData)};\n`);
+    fs.writeFileSync('cache/e2eTestMetaData.mjs', `export const e2eTestMetaData = ${objStringify(e2eTestMetaData)};\n`);
 };
 main();

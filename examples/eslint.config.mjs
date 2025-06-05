@@ -9,12 +9,20 @@ export default [
             globals: {
                 ...globals.browser,
                 ...globals.node,
+                ...globals.mocha,
                 'ObjModelParser': 'readonly',
                 'OutlineEffect': 'readonly'
             }
         },
         rules: {
             'import/no-unresolved': 'off'
+        }
+    },
+    {
+        files: ['test/**/*.mjs'],
+        rules: {
+            'no-unused-expressions': 'off',
+            'prefer-arrow-callback': 'off' // Mocha uses function callbacks
         }
     },
     {
