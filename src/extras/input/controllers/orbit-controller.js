@@ -1,6 +1,8 @@
+import { Mat4 } from '../../../core/math/mat4.js';
+import { math } from '../../../core/math/math.js';
+import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-import { Ray } from '../../../core/shape/ray.js';
-import { Plane } from '../../../core/shape/plane.js';
+import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 import { InputController } from '../input.js';
 import { Pose } from '../pose.js';
 
@@ -8,8 +10,9 @@ import { Pose } from '../pose.js';
 /** @import { InputDelta } from '../input.js'; */
 
 const tmpV1 = new Vec3();
-const tmpR1 = new Ray();
-const tmpP1 = new Plane();
+const tmpV2 = new Vec3();
+const tmpQ1 = new Quat();
+const tmpM1 = new Mat4();
 const tmpO1 = new Pose();
 
 const EPSILON = 0.001;
@@ -132,10 +135,10 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {number} dx - The change in x direction.
-     * @param {number} dy - The change in y direction.
-     * @param {Vec3} out - The output target pose.
-     * @returns {Vec3} - The updated target pose.
+     * @param {number} dx - The delta x value.
+     * @param {number} dy - The delta y value.
+     * @param {Vec3} out - The output vector to store the pan result.
+     * @returns {Vec3} - The pan vector in world space.
      * @private
      */
     _pan(dx, dy, out) {
@@ -143,22 +146,33 @@ class OrbitController extends InputController {
             return out.set(0, 0, 0);
         }
 
-        const v1 = new Vec3();
-        const v2 = new Vec3();
+        const { width, height } = this.camera.system.app.graphicsDevice;
+        const { fov, aspectRatio, horizontalFov, projection } = this.camera;
 
         const position = tmpO1.mul2(this._rootPose, this._childPose).position;
         const focus = this.focus;
 
-        const normal = out.sub2(position, focus).normalize();
-        const plane = tmpP1.setFromPointNormal(focus, normal);
+        // normalize deltas to device coord space
+        out.set(
+            -(dx / width) * 2,
+            (dy / height) * 2,
+            0
+        );
 
-        const mouseStart = this.camera.screenToWorld(0, 0, 1);
-        const mouseEnd = this.camera.screenToWorld(dx, dy, 1);
+        if (projection === PROJECTION_PERSPECTIVE) {
+            // calculate half size of the view frustum at the current distance
+            const z = position.distance(focus);
+            const halfSize = tmpV2.set(0, 0, 0);
+            Mat4._getPerspectiveHalfSize(halfSize, fov, aspectRatio, z, horizontalFov);
 
-        plane.intersectsRay(tmpR1.set(position, mouseStart.sub(position).normalize()), v1);
-        plane.intersectsRay(tmpR1.set(position, mouseEnd.sub(position).normalize()), v2);
+            // scale by device coord space
+            out.mul(halfSize);
 
-        return out.sub2(v1, v2);
+            // rescale half to full range
+            out.mulScalar(2);
+        }
+
+        return out;
     }
 
     /**
@@ -218,7 +232,10 @@ class OrbitController extends InputController {
 
         // rotate / move
         if (pan.value[0]) {
-            this._targetRootPose.move(this._pan(move.value[0], move.value[1], tmpV1));
+            const rotation = tmpQ1.setFromEulerAngles(this._rootPose.angles);
+            this._pan(move.value[0], move.value[1], tmpV1);
+            rotation.transformVector(tmpV1, tmpV1);
+            this._targetRootPose.move(tmpV1);
         } else {
             this._targetRootPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
         }
