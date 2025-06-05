@@ -708,10 +708,10 @@ class CameraControls extends Script {
             0
         );
 
-        // calculate half size of the view frustum at the current distance
+        // calculate size of the view frustum at the current distance
         const size = tmpV2.set(0, 0, 0);
         if (projection === PROJECTION_PERSPECTIVE) {
-            const slice = dz * Math.tan(fov * Math.PI / 360);
+            const slice = dz * Math.tan(0.5 * fov * math.DEG_TO_RAD);
             if (horizontalFov) {
                 size.set(
                     slice,
@@ -839,16 +839,6 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {number} dt - The time delta.
-     * @private
-     */
-    _updateController(dt) {
-        const pose = this._controller.update(this._frame, dt);
-        this._camera.entity.setPosition(pose.position);
-        this._camera.entity.setEulerAngles(pose.angles);
-    }
-
-    /**
      * @param {Vec3} focus - The focus point.
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
@@ -913,7 +903,9 @@ class CameraControls extends Script {
         }
 
         // update controller
-        this._updateController(dt);
+        const pose = this._controller.update(this._frame, dt);
+        this._camera.entity.setPosition(pose.position);
+        this._camera.entity.setEulerAngles(pose.angles);
     }
 }
 
