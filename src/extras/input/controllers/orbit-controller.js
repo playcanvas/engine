@@ -148,7 +148,7 @@ class OrbitController extends InputController {
         }
 
         const { width, height } = this.camera.system.app.graphicsDevice;
-        const { fov, aspectRatio, horizontalFov, projection } = this.camera;
+        const { fov, aspectRatio, horizontalFov, projection, orthoHeight } = this.camera;
 
         // normalize deltas to device coord space
         out.set(
@@ -157,17 +157,23 @@ class OrbitController extends InputController {
             0
         );
 
+        // calculate half size of the view frustum at the current distance
+        const size = tmpV2.set(0, 0, 0);
         if (projection === PROJECTION_PERSPECTIVE) {
-            // calculate half size of the view frustum at the current distance
-            const size = tmpV2.set(0, 0, 0);
             Mat4._getPerspectiveHalfSize(size, fov, aspectRatio, dz, horizontalFov);
-
-            // convert half size to full size
-            size.mulScalar(2);
-
-            // scale by device coord space
-            out.mul(size);
+        } else {
+            size.set(
+                orthoHeight * aspectRatio,
+                orthoHeight,
+                0
+            );
         }
+
+        // convert half size to full size
+        size.mulScalar(2);
+
+        // scale by device coord space
+        out.mul(size);
 
         return out;
     }
