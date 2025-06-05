@@ -11,24 +11,79 @@ import { Pose } from './pose.js';
 class InputDelta {
     /**
      * @type {number[]}
+     * @private
      */
     _instance;
 
     /**
-     * @param {number} dim - The dimension.
+     * Allocates a new InputDelta instance with the specified dimension.
+     *
+     * @param {number} dim - The dimension of the delta.
+     * @returns {InputDelta} - A new InputDelta instance initialized with zeros.
      */
-    constructor(dim = 1) {
-        this._instance = new Array(dim).fill(0);
+    static alloc(dim = 1) {
+        return new this(Array(dim).fill(0));
     }
 
+    /**
+     * @param {number[]} array - the array to use for the delta.
+     */
+    constructor(array) {
+        this._instance = array;
+    }
+
+    /**
+     * Gets the current value of the delta.
+     *
+     * @returns {number[]} - The current value of the delta.
+     */
     get value() {
         return this._instance;
     }
 
     /**
+     * Adds another InputDelta instance to this one.
+     *
+     * @param {InputDelta} other - The other InputDelta instance to add.
+     * @returns {InputDelta} - This InputDelta instance after addition.
+     */
+    add(other) {
+        for (let i = 0; i < this._instance.length; i++) {
+            this._instance[i] += other._instance[i] || 0;
+        }
+        return this;
+    }
+
+    /**
+     * Copies the values from another InputDelta instance to this one.
+     *
+     * @param {InputDelta} other - The other InputDelta instance to copy from.
+     * @returns {InputDelta} - This InputDelta instance after copying.
+     */
+    copy(other) {
+        for (let i = 0; i < this._instance.length; i++) {
+            this._instance[i] = other._instance[i] || 0;
+        }
+        return this;
+    }
+
+    /**
+     * Subtracts another InputDelta instance from this one.
+     *
+     * @param {InputDelta} other - The other InputDelta instance to subtract.
+     * @returns {InputDelta} - This InputDelta instance after subtraction.
+     */
+    sub(other) {
+        for (let i = 0; i < this._instance.length; i++) {
+            this._instance[i] -= other._instance[i] || 0;
+        }
+        return this;
+    }
+
+    /**
      * @param {number[]} offsets - The offsets.
      */
-    add(offsets) {
+    append(offsets) {
         for (let i = 0; i < this._instance.length; i++) {
             this._instance[i] += offsets[i] || 0;
         }

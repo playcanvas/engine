@@ -50,8 +50,8 @@ class DualGestureSource extends InputSource {
      * @override
      */
     deltas = {
-        leftInput: new InputDelta(2),
-        rightInput: new InputDelta(2)
+        leftInput: InputDelta.alloc(2),
+        rightInput: InputDelta.alloc(2)
     };
 
     /**
@@ -142,13 +142,13 @@ class DualGestureSource extends InputSource {
             if (startsWith(this._layout, 'joystick')) {
                 this._leftJoystick.setStick(event.clientX, event.clientY);
             } else {
-                this.deltas.leftInput.add([event.movementX, event.movementY]);
+                this.deltas.leftInput.append([event.movementX, event.movementY]);
             }
         } else {
             if (endsWith(this._layout, 'joystick')) {
                 this._rightJoystick.setStick(event.clientX, event.clientY);
             } else {
-                this.deltas.rightInput.add([event.movementX, event.movementY]);
+                this.deltas.rightInput.append([event.movementX, event.movementY]);
             }
         }
     }
@@ -211,8 +211,8 @@ class DualGestureSource extends InputSource {
      * @override
      */
     frame() {
-        this.deltas.leftInput.add([this._leftJoystick.value.x, this._leftJoystick.value.y]);
-        this.deltas.rightInput.add([this._rightJoystick.value.x, this._rightJoystick.value.y]);
+        this.deltas.leftInput.append([this._leftJoystick.value.x, this._leftJoystick.value.y]);
+        this.deltas.rightInput.append([this._rightJoystick.value.x, this._rightJoystick.value.y]);
 
         return super.frame();
     }

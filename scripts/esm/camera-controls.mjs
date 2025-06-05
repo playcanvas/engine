@@ -27,8 +27,8 @@ import {
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 
-const move = new InputDelta(3);
-const rotate = new InputDelta(3);
+const move = InputDelta.alloc(3);
+const rotate = InputDelta.alloc(3);
 
 const ZOOM_SCALE_MULT = 10;
 
@@ -330,7 +330,7 @@ class CameraControls extends Script {
         const orbit = +(this._mode === CameraControls.MODE_ORBIT);
         const fly = 1 - orbit;
         const pan = +(this.enablePan &&
-            (this._state.shift || this._state.mouse[1] || this._state.touches > 1));
+            ((orbit && this._state.shift) || this._state.mouse[1] || this._state.touches > 1));
         return { fly, orbit, pan };
     }
 
@@ -775,12 +775,12 @@ class CameraControls extends Script {
         const mouseRotate = new Vec3(mouse[0], mouse[1], 0).mulScalar(this.rotateSpeed);
 
         // add inputs
-        move.add([
+        move.append([
             fly * (1 - pan) * keyMove.x + orbit * pan * panMove.x,
             fly * (1 - pan) * keyMove.y + orbit * pan * panMove.y,
             fly * (1 - pan) * keyMove.z + orbit * wheelMove.z
         ]);
-        rotate.add([
+        rotate.append([
             (1 - pan) * mouseRotate.x,
             (1 - pan) * mouseRotate.y,
             (1 - pan) * mouseRotate.z
@@ -812,12 +812,12 @@ class CameraControls extends Script {
             +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens);
 
         // add inputs
-        move.add([
+        move.append([
             fly * (1 - pan) * orbitMove.x + orbit * pan * panMove.x,
             fly * (1 - pan) * orbitMove.y + orbit * pan * panMove.y,
             fly * (1 - pan) * orbitMove.z + orbit * pinchMove.z
         ]);
-        rotate.add([
+        rotate.append([
             orbit * (1 - pan) * orbitRotate.x + fly * (1 - pan) * flyRotate.x,
             orbit * (1 - pan) * orbitRotate.y + fly * (1 - pan) * flyRotate.y,
             orbit * (1 - pan) * orbitRotate.z + fly * (1 - pan) * flyRotate.z
@@ -845,12 +845,12 @@ class CameraControls extends Script {
             this.rotateJoystickSens);
 
         // add inputs
-        move.add([
+        move.append([
             fly * (1 - pan) * stickMove.x,
             fly * (1 - pan) * stickMove.y,
             fly * (1 - pan) * stickMove.z
         ]);
-        rotate.add([
+        rotate.append([
             fly * (1 - pan) * stickRotate.x,
             fly * (1 - pan) * stickRotate.y,
             fly * (1 - pan) * stickRotate.z

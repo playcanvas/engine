@@ -39,10 +39,10 @@ class KeyboardMouseSource extends InputSource {
      * @override
      */
     deltas = {
-        key: new InputDelta(9),
-        button: new InputDelta(3),
-        mouse: new InputDelta(2),
-        wheel: new InputDelta()
+        key: InputDelta.alloc(9),
+        button: InputDelta.alloc(3),
+        mouse: InputDelta.alloc(2),
+        wheel: InputDelta.alloc()
     };
 
     constructor() {
@@ -63,7 +63,7 @@ class KeyboardMouseSource extends InputSource {
      */
     _onWheel(event) {
         event.preventDefault();
-        this.deltas.wheel.add([event.deltaY]);
+        this.deltas.wheel.append([event.deltaY]);
     }
 
     /**
@@ -78,7 +78,7 @@ class KeyboardMouseSource extends InputSource {
 
         this._clearButtons();
         this._button[event.button] = 1;
-        this.deltas.button.add(this._button);
+        this.deltas.button.append(this._button);
 
         if (this._pointerId) {
             return;
@@ -100,7 +100,7 @@ class KeyboardMouseSource extends InputSource {
         if (this._pointerId !== event.pointerId) {
             return;
         }
-        this.deltas.mouse.add([event.movementX, event.movementY]);
+        this.deltas.mouse.append([event.movementX, event.movementY]);
     }
 
     /**
@@ -114,7 +114,7 @@ class KeyboardMouseSource extends InputSource {
         this._element?.releasePointerCapture(event.pointerId);
 
         this._clearButtons();
-        this.deltas.button.add(this._button);
+        this.deltas.button.append(this._button);
 
         if (this._pointerId !== event.pointerId) {
             return;
@@ -251,7 +251,7 @@ class KeyboardMouseSource extends InputSource {
             array9[i] = this._keyNow[i] - this._keyPrev[i];
             this._keyPrev[i] = this._keyNow[i];
         }
-        this.deltas.key.add(array9);
+        this.deltas.key.append(array9);
 
         return super.frame();
     }

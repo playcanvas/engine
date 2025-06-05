@@ -32,9 +32,9 @@ class MultiTouchSource extends InputSource {
      * @override
      */
     deltas = {
-        touch: new InputDelta(2),
-        count: new InputDelta(),
-        pinch: new InputDelta()
+        touch: InputDelta.alloc(2),
+        count: InputDelta.alloc(),
+        pinch: InputDelta.alloc()
     };
 
     constructor() {
@@ -58,7 +58,7 @@ class MultiTouchSource extends InputSource {
 
         this._pointerEvents.set(event.pointerId, event);
 
-        this.deltas.count.add([1]);
+        this.deltas.count.append([1]);
         if (this._pointerEvents.size > 1) {
             // pan
             this._getMidPoint(this._pointerPos);
@@ -87,17 +87,17 @@ class MultiTouchSource extends InputSource {
         if (this._pointerEvents.size > 1) {
             // pan
             const mid = this._getMidPoint(tmpVa);
-            this.deltas.touch.add([mid.x - this._pointerPos.x, mid.y - this._pointerPos.y]);
+            this.deltas.touch.append([mid.x - this._pointerPos.x, mid.y - this._pointerPos.y]);
             this._pointerPos.copy(mid);
 
             // pinch
             const pinchDist = this._getPinchDist();
             if (this._pinchDist > 0) {
-                this.deltas.pinch.add([this._pinchDist - pinchDist]);
+                this.deltas.pinch.append([this._pinchDist - pinchDist]);
             }
             this._pinchDist = pinchDist;
         } else {
-            this.deltas.touch.add([event.movementX, event.movementY]);
+            this.deltas.touch.append([event.movementX, event.movementY]);
         }
     }
 
@@ -113,7 +113,7 @@ class MultiTouchSource extends InputSource {
 
         this._pointerEvents.delete(event.pointerId);
 
-        this.deltas.count.add([-1]);
+        this.deltas.count.append([-1]);
         if (this._pointerEvents.size < 2) {
             this._pinchDist = -1;
         }

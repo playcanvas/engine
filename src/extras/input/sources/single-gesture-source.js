@@ -30,7 +30,7 @@ class SingleGestureSource extends InputSource {
      * @override
      */
     deltas = {
-        input: new InputDelta(2)
+        input: InputDelta.alloc(2)
     };
 
     constructor() {
@@ -107,7 +107,7 @@ class SingleGestureSource extends InputSource {
         if (this._layout === 'joystick') {
             this._joystick.setStick(event.clientX, event.clientY);
         } else {
-            this.deltas.input.add([event.movementX, event.movementY]);
+            this.deltas.input.append([event.movementX, event.movementY]);
         }
     }
 
@@ -164,7 +164,7 @@ class SingleGestureSource extends InputSource {
      * @override
      */
     frame() {
-        this.deltas.input.add([this._joystick.value.x, this._joystick.value.y]);
+        this.deltas.input.append([this._joystick.value.x, this._joystick.value.y]);
 
         return super.frame();
     }
