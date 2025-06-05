@@ -226,6 +226,7 @@ class OutlineRenderer {
                         opts.litOptions.useMorphPosition = options.litOptions.useMorphPosition;
                         opts.litOptions.useMorphNormal = options.litOptions.useMorphNormal;
                         opts.litOptions.useMorphTextureBasedInt = options.litOptions.useMorphTextureBasedInt;
+                        opts.litOptions.opacityFadesSpecular = options.litOptions.opacityFadesSpecular;
                         return opts;
                     }
 
