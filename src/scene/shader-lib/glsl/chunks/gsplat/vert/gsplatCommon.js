@@ -16,6 +16,15 @@ struct SplatCenter {
     float projMat00;    // element [0][0] of the projection matrix
 };
 
+// stores the offset from center for the current gaussian
+struct SplatCorner {
+    vec2 offset;        // corner offset from center in clip space
+    vec2 uv;            // corner uv
+    #if GSPLAT_AA
+        float aaFactor; // for scenes generated with antialiasing
+    #endif
+};
+
 mat3 quatToMat3(vec4 R) {
     vec4 R2 = R + R;
     float X = R2.x * R.w;
@@ -35,15 +44,6 @@ mat3 quatToMat3(vec4 R) {
         1.0 - Y.y - Z.z
     );
 }
-
-// stores the offset from center for the current gaussian
-struct SplatCorner {
-    vec2 offset;        // corner offset from center in clip space
-    vec2 uv;            // corner uv
-    #if GSPLAT_AA
-        float aaFactor; // for scenes generated with antialiasing
-    #endif
-};
 
 #if SH_BANDS == 1
     #define SH_COEFFS 3
