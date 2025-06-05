@@ -42,9 +42,8 @@ vec4 unpackRotation(uint bits) {
     return vec4(a, b, c, m);
 }
 
-
-// read center
-vec3 readCenter(SplatSource source) {
+// read data
+vec3 readPosition(in SplatSource source) {
     uint w = uint(textureSize(chunkTexture, 0).x) / 5u;
     uint chunkId = source.id / 256u;
     ivec2 chunkUV = ivec2((chunkId % w) * 5u, chunkId / w);
@@ -60,32 +59,14 @@ vec3 readCenter(SplatSource source) {
     return mix(chunkDataA.xyz, vec3(chunkDataA.w, chunkDataB.xy), unpack111011(packedData.x));
 }
 
+void readRotationAndScale(in SplatSource source, out vec4 rotation, out vec3 scale) {
+    rotation = unpackRotation(packedData.y);
+    scale = exp(mix(vec3(chunkDataB.zw, chunkDataC.x), chunkDataC.yzw, unpack111011(packedData.z)));
+}
+
+// read color
 vec4 readColor(in SplatSource source) {
     vec4 r = unpack8888(packedData.w);
     return vec4(mix(chunkDataD.xyz, vec3(chunkDataD.w, chunkDataE.xy), r.rgb), r.w);
-}
-
-vec4 getRotation() {
-    return unpackRotation(packedData.y);
-}
-
-vec3 getScale() {
-    return exp(mix(vec3(chunkDataB.zw, chunkDataC.x), chunkDataC.yzw, unpack111011(packedData.z)));
-}
-
-// given a rotation matrix and scale vector, compute 3d covariance A and B
-void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
-    mat3 rot = quatToMat3(getRotation());
-    vec3 scale = getScale();
-
-    // M = S * R
-    mat3 M = transpose(mat3(
-        scale.x * rot[0],
-        scale.y * rot[1],
-        scale.z * rot[2]
-    ));
-
-    covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
-    covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
 }
 `;

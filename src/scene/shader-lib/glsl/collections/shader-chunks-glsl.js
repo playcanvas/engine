@@ -45,6 +45,7 @@ import gammaPS from '../chunks/common/frag/gamma.js';
 import gles3PS from '../../../../platform/graphics/shader-chunks/frag/gles3.js';
 import gles3VS from '../../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from '../chunks/standard/frag/gloss.js';
+import gsplatAnimVS from '../chunks/gsplat/vert/gsplatAnim.js';
 import gsplatCenterVS from '../chunks/gsplat/vert/gsplatCenter.js';
 import gsplatColorVS from '../chunks/gsplat/vert/gsplatColor.js';
 import gsplatCommonVS from '../chunks/gsplat/vert/gsplatCommon.js';
@@ -222,6 +223,7 @@ const shaderChunksGLSL = {
     gles3PS,
     gles3VS,
     glossPS,
+    gsplatAnimVS,
     gsplatCenterVS,
     gsplatCornerVS,
     gsplatColorVS,

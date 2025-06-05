@@ -3,10 +3,16 @@ uniform vec2 viewport;                  // viewport dimensions
 uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
 
 // calculate the clip-space offset from the center for this gaussian
-bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) {
-    // get covariance
-    vec3 covA, covB;
-    readCovariance(source, covA, covB);
+bool initCorner(SplatSource source, SplatCenter center, mat3 rot, vec3 scale, out SplatCorner corner) {
+    // M = S * R
+    mat3 M = transpose(mat3(
+        scale.x * rot[0],
+        scale.y * rot[1],
+        scale.z * rot[2]
+    ));
+
+    vec3 covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
+    vec3 covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
 
     mat3 Vrk = mat3(
         covA.x, covA.y, covA.z, 
@@ -46,7 +52,7 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
     float lambda2 = max(mid - radius, 0.1);
 
     // Use the smaller viewport dimension to limit the kernel size relative to the screen resolution.
-    float vmin = min(viewport.x, viewport.y);
+    float vmin = min(1024.0, min(viewport.x, viewport.y));
 
     float l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     float l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);

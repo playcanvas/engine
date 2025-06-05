@@ -1,5 +1,6 @@
 export default /* glsl */`
 #include "gsplatCommonVS"
+#include "gsplatAnimVS"
 
 varying mediump vec2 gaussianUV;
 varying mediump vec4 gaussianColor;
@@ -22,17 +23,25 @@ void main(void) {
         return;
     }
 
-    vec3 modelCenter = readCenter(source);
+    // read data
+    vec3 position;
+    vec4 rotation;
+    vec3 scale;
+    position = readPosition(source);
+    readRotationAndScale(source, rotation, scale);
+    mat3 rot = quatToMat3(rotation);
+
+    animatePRS(position, rot, scale);
 
     SplatCenter center;
-    if (!initCenter(modelCenter, center)) {
+    if (!initCenter(position, center)) {
         gl_Position = discardVec;
         return;
     }
 
     // project center to screen space
     SplatCorner corner;
-    if (!initCorner(source, center, corner)) {
+    if (!initCorner(source, center, rot, scale, corner)) {
         gl_Position = discardVec;
         return;
     }
@@ -40,17 +49,20 @@ void main(void) {
     // read color
     vec4 clr = readColor(source);
 
-    #if GSPLAT_AA
-        // apply AA compensation
-        clr.a *= corner.aaFactor;
-    #endif
-
     // evaluate spherical harmonics
     #if SH_BANDS > 0
         // calculate the model-space view direction
         vec3 dir = normalize(center.view * mat3(center.modelView));
         clr.xyz += evalSH(source, dir);
     #endif
+
+    clr = animateColor(position, rot, scale, clr);
+
+    #if GSPLAT_AA
+        // apply AA compensation
+        clr.w *= corner.aaFactor;
+    #endif
+
 
     clipCorner(corner, clr.w);
 
