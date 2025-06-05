@@ -783,7 +783,7 @@ class CameraControls extends Script {
         // flags
         const orbit = +(this._mode === CameraControls.MODE_ORBIT);
         const fly = 1 - orbit;
-        const pan = +(orbit && this.enablePan &&
+        const pan = +(this.enablePan &&
             (this._state.shift || this._state.mouse[1] || this._state.touches > 1));
 
         // update desktop
@@ -792,17 +792,14 @@ class CameraControls extends Script {
         const desktopWheelMove = new Vec3(0, 0, wheel[0]).mulScalar(this._zoomMult);
         const desktopMouseRotate = new Vec3(mouse[0], mouse[1], 0).mulScalar(this.rotateSpeed);
         this._frame.move.add([
-            fly * desktopKeyMove.x + orbit * pan * desktopPanMove.x,
-            fly * desktopKeyMove.y + orbit * pan * desktopPanMove.y,
-            fly * desktopKeyMove.z + orbit * desktopWheelMove.z
+            fly * (1 - pan) * desktopKeyMove.x + orbit * pan * desktopPanMove.x,
+            fly * (1 - pan) * desktopKeyMove.y + orbit * pan * desktopPanMove.y,
+            fly * (1 - pan) * desktopKeyMove.z + orbit * desktopWheelMove.z
         ]);
         this._frame.rotate.add([
-            fly * (1 - pan) * desktopMouseRotate.x,
-            fly * (1 - pan) * desktopMouseRotate.y,
-            fly * (1 - pan) * desktopMouseRotate.z
-        ]);
-        this._frame.pan.add([
-            orbit * pan
+            (1 - pan) * desktopMouseRotate.x,
+            (1 - pan) * desktopMouseRotate.y,
+            (1 - pan) * desktopMouseRotate.z
         ]);
 
         // update mobile
@@ -815,17 +812,14 @@ class CameraControls extends Script {
         const mobileInputRotate = new Vec3(rightInput[0], rightInput[1], 0).mulScalar(this.rotateSpeed +
             +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens);
         this._frame.move.add([
-            fly * mobileInputMove.x + orbit * pan * mobilePanMove.x,
-            fly * mobileInputMove.y + orbit * pan * mobilePanMove.y,
-            fly * mobileInputMove.z + orbit * mobilePinchMove.z
+            fly * (1 - pan) * mobileInputMove.x + orbit * pan * mobilePanMove.x,
+            fly * (1 - pan) * mobileInputMove.y + orbit * pan * mobilePanMove.y,
+            fly * (1 - pan) * mobileInputMove.z + orbit * mobilePinchMove.z
         ]);
         this._frame.rotate.add([
-            orbit * ((1 - pan) * mobileTouchRotate.x) + fly * mobileInputRotate.x,
-            orbit * ((1 - pan) * mobileTouchRotate.y) + fly * mobileInputRotate.y,
-            orbit * ((1 - pan) * mobileTouchRotate.z) + fly * mobileInputRotate.z
-        ]);
-        this._frame.pan.add([
-            orbit * pan
+            orbit * (1 - pan) * mobileTouchRotate.x + fly * (1 - pan) * mobileInputRotate.x,
+            orbit * (1 - pan) * mobileTouchRotate.y + fly * (1 - pan) * mobileInputRotate.y,
+            orbit * (1 - pan) * mobileTouchRotate.z + fly * (1 - pan) * mobileInputRotate.z
         ]);
 
         // update gamepad
@@ -833,14 +827,14 @@ class CameraControls extends Script {
         const gamepadStickRotate = new Vec3(rightStick[0], rightStick[1], 0).mulScalar(this.rotateSpeed *
             this.rotateJoystickSens);
         this._frame.move.add([
-            fly * gamepadStickMove.x,
-            fly * gamepadStickMove.y,
-            fly * gamepadStickMove.z
+            fly * (1 - pan) * gamepadStickMove.x,
+            fly * (1 - pan) * gamepadStickMove.y,
+            fly * (1 - pan) * gamepadStickMove.z
         ]);
         this._frame.rotate.add([
-            fly * gamepadStickRotate.x,
-            fly * gamepadStickRotate.y,
-            fly * gamepadStickRotate.z
+            fly * (1 - pan) * gamepadStickRotate.x,
+            fly * (1 - pan) * gamepadStickRotate.y,
+            fly * (1 - pan) * gamepadStickRotate.z
         ]);
     }
 

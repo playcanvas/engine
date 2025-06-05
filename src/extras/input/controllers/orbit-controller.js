@@ -185,18 +185,15 @@ class OrbitController extends InputController {
             }
         }
 
-        // rotate / move
-        if (pan.value[0]) {
-            tmpV1.set(move.value[0], move.value[1], 0);
-            const rotation = tmpQ1.setFromEulerAngles(this._rootPose.angles);
-            rotation.transformVector(tmpV1, tmpV1);
-            this._targetRootPose.move(tmpV1);
-        } else {
-            this._targetRootPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
-        }
-
-        // zoom
+        // move
+        tmpV1.set(move.value[0], move.value[1], 0);
+        const rotation = tmpQ1.setFromEulerAngles(this._rootPose.angles);
+        rotation.transformVector(tmpV1, tmpV1);
+        this._targetRootPose.move(tmpV1);
         this._targetChildPose.move(tmpV1.set(0, 0, move.value[2]));
+
+        // rotate
+        this._targetRootPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
 
         // smoothing
         this._rootPose.lerp(
