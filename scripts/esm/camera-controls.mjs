@@ -688,8 +688,8 @@ class CameraControls extends Script {
      * @private
      */
     _screenToWorld(dx, dy, dz, out = new Vec3()) {
-        const { system, fov, aspectRatio, horizontalFov, projection, orthoHeight } = this._camera;
-        const { width, height } = system.app.graphicsDevice;
+        const { fov, aspectRatio, horizontalFov, projection, orthoHeight } = this._camera;
+        const { width, height } = this.app.graphicsDevice;
 
         // normalize deltas to device coord space
         out.set(
