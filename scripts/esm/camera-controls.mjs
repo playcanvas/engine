@@ -737,7 +737,7 @@ class CameraControls extends Script {
      * @param {InputFrame<{ move: number, rotate: number }>} frame - The input frame.
      * @private
      */
-    _addDesktopInputDeltas({ deltas }) {
+    _addDesktopInputFrame({ deltas } = frame) {
         const { key, button, mouse, wheel } = this._desktopInput.flush();
 
         // destructure keys
@@ -795,7 +795,7 @@ class CameraControls extends Script {
      * @param {InputFrame<{ move: number, rotate: number }>} frame - The input frame.
      * @private
      */
-    _addMobileInputDeltas({ deltas }) {
+    _addMobileInputFrame({ deltas }) {
         const { touch, pinch, count } = this._orbitMobileInput.flush();
         const { leftInput, rightInput } = this._flyMobileInput.flush();
 
@@ -836,7 +836,7 @@ class CameraControls extends Script {
      * @param {InputFrame<{ move: 3, rotate: 3 }>} frame - The input frame.
      * @private
      */
-    _addGamepadInputDeltas({ deltas }) {
+    _addGamepadInputFrame({ deltas }) {
         const { leftStick, rightStick } = this._gamepadInput.flush();
 
         // apply dead zone to gamepad sticks
@@ -915,10 +915,10 @@ class CameraControls extends Script {
      * @param {number} dt - The time delta.
      */
     update(dt) {
-        // add inputs
-        this._addDesktopInputDeltas(frame);
-        this._addMobileInputDeltas(frame);
-        this._addGamepadInputDeltas(frame);
+        // combine input frames
+        this._addDesktopInputFrame(frame);
+        this._addMobileInputFrame(frame);
+        this._addGamepadInputFrame(frame);
 
         if (this.skipUpdate) {
             // skip update, just flush frame
