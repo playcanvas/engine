@@ -1,6 +1,5 @@
 export default /* glsl */`
 #include "gsplatCommonVS"
-#include "gsplatAnimVS"
 
 varying mediump vec2 gaussianUV;
 varying mediump vec4 gaussianColor;
@@ -15,6 +14,9 @@ mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
     varying float vLinearDepth;
 #endif
 
+#include "gsplatAnimatePRSVS"
+#include "gsplatAnimateColorVS"
+
 void main(void) {
     // read gaussian details
     SplatSource source;
@@ -23,25 +25,25 @@ void main(void) {
         return;
     }
 
-    // read data
-    vec3 position;
-    vec4 rotation;
-    vec3 scale;
-    position = readPosition(source);
-    readRotationAndScale(source, rotation, scale);
-    mat3 rot = quatToMat3(rotation);
+    // read gaussian PRS attributes
+    SplatPRS prs;
+    vec4 quat;
+    prs.position = readPosition(source);
+    readRotationAndScale(source, quat, prs.scale);
+    prs.rotation = quatToMat3(quat);
 
-    animatePRS(position, rot, scale);
+    // animate position, rotation and scale
+    animatePRS(prs);
 
     SplatCenter center;
-    if (!initCenter(position, center)) {
+    if (!initCenter(prs.position, center)) {
         gl_Position = discardVec;
         return;
     }
 
     // project center to screen space
     SplatCorner corner;
-    if (!initCorner(source, center, rot, scale, corner)) {
+    if (!initCorner(source, center, prs, corner)) {
         gl_Position = discardVec;
         return;
     }
@@ -56,13 +58,12 @@ void main(void) {
         clr.xyz += evalSH(source, dir);
     #endif
 
-    clr = animateColor(position, rot, scale, clr);
+    animateColor(prs, clr);
 
     #if GSPLAT_AA
         // apply AA compensation
         clr.w *= corner.aaFactor;
     #endif
-
 
     clipCorner(corner, clr.w);
 

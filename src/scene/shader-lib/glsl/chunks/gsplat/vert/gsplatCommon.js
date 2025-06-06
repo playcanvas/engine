@@ -8,6 +8,13 @@ struct SplatSource {
     vec2 cornerUV;      // corner coordinates for this vertex of the gaussian (-1, -1)..(1, 1)
 };
 
+// local space position, rotation and scale of the gaussian
+struct SplatPRS {
+    vec3 position;      // model space position
+    mat3 rotation;      // matrix rotation
+    vec3 scale;         // model space scale
+};
+
 // stores the camera and clip space position of the gaussian center
 struct SplatCenter {
     vec3 view;          // center in view space

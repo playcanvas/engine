@@ -3,12 +3,12 @@ uniform vec2 viewport;                  // viewport dimensions
 uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
 
 // calculate the clip-space offset from the center for this gaussian
-bool initCorner(SplatSource source, SplatCenter center, mat3 rot, vec3 scale, out SplatCorner corner) {
+bool initCorner(SplatSource source, SplatCenter center, SplatPRS prs, out SplatCorner corner) {
     // M = S * R
     mat3 M = transpose(mat3(
-        scale.x * rot[0],
-        scale.y * rot[1],
-        scale.z * rot[2]
+        prs.scale.x * prs.rotation[0],
+        prs.scale.y * prs.rotation[1],
+        prs.scale.z * prs.rotation[2]
     ));
 
     vec3 covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
