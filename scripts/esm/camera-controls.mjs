@@ -932,7 +932,7 @@ class CameraControls extends Script {
             return;
         }
 
-        // update controller and consume frame
+        // update controller by consuming frame
         const pose = this._controller.update(frame, dt);
         this._camera.entity.setPosition(pose.position);
         this._camera.entity.setEulerAngles(pose.angles);
