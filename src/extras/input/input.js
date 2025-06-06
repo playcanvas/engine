@@ -85,6 +85,9 @@ class InputDelta {
 /**
  * Represents an input frame, which contains a map of input deltas.
  *
+ * @category Input Source
+ * @alpha
+ *
  * @template {Record<string, number>} T - The shape of the input frame.
  */
 class InputFrame {
@@ -113,19 +116,6 @@ class InputFrame {
             frame[name] = this.deltas[name].flush();
         }
         return frame;
-    }
-}
-
-/**
- * The base class for all input consumers, which are used to process input frames.
- */
-class InputConsumer {
-    /**
-     * @param {InputFrame} frame - The input frame.
-     * @param {number} dt - The delta time.
-     * @returns {any} - The controller pose.
-     */
-    update(frame, dt) {
     }
 }
 
@@ -169,9 +159,25 @@ class InputSource extends InputFrame {
 }
 
 /**
+ * The base class for all input consumers, which are used to process input frames.
+ *
+ * @category Input Consumer
+ * @alpha
+ */
+class InputConsumer {
+    /**
+     * @param {InputFrame} frame - The input frame.
+     * @param {number} dt - The delta time.
+     * @returns {any} - The controller pose.
+     */
+    update(frame, dt) {
+    }
+}
+
+/**
  * The base class for all input controllers.
  *
- * @category Input Controller
+ * @category Input Consumer
  * @alpha
  */
 class InputController extends InputConsumer {
@@ -209,7 +215,7 @@ class InputController extends InputConsumer {
 export {
     InputDelta,
     InputFrame,
-    InputConsumer,
     InputSource,
+    InputConsumer,
     InputController
 };
