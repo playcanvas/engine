@@ -97,6 +97,25 @@ class InputFrame {
     deltas = /** @type {{ [K in keyof T]: InputDelta }} */ ({});
 
     /**
+     * Parses the input frame from raw values
+     *
+     * @template {Record<string, number>} T - The shape of the input frame.
+     * @param {{ [K in keyof T]: number[] }} raw - The shape of the input frame.
+     * @returns {InputFrame<{ [K in keyof T]: number }>} - The parsed input frame.
+     */
+    static parse(raw) {
+        const shape = /** @type {{ [K in keyof T]: number }} */ ({});
+        for (const name in raw) {
+            shape[name] = raw[name].length;
+        }
+        const frame = new InputFrame(shape);
+        for (const name in raw) {
+            frame.deltas[name].append(raw[name]);
+        }
+        return frame;
+    }
+
+    /**
      * @param {T} shape - The shape of the input frame.
      */
     constructor(shape) {
