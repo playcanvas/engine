@@ -81,32 +81,6 @@ class InputDelta {
     }
 
     /**
-     * Multiplies the current delta values by a scalar.
-     *
-     * @param {number} scalar - The scalar value to multiply by.
-     * @returns {InputDelta} Self for chaining.
-     */
-    mulScalar(scalar) {
-        for (let i = 0; i < this._instance.length; i++) {
-            this._instance[i] *= scalar;
-        }
-        return this;
-    }
-
-    /**
-     * Subtracts another InputDelta instance from this one.
-     *
-     * @param {InputDelta} other - The other InputDelta instance to subtract.
-     * @returns {InputDelta} Self for chaining.
-     */
-    sub(other) {
-        for (let i = 0; i < this._instance.length; i++) {
-            this._instance[i] -= other._instance[i] || 0;
-        }
-        return this;
-    }
-
-    /**
      * Resets the delta values to zero.
      */
     flush() {
