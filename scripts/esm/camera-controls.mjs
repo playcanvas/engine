@@ -920,14 +920,20 @@ class CameraControls extends Script {
         const move = InputDelta.alloc(3);
         const rotate = InputDelta.alloc(3);
 
-        // calculate input deltas
+        // deskop input
         const desktop = this._desktopInputDeltas();
-        const mobile = this._mobileInputDeltas();
-        const gamepad = this._gamepadInputDeltas();
+        move.add(desktop.move);
+        rotate.add(desktop.rotate);
 
-        // add input deltas
-        move.add(desktop.move).add(mobile.move).add(gamepad.move);
-        rotate.add(desktop.rotate).add(mobile.rotate).add(gamepad.rotate);
+        // mobile input
+        const mobile = this._mobileInputDeltas();
+        move.add(mobile.move);
+        rotate.add(mobile.rotate);
+
+        // gamepad input
+        const gamepad = this._gamepadInputDeltas();
+        move.add(gamepad.move);
+        rotate.add(gamepad.rotate);
 
         // update controller
         if (!this.skipUpdate && !this.app.xr?.active) {
