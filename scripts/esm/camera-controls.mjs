@@ -344,7 +344,6 @@ class CameraControls extends Script {
         this._camera = this.entity.camera;
 
         // set orbit controller defaults
-        this._orbitController.camera = this._camera;
         this._orbitController.zoomRange = new Vec2(0, Infinity);
 
         // attach input

@@ -3,7 +3,6 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { InputController } from '../input.js';
 import { Pose } from '../pose.js';
 
-/** @import { CameraComponent } from '../../../framework/components/camera/component.js' */
 /** @import { InputFrame } from '../input.js'; */
 
 const tmpV1 = new Vec3();
@@ -56,11 +55,6 @@ class OrbitController extends InputController {
      * @private
      */
     _childPose = new Pose();
-
-    /**
-     * @type {CameraComponent | undefined}
-     */
-    camera;
 
     /**
      * The focus damping. In the range 0 to 1, where a value of 0 means no damping and 1 means
