@@ -117,6 +117,19 @@ class InputFrame {
 }
 
 /**
+ * The base class for all input consumers, which are used to process input frames.
+ */
+class InputConsumer {
+    /**
+     * @param {InputFrame} frame - The input frame.
+     * @param {number} dt - The delta time.
+     * @returns {any} - The controller pose.
+     */
+    update(frame, dt) {
+    }
+}
+
+/**
  * The base class for all input devices.
  *
  * @category Input Source
@@ -147,10 +160,7 @@ class InputSource extends InputFrame {
             return;
         }
         this._element = null;
-
-        for (const name in this.deltas) {
-            this.deltas[name].flush();
-        }
+        this.flush();
     }
 
     destroy() {
@@ -164,7 +174,7 @@ class InputSource extends InputFrame {
  * @category Input Controller
  * @alpha
  */
-class InputController {
+class InputController extends InputConsumer {
     /**
      * @type {Pose}
      * @protected
@@ -185,6 +195,7 @@ class InputController {
      * @param {InputFrame} frame - The input frame.
      * @param {number} dt - The delta time.
      * @returns {Pose} - The controller pose.
+     * @override
      */
     update(frame, dt) {
         return this._pose;
@@ -195,4 +206,10 @@ class InputController {
     }
 }
 
-export { InputDelta, InputFrame, InputSource, InputController };
+export {
+    InputDelta,
+    InputFrame,
+    InputConsumer,
+    InputSource,
+    InputController
+};

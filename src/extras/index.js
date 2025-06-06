@@ -28,7 +28,7 @@ export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 export { CameraFrame } from './render-passes/camera-frame.js';
 
 // INPUT
-export { InputDelta, InputFrame, InputSource, InputController } from './input/input.js';
+export { InputDelta, InputFrame, InputConsumer, InputSource, InputController } from './input/input.js';
 export { Pose } from './input/pose.js';
 
 // INPUT SOURCES
