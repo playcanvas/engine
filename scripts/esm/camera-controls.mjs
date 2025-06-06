@@ -27,9 +27,6 @@ import {
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 
-const move = InputDelta.alloc(3);
-const rotate = InputDelta.alloc(3);
-
 const ZOOM_SCALE_MULT = 10;
 
 /**
@@ -733,11 +730,10 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {InputDelta} move - The move input delta.
-     * @param {InputDelta} rotate - The rotate input delta.
+     * @returns {{ move: InputDelta, rotate: InputDelta }} - The move and rotate input deltas.
      * @private
      */
-    _addDesktopInput(move, rotate) {
+    _desktopInputDeltas() {
         const { key, button, mouse, wheel } = this._desktopInput.frame();
 
         // destructure keys
@@ -768,31 +764,36 @@ class CameraControls extends Script {
         // flags
         const { orbit, fly, pan } = this._flags;
 
-        // scale deltas
-        const keyMove = this._state.axis.clone().normalize().mulScalar(this._moveMult);
-        const panMove = this._screenToWorld(mouse[0], mouse[1], this._orbitController.zoom);
-        const wheelMove = new Vec3(0, 0, wheel[0]).mulScalar(this._zoomMult);
-        const mouseRotate = new Vec3(mouse[0], mouse[1], 0).mulScalar(this.rotateSpeed);
+        // move input
+        const v = tmpV1.set(0, 0, 0);
 
-        // add inputs
-        move.append([
-            fly * (1 - pan) * keyMove.x + orbit * pan * panMove.x,
-            fly * (1 - pan) * keyMove.y + orbit * pan * panMove.y,
-            fly * (1 - pan) * keyMove.z + orbit * wheelMove.z
-        ]);
-        rotate.append([
-            (1 - pan) * mouseRotate.x,
-            (1 - pan) * mouseRotate.y,
-            (1 - pan) * mouseRotate.z
-        ]);
+        const keyMove = this._state.axis.clone().normalize().mulScalar(this._moveMult);
+        v.add(keyMove.mulScalar(fly * (1 - pan)));
+
+        const panMove = this._screenToWorld(mouse[0], mouse[1], this._orbitController.zoom);
+        v.add(panMove.mulScalar(orbit * pan));
+
+        const wheelMove = new Vec3(0, 0, wheel[0]).mulScalar(this._zoomMult);
+        v.add(wheelMove.mulScalar(orbit));
+
+        const move = new InputDelta([v.x, v.y, v.z]);
+
+        // rotate input
+        v.set(0, 0, 0);
+
+        const mouseRotate = new Vec3(mouse[0], mouse[1], 0).mulScalar(this.rotateSpeed);
+        v.add(mouseRotate.mulScalar(1 - pan));
+
+        const rotate = new InputDelta([v.x, v.y, v.z]);
+
+        return { move, rotate };
     }
 
     /**
-     * @param {InputDelta} move - The move input delta.
-     * @param {InputDelta} rotate - The rotate input delta.
+     * @returns {{ move: InputDelta, rotate: InputDelta }} - The move and rotate input deltas.
      * @private
      */
-    _addMobileInput(move, rotate) {
+    _mobileInputDeltas() {
         const { touch, pinch, count } = this._orbitMobileInput.frame();
         const { leftInput, rightInput } = this._flyMobileInput.frame();
 
@@ -802,34 +803,40 @@ class CameraControls extends Script {
         // flags
         const { orbit, fly, pan } = this._flags;
 
-        // scale deltas
+        // move input
+        const v = tmpV1.set(0, 0, 0);
+
         const orbitMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(this._moveMult);
+        v.add(orbitMove.mulScalar(orbit * (1 - pan)));
+
         const panMove = this._screenToWorld(touch[0], touch[1], this._orbitController.zoom);
-        const pinchMove = new Vec3(0, 0, pinch[0]).mulScalar(this._zoomMult *
-            this.zoomPinchSens);
+        v.add(panMove.mulScalar(orbit * pan));
+
+        const pinchMove = new Vec3(0, 0, pinch[0]).mulScalar(this._zoomMult * this.zoomPinchSens);
+        v.add(pinchMove.mulScalar(orbit));
+
+        const move = new InputDelta([v.x, v.y, v.z]);
+
+        // rotate input
+        v.set(0, 0, 0);
+
         const orbitRotate = new Vec3(touch[0], touch[1], 0).mulScalar(this.rotateSpeed);
+        v.add(orbitRotate.mulScalar(orbit * (1 - pan)));
+
         const flyRotate = new Vec3(rightInput[0], rightInput[1], 0).mulScalar(this.rotateSpeed +
             +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens);
+        v.add(flyRotate.mulScalar(fly * (1 - pan)));
 
-        // add inputs
-        move.append([
-            fly * (1 - pan) * orbitMove.x + orbit * pan * panMove.x,
-            fly * (1 - pan) * orbitMove.y + orbit * pan * panMove.y,
-            fly * (1 - pan) * orbitMove.z + orbit * pinchMove.z
-        ]);
-        rotate.append([
-            orbit * (1 - pan) * orbitRotate.x + fly * (1 - pan) * flyRotate.x,
-            orbit * (1 - pan) * orbitRotate.y + fly * (1 - pan) * flyRotate.y,
-            orbit * (1 - pan) * orbitRotate.z + fly * (1 - pan) * flyRotate.z
-        ]);
+        const rotate = new InputDelta([v.x, v.y, v.z]);
+
+        return { move, rotate };
     }
 
     /**
-     * @param {InputDelta} move - The move input delta.
-     * @param {InputDelta} rotate - The rotate input delta.
+     * @returns {{ move: InputDelta, rotate: InputDelta }} - The move and rotate input deltas.
      * @private
      */
-    _addGamepadInput(move, rotate) {
+    _gamepadInputDeltas() {
         const { leftStick, rightStick } = this._gamepadInput.frame();
 
         // apply dead zone to gamepad sticks
@@ -839,22 +846,24 @@ class CameraControls extends Script {
         // flags
         const { fly, pan } = this._flags;
 
-        // scale deltas
+        // move input
+        const v = tmpV1.set(0, 0, 0);
+
         const stickMove = tmpV1.set(leftStick[0], 0, -leftStick[1]).mulScalar(this._moveMult);
+        v.add(stickMove.mulScalar(fly * (1 - pan)));
+
+        const move = new InputDelta([v.x, v.y, v.z]);
+
+        // rotate input
+        v.set(0, 0, 0);
+
         const stickRotate = new Vec3(rightStick[0], rightStick[1], 0).mulScalar(this.rotateSpeed *
             this.rotateJoystickSens);
+        v.add(stickRotate.mulScalar(fly * (1 - pan)));
 
-        // add inputs
-        move.append([
-            fly * (1 - pan) * stickMove.x,
-            fly * (1 - pan) * stickMove.y,
-            fly * (1 - pan) * stickMove.z
-        ]);
-        rotate.append([
-            fly * (1 - pan) * stickRotate.x,
-            fly * (1 - pan) * stickRotate.y,
-            fly * (1 - pan) * stickRotate.z
-        ]);
+        const rotate = new InputDelta([v.x, v.y, v.z]);
+
+        return { move, rotate };
     }
 
     /**
@@ -908,10 +917,17 @@ class CameraControls extends Script {
      * @param {number} dt - The time delta.
      */
     update(dt) {
-        // add inputs
-        this._addDesktopInput(move, rotate);
-        this._addMobileInput(move, rotate);
-        this._addGamepadInput(move, rotate);
+        const move = InputDelta.alloc(3);
+        const rotate = InputDelta.alloc(3);
+
+        // calculate input deltas
+        const desktop = this._desktopInputDeltas();
+        const mobile = this._mobileInputDeltas();
+        const gamepad = this._gamepadInputDeltas();
+
+        // add input deltas
+        move.add(desktop.move).add(mobile.move).add(gamepad.move);
+        rotate.add(desktop.rotate).add(mobile.rotate).add(gamepad.rotate);
 
         // update controller
         if (!this.skipUpdate && !this.app.xr?.active) {

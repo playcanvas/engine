@@ -45,7 +45,7 @@ class InputDelta {
      * Adds another InputDelta instance to this one.
      *
      * @param {InputDelta} other - The other InputDelta instance to add.
-     * @returns {InputDelta} - This InputDelta instance after addition.
+     * @returns {InputDelta} Self for chaining.
      */
     add(other) {
         for (let i = 0; i < this._instance.length; i++) {
@@ -55,10 +55,23 @@ class InputDelta {
     }
 
     /**
+     * Appends offsets to the current delta values.
+     *
+     * @param {number[]} offsets - The offsets.
+     * @returns {InputDelta} Self for chaining.
+     */
+    append(offsets) {
+        for (let i = 0; i < this._instance.length; i++) {
+            this._instance[i] += offsets[i] || 0;
+        }
+        return this;
+    }
+
+    /**
      * Copies the values from another InputDelta instance to this one.
      *
      * @param {InputDelta} other - The other InputDelta instance to copy from.
-     * @returns {InputDelta} - This InputDelta instance after copying.
+     * @returns {InputDelta} Self for chaining.
      */
     copy(other) {
         for (let i = 0; i < this._instance.length; i++) {
@@ -68,10 +81,23 @@ class InputDelta {
     }
 
     /**
+     * Multiplies the current delta values by a scalar.
+     *
+     * @param {number} scalar - The scalar value to multiply by.
+     * @returns {InputDelta} Self for chaining.
+     */
+    mulScalar(scalar) {
+        for (let i = 0; i < this._instance.length; i++) {
+            this._instance[i] *= scalar;
+        }
+        return this;
+    }
+
+    /**
      * Subtracts another InputDelta instance from this one.
      *
      * @param {InputDelta} other - The other InputDelta instance to subtract.
-     * @returns {InputDelta} - This InputDelta instance after subtraction.
+     * @returns {InputDelta} Self for chaining.
      */
     sub(other) {
         for (let i = 0; i < this._instance.length; i++) {
@@ -81,14 +107,8 @@ class InputDelta {
     }
 
     /**
-     * @param {number[]} offsets - The offsets.
+     * Resets the delta values to zero.
      */
-    append(offsets) {
-        for (let i = 0; i < this._instance.length; i++) {
-            this._instance[i] += offsets[i] || 0;
-        }
-    }
-
     flush() {
         this._instance.fill(0);
     }
