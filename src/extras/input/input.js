@@ -71,10 +71,48 @@ class InputDelta {
     }
 
     /**
-     * Resets the delta values to zero.
+     * Returns the current value of the delta and resets it to zero.
+     *
+     * @returns {number[]} - The current value of the delta.
      */
     flush() {
+        const value = this._instance.slice();
         this._instance.fill(0);
+        return value;
+    }
+}
+
+/**
+ * Represents an input frame, which contains a map of input deltas.
+ *
+ * @template {Record<string, number>} T - The shape of the input frame.
+ */
+class InputFrame {
+    /**
+     * @type {{ [K in keyof T]: InputDelta }}
+     */
+    deltas = /** @type {{ [K in keyof T]: InputDelta }} */ ({});
+
+    /**
+     * @param {T} shape - The shape of the input frame.
+     */
+    constructor(shape) {
+        for (const name in shape) {
+            this.deltas[name] = new InputDelta(shape[name]);
+        }
+    }
+
+    /**
+     * Flushes the current input frame, returning a new frame with the current deltas.
+     *
+     * @returns {{ [K in keyof T]: number[] }} - The flushed input frame with current deltas.
+     */
+    flush() {
+        const frame = /** @type {{ [K in keyof T]: number[] }} */ ({});
+        for (const name in this.deltas) {
+            frame[name] = this.deltas[name].flush();
+        }
+        return frame;
     }
 }
 
@@ -160,7 +198,7 @@ class InputController {
     }
 
     /**
-     * @param {Record<string, InputDelta>} frame - The input frame.
+     * @param {InputFrame} frame - The input frame.
      * @param {number} dt - The delta time.
      * @returns {Pose} - The controller pose.
      */
@@ -173,4 +211,4 @@ class InputController {
     }
 }
 
-export { InputDelta, InputSource, InputController };
+export { InputDelta, InputFrame, InputSource, InputController };

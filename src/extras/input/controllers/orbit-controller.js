@@ -4,7 +4,7 @@ import { InputController } from '../input.js';
 import { Pose } from '../pose.js';
 
 /** @import { CameraComponent } from '../../../framework/components/camera/component.js' */
-/** @import { InputDelta } from '../input.js'; */
+/** @import { InputFrame } from '../input.js'; */
 
 const tmpV1 = new Vec3();
 const tmpQ1 = new Quat();
@@ -161,20 +161,18 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {object} frame - The input frame.
-     * @param {InputDelta} frame.move - The move input delta.
-     * @param {InputDelta} frame.rotate - The rotate input delta.
+     * @param {InputFrame<{ move: number, rotate: number }>} frame - The input frame.
      * @param {number} dt - The delta time.
      * @returns {Pose} - The controller pose.
      */
     update(frame, dt) {
-        const { move, rotate } = frame;
+        const { move, rotate } = frame.flush();
 
         // check focus interrupt
         if (this._focusing) {
-            const moveLen = Math.sqrt(move.value[0] * move.value[0] + move.value[1] * move.value[1]);
-            const rotateLen = Math.sqrt(rotate.value[0] * rotate.value[0] + rotate.value[1] * rotate.value[1]);
-            const zoomLen = Math.abs(move.value[2]);
+            const moveLen = Math.sqrt(move[0] * move[0] + move[1] * move[1]);
+            const rotateLen = Math.sqrt(rotate[0] * rotate[0] + rotate[1] * rotate[1]);
+            const zoomLen = Math.abs(move[2]);
             if (moveLen + rotateLen + zoomLen > 0) {
                 this._targetRootPose.copy(this._rootPose);
                 this._targetChildPose.copy(this._childPose);
@@ -183,14 +181,14 @@ class OrbitController extends InputController {
         }
 
         // move
-        tmpV1.set(move.value[0], move.value[1], 0);
+        tmpV1.set(move[0], move[1], 0);
         const rotation = tmpQ1.setFromEulerAngles(this._rootPose.angles);
         rotation.transformVector(tmpV1, tmpV1);
         this._targetRootPose.move(tmpV1);
-        this._targetChildPose.move(tmpV1.set(0, 0, move.value[2]));
+        this._targetChildPose.move(tmpV1.set(0, 0, move[2]));
 
         // rotate
-        this._targetRootPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
+        this._targetRootPose.rotate(tmpV1.set(-rotate[1], -rotate[0], 0));
 
         // smoothing
         this._rootPose.lerp(

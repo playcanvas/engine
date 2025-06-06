@@ -3,7 +3,7 @@ import { Quat } from '../../../core/math/quat.js';
 import { InputController } from '../input.js';
 import { Pose } from '../pose.js';
 
-/** @import { InputDelta } from '../input.js'; */
+/** @import { InputFrame } from '../input.js'; */
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -80,17 +80,15 @@ class FlyController extends InputController {
     }
 
     /**
-     * @param {object} frame - The input frame.
-     * @param {InputDelta} frame.move - The movement input delta.
-     * @param {InputDelta} frame.rotate - The rotation input delta.
+     * @param {InputFrame<{ move: number, rotate: number }>} frame - The input frame.
      * @param {number} dt - The delta time.
      * @returns {Pose} - The controller pose.
      */
     update(frame, dt) {
-        const { move, rotate } = frame;
+        const { move, rotate } = frame.flush();
 
         // rotate
-        this._targetPose.rotate(tmpV1.set(-rotate.value[1], -rotate.value[0], 0));
+        this._targetPose.rotate(tmpV1.set(-rotate[1], -rotate[0], 0));
 
         // move
         const rotation = tmpQ1.setFromEulerAngles(this._pose.angles);
@@ -98,9 +96,9 @@ class FlyController extends InputController {
         const right = rotation.transformVector(Vec3.RIGHT, new Vec3());
         const up = rotation.transformVector(Vec3.UP, new Vec3());
         tmpV1.set(0, 0, 0);
-        tmpV1.add(tmpV2.copy(forward).mulScalar(move.value[2]));
-        tmpV1.add(tmpV2.copy(right).mulScalar(move.value[0]));
-        tmpV1.add(tmpV2.copy(up).mulScalar(move.value[1]));
+        tmpV1.add(tmpV2.copy(forward).mulScalar(move[2]));
+        tmpV1.add(tmpV2.copy(right).mulScalar(move[0]));
+        tmpV1.add(tmpV2.copy(up).mulScalar(move[1]));
         tmpV1.mulScalar(dt);
         this._targetPose.move(tmpV1);
 

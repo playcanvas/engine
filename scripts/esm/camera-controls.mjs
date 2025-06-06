@@ -3,14 +3,14 @@ import {
     DualGestureSource,
     FlyController,
     GamepadSource,
+    InputFrame,
     KeyboardMouseSource,
     MultiTouchSource,
     OrbitController,
+    PROJECTION_PERSPECTIVE,
     Script,
     Vec2,
-    Vec3,
-    InputDelta,
-    PROJECTION_PERSPECTIVE
+    Vec3
 } from 'playcanvas';
 
 /** @import { CameraComponent, EventHandler, InputController } from 'playcanvas' */
@@ -27,8 +27,10 @@ import {
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 
-const move = new InputDelta(3);
-const rotate = new InputDelta(3);
+const frame = new InputFrame({
+    move: 3,
+    rotate: 3
+});
 
 const ZOOM_SCALE_MULT = 10;
 
@@ -733,11 +735,10 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {InputDelta} move - The move input delta.
-     * @param {InputDelta} rotate - The rotate input delta.
+     * @param {InputFrame<{ move: number, rotate: number }>} frame - The input frame.
      * @private
      */
-    _addDesktopInput(move, rotate) {
+    _addDesktopInputDeltas({ deltas }) {
         const { key, button, mouse, wheel } = this._desktopInput.frame();
 
         // destructure keys
@@ -780,7 +781,7 @@ class CameraControls extends Script {
         const wheelMove = new Vec3(0, 0, wheel[0]).mulScalar(this._zoomMult);
         v.add(wheelMove.mulScalar(orbit));
 
-        move.append([v.x, v.y, v.z]);
+        deltas.move.append([v.x, v.y, v.z]);
 
         // rotate input
         v.set(0, 0, 0);
@@ -788,15 +789,14 @@ class CameraControls extends Script {
         const mouseRotate = new Vec3(mouse[0], mouse[1], 0).mulScalar(this.rotateSpeed);
         v.add(mouseRotate.mulScalar(1 - pan));
 
-        rotate.append([v.x, v.y, v.z]);
+        deltas.rotate.append([v.x, v.y, v.z]);
     }
 
     /**
-     * @param {InputDelta} move - The move input delta.
-     * @param {InputDelta} rotate - The rotate input delta.
+     * @param {InputFrame<{ move: number, rotate: number }>} frame - The input frame.
      * @private
      */
-    _addMobileInput(move, rotate) {
+    _addMobileInputDeltas({ deltas }) {
         const { touch, pinch, count } = this._orbitMobileInput.frame();
         const { leftInput, rightInput } = this._flyMobileInput.frame();
 
@@ -818,7 +818,7 @@ class CameraControls extends Script {
         const pinchMove = new Vec3(0, 0, pinch[0]).mulScalar(this._zoomMult * this.zoomPinchSens);
         v.add(pinchMove.mulScalar(orbit));
 
-        move.append([v.x, v.y, v.z]);
+        deltas.move.append([v.x, v.y, v.z]);
 
         // rotate input
         v.set(0, 0, 0);
@@ -830,15 +830,14 @@ class CameraControls extends Script {
             +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens);
         v.add(flyRotate.mulScalar(fly * (1 - pan)));
 
-        rotate.append([v.x, v.y, v.z]);
+        deltas.rotate.append([v.x, v.y, v.z]);
     }
 
     /**
-     * @param {InputDelta} move - The move input delta.
-     * @param {InputDelta} rotate - The rotate input delta.
+     * @param {InputFrame<{ move: number, rotate: number }>} frame - The input frame.
      * @private
      */
-    _addGamepadInput(move, rotate) {
+    _addGamepadInputDeltas({ deltas }) {
         const { leftStick, rightStick } = this._gamepadInput.frame();
 
         // apply dead zone to gamepad sticks
@@ -854,7 +853,7 @@ class CameraControls extends Script {
         const stickMove = tmpV1.set(leftStick[0], 0, -leftStick[1]).mulScalar(this._moveMult);
         v.add(stickMove.mulScalar(fly * (1 - pan)));
 
-        move.append([v.x, v.y, v.z]);
+        deltas.move.append([v.x, v.y, v.z]);
 
         // rotate input
         v.set(0, 0, 0);
@@ -863,7 +862,7 @@ class CameraControls extends Script {
             this.rotateJoystickSens);
         v.add(stickRotate.mulScalar(fly * (1 - pan)));
 
-        rotate.append([v.x, v.y, v.z]);
+        deltas.rotate.append([v.x, v.y, v.z]);
     }
 
     /**
@@ -918,21 +917,26 @@ class CameraControls extends Script {
      */
     update(dt) {
         // add inputs
-        this._addDesktopInput(move, rotate);
-        this._addMobileInput(move, rotate);
-        this._addGamepadInput(move, rotate);
+        this._addDesktopInputDeltas(frame);
+        this._addMobileInputDeltas(frame);
+        this._addGamepadInputDeltas(frame);
 
-        // update controller
-        if (!this.skipUpdate && !this.app.xr?.active) {
-            const pose = this._controller.update({ move, rotate }, dt);
-            this._camera.entity.setPosition(pose.position);
-            this._camera.entity.setEulerAngles(pose.angles);
+        if (this.skipUpdate) {
+            // skip update, just flush frame
+            frame.flush();
+            return;
         }
 
-        // flush inputs
-        move.flush();
-        rotate.flush();
+        if (this.app.xr?.active) {
+            // skip update, just flush frame
+            frame.flush();
+            return;
+        }
 
+        // update controller and consume frame
+        const pose = this._controller.update(frame, dt);
+        this._camera.entity.setPosition(pose.position);
+        this._camera.entity.setEulerAngles(pose.angles);
     }
 }
 
