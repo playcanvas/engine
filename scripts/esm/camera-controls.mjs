@@ -808,8 +808,8 @@ class CameraControls extends Script {
         // move input
         const v = tmpV1.set(0, 0, 0);
 
-        const orbitMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(this._moveMult);
-        v.add(orbitMove.mulScalar(orbit * (1 - pan)));
+        const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(this._moveMult);
+        v.add(flyMove.mulScalar(fly * (1 - pan)));
 
         const panMove = this._screenToWorld(touch[0], touch[1], this._orbitController.zoom);
         v.add(panMove.mulScalar(orbit * pan));
