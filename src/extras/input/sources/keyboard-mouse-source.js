@@ -1,4 +1,4 @@
-import { InputDelta, InputSource } from '../input.js';
+import { InputSource } from '../input.js';
 
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
@@ -10,6 +10,8 @@ const array9 = new Array(9).fill(0);
  *
  * @category Input Source
  * @alpha
+ *
+ * @augments {InputSource<{ key: number, button: number, mouse: number, wheel: number }>}
  */
 class KeyboardMouseSource extends InputSource {
     /**
@@ -35,18 +37,13 @@ class KeyboardMouseSource extends InputSource {
      */
     _button = new Array(3).fill(0);
 
-    /**
-     * @override
-     */
-    deltas = {
-        key: new InputDelta(9),
-        button: new InputDelta(3),
-        mouse: new InputDelta(2),
-        wheel: new InputDelta()
-    };
-
     constructor() {
-        super();
+        super({
+            key: 9,
+            button: 3,
+            mouse: 2,
+            wheel: 1
+        });
 
         this._onWheel = this._onWheel.bind(this);
         this._onPointerDown = this._onPointerDown.bind(this);
@@ -243,17 +240,16 @@ class KeyboardMouseSource extends InputSource {
     }
 
     /**
-     * @returns {{ [K in keyof KeyboardMouseSource["deltas"]]: number[] }} - The deltas.
      * @override
      */
-    frame() {
+    flush() {
         for (let i = 0; i < array9.length; i++) {
             array9[i] = this._keyNow[i] - this._keyPrev[i];
             this._keyPrev[i] = this._keyNow[i];
         }
         this.deltas.key.append(array9);
 
-        return super.frame();
+        return super.flush();
     }
 }
 

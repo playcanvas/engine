@@ -1,19 +1,20 @@
-import { InputDelta, InputSource } from '../input.js';
+import { InputSource } from '../input.js';
 
 /**
  * Game pad input source class
  *
  * @category Input Source
  * @alpha
+ *
+ * @augments {InputSource<{ leftStick: number, rightStick: number }>}
  */
 class GamepadSource extends InputSource {
-    /**
-     * @override
-     */
-    deltas = {
-        leftStick: new InputDelta(2),
-        rightStick: new InputDelta(2)
-    };
+    constructor() {
+        super({
+            leftStick: 2,
+            rightStick: 2
+        });
+    }
 
     /**
      * @param {HTMLElement} element - The element.
@@ -31,10 +32,9 @@ class GamepadSource extends InputSource {
     }
 
     /**
-     * @returns {{ [K in keyof GamepadSource["deltas"]]: number[] }} - The deltas.
      * @override
      */
-    frame() {
+    flush() {
         const gamepads = navigator.getGamepads();
         for (let i = 0; i < gamepads.length; i++) {
             const gp = gamepads[i];
@@ -47,7 +47,7 @@ class GamepadSource extends InputSource {
             this.deltas.rightStick.append([axes[2], axes[3]]);
         }
 
-        return super.frame();
+        return super.flush();
     }
 }
 

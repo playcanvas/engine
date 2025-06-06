@@ -1,4 +1,4 @@
-import { InputDelta, InputSource } from '../input.js';
+import { InputSource } from '../input.js';
 import { VirtualJoystick } from './virtual-joystick.js';
 
 /**
@@ -20,6 +20,8 @@ const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length
  *
  * @category Input Source
  * @alpha
+ *
+ * @augments {InputSource<{ leftInput: number, rightInput: number }>}
  */
 class DualGestureSource extends InputSource {
     /**
@@ -47,19 +49,14 @@ class DualGestureSource extends InputSource {
     _rightJoystick;
 
     /**
-     * @override
-     */
-    deltas = {
-        leftInput: new InputDelta(2),
-        rightInput: new InputDelta(2)
-    };
-
-    /**
      * @param {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`} [layout] - The layout of the dual
      * gesture source.
      */
     constructor(layout) {
-        super();
+        super({
+            leftInput: 2,
+            rightInput: 2
+        });
 
         if (layout) {
             this.layout = layout;
@@ -207,14 +204,13 @@ class DualGestureSource extends InputSource {
     }
 
     /**
-     * @returns {{ [K in keyof DualGestureSource["deltas"]]: number[] }} - The deltas.
      * @override
      */
-    frame() {
+    flush() {
         this.deltas.leftInput.append([this._leftJoystick.value.x, this._leftJoystick.value.y]);
         this.deltas.rightInput.append([this._rightJoystick.value.x, this._rightJoystick.value.y]);
 
-        return super.frame();
+        return super.flush();
     }
 
     destroy() {

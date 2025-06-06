@@ -1,5 +1,5 @@
 import { Vec2 } from '../../../core/math/vec2.js';
-import { InputDelta, InputSource } from '../input.js';
+import { InputSource } from '../input.js';
 
 const tmpVa = new Vec2();
 
@@ -8,6 +8,8 @@ const tmpVa = new Vec2();
  *
  * @category Input Source
  * @alpha
+ *
+ * @augments {InputSource<{ touch: number, count: number, pinch: number }>}
  */
 class MultiTouchSource extends InputSource {
     /**
@@ -28,17 +30,12 @@ class MultiTouchSource extends InputSource {
      */
     _pinchDist = -1;
 
-    /**
-     * @override
-     */
-    deltas = {
-        touch: new InputDelta(2),
-        count: new InputDelta(),
-        pinch: new InputDelta()
-    };
-
     constructor() {
-        super();
+        super({
+            touch: 2,
+            count: 1,
+            pinch: 1
+        });
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
@@ -179,14 +176,6 @@ class MultiTouchSource extends InputSource {
         this._pointerEvents.clear();
 
         super.detach();
-    }
-
-    /**
-     * @returns {{ [K in keyof MultiTouchSource["deltas"]]: number[] }} - The deltas.
-     * @override
-     */
-    frame() {
-        return super.frame();
     }
 }
 

@@ -121,19 +121,16 @@ class InputFrame {
  *
  * @category Input Source
  * @alpha
+ *
+ * @template {Record<string, number>} T - The shape of the input source.
+ * @augments {InputFrame<T>}
  */
-class InputSource {
+class InputSource extends InputFrame {
     /**
      * @type {HTMLElement | null}
      * @protected
      */
     _element = null;
-
-    /**
-     * @type {object}
-     * @protected
-     */
-    deltas = {};
 
     /**
      * @param {HTMLElement} element - The element.
@@ -154,19 +151,6 @@ class InputSource {
         for (const name in this.deltas) {
             this.deltas[name].flush();
         }
-    }
-
-    /**
-     * @returns {object} - The deltas.
-     */
-    frame() {
-        const frame = {};
-        for (const name in this.deltas) {
-            const delta = this.deltas[name];
-            frame[name] = delta.value.slice();
-            delta.flush();
-        }
-        return frame;
     }
 
     destroy() {

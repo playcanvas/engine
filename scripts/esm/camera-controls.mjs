@@ -739,7 +739,7 @@ class CameraControls extends Script {
      * @private
      */
     _addDesktopInputDeltas({ deltas }) {
-        const { key, button, mouse, wheel } = this._desktopInput.frame();
+        const { key, button, mouse, wheel } = this._desktopInput.flush();
 
         // destructure keys
         const [forward, back, left, right, down, up, /** space */, shift, ctrl] = key;
@@ -797,8 +797,8 @@ class CameraControls extends Script {
      * @private
      */
     _addMobileInputDeltas({ deltas }) {
-        const { touch, pinch, count } = this._orbitMobileInput.frame();
-        const { leftInput, rightInput } = this._flyMobileInput.frame();
+        const { touch, pinch, count } = this._orbitMobileInput.flush();
+        const { leftInput, rightInput } = this._flyMobileInput.flush();
 
         // update state
         this._state.touches += count[0];
@@ -834,11 +834,11 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {InputFrame<{ move: number, rotate: number }>} frame - The input frame.
+     * @param {InputFrame<{ move: 3, rotate: 3 }>} frame - The input frame.
      * @private
      */
     _addGamepadInputDeltas({ deltas }) {
-        const { leftStick, rightStick } = this._gamepadInput.frame();
+        const { leftStick, rightStick } = this._gamepadInput.flush();
 
         // apply dead zone to gamepad sticks
         applyDeadZone(leftStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);

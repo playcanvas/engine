@@ -1,4 +1,4 @@
-import { InputDelta, InputSource } from '../input.js';
+import { InputSource } from '../input.js';
 import { VirtualJoystick } from './virtual-joystick.js';
 
 /**
@@ -6,6 +6,8 @@ import { VirtualJoystick } from './virtual-joystick.js';
  *
  * @category Input Source
  * @alpha
+ *
+ * @augments {InputSource<{ input: number }>}
  */
 class SingleGestureSource extends InputSource {
     /**
@@ -26,15 +28,10 @@ class SingleGestureSource extends InputSource {
      */
     _joystick;
 
-    /**
-     * @override
-     */
-    deltas = {
-        input: new InputDelta(2)
-    };
-
     constructor() {
-        super();
+        super({
+            input: 2
+        });
 
         this._joystick = new VirtualJoystick();
 
@@ -160,13 +157,12 @@ class SingleGestureSource extends InputSource {
     }
 
     /**
-     * @returns {{ [K in keyof SingleGestureSource["deltas"]]: number[] }} - The deltas.
      * @override
      */
-    frame() {
+    flush() {
         this.deltas.input.append([this._joystick.value.x, this._joystick.value.y]);
 
-        return super.frame();
+        return super.flush();
     }
 
     destroy() {
