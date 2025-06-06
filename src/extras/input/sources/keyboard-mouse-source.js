@@ -39,10 +39,10 @@ class KeyboardMouseSource extends InputSource {
      * @override
      */
     deltas = {
-        key: InputDelta.alloc(9),
-        button: InputDelta.alloc(3),
-        mouse: InputDelta.alloc(2),
-        wheel: InputDelta.alloc()
+        key: new InputDelta(9),
+        button: new InputDelta(3),
+        mouse: new InputDelta(2),
+        wheel: new InputDelta()
     };
 
     constructor() {

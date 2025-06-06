@@ -16,20 +16,10 @@ class InputDelta {
     _instance;
 
     /**
-     * Allocates a new InputDelta instance with the specified dimension.
-     *
-     * @param {number} dim - The dimension of the delta.
-     * @returns {InputDelta} - A new InputDelta instance initialized with zeros.
+     * @param {number} dim - The dimension of the delta. Defaults to 1.
      */
-    static alloc(dim = 1) {
-        return new this(Array(dim).fill(0));
-    }
-
-    /**
-     * @param {number[]} array - the array to use for the delta.
-     */
-    constructor(array) {
-        this._instance = array;
+    constructor(dim = 1) {
+        this._instance = Array(dim).fill(0);
     }
 
     /**

@@ -30,7 +30,7 @@ class SingleGestureSource extends InputSource {
      * @override
      */
     deltas = {
-        input: InputDelta.alloc(2)
+        input: new InputDelta(2)
     };
 
     constructor() {

@@ -50,8 +50,8 @@ class DualGestureSource extends InputSource {
      * @override
      */
     deltas = {
-        leftInput: InputDelta.alloc(2),
-        rightInput: InputDelta.alloc(2)
+        leftInput: new InputDelta(2),
+        rightInput: new InputDelta(2)
     };
 
     /**

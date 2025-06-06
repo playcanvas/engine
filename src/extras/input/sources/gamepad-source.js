@@ -11,8 +11,8 @@ class GamepadSource extends InputSource {
      * @override
      */
     deltas = {
-        leftStick: InputDelta.alloc(2),
-        rightStick: InputDelta.alloc(2)
+        leftStick: new InputDelta(2),
+        rightStick: new InputDelta(2)
     };
 
     /**

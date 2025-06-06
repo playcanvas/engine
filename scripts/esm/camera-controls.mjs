@@ -27,8 +27,8 @@ import {
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 
-const move = InputDelta.alloc(3);
-const rotate = InputDelta.alloc(3);
+const move = new InputDelta(3);
+const rotate = new InputDelta(3);
 
 const ZOOM_SCALE_MULT = 10;
 

@@ -32,9 +32,9 @@ class MultiTouchSource extends InputSource {
      * @override
      */
     deltas = {
-        touch: InputDelta.alloc(2),
-        count: InputDelta.alloc(),
-        pinch: InputDelta.alloc()
+        touch: new InputDelta(2),
+        count: new InputDelta(),
+        pinch: new InputDelta()
     };
 
     constructor() {
