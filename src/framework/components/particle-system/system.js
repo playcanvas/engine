@@ -240,7 +240,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
                     if (!data.paused) {
                         let numSteps = 0;
                         emitter.simTime += dt;
-                        if (emitter.simTime > emitter.fixedTimeStep) {
+                        if (emitter.simTime >= emitter.fixedTimeStep) {
                             numSteps = Math.floor(emitter.simTime / emitter.fixedTimeStep);
                             emitter.simTime -= numSteps * emitter.fixedTimeStep;
                         }
