@@ -2,17 +2,25 @@ export default /* glsl */`
 uniform vec2 viewport;                  // viewport dimensions
 uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
 
-// calculate the clip-space offset from the center for this gaussian
-bool initCorner(SplatSource source, SplatCenter center, SplatPRS prs, out SplatCorner corner) {
+void calcCovarianceOrig(SplatPRS viewPRS, float focal, out vec3 cov0, out vec3 cov1) {
     // M = S * R
     mat3 M = transpose(mat3(
-        prs.scale.x * prs.rotation[0],
-        prs.scale.y * prs.rotation[1],
-        prs.scale.z * prs.rotation[2]
+        viewPRS.scale.x * viewPRS.rotation[0],
+        viewPRS.scale.y * viewPRS.rotation[1],
+        viewPRS.scale.z * viewPRS.rotation[2]
     ));
 
-    vec3 covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
-    vec3 covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
+    vec3 covA = vec3(
+        dot(M[0], M[0]),
+        dot(M[0], M[1]),
+        dot(M[0], M[2])
+    );
+
+    vec3 covB = vec3(
+        dot(M[1], M[1]),
+        dot(M[1], M[2]),
+        dot(M[2], M[2])
+    );
 
     mat3 Vrk = mat3(
         covA.x, covA.y, covA.z, 
@@ -20,9 +28,7 @@ bool initCorner(SplatSource source, SplatCenter center, SplatPRS prs, out SplatC
         covA.z, covB.y, covB.z
     );
 
-    float focal = viewport.x * center.projMat00;
-
-    vec3 v = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : center.view.xyz;
+    vec3 v = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : viewPRS.position;
     float J1 = focal / v.z;
     vec2 J2 = -J1 / v.z * v.xy;
     mat3 J = mat3(
@@ -31,20 +37,63 @@ bool initCorner(SplatSource source, SplatCenter center, SplatPRS prs, out SplatC
         0.0, 0.0, 0.0
     );
 
-    mat3 W = transpose(mat3(center.modelView));
-    mat3 T = W * J;
-    mat3 cov = transpose(T) * Vrk * T;
+    mat3 Jt = mat3(
+        J1,   0.0,  0.0,
+        0.0,  J1,   0.0,
+        J2.x, J2.y, 0.0
+    );
+
+    mat3 cov = Jt * Vrk * J;
+
+    cov0 = cov[0];
+    cov1 = cov[1];
+}
+
+void calcCovariance(SplatPRS viewPRS, float focal, out vec3 cov0, out vec3 cov1) {
+    vec3 c0 = viewPRS.scale.x * viewPRS.rotation[0];   // first column of S·R
+    vec3 c1 = viewPRS.scale.y * viewPRS.rotation[1];   // second column
+
+    float a00 = dot(c0, c0);   // = covA.x
+    float a01 = dot(c0, c1);   // = covA.y
+    float a11 = dot(c1, c1);   // = covB.x
+
+    vec3  v      = (camera_params.w == 1.0) ? vec3(0.0, 0.0, 1.0) : viewPRS.position;
+    float invZ   = 1.0 / v.z;
+    float J1     = focal * invZ;          // ∂x/∂X = ∂y/∂Y = f / Z
+    vec2  J2     = -J1 * invZ * v.xy;     // ∂x/∂Z , ∂y/∂Z
+    float J1sq   = J1 * J1;
+
+    // cov[0]  (column 0)
+    cov0 = vec3(
+        J1sq * a00,                                   // (0,0)
+        J1sq * a01,                                   // (1,0) = (0,1)
+        J1   * (J2.x * a00 + J2.y * a01)              // (2,0)
+    );
+
+    // cov[1]  (column 1)
+    cov1 = vec3(
+        J1sq * a01,                                   // (0,1) = (1,0)
+        J1sq * a11,                                   // (1,1)
+        J1   * (J2.x * a01 + J2.y * a11)              // (2,1)
+    );
+}
+
+// calculate the clip-space offset from the center for this gaussian
+bool project2D(SplatPRS viewPRS, mat4 proj, out vec2 v0, out vec2 v1, out float aaFactor) {
+
+    vec3 cov0, cov1;
+    calcCovariance(viewPRS, viewport.x * proj[0][0], cov0, cov1);
 
     #if GSPLAT_AA
         // calculate AA factor
-        float detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[0][1];
-        float detBlur = (cov[0][0] + 0.3) * (cov[1][1] + 0.3) - cov[0][1] * cov[0][1];
-        corner.aaFactor = sqrt(max(detOrig / detBlur, 0.0));
+        float detOrig = cov0[0] * cov1[1] - cov0[1] * cov0[1];
+        float detBlur = (cov0[0] + 0.3) * (cov1[1] + 0.3) - cov0[1] * cov0[1];
+        aaFactor = sqrt(max(detOrig / detBlur, 0.0));
     #endif
 
-    float diagonal1 = cov[0][0] + 0.3;
-    float offDiagonal = cov[0][1];
-    float diagonal2 = cov[1][1] + 0.3;
+    float diagonal1 = cov0[0] + 0.3;
+    float offDiagonal = cov0[1];
+    float diagonal2 = cov1[1] + 0.3;
 
     float mid = 0.5 * (diagonal1 + diagonal2);
     float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
@@ -62,19 +111,9 @@ bool initCorner(SplatSource source, SplatCenter center, SplatPRS prs, out SplatC
         return false;
     }
 
-    vec2 c = center.proj.ww / viewport;
-
-    // cull against frustum x/y axes
-    if (any(greaterThan(abs(center.proj.xy) - vec2(max(l1, l2)) * c, center.proj.ww))) {
-        return false;
-    }
-
     vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
-    vec2 v1 = l1 * diagonalVector;
-    vec2 v2 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
-
-    corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) * c;
-    corner.uv = source.cornerUV;
+    v0 = l1 * diagonalVector;
+    v1 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
 
     return true;
 }

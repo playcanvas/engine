@@ -32,6 +32,8 @@ import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
 
+import { Texture } from '../texture.js';
+
 /**
  * @import { BindGroup } from '../bind-group.js'
  * @import { RenderPass } from '../render-pass.js'
@@ -411,8 +413,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.memory(this);
         WebgpuDebug.validate(this);
 
+        const createInternal = () => {
+            this.internalBackbuffer = new Texture(this, {
+                width: 1024,
+                height: 512,
+                name: 'WebgpuInternalBackbuffer',
+                mipmaps: false,
+                format: PIXELFORMAT_BGRA8
+            });
+
+            return this.internalBackbuffer.impl;
+        };
+
         // current frame color output buffer
-        const outColorBuffer = this.gpuContext.getCurrentTexture();
+        const outColorBuffer = this.gpuContext?.getCurrentTexture?.() ?? createInternal();
         DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
         // reallocate framebuffer if dimensions change, to match the output texture

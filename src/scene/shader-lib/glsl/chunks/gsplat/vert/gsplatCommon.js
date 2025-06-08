@@ -15,14 +15,6 @@ struct SplatPRS {
     vec3 scale;         // model space scale
 };
 
-// stores the camera and clip space position of the gaussian center
-struct SplatCenter {
-    vec3 view;          // center in view space
-    vec4 proj;          // center in clip space
-    mat4 modelView;     // model-view matrix
-    float projMat00;    // element [0][0] of the projection matrix
-};
-
 // stores the offset from center for the current gaussian
 struct SplatCorner {
     vec2 offset;        // corner offset from center in clip space

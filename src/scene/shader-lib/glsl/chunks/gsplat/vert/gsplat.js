@@ -4,6 +4,8 @@ export default /* glsl */`
 varying mediump vec2 gaussianUV;
 varying mediump vec4 gaussianColor;
 
+uniform mat4 matrix_projection;
+
 #ifndef DITHER_NONE
     varying float id;
 #endif
@@ -17,6 +19,13 @@ mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 #include "gsplatAnimatePRSVS"
 #include "gsplatAnimateColorVS"
 
+void readPRS(SplatSource source, out SplatPRS prs) {
+    prs.position = readPosition(source);
+    vec4 quat;
+    readRotationAndScale(source, quat, prs.scale);
+    prs.rotation = quatToMat3(quat);
+}
+
 void main(void) {
     // read gaussian details
     SplatSource source;
@@ -25,25 +34,21 @@ void main(void) {
         return;
     }
 
-    // read gaussian PRS attributes
+    // read PRS
     SplatPRS prs;
-    vec4 quat;
-    prs.position = readPosition(source);
-    readRotationAndScale(source, quat, prs.scale);
-    prs.rotation = quatToMat3(quat);
+    readPRS(source, prs);
 
-    // animate position, rotation and scale
+    // update PRS
     animatePRS(prs);
 
-    SplatCenter center;
-    if (!initCenter(prs.position, center)) {
-        gl_Position = discardVec;
-        return;
-    }
+    // transform PRS to view space
+    SplatPRS viewPRS;
+    transformPRS(prs, viewPRS);
 
     // project center to screen space
-    SplatCorner corner;
-    if (!initCorner(source, center, prs, corner)) {
+    vec2 v0, v1;
+    float aaFactor;
+    if (!project2D(viewPRS, matrix_projection, v0, v1, aaFactor)) {
         gl_Position = discardVec;
         return;
     }
@@ -54,7 +59,7 @@ void main(void) {
     // evaluate spherical harmonics
     #if SH_BANDS > 0
         // calculate the model-space view direction
-        vec3 dir = normalize(center.view * mat3(center.modelView));
+        vec3 dir = normalize(viewPRS.position * mat3(center.modelView));
         clr.xyz += evalSH(source, dir);
     #endif
 
@@ -62,7 +67,7 @@ void main(void) {
 
     #if GSPLAT_AA
         // apply AA compensation
-        clr.w *= corner.aaFactor;
+        clr.w *= aaFactor;
     #endif
 
     clipCorner(corner, clr.w);
