@@ -51,6 +51,11 @@ void main(void) {
     // read color
     vec4 clr = readColor(source);
 
+    #if GSPLAT_AA
+        // apply AA compensation
+        clr.w *= corner.aaFactor;
+    #endif
+
     // evaluate spherical harmonics
     #if SH_BANDS > 0
         // calculate the model-space view direction
@@ -59,11 +64,6 @@ void main(void) {
     #endif
 
     animateColor(prs, clr);
-
-    #if GSPLAT_AA
-        // apply AA compensation
-        clr.w *= corner.aaFactor;
-    #endif
 
     clipCorner(corner, clr.w);
 
