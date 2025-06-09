@@ -279,34 +279,14 @@ class CameraControls extends Script {
     gamepadDeadZone = new Vec2(0.3, 0.6);
 
     /**
-     * The joystick event name for the down event.
+     * The joystick event name for the UI position for the base and stick elements.
      * The event name is appended with the side: 'left' or 'right'.
      *
      * @attribute
      * @title Joystick Base Event Name
      * @type {string}
      */
-    joystickDownEventName = 'joystick:down';
-
-    /**
-     * The joystick event name for the move event.
-     * The event name is appended with the side: 'left' or 'right'.
-     *
-     * @attribute
-     * @title Joystick Stick Event Name
-     * @type {string}
-     */
-    joystickMoveEventName = 'joystick:move';
-
-    /**
-     * The joystick event name for the up event.
-     * The event name is appended with the side: 'left' or 'right'.
-     *
-     * @attribute
-     * @title Joystick Reset Event Name
-     * @type {string}
-     */
-    joystickUpEventName = 'joystick:up';
+    joystickEventName = 'joystick';
 
     /**
      * @type {number}
@@ -605,23 +585,11 @@ class CameraControls extends Script {
      * @private
      */
     _exposeJoystickEvents(joystick, side) {
-        joystick.on('down', (x, y) => {
+        joystick.on('position', (bx, by, sx, sy) => {
             if (this._mode !== CameraControls.MODE_FLY) {
                 return;
             }
-            this.app.fire(`${this.joystickDownEventName}:${side}`, x, y);
-        });
-        joystick.on('move', (x, y) => {
-            if (this._mode !== CameraControls.MODE_FLY) {
-                return;
-            }
-            this.app.fire(`${this.joystickMoveEventName}:${side}`, x, y);
-        });
-        joystick.on('up', () => {
-            if (this._mode !== CameraControls.MODE_FLY) {
-                return;
-            }
-            this.app.fire(`${this.joystickUpEventName}:${side}`);
+            this.app.fire(`${this.joystickEventName}:${side}`, bx, by, sx, sy);
         });
     }
 

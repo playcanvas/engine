@@ -39,7 +39,7 @@ class VirtualJoystick extends EventHandler {
     down(x, y) {
         this._position.set(x, y);
         this._value.set(0, 0);
-        this.fire('down', this._position.x, this._position.y);
+        this.fire('position', x, y, x, y);
     }
 
     /**
@@ -55,13 +55,14 @@ class VirtualJoystick extends EventHandler {
             math.clamp(v.x / this._range, -1, 1),
             math.clamp(v.y / this._range, -1, 1)
         );
-        this.fire('move', this._position.x + v.x, this._position.y + v.y);
+        const { x: px, y: py } = this._position;
+        this.fire('position', px, py, px + v.x, py + v.y);
     }
 
     up() {
         this._position.set(0, 0);
         this._value.set(0, 0);
-        this.fire('up');
+        this.fire('position', -1, -1, -1, -1);
     }
 
     get value() {

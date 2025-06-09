@@ -180,16 +180,15 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
         el.style.display = 'none';
     };
 
-    app.on(`${cc.joystickDownEventName}:${side}`, (x, y) => {
-        show(base, baseSize, x, y);
-        show(stick, stickSize, x, y);
-    });
-    app.on(`${cc.joystickMoveEventName}:${side}`, (x, y) => {
-        show(stick, stickSize, x, y);
-    });
-    app.on(`${cc.joystickUpEventName}:${side}`, () => {
-        hide(base);
-        hide(stick);
+    app.on(`${cc.joystickEventName}:${side}`, (bx, by, sx, sy) => {
+        if (bx < 0 || by < 0 || sx < 0 || sy < 0) {
+            hide(base);
+            hide(stick);
+            return;
+        }
+
+        show(base, baseSize, bx, by);
+        show(stick, stickSize, sx, sy);
     });
 
     document.body.append(base, stick);
