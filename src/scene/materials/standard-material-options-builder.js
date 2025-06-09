@@ -401,7 +401,7 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.lights = [];
         }
 
-        if (options.litOptions.lights.length === 0) {
+        if (options.litOptions.lights.length === 0 && !scene.clusteredLightingEnabled) {
             options.litOptions.noShadow = true;
         }
     }
