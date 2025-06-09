@@ -38,6 +38,7 @@ class VirtualJoystick extends EventHandler {
      */
     down(x, y) {
         this._position.set(x, y);
+        this._value.set(0, 0);
         this.fire('down', this._position.x, this._position.y);
     }
 

@@ -108,11 +108,9 @@ class DualGestureSource extends InputSource {
 
         if (left && startsWith(this._layout, 'joystick')) {
             this._leftJoystick.down(event.clientX, event.clientY);
-            this._leftJoystick.move(event.clientX, event.clientY);
         }
         if (!left && endsWith(this._layout, 'joystick')) {
             this._rightJoystick.down(event.clientX, event.clientY);
-            this._rightJoystick.move(event.clientX, event.clientY);
         }
     }
 

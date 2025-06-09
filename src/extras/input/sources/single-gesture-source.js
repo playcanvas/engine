@@ -79,7 +79,6 @@ class SingleGestureSource extends InputSource {
 
         if (this._layout === 'joystick') {
             this._joystick.down(event.clientX, event.clientY);
-            this._joystick.move(event.clientX, event.clientY);
         }
     }
 
