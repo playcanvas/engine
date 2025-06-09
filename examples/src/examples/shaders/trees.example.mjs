@@ -145,7 +145,6 @@ assetListLoader.load(() => {
         attribute vec4 vertex_position;
         uniform mat4 matrix_viewProjection;
         uniform mat4 matrix_model;
-        uniform mat3 matrix_normal;
 
         #if defined(INSTANCING)
             #include "transformInstancingVS"
