@@ -14,7 +14,7 @@ uniform vec3 scales_mins;
 uniform vec3 scales_maxs;
 
 // read the model-space center of the gaussian
-vec3 readCenter(SplatSource source) {
+vec3 readPosition(SplatSource source) {
     vec3 u = texelFetch(means_u, source.uv, 0).xyz;
     vec3 l = texelFetch(means_l, source.uv, 0).xyz;
     vec3 n = (l * 255.0 + u * 255.0 * 256.0) / 65535.0;

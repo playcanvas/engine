@@ -7,7 +7,7 @@ uint tAw;
 vec4 tB;
 
 // read the model-space center of the gaussian
-vec3 readCenter(SplatSource source) {
+vec3 readPosition(SplatSource source) {
     // read transform data
     uvec4 tA = texelFetch(transformA, source.uv, 0);
     tAw = tA.w;
