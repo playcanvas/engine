@@ -4,8 +4,7 @@ export default /* wgsl */`
 
     uniform matrix_viewProjection: mat4x4f;
     uniform matrix_model: mat4x4f;
-    uniform matrix_normal: mat3x3f;
-
+    
     #ifdef MORPHING
 
         uniform morph_tex_params: vec2f;

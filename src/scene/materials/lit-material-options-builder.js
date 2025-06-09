@@ -14,7 +14,7 @@ class LitMaterialOptionsBuilder {
         LitMaterialOptionsBuilder.updateSharedOptions(litOptions, material, scene, objDefs, pass);
         LitMaterialOptionsBuilder.updateMaterialOptions(litOptions, material);
         LitMaterialOptionsBuilder.updateEnvOptions(litOptions, material, scene, renderParams);
-        LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, objDefs, sortedLights);
+        LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, scene, objDefs, sortedLights);
     }
 
     static updateSharedOptions(litOptions, material, scene, objDefs, pass) {
@@ -127,7 +127,7 @@ class LitMaterialOptionsBuilder {
         litOptions.useCubeMapRotation = hasSkybox && scene._skyboxRotationShaderInclude;
     }
 
-    static updateLightingOptions(litOptions, material, objDefs, sortedLights) {
+    static updateLightingOptions(litOptions, material, scene, objDefs, sortedLights) {
         litOptions.lightMapWithoutAmbient = false;
 
         if (material.useLighting) {
@@ -140,15 +140,18 @@ class LitMaterialOptionsBuilder {
 
             if (sortedLights) {
                 LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask);
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask);
+
+                if (!scene.clusteredLightingEnabled) {
+                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask);
+                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask);
+                }
             }
             litOptions.lights = lightsFiltered;
         } else {
             litOptions.lights = [];
         }
 
-        if (litOptions.lights.length === 0 || ((objDefs & SHADERDEF_NOSHADOW) !== 0)) {
+        if ((litOptions.lights.length === 0 && !scene.clusteredLightingEnabled) || ((objDefs & SHADERDEF_NOSHADOW) !== 0)) {
             litOptions.noShadow = true;
         }
     }
