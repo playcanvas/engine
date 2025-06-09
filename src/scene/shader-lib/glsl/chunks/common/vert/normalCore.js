@@ -2,6 +2,8 @@ export default /* glsl */`
 
 attribute vec3 vertex_normal;
 
+uniform mat3 matrix_normal;
+
 #ifdef MORPHING_NORMAL
     #ifdef MORPHING_INT
         uniform highp usampler2D morphNormalTex;
