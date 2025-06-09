@@ -4,7 +4,6 @@ uniform highp sampler2D transformB;
 
 // work values
 uint tAw;
-vec4 tB;
 
 // read the model-space center of the gaussian
 vec3 readPosition(SplatSource source) {
@@ -20,6 +19,7 @@ vec4 unpackRotation(vec3 packed) {
 
 // sample covariance vectors
 void readRotationAndScale(in SplatSource source, out vec4 rotation, out vec3 scale) {
+    vec4 tB = texelFetch(transformB, source.uv, 0);
     rotation = unpackRotation(vec3(unpackHalf2x16(tAw), tB.w)).wxyz;
     scale = tB.xyz;
 }
