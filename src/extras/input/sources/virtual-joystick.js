@@ -2,41 +2,20 @@ import { math } from '../../../core/math/math.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { EventHandler } from '../../../core/event-handler.js';
 
-const tmpVa = new Vec2();
+const v = new Vec2();
 
 class VirtualJoystick extends EventHandler {
-    /**
-     * @event
-     */
-    static EVENT_POSITIONBASE = 'position:base';
-
-    /**
-     * @event
-     */
-    static EVENT_POSITIONSTICK = 'position:stick';
-
-    /**
-     * @event
-     */
-    static EVENT_RESET = 'reset';
-
     /**
      * @type {number}
      * @private
      */
-    _displacement = 70;
+    _range = 70;
 
     /**
      * @type {Vec2}
      * @private
      */
-    _basePos = new Vec2();
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _stickPos = new Vec2();
+    _position = new Vec2();
 
     /**
      * @type {Vec2}
@@ -46,45 +25,42 @@ class VirtualJoystick extends EventHandler {
 
     /**
      * @param {object} options - The options.
-     * @param {number} [options.displacement] - The inner max distance of the joystick.
+     * @param {number} [options.range] - The inner max distance of the joystick.
      */
-    constructor(options = {}) {
+    constructor({ range } = {}) {
         super();
-        this._displacement = options.displacement ?? this._displacement;
+        this._range = range ?? this._range;
     }
 
     /**
      * @param {number} x - The x position.
      * @param {number} y - The y position.
      */
-    setBase(x, y) {
-        // base position
-        this._basePos.set(x, y);
-        this.fire(VirtualJoystick.EVENT_POSITIONBASE, this._basePos.x, this._basePos.y);
+    down(x, y) {
+        this._position.set(x, y);
+        this.fire('down', this._position.x, this._position.y);
     }
 
     /**
-     * @param {number} x - The x position.
-     * @param {number} y - The y position.
+     * @param {number} x - The x position of the stick
+     * @param {number} y - The y position of the stick
      */
-    setStick(x, y) {
-        this._stickPos.set(x, y);
-        tmpVa.sub2(this._stickPos, this._basePos);
-        const dist = tmpVa.length();
-        if (dist > this._displacement) {
-            tmpVa.normalize().mulScalar(this._displacement);
-            this._stickPos.add2(this._basePos, tmpVa);
+    move(x, y) {
+        v.set(x - this._position.x, y - this._position.y);
+        if (v.length() > this._range) {
+            v.normalize().mulScalar(this._range);
         }
-        this.fire(VirtualJoystick.EVENT_POSITIONSTICK, this._stickPos.x, this._stickPos.y);
-
-        const vx = math.clamp(tmpVa.x / this._displacement, -1, 1);
-        const vy = math.clamp(tmpVa.y / this._displacement, -1, 1);
-        this._value.set(vx, vy);
+        this._value.set(
+            math.clamp(v.x / this._range, -1, 1),
+            math.clamp(v.y / this._range, -1, 1)
+        );
+        this.fire('move', this._position.x + v.x, this._position.y + v.y);
     }
 
-    reset() {
+    up() {
+        this._position.set(0, 0);
         this._value.set(0, 0);
-        this.fire(VirtualJoystick.EVENT_RESET);
+        this.fire('up');
     }
 
     get value() {

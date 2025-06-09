@@ -78,8 +78,8 @@ class SingleGestureSource extends InputSource {
         });
 
         if (this._layout === 'joystick') {
-            this._joystick.setBase(event.clientX, event.clientY);
-            this._joystick.setStick(event.clientX, event.clientY);
+            this._joystick.down(event.clientX, event.clientY);
+            this._joystick.move(event.clientX, event.clientY);
         }
     }
 
@@ -102,7 +102,7 @@ class SingleGestureSource extends InputSource {
         data.y = event.clientY;
 
         if (this._layout === 'joystick') {
-            this._joystick.setStick(event.clientX, event.clientY);
+            this._joystick.move(event.clientX, event.clientY);
         } else {
             this.deltas.input.append([event.movementX, event.movementY]);
         }
@@ -125,7 +125,7 @@ class SingleGestureSource extends InputSource {
         this._pointerData.delete(event.pointerId);
 
         if (this._layout === 'joystick') {
-            this._joystick.reset();
+            this._joystick.up();
         }
     }
 
@@ -166,7 +166,7 @@ class SingleGestureSource extends InputSource {
     }
 
     destroy() {
-        this._joystick.reset();
+        this._joystick.up();
 
         super.destroy();
     }

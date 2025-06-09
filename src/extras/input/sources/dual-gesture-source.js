@@ -107,12 +107,12 @@ class DualGestureSource extends InputSource {
         });
 
         if (left && startsWith(this._layout, 'joystick')) {
-            this._leftJoystick.setBase(event.clientX, event.clientY);
-            this._leftJoystick.setStick(event.clientX, event.clientY);
+            this._leftJoystick.down(event.clientX, event.clientY);
+            this._leftJoystick.move(event.clientX, event.clientY);
         }
         if (!left && endsWith(this._layout, 'joystick')) {
-            this._rightJoystick.setBase(event.clientX, event.clientY);
-            this._rightJoystick.setStick(event.clientX, event.clientY);
+            this._rightJoystick.down(event.clientX, event.clientY);
+            this._rightJoystick.move(event.clientX, event.clientY);
         }
     }
 
@@ -137,13 +137,13 @@ class DualGestureSource extends InputSource {
 
         if (left) {
             if (startsWith(this._layout, 'joystick')) {
-                this._leftJoystick.setStick(event.clientX, event.clientY);
+                this._leftJoystick.move(event.clientX, event.clientY);
             } else {
                 this.deltas.leftInput.append([event.movementX, event.movementY]);
             }
         } else {
             if (endsWith(this._layout, 'joystick')) {
-                this._rightJoystick.setStick(event.clientX, event.clientY);
+                this._rightJoystick.move(event.clientX, event.clientY);
             } else {
                 this.deltas.rightInput.append([event.movementX, event.movementY]);
             }
@@ -168,10 +168,10 @@ class DualGestureSource extends InputSource {
         this._pointerData.delete(event.pointerId);
 
         if (left && startsWith(this._layout, 'joystick')) {
-            this._leftJoystick.reset();
+            this._leftJoystick.up();
         }
         if (!left && endsWith(this._layout, 'joystick')) {
-            this._rightJoystick.reset();
+            this._rightJoystick.up();
         }
 
     }
@@ -214,8 +214,8 @@ class DualGestureSource extends InputSource {
     }
 
     destroy() {
-        this._leftJoystick.reset();
-        this._rightJoystick.reset();
+        this._leftJoystick.up();
+        this._rightJoystick.up();
 
         super.destroy();
     }

@@ -279,34 +279,34 @@ class CameraControls extends Script {
     gamepadDeadZone = new Vec2(0.3, 0.6);
 
     /**
-     * The joystick event name for the base position.
+     * The joystick event name for the down event.
      * The event name is appended with the side: 'left' or 'right'.
      *
      * @attribute
      * @title Joystick Base Event Name
      * @type {string}
      */
-    joystickBaseEventName = 'joystick:base';
+    joystickDownEventName = 'joystick:down';
 
     /**
-     * The joystick event name for the stick position.
+     * The joystick event name for the move event.
      * The event name is appended with the side: 'left' or 'right'.
      *
      * @attribute
      * @title Joystick Stick Event Name
      * @type {string}
      */
-    joystickStickEventName = 'joystick:stick';
+    joystickMoveEventName = 'joystick:move';
 
     /**
-     * The joystick event name for the reset event.
+     * The joystick event name for the up event.
      * The event name is appended with the side: 'left' or 'right'.
      *
      * @attribute
      * @title Joystick Reset Event Name
      * @type {string}
      */
-    joystickResetEventName = 'joystick:reset';
+    joystickUpEventName = 'joystick:up';
 
     /**
      * @type {number}
@@ -605,23 +605,23 @@ class CameraControls extends Script {
      * @private
      */
     _exposeJoystickEvents(joystick, side) {
-        joystick.on('position:base', (x, y) => {
+        joystick.on('down', (x, y) => {
             if (this._mode !== CameraControls.MODE_FLY) {
                 return;
             }
-            this.app.fire(`${this.joystickBaseEventName}:${side}`, x, y);
+            this.app.fire(`${this.joystickDownEventName}:${side}`, x, y);
         });
-        joystick.on('position:stick', (x, y) => {
+        joystick.on('move', (x, y) => {
             if (this._mode !== CameraControls.MODE_FLY) {
                 return;
             }
-            this.app.fire(`${this.joystickStickEventName}:${side}`, x, y);
+            this.app.fire(`${this.joystickMoveEventName}:${side}`, x, y);
         });
-        joystick.on('reset', () => {
+        joystick.on('up', () => {
             if (this._mode !== CameraControls.MODE_FLY) {
                 return;
             }
-            this.app.fire(`${this.joystickResetEventName}:${side}`);
+            this.app.fire(`${this.joystickUpEventName}:${side}`);
         });
     }
 

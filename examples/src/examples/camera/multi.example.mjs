@@ -161,7 +161,7 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
         boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)'
     });
 
-    app.on(`${cc.joystickBaseEventName}:${side}`, (x, y) => {
+    app.on(`${cc.joystickDownEventName}:${side}`, (x, y) => {
         const left = x - baseSize * 0.5;
         const top = y - baseSize * 0.5;
 
@@ -169,7 +169,7 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
         base.style.left = `${left}px`;
         base.style.top = `${top}px`;
     });
-    app.on(`${cc.joystickStickEventName}:${side}`, (x, y) => {
+    app.on(`${cc.joystickMoveEventName}:${side}`, (x, y) => {
         const left = x - stickSize * 0.5;
         const top = y - stickSize * 0.5;
 
@@ -177,7 +177,7 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
         stick.style.left = `${left}px`;
         stick.style.top = `${top}px`;
     });
-    app.on(`${cc.joystickResetEventName}:${side}`, () => {
+    app.on(`${cc.joystickUpEventName}:${side}`, () => {
         base.style.display = 'none';
         stick.style.display = 'none';
     });
