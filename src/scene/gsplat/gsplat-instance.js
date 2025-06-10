@@ -117,7 +117,7 @@ class GSplatInstance {
     }
 
     clone() {
-        return new GSplatInstance(this.resource, this.options);
+        return new GSplatInstance(this.resource, this.material.clone());
     }
 
     /**

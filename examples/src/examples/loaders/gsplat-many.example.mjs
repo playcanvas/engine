@@ -70,11 +70,12 @@ assetListLoader.load(() => {
     camera.setLocalPosition(-3, 1, 2);
 
     // instantiate guitar with a custom shader
-    const guitar = assets.guitar.resource.instantiate({
-        vertex: files['shader.vert']
+    const guitar = new pc.Entity('guitar');
+    guitar.addComponent('gsplat', {
+        asset: assets.guitar
     });
-    guitar.name = 'guitar';
     guitar.setLocalPosition(0, 0.8, 0);
+    guitar.setLocalEulerAngles(0, 0, 180);
     guitar.setLocalScale(0.4, 0.4, 0.4);
     app.root.addChild(guitar);
 
