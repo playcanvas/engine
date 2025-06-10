@@ -13,16 +13,16 @@ class InputDelta {
      * @type {number[]}
      * @private
      */
-    _instance;
+    _value;
 
     /**
      * @param {number | number[]} arg - The size of the delta or an array of initial values.
      */
     constructor(arg) {
         if (Array.isArray(arg)) {
-            this._instance = arg.slice();
+            this._value = arg.slice();
         } else {
-            this._instance = new Array(+arg).fill(0);
+            this._value = new Array(+arg).fill(0);
         }
     }
 
@@ -33,8 +33,8 @@ class InputDelta {
      * @returns {InputDelta} Self for chaining.
      */
     add(other) {
-        for (let i = 0; i < this._instance.length; i++) {
-            this._instance[i] += other._instance[i] || 0;
+        for (let i = 0; i < this._value.length; i++) {
+            this._value[i] += other._value[i] || 0;
         }
         return this;
     }
@@ -46,8 +46,8 @@ class InputDelta {
      * @returns {InputDelta} Self for chaining.
      */
     append(offsets) {
-        for (let i = 0; i < this._instance.length; i++) {
-            this._instance[i] += offsets[i] || 0;
+        for (let i = 0; i < this._value.length; i++) {
+            this._value[i] += offsets[i] || 0;
         }
         return this;
     }
@@ -59,8 +59,8 @@ class InputDelta {
      * @returns {InputDelta} Self for chaining.
      */
     copy(other) {
-        for (let i = 0; i < this._instance.length; i++) {
-            this._instance[i] = other._instance[i] || 0;
+        for (let i = 0; i < this._value.length; i++) {
+            this._value[i] = other._value[i] || 0;
         }
         return this;
     }
@@ -71,8 +71,8 @@ class InputDelta {
      * @returns {number[]} - The current value of the delta.
      */
     flush() {
-        const value = this._instance.slice();
-        this._instance.fill(0);
+        const value = this._value.slice();
+        this._value.fill(0);
         return value;
     }
 }
