@@ -116,10 +116,6 @@ class GSplatInstance {
         this.sorter?.destroy();
     }
 
-    clone() {
-        return new GSplatInstance(this.resource, this.material.clone());
-    }
-
     /**
      * @param {ShaderMaterial} value - The material instance.
      */
