@@ -58,7 +58,7 @@ class GSplatComponent extends Component {
      * @type {ShaderMaterial|null}
      * @private
      */
-    _materialStore = null;
+    _materialTmp = null;
 
     /**
      * @type {BoundingBox|null}
@@ -192,7 +192,7 @@ class GSplatComponent extends Component {
         if (this._instance) {
             this._instance.material = value;
         } else {
-            this._materialStore = value;
+            this._materialTmp = value;
         }
     }
 
@@ -202,7 +202,7 @@ class GSplatComponent extends Component {
      * @type {ShaderMaterial|null}
      */
     get material() {
-        return this._instance?.material ?? this._materialStore ?? null;
+        return this._instance?.material ?? this._materialTmp ?? null;
     }
 
     /**
@@ -468,8 +468,8 @@ class GSplatComponent extends Component {
         // create new instance
         const asset = this._assetReference.asset;
         if (asset) {
-            this.instance = new GSplatInstance(asset.resource, this._materialStore);
-            this._materialStore = null;
+            this.instance = new GSplatInstance(asset.resource, this._materialTmp);
+            this._materialTmp = null;
             this.customAabb = this.instance.resource.aabb.clone();
         }
     }
