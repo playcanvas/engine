@@ -185,7 +185,7 @@ class GSplatComponent extends Component {
 
     /**
      * Sets the material used to render the gsplat.
-     * 
+     *
      * @param {ShaderMaterial} value - The material instance.
      */
     set material(value) {
