@@ -670,17 +670,17 @@ class CameraControls extends Script {
         // calculate size of the view frustum at the current distance
         const size = tmpV2.set(0, 0, 0);
         if (projection === PROJECTION_PERSPECTIVE) {
-            const slice = dz * Math.tan(0.5 * fov * math.DEG_TO_RAD);
+            const halfSlice = dz * Math.tan(0.5 * fov * math.DEG_TO_RAD);
             if (horizontalFov) {
                 size.set(
-                    slice,
-                    slice / aspectRatio,
+                    halfSlice,
+                    halfSlice / aspectRatio,
                     0
                 );
             } else {
                 size.set(
-                    slice * aspectRatio,
-                    slice,
+                    halfSlice * aspectRatio,
+                    halfSlice,
                     0
                 );
             }
