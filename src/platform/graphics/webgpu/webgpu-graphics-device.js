@@ -32,8 +32,6 @@ import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
 
-import { Texture } from '../texture.js';
-
 /**
  * @import { BindGroup } from '../bind-group.js'
  * @import { RenderPass } from '../render-pass.js'
