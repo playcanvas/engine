@@ -8,28 +8,12 @@ struct SplatSource {
     vec2 cornerUV;      // corner coordinates for this vertex of the gaussian (-1, -1)..(1, 1)
 };
 
-// local space position, rotation and scale of the gaussian
-struct SplatPRS {
-    vec3 position;      // model space position
-    mat3 rotation;      // matrix rotation
-    vec3 scale;         // model space scale
-};
-
 // stores the camera and clip space position of the gaussian center
 struct SplatCenter {
     vec3 view;          // center in view space
     vec4 proj;          // center in clip space
     mat4 modelView;     // model-view matrix
     float projMat00;    // element [0][0] of the projection matrix
-};
-
-// stores the offset from center for the current gaussian
-struct SplatCorner {
-    vec2 offset;        // corner offset from center in clip space
-    vec2 uv;            // corner uv
-    #if GSPLAT_AA
-        float aaFactor; // for scenes generated with antialiasing
-    #endif
 };
 
 mat3 quatToMat3(vec4 R) {
@@ -51,6 +35,15 @@ mat3 quatToMat3(vec4 R) {
         1.0 - Y.y - Z.z
     );
 }
+
+// stores the offset from center for the current gaussian
+struct SplatCorner {
+    vec2 offset;        // corner offset from center in clip space
+    vec2 uv;            // corner uv
+    #if GSPLAT_AA
+        float aaFactor; // for scenes generated with antialiasing
+    #endif
+};
 
 #if SH_BANDS == 1
     #define SH_COEFFS 3

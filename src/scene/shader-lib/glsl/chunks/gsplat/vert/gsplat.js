@@ -14,9 +14,6 @@ mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
     varying float vLinearDepth;
 #endif
 
-#include "gsplatAnimatePRSVS"
-#include "gsplatAnimateColorVS"
-
 void main(void) {
     // read gaussian details
     SplatSource source;
@@ -25,25 +22,17 @@ void main(void) {
         return;
     }
 
-    // read gaussian PRS attributes
-    SplatPRS prs;
-    vec4 quat;
-    prs.position = readPosition(source);
-    readRotationAndScale(source, quat, prs.scale);
-    prs.rotation = quatToMat3(quat);
-
-    // animate position, rotation and scale
-    animatePRS(prs);
+    vec3 modelCenter = readCenter(source);
 
     SplatCenter center;
-    if (!initCenter(prs.position, center)) {
+    if (!initCenter(modelCenter, center)) {
         gl_Position = discardVec;
         return;
     }
 
     // project center to screen space
     SplatCorner corner;
-    if (!initCorner(source, center, prs, corner)) {
+    if (!initCorner(source, center, corner)) {
         gl_Position = discardVec;
         return;
     }
@@ -53,7 +42,7 @@ void main(void) {
 
     #if GSPLAT_AA
         // apply AA compensation
-        clr.w *= corner.aaFactor;
+        clr.a *= corner.aaFactor;
     #endif
 
     // evaluate spherical harmonics
@@ -62,8 +51,6 @@ void main(void) {
         vec3 dir = normalize(center.view * mat3(center.modelView));
         clr.xyz += evalSH(source, dir);
     #endif
-
-    animateColor(prs, clr);
 
     clipCorner(corner, clr.w);
 
