@@ -5,7 +5,6 @@ import { Vec3 } from '../../core/math/vec3.js';
 import {
     PIXELFORMAT_RGBA16F, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
-import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 
 /**

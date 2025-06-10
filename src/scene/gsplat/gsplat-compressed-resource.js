@@ -2,7 +2,6 @@ import { Vec2 } from '../../core/math/vec2.js';
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
-import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 
 /**

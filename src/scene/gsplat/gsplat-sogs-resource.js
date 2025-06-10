@@ -1,5 +1,4 @@
 import { Vec2 } from '../../core/math/vec2.js';
-import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 
 class GSplatSogsResource extends GSplatResourceBase {
