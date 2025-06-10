@@ -25,18 +25,29 @@ vec3 readCenter(SplatSource source) {
 
 const float norm = 2.0 / sqrt(2.0);
 
-// read rotation and scale data
-void readRotationAndScale(in SplatSource source, out vec4 rotation, out vec3 scale) {
+// sample covariance vectors
+void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
     vec4 qdata = texelFetch(quats, source.uv, 0);
     vec3 abc = (qdata.xyz - 0.5) * norm;
     float d = sqrt(max(0.0, 1.0 - dot(abc, abc)));
 
     uint mode = uint(qdata.w * 255.0 + 0.5) - 252u;
 
-    rotation =  (mode == 0u) ? vec4(d, abc) :
-               ((mode == 1u) ? vec4(abc.x, d, abc.yz) :
-               ((mode == 2u) ? vec4(abc.xy, d, abc.z) : vec4(abc, d)));
+    vec4 quat = (mode == 0u) ? vec4(d, abc) :
+                ((mode == 1u) ? vec4(abc.x, d, abc.yz) :
+                ((mode == 2u) ? vec4(abc.xy, d, abc.z) : vec4(abc, d)));
 
-    scale = exp(mix(scales_mins, scales_maxs, texelFetch(scales, source.uv, 0).xyz));
+    mat3 rot = quatToMat3(quat);
+    vec3 scale = exp(mix(scales_mins, scales_maxs, texelFetch(scales, source.uv, 0).xyz));
+
+    // M = S * R
+    mat3 M = transpose(mat3(
+        scale.x * rot[0],
+        scale.y * rot[1],
+        scale.z * rot[2]
+    ));
+
+    covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
+    covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
 }
 `;

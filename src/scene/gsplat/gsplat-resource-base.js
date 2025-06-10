@@ -109,12 +109,6 @@ class GSplatResourceBase {
         return this.gsplatData.numSplats;
     }
 
-    configureMaterial(material) {
-    }
-
-    evalTextureSize(count) {
-    }
-
     /**
      * Creates a new texture with the specified parameters.
      *

@@ -95,16 +95,21 @@ class GSplatResource extends GSplatResourceBase {
         this.sh12to15Texture?.destroy();
     }
 
-    configureMaterial(material) {
-        material.setParameter('splatColor', this.colorTexture);
-        material.setParameter('transformA', this.transformATexture);
-        material.setParameter('transformB', this.transformBTexture);
-        material.setParameter('numSplats', this.numSplats);
-        material.setDefine('SH_BANDS', this.shBands);
-        if (this.sh1to3Texture) material.setParameter('splatSH_1to3', this.sh1to3Texture);
-        if (this.sh4to7Texture) material.setParameter('splatSH_4to7', this.sh4to7Texture);
-        if (this.sh8to11Texture) material.setParameter('splatSH_8to11', this.sh8to11Texture);
-        if (this.sh12to15Texture) material.setParameter('splatSH_12to15', this.sh12to15Texture);
+    /**
+     * @returns {Material} material - The material to set up for the splat rendering.
+     */
+    createMaterial(options) {
+        const result = createGSplatMaterial(this.device, options);
+        result.setParameter('splatColor', this.colorTexture);
+        result.setParameter('transformA', this.transformATexture);
+        result.setParameter('transformB', this.transformBTexture);
+        result.setParameter('numSplats', this.numSplats);
+        result.setDefine('SH_BANDS', this.shBands);
+        if (this.sh1to3Texture) result.setParameter('splatSH_1to3', this.sh1to3Texture);
+        if (this.sh4to7Texture) result.setParameter('splatSH_4to7', this.sh4to7Texture);
+        if (this.sh8to11Texture) result.setParameter('splatSH_8to11', this.sh8to11Texture);
+        if (this.sh12to15Texture) result.setParameter('splatSH_12to15', this.sh12to15Texture);
+        return result;
     }
 
     /**

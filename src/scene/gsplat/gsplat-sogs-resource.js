@@ -9,23 +9,26 @@ class GSplatSogsResource extends GSplatResourceBase {
         this.gsplatData.destroy();
     }
 
-    configureMaterial(material) {
+    createMaterial(options) {
         const { gsplatData } = this;
 
-        material.setDefine('GSPLAT_SOGS_DATA', true);
-        material.setDefine('SH_BANDS', this.gsplatData.shBands);
+        const result = createGSplatMaterial(this.device, options);
+        result.setDefine('GSPLAT_SOGS_DATA', true);
+        result.setDefine('SH_BANDS', this.gsplatData.shBands);
 
         ['means_l', 'means_u', 'quats', 'scales', 'sh0', 'sh_centroids', 'sh_labels'].forEach((name) => {
-            material.setParameter(name, gsplatData[name]);
+            result.setParameter(name, gsplatData[name]);
         });
 
         ['means', 'scales', 'sh0', 'shN'].forEach((name) => {
             const v = gsplatData.meta[name];
             if (v) {
-                material.setParameter(`${name}_mins`, v.mins);
-                material.setParameter(`${name}_maxs`, v.maxs);
+                result.setParameter(`${name}_mins`, v.mins);
+                result.setParameter(`${name}_maxs`, v.maxs);
             }
         });
+
+        return result;
     }
 
     evalTextureSize(count) {
