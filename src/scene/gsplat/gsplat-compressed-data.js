@@ -97,6 +97,13 @@ class GSplatCompressedData {
     numSplats;
 
     /**
+     * File header comments.
+     *
+     * @type { string[] }
+     */
+    comments;
+
+    /**
      * Contains either 12 or 18 floats per chunk:
      *      min_x, min_y, min_z,
      *      max_x, max_y, max_z,
@@ -349,7 +356,7 @@ class GSplatCompressedData {
                     storage: data[name]
                 };
             })
-        }]);
+        }], this.comments);
     }
 }
 

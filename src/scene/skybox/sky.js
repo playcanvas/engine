@@ -38,6 +38,12 @@ class Sky {
     skyMesh = null;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _depthWrite = false;
+
+    /**
      * A graph node with a transform used to render the sky mesh. Adjust the position, rotation and
      * scale of this node to orient the sky mesh. Ignored for {@link SKYTYPE_INFINITE}.
      *
@@ -109,11 +115,42 @@ class Sky {
         return this._center;
     }
 
+    /**
+     * Whether depth writing is enabled for the sky. Defaults to false.
+     *
+     * Writing a depth value for the skydome is supported when its type is not
+     * {@link SKYTYPE_INFINITE}. When enabled, the depth is written during a prepass render pass and
+     * can be utilized by subsequent passes to apply depth-based effects, such as Depth of Field.
+     *
+     * Note: For the skydome to be rendered during the prepass, the Sky Layer must be ordered before
+     * the Depth layer, which is the final layer used in the prepass.
+     *
+     * @type {boolean}
+     */
+    set depthWrite(value) {
+        if (this._depthWrite !== value) {
+            this._depthWrite = value;
+            if (this.skyMesh) {
+                this.skyMesh.depthWrite = value;
+            }
+        }
+    }
+
+    /**
+     * Returns whether depth writing is enabled for the sky.
+     *
+     * @type {boolean}
+     */
+    get depthWrite() {
+        return this._depthWrite;
+    }
+
     updateSkyMesh() {
         const texture = this.scene._getSkyboxTex();
         if (texture) {
             this.resetSkyMesh();
             this.skyMesh = new SkyMesh(this.device, this.scene, this.node, texture, this.type);
+            this.skyMesh.depthWrite = this._depthWrite;
             this.scene.fire('set:skybox', texture);
         }
     }

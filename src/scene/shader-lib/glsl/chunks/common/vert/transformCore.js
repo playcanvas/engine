@@ -4,7 +4,6 @@ attribute vec4 vertex_position;
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
-uniform mat3 matrix_normal;
 
 #ifdef MORPHING
     uniform vec2 morph_tex_params;

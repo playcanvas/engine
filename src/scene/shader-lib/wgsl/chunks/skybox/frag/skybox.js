@@ -5,6 +5,11 @@ export default /* wgsl */`
     #include "gammaPS"
     #include "tonemappingPS"
 
+    #ifdef PREPASS_PASS
+        varying vLinearDepth: f32;
+        #include "floatAsUintPS"
+    #endif
+
     // Varying and uniform declarations
     varying vViewDir : vec3f;
     uniform skyboxHighlightMultiplier : f32;
@@ -35,37 +40,48 @@ export default /* wgsl */`
     @fragment
     fn fragmentMain(input : FragmentInput) -> FragmentOutput {
 
-        var linear : vec3f;
-        var dir : vec3f;
+        var output: FragmentOutput;
 
-        #ifdef SKY_CUBEMAP
+        #ifdef PREPASS_PASS
 
-            #ifdef SKYMESH
-                // get vector from world space pos to tripod origin
-                var envDir : vec3f = normalize(input.vWorldPos - uniform.projectedSkydomeCenter);
-                dir = envDir * uniform.cubeMapRotationMatrix;
-            #else
-                dir = input.vViewDir;
+            // output linear depth during prepass
+            output.color = float2vec4(vLinearDepth);
+
+        #else
+
+            var linear : vec3f;
+            var dir : vec3f;
+
+            #ifdef SKY_CUBEMAP
+
+                #ifdef SKYMESH
+                    // get vector from world space pos to tripod origin
+                    var envDir : vec3f = normalize(input.vWorldPos - uniform.projectedSkydomeCenter);
+                    dir = envDir * uniform.cubeMapRotationMatrix;
+                #else
+                    dir = input.vViewDir;
+                #endif
+
+                dir.x *= -1.0;
+                linear = {SKYBOX_DECODE_FNC}(textureSample(texture_cubeMap, texture_cubeMap_sampler, dir));
+
+            #else // env-atlas
+
+                dir = input.vViewDir * vec3f(-1.0, 1.0, 1.0);
+                let uv : vec2f = toSphericalUv(normalize(dir));
+                linear = {SKYBOX_DECODE_FNC}(textureSample(texture_envAtlas, texture_envAtlas_sampler, mapRoughnessUv(uv, uniform.mipLevel)));
+
             #endif
 
-            dir.x *= -1.0;
-            linear = {SKYBOX_DECODE_FNC}(textureSample(texture_cubeMap, texture_cubeMap_sampler, dir));
-
-        #else // env-atlas
-
-            dir = input.vViewDir * vec3f(-1.0, 1.0, 1.0);
-            let uv : vec2f = toSphericalUv(normalize(dir));
-            linear = {SKYBOX_DECODE_FNC}(textureSample(texture_envAtlas, texture_envAtlas_sampler, mapRoughnessUv(uv, uniform.mipLevel)));
+            // our HDR encodes values up to 64, so allow extra brightness for the clipped values
+            if (any(linear >= vec3f(64.0))) {
+                linear *= uniform.skyboxHighlightMultiplier;
+            }
+            
+            output.color = vec4f(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
 
         #endif
 
-        // our HDR encodes values up to 64, so allow extra brightness for the clipped values
-        if (any(linear >= vec3f(64.0))) {
-            linear *= uniform.skyboxHighlightMultiplier;
-        }
-        
-        var output: FragmentOutput;
-        output.color = vec4f(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
         return output;
     }
 `;

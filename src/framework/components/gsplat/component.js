@@ -1,4 +1,5 @@
 import { LAYERID_WORLD } from '../../../scene/constants.js';
+import { GSplatInstance } from '../../../scene/gsplat/gsplat-instance.js';
 import { Asset } from '../../asset/asset.js';
 import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
@@ -8,7 +9,6 @@ import { Component } from '../component.js';
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { GSplatComponentSystem } from './system.js'
- * @import { GSplatInstance } from '../../../scene/gsplat/gsplat-instance.js'
  * @import { Material } from '../../../scene/materials/material.js'
  * @import { SplatMaterialOptions } from '../../../scene/gsplat/gsplat-material.js'
  */
@@ -487,7 +487,8 @@ class GSplatComponent extends Component {
         // create new instance
         const asset = this._assetReference.asset;
         if (asset) {
-            this.instance = asset.resource.createInstance();
+            this.instance = new GSplatInstance(asset.resource, this._materialOptions || {});
+            this.customAabb = this.instance.resource.aabb.clone();
         }
     }
 

@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, BooleanInput, SelectInput, LabelGroup, Panel } = ReactPCUI;
+    const { BindingTwoWay, BooleanInput, SelectInput, LabelGroup, Panel, SliderInput } = ReactPCUI;
     return fragment(
         jsx(
             Panel,
@@ -35,6 +35,17 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     { v: pc.TONEMAP_ACES2, t: 'ACES2' },
                     { v: pc.TONEMAP_NEUTRAL, t: 'NEUTRAL' }
                 ]
+            })
+        ),
+        jsx(
+            LabelGroup,
+            { text: 'LUT Intensity' },
+            jsx(SliderInput, {
+                binding: new BindingTwoWay(),
+                link: { observer, path: 'data.colorLutIntensity' },
+                min: 0,
+                max: 1,
+                precision: 2
             })
         )
     );

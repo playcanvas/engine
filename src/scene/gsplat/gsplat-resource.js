@@ -3,15 +3,15 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
-import { Texture } from '../../platform/graphics/texture.js';
-import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { createGSplatMaterial } from './gsplat-material.js';
+import { GSplatResourceBase } from './gsplat-resource-base.js';
 
 /**
  * @import { GSplatData } from './gsplat-data.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Texture } from '../../platform/graphics/texture.js';
  * @import { Material } from '../materials/material.js'
  */
 
@@ -24,19 +24,7 @@ const getSHData = (gsplatData, numCoeffs) => {
 };
 
 /** @ignore */
-class GSplat {
-    device;
-
-    numSplats;
-
-    numSplatsVisible;
-
-    /** @type {Float32Array} */
-    centers;
-
-    /** @type {BoundingBox} */
-    aabb;
-
+class GSplatResource extends GSplatResourceBase {
     /** @type {Texture} */
     colorTexture;
 
@@ -66,17 +54,9 @@ class GSplat {
      * @param {GSplatData} gsplatData - The splat data.
      */
     constructor(device, gsplatData) {
+        super(device, gsplatData);
+
         const numSplats = gsplatData.numSplats;
-
-        this.device = device;
-        this.numSplats = numSplats;
-        this.numSplatsVisible = numSplats;
-
-        this.centers = new Float32Array(gsplatData.numSplats * 3);
-        gsplatData.getCenters(this.centers);
-
-        this.aabb = new BoundingBox();
-        gsplatData.calcAabb(this.aabb);
 
         const size = this.evalTextureSize(numSplats);
         this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA16F, size);
@@ -123,7 +103,7 @@ class GSplat {
         result.setParameter('splatColor', this.colorTexture);
         result.setParameter('transformA', this.transformATexture);
         result.setParameter('transformB', this.transformBTexture);
-        result.setParameter('numSplats', this.numSplatsVisible);
+        result.setParameter('numSplats', this.numSplats);
         result.setDefine('SH_BANDS', this.shBands);
         if (this.sh1to3Texture) result.setParameter('splatSH_1to3', this.sh1to3Texture);
         if (this.sh4to7Texture) result.setParameter('splatSH_4to7', this.sh4to7Texture);
@@ -144,29 +124,6 @@ class GSplat {
         const width = Math.ceil(Math.sqrt(count));
         const height = Math.ceil(count / width);
         return new Vec2(width, height);
-    }
-
-    /**
-     * Creates a new texture with the specified parameters.
-     *
-     * @param {string} name - The name of the texture to be created.
-     * @param {number} format - The pixel format of the texture.
-     * @param {Vec2} size - The size of the texture in a Vec2 object, containing width (x) and height (y).
-     * @returns {Texture} The created texture instance.
-     */
-    createTexture(name, format, size) {
-        return new Texture(this.device, {
-            name: name,
-            width: size.x,
-            height: size.y,
-            format: format,
-            cubemap: false,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
     }
 
     /**
@@ -337,4 +294,4 @@ class GSplat {
     }
 }
 
-export { GSplat };
+export { GSplatResource };

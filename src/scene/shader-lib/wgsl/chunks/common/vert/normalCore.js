@@ -2,6 +2,8 @@ export default /* wgsl */`
 
 attribute vertex_normal: vec3f;
 
+uniform matrix_normal: mat3x3f;
+
 #ifdef MORPHING_NORMAL
     #ifdef MORPHING_INT
         var morphNormalTex: texture_2d<u32>;
