@@ -37,7 +37,7 @@ class GamepadSource extends InputSource {
     /**
      * @override
      */
-    flush() {
+    read() {
         const gamepads = navigator.getGamepads();
         for (let i = 0; i < gamepads.length; i++) {
             const gp = gamepads[i];
@@ -50,7 +50,7 @@ class GamepadSource extends InputSource {
             this.deltas.rightStick.append([axes[2], axes[3]]);
         }
 
-        return super.flush();
+        return super.read();
     }
 }
 

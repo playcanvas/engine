@@ -160,7 +160,7 @@ class OrbitController extends InputController {
      * @returns {Pose} - The controller pose.
      */
     update(frame, dt) {
-        const { move, rotate } = frame.flush();
+        const { move, rotate } = frame.read();
 
         // check focus interrupt
         if (this._focusing) {

@@ -70,7 +70,7 @@ class InputDelta {
      *
      * @returns {number[]} - The current value of the delta.
      */
-    flush() {
+    read() {
         const value = this._value.slice();
         this._value.fill(0);
         return value;
@@ -101,14 +101,14 @@ class InputFrame {
     }
 
     /**
-     * Flushes the current input frame, returning a new frame with the current deltas.
+     * Returns the current frame state and resets the deltas to zero.
      *
      * @returns {{ [K in keyof T]: number[] }} - The flushed input frame with current deltas.
      */
-    flush() {
+    read() {
         const frame = /** @type {{ [K in keyof T]: number[] }} */ ({});
         for (const name in this.deltas) {
-            frame[name] = this.deltas[name].flush();
+            frame[name] = this.deltas[name].read();
         }
         return frame;
     }
@@ -145,7 +145,7 @@ class InputSource extends InputFrame {
             return;
         }
         this._element = null;
-        this.flush();
+        this.read();
     }
 
     destroy() {

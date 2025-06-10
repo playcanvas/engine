@@ -706,7 +706,7 @@ class CameraControls extends Script {
      * @private
      */
     _addDesktopInputFrame({ deltas } = frame) {
-        const { key, button, mouse, wheel } = this._desktopInput.flush();
+        const { key, button, mouse, wheel } = this._desktopInput.read();
 
         // destructure keys
         const [forward, back, left, right, down, up, /** space */, shift, ctrl] = key;
@@ -764,8 +764,8 @@ class CameraControls extends Script {
      * @private
      */
     _addMobileInputFrame({ deltas }) {
-        const { touch, pinch, count } = this._orbitMobileInput.flush();
-        const { leftInput, rightInput } = this._flyMobileInput.flush();
+        const { touch, pinch, count } = this._orbitMobileInput.read();
+        const { leftInput, rightInput } = this._flyMobileInput.read();
 
         // update state
         this._state.touches += count[0];
@@ -805,7 +805,7 @@ class CameraControls extends Script {
      * @private
      */
     _addGamepadInputFrame({ deltas }) {
-        const { leftStick, rightStick } = this._gamepadInput.flush();
+        const { leftStick, rightStick } = this._gamepadInput.read();
 
         // apply dead zone to gamepad sticks
         applyDeadZone(leftStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
@@ -889,14 +889,14 @@ class CameraControls extends Script {
         this._addGamepadInputFrame(frame);
 
         if (this.skipUpdate) {
-            // skip update, just flush frame
-            frame.flush();
+            // skip update, just read frame to clear it
+            frame.read();
             return;
         }
 
         if (this.app.xr?.active) {
-            // skip update, just flush frame
-            frame.flush();
+            // skip update, just read frame to clear it
+            frame.read();
             return;
         }
 

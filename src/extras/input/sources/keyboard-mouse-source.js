@@ -247,14 +247,14 @@ class KeyboardMouseSource extends InputSource {
     /**
      * @override
      */
-    flush() {
+    read() {
         for (let i = 0; i < array9.length; i++) {
             array9[i] = this._keyNow[i] - this._keyPrev[i];
             this._keyPrev[i] = this._keyNow[i];
         }
         this.deltas.key.append(array9);
 
-        return super.flush();
+        return super.read();
     }
 }
 

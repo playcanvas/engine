@@ -160,10 +160,10 @@ class SingleGestureSource extends InputSource {
     /**
      * @override
      */
-    flush() {
+    read() {
         this.deltas.input.append([this._joystick.value.x, this._joystick.value.y]);
 
-        return super.flush();
+        return super.read();
     }
 
     destroy() {
