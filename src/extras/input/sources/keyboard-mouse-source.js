@@ -3,7 +3,7 @@ import { InputSource } from '../input.js';
 /** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
 
-const array9 = new Array(9).fill(0);
+const array9 = Array(9).fill(0);
 
 /**
  * Keyboard and mouse input source class
@@ -29,18 +29,18 @@ class KeyboardMouseSource extends InputSource {
      * @type {number[]}
      * @private
      */
-    _keyPrev = new Array(9).fill(0);
+    _keyPrev = Array(9).fill(0);
 
     /**
      * @type {number[]}
      * @private
      */
-    _keyNow = new Array(9).fill(0);
+    _keyNow = Array(9).fill(0);
 
     /**
      * @type {number[]}
      */
-    _button = new Array(3).fill(0);
+    _button = Array(3).fill(0);
 
     constructor() {
         super({
