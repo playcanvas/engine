@@ -185,8 +185,9 @@ class InputController extends InputConsumer {
     /**
      * @param {Vec3} position - The controller position.
      * @param {Vec3} focus - The focus point
+     * @param {boolean} [smooth] - Whether to smooth the transition.
      */
-    attach(position, focus) {
+    attach(position, focus, smooth = true) {
     }
 
     detach() {
