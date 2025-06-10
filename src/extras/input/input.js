@@ -27,15 +27,6 @@ class InputDelta {
     }
 
     /**
-     * Gets the current value of the delta.
-     *
-     * @returns {number[]} - The current value of the delta.
-     */
-    get value() {
-        return this._instance;
-    }
-
-    /**
      * Adds another InputDelta instance to this one.
      *
      * @param {InputDelta} other - The other InputDelta instance to add.
