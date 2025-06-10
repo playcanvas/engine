@@ -125,9 +125,9 @@ class GSplatInstance {
      * @param {ShaderMaterial} value - The material instance.
      */
     set material(value) {
-        if (this.material !== value) {
+        if (this._material !== value) {
             // set the new material
-            this.material = value;
+            this._material = value;
 
             if (this.meshInstance) {
                 this.meshInstance.material = value;
