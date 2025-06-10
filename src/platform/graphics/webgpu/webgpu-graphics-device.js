@@ -176,7 +176,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.samples = this.backBufferAntialias ? 4 : 1;
 
         // WGSL features
-        const wgslFeatures = navigator.gpu.wgslLanguageFeatures;
+        const wgslFeatures = window.navigator.gpu.wgslLanguageFeatures;
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
 
         this.initCapsDefines();
@@ -291,7 +291,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         let canvasToneMapping = 'standard';
 
         // pixel format of the framebuffer that is the most efficient one on the system
-        let preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
+        let preferredCanvasFormat = window.navigator.gpu.getPreferredCanvasFormat();
 
         // display format the user asked for
         const displayFormat = this.initOptions.displayFormat;
@@ -346,7 +346,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // (this allows us to view the preferred format as srgb)
             viewFormats: displayFormat === DISPLAYFORMAT_LDR_SRGB ? [this.backBufferViewFormat] : []
         };
-        this.gpuContext.configure(this.canvasConfig);
+        this.gpuContext?.configure(this.canvasConfig);
 
         this.createBackbuffer();
 
@@ -411,8 +411,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.memory(this);
         WebgpuDebug.validate(this);
 
-        // current frame color output buffer
-        const outColorBuffer = this.gpuContext.getCurrentTexture();
+        // current frame color output buffer (fallback to external backbuffer if not available)
+        const outColorBuffer = this.gpuContext?.getCurrentTexture?.() ?? this.externalBackbuffer?.impl.gpuTexture;
         DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
         // reallocate framebuffer if dimensions change, to match the output texture

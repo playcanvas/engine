@@ -401,10 +401,10 @@ class WebgpuTexture {
 
     // image types supported by copyExternalImageToTexture
     isExternalImage(image) {
-        return (image instanceof ImageBitmap) ||
-            (image instanceof HTMLVideoElement) ||
-            (image instanceof HTMLCanvasElement) ||
-            (image instanceof OffscreenCanvas);
+        return (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap) ||
+            (typeof HTMLVideoElement !== 'undefined' && image instanceof HTMLVideoElement) ||
+            (typeof HTMLCanvasElement !== 'undefined' && image instanceof HTMLCanvasElement) ||
+            (typeof OffscreenCanvas !== 'undefined' && image instanceof OffscreenCanvas);
     }
 
     uploadExternalImage(device, image, mipLevel, index) {
