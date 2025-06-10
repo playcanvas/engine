@@ -11,7 +11,12 @@ const array9 = new Array(9).fill(0);
  * @category Input Source
  * @alpha
  *
- * @augments {InputSource<{ key: number, button: number, mouse: number, wheel: number }>}
+ * @typedef {object} KeyboardMouseSourceDeltas
+ * @property {number[]} key - The key deltas.
+ * @property {number[]} button - The button deltas.
+ * @property {number[]} mouse - The mouse deltas.
+ * @property {number[]} wheel - The wheel deltas.
+ * @augments {InputSource<KeyboardMouseSourceDeltas>}
  */
 class KeyboardMouseSource extends InputSource {
     /**
@@ -39,10 +44,10 @@ class KeyboardMouseSource extends InputSource {
 
     constructor() {
         super({
-            key: 9,
-            button: 3,
-            mouse: 2,
-            wheel: 1
+            key: Array(9).fill(0),
+            button: [0, 0, 0],
+            mouse: [0, 0],
+            wheel: [0]
         });
 
         this._onWheel = this._onWheel.bind(this);

@@ -6,13 +6,16 @@ import { InputSource } from '../input.js';
  * @category Input Source
  * @alpha
  *
- * @augments {InputSource<{ leftStick: number, rightStick: number }>}
+ * @typedef {object} GamepadSourceDeltas
+ * @property {number[]} leftStick - The left stick deltas, represented as an array of [x, y] coordinates.
+ * @property {number[]} rightStick - The right stick deltas, represented as an array of [x, y] coordinates.
+ * @augments {InputSource<GamepadSourceDeltas>}
  */
 class GamepadSource extends InputSource {
     constructor() {
         super({
-            leftStick: 2,
-            rightStick: 2
+            leftStick: [0, 0],
+            rightStick: [0, 0]
         });
     }
 

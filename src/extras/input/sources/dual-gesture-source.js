@@ -21,7 +21,10 @@ const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length
  * @category Input Source
  * @alpha
  *
- * @augments {InputSource<{ leftInput: number, rightInput: number }>}
+ * @typedef {object} DualGestureSourceDeltas
+ * @property {number[]} leftInput - The left input deltas.
+ * @property {number[]} rightInput - The right input deltas.
+ * @augments {InputSource<DualGestureSourceDeltas>}
  */
 class DualGestureSource extends InputSource {
     /**
@@ -54,8 +57,8 @@ class DualGestureSource extends InputSource {
      */
     constructor(layout) {
         super({
-            leftInput: 2,
-            rightInput: 2
+            leftInput: [0, 0],
+            rightInput: [0, 0]
         });
 
         if (layout) {

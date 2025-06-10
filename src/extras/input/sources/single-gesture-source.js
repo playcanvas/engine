@@ -7,7 +7,9 @@ import { VirtualJoystick } from './virtual-joystick.js';
  * @category Input Source
  * @alpha
  *
- * @augments {InputSource<{ input: number }>}
+ * @typedef {object} SingleGestureSourceDeltas
+ * @property {number[]} input - The input deltas, represented as an array of [x, y] coordinates.
+ * @augments {InputSource<SingleGestureSourceDeltas>}
  */
 class SingleGestureSource extends InputSource {
     /**
@@ -30,7 +32,7 @@ class SingleGestureSource extends InputSource {
 
     constructor() {
         super({
-            input: 2
+            input: [0, 0]
         });
 
         this._joystick = new VirtualJoystick();

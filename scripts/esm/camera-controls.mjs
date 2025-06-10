@@ -28,8 +28,8 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 
 const frame = new InputFrame({
-    move: 3,
-    rotate: 3
+    move: [0, 0, 0],
+    rotate: [0, 0, 0]
 });
 
 const ZOOM_SCALE_MULT = 10;
@@ -702,7 +702,7 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {InputFrame<{ move: number, rotate: number }>} frame - The input frame.
+     * @param {InputFrame<{ move: number[], rotate: number[] }>} frame - The input frame.
      * @private
      */
     _addDesktopInputFrame({ deltas } = frame) {
@@ -760,7 +760,7 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {InputFrame<{ move: number, rotate: number }>} frame - The input frame.
+     * @param {InputFrame<{ move: number[], rotate: number[] }>} frame - The input frame.
      * @private
      */
     _addMobileInputFrame({ deltas }) {
@@ -801,7 +801,7 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {InputFrame<{ move: 3, rotate: 3 }>} frame - The input frame.
+     * @param {InputFrame<{ move: number[], rotate: number[] }>} frame - The input frame.
      * @private
      */
     _addGamepadInputFrame({ deltas }) {

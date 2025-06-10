@@ -9,7 +9,11 @@ const tmpVa = new Vec2();
  * @category Input Source
  * @alpha
  *
- * @augments {InputSource<{ touch: number, count: number, pinch: number }>}
+ * @typedef {object} MultiTouchSourceDeltas
+ * @property {number[]} touch - The touch deltas, represented as an array of [x, y] coordinates.
+ * @property {number[]} count - The count deltas, represented as an array of integers.
+ * @property {number[]} pinch - The pinch deltas, represented as an array of integers.
+ * @augments {InputSource<MultiTouchSourceDeltas>}
  */
 class MultiTouchSource extends InputSource {
     /**
@@ -32,9 +36,9 @@ class MultiTouchSource extends InputSource {
 
     constructor() {
         super({
-            touch: 2,
-            count: 1,
-            pinch: 1
+            touch: [0, 0],
+            count: [0],
+            pinch: [0]
         });
 
         this._onPointerDown = this._onPointerDown.bind(this);

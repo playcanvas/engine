@@ -16,10 +16,14 @@ class InputDelta {
     _instance;
 
     /**
-     * @param {number} dim - The dimension of the delta. Defaults to 1.
+     * @param {number | number[]} arg - The size of the delta or an array of initial values.
      */
-    constructor(dim = 1) {
-        this._instance = Array(dim).fill(0);
+    constructor(arg) {
+        if (Array.isArray(arg)) {
+            this._instance = arg.slice();
+        } else {
+            this._instance = new Array(+arg).fill(0);
+        }
     }
 
     /**
@@ -88,7 +92,7 @@ class InputDelta {
  * @category Input Source
  * @alpha
  *
- * @template {Record<string, number>} T - The shape of the input frame.
+ * @template {Record<string, number[]>} T - The shape of the input frame.
  */
 class InputFrame {
     /**
@@ -97,30 +101,11 @@ class InputFrame {
     deltas = /** @type {{ [K in keyof T]: InputDelta }} */ ({});
 
     /**
-     * Parses the input frame from raw values
-     *
-     * @template {Record<string, number>} T - The shape of the input frame.
-     * @param {{ [K in keyof T]: number[] }} raw - The shape of the input frame.
-     * @returns {InputFrame<{ [K in keyof T]: number }>} - The parsed input frame.
+     * @param {T} data - The input frame data, where each key corresponds to an input delta.
      */
-    static parse(raw) {
-        const shape = /** @type {{ [K in keyof T]: number }} */ ({});
-        for (const name in raw) {
-            shape[name] = raw[name].length;
-        }
-        const frame = new InputFrame(shape);
-        for (const name in raw) {
-            frame.deltas[name].append(raw[name]);
-        }
-        return frame;
-    }
-
-    /**
-     * @param {T} shape - The shape of the input frame.
-     */
-    constructor(shape) {
-        for (const name in shape) {
-            this.deltas[name] = new InputDelta(shape[name]);
+    constructor(data) {
+        for (const name in data) {
+            this.deltas[name] = new InputDelta(data[name]);
         }
     }
 
@@ -144,7 +129,7 @@ class InputFrame {
  * @category Input Source
  * @alpha
  *
- * @template {Record<string, number>} T - The shape of the input source.
+ * @template {Record<string, number[]>} T - The shape of the input source.
  * @augments {InputFrame<T>}
  */
 class InputSource extends InputFrame {

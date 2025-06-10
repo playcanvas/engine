@@ -80,7 +80,7 @@ class FlyController extends InputController {
     }
 
     /**
-     * @param {InputFrame<{ move: number, rotate: number }>} frame - The input frame.
+     * @param {InputFrame<{ move: number[], rotate: number[] }>} frame - The input frame.
      * @param {number} dt - The delta time.
      * @returns {Pose} - The controller pose.
      */
