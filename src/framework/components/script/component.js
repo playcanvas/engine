@@ -5,7 +5,7 @@ import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 import {
     SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE, SCRIPT_UPDATE,
-    SCRIPT_POST_UPDATE, SCRIPT_SWAP
+    SCRIPT_FIXED_UPDATE, SCRIPT_POST_UPDATE, SCRIPT_SWAP
 } from '../../script/constants.js';
 import { ScriptType } from '../../script/script-type.js';
 import { getScriptName } from '../../script/script.js';
@@ -497,6 +497,22 @@ class ScriptComponent extends Component {
 
     _onPostInitialize() {
         this.onPostStateChange();
+    }
+
+    _onFixedUpdate(dt) {
+        const list = this._updateList;
+        if (!list.length) return;
+
+        const wasLooping = this._beginLooping();
+
+        for (list.loopIndex = 0; list.loopIndex < list.length; list.loopIndex++) {
+            const script = list.items[list.loopIndex];
+            if (script.enabled) {
+                this._scriptMethod(script, SCRIPT_FIXED_UPDATE, dt);
+            }
+        }
+
+        this._endLooping(wasLooping);
     }
 
     _onUpdate(dt) {
