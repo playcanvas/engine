@@ -61,7 +61,9 @@ assetListLoader.load(() => {
     app.start();
 
     // get the instance of the cube it set up with render component and add it to scene
-    const entity = assets.glb.resource.instantiateRenderEntity();
+    const entity = assets.glb.resource.instantiateRenderEntity({
+        castShadows: true
+    });
     app.root.addChild(entity);
 
     // Create an Entity with a camera component
@@ -71,7 +73,7 @@ assetListLoader.load(() => {
         farClip: 100,
         toneMapping: pc.TONEMAP_ACES
     });
-    camera.translate(25, 15, 25);
+    camera.translate(15, 15, -25);
 
     // add orbit camera script with a mouse and a touch support
     camera.addComponent('script');
@@ -91,6 +93,36 @@ assetListLoader.load(() => {
     // set skybox
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 1;
+
+    // Create an entity with a light component
+    const light = new pc.Entity();
+    light.addComponent('light', {
+        type: 'directional',
+        color: new pc.Color(1, 1, 1),
+        castShadows: true,
+        intensity: 2,
+        shadowBias: 0.2,
+        shadowDistance: 100,
+        normalOffsetBias: 0.05,
+        shadowResolution: 2048
+    });
+    light.setLocalEulerAngles(60, 30, 0);
+    app.root.addChild(light);
+
+    // Create an Entity for the ground
+    const material = new pc.StandardMaterial();
+    material.diffuse = pc.Color.GRAY;
+    material.update();
+
+    const ground = new pc.Entity();
+    ground.addComponent('render', {
+        type: 'box',
+        material: material
+    });
+    ground.setLocalScale(50, 1, 50);
+    ground.setLocalPosition(0, -2, 0);
+    app.root.addChild(ground);
+
 });
 
 export { app };

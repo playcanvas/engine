@@ -1643,7 +1643,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    setBuffers() {
+    setBuffers(indexBuffer) {
         const gl = this.gl;
         let vao;
 
@@ -1668,199 +1668,163 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.bindVertexArray(vao);
         }
 
-        // empty array of vertex buffers
-        this.clearVertexBuffer();
-
         // Set the active index buffer object
         // Note: we don't cache this state and set it only when it changes, as VAO captures last bind buffer in it
         // and so we don't know what VAO sets it to.
-        const bufferId = this.indexBuffer ? this.indexBuffer.impl.bufferId : null;
+        const bufferId = indexBuffer ? indexBuffer.impl.bufferId : null;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
     }
 
-    /**
-     * Submits a graphical primitive to the hardware for immediate rendering.
-     *
-     * @param {object} primitive - Primitive object describing how to submit current vertex/index
-     * buffers.
-     * @param {number} primitive.type - The type of primitive to render. Can be:
-     *
-     * - {@link PRIMITIVE_POINTS}
-     * - {@link PRIMITIVE_LINES}
-     * - {@link PRIMITIVE_LINELOOP}
-     * - {@link PRIMITIVE_LINESTRIP}
-     * - {@link PRIMITIVE_TRIANGLES}
-     * - {@link PRIMITIVE_TRISTRIP}
-     * - {@link PRIMITIVE_TRIFAN}
-     *
-     * @param {number} primitive.base - The offset of the first index or vertex to dispatch in the
-     * draw call.
-     * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw
-     * call.
-     * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby
-     * using the currently set index buffer and false otherwise.
-     * @param {number} [numInstances] - The number of instances to render when using instancing.
-     * Defaults to 1.
-     * @param {boolean} [keepBuffers] - Optionally keep the current set of vertex / index buffers /
-     * VAO. This is used when rendering of multiple views, for example under WebXR.
-     * @example
-     * // Render a single, unindexed triangle
-     * device.draw({
-     *     type: pc.PRIMITIVE_TRIANGLES,
-     *     base: 0,
-     *     count: 3,
-     *     indexed: false
-     * });
-     */
-    draw(primitive, numInstances, keepBuffers) {
-        const gl = this.gl;
-
-        this.activateShader(this);
-        if (!this.shaderValid) {
-            return;
-        }
+    draw(primitive, indexBuffer, numInstances, first = true, last = true) {
 
         const shader = this.shader;
-        if (!shader) {
-            return;
-        }
+        if (shader) {
+            this.activateShader();
+            if (this.shaderValid) {
+                const gl = this.gl;
 
-        // vertex buffers
-        if (!keepBuffers) {
-            Debug.call(() => this.validateAttributes(this.shader, this.vertexBuffers[0]?.format, this.vertexBuffers[1]?.format));
+                // vertex buffers
+                if (first) {
+                    Debug.call(() => this.validateAttributes(this.shader, this.vertexBuffers[0]?.format, this.vertexBuffers[1]?.format));
 
-            this.setBuffers();
-        }
-
-        // Commit the shader program variables
-        let textureUnit = 0;
-        const samplers = shader.impl.samplers;
-        for (let i = 0, len = samplers.length; i < len; i++) {
-            const sampler = samplers[i];
-            let samplerValue = sampler.scopeId.value;
-            if (!samplerValue) {
-
-                const samplerName = sampler.scopeId.name;
-                Debug.assert(samplerName !== 'texture_grabPass', 'Engine provided texture with sampler name \'texture_grabPass\' is not longer supported, use \'uSceneColorMap\' instead');
-                Debug.assert(samplerName !== 'uDepthMap', 'Engine provided texture with sampler name \'uDepthMap\' is not longer supported, use \'uSceneDepthMap\' instead');
-
-                if (samplerName === 'uSceneDepthMap') {
-                    Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
-                    samplerValue = getBuiltInTexture(this, 'white');
-                }
-                if (samplerName === 'uSceneColorMap') {
-                    Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
-                    samplerValue = getBuiltInTexture(this, 'pink');
+                    this.setBuffers(indexBuffer);
                 }
 
-                // missing generic texture
-                if (!samplerValue) {
-                    Debug.errorOnce(`Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`);
-                    samplerValue = getBuiltInTexture(this, 'pink');
+                // Commit the shader program variables
+                let textureUnit = 0;
+                const samplers = shader.impl.samplers;
+                for (let i = 0, len = samplers.length; i < len; i++) {
+                    const sampler = samplers[i];
+                    let samplerValue = sampler.scopeId.value;
+                    if (!samplerValue) {
+
+                        const samplerName = sampler.scopeId.name;
+                        Debug.assert(samplerName !== 'texture_grabPass', 'Engine provided texture with sampler name \'texture_grabPass\' is not longer supported, use \'uSceneColorMap\' instead');
+                        Debug.assert(samplerName !== 'uDepthMap', 'Engine provided texture with sampler name \'uDepthMap\' is not longer supported, use \'uSceneDepthMap\' instead');
+
+                        if (samplerName === 'uSceneDepthMap') {
+                            Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                            samplerValue = getBuiltInTexture(this, 'white');
+                        }
+                        if (samplerName === 'uSceneColorMap') {
+                            Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                            samplerValue = getBuiltInTexture(this, 'pink');
+                        }
+
+                        // missing generic texture
+                        if (!samplerValue) {
+                            Debug.errorOnce(`Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`);
+                            samplerValue = getBuiltInTexture(this, 'pink');
+                        }
+                    }
+
+                    if (samplerValue instanceof Texture) {
+                        const texture = samplerValue;
+                        this.setTexture(texture, textureUnit);
+
+                        // #if _DEBUG
+                        if (this.renderTarget) {
+                            // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
+                            if (this.renderTarget._samples < 2) {
+                                if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer === texture) {
+                                    Debug.error('Trying to bind current color buffer as a texture', { renderTarget: this.renderTarget, texture });
+                                } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer === texture) {
+                                    Debug.error('Trying to bind current depth buffer as a texture', { texture });
+                                }
+                            }
+                        }
+                        // #endif
+
+                        if (sampler.slot !== textureUnit) {
+                            gl.uniform1i(sampler.locationId, textureUnit);
+                            sampler.slot = textureUnit;
+                        }
+                        textureUnit++;
+                    } else { // Array
+                        sampler.array.length = 0;
+                        const numTextures = samplerValue.length;
+                        for (let j = 0; j < numTextures; j++) {
+                            const texture = samplerValue[j];
+                            this.setTexture(texture, textureUnit);
+
+                            sampler.array[j] = textureUnit;
+                            textureUnit++;
+                        }
+                        gl.uniform1iv(sampler.locationId, sampler.array);
+                    }
                 }
-            }
 
-            if (samplerValue instanceof Texture) {
-                const texture = samplerValue;
-                this.setTexture(texture, textureUnit);
+                // Commit any updated uniforms
+                const uniforms = shader.impl.uniforms;
+                for (let i = 0, len = uniforms.length; i < len; i++) {
+                    const uniform = uniforms[i];
+                    const scopeId = uniform.scopeId;
+                    const uniformVersion = uniform.version;
+                    const programVersion = scopeId.versionObject.version;
 
-                // #if _DEBUG
-                if (this.renderTarget) {
-                    // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
-                    if (this.renderTarget._samples < 2) {
-                        if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer === texture) {
-                            Debug.error('Trying to bind current color buffer as a texture', { renderTarget: this.renderTarget, texture });
-                        } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer === texture) {
-                            Debug.error('Trying to bind current depth buffer as a texture', { texture });
+                    // Check the value is valid
+                    if (uniformVersion.globalId !== programVersion.globalId || uniformVersion.revision !== programVersion.revision) {
+                        uniformVersion.globalId = programVersion.globalId;
+                        uniformVersion.revision = programVersion.revision;
+
+                        // Call the function to commit the uniform value
+                        const value = scopeId.value;
+                        if (value !== null && value !== undefined) {
+                            this.commitFunction[uniform.dataType](uniform, value);
+                        } else {
+                            Debug.warnOnce(`Shader [${shader.label}] requires uniform [${uniform.scopeId.name}] which has not been set, while rendering [${DebugGraphics.toString()}]`);
                         }
                     }
                 }
-                // #endif
 
-                if (sampler.slot !== textureUnit) {
-                    gl.uniform1i(sampler.locationId, textureUnit);
-                    sampler.slot = textureUnit;
+                if (this.transformFeedbackBuffer) {
+                    // Enable TF, start writing to out buffer
+                    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.impl.bufferId);
+                    gl.beginTransformFeedback(gl.POINTS);
                 }
-                textureUnit++;
-            } else { // Array
-                sampler.array.length = 0;
-                const numTextures = samplerValue.length;
-                for (let j = 0; j < numTextures; j++) {
-                    const texture = samplerValue[j];
-                    this.setTexture(texture, textureUnit);
 
-                    sampler.array[j] = textureUnit;
-                    textureUnit++;
-                }
-                gl.uniform1iv(sampler.locationId, sampler.array);
-            }
-        }
+                const mode = this.glPrimitive[primitive.type];
+                const count = primitive.count;
 
-        // Commit any updated uniforms
-        const uniforms = shader.impl.uniforms;
-        for (let i = 0, len = uniforms.length; i < len; i++) {
-            const uniform = uniforms[i];
-            const scopeId = uniform.scopeId;
-            const uniformVersion = uniform.version;
-            const programVersion = scopeId.versionObject.version;
+                if (primitive.indexed) {
+                    Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
 
-            // Check the value is valid
-            if (uniformVersion.globalId !== programVersion.globalId || uniformVersion.revision !== programVersion.revision) {
-                uniformVersion.globalId = programVersion.globalId;
-                uniformVersion.revision = programVersion.revision;
+                    const format = indexBuffer.impl.glFormat;
+                    const offset = primitive.base * indexBuffer.bytesPerIndex;
 
-                // Call the function to commit the uniform value
-                const value = scopeId.value;
-                if (value !== null && value !== undefined) {
-                    this.commitFunction[uniform.dataType](uniform, value);
+                    if (numInstances > 0) {
+                        gl.drawElementsInstanced(mode, count, format, offset, numInstances);
+                    } else {
+                        gl.drawElements(mode, count, format, offset);
+                    }
                 } else {
-                    Debug.warnOnce(`Shader [${shader.label}] requires uniform [${uniform.scopeId.name}] which has not been set, while rendering [${DebugGraphics.toString()}]`);
+                    const first = primitive.base;
+
+                    if (numInstances > 0) {
+                        gl.drawArraysInstanced(mode, first, count, numInstances);
+                    } else {
+                        gl.drawArrays(mode, first, count);
+                    }
                 }
+
+                if (this.transformFeedbackBuffer) {
+                    // disable TF
+                    gl.endTransformFeedback();
+                    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+                }
+
+                this._drawCallsPerFrame++;
+
+                // #if _PROFILER
+                this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                // #endif
             }
         }
 
-        if (this.transformFeedbackBuffer) {
-            // Enable TF, start writing to out buffer
-            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.impl.bufferId);
-            gl.beginTransformFeedback(gl.POINTS);
+        if (last) {
+            // empty array of vertex buffers
+            this.clearVertexBuffer();
         }
-
-        const mode = this.glPrimitive[primitive.type];
-        const count = primitive.count;
-
-        if (primitive.indexed) {
-            const indexBuffer = this.indexBuffer;
-            Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
-
-            const format = indexBuffer.impl.glFormat;
-            const offset = primitive.base * indexBuffer.bytesPerIndex;
-
-            if (numInstances > 0) {
-                gl.drawElementsInstanced(mode, count, format, offset, numInstances);
-            } else {
-                gl.drawElements(mode, count, format, offset);
-            }
-        } else {
-            const first = primitive.base;
-
-            if (numInstances > 0) {
-                gl.drawArraysInstanced(mode, first, count, numInstances);
-            } else {
-                gl.drawArrays(mode, first, count);
-            }
-        }
-
-        if (this.transformFeedbackBuffer) {
-            // disable TF
-            gl.endTransformFeedback();
-            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
-        }
-
-        this._drawCallsPerFrame++;
-
-        // #if _PROFILER
-        this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
-        // #endif
     }
 
     /**
@@ -2387,7 +2351,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    activateShader(device) {
+    activateShader() {
 
         const { shader } = this;
         const { impl } = shader;
@@ -2401,7 +2365,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 if (this.shaderAsyncCompile) {
 
                     // if the shader is linked, finalize it
-                    if (impl.isLinked(device)) {
+                    if (impl.isLinked(this)) {
                         if (!impl.finalize(this, shader)) {
                             shader.failed = true;
                             this.shaderValid = false;
