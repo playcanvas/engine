@@ -38,8 +38,9 @@ import { Component } from '../component.js';
  *
  * Relevant Engine API examples:
  *
- * - [Loading a Splat](https://playcanvas.github.io/#/loaders/gsplat)
- * - [Custom Splat Shaders](https://playcanvas.github.io/#/loaders/gsplat-many)
+ * - [Loading a Splat](https://playcanvas.github.io/#/gaussian-splatting/simple)
+ * - [Custom Splat Shaders](https://playcanvas.github.io/#/gaussian-splatting/multi-splat)
+ * - [Splat picking](https://playcanvas.github.io/#/gaussian-splatting/picking)
  *
  * @hideconstructor
  * @category Graphics
