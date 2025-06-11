@@ -86,7 +86,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
     createShaderDefinition(device, options) {
 
         const desc = options.shaderDesc;
-        const wgsl = device.isWebGPU && !!desc.vertexWGSL && !!desc.fragmentWGSL;
+        const wgsl = device.isWebGPU && !!desc.vertexWGSL && !!desc.fragmentWGSL && (options.shaderChunks?.useWGSL ?? true);
         const definitionOptions = {
             name: `ShaderMaterial-${desc.uniqueName}`,
             shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,
