@@ -1155,7 +1155,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         // Apply transform interpolation to all entities referencing the dynamic body.
-        const extrapolationTime = this._internalTime - this._lastFixedTimeStep;
+        // multiply 2 because the fixedUpdate step was before physicsFixedUpdate, 
+        // this will allow the lag to be synchronized
+        const extrapolationTime = this._internalTime - (this._lastFixedTimeStep * 2);
         const dynamic = this._dynamic;
         for (i = 0, len = dynamic.length; i < len; i++) {
             dynamic[i]._applyInterpolation(extrapolationTime);
