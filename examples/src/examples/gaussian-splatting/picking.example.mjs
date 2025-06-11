@@ -72,7 +72,7 @@ assetListLoader.load(() => {
 
         // create a splat entity and place it in the world
         const splat = new pc.Entity(`splat-${i}`);
-        splat.addComponent(`gsplat`, {
+        splat.addComponent('gsplat', {
             asset: assets.skull,
             castShadows: false
         });
@@ -160,7 +160,7 @@ assetListLoader.load(() => {
             if (meshInstances.length > 0) {
                 const meshInstance = meshInstances[0];
                 // find entity with matching mesh instance
-                const entity = entities.find((e) => e.entity.gsplat.instance.meshInstance === meshInstance);
+                const entity = entities.find(e => e.entity.gsplat.instance.meshInstance === meshInstance);
                 if (entity) {
                     // trigger the visual effect
                     entity.fade = 1;
