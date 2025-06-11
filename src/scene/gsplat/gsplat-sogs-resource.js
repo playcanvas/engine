@@ -2,8 +2,6 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 
 class GSplatSogsResource extends GSplatResourceBase {
-    device;
-
     destroy() {
         this.gsplatData.destroy();
     }
