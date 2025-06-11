@@ -1069,7 +1069,7 @@ class RigidBodyComponent extends Component {
         }
     }
 
-    _setEntityPosAndRotFormTransform(transform) {
+    _setEntityPosAndRotFromTransform(transform) {
 
         const p = transform.getOrigin();
         const q = transform.getRotation();
@@ -1125,11 +1125,11 @@ class RigidBodyComponent extends Component {
                 const motionState = body.getMotionState();
                 if (motionState) {
                     motionState.getWorldTransform(_ammoTransform);
-                    this._setEntityPosAndRotFormTransform(_ammoTransform);
+                    this._setEntityPosAndRotFromTransform(_ammoTransform);
                 }
             } else {
                 const currentTransform = body.getWorldTransform();
-                this._setEntityPosAndRotFormTransform(currentTransform);
+                this._setEntityPosAndRotFromTransform(currentTransform);
             }
         }
     }
