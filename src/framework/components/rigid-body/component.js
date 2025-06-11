@@ -173,6 +173,12 @@ class RigidBodyComponent extends Component {
     /** @private */
     _type = BODYTYPE_STATIC;
 
+    /** @private */
+    _position = new Vec3();
+
+    /** @private */
+    _rotation = new Quat();
+
     /** @ignore */
     static onLibraryLoaded() {
         // Lazily create shared variable
@@ -194,6 +200,42 @@ class RigidBodyComponent extends Component {
         _ammoVec1 = null;
         _ammoVec2 = null;
         _ammoQuat = null;
+    }
+
+    /**
+     * The position of the rigidbody.
+     *
+     * @returns {Vec3} the position of the rigidbody.
+     */
+    get position() {
+
+        if (this._body && this._type === BODYTYPE_DYNAMIC) {
+
+            const currentTransform = this._body.getWorldTransform();
+            const currentPosition  = currentTransform.getOrigin();
+
+            return this._position.set(currentPosition.x(), currentPosition.y(), currentPosition.z());
+        }
+
+        return this.entity.getPosition();
+    }
+
+    /**
+     * The rotation of the rigidbody.
+     *
+     * @returns {Quat} the rotation of the rigidbody.
+     */
+    get rotation() {
+
+        if (this._body && this._type === BODYTYPE_DYNAMIC) {
+
+            const currentTransform = this._body.getWorldTransform();
+            const currentRotation  = currentTransform.getRotation();
+
+            return this._rotation.set(currentRotation.x(), currentRotation.y(), currentRotation.z(), currentRotation.w());
+        }
+
+        return this.entity.getRotation();
     }
 
     /**
