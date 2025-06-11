@@ -1,41 +1,39 @@
 import { Component } from '../component.js';
 
 /**
- * @import { Entity } from '../../entity.js'
- * @import { LayoutChildComponentSystem } from './system.js'
- */
-
-/**
  * A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent
  * {@link LayoutGroupComponent}.
  *
+ * @hideconstructor
  * @category User Interface
  */
 class LayoutChildComponent extends Component {
-    /**
-     * Create a new LayoutChildComponent.
-     *
-     * @param {LayoutChildComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
-     */
-    constructor(system, entity) {
-        super(system, entity);
+    /** @private */
+    _minWidth = 0;
 
-        /** @private */
-        this._minWidth = 0;
-        /** @private */
-        this._minHeight = 0;
-        /** @private */
-        this._maxWidth = null;
-        /** @private */
-        this._maxHeight = null;
-        /** @private */
-        this._fitWidthProportion = 0;
-        /** @private */
-        this._fitHeightProportion = 0;
-        /** @private */
-        this._excludeFromLayout = false;
-    }
+    /** @private */
+    _minHeight = 0;
+
+    /**
+     * @type {number|null}
+     * @private
+     */
+    _maxWidth = null;
+
+    /**
+     * @type {number|null}
+     * @private
+     */
+    _maxHeight = null;
+
+    /** @private */
+    _fitWidthProportion = 0;
+
+    /** @private */
+    _fitHeightProportion = 0;
+
+    /** @private */
+    _excludeFromLayout = false;
 
     /**
      * Sets the minimum width the element should be rendered at.

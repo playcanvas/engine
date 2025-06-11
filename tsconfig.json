@@ -14,27 +14,5 @@
         "target": "es6",
         "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types" ]
     },
-    "typedocOptions": {
-        "compilerOptions": {
-            "allowSyntheticDefaultImports": true,
-            "checkJs": false,
-            "typeRoots": [ "./node_modules/@types" ]
-        },
-        "entryPoints": [ "./src/index.js" ],
-        "excludeNotDocumented": true,
-        "githubPages": false,
-        "name": "PlayCanvas Engine API",
-        "navigationLinks": {
-            "Developer Site": "https://developer.playcanvas.com/",
-            "Discord": "https://discord.gg/RSaMRzg",
-            "Forum": "https://forum.playcanvas.com/",
-            "GitHub": "https://github.com/playcanvas/engine"
-        },
-        "plugin": [
-            "./utils/typedoc-plugin.mjs",
-            "typedoc-plugin-mdn-links"
-        ],
-        "readme": "none"
-    },
-    "include": ["src/**/*.js", "rollup.config.mjs"]
+    "include": ["src/**/*.js", "scripts/**/*.mjs", "rollup.config.mjs", "playcanvas.d.ts"],
 }

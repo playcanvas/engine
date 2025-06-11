@@ -22,35 +22,52 @@ const UNDEF = /undef[ \t]+([^\n]+)\r?(?:\n|$)/g;
 const IF = /(ifdef|ifndef|if)[ \t]*([^\r\n]+)\r?\n/g;
 
 // #endif/#else or #elif EXPRESSION
-const ENDIF = /(endif|else|elif)([ \t][^\r\n]+)?\r?(?:\n|$)/g;
+const ENDIF = /(endif|else|elif)(?:[ \t]+([^\r\n]*))?\r?\n?/g;
 
-// identifier
-const IDENTIFIER = /([\w-]+)/;
+// identifier in form of IDENTIFIER or {IDENTIFIER}
+const IDENTIFIER = /\{?[\w-]+\}?/;
 
 // [!]defined(EXPRESSION)
 const DEFINED = /(!|\s)?defined\(([\w-]+)\)/;
 
-// currently unsupported characters in the expression: | & < > = + -
-const INVALID = /[><=|&+-]/g;
+// Matches comparison operators like ==, !=, <, <=, >, >=
+const COMPARISON = /([a-z_]\w*)\s*(==|!=|<|<=|>|>=)\s*([\w"']+)/i;
 
-// #include "identifier"
-const INCLUDE = /include[ \t]+"([\w-]+)"\r?(?:\n|$)/g;
+// currently unsupported characters in the expression: + -
+const INVALID = /[+\-]/g;
+
+// #include "identifier" or optional second identifier #include "identifier1, identifier2"
+// Matches only up to the closing quote of the include directive
+const INCLUDE = /include[ \t]+"([\w-]+)(?:\s*,\s*([\w-]+))?"/g;
+
+// loop index to replace, in the format {i}
+const LOOP_INDEX = /\{i\}/g;
+
+// matches color attachments, for example: pcFragColor1
+const FRAGCOLOR = /(pcFragColor[1-8])\b/g;
 
 /**
  * Pure static class implementing subset of C-style preprocessor.
  * inspired by: https://github.com/dcodeIO/Preprocessor.js
  */
 class Preprocessor {
+    static sourceName;
+
     /**
      * Run c-like preprocessor on the source code, and resolves the code based on the defines and ifdefs
      *
      * @param {string} source - The source code to work on.
      * @param {Map<string, string>} [includes] - A map containing key-value pairs of include names
      * and their content. These are used for resolving #include directives in the source.
-     * @param {boolean} [stripUnusedColorAttachments] - If true, strips unused color attachments.
+     * @param {object} [options] - Optional parameters.
+     * @param {boolean} [options.stripUnusedColorAttachments] - If true, strips unused color attachments.
+     * @param {boolean} [options.stripDefines] - If true, strips all defines from the source.
+     * @param {string} [options.sourceName] - The name of the source file.
      * @returns {string|null} Returns preprocessed source code, or null in case of error.
      */
-    static run(source, includes = new Map(), stripUnusedColorAttachments = false) {
+    static run(source, includes = new Map(), options = {}) {
+
+        Preprocessor.sourceName = options.sourceName;
 
         // strips comments, handles // and many cases of /*
         source = this.stripComments(source);
@@ -60,29 +77,15 @@ class Preprocessor {
         .map(line => line.trimEnd())
         .join('\n');
 
-        // generate defines to remove unused color attachments
+        // extracted defines
         const defines = new Map();
-        if (stripUnusedColorAttachments) {
 
-            // find out how many times pcFragColorX is used (see gles3.js)
-            const counts = new Map();
-            const regex = /(pcFragColor[1-8])\b/g;
-            const matches = source.match(regex);
-            matches?.forEach((match) => {
-                const index = parseInt(match.charAt(match.length - 1), 10);
-                counts.set(index, (counts.get(index) ?? 0) + 1);
-            });
-
-            // if pcFragColorX is used only once, remove it
-            counts.forEach((count, index) => {
-                if (count === 1) {
-                    defines.set(`REMOVE_COLOR_ATTACHMENT_${index}`, '');
-                }
-            });
-        }
+        // extracted defines with name in {} which are to be replaced with their values
+        const injectDefines = new Map();
 
         // preprocess defines / ifdefs ..
-        source = this._preprocess(source, defines, includes);
+        source = this._preprocess(source, defines, injectDefines, includes, options.stripDefines);
+        if (source === null) return null;
 
         // extract defines that evaluate to an integer number
         const intDefines = new Map();
@@ -95,11 +98,53 @@ class Preprocessor {
         // strip comments again after the includes have been resolved
         source = this.stripComments(source);
 
+        source = this.stripUnusedColorAttachments(source, options);
+
         // remove empty lines
         source = this.RemoveEmptyLines(source);
 
         // process array sizes
         source = this.processArraySize(source, intDefines);
+
+        // inject defines
+        source = this.injectDefines(source, injectDefines);
+
+        return source;
+    }
+
+    static stripUnusedColorAttachments(source, options) {
+
+        if (options.stripUnusedColorAttachments) {
+
+            // find out how many times pcFragColorX is used (see gles3.js)
+            const counts = new Map();
+            const matches = source.match(FRAGCOLOR);
+            matches?.forEach((match) => {
+                const index = parseInt(match.charAt(match.length - 1), 10);
+                counts.set(index, (counts.get(index) ?? 0) + 1);
+            });
+
+            // if there's any attachment used only one time (only as a declaration, without actual use)
+            const anySingleUse = Array.from(counts.values()).some(count => count === 1);
+            if (anySingleUse) {
+
+                // remove all lines that contains pcFragColorX with single usage
+                const lines = source.split('\n');
+                const keepLines = [];
+                for (let i = 0; i < lines.length; i++) {
+                    const match = lines[i].match(FRAGCOLOR);
+                    if (match) {
+                        const index = parseInt(match[0].charAt(match[0].length - 1), 10);
+                        if (index > 0 && counts.get(index) === 1) {
+                            continue;
+                        }
+                    }
+                    keepLines.push(lines[i]);
+                }
+
+                source = keepLines.join('\n');
+            }
+        }
 
         return source;
     }
@@ -116,6 +161,28 @@ class Preprocessor {
             intDefines.forEach((value, key) => {
                 source = source.replace(new RegExp(`\\[${key}\\]`, 'g'), `[${value}]`);
             });
+        }
+
+        return source;
+    }
+
+    static injectDefines(source, injectDefines) {
+
+        if (source !== null && injectDefines.size > 0) {
+
+            // replace all instances of the injected defines with the value itself
+            const lines = source.split('\n');
+            injectDefines.forEach((value, key) => {
+                const regex = new RegExp(key, 'g');
+                for (let i = 0; i < lines.length; i++) {
+
+                    // replace them on lines that do not contain a preprocessor directive (the define itself for example)
+                    if (!lines[i].includes('#')) {
+                        lines[i] = lines[i].replace(regex, value);
+                    }
+                }
+            });
+            source = lines.join('\n');
         }
 
         return source;
@@ -144,11 +211,14 @@ class Preprocessor {
      * @param {Map<string, string>} defines - Supplied defines which are used in addition to those
      * defined in the source code. Maps a define name to its value. Note that the map is modified
      * by the function.
+     * @param {Map<string, string>} injectDefines - An object to collect defines that are to be
+     * replaced with their values.
      * @param {Map<string, string>} [includes] - An object containing key-value pairs of include names and their
      * content.
-     * @returns {string} Returns preprocessed source code.
+     * @param {boolean} [stripDefines] - If true, strips all defines from the source.
+     * @returns {string|null} Returns preprocessed source code, or null if failed.
      */
-    static _preprocess(source, defines = new Map(), includes) {
+    static _preprocess(source, defines = new Map(), injectDefines, includes, stripDefines) {
 
         const originalSource = source;
 
@@ -159,7 +229,7 @@ class Preprocessor {
         let error = false;
 
         let match;
-        while ((match = KEYWORD.exec(source)) !== null) {
+        while ((match = KEYWORD.exec(source)) !== null && !error) {
 
             const keyword = match[1];
             switch (keyword) {
@@ -175,21 +245,43 @@ class Preprocessor {
                     // split it to identifier name and a value
                     IDENTIFIER.lastIndex = define.index;
                     const identifierValue = IDENTIFIER.exec(expression);
-                    const identifier = identifierValue[1];
+                    const identifier = identifierValue[0];
                     let value = expression.substring(identifier.length).trim();
                     if (value === '') value = 'true';
 
                     // are we inside if-blocks that are accepted
                     const keep = Preprocessor._keep(stack);
+                    let stripThisDefine = stripDefines;
 
                     if (keep) {
-                        defines.set(identifier, value);
+
+                        // replacement identifier (inside {}) - always remove it from code
+                        const replacementDefine = identifier.startsWith('{') && identifier.endsWith('}');
+                        if (replacementDefine) {
+                            stripThisDefine = true;
+                        }
+
+                        if (replacementDefine) {
+                            injectDefines.set(identifier, value);
+                        } else {
+                            defines.set(identifier, value);
+                        }
+
+                        if (stripThisDefine) {
+                            // cut out the define line
+                            source = source.substring(0, define.index - 1) + source.substring(DEFINE.lastIndex);
+
+                            // continue processing on the next symbol
+                            KEYWORD.lastIndex = define.index - 1;
+                        }
                     }
 
                     Debug.trace(TRACEID, `${keyword}: [${identifier}] ${value} ${keep ? '' : 'IGNORED'}`);
 
                     // continue on the next line
-                    KEYWORD.lastIndex = define.index + define[0].length;
+                    if (!stripThisDefine) {
+                        KEYWORD.lastIndex = define.index + define[0].length;
+                    }
                     break;
                 }
 
@@ -206,12 +298,22 @@ class Preprocessor {
                     // remove it from defines
                     if (keep) {
                         defines.delete(identifier);
+
+                        if (stripDefines) {
+                            // cut out the undef line
+                            source = source.substring(0, undef.index - 1) + source.substring(UNDEF.lastIndex);
+
+                            // continue processing on the next symbol
+                            KEYWORD.lastIndex = undef.index - 1;
+                        }
                     }
 
                     Debug.trace(TRACEID, `${keyword}: [${identifier}] ${keep ? '' : 'IGNORED'}`);
 
                     // continue on the next line
-                    KEYWORD.lastIndex = undef.index + undef[0].length;
+                    if (!stripDefines) {
+                        KEYWORD.lastIndex = undef.index + undef[0].length;
+                    }
                     break;
                 }
 
@@ -279,6 +381,11 @@ class Preprocessor {
                     const endif = ENDIF.exec(source);
 
                     const blockInfo = stack.pop();
+                    if (!blockInfo) {
+                        console.error(`Shader preprocessing encountered "#${endif[1]}" without a preceding #if #ifdef #ifndef while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
+                        error = true;
+                        continue;
+                    }
 
                     // code between if and endif
                     const blockCode = blockInfo.keep ? source.substring(blockInfo.end, match.index) : '';
@@ -322,8 +429,13 @@ class Preprocessor {
                     INCLUDE.lastIndex = match.index;
                     const include = INCLUDE.exec(source);
                     error ||= include === null;
-                    Debug.assert(include, `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`);
+                    if (!include) {
+                        Debug.assert(include, `Invalid [${keyword}] while preprocessing ${Preprocessor.sourceName}:\n${source.substring(match.index, match.index + 100)}...`);
+                        error = true;
+                        continue;
+                    }
                     const identifier = include[1].trim();
+                    const countIdentifier = include[2]?.trim();
 
                     // are we inside if-blocks that are accepted
                     const keep = Preprocessor._keep(stack);
@@ -331,15 +443,39 @@ class Preprocessor {
                     if (keep) {
 
                         // cut out the include line and replace it with the included string
-                        const includeSource = includes?.get(identifier);
+                        let includeSource = includes?.get(identifier);
                         if (includeSource !== undefined) {
+
+                            includeSource = this.stripComments(includeSource);
+
+                            // handle second identifier specifying loop count
+                            if (countIdentifier) {
+                                const countString = defines.get(countIdentifier);
+                                const count = parseFloat(countString);
+                                if (Number.isInteger(count)) {
+
+                                    // add the include count times
+                                    let result = '';
+                                    for (let i = 0; i < count; i++) {
+                                        result += includeSource.replace(LOOP_INDEX, String(i));
+                                    }
+                                    includeSource = result;
+
+                                } else {
+                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { originalSource: originalSource, source: source });
+                                    error = true;
+                                }
+                            }
+
+                            // replace the include by the included string
                             source = source.substring(0, include.index - 1) + includeSource + source.substring(INCLUDE.lastIndex);
 
                             // process the just included test
-                            KEYWORD.lastIndex = include.index;
+                            KEYWORD.lastIndex = include.index - 1;
                         } else {
-                            console.error(`Include "${identifier}" not resolved while preprocessing a shader`, { source: originalSource });
+                            console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`, { originalSource: originalSource, source: source });
                             error = true;
+                            continue;
                         }
                     }
 
@@ -349,9 +485,14 @@ class Preprocessor {
             }
         }
 
+        if (stack.length > 0) {
+            console.error(`Shader preprocessing reached the end of the file without encountering the necessary #endif to close a preceding #if, #ifdef, or #ifndef block. ${Preprocessor.sourceName}`);
+            error = true;
+        }
+
         if (error) {
-            console.warn('Failed to preprocess shader: ', { source: originalSource });
-            return originalSource;
+            console.error('Failed to preprocess shader: ', { source: originalSource });
+            return null;
         }
 
         return source;
@@ -369,46 +510,92 @@ class Preprocessor {
     }
 
     /**
-     * Very simple expression evaluation, handles cases:
+     * Evaluates a single atomic expression, which can be:
+     * - `defined(EXPRESSION)` or `!defined(EXPRESSION)`
+     * - Comparisons such as `A == B`, `A != B`, `A > B`, etc.
+     * - Simple checks for the existence of a define.
      *
-     * - expression
-     * - defined(expression)
-     * - !defined(expression)
-     *
-     * But does not handle more complex cases, which would require more complex system:
-     *
-     * - defined(A) || defined(B)
+     * @param {string} expr - The atomic expression to evaluate.
+     * @param {Map<string, string>} defines - A map containing key-value pairs of defines.
+     * @returns {object} Returns an object containing the result of the evaluation and an error flag.
+     */
+    static evaluateAtomicExpression(expr, defines) {
+        let error = false;
+        expr = expr.trim();
+        let invert = false;
+
+        // Handle defined(expr) and !defined(expr)
+        const definedMatch = DEFINED.exec(expr);
+        if (definedMatch) {
+            invert = definedMatch[1] === '!';
+            expr = definedMatch[2].trim();
+            const exists = defines.has(expr);
+            return { result: invert ? !exists : exists, error };
+        }
+
+        // Handle comparisons
+        const comparisonMatch = COMPARISON.exec(expr);
+        if (comparisonMatch) {
+            const left = defines.get(comparisonMatch[1].trim()) ?? comparisonMatch[1].trim();
+            const right = defines.get(comparisonMatch[3].trim()) ?? comparisonMatch[3].trim();
+            const operator = comparisonMatch[2].trim();
+
+            let result = false;
+            switch (operator) {
+                case '==': result = left === right; break;
+                case '!=': result = left !== right; break;
+                case '<': result = left < right; break;
+                case '<=': result = left <= right; break;
+                case '>': result = left > right; break;
+                case '>=': result = left >= right; break;
+                default: error = true;
+            }
+
+            return { result, error };
+        }
+
+        // Default case: check if expression is defined
+        const result = defines.has(expr);
+        return { result, error };
+    }
+
+    /**
+     * Evaluates a complex expression with support for `defined`, `!defined`, comparisons, `&&`,
+     * and `||`. It does not currently handle ( and ).
      *
      * @param {string} expression - The expression to evaluate.
      * @param {Map<string, string>} defines - A map containing key-value pairs of defines.
      * @returns {object} Returns an object containing the result of the evaluation and an error flag.
      */
     static evaluate(expression, defines) {
-
         const correct = INVALID.exec(expression) === null;
         Debug.assert(correct, `Resolving expression like this is not supported: ${expression}`);
 
-        // if the format is defined(expression), extract expression
-        let invert = false;
-        const defined = DEFINED.exec(expression);
-        if (defined) {
-            invert = defined[1] === '!';
-            expression = defined[2];
+        // Step 1: Split by "||" to handle OR conditions
+        const orSegments = expression.split('||');
+        for (const orSegment of orSegments) {
+
+            // Step 2: Split each OR segment by "&&" to handle AND conditions
+            const andSegments = orSegment.split('&&');
+
+            // Step 3: Evaluate each AND segment
+            let andResult = true;
+            for (const andSegment of andSegments) {
+                const { result, error } = Preprocessor.evaluateAtomicExpression(andSegment.trim(), defines);
+                if (!result || error) {
+                    andResult = false;
+                    break; // Short-circuit AND evaluation
+                }
+            }
+
+            // Step 4: If any OR segment evaluates to true, short-circuit and return true
+            if (andResult) {
+                return { result: true, error: !correct };
+            }
         }
 
-        // test if expression define exists
-        expression = expression.trim();
-        let exists = defines.has(expression);
-
-        // handle inversion
-        if (invert) {
-            exists = !exists;
-        }
-
-        return {
-            result: exists,
-            error: !correct
-        };
+        // If no OR segment is true, the whole expression is false
+        return { result: false, error: !correct };
     }
 }
 

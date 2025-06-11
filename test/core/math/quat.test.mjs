@@ -1,8 +1,8 @@
+import { expect } from 'chai';
+
 import { Mat4 } from '../../../src/core/math/mat4.js';
 import { Quat } from '../../../src/core/math/quat.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
-
-import { expect } from 'chai';
 
 describe('Quat', function () {
 

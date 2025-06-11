@@ -3,9 +3,10 @@ import { math } from './math.js';
 /**
  * An RGBA color.
  *
- * Each color component is a floating point value in the range 0 to 1. The `r` (red), `g` (green)
- * and `b` (blue) components define a color in RGB color space. The `a` (alpha) component defines
- * transparency. An alpha of 1 is fully opaque. An alpha of 0 is fully transparent.
+ * Each color component is a floating point value in the range 0 to 1. The {@link r} (red),
+ * {@link g} (green) and {@link b} (blue) components define a color in RGB color space. The
+ * {@link a} (alpha) component defines transparency. An alpha of 1 is fully opaque. An alpha of
+ * 0 is fully transparent.
  *
  * @category Math
  */
@@ -39,13 +40,31 @@ class Color {
     a;
 
     /**
-     * Create a new Color object.
+     * Creates a new Color instance.
      *
-     * @param {number|number[]} [r] - The value of the red component (0-1). Defaults to 0. If r is
-     * an array of length 3 or 4, the array will be used to populate all components.
-     * @param {number} [g] - The value of the green component (0-1). Defaults to 0.
-     * @param {number} [b] - The value of the blue component (0-1). Defaults to 0.
-     * @param {number} [a] - The value of the alpha component (0-1). Defaults to 1.
+     * @overload
+     * @param {number} [r] - The r value. Defaults to 0.
+     * @param {number} [g] - The g value. Defaults to 0.
+     * @param {number} [b] - The b value. Defaults to 0.
+     * @param {number} [a] - The a value. Defaults to 1.
+     * @example
+     * const c1 = new pc.Color(); // defaults to 0, 0, 0, 1
+     * const c2 = new pc.Color(0.1, 0.2, 0.3, 0.4);
+     */
+    /**
+     * Creates a new Color instance.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the color values from.
+     * @example
+     * const c = new pc.Color([0.1, 0.2, 0.3, 0.4]);
+     */
+    /**
+     * @param {number|number[]} [r] - The r value. Defaults to 0. If r is an array of length 3 or
+     * 4, the array will be used to populate all components.
+     * @param {number} [g] - The g value. Defaults to 0.
+     * @param {number} [b] - The b value. Defaults to 0.
+     * @param {number} [a] - The a value. Defaults to 1.
      */
     constructor(r = 0, g = 0, b = 0, a = 1) {
         const length = r.length;
@@ -221,30 +240,82 @@ class Color {
     }
 
     /**
+     * Set the values of the vector from an array.
+     *
+     * @param {number[]} arr - The array to set the vector values from.
+     * @param {number} [offset] - The zero-based index at which to start copying elements from the
+     * array. Default is 0.
+     * @returns {Color} Self for chaining.
+     * @example
+     * const c = new pc.Color();
+     * c.fromArray([1, 0, 1, 1]);
+     * // c is set to [1, 0, 1, 1]
+     */
+    fromArray(arr, offset = 0) {
+        this.r = arr[offset] ?? this.r;
+        this.g = arr[offset + 1] ?? this.g;
+        this.b = arr[offset + 2] ?? this.b;
+        this.a = arr[offset + 3] ?? this.a;
+
+        return this;
+    }
+
+    /**
      * Converts the color to string form. The format is '#RRGGBBAA', where RR, GG, BB, AA are the
      * red, green, blue and alpha values. When the alpha value is not included (the default), this
      * is the same format as used in HTML/CSS.
      *
      * @param {boolean} alpha - If true, the output string will include the alpha value.
+     * @param {boolean} [asArray] - If true, the output will be an array of numbers. Defaults to false.
      * @returns {string} The color in string form.
      * @example
      * const c = new pc.Color(1, 1, 1);
      * // Outputs #ffffffff
      * console.log(c.toString());
      */
-    toString(alpha) {
-        let s = `#${((1 << 24) + (Math.round(this.r * 255) << 16) + (Math.round(this.g * 255) << 8) + Math.round(this.b * 255)).toString(16).slice(1)}`;
-        if (alpha === true) {
-            const a = Math.round(this.a * 255).toString(16);
-            if (this.a < 16 / 255) {
-                s += `0${a}`;
-            } else {
-                s += a;
-            }
+    toString(alpha, asArray) {
 
+        const { r, g, b, a } = this;
+
+        // If any component exceeds 1 (HDR), return the color as an array
+        if (asArray || r > 1 || g > 1 || b > 1) {
+            return `${r.toFixed(3)}, ${g.toFixed(3)}, ${b.toFixed(3)}, ${a.toFixed(3)}`;
         }
 
+        let s = `#${((1 << 24) + (Math.round(r * 255) << 16) + (Math.round(g * 255) << 8) + Math.round(b * 255)).toString(16).slice(1)}`;
+        if (alpha === true) {
+            const aa = Math.round(a * 255).toString(16);
+            if (this.a < 16 / 255) {
+                s += `0${aa}`;
+            } else {
+                s += aa;
+            }
+        }
         return s;
+    }
+
+    /**
+     * Converts the color to an array.
+     *
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the color's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @param {boolean} [alpha] - If true, the output array will include the alpha value.
+     * @returns {number[]|ArrayBufferView} The color as an array.
+     * @example
+     * const c = new pc.Color(1, 1, 1);
+     * // Outputs [1, 1, 1, 1]
+     * console.log(c.toArray());
+     */
+    toArray(arr = [], offset = 0, alpha = true) {
+        arr[offset] = this.r;
+        arr[offset + 1] = this.g;
+        arr[offset + 2] = this.b;
+        if (alpha) {
+            arr[offset + 3] = this.a;
+        }
+        return arr;
     }
 
     /**

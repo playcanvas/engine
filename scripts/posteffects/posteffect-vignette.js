@@ -27,8 +27,11 @@ function VignetteEffect(graphicsDevice) {
         '}'
     ].join('\n');
 
-    this.vignetteShader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, luminosityFrag, 'VignetteShader', {
-        aPosition: pc.SEMANTIC_POSITION
+    this.vignetteShader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'VignetteShader',
+        attributes: { aPosition: pc.SEMANTIC_POSITION },
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: luminosityFrag
     });
 
     this.offset = 1;

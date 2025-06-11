@@ -44,8 +44,6 @@ class CameraComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.on('prerender', this.onAppPrerender, this);
-
-        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -63,6 +61,7 @@ class CameraComponentSystem extends ComponentSystem {
             'cullFaces',
             'farClip',
             'flipFaces',
+            'fog',
             'fov',
             'frustumCulling',
             'horizontalFov',
@@ -153,9 +152,6 @@ class CameraComponentSystem extends ComponentSystem {
         component.onRemove();
     }
 
-    onUpdate(dt) {
-    }
-
     onAppPrerender() {
         for (let i = 0, len = this.cameras.length; i < len; i++) {
             this.cameras[i].onAppPrerender();
@@ -176,9 +172,9 @@ class CameraComponentSystem extends ComponentSystem {
     }
 
     destroy() {
-        super.destroy();
+        this.app.off('prerender', this.onAppPrerender, this);
 
-        this.app.systems.off('update', this.onUpdate, this);
+        super.destroy();
     }
 }
 

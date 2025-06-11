@@ -1,8 +1,8 @@
+import { expect } from 'chai';
+
 import { Mat3 } from '../../../src/core/math/mat3.js';
 import { Mat4 } from '../../../src/core/math/mat4.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
-
-import { expect } from 'chai';
 
 const identity =   [1, 0, 0, 0, 1, 0, 0, 0, 1];
 const increasing = [1, 2, 3, 4, 5, 6, 7, 8, 9];

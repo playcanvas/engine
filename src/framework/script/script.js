@@ -15,11 +15,11 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  * At its core, a script is simply a collection of methods that are called at various points in the
  * Engine's lifecycle. These methods are:
  *
- * {@link Script#initialize} - Called once when the script is initialized
- * {@link Script#postInitialize} - Called once after all scripts have been initialized
- * {@link Script#update} - Called every frame, if the script is enabled
- * {@link Script#postUpdate} - Called every frame, after all scripts have been updated
- * {@link Script#swap} - Called when a script is redefined
+ * - `Script#initialize` - Called once when the script is initialized.
+ * - `Script#postInitialize` - Called once after all scripts have been initialized.
+ * - `Script#update` - Called every frame, if the script is enabled.
+ * - `Script#postUpdate` - Called every frame, after all scripts have been updated.
+ * - `Script#swap` - Called when a script is redefined.
  *
  * These methods are entirely optional, but provide a useful way to manage the lifecycle of a
  * script and perform any necessary setup and cleanup.
@@ -27,8 +27,12 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  * Below is a simple example of a script that rotates an entity every frame.
  * @example
  * ```javascript
- * class EntityRotator extends Script {
- *     update() {
+ * import { Script } from 'playcanvas';
+ *
+ * export class Rotator extends Script {
+ *     static scriptName = 'rotator';
+ *
+ *     update(dt) {
  *         this.entity.rotateLocal(0, 1, 0);
  *     }
  * }
@@ -48,6 +52,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('enable', () => {
      *             // Script Instance is now enabled
@@ -63,6 +68,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('disable', () => {
      *             // Script Instance is now disabled
@@ -79,6 +85,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('state', (enabled) => {
      *             console.log(`Script Instance is now ${enabled ? 'enabled' : 'disabled'}`);
@@ -94,6 +101,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('destroy', () => {
      *             // no longer part of the entity
@@ -117,6 +125,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('attr', (name, newValue, oldValue) => {
      *             console.log(`Attribute '${name}' changed from '${oldValue}' to '${newValue}'`);
@@ -125,6 +134,7 @@ export class Script extends EventHandler {
      * };
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('attr:speed', (newValue, oldValue) => {
      *             console.log(`Attribute 'speed' changed from '${oldValue}' to '${newValue}'`);
@@ -142,6 +152,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('error', (err, method) => {
      *             // caught an exception
@@ -153,14 +164,14 @@ export class Script extends EventHandler {
     static EVENT_ERROR = 'error';
 
     /**
-     * The {@link AppBase} that the instance of this type belongs to.
+     * The {@link AppBase} that the instance of this script belongs to.
      *
      * @type {AppBase}
      */
     app;
 
     /**
-     * The {@link Entity} that the instance of this type belongs to.
+     * The {@link Entity} that the instance of this script belongs to.
      *
      * @type {Entity}
      */
@@ -206,11 +217,11 @@ export class Script extends EventHandler {
     }
 
     /**
-     * True if the instance of this type is in running state. False when script is not running,
+     * True if the instance of this script is in running state. False when script is not running,
      * because the Entity or any of its parents are disabled or the {@link ScriptComponent} is
-     * disabled or the Script Instance is disabled. When disabled no update methods will be called
-     * on each tick. initialize and postInitialize methods will run once when the script instance
-     * is in `enabled` state during app tick.
+     * disabled or the Script Instance is disabled. When disabled, no update methods will be called
+     * on each tick. `initialize` and `postInitialize` methods will run once when the script
+     * instance is in the `enabled` state during an app tick.
      *
      * @type {boolean}
      */
@@ -347,6 +358,7 @@ const funcNameRegex = /^\s*function(?:\s|\s*\/\*.*\*\/\s*)+([^(\s\/]*)\s*/;
  */
 export function getScriptName(constructorFn) {
     if (typeof constructorFn !== 'function') return undefined;
+    if (constructorFn.scriptName) return constructorFn.scriptName;
     if ('name' in Function.prototype) return constructorFn.name;
     if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
     const match = (`${constructorFn}`).match(funcNameRegex);

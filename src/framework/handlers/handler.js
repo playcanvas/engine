@@ -5,11 +5,11 @@
  */
 
 /**
- * Callback used by {@link ResourceHandler#load} when a resource is loaded (or an error occurs).
- *
  * @callback ResourceHandlerCallback
+ * Callback used by {@link ResourceHandler#load} when a resource is loaded (or an error occurs).
  * @param {string|null} err - The error message in the case where the load fails.
- * @param {*} [response] - The raw data that has been successfully loaded.
+ * @param {any} [response] - The raw data that has been successfully loaded.
+ * @returns {void}
  */
 
 /**

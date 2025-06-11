@@ -6,34 +6,32 @@ import { standardMaterialTextureParameters } from '../../scene/materials/standar
 import { Asset } from './asset.js';
 
 /**
- * @import { Bundle } from '../bundle/bundle.js'
  * @import { BundleRegistry } from '../bundle/bundle-registry.js'
  * @import { ResourceLoader } from '../handlers/loader.js'
  */
 
 /**
- * Callback used by {@link AssetRegistry#filter} to filter assets.
- *
  * @callback FilterAssetCallback
+ * Callback used by {@link AssetRegistry#filter} to filter assets.
  * @param {Asset} asset - The current asset to filter.
  * @returns {boolean} Return `true` to include asset to result list.
  */
 
 /**
+ * @callback LoadAssetCallback
  * Callback used by {@link AssetRegistry#loadFromUrl} and called when an asset is loaded (or an
  * error occurs).
- *
- * @callback LoadAssetCallback
  * @param {string|null} err - The error message is null if no errors were encountered.
  * @param {Asset} [asset] - The loaded asset if no errors were encountered.
+ * @returns {void}
  */
 
 /**
+ * @callback BundlesFilterCallback
  * Callback used by {@link ResourceLoader#load} and called when an asset is choosing a bundle
  * to load from. Return a single bundle to ensure asset is loaded from it.
- *
- * @callback BundlesFilterCallback
- * @param {Bundle[]} bundles - List of bundles which contain the asset.
+ * @param {Asset[]} bundles - List of bundle assets which contain the asset.
+ * @returns {Asset} Return a single bundle asset to ensure asset is loaded from it.
  */
 
 /**
@@ -167,7 +165,7 @@ class AssetRegistry extends EventHandler {
     _assets = new Set();
 
     /**
-     * @type {import('../handlers/loader.js').ResourceLoader}
+     * @type {ResourceLoader}
      * @private
      */
     _loader;
@@ -195,7 +193,7 @@ class AssetRegistry extends EventHandler {
      *
      * @private
      */
-    _tags = new TagsCache('_id');
+    _tags = new TagsCache('id');
 
     /**
      * A URL prefix that will be added to all asset loading requests.
@@ -366,8 +364,8 @@ class AssetRegistry extends EventHandler {
      * is already loaded is bypassed, which forces loading of asset regardless.
      * @param {BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
      * when loading an asset that is contained in any of the bundles. It provides an array of
-     * bundles and will ensure asset is loaded from bundle returned from a callback. By default
-     * smallest filesize bundle is chosen.
+     * bundles and will ensure asset is loaded from bundle returned from a callback. By default,
+     * the smallest filesize bundle is chosen.
      * @example
      * // load some assets
      * const assetsToLoad = [
@@ -375,8 +373,8 @@ class AssetRegistry extends EventHandler {
      *     app.assets.find("Another Asset")
      * ];
      * let count = 0;
-     * assetsToLoad.forEach(function (assetToLoad) {
-     *     assetToLoad.ready(function (asset) {
+     * assetsToLoad.forEach((assetToLoad) => {
+     *     assetToLoad.ready((asset) => {
      *         count++;
      *         if (count === assetsToLoad.length) {
      *             // done

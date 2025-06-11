@@ -494,9 +494,9 @@ OrbitCameraInputMouse.prototype.onMouseMove = function (event) {
 
 OrbitCameraInputMouse.prototype.onMouseWheel = function (event) {
     if (this.entity.camera.projection === pc.PROJECTION_PERSPECTIVE) {
-        this.orbitCamera.distance -= event.wheel * this.distanceSensitivity * (this.orbitCamera.distance * 0.1);
+        this.orbitCamera.distance -= event.wheelDelta * -2 * this.distanceSensitivity * (this.orbitCamera.distance * 0.1);
     } else {
-        this.orbitCamera.orthoHeight -= event.wheel * this.distanceSensitivity;
+        this.orbitCamera.orthoHeight -= event.wheelDelta * -2 * this.distanceSensitivity;
     }
     event.event.preventDefault();
 };

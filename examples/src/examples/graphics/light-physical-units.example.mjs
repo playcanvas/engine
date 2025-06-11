@@ -283,7 +283,7 @@ assetListLoader.load(() => {
             app.scene.physicalUnits = value;
         } else if (path === 'script.scene.sky') {
             if (value) {
-                app.scene.setSkybox(assets.helipad.resources);
+                app.scene.envAtlas = assets.helipad.resource;
             } else {
                 app.scene.setSkybox(null);
             }

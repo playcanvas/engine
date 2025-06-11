@@ -1,6 +1,11 @@
 import playcanvasConfig from '@playcanvas/eslint-config';
-import babelParser from '@babel/eslint-parser';
 import globals from 'globals';
+
+// Extract or preserve existing JSDoc tags
+const jsdocRule = playcanvasConfig.find(
+    config => config.rules && config.rules['jsdoc/check-tag-names']
+);
+const existingTags = jsdocRule?.rules['jsdoc/check-tag-names'][1]?.definedTags || [];
 
 export default [
     ...playcanvasConfig,
@@ -9,10 +14,6 @@ export default [
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'module',
-            parser: babelParser,
-            parserOptions: {
-                requireConfigFile: false
-            },
             globals: {
                 ...globals.browser,
                 ...globals.mocha,
@@ -27,7 +28,14 @@ export default [
             }
         },
         rules: {
-            'import/order': 'off'
+            'import/order': 'off',
+            'jsdoc/check-tag-names': [
+                'error',
+                {
+                    // custom mjs script tags to not error on, add them to those from parent config
+                    definedTags: [...new Set([...existingTags, 'range', 'step', 'precision'])]
+                }
+            ]
         }
     },
     {
@@ -37,15 +45,22 @@ export default [
         }
     },
     {
+        files: ['scripts/**/*.mjs'],
+        rules: {
+            'jsdoc/no-defaults': 'off', // Attributes use default values
+            'import/no-unresolved': 'off' // PlayCanvas is not installed for scripts
+        }
+    },
+    {
         files: ['test/**/*.mjs'],
         rules: {
+            'import/order': 'error',
             'no-unused-expressions': 'off',
             'prefer-arrow-callback': 'off' // Mocha uses function callbacks
         }
     },
     {
         ignores: [
-            'tests/**/*',
             'examples/lib/*',
             'scripts/textmesh/*.min.js',
             'src/polyfill/*',

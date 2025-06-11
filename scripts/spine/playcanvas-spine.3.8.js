@@ -1,4 +1,4 @@
-/* Copyright 2015-2024 PlayCanvas Ltd */
+/* Copyright 2015-2025 PlayCanvas Ltd */
 
 var spine = (function (pc) {
 	'use strict';
@@ -10039,6 +10039,10 @@ var spine = (function (pc) {
 
 	(function () {
 	  var app = pc__namespace.Application.getApplication();
+	  if (!app) {
+	    console.warn("No Application found. An Application or AppBase must be instantiated before `playcanvas-spine`.");
+	    return;
+	  }
 	  var system = new SpineComponentSystem(app);
 	  app.systems.add(system);
 	})();

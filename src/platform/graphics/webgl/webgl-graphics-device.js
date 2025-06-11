@@ -583,12 +583,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.constantTexSource = this.scope.resolve('source');
 
-        // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
-        this.textureFloatRenderable = !!this.extColorBufferFloat;
-
-        // render to half float buffers support - either of these two extensions
-        this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
-
         this.postInit();
     }
 
@@ -775,7 +769,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.textureRG11B10Renderable = true;
 
+        // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
         this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
+        this.textureFloatRenderable = !!this.extColorBufferFloat;
+
+        // iOS exposes this for half precision render targets on WebGL2 from iOS v 14.5beta
+        this.extColorBufferHalfFloat = this.getExtension('EXT_color_buffer_half_float');
+
+        // render to half float buffers support - either of these two extensions
+        this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
 
         this.extDebugRendererInfo = this.getExtension('WEBGL_debug_renderer_info');
 
@@ -795,9 +797,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
         this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
-
-        // iOS exposes this for half precision render targets on WebGL2 from iOS v 14.5beta
-        this.extColorBufferHalfFloat = this.getExtension('EXT_color_buffer_half_float');
     }
 
     /**
@@ -866,6 +865,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (this.maxTextures <= 8) {
             this.supportsAreaLights = false;
         }
+
+        this.initCapsDefines();
     }
 
     /**
@@ -1719,26 +1720,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
             return;
         }
 
-        let sampler, samplerValue, texture, numTextures; // Samplers
-        let uniform, scopeId, uniformVersion, programVersion; // Uniforms
         const shader = this.shader;
         if (!shader) {
             return;
         }
-        const samplers = shader.impl.samplers;
-        const uniforms = shader.impl.uniforms;
 
         // vertex buffers
         if (!keepBuffers) {
+            Debug.call(() => this.validateAttributes(this.shader, this.vertexBuffers[0]?.format, this.vertexBuffers[1]?.format));
+
             this.setBuffers();
         }
 
         // Commit the shader program variables
         let textureUnit = 0;
-
+        const samplers = shader.impl.samplers;
         for (let i = 0, len = samplers.length; i < len; i++) {
-            sampler = samplers[i];
-            samplerValue = sampler.scopeId.value;
+            const sampler = samplers[i];
+            let samplerValue = sampler.scopeId.value;
             if (!samplerValue) {
 
                 const samplerName = sampler.scopeId.name;
@@ -1762,7 +1761,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             if (samplerValue instanceof Texture) {
-                texture = samplerValue;
+                const texture = samplerValue;
                 this.setTexture(texture, textureUnit);
 
                 // #if _DEBUG
@@ -1785,9 +1784,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 textureUnit++;
             } else { // Array
                 sampler.array.length = 0;
-                numTextures = samplerValue.length;
+                const numTextures = samplerValue.length;
                 for (let j = 0; j < numTextures; j++) {
-                    texture = samplerValue[j];
+                    const texture = samplerValue[j];
                     this.setTexture(texture, textureUnit);
 
                     sampler.array[j] = textureUnit;
@@ -1798,11 +1797,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         // Commit any updated uniforms
+        const uniforms = shader.impl.uniforms;
         for (let i = 0, len = uniforms.length; i < len; i++) {
-            uniform = uniforms[i];
-            scopeId = uniform.scopeId;
-            uniformVersion = uniform.version;
-            programVersion = scopeId.versionObject.version;
+            const uniform = uniforms[i];
+            const scopeId = uniform.scopeId;
+            const uniformVersion = uniform.version;
+            const programVersion = scopeId.versionObject.version;
 
             // Check the value is valid
             if (uniformVersion.globalId !== programVersion.globalId || uniformVersion.revision !== programVersion.revision) {
@@ -1810,11 +1810,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 uniformVersion.revision = programVersion.revision;
 
                 // Call the function to commit the uniform value
-                if (scopeId.value !== null) {
-                    this.commitFunction[uniform.dataType](uniform, scopeId.value);
+                const value = scopeId.value;
+                if (value !== null && value !== undefined) {
+                    this.commitFunction[uniform.dataType](uniform, value);
                 } else {
-                    // commented out till engine issue #4971 is sorted out
-                    // Debug.warnOnce(`Shader [${shader.label}] requires uniform [${uniform.scopeId.name}] which has not been set, while rendering [${DebugGraphics.toString()}]`);
+                    Debug.warnOnce(`Shader [${shader.label}] requires uniform [${uniform.scopeId.name}] which has not been set, while rendering [${DebugGraphics.toString()}]`);
                 }
             }
         }
@@ -2059,7 +2059,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     renderTarget.destroy();
                 }
                 resolve(data);
-            });
+            }).catch(reject);
         });
     }
 

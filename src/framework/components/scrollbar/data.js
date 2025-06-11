@@ -12,10 +12,10 @@ class ScrollbarComponentData {
     value = 0;
 
     /** @type {number} */
-    handleSize;
+    handleSize = 0;
 
-    /** @type {Entity} */
-    handleEntity;
+    /** @type {Entity|null} */
+    handleEntity = null;
 }
 
 export { ScrollbarComponentData };

@@ -1,4 +1,8 @@
-import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE } from '../../constants.js';
+import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE, REFLECTIONSRC_NONE } from '../../constants.js';
+
+/**
+ * @import { ShaderChunks } from '../shader-chunks.js';
+ */
 
 /**
  * The lit shader options determines how the lit-shader gets generated. It specifies a set of
@@ -10,11 +14,11 @@ class LitShaderOptions {
     hasTangents = false;
 
     /**
-     * Object containing custom shader chunks that will replace default ones.
+     * Custom shader chunks that will replace default ones.
      *
-     * @type {Object<string, string>}
+     * @type {ShaderChunks|null}
      */
-    chunks = {};
+    shaderChunks = null;
 
     // one of the SHADER_ constants
     pass = 0;
@@ -92,13 +96,6 @@ class LitShaderOptions {
     useAo = false;
 
     diffuseMapEnabled = false;
-
-    /**
-     * Replaced the whole fragment shader with this string.
-     *
-     * @type {string}
-     */
-    customFragmentShader = null;
 
     pixelSnap = false;
 
@@ -236,27 +233,27 @@ class LitShaderOptions {
     fog = FOG_NONE;
 
     /**
-     * The type of gamma correction being applied in the shader. See {@link Scene#gammaCorrection}
-     * for the list of possible values.
+     * The type of gamma correction being applied in the shader. See
+     * {@link CameraComponent#gammaCorrection} for the list of possible values.
      *
      * @type {number}
      */
     gamma = GAMMA_NONE;
 
     /**
-     * The type of tone mapping being applied in the shader. See {@link Scene#toneMapping} for the
-     * list of possible values.
+     * The type of tone mapping being applied in the shader. See {@link CameraComponent#toneMapping}
+     * for the list of possible values.
      *
      * @type {number}
      */
     toneMap = -1;
 
     /**
-     * One of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap".
+     * One of REFLECTIONSRC_*** constants.
      *
      * @type {string}
      */
-    reflectionSource = null;
+    reflectionSource = REFLECTIONSRC_NONE;
 
     reflectionEncoding = null;
 
@@ -302,6 +299,18 @@ class LitShaderOptions {
      * @type {Object<string, string>}
      */
     userAttributes = {};
+
+    /**
+     * Make vLinearDepth available in the shader.
+     *
+     * @type {boolean}
+     */
+    linearDepth = false;
+
+    /**
+     * Shader outputs the accumulated shadow value, used for shadow catcher materials.
+     */
+    shadowCatcher = false;
 }
 
 export { LitShaderOptions };

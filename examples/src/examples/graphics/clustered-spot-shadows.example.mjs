@@ -61,10 +61,11 @@ assetListLoader.load(() => {
 
     data.set('settings', {
         shadowAtlasResolution: 1024, // shadow map resolution storing all shadows
-        shadowType: pc.SHADOW_PCF3, // shadow filter type
+        shadowType: pc.SHADOW_PCF3_32F, // shadow filter type
         shadowsEnabled: true,
         cookiesEnabled: true,
         shadowIntensity: 1,
+        cookieIntensity: 0.5,
         numLights: 0,
         debug: false,
         debugAtlas: false,
@@ -275,6 +276,10 @@ assetListLoader.load(() => {
         } else if (pathArray[1] === 'shadowIntensity') {
             for (let i = 0; i < spotLightList.length; i++) {
                 spotLightList[i].light.shadowIntensity = value;
+            }
+        } else if (pathArray[1] === 'cookieIntensity') {
+            for (let i = 0; i < spotLightList.length; i++) {
+                spotLightList[i].light.cookieIntensity = value;
             }
         } else {
             // @ts-ignore

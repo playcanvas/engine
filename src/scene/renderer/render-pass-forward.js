@@ -6,7 +6,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { RenderAction } from '../composition/render-action.js';
-import { SHADER_FORWARD } from '../constants.js';
+import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SHADER_FORWARD } from '../constants.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -41,6 +41,20 @@ class RenderPassForward extends RenderPass {
      * @type {RenderAction[]}
      */
     renderActions = [];
+
+    /**
+     * The gamma correction setting for the render pass. In not set, setting from the camera is used.
+     *
+     * @type {number|undefined}
+     */
+    gammaCorrection;
+
+    /**
+     * The tone mapping setting for the render pass. In not set, setting from the camera is used.
+     *
+     * @type {number|undefined}
+     */
+    toneMapping;
 
     /**
      * If true, do not clear the depth buffer before rendering, as it was already primed by a depth
@@ -160,7 +174,7 @@ class RenderPassForward extends RenderPass {
                 for (let l = 0; l < shadowDirLights.length; l++) {
                     const light = shadowDirLights[l];
 
-                    // the the shadow map is not already rendered for this light
+                    // the shadow map is not already rendered for this light
                     if (renderer.dirLightShadows.get(light) !== camera) {
                         renderer.dirLightShadows.set(light, camera);
 
@@ -201,11 +215,11 @@ class RenderPassForward extends RenderPass {
     before() {
         const { renderActions } = this;
 
-        // onPreRender callbacks
+        // onPreRender events
         for (let i = 0; i < renderActions.length; i++) {
             const ra = renderActions[i];
             if (ra.firstCameraUse) {
-                ra.camera.onPreRender?.();
+                this.scene.fire(EVENT_PRERENDER, ra.camera);
             }
         }
     }
@@ -231,11 +245,11 @@ class RenderPassForward extends RenderPass {
 
     after() {
 
-        // onPostRender callbacks
+        // onPostRender events
         for (let i = 0; i < this.renderActions.length; i++) {
             const ra = this.renderActions[i];
             if (ra.lastCameraUse) {
-                ra.camera.onPostRender?.();
+                this.scene.fire(EVENT_POSTRENDER, ra.camera);
             }
         }
 
@@ -249,7 +263,7 @@ class RenderPassForward extends RenderPass {
      */
     renderRenderAction(renderAction, firstRenderAction) {
 
-        const { renderer } = this;
+        const { renderer, scene } = this;
         const device = renderer.device;
 
         // layer
@@ -263,8 +277,14 @@ class RenderPassForward extends RenderPass {
 
         if (camera) {
 
-            // layer pre render callback
-            camera.onPreRenderLayer?.(layer, transparent);
+            // override gamma correction and tone mapping settings
+            const originalGammaCorrection = camera.gammaCorrection;
+            const originalToneMapping = camera.toneMapping;
+            if (this.gammaCorrection !== undefined) camera.gammaCorrection = this.gammaCorrection;
+            if (this.toneMapping !== undefined) camera.toneMapping = this.toneMapping;
+
+            // layer pre render event
+            scene.fire(EVENT_PRERENDER_LAYER, camera, layer, transparent);
 
             const options = {
                 lightClusters: renderAction.lightClusters
@@ -292,8 +312,12 @@ class RenderPassForward extends RenderPass {
             device.setStencilState(null, null);
             device.setAlphaToCoverage(false);
 
-            // layer post render callback
-            camera.onPostRenderLayer?.(layer, transparent);
+            // layer post render event
+            scene.fire(EVENT_POSTRENDER_LAYER, camera, layer, transparent);
+
+            // restore gamma correction and tone mapping settings
+            if (this.gammaCorrection !== undefined) camera.gammaCorrection = originalGammaCorrection;
+            if (this.toneMapping !== undefined) camera.toneMapping = originalToneMapping;
         }
 
         DebugGraphics.popGpuMarker(this.device);

@@ -1,12 +1,10 @@
-import { Application } from '../../../../src/framework/application.js';
+import { expect } from 'chai';
+
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { Canvas } from 'skia-canvas';
-
-import { expect } from 'chai';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ModelComponent', function () {
     let app;
@@ -32,10 +30,10 @@ describe('ModelComponent', function () {
     const loadAssets = function (cb) {
         const assetlist = [
             new Asset('plane.json', 'model', {
-                url: 'http://localhost:3000/test/test-assets/plane/plane.json'
+                url: 'http://localhost:3000/test/assets/plane/plane.json'
             }),
             new Asset('lambert1.json', 'material', {
-                url: 'http://localhost:3000/test/test-assets/plane/31208636/lambert1.json'
+                url: 'http://localhost:3000/test/assets/plane/31208636/lambert1.json'
             })
         ];
 
@@ -47,8 +45,8 @@ describe('ModelComponent', function () {
     };
 
     beforeEach(function (done) {
-        const canvas = new Canvas(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        jsdomSetup();
+        app = createApp();
 
         loadAssets(() => {
             done();
@@ -56,7 +54,9 @@ describe('ModelComponent', function () {
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
         assets = {};
     });
 
@@ -257,18 +257,18 @@ describe('ModelComponent', function () {
 
     it('Materials applied when loading asynchronously', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: 'http://localhost:3000/test/test-assets/box/box.json'
+            url: 'http://localhost:3000/test/assets/cube/cube.json'
         }, {
             'mapping': [
                 {
-                    'path': '1/Box Material.json'
+                    'path': '208808876/Material.json'
                 }
             ],
             'area': 0
         });
 
-        const materialAsset = new Asset('Box Material', 'material', {
-            url: 'http://localhost:3000/test/test-assets/box/1/Box Material.json'
+        const materialAsset = new Asset('Material', 'material', {
+            url: 'http://localhost:3000/test/assets/cube/208808876/Material.json'
         });
 
         app.assets.add(boxAsset);
@@ -291,11 +291,11 @@ describe('ModelComponent', function () {
 
     it('Materials applied when added later', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: 'http://localhost:3000/test/test-assets/box/box.json'
+            url: 'http://localhost:3000/test/assets/cube/cube.json'
         });
 
         const materialAsset = new Asset('Box Material', 'material', {
-            url: 'http://localhost:3000/test/test-assets/box/1/Box Material.json'
+            url: 'http://localhost:3000/test/assets/cube/208808876/Material.json'
         });
 
         app.assets.add(boxAsset);
@@ -328,11 +328,11 @@ describe('ModelComponent', function () {
 
     it('Material add events unbound on destroy', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: 'http://localhost:3000/test/test-assets/box/box.json'
+            url: 'http://localhost:3000/test/assets/cube/cube.json'
         });
 
         const materialAsset = new Asset('Box Material', 'material', {
-            url: 'http://localhost:3000/test/test-assets/box/1/Box Material.json'
+            url: 'http://localhost:3000/test/assets/cube/208808876/Material.json'
         });
 
         app.assets.add(boxAsset);
@@ -375,8 +375,8 @@ describe('ModelComponent', function () {
     });
 
     it('Asset materials unbound on destroy', (done) => {
-        const modelAsset = new Asset('box.json', 'model', {
-            url: 'http://localhost:3000/test/test-assets/box/box.json'
+        const modelAsset = new Asset('cube.json', 'model', {
+            url: 'http://localhost:3000/test/assets/cube/cube.json'
         }, {
             mapping: [{
                 material: assets.material.id
@@ -404,7 +404,7 @@ describe('ModelComponent', function () {
 
     it('Asset materials unbound on change model', (done) => {
         const modelAsset = new Asset('plane.json', 'model', {
-            url: 'http://localhost:3000/test/test-assets/plane/plane.json'
+            url: 'http://localhost:3000/test/assets/plane/plane.json'
         }, {
             mapping: [{
                 material: assets.material.id
@@ -412,10 +412,10 @@ describe('ModelComponent', function () {
         });
 
         const materialAsset2 = new Asset('lambert2.json', 'material', {
-            url: 'http://localhost:3000/test/test-assets/plane/31208636/lambert1.json?t=1'
+            url: 'http://localhost:3000/test/assets/plane/31208636/lambert1.json?t=1'
         });
         const modelAsset2 = new Asset('plane2.json', 'model', {
-            url: 'http://localhost:3000/test/test-assets/plane/plane.json?t=1'
+            url: 'http://localhost:3000/test/assets/plane/plane.json?t=1'
         }, {
             mapping: [{
                 material: materialAsset2.id

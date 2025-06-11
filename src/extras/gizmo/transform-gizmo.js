@@ -15,7 +15,7 @@ import {
     color3from4,
     color4from3
 } from './color.js';
-import { GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
+import { GIZMOAXIS_FACE, GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
 import { Gizmo } from './gizmo.js';
 
 /**
@@ -46,7 +46,7 @@ class TransformGizmo extends Gizmo {
      *
      * @event
      * @example
-     * const gizmo = new pc.TransformGizmo(app, camera, layer);
+     * const gizmo = new pc.TransformGizmo(camera, layer);
      * gizmo.on('transform:start', () => {
      *     console.log('Transformation started');
      * });
@@ -58,7 +58,7 @@ class TransformGizmo extends Gizmo {
      *
      * @event
      * @example
-     * const gizmo = new pc.TransformGizmo(app, camera, layer);
+     * const gizmo = new pc.TransformGizmo(camera, layer);
      * gizmo.on('transform:move', (pointDelta, angleDelta) => {
      *     console.log('Transformation moved by ${pointDelta} (angle: ${angleDelta})');
      * });
@@ -70,7 +70,7 @@ class TransformGizmo extends Gizmo {
      *
      * @event
      * @example
-     * const gizmo = new pc.TransformGizmo(app, camera, layer);
+     * const gizmo = new pc.TransformGizmo(camera, layer);
      * gizmo.on('transform:end', () => {
      *     console.log('Transformation ended');
      * });
@@ -121,14 +121,6 @@ class TransformGizmo extends Gizmo {
         z: COLOR_BLUE.clone(),
         f: COLOR_YELLOW.clone()
     };
-
-    /**
-     * Internal point delta.
-     *
-     * @type {Vec3}
-     * @private
-     */
-    _pointDelta = new Vec3();
 
     /**
      * Internal gizmo starting rotation in world space.
@@ -227,14 +219,6 @@ class TransformGizmo extends Gizmo {
     _selectionStartPoint = new Vec3();
 
     /**
-     * Internal selection starting angle in world space.
-     *
-     * @type {number}
-     * @protected
-     */
-    _selectionStartAngle = 0;
-
-    /**
      * Internal state for if the gizmo is being dragged.
      *
      * @type {boolean}
@@ -263,7 +247,7 @@ class TransformGizmo extends Gizmo {
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
-     * const gizmo = new pc.TransformGizmo(app, camera, layer);
+     * const gizmo = new pc.TransformGizmo(camera, layer);
      */
     constructor(camera, layer) {
         super(camera, layer);
@@ -294,11 +278,10 @@ class TransformGizmo extends Gizmo {
             this._selectedIsPlane =  this._getIsPlane(meshInstance);
             this._rootStartPos.copy(this.root.getPosition());
             this._rootStartRot.copy(this.root.getRotation());
-            const pointInfo = this._screenToPoint(x, y);
-            this._selectionStartPoint.copy(pointInfo.point);
-            this._selectionStartAngle = pointInfo.angle;
+            const point = this._screenToPoint(x, y);
+            this._selectionStartPoint.copy(point);
             this._dragging = true;
-            this.fire(TransformGizmo.EVENT_TRANSFORMSTART);
+            this.fire(TransformGizmo.EVENT_TRANSFORMSTART, point, x, y);
         });
 
         this.on(Gizmo.EVENT_POINTERMOVE, (x, y, meshInstance) => {
@@ -315,10 +298,8 @@ class TransformGizmo extends Gizmo {
                 return;
             }
 
-            const pointInfo = this._screenToPoint(x, y);
-            this._pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
-            const angleDelta = pointInfo.angle - this._selectionStartAngle;
-            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, this._pointDelta, angleDelta);
+            const point = this._screenToPoint(x, y);
+            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, point, x, y);
 
             this._hoverAxis = '';
             this._hoverIsPlane = false;
@@ -592,6 +573,22 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
+     * @param {string} axis - The axis
+     * @param {Vec3} dir - The direction
+     * @returns {Vec3} - The direction
+     * @protected
+     */
+    _dirFromAxis(axis, dir) {
+        if (axis === GIZMOAXIS_FACE) {
+            dir.copy(this._camera.entity.forward).mulScalar(-1);
+        } else {
+            dir.set(0, 0, 0);
+            dir[axis] = 1;
+        }
+        return dir;
+    }
+
+    /**
      * @param {Vec3} point - The point to project.
      * @param {string} axis - The axis to project to.
      * @protected
@@ -613,7 +610,7 @@ class TransformGizmo extends Gizmo {
      * @param {number} y - The y coordinate.
      * @param {boolean} isFacing - Whether the axis is facing the camera.
      * @param {boolean} isLine - Whether the axis is a line.
-     * @returns {{ point: Vec3, angle: number }} - The point and angle.
+     * @returns {Vec3} - The point.
      * @protected
      */
     _screenToPoint(x, y, isFacing = false, isLine = false) {
@@ -625,10 +622,9 @@ class TransformGizmo extends Gizmo {
         const plane = this._createPlane(axis, isFacing, isLine);
 
         const point = new Vec3();
-        const angle = 0;
         plane.intersectsRay(ray, point);
 
-        return { point, angle };
+        return point;
     }
 
     /**

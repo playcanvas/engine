@@ -10,6 +10,13 @@ const STANDARD_MAT_PROPS = [
     ['alphaFade', 'boolean'],
     ['ambient', 'Color'],
     ['anisotropy', 'number'],
+    ['anisotropyIntensity', 'number'],
+    ['anisotropyRotation', 'number'],
+    ['anisotropyMap', 'Texture|null'],
+    ['anisotropyMapOffset', 'Vec2'],
+    ['anisotropyMapRotation', 'number'],
+    ['anisotropyMapTiling', 'Vec2'],
+    ['anisotropyMapUv', 'number'],
     ['aoIntensity', 'number'],
     ['aoMap', 'Texture|null'],
     ['aoMapChannel', 'string'],
@@ -132,7 +139,6 @@ const STANDARD_MAT_PROPS = [
     ['occludeDirect', 'number'],
     ['occludeSpecular', 'number'],
     ['occludeSpecularIntensity', 'number'],
-    ['onUpdateShader', 'UpdateShaderCallback'],
     ['opacity', 'number'],
     ['opacityDither', 'string'],
     ['opacityShadowDither', 'string'],
@@ -150,6 +156,7 @@ const STANDARD_MAT_PROPS = [
     ['refraction', 'number'],
     ['refractionIndex', 'number'],
     ['dispersion', 'number'],
+    ['shadowCatcher', 'boolean'],
     ['specular', 'Color'],
     ['specularMap', 'Texture|null'],
     ['specularMapChannel', 'string'],
@@ -190,12 +197,28 @@ const STANDARD_MAT_PROPS = [
 const REPLACEMENTS = [{
     path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
     replacement: {
-        from: 'reset(): void;',
-        to: `reset(): void;
-${STANDARD_MAT_PROPS.map(prop => `
-    set ${prop[0]}(arg: ${prop[1]});
-    get ${prop[0]}(): ${prop[1]};
-`).join('')}`,
+        transformer: (contents) => {
+
+            // Find the jsdoc block description using eg "@property {Type} {name}"
+            return contents.replace('reset(): void;', `reset(): void;
+                ${STANDARD_MAT_PROPS.map((prop) => {
+        const typeDefinition = `@property {${prop[1]}} ${prop[0]}`;
+        const typeDescriptionIndex = contents.match(typeDefinition);
+        const typeDescription = typeDescriptionIndex ?
+            contents.slice(typeDescriptionIndex.index + typeDefinition.length, contents.indexOf('\n * @property', typeDescriptionIndex.index + typeDefinition.length)) :
+            '';
+
+        // Strip newlines, asterisks, and tabs from the type description
+        const cleanTypeDescription = typeDescription
+        .trim()
+        .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
+        .replace(/\s+/g, ' '); // collapse whitespace
+
+        const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
+        return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
+    }).join('')}`
+            );
+        },
         footer: `
 import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
@@ -242,9 +265,13 @@ export function typesFixup() {
         name: 'types-fixup',
         buildStart() {
             REPLACEMENTS.forEach((item) => {
-                const { from, to, footer } = item.replacement;
+                const { from, to, footer, transformer } = item.replacement;
                 let contents = fs.readFileSync(item.path, 'utf-8');
-                contents = contents.replace(from, to);
+                if (transformer) {
+                    contents = transformer(contents);
+                } else {
+                    contents = contents.replace(from, to);
+                }
                 contents += footer ?? '';
                 fs.writeFileSync(item.path, contents, 'utf-8');
                 console.log(`${GREEN_OUT}type fixed ${BOLD_OUT}${item.path}${REGULAR_OUT}`);

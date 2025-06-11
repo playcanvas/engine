@@ -1,8 +1,9 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { SHADERLANGUAGE_WGSL } from '../constants.js';
 import { DebugGraphics } from '../debug-graphics.js';
-import { ShaderProcessor } from '../shader-processor.js';
+import { ShaderProcessorGLSL } from '../shader-processor-glsl.js';
 import { WebgpuDebug } from './webgpu-debug.js';
+import { WebgpuShaderProcessorWGSL } from './webgpu-shader-processor-wgsl.js';
 
 /**
  * @import { GraphicsDevice } from '../graphics-device.js'
@@ -11,6 +12,8 @@ import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
  * A WebGPU implementation of the Shader.
+ *
+ * @ignore
  */
 class WebgpuShader {
     /**
@@ -61,24 +64,37 @@ class WebgpuShader {
 
         if (definition.shaderLanguage === SHADERLANGUAGE_WGSL) {
 
-            this._vertexCode = definition.vshader ?? null;
-            this._fragmentCode = definition.fshader ?? null;
-            this._computeCode = definition.cshader ?? null;
+            if (definition.cshader) {
 
-            shader.meshUniformBufferFormat = definition.meshUniformBufferFormat;
-            shader.meshBindGroupFormat = definition.meshBindGroupFormat;
+                this._computeCode = definition.cshader ?? null;
+                this.computeUniformBufferFormats = definition.computeUniformBufferFormats;
+                this.computeBindGroupFormat = definition.computeBindGroupFormat;
 
-            this.computeUniformBufferFormats = definition.computeUniformBufferFormats;
-            this.computeBindGroupFormat = definition.computeBindGroupFormat;
+            } else {
 
-            this.vertexEntryPoint = 'vertexMain';
-            this.fragmentEntryPoint = 'fragmentMain';
+                this.vertexEntryPoint = 'vertexMain';
+                this.fragmentEntryPoint = 'fragmentMain';
+
+                if (definition.processingOptions) {
+
+                    this.processWGSL();
+
+                } else {
+
+                    this._vertexCode = definition.vshader ?? null;
+                    this._fragmentCode = definition.fshader ?? null;
+
+                    shader.meshUniformBufferFormat = definition.meshUniformBufferFormat;
+                    shader.meshBindGroupFormat = definition.meshBindGroupFormat;
+                }
+            }
+
             shader.ready = true;
 
         } else {
 
             if (definition.processingOptions) {
-                this.process();
+                this.processGLSL();
             }
         }
     }
@@ -104,7 +120,7 @@ class WebgpuShader {
         });
         DebugHelper.setLabel(shaderModule, `${shaderType}:${this.shader.label}`);
 
-        WebgpuDebug.end(device, {
+        WebgpuDebug.endShader(device, shaderModule, code, 6, {
             shaderType,
             source: code,
             shader: this.shader
@@ -125,11 +141,11 @@ class WebgpuShader {
         return this.createShaderModule(this._computeCode, 'Compute');
     }
 
-    process() {
+    processGLSL() {
         const shader = this.shader;
 
         // process the shader source to allow for uniforms
-        const processed = ShaderProcessor.run(shader.device, shader.definition, shader);
+        const processed = ShaderProcessorGLSL.run(shader.device, shader.definition, shader);
 
         // keep reference to processed shaders in debug mode
         Debug.call(() => {
@@ -147,12 +163,43 @@ class WebgpuShader {
 
         shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
         shader.meshBindGroupFormat = processed.meshBindGroupFormat;
+        shader.attributes = processed.attributes;
+    }
+
+    processWGSL() {
+        const shader = this.shader;
+
+        // process the shader source to allow for uniforms
+        const processed = WebgpuShaderProcessorWGSL.run(shader.device, shader.definition, shader);
+
+        // keep reference to processed shaders in debug mode
+        Debug.call(() => {
+            this.processed = processed;
+        });
+
+        this._vertexCode = processed.vshader;
+        this._fragmentCode = processed.fshader;
+
+        shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
+        shader.meshBindGroupFormat = processed.meshBindGroupFormat;
+        shader.attributes = processed.attributes;
     }
 
     transpile(src, shaderType, originalSrc) {
+
+        // make sure shader transpilers are available
+        const device = this.shader.device;
+        if (!device.glslang || !device.twgsl) {
+            console.error(`Cannot transpile shader [${this.shader.label}] - shader transpilers (glslang/twgsl) are not available. Make sure to provide glslangUrl and twgslUrl when creating the device.`, {
+                shader: this.shader
+            });
+            return null;
+        }
+
+        // transpile
         try {
-            const spirv = this.shader.device.glslang.compileGLSL(src, shaderType);
-            const wgsl = this.shader.device.twgsl.convertSpirV2WGSL(spirv);
+            const spirv = device.glslang.compileGLSL(src, shaderType);
+            const wgsl = device.twgsl.convertSpirV2WGSL(spirv);
             return wgsl;
         } catch (err) {
             console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU while rendering ${DebugGraphics.toString()}, error:\n [${err.stack}]`, {

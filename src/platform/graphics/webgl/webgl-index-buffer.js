@@ -3,6 +3,8 @@ import { WebglBuffer } from './webgl-buffer.js';
 
 /**
  * A WebGL implementation of the IndexBuffer.
+ *
+ * @ignore
  */
 class WebglIndexBuffer extends WebglBuffer {
     constructor(indexBuffer) {

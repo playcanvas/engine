@@ -7,6 +7,8 @@ import { math } from './math.js';
 
 /**
  * A class for evaluating a curve at a specific time.
+ *
+ * @ignore
  */
 class CurveEvaluator {
     /** @private */

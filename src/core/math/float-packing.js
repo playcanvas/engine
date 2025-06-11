@@ -1,7 +1,7 @@
-import { math } from './math.js';
+/**
+ * @import { Color } from './color.js'
+ */
 
-let checkRange = 5;
-const oneDiv255 = 1 / 255;
 const floatView = new Float32Array(1);
 const int32View = new Int32Array(floatView.buffer);
 
@@ -62,85 +62,21 @@ class FloatPacking {
     }
 
     /**
-     * Packs a float value in [0..1) range to specified number of bytes and stores them in an array
-     * with start offset. Based on: https://aras-p.info/blog/2009/07/30/encoding-floats-to-rgba-the-final/
-     * Note: calls to Math.round are only needed on iOS. Precision is somehow really bad without
-     * it. Looks like an issue with their implementation of Uint8ClampedArray.
+     * Converts bits of a 32-bit float into RGBA8 format and stores the result in a provided color.
+     * The float can be reconstructed in shader using the uintBitsToFloat instruction.
      *
-     * @param {number} value - The float value to pack.
-     * @param {Uint8ClampedArray} array - The array to store the packed value in.
-     * @param {number} offset - The start offset in the array to store the packed value at.
-     * @param {number} numBytes - The number of bytes to pack the value to.
+     * @param {number} value - The float value to convert.
+     * @param {Color} data - The color to store the RGBA8 packed value in.
      *
      * @ignore
      */
-    static float2Bytes(value, array, offset, numBytes) {
-        const enc1 = (255.0 * value) % 1;
-        array[offset + 0] = Math.round(((value % 1) - oneDiv255 * enc1) * 255);
-
-        if (numBytes > 1) {
-            const enc2 = (65025.0 * value) % 1;
-            array[offset + 1] = Math.round((enc1 - oneDiv255 * enc2) * 255);
-
-            if (numBytes > 2) {
-                const enc3 = (16581375.0 * value) % 1;
-                array[offset + 2] = Math.round((enc2 - oneDiv255 * enc3) * 255);
-
-                if (numBytes > 3) {
-                    array[offset + 3] = Math.round(enc3 * 255);
-                }
-            }
-        }
-    }
-
-    /**
-     * Packs a float into specified number of bytes. Min and max range for the float is specified,
-     * allowing the float to be normalized to 0..1 range.
-     *
-     * @param {number} value - The float value to pack.
-     * @param {Uint8ClampedArray} array - The array to store the packed value in.
-     * @param {number} offset - The start offset in the array to store the packed value at.
-     * @param {number} min - Range minimum.
-     * @param {number} max - Range maximum.
-     * @param {number} numBytes - The number of bytes to pack the value to.
-     *
-     * @ignore
-     */
-    static float2BytesRange(value, array, offset, min, max, numBytes) {
-        // #if _DEBUG
-        if (value < min || value > max) {
-            if (checkRange) {
-                checkRange--;
-                console.warn('float2BytesRange - value to pack is out of specified range.');
-            }
-        }
-        // #endif
-
-        value = math.clamp((value - min) / (max - min), 0, 1);
-        FloatPacking.float2Bytes(value, array, offset, numBytes);
-    }
-
-    /**
-     * Packs a float into specified number of bytes, using 1 byte for exponent and the remaining
-     * bytes for the mantissa.
-     *
-     * @param {number} value - The float value to pack.
-     * @param {Uint8ClampedArray} array - The array to store the packed value in.
-     * @param {number} offset - The start offset in the array to store the packed value at.
-     * @param {number} numBytes - The number of bytes to pack the value to.
-     *
-     * @ignore
-     */
-    static float2MantissaExponent(value, array, offset, numBytes) {
-        // exponent is increased by one, so that 2^exponent is larger than the value
-        const exponent = Math.floor(Math.log2(Math.abs(value))) + 1;
-        value /= Math.pow(2, exponent);
-
-        // value is now in -1..1 range, store it using specified number of bytes less one
-        FloatPacking.float2BytesRange(value, array, offset, -1, 1, numBytes - 1);
-
-        // last byte for the exponent (positive or negative)
-        array[offset + numBytes - 1] = Math.round(exponent + 127);
+    static float2RGBA8(value, data) {
+        floatView[0] = value;
+        const intBits = int32View[0];
+        data.r = ((intBits >> 24) & 0xFF) / 255.0;
+        data.g = ((intBits >> 16) & 0xFF) / 255.0;
+        data.b = ((intBits >> 8) & 0xFF) / 255.0;
+        data.a = (intBits & 0xFF) / 255.0;
     }
 }
 

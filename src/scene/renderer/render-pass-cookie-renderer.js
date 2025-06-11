@@ -1,44 +1,15 @@
 import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI } from '../constants.js';
-import { createShaderFromCode } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { LightCamera } from './light-camera.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { QuadRender } from '../graphics/quad-render.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-
-const textureBlitVertexShader = /* glsl */ `
-    attribute vec2 vertex_position;
-    varying vec2 uv0;
-    void main(void) {
-        gl_Position = vec4(vertex_position, 0.5, 1.0);
-        uv0 = vertex_position.xy * 0.5 + 0.5;
-        #ifndef WEBGPU
-            uv0.y = 1.0 - uv0.y;
-        #endif
-    }`;
-
-const textureBlitFragmentShader = /* glsl */ `
-    varying vec2 uv0;
-    uniform sampler2D blitTexture;
-    void main(void) {
-        gl_FragColor = texture2D(blitTexture, uv0);
-    }`;
-
-// shader runs for each face, with inViewProj matrix representing a face camera
-const textureCubeBlitFragmentShader = /* glsl */ `
-    varying vec2 uv0;
-    uniform samplerCube blitTexture;
-    uniform mat4 invViewProj;
-    void main(void) {
-        vec4 projPos = vec4(uv0 * 2.0 - 1.0, 0.5, 1.0);
-        vec4 worldPos = invViewProj * projPos;
-        gl_FragColor = textureCube(blitTexture, worldPos.xyz);
-    }`;
 
 const _viewport = new Vec4();
 
@@ -47,6 +18,8 @@ const _invViewProjMatrices = [];
 
 /**
  * A render pass used to render cookie textures (both 2D and Cubemap) into the texture atlas.
+ *
+ * @ignore
  */
 class RenderPassCookieRenderer extends RenderPass {
     /** @type {QuadRender|null} */
@@ -137,7 +110,12 @@ class RenderPassCookieRenderer extends RenderPass {
 
     get quadRenderer2D() {
         if (!this._quadRenderer2D) {
-            const shader = createShaderFromCode(this.device, textureBlitVertexShader, textureBlitFragmentShader, 'cookieRenderer2d');
+            const shader = ShaderUtils.createShader(this.device, {
+                uniqueName: 'cookieRenderer2d',
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexChunk: 'cookieBlitVS',
+                fragmentChunk: 'cookieBlit2DPS'
+            });
             this._quadRenderer2D = new QuadRender(shader);
         }
         return this._quadRenderer2D;
@@ -145,7 +123,12 @@ class RenderPassCookieRenderer extends RenderPass {
 
     get quadRendererCube() {
         if (!this._quadRendererCube) {
-            const shader = createShaderFromCode(this.device, textureBlitVertexShader, textureCubeBlitFragmentShader, 'cookieRendererCube');
+            const shader = ShaderUtils.createShader(this.device, {
+                uniqueName: 'cookieRendererCube',
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexChunk: 'cookieBlitVS',
+                fragmentChunk: 'cookieBlitCubePS'
+            });
             this._quadRendererCube = new QuadRender(shader);
         }
         return this._quadRendererCube;

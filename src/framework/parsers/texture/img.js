@@ -35,7 +35,7 @@ class ImgParser extends TextureParser {
         const hasContents = !!asset?.file?.contents;
 
         if (hasContents) {
-            // ImageBitmap interface can load iage
+            // ImageBitmap interface can load image
             if (this.device.supportsImageBitmap) {
                 this._loadImageBitmapFromBlob(new Blob([asset.file.contents]), callback);
                 return;

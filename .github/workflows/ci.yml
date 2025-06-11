@@ -26,7 +26,7 @@ jobs:
     - name: Setup Node.js 18.x
       uses: actions/setup-node@v4
       with:
-        node-version: 18.x
+        node-version: 22.x
         cache: 'npm'
 
     - name: Install dependencies
@@ -49,7 +49,7 @@ jobs:
     - name: Setup Node.js 18.x
       uses: actions/setup-node@v4
       with:
-        node-version: 18.x
+        node-version: 22.x
         cache: 'npm'
 
     - name: Install dependencies
@@ -69,7 +69,7 @@ jobs:
     - name: Setup Node.js 18.x
       uses: actions/setup-node@v4
       with:
-        node-version: 18.x
+        node-version: 22.x
         cache: 'npm'
 
     - name: Install dependencies
@@ -95,7 +95,7 @@ jobs:
     - name: Setup Node.js 18.x
       uses: actions/setup-node@v4
       with:
-        node-version: 18.x
+        node-version: 22.x
         cache: 'npm'
 
     - name: Install dependencies
@@ -107,8 +107,8 @@ jobs:
     - name: Compile TypeScript declarations
       run: npm run test:types
 
-  unit-test-node:
-    name: Unit Test (Node)
+  unit-test:
+    name: Unit Test
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -118,7 +118,7 @@ jobs:
     - name: Setup Node.js 18.x
       uses: actions/setup-node@v4
       with:
-        node-version: 18.x
+        node-version: 22.x
         cache: 'npm'
 
     - name: Install dependencies
@@ -126,32 +126,6 @@ jobs:
 
     - name: Run unit tests
       run: npm test
-
-  unit-test-karma:
-    name: Unit Test (Karma)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js 18.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18.x
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
-
-    - name: Build PlayCanvas (UMD-only)
-      run: npm run build:umd
-
-    - name: Install X virtual framebuffer
-      run: sudo apt-get install xvfb
-
-    - name: Run unit tests
-      run: xvfb-run --auto-servernum npm run test:karma
 
   build-examples:
     name: Build Examples Browser
@@ -164,7 +138,7 @@ jobs:
     - name: Setup Node.js 18.x
       uses: actions/setup-node@v4
       with:
-        node-version: 18.x
+        node-version: 22.x
         cache: 'npm'
 
     - name: Install dependencies

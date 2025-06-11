@@ -8,6 +8,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } = ReactPCUI;
     return fragment(
         jsx(
+            LabelGroup,
+            { text: 'enabled' },
+            jsx(BooleanInput, {
+                type: 'toggle',
+                binding: new BindingTwoWay(),
+                link: { observer, path: 'data.enabled' }
+            })
+        ),
+        jsx(
             Panel,
             { headerText: 'Scene Rendering' },
             jsx(
@@ -59,6 +68,21 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: pc.TONEMAP_NEUTRAL, t: 'NEUTRAL' }
                     ]
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Debug' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.scene.debug' },
+                    type: 'number',
+                    options: [
+                        { v: 0, t: 'NONE' },
+                        { v: 1, t: 'BLOOM' },
+                        { v: 2, t: 'VIGNETTE' },
+                        { v: 3, t: 'SCENE' }
+                    ]
+                })
             )
         ),
         jsx(
@@ -86,12 +110,12 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'last mip level' },
+                { text: 'blur level' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.bloom.lastMipLevel' },
+                    link: { observer, path: 'data.bloom.blurLevel' },
                     min: 1,
-                    max: 10,
+                    max: 16,
                     precision: 0
                 })
             )

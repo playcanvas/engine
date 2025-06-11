@@ -109,7 +109,7 @@ class ScriptComponentSystem extends ComponentSystem {
             const scriptName = scriptInstance.__scriptType.__name;
             order.push(scriptName);
 
-            const attributes = { };
+            const attributes = entity.script._attributeDataMap?.get(scriptName) || { };
             for (const key in scriptInstance.__attributes) {
                 attributes[key] = scriptInstance.__attributes[key];
             }

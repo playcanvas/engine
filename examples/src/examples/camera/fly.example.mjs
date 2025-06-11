@@ -3,7 +3,7 @@ import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/camera-controls.mjs`);
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -82,17 +82,19 @@ const calcEntityAABB = (bbox, entity) => {
  * @returns {CameraControls} The camera-controls script.
  */
 const createFlyCamera = (focus) => {
+    const start = new pc.Vec3(0, 20, 30);
+
     const camera = new pc.Entity();
     camera.addComponent('camera');
     camera.addComponent('script');
-    camera.setPosition(0, 20, 30);
+    camera.setPosition(start);
     app.root.addChild(camera);
 
     const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
 
     /** @type {CameraControls} */
     const script = camera.script.create(CameraControls, {
-        attributes: {
+        properties: {
             enableOrbit: false,
             enablePan: false,
             focusPoint: bbox.center,
@@ -125,13 +127,13 @@ app.root.addChild(statue);
 const multiCameraScript = createFlyCamera(statue);
 
 data.set('attr', [
-    'lookSensitivity',
-    'lookDamping',
-    'moveDamping',
     'pitchRange',
+    'rotateSpeed',
+    'rotateDamping',
     'moveSpeed',
-    'sprintSpeed',
-    'crouchSpeed'
+    'moveFastSpeed',
+    'moveSlowSpeed',
+    'moveDamping'
 ].reduce((/** @type {Record<string, any>} */ obj, key) => {
     const value = multiCameraScript[key];
 

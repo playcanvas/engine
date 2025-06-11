@@ -1,81 +1,69 @@
 import { Vec3 } from '../../core/math/vec3.js';
-import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
-import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC } from '../constants.js';
+import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE, LIGHT_COLOR_DIVIDER } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { LightCamera } from '../renderer/light-camera.js';
-
-const epsilon = 0.000001;
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 const tempVec3 = new Vec3();
 const tempAreaLightSizes = new Float32Array(6);
 const areaHalfAxisWidth = new Vec3(-0.5, 0, 0);
 const areaHalfAxisHeight = new Vec3(0, 0, 0.5);
 
-// format of a row in 8 bit texture used to encode light data
-// this is used to store data in the texture correctly, and also use to generate defines for the shader
-const TextureIndex8 = {
-
-    // format of the 8bit texture data
-    FLAGS: 0,                   // lightType, lightShape, fallofMode, castShadows
-    COLOR_A: 1,                 // color.r, color.r, color.g, color.g    // HDR color is stored using 2 bytes per channel
-    COLOR_B: 2,                 // color.b, color.b, useCookie, lightMask
-    SPOT_ANGLES: 3,             // spotInner, spotInner, spotOuter, spotOuter
-    SHADOW_BIAS: 4,             // bias, bias, normalBias, normalBias
-    COOKIE_A: 5,                // cookieIntensity, cookieIsRgb, -, -
-    COOKIE_B: 6,                // cookieChannelMask.xyzw
-
-    // leave last
-    COUNT: 7
-};
-
 // format of the float texture data
 const TextureIndexFloat = {
     POSITION_RANGE: 0,              // positions.xyz, range
-    SPOT_DIRECTION: 1,              // spot direction.xyz, -
+    DIRECTION_FLAGS: 1,             // spot direction.xyz, 32bit flags
+    COLOR_ANGLES_BIAS: 2,           // color.rgb, spot inner and outer, bias and normal bias (half floats format), 16bits unused
 
-    PROJ_MAT_0: 2,                  // projection matrix row 0 (spot light)
-    ATLAS_VIEWPORT: 2,              // atlas viewport data (omni light)
+    PROJ_MAT_0: 3,                  // projection matrix row 0 (spot light)
+    ATLAS_VIEWPORT: 3,              // atlas viewport data (omni light)
 
-    PROJ_MAT_1: 3,                  // projection matrix row 1 (spot light)
-    PROJ_MAT_2: 4,                  // projection matrix row 2 (spot light)
-    PROJ_MAT_3: 5,                  // projection matrix row 3 (spot light)
+    PROJ_MAT_1: 4,                  // projection matrix row 1 (spot light)
+    PROJ_MAT_2: 5,                  // projection matrix row 2 (spot light)
+    PROJ_MAT_3: 6,                  // projection matrix row 3 (spot light)
 
-    AREA_DATA_WIDTH: 6,             // area light half-width.xyz, -
-    AREA_DATA_HEIGHT: 7,            // area light half-height.xyz, -
+    AREA_DATA_WIDTH: 7,             // area light half-width.xyz, -
+    AREA_DATA_HEIGHT: 8,            // area light half-height.xyz, -
 
     // leave last
-    COUNT: 8
+    COUNT: 9
 };
 
-let _defines;
+// enums supplied to the shader as inject-defines
+const enums = {
+    'LIGHTSHAPE_PUNCTUAL': `${LIGHTSHAPE_PUNCTUAL}u`,
+    'LIGHTSHAPE_RECT': `${LIGHTSHAPE_RECT}u`,
+    'LIGHTSHAPE_DISK': `${LIGHTSHAPE_DISK}u`,
+    'LIGHTSHAPE_SPHERE': `${LIGHTSHAPE_SPHERE}u`,
+    'LIGHT_COLOR_DIVIDER': `${LIGHT_COLOR_DIVIDER}.0`
+};
+
+// converts object with properties to a list of these as an example: "#define {CLUSTER_TEXTURE_8_BLAH} 1"
+const buildShaderDefines = (object, prefix) => {
+    return Object.keys(object)
+    .map(key => `#define {${prefix}${key}} ${object[key]}`)
+    .join('\n');
+};
+
+// create a shader chunk with defines for the light buffer textures
+const lightBufferDefines = `\n
+    ${buildShaderDefines(TextureIndexFloat, 'CLUSTER_TEXTURE_')}
+    ${buildShaderDefines(enums, '')}
+`;
 
 // A class used by clustered lighting, responsible for encoding light properties into textures for the use on the GPU
 class LightsBuffer {
-    static getShaderDefines() {
-
-        // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1"
-        const buildShaderDefines = (object, prefix) => {
-            return Object.keys(object)
-            .map(key => `#define ${prefix}${key} ${object[key]}`)
-            .join('\n');
-        };
-
-        if (!_defines) {
-            _defines =  `\n
-                ${buildShaderDefines(TextureIndex8, 'CLUSTER_TEXTURE_8_')}
-                ${buildShaderDefines(TextureIndexFloat, 'CLUSTER_TEXTURE_F_')}
-            `;
-        }
-
-        return _defines;
-    }
-
     areaLightsEnabled = false;
 
     constructor(device) {
 
         this.device = device;
+
+        // shader chunk with defines
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('lightBufferDefinesPS', lightBufferDefines);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('lightBufferDefinesPS', lightBufferDefines);
 
         // features
         this.cookiesEnabled = false;
@@ -85,17 +73,12 @@ class LightsBuffer {
         // using 8 bit index so this is maximum supported number of lights
         this.maxLights = 255;
 
-        // 8bit texture - to store data that can fit into 8bits to lower the bandwidth requirements
-        const pixelsPerLight8 = TextureIndex8.COUNT;
-        this.lights8 = new Uint8ClampedArray(4 * pixelsPerLight8 * this.maxLights);
-        this.lightsTexture8 = this.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_RGBA8, 'LightsTexture8');
-        this._lightsTexture8Id = this.device.scope.resolve('lightsTexture8');
-
         // float texture
         const pixelsPerLightFloat = TextureIndexFloat.COUNT;
         this.lightsFloat = new Float32Array(4 * pixelsPerLightFloat * this.maxLights);
-        this.lightsTextureFloat = this.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F, 'LightsTextureFloat');
-        this._lightsTextureFloatId = this.device.scope.resolve('lightsTextureFloat');
+        this.lightsUint = new Uint32Array(this.lightsFloat.buffer);
+        this.lightsTexture = this.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F, 'LightsTexture');
+        this._lightsTextureId = this.device.scope.resolve('lightsTexture');
 
         // compression ranges
         this.invMaxColorValue = 0;
@@ -106,12 +89,9 @@ class LightsBuffer {
 
     destroy() {
 
-        // release textures
-        this.lightsTexture8?.destroy();
-        this.lightsTexture8 = null;
-
-        this.lightsTextureFloat?.destroy();
-        this.lightsTextureFloat = null;
+        // release texture
+        this.lightsTexture?.destroy();
+        this.lightsTexture = null;
     }
 
     createTexture(device, width, height, format, name) {
@@ -132,11 +112,6 @@ class LightsBuffer {
         return tex;
     }
 
-    setCompressionRanges(maxAttenuation, maxColorValue) {
-        this.invMaxColorValue = 1 / maxColorValue;
-        this.invMaxAttenuation = 1 / maxAttenuation;
-    }
-
     setBounds(min, delta) {
         this.boundsMin.copy(min);
         this.boundsDelta.copy(delta);
@@ -144,18 +119,14 @@ class LightsBuffer {
 
     uploadTextures() {
 
-        this.lightsTextureFloat.lock().set(this.lightsFloat);
-        this.lightsTextureFloat.unlock();
-
-        this.lightsTexture8.lock().set(this.lights8);
-        this.lightsTexture8.unlock();
+        this.lightsTexture.lock().set(this.lightsFloat);
+        this.lightsTexture.unlock();
     }
 
     updateUniforms() {
 
-        // textures
-        this._lightsTexture8Id.setValue(this.lightsTexture8);
-        this._lightsTextureFloatId.setValue(this.lightsTextureFloat);
+        // texture
+        this._lightsTextureId.setValue(this.lightsTexture);
     }
 
     getSpotDirection(direction, spot) {
@@ -184,60 +155,6 @@ class LightsBuffer {
         return tempAreaLightSizes;
     }
 
-    addLightDataFlags(data8, index, light, isSpot, castShadows, shadowIntensity) {
-        data8[index + 0] = isSpot ? 255 : 0;
-        data8[index + 1] = this.areaLightsEnabled ? light._shape * 64 : 0;   // value 0..3
-        data8[index + 2] = light._falloffMode * 255;                         // value 0..1
-        data8[index + 3] = castShadows ? shadowIntensity * 255 : 0;
-    }
-
-    addLightDataColor(data8, index, light, isCookie) {
-        const invMaxColorValue = this.invMaxColorValue;
-        const color = light._colorLinear;
-        FloatPacking.float2Bytes(color[0] * invMaxColorValue, data8, index + 0, 2);
-        FloatPacking.float2Bytes(color[1] * invMaxColorValue, data8, index + 2, 2);
-        FloatPacking.float2Bytes(color[2] * invMaxColorValue, data8, index + 4, 2);
-
-        // cookie
-        data8[index + 6] = isCookie ? 255 : 0;
-
-        // lightMask
-        // 0: MASK_AFFECT_DYNAMIC
-        // 127: MASK_AFFECT_DYNAMIC && MASK_AFFECT_LIGHTMAPPED
-        // 255: MASK_AFFECT_LIGHTMAPPED
-        const isDynamic = !!(light.mask & MASK_AFFECT_DYNAMIC);
-        const isLightmapped = !!(light.mask & MASK_AFFECT_LIGHTMAPPED);
-        data8[index + 7] = (isDynamic && isLightmapped) ? 127 : (isLightmapped ? 255 : 0);
-    }
-
-    addLightDataSpotAngles(data8, index, light) {
-        // 2 bytes each
-        FloatPacking.float2Bytes(light._innerConeAngleCos * (0.5 - epsilon) + 0.5, data8, index + 0, 2);
-        FloatPacking.float2Bytes(light._outerConeAngleCos * (0.5 - epsilon) + 0.5, data8, index + 2, 2);
-    }
-
-    addLightDataShadowBias(data8, index, light) {
-        const lightRenderData = light.getRenderData(null, 0);
-        const biases = light._getUniformBiasValues(lightRenderData);
-        FloatPacking.float2BytesRange(biases.bias, data8, index, -1, 20, 2);  // bias: -1 to 20 range
-        FloatPacking.float2Bytes(biases.normalBias, data8, index + 2, 2);     // normalBias: 0 to 1 range
-    }
-
-    addLightDataCookies(data8, index, light) {
-        const isRgb = light._cookieChannel === 'rgb';
-        data8[index + 0] = Math.floor(light.cookieIntensity * 255);
-        data8[index + 1] = isRgb ? 255 : 0;
-        // we have two unused bytes here
-
-        if (!isRgb) {
-            const channel = light._cookieChannel;
-            data8[index + 4] = channel === 'rrr' ? 255 : 0;
-            data8[index + 5] = channel === 'ggg' ? 255 : 0;
-            data8[index + 6] = channel === 'bbb' ? 255 : 0;
-            data8[index + 7] = channel === 'aaa' ? 255 : 0;
-        }
-    }
-
     // fill up both float and 8bit texture data with light properties
     addLightData(light, lightIndex) {
 
@@ -263,33 +180,9 @@ class LightsBuffer {
             }
         }
 
-        // data always stored in 8bit texture
-        const data8 = this.lights8;
-        const data8Start = lightIndex * this.lightsTexture8.width * 4;
-
-        // flags
-        this.addLightDataFlags(data8, data8Start + 4 * TextureIndex8.FLAGS, light, isSpot, castShadows, light.shadowIntensity);
-
-        // light color
-        this.addLightDataColor(data8, data8Start + 4 * TextureIndex8.COLOR_A, light, isCookie);
-
-        // spot light angles
-        if (isSpot) {
-            this.addLightDataSpotAngles(data8, data8Start + 4 * TextureIndex8.SPOT_ANGLES, light);
-        }
-
-        // shadow biases
-        if (light.castShadows) {
-            this.addLightDataShadowBias(data8, data8Start + 4 * TextureIndex8.SHADOW_BIAS, light);
-        }
-
-        // cookie properties
-        if (isCookie) {
-            this.addLightDataCookies(data8, data8Start + 4 * TextureIndex8.COOKIE_A, light);
-        }
-
         const dataFloat = this.lightsFloat;
-        const dataFloatStart = lightIndex * this.lightsTextureFloat.width * 4;
+        const dataUint = this.lightsUint;
+        const dataFloatStart = lightIndex * this.lightsTexture.width * 4;
 
         // pos and range
         dataFloat[dataFloatStart + 4 * TextureIndexFloat.POSITION_RANGE + 0] = pos.x;
@@ -297,14 +190,34 @@ class LightsBuffer {
         dataFloat[dataFloatStart + 4 * TextureIndexFloat.POSITION_RANGE + 2] = pos.z;
         dataFloat[dataFloatStart + 4 * TextureIndexFloat.POSITION_RANGE + 3] = light.attenuationEnd;
 
+        // color, spot angles, biases
+        const clusteredData = light.clusteredData;
+        dataUint[dataFloatStart + 4 * TextureIndexFloat.COLOR_ANGLES_BIAS + 0] = clusteredData[0];
+        dataUint[dataFloatStart + 4 * TextureIndexFloat.COLOR_ANGLES_BIAS + 1] = clusteredData[1];
+        dataUint[dataFloatStart + 4 * TextureIndexFloat.COLOR_ANGLES_BIAS + 2] = clusteredData[2];
+
+        // biases (those are non-constant values, needs simplification)
+        if (light.castShadows) {
+            const lightRenderData = light.getRenderData(null, 0);
+            const biases = light._getUniformBiasValues(lightRenderData);
+
+            // store them in 32bits as half floats
+            const biasHalf = FloatPacking.float2Half(biases.bias);
+            const normalBiasHalf = FloatPacking.float2Half(biases.normalBias);
+            dataUint[dataFloatStart + 4 * TextureIndexFloat.COLOR_ANGLES_BIAS + 3] = biasHalf | (normalBiasHalf << 16);
+        }
+
         // spot direction
         if (isSpot) {
             this.getSpotDirection(tempVec3, light);
-            dataFloat[dataFloatStart + 4 * TextureIndexFloat.SPOT_DIRECTION + 0] = tempVec3.x;
-            dataFloat[dataFloatStart + 4 * TextureIndexFloat.SPOT_DIRECTION + 1] = tempVec3.y;
-            dataFloat[dataFloatStart + 4 * TextureIndexFloat.SPOT_DIRECTION + 2] = tempVec3.z;
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.DIRECTION_FLAGS + 0] = tempVec3.x;
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.DIRECTION_FLAGS + 1] = tempVec3.y;
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.DIRECTION_FLAGS + 2] = tempVec3.z;
             // here we have unused float
         }
+
+        // flags
+        dataUint[dataFloatStart + 4 * TextureIndexFloat.DIRECTION_FLAGS + 3] = light.getClusteredFlags(castShadows, isCookie);
 
         // light projection matrix
         if (lightProjectionMatrix) {

@@ -1,16 +1,14 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
-import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
-import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
-import { Texture } from '../../../src/platform/graphics/texture.js';
-import { http, Http } from '../../../src/platform/net/http.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
+
+import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
+import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
+import { http, Http } from '../../../src/platform/net/http.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AssetRegistry', function () {
 
@@ -18,15 +16,19 @@ describe('AssetRegistry', function () {
     let retryDelay;
 
     beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
-        const canvas = new Canvas(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
     afterEach(function () {
-        app.destroy();
         Http.retryDelay = retryDelay;
+
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
         restore();
     });
 
@@ -237,7 +239,7 @@ describe('AssetRegistry', function () {
 
     describe('#loadFromUrl', function () {
 
-        const assetPath = 'http://localhost:3000/test/test-assets/';
+        const assetPath = 'http://localhost:3000/test/assets/';
 
         it('loads binary assets', (done) => {
             app.assets.loadFromUrl(`${assetPath}test.bin`, 'binary', (err, asset) => {
@@ -281,7 +283,7 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it.skip('loads html assets', (done) => {
+        it('loads html assets', (done) => {
             app.assets.loadFromUrl(`${assetPath}test.html`, 'html', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);

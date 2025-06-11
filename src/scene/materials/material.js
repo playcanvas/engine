@@ -5,7 +5,8 @@ import {
     BLENDMODE_ONE_MINUS_SRC_ALPHA,
     BLENDEQUATION_ADD, BLENDEQUATION_REVERSE_SUBTRACT,
     BLENDEQUATION_MIN, BLENDEQUATION_MAX,
-    CULLFACE_BACK
+    CULLFACE_BACK,
+    SHADERLANGUAGE_GLSL
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
@@ -15,6 +16,7 @@ import {
     BLEND_MIN, BLEND_MAX, BLEND_SUBTRACTIVE
 } from '../constants.js';
 import { getDefaultMaterial } from './default-material.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
  * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
@@ -28,6 +30,7 @@ import { getDefaultMaterial } from './default-material.js';
  * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
  * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+ * @import { ShaderChunkMap } from '../shader-lib/shader-chunk-map.js';
  */
 
 // blend mode mapping to op, srcBlend and dstBlend
@@ -62,8 +65,9 @@ let id = 0;
  */
 
 /**
- * A material determines how a particular mesh instance is rendered. It specifies the shader and
- * render state that is set before the mesh instance is submitted to the graphics device.
+ * A material determines how a particular {@link MeshInstance} is rendered. It specifies the
+ * {@link Shader} and render state that is set before the mesh instance is submitted to the
+ * {@link GraphicsDevice}.
  *
  * @category Graphics
  */
@@ -173,11 +177,126 @@ class Material {
      */
     stencilBack = null;
 
+    /**
+     * @type {ShaderChunks|null}
+     * @private
+     */
+    _shaderChunks = null;
+
+    // this is deprecated, keeping for backwards compatibility
+    _oldChunks = {};
+
+    _dirtyShader = true;
+
     /** @protected */
     constructor() {
         if (new.target === Material) {
             Debug.error('Material class cannot be instantiated, use ShaderMaterial instead');
         }
+    }
+
+    /**
+     * Returns true if the material has custom shader chunks.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get hasShaderChunks() {
+        return this._shaderChunks != null;
+    }
+
+    /**
+     * Returns the shader chunks for the material. Those get allocated if they are not already.
+     *
+     * @type {ShaderChunks}
+     * @ignore
+     */
+    get shaderChunks() {
+        if (!this._shaderChunks) {
+            this._shaderChunks = new ShaderChunks();
+        }
+        return this._shaderChunks;
+    }
+
+    /**
+     * Returns an object containing shader chunks for a specific shader language for the material.
+     * These chunks define custom GLSL or WGSL code used to construct the final shader for the
+     * material. The chunks can be also be included in shaders using the `#include "ChunkName"`
+     * directive.
+     *
+     * On the WebGL platform:
+     *  - If GLSL chunks are provided, they are used directly.
+     *
+     * On the WebGPU platform:
+     * - If WGSL chunks are provided, they are used directly.
+     * - If only GLSL chunks are provided, a GLSL shader is generated and then transpiled to WGSL,
+     * which is less efficient.
+     *
+     * To ensure faster shader compilation, it is recommended to provide shader chunks for all
+     * supported platforms.
+     *
+     * A simple example on how to override a shader chunk providing emissive color for both GLSL and
+     * WGSL to simply return a red color:
+     *
+     * ```javascript
+     * material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('emissivePS', `
+     *     void getEmission() {
+     *         dEmission = vec3(1.0, 0.0, 1.0);
+     *     }
+     * `);
+     *
+     * material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('emissivePS', `
+     *     fn getEmission() {
+     *         dEmission = vec3f(1.0, 0.0, 1.0);
+     *     }
+     * `);
+     *
+     * // call update to apply the changes
+     * material.update();
+     * ```
+     *
+     * @param {string} [shaderLanguage] - Specifies the shader language of shaders. Defaults to
+     * {@link SHADERLANGUAGE_GLSL}.
+     * @returns {ShaderChunkMap} - The shader chunks for the specified shader language.
+     */
+    getShaderChunks(shaderLanguage = SHADERLANGUAGE_GLSL) {
+        const chunks = this.shaderChunks;
+        return shaderLanguage === SHADERLANGUAGE_GLSL ? chunks.glsl : chunks.wgsl;
+    }
+
+    /**
+     * Sets the version of the shader chunks.
+     *
+     * This should be a string containing the current engine major and minor version (e.g., '2.8'
+     * for engine v2.8.1) and ensures compatibility with the current engine version. When providing
+     * custom shader chunks, set this to the latest supported version. If a future engine release no
+     * longer supports the specified version, a warning will be issued. In that case, update your
+     * shader chunks to match the new format and set this to the latest version accordingly.
+     *
+     * @type {string}
+     */
+    set shaderChunksVersion(value) {
+        this.shaderChunks.version = value;
+    }
+
+    /**
+     * Returns the version of the shader chunks.
+     *
+     * @type {string}
+     */
+    get shaderChunksVersion() {
+        return this.shaderChunks.version;
+    }
+
+    set chunks(value) {
+        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
+        this._oldChunks = value;
+    }
+
+    get chunks() {
+        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
+        Object.assign(this._oldChunks, Object.fromEntries(this.shaderChunks.glsl));
+        return this._oldChunks;
     }
 
     /**
@@ -532,7 +651,11 @@ class Material {
 
         // defines
         this.defines.clear();
-        source.defines.forEach(define => this.defines.add(define));
+        source.defines.forEach((value, key) => this.defines.set(key, value));
+
+        // shader chunks
+        this._shaderChunks = source.hasShaderChunks ? new ShaderChunks() : null;
+        this._shaderChunks?.copy(source._shaderChunks);
 
         return this;
     }
@@ -555,6 +678,9 @@ class Material {
     }
 
     updateUniforms(device, scene) {
+        if (this._dirtyShader) {
+            this.clearVariants();
+        }
     }
 
     /**
@@ -569,9 +695,20 @@ class Material {
      * Applies any changes made to the material's properties.
      */
     update() {
-        // if the defines were modified, we need to rebuild the shaders
-        if (this._definesDirty) {
+
+        // handle deprecated chunks for backwards compatibility
+        if (Object.keys(this._oldChunks).length > 0) {
+            for (const [key, value] of Object.entries(this._oldChunks)) {
+                this.shaderChunks.glsl.set(key, value);
+                delete this._oldChunks[key];
+            }
+        }
+
+        // if the defines or chunks were modified, we need to rebuild the shaders
+        if (this._definesDirty || this._shaderChunks?.isDirty()) {
             this._definesDirty = false;
+            this._shaderChunks?.resetDirty();
+
             this.clearVariants();
         }
 
@@ -611,6 +748,13 @@ class Material {
     }
 
     _setParameterSimple(name, data) {
+
+        Debug.call(() => {
+            if (data === undefined) {
+                Debug.warnOnce(`Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`);
+            }
+        });
+
         const param = this.parameters[name];
         if (param) {
             param.data = data;
@@ -677,8 +821,17 @@ class Material {
      * parts of the shader code.
      *
      * @param {string} name - The name of the define to set.
-     * @param {string|undefined|false} value - The value of the define. If undefined or false, the
+     * @param {string|undefined|boolean} value - The value of the define. If undefined or false, the
      * define is removed.
+     *
+     * A simple example on how to set a custom shader define value used by the shader processor.
+     *
+     * ```javascript
+     * material.setDefine('MY_DEFINE', true);
+     *
+     * // call update to apply the changes, which will recompile the shader using the new define
+     * material.update();
+     * ```
      */
     setDefine(name, value) {
         let modified = false;

@@ -49,7 +49,7 @@ class WebgpuComputePipeline extends WebgpuPipeline {
         DebugHelper.setLabel(pipeline, `ComputePipeline-${_pipelineId}`);
         Debug.trace(TRACEID_COMPUTEPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}`, desc);
 
-        WebgpuDebug.end(this.device, {
+        WebgpuDebug.end(this.device, 'ComputePipeline creation', {
             computePipeline: this,
             desc: desc,
             shader

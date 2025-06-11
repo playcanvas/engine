@@ -1,5 +1,6 @@
-import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
 import { expect } from 'chai';
+
+import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
 
 describe('AnimEvents', function () {
     const animEvents = new AnimEvents([

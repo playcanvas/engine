@@ -70,8 +70,11 @@ function FxaaEffect(graphicsDevice) {
         '}'
     ].join('\n');
 
-    this.fxaaShader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fxaaFrag, 'FxaaShader', {
-        aPosition: pc.SEMANTIC_POSITION
+    this.fxaaShader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'FxaaShader',
+        attributes: { aPosition: pc.SEMANTIC_POSITION },
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: fxaaFrag
     });
 
     // Uniforms

@@ -11,6 +11,7 @@ import { Component } from '../component.js';
 /**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
  * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
  * @import { Layer } from '../../../scene/layer.js'
  * @import { Material } from '../../../scene/materials/material.js'
@@ -18,14 +19,40 @@ import { Component } from '../component.js';
  */
 
 /**
- * Enables an Entity to render a model or a primitive shape. This Component attaches additional
- * model geometry in to the scene graph below the Entity.
+ * The ModelComponent enables an {@link Entity} to render 3D models. The {@link type} property can
+ * be set to one of several predefined shapes (such as `box`, `sphere`, `cone` and so on).
+ * Alternatively, the component can be configured to manage an arbitrary {@link Model}. This can
+ * either be created programmatically or loaded from an {@link Asset}.
+ *
+ * The {@link Model} managed by this component is positioned, rotated, and scaled in world space by
+ * the world transformation matrix of the owner {@link Entity}. This world matrix is derived by
+ * combining the entity's local transformation (position, rotation, and scale) with the world
+ * transformation matrix of its parent entity in the scene hierarchy.
+ *
+ * You should never need to use the ModelComponent constructor directly. To add a ModelComponent
+ * to an Entity, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('model', {
+ *     type: 'box'
+ * });
+ * ```
+ *
+ * Once the ModelComponent is added to the entity, you can access it via the {@link Entity#model}
+ * property:
+ *
+ * ```javascript
+ * entity.model.type = 'capsule';  // Set the model component's type
+ *
+ * console.log(entity.model.type); // Get the model component's type and print it
+ * ```
  *
  * @category Graphics
  */
 class ModelComponent extends Component {
     /**
-     * @type {string}
+     * @type {'asset'|'box'|'capsule'|'cone'|'cylinder'|'plane'|'sphere'|'torus'}
      * @private
      */
     _type = 'asset';
@@ -130,6 +157,24 @@ class ModelComponent extends Component {
     // #endif
 
     /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayersChanged = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
+
+    /**
      * Create a new ModelComponent instance.
      *
      * @param {ModelComponentSystem} system - The ComponentSystem that created this Component.
@@ -206,18 +251,36 @@ class ModelComponent extends Component {
     }
 
     /**
-     * Sets the type of the component. Can be one of the following:
+     * Sets the type of the component, determining the source of the geometry to be rendered.
+     * The geometry, whether it's a primitive shape or originates from an asset, is rendered
+     * using the owning entity's final world transform. This world transform is calculated by
+     * concatenating (multiplying) the local transforms (position, rotation, scale) of the
+     * entity and all its ancestors in the scene hierarchy. This process positions, orientates,
+     * and scales the geometry in world space.
      *
-     * - "asset": The component will render a model asset
-     * - "box": The component will render a box (1 unit in each dimension)
-     * - "capsule": The component will render a capsule (radius 0.5, height 2)
-     * - "cone": The component will render a cone (radius 0.5, height 1)
-     * - "cylinder": The component will render a cylinder (radius 0.5, height 1)
-     * - "plane": The component will render a plane (1 unit in each dimension)
-     * - "sphere": The component will render a sphere (radius 0.5)
-     * - "torus": The component will render a torus (tubeRadius: 0.2, ringRadius: 0.3)
+     * Can be one of the following values:
      *
-     * @type {string}
+     * - **"asset"**: Renders geometry defined in an {@link Asset} of type `model`. This asset,
+     *   assigned to the {@link asset} property, contains a {@link Model}. Alternatively,
+     *   {@link model} can be set programmatically.
+     * - **"box"**: A unit cube (sides of length 1) centered at the local space origin.
+     * - **"capsule"**: A shape composed of a cylinder and two hemispherical caps that is aligned
+     *   with the local Y-axis. It is centered at the local space origin and has an unscaled height
+     *   of 2 and a radius of 0.5.
+     * - **"cone"**: A cone aligned with the local Y-axis. It is centered at the local space
+     *   origin, with its base in the local XZ plane at Y = -0.5 and its tip at Y = +0.5. It has
+     *   an unscaled height of 1 and a base radius of 0.5.
+     * - **"cylinder"**: A cylinder aligned with the local Y-axis. It is centered at the local
+     *   space origin with an unscaled height of 1 and a radius of 0.5.
+     * - **"plane"**: A flat plane in the local XZ plane at Y = 0 (normal along +Y). It is
+     *   centered at the local space origin with unscaled dimensions of 1x1 units along local X and
+     *   Z axes.
+     * - **"sphere"**: A sphere with a radius of 0.5. It is centered at the local space origin and
+     *   has poles at Y = -0.5 and Y = +0.5.
+     * - **"torus"**: A doughnut shape lying in the local XZ plane at Y = 0. It is centered at
+     *   the local space origin with a tube radius of 0.2 and a ring radius of 0.3.
+     *
+     * @type {'asset'|'box'|'capsule'|'cone'|'cylinder'|'plane'|'sphere'|'torus'}
      */
     set type(value) {
         if (this._type === value) return;
@@ -253,7 +316,7 @@ class ModelComponent extends Component {
     /**
      * Gets the type of the component.
      *
-     * @type {string}
+     * @type {'asset'|'box'|'capsule'|'cone'|'cylinder'|'plane'|'sphere'|'torus'}
      */
     get type() {
         return this._type;
@@ -934,11 +997,13 @@ class ModelComponent extends Component {
     onEnable() {
         const app = this.system.app;
         const scene = app.scene;
+        const layers = scene?.layers;
 
-        scene.on('set:layers', this.onLayersChanged, this);
-        if (scene.layers) {
-            scene.layers.on('add', this.onLayerAdded, this);
-            scene.layers.on('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
+
+        if (layers) {
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         const isAsset = (this._type === 'asset');
@@ -985,11 +1050,16 @@ class ModelComponent extends Component {
     onDisable() {
         const app = this.system.app;
         const scene = app.scene;
+        const layers = scene.layers;
 
-        scene.off('set:layers', this.onLayersChanged, this);
-        if (scene.layers) {
-            scene.layers.off('add', this.onLayerAdded, this);
-            scene.layers.off('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
+        if (layers) {
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
         if (this._batchGroupId >= 0) {

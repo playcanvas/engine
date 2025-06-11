@@ -1,9 +1,11 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move (Fly enabled)</div><div>(<b>LMB</b>) Orbit, (<b>LMB </b>(Orbit disabled)<b> / RMB</b>) Fly</div><div>(<b>Hold Shift / MMB / RMB </b>(Fly or Orbit disabled)) Pan</div><div>(<b>Scroll Wheel</b> (Orbit or Pan enabled)) Zoom</div><div>(<b>F</b>) Focus</div></div>
+// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move (Fly enabled)</div><div>(<b>LMB</b>) Orbit, (<b>LMB </b>(Orbit disabled)<b> / RMB</b>) Fly</div><div>(<b>Hold Shift / MMB / RMB </b>(Fly or Orbit disabled)) Pan</div><div>(<b>Scroll Wheel</b> (Orbit or Pan enabled)) Zoom</div><div>(<b>F</b>) Focus (<b>R</b>) Reset</div></div>
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/camera-controls.mjs`);
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+
+const tmpVa = new pc.Vec2();
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -82,18 +84,20 @@ const calcEntityAABB = (bbox, entity) => {
  * @returns {CameraControls} The camera-controls script.
  */
 const createMultiCamera = (focus) => {
+    const start = new pc.Vec3(0, 20, 30);
+
     const camera = new pc.Entity();
     camera.addComponent('camera');
     camera.addComponent('script');
-    camera.setPosition(0, 20, 30);
+    camera.setPosition(start);
     app.root.addChild(camera);
 
     const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
-    const cameraDist = camera.getPosition().distance(bbox.center);
+    const cameraDist = start.distance(bbox.center);
 
     /** @type {CameraControls} */
     const script = camera.script.create(CameraControls, {
-        attributes: {
+        properties: {
             focusPoint: bbox.center,
             sceneSize: bbox.halfExtents.length()
         }
@@ -101,13 +105,24 @@ const createMultiCamera = (focus) => {
 
     // focus on entity when 'f' key is pressed
     const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
-        if (e.key === 'f') {
-            script.refocus(
-                bbox.center,
-                null,
-                data.get('example.zoomReset') ? cameraDist : null,
-                data.get('example.smoothedFocus')
-            );
+        switch (e.key) {
+            case 'f': {
+                script.refocus(
+                    bbox.center,
+                    null,
+                    data.get('example.zoomReset') ? cameraDist : null,
+                    data.get('example.smoothedFocus')
+                );
+                break;
+            }
+            case 'r': {
+                script.refocus(
+                    bbox.center,
+                    start,
+                    data.get('example.zoomReset') ? cameraDist : null,
+                    data.get('example.smoothedFocus')
+                );
+            }
         }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -148,18 +163,20 @@ data.set('attr', [
     'enableOrbit',
     'enablePan',
     'enableFly',
-    'lookSensitivity',
-    'lookDamping',
-    'moveDamping',
+    'focusDamping',
     'pitchRange',
-    'pinchSpeed',
-    'wheelSpeed',
+    'rotateSpeed',
+    'rotateDamping',
+    'moveSpeed',
+    'moveFastSpeed',
+    'moveSlowSpeed',
+    'moveDamping',
+    'zoomSpeed',
+    'zoomPinchSens',
+    'zoomDamping',
     'zoomMin',
     'zoomMax',
-    'zoomScaleMin',
-    'moveSpeed',
-    'sprintSpeed',
-    'crouchSpeed'
+    'zoomScaleMin'
 ].reduce((/** @type {Record<string, any>} */ obj, key) => {
     const value = multiCameraScript[key];
 
@@ -172,7 +189,6 @@ data.set('attr', [
     return obj;
 }, {}));
 
-const tmpVa = new pc.Vec2();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key, index] = path.split('.');
     if (category !== 'attr') {
@@ -188,6 +204,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         multiCameraScript[key] = tmpVa.set(arr[0], arr[1]);
         return;
     }
+
     multiCameraScript[key] = value;
 });
 

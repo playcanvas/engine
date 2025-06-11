@@ -8,6 +8,8 @@ import { Debug } from '../core/debug.js';
 
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
+ *
+ * @ignore
  */
 class FrameGraph {
     /** @type {RenderPass[]} */

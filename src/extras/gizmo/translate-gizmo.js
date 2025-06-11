@@ -22,13 +22,43 @@ import { SphereShape } from './shape/sphere-shape.js';
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 // constants
 const GLANCE_EPSILON = 0.98;
 
 /**
- * Translation gizmo.
+ * The TranslateGizmo provides interactive 3D manipulation handles for translating/moving
+ * {@link Entity}s in a {@link Scene}. It creates a visual widget with arrows along the X, Y
+ * and Z axes, planes at their intersections, and a center sphere, allowing precise control over
+ * object positioning through direct manipulation. The gizmo's visual appearance can be customized
+ * away from the defaults as required.
+ *
+ * Note that the gizmo can be driven by both mouse+keyboard and touch input.
+ *
+ * ```javascript
+ * // Create a layer for rendering all gizmos
+ * const gizmoLayer = pc.Gizmo.createLayer(app);
+ *
+ * // Create a translate gizmo
+ * const gizmo = new pc.TranslateGizmo(cameraComponent, gizmoLayer);
+ *
+ * // Create an entity to attach the gizmo to
+ * const entity = new pc.Entity();
+ * entity.addComponent('render', {
+ *     type: 'box'
+ * });
+ * app.root.addChild(entity);
+ *
+ * // Attach the gizmo to the entity
+ * gizmo.attach([entity]);
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Translate Gizmo](https://playcanvas.github.io/#/gizmos/transform-translate)
+ * - [Editor](https://playcanvas.github.io/#/misc/editor)
  *
  * @category Gizmo
  */
@@ -120,12 +150,13 @@ class TranslateGizmo extends TransformGizmo {
     flipShapes = true;
 
     /**
-     * Creates a new TranslateGizmo object.
+     * Creates a new TranslateGizmo object. Use {@link Gizmo.createLayer} to create the layer
+     * required to display the gizmo.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The render layer.
+     * @param {Layer} layer - The layer responsible for rendering the gizmo.
      * @example
-     * const gizmo = new pc.TranslateGizmo(app, camera, layer);
+     * const gizmo = new pc.TranslateGizmo(camera, layer);
      */
     constructor(camera, layer) {
         super(camera, layer);
@@ -136,7 +167,8 @@ class TranslateGizmo extends TransformGizmo {
             this._storeNodePositions();
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (pointDelta) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
+            const pointDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
             if (this.snap) {
                 pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();
@@ -445,7 +477,7 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {{ point: Vec3, angle: number }} The point and angle.
+     * @returns {Vec3} The point in world space.
      * @protected
      */
     _screenToPoint(x, y) {
@@ -458,7 +490,6 @@ class TranslateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, !isPlane);
 
         const point = new Vec3();
-        const angle = 0;
 
         plane.intersectsRay(ray, point);
 
@@ -469,7 +500,7 @@ class TranslateGizmo extends TransformGizmo {
             this._projectToAxis(point, axis);
         }
 
-        return { point, angle };
+        return point;
     }
 }
 

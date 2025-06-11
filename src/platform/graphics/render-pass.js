@@ -2,7 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
-import { pixelFormatInfo } from './constants.js';
+import { isIntegerPixelFormat, pixelFormatInfo } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from '../graphics/graphics-device.js'
@@ -246,13 +246,31 @@ class RenderPass {
         return this._name;
     }
 
+    set scaleX(value) {
+        Debug.assert(this._options, 'The render pass needs to be initialized first.');
+        this._options.scaleX = value;
+    }
+
+    get scaleX() {
+        return this._options.scaleX;
+    }
+
+    set scaleY(value) {
+        Debug.assert(this._options, 'The render pass needs to be initialized first.');
+        this._options.scaleY = value;
+    }
+
+    get scaleY() {
+        return this._options.scaleY;
+    }
+
     set options(value) {
         this._options = value;
 
         // sanitize options
         if (value) {
-            this._options.scaleX = this._options.scaleX ?? 1;
-            this._options.scaleY = this._options.scaleY ?? 1;
+            this.scaleX = this.scaleX ?? 1;
+            this.scaleY = this.scaleY ?? 1;
         }
     }
 
@@ -315,8 +333,10 @@ class RenderPass {
             }
 
             // if render target needs mipmaps
-            if (this.renderTarget?.mipmaps && this.renderTarget?._colorBuffers?.[i].mipmaps) {
-                colorOps.genMipmaps = true;
+            const colorBuffer = this.renderTarget?._colorBuffers?.[i];
+            if (this.renderTarget?.mipmaps && colorBuffer?.mipmaps) {
+                const intFormat = isIntegerPixelFormat(colorBuffer._format);
+                colorOps.genMipmaps = !intFormat;  // no automatic mipmap generation for integer formats
             }
         }
     }
@@ -331,8 +351,8 @@ class RenderPass {
         // resize the render target if needed
         if (this._options && this.renderTarget) {
             const resizeSource = this._options.resizeSource ?? this.device.backBuffer;
-            const width = Math.floor(resizeSource.width * this._options.scaleX);
-            const height = Math.floor(resizeSource.height * this._options.scaleY);
+            const width = Math.floor(resizeSource.width * this.scaleX);
+            const height = Math.floor(resizeSource.height * this.scaleY);
             this.renderTarget.resize(width, height);
         }
     }
@@ -481,7 +501,9 @@ class RenderPass {
                             `${colorOps.store ? 'store' : 'discard'} ` +
                             `${colorOps.resolve ? 'resolve ' : ''}` +
                             `${colorOps.genMipmaps ? 'mipmaps ' : ''}` +
-                            ` [format: ${colorFormat}]`);
+                            ` [format: ${colorFormat}]` +
+                            ` ${colorOps.clear ? `[clear: ${colorOps.clearValue.toString(true, true)}]` : ''}`
+                );
             }
 
             if (this.depthStencilOps) {
@@ -493,14 +515,18 @@ class RenderPass {
                                 `${this.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
                                 `${this.depthStencilOps.storeDepth ? 'store' : 'discard'}` +
                                 `${this.depthStencilOps.resolveDepth ? ' resolve' : ''}` +
-                                `${depthFormat}`);
+                                `${depthFormat}` +
+                                `${this.depthStencilOps.clearDepth ? ` [clear: ${this.depthStencilOps.clearDepthValue}]` : ''}`
+                    );
                 }
 
                 if (hasStencil) {
                     Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    stencOps: ' +
                                 `${this.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
                                 `${this.depthStencilOps.storeStencil ? 'store' : 'discard'}` +
-                                `${depthFormat}`);
+                                `${depthFormat}` +
+                                `${this.depthStencilOps.clearStencil ? ` [clear: ${this.depthStencilOps.clearStencilValue}]` : ''}`
+                    );
                 }
             }
         }

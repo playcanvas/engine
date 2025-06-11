@@ -1,6 +1,6 @@
 /**
  * AnimEvents stores a sorted array of animation events which should fire sequentially during the
- * playback of an pc.AnimTrack.
+ * playback of an {@link AnimTrack}.
  *
  * @category Animation
  */

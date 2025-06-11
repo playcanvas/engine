@@ -46,6 +46,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     max: 10,
                     precision: 0
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Orbit Rotation' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.orbitRotation' }
+                })
             )
         ),
         jsx(

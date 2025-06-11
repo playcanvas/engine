@@ -3,15 +3,16 @@ import { Debug } from '../core/debug.js';
 import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
+import { math } from '../core/math/math.js';
 
 import {
     BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
     PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
+    SHADERLANGUAGE_GLSL
 } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
-import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
@@ -20,6 +21,8 @@ import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
+import { AnimationKey, AnimationNode } from '../scene/animation/animation.js';
+import { Geometry } from '../scene/geometry/geometry.js';
 import { CylinderGeometry } from '../scene/geometry/cylinder-geometry.js';
 import { BoxGeometry } from '../scene/geometry/box-geometry.js';
 import { CapsuleGeometry } from '../scene/geometry/capsule-geometry.js';
@@ -57,8 +60,8 @@ import {
 } from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
-import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
-import { Geometry } from '../scene/geometry/geometry.js';
+import { CameraComponent } from '../framework/components/camera/component.js';
+import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 // MATH
 
@@ -83,6 +86,22 @@ export const BLENDMODE_CONSTANT_COLOR = BLENDMODE_CONSTANT;
 export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = BLENDMODE_ONE_MINUS_CONSTANT;
 export const BLENDMODE_CONSTANT_ALPHA = BLENDMODE_CONSTANT;
 export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = BLENDMODE_ONE_MINUS_CONSTANT;
+
+export const CHUNKAPI_1_51 = '1.51';
+export const CHUNKAPI_1_55 = '1.55';
+export const CHUNKAPI_1_56 = '1.56';
+export const CHUNKAPI_1_57 = '1.57';
+export const CHUNKAPI_1_58 = '1.58';
+export const CHUNKAPI_1_60 = '1.60';
+export const CHUNKAPI_1_62 = '1.62';
+export const CHUNKAPI_1_65 = '1.65';
+export const CHUNKAPI_1_70 = '1.70';
+export const CHUNKAPI_2_1 = '2.1';
+export const CHUNKAPI_2_3 = '2.3';
+export const CHUNKAPI_2_5 = '2.5';
+export const CHUNKAPI_2_6 = '2.6';
+export const CHUNKAPI_2_7 = '2.7';
+export const CHUNKAPI_2_8 = '2.8';
 
 const _viewport = new Vec4();
 
@@ -152,67 +171,6 @@ export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
 
     drawQuadWithShader(device, target, shader, viewport);
 }
-
-const deprecatedChunks = {
-    'ambientPrefilteredCube.frag': 'ambientEnv.frag',
-    'ambientPrefilteredCubeLod.frag': 'ambientEnv.frag',
-    'dpAtlasQuad.frag': null,
-    'genParaboloid.frag': null,
-    'prefilterCubemap.frag': null,
-    'reflectionDpAtlas.frag': 'reflectionEnv.frag',
-    'reflectionPrefilteredCube.frag': 'reflectionEnv.frag',
-    'reflectionPrefilteredCubeLod.frag': 'reflectionEnv.frag'
-};
-
-Object.keys(deprecatedChunks).forEach((chunkName) => {
-    const replacement = deprecatedChunks[chunkName];
-    const useInstead = replacement ? ` Use pc.shaderChunks['${replacement}'] instead.` : '';
-    const msg = `pc.shaderChunks['${chunkName}'] is deprecated.${useInstead}}`;
-    Object.defineProperty(shaderChunks, chunkName, {
-        get: function () {
-            Debug.error(msg);
-            return null;
-        },
-        set: function () {
-            Debug.error(msg);
-        }
-    });
-});
-
-// We only provide backwards compatibility in debug builds, production builds have to be
-// as fast and small as possible.
-
-// #if _DEBUG
-
-/**
- * Helper function to ensure a bit of backwards compatibility.
- *
- * @example
- * toLitArgs('litShaderArgs.sheen.specularity'); // Result: 'litArgs_sheen_specularity'
- * @param {string} src - The shader source which may generate shader errors.
- * @returns {string} The backwards compatible shader source.
- * @ignore
- */
-function compatibilityForLitArgs(src) {
-    if (src.includes('litShaderArgs')) {
-        // eslint-disable-next-line regexp/no-misleading-capturing-group
-        src = src.replace(/litShaderArgs([.a-zA-Z]+)+/g, (a, b) => {
-            const newSource = `litArgs${b.replace(/\./g, '_')}`;
-            Debug.deprecated(`Nested struct property access is deprecated, because it's crashing some devices. Please update your custom chunks manually. In particular ${a} should be ${newSource} now.`);
-            return newSource;
-        });
-    }
-    return src;
-}
-
-/**
- * Add more backwards compatibility functions as needed.
- */
-LitShader.prototype.handleCompatibility = function () {
-    this.fshader = compatibilityForLitArgs(this.fshader);
-};
-
-// #endif
 
 // Note: This was never public interface, but has been used in external scripts
 Object.defineProperties(RenderTarget.prototype, {
@@ -443,7 +401,23 @@ GraphicsDevice.prototype.getCullMode = function () {
 
 // SCENE
 
+export const Key = AnimationKey;
+export const Node = AnimationNode;
+
 export const LitOptions = LitShaderOptions;
+
+// deprecated access to global shader chunks
+export const shaderChunks = new Proxy({}, {
+    get(target, prop) {
+        Debug.deprecated(`Using pc.shaderChunks to access global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('${prop}');`);
+        return ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).get(prop);
+    },
+    set(target, prop, value) {
+        Debug.deprecated(`Using pc.shaderChunks to override global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).set('${prop}');`);
+        ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).set(prop, value);
+        return true;
+    }
+});
 
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {
@@ -564,30 +538,37 @@ Object.defineProperty(Scene.prototype, 'models', {
     }
 });
 
-// A helper function to add deprecated set and get property on a Layer
-function _removedLayerProperty(name) {
-    Object.defineProperty(Layer.prototype, name, {
+// A helper function to add deprecated set and get property on a class
+function _removedClassProperty(targetClass, name, comment = '') {
+    Object.defineProperty(targetClass.prototype, name, {
         set: function (value) {
-            Debug.errorOnce(`pc.Layer#${name} has been removed.`);
+            Debug.errorOnce(`${targetClass.name}#${name} has been removed. ${comment}`);
         },
         get: function () {
-            Debug.errorOnce(`pc.Layer#${name} has been removed.`);
+            Debug.errorOnce(`${targetClass.name}#${name} has been removed. ${comment}`);
             return undefined;
         }
     });
 }
 
-_removedLayerProperty('renderTarget');
-_removedLayerProperty('onPreCull');
-_removedLayerProperty('onPreRender');
-_removedLayerProperty('onPreRenderOpaque');
-_removedLayerProperty('onPreRenderTransparent');
-_removedLayerProperty('onPostCull');
-_removedLayerProperty('onPostRender');
-_removedLayerProperty('onPostRenderOpaque');
-_removedLayerProperty('onPostRenderTransparent');
-_removedLayerProperty('onDrawCall');
-_removedLayerProperty('layerReference');
+_removedClassProperty(Layer, 'renderTarget');
+_removedClassProperty(Layer, 'onPreCull');
+_removedClassProperty(Layer, 'onPreRender');
+_removedClassProperty(Layer, 'onPreRenderOpaque');
+_removedClassProperty(Layer, 'onPreRenderTransparent');
+_removedClassProperty(Layer, 'onPostCull');
+_removedClassProperty(Layer, 'onPostRender');
+_removedClassProperty(Layer, 'onPostRenderOpaque');
+_removedClassProperty(Layer, 'onPostRenderTransparent');
+_removedClassProperty(Layer, 'onDrawCall');
+_removedClassProperty(Layer, 'layerReference');
+
+_removedClassProperty(CameraComponent, 'onPreCull', 'Use Scene#EVENT_PRECULL event instead.');
+_removedClassProperty(CameraComponent, 'onPostCull', 'Use Scene#EVENT_POSTCULL event instead.');
+_removedClassProperty(CameraComponent, 'onPreRender', 'Use Scene#EVENT_PRERENDER event instead.');
+_removedClassProperty(CameraComponent, 'onPostRender', 'Use Scene#EVENT_POSTRENDER event instead.');
+_removedClassProperty(CameraComponent, 'onPreRenderLayer', 'Use Scene#EVENT_PRERENDER_LAYER event instead.');
+_removedClassProperty(CameraComponent, 'onPostRenderLayer', 'Use Scene#EVENT_POSTRENDER_LAYER event instead.');
 
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');
@@ -679,6 +660,23 @@ Object.defineProperty(StandardMaterial.prototype, 'useGammaTonemap', {
     },
     set: function (value) {
         this.useTonemap = value;
+    }
+});
+
+Object.defineProperty(StandardMaterial.prototype, 'anisotropy', {
+    get: function () {
+        Debug.deprecated('pc.StandardMaterial#anisotropy is deprecated. Use pc.StandardMaterial#anisotropyIntensity and pc.StandardMaterial#anisotropyRotation instead.');
+        const sign = Math.sign(Math.cos(this.anisotropyRotation * math.DEG_TO_RAD * 2));
+        return this.anisotropyIntensity * sign;
+    },
+    set: function (value) {
+        Debug.deprecated('pc.StandardMaterial#anisotropy is deprecated. Use pc.StandardMaterial#anisotropyIntensity and pc.StandardMaterial#anisotropyRotation instead.');
+        this.anisotropyIntensity = Math.abs(value);
+        if (value >= 0) {
+            this.anisotropyRotation = 0;
+        } else {
+            this.anisotropyRotation = 90;
+        }
     }
 });
 
@@ -778,6 +776,26 @@ Object.defineProperty(XrInputSource.prototype, 'rotation', {
 });
 
 // INPUT
+
+export const EVENT_KEYDOWN = 'keydown';
+export const EVENT_KEYUP = 'keyup';
+
+export const EVENT_MOUSEDOWN = 'mousedown';
+export const EVENT_MOUSEMOVE = 'mousemove';
+export const EVENT_MOUSEUP = 'mouseup';
+export const EVENT_MOUSEWHEEL = 'mousewheel';
+
+export const EVENT_TOUCHSTART = 'touchstart';
+export const EVENT_TOUCHEND = 'touchend';
+export const EVENT_TOUCHMOVE = 'touchmove';
+export const EVENT_TOUCHCANCEL = 'touchcancel';
+
+export const EVENT_GAMEPADCONNECTED = 'gamepadconnected';
+export const EVENT_GAMEPADDISCONNECTED = 'gamepaddisconnected';
+
+export const EVENT_SELECT = 'select';
+export const EVENT_SELECTSTART = 'selectstart';
+export const EVENT_SELECTEND = 'selectend';
 
 Object.defineProperty(ElementInput.prototype, 'wheel', {
     get: function () {

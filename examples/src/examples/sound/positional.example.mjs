@@ -106,7 +106,9 @@ assetListLoader.load(() => {
     const entity = new pc.Entity();
 
     // add sound component
-    entity.addComponent('sound');
+    entity.addComponent('sound', {
+        maxDistance: 9
+    });
 
     // add footsteps slot
     entity.sound.addSlot('footsteps', {

@@ -168,10 +168,10 @@ class Picker {
                 const g = pixels[i + 1];
                 const b = pixels[i + 2];
                 const a = pixels[i + 3];
-                const index = a << 24 | r << 16 | g << 8 | b;
+                const index = (a << 24 | r << 16 | g << 8 | b) >>> 0;
 
-                // White is 'no selection'
-                if (index !== -1) {
+                // White is 'no selection
+                if (index !== 0xFFFFFFFF) {
                     tempSet.add(mapping.get(index));
                 }
             }

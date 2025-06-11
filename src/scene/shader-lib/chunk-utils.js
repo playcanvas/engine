@@ -3,7 +3,9 @@ const decodeTable = {
     'srgb': 'decodeGamma',
     'rgbm': 'decodeRGBM',
     'rgbe': 'decodeRGBE',
-    'rgbp': 'decodeRGBP'
+    'rgbp': 'decodeRGBP',
+    'xy': 'unpackNormalXY',
+    'xyz': 'unpackNormalXYZ'
 };
 
 const encodeTable = {
@@ -17,11 +19,11 @@ const encodeTable = {
 class ChunkUtils {
     // returns the name of the decode function for the texture encoding
     static decodeFunc(encoding) {
-        return decodeTable[encoding] || 'decodeGamma';
+        return decodeTable[encoding] ?? 'decodeGamma';
     }
 
     static encodeFunc(encoding) {
-        return encodeTable[encoding] || 'encodeGamma';
+        return encodeTable[encoding] ?? 'encodeGamma';
     }
 }
 

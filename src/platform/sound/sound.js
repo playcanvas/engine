@@ -1,5 +1,7 @@
 /**
- * Represents the resource of an audio asset.
+ * Represents the raw audio data of playable sound. A Sound is the resource of an audio
+ * {@link Asset}. An audio asset can be assigned to a {@link SoundSlot} owned by a
+ * {@link SoundComponent}.
  *
  * @category Sound
  */

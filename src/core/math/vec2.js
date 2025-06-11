@@ -21,13 +21,27 @@ class Vec2 {
     y;
 
     /**
-     * Create a new Vec2 instance.
+     * Creates a new Vec2 instance.
      *
+     * @overload
+     * @param {number} [x] - The x value. Defaults to 0.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @example
+     * const v1 = new pc.Vec2(); // defaults to 0, 0
+     * const v2 = new pc.Vec2(1, 2);
+     */
+    /**
+     * Creates a new Vec2 instance.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the vector values from.
+     * @example
+     * const v = new pc.Vec2([1, 2]);
+     */
+    /**
      * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 2, the
      * array will be used to populate all components.
      * @param {number} [y] - The y value. Defaults to 0.
-     * @example
-     * const v = new pc.Vec2(1, 2);
      */
     constructor(x = 0, y = 0) {
         if (x.length === 2) {
@@ -227,8 +241,8 @@ class Vec2 {
      * const r = new pc.Vec2();
      *
      * r.div2(a, b);
-     * // Outputs [2, 3]
      *
+     * // Outputs [2, 3]
      * console.log("The result of the division is: " + r.toString());
      */
     div2(lhs, rhs) {
@@ -643,6 +657,25 @@ class Vec2 {
     }
 
     /**
+     * Set the values of the vector from an array.
+     *
+     * @param {number[]|ArrayBufferView} arr - The array to set the vector values from.
+     * @param {number} [offset] - The zero-based index at which to start copying elements from the
+     * array. Default is 0.
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * const v = new pc.Vec2();
+     * v.fromArray([20, 10]);
+     * // v is set to [20, 10]
+     */
+    fromArray(arr, offset = 0) {
+        this.x = arr[offset] ?? this.x;
+        this.y = arr[offset + 1] ?? this.y;
+
+        return this;
+    }
+
+    /**
      * Converts the vector to string form.
      *
      * @returns {string} The vector in string form.
@@ -653,6 +686,26 @@ class Vec2 {
      */
     toString() {
         return `[${this.x}, ${this.y}]`;
+    }
+
+    /**
+     * Converts the vector to an array.
+     *
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the vector's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]|ArrayBufferView} The vector as an array.
+     * @example
+     * const v = new pc.Vec2(20, 10);
+     * // Outputs [20, 10]
+     * console.log(v.toArray());
+     */
+    toArray(arr = [], offset = 0) {
+        arr[offset] = this.x;
+        arr[offset + 1] = this.y;
+
+        return arr;
     }
 
     /**

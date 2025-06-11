@@ -33,15 +33,31 @@ class Vec4 {
     w;
 
     /**
-     * Creates a new Vec4 object.
+     * Creates a new Vec4 instance.
      *
+     * @overload
+     * @param {number} [x] - The x value. Defaults to 0.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @param {number} [z] - The z value. Defaults to 0.
+     * @param {number} [w] - The w value. Defaults to 0.
+     * @example
+     * const v1 = new pc.Vec4(); // defaults to 0, 0, 0, 0
+     * const v2 = new pc.Vec4(1, 2, 3, 4);
+     */
+    /**
+     * Creates a new Vec4 instance.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the vector values from.
+     * @example
+     * const v = new pc.Vec4([1, 2, 3, 4]);
+     */
+    /**
      * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 4, the
      * array will be used to populate all components.
      * @param {number} [y] - The y value. Defaults to 0.
      * @param {number} [z] - The z value. Defaults to 0.
      * @param {number} [w] - The w value. Defaults to 0.
-     * @example
-     * const v = new pc.Vec4(1, 2, 3, 4);
      */
     constructor(x = 0, y = 0, z = 0, w = 0) {
         if (x.length === 4) {
@@ -222,8 +238,8 @@ class Vec4 {
      * const r = new pc.Vec4();
      *
      * r.div2(a, b);
-     * // Outputs [2, 3, 4, 5]
      *
+     * // Outputs [2, 3, 4, 5]
      * console.log("The result of the division is: " + r.toString());
      */
     div2(lhs, rhs) {
@@ -623,6 +639,27 @@ class Vec4 {
     }
 
     /**
+     * Set the values of the vector from an array.
+     *
+     * @param {number[]|ArrayBufferView} arr - The array to set the vector values from.
+     * @param {number} [offset] - The zero-based index at which to start copying elements from the
+     * array. Default is 0.
+     * @returns {Vec4} Self for chaining.
+     * @example
+     * const v = new pc.Vec4();
+     * v.fromArray([20, 10, 5, 0]);
+     * // v is set to [20, 10, 5, 0]
+     */
+    fromArray(arr, offset = 0) {
+        this.x = arr[offset] ?? this.x;
+        this.y = arr[offset + 1] ?? this.y;
+        this.z = arr[offset + 2] ?? this.z;
+        this.w = arr[offset + 3] ?? this.w;
+
+        return this;
+    }
+
+    /**
      * Converts the vector to string form.
      *
      * @returns {string} The vector in string form.
@@ -633,6 +670,28 @@ class Vec4 {
      */
     toString() {
         return `[${this.x}, ${this.y}, ${this.z}, ${this.w}]`;
+    }
+
+    /**
+     * Converts the vector to an array.
+     *
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the vector's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]|ArrayBufferView} The vector as an array.
+     * @example
+     * const v = new pc.Vec4(20, 10, 5, 1);
+     * // Outputs [20, 10, 5, 1]
+     * console.log(v.toArray());
+     */
+    toArray(arr = [], offset = 0) {
+        arr[offset] = this.x;
+        arr[offset + 1] = this.y;
+        arr[offset + 2] = this.z;
+        arr[offset + 3] = this.w;
+
+        return arr;
     }
 
     /**

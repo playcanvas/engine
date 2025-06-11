@@ -183,7 +183,6 @@ class ShadowRendererDirectional {
             shadowCamNode.translateLocal(0, 0, depthRange.max + 0.1);
             shadowCam.farClip = depthRange.max - depthRange.min + 0.2;
 
-            lightRenderData.depthRangeCompensation = shadowCam.farClip;
             lightRenderData.projectionCompensation = radius;
         }
     }

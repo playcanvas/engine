@@ -6,10 +6,12 @@ import { AnimNode } from './anim-node.js';
  */
 
 /**
- * BlendTrees are used to store and blend multiple AnimNodes together. BlendTrees can be the child
- * of other AnimBlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as
- * an argument which defines which function should be used to determine the weights of each of its
- * children, based on the current parameter value.
+ * AnimBlendTrees are used to store and blend multiple {@link AnimNode}s together. BlendTrees can
+ * be the child of other AnimBlendTrees, in order to create a hierarchy of AnimNodes. It takes a
+ * blend type as an argument which defines which function should be used to determine the weights
+ * of each of its children, based on the current parameter value.
+ *
+ * @category Animation
  */
 class AnimBlendTree extends AnimNode {
     /**
@@ -25,7 +27,7 @@ class AnimBlendTree extends AnimNode {
      * @param {string[]} parameters - The anim component parameters which are used to calculate the
      * current weights of the blend trees children.
      * @param {object[]} children - The child nodes that this blend tree should create. Can either
-     * be of type {@link AnimNode} or {@link BlendTree}.
+     * be of type {@link AnimNode} or {@link AnimBlendTree}.
      * @param {boolean} syncAnimations - If true, the speed of each blended animation will be
      * synchronized.
      * @param {Function} createTree - Used to create child blend trees of varying types.

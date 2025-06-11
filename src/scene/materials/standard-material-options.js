@@ -55,6 +55,20 @@ class StandardMaterialOptions {
     packedNormal = false;
 
     /**
+     * If normal detail map contains X in RGB, Y in Alpha, and Z must be reconstructed.
+     *
+     * @type {boolean}
+     */
+    normalDetailPackedNormal = false;
+
+    /**
+     * If normal clear coat map contains X in RGB, Y in Alpha, and Z must be reconstructed.
+     *
+     * @type {boolean}
+     */
+    clearCoatPackedNormal = false;
+
+    /**
      * Invert the gloss channel.
      *
      * @type {boolean}

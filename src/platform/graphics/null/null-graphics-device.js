@@ -1,8 +1,8 @@
-import { Debug } from '../../../core/debug.js';
 import {
     DEVICETYPE_NULL
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
+import { RenderTarget } from '../render-target.js';
 
 import { NullIndexBuffer } from './null-index-buffer.js';
 import { NullRenderTarget } from './null-render-target.js';
@@ -19,7 +19,15 @@ class NullGraphicsDevice extends GraphicsDevice {
         this._deviceType = DEVICETYPE_NULL;
         this.samples = 1;
 
-        Debug.log('NullGraphicsDevice');
+        this.backBuffer = new RenderTarget({
+            name: 'Framebuffer',
+            graphicsDevice: this,
+            depth: this.initOptions.depth,
+            stencil: this.supportsStencil,
+            samples: this.samples
+        });
+
+        this.initDeviceCaps();
     }
 
     destroy() {
@@ -44,7 +52,7 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.supportsGpuParticles = false;
         this.textureFloatRenderable = true;
         this.textureHalfFloatRenderable = true;
-        this.supportsImageBitmap = true;
+        this.supportsImageBitmap = false;
     }
 
     postInit() {

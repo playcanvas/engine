@@ -211,8 +211,8 @@ class XrView extends EventHandler {
      * geometry, virtual object placement, occlusion of virtual object by the real world geometry,
      * and more.
      * The format of this texture is any of {@link PIXELFORMAT_LA8}, {@link PIXELFORMAT_DEPTH}, or
-     * {@link PIXELFORMAT_R32F} based on {@link XrViews#depthFormat}. It is UV transformed based
-     * on the underlying AR system which can be normalized using {@link XrView#depthUvMatrix}.
+     * {@link PIXELFORMAT_R32F} based on {@link XrViews#depthPixelFormat}. It is UV transformed
+     * based on the underlying AR system which can be normalized using {@link XrView#depthUvMatrix}.
      * Equals to null if camera depth is not supported.
      *
      * @type {Texture|null}
@@ -253,7 +253,7 @@ class XrView extends EventHandler {
 
     /**
      * 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader.
-     * It is updated when the depth texture is resized. Refer to {@link XrView#depthResize}.
+     * It is updated when the depth texture is resized. Refer to {@link EVENT_DEPTHRESIZE}.
      *
      * @type {Mat4}
      * @example

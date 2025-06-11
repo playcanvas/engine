@@ -30,8 +30,11 @@ const instanceOptions = {
 };
 
 /**
- * The SoundSlot controls playback of an audio asset.
+ * The SoundSlot controls the playback of {@link SoundInstance}s. SoundSlots are managed by
+ * {@link SoundComponent}s. To add and remove SoundSlots on a SoundComponent, use
+ * {@link SoundComponent#addSlot} and {@link SoundComponent#removeSlot} respectively.
  *
+ * @hideconstructor
  * @category Sound
  */
 class SoundSlot extends EventHandler {
@@ -84,6 +87,18 @@ class SoundSlot extends EventHandler {
     static EVENT_STOP = 'stop';
 
     /**
+     * Fired when a sound instance stops playing because it reached its end. The handler is passed
+     * the {@link SoundInstance} that ended.
+     *
+     * @event
+     * @example
+     * slot.on('end', (instance) => {
+     *     console.log('Sound instance playback ended');
+     * });
+     */
+    static EVENT_END = 'end';
+
+    /**
      * Fired when the sound {@link Asset} assigned to the slot is loaded. The handler is passed the
      * loaded {@link Sound} resource.
      *
@@ -112,8 +127,7 @@ class SoundSlot extends EventHandler {
     /**
      * Create a new SoundSlot.
      *
-     * @param {SoundComponent} component - The Component that created this
-     * slot.
+     * @param {SoundComponent} component - The Component that created this slot.
      * @param {string} [name] - The name of the slot. Defaults to 'Untitled'.
      * @param {object} [options] - Settings for the slot.
      * @param {number} [options.volume] - The playback volume, between 0 and 1.
@@ -163,7 +177,7 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * Plays a sound. If {@link SoundSlot#overlap} is true the new sound instance will be played
+     * Plays a sound. If {@link overlap} is true the new sound instance will be played
      * independently of any other instances already playing. Otherwise existing sound instances
      * will stop before playing the new sound.
      *
@@ -206,7 +220,7 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * Pauses all sound instances. To continue playback call {@link SoundSlot#resume}.
+     * Pauses all sound instances. To continue playback call {@link resume}.
      *
      * @returns {boolean} True if the sound instances paused successfully, false otherwise.
      */
@@ -338,7 +352,7 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * Clears any external nodes set by {@link SoundSlot#setExternalNodes}.
+     * Clears any external nodes set by {@link setExternalNodes}.
      */
     clearExternalNodes() {
         this._firstNode = null;
@@ -354,10 +368,10 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * Gets an array that contains the two external nodes set by {@link SoundSlot#setExternalNodes}.
+     * Gets an array that contains the two external nodes set by {@link setExternalNodes}.
      *
      * @returns {AudioNode[]} An array of 2 elements that contains the first and last nodes set by
-     * {@link SoundSlot#setExternalNodes}.
+     * {@link setExternalNodes}.
      */
     getExternalNodes() {
         return [this._firstNode, this._lastNode];

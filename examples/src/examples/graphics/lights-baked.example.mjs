@@ -1,4 +1,3 @@
-// @config WEBGPU_DISABLED
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -87,7 +86,7 @@ light.addComponent('light', {
     shadowBias: 0.2,
     shadowDistance: 50,
     shadowResolution: 2048,
-    shadowType: pc.SHADOW_PCF3,
+    shadowType: pc.SHADOW_PCF3_32F,
     color: pc.Color.GREEN,
     type: 'directional'
 });
@@ -105,7 +104,7 @@ lightPoint.addComponent('light', {
     shadowBias: 0.2,
     shadowDistance: 50,
     shadowResolution: 512,
-    shadowType: pc.SHADOW_PCF3,
+    shadowType: pc.SHADOW_PCF3_32F,
     color: pc.Color.RED,
     range: 100,
     type: 'point'

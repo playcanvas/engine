@@ -21,6 +21,8 @@ const blueNoiseData = () => {
 
 /**
  * Blue noise based random numbers API.
+ *
+ * @ignore
  */
 class BlueNoise {
     seed = 0;

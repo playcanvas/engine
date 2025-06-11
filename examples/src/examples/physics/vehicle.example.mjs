@@ -212,7 +212,7 @@ assetListLoader.load(() => {
         }
     });
 
-    app.keyboard.on(pc.EVENT_KEYDOWN, (e) => {
+    app.keyboard.on('keydown', (e) => {
         if (e.key === pc.KEY_R) {
             app.fire('reset');
         }

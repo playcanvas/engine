@@ -5,7 +5,6 @@ import { SoundSlot } from './slot.js';
 
 /**
  * @import { Entity } from '../../entity.js'
- * @import { SoundComponentSystem } from './system.js'
  * @import { SoundInstance } from '../../../platform/sound/instance.js'
  */
 
@@ -24,35 +23,35 @@ import { SoundSlot } from './slot.js';
  * to an Entity, use {@link Entity#addComponent}:
  *
  * ```javascript
- * // Add a sound component to an entity
  * const entity = new pc.Entity();
- * entity.addComponent("sound");
- * ```
- *
- * Then, to add a sound slot to the component:
- *
- * ```javascript
- * entity.sound.addSlot("beep", {
- *     asset: asset,
- *     autoPlay: true,
- *     loop: true,
- *     overlap: true,
- *     pitch: 1.5
+ * entity.addComponent('sound', {
+ *     volume: 0.8,
+ *     positional: true
  * });
  * ```
  *
- * Once the SoundComponent is added to the entity, you can set and get any of its properties:
+ * Once the SoundComponent is added to the entity, you can access it via the {@link Entity#sound}
+ * property:
  *
  * ```javascript
- * entity.sound.volume = 0.8;  // Set the volume for all sounds
+ * entity.sound.volume = 0.9;  // Set the volume for all sounds
  *
  * console.log(entity.sound.volume); // Get the volume and print it
  * ```
  *
- * Relevant examples:
+ * Add individual sounds by creating sound slots on the component:
+ *
+ * ```javascript
+ * entity.sound.addSlot('beep', {
+ *     asset: asset
+ * });
+ * ```
+ *
+ * Relevant Engine API examples:
  *
  * - [Positional Sound](https://playcanvas.github.io/#/sound/positional)
  *
+ * @hideconstructor
  * @category Sound
  */
 class SoundComponent extends Component {
@@ -116,39 +115,36 @@ class SoundComponent extends Component {
      */
     static EVENT_END = 'end';
 
+    /** @private */
+    _volume = 1;
+
+    /** @private */
+    _pitch = 1;
+
+    /** @private */
+    _positional = true;
+
+    /** @private */
+    _refDistance = 1;
+
+    /** @private */
+    _maxDistance = 10000;
+
+    /** @private */
+    _rollOffFactor = 1;
+
+    /** @private */
+    _distanceModel = DISTANCE_LINEAR;
+
     /**
-     * Create a new Sound Component.
-     *
-     * @param {SoundComponentSystem} system - The ComponentSystem that created this component.
-     * @param {Entity} entity - The entity that the Component is attached to.
+     * @type {Object<string, SoundSlot>}
+     * @private
      */
-    constructor(system, entity) {
-        super(system, entity);
+    _slots = {};
 
-        /** @private */
-        this._volume = 1;
-        /** @private */
-        this._pitch = 1;
-        /** @private */
-        this._positional = true;
-        /** @private */
-        this._refDistance = 1;
-        /** @private */
-        this._maxDistance = 10000;
-        /** @private */
-        this._rollOffFactor = 1;
-        /** @private */
-        this._distanceModel = DISTANCE_LINEAR;
+    /** @private */
+    _playingBeforeDisable = {};
 
-        /**
-         * @type {Object<string, SoundSlot>}
-         * @private
-         */
-        this._slots = {};
-
-        /** @private */
-        this._playingBeforeDisable = {};
-    }
 
     /**
      * Update the specified property on all sound instances.

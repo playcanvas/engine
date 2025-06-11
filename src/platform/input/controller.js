@@ -1,6 +1,5 @@
 import {
     ACTION_GAMEPAD, ACTION_KEYBOARD, ACTION_MOUSE,
-    EVENT_MOUSEMOVE,
     PAD_1,
     PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y
 } from './constants.js';
@@ -258,12 +257,12 @@ class Controller {
         const bind = function (controller, source, value, key) {
             switch (source) {
                 case 'mousex':
-                    controller._mouse.on(EVENT_MOUSEMOVE, (e) => {
+                    controller._mouse.on('mousemove', (e) => {
                         controller._axesValues[name][i] = e.dx / 10;
                     });
                     break;
                 case 'mousey':
-                    controller._mouse.on(EVENT_MOUSEMOVE, (e) => {
+                    controller._mouse.on('mousemove', (e) => {
                         controller._axesValues[name][i] = e.dy / 10;
                     });
                     break;

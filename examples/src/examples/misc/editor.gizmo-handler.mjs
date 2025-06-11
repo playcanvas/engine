@@ -26,18 +26,11 @@ class GizmoHandler {
     _nodes = [];
 
     /**
-     * Flag to check if gizmo has captured pointer.
-     *
-     * @type {boolean}
-     * @private
-     */
-    _hasPointer = false;
-
-    /**
      * @param {pc.CameraComponent} camera - The camera component.
      */
     constructor(camera) {
-        const layer = pc.Gizmo.createLayer(camera.system.app);
+        const app = camera.system.app;
+        const layer = pc.Gizmo.createLayer(app);
         this._gizmos = {
             translate: new pc.TranslateGizmo(camera, layer),
             rotate: new pc.RotateGizmo(camera, layer),
@@ -47,10 +40,10 @@ class GizmoHandler {
         for (const type in this._gizmos) {
             const gizmo = this._gizmos[type];
             gizmo.on('pointer:down', (x, y, /** @type {pc.MeshInstance} */ meshInstance) => {
-                this._hasPointer = !!meshInstance;
+                app.fire('gizmo:pointer', !!meshInstance);
             });
             gizmo.on('pointer:up', () => {
-                this._hasPointer = false;
+                app.fire('gizmo:pointer', false);
             });
         }
     }
@@ -71,10 +64,6 @@ class GizmoHandler {
 
     get size() {
         return this.gizmo.size;
-    }
-
-    get hasPointer() {
-        return this._hasPointer;
     }
 
     /**

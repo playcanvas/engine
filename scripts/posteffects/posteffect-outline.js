@@ -34,7 +34,7 @@ function OutlineEffect(graphicsDevice, thickness) {
         '        {',
         '            for (int y=-THICKNESS;y<=THICKNESS;y++)',
         '            {    ',
-        '                float tex=texture2DLodEXT(uOutlineTex, vUv0 + vec2(float(x)/uWidth, float(y)/uHeight), 0.0).a;',
+        '                float tex=texture2DLod(uOutlineTex, vUv0 + vec2(float(x)/uWidth, float(y)/uHeight), 0.0).a;',
         '                if (tex>0.0)',
         '                {',
         '                    outline=1.0;',
@@ -46,8 +46,11 @@ function OutlineEffect(graphicsDevice, thickness) {
         '}'
     ].join('\n');
 
-    this.shader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fshader, 'OutlineShader', {
-        aPosition: pc.SEMANTIC_POSITION
+    this.shader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'OutlineShader',
+        attributes: { aPosition: pc.SEMANTIC_POSITION },
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: fshader
     });
 
     // Uniforms

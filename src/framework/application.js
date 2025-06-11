@@ -65,28 +65,11 @@ import { XrManager } from './xr/xr-manager.js';
  */
 
 /**
- * An Application represents and manages your PlayCanvas application. If you are developing using
- * the PlayCanvas Editor, the Application is created for you. You can access your Application
- * instance in your scripts. Below is a skeleton script which shows how you can access the
- * application 'app' property inside the initialize and update functions:
- *
- * ```javascript
- * // Editor example: accessing the pc.Application from a script
- * var MyScript = pc.createScript('myScript');
- *
- * MyScript.prototype.initialize = function() {
- *     // Every script instance has a property 'this.app' accessible in the initialize...
- *     const app = this.app;
- * };
- *
- * MyScript.prototype.update = function(dt) {
- *     // ...and update functions.
- *     const app = this.app;
- * };
- * ```
- *
- * If you are using the Engine without the Editor, you have to create the application instance
- * manually.
+ * Application is a subclass of {@link AppBase}, which represents the base functionality for all
+ * PlayCanvas applications. It acts as a convenience class by internally registering all
+ * {@link ComponentSystem}s and {@link ResourceHandler}s implemented in the PlayCanvas Engine. This
+ * makes app setup simple but results in the full engine being included when bundling your
+ * application.
  */
 class Application extends AppBase {
     /**

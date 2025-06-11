@@ -1,3 +1,4 @@
+import { version } from '../../core/core.js';
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
@@ -10,7 +11,8 @@ import {
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    DISPLAYFORMAT_LDR
+    DISPLAYFORMAT_LDR,
+    semanticToLocation
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
@@ -18,6 +20,7 @@ import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 import { StencilParameters } from './stencil-parameters.js';
+import { DebugGraphics } from './debug-graphics.js';
 
 /**
  * @import { Compute } from './compute.js'
@@ -29,6 +32,8 @@ import { StencilParameters } from './stencil-parameters.js';
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
  */
+
+const _tempSet = new Set();
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -276,6 +281,14 @@ class GraphicsDevice extends EventHandler {
     supportsUniformBuffers = false;
 
     /**
+     * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
+     * primitives' clip volume with user-defined half-spaces in the output of vertex stage.
+     *
+     * @type {boolean}
+     */
+    supportsClipDistances = false;
+
+    /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
      *
      * @type {boolean}
@@ -384,12 +397,31 @@ class GraphicsDevice extends EventHandler {
         height: 0
     };
 
+    /**
+     * A very heavy handed way to force all shaders to be rebuilt. Avoid using as much as possible.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _shadersDirty = false;
+
+    /**
+     * A list of shader defines based on the capabilities of the device.
+     *
+     * @type {Map<string, string>}
+     * @ignore
+     */
+    capsDefines = new Map();
+
     static EVENT_RESIZE = 'resizecanvas';
 
     constructor(canvas, options) {
         super();
 
         this.canvas = canvas;
+        if ('setAttribute' in canvas) {
+            canvas.setAttribute('data-engine', `PlayCanvas ${version}`);
+        }
 
         // copy options and handle defaults
         this.initOptions = { ...options };
@@ -459,6 +491,18 @@ class GraphicsDevice extends EventHandler {
         this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
             data: positions
         });
+    }
+
+    /**
+     * Initialize the map of device capabilities, which are supplied to shaders as defines.
+     *
+     * @ignore
+     */
+    initCapsDefines() {
+        const { capsDefines } = this;
+        capsDefines.clear();
+        if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
+        if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
     }
 
     /**
@@ -649,9 +693,8 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Sets the current index buffer on the graphics device. On subsequent calls to
-     * {@link GraphicsDevice#draw}, the specified index buffer will be used to provide index data
-     * for any indexed primitives.
+     * Sets the current index buffer on the graphics device. For subsequent draw calls, the
+     * specified index buffer will be used to provide index data for any indexed primitives.
      *
      * @param {IndexBuffer|null} indexBuffer - The index buffer to assign to the device.
      */
@@ -661,9 +704,8 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Sets the current vertex buffer on the graphics device. On subsequent calls to
-     * {@link GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex
-     * data for any primitives.
+     * Sets the current vertex buffer on the graphics device. For subsequent draw calls, the
+     * specified vertex buffer(s) will be used to provide vertex data for any primitives.
      *
      * @param {VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
      */
@@ -681,6 +723,15 @@ class GraphicsDevice extends EventHandler {
      */
     clearVertexBuffer() {
         this.vertexBuffers.length = 0;
+    }
+
+    /**
+     * Clears the index buffer set on the graphics device. This is called automatically by the
+     * renderer.
+     * @ignore
+     */
+    clearIndexBuffer() {
+        this.indexBuffer = null;
     }
 
     /**
@@ -974,6 +1025,37 @@ class GraphicsDevice extends EventHandler {
             }
         }
         return undefined;
+    }
+
+    /**
+     * Validate that all attributes required by the shader are present in the currently assigned
+     * vertex buffers.
+     *
+     * @param {Shader} shader - The shader to validate.
+     * @param {VertexFormat} vb0Format - The format of the first vertex buffer.
+     * @param {VertexFormat} vb1Format - The format of the second vertex buffer.
+     * @protected
+     */
+    validateAttributes(shader, vb0Format, vb1Format) {
+
+        Debug.call(() => {
+
+            // add all attribute locations from vertex formats to the set
+            _tempSet.clear();
+            vb0Format?.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
+            vb1Format?.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
+
+            // every location shader needs must be in the vertex buffer
+            for (const [location, name] of shader.attributes) {
+                if (!_tempSet.has(location)) {
+                    Debug.errorOnce(`Vertex attribute [${name}] at location ${location} required by the shader is not present in the currently assigned vertex buffers, while rendering [${DebugGraphics.toString()}]`, {
+                        shader,
+                        vb0Format,
+                        vb1Format
+                    });
+                }
+            }
+        });
     }
 }
 

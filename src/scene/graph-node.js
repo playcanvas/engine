@@ -69,33 +69,46 @@ function findNode(node, test) {
 }
 
 /**
+ * @callback FindNodeCallback
  * Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph
  * node and all of its descendants.
- *
- * @callback FindNodeCallback
  * @param {GraphNode} node - The current graph node.
  * @returns {boolean} Returning `true` will result in that node being returned from
  * {@link GraphNode#find} or {@link GraphNode#findOne}.
  */
 
 /**
+ * @callback ForEachNodeCallback
  * Callback used by {@link GraphNode#forEach} to iterate through a graph node and all of its
  * descendants.
- *
- * @callback ForEachNodeCallback
  * @param {GraphNode} node - The current graph node.
+ * @returns {void}
  */
 
 /**
- * The `GraphNode` class represents a node within a hierarchical scene graph. Each `GraphNode` can
- * reference a array of child nodes. This creates a tree-like structure that is fundamental for
- * organizing and managing the spatial relationships between objects in a 3D scene. This class
+ * The GraphNode class represents a node within a hierarchical scene graph. Each GraphNode can
+ * reference an array of {@link children}. This creates a tree-like structure that is fundamental
+ * for organizing and managing the spatial relationships between objects in a 3D scene. This class
  * provides a comprehensive API for manipulating the position, rotation, and scale of nodes both
- * locally and in world space.
+ * locally (relative to the {@link parent}) and in world space (relative to the {@link Scene}
+ * origin).
  *
- * `GraphNode` is the superclass of {@link Entity}, which is the primary class for creating objects
- * in a PlayCanvas application. For this reason, `GraphNode` is rarely used directly, but it provides
- * a powerful set of features that are leveraged by the `Entity` class.
+ * During the application's (see {@link AppBase}) main update loop, the engine automatically
+ * synchronizes the entire GraphNode hierarchy each frame. This process ensures that the world
+ * transformation matrices for all nodes are up-to-date. A node's world transformation matrix is
+ * calculated by combining its local transformation matrix (derived from its local position,
+ * rotation, and scale) with the world transformation matrix of its parent node. For the scene
+ * graph's {@link root} node (which has no parent), its world matrix is simply its local matrix.
+ * This hierarchical update mechanism ensures that changes made to a parent node's transform
+ * correctly propagate down to all its children and descendants, accurately reflecting their final
+ * position, orientation, and scale in the world. This synchronized world transform is essential
+ * for systems like rendering and physics.
+ *
+ * GraphNode is the superclass of {@link Entity}, which is the primary class for creating objects
+ * in a PlayCanvas application. For this reason, developers typically interact with the scene
+ * hierarchy and transformations through the Entity interface rather than using GraphNode directly.
+ * However, GraphNode provides the underlying powerful set of features for hierarchical
+ * transformations that Entity leverages.
  */
 class GraphNode extends EventHandler {
     /**
@@ -107,7 +120,7 @@ class GraphNode extends EventHandler {
 
     /**
      * Interface for tagging graph nodes. Tag based searches can be performed using the
-     * {@link GraphNode#findByTag} function.
+     * {@link findByTag} function.
      *
      * @type {Tags}
      */
@@ -583,7 +596,7 @@ class GraphNode extends EventHandler {
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
      * // Finds all nodes that have a model component and have 'door' in their lower-cased name
-     * const doors = house.find(function (node) {
+     * const doors = house.find((node) => {
      *     return node.model && node.name.toLowerCase().indexOf('door') !== -1;
      * });
      * @example
@@ -620,7 +633,7 @@ class GraphNode extends EventHandler {
      * node is found.
      * @example
      * // Find the first node that is called 'head' and has a model component
-     * const head = player.findOne(function (node) {
+     * const head = player.findOne((node) => {
      *     return node.model && node.name === 'head';
      * });
      * @example
@@ -653,8 +666,7 @@ class GraphNode extends EventHandler {
      * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
      * const meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
      */
-    findByTag() {
-        const query = arguments;
+    findByTag(...query) {
         const results = [];
 
         const queryNode = (node, checkNode) => {
@@ -687,8 +699,8 @@ class GraphNode extends EventHandler {
      * Get the first node found in the graph by its full path in the graph. The full path has this
      * form 'parent/child/sub-child'. The search is depth first.
      *
-     * @param {string|string[]} path - The full path of the {@link GraphNode} as either a string or
-     * array of {@link GraphNode} names.
+     * @param {string|string[]} path - The full path of the GraphNode as either a string or array
+     * of GraphNode names.
      * @returns {GraphNode|null} The first node to be found matching the supplied path. Returns
      * null if no node is found.
      * @example
@@ -721,7 +733,7 @@ class GraphNode extends EventHandler {
      * @param {object} [thisArg] - Optional value to use as this when executing callback function.
      * @example
      * // Log the path and name of each node in descendant tree starting with "parent"
-     * parent.forEach(function (node) {
+     * parent.forEach((node) => {
      *     console.log(node.path + "/" + node.name);
      * });
      */
@@ -772,10 +784,11 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Get the world space rotation for the specified GraphNode in Euler angle form. The rotation
-     * is returned as euler angles in a {@link Vec3}. The value returned by this function should be
-     * considered read-only. In order to set the world space rotation of the graph node, use
-     * {@link GraphNode#setEulerAngles}.
+     * Get the world space rotation for the specified GraphNode in Euler angles. The angles are in
+     * degrees and in XYZ order.
+     *
+     * Important: The value returned by this function should be considered read-only. In order to
+     * set the world space rotation of the graph node, use {@link setEulerAngles}.
      *
      * @returns {Vec3} The world space rotation of the graph node in Euler angle form.
      * @example
@@ -789,11 +802,13 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Get the rotation in local space for the specified GraphNode. The rotation is returned as
-     * euler angles in a {@link Vec3}. The returned vector should be considered read-only. To
-     * update the local rotation, use {@link GraphNode#setLocalEulerAngles}.
+     * Get the local space rotation for the specified GraphNode in Euler angles. The angles are in
+     * degrees and in XYZ order.
      *
-     * @returns {Vec3} The local space rotation of the graph node as euler angles in XYZ order.
+     * Important: The value returned by this function should be considered read-only. In order to
+     * set the local space rotation of the graph node, use {@link setLocalEulerAngles}.
+     *
+     * @returns {Vec3} The local space rotation of the graph node as Euler angles in XYZ order.
      * @example
      * const angles = this.entity.getLocalEulerAngles();
      * angles.y = 180;
@@ -807,7 +822,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the position in local space for the specified GraphNode. The position is returned as a
      * {@link Vec3}. The returned vector should be considered read-only. To update the local
-     * position, use {@link GraphNode#setLocalPosition}.
+     * position, use {@link setLocalPosition}.
      *
      * @returns {Vec3} The local space position of the graph node.
      * @example
@@ -822,7 +837,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the rotation in local space for the specified GraphNode. The rotation is returned as a
      * {@link Quat}. The returned quaternion should be considered read-only. To update the local
-     * rotation, use {@link GraphNode#setLocalRotation}.
+     * rotation, use {@link setLocalRotation}.
      *
      * @returns {Quat} The local space rotation of the graph node as a quaternion.
      * @example
@@ -835,7 +850,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the scale in local space for the specified GraphNode. The scale is returned as a
      * {@link Vec3}. The returned vector should be considered read-only. To update the local scale,
-     * use {@link GraphNode#setLocalScale}.
+     * use {@link setLocalScale}.
      *
      * @returns {Vec3} The local space scale of the graph node.
      * @example
@@ -866,7 +881,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the world space position for the specified GraphNode. The position is returned as a
      * {@link Vec3}. The value returned by this function should be considered read-only. In order
-     * to set the world space position of the graph node, use {@link GraphNode#setPosition}.
+     * to set the world space position of the graph node, use {@link setPosition}.
      *
      * @returns {Vec3} The world space position of the graph node.
      * @example
@@ -882,7 +897,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the world space rotation for the specified GraphNode. The rotation is returned as a
      * {@link Quat}. The value returned by this function should be considered read-only. In order
-     * to set the world space rotation of the graph node, use {@link GraphNode#setRotation}.
+     * to set the world space rotation of the graph node, use {@link setRotation}.
      *
      * @returns {Quat} The world space rotation of the graph node as a quaternion.
      * @example
@@ -974,22 +989,34 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Sets the local space rotation of the specified graph node using euler angles. Eulers are
-     * interpreted in XYZ order. Eulers must be specified in degrees. This function has two valid
-     * signatures: you can either pass a 3D vector or 3 numbers to specify the local space euler
-     * rotation.
+     * Sets the local space rotation of the specified graph node using Euler angles. Eulers are
+     * interpreted in XYZ order.
      *
-     * @param {Vec3|number} x - 3-dimensional vector holding eulers or rotation around local space
-     * x-axis in degrees.
-     * @param {number} [y] - Rotation around local space y-axis in degrees.
-     * @param {number} [z] - Rotation around local space z-axis in degrees.
+     * @overload
+     * @param {number} x - Rotation around local space x-axis in degrees.
+     * @param {number} y - Rotation around local space y-axis in degrees.
+     * @param {number} z - Rotation around local space z-axis in degrees.
+     * @returns {void}
      * @example
      * // Set rotation of 90 degrees around y-axis via 3 numbers
      * this.entity.setLocalEulerAngles(0, 90, 0);
+     */
+    /**
+     * Sets the local space rotation of the specified graph node using Euler angles. Eulers are
+     * interpreted in XYZ order.
+     *
+     * @overload
+     * @param {Vec3} angles - Vector holding rotations around local space axes in degrees.
+     * @returns {void}
      * @example
      * // Set rotation of 90 degrees around y-axis via a vector
      * const angles = new pc.Vec3(0, 90, 0);
      * this.entity.setLocalEulerAngles(angles);
+     */
+    /**
+     * @param {number|Vec3} x - Rotation around local space x-axis in degrees or vector holding rotations around local space axes in degrees.
+     * @param {number} [y] - Rotation around local space y-axis in degrees.
+     * @param {number} [z] - Rotation around local space z-axis in degrees.
      */
     setLocalEulerAngles(x, y, z) {
         this.localRotation.setFromEulerAngles(x, y, z);
@@ -1000,21 +1027,30 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Sets the local space position of the specified graph node. This function has two valid
-     * signatures: you can either pass a 3D vector or 3 numbers to specify the local space
-     * position.
+     * Sets the local space position of the specified graph node.
      *
-     * @param {Vec3|number} x - 3-dimensional vector holding local space position or
-     * x-coordinate of local space position.
-     * @param {number} [y] - Y-coordinate of local space position.
-     * @param {number} [z] - Z-coordinate of local space position.
+     * @overload
+     * @param {number} x - X-coordinate of local space position.
+     * @param {number} y - Y-coordinate of local space position.
+     * @param {number} z - Z-coordinate of local space position.
+     * @returns {void}
      * @example
-     * // Set via 3 numbers
      * this.entity.setLocalPosition(0, 10, 0);
+     */
+    /**
+     * Sets the local space position of the specified graph node.
+     *
+     * @overload
+     * @param {Vec3} position - Vector holding local space position.
+     * @returns {void}
      * @example
-     * // Set via vector
      * const pos = new pc.Vec3(0, 10, 0);
      * this.entity.setLocalPosition(pos);
+     */
+    /**
+     * @param {number|Vec3} x - X-coordinate of local space position or vector holding local space position.
+     * @param {number} [y] - Y-coordinate of local space position.
+     * @param {number} [z] - Z-coordinate of local space position.
      */
     setLocalPosition(x, y, z) {
         if (x instanceof Vec3) {
@@ -1029,22 +1065,32 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Sets the local space rotation of the specified graph node. This function has two valid
-     * signatures: you can either pass a quaternion or 3 numbers to specify the local space
-     * rotation.
+     * Sets the local space rotation of the specified graph node.
      *
-     * @param {Quat|number} x - Quaternion holding local space rotation or x-component of
-     * local space quaternion rotation.
+     * @overload
+     * @param {number} x - X-component of local space quaternion rotation.
+     * @param {number} y - Y-component of local space quaternion rotation.
+     * @param {number} z - Z-component of local space quaternion rotation.
+     * @param {number} w - W-component of local space quaternion rotation.
+     * @returns {void}
+     * @example
+     * this.entity.setLocalRotation(0, 0, 0, 1);
+     */
+    /**
+     * Sets the local space rotation of the specified graph node.
+     *
+     * @overload
+     * @param {Quat} rotation - Quaternion holding local space rotation.
+     * @returns {void}
+     * @example
+     * const q = new pc.Quat();
+     * this.entity.setLocalRotation(q);
+     */
+    /**
+     * @param {number|Quat} x - X-component of local space quaternion rotation or quaternion holding local space rotation.
      * @param {number} [y] - Y-component of local space quaternion rotation.
      * @param {number} [z] - Z-component of local space quaternion rotation.
      * @param {number} [w] - W-component of local space quaternion rotation.
-     * @example
-     * // Set via 4 numbers
-     * this.entity.setLocalRotation(0, 0, 0, 1);
-     * @example
-     * // Set via quaternion
-     * const q = pc.Quat();
-     * this.entity.setLocalRotation(q);
      */
     setLocalRotation(x, y, z, w) {
         if (x instanceof Quat) {
@@ -1059,20 +1105,30 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Sets the local space scale factor of the specified graph node. This function has two valid
-     * signatures: you can either pass a 3D vector or 3 numbers to specify the local space scale.
+     * Sets the local space scale factor of the specified graph node.
      *
-     * @param {Vec3|number} x - 3-dimensional vector holding local space scale or x-coordinate
-     * of local space scale.
-     * @param {number} [y] - Y-coordinate of local space scale.
-     * @param {number} [z] - Z-coordinate of local space scale.
+     * @overload
+     * @param {number} x - X-coordinate of local space scale.
+     * @param {number} y - Y-coordinate of local space scale.
+     * @param {number} z - Z-coordinate of local space scale.
+     * @returns {void}
      * @example
-     * // Set via 3 numbers
      * this.entity.setLocalScale(10, 10, 10);
+     */
+    /**
+     * Sets the local space scale factor of the specified graph node.
+     *
+     * @overload
+     * @param {Vec3} scale - Vector holding local space scale.
+     * @returns {void}
      * @example
-     * // Set via vector
      * const scale = new pc.Vec3(10, 10, 10);
      * this.entity.setLocalScale(scale);
+     */
+    /**
+     * @param {number|Vec3} x - X-coordinate of local space scale or vector holding local space scale.
+     * @param {number} [y] - Y-coordinate of local space scale.
+     * @param {number} [z] - Z-coordinate of local space scale.
      */
     setLocalScale(x, y, z) {
         if (x instanceof Vec3) {
@@ -1130,21 +1186,30 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Sets the world space position of the specified graph node. This function has two valid
-     * signatures: you can either pass a 3D vector or 3 numbers to specify the world space
-     * position.
+     * Sets the world space position of the specified graph node.
      *
-     * @param {Vec3|number} x - 3-dimensional vector holding world space position or
-     * x-coordinate of world space position.
-     * @param {number} [y] - Y-coordinate of world space position.
-     * @param {number} [z] - Z-coordinate of world space position.
+     * @overload
+     * @param {number} x - X-coordinate of world space position.
+     * @param {number} y - Y-coordinate of world space position.
+     * @param {number} z - Z-coordinate of world space position.
+     * @returns {void}
      * @example
-     * // Set via 3 numbers
      * this.entity.setPosition(0, 10, 0);
+     */
+    /**
+     * Sets the world space position of the specified graph node.
+     *
+     * @overload
+     * @param {Vec3} position - Vector holding world space position.
+     * @returns {void}
      * @example
-     * // Set via vector
      * const position = new pc.Vec3(0, 10, 0);
      * this.entity.setPosition(position);
+     */
+    /**
+     * @param {number|Vec3} x - X-coordinate of world space position or vector holding world space position.
+     * @param {number} [y] - Y-coordinate of world space position.
+     * @param {number} [z] - Z-coordinate of world space position.
      */
     setPosition(x, y, z) {
         if (x instanceof Vec3) {
@@ -1166,22 +1231,32 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Sets the world space rotation of the specified graph node. This function has two valid
-     * signatures: you can either pass a quaternion or 3 numbers to specify the world space
-     * rotation.
+     * Sets the world space rotation of the specified graph node.
      *
-     * @param {Quat|number} x - Quaternion holding world space rotation or x-component of
-     * world space quaternion rotation.
+     * @overload
+     * @param {number} x - X-component of world space quaternion rotation.
+     * @param {number} y - Y-component of world space quaternion rotation.
+     * @param {number} z - Z-component of world space quaternion rotation.
+     * @param {number} w - W-component of world space quaternion rotation.
+     * @returns {void}
+     * @example
+     * this.entity.setRotation(0, 0, 0, 1);
+     */
+    /**
+     * Sets the world space rotation of the specified graph node.
+     *
+     * @overload
+     * @param {Quat} rotation - Quaternion holding world space rotation.
+     * @returns {void}
+     * @example
+     * const rotation = new pc.Quat();
+     * this.entity.setRotation(rotation);
+     */
+    /**
+     * @param {number|Quat} x - X-component of world space quaternion rotation or quaternion holding world space rotation.
      * @param {number} [y] - Y-component of world space quaternion rotation.
      * @param {number} [z] - Z-component of world space quaternion rotation.
      * @param {number} [w] - W-component of world space quaternion rotation.
-     * @example
-     * // Set via 4 numbers
-     * this.entity.setRotation(0, 0, 0, 1);
-     * @example
-     * // Set via quaternion
-     * const q = pc.Quat();
-     * this.entity.setRotation(q);
      */
     setRotation(x, y, z, w) {
         if (x instanceof Quat) {
@@ -1231,22 +1306,32 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Sets the world space rotation of the specified graph node using euler angles. Eulers are
-     * interpreted in XYZ order. Eulers must be specified in degrees. This function has two valid
-     * signatures: you can either pass a 3D vector or 3 numbers to specify the world space euler
-     * rotation.
+     * Sets the world space rotation of the specified graph node using Euler angles. Eulers are
+     * interpreted in XYZ order.
      *
-     * @param {Vec3|number} x - 3-dimensional vector holding eulers or rotation around world space
-     * x-axis in degrees.
-     * @param {number} [y] - Rotation around world space y-axis in degrees.
-     * @param {number} [z] - Rotation around world space z-axis in degrees.
+     * @overload
+     * @param {number} x - Rotation around world space x-axis in degrees.
+     * @param {number} y - Rotation around world space y-axis in degrees.
+     * @param {number} z - Rotation around world space z-axis in degrees.
+     * @returns {void}
      * @example
-     * // Set rotation of 90 degrees around world space y-axis via 3 numbers
      * this.entity.setEulerAngles(0, 90, 0);
+     */
+    /**
+     * Sets the world space rotation of the specified graph node using Euler angles. Eulers are
+     * interpreted in XYZ order.
+     *
+     * @overload
+     * @param {Vec3} angles - Vector holding rotations around world space axes in degrees.
+     * @returns {void}
      * @example
-     * // Set rotation of 90 degrees around world space y-axis via a vector
      * const angles = new pc.Vec3(0, 90, 0);
      * this.entity.setEulerAngles(angles);
+     */
+    /**
+     * @param {number|Vec3} x - Rotation around world space x-axis in degrees or vector holding rotations around world space axes in degrees.
+     * @param {number} [y] - Rotation around world space y-axis in degrees.
+     * @param {number} [z] - Rotation around world space z-axis in degrees.
      */
     setEulerAngles(x, y, z) {
         this.localRotation.setFromEulerAngles(x, y, z);
@@ -1288,7 +1373,6 @@ class GraphNode extends EventHandler {
      * @ignore
      */
     addChildAndSaveTransform(node) {
-
         const wPos = node.getPosition();
         const wRot = node.getRotation();
 
@@ -1313,7 +1397,6 @@ class GraphNode extends EventHandler {
      * this.entity.insertChild(e, 1);
      */
     insertChild(node, index) {
-
         this._prepareInsertChild(node);
         this._children.splice(index, 0, node);
         this._onInsertChild(node);
@@ -1326,7 +1409,6 @@ class GraphNode extends EventHandler {
      * @private
      */
     _prepareInsertChild(node) {
-
         // remove it from the existing parent
         node.remove();
 
@@ -1521,32 +1603,48 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Reorients the graph node so that the negative z-axis points towards the target. This
-     * function has two valid signatures. Either pass 3D vectors for the look at coordinate and up
-     * vector, or pass numbers to represent the vectors.
+     * Reorients the graph node so that the negative z-axis points towards the target.
      *
-     * @param {Vec3|number} x - If passing a 3D vector, this is the world space coordinate to look at.
-     * Otherwise, it is the x-component of the world space coordinate to look at.
-     * @param {Vec3|number} [y] - If passing a 3D vector, this is the world space up vector for look at
-     * transform. Otherwise, it is the y-component of the world space coordinate to look at.
-     * @param {number} [z] - Z-component of the world space coordinate to look at.
+     * @overload
+     * @param {number} x - X-component of the world space coordinate to look at.
+     * @param {number} y - Y-component of the world space coordinate to look at.
+     * @param {number} z - Z-component of the world space coordinate to look at.
      * @param {number} [ux] - X-component of the up vector for the look at transform. Defaults to 0.
      * @param {number} [uy] - Y-component of the up vector for the look at transform. Defaults to 1.
      * @param {number} [uz] - Z-component of the up vector for the look at transform. Defaults to 0.
-     * @example
-     * // Look at another entity, using the (default) positive y-axis for up
-     * const position = otherEntity.getPosition();
-     * this.entity.lookAt(position);
-     * @example
-     * // Look at another entity, using the negative world y-axis for up
-     * const position = otherEntity.getPosition();
-     * this.entity.lookAt(position, pc.Vec3.DOWN);
+     * @returns {void}
      * @example
      * // Look at the world space origin, using the (default) positive y-axis for up
      * this.entity.lookAt(0, 0, 0);
      * @example
      * // Look at world space coordinate [10, 10, 10], using the negative world y-axis for up
      * this.entity.lookAt(10, 10, 10, 0, -1, 0);
+     */
+    /**
+     * Reorients the graph node so that the negative z-axis points towards the target.
+     *
+     * @overload
+     * @param {Vec3} target - The world space coordinate to look at.
+     * @param {Vec3} [up] - The world space up vector for look at transform. Defaults to {@link Vec3.UP}.
+     * @returns {void}
+     * @example
+     * // Look at another entity, using the (default) positive y-axis for up
+     * const target = otherEntity.getPosition();
+     * this.entity.lookAt(target);
+     * @example
+     * // Look at another entity, using the negative world y-axis for up
+     * const target = otherEntity.getPosition();
+     * this.entity.lookAt(target, pc.Vec3.DOWN);
+     */
+    /**
+     * @param {number|Vec3} x - If passing a 3D vector, this is the world space coordinate to look at.
+     * Otherwise, it is the x-component of the world space coordinate to look at.
+     * @param {number|Vec3} [y] - If passing a 3D vector, this is the world space up vector for look at
+     * transform. Otherwise, it is the y-component of the world space coordinate to look at.
+     * @param {number} [z] - Z-component of the world space coordinate to look at.
+     * @param {number} [ux] - X-component of the up vector for the look at transform. Defaults to 0.
+     * @param {number} [uy] - Y-component of the up vector for the look at transform. Defaults to 1.
+     * @param {number} [uz] - Z-component of the up vector for the look at transform. Defaults to 0.
      */
     lookAt(x, y, z, ux = 0, uy = 1, uz = 0) {
         if (x instanceof Vec3) {
@@ -1570,21 +1668,30 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Translates the graph node in world space by the specified translation vector. This function
-     * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
-     * world space translation.
+     * Translates the graph node in world space by the specified translation vector.
      *
-     * @param {Vec3|number} x - 3-dimensional vector holding world space translation or
-     * x-coordinate of world space translation.
+     * @overload
+     * @param {number} x - X-coordinate of world space translation.
+     * @param {number} y - Y-coordinate of world space translation.
+     * @param {number} z - Z-coordinate of world space translation.
+     * @returns {void}
+     * @example
+     * this.entity.translate(10, 0, 0);
+     */
+    /**
+     * Translates the graph node in world space by the specified translation vector.
+     *
+     * @overload
+     * @param {Vec3} translation - Vector holding world space translation.
+     * @returns {void}
+     * @example
+     * const translation = new pc.Vec3(10, 0, 0);
+     * this.entity.translate(translation);
+     */
+    /**
+     * @param {number|Vec3} x - X-coordinate of world space translation or vector holding world space translation.
      * @param {number} [y] - Y-coordinate of world space translation.
      * @param {number} [z] - Z-coordinate of world space translation.
-     * @example
-     * // Translate via 3 numbers
-     * this.entity.translate(10, 0, 0);
-     * @example
-     * // Translate via vector
-     * const t = new pc.Vec3(10, 0, 0);
-     * this.entity.translate(t);
      */
     translate(x, y, z) {
         if (x instanceof Vec3) {
@@ -1598,21 +1705,30 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Translates the graph node in local space by the specified translation vector. This function
-     * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
-     * local space translation.
+     * Translates the graph node in local space by the specified translation vector.
      *
-     * @param {Vec3|number} x - 3-dimensional vector holding local space translation or
-     * x-coordinate of local space translation.
-     * @param {number} [y] - Y-coordinate of local space translation.
-     * @param {number} [z] - Z-coordinate of local space translation.
+     * @overload
+     * @param {number} x - X-coordinate of local space translation.
+     * @param {number} y - Y-coordinate of local space translation.
+     * @param {number} z - Z-coordinate of local space translation.
+     * @returns {void}
      * @example
-     * // Translate via 3 numbers
      * this.entity.translateLocal(10, 0, 0);
+     */
+    /**
+     * Translates the graph node in local space by the specified translation vector.
+     *
+     * @overload
+     * @param {Vec3} translation - Vector holding local space translation.
+     * @returns {void}
      * @example
-     * // Translate via vector
      * const t = new pc.Vec3(10, 0, 0);
      * this.entity.translateLocal(t);
+     */
+    /**
+     * @param {number|Vec3} x - X-coordinate of local space translation or vector holding local space translation.
+     * @param {number} [y] - Y-coordinate of local space translation.
+     * @param {number} [z] - Z-coordinate of local space translation.
      */
     translateLocal(x, y, z) {
         if (x instanceof Vec3) {
@@ -1631,20 +1747,31 @@ class GraphNode extends EventHandler {
 
     /**
      * Rotates the graph node in world space by the specified Euler angles. Eulers are specified in
-     * degrees in XYZ order. This function has two valid signatures: you can either pass a 3D
-     * vector or 3 numbers to specify the world space rotation.
+     * degrees in XYZ order.
      *
-     * @param {Vec3|number} x - 3-dimensional vector holding world space rotation or
-     * rotation around world space x-axis in degrees.
+     * @overload
+     * @param {number} x - Rotation around world space x-axis in degrees.
+     * @param {number} y - Rotation around world space y-axis in degrees.
+     * @param {number} z - Rotation around world space z-axis in degrees.
+     * @returns {void}
+     * @example
+     * this.entity.rotate(0, 90, 0);
+     */
+    /**
+     * Rotates the graph node in world space by the specified Euler angles. Eulers are specified in
+     * degrees in XYZ order.
+     *
+     * @overload
+     * @param {Vec3} rotation - Vector holding world space rotation.
+     * @returns {void}
+     * @example
+     * const rotation = new pc.Vec3(0, 90, 0);
+     * this.entity.rotate(rotation);
+     */
+    /**
+     * @param {number|Vec3} x - Rotation around world space x-axis in degrees or vector holding world space rotation.
      * @param {number} [y] - Rotation around world space y-axis in degrees.
      * @param {number} [z] - Rotation around world space z-axis in degrees.
-     * @example
-     * // Rotate via 3 numbers
-     * this.entity.rotate(0, 90, 0);
-     * @example
-     * // Rotate via vector
-     * const r = new pc.Vec3(0, 90, 0);
-     * this.entity.rotate(r);
      */
     rotate(x, y, z) {
         rotation.setFromEulerAngles(x, y, z);
@@ -1667,20 +1794,31 @@ class GraphNode extends EventHandler {
 
     /**
      * Rotates the graph node in local space by the specified Euler angles. Eulers are specified in
-     * degrees in XYZ order. This function has two valid signatures: you can either pass a 3D
-     * vector or 3 numbers to specify the local space rotation.
+     * degrees in XYZ order.
      *
-     * @param {Vec3|number} x - 3-dimensional vector holding local space rotation or
-     * rotation around local space x-axis in degrees.
+     * @overload
+     * @param {number} x - Rotation around local space x-axis in degrees.
+     * @param {number} y - Rotation around local space y-axis in degrees.
+     * @param {number} z - Rotation around local space z-axis in degrees.
+     * @returns {void}
+     * @example
+     * this.entity.rotateLocal(0, 90, 0);
+     */
+    /**
+     * Rotates the graph node in local space by the specified Euler angles. Eulers are specified in
+     * degrees in XYZ order.
+     *
+     * @overload
+     * @param {Vec3} rotation - Vector holding local space rotation.
+     * @returns {void}
+     * @example
+     * const rotation = new pc.Vec3(0, 90, 0);
+     * this.entity.rotateLocal(rotation);
+     */
+    /**
+     * @param {number|Vec3} x - Rotation around local space x-axis in degrees or vector holding local space rotation.
      * @param {number} [y] - Rotation around local space y-axis in degrees.
      * @param {number} [z] - Rotation around local space z-axis in degrees.
-     * @example
-     * // Rotate via 3 numbers
-     * this.entity.rotateLocal(0, 90, 0);
-     * @example
-     * // Rotate via vector
-     * const r = new pc.Vec3(0, 90, 0);
-     * this.entity.rotateLocal(r);
      */
     rotateLocal(x, y, z) {
         rotation.setFromEulerAngles(x, y, z);

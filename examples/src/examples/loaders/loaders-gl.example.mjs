@@ -72,8 +72,8 @@ async function loadModel(url) {
     // create material using the shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'MyShader',
-        vertexCode: files['shader.vert'],
-        fragmentCode: files['shader.frag'],
+        vertexGLSL: files['shader.vert'],
+        fragmentGLSL: files['shader.frag'],
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aColor: pc.SEMANTIC_COLOR

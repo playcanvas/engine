@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { TRACE_ID_ELEMENT } from '../../../core/constants.js';
+import { TRACEID_ELEMENT } from '../../../core/constants.js';
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
@@ -29,6 +29,7 @@ import { Asset } from '../../asset/asset.js';
 
 /**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Material } from '../../../scene/materials/material.js'
  * @import { Sprite } from '../../../scene/sprite.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
@@ -69,7 +70,10 @@ class ImageRenderable {
         this.model = null;
         this.node = null;
         this.mesh = null;
+        this.meshInstance?.destroy();
         this.meshInstance = null;
+        this.unmaskMeshInstance?.destroy();
+        this.unmaskMeshInstance = null;
         this._entity = null;
         this._element = null;
     }
@@ -91,6 +95,11 @@ class ImageRenderable {
     setMask(mask) {
         if (!this.meshInstance) return;
 
+        // remove model to remove mesh instance from layers
+        if (this._entity.enabled && this._element.enabled) {
+            this._element.removeModelFromLayers(this.model);
+        }
+
         if (mask) {
             this.unmaskMeshInstance = new MeshInstance(this.mesh, this.meshInstance.material, this.node);
             this.unmaskMeshInstance.name = `Unmask: ${this._entity.name}`;
@@ -110,14 +119,16 @@ class ImageRenderable {
             if (idx >= 0) {
                 this.model.meshInstances.splice(idx, 1);
             }
-
-            this.unmaskMeshInstance = null;
         }
 
-        // remove model then re-add to update to current mesh instances
+        // re-add to update to current mesh instances
         if (this._entity.enabled && this._element.enabled) {
-            this._element.removeModelFromLayers(this.model);
             this._element.addModelToLayers(this.model);
+        }
+
+        if (!mask) {
+            this.unmaskMeshInstance?.destroy();
+            this.unmaskMeshInstance = null;
         }
     }
 
@@ -189,7 +200,7 @@ class ImageRenderable {
             } else {
                 this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + this._element.getMaskOffset();
             }
-            Debug.trace(TRACE_ID_ELEMENT, 'setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
+            Debug.trace(TRACEID_ELEMENT, 'setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
         }
     }
 
@@ -198,7 +209,7 @@ class ImageRenderable {
             return;
         }
 
-        Debug.trace(TRACE_ID_ELEMENT, 'setDrawOrder: ', this.meshInstance.name, drawOrder);
+        Debug.trace(TRACEID_ELEMENT, 'setDrawOrder: ', this.meshInstance.name, drawOrder);
 
         this.meshInstance.drawOrder = drawOrder;
     }
@@ -263,6 +274,12 @@ class ImageRenderable {
 }
 
 class ImageElement {
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtSetMeshes = null;
+
     constructor(element) {
         this._element = element;
         this._entity = element.entity;
@@ -794,7 +811,7 @@ class ImageElement {
 
     // Hook up event handlers on sprite asset
     _bindSprite(sprite) {
-        sprite.on('set:meshes', this._onSpriteMeshesChange, this);
+        this._evtSetMeshes = sprite.on('set:meshes', this._onSpriteMeshesChange, this);
         sprite.on('set:pixelsPerUnit', this._onSpritePpuChange, this);
         sprite.on('set:atlas', this._onAtlasTextureChange, this);
         if (sprite.atlas) {
@@ -803,7 +820,8 @@ class ImageElement {
     }
 
     _unbindSprite(sprite) {
-        sprite.off('set:meshes', this._onSpriteMeshesChange, this);
+        this._evtSetMeshes?.off();
+        this._evtSetMeshes = null;
         sprite.off('set:pixelsPerUnit', this._onSpritePpuChange, this);
         sprite.off('set:atlas', this._onAtlasTextureChange, this);
         if (sprite.atlas) {

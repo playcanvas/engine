@@ -3,6 +3,8 @@ import { RenderPass } from '../../platform/graphics/render-pass.js';
 /**
  * A render pass used to render local clustered shadows. This is done inside a single render pass,
  * as all shadows are part of a single render target atlas.
+ *
+ * @ignore
  */
 class RenderPassShadowLocalClustered extends RenderPass {
     constructor(device, shadowRenderer, shadowRendererLocal) {

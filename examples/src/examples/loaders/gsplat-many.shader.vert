@@ -1,79 +1,82 @@
-uniform float uTime;
-varying float height;
+#include "gsplatCommonVS"
 
-void animate(inout vec3 center) {
+varying mediump vec2 gaussianUV;
+varying mediump vec4 gaussianColor;
+
+#ifndef DITHER_NONE
+    varying float id;
+#endif
+
+mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
+
+uniform float uTime;
+
+vec3 animatePosition(vec3 center) {
     // modify center
     float heightIntensity = center.y * 0.2;
     center.x += sin(uTime * 5.0 + center.y) * 0.3 * heightIntensity;
 
     // output y-coordinate
-    height = center.y;
+    return center;
 }
 
-uniform vec3 view_position;
+vec4 animateColor(float height, vec4 clr) {
+    float sineValue = abs(sin(uTime * 5.0 + height));
 
-uniform sampler2D splatColor;
-
-varying mediump vec2 texCoord;
-varying mediump vec4 color;
-
-mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
-
-void main(void)
-{
-    // calculate splat uv
-    if (!calcSplatUV()) {
-        gl_Position = discardVec;
-        return;
-    }
-
-    // get center
-    vec3 center = getCenter();
-
-    animate(center);
-
-    // handle transforms
-    mat4 model_view = matrix_view * matrix_model;
-    vec4 splat_cam = model_view * vec4(center, 1.0);
-    vec4 splat_proj = matrix_projection * splat_cam;
-
-    // cull behind camera
-    if (splat_proj.z < -splat_proj.w) {
-        gl_Position = discardVec;
-        return;
-    }
-
-    // get covariance
-    vec3 covA, covB;
-    getCovariance(covA, covB);
-
-    vec4 v1v2 = calcV1V2(splat_cam.xyz, covA, covB, transpose(mat3(model_view)));
-
-    // get color
-    color = texelFetch(splatColor, splatUV, 0);
-
-    // calculate scale based on alpha
-    float scale = min(1.0, sqrt(-log(1.0 / 255.0 / color.a)) / 2.0);
-
-    v1v2 *= scale;
-
-    // early out tiny splats
-    if (dot(v1v2.xy, v1v2.xy) < 4.0 && dot(v1v2.zw, v1v2.zw) < 4.0) {
-        gl_Position = discardVec;
-        return;
-    }
-
-    gl_Position = splat_proj + vec4((vertex_position.x * v1v2.xy + vertex_position.y * v1v2.zw) / viewport * splat_proj.w, 0, 0);
-
-    texCoord = vertex_position.xy * scale / 2.0;
-
-    #ifdef USE_SH1
-        vec4 worldCenter = matrix_model * vec4(center, 1.0);
-        vec3 viewDir = normalize((worldCenter.xyz / worldCenter.w - view_position) * mat3(matrix_model));
-        color.xyz = max(color.xyz + evalSH(viewDir), 0.0);
+    #ifdef CUTOUT
+        // in cutout mode, remove pixels along the wave
+        if (sineValue < 0.5) {
+            clr.a = 0.0;
+        }
+    #else
+        // in non-cutout mode, add a golden tint to the wave
+        vec3 gold = vec3(1.0, 0.85, 0.0);
+        float blend = smoothstep(0.9, 1.0, sineValue);
+        clr.xyz = mix(clr.xyz, gold, blend);
     #endif
 
+    return clr;
+}
+
+void main(void) {
+    // read gaussian center
+    SplatSource source;
+    if (!initSource(source)) {
+        gl_Position = discardVec;
+        return;
+    }
+
+    vec3 centerPos = animatePosition(readCenter(source));
+
+    SplatCenter center;
+    initCenter(centerPos, center);
+
+    // project center to screen space
+    SplatCorner corner;
+    if (!initCorner(source, center, corner)) {
+        gl_Position = discardVec;
+        return;
+    }
+
+    // read color
+    vec4 clr = readColor(source);
+
+    // evaluate spherical harmonics
+    #if SH_BANDS > 0
+        vec3 dir = normalize(center.view * mat3(center.modelView));
+        clr.xyz += evalSH(state, dir);
+    #endif
+
+    clr = animateColor(centerPos.y, clr);
+
+    clipCorner(corner, clr.w);
+
+    // write output
+    gl_Position = center.proj + vec4(corner.offset, 0.0, 0.0);
+    gaussianUV = corner.uv;
+    gaussianColor = vec4(prepareOutputFromGamma(max(clr.xyz, 0.0)), clr.w);
+
     #ifndef DITHER_NONE
-        id = float(splatId);
+        id = float(state.id);
     #endif
 }

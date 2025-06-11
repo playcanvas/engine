@@ -27,6 +27,8 @@ const primitive = {
  * it needs to be cleared later during the rendering, this need to be achieved by rendering a quad.
  * This class renders a full-screen quad, and expects the viewport / scissor to be set up to clip
  * it to only required area.
+ *
+ * @ignore
  */
 class WebgpuClearRenderer {
     constructor(device) {

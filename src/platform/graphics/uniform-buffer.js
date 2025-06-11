@@ -204,6 +204,8 @@ _updateFunctions[UNIFORMTYPE_UVEC3ARRAY] = (uniformBuffer, value, offset, count)
 
 /**
  * A uniform buffer represents a GPU memory buffer storing the uniforms.
+ *
+ * @ignore
  */
 class UniformBuffer {
     device;

@@ -90,8 +90,13 @@ class Touch {
 }
 
 /**
- * A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the
- * standard browser DOM event and provides lists of {@link Touch} objects.
+ * The TouchEvent object is passed into all event handlers registered on the {@link TouchDevice}.
+ * The events are:
+ *
+ * - {@link TouchDevice.EVENT_TOUCHSTART}
+ * - {@link TouchDevice.EVENT_TOUCHEND}
+ * - {@link TouchDevice.EVENT_TOUCHMOVE}
+ * - {@link TouchDevice.EVENT_TOUCHCANCEL}
  *
  * @category Input
  */

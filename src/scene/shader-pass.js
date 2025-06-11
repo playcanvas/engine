@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
-    SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY
+    SHADER_FORWARD, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS
 } from './constants.js';
 
 /**
@@ -15,6 +15,8 @@ const shaderPassDeviceCache = new DeviceCache();
  * Info about a shader pass. Shader pass is represented by a unique index and a name, and the
  * index is used to access the shader required for the pass, from an array stored in the
  * material or mesh instance.
+ *
+ * @ignore
  */
 class ShaderPassInfo {
     /** @type {number} */
@@ -23,8 +25,8 @@ class ShaderPassInfo {
     /** @type {string} */
     name;
 
-    /** @type {string} */
-    shaderDefines;
+    /** @type {Map<string, string} */
+    defines = new Map();
 
     /**
      * @param {string} name - The name, for example 'depth'. Must contain only letters, numbers,
@@ -34,7 +36,7 @@ class ShaderPassInfo {
      * @param {boolean} [options.isForward] - Whether the pass is forward.
      * @param {boolean} [options.isShadow] - Whether the pass is shadow.
      * @param {boolean} [options.lightType] - Type of light, for example `pc.LIGHTTYPE_DIRECTIONAL`.
-     * @param {boolean} [options.shadowType] - Type of shadow, for example `pc.SHADOW_PCF3`.
+     * @param {boolean} [options.shadowType] - Type of shadow, for example `pc.SHADOW_PCF3_32F`.
      */
     constructor(name, index, options = {}) {
 
@@ -46,7 +48,7 @@ class ShaderPassInfo {
         // assign options as properties to this object
         Object.assign(this, options);
 
-        this.shaderDefines = this.buildShaderDefines();
+        this.buildShaderDefines();
     }
 
     buildShaderDefines() {
@@ -56,19 +58,12 @@ class ShaderPassInfo {
             keyword = 'SHADOW';
         } else if (this.isForward) {
             keyword = 'FORWARD';
-        } else if (this.index === SHADER_DEPTH) {
-            keyword = 'DEPTH';
         } else if (this.index === SHADER_PICK) {
             keyword = 'PICK';
         }
 
-        // define based on on the options based name
-        const define1 = keyword ? `#define ${keyword}_PASS\n` : '';
-
-        // define based on the name
-        const define2 = `#define ${this.name.toUpperCase()}_PASS\n`;
-
-        return define1 + define2;
+        this.defines.set(`${keyword}_PASS`, '');
+        this.defines.set(`${this.name.toUpperCase()}_PASS`, '');
     }
 }
 
@@ -104,10 +99,9 @@ class ShaderPass {
 
         // add default passes in the required order, to match the constants
         add('forward', SHADER_FORWARD, { isForward: true });
-        add('prepass', SHADER_PREPASS_VELOCITY);
-        add('depth', SHADER_DEPTH);
-        add('pick', SHADER_PICK);
+        add('prepass', SHADER_PREPASS);
         add('shadow', SHADER_SHADOW);
+        add('pick', SHADER_PICK);
     }
 
     /**

@@ -19,9 +19,9 @@ class BakeLight {
         // don't use cascades
         light.numCascades = 1;
 
-        if (this.scene.clusteredLightingEnabled) {
-            // if clustered shadows are disabled, disable them on the light
-            light.castShadows = light.bakeShadows && lightingParams.shadowsEnabled;
+        // if clustered shadows are disabled, disable them on the light
+        if (this.scene.clusteredLightingEnabled && !lightingParams.shadowsEnabled) {
+            light.castShadows = false;
         }
 
         // bounds for non-directional light

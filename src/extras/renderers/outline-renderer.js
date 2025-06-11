@@ -4,7 +4,9 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_SRC_ALPHA,
     CULLFACE_NONE,
-    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8,
+    SEMANTIC_POSITION,
+    SHADERLANGUAGE_GLSL
 } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -13,8 +15,8 @@ import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
 import { StandardMaterialOptions } from '../../scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
@@ -97,9 +99,12 @@ class OutlineRenderer {
         this.outlineShaderPass = this.outlineCameraEntity.camera.setShaderPass('OutlineShaderPass');
 
         // function called after the camera has rendered the outline objects to the texture
-        this.outlineCameraEntity.camera.onPostRender = () => {
-            this.onPostRender();
+        this.postRender = (cameraComponent) => {
+            if (this.outlineCameraEntity.camera === cameraComponent) {
+                this.onPostRender();
+            }
         };
+        app.scene.on('postrender', this.postRender);
 
         // add the camera to the scene
         this.app.root.addChild(this.outlineCameraEntity);
@@ -110,8 +115,20 @@ class OutlineRenderer {
         this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA);
 
         const device = this.app.graphicsDevice;
-        this.shaderExtend = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderOutlineExtendPS, 'OutlineExtendShader');
-        this.shaderBlend = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.outputTex2DPS, 'OutlineBlendShader');
+
+        this.shaderExtend = ShaderUtils.createShader(device, {
+            uniqueName: 'OutlineExtendShader',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('fullscreenQuadVS'),
+            fragmentGLSL: shaderOutlineExtendPS
+        });
+
+        this.shaderBlend = ShaderUtils.createShader(device, {
+            uniqueName: 'OutlineBlendShader',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentChunk: 'outputTex2DPS'
+        });
 
         this.quadRenderer = new QuadRender(this.shaderBlend);
 
@@ -146,6 +163,8 @@ class OutlineRenderer {
         this.tempRt.destroy();
         this.tempRt = null;
 
+        this.app.scene.off('postrender', this.postRender);
+
         this.quadRenderer?.destroy();
         this.quadRenderer = null;
     }
@@ -155,14 +174,14 @@ class OutlineRenderer {
 
         const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
         renders.forEach((render) => {
-            if (render.entity.enabled && render.enabled) {
+            if (render.meshInstances) {
                 meshInstances.push(...render.meshInstances);
             }
         });
 
         const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
         models.forEach((model) => {
-            if (model.entity.enabled && model.enabled) {
+            if (model.meshInstances) {
                 meshInstances.push(...model.meshInstances);
             }
         });
@@ -192,6 +211,7 @@ class OutlineRenderer {
 
                         // custom shader for the outline shader pass, renders single color meshes using emissive color
                         const opts = new StandardMaterialOptions();
+                        opts.defines = options.defines;
                         opts.opacityMap = options.opacityMap;
                         opts.opacityMapUv = options.opacityMapUv;
                         opts.opacityMapChannel = options.opacityMapChannel;
@@ -201,6 +221,12 @@ class OutlineRenderer {
                         opts.litOptions.vertexColors = options.litOptions.vertexColors;
                         opts.litOptions.alphaTest = options.litOptions.alphaTest;
                         opts.litOptions.skin = options.litOptions.skin;
+                        opts.litOptions.batch = options.litOptions.batch;
+                        opts.litOptions.useInstancing = options.litOptions.useInstancing;
+                        opts.litOptions.useMorphPosition = options.litOptions.useMorphPosition;
+                        opts.litOptions.useMorphNormal = options.litOptions.useMorphNormal;
+                        opts.litOptions.useMorphTextureBasedInt = options.litOptions.useMorphTextureBasedInt;
+                        opts.litOptions.opacityFadesSpecular = options.litOptions.opacityFadesSpecular;
                         return opts;
                     }
 
@@ -331,15 +357,12 @@ class OutlineRenderer {
         this.updateRenderTarget(sceneCamera);
 
         // function called before the scene camera renders a layer
-        sceneCameraEntity.camera.onPreRenderLayer = (layer, transparent) => {
-
-            // when specified blend layer is rendered, add outline before its rendering
-            if (transparent === blendLayerTransparent && layer === blendLayer) {
+        const evt = this.app.scene.on('prerender:layer', (cameraComponent, layer, transparent) => {
+            if (sceneCamera === cameraComponent && transparent === blendLayerTransparent && layer === blendLayer) {
                 this.blendOutlines();
-
-                sceneCameraEntity.camera.onPreRenderLayer = null;
+                evt.off();
             }
-        };
+        });
 
         // copy the transform
         this.outlineCameraEntity.setLocalPosition(sceneCameraEntity.getPosition());

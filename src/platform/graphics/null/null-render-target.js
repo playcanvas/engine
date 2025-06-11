@@ -1,5 +1,7 @@
 /**
  * A Null implementation of the RenderTarget.
+ *
+ * @ignore
  */
 class NullRenderTarget {
     destroy(device) {

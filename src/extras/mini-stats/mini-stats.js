@@ -15,6 +15,43 @@ import { Render2d } from './render2d.js';
  */
 
 /**
+ * @typedef {object} MiniStatsSizeOptions
+ * @property {number} width - Width of the graph area.
+ * @property {number} height - Height of the graph area.
+ * @property {number} spacing - Spacing between graphs.
+ * @property {boolean} graphs - Whether to show graphs.
+ */
+
+/**
+ * @typedef {object} MiniStatsProcessorOptions
+ * @property {boolean} enabled - Whether to show the graph.
+ * @property {number} watermark - Watermark - shown as a line on the graph, useful for displaying a
+ * budget.
+ */
+
+/**
+ * @typedef {object} MiniStatsGraphOptions
+ * @property {string} name - Display name.
+ * @property {string[]} stats - Path to data inside Application.stats.
+ * @property {number} [decimalPlaces] - Number of decimal places (defaults to none).
+ * @property {string} [unitsName] - Units (defaults to "").
+ * @property {number} [watermark] - Watermark - shown as a line on the graph, useful for displaying
+ * a budget.
+ */
+
+/**
+ * @typedef {object} MiniStatsOptions
+ * @property {MiniStatsSizeOptions[]} sizes - Sizes of area to render individual graphs in and
+ * spacing between individual graphs.
+ * @property {number} startSizeIndex - Index into sizes array for initial setting.
+ * @property {number} textRefreshRate - Refresh rate of text stats in ms.
+ * @property {MiniStatsProcessorOptions} cpu - CPU graph options.
+ * @property {MiniStatsProcessorOptions} gpu - GPU graph options.
+ * @property {MiniStatsGraphOptions[]} stats - Array of options to render additional graphs based
+ * on stats collected into Application.stats.
+ */
+
+/**
  * MiniStats is a small graphical overlay that displays realtime performance metrics. By default,
  * it shows CPU and GPU utilization, frame timings and draw call count. It can also be configured
  * to display additional graphs based on data collected into {@link AppBase#stats}.
@@ -24,31 +61,7 @@ class MiniStats {
      * Create a new MiniStats instance.
      *
      * @param {AppBase} app - The application.
-     * @param {object} [options] - Options for the MiniStats instance.
-     * @param {object[]} [options.sizes] - Sizes of area to render individual graphs in and spacing
-     * between individual graphs.
-     * @param {number} [options.sizes[].width] - Width of the graph area.
-     * @param {number} [options.sizes[].height] - Height of the graph area.
-     * @param {number} [options.sizes[].spacing] - Spacing between graphs.
-     * @param {boolean} [options.sizes[].graphs] - Whether to show graphs.
-     * @param {number} [options.startSizeIndex] - Index into sizes array for initial setting.
-     * @param {number} [options.textRefreshRate] - Refresh rate of text stats in ms.
-     * @param {object} [options.cpu] - CPU graph options.
-     * @param {boolean} [options.cpu.enabled] - Whether to show the CPU graph.
-     * @param {number} [options.cpu.watermark] - Watermark - shown as a line on the graph, useful for
-     * displaying a budget.
-     * @param {object} [options.gpu] - GPU graph options.
-     * @param {boolean} [options.gpu.enabled] - Whether to show the GPU graph.
-     * @param {number} [options.gpu.watermark] - Watermark - shown as a line on the graph, useful for
-     * displaying a budget.
-     * @param {object[]} [options.stats] - Array of options to render additional graphs based on
-     * stats collected into {@link AppBase#stats}.
-     * @param {string} [options.stats[].name] - Display name.
-     * @param {string[]} options.stats[].stats - Path to data inside {@link AppBase#stats}.
-     * @param {number} [options.stats[].decimalPlaces] - Number of decimal places (defaults to none).
-     * @param {string} [options.stats[].unitsName] - Units (defaults to "").
-     * @param {number} [options.stats[].watermark] - Watermark - shown as a line on the graph, useful
-     * for displaying a budget.
+     * @param {MiniStatsOptions} [options] - Options for the MiniStats instance.
      * @example
      * // create a new MiniStats instance using default options
      * const miniStats = new pc.MiniStats(app);

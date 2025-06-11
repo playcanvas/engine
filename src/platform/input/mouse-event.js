@@ -14,7 +14,13 @@ function isMousePointerLocked() {
 }
 
 /**
- * MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
+ * The MouseEvent object is passed into all event handlers registered on the {@link Mouse}. The
+ * events are:
+ *
+ * - {@link Mouse.EVENT_MOUSEDOWN}
+ * - {@link Mouse.EVENT_MOUSEUP}
+ * - {@link Mouse.EVENT_MOUSEMOVE}
+ * - {@link Mouse.EVENT_MOUSEWHEEL}
  *
  * @category Input
  */
@@ -60,7 +66,7 @@ class MouseEvent {
 
     /**
      * A value representing the amount the mouse wheel has moved, only valid for
-     * {@link EVENT_MOUSEWHEEL} events.
+     * {@link Mouse.EVENT_MOUSEWHEEL} events.
      *
      * @type {number}
      */

@@ -99,11 +99,20 @@ class GSplatData {
     numSplats;
 
     /**
-     * @param {PlyElement[]} elements - The elements.
+     * File header comments.
+     *
+     * @type { string[] }
      */
-    constructor(elements) {
+    comments;
+
+    /**
+     * @param {PlyElement[]} elements - The elements.
+     * @param {string[]} comments - File header comments.
+     */
+    constructor(elements, comments = []) {
         this.elements = elements;
         this.numSplats = this.getElement('vertex').count;
+        this.comments = comments;
     }
 
     /**
@@ -176,11 +185,16 @@ class GSplatData {
                 continue;
             }
 
-            const scaleVal = 2.0 * Math.exp(Math.max(sx[i], sy[i], sz[i]));
-
             const px = x[i];
             const py = y[i];
             const pz = z[i];
+            const scale = Math.max(sx[i], sy[i], sz[i]);
+
+            if (!isFinite(px) || !isFinite(py) || !isFinite(pz) || !isFinite(scale)) {
+                continue;
+            }
+
+            const scaleVal = 2.0 * Math.exp(scale);
 
             if (first) {
                 first = false;
@@ -261,7 +275,7 @@ class GSplatData {
 
     /**
      * @param {Vec3} result - The result.
-     * @param {Function} pred - Predicate given index for skipping.
+     * @param {Function} [pred] - Predicate given index for skipping.
      */
     calcFocalPoint(result, pred) {
         const x = this.getProp('x');
@@ -281,10 +295,18 @@ class GSplatData {
                 continue;
             }
 
+            const px = x[i];
+            const py = y[i];
+            const pz = z[i];
+
+            if (!isFinite(px) || !isFinite(py) || !isFinite(pz)) {
+                continue;
+            }
+
             const weight = 1.0 / (1.0 + Math.exp(Math.max(sx[i], sy[i], sz[i])));
-            result.x += x[i] * weight;
-            result.y += y[i] * weight;
-            result.z += z[i] * weight;
+            result.x += px * weight;
+            result.y += py * weight;
+            result.z += pz * weight;
             sum += weight;
         }
         result.mulScalar(1 / sum);
@@ -320,6 +342,24 @@ class GSplatData {
 
     get isCompressed() {
         return false;
+    }
+
+    // return the number of spherical harmonic bands present. value will be between 0 and 3 inclusive.
+    get shBands() {
+        const numProps = () => {
+            for (let i = 0; i < 45; ++i) {
+                if (!this.getProp(`f_rest_${i}`)) {
+                    return i;
+                }
+            }
+            return 45;
+        };
+        const sizes = {
+            9: 1,
+            24: 2,
+            45: 3
+        };
+        return sizes[numProps()] ?? 0;
     }
 
     calcMortonOrder() {
@@ -361,9 +401,9 @@ class GSplatData {
 
         const codes = new Map();
         for (let i = 0; i < this.numSplats; i++) {
-            const ix = Math.floor((x[i] - minX) * sizeX);
-            const iy = Math.floor((y[i] - minY) * sizeY);
-            const iz = Math.floor((z[i] - minZ) * sizeZ);
+            const ix = Math.min(1023, Math.floor((x[i] - minX) * sizeX));
+            const iy = Math.min(1023, Math.floor((y[i] - minY) * sizeY));
+            const iz = Math.min(1023, Math.floor((z[i] - minZ) * sizeZ));
             const code = encodeMorton3(ix, iy, iz);
 
             const val = codes.get(code);

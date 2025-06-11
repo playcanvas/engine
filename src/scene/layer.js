@@ -2,8 +2,6 @@ import { Debug } from '../core/debug.js';
 import { hash32Fnv1a } from '../core/hash.js';
 import {
     LIGHTTYPE_DIRECTIONAL,
-    LAYER_FX,
-    SORTKEY_FORWARD,
     SORTMODE_BACK2FRONT, SORTMODE_CUSTOM, SORTMODE_FRONT2BACK, SORTMODE_MATERIALMESH, SORTMODE_NONE
 } from './constants.js';
 import { Material } from './materials/material.js';
@@ -28,20 +26,20 @@ function sortManual(drawCallA, drawCallB) {
 }
 
 function sortMaterialMesh(drawCallA, drawCallB) {
-    const keyA = drawCallA._key[SORTKEY_FORWARD];
-    const keyB = drawCallB._key[SORTKEY_FORWARD];
-    if (keyA === keyB && drawCallA.mesh && drawCallB.mesh) {
+    const keyA = drawCallA._sortKeyForward;
+    const keyB = drawCallB._sortKeyForward;
+    if (keyA === keyB) {
         return drawCallB.mesh.id - drawCallA.mesh.id;
     }
     return keyB - keyA;
 }
 
 function sortBackToFront(drawCallA, drawCallB) {
-    return drawCallB.zdist - drawCallA.zdist;
+    return drawCallB._sortKeyDynamic - drawCallA._sortKeyDynamic;
 }
 
 function sortFrontToBack(drawCallA, drawCallB) {
-    return drawCallA.zdist - drawCallB.zdist;
+    return drawCallA._sortKeyDynamic - drawCallB._sortKeyDynamic;
 }
 
 const sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
@@ -280,9 +278,6 @@ class Layer {
          *
          * - The layer is created with {@link Layer#enabled} set to true (which is the default value).
          * - {@link Layer#enabled} was changed from false to true
-         * - {@link Layer#incrementCounter} was called and incremented the counter above zero.
-         *
-         * Useful for allocating resources this layer will use (e.g. creating render targets).
          *
          * @type {Function}
          */
@@ -460,8 +455,7 @@ class Layer {
 
     /**
      * Decrements the usage counter of this layer. Decrementing the counter from 1 to 0 will
-     * disable the layer and call {@link Layer.onDisable}. See {@link Layer#incrementCounter} for
-     * more details.
+     * disable the layer and call {@link Layer.onDisable}.
      *
      * @ignore
      */
@@ -616,6 +610,10 @@ class Layer {
         this._lightHashDirty = true;
         this._lightIdHashDirty = true;
         this._splitLightsDirty = true;
+    }
+
+    hasLight(light) {
+        return this._lightsSet.has(light);
     }
 
     /**
@@ -793,24 +791,32 @@ class Layer {
 
     /**
      * @param {MeshInstance[]} drawCalls - Array of mesh instances.
-     * @param {number} drawCallsCount - Number of mesh instances.
      * @param {Vec3} camPos - Camera position.
      * @param {Vec3} camFwd - Camera forward vector.
      * @private
      */
-    _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {
-        for (let i = 0; i < drawCallsCount; i++) {
+    _calculateSortDistances(drawCalls, camPos, camFwd) {
+        const count = drawCalls.length;
+        const { x: px, y: py, z: pz } = camPos;
+        const { x: fx, y: fy, z: fz } = camFwd;
+
+        for (let i = 0; i < count; i++) {
             const drawCall = drawCalls[i];
-            if (drawCall.layer <= LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
+
+            // compute distance from camera to mesh along the forward vector
+            let zDist;
             if (drawCall.calculateSortDistance) {
-                drawCall.zdist = drawCall.calculateSortDistance(drawCall, camPos, camFwd);
-                continue;
+                zDist = drawCall.calculateSortDistance(drawCall, camPos, camFwd);
+            } else {
+                const meshPos = drawCall.aabb.center;
+                zDist = (meshPos.x - px) * fx + (meshPos.y - py) * fy + (meshPos.z - pz) * fz;
             }
-            const meshPos = drawCall.aabb.center;
-            const tempx = meshPos.x - camPos.x;
-            const tempy = meshPos.y - camPos.y;
-            const tempz = meshPos.z - camPos.z;
-            drawCall.zdist = tempx * camFwd.x + tempy * camFwd.y + tempz * camFwd.z;
+
+            // scale the bucket to give it a significantly higher magnitude than distance (1 billion)
+            const bucket = drawCall._drawBucket * 1e9;
+
+            // create sorting key based on the drawBucket and distance
+            drawCall._sortKeyDynamic = bucket + zDist;
         }
     }
 
@@ -836,6 +842,7 @@ class Layer {
      * @ignore
      */
     sortVisible(camera, transparent) {
+
         const sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
         if (sortMode === SORTMODE_NONE) {
             return;
@@ -859,7 +866,7 @@ class Layer {
             if (sortMode === SORTMODE_BACK2FRONT || sortMode === SORTMODE_FRONT2BACK) {
                 const sortPos = cameraNode.getPosition();
                 const sortDir = cameraNode.forward;
-                this._calculateSortDistances(instances, instances.length, sortPos, sortDir);
+                this._calculateSortDistances(instances, sortPos, sortDir);
             }
 
             instances.sort(sortCallbacks[sortMode]);

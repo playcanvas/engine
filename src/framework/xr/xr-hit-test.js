@@ -10,12 +10,12 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  */
 
 /**
- * Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.
- *
  * @callback XrHitTestStartCallback
+ * Callback used by {@link XrHitTest#start} and {@link XrInputSource#hitTestStart}.
  * @param {Error|null} err - The Error object if failed to create hit test source or null.
  * @param {XrHitTestSource|null} hitTestSource - Object that provides access to hit results against
  * real world geometry.
+ * @returns {void}
  */
 
 /**
@@ -226,9 +226,9 @@ class XrHitTest extends EventHandler {
      * // start hit testing from viewer position facing forwards
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_VIEWER,
-     *     callback: function (err, hitTestSource) {
+     *     callback: (err, hitTestSource) => {
      *         if (err) return;
-     *         hitTestSource.on('result', function (position, rotation) {
+     *         hitTestSource.on('result', (position, rotation) => {
      *             // position and rotation of hit test result
      *         });
      *     }
@@ -239,7 +239,7 @@ class XrHitTest extends EventHandler {
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_LOCAL,
      *     offsetRay: ray,
-     *     callback: function (err, hitTestSource) {
+     *     callback: (err, hitTestSource) => {
      *         // hit test source that will sample real world geometry straight down
      *         // from the position where AR session started
      *     }
@@ -248,9 +248,9 @@ class XrHitTest extends EventHandler {
      * // start hit testing for touch screen taps
      * app.xr.hitTest.start({
      *     profile: 'generic-touchscreen',
-     *     callback: function (err, hitTestSource) {
+     *     callback: (err, hitTestSource) => {
      *         if (err) return;
-     *         hitTestSource.on('result', function (position, rotation, inputSource) {
+     *         hitTestSource.on('result', (position, rotation, inputSource) => {
      *             // position and rotation of hit test result
      *             // that will be created from touch on mobile devices
      *         });

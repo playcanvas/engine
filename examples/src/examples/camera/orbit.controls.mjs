@@ -38,33 +38,10 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Look sensitivity' },
+                { text: 'Focus damping' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.lookSensitivity' },
-                    min: 0.1,
-                    max: 1,
-                    step: 0.01
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Look damping' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.lookDamping' },
-                    min: 0,
-                    max: 0.999,
-                    step: 0.001,
-                    precision: 3
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Move damping' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.moveDamping' },
+                    link: { observer, path: 'attr.focusDamping' },
                     min: 0,
                     max: 0.999,
                     step: 0.001,
@@ -82,12 +59,59 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Wheel speed' },
+                { text: 'Rotate speed' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.wheelSpeed' },
+                    link: { observer, path: 'attr.rotateSpeed' },
+                    min: 0.1,
+                    max: 1,
+                    step: 0.01
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Rotate damping' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.rotateDamping' },
+                    min: 0,
+                    max: 0.999,
+                    step: 0.001,
+                    precision: 3
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Zoom speed' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.zoomSpeed' },
                     min: 0,
                     max: 10,
+                    step: 0.001,
+                    precision: 3
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Zoom Pinch Sensitivity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.zoomPinchSens' },
+                    min: 0,
+                    max: 10,
+                    step: 0.01,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Zoom damping' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.zoomDamping' },
+                    min: 0,
+                    max: 0.999,
                     step: 0.001,
                     precision: 3
                 })

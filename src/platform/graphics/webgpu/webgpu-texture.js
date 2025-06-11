@@ -41,6 +41,8 @@ const dummyUse = (thingOne) => {
 
 /**
  * A WebGPU implementation of the Texture.
+ *
+ * @ignore
  */
 class WebgpuTexture {
     /**
@@ -92,7 +94,7 @@ class WebgpuTexture {
 
         const texture = this.texture;
         const wgpu = device.wgpu;
-        const mipLevelCount = texture.requiredMipLevels;
+        const numLevels = texture.numLevels;
 
         Debug.assert(texture.width > 0 && texture.height > 0, `Invalid texture dimensions ${texture.width}x${texture.height} for texture ${texture.name}`, texture);
 
@@ -103,7 +105,7 @@ class WebgpuTexture {
                 depthOrArrayLayers: texture.cubemap ? 6 : (texture.array ? texture.arrayLength : 1)
             },
             format: this.format,
-            mipLevelCount: mipLevelCount,
+            mipLevelCount: numLevels,
             sampleCount: 1,
             dimension: texture.volume ? '3d' : '2d',
 
@@ -120,7 +122,7 @@ class WebgpuTexture {
         this.gpuTexture = wgpu.createTexture(this.desc);
         DebugHelper.setLabel(this.gpuTexture, `${texture.name}${texture.cubemap ? '[cubemap]' : ''}${texture.volume ? '[3d]' : ''}`);
 
-        WebgpuDebug.end(device, {
+        WebgpuDebug.end(device, 'Texture creation', {
             desc: this.desc,
             texture
         });
@@ -300,7 +302,7 @@ class WebgpuTexture {
             // upload texture data if any
             let anyUploads = false;
             let anyLevelMissing = false;
-            const requiredMipLevels = texture.requiredMipLevels;
+            const requiredMipLevels = texture.numLevels;
             for (let mipLevel = 0; mipLevel < requiredMipLevels; mipLevel++) {
 
                 const mipObject = texture._levels[mipLevel];
@@ -383,7 +385,7 @@ class WebgpuTexture {
                 }
             }
 
-            if (anyUploads && anyLevelMissing && texture.mipmaps && !isCompressedPixelFormat(texture.format)) {
+            if (anyUploads && anyLevelMissing && texture.mipmaps && !isCompressedPixelFormat(texture.format) && !isIntegerPixelFormat(texture.format)) {
                 device.mipmapRenderer.generate(this);
             }
 
@@ -399,10 +401,10 @@ class WebgpuTexture {
 
     // image types supported by copyExternalImageToTexture
     isExternalImage(image) {
-        return (image instanceof ImageBitmap) ||
-            (image instanceof HTMLVideoElement) ||
-            (image instanceof HTMLCanvasElement) ||
-            (image instanceof OffscreenCanvas);
+        return (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap) ||
+            (typeof HTMLVideoElement !== 'undefined' && image instanceof HTMLVideoElement) ||
+            (typeof HTMLCanvasElement !== 'undefined' && image instanceof HTMLCanvasElement) ||
+            (typeof OffscreenCanvas !== 'undefined' && image instanceof OffscreenCanvas);
     }
 
     uploadExternalImage(device, image, mipLevel, index) {
@@ -506,7 +508,7 @@ class WebgpuTexture {
 
         const mipLevel = options.mipLevel ?? 0;
         const face = options.face ?? 0;
-        let data = options.data ?? null;
+        const data = options.data ?? null;
         const immediate = options.immediate ?? false;
 
         const texture = this.texture;
@@ -552,15 +554,15 @@ class WebgpuTexture {
         return device.readBuffer(stagingBuffer, size, null, immediate).then((temp) => {
 
             // remove the 256 alignment padding from the end of each row
-            data ??= new Uint8Array(height * bytesPerRow);
+            const target = (data?.constructor === Uint8Array) ? data : new Uint8Array(data?.buffer ?? height * bytesPerRow);
             for (let i = 0; i < height; i++) {
                 const srcOffset = i * paddedBytesPerRow;
                 const dstOffset = i * bytesPerRow;
                 const sub = temp.subarray(srcOffset, srcOffset + bytesPerRow);
-                data.set(sub, dstOffset);
+                target.set(sub, dstOffset);
             }
 
-            return data;
+            return data ?? target;
         });
     }
 }

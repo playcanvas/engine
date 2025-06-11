@@ -32,6 +32,8 @@ const stringIds = new StringIds();
 
 /**
  * A WebGPU implementation of the BindGroupFormat, which is a wrapper over GPUBindGroupLayout.
+ *
+ * @ignore
  */
 class WebgpuBindGroupFormat {
     /**

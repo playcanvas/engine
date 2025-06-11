@@ -8,9 +8,10 @@ import {
     DETAILMODE_MUL,
     DITHER_NONE,
     FRESNEL_SCHLICK,
-    SHADER_DEPTH, SHADER_PICK,
-    SHADER_PREPASS_VELOCITY,
-    SPECOCC_AO
+    SHADER_PICK,
+    SHADER_PREPASS,
+    SPECOCC_AO,
+    tonemapNames
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { EnvLighting } from '../graphics/env-lighting.js';
@@ -20,6 +21,7 @@ import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 
 /**
  * @import { BoundingBox } from '../../core/shape/bounding-box.js'
@@ -39,9 +41,8 @@ let _params = new Set();
 const _tempColor = new Color();
 
 /**
- * Callback used by {@link StandardMaterial#onUpdateShader}.
- *
  * @callback UpdateShaderCallback
+ * Callback used by {@link StandardMaterial#onUpdateShader}.
  * @param {StandardMaterialOptions} options - An object with shader generator settings (based on current
  * material and scene properties), that you can change and then return. Properties of the object passed
  * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
@@ -50,10 +51,10 @@ const _tempColor = new Color();
  */
 
 /**
- * A Standard material is the main, general purpose material that is most often used for rendering.
+ * A standard material is the main, general purpose material that is most often used for rendering.
  * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
- * Most maps can use 3 types of input values in any combination: constant (color or number), mesh
- * vertex colors and a texture. All enabled inputs are multiplied together.
+ * Most maps can use 3 types of input values in any combination: constant ({@link Color} or number),
+ * mesh vertex colors and a {@link Texture}. All enabled inputs are multiplied together.
  *
  * @property {Color} ambient The ambient color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
@@ -129,16 +130,18 @@ const _tempColor = new Color();
  * @property {string} specularityFactorVertexColorChannel Vertex color channels to use for specularity factor. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
- * {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
- * @property {number} anisotropy Defines amount of anisotropy. Requires
+ * {@link StandardMaterial#anisotropyIntensity} parameter to set material anisotropy.
+ * @property {number} anisotropyIntensity Defines amount of anisotropy. Requires
  * {@link StandardMaterial#enableGGXSpecular} is set to true.
- *
- * - When anisotropy == 0, specular is isotropic.
- * - When anisotropy < 0, anisotropy direction aligns with the tangent, and specular anisotropy
- * increases as the anisotropy value decreases to minimum of -1.
- * - When anisotropy > 0, anisotropy direction aligns with the bi-normal, and specular anisotropy
- * increases as anisotropy value increases to maximum of 1.
- *
+ * - When anisotropyIntensity == 0, specular is isotropic.
+ * - Specular anisotropy increases as anisotropyIntensity value increases to maximum of 1.
+ * @property {number} anisotropyRotation Defines the rotation (in degrees) of anisotropy.
+ * @property {Texture|null} anisotropyMap The anisotropy map of the material (default is null).
+ * @property {number} anisotropyMapUv Anisotropy map UV channel.
+ * @property {Vec2} anisotropyMapTiling Controls the 2D tiling of the anisotropy map.
+ * @property {Vec2} anisotropyMapOffset Controls the 2D offset of the anisotropy map. Each
+ * component is between 0 and 1.
+ * @property {number} anisotropyMapRotation Controls the 2D rotation (in degrees) of the anisotropy map.
  * @property {number} clearCoat Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer
  * is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {Texture|null} clearCoatMap Monochrome clearcoat intensity map (default is null). If
@@ -518,16 +521,8 @@ const _tempColor = new Color();
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
  * backfaces.
- * @property {UpdateShaderCallback} onUpdateShader A custom function that will be called after all
- * shader generator properties are collected and before shader code is generated. This function
- * will receive an object with shader generator settings (based on current material and scene
- * properties), that you can change and then return. Returned value will be used instead. This is
- * mostly useful when rendering the same set of objects, but with different shader variations based
- * on the same material. For example, you may wish to render a depth or normal pass using textures
- * assigned to the material, a reflection pass with simpler shaders and so on. These properties are
- * split into two sections, generic standard material options and lit options. Properties of the
- * standard material options are {@link StandardMaterialOptions} and the options for the lit options
- * are {@link LitShaderOptions}.
+ * @property {boolean} shadowCatcher When enabled, the material will output accumulated directional
+ * shadow value in linear space as the color.
  *
  * @category Graphics
  */
@@ -537,6 +532,22 @@ class StandardMaterial extends Material {
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
     userAttributes = new Map();
+
+    /**
+     * A custom function that will be called after all shader generator properties are collected
+     * and before shader code is generated. This function will receive an object with shader
+     * generator settings (based on current material and scene properties), that you can change and
+     * then return. Returned value will be used instead. This is mostly useful when rendering the
+     * same set of objects, but with different shader variations based on the same material. For
+     * example, you may wish to render a depth or normal pass using textures assigned to the
+     * material, a reflection pass with simpler shaders and so on. These properties are split into
+     * two sections, generic standard material options and lit options. Properties of the standard
+     * material options are {@link StandardMaterialOptions} and the options for the lit options are
+     * {@link LitShaderOptions}.
+     *
+     * @type {UpdateShaderCallback|undefined}
+     */
+    onUpdateShader;
 
     /**
      * Create a new StandardMaterial instance.
@@ -568,8 +579,6 @@ class StandardMaterial extends Material {
     constructor() {
         super();
 
-        this._dirtyShader = true;
-
         // storage for texture and cubemap asset references
         this._assetReferences = {};
 
@@ -587,27 +596,7 @@ class StandardMaterial extends Material {
             this[`_${name}`] = _props[name].value();
         });
 
-        /**
-         * @type {Object<string, string>}
-         * @private
-         */
-        this._chunks = { };
         this._uniformCache = { };
-    }
-
-    /**
-     * Object containing custom shader chunks that will replace default ones.
-     *
-     * @type {Object<string, string>}
-     */
-    set chunks(value) {
-        this._dirtyShader = true;
-        this._chunks = value;
-    }
-
-    get chunks() {
-        this._dirtyShader = true;
-        return this._chunks;
     }
 
     /**
@@ -623,13 +612,6 @@ class StandardMaterial extends Material {
         Object.keys(_props).forEach((k) => {
             this[k] = source[k];
         });
-
-        // clone chunks
-        for (const p in source._chunks) {
-            if (source._chunks.hasOwnProperty(p)) {
-                this._chunks[p] = source._chunks[p];
-            }
-        }
 
         // clone user attributes
         this.userAttributes = new Map(source.userAttributes);
@@ -734,7 +716,8 @@ class StandardMaterial extends Material {
         }
 
         if (this.enableGGXSpecular) {
-            this._setParameter('material_anisotropy', this.anisotropy);
+            this._setParameter('material_anisotropyIntensity', this.anisotropyIntensity);
+            this._setParameter('material_anisotropyRotation', [Math.cos(this.anisotropyRotation * math.DEG_TO_RAD), Math.sin(this.anisotropyRotation * math.DEG_TO_RAD)]);
         }
 
         if (this.clearCoat > 0) {
@@ -826,9 +809,7 @@ class StandardMaterial extends Material {
         // remove unused params
         this._processParameters('_activeParams');
 
-        if (this._dirtyShader) {
-            this.clearVariants();
-        }
+        super.updateUniforms(device, scene);
     }
 
     updateEnvUniforms(device, scene) {
@@ -857,15 +838,21 @@ class StandardMaterial extends Material {
 
         // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS_VELOCITY || shaderPassInfo.isShadow;
+        const minimalOptions = pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
-        options.defines = this.defines;
+        options.defines = ShaderUtils.getCoreDefines(this, params);
 
         if (minimalOptions) {
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
         } else {
             this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, sortedLights);
         }
+
+        // standard material can overwrite camera's fog setting
+        if (!this.useFog) options.defines.set('FOG', 'NONE');
+
+        // standard material can overwrite camera's tonemapping setting
+        options.defines.set('TONEMAP', tonemapNames[options.litOptions.toneMap]);
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {
@@ -1139,7 +1126,8 @@ function _defineMaterialProps() {
     _defineFloat('thickness', 0);
     _defineFloat('attenuationDistance', 0);
     _defineFloat('metalness', 1);
-    _defineFloat('anisotropy', 0);
+    _defineFloat('anisotropyIntensity', 0);
+    _defineFloat('anisotropyRotation', 0);
     _defineFloat('clearCoat', 0);
     _defineFloat('clearCoatGloss', 1);
     _defineFloat('clearCoatBumpiness', 1);
@@ -1190,7 +1178,6 @@ function _defineMaterialProps() {
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
     _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
-    _defineFlag('customFragmentShader', null);
     _defineFlag('useFog', true);
     _defineFlag('useLighting', true);
     _defineFlag('useTonemap', true);
@@ -1206,6 +1193,7 @@ function _defineMaterialProps() {
     _defineFlag('clearCoatGlossInvert', false);
     _defineFlag('opacityDither', DITHER_NONE);
     _defineFlag('opacityShadowDither', DITHER_NONE);
+    _defineFlag('shadowCatcher', false);
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');
@@ -1231,6 +1219,7 @@ function _defineMaterialProps() {
     _defineTex2D('sheenGloss', 'g');
     _defineTex2D('iridescence', 'g');
     _defineTex2D('iridescenceThickness', 'g');
+    _defineTex2D('anisotropy', '');
 
     _defineFlag('diffuseDetailMode', DETAILMODE_MUL);
     _defineFlag('aoDetailMode', DETAILMODE_MUL);

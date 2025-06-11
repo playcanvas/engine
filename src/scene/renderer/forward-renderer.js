@@ -58,7 +58,7 @@ function vogelSpherePrecalculationSamples(numSamples) {
     const samples = [];
     for (let i = 0; i < numSamples; i++) {
         const weight = i / numSamples;
-        const radius = Math.sqrt(1.0 - weight * weight);
+        const radius = Math.sqrt(weight * weight);
         samples.push(radius);
     }
     return samples;
@@ -121,11 +121,13 @@ class ForwardRenderer extends Renderer {
         this.lightCookieOffsetId = [];
         this.lightShadowSearchAreaId = [];
         this.lightCameraParamsId = [];
+        this.lightSoftShadowParamsId = [];
 
         // shadow cascades
         this.shadowMatrixPaletteId = [];
         this.shadowCascadeDistancesId = [];
         this.shadowCascadeCountId = [];
+        this.shadowCascadeBlendId = [];
 
         this.screenSizeId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
@@ -197,11 +199,13 @@ class ForwardRenderer extends Renderer {
         this.lightCookieMatrixId[i] = scope.resolve(`${light}_cookieMatrix`);
         this.lightCookieOffsetId[i] = scope.resolve(`${light}_cookieOffset`);
         this.lightCameraParamsId[i] = scope.resolve(`${light}_cameraParams`);
+        this.lightSoftShadowParamsId[i] = scope.resolve(`${light}_softShadowParams`);
 
         // shadow cascades
         this.shadowMatrixPaletteId[i] = scope.resolve(`${light}_shadowMatrixPalette[0]`);
-        this.shadowCascadeDistancesId[i] = scope.resolve(`${light}_shadowCascadeDistances[0]`);
+        this.shadowCascadeDistancesId[i] = scope.resolve(`${light}_shadowCascadeDistances`);
         this.shadowCascadeCountId[i] = scope.resolve(`${light}_shadowCascadeCount`);
+        this.shadowCascadeBlendId[i] = scope.resolve(`${light}_shadowCascadeBlend`);
     }
 
     setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
@@ -264,18 +268,18 @@ class ForwardRenderer extends Renderer {
                 this.shadowMatrixPaletteId[cnt].setValue(directional._shadowMatrixPalette);
                 this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
+                this.shadowCascadeBlendId[cnt].setValue(1 - directional.cascadeBlend);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
+                this.lightSoftShadowParamsId[cnt].setValue(directional._softShadowParams);
 
-                const projectionCompensation = (50.0 / lightRenderData.projectionCompensation);
                 const shadowRT = lightRenderData.shadowCamera.renderTarget;
                 if (shadowRT) {
-                    const pixelsPerMeter = directional.penumbraSize / shadowRT.width;
-                    this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * projectionCompensation);
+                    this.lightShadowSearchAreaId[cnt].setValue(directional.penumbraSize / lightRenderData.shadowCamera.renderTarget.width * lightRenderData.projectionCompensation);
                 }
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
-                cameraParams[0] = lightRenderData.depthRangeCompensation;
+                cameraParams[0] = 0; // unused
                 cameraParams[1] = lightRenderData.shadowCamera._farClip;
                 cameraParams[2] = lightRenderData.shadowCamera._nearClip;
                 cameraParams[3] = 1;
@@ -349,7 +353,7 @@ class ForwardRenderer extends Renderer {
             const cameraParams = omni._shadowCameraParams;
 
             cameraParams.length = 4;
-            cameraParams[0] = lightRenderData.depthRangeCompensation;
+            cameraParams[0] = 0; // unused
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
@@ -417,7 +421,7 @@ class ForwardRenderer extends Renderer {
 
             const cameraParams = spot._shadowCameraParams;
             cameraParams.length = 4;
-            cameraParams[0] = lightRenderData.depthRangeCompensation;
+            cameraParams[0] = 0; // unused
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
@@ -475,7 +479,7 @@ class ForwardRenderer extends Renderer {
     renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass) {
 
         // fog params from the scene, or overridden by the camera
-        const fogParams = camera.fog ?? this.scene.fog;
+        const fogParams = camera.fogParams ?? this.scene.fog;
 
         // camera shader params
         const shaderParams = camera.shaderParams;
@@ -572,6 +576,8 @@ class ForwardRenderer extends Renderer {
             const shaderInstance = preparedCalls.shaderInstances[i];
             const material = drawCall.material;
             const lightMask = drawCall.mask;
+
+            if (shaderInstance.shader.failed) continue;
 
             if (newMaterial) {
 
@@ -759,7 +765,7 @@ class ForwardRenderer extends Renderer {
         // Set the not very clever global variable which is only useful when there's just one camera
         scene._activeCamera = camera;
 
-        const fogParams = camera.fog ?? this.scene.fog;
+        const fogParams = camera.fogParams ?? this.scene.fog;
         this.setFogConstants(fogParams);
 
         const viewCount = this.setCameraUniforms(camera, renderTarget);

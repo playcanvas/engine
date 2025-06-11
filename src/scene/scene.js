@@ -68,6 +68,80 @@ class Scene extends EventHandler {
     static EVENT_SETSKYBOX = 'set:skybox';
 
     /**
+     * Fired before the camera renders the scene. The handler is passed the {@link CameraComponent}
+     * that will render the scene.
+     *
+     * @event
+     * @example
+     * app.scene.on('prerender', (camera) => {
+     *    console.log(`Camera ${camera.entity.name} will render the scene`);
+     * });
+     */
+    static EVENT_PRERENDER = 'prerender';
+
+    /**
+     * Fired when the camera renders the scene. The handler is passed the {@link CameraComponent}
+     * that rendered the scene.
+     *
+     * @event
+     * @example
+     * app.scene.on('postrender', (camera) => {
+     *    console.log(`Camera ${camera.entity.name} rendered the scene`);
+     * });
+     */
+    static EVENT_POSTRENDER = 'postrender';
+
+    /**
+     * Fired before the camera renders a layer. The handler is passed the {@link CameraComponent},
+     * the {@link Layer} that will be rendered, and a boolean parameter set to true if the layer is
+     * transparent. This is called during rendering to a render target or a default framebuffer, and
+     * additional rendering can be performed here, for example using {@link QuadRender#render}.
+     *
+     * @event
+     * @example
+     * app.scene.on('prerender:layer', (camera, layer, transparent) => {
+     *    console.log(`Camera ${camera.entity.name} will render the layer ${layer.name} (transparent: ${transparent})`);
+     * });
+     */
+    static EVENT_PRERENDER_LAYER = 'prerender:layer';
+
+    /**
+     * Fired when the camera renders a layer. The handler is passed the {@link CameraComponent},
+     * the {@link Layer} that will be rendered, and a boolean parameter set to true if the layer is
+     * transparent. This is called during rendering to a render target or a default framebuffer, and
+     * additional rendering can be performed here, for example using {@link QuadRender#render}.
+     *
+     * @event
+     * @example
+     * app.scene.on('postrender:layer', (camera, layer, transparent) => {
+     *    console.log(`Camera ${camera.entity.name} rendered the layer ${layer.name} (transparent: ${transparent})`);
+     * });
+     */
+    static EVENT_POSTRENDER_LAYER = 'postrender:layer';
+
+    /**
+     * Fired before visibility culling is performed for the camera.
+     *
+     * @event
+     * @example
+     * app.scene.on('precull', (camera) => {
+     *    console.log(`Visibility culling will be performed for camera ${camera.entity.name}`);
+     * });
+     */
+    static EVENT_PRECULL = 'precull';
+
+    /**
+     * Fired after visibility culling is performed for the camera.
+     *
+     * @event
+     * @example
+     * app.scene.on('postcull', (camera) => {
+     *    console.log(`Visibility culling was performed for camera ${camera.entity.name}`);
+     * });
+     */
+    static EVENT_POSTCULL = 'postcull';
+
+    /**
      * If enabled, the ambient lighting will be baked into lightmaps. This will be either the
      * {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
      *
@@ -197,6 +271,17 @@ class Scene extends EventHandler {
      * @private
      */
     _fogParams = new FogParams();
+
+    /**
+     * Internal flag to indicate that the specular (and sheen) maps of standard materials should be
+     * assumed to be in a linear space, instead of sRGB. This is used by the editor using engine v2
+     * internally to render in a style of engine v1, where spec those textures were specified as
+     * linear, while engine 2 assumes they are in sRGB space. This should be removed when the editor
+     * no longer supports engine v1 projects.
+     *
+     * @ignore
+     */
+    forcePassThroughSpecular = false;
 
     /**
      * Create a new Scene instance.

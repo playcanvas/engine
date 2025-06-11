@@ -1,24 +1,24 @@
-import { Application } from '../../../src/framework/application.js';
+import { expect } from 'chai';
+
 import { AssetListLoader } from '../../../src/framework/asset/asset-list-loader.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { Canvas } from 'skia-canvas';
-
-import { expect } from 'chai';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AssetListLoader', function () {
 
     let app;
-    const assetPath = 'http://localhost:3000/test/test-assets/';
+    const assetPath = 'http://localhost:3000/test/assets/';
 
     beforeEach(function () {
-        const canvas = new Canvas(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        jsdomSetup();
+        app = createApp();
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     describe('#constructor', function () {
@@ -316,6 +316,38 @@ describe('AssetListLoader', function () {
             assetListLoader._onError(undefined, assets[0]);
         });
 
+    });
+
+    describe('#multi-app', function () {
+
+        let app2;
+
+        beforeEach(function () {
+            app2 = createApp();
+        });
+
+        afterEach(function () {
+            app2?.destroy();
+            app2 = null;
+        });
+
+        it('can successfully load assets correctly in multi-app', async () => {
+
+            const loadAssets = () => new Promise((resolve, reject) => {
+                const asset = new Asset('render', 'container', { url: `${assetPath}test.glb` });
+                const assetListLoader = new AssetListLoader([asset], app.assets);
+                assetListLoader.load(() => {
+                    const e = asset.resource.instantiateRenderEntity();
+                    expect(e._app === app).to.be.true;
+                    resolve(e._app);
+                });
+            });
+
+            await Promise.all([
+                loadAssets(app),
+                loadAssets(app2)
+            ]);
+        });
     });
 
 });

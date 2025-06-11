@@ -4,6 +4,8 @@ import { SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME } from '../constants.js';
 
 /**
  * A render pass used to render directional shadows.
+ *
+ * @ignore
  */
 class RenderPassShadowDirectional extends RenderPass {
     constructor(device, shadowRenderer, light, camera, allCascadesRendering) {

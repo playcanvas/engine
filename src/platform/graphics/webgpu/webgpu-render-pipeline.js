@@ -6,7 +6,7 @@ import { WebgpuVertexBufferLayout } from './webgpu-vertex-buffer-layout.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 import { WebgpuPipeline } from './webgpu-pipeline.js';
 import { DebugGraphics } from '../debug-graphics.js';
-import { bindGroupNames } from '../constants.js';
+import { bindGroupNames, PRIMITIVE_LINESTRIP, PRIMITIVE_TRISTRIP } from '../constants.js';
 
 /**
  * @import { BindGroupFormat } from '../bind-group-format.js'
@@ -83,6 +83,12 @@ const _stencilOps = [
     'invert'                // STENCILOP_INVERT
 ];
 
+const _indexFormat = [
+    '',                     // INDEXFORMAT_UINT8
+    'uint16',               // INDEXFORMAT_UINT16
+    'uint32'                // INDEXFORMAT_UINT32
+];
+
 class CacheEntry {
     /**
      * Render pipeline
@@ -101,7 +107,7 @@ class CacheEntry {
 }
 
 class WebgpuRenderPipeline extends WebgpuPipeline {
-    lookupHashes = new Uint32Array(13);
+    lookupHashes = new Uint32Array(14);
 
     constructor(device) {
         super(device);
@@ -125,6 +131,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
      * @param {object} primitive - The primitive.
      * @param {VertexFormat} vertexFormat0 - The first vertex format.
      * @param {VertexFormat} vertexFormat1 - The second vertex format.
+     * @param {number|undefined} ibFormat - The index buffer format.
      * @param {Shader} shader - The shader.
      * @param {RenderTarget} renderTarget - The render target.
      * @param {BindGroupFormat[]} bindGroupFormats - An array of bind group formats.
@@ -137,10 +144,16 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
      * @returns {GPURenderPipeline} Returns the render pipeline.
      * @private
      */
-    get(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState,
+    get(primitive, vertexFormat0, vertexFormat1, ibFormat, shader, renderTarget, bindGroupFormats, blendState,
         depthState, cullMode, stencilEnabled, stencilFront, stencilBack) {
 
         Debug.assert(bindGroupFormats.length <= 3);
+
+        // ibFormat is used only for stripped primitives, clear it otherwise to avoid additional render pipelines
+        const primitiveType = primitive.type;
+        if (ibFormat && primitiveType !== PRIMITIVE_LINESTRIP && primitiveType !== PRIMITIVE_TRISTRIP) {
+            ibFormat = undefined;
+        }
 
         // all bind groups must be set as the WebGPU layout cannot have skipped indices. Not having a bind
         // group would assign incorrect slots to the following bind groups, causing a validation errors.
@@ -150,7 +163,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
         // render pipeline unique hash
         const lookupHashes = this.lookupHashes;
-        lookupHashes[0] = primitive.type;
+        lookupHashes[0] = primitiveType;
         lookupHashes[1] = shader.id;
         lookupHashes[2] = cullMode;
         lookupHashes[3] = depthState.key;
@@ -163,6 +176,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         lookupHashes[10] = bindGroupFormats[2]?.key ?? 0;
         lookupHashes[11] = stencilEnabled ? stencilFront.key : 0;
         lookupHashes[12] = stencilEnabled ? stencilBack.key : 0;
+        lookupHashes[13] = ibFormat ?? 0;
         const hash = hash32Fnv1a(lookupHashes);
 
         // cached pipeline
@@ -179,7 +193,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         }
 
         // no match or a hash collision, so create a new pipeline
-        const primitiveTopology = _primitiveTopology[primitive.type];
+        const primitiveTopology = _primitiveTopology[primitiveType];
         Debug.assert(primitiveTopology, 'Unsupported primitive topology', primitive);
 
         // pipeline layout
@@ -191,7 +205,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         // pipeline
         const cacheEntry = new CacheEntry();
         cacheEntry.hashes = new Uint32Array(lookupHashes);
-        cacheEntry.pipeline = this.create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState,
+        cacheEntry.pipeline = this.create(primitiveTopology, ibFormat, shader, renderTarget, pipelineLayout, blendState,
             depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack);
 
         // add to cache
@@ -242,10 +256,11 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
      * @param {boolean} stencilEnabled - Whether stencil is enabled.
      * @param {StencilParameters} stencilFront - The stencil state for front faces.
      * @param {StencilParameters} stencilBack - The stencil state for back faces.
+     * @param {string} primitiveTopology - The primitive topology.
      * @returns {object} Returns the depth stencil state.
      * @private
      */
-    getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack) {
+    getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack, primitiveTopology) {
 
         /** @type {GPUDepthStencilState} */
         let depthStencil;
@@ -261,8 +276,10 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             if (depth) {
                 depthStencil.depthWriteEnabled = depthState.write;
                 depthStencil.depthCompare = _compareFunction[depthState.func];
-                depthStencil.depthBias = depthState.depthBias;
-                depthStencil.depthBiasSlopeScale = depthState.depthBiasSlope;
+
+                const biasAllowed = primitiveTopology === 'triangle-list' || primitiveTopology === 'triangle-strip';
+                depthStencil.depthBias = biasAllowed ? depthState.depthBias : 0;
+                depthStencil.depthBiasSlopeScale = biasAllowed ? depthState.depthBiasSlope : 0;
             } else {
                 // if render target does not have depth buffer
                 depthStencil.depthWriteEnabled = false;
@@ -295,7 +312,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         return depthStencil;
     }
 
-    create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout,
+    create(primitiveTopology, ibFormat, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout,
         cullMode, stencilEnabled, stencilFront, stencilBack) {
 
         const wgpu = this.device.wgpu;
@@ -317,7 +334,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
                 cullMode: _cullModes[cullMode]
             },
 
-            depthStencil: this.getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack),
+            depthStencil: this.getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack, primitiveTopology),
 
             multisample: {
                 count: renderTarget.samples
@@ -326,6 +343,10 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             // uniform / texture binding layout
             layout: pipelineLayout
         };
+
+        if (ibFormat) {
+            desc.primitive.stripIndexFormat = _indexFormat[ibFormat];
+        }
 
         desc.fragment = {
             module: webgpuShader.getFragmentShaderModule(),
@@ -365,7 +386,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         DebugHelper.setLabel(pipeline, `RenderPipeline-${_pipelineId}`);
         Debug.trace(TRACEID_RENDERPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}, stack: ${DebugGraphics.toString()}`, desc);
 
-        WebgpuDebug.end(this.device, {
+        WebgpuDebug.end(this.device, 'RenderPipeline creation', {
             renderPipeline: this,
             desc: desc,
             shader

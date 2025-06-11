@@ -7,8 +7,13 @@
 /**
  * Class representing an entry in the final order of rendering of cameras and layers in the engine
  * this is populated at runtime based on LayerComposition
+ *
+ * @ignore
  */
 class RenderAction {
+    // {CameraComponent|null}
+    camera = null;
+
     constructor() {
 
         // the layer
@@ -17,9 +22,6 @@ class RenderAction {
 
         // true if this uses transparent sublayer, opaque otherwise
         this.transparent = false;
-
-        // camera of type CameraComponent
-        this.camera = null;
 
         /**
          * Render target this render action renders to.

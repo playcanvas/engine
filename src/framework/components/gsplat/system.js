@@ -15,9 +15,10 @@ const _schema = [
 
 // order matters here
 const _properties = [
-    'instance',
+    'castShadows',
     'asset',
-    'layers'
+    'layers',
+    'material'
 ];
 
 /**
@@ -70,19 +71,15 @@ class GSplatComponentSystem extends ComponentSystem {
 
         // copy properties
         const data = {};
-        for (let i = 0; i < _properties.length; i++) {
-            data[_properties[i]] = gSplatComponent[_properties[i]];
-        }
+        _properties.forEach((prop) => {
+            if (prop !== 'material') {
+                data[prop] = gSplatComponent[prop];
+            }
+        });
         data.enabled = gSplatComponent.enabled;
-
-        // gsplat instance cannot be used this way, remove it and manually clone it later
-        delete data.instance;
 
         // clone component
         const component = this.addComponent(clone, data);
-
-        // clone gsplat instance
-        component.instance = gSplatComponent.instance.clone();
 
         if (gSplatComponent.customAabb) {
             component.customAabb = gSplatComponent.customAabb.clone();

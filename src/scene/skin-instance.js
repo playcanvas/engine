@@ -26,8 +26,6 @@ class SkinInstance {
      */
     bones;
 
-    boneTextureSize;
-
     /**
      * Create a new SkinInstance instance.
      *
@@ -76,8 +74,6 @@ class SkinInstance {
             magFilter: FILTER_NEAREST,
             name: 'skin'
         });
-
-        this.boneTextureSize = [width, height, 1.0 / width, 1.0 / height];
 
         this.matrixPalette = this.boneTexture.lock({ mode: TEXTURELOCK_READ });
         this.boneTexture.unlock();

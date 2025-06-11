@@ -4,7 +4,9 @@ import {
     SHADERDEF_MORPH_POSITION, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
     SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE,
     SHADERDEF_MORPH_TEXTURE_BASED_INT,
-    FOG_NONE
+    FOG_NONE,
+    REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP,
+    AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT
 } from '../constants.js';
 
 class LitMaterialOptionsBuilder {
@@ -12,11 +14,11 @@ class LitMaterialOptionsBuilder {
         LitMaterialOptionsBuilder.updateSharedOptions(litOptions, material, scene, objDefs, pass);
         LitMaterialOptionsBuilder.updateMaterialOptions(litOptions, material);
         LitMaterialOptionsBuilder.updateEnvOptions(litOptions, material, scene, renderParams);
-        LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, objDefs, sortedLights);
+        LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, scene, objDefs, sortedLights);
     }
 
     static updateSharedOptions(litOptions, material, scene, objDefs, pass) {
-        litOptions.chunks = material.chunks;
+        litOptions.shaderChunks = material.shaderChunks;
         litOptions.pass = pass;
         litOptions.alphaTest = material.alphaTest > 0;
         litOptions.blendType = material.blendType;
@@ -48,7 +50,6 @@ class LitMaterialOptionsBuilder {
 
     static updateMaterialOptions(litOptions, material) {
         litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
-        litOptions.customFragmentShader = null;
         litOptions.pixelSnap = material.pixelSnap;
 
         litOptions.ambientSH = material.ambientSH;
@@ -95,38 +96,38 @@ class LitMaterialOptionsBuilder {
 
         // source of reflections
         if (material.useSkybox && scene.envAtlas && scene.skybox) {
-            litOptions.reflectionSource = 'envAtlasHQ';
+            litOptions.reflectionSource = REFLECTIONSRC_ENVATLASHQ;
             litOptions.reflectionEncoding = scene.envAtlas.encoding;
             litOptions.reflectionCubemapEncoding = scene.skybox.encoding;
         } else if (material.useSkybox && scene.envAtlas) {
-            litOptions.reflectionSource = 'envAtlas';
+            litOptions.reflectionSource = REFLECTIONSRC_ENVATLAS;
             litOptions.reflectionEncoding = scene.envAtlas.encoding;
         } else if (material.useSkybox && scene.skybox) {
-            litOptions.reflectionSource = 'cubeMap';
+            litOptions.reflectionSource = REFLECTIONSRC_CUBEMAP;
             litOptions.reflectionEncoding = scene.skybox.encoding;
         } else {
-            litOptions.reflectionSource = null;
+            litOptions.reflectionSource = REFLECTIONSRC_NONE;
             litOptions.reflectionEncoding = null;
         }
 
         // source of environment ambient is as follows:
         if (material.ambientSH) {
-            litOptions.ambientSource = 'ambientSH';
+            litOptions.ambientSource = AMBIENTSRC_AMBIENTSH;
             litOptions.ambientEncoding = null;
-        } else if (litOptions.reflectionSource && scene.envAtlas) {
-            litOptions.ambientSource = 'envAtlas';
+        } else if (litOptions.reflectionSource !== REFLECTIONSRC_NONE && scene.envAtlas) {
+            litOptions.ambientSource = AMBIENTSRC_ENVALATLAS;
             litOptions.ambientEncoding = scene.envAtlas.encoding;
         } else {
-            litOptions.ambientSource = 'constant';
+            litOptions.ambientSource = AMBIENTSRC_CONSTANT;
             litOptions.ambientEncoding = null;
         }
 
-        const hasSkybox = !!litOptions.reflectionSource;
+        const hasSkybox = litOptions.reflectionSource !== REFLECTIONSRC_NONE;
         litOptions.skyboxIntensity = hasSkybox;
         litOptions.useCubeMapRotation = hasSkybox && scene._skyboxRotationShaderInclude;
     }
 
-    static updateLightingOptions(litOptions, material, objDefs, sortedLights) {
+    static updateLightingOptions(litOptions, material, scene, objDefs, sortedLights) {
         litOptions.lightMapWithoutAmbient = false;
 
         if (material.useLighting) {
@@ -139,15 +140,18 @@ class LitMaterialOptionsBuilder {
 
             if (sortedLights) {
                 LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask);
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask);
+
+                if (!scene.clusteredLightingEnabled) {
+                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask);
+                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask);
+                }
             }
             litOptions.lights = lightsFiltered;
         } else {
             litOptions.lights = [];
         }
 
-        if (litOptions.lights.length === 0 || ((objDefs & SHADERDEF_NOSHADOW) !== 0)) {
+        if ((litOptions.lights.length === 0 && !scene.clusteredLightingEnabled) || ((objDefs & SHADERDEF_NOSHADOW) !== 0)) {
             litOptions.noShadow = true;
         }
     }

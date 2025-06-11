@@ -1,182 +1,16 @@
 import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { TONEMAP_LINEAR } from '../../scene/constants.js';
-import { ShaderGenerator } from '../../scene/shader-lib/programs/shader-generator.js';
+import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
+import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
+import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
+import { composeChunksGLSL } from '../../scene/shader-lib/glsl/collections/compose-chunks-glsl.js';
+import { composeChunksWGSL } from '../../scene/shader-lib/wgsl/collections/compose-chunks-wgsl.js';
 
-
-// Contrast Adaptive Sharpening (CAS) is used to apply the sharpening. It's based on AMD's
-// FidelityFX CAS, WebGL implementation: https://www.shadertoy.com/view/wtlSWB. It's best to run it
-// on a tone-mapped color buffer after post-processing, but before the UI, and so this is the
-// obvious place to put it to avoid a separate render pass, even though we need to handle running it
-// before the tone-mapping.
-
-const fragmentShader = /* glsl */ `
-    varying vec2 uv0;
-    uniform sampler2D sceneTexture;
-    uniform vec2 sceneTextureInvRes;
-
-    #ifdef BLOOM
-        uniform sampler2D bloomTexture;
-        uniform float bloomIntensity;
-    #endif
-
-    #ifdef SSAO
-        uniform sampler2D ssaoTexture;
-    #endif
-
-    #ifdef GRADING
-        uniform vec3 brightnessContrastSaturation;
-        uniform vec3 tint;
-
-        // for all parameters, 1.0 is the no-change value
-        vec3 colorGradingHDR(vec3 color, float brt, float sat, float con)
-        {
-            // tint
-            color *= tint;
-
-            // brightness
-            color = color * brt;
-
-            // saturation
-            float grey = dot(color, vec3(0.3, 0.59, 0.11));
-            grey = grey / max(1.0, max(color.r, max(color.g, color.b)));    // Normalize luminance in HDR to preserve intensity (optional)
-            color = mix(vec3(grey), color, sat);
-
-            // contrast
-            return mix(vec3(0.5), color, con);
-        }
-    
-    #endif
-
-    #ifdef VIGNETTE
-
-        uniform vec4 vignetterParams;
-
-        float vignette(vec2 uv) {
-
-            float inner = vignetterParams.x;
-            float outer = vignetterParams.y;
-            float curvature = vignetterParams.z;
-            float intensity = vignetterParams.w;
-
-            // edge curvature
-            vec2 curve = pow(abs(uv * 2.0 -1.0), vec2(1.0 / curvature));
-
-            // distance to edge
-            float edge = pow(length(curve), curvature);
-
-            // gradient and intensity
-            return 1.0 - intensity * smoothstep(inner, outer, edge);
-        }        
-
-    #endif
-
-    #ifdef FRINGING
-
-        uniform float fringingIntensity;
-
-        vec3 fringing(vec2 uv, vec3 color) {
-
-            // offset depends on the direction from the center, raised to power to make it stronger away from the center
-            vec2 centerDistance = uv0 - 0.5;
-            vec2 offset = fringingIntensity * pow(centerDistance, vec2(2.0, 2.0));
-
-            color.r = texture2D(sceneTexture, uv0 - offset).r;
-            color.b = texture2D(sceneTexture, uv0 + offset).b;
-            return color;
-        }
-
-    #endif
-
-    #ifdef CAS
-
-        uniform float sharpness;
-
-        // reversible LDR <-> HDR tone mapping, as CAS needs LDR input
-        // based on: https://gpuopen.com/learn/optimized-reversible-tonemapper-for-resolve/
-        float maxComponent(float x, float y, float z) { return max(x, max(y, z)); }
-        vec3 toSDR(vec3 c) { return c / (1.0 + maxComponent(c.r, c.g, c.b)); }
-        vec3 toHDR(vec3 c) { return c / (1.0 - maxComponent(c.r, c.g, c.b)); }
-
-        vec3 cas(vec3 color, vec2 uv, float sharpness) {
-
-            float x = sceneTextureInvRes.x;
-            float y = sceneTextureInvRes.y;
-
-            // sample 4 neighbors around the already sampled pixel, and convert it to SDR
-            vec3 a = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(0.0, -y), 0.0).rgb);
-            vec3 b = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(-x, 0.0), 0.0).rgb);
-            vec3 c = toSDR(color.rgb);
-            vec3 d = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(x, 0.0), 0.0).rgb);
-            vec3 e = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(0.0, y), 0.0).rgb);
-
-            // apply the sharpening
-            float min_g = min(a.g, min(b.g, min(c.g, min(d.g, e.g))));
-            float max_g = max(a.g, max(b.g, max(c.g, max(d.g, e.g))));
-            float sharpening_amount = sqrt(min(1.0 - max_g, min_g) / max_g);
-            float w = sharpening_amount * sharpness;
-            vec3 res = (w * (a + b + d + e) + c) / (4.0 * w + 1.0);
-
-            // remove negative colors
-            res = max(res, 0.0);
-
-            // convert back to HDR
-            return toHDR(res);
-        }
-
-    #endif
-
-    void main() {
-
-        vec2 uv = uv0;
-
-        // TAA pass renders upside-down on WebGPU, flip it here
-        #ifdef TAA
-        #ifdef WEBGPU
-            uv.y = 1.0 - uv.y;
-        #endif
-        #endif
-
-        vec4 scene = texture2DLodEXT(sceneTexture, uv, 0.0);
-        vec3 result = scene.rgb;
-
-        #ifdef CAS
-            result = cas(result, uv, sharpness);
-        #endif
-
-        #ifdef SSAO
-            result *= texture2DLodEXT(ssaoTexture, uv0, 0.0).r;
-        #endif
-
-        #ifdef FRINGING
-            result = fringing(uv, result);
-        #endif
-
-        #ifdef BLOOM
-            vec3 bloom = texture2DLodEXT(bloomTexture, uv, 0.0).rgb;
-            result += bloom * bloomIntensity;
-        #endif
-
-        #ifdef GRADING
-            // color grading takes place in HDR space before tone mapping
-            result = colorGradingHDR(result, brightnessContrastSaturation.x, brightnessContrastSaturation.z, brightnessContrastSaturation.y);
-        #endif
-
-        result = toneMap(result);
-
-        #ifdef VIGNETTE
-            result *= vignette(uv);
-        #endif
-
-        #ifdef GAMMA_CORRECT_OUTPUT
-            result = gammaCorrectOutput(result);
-        #endif
-
-        gl_FragColor = vec4(result, scene.a);
-    }
-`;
+/**
+ * @import { Texture } from '../../platform/graphics/texture.js';
+ */
 
 /**
  * Render pass implementation of the final post-processing composition.
@@ -190,6 +24,12 @@ class RenderPassCompose extends RenderPassShaderQuad {
     bloomIntensity = 0.01;
 
     _bloomTexture = null;
+
+    _cocTexture = null;
+
+    blurTexture = null;
+
+    blurTextureUpscale = false;
 
     _ssaoTexture = null;
 
@@ -225,17 +65,32 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _sharpness = 0.5;
 
-    _srgb = false;
+    _gammaCorrection = GAMMA_SRGB;
+
+    /**
+     * @type {Texture|null}
+     */
+    _colorLUT = null;
+
+    colorLUTIntensity = 1;
 
     _key = '';
+
+    _debug = null;
 
     constructor(graphicsDevice) {
         super(graphicsDevice);
 
+        // register compose shader chunks
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).add(composeChunksGLSL);
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).add(composeChunksWGSL);
+
         const { scope } = graphicsDevice;
         this.sceneTextureId = scope.resolve('sceneTexture');
         this.bloomTextureId = scope.resolve('bloomTexture');
+        this.cocTextureId = scope.resolve('cocTexture');
         this.ssaoTextureId = scope.resolve('ssaoTexture');
+        this.blurTextureId = scope.resolve('blurTexture');
         this.bloomIntensityId = scope.resolve('bloomIntensity');
         this.bcsId = scope.resolve('brightnessContrastSaturation');
         this.tintId = scope.resolve('tint');
@@ -244,6 +99,31 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.sceneTextureInvResId = scope.resolve('sceneTextureInvRes');
         this.sceneTextureInvResValue = new Float32Array(2);
         this.sharpnessId = scope.resolve('sharpness');
+        this.colorLUTId = scope.resolve('colorLUT');
+        this.colorLUTParams = new Float32Array(4);
+        this.colorLUTParamsId = scope.resolve('colorLUTParams');
+    }
+
+    set debug(value) {
+        if (this._debug !== value) {
+            this._debug = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get debug() {
+        return this._debug;
+    }
+
+    set colorLUT(value) {
+        if (this._colorLUT !== value) {
+            this._colorLUT = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get colorLUT() {
+        return this._colorLUT;
     }
 
     set bloomTexture(value) {
@@ -255,6 +135,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     get bloomTexture() {
         return this._bloomTexture;
+    }
+
+    set cocTexture(value) {
+        if (this._cocTexture !== value) {
+            this._cocTexture = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get cocTexture() {
+        return this._cocTexture;
     }
 
     set ssaoTexture(value) {
@@ -350,8 +241,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
         // detect if the render target is srgb vs execute manual srgb conversion
         const rt = this.renderTarget ?? this.device.backBuffer;
         const srgb = rt.isColorBufferSrgb(0);
-        if (this._srgb !== srgb) {
-            this._srgb = srgb;
+        const neededGammaCorrection = srgb ? GAMMA_NONE : GAMMA_SRGB;
+        if (this._gammaCorrection !== neededGammaCorrection) {
+            this._gammaCorrection = neededGammaCorrection;
             this._shaderDirty = true;
         }
 
@@ -359,35 +251,51 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._shaderDirty) {
             this._shaderDirty = false;
 
-            const key = `${this.toneMapping}` +
+            const gammaCorrectionName = gammaNames[this._gammaCorrection];
+
+            const key =
+                `${this.toneMapping}` +
+                `-${gammaCorrectionName}` +
                 `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
+                `-${this.cocTexture ? 'dof' : 'nodof'}` +
+                `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
                 `-${this.ssaoTexture ? 'ssao' : 'nossao'}` +
                 `-${this.gradingEnabled ? 'grading' : 'nograding'}` +
+                `-${this.colorLUT ? 'colorlut' : 'nocolorlut'}` +
                 `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
                 `-${this.taaEnabled ? 'taa' : 'notaa'}` +
                 `-${this.isSharpnessEnabled ? 'cas' : 'nocas'}` +
-                `-${this._srgb ? 'srgb' : 'linear'}`;
+                `-${this._debug ?? ''}`;
 
             if (this._key !== key) {
                 this._key = key;
 
-                const defines =
-                    (this.bloomTexture ? '#define BLOOM\n' : '') +
-                    (this.ssaoTexture ? '#define SSAO\n' : '') +
-                    (this.gradingEnabled ? '#define GRADING\n' : '') +
-                    (this.vignetteEnabled ? '#define VIGNETTE\n' : '') +
-                    (this.fringingEnabled ? '#define FRINGING\n' : '') +
-                    (this.taaEnabled ? '#define TAA\n' : '') +
-                    (this.isSharpnessEnabled ? '#define CAS\n' : '') +
-                    (this._srgb ? '' : '#define GAMMA_CORRECT_OUTPUT\n');
+                const defines = new Map();
+                defines.set('TONEMAP', tonemapNames[this.toneMapping]);
+                defines.set('GAMMA', gammaCorrectionName);
+                if (this.bloomTexture) defines.set('BLOOM', true);
+                if (this.cocTexture) defines.set('DOF', true);
+                if (this.blurTextureUpscale) defines.set('DOF_UPSCALE', true);
+                if (this.ssaoTexture) defines.set('SSAO', true);
+                if (this.gradingEnabled) defines.set('GRADING', true);
+                if (this.colorLUT) defines.set('COLOR_LUT', true);
+                if (this.vignetteEnabled) defines.set('VIGNETTE', true);
+                if (this.fringingEnabled) defines.set('FRINGING', true);
+                if (this.taaEnabled) defines.set('TAA', true);
+                if (this.isSharpnessEnabled) defines.set('CAS', true);
+                if (this._debug) defines.set('DEBUG_COMPOSE', this._debug);
 
-                const fsChunks =
-                shaderChunks.decodePS +
-                shaderChunks.gamma2_2PS +
-                ShaderGenerator.tonemapCode(this.toneMapping);
+                const includes = new Map(ShaderChunks.get(this.device, this.device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL));
 
-                this.shader = this.createQuadShader(`ComposeShader-${key}`, defines + fsChunks + fragmentShader);
+                this.shader = ShaderUtils.createShader(this.device, {
+                    uniqueName: `ComposeShader-${key}`,
+                    attributes: { aPosition: SEMANTIC_POSITION },
+                    vertexChunk: 'quadVS',
+                    fragmentChunk: 'composePS',
+                    fragmentDefines: defines,
+                    fragmentIncludes: includes
+                });
             }
         }
     }
@@ -404,6 +312,11 @@ class RenderPassCompose extends RenderPassShaderQuad {
             this.bloomIntensityId.setValue(this.bloomIntensity);
         }
 
+        if (this._cocTexture) {
+            this.cocTextureId.setValue(this._cocTexture);
+            this.blurTextureId.setValue(this.blurTexture);
+        }
+
         if (this._ssaoTexture) {
             this.ssaoTextureId.setValue(this._ssaoTexture);
         }
@@ -411,6 +324,16 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._gradingEnabled) {
             this.bcsId.setValue([this.gradingBrightness, this.gradingContrast, this.gradingSaturation]);
             this.tintId.setValue([this.gradingTint.r, this.gradingTint.g, this.gradingTint.b]);
+        }
+
+        const lutTexture = this._colorLUT;
+        if (lutTexture) {
+            this.colorLUTParams[0] = lutTexture.width;
+            this.colorLUTParams[1] = lutTexture.height;
+            this.colorLUTParams[2] = lutTexture.height - 1.0;
+            this.colorLUTParams[3] = this.colorLUTIntensity;
+            this.colorLUTParamsId.setValue(this.colorLUTParams);
+            this.colorLUTId.setValue(lutTexture);
         }
 
         if (this._vignetteEnabled) {

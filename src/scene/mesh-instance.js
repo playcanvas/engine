@@ -4,14 +4,12 @@ import { BoundingSphere } from '../core/shape/bounding-sphere.js';
 import { BindGroup } from '../platform/graphics/bind-group.js';
 import { UniformBuffer } from '../platform/graphics/uniform-buffer.js';
 import {
-    BLEND_NONE, BLEND_NORMAL,
     LAYER_WORLD,
     MASK_AFFECT_DYNAMIC, MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
     RENDERSTYLE_SOLID,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
-    SORTKEY_FORWARD
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
@@ -53,6 +51,8 @@ const lookupHashes = new Uint32Array(4);
 
 /**
  * Internal data structure used to store data used by hardware instancing.
+ *
+ * @ignore
  */
 class InstancingData {
     /** @type {VertexBuffer|null} */
@@ -82,6 +82,8 @@ class InstancingData {
 
 /**
  * Internal helper class for storing the shader and related mesh bind group in the shader cache.
+ *
+ * @ignore
  */
 class ShaderInstance {
     /**
@@ -165,13 +167,13 @@ class ShaderInstance {
 }
 
 /**
+ * @callback CalculateSortDistanceCallback
  * Callback used by {@link Layer} to calculate the "sort distance" for a {@link MeshInstance},
  * which determines its place in the render order.
- *
- * @callback CalculateSortDistanceCallback
  * @param {MeshInstance} meshInstance - The mesh instance.
  * @param {Vec3} cameraPosition - The position of the camera.
  * @param {Vec3} cameraForward - The forward vector of the camera.
+ * @returns {void}
  */
 
 /**
@@ -209,6 +211,12 @@ class MeshInstance {
     drawOrder = 0;
 
     /**
+     * @type {number}
+     * @ignore
+     */
+    _drawBucket = 127;
+
+    /**
      * The graph node defining the transform for this instance.
      *
      * @type {GraphNode}
@@ -225,8 +233,8 @@ class MeshInstance {
     visible = true;
 
     /**
-     * Read this value in {@link CameraComponent#onPostCull} to determine if the object is actually going to
-     * be rendered.
+     * Read this value in {@link Scene.EVENT_POSTCULL} event to determine if the object is actually going
+     * to be rendered.
      *
      * @type {boolean}
      */
@@ -322,8 +330,28 @@ class MeshInstance {
     /** @private */
     _updateAabbFunc = null;
 
-    /** @private */
-    _key = [0, 0];
+    /**
+     * The internal sorting key used by the shadow renderer.
+     *
+     * @ignore
+     */
+    _sortKeyShadow = 0;
+
+    /**
+     * The internal sorting key used by the forward renderer, in case SORTMODE_MATERIALMESH sorting
+     * is used.
+     *
+     * @private
+     */
+    _sortKeyForward = 0;
+
+    /**
+     * The internal sorting key used by the forward renderer, in case SORTMODE_BACK2FRONT or
+     * SORTMODE_FRONT2BACK sorting is used.
+     *
+     * @ignore
+     */
+    _sortKeyDynamic = 0;
 
     /** @private */
     _layer = LAYER_WORLD;
@@ -417,6 +445,34 @@ class MeshInstance {
 
         // 64-bit integer key that defines render order of this mesh instance
         this.updateKey();
+    }
+
+    /**
+     * Sets the draw bucket for mesh instances. The draw bucket, an integer from 0 to 255 (default
+     * 127), serves as the primary sort key for mesh rendering. Meshes are sorted by draw bucket,
+     * then by sort mode. This setting is only effective when mesh instances are added to a
+     * {@link Layer} with its {@link Layer#opaqueSortMode} or {@link Layer#transparentSortMode}
+     * (depending on the material) set to {@link SORTMODE_BACK2FRONT}, {@link SORTMODE_FRONT2BACK},
+     * or {@link SORTMODE_MATERIALMESH}.
+     *
+     * Note: When {@link SORTMODE_BACK2FRONT} is used, a descending sort order is used; otherwise,
+     * an ascending sort order is used.
+     *
+     * @type {number}
+     */
+    set drawBucket(bucket) {
+        // 8bit integer
+        this._drawBucket = Math.floor(bucket) & 0xff;
+        this.updateKey();
+    }
+
+    /**
+     * Gets the draw bucket for mesh instance.
+     *
+     * @type {number}
+     */
+    get drawBucket() {
+        return this._drawBucket;
     }
 
     /**
@@ -702,15 +758,6 @@ class MeshInstance {
         return this._material;
     }
 
-    set layer(layer) {
-        this._layer = layer;
-        this.updateKey();
-    }
-
-    get layer() {
-        return this._layer;
-    }
-
     /**
      * @param {number} shaderDefs - The shader definitions to set.
      * @private
@@ -827,11 +874,11 @@ class MeshInstance {
     }
 
     set key(val) {
-        this._key[SORTKEY_FORWARD] = val;
+        this._sortKeyForward = val;
     }
 
     get key() {
-        return this._key[SORTKEY_FORWARD];
+        return this._sortKeyForward;
     }
 
     /**
@@ -965,21 +1012,15 @@ class MeshInstance {
 
     updateKey() {
 
-        // render alphatest/atoc after opaque
-        const material = this.material;
-        const blendType = (material.alphaToCoverage || material.alphaTest) ? BLEND_NORMAL : material.blendType;
-
-        // Key definition:
-        // Bit
         // 31      : sign bit (leave)
-        // 27 - 30 : layer
-        // 26      : translucency type (opaque/transparent)
-        // 25      : unused
-        // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
-        this._key[SORTKEY_FORWARD] =
-            ((this.layer & 0x0f) << 27) |
-            ((blendType === BLEND_NONE ? 1 : 0) << 26) |
-            ((material.id & 0x1ffffff) << 0);
+        // 30 - 25 : 8 bits for draw bucket - this is the highest priority for sorting
+        // 24      : 1 bit for alpha test / coverage, to render them after opaque to keep GPU efficiency
+        // 23 - 0  : 24 bits for material ID
+        const { material } = this;
+        this._sortKeyForward =
+            (this._drawBucket << 25) |
+            ((material.alphaToCoverage || material.alphaTest) ? 0x1000000 : 0) |
+            (material.id & 0xffffff);
     }
 
     /**

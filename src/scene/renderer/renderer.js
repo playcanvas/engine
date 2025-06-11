@@ -13,19 +13,19 @@ import {
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH,
     BINDGROUP_MESH_UB
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
-import { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import {
-    SORTKEY_DEPTH, SORTKEY_FORWARD,
     VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
     LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
-    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
+    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
+    EVENT_PRECULL,
+    EVENT_POSTCULL
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
@@ -207,7 +207,6 @@ class Renderer {
         // Uniforms
         const scope = graphicsDevice.scope;
         this.boneTextureId = scope.resolve('texture_poseMap');
-        this.boneTextureSizeId = scope.resolve('texture_poseMapSize');
 
         this.modelMatrixId = scope.resolve('matrix_model');
         this.normalMatrixId = scope.resolve('matrix_normal');
@@ -262,50 +261,6 @@ class Renderer {
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
-    }
-
-    sortCompare(drawCallA, drawCallB) {
-        if (drawCallA.layer === drawCallB.layer) {
-            if (drawCallA.drawOrder && drawCallB.drawOrder) {
-                return drawCallA.drawOrder - drawCallB.drawOrder;
-            } else if (drawCallA.zdist && drawCallB.zdist) {
-                return drawCallB.zdist - drawCallA.zdist; // back to front
-            } else if (drawCallA.zdist2 && drawCallB.zdist2) {
-                return drawCallA.zdist2 - drawCallB.zdist2; // front to back
-            }
-        }
-
-        return drawCallB._key[SORTKEY_FORWARD] - drawCallA._key[SORTKEY_FORWARD];
-    }
-
-    sortCompareMesh(drawCallA, drawCallB) {
-        if (drawCallA.layer === drawCallB.layer) {
-            if (drawCallA.drawOrder && drawCallB.drawOrder) {
-                return drawCallA.drawOrder - drawCallB.drawOrder;
-            } else if (drawCallA.zdist && drawCallB.zdist) {
-                return drawCallB.zdist - drawCallA.zdist; // back to front
-            }
-        }
-
-        const keyA = drawCallA._key[SORTKEY_FORWARD];
-        const keyB = drawCallB._key[SORTKEY_FORWARD];
-
-        if (keyA === keyB && drawCallA.mesh && drawCallB.mesh) {
-            return drawCallB.mesh.id - drawCallA.mesh.id;
-        }
-
-        return keyB - keyA;
-    }
-
-    sortCompareDepth(drawCallA, drawCallB) {
-        const keyA = drawCallA._key[SORTKEY_DEPTH];
-        const keyB = drawCallB._key[SORTKEY_DEPTH];
-
-        if (keyA === keyB && drawCallA.mesh && drawCallB.mesh) {
-            return drawCallB.mesh.id - drawCallA.mesh.id;
-        }
-
-        return keyB - keyA;
     }
 
     /**
@@ -740,7 +695,6 @@ class Renderer {
 
             const boneTexture = skinInstance.boneTexture;
             this.boneTextureId.setValue(boneTexture);
-            this.boneTextureSizeId.setValue(skinInstance.boneTextureSize);
         }
     }
 
@@ -775,7 +729,6 @@ class Renderer {
                     new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterCellsDot', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterCellsMax', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCompressionLimit0', UNIFORMTYPE_VEC2),
                     new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
                     new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
                     new UniformFormat('clusterSkip', UNIFORMTYPE_FLOAT)
@@ -788,22 +741,25 @@ class Renderer {
             const formats = [
 
                 // uniform buffer needs to be first, as the shader processor assumes slot 0 for it
-                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT),
+                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
 
-                new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
-                new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
-                new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
-                new BindTextureFormat('cookieAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+                // disable view level textures, as they consume texture slots. They get automatically added to mesh bind group
+                // for the meshes that uses them
+                // new BindTextureFormat('lightsTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
+                // new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
+                // new BindTextureFormat('cookieAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
 
-                new BindTextureFormat('areaLightsLutTex1', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
-                new BindTextureFormat('areaLightsLutTex2', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT)
+                // new BindTextureFormat('areaLightsLutTex1', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+                // new BindTextureFormat('areaLightsLutTex2', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT)
             ];
 
-            if (isClustered) {
-                formats.push(...[
-                    new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
-                ]);
-            }
+            // disable view level textures, as they consume texture slots. They get automatically added to mesh bind group
+            // for the meshes that uses them
+            // if (isClustered) {
+            //     formats.push(...[
+            //         new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
+            //     ]);
+            // }
 
             this.viewBindGroupFormat = new BindGroupFormat(this.device, formats);
         }
@@ -869,6 +825,7 @@ class Renderer {
                 device.draw(mesh.primitive[style], instancingData.count);
             } else {
                 device.clearVertexBuffer();
+                device.clearIndexBuffer();
             }
         } else {
             device.draw(mesh.primitive[style]);
@@ -885,6 +842,7 @@ class Renderer {
                 device.draw(mesh.primitive[style], instancingData.count, true);
             } else {
                 device.clearVertexBuffer();
+                device.clearIndexBuffer();
             }
         } else {
             // matrices are already set
@@ -1129,6 +1087,8 @@ class Renderer {
         const cullTime = now();
         // #endif
 
+        const { scene } = this;
+
         this.processingMeshInstances.clear();
 
         // for all cameras
@@ -1138,8 +1098,8 @@ class Renderer {
         for (let i = 0; i < numCameras; i++) {
             const camera = comp.cameras[i];
 
-            // callback before the camera is culling
-            camera.onPreCull?.();
+            // event before the camera is culling
+            scene?.fire(EVENT_PRECULL, camera);
 
             // update camera and frustum
             const renderTarget = camera.renderTarget;
@@ -1162,13 +1122,13 @@ class Renderer {
                 }
             }
 
-            // callback after the camera is done with culling
-            camera.onPostCull?.();
+            // event after the camera is done with culling
+            scene?.fire(EVENT_POSTCULL, camera);
         }
 
         // update shadow / cookie atlas allocation for the visible lights. Update it after the ligthts were culled,
         // but before shadow maps were culling, as it might force some 'update once' shadows to cull.
-        if (this.scene.clusteredLightingEnabled) {
+        if (scene.clusteredLightingEnabled) {
             this.updateLightTextureAtlas();
         }
 
@@ -1225,7 +1185,7 @@ class Renderer {
     beginFrame(comp) {
 
         const scene = this.scene;
-        const updateShaders = scene.updateShaders;
+        const updateShaders = scene.updateShaders || this.device._shadersDirty;
 
         let totalMeshInstances = 0;
         const layers = comp.layerList;
@@ -1262,9 +1222,10 @@ class Renderer {
 
         // update shaders if needed
         if (updateShaders) {
-            const onlyLitShaders = !scene.updateShaders;
+            const onlyLitShaders = !scene.updateShaders || !this.device._shadersDirty;
             this.updateShaders(_tempMeshInstances, onlyLitShaders);
             scene.updateShaders = false;
+            this.device._shadersDirty = false;
             scene._shaderVersion++;
         }
 

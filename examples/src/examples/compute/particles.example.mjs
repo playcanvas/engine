@@ -208,22 +208,10 @@ assetListLoader.load(() => {
     // ------- Particle rendering -------
 
     // material to render the particles using WGSL shader as GLSL does not have access to storage buffers
-    const shaderSource = files['shader-shared.wgsl'] + files['shader-rendering.wgsl'];
     const material = new pc.ShaderMaterial({
         uniqueName: 'ParticleRenderShader',
-        vertexCode: shaderSource,
-        fragmentCode: shaderSource,
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-
-        // For now WGSL shaders need to provide their own bind group formats as they aren't processed.
-        // This has to match the ub_mesh struct in the shader.
-        meshUniformBufferFormat: new pc.UniformBufferFormat(app.graphicsDevice, [
-            new pc.UniformFormat('matrix_model', pc.UNIFORMTYPE_MAT4)
-        ]),
-        meshBindGroupFormat: new pc.BindGroupFormat(app.graphicsDevice, [
-            // particle storage buffer in read-only mode
-            new pc.BindStorageBufferFormat('particles', pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT, true)
-        ])
+        vertexWGSL: files['shader-shared.wgsl'] + files['shader-rendering.vertex.wgsl'],
+        fragmentWGSL: files['shader-shared.wgsl'] + files['shader-rendering.fragment.wgsl']
     });
 
     // index buffer - two triangles (6 indices) per particle using 4 vertices

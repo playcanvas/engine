@@ -9,6 +9,8 @@ import { AnimBlendTree } from './anim-blend-tree.js';
 /**
  * An AnimBlendTree that calculates its weights using a 1D algorithm based on the thesis
  * http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6.
+ *
+ * @category Animation
  */
 class AnimBlendTree1D extends AnimBlendTree {
     /**
@@ -24,7 +26,7 @@ class AnimBlendTree1D extends AnimBlendTree {
      * @param {string[]} parameters - The anim component parameters which are used to calculate the
      * current weights of the blend trees children.
      * @param {object[]} children - The child nodes that this blend tree should create. Can either
-     * be of type {@link AnimNode} or {@link BlendTree}.
+     * be of type {@link AnimNode} or {@link AnimBlendTree}.
      * @param {boolean} syncAnimations - If true, the speed of each blended animation will be
      * synchronized.
      * @param {Function} createTree - Used to create child blend trees of varying types.

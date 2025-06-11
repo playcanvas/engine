@@ -13,39 +13,51 @@ import {
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 
 /**
- * @import { AnimComponentSystem } from './system.js'
- */
-
-/**
- * The Anim Component allows an Entity to playback animations on models and entity properties.
+ * The AnimComponent allows an {@link Entity} to playback animations on models and entity
+ * properties.
  *
+ * @hideconstructor
  * @category Animation
  */
 class AnimComponent extends Component {
-    /**
-     * Create a new AnimComponent instance.
-     *
-     * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
-     */
-    constructor(system, entity) {
-        super(system, entity);
+    /** @private */
+    _stateGraphAsset = null;
 
-        this._stateGraphAsset = null;
-        this._animationAssets = {};
-        this._speed = 1.0;
-        this._activate = true;
-        this._playing = false;
-        this._rootBone = null;
-        this._stateGraph = null;
-        this._layers = [];
-        this._layerIndices = {};
-        this._parameters = {};
-        // a collection of animated property targets
-        this._targets = {};
-        this._consumedTriggers = new Set();
-        this._normalizeWeights = false;
-    }
+    /** @private */
+    _animationAssets = {};
+
+    /** @private */
+    _speed = 1;
+
+    /** @private */
+    _activate = true;
+
+    /** @private */
+    _playing = false;
+
+    /** @private */
+    _rootBone = null;
+
+    /** @private */
+    _stateGraph = null;
+
+    /** @private */
+    _layers = [];
+
+    /** @private */
+    _layerIndices = {};
+
+    /** @private */
+    _parameters = {};
+
+    /** @private */
+    _targets = {};
+
+    /** @private */
+    _consumedTriggers = new Set();
+
+    /** @private */
+    _normalizeWeights = false;
 
     set stateGraphAsset(value) {
         if (value === null) {
@@ -516,7 +528,7 @@ class AnimComponent extends Component {
     }
 
     /**
-     * Finds a {@link AnimComponentLayer} in this component.
+     * Finds an {@link AnimComponentLayer} in this component.
      *
      * @param {string} name - The name of the anim component layer to find.
      * @returns {AnimComponentLayer} Layer.
@@ -565,9 +577,9 @@ class AnimComponent extends Component {
 
     /**
      * Associates an animation with a state or blend tree node in the loaded state graph. If all
-     * states are linked and the {@link AnimComponent#activate} value was set to true then the
-     * component will begin playing. If no state graph is loaded, a default state graph will be
-     * created with a single state based on the provided nodePath parameter.
+     * states are linked and the {@link activate} value was set to true then the component will
+     * begin playing. If no state graph is loaded, a default state graph will be created with a
+     * single state based on the provided nodePath parameter.
      *
      * @param {string} nodePath - Either the state name or the path to a blend tree node that this
      * animation should be associated with. Each section of a blend tree path is split using a

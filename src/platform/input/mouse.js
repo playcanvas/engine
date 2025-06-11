@@ -1,17 +1,24 @@
 import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-import { EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEUP, EVENT_MOUSEWHEEL } from './constants.js';
 import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 
 /**
- * Callback used by {@link Mouse#enablePointerLock} and {@link Application#disablePointerLock}.
- *
  * @callback LockMouseCallback
+ * Callback used by {@link Mouse#enablePointerLock} and {@link Mouse#disablePointerLock}.
+ * @returns {void}
  */
 
 /**
- * A Mouse Device, bound to a DOM Element.
+ * Manages mouse input by tracking button states and dispatching events. Extends {@link EventHandler}
+ * to fire `mousedown`, `mouseup`, `mousemove` and `mousewheel` events (see {@link MouseEvent}).
+ *
+ * Allows the state of mouse buttons to be queried to check if they are currently pressed or were
+ * pressed/released since the last update. Provides methods to enable/disable pointer lock for
+ * raw mouse movement input and control over the context menu. The Mouse instance must be attached
+ * to a DOM element before it can detect mouse events.
+ *
+ * Your application's Mouse instance is managed and accessible via {@link AppBase#mouse}.
  *
  * @category Input
  */
@@ -25,7 +32,7 @@ class Mouse extends EventHandler {
      *     console.log(`Current mouse position is: ${e.x}, ${e.y}`);
      * });
      */
-    static EVENT_MOUSEMOVE = EVENT_MOUSEMOVE;
+    static EVENT_MOUSEMOVE = 'mousemove';
 
     /**
      * Fired when a mouse button is pressed. The handler is passed a {@link MouseEvent}.
@@ -36,7 +43,7 @@ class Mouse extends EventHandler {
      *     console.log(`The ${e.button} button was pressed at position: ${e.x}, ${e.y}`);
      * });
      */
-    static EVENT_MOUSEDOWN = EVENT_MOUSEDOWN;
+    static EVENT_MOUSEDOWN = 'mousedown';
 
     /**
      * Fired when a mouse button is released. The handler is passed a {@link MouseEvent}.
@@ -47,7 +54,7 @@ class Mouse extends EventHandler {
      *     console.log(`The ${e.button} button was released at position: ${e.x}, ${e.y}`);
      * });
      */
-    static EVENT_MOUSEUP = EVENT_MOUSEUP;
+    static EVENT_MOUSEUP = 'mouseup';
 
     /**
      * Fired when a mouse wheel is moved. The handler is passed a {@link MouseEvent}.
@@ -58,7 +65,7 @@ class Mouse extends EventHandler {
      *     console.log(`The mouse wheel was moved by ${e.wheelDelta}`);
      * });
      */
-    static EVENT_MOUSEWHEEL = EVENT_MOUSEWHEEL;
+    static EVENT_MOUSEWHEEL = 'mousewheel';
 
     /** @private */
     _lastX = 0;
@@ -288,7 +295,7 @@ class Mouse extends EventHandler {
         if (!e.event) return;
 
         // send 'mouseup' event
-        this.fire(EVENT_MOUSEUP, e);
+        this.fire('mouseup', e);
     }
 
     _handleDown(event) {
@@ -298,14 +305,14 @@ class Mouse extends EventHandler {
         const e = new MouseEvent(this, event);
         if (!e.event) return;
 
-        this.fire(EVENT_MOUSEDOWN, e);
+        this.fire('mousedown', e);
     }
 
     _handleMove(event) {
         const e = new MouseEvent(this, event);
         if (!e.event) return;
 
-        this.fire(EVENT_MOUSEMOVE, e);
+        this.fire('mousemove', e);
 
         // Store the last offset position to calculate deltas
         this._lastX = e.x;
@@ -316,7 +323,7 @@ class Mouse extends EventHandler {
         const e = new MouseEvent(this, event);
         if (!e.event) return;
 
-        this.fire(EVENT_MOUSEWHEEL, e);
+        this.fire('mousewheel', e);
     }
 
     _getTargetCoords(event) {

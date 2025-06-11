@@ -1,6 +1,6 @@
-import { Preprocessor } from '../../src/core/preprocessor.js';
-
 import { expect } from 'chai';
+
+import { Preprocessor } from '../../src/core/preprocessor.js';
 
 describe('Preprocessor', function () {
 
@@ -11,13 +11,43 @@ describe('Preprocessor', function () {
                 nested
             #endif
         `],
-        ['inc2', 'block2']
+        ['inc2', 'block2'],
+        ['incLoop', 'inserted{i}\n']
     ]);
 
     const srcData = `
         
+        #define LOOP_COUNT 3
+        #define {COUNT} 2
+        #define {STRING} hello
         #define FEATURE1
         #define FEATURE2
+        #define AND1
+        #define AND2
+        #define OR1
+        #define OR2
+
+        #include "incLoop, LOOP_COUNT"
+
+        #if (defined(AND1) && defined(AND2))
+            ANDS1
+        #endif
+
+        #if (defined(UNDEFINED) && defined(AND2))
+            ANDS2
+        #endif
+
+        #if (defined(OR1) || defined(OR2))
+            ORS1
+        #endif
+
+        #if (defined(UNDEFINED) || defined(OR2))
+            ORS2
+        #endif
+
+        #if (defined(UNDEFINED) || defined(UNDEFINED2) || defined(OR2))
+            ORS3
+        #endif
 
         #ifdef FEATURE1
             TEST1
@@ -73,6 +103,31 @@ describe('Preprocessor', function () {
         #ifdef (UNKNOWN)
             #define TEST14  // this should not be defined
         #endif
+
+        #define INDEX 3
+        #if INDEX == 3
+            CMP1
+        #endif
+
+        #if INDEX != 3
+            CMP2
+        #endif
+
+        #if INDEX > 2
+            CMP3
+        #endif
+
+        #define NAME hello
+        #if NAME == hello
+            CMP4
+        #endif
+
+        #if NAME != hello
+            CMP5
+        #endif
+
+        TESTINJECTION {COUNT}
+        INJECTSTRING {STRING}(x)
     `;
 
     it('returns false for MORPH_A', function () {
@@ -153,5 +208,64 @@ describe('Preprocessor', function () {
 
     it('returns true for nested', function () {
         expect(Preprocessor.run(srcData, includes).includes('nested')).to.equal(true);
+    });
+
+    it('returns true for CMP1', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP1')).to.equal(true);
+    });
+
+    it('returns false for CMP2', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP2')).to.equal(false);
+    });
+
+    it('returns true for CMP3', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP3')).to.equal(true);
+    });
+
+    it('returns true for CMP4', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP4')).to.equal(true);
+    });
+
+    it('returns false for CMP5', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP5')).to.equal(false);
+    });
+
+    it('returns false for any leftover hash symbols', function () {
+        expect(Preprocessor.run(srcData, includes, { stripDefines: true }).includes('#')).to.equal(false);
+    });
+
+    it('returns true for working integer injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('TESTINJECTION 2')).to.equal(true);
+    });
+
+    it('returns true for working string injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('INJECTSTRING hello(x)')).to.equal(true);
+    });
+
+    it('returns true for loop injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('inserted0')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted1')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted2')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted3')).to.equal(false);
+    });
+
+    it('returns true for ANDS1', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ANDS1')).to.equal(true);
+    });
+
+    it('returns false for ANDS2', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ANDS2')).to.equal(false);
+    });
+
+    it('returns true for ORS1', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ORS1')).to.equal(true);
+    });
+
+    it('returns true for ORS2', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ORS2')).to.equal(true);
+    });
+
+    it('returns true for ORS3', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ORS3')).to.equal(true);
     });
 });

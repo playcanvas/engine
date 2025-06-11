@@ -10,6 +10,8 @@ let _layoutId = 0;
 
 /**
  * Base class for render and compute pipelines.
+ *
+ * @ignore
  */
 class WebgpuPipeline {
     constructor(device) {

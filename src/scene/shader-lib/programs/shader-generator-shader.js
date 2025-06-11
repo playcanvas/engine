@@ -1,36 +1,25 @@
 import { hashCode } from '../../../core/hash.js';
-import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
-import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
-import { ShaderPass } from '../../shader-pass.js';
-import { shaderChunks } from '../chunks/chunks.js';
+import { MapUtils } from '../../../core/map-utils.js';
+import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
+import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
-
-const vShader = `
-    #include "shaderPassDefines"
-    #include "userCode"
-`;
-
-const fShader = `
-    #include "shaderPassDefines"
-    #include "decodePS"
-    #include "gamma"
-    #include "tonemapping"
-    #include "fog"
-    #include "userCode"
-`;
+import { ShaderChunks } from '../shader-chunks.js';
 
 class ShaderGeneratorShader extends ShaderGenerator {
     generateKey(options) {
-        const desc = options.shaderDesc;
-        const vsHash = desc.vertexCode ? hashCode(desc.vertexCode) : 0;
-        const fsHash = desc.fragmentCode ? hashCode(desc.fragmentCode) : 0;
-        const definesHash = ShaderGenerator.definesHash(options.defines);
 
-        let key = `${desc.uniqueName}_${vsHash}_${fsHash}_${definesHash}`;
-        key += `_${options.pass}`;
-        key += `_${options.gamma}`;
-        key += `_${options.toneMapping}`;
-        key += `_${options.fog}`;
+        // Note: options.shaderChunks are not included in the key as currently shader variants are removed
+        // from the material when its chunks are modified.
+
+        const desc = options.shaderDesc;
+        const vsHashGLSL = desc.vertexGLSL ? hashCode(desc.vertexGLSL) : 0;
+        const fsHashGLSL = desc.fragmentGLSL ? hashCode(desc.fragmentGLSL) : 0;
+        const vsHashWGSL = desc.vertexWGSL ? hashCode(desc.vertexWGSL) : 0;
+        const fsHashWGSL = desc.fragmentWGSL ? hashCode(desc.fragmentWGSL) : 0;
+        const definesHash = ShaderGenerator.definesHash(options.defines);
+        const chunksKey = options.shaderChunks?.key ?? '';
+
+        let key = `${desc.uniqueName}_${definesHash}_${vsHashGLSL}_${fsHashGLSL}_${vsHashWGSL}_${fsHashWGSL}_${chunksKey}`;
 
         if (options.skin)                       key += '_skin';
         if (options.useInstancing)              key += '_inst';
@@ -60,90 +49,64 @@ class ShaderGeneratorShader extends ShaderGenerator {
         definitionOptions.attributes = attributes;
     }
 
-
-    createVertexDefinition(definitionOptions, options, shaderPassInfo) {
+    createVertexDefinition(definitionOptions, options, sharedIncludes, wgsl) {
 
         const desc = options.shaderDesc;
 
-        if (definitionOptions.shaderLanguage === SHADERLANGUAGE_WGSL) {
+        const includes = new Map(sharedIncludes);
+        includes.set('transformInstancingVS', ''); // no default instancing, needs to be implemented in the user shader
 
-            // TODO: WGSL doesn't have preprocessor connected at the moment, so we just directly use
-            // the provided code. This will be fixed in the future.
-            definitionOptions.vertexCode = desc.vertexCode;
-
-        } else {
-            const includes = new Map();
-            const defines = new Map(options.defines);
-
-            includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
-            includes.set('userCode', desc.vertexCode);
-            includes.set('transformCore', shaderChunks.transformCoreVS);
-            includes.set('transformInstancing', ''); // no default instancing, needs to be implemented in the user shader
-            includes.set('normalCore', shaderChunks.normalCoreVS);
-            includes.set('skinCode', shaderChunks.skinTexVS);
-            includes.set('skinTexVS', shaderChunks.skinTexVS);
-
-            if (options.skin) defines.set('SKIN', true);
-            if (options.useInstancing) defines.set('INSTANCING', true);
-            if (options.useMorphPosition || options.useMorphNormal) {
-                defines.set('MORPHING', true);
-                if (options.useMorphTextureBasedInt) defines.set('MORPHING_INT', true);
-                if (options.useMorphPosition) defines.set('MORPHING_POSITION', true);
-                if (options.useMorphNormal) defines.set('MORPHING_NORMAL', true);
-            }
-
-            definitionOptions.vertexCode = vShader;
-            definitionOptions.vertexIncludes = includes;
-            definitionOptions.vertexDefines = defines;
+        const defines = new Map(options.defines);
+        if (options.skin) defines.set('SKIN', true);
+        if (options.useInstancing) defines.set('INSTANCING', true);
+        if (options.useMorphPosition || options.useMorphNormal) {
+            defines.set('MORPHING', true);
+            if (options.useMorphTextureBasedInt) defines.set('MORPHING_INT', true);
+            if (options.useMorphPosition) defines.set('MORPHING_POSITION', true);
+            if (options.useMorphNormal) defines.set('MORPHING_NORMAL', true);
         }
+
+        definitionOptions.vertexCode = wgsl ? desc.vertexWGSL : desc.vertexGLSL;
+        definitionOptions.vertexIncludes = includes;
+        definitionOptions.vertexDefines = defines;
     }
 
-    createFragmentDefinition(definitionOptions, options, shaderPassInfo) {
+    createFragmentDefinition(definitionOptions, options, sharedIncludes, wgsl) {
 
         const desc = options.shaderDesc;
 
-        if (definitionOptions.shaderLanguage === SHADERLANGUAGE_WGSL) {
+        const includes = new Map(sharedIncludes);
+        const defines = new Map(options.defines);
 
-            // TODO: WGSL doesn't have preprocessor connected at the moment, so we just directly use
-            // the provided code. This will be fixed in the future.
-            definitionOptions.fragmentCode = desc.fragmentCode;
-
-        } else {
-            const includes = new Map();
-            const defines = new Map(options.defines);
-
-            includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
-            includes.set('decodePS', shaderChunks.decodePS);
-            includes.set('gamma', ShaderGenerator.gammaCode(options.gamma));
-            includes.set('tonemapping', ShaderGenerator.tonemapCode(options.toneMapping));
-            includes.set('fog', ShaderGenerator.fogCode(options.fog));
-            includes.set('userCode', desc.fragmentCode);
-            includes.set('pick', shaderChunks.pickPS);
-
-            definitionOptions.fragmentCode = fShader;
-            definitionOptions.fragmentIncludes = includes;
-            definitionOptions.fragmentDefines = defines;
-        }
+        definitionOptions.fragmentCode = wgsl ? desc.fragmentWGSL : desc.fragmentGLSL;
+        definitionOptions.fragmentIncludes = includes;
+        definitionOptions.fragmentDefines = defines;
     }
 
     createShaderDefinition(device, options) {
 
-        const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
         const desc = options.shaderDesc;
-
+        const wgsl = device.isWebGPU && !!desc.vertexWGSL && !!desc.fragmentWGSL;
         const definitionOptions = {
             name: `ShaderMaterial-${desc.uniqueName}`,
-            shaderLanguage: desc.shaderLanguage,
+            shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,
             fragmentOutputTypes: desc.fragmentOutputTypes,
             meshUniformBufferFormat: desc.meshUniformBufferFormat,
             meshBindGroupFormat: desc.meshBindGroupFormat
         };
 
-        this.createAttributesDefinition(definitionOptions, options);
-        this.createVertexDefinition(definitionOptions, options, shaderPassInfo);
-        this.createFragmentDefinition(definitionOptions, options, shaderPassInfo);
+        // includes - default chunks
+        const shaderLanguage = wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        const sharedIncludes = MapUtils.merge(
+            ShaderChunks.get(device, shaderLanguage),
+            options.shaderChunks[shaderLanguage]
+        );
 
-        return ShaderUtils.createDefinition(device, definitionOptions);
+        this.createAttributesDefinition(definitionOptions, options);
+        this.createVertexDefinition(definitionOptions, options, sharedIncludes, wgsl);
+        this.createFragmentDefinition(definitionOptions, options, sharedIncludes, wgsl);
+
+        return ShaderDefinitionUtils.createDefinition(device, definitionOptions);
     }
 }
 

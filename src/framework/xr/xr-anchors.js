@@ -10,11 +10,11 @@ import { XrAnchor } from './xr-anchor.js';
  */
 
 /**
- * Callback used by {@link XrAnchors#create}.
- *
  * @callback XrAnchorCreateCallback
+ * Callback used by {@link XrAnchors#create}.
  * @param {Error|null} err - The Error object if failed to create an anchor or null.
  * @param {XrAnchor|null} anchor - The anchor that is tracked against real world geometry.
+ * @returns {void}
  */
 
 /**
@@ -178,7 +178,7 @@ class XrAnchors extends EventHandler {
 
     /** @private */
     _onSessionStart() {
-        const available = this.manager.session.enabledFeatures.indexOf('anchors') !== -1;
+        const available = this.manager.session.enabledFeatures?.indexOf('anchors') >= 0;
         if (!available) return;
         this._available = available;
         this.fire('available');
@@ -258,7 +258,7 @@ class XrAnchors extends EventHandler {
      * @example
      * // create an anchor from a hit test result
      * hitTestSource.on('result', (position, rotation, inputSource, hitTestResult) => {
-     *     app.xr.anchors.create(hitTestResult, function (err, anchor) {
+     *     app.xr.anchors.create(hitTestResult, (err, anchor) => {
      *         if (!err) {
      *             // new anchor has been created
      *         }
@@ -311,7 +311,7 @@ class XrAnchors extends EventHandler {
      * failed to be created.
      * @example
      * // restore an anchor using uuid string
-     * app.xr.anchors.restore(uuid, function (err, anchor) {
+     * app.xr.anchors.restore(uuid, (err, anchor) => {
      *     if (!err) {
      *         // new anchor has been created
      *     }

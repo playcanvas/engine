@@ -6,7 +6,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    playcanvas: new pc.Asset('playcanvas', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` })
+    playcanvas: new pc.Asset('playcanvas', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` }, { srgb: true })
 };
 
 const gfxOptions = {
@@ -72,8 +72,8 @@ assetListLoader.load(() => {
     // Create a new material with the new shader and additive alpha blending
     const material = new pc.ShaderMaterial({
         uniqueName: 'myUIShader',
-        vertexCode: files['shader.vert'],
-        fragmentCode: files['shader.frag'],
+        vertexGLSL: files['shader.vert'],
+        fragmentGLSL: files['shader.frag'],
         attributes: {
             vertex_position: pc.SEMANTIC_POSITION,
             vertex_texCoord0: pc.SEMANTIC_TEXCOORD0

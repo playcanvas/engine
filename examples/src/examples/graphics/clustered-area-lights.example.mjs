@@ -1,7 +1,6 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -228,11 +227,11 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
 
     // custom render passes
-    const cameraFrame = camera.script.create(CameraFrame);
+    const cameraFrame = new pc.CameraFrame(app, camera.camera);
     cameraFrame.rendering.samples = 4;
-    cameraFrame.bloom.enabled = true;
     cameraFrame.bloom.intensity = 0.01;
-    cameraFrame.bloom.lastMipLevel = 4;
+    cameraFrame.bloom.blurLevel = 4;
+    cameraFrame.update();
 
     // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
     cameraFrame.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_NEUTRAL;

@@ -49,7 +49,7 @@ class SoundComponentSystem extends ComponentSystem {
 
     /**
      * Sets the volume for the entire Sound system. All sounds will have their volume multiplied by
-     * this value. Valid between [0, 1].
+     * this value. Valid range is between 0 and 1. Defaults to 1.
      *
      * @type {number}
      */

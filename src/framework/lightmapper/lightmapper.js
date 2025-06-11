@@ -6,7 +6,6 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    CHUNKAPI_1_65,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_RGBA8,
@@ -30,8 +29,6 @@ import {
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { LightingParams } from '../../scene/lighting/lighting-params.js';
 import { WorldClusters } from '../../scene/lighting/world-clusters.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
 import { Camera } from '../../scene/camera.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
@@ -128,6 +125,8 @@ class Lightmapper {
     }
 
     initBake(device) {
+
+        this.bakeHDR = this.scene.lightmapPixelFormat !== PIXELFORMAT_RGBA8;
 
         // only initialize one time
         if (!this._initCalled) {
@@ -230,39 +229,28 @@ class Lightmapper {
         }
     }
 
-    createMaterialForPass(device, scene, pass, addAmbient) {
+    createMaterialForPass(scene, pass, addAmbient) {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
-        material.chunks.APIVersion = CHUNKAPI_1_65;
-        const transformDefines = '#define UV1LAYOUT\n';
-        material.chunks.transformVS = transformDefines + shaderChunks.transformVS; // draw into UV1 texture space
+        material.setDefine('UV1LAYOUT', '');    // draw into UV1 texture space
+        material.setDefine('LIT_LIGHTMAP_BAKING', '');
 
         if (pass === PASS_COLOR) {
-            let bakeLmEndChunk = shaderChunksLightmapper.bakeLmEndPS; // encode to RGBM
+            material.setDefine('LIT_LIGHTMAP_BAKING_COLOR', '');
             if (addAmbient) {
-                // diffuse light stores accumulated AO, apply contrast and brightness to it
-                // and multiply ambient light color by the AO
-                bakeLmEndChunk = `
-                    dDiffuseLight = ((dDiffuseLight - 0.5) * max(${scene.ambientBakeOcclusionContrast.toFixed(1)} + 1.0, 0.0)) + 0.5;
-                    dDiffuseLight += vec3(${scene.ambientBakeOcclusionBrightness.toFixed(1)});
-                    dDiffuseLight = saturate(dDiffuseLight);
-                    dDiffuseLight *= dAmbientLight;
-                ${bakeLmEndChunk}`;
+                material.setDefine('LIT_LIGHTMAP_BAKING_ADD_AMBIENT', '');
             } else {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
             }
-            material.chunks.basePS = shaderChunks.basePS + (scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? '\n#define LIGHTMAP_RGBM\n' : '');
-            material.chunks.endPS = bakeLmEndChunk;
+
+            if (!this.bakeHDR) material.setDefine('LIGHTMAP_RGBM', '');
+
             material.lightMap = this.blackTex;
         } else {
-            material.chunks.basePS = `${shaderChunks.basePS}\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n`;
-            material.chunks.endPS = shaderChunksLightmapper.bakeDirLmEndPS;
+            material.setDefine('LIT_LIGHTMAP_BAKING_DIR', '');
+            material.setDefine('STD_LIGHTMAP_DIR', '');
         }
 
-        // avoid writing unrelated things to alpha
-        material.chunks.outputAlphaPS = '\n';
-        material.chunks.outputAlphaOpaquePS = '\n';
-        material.chunks.outputAlphaPremulPS = '\n';
         material.cull = CULLFACE_NONE;
         material.forceUv1 = true; // provide data to xformUv1
         material.update();
@@ -273,13 +261,13 @@ class Lightmapper {
     createMaterials(device, scene, passCount) {
         for (let pass = 0; pass < passCount; pass++) {
             if (!this.passMaterials[pass]) {
-                this.passMaterials[pass] = this.createMaterialForPass(device, scene, pass, false);
+                this.passMaterials[pass] = this.createMaterialForPass(scene, pass, false);
             }
         }
 
         // material used on last render of ambient light to multiply accumulated AO in lightmap by ambient light
         if (!this.ambientAOMaterial) {
-            this.ambientAOMaterial = this.createMaterialForPass(device, scene, 0, true);
+            this.ambientAOMaterial = this.createMaterialForPass(scene, 0, true);
             this.ambientAOMaterial.onUpdateShader = function (options) {
                 // mark LM as without ambient, to add it
                 options.litOptions.lightMapWithoutAmbient = true;
@@ -299,7 +287,7 @@ class Lightmapper {
             height: size,
             format: this.scene.lightmapPixelFormat,
             mipmaps: false,
-            type: this.scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
+            type: this.bakeHDR ? TEXTURETYPE_DEFAULT : TEXTURETYPE_RGBM,
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -690,6 +678,10 @@ class Lightmapper {
 
         // apply scene settings
         this.renderer.setSceneConstants();
+
+        // uniforms
+        this.device.scope.resolve('ambientBakeOcclusionContrast').setValue(this.scene.ambientBakeOcclusionContrast);
+        this.device.scope.resolve('ambientBakeOcclusionBrightness').setValue(this.scene.ambientBakeOcclusionBrightness);
     }
 
     restoreScene() {
@@ -876,12 +868,14 @@ class Lightmapper {
     postprocessTextures(device, bakeNodes, passCount) {
 
         const numDilates2x = 1; // 1 or 2 dilates (depending on filter being enabled)
-        const dilateShader = this.lightmapFilters.shaderDilate;
+        const dilateShader = this.lightmapFilters.getDilate(device, this.bakeHDR);
+        let denoiseShader;
 
         // bilateral denoise filter - runs as a first pass, before dilate
         const filterLightmap = this.scene.lightmapFilterEnabled;
         if (filterLightmap) {
-            this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness);
+            this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness, this.bakeHDR);
+            denoiseShader = this.lightmapFilters.getDenoise(this.bakeHDR);
         }
 
         device.setBlendState(BlendState.NOBLEND);
@@ -908,7 +902,7 @@ class Lightmapper {
 
                     this.lightmapFilters.setSourceTexture(lightmap);
                     const bilateralFilterEnabled = filterLightmap && pass === 0 && i === 0;
-                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? this.lightmapFilters.shaderDenoise : dilateShader);
+                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? denoiseShader : dilateShader);
 
                     this.lightmapFilters.setSourceTexture(tempTex);
                     drawQuadWithShader(device, nodeRT, dilateShader);

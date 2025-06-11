@@ -34,6 +34,8 @@ class JointComponentSystem extends ComponentSystem {
 
     initializeComponentData(component, data, properties) {
         component.initFromData(data);
+
+        super.initializeComponentData(component, data, _schema);
     }
 }
 

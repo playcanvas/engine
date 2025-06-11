@@ -1,7 +1,6 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -9,6 +8,7 @@ window.focus();
 const assets = {
     orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     house: new pc.Asset('house', 'container', { url: `${rootPath}/static/assets/models/pbr-house.glb` }),
+    cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
@@ -111,22 +111,27 @@ assetListLoader.load(() => {
     app.root.addChild(light);
     light.setLocalEulerAngles(40, 10, 0);
 
+    const cubeEntity = assets.cube.resource.instantiateRenderEntity();
+    cubeEntity.setLocalScale(30, 30, 30);
+    app.root.addChild(cubeEntity);
+
     // ------ Custom render passes set up ------
 
-    /** @type { CameraFrame } */
-    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
     cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
     cameraFrame.bloom.intensity = 0.02;
+    cameraFrame.update();
 
     // ------
 
     const applySettings = () => {
 
-        cameraFrame.bloom.enabled = data.get('data.scene.bloom');
+        cameraFrame.bloom.intensity = data.get('data.scene.bloom') ? 0.02 : 0;
         cameraFrame.taa.enabled = data.get('data.taa.enabled');
         cameraFrame.taa.jitter = data.get('data.taa.jitter');
         cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
         cameraFrame.rendering.sharpness = data.get('data.scene.sharpness');
+        cameraFrame.update();
     };
 
     // apply UI changes
@@ -151,6 +156,13 @@ assetListLoader.load(() => {
             enabled: true,
             jitter: 1
         }
+    });
+
+    let time = 0;
+    app.on('update', (/** @type {number} */ dt) => {
+        time += dt;
+        cubeEntity.setLocalPosition(130 * Math.sin(time), 0, 130 * Math.cos(time));
+        cubeEntity.rotate(50 * dt, 20 * dt, 30 * dt);
     });
 });
 

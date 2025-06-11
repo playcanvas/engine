@@ -1,16 +1,18 @@
 import { Debug } from '../../../core/debug.js';
 import {
-    BLEND_NONE, DITHER_BAYER8, DITHER_NONE, FRESNEL_SCHLICK,
+    BLEND_NONE, DITHER_NONE, ditherNames, FRESNEL_SCHLICK,
     SHADER_FORWARD,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../constants.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { LitShader } from './lit-shader.js';
-import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
+import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
+import { SHADERTAG_MATERIAL } from '../../../platform/graphics/constants.js';
+import { MapUtils } from '../../../core/map-utils.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -50,15 +52,13 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         return key;
     }
 
-    // get the value to replace $UV with in Map Shader functions
-
     /**
-     * Get the code with which to to replace '$UV' in the map shader functions.
+     * Get the code with which to to replace '*_TEXTURE_UV' in the map shader functions.
      *
      * @param {string} transformPropName - Name of the transform id in the options block. Usually "basenameTransform".
      * @param {string} uVPropName - Name of the UV channel in the options block. Usually "basenameUv".
      * @param {object} options - The options passed into createShaderDefinition.
-     * @returns {string} The code used to replace "$UV" in the shader code.
+     * @returns {string} The code used to replace '*_TEXTURE_UV' in the shader code.
      * @private
      */
     _getUvSourceExpression(transformPropName, uVPropName, options) {
@@ -88,32 +88,66 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         return expression;
     }
 
-    _addMapDef(name, enabled) {
-        return enabled ? `#define ${name}\n` : `#undef ${name}\n`;
-    }
+    _validateMapChunk(propName, chunkName, chunks) {
+        Debug.call(() => {
+            // strip comments from the chunk
+            const code = chunks.get(chunkName).replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
 
-    _addMapDefs(float, color, vertex, map, invert) {
-        return this._addMapDef('MAPFLOAT', float) +
-               this._addMapDef('MAPCOLOR', color) +
-               this._addMapDef('MAPVERTEX', vertex) +
-               this._addMapDef('MAPTEXTURE', map) +
-               this._addMapDef('MAPINVERT', invert);
+            const requiredChangeStrings = [];
+
+            // Helper function to add a formatted change string if the old syntax is found
+            const trackChange = (oldSyntax, newSyntax) => {
+                if (code.includes(oldSyntax)) {
+                    requiredChangeStrings.push(`  ${oldSyntax} -> ${newSyntax}`);
+                }
+            };
+
+            // inject defines (with curly braces)
+            [
+                ['$UV',         `{STD_${propName}_TEXTURE_UV}`],
+                ['$CH',         `{STD_${propName}_TEXTURE_CHANNEL}`],
+                ['$SAMPLER',    `{STD_${propName}_TEXTURE_NAME}`],
+                ['$DECODE',     `{STD_${propName}_TEXTURE_DECODE}`],
+                ['$VC',         `{STD_${propName}_VERTEX_CHANNEL}`],
+                ['$DETAILMODE', `{STD_${propName}_DETAILMODE}`],
+                ['unpackNormal(', `{STD_${propName}_TEXTURE_DECODE}(`]
+            ].forEach(([oldSyntax, newSyntax]) => trackChange(oldSyntax, newSyntax));
+
+            // defines
+            [
+                ['MAPFLOAT',   `STD_${propName}_CONSTANT`],
+                ['MAPCOLOR',   `STD_${propName}_CONSTANT`],
+                ['MAPVERTEX',  `STD_${propName}_VERTEX`],
+                ['MAPTEXTURE', `STD_${propName}_TEXTURE`],
+                ['MAPINVERT',  `STD_${propName}_INVERT`]
+            ].forEach(([oldSyntax, newSyntax]) => trackChange(oldSyntax, newSyntax));
+
+            // custom handling
+            if (code.includes('$texture2DSAMPLE')) {
+                trackChange('$texture2DSAMPLE', '(Macro no longer supported - remove/refactor)');
+            }
+
+            if (requiredChangeStrings.length > 0) {
+                Debug.errorOnce(`Shader chunk ${chunkName} is in no longer compatible format. Please make these replacements to bring it to the current version:\n${requiredChangeStrings.join('\n')}`, { code: code });
+            }
+        });
     }
 
     /**
-     * Add chunk for Map Types (used for all maps except Normal).
+     * Add shader defines for a texture map.
      *
+     * @param {Map<string, string>} fDefines - The fragment defines.
      * @param {string} propName - The base name of the map: diffuse | emissive | opacity | light | height | metalness | specular | gloss | ao.
      * @param {string} chunkName - The name of the chunk to use. Usually "basenamePS".
      * @param {object} options - The options passed into to createShaderDefinition.
-     * @param {object} chunks - The set of shader chunks to choose from.
+     * @param {Map<string, string>} chunks - The set of shader chunks to choose from.
      * @param {object} mapping - The mapping between chunk and sampler
-     * @param {string} encoding - The texture's encoding
-     * @returns {string} The shader code to support this map.
+     * @param {string|null} encoding - The texture's encoding
      * @private
      */
-    _addMap(propName, chunkName, options, chunks, mapping, encoding = null) {
+    _addMapDefines(fDefines, propName, chunkName, options, chunks, mapping, encoding = null) {
         const mapPropName = `${propName}Map`;
+        const propNameCaps = propName.toUpperCase();
         const uVPropName = `${mapPropName}Uv`;
         const identifierPropName = `${mapPropName}Identifier`;
         const transformPropName = `${mapPropName}Transform`;
@@ -130,61 +164,64 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         const textureIdentifier = options[identifierPropName];
         const detailModeOption = options[detailModePropName];
 
-        let subCode = chunks[chunkName];
+        const chunkCode = chunks.get(chunkName);
+        Debug.assert(chunkCode, `Shader chunk ${chunkName} not found.`);
+
+        // log errors if the chunk format is deprecated (format changed in engine 2.7)
+        Debug.call(() => {
+            if (chunkCode) {
+                this._validateMapChunk(propNameCaps, chunkName, chunks);
+            }
+        });
 
         if (textureOption) {
+
+            fDefines.set(`STD_${propNameCaps}_TEXTURE`, '');
+
             const uv = this._getUvSourceExpression(transformPropName, uVPropName, options);
 
-            subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[channelPropName]);
+            // chunk injection defines
+            fDefines.set(`{STD_${propNameCaps}_TEXTURE_UV}`, uv);
+            fDefines.set(`{STD_${propNameCaps}_TEXTURE_CHANNEL}`, options[channelPropName]);
 
-            if (mapping && subCode.search(/\$SAMPLER/g) !== -1) {
+            // texture sampler define
+            const textureId = `{STD_${propNameCaps}_TEXTURE_NAME}`;
+            if (chunkCode.includes(textureId)) {
                 let samplerName = `texture_${mapPropName}`;
                 const alias = mapping[textureIdentifier];
                 if (alias) {
                     samplerName = alias;
                 } else {
                     mapping[textureIdentifier] = samplerName;
+
+                    // texture is not aliased to existing texture, create a new one
+                    fDefines.set(`STD_${propNameCaps}_TEXTURE_ALLOCATE`, '');
                 }
-                subCode = subCode.replace(/\$SAMPLER/g, samplerName);
+                fDefines.set(textureId, samplerName);
             }
 
             if (encoding) {
-                if (options[channelPropName] === 'aaa') {
-                    // completely skip decoding if the user has selected the alpha channel (since alpha
-                    // is never decoded).
-                    subCode = subCode.replace(/\$DECODE/g, 'passThrough');
-                } else {
-                    subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc(encoding));
-                }
-
-                // continue to support $texture2DSAMPLE
-                if (subCode.indexOf('$texture2DSAMPLE')) {
-                    const decodeTable = {
-                        linear: 'texture2D',
-                        srgb: 'texture2DSRGB',
-                        rgbm: 'texture2DRGBM',
-                        rgbe: 'texture2DRGBE'
-                    };
-
-                    subCode = subCode.replace(/\$texture2DSAMPLE/g, decodeTable[encoding] || 'texture2D');
-                }
+                // decode function, ignored for alpha channel
+                const textureDecode = options[channelPropName] === 'aaa' ? 'passThrough' : ChunkUtils.decodeFunc(encoding);
+                fDefines.set(`{STD_${propNameCaps}_TEXTURE_DECODE}`, textureDecode);
             }
         }
 
         if (vertexColorOption) {
-            subCode = subCode.replace(/\$VC/g, options[vertexColorChannelPropName]);
+            fDefines.set(`STD_${propNameCaps}_VERTEX`, '');
+            fDefines.set(`{STD_${propNameCaps}_VERTEX_CHANNEL}`, options[vertexColorChannelPropName]);
         }
 
         if (detailModeOption) {
-            subCode = subCode.replace(/\$DETAILMODE/g, detailModeOption);
+            fDefines.set(`{STD_${propNameCaps}_DETAILMODE}`, detailModeOption);
         }
 
-        const isFloatTint = !!(tintOption & 1);
-        const isVecTint = !!(tintOption & 2);
-        const invertOption = !!(options[invertName]);
-
-        subCode = this._addMapDefs(isFloatTint, isVecTint, vertexColorOption, textureOption, invertOption) + subCode;
-        return subCode.replace(/\$/g, '');
+        if (tintOption) {
+            fDefines.set(`STD_${propNameCaps}_CONSTANT`, '');
+        }
+        if (!!(options[invertName])) {
+            fDefines.set(`STD_${propNameCaps}_INVERT`, '');
+        }
     }
 
     _correctChannel(p, chan, _matTex2D) {
@@ -202,6 +239,74 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         }
     }
 
+    createVertexShader(litShader, options) {
+
+        const useUv = [];
+        const useUnmodifiedUv = [];
+        const mapTransforms = [];
+        const maxUvSets = 2;
+
+        for (const p in _matTex2D) {
+            const mapName = `${p}Map`;
+
+            if (options[`${p}VertexColor`]) {
+                const colorChannelName = `${p}VertexColorChannel`;
+                options[colorChannelName] = this._correctChannel(p, options[colorChannelName], _matTex2D);
+            }
+
+            if (options[mapName]) {
+                const channelName = `${mapName}Channel`;
+                const transformName = `${mapName}Transform`;
+                const uvName = `${mapName}Uv`;
+
+                options[uvName] = Math.min(options[uvName], maxUvSets - 1);
+                options[channelName] = this._correctChannel(p, options[channelName], _matTex2D);
+
+                const uvSet = options[uvName];
+                useUv[uvSet] = true;
+                useUnmodifiedUv[uvSet] = useUnmodifiedUv[uvSet] || (options[mapName] && !options[transformName]);
+
+                // create map transforms
+                if (options[transformName]) {
+                    mapTransforms.push({
+                        name: p,
+                        id: options[transformName],
+                        uv: options[uvName]
+                    });
+                }
+            }
+        }
+
+        if (options.forceUv1) {
+            useUv[1] = true;
+            useUnmodifiedUv[1] = (useUnmodifiedUv[1] !== undefined) ? useUnmodifiedUv[1] : true;
+        }
+
+        litShader.generateVertexShader(useUv, useUnmodifiedUv, mapTransforms);
+    }
+
+    /**
+     * @param {StandardMaterialOptions} options - The create options.
+     * @param {Map<string, string>} fDefines - The fragment defines.
+     * @param {ShaderPass} shaderPassInfo - The shader pass info.
+     */
+    prepareFragmentDefines(options, fDefines, shaderPassInfo) {
+
+        const fDefineSet = (condition, name, value = '') => {
+            if (condition) {
+                fDefines.set(name, value);
+            }
+        };
+
+        fDefineSet(options.lightMap, 'STD_LIGHTMAP', '');
+        fDefineSet(options.lightVertexColor, 'STD_LIGHT_VERTEX_COLOR', '');
+        fDefineSet(options.dirLightMap && options.litOptions.useSpecular, 'STD_LIGHTMAP_DIR', '');
+        fDefineSet(options.heightMap, 'STD_HEIGHT_MAP', '');
+        fDefineSet(options.useSpecularColor, 'STD_SPECULAR_COLOR', '');
+        fDefineSet(options.aoMap || options.aoVertexColor || options.useAO, 'STD_AO', '');
+        fDefineSet(true, 'STD_OPACITY_DITHER', ditherNames[shaderPassInfo.isForward ? options.litOptions.opacityDither : options.litOptions.opacityShadowDither]);
+    }
+
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {StandardMaterialOptions} options - The create options.
@@ -214,110 +319,33 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         const litShader = new LitShader(device, options.litOptions);
 
         // generate vertex shader
-        const useUv = [];
-        const useUnmodifiedUv = [];
-        const mapTransforms = [];
-        const maxUvSets = 2;
-        const textureMapping = {};
-
-        for (const p in _matTex2D) {
-            const mname = `${p}Map`;
-
-            if (options[`${p}VertexColor`]) {
-                const cname = `${p}VertexColorChannel`;
-                options[cname] = this._correctChannel(p, options[cname], _matTex2D);
-            }
-
-            if (options[mname]) {
-                const cname = `${mname}Channel`;
-                const tname = `${mname}Transform`;
-                const uname = `${mname}Uv`;
-
-                options[uname] = Math.min(options[uname], maxUvSets - 1);
-                options[cname] = this._correctChannel(p, options[cname], _matTex2D);
-
-                const uvSet = options[uname];
-                useUv[uvSet] = true;
-                useUnmodifiedUv[uvSet] = useUnmodifiedUv[uvSet] || (options[mname] && !options[tname]);
-
-                // create map transforms
-                if (options[tname]) {
-                    mapTransforms.push({
-                        name: p,
-                        id: options[tname],
-                        uv: options[uname]
-                    });
-                }
-            }
-        }
-
-        if (options.forceUv1) {
-            useUv[1] = true;
-            useUnmodifiedUv[1] = (useUnmodifiedUv[1] !== undefined) ? useUnmodifiedUv[1] : true;
-        }
-
-        litShader.generateVertexShader(useUv, useUnmodifiedUv, mapTransforms);
+        this.createVertexShader(litShader, options);
 
         // handle fragment shader
+        const textureMapping = {};
+
         options.litOptions.fresnelModel = (options.litOptions.fresnelModel === 0) ? FRESNEL_SCHLICK : options.litOptions.fresnelModel;
 
-        const decl = new ChunkBuilder();
-        const code = new ChunkBuilder();
-        const func = new ChunkBuilder();
-        const args = new ChunkBuilder();
-        let lightingUv = '';
+        // fragment defines
+        const fDefines = litShader.fDefines;
+        this.prepareFragmentDefines(options, fDefines, shaderPassInfo);
 
-        // global texture bias for standard textures
-        if (options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
-            decl.append('const float textureBias = -1000.0;');
-        } else {
-            decl.append('uniform float textureBias;');
-        }
+        let lightingUv = '';
 
         if (isForwardPass) {
             // parallax
             if (options.heightMap) {
-                // if (!options.normalMap) {
-                //     const transformedHeightMapUv = this._getUvSourceExpression("heightMapTransform", "heightMapUv", options);
-                //     if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedHeightMapUv);
-                //     code += tbn;
-                // }
-                decl.append('vec2 dUvOffset;');
-                code.append(this._addMap('height', 'parallaxPS', options, litShader.chunks, textureMapping));
-                func.append('getParallax();');
+                this._addMapDefines(fDefines, 'height', 'parallaxPS', options, litShader.chunks, textureMapping);
             }
 
             // opacity
             if (options.litOptions.blendType !== BLEND_NONE || options.litOptions.alphaTest || options.litOptions.alphaToCoverage || options.litOptions.opacityDither !== DITHER_NONE) {
-                decl.append('float dAlpha;');
-                code.append(this._addMap('opacity', 'opacityPS', options, litShader.chunks, textureMapping));
-                func.append('getOpacity();');
-                args.append('litArgs_opacity = dAlpha;');
-
-                if (options.litOptions.alphaTest) {
-                    code.append(litShader.chunks.alphaTestPS);
-                    func.append('alphaTest(dAlpha);');
-                }
-
-                const opacityDither = options.litOptions.opacityDither;
-                if (opacityDither !== DITHER_NONE) {
-                    if (opacityDither === DITHER_BAYER8) {
-                        decl.append(litShader.chunks.bayerPS);
-                    }
-                    decl.append(`#define DITHER_${opacityDither.toUpperCase()}\n`);
-                    decl.append(litShader.chunks.opacityDitherPS);
-                    func.append('opacityDither(dAlpha, 0.0);');
-                }
-            } else {
-                decl.append('float dAlpha = 1.0;');
+                this._addMapDefines(fDefines, 'opacity', 'opacityPS', options, litShader.chunks, textureMapping);
             }
 
             // normal
             if (litShader.needsNormal) {
                 if (options.normalMap || options.clearCoatNormalMap) {
-                    // TODO: let each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently decide which unpackNormal to use.
-                    code.append(options.packedNormal ? litShader.chunks.normalXYPS : litShader.chunks.normalXYZPS);
-
                     if (!options.litOptions.hasTangents) {
                         // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently
                         const baseName = options.normalMap ? 'normalMap' : 'clearCoatNormalMap';
@@ -325,210 +353,116 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     }
                 }
 
-                decl.append('vec3 dNormalW;');
-                code.append(this._addMap('normalDetail', 'normalDetailMapPS', options, litShader.chunks, textureMapping));
-                code.append(this._addMap('normal', 'normalMapPS', options, litShader.chunks, textureMapping));
-                func.append('getNormal();');
-                args.append('litArgs_worldNormal = dNormalW;');
+                this._addMapDefines(fDefines, 'normalDetail', 'normalMapPS', options, litShader.chunks, textureMapping, options.normalDetailPackedNormal ? 'xy' : 'xyz');
+                this._addMapDefines(fDefines, 'normal', 'normalMapPS', options, litShader.chunks, textureMapping, options.packedNormal ? 'xy' : 'xyz');
             }
 
-            if (litShader.needsSceneColor) {
-                decl.append('uniform sampler2D uSceneColorMap;');
-            }
-            if (litShader.needsScreenSize) {
-                decl.append('uniform vec4 uScreenSize;');
-            }
-            if (litShader.needsTransforms) {
-                decl.append('uniform mat4 matrix_viewProjection;');
-                decl.append('uniform mat4 matrix_model;');
-            }
-
-            // support for diffuse & ao detail modes
-            if (options.diffuseDetail || options.aoDetail) {
-                code.append(litShader.chunks.detailModesPS);
-            }
-
-            // albedo
-            decl.append('vec3 dAlbedo;');
+            // diffuse
             if (options.diffuseDetail) {
-                code.append(this._addMap('diffuseDetail', 'diffuseDetailMapPS', options, litShader.chunks, textureMapping, options.diffuseDetailEncoding));
+                this._addMapDefines(fDefines, 'diffuseDetail', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseDetailEncoding);
             }
-            code.append(this._addMap('diffuse', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseEncoding));
-            func.append('getAlbedo();');
-            args.append('litArgs_albedo = dAlbedo;');
+            this._addMapDefines(fDefines, 'diffuse', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseEncoding);
 
+            // refraction
             if (options.litOptions.useRefraction) {
-                decl.append('float dTransmission;');
-                code.append(this._addMap('refraction', 'transmissionPS', options, litShader.chunks, textureMapping));
-                func.append('getRefraction();');
-                args.append('litArgs_transmission = dTransmission;');
-
-                decl.append('float dThickness;');
-                code.append(this._addMap('thickness', 'thicknessPS', options, litShader.chunks, textureMapping));
-                func.append('getThickness();');
-                args.append('litArgs_thickness = dThickness;');
-
-                if (options.litOptions.dispersion) {
-                    args.append('litArgs_dispersion = material_dispersion;');
-                }
+                this._addMapDefines(fDefines, 'refraction', 'transmissionPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'thickness', 'thicknessPS', options, litShader.chunks, textureMapping);
             }
 
+            // iridescence
             if (options.litOptions.useIridescence) {
-                decl.append('float dIridescence;');
-                code.append(this._addMap('iridescence', 'iridescencePS', options, litShader.chunks, textureMapping));
-                func.append('getIridescence();');
-                args.append('litArgs_iridescence_intensity = dIridescence;');
-
-                decl.append('float dIridescenceThickness;');
-                code.append(this._addMap('iridescenceThickness', 'iridescenceThicknessPS', options, litShader.chunks, textureMapping));
-                func.append('getIridescenceThickness();');
-                args.append('litArgs_iridescence_thickness = dIridescenceThickness;');
+                this._addMapDefines(fDefines, 'iridescence', 'iridescencePS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'iridescenceThickness', 'iridescenceThicknessPS', options, litShader.chunks, textureMapping);
             }
 
             // specularity & glossiness
             if ((litShader.lighting && options.litOptions.useSpecular) || litShader.reflections) {
-                decl.append('vec3 dSpecularity;');
-                decl.append('float dGlossiness;');
                 if (options.litOptions.useSheen) {
-                    decl.append('vec3 sSpecularity;');
-                    code.append(this._addMap('sheen', 'sheenPS', options, litShader.chunks, textureMapping, options.sheenEncoding));
-                    func.append('getSheen();');
-                    args.append('litArgs_sheen_specularity = sSpecularity;');
-
-                    decl.append('float sGlossiness;');
-                    code.append(this._addMap('sheenGloss', 'sheenGlossPS', options, litShader.chunks, textureMapping));
-                    func.append('getSheenGlossiness();');
-                    args.append('litArgs_sheen_gloss = sGlossiness;');
+                    this._addMapDefines(fDefines, 'sheen', 'sheenPS', options, litShader.chunks, textureMapping, options.sheenEncoding);
+                    this._addMapDefines(fDefines, 'sheenGloss', 'sheenGlossPS', options, litShader.chunks, textureMapping);
                 }
+
                 if (options.litOptions.useMetalness) {
-                    decl.append('float dMetalness;');
-                    code.append(this._addMap('metalness', 'metalnessPS', options, litShader.chunks, textureMapping));
-                    func.append('getMetalness();');
-                    args.append('litArgs_metalness = dMetalness;');
+                    this._addMapDefines(fDefines, 'metalness', 'metalnessPS', options, litShader.chunks, textureMapping);
+                    this._addMapDefines(fDefines, 'ior', 'iorPS', options, litShader.chunks, textureMapping);
+                }
 
-                    decl.append('float dIor;');
-                    code.append(this._addMap('ior', 'iorPS', options, litShader.chunks, textureMapping));
-                    func.append('getIor();');
-                    args.append('litArgs_ior = dIor;');
-                }
                 if (options.litOptions.useSpecularityFactor) {
-                    decl.append('float dSpecularityFactor;');
-                    code.append(this._addMap('specularityFactor', 'specularityFactorPS', options, litShader.chunks, textureMapping));
-                    func.append('getSpecularityFactor();');
-                    args.append('litArgs_specularityFactor = dSpecularityFactor;');
+                    this._addMapDefines(fDefines, 'specularityFactor', 'specularityFactorPS', options, litShader.chunks, textureMapping);
                 }
+
                 if (options.useSpecularColor) {
-                    code.append(this._addMap('specular', 'specularPS', options, litShader.chunks, textureMapping, options.specularEncoding));
-                } else {
-                    code.append('void getSpecularity() { dSpecularity = vec3(1); }');
+                    this._addMapDefines(fDefines, 'specular', 'specularPS', options, litShader.chunks, textureMapping, options.specularEncoding);
                 }
-                code.append(this._addMap('gloss', 'glossPS', options, litShader.chunks, textureMapping));
-                func.append('getGlossiness();');
-                func.append('getSpecularity();');
-                args.append('litArgs_specularity = dSpecularity;');
-                args.append('litArgs_gloss = dGlossiness;');
-            } else {
-                decl.append('vec3 dSpecularity = vec3(0.0);');
-                decl.append('float dGlossiness = 0.0;');
+
+                this._addMapDefines(fDefines, 'gloss', 'glossPS', options, litShader.chunks, textureMapping);
             }
 
             // ao
             if (options.aoDetail) {
-                code.append(this._addMap('aoDetail', 'aoDetailMapPS', options, litShader.chunks, textureMapping));
+                this._addMapDefines(fDefines, 'aoDetail', 'aoPS', options, litShader.chunks, textureMapping);
             }
             if (options.aoMap || options.aoVertexColor || options.useAO) {
-                decl.append('float dAo;');
-                code.append(this._addMap('ao', 'aoPS', options, litShader.chunks, textureMapping));
-                func.append('getAO();');
-                args.append('litArgs_ao = dAo;');
+                this._addMapDefines(fDefines, 'ao', 'aoPS', options, litShader.chunks, textureMapping);
             }
 
             // emission
-            decl.append('vec3 dEmission;');
-            code.append(this._addMap('emissive', 'emissivePS', options, litShader.chunks, textureMapping, options.emissiveEncoding));
-            func.append('getEmission();');
-            args.append('litArgs_emission = dEmission;');
+            this._addMapDefines(fDefines, 'emissive', 'emissivePS', options, litShader.chunks, textureMapping, options.emissiveEncoding);
 
             // clearcoat
             if (options.litOptions.useClearCoat) {
-                decl.append('float ccSpecularity;');
-                decl.append('float ccGlossiness;');
-                decl.append('vec3 ccNormalW;');
+                this._addMapDefines(fDefines, 'clearCoat', 'clearCoatPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'clearCoatGloss', 'clearCoatGlossPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping, options.clearCoatPackedNormal ? 'xy' : 'xyz');
+            }
 
-                code.append(this._addMap('clearCoat', 'clearCoatPS', options, litShader.chunks, textureMapping));
-                code.append(this._addMap('clearCoatGloss', 'clearCoatGlossPS', options, litShader.chunks, textureMapping));
-                code.append(this._addMap('clearCoatNormal', 'clearCoatNormalPS', options, litShader.chunks, textureMapping));
-
-                func.append('getClearCoat();');
-                func.append('getClearCoatGlossiness();');
-                func.append('getClearCoatNormal();');
-
-                args.append('litArgs_clearcoat_specularity = ccSpecularity;');
-                args.append('litArgs_clearcoat_gloss = ccGlossiness;');
-                args.append('litArgs_clearcoat_worldNormal = ccNormalW;');
+            // anisotropy
+            if (options.litOptions.enableGGXSpecular) {
+                this._addMapDefines(fDefines, 'anisotropy', 'anisotropyPS', options, litShader.chunks, textureMapping);
             }
 
             // lightmap
             if (options.lightMap || options.lightVertexColor) {
-                const lightmapDir = (options.dirLightMap && options.litOptions.useSpecular);
-                const lightmapChunkPropName = lightmapDir ? 'lightmapDirPS' : 'lightmapSinglePS';
-                decl.append('vec3 dLightmap;');
-                if (lightmapDir) {
-                    decl.append('vec3 dLightmapDir;');
-                }
-                code.append(this._addMap('light', lightmapChunkPropName, options, litShader.chunks, textureMapping, options.lightMapEncoding));
-                func.append('getLightMap();');
-                args.append('litArgs_lightmap = dLightmap;');
-                if (lightmapDir) {
-                    args.append('litArgs_lightmapDir = dLightmapDir;');
-                }
+                this._addMapDefines(fDefines, 'light', 'lightmapPS', options, litShader.chunks, textureMapping, options.lightMapEncoding);
             }
-
-            Debug.assert(code.code.indexOf('texture2DSRGB') === -1 &&
-                         code.code.indexOf('texture2DRGBM') === -1 &&
-                         code.code.indexOf('texture2DRGBE') === -1, 'Shader chunk macro $texture2DSAMPLE(XXX) is deprecated. Please use $DECODE(texture2D(XXX)) instead.');
 
         } else {
             // all other passes require only opacity
             const opacityShadowDither = options.litOptions.opacityShadowDither;
             if (options.litOptions.alphaTest || opacityShadowDither) {
-                decl.append('float dAlpha;');
-                code.append(this._addMap('opacity', 'opacityPS', options, litShader.chunks, textureMapping));
-                func.append('getOpacity();');
-                args.append('litArgs_opacity = dAlpha;');
-                if (options.litOptions.alphaTest) {
-                    code.append(litShader.chunks.alphaTestPS);
-                    func.append('alphaTest(dAlpha);');
-                }
-                if (opacityShadowDither !== DITHER_NONE) {
-                    if (opacityShadowDither === DITHER_BAYER8) {
-                        decl.append(litShader.chunks.bayerPS);
-                    }
-                    decl.append(`#define DITHER_${opacityShadowDither.toUpperCase()}\n`);
-                    decl.append(litShader.chunks.opacityDitherPS);
-                    func.append('opacityDither(dAlpha, 0.0);');
-                }
+                this._addMapDefines(fDefines, 'opacity', 'opacityPS', options, litShader.chunks, textureMapping);
             }
         }
 
-        decl.append(litShader.chunks.litShaderArgsPS);
-        code.append(`void evaluateFrontend() { \n${func.code}\n${args.code}\n }\n`);
-        func.code = 'evaluateFrontend();';
+        // generate fragment shader - supply the front end declaration and code to the lit shader, which will
+        // use the outputs from this standard shader generator as an input to the lit shader generator
+        litShader.generateFragmentShader(litShader.chunks.get('stdDeclarationPS'), litShader.chunks.get('stdFrontEndPS'), lightingUv);
 
-        for (const texture in textureMapping) {
-            decl.append(`uniform sampler2D ${textureMapping[texture]};`);
+        // chunks collected by the lit shader + includes generated by the lit shader
+        const includes = MapUtils.merge(litShader.chunks, litShader.includes);
+
+        const vDefines = litShader.vDefines;
+        options.defines.forEach((value, key) => vDefines.set(key, value));
+
+        options.defines.forEach((value, key) => fDefines.set(key, value));
+
+        const definition = ShaderDefinitionUtils.createDefinition(device, {
+            name: 'StandardShader',
+            attributes: litShader.attributes,
+            shaderLanguage: litShader.shaderLanguage,
+            vertexCode: litShader.vshader,
+            fragmentCode: litShader.fshader,
+            vertexIncludes: includes,
+            fragmentIncludes: includes,
+            fragmentDefines: fDefines,
+            vertexDefines: vDefines
+        });
+
+        if (litShader.shaderPassInfo.isForward) {
+            definition.tag = SHADERTAG_MATERIAL;
         }
 
-        // decl.append('//-------- frontend decl begin', decl.code, '//-------- frontend decl end');
-        // code.append('//-------- frontend code begin', code.code, '//-------- frontend code end');
-        // func.append('//-------- frontend func begin\n${func}//-------- frontend func end\n`;
-
-        // format func
-        func.code = `\n${func.code.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
-
-        litShader.generateFragmentShader(decl.code, code.code, func.code, lightingUv);
-
-        return litShader.getDefinition(options);
+        return definition;
     }
 }
 

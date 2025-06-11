@@ -3,6 +3,7 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 /**
  * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { Scene } from '../scene.js'
  */
 
 /**
@@ -57,7 +58,12 @@ class Batch {
         this.batchGroupId = batchGroupId;
     }
 
-    // Removes the batch meshes from all layers and destroys it
+    /**
+     * Removes the batch from the layers and destroys it.
+     *
+     * @param {Scene} scene - The scene.
+     * @param {number[]} layers - The layers to remove the batch from.
+     */
     destroy(scene, layers) {
         if (this.meshInstance) {
             this.removeFromLayers(scene, layers);

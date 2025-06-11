@@ -1,8 +1,5 @@
 import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_NONE, GAMMA_NONE } from '../../scene/constants.js';
-import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST,
-    PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8
-} from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { RenderPassColorGrab } from '../../scene/graphics/render-pass-color-grab.js';
@@ -12,13 +9,20 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { RenderPassBloom } from './render-pass-bloom.js';
 import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
+import { RenderPassDof } from './render-pass-dof.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 import { RenderPassSsao } from './render-pass-ssao.js';
+import { SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE } from './constants.js';
+import { Debug } from '../../core/debug.js';
+import { RenderPassDownsample } from './render-pass-downsample.js';
+import { Color } from '../../core/math/color.js';
 
-export const SSAOTYPE_NONE = 'none';
-export const SSAOTYPE_LIGHTING = 'lighting';
-export const SSAOTYPE_COMBINE = 'combine';
-
+/**
+ * Options used to configure the RenderPassCameraFrame. To modify these options, you must create
+ * a new instance of the RenderPassCameraFrame with the desired settings.
+ *
+ * @ignore
+ */
 class CameraFrameOptions {
     formats;
 
@@ -50,6 +54,13 @@ class CameraFrameOptions {
     ssaoBlurEnabled = true;
 
     prepassEnabled = false;
+
+    // DOF
+    dofEnabled = false;
+
+    dofNearBlur = false;
+
+    dofHighQuality = true;
 }
 
 const _defaultOptions = new CameraFrameOptions();
@@ -76,7 +87,19 @@ class RenderPassCameraFrame extends RenderPass {
 
     taaPass;
 
+    scenePassHalf;
+
+    dofPass;
+
     _renderTargetScale = 1;
+
+    /**
+     * True if the render pass needs to be re-created because layers have been added or removed.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    layersDirty = false;
 
     /**
      * @type {RenderTarget|null}
@@ -85,6 +108,7 @@ class RenderPassCameraFrame extends RenderPass {
     rt = null;
 
     constructor(app, cameraComponent, options = {}) {
+        Debug.assert(app);
         super(app.graphicsDevice);
         this.app = app;
         this.cameraComponent = cameraComponent;
@@ -100,12 +124,18 @@ class RenderPassCameraFrame extends RenderPass {
     reset() {
 
         this.sceneTexture = null;
-        this.sceneDepth = null;
+        this.sceneTextureHalf = null;
 
         if (this.rt) {
             this.rt.destroyTextureBuffers();
             this.rt.destroy();
             this.rt = null;
+        }
+
+        if (this.rtHalf) {
+            this.rtHalf.destroyTextureBuffers();
+            this.rtHalf.destroy();
+            this.rtHalf = null;
         }
 
         // destroy all passes we created
@@ -121,13 +151,15 @@ class RenderPassCameraFrame extends RenderPass {
         this.ssaoPass = null;
         this.taaPass = null;
         this.afterPass = null;
+        this.scenePassHalf = null;
+        this.dofPass = null;
     }
 
     sanitizeOptions(options) {
         options = Object.assign({}, _defaultOptions, options);
 
         // automatically enable prepass when required internally
-        if (options.taaEnabled || options.ssaoType !== SSAOTYPE_NONE) {
+        if (options.taaEnabled || options.ssaoType !== SSAOTYPE_NONE || options.dofEnabled) {
             options.prepassEnabled = true;
         }
 
@@ -137,8 +169,8 @@ class RenderPassCameraFrame extends RenderPass {
     set renderTargetScale(value) {
         this._renderTargetScale = value;
         if (this.scenePass) {
-            this.scenePass.options.scaleX = value;
-            this.scenePass.options.scaleY = value;
+            this.scenePass.scaleX = value;
+            this.scenePass.scaleY = value;
         }
     }
 
@@ -163,6 +195,9 @@ class RenderPassCameraFrame extends RenderPass {
             options.bloomEnabled !== currentOptions.bloomEnabled ||
             options.prepassEnabled !== currentOptions.prepassEnabled ||
             options.sceneColorMap !== currentOptions.sceneColorMap ||
+            options.dofEnabled !== currentOptions.dofEnabled ||
+            options.dofNearBlur !== currentOptions.dofNearBlur ||
+            options.dofHighQuality !== currentOptions.dofHighQuality ||
             arraysNotEqual(options.formats, currentOptions.formats);
     }
 
@@ -172,7 +207,8 @@ class RenderPassCameraFrame extends RenderPass {
         options = this.sanitizeOptions(options);
 
         // destroy existing passes if they need to be re-created
-        if (this.needsReset(options)) {
+        if (this.needsReset(options) || this.layersDirty) {
+            this.layersDirty = false;
             this.reset();
         }
 
@@ -185,24 +221,10 @@ class RenderPassCameraFrame extends RenderPass {
         }
     }
 
-    setupRenderPasses(options) {
+    createRenderTarget(name, depth, stencil, samples, flipY) {
 
-        const { device } = this;
-        const cameraComponent = this.cameraComponent;
-        const targetRenderTarget = cameraComponent.renderTarget;
-
-        this.hdrFormat = device.getRenderableHdrFormat(options.formats, true, options.samples) || PIXELFORMAT_RGBA8;
-
-        // camera renders in HDR mode (linear output, no tonemapping)
-        cameraComponent.gammaCorrection = GAMMA_NONE;
-        cameraComponent.toneMapping = TONEMAP_NONE;
-
-        // set up internal rendering parameters - this affect the shader generation to apply SSAO during forward pass
-        cameraComponent.shaderParams.ssaoEnabled = options.ssaoType === SSAOTYPE_LIGHTING;
-
-        // create a render target to render the scene into
-        this.sceneTexture = new Texture(device, {
-            name: 'SceneColor',
+        const texture = new Texture(this.device, {
+            name: name,
             width: 4,
             height: 4,
             format: this.hdrFormat,
@@ -213,31 +235,42 @@ class RenderPassCameraFrame extends RenderPass {
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
 
-        let depthFormat = options.stencil ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
-        if (options.prepassEnabled && device.isWebGPU && options.samples > 1) {
-            // on WebGPU the depth format cannot be resolved, so we need to use a float format in that case
-            // TODO: ideally we expose this using some option or similar public API to hide this implementation detail
-            depthFormat = PIXELFORMAT_R32F;
+        return new RenderTarget({
+            colorBuffer: texture,
+            depth: depth,
+            stencil: stencil,
+            samples: samples,
+            flipY: flipY
+        });
+    }
+
+    setupRenderPasses(options) {
+
+        const { device } = this;
+        const cameraComponent = this.cameraComponent;
+        const targetRenderTarget = cameraComponent.renderTarget;
+
+        this.hdrFormat = device.getRenderableHdrFormat(options.formats, true, options.samples) || PIXELFORMAT_RGBA8;
+
+        // HDR bloom is not supported on RGBA8 format
+        this._bloomEnabled = options.bloomEnabled && this.hdrFormat !== PIXELFORMAT_RGBA8;
+
+        // bloom and DOF needs half resolution scene texture
+        this._sceneHalfEnabled = this._bloomEnabled || options.dofEnabled;
+
+        // set up internal rendering parameters - this affect the shader generation to apply SSAO during forward pass
+        cameraComponent.shaderParams.ssaoEnabled = options.ssaoType === SSAOTYPE_LIGHTING;
+
+        // create a render target to render the scene into
+        const flipY = !!targetRenderTarget?.flipY; // flipY is inherited from the target renderTarget
+        this.rt = this.createRenderTarget('SceneColor', true, options.stencil, options.samples, flipY);
+        this.sceneTexture = this.rt.colorBuffer;
+
+        // when half size scene color buffer is used
+        if (this._sceneHalfEnabled) {
+            this.rtHalf = this.createRenderTarget('SceneColorHalf', false, false, 1, flipY);
+            this.sceneTextureHalf = this.rtHalf.colorBuffer;
         }
-
-        this.sceneDepth = new Texture(device, {
-            name: 'SceneDepth',
-            width: 4,
-            height: 4,
-            format: depthFormat,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
-
-        this.rt = new RenderTarget({
-            colorBuffer: this.sceneTexture,
-            depthBuffer: this.sceneDepth,
-            samples: options.samples,
-            flipY: !!targetRenderTarget?.flipY  // flipY is inherited from the target renderTarget
-        });
 
         this.sceneOptions = {
             resizeSource: targetRenderTarget,
@@ -254,7 +287,7 @@ class RenderPassCameraFrame extends RenderPass {
     collectPasses() {
 
         // use these prepared render passes in the order they should be executed
-        return [this.prePass, this.ssaoPass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.taaPass, this.bloomPass, this.composePass, this.afterPass];
+        return [this.prePass, this.ssaoPass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.taaPass, this.scenePassHalf, this.bloomPass, this.dofPass, this.composePass, this.afterPass];
     }
 
     createPasses(options) {
@@ -271,8 +304,13 @@ class RenderPassCameraFrame extends RenderPass {
         // TAA
         const sceneTextureWithTaa = this.setupTaaPass(options);
 
+        // downscale to half resolution
+        this.setupSceneHalfPass(options, sceneTextureWithTaa);
+
         // bloom
-        this.setupBloomPass(options, sceneTextureWithTaa);
+        this.setupBloomPass(options, this.sceneTextureHalf);
+
+        this.setupDofPass(options, this.sceneTexture, this.sceneTextureHalf);
 
         // compose
         this.setupComposePass(options);
@@ -286,12 +324,14 @@ class RenderPassCameraFrame extends RenderPass {
 
             const { app, device, cameraComponent } = this;
             const { scene, renderer } = app;
-
-            // ssao & taa need resolved depth
-            const resolveDepth = this.options.ssaoType !== SSAOTYPE_NONE || this.options.taaEnabled;
-
-            this.prePass = new RenderPassPrepass(device, scene, renderer, cameraComponent, this.sceneDepth, resolveDepth, this.sceneOptions, options.samples);
+            this.prePass = new RenderPassPrepass(device, scene, renderer, cameraComponent, this.sceneOptions);
         }
+    }
+
+    setupScenePassSettings(pass) {
+        // forward passes render in HDR
+        pass.gammaCorrection = GAMMA_NONE;
+        pass.toneMapping = TONEMAP_NONE;
     }
 
     setupScenePass(options) {
@@ -304,18 +344,8 @@ class RenderPassCameraFrame extends RenderPass {
         // matches the back-buffer size with the optional scale. Note that the scale parameters
         // allow us to render the 3d scene at lower resolution, improving performance.
         this.scenePass = new RenderPassForward(device, composition, scene, renderer);
+        this.setupScenePassSettings(this.scenePass);
         this.scenePass.init(this.rt, this.sceneOptions);
-
-        // if prepass is enabled, do not clear the depth buffer when rendering the scene, and preserve it
-        if (options.prepassEnabled) {
-            if (!options.stencil) {
-                // when stencil is used, the depth buffer might not be correct as the prepass does not
-                // handle stencil, so we need to clear it - in this case, depth prepass does not give
-                // us any benefit
-                this.scenePass.noDepthClear = true;
-            }
-            this.scenePass.depthStencilOps.storeDepth = true;
-        }
 
         // layers this pass renders depend on the grab pass being used
         const lastLayerId = options.sceneColorMap ? options.lastGrabLayerId : options.lastSceneLayerId;
@@ -338,6 +368,7 @@ class RenderPassCameraFrame extends RenderPass {
 
             // if grab pass is used, render the layers after it (otherwise they were already rendered)
             this.scenePassTransparent = new RenderPassForward(device, composition, scene, renderer);
+            this.setupScenePassSettings(this.scenePassTransparent);
             this.scenePassTransparent.init(this.rt);
             ret.lastAddedIndex = this.scenePassTransparent.addLayers(composition, cameraComponent, ret.lastAddedIndex, ret.clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
 
@@ -359,25 +390,48 @@ class RenderPassCameraFrame extends RenderPass {
     }
 
     setupSsaoPass(options) {
-        const { camera, ssaoBlurEnabled, ssaoType } = options;
+        const { ssaoBlurEnabled, ssaoType } = options;
+        const { device, cameraComponent } = this;
         if (ssaoType !== SSAOTYPE_NONE) {
-            this.ssaoPass = new RenderPassSsao(this.device, this.sceneTexture, camera, ssaoBlurEnabled);
+            this.ssaoPass = new RenderPassSsao(device, this.sceneTexture, cameraComponent, ssaoBlurEnabled);
+        }
+    }
+
+    setupSceneHalfPass(options, sourceTexture) {
+
+        if (this._sceneHalfEnabled) {
+            this.scenePassHalf = new RenderPassDownsample(this.device, this.sceneTexture, {
+                boxFilter: true,
+                removeInvalid: true // remove invalid pixels to avoid bloom / dof artifacts
+            });
+            this.scenePassHalf.name = 'RenderPassSceneHalf';
+            this.scenePassHalf.init(this.rtHalf, {
+                resizeSource: sourceTexture,
+                scaleX: 0.5,
+                scaleY: 0.5
+            });
+            this.scenePassHalf.setClearColor(Color.BLACK);
         }
     }
 
     setupBloomPass(options, inputTexture) {
-        // HDR bloom is not supported on RGBA8 format
-        if (options.bloomEnabled && this.hdrFormat !== PIXELFORMAT_RGBA8) {
+
+        if (this._bloomEnabled) {
             // create a bloom pass, which generates bloom texture based on the provided texture
             this.bloomPass = new RenderPassBloom(this.device, inputTexture, this.hdrFormat);
+        }
+    }
+
+    setupDofPass(options, inputTexture, inputTextureHalf) {
+        if (options.dofEnabled)  {
+            this.dofPass = new RenderPassDof(this.device, this.cameraComponent, inputTexture, inputTextureHalf, options.dofHighQuality, options.dofNearBlur);
         }
     }
 
     setupTaaPass(options) {
         let textureWithTaa = this.sceneTexture;
         if (options.taaEnabled) {
-            const cameraComponent = this.cameraComponent;
-            this.taaPass = new RenderPassTAA(this.device, this.sceneTexture, cameraComponent);
+            this.taaPass = new RenderPassTAA(this.device, this.sceneTexture, this.cameraComponent);
             textureWithTaa = this.taaPass.historyTexture;
         }
 
@@ -390,6 +444,9 @@ class RenderPassCameraFrame extends RenderPass {
         this.composePass = new RenderPassCompose(this.device);
         this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
         this.composePass.taaEnabled = options.taaEnabled;
+        this.composePass.cocTexture = this.dofPass?.cocTexture;
+        this.composePass.blurTexture = this.dofPass?.blurTexture;
+        this.composePass.blurTextureUpscale = !this.dofPass?.highQuality;
 
         // compose pass renders directly to target renderTarget
         const cameraComponent = this.cameraComponent;
@@ -417,6 +474,11 @@ class RenderPassCameraFrame extends RenderPass {
 
     frameUpdate() {
 
+        // trigger update if layers were added or removed
+        if (this.layersDirty) {
+            this.update(this.options);
+        }
+
         super.frameUpdate();
 
         // scene texture is either output of taa pass or the scene render target
@@ -424,9 +486,7 @@ class RenderPassCameraFrame extends RenderPass {
 
         // TAA history buffer is double buffered, assign the current one to the follow up passes.
         this.composePass.sceneTexture = sceneTexture;
-        if (this.options.bloomEnabled && this.bloomPass) {
-            this.bloomPass.sourceTexture = sceneTexture;
-        }
+        this.scenePassHalf?.setSourceTexture(sceneTexture);
     }
 }
 

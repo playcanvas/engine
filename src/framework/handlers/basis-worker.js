@@ -59,7 +59,7 @@ function BasisWorker() {
     // map of basis format to engine pixel format
     const basisToEngineMapping = (basisFormat, deviceDetails) => {
         switch (basisFormat) {
-            case BASIS_FORMAT.cTFETC1: return deviceDetails.formats.etc1 ? PIXEL_FORMAT.ETC1 : PIXEL_FORMAT.ETC2_RGB;
+            case BASIS_FORMAT.cTFETC1: return deviceDetails.formats.etc2 ? PIXEL_FORMAT.ETC2_RGB : PIXEL_FORMAT.ETC1;
             case BASIS_FORMAT.cTFETC2: return PIXEL_FORMAT.ETC2_RGBA;
             case BASIS_FORMAT.cTFBC1: return PIXEL_FORMAT.DXT1;
             case BASIS_FORMAT.cTFBC3: return PIXEL_FORMAT.DXT5;
@@ -136,7 +136,10 @@ function BasisWorker() {
                     return 'etc2';
                 }
             } else {
-                if (deviceDetails.formats.etc1 || deviceDetails.formats.etc2) {
+                if (deviceDetails.formats.etc2) {
+                    return 'etc2';
+                }
+                if (deviceDetails.formats.etc1) {
                     return 'etc1';
                 }
             }

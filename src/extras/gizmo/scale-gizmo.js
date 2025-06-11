@@ -16,13 +16,43 @@ import { BoxLineShape } from './shape/boxline-shape.js';
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 // constants
 const GLANCE_EPSILON = 0.98;
 
 /**
- * Scaling gizmo.
+ * The ScaleGizmo provides interactive 3D manipulation handles for scaling/resizing
+ * {@link Entity}s in a {@link Scene}. It creates a visual widget with box-tipped lines along the
+ * X, Y and Z axes, planes at their intersections, and a center box, allowing precise control over
+ * object scaling through direct manipulation. The gizmo's visual appearance can be customized
+ * away from the defaults as required.
+ *
+ * Note that the gizmo can be driven by both mouse+keyboard and touch input.
+ *
+ * ```javascript
+ * // Create a layer for rendering all gizmos
+ * const gizmoLayer = pc.Gizmo.createLayer(app);
+ *
+ * // Create a scale gizmo
+ * const gizmo = new pc.ScaleGizmo(cameraComponent, gizmoLayer);
+ *
+ * // Create an entity to attach the gizmo to
+ * const entity = new pc.Entity();
+ * entity.addComponent('render', {
+ *     type: 'box'
+ * });
+ * app.root.addChild(entity);
+ *
+ * // Attach the gizmo to the entity
+ * gizmo.attach([entity]);
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Scale Gizmo](https://playcanvas.github.io/#/gizmos/transform-scale)
+ * - [Editor](https://playcanvas.github.io/#/misc/editor)
  *
  * @category Gizmo
  */
@@ -123,12 +153,13 @@ class ScaleGizmo extends TransformGizmo {
     lowerBoundScale = new Vec3(-Infinity, -Infinity, -Infinity);
 
     /**
-     * Creates a new ScaleGizmo object.
+     * Creates a new ScaleGizmo object. Use {@link Gizmo.createLayer} to create the layer
+     * required to display the gizmo.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The render layer.
+     * @param {Layer} layer - The layer responsible for rendering the gizmo.
      * @example
-     * const gizmo = new pc.ScaleGizmo(app, camera, layer);
+     * const gizmo = new pc.ScaleGizmo(camera, layer);
      */
     constructor(camera, layer) {
         super(camera, layer);
@@ -139,7 +170,8 @@ class ScaleGizmo extends TransformGizmo {
             this._storeNodeScales();
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (pointDelta) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
+            const pointDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
             if (this.snap) {
                 pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();
@@ -437,7 +469,7 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {{ point: Vec3, angle: number }} The point and angle.
+     * @returns {Vec3} The point in world space.
      * @protected
      */
     _screenToPoint(x, y) {
@@ -453,7 +485,6 @@ class ScaleGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, isScaleUniform, !isPlane);
 
         const point = new Vec3();
-        const angle = 0;
 
         plane.intersectsRay(ray, point);
 
@@ -489,7 +520,7 @@ class ScaleGizmo extends TransformGizmo {
                 point[axis] = 1;
             }
 
-            return { point, angle };
+            return point;
         }
 
         // rotate point back to world coords
@@ -499,7 +530,7 @@ class ScaleGizmo extends TransformGizmo {
             this._projectToAxis(point, axis);
         }
 
-        return { point, angle };
+        return point;
     }
 }
 

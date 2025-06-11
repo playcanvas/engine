@@ -19,48 +19,101 @@ import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 
-const vertexShader = /* glsl */ `
-attribute vec3 vertex_position;         // unnormalized xy, word flag
-attribute vec4 vertex_texCoord0;        // unnormalized texture space uv, normalized uv
+const vertexShaderGLSL = /* glsl */ `
+    attribute vec3 vertex_position;         // unnormalized xy, word flag
+    attribute vec4 vertex_texCoord0;        // unnormalized texture space uv, normalized uv
 
-varying vec4 uv0;
-varying float wordFlag;
+    varying vec4 uv0;
+    varying float wordFlag;
 
-void main(void) {
-    gl_Position = vec4(vertex_position.xy * 2.0 - 1.0, 0.5, 1.0);
-    uv0 = vertex_texCoord0;
-    wordFlag = vertex_position.z;
-}`;
+    void main(void) {
+        gl_Position = vec4(vertex_position.xy * 2.0 - 1.0, 0.5, 1.0);
+        uv0 = vertex_texCoord0;
+        wordFlag = vertex_position.z;
+    }
+`;
+
+const vertexShaderWGSL = /* wgsl */ `
+    attribute vertex_position: vec3f;         // unnormalized xy, word flag
+    attribute vertex_texCoord0: vec4f;        // unnormalized texture space uv, normalized uv
+
+    varying uv0: vec4f;
+    varying wordFlag: f32;
+
+    @vertex fn vertexMain(input : VertexInput) -> VertexOutput {
+        var output : VertexOutput;
+        output.position = vec4(input.vertex_position.xy * 2.0 - 1.0, 0.5, 1.0);
+        output.uv0 = input.vertex_texCoord0;
+        output.wordFlag = input.vertex_position.z;
+        return output;
+    }
+`;
 
 // this fragment shader renders the bits required for text and graphs. The text is identified
 // in the texture by white color. The graph data is specified as a single row of pixels
 // where the R channel denotes the height of the 1st graph and the G channel the height
 // of the second graph and B channel the height of the last graph
-const fragmentShader = /* glsl */ `
-varying vec4 uv0;
-varying float wordFlag;
+const fragmentShaderGLSL = /* glsl */ `
+    varying vec4 uv0;
+    varying float wordFlag;
 
-uniform vec4 clr;
-uniform sampler2D graphTex;
-uniform sampler2D wordsTex;
+    uniform vec4 clr;
+    uniform sampler2D graphTex;
+    uniform sampler2D wordsTex;
 
-void main (void) {
-    vec4 graphSample = texture2D(graphTex, uv0.xy);
+    void main (void) {
+        vec4 graphSample = texture2D(graphTex, uv0.xy);
 
-    vec4 graph;
-    if (uv0.w < graphSample.r)
-        graph = vec4(0.7, 0.2, 0.2, 1.0);
-    else if (uv0.w < graphSample.g)
-        graph = vec4(0.2, 0.7, 0.2, 1.0);
-    else if (uv0.w < graphSample.b)
-        graph = vec4(0.2, 0.2, 0.7, 1.0);
-    else
-        graph = vec4(0.0, 0.0, 0.0, 1.0 - 0.25 * sin(uv0.w * 3.14159));
+        vec4 graph;
+        if (uv0.w < graphSample.r)
+            graph = vec4(0.7, 0.2, 0.2, 1.0);
+        else if (uv0.w < graphSample.g)
+            graph = vec4(0.2, 0.7, 0.2, 1.0);
+        else if (uv0.w < graphSample.b)
+            graph = vec4(0.2, 0.2, 0.7, 1.0);
+        else
+            graph = vec4(0.0, 0.0, 0.0, 1.0 - 0.25 * sin(uv0.w * 3.14159));
 
-    vec4 words = texture2D(wordsTex, vec2(uv0.x, 1.0 - uv0.y));
+        vec4 words = texture2D(wordsTex, vec2(uv0.x, 1.0 - uv0.y));
 
-    gl_FragColor = mix(graph, words, wordFlag) * clr;
-}`;
+        gl_FragColor = mix(graph, words, wordFlag) * clr;
+    }
+`;
+
+const fragmentShaderWGSL = /* wgsl */ `
+    varying uv0: vec4f;
+    varying wordFlag: f32;
+
+    uniform clr: vec4f;
+
+    var graphTex : texture_2d<f32>;
+    var graphTex_sampler : sampler;
+
+    var wordsTex : texture_2d<f32>;
+    var wordsTex_sampler : sampler;
+
+    @fragment fn fragmentMain(input : FragmentInput) -> FragmentOutput {
+        var uv0: vec4f = input.uv0;
+        var graphSample: vec4f = textureSample(graphTex, graphTex_sampler, uv0.xy);
+
+        var graph: vec4f;
+        if (uv0.w < graphSample.r) {
+            graph = vec4f(0.7, 0.2, 0.2, 1.0);
+        } else if (uv0.w < graphSample.g) {
+            graph = vec4f(0.2, 0.7, 0.2, 1.0);
+        } else if (uv0.w < graphSample.b) {
+            graph = vec4f(0.2, 0.2, 0.7, 1.0);
+        } else {
+            graph = vec4f(0.0, 0.0, 0.0, 1.0 - 0.25 * sin(uv0.w * 3.14159));
+        }
+
+        var words: vec4f = textureSample(wordsTex, wordsTex_sampler, vec2f(uv0.x, 1.0 - uv0.y));
+
+        var output: FragmentOutput;
+        output.color = mix(graph, words, input.wordFlag) * uniform.clr;
+        return output;
+    }
+`;
 
 // render 2d textured quads
 class Render2d {
@@ -103,8 +156,14 @@ class Render2d {
 
         const material = new ShaderMaterial({
             uniqueName: 'MiniStats',
-            vertexCode: vertexShader,
-            fragmentCode: fragmentShader
+            vertexGLSL: vertexShaderGLSL,
+            fragmentGLSL: fragmentShaderGLSL,
+            vertexWGSL: vertexShaderWGSL,
+            fragmentWGSL: fragmentShaderWGSL,
+            attributes: {
+                vertex_position: SEMANTIC_POSITION,
+                vertex_texCoord0: SEMANTIC_TEXCOORD0
+            }
         });
         this.material = material;
         material.cull = CULLFACE_NONE;

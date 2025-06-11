@@ -3,16 +3,18 @@ import { math } from '../../../core/math/math.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../scene/constants.js';
-import { EntityReference } from '../../utils/entity-reference.js';
+
+import { GraphNode } from '../../../scene/graph-node.js';
+
 import { ElementDragHelper } from '../element/element-drag-helper.js';
 import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_VISIBILITY_SHOW_ALWAYS, SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED } from './constants.js';
 import { Component } from '../component.js';
-import { EVENT_MOUSEWHEEL } from '../../../platform/input/constants.js';
 
 /**
  * @import { Entity } from '../../entity.js'
  * @import { ScrollViewComponentData } from './data.js'
  * @import { ScrollViewComponentSystem } from './system.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  */
 
 const _tempScrollValue = new Vec2();
@@ -21,6 +23,7 @@ const _tempScrollValue = new Vec2();
  * A ScrollViewComponent enables a group of entities to behave like a masked scrolling area, with
  * optional horizontal and vertical scroll bars.
  *
+ * @hideconstructor
  * @category User Interface
  */
 class ScrollViewComponent extends Component {
@@ -38,6 +41,102 @@ class ScrollViewComponent extends Component {
     static EVENT_SETSCROLL = 'set:scroll';
 
     /**
+     * @type {Entity|null}
+     * @private
+     */
+    _viewportEntity = null;
+
+    /**
+     * @type {Entity|null}
+     * @private
+     */
+    _contentEntity = null;
+
+    /**
+     * @type {Entity|null}
+     * @private
+     */
+    _horizontalScrollbarEntity = null;
+
+    /**
+     * @type {Entity|null}
+     * @private
+     */
+    _verticalScrollbarEntity = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtElementRemove = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtViewportElementRemove = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtViewportResize = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtContentEntityElementAdd = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtContentElementRemove = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtContentResize = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtHorizontalScrollbarAdd = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtHorizontalScrollbarRemove = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtHorizontalScrollbarValue = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtVerticalScrollbarAdd = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtVerticalScrollbarRemove = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtVerticalScrollbarValue = null;
+
+    /**
      * Create a new ScrollViewComponent.
      *
      * @param {ScrollViewComponentSystem} system - The ComponentSystem that created this Component.
@@ -46,27 +145,9 @@ class ScrollViewComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        this._viewportReference = new EntityReference(this, 'viewportEntity', {
-            'element#gain': this._onViewportElementGain,
-            'element#resize': this._onSetContentOrViewportSize
-        });
-
-        this._contentReference = new EntityReference(this, 'contentEntity', {
-            'element#gain': this._onContentElementGain,
-            'element#lose': this._onContentElementLose,
-            'element#resize': this._onSetContentOrViewportSize
-        });
-
         this._scrollbarUpdateFlags = {};
-        this._scrollbarReferences = {};
-        this._scrollbarReferences[ORIENTATION_HORIZONTAL] = new EntityReference(this, 'horizontalScrollbarEntity', {
-            'scrollbar#set:value': this._onSetHorizontalScrollbarValue,
-            'scrollbar#gain': this._onHorizontalScrollbarGain
-        });
-        this._scrollbarReferences[ORIENTATION_VERTICAL] = new EntityReference(this, 'verticalScrollbarEntity', {
-            'scrollbar#set:value': this._onSetVerticalScrollbarValue,
-            'scrollbar#gain': this._onVerticalScrollbarGain
-        });
+
+        this._scrollbarEntities = {};
 
         this._prevContentSizes = {};
         this._prevContentSizes[ORIENTATION_HORIZONTAL] = null;
@@ -79,7 +160,7 @@ class ScrollViewComponent extends Component {
         this._disabledContentInput = false;
         this._disabledContentInputEntities = [];
 
-        this._toggleLifecycleListeners('on', system);
+        this._toggleLifecycleListeners('on');
         this._toggleElementListeners('on');
     }
 
@@ -300,76 +381,196 @@ class ScrollViewComponent extends Component {
      * Sets the entity to be used as the masked viewport area, within which the content will scroll.
      * This entity must have an ElementGroup component.
      *
-     * @type {Entity}
+     * @type {Entity|string|null}
      */
     set viewportEntity(arg) {
-        this._setValue('viewportEntity', arg);
+        if (this._viewportEntity === arg) {
+            return;
+        }
+
+        const isString = typeof arg === 'string';
+        if (this._viewportEntity && isString && this._viewportEntity.getGuid() === arg) {
+            return;
+        }
+
+        if (this._viewportEntity) {
+            this._viewportEntityUnsubscribe();
+        }
+
+        if (arg instanceof GraphNode) {
+            this._viewportEntity = arg;
+        } else if (isString) {
+            this._viewportEntity = this.system.app.getEntityFromIndex(arg) || null;
+        } else {
+            this._viewportEntity = null;
+        }
+
+        if (this._viewportEntity) {
+            this._viewportEntitySubscribe();
+        }
+
+        if (this._viewportEntity) {
+            this.data.viewportEntity = this._viewportEntity.getGuid();
+        } else if (isString && arg) {
+            this.data.viewportEntity = arg;
+        }
     }
 
     /**
      * Gets the entity to be used as the masked viewport area, within which the content will scroll.
      *
-     * @type {Entity}
+     * @type {Entity|null}
      */
     get viewportEntity() {
-        return this.data.viewportEntity;
+        return this._viewportEntity;
     }
 
     /**
      * Sets the entity which contains the scrolling content itself. This entity must have an
      * {@link ElementComponent}.
      *
-     * @type {Entity}
+     * @type {Entity|string|null}
      */
     set contentEntity(arg) {
-        this._setValue('contentEntity', arg);
+        if (this._contentEntity === arg) {
+            return;
+        }
+
+        const isString = typeof arg === 'string';
+        if (this._contentEntity && isString && this._contentEntity.getGuid() === arg) {
+            return;
+        }
+
+        if (this._contentEntity) {
+            this._contentEntityUnsubscribe();
+        }
+
+        if (arg instanceof GraphNode) {
+            this._contentEntity = arg;
+        } else if (isString) {
+            this._contentEntity = this.system.app.getEntityFromIndex(arg) || null;
+        } else {
+            this._contentEntity = null;
+        }
+
+        if (this._contentEntity) {
+            this._contentEntitySubscribe();
+        }
+
+        if (this._contentEntity) {
+            this.data.contentEntity = this._contentEntity.getGuid();
+        } else if (isString && arg) {
+            this.data.contentEntity = arg;
+        }
     }
 
     /**
      * Gets the entity which contains the scrolling content itself.
      *
-     * @type {Entity}
+     * @type {Entity|null}
      */
     get contentEntity() {
-        return this.data.contentEntity;
+        return this._contentEntity;
     }
 
     /**
      * Sets the entity to be used as the horizontal scrollbar. This entity must have a
      * {@link ScrollbarComponent}.
      *
-     * @type {Entity}
+     * @type {Entity|string|null}
      */
     set horizontalScrollbarEntity(arg) {
-        this._setValue('horizontalScrollbarEntity', arg);
+        if (this._horizontalScrollbarEntity === arg) {
+            return;
+        }
+
+        const isString = typeof arg === 'string';
+        if (this._horizontalScrollbarEntity && isString && this._horizontalScrollbarEntity.getGuid() === arg) {
+            return;
+        }
+
+        if (this._horizontalScrollbarEntity) {
+            this._horizontalScrollbarEntityUnsubscribe();
+        }
+
+        if (arg instanceof GraphNode) {
+            this._horizontalScrollbarEntity = arg;
+        } else if (isString) {
+            this._horizontalScrollbarEntity = this.system.app.getEntityFromIndex(arg) || null;
+        } else {
+            this._horizontalScrollbarEntity = null;
+        }
+
+        this._scrollbarEntities[ORIENTATION_HORIZONTAL] = this._horizontalScrollbarEntity;
+
+        if (this._horizontalScrollbarEntity) {
+            this._horizontalScrollbarEntitySubscribe();
+        }
+
+        if (this._horizontalScrollbarEntity) {
+            this.data.horizontalScrollbarEntity = this._horizontalScrollbarEntity.getGuid();
+        } else if (isString && arg) {
+            this.data.horizontalScrollbarEntity = arg;
+        }
     }
 
     /**
      * Gets the entity to be used as the horizontal scrollbar.
      *
-     * @type {Entity}
+     * @type {Entity|null}
      */
     get horizontalScrollbarEntity() {
-        return this.data.horizontalScrollbarEntity;
+        return this._horizontalScrollbarEntity;
     }
 
     /**
      * Sets the entity to be used as the vertical scrollbar. This entity must have a
      * {@link ScrollbarComponent}.
      *
-     * @type {Entity}
+     * @type {Entity|string|null}
      */
     set verticalScrollbarEntity(arg) {
-        this._setValue('verticalScrollbarEntity', arg);
+        if (this._verticalScrollbarEntity === arg) {
+            return;
+        }
+
+        const isString = typeof arg === 'string';
+        if (this._verticalScrollbarEntity && isString && this._verticalScrollbarEntity.getGuid() === arg) {
+            return;
+        }
+
+        if (this._verticalScrollbarEntity) {
+            this._verticalScrollbarEntityUnsubscribe();
+        }
+
+        if (arg instanceof GraphNode) {
+            this._verticalScrollbarEntity = arg;
+        } else if (isString) {
+            this._verticalScrollbarEntity = this.system.app.getEntityFromIndex(arg) || null;
+        } else {
+            this._verticalScrollbarEntity = null;
+        }
+
+        this._scrollbarEntities[ORIENTATION_VERTICAL] = this._verticalScrollbarEntity;
+
+        if (this._verticalScrollbarEntity) {
+            this._verticalScrollbarEntitySubscribe();
+        }
+
+        if (this._verticalScrollbarEntity) {
+            this.data.verticalScrollbarEntity = this._verticalScrollbarEntity.getGuid();
+        } else if (isString && arg) {
+            this.data.verticalScrollbarEntity = arg;
+        }
     }
 
     /**
      * Gets the entity to be used as the vertical scrollbar.
      *
-     * @type {Entity}
+     * @type {Entity|null}
      */
     get verticalScrollbarEntity() {
-        return this.data.verticalScrollbarEntity;
+        return this._verticalScrollbarEntity;
     }
 
     /**
@@ -400,16 +601,13 @@ class ScrollViewComponent extends Component {
 
     /**
      * @param {string} onOrOff - 'on' or 'off'.
-     * @param {ScrollViewComponentSystem} system - The ComponentSystem that
-     * created this Component.
      * @private
      */
-    _toggleLifecycleListeners(onOrOff, system) {
+    _toggleLifecycleListeners(onOrOff) {
         this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
         this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
 
-        system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
-        system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
+        this.entity[onOrOff]('element:add', this._onElementComponentAdd, this);
     }
 
     /**
@@ -422,32 +620,100 @@ class ScrollViewComponent extends Component {
                 return;
             }
 
-            this.entity.element[onOrOff]('resize', this._onSetContentOrViewportSize, this);
-            this.entity.element[onOrOff](EVENT_MOUSEWHEEL, this._onMouseWheel, this);
+            this.entity.element[onOrOff]('resize', this._syncAll, this);
+            this.entity.element[onOrOff]('mousewheel', this._onMouseWheel, this);
 
             this._hasElementListeners = onOrOff === 'on';
         }
     }
 
     _onElementComponentAdd(entity) {
-        if (this.entity === entity) {
-            this._toggleElementListeners('on');
-        }
+        this._evtElementRemove = this.entity.element.once('beforeremove', this._onElementComponentRemove, this);
+        this._toggleElementListeners('on');
     }
 
     _onElementComponentRemove(entity) {
-        if (this.entity === entity) {
-            this._toggleElementListeners('off');
+        this._evtElementRemove?.off();
+        this._evtElementRemove = null;
+        this._toggleElementListeners('off');
+    }
+
+    _viewportEntitySubscribe() {
+        this._evtViewportEntityElementAdd = this._viewportEntity.on('element:add', this._onViewportElementGain, this);
+
+        if (this._viewportEntity.element) {
+            this._onViewportElementGain();
         }
     }
 
+    _viewportEntityUnsubscribe() {
+        this._evtViewportEntityElementAdd?.off();
+        this._evtViewportEntityElementAdd = null;
+
+        if (this._viewportEntity?.element) {
+            this._onViewportElementLose();
+        }
+    }
+
+    _viewportEntityElementSubscribe() {
+        const element = this._viewportEntity.element;
+        this._evtViewportElementRemove = element.once('beforeremove', this._onViewportElementLose, this);
+        this._evtViewportResize = element.on('resize', this._syncAll, this);
+    }
+
+    _viewportEntityElementUnsubscribe() {
+        this._evtViewportElementRemove?.off();
+        this._evtViewportElementRemove = null;
+
+        this._evtViewportResize?.off();
+        this._evtViewportResize = null;
+    }
+
     _onViewportElementGain() {
+        this._viewportEntityElementSubscribe();
         this._syncAll();
     }
 
+    _onViewportElementLose() {
+        this._viewportEntityElementUnsubscribe();
+    }
+
+    _contentEntitySubscribe() {
+        this._evtContentEntityElementAdd = this._contentEntity.on('element:add', this._onContentElementGain, this);
+
+        if (this._contentEntity.element) {
+            this._onContentElementGain();
+        }
+    }
+
+    _contentEntityUnsubscribe() {
+        this._evtContentEntityElementAdd?.off();
+        this._evtContentEntityElementAdd = null;
+
+        if (this._contentEntity?.element) {
+            this._onContentElementLose();
+        }
+    }
+
+    _contentEntityElementSubscribe() {
+        const element = this._contentEntity.element;
+        this._evtContentElementRemove = element.once('beforeremove', this._onContentElementLose, this);
+        this._evtContentResize = element.on('resize', this._syncAll, this);
+    }
+
+    _contentEntityElementUnsubscribe() {
+        this._evtContentElementRemove?.off();
+        this._evtContentElementRemove = null;
+
+        this._evtContentResize?.off();
+        this._evtContentResize = null;
+    }
+
     _onContentElementGain() {
+        this._contentEntityElementSubscribe();
         this._destroyDragHelper();
-        this._contentDragHelper = new ElementDragHelper(this._contentReference.entity.element);
+
+        this._contentDragHelper = new ElementDragHelper(this._contentEntity.element);
         this._contentDragHelper.on('drag:start', this._onContentDragStart, this);
         this._contentDragHelper.on('drag:end', this._onContentDragEnd, this);
         this._contentDragHelper.on('drag:move', this._onContentDragMove, this);
@@ -459,12 +725,13 @@ class ScrollViewComponent extends Component {
     }
 
     _onContentElementLose() {
+        this._contentEntityElementUnsubscribe();
         this._destroyDragHelper();
     }
 
     _onContentDragStart() {
-        if (this._contentReference.entity && this.enabled && this.entity.enabled) {
-            this._dragStartPosition.copy(this._contentReference.entity.getLocalPosition());
+        if (this._contentEntity && this.enabled && this.entity.enabled) {
+            this._dragStartPosition.copy(this._contentEntity.getLocalPosition());
         }
     }
 
@@ -474,7 +741,7 @@ class ScrollViewComponent extends Component {
     }
 
     _onContentDragMove(position) {
-        if (this._contentReference.entity && this.enabled && this.entity.enabled) {
+        if (this._contentEntity && this.enabled && this.entity.enabled) {
             this._wasDragged = true;
             this._setScrollFromContentPosition(position);
             this._setVelocityFromContentPositionDelta(position);
@@ -493,8 +760,38 @@ class ScrollViewComponent extends Component {
         }
     }
 
-    _onSetContentOrViewportSize() {
-        this._syncAll();
+    _horizontalScrollbarEntitySubscribe() {
+        this._evtHorizontalScrollbarAdd = this._horizontalScrollbarEntity.on('scrollbar:add', this._onHorizontalScrollbarGain, this);
+
+        if (this._horizontalScrollbarEntity.scrollbar) {
+            this._onHorizontalScrollbarGain();
+        }
+    }
+
+    _verticalScrollbarEntitySubscribe() {
+        this._evtVerticalScrollbarAdd = this._verticalScrollbarEntity.on('scrollbar:add', this._onVerticalScrollbarGain, this);
+
+        if (this._verticalScrollbarEntity.scrollbar) {
+            this._onVerticalScrollbarGain();
+        }
+    }
+
+    _horizontalScrollbarEntityUnsubscribe() {
+        this._evtHorizontalScrollbarAdd?.off();
+        this._evtHorizontalScrollbarAdd = null;
+
+        if (this._horizontalScrollbarEntity.scrollbar) {
+            this._onHorizontalScrollbarLose();
+        }
+    }
+
+    _verticalScrollbarEntityUnsubscribe() {
+        this._evtVerticalScrollbarAdd?.off();
+        this._evtVerticalScrollbarAdd = null;
+
+        if (this._verticalScrollbarEntity.scrollbar) {
+            this._onVerticalScrollbarLose();
+        }
     }
 
     _onSetHorizontalScrollbarValue(scrollValueX) {
@@ -509,22 +806,46 @@ class ScrollViewComponent extends Component {
         }
     }
 
+    _onHorizontalScrollbarGain() {
+        const scrollbar = this._horizontalScrollbarEntity?.scrollbar;
+        this._evtHorizontalScrollbarRemove = scrollbar.on('beforeremove', this._onHorizontalScrollbarLose, this);
+        this._evtHorizontalScrollbarValue = scrollbar.on('set:value', this._onSetHorizontalScrollbarValue, this);
+
+        this._syncScrollbarEnabledState(ORIENTATION_HORIZONTAL);
+        this._syncScrollbarPosition(ORIENTATION_HORIZONTAL);
+    }
+
+    _onVerticalScrollbarGain() {
+        const scrollbar = this._verticalScrollbarEntity?.scrollbar;
+        this._evtVerticalScrollbarRemove = scrollbar.on('beforeremove', this._onVerticalScrollbarLose, this);
+        this._evtVerticalScrollbarValue = scrollbar.on('set:value', this._onSetVerticalScrollbarValue, this);
+
+        this._syncScrollbarEnabledState(ORIENTATION_VERTICAL);
+        this._syncScrollbarPosition(ORIENTATION_VERTICAL);
+    }
+
+    _onHorizontalScrollbarLose() {
+        this._evtHorizontalScrollbarRemove?.off();
+        this._evtHorizontalScrollbarRemove = null;
+
+        this._evtHorizontalScrollbarValue?.off();
+        this._evtHorizontalScrollbarValue = null;
+    }
+
+    _onVerticalScrollbarLose() {
+        this._evtVerticalScrollbarRemove?.off();
+        this._evtVerticalScrollbarRemove = null;
+
+        this._evtVerticalScrollbarValue?.off();
+        this._evtVerticalScrollbarValue = null;
+    }
+
     _onSetHorizontalScrollingEnabled() {
         this._syncScrollbarEnabledState(ORIENTATION_HORIZONTAL);
     }
 
     _onSetVerticalScrollingEnabled() {
         this._syncScrollbarEnabledState(ORIENTATION_VERTICAL);
-    }
-
-    _onHorizontalScrollbarGain() {
-        this._syncScrollbarEnabledState(ORIENTATION_HORIZONTAL);
-        this._syncScrollbarPosition(ORIENTATION_HORIZONTAL);
-    }
-
-    _onVerticalScrollbarGain() {
-        this._syncScrollbarEnabledState(ORIENTATION_VERTICAL);
-        this._syncScrollbarPosition(ORIENTATION_VERTICAL);
     }
 
     _onSetScroll(x, y, resetVelocity) {
@@ -590,75 +911,79 @@ class ScrollViewComponent extends Component {
     }
 
     _syncContentPosition(orientation) {
+        if (!this._contentEntity) {
+            return;
+        }
+
         const axis = this._getAxis(orientation);
         const sign = this._getSign(orientation);
-        const contentEntity = this._contentReference.entity;
 
-        if (contentEntity) {
-            const prevContentSize = this._prevContentSizes[orientation];
-            const currContentSize = this._getContentSize(orientation);
+        const prevContentSize = this._prevContentSizes[orientation];
+        const currContentSize = this._getContentSize(orientation);
 
-            // If the content size has changed, adjust the scroll value so that the content will
-            // stay in the same place from the user's perspective.
-            if (prevContentSize !== null && Math.abs(prevContentSize - currContentSize) > 1e-4) {
-                const prevMaxOffset = this._getMaxOffset(orientation, prevContentSize);
-                const currMaxOffset = this._getMaxOffset(orientation, currContentSize);
-                if (currMaxOffset === 0) {
-                    this._scroll[axis] = 1;
-                } else {
-                    this._scroll[axis] = math.clamp((this._scroll[axis] * prevMaxOffset) / currMaxOffset, 0, 1);
-                }
+        // If the content size has changed, adjust the scroll value so that the content will
+        // stay in the same place from the user's perspective.
+        if (prevContentSize !== null && Math.abs(prevContentSize - currContentSize) > 1e-4) {
+            const prevMaxOffset = this._getMaxOffset(orientation, prevContentSize);
+            const currMaxOffset = this._getMaxOffset(orientation, currContentSize);
+            if (currMaxOffset === 0) {
+                this._scroll[axis] = 1;
+            } else {
+                this._scroll[axis] = math.clamp((this._scroll[axis] * prevMaxOffset) / currMaxOffset, 0, 1);
             }
-
-            const offset = this._scroll[axis] * this._getMaxOffset(orientation);
-            const contentPosition = contentEntity.getLocalPosition();
-            contentPosition[axis] = offset * sign;
-
-            contentEntity.setLocalPosition(contentPosition);
-
-            this._prevContentSizes[orientation] = currContentSize;
         }
+
+        const offset = this._scroll[axis] * this._getMaxOffset(orientation);
+        const contentPosition = this._contentEntity.getLocalPosition();
+        contentPosition[axis] = offset * sign;
+
+        this._contentEntity.setLocalPosition(contentPosition);
+
+        this._prevContentSizes[orientation] = currContentSize;
     }
 
     _syncScrollbarPosition(orientation) {
-        const axis = this._getAxis(orientation);
-        const scrollbarEntity = this._scrollbarReferences[orientation].entity;
-
-        if (scrollbarEntity && scrollbarEntity.scrollbar) {
-            // Setting the value of the scrollbar will fire a 'set:value' event, which in turn
-            // will call the _onSetHorizontalScrollbarValue/_onSetVerticalScrollbarValue handlers
-            // and cause a cycle. To avoid this we keep track of the fact that we're in the process
-            // of updating the scrollbar value.
-            this._scrollbarUpdateFlags[orientation] = true;
-            scrollbarEntity.scrollbar.value = this._scroll[axis];
-            scrollbarEntity.scrollbar.handleSize = this._getScrollbarHandleSize(axis, orientation);
-            this._scrollbarUpdateFlags[orientation] = false;
+        const scrollbarEntity = this._scrollbarEntities[orientation];
+        if (!scrollbarEntity?.scrollbar) {
+            return;
         }
+
+        const axis = this._getAxis(orientation);
+
+        // Setting the value of the scrollbar will fire a 'set:value' event, which in turn
+        // will call the _onSetHorizontalScrollbarValue/_onSetVerticalScrollbarValue handlers
+        // and cause a cycle. To avoid this we keep track of the fact that we're in the process
+        // of updating the scrollbar value.
+        this._scrollbarUpdateFlags[orientation] = true;
+        scrollbarEntity.scrollbar.value = this._scroll[axis];
+        scrollbarEntity.scrollbar.handleSize = this._getScrollbarHandleSize(axis, orientation);
+        this._scrollbarUpdateFlags[orientation] = false;
     }
 
     // Toggles the scrollbar entities themselves to be enabled/disabled based
     // on whether the user has enabled horizontal/vertical scrolling on the
     // scroll view.
     _syncScrollbarEnabledState(orientation) {
-        const entity = this._scrollbarReferences[orientation].entity;
+        const entity = this._scrollbarEntities[orientation];
+        if (!entity) {
+            return;
+        }
 
-        if (entity) {
-            const isScrollingEnabled = this._getScrollingEnabled(orientation);
-            const requestedVisibility = this._getScrollbarVisibility(orientation);
+        const isScrollingEnabled = this._getScrollingEnabled(orientation);
+        const requestedVisibility = this._getScrollbarVisibility(orientation);
 
-            switch (requestedVisibility) {
-                case SCROLLBAR_VISIBILITY_SHOW_ALWAYS:
-                    entity.enabled = isScrollingEnabled;
-                    return;
+        switch (requestedVisibility) {
+            case SCROLLBAR_VISIBILITY_SHOW_ALWAYS:
+                entity.enabled = isScrollingEnabled;
+                return;
 
-                case SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED:
-                    entity.enabled = isScrollingEnabled && this._contentIsLargerThanViewport(orientation);
-                    return;
+            case SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED:
+                entity.enabled = isScrollingEnabled && this._contentIsLargerThanViewport(orientation);
+                return;
 
-                default:
-                    console.warn(`Unhandled scrollbar visibility:${requestedVisibility}`);
-                    entity.enabled = isScrollingEnabled;
-            }
+            default:
+                console.warn(`Unhandled scrollbar visibility:${requestedVisibility}`);
+                entity.enabled = isScrollingEnabled;
         }
     }
 
@@ -721,16 +1046,16 @@ class ScrollViewComponent extends Component {
     }
 
     _getViewportSize(orientation) {
-        return this._getSize(orientation, this._viewportReference);
+        return this._getSize(orientation, this._viewportEntity);
     }
 
     _getContentSize(orientation) {
-        return this._getSize(orientation, this._contentReference);
+        return this._getSize(orientation, this._contentEntity);
     }
 
-    _getSize(orientation, entityReference) {
-        if (entityReference.entity && entityReference.entity.element) {
-            return entityReference.entity.element[this._getCalculatedDimension(orientation)];
+    _getSize(orientation, entity) {
+        if (entity?.element) {
+            return entity.element[this._getCalculatedDimension(orientation)];
         }
 
         return 0;
@@ -777,7 +1102,7 @@ class ScrollViewComponent extends Component {
     }
 
     onUpdate() {
-        if (this._contentReference.entity) {
+        if (this._contentEntity) {
             this._updateVelocity();
             this._syncScrollbarEnabledState(ORIENTATION_HORIZONTAL);
             this._syncScrollbarEnabledState(ORIENTATION_VERTICAL);
@@ -797,10 +1122,10 @@ class ScrollViewComponent extends Component {
             }
 
             if (Math.abs(this._velocity.x) > 1e-4 || Math.abs(this._velocity.y) > 1e-4) {
-                const position = this._contentReference.entity.getLocalPosition();
+                const position = this._contentEntity.getLocalPosition();
                 position.x += this._velocity.x;
                 position.y += this._velocity.y;
-                this._contentReference.entity.setLocalPosition(position);
+                this._contentEntity.setLocalPosition(position);
 
                 this._setScrollFromContentPosition(position);
             }
@@ -888,12 +1213,12 @@ class ScrollViewComponent extends Component {
     }
 
     _setScrollbarComponentsEnabled(enabled) {
-        if (this._scrollbarReferences[ORIENTATION_HORIZONTAL].hasComponent('scrollbar')) {
-            this._scrollbarReferences[ORIENTATION_HORIZONTAL].entity.scrollbar.enabled = enabled;
+        if (this._horizontalScrollbarEntity?.scrollbar) {
+            this._horizontalScrollbarEntity.scrollbar.enabled = enabled;
         }
 
-        if (this._scrollbarReferences[ORIENTATION_VERTICAL].hasComponent('scrollbar')) {
-            this._scrollbarReferences[ORIENTATION_VERTICAL].entity.scrollbar.enabled = enabled;
+        if (this._verticalScrollbarEntity?.scrollbar) {
+            this._verticalScrollbarEntity.scrollbar.enabled = enabled;
         }
     }
 
@@ -904,19 +1229,21 @@ class ScrollViewComponent extends Component {
     }
 
     _onMouseWheel(event) {
-        if (this.useMouseWheel) {
-            const wheelEvent = event.event;
-
-            // wheelEvent's delta variables are screen space, so they need to be normalized first
-            const normalizedDeltaX = (wheelEvent.deltaX / this._contentReference.entity.element.calculatedWidth) * this.mouseWheelSensitivity.x;
-            const normalizedDeltaY = (wheelEvent.deltaY / this._contentReference.entity.element.calculatedHeight) * this.mouseWheelSensitivity.y;
-
-            // update scroll positions, clamping to [0, maxScrollValue] to always prevent over-shooting
-            const scrollX = math.clamp(this._scroll.x + normalizedDeltaX, 0, this._getMaxScrollValue(ORIENTATION_HORIZONTAL));
-            const scrollY = math.clamp(this._scroll.y + normalizedDeltaY, 0, this._getMaxScrollValue(ORIENTATION_VERTICAL));
-
-            this.scroll = new Vec2(scrollX, scrollY);
+        if (!this.useMouseWheel || !this._contentEntity?.element) {
+            return;
         }
+
+        const wheelEvent = event.event;
+
+        // wheelEvent's delta variables are screen space, so they need to be normalized first
+        const normalizedDeltaX = (wheelEvent.deltaX / this._contentEntity.element.calculatedWidth) * this.mouseWheelSensitivity.x;
+        const normalizedDeltaY = (wheelEvent.deltaY / this._contentEntity.element.calculatedHeight) * this.mouseWheelSensitivity.y;
+
+        // update scroll positions, clamping to [0, maxScrollValue] to always prevent over-shooting
+        const scrollX = math.clamp(this._scroll.x + normalizedDeltaX, 0, this._getMaxScrollValue(ORIENTATION_HORIZONTAL));
+        const scrollY = math.clamp(this._scroll.y + normalizedDeltaY, 0, this._getMaxScrollValue(ORIENTATION_VERTICAL));
+
+        this.scroll = new Vec2(scrollX, scrollY);
     }
 
     // re-enable useInput flag on any descendant that was disabled
@@ -945,10 +1272,9 @@ class ScrollViewComponent extends Component {
             }
         };
 
-        const contentEntity = this._contentReference.entity;
-        if (contentEntity) {
+        if (this._contentEntity) {
             // disable input recursively for all children of the content entity
-            const children = contentEntity.children;
+            const children = this._contentEntity.children;
             for (let i = 0, l = children.length; i < l; i++) {
                 _disableInput(children[i]);
             }
@@ -958,10 +1284,6 @@ class ScrollViewComponent extends Component {
     }
 
     onEnable() {
-        this._viewportReference.onParentComponentEnable();
-        this._contentReference.onParentComponentEnable();
-        this._scrollbarReferences[ORIENTATION_HORIZONTAL].onParentComponentEnable();
-        this._scrollbarReferences[ORIENTATION_VERTICAL].onParentComponentEnable();
         this._setScrollbarComponentsEnabled(true);
         this._setContentDraggingEnabled(true);
 
@@ -974,9 +1296,24 @@ class ScrollViewComponent extends Component {
     }
 
     onRemove() {
-        this._toggleLifecycleListeners('off', this.system);
+        this._toggleLifecycleListeners('off');
         this._toggleElementListeners('off');
         this._destroyDragHelper();
+    }
+
+    resolveDuplicatedEntityReferenceProperties(oldScrollView, duplicatedIdsMap) {
+        if (oldScrollView.viewportEntity) {
+            this.viewportEntity = duplicatedIdsMap[oldScrollView.viewportEntity.getGuid()];
+        }
+        if (oldScrollView.contentEntity) {
+            this.contentEntity = duplicatedIdsMap[oldScrollView.contentEntity.getGuid()];
+        }
+        if (oldScrollView.horizontalScrollbarEntity) {
+            this.horizontalScrollbarEntity = duplicatedIdsMap[oldScrollView.horizontalScrollbarEntity.getGuid()];
+        }
+        if (oldScrollView.verticalScrollbarEntity) {
+            this.verticalScrollbarEntity = duplicatedIdsMap[oldScrollView.verticalScrollbarEntity.getGuid()];
+        }
     }
 }
 

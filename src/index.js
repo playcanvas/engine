@@ -1,9 +1,45 @@
 /**
- * This module provides the core functionality for the PlayCanvas Engine. It includes the main
- * classes and methods used to create and manage a PlayCanvas application. It provides APIs for
- * graphics, audio, input, physics, asset management, scripting and much more. It also includes an
- * application framework and entity-component system, making it easy to manage the lifetime of your
- * application.
+ * Welcome to the PlayCanvas Engine API Reference. The PlayCanvas Engine is an open source framework
+ * for building interactive 3D applications. It is written in JavaScript and is built on top of
+ * standard browser APIs including WebGL, WebGPU, Web Audio and WebXR.
+ *
+ * ### 🧑 Who Should Use This Manual?
+ *
+ * This API reference is intended for developers who are building applications using:
+ *
+ * - The [PlayCanvas Engine](https://github.com/playcanvas/engine) directly.
+ * - [PlayCanvas Web Components](https://github.com/playcanvas/web-components) or
+ * [PlayCanvas React](https://github.com/playcanvas/react) which wrap the PlayCanvas Engine
+ * with a declarative interface.
+ * - The [PlayCanvas Editor](https://playcanvas.com/products/editor) which supports the writing of
+ * custom scripts based on the Engine API.
+ *
+ * ### 🔍 Searching the API Reference
+ *
+ * You can search the API Reference by clicking the 🔍 icon in the header. The `/` key is a shortcut
+ * for opening the search dialog. Press `Escape` to close the search dialog.
+ *
+ * ### 🗺️ Navigating the API Reference
+ *
+ * This top level page groups the API into a number of categories: Animation, Asset, Debug, Exporter,
+ * Gizmo, Graphics, Input, Math, Other, Physics, Script, Sound, User Interface and XR.
+ *
+ * There is also a full alphabetical index available on the left hand side of the page. However,
+ * this list is extensive so here is a list of key classes that you can use as jumping on points
+ * for exploring the API:
+ *
+ * - {@link AppBase} - Represents your PlayCanvas application.
+ * - {@link Scene} - Represents the graphical scene managed by the application.
+ * - {@link Entity} - Represents objects in your app. The scene manages a hierarchy
+ * of entities. Add capabilities to entities with {@link Component}s.
+ * - {@link ScriptComponent} - A powerful component that allows you to write {@link Script}s
+ * that implement custom behavior for your entities.
+ * - {@link AssetRegistry} - Manages all the {@link Asset}s (3D models, sounds, etc) in your app.
+ *
+ * ### 🙌 Contributing to the API Reference
+ *
+ * We want the API Reference to be as high quality as possible. If you spot any errors or omissions,
+ * please raise an issue or open a pull request on the [PlayCanvas Engine GitHub repository](https://github.com/playcanvas/engine).
  *
  * @module Engine
  */
@@ -49,6 +85,7 @@ export { Color } from './core/math/color.js';
 export { Curve } from './core/math/curve.js';
 export { CurveSet } from './core/math/curve-set.js';
 export { FloatPacking } from './core/math/float-packing.js';
+export { Kernel } from './core/math/kernel.js';
 export { Mat3 } from './core/math/mat3.js';
 export { Mat4 } from './core/math/mat4.js';
 export { Quat } from './core/math/quat.js';
@@ -152,7 +189,7 @@ export { StencilParameters } from './platform/graphics/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
 // SCENE / ANIMATION
-export { Animation, Key, Node } from './scene/animation/animation.js';
+export { Animation, AnimationKey, AnimationNode } from './scene/animation/animation.js';
 export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
@@ -186,20 +223,21 @@ export { FogParams } from './scene/fog-params.js';
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
-export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';
+export { ShaderUtils, createShader, createShaderFromCode } from './scene/shader-lib/shader-utils.js';
 export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
-export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
-export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
-export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
+export { ChunkUtils } from './scene/shader-lib/chunk-utils.js';
+export { ShaderChunks } from './scene/shader-lib/shader-chunks.js';
 
 // SCENE / SKY
 export { Sky } from './scene/skybox/sky.js';
 
 // SCENE / SPLAT
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
-export { GSplat } from './scene/gsplat/gsplat.js';
+export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
+export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
@@ -229,7 +267,6 @@ export { ElementComponent } from './framework/components/element/component.js';
 export { ElementComponentSystem } from './framework/components/element/system.js';
 export { ElementDragHelper } from './framework/components/element/element-drag-helper.js';
 export { Entity } from './framework/entity.js';
-export { EntityReference } from './framework/utils/entity-reference.js';
 export { GSplatComponent } from './framework/components/gsplat/component.js';
 export { GSplatComponentSystem } from './framework/components/gsplat/system.js';
 export { ImageElement } from './framework/components/element/image-element.js';
@@ -329,7 +366,6 @@ export { CssHandler } from './framework/handlers/css.js';
 export { CubemapHandler } from './framework/handlers/cubemap.js';
 export { FolderHandler } from './framework/handlers/folder.js';
 export { FontHandler } from './framework/handlers/font.js';
-export { GSplatResource } from './framework/parsers/gsplat-resource.js';
 export { HierarchyHandler } from './framework/handlers/hierarchy.js';
 export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';

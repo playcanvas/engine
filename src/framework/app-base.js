@@ -14,7 +14,9 @@ import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
 
 import {
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE
+    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
 } from '../platform/graphics/constants.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { http } from '../platform/net/http.js';
@@ -52,6 +54,9 @@ import { SceneRegistry } from './scene-registry.js';
 import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
 import { getApplication, setApplication } from './globals.js';
+import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
+import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
+import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 /**
  * @import { AppOptions } from './app-options.js'
@@ -72,26 +77,23 @@ import { getApplication, setApplication } from './globals.js';
  */
 
 /**
+ * @callback ConfigureAppCallback
  * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or an
  * error occurs).
- *
- * @callback ConfigureAppCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  * @returns {void}
  */
 
 /**
- * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
- *
  * @callback PreloadAppCallback
+ * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
  * @returns {void}
  */
 
 /**
+ * @callback MakeTickCallback
  * Callback used by {@link AppBase#start} and itself to request the rendering of a new animation
  * frame.
- *
- * @callback MakeTickCallback
  * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
  * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
  * @returns {void}
@@ -106,28 +108,21 @@ import { getApplication, setApplication } from './globals.js';
 let app = null;
 
 /**
- * An Application represents and manages your PlayCanvas application. If you are developing using
- * the PlayCanvas Editor, the Application is created for you. You can access your Application
- * instance in your scripts. Below is a skeleton script which shows how you can access the
- * application 'app' property inside the initialize and update functions:
+ * AppBase represents the base functionality for all PlayCanvas applications. It is responsible for
+ * initializing and managing the application lifecycle. It coordinates core engine systems such
+ * as:
  *
- * ```javascript
- * // Editor example: accessing the pc.Application from a script
- * var MyScript = pc.createScript('myScript');
+ * - The graphics device - see {@link GraphicsDevice}.
+ * - The asset registry - see {@link AssetRegistry}.
+ * - The component system registry - see {@link ComponentSystemRegistry}.
+ * - The scene - see {@link Scene}.
+ * - Input devices - see {@link Keyboard}, {@link Mouse}, {@link TouchDevice}, and {@link GamePads}.
+ * - The main update/render loop.
  *
- * MyScript.prototype.initialize = function() {
- *     // Every script instance has a property 'this.app' accessible in the initialize...
- *     const app = this.app;
- * };
- *
- * MyScript.prototype.update = function(dt) {
- *     // ...and update functions.
- *     const app = this.app;
- * };
- * ```
- *
- * If you are using the Engine without the Editor, you have to create the application instance
- * manually.
+ * Using AppBase directly requires you to register {@link ComponentSystem}s and
+ * {@link ResourceHandler}s yourself. This facilitates
+ * [tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) when bundling
+ * your application.
  */
 class AppBase extends EventHandler {
     /**
@@ -288,8 +283,8 @@ class AppBase extends EventHandler {
 
     /**
      * Set to true to render the scene on the next iteration of the main loop. This only has an
-     * effect if {@link AppBase#autoRender} is set to false. The value of renderNextFrame is set
-     * back to false again as soon as the scene has been rendered.
+     * effect if {@link autoRender} is set to false. The value of renderNextFrame is set back to
+     * false again as soon as the scene has been rendered.
      *
      * @type {boolean}
      * @example
@@ -449,11 +444,11 @@ class AppBase extends EventHandler {
     /**
      * Create a new AppBase instance.
      *
-     * @param {HTMLCanvasElement} canvas - The canvas element.
+     * @param {HTMLCanvasElement | OffscreenCanvas} canvas - The canvas element.
      * @example
-     * // Engine-only example: create the application manually
-     * const options = new AppOptions();
      * const app = new pc.AppBase(canvas);
+     *
+     * const options = new AppOptions();
      * app.init(options);
      *
      * // Start the application's main loop
@@ -490,8 +485,12 @@ class AppBase extends EventHandler {
         } = appOptions;
 
         Debug.assert(graphicsDevice, 'The application cannot be created without a valid GraphicsDevice');
-
         this.graphicsDevice = graphicsDevice;
+
+        // register shader chunks
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).add(shaderChunksGLSL);
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
+
         this._initDefaultMaterial();
         this._initProgramLibrary();
         this.stats = new ApplicationStats(graphicsDevice);
@@ -1416,9 +1415,12 @@ class AppBase extends EventHandler {
      * @param {number} settings.render.lightingMaxLightsPerCell - Maximum number of lights a cell can store.
      * @param {number} settings.render.lightingShadowType - The type of shadow filtering used by all shadows. Can be:
      *
-     * - {@link SHADOW_PCF1}: PCF 1x1 sampling.
-     * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
-     * - {@link SHADOW_PCF5}: PCF 5x5 sampling.
+     * - {@link SHADOW_PCF1_32F}
+     * - {@link SHADOW_PCF3_32F}
+     * - {@link SHADOW_PCF5_32F}
+     * - {@link SHADOW_PCF1_16F}
+     * - {@link SHADOW_PCF3_16F}
+     * - {@link SHADOW_PCF5_16F}
      *
      * @param {Vec3} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
      * is subdivided into.

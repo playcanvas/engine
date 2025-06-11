@@ -1,27 +1,26 @@
 import { Component } from '../component.js';
 
 /**
- * @import { AudioListenerComponentSystem } from './system.js'
- * @import { Entity } from '../../entity.js'
- */
-
-/**
- * Represents the audio listener in the 3D world, so that 3D positioned audio sources are heard
- * correctly.
+ * The AudioListenerComponent enables an {@link Entity} to represent the point from where
+ * positional {@link SoundComponent}s are heard. This is typically the main camera Entity in your
+ * scene. And typically, you will only have one AudioListenerComponent in your scene.
  *
+ * You should never need to use the AudioListenerComponent constructor directly. To add a
+ * AudioListenerComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('audiolistener');
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Positional Sound](https://playcanvas.github.io/#/sound/positional)
+ *
+ * @hideconstructor
  * @category Sound
  */
 class AudioListenerComponent extends Component {
-    /**
-     * Create a new AudioListenerComponent instance.
-     *
-     * @param {AudioListenerComponentSystem} system - The ComponentSystem that created this component.
-     * @param {Entity} entity - The Entity that this component is attached to.
-     */
-    constructor(system, entity) { // eslint-disable-line no-useless-constructor
-        super(system, entity);
-    }
-
     setCurrentListener() {
         if (this.enabled && this.entity.audiolistener && this.entity.enabled) {
             this.system.current = this.entity;

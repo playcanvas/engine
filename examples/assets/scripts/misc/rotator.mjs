@@ -1,6 +1,8 @@
 import { Script } from 'playcanvas';
 
 class Rotator extends Script {
+    static scriptName = 'rotator';
+
     /**
      * @attribute
      */

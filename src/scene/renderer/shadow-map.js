@@ -1,17 +1,19 @@
+import { Debug } from '../../core/debug.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_NEAREST,
     FUNC_LESS,
-    PIXELFORMAT_DEPTH, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    TEXHINT_SHADOWMAP,
-    PIXELFORMAT_R32F
+    PIXELFORMAT_R32F, PIXELFORMAT_R16F,
+    pixelFormatInfo,
+    TEXHINT_SHADOWMAP
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
 import {
     LIGHTTYPE_OMNI,
-    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS
+    SHADOW_VSM_32F, SHADOW_PCSS_32F,
+    shadowTypeInfo
 } from '../constants.js';
 
 
@@ -45,27 +47,6 @@ class ShadowMap {
         this.renderTargets.length = 0;
     }
 
-    static getShadowFormat(shadowType) {
-        if (shadowType === SHADOW_VSM32) {
-            return PIXELFORMAT_RGBA32F;
-        } else if (shadowType === SHADOW_VSM16) {
-            return PIXELFORMAT_RGBA16F;
-        } else if (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
-            return PIXELFORMAT_DEPTH;
-        } else if (shadowType === SHADOW_PCSS) {
-            return PIXELFORMAT_R32F;
-        }
-
-        return PIXELFORMAT_RGBA8;
-    }
-
-    static getShadowFiltering(device, shadowType) {
-        if (shadowType === SHADOW_VSM32) {
-            return device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
-        }
-        return FILTER_LINEAR;
-    }
-
     static create(device, light) {
 
         let shadowMap = null;
@@ -94,8 +75,25 @@ class ShadowMap {
 
     static create2dMap(device, size, shadowType) {
 
-        const format = this.getShadowFormat(shadowType);
-        const filter = this.getShadowFiltering(device, shadowType);
+        const shadowInfo = shadowTypeInfo.get(shadowType);
+        Debug.assert(shadowInfo);
+        let format = shadowInfo.format;
+
+        // when F32 is needed but not supported, fallback to F16 (PCSS)
+        if (format === PIXELFORMAT_R32F && !device.textureFloatRenderable && device.textureHalfFloatRenderable) {
+            format = PIXELFORMAT_R16F;
+        }
+        const formatName = pixelFormatInfo.get(format)?.name;
+
+        let filter = FILTER_LINEAR;
+        if (shadowType === SHADOW_VSM_32F) {
+            filter = device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
+        }
+        if (shadowType === SHADOW_PCSS_32F) {
+            // we're sampling and comparing depth, so need nearest filtering
+            // also note that linear is failing on iOS devices
+            filter = FILTER_NEAREST;
+        }
 
         const texture = new Texture(device, {
             // #if _PROFILER
@@ -109,11 +107,11 @@ class ShadowMap {
             magFilter: filter,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
-            name: 'ShadowMap2D'
+            name: `ShadowMap2D_${formatName}`
         });
 
         let target = null;
-        if (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
+        if (shadowInfo?.pcf) {
 
             // enable hardware PCF when sampling the depth texture
             texture.compareOnRead = true;
@@ -131,7 +129,7 @@ class ShadowMap {
             });
         }
 
-        // TODO: this is temporary, and will be handle on generic level for all render targets for WebGPU
+        // TODO: this is temporary, and will be handled on generic level for all render targets for WebGPU
         if (device.isWebGPU) {
             target.flipY = true;
         }
@@ -141,15 +139,17 @@ class ShadowMap {
 
     static createCubemap(device, size, shadowType) {
 
-        const isPcss = shadowType === SHADOW_PCSS;
-        const format = this.getShadowFormat(shadowType);
+        const shadowInfo = shadowTypeInfo.get(shadowType);
+        Debug.assert(shadowInfo);
+        const formatName = pixelFormatInfo.get(shadowInfo.format)?.name;
+        const isPcss = shadowType === SHADOW_PCSS_32F;
         const filter = isPcss ? FILTER_NEAREST : FILTER_LINEAR;
 
         const cubemap = new Texture(device, {
             // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,
             // #endif
-            format: format,
+            format: shadowInfo?.format,
             width: size,
             height: size,
             cubemap: true,
@@ -158,7 +158,7 @@ class ShadowMap {
             magFilter: filter,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
-            name: 'ShadowMapCube'
+            name: `ShadowMapCube_${formatName}`
         });
 
         // enable hardware PCF when sampling the depth texture

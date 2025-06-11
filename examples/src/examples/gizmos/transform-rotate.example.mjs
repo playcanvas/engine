@@ -1,6 +1,8 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+const { Grid } = await fileImport(`${rootPath}/static/scripts/esm/grid.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -95,6 +97,7 @@ gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
     snapIncrement: gizmo.snapIncrement,
+    orbitRotation: gizmo.orbitRotation,
     xAxisColor: Object.values(gizmo.xAxisColor),
     yAxisColor: Object.values(gizmo.yAxisColor),
     zAxisColor: Object.values(gizmo.zAxisColor),
@@ -107,6 +110,13 @@ data.set('gizmo', {
     faceTubeRadius: gizmo.faceTubeRadius,
     faceRingRadius: gizmo.faceRingRadius
 });
+
+// create grid
+const gridEntity = new pc.Entity('grid');
+gridEntity.setLocalScale(4, 1, 4);
+app.root.addChild(gridEntity);
+gridEntity.addComponent('script');
+gridEntity.script.create(Grid);
 
 // controls hook
 const tmpC = new pc.Color();
@@ -145,24 +155,6 @@ const resize = () => {
 };
 window.addEventListener('resize', resize);
 resize();
-
-// grid lines
-const createGridLines = (size = 1) => {
-    const lines = [];
-    for (let i = -size; i < size + 1; i++) {
-        lines.push(
-            new pc.Vec3(-size, 0, i),
-            new pc.Vec3(size, 0, i),
-            new pc.Vec3(i, 0, -size),
-            new pc.Vec3(i, 0, size)
-        );
-    }
-    return lines;
-};
-
-const lines = createGridLines(2);
-const gridCol = new pc.Color(1, 1, 1, 0.5);
-app.on('update', () => app.drawLines(lines, gridCol));
 
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);

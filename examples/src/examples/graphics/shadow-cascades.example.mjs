@@ -54,7 +54,8 @@ assetListLoader.load(() => {
             numCascades: 4, // number of cascades
             shadowResolution: 2048, // shadow map resolution storing 4 cascades
             cascadeDistribution: 0.5, // distribution of cascade distances to prefer sharpness closer to the camera
-            shadowType: pc.SHADOW_PCF3, // shadow filter type
+            cascadeBlend: 0.1, // blend between cascades
+            shadowType: pc.SHADOW_PCF3_32F, // shadow filter type
             vsmBlurSize: 11, // shader filter blur size for VSM shadows
             everyFrame: true // true if all cascades update every frame
         }
@@ -141,7 +142,7 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
 
     // Create a directional light casting cascaded shadows
-    const dirLight = new pc.Entity();
+    const dirLight = new pc.Entity('Cascaded Light');
     dirLight.addComponent('light', {
         ...{
             type: 'directional',
@@ -152,7 +153,11 @@ assetListLoader.load(() => {
 
             // enable shadow casting
             castShadows: true,
-            shadowDistance: 1000
+            shadowDistance: 1000,
+
+            // parameters for PCSS
+            penumbraSize: 20,
+            penumbraFalloff: 8
         },
         ...data.get('settings.light')
     });

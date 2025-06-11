@@ -1,8 +1,8 @@
 import {
     FILTER_NEAREST,
-    PIXELFORMAT_RGBA32F,
-    PIXELFORMAT_RGBA16F,
-    ADDRESS_CLAMP_TO_EDGE
+    ADDRESS_CLAMP_TO_EDGE,
+    PIXELFORMAT_R32F,
+    PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
@@ -10,8 +10,10 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 
 import {
     LAYERID_DEPTH,
-    SHADER_PREPASS_VELOCITY
+    SHADER_PREPASS
 } from '../../scene/constants.js';
+import { Color } from '../../core/math/color.js';
+import { FloatPacking } from '../../core/math/float-packing.js';
 
 /**
  * @import { BindGroup } from '../../platform/graphics/bind-group.js'
@@ -21,9 +23,6 @@ const tempMeshInstances = [];
 
 // uniform name of the depth texture
 const DEPTH_UNIFORM_NAME = 'uSceneDepthMap';
-
-// uniform name of the velocity texture
-const VELOCITY_UNIFORM_NAME = 'uSceneVelocityMap';
 
 /**
  * A render pass which typically executes before the rendering of the main scene, and renders data
@@ -38,24 +37,26 @@ class RenderPassPrepass extends RenderPass {
     viewBindGroups = [];
 
     /** @type {Texture} */
-    velocityTexture;
+    linearDepthTexture;
 
-    constructor(device, scene, renderer, camera, depthBuffer, resolveDepth, options, samples) {
+    /** @type {Color} */
+    linearDepthClearValue = new Color(0, 0, 0, 0);
+
+    constructor(device, scene, renderer, camera, options) {
         super(device);
         this.scene = scene;
         this.renderer = renderer;
         this.camera = camera;
-        this.samples = samples;
 
-        this.setupRenderTarget(depthBuffer, resolveDepth, options);
+        this.setupRenderTarget(options);
     }
 
     destroy() {
         super.destroy();
         this.renderTarget?.destroy();
         this.renderTarget = null;
-        this.velocityTexture?.destroy();
-        this.velocityTexture = null;
+        this.linearDepthTexture?.destroy();
+        this.linearDepthTexture = null;
 
         this.viewBindGroups.forEach((bg) => {
             bg.defaultUniformBuffer.destroy();
@@ -64,17 +65,16 @@ class RenderPassPrepass extends RenderPass {
         this.viewBindGroups.length = 0;
     }
 
-    setupRenderTarget(depthBuffer, resolveDepth, options) {
+    setupRenderTarget(options) {
 
         const { device } = this;
 
-        // TODO: only two channel texture is needed here, but that is not supported by WebGL
-        const velocityFormat = device.getRenderableHdrFormat([PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F]);
-        this.velocityTexture = new Texture(device, {
-            name: 'VelocityTexture',
-            width: 4,
-            height: 4,
-            format: velocityFormat,
+        this.linearDepthFormat = device.textureFloatRenderable ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
+        this.linearDepthTexture = new Texture(device, {
+            name: 'SceneLinearDepthTexture',
+            width: 1,
+            height: 1,
+            format: this.linearDepthFormat,
             mipmaps: false,
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
@@ -84,26 +84,24 @@ class RenderPassPrepass extends RenderPass {
 
         const renderTarget = new RenderTarget({
             name: 'PrepassRT',
-            // colorBuffer: this.velocityTexture,
-            depthBuffer: depthBuffer,
-            samples: this.samples
+            colorBuffer: this.linearDepthTexture,
+
+            // use depth buffer, but this can be discarded after the prepass as the depth is stored in the linearDepthTexture
+            depth: true,
+
+            // always single sampled
+            samples: 1
         });
 
-        this.init(renderTarget, options);
-        this.depthStencilOps.clearStencil = true;
-        this.depthStencilOps.storeDepth = true;
+        // scene depth will be linear
+        this.camera.shaderParams.sceneDepthMapLinear = true;
 
-        if (resolveDepth) {
-            this.depthStencilOps.resolveDepth = true;
-        }
+        this.init(renderTarget, options);
     }
 
     after() {
-
-        // Assign the depth to the uniform. Note that the depth buffer is still used as a render
-        // target in the following scene passes, and cannot be used as a texture inside those passes.
-        this.device.scope.resolve(DEPTH_UNIFORM_NAME).setValue(this.renderTarget.depthBuffer);
-        this.device.scope.resolve(VELOCITY_UNIFORM_NAME).setValue(this.velocityTexture);
+        // Assign the linear depth texture to the uniform
+        this.device.scope.resolve(DEPTH_UNIFORM_NAME).setValue(this.linearDepthTexture);
     }
 
     execute() {
@@ -139,7 +137,7 @@ class RenderPassPrepass extends RenderPass {
                         }
                     }
 
-                    renderer.renderForwardLayer(camera, renderTarget, null, undefined, SHADER_PREPASS_VELOCITY, this.viewBindGroups, {
+                    renderer.renderForwardLayer(camera, renderTarget, null, undefined, SHADER_PREPASS, this.viewBindGroups, {
                         meshInstances: tempMeshInstances
                     });
 
@@ -153,9 +151,22 @@ class RenderPassPrepass extends RenderPass {
 
         super.frameUpdate();
 
-        // depth clear value (1 or no clear) set up each frame
+        // depth clear value set up each frame
         const { camera } = this;
         this.setClearDepth(camera.clearDepthBuffer ? 1 : undefined);
+
+        // linear depth clear value set up each frame, or undefined to disable clearing
+        let clearValue;
+        if (camera.clearDepthBuffer) {
+            const farClip = camera.farClip - Number.MIN_VALUE;
+            clearValue = this.linearDepthClearValue;
+            if (this.linearDepthFormat === PIXELFORMAT_R32F) {
+                clearValue.r = farClip;  // only R is used
+            } else {
+                FloatPacking.float2RGBA8(farClip, clearValue);
+            }
+        }
+        this.setClearColor(clearValue);
     }
 }
 

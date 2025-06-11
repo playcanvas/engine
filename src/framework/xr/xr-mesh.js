@@ -11,7 +11,6 @@ import { Quat } from '../../core/math/quat.js';
  * indices) and its semantic label. Any of its properties can change during its lifetime.
  *
  * @category XR
- * @ignore
  */
 class XrMesh extends EventHandler {
     /**

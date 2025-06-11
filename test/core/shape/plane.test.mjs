@@ -1,7 +1,7 @@
-import { Plane } from '../../../src/core/shape/plane.js';
-import { Vec3 } from '../../../src/core/math/vec3.js';
-
 import { expect } from 'chai';
+
+import { Vec3 } from '../../../src/core/math/vec3.js';
+import { Plane } from '../../../src/core/shape/plane.js';
 
 describe('Plane', function () {
 

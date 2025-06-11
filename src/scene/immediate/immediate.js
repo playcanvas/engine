@@ -1,43 +1,18 @@
-import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 
 import { BLEND_NORMAL } from '../constants.js';
 import { GraphNode } from '../graph-node.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { ImmediateBatches } from './immediate-batches.js';
 
 import { Vec3 } from '../../core/math/vec3.js';
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 const tempPoints = [];
 const vec = new Vec3();
-
-const lineShaderDesc = {
-    uniqueName: 'ImmediateLine',
-    vertexCode: /* glsl */ `
-        attribute vec3 vertex_position;
-        attribute vec4 vertex_color;
-        uniform mat4 matrix_model;
-        uniform mat4 matrix_viewProjection;
-        varying vec4 color;
-        void main(void) {
-            color = vertex_color;
-            gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1);
-        }
-    `,
-    fragmentCode: /* glsl */ `
-        varying vec4 color;
-        void main(void) {
-            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(color.rgb)), color.a);
-        }
-    `,
-    attributes: {
-        vertex_position: SEMANTIC_POSITION,
-        vertex_color: SEMANTIC_COLOR
-    }
-};
 
 class Immediate {
     shaderDescs = new Map();
@@ -69,7 +44,17 @@ class Immediate {
 
     // creates material for line rendering
     createMaterial(depthTest) {
-        const material = new ShaderMaterial(lineShaderDesc);
+        const material = new ShaderMaterial({
+            uniqueName: 'ImmediateLine',
+            vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('immediateLineVS'),
+            fragmentGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('immediateLinePS'),
+            vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('immediateLineVS'),
+            fragmentWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('immediateLinePS'),
+            attributes: {
+                vertex_position: SEMANTIC_POSITION,
+                vertex_color: SEMANTIC_COLOR
+            }
+        });
         material.blendType = BLEND_NORMAL;
         material.depthTest = depthTest;
         material.update();
@@ -110,23 +95,36 @@ class Immediate {
         return batches.getBatch(material, layer);
     }
 
-    getShaderDesc(id, fragment) {
+    getShaderDesc(id, fragmentGLSL, fragmentWGSL) {
         if (!this.shaderDescs.has(id)) {
-            // shared vertex shader for textured quad rendering
-            const vertex = /* glsl */ `
-                attribute vec2 vertex_position;
-                uniform mat4 matrix_model;
-                varying vec2 uv0;
-                void main(void) {
-                    gl_Position = matrix_model * vec4(vertex_position, 0, 1);
-                    uv0 = vertex_position.xy + 0.5;
-                }
-            `;
-
             this.shaderDescs.set(id, {
                 uniqueName: `DebugShader:${id}`,
-                vertexCode: vertex,
-                fragmentCode: fragment,
+
+                // shared vertex shader for textured quad rendering
+                vertexGLSL: /* glsl */ `
+                    attribute vec2 vertex_position;
+                    uniform mat4 matrix_model;
+                    varying vec2 uv0;
+                    void main(void) {
+                        gl_Position = matrix_model * vec4(vertex_position, 0, 1);
+                        uv0 = vertex_position.xy + 0.5;
+                    }
+                `,
+
+                vertexWGSL: /* wgsl */ `
+                    attribute vertex_position: vec2f;
+                    uniform matrix_model: mat4x4f;
+                    varying uv0: vec2f;
+                    @vertex fn vertexMain(input: VertexInput) -> VertexOutput {
+                        var output: VertexOutput;
+                        output.position = uniform.matrix_model * vec4f(input.vertex_position, 0.0, 1.0);
+                        output.uv0 = input.vertex_position.xy + vec2f(0.5);
+                        return output;
+                    }
+                `,
+
+                fragmentGLSL: fragmentGLSL,
+                fragmentWGSL: fragmentWGSL,
                 attributes: { vertex_position: SEMANTIC_POSITION }
             });
         }
@@ -136,36 +134,74 @@ class Immediate {
     // shader used to display texture
     getTextureShaderDesc(encoding) {
         const decodeFunc = ChunkUtils.decodeFunc(encoding);
-        return this.getShaderDesc(`textureShader-${encoding}`, /* glsl */ `
+        return this.getShaderDesc(`textureShader-${encoding}`,
+        /* glsl */ `
+            #include "gammaPS"
             varying vec2 uv0;
             uniform sampler2D colorMap;
             void main (void) {
                 vec3 linearColor = ${decodeFunc}(texture2D(colorMap, uv0));
                 gl_FragColor = vec4(gammaCorrectOutput(linearColor), 1);
             }
+        `, /* wgsl */`
+            #include "gammaPS"
+            varying uv0: vec2f;
+            var colorMap: texture_2d<f32>;
+            var colorMapSampler: sampler;
+            @fragment fn fragmentMain(input : FragmentInput) -> FragmentOutput {
+                var output: FragmentOutput;
+                let sampledTex = textureSample(colorMap, colorMapSampler, input.uv0);
+                let linearColor: vec3f = ${decodeFunc}(sampledTex);
+                output.color = vec4f(gammaCorrectOutput(linearColor), 1.0);
+                return output;
+            }
         `);
     }
 
     // shader used to display infilterable texture sampled using texelFetch
     getUnfilterableTextureShaderDesc() {
-        return this.getShaderDesc('textureShaderUnfilterable', /* glsl */ `
+        return this.getShaderDesc('textureShaderUnfilterable',
+        /* glsl */ `
             varying vec2 uv0;
             uniform highp sampler2D colorMap;
             void main (void) {
                 ivec2 uv = ivec2(uv0 * textureSize(colorMap, 0));
                 gl_FragColor = vec4(texelFetch(colorMap, uv, 0).xyz, 1);
             }
+        `, /* wgsl */`
+
+            varying uv0: vec2f;
+            var colorMap: texture_2d<uff>;
+            @fragment fn fragmentMain(input : FragmentInput) -> FragmentOutput {
+                var output: FragmentOutput;
+                let uv : vec2<i32> = vec2<i32>(input.uv0 * vec2f(textureDimensions(colorMap, 0)));
+                let fetchedColor : vec4f = textureLoad(colorMap, uv, 0);
+                output.color = vec4f(fetchedColor.xyz, 1.0);
+                return output;
+            }
         `);
     }
 
     // shader used to display depth texture
     getDepthTextureShaderDesc() {
-        return this.getShaderDesc('depthTextureShader', /* glsl */ `
-            ${shaderChunks.screenDepthPS}
+        return this.getShaderDesc('depthTextureShader',
+        /* glsl */ `
+            #include "screenDepthPS"
+            #include "gammaPS"
             varying vec2 uv0;
             void main() {
                 float depth = getLinearScreenDepth(getImageEffectUV(uv0)) * camera_params.x;
                 gl_FragColor = vec4(gammaCorrectOutput(vec3(depth)), 1.0);
+            }
+        `, /* wgsl */`
+            #include "screenDepthPS"
+            #include "gammaPS"
+            varying uv0: vec2f;
+            @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+                var output: FragmentOutput;
+                let depth: f32 = getLinearScreenDepth(getImageEffectUV(input.uv0)) * uniform.camera_params.x;
+                output.color = vec4f(gammaCorrectOutput(vec3f(depth)), 1.0);
+                return output;
             }
         `);
     }

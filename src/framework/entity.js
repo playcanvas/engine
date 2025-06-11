@@ -67,17 +67,16 @@ const releaseTempArray = (a) => {
 };
 
 /**
- * The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game
- * will consist of an {@link Entity}, and a set of {@link Component}s which are managed by their
- * respective {@link ComponentSystem}s. One of those components maybe a {@link ScriptComponent}
- * which allows you to write custom code to attach to your Entity.
+ * The Entity is a core primitive of a PlayCanvas application. Generally speaking, any object in
+ * your application will be represented by an Entity, along with a set of {@link Component}s. Each
+ * component enables a particular capability. For example, the {@link RenderComponent} enables an
+ * entity to render a 3D model, and the {@link ScriptComponent} enables an entity to run code that
+ * implements custom behavior.
  *
- * The Entity uniquely identifies the object and also provides a transform for position and
- * orientation which it inherits from {@link GraphNode} so can be added into the scene graph. The
- * Component and ComponentSystem provide the logic to give an Entity a specific type of behavior.
- * e.g. the ability to render a model or play a sound. Components are specific to an instance of an
- * Entity and are attached (e.g. `this.entity.model`) ComponentSystems allow access to all Entities
- * and Components and are attached to the {@link AppBase}.
+ * Entity is a subclass of {@link GraphNode} which allows entities to form a tree-like hierarchy
+ * (based on parent/child relationships). The root of the entity hierarchy can be queried with
+ * {@link AppBase#root}. Entities inherit a 3D transform from {@link GraphNode} which allows them
+ * to be positioned, rotated and scaled.
  */
 class Entity extends GraphNode {
     /**
@@ -306,7 +305,7 @@ class Entity extends GraphNode {
      * const entity = new pc.Entity();
      *
      * // Add a Component to the Entity
-     * entity.addComponent("camera", {
+     * entity.addComponent('camera', {
      *     fov: 45,
      *     nearClip: 1,
      *     farClip: 10000
@@ -752,6 +751,21 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
         // Handle entity render attributes
         if (components.render) {
             newEntity.render.resolveDuplicatedEntityReferenceProperties(components.render, duplicatedIdsMap);
+        }
+
+        // Handle entity button attributes
+        if (components.button) {
+            newEntity.button.resolveDuplicatedEntityReferenceProperties(components.button, duplicatedIdsMap);
+        }
+
+        // Handle entity scrollview attributes
+        if (components.scrollview) {
+            newEntity.scrollview.resolveDuplicatedEntityReferenceProperties(components.scrollview, duplicatedIdsMap);
+        }
+
+        // Handle entity scrollbar attributes
+        if (components.scrollbar) {
+            newEntity.scrollbar.resolveDuplicatedEntityReferenceProperties(components.scrollbar, duplicatedIdsMap);
         }
 
         // Handle entity anim attributes

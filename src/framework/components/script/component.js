@@ -18,10 +18,34 @@ import { getScriptName } from '../../script/script.js';
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
 /**
- * The ScriptComponent allows you to extend the functionality of an Entity by attaching your own
- * Script Types defined in JavaScript files to be executed with access to the Entity. For more
- * details on scripting see [Scripting](https://developer.playcanvas.com/user-manual/scripting/).
+ * The ScriptComponent allows you add custom behavior to an {@link Entity} by attaching
+ * your own scripts written in JavaScript (or TypeScript).
  *
+ * You should never need to use the ScriptComponent constructor directly. To add a
+ * ScriptComponent to an Entity, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('script');
+ * ```
+ *
+ * Once the ScriptComponent is added to the entity, you can access it via the {@link Entity#script}
+ * property.
+ *
+ * Add scripts to the entity by calling the `create` method:
+ *
+ * ```javascript
+ * // Option 1: Add a script using the name registered in the ScriptRegistry
+ * entity.script.create('cameraControls');
+ *
+ * // Option 2: Add a script using the script class
+ * entity.script.create(CameraControls);
+ * ```
+ *
+ * For more details on scripting see the [Scripting Section](https://developer.playcanvas.com/user-manual/scripting/)
+ * of the User Manual.
+ *
+ * @hideconstructor
  * @category Script
  */
 class ScriptComponent extends Component {
@@ -690,7 +714,16 @@ class ScriptComponent extends Component {
         if (typeof scriptType === 'string') {
             scriptType = this.system.app.scripts.get(scriptType);
         } else if (scriptType) {
-            scriptName = scriptType.__name ?? toLowerCamelCase(getScriptName(scriptType));
+
+            const inferredScriptName = getScriptName(scriptType);
+            const lowerInferredScriptName = toLowerCamelCase(inferredScriptName);
+
+            if (!(scriptType.prototype instanceof ScriptType) && !scriptType.scriptName) {
+                Debug.warnOnce(`The Script class "${inferredScriptName}" must have a static "scriptName" property: \`${inferredScriptName}.scriptName = "${lowerInferredScriptName}";\`. This will be an error in future versions of PlayCanvas.`);
+            }
+
+            scriptType.__name ??= scriptType.scriptName ?? lowerInferredScriptName;
+            scriptName = scriptType.__name;
         }
 
         if (scriptType) {

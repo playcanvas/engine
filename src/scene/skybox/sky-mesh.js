@@ -1,11 +1,10 @@
-import { CULLFACE_FRONT } from '../../platform/graphics/constants.js';
-import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { LAYERID_SKYBOX } from '../constants.js';
+import { CULLFACE_FRONT, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { LAYERID_SKYBOX, SKYTYPE_INFINITE } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
-import { getProgramLibrary } from '../shader-lib/get-program-library.js';
-import { skybox } from '../shader-lib/programs/skybox.js';
+import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 import { SkyGeometry } from './sky-geometry.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
  * @import { GraphNode } from '../graph-node.js'
@@ -16,6 +15,8 @@ import { SkyGeometry } from './sky-geometry.js';
 
 /**
  * A visual representation of the sky.
+ *
+ * @ignore
  */
 class SkyMesh {
     /**
@@ -26,6 +27,11 @@ class SkyMesh {
     meshInstance = null;
 
     /**
+     * @type {boolean}
+     */
+    _depthWrite = false;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Scene} scene - The scene owning the sky.
      * @param {GraphNode} node - The graph node of the sky mesh instance.
@@ -34,34 +40,21 @@ class SkyMesh {
      */
     constructor(device, scene, node, texture, type) {
 
-        const material = new ShaderMaterial();
-        material.name = 'SkyMaterial';
-
-        material.getShaderVariant = function (params) {
-
-            const { scene, cameraShaderParams } = params;
-            const options = {
-                defines: this.defines,
-                pass: params.pass,
-                encoding: texture.encoding,
-                gamma: cameraShaderParams.shaderOutputGamma,
-                toneMapping: cameraShaderParams.toneMapping,
-                skymesh: type
-            };
-
-            if (texture.cubemap) {
-                options.type = 'cubemap';
-                options.mip = scene.skyboxMip;
-            } else {
-                options.type = 'envAtlas';
+        const material = new ShaderMaterial({
+            uniqueName: 'SkyMaterial',
+            vertexGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('skyboxVS'),
+            fragmentGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('skyboxPS'),
+            vertexWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('skyboxVS'),
+            fragmentWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('skyboxPS'),
+            attributes: {
+                aPosition: SEMANTIC_POSITION
             }
+        });
 
-            const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat);
-
-            const library = getProgramLibrary(device);
-            library.register('skybox', skybox);
-            return library.getProgram('skybox', options, processingOptions);
-        };
+        // defines
+        material.setDefine('{SKYBOX_DECODE_FNC}', ChunkUtils.decodeFunc(texture.encoding));
+        if (type !== SKYTYPE_INFINITE) material.setDefine('SKYMESH', '');
+        if (texture.cubemap) material.setDefine('SKY_CUBEMAP', '');
 
         material.setParameter('skyboxHighlightMultiplier', scene.skyboxHighlightMultiplier);
 
@@ -72,8 +65,10 @@ class SkyMesh {
             material.setParameter('mipLevel', scene.skyboxMip);
         }
 
+        // render inside of the geometry
         material.cull = CULLFACE_FRONT;
-        material.depthWrite = false;
+
+        material.depthWrite = this._depthWrite;
 
         const skyLayer = scene.layers.getLayerById(LAYERID_SKYBOX);
         if (skyLayer) {
@@ -101,6 +96,17 @@ class SkyMesh {
             this.meshInstance.destroy();
             this.meshInstance = null;
         }
+    }
+
+    set depthWrite(value) {
+        this._depthWrite = value;
+        if (this.meshInstance) {
+            this.meshInstance.material.depthWrite = value;
+        }
+    }
+
+    get depthWrite() {
+        return this._depthWrite;
     }
 }
 

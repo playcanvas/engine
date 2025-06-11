@@ -9,14 +9,13 @@ import { Component } from '../component.js';
 
 /**
  * @import { Animation } from '../../../scene/animation/animation.js'
- * @import { AnimationComponentSystem } from './system.js'
- * @import { Entity } from '../../entity.js'
  * @import { Model } from '../../../scene/model.js'
  */
 
 /**
  * The Animation Component allows an Entity to playback animations on models.
  *
+ * @hideconstructor
  * @category Animation
  */
 class AnimationComponent extends Component {
@@ -108,17 +107,6 @@ class AnimationComponent extends Component {
      * @type {number}
      */
     speed = 1;
-
-    /**
-     * Create a new AnimationComponent instance.
-     *
-     * @param {AnimationComponentSystem} system - The {@link ComponentSystem} that created this
-     * component.
-     * @param {Entity} entity - The Entity that this component is attached to.
-     */
-    constructor(system, entity) { // eslint-disable-line no-useless-constructor
-        super(system, entity);
-    }
 
     /**
      * Sets the dictionary of animations by name.

@@ -4,11 +4,13 @@ import {
     GAMMA_NONE,
     PARTICLEORIENTATION_SCREEN,
     SHADER_FORWARD,
+    SHADERDEF_UV0,
     TONEMAP_LINEAR
 } from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { Material } from '../materials/material.js';
 import { particle } from '../shader-lib/programs/particle.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 
 /**
  * @import { ParticleEmitter } from './particle-emitter.js'
@@ -36,10 +38,10 @@ class ParticleMaterial extends Material {
 
     getShaderVariant(params) {
 
-        const { device, scene, cameraShaderParams } = params;
+        const { device, scene, cameraShaderParams, objDefs } = params;
         const { emitter } = this;
         const options = {
-            defines: this.defines,
+            defines: ShaderUtils.getCoreDefines(this, params),
             pass: SHADER_FORWARD,
             useCpu: this.emitter.useCpu,
             normal: emitter.lighting ? ((emitter.normalMap !== null) ? 2 : 1) : 0,
@@ -48,6 +50,7 @@ class ParticleMaterial extends Material {
             alignToMotion: this.emitter.alignToMotion,
             soft: this.emitter.depthSoftening,
             mesh: this.emitter.useMesh,
+            meshUv: objDefs & SHADERDEF_UV0,
             gamma: cameraShaderParams?.shaderOutputGamma ?? GAMMA_NONE,
             toneMap: cameraShaderParams?.toneMapping ?? TONEMAP_LINEAR,
             fog: (scene && !this.emitter.noFog) ? scene.fog.type : 'none',
@@ -57,7 +60,7 @@ class ParticleMaterial extends Material {
             // in Editor, screen space particles (children of 2D Screen) are still rendered in 3d space
             screenSpace: emitter.inTools ? false : this.emitter.screenSpace,
 
-            blend: this.blendType,
+            blend: this.emitter.blendType,
             animTex: this.emitter._isAnimated(),
             animTexLoop: this.emitter.animLoop,
             pack8: this.emitter.pack8,

@@ -4,6 +4,7 @@
         "allowJs": true,
         "declaration": true,
         "emitDeclarationOnly": true,
-        "outDir": "build/playcanvas/src"
+        "outDir": "build/playcanvas/src",
+        "typeRoots": [ "./node_modules/@types" ]
     }
 }
