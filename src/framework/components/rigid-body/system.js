@@ -4,7 +4,7 @@ import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
+import { BODYFLAG_NORESPONSE_OBJECT, EVENT_PHYSICS_FIXED_UPDATE, EVENT_PHYSICS_UPDATE } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
@@ -414,6 +414,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
     _compounds = [];
 
     /**
+     * @type {number}
+     * @private
+     */
+    _internalTime = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lastFixedTimeStep = 0;
+
+    /**
      * Create a new RigidBodyComponentSystem.
      *
      * @param {AppBase} app - The Application.
@@ -471,9 +483,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
 
             this.app.systems.on('update', this.onUpdate, this);
+            this.app.systems.on(EVENT_PHYSICS_FIXED_UPDATE, this.onPhysicsFixedUpdate, this);
+            this.app.systems.on(EVENT_PHYSICS_UPDATE, this.onPhysicsUpdate, this);
         } else {
             // Unbind the update function if we haven't loaded Ammo by now
             this.app.systems.off('update', this.onUpdate, this);
+            this.app.systems.off(EVENT_PHYSICS_FIXED_UPDATE, this.onPhysicsFixedUpdate, this);
+            this.app.systems.off(EVENT_PHYSICS_UPDATE, this.onPhysicsUpdate, this);
         }
     }
 
@@ -1048,12 +1064,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.singleContactResultPool.freeAll();
     }
 
-    onUpdate(dt) {
-        let i, len;
+    /**
+     * A list of tasks that the system needs to perform after the physics step.
+     * @param {number} dt The amount of simulation time processed in the last simulation tick.
+     */
+    _beforeStepSimulation(dt) {
 
-        // #if _PROFILER
-        this._stats.physicsStart = now();
-        // #endif
+        let i, len;
 
         // downcast gravity to float32 so we can accurately compare with existing
         // gravity set in ammo.
@@ -1085,9 +1102,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
         for (i = 0, len = kinematic.length; i < len; i++) {
             kinematic[i]._updateKinematic();
         }
+    }
 
-        // Step the physics simulation
-        this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
+    /**
+     * A list of tasks that the system needs to perform after the physics step.
+     * @param {number} dt The amount of simulation time processed in the last simulation tick.
+     */
+    _afterStepSimulation(dt) {
+
+        let i, len;
 
         // Update the transforms of all entities referencing a dynamic body
         const dynamic = this._dynamic;
@@ -1098,6 +1121,70 @@ class RigidBodyComponentSystem extends ComponentSystem {
         if (!this.dynamicsWorld.setInternalTickCallback) {
             this._checkForCollisions(Ammo.getPointer(this.dynamicsWorld), dt);
         }
+    }
+
+    onPhysicsFixedUpdate(dt) {
+
+        this._lastFixedTimeStep = dt;
+
+        // #if _PROFILER
+        this._stats.physicsStart = now();
+        // #endif
+
+        this._beforeStepSimulation(dt);
+
+        // Step the physics simulation
+        this.dynamicsWorld.stepSimulation(dt, 0);
+
+        this._afterStepSimulation(dt);
+
+        // ???
+        // #if _PROFILER
+        this._stats.physicsTime = now() - this._stats.physicsStart;
+        // #endif
+    }
+
+    onPhysicsUpdate(dt) {
+
+        this._internalTime += dt;
+        
+        // TODO: add interpolation type for component
+
+        if (this._internalTime >= this._lastFixedTimeStep && this._lastFixedTimeStep > 0) {
+            const numSimulationSubSteps = Math.floor(this._internalTime / this._lastFixedTimeStep);
+            this._internalTime -= numSimulationSubSteps * this._lastFixedTimeStep;
+        }
+        
+        let i, len;
+
+        // Apply transform interpolation to all entities referencing the dynamic body.
+        const extrapolationTime = this._internalTime - this._lastFixedTimeStep;
+        const dynamic = this._dynamic;
+        for (i = 0, len = dynamic.length; i < len; i++) {
+            dynamic[i]._applyInterpolation(extrapolationTime);
+        }
+
+        // #if _PROFILER
+        this._stats.physicsTime = now() - this._stats.physicsStart;
+        // #endif
+    }
+
+    onUpdate(dt) {
+
+        if (this.app.useFixedTimeForPhysics) {
+            return;
+        }
+
+        // #if _PROFILER
+        this._stats.physicsStart = now();
+        // #endif
+
+        this._beforeStepSimulation(dt);
+
+        // Step the physics simulation
+        this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
+
+        this._afterStepSimulation(dt);
 
         // #if _PROFILER
         this._stats.physicsTime = now() - this._stats.physicsStart;
@@ -1108,6 +1195,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
         super.destroy();
 
         this.app.systems.off('update', this.onUpdate, this);
+        this.app.systems.off(EVENT_PHYSICS_FIXED_UPDATE, this.onPhysicsFixedUpdate, this);
+        this.app.systems.off(EVENT_PHYSICS_UPDATE, this.onPhysicsUpdate, this);
 
         if (typeof Ammo !== 'undefined') {
             Ammo.destroy(this.dynamicsWorld);

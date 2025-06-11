@@ -13,12 +13,15 @@ import {
  * @import { Entity } from '../../entity.js'
  */
 
+const ANGULAR_MOTION_THRESHOLD = 0.25 * Math.PI;
+
 // Shared math variable to avoid excessive allocation
 let _ammoTransform;
 let _ammoVec1, _ammoVec2, _ammoQuat;
 const _quat1 = new Quat();
 const _quat2 = new Quat();
-const _vec3 = new Vec3();
+const _vec31 = new Vec3();
+const _vec32 = new Vec3();
 
 /**
  * The RigidBodyComponent, when combined with a {@link CollisionComponent}, allows your entities
@@ -1066,49 +1069,165 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    _setEntityPosAndRotFormTransform(transform) {
+
+        const p = transform.getOrigin();
+        const q = transform.getRotation();
+
+        const entity = this.entity;
+        const component = entity.collision;
+
+        if (component && component._hasOffset) {
+            const lo = component.data.linearOffset;
+            const ao = component.data.angularOffset;
+
+            // Un-rotate the angular offset and then use the new rotation to
+            // un-translate the linear offset in local space
+            // Order of operations matter here
+            const invertedAo = _quat2.copy(ao).invert();
+            const entityRot = _quat1.set(q.x(), q.y(), q.z(), q.w()).mul(invertedAo);
+
+            entityRot.transformVector(lo, _vec31);
+
+            entity.setPositionAndRotation(
+                _vec31.set(p.x() - _vec31.x, p.y() - _vec31.y, p.z() - _vec31.z),
+                entityRot
+            );
+
+        } else {
+            entity.setPositionAndRotation(
+                _vec31.set(p.x(), p.y(), p.z()),
+                _quat1.set(q.x(), q.y(), q.z(), q.w()),
+            );
+        }
+    }
+
     /**
      * Sets an entity's transform to match that of the world transformation matrix of a dynamic
      * rigid body's motion state.
-     *
+     * @param {boolean} fromMotionState set transform from body motionsState
      * @private
      */
-    _updateDynamic() {
+    _updateDynamic(fromMotionState = true) {
+
         const body = this._body;
 
         // If a dynamic body is frozen, we can assume its motion state transform is
         // the same is the entity world transform
         if (body.isActive()) {
-            // Update the motion state. Note that the test for the presence of the motion
-            // state is technically redundant since the engine creates one for all bodies.
-            const motionState = body.getMotionState();
-            if (motionState) {
-                const entity = this.entity;
 
-                motionState.getWorldTransform(_ammoTransform);
+            if (fromMotionState) {
 
-                const p = _ammoTransform.getOrigin();
-                const q = _ammoTransform.getRotation();
-
-                const component = entity.collision;
-                if (component && component._hasOffset) {
-                    const lo = component.data.linearOffset;
-                    const ao = component.data.angularOffset;
-
-                    // Un-rotate the angular offset and then use the new rotation to
-                    // un-translate the linear offset in local space
-                    // Order of operations matter here
-                    const invertedAo = _quat2.copy(ao).invert();
-                    const entityRot = _quat1.set(q.x(), q.y(), q.z(), q.w()).mul(invertedAo);
-
-                    entityRot.transformVector(lo, _vec3);
-                    entity.setPosition(p.x() - _vec3.x, p.y() - _vec3.y, p.z() - _vec3.z);
-                    entity.setRotation(entityRot);
-
-                } else {
-                    entity.setPosition(p.x(), p.y(), p.z());
-                    entity.setRotation(q.x(), q.y(), q.z(), q.w());
+                // Update the motion state. Note that the test for the presence of the motion
+                // state is technically redundant since the engine creates one for all bodies.
+                const motionState = body.getMotionState();
+                if (motionState) {
+                    motionState.getWorldTransform(_ammoTransform);
+                    this._setEntityPosAndRotFormTransform(_ammoTransform);
                 }
             }
+            else {
+                const currentTransform = body.getWorldTransform();
+                this._setEntityPosAndRotFormTransform(currentTransform);
+            }
+        }
+    }
+
+    /**
+     * @param {Quat} rotation 
+     * @param {Vec3} angularVelocity 
+     * @param {number} timeStep 
+     * @param {Quat} out 
+     * 
+     * @private
+     */
+    _interpolationRotationByAngularVelocity(rotation, angularVelocity, timeStep, out) {
+
+		let fAngle = angularVelocity.length();
+
+		//limit the angular motion
+		if (fAngle * timeStep > ANGULAR_MOTION_THRESHOLD) {
+			fAngle = ANGULAR_MOTION_THRESHOLD / timeStep;
+		}
+
+        const factor = fAngle < 0.001
+            ? 0.5 * timeStep - (timeStep * timeStep * timeStep) * 0.020833333333 * fAngle * fAngle // use Taylor's expansions of sync function
+            : Math.sin(0.5 * fAngle * timeStep) / fAngle;                                          // sync(fAngle) = sin(c*fAngle)/t
+        
+        // q1 = q(angularVelocity, Math.cos(fAngle * timeStep * 0.5))
+        // out = q1 * q2
+
+        const q1x = angularVelocity.x * factor;
+        const q1y = angularVelocity.y * factor;
+        const q1z = angularVelocity.z * factor;
+        const q1w = Math.cos(fAngle * timeStep * 0.5);
+
+        const q2x = rotation.x;
+        const q2y = rotation.y;
+        const q2z = rotation.z;
+        const q2w = rotation.w;
+        const cx = q1y * q2z - q1z * q2y;
+        const cy = q1z * q2x - q1x * q2z;
+        const cz = q1x * q2y - q1y * q2x;
+
+        const dot = q1x * q2x + q1y * q2y + q1z * q2z;
+    
+        out.x = q1x * q2w + q2x * q1w + cx;
+        out.y = q1y * q2w + q2y * q1w + cy;
+        out.z = q1z * q2w + q2z * q1w + cz;
+        out.w = q1w * q2w - dot
+    }
+
+    _applyInterpolation(extrapolationTime) {
+
+        if (!this._body || this._type !== BODYTYPE_DYNAMIC) {
+            return;
+        }
+
+        const body = this._body;
+
+        // If a dynamic body is frozen, we can assume its motion state transform is
+        // the same is the entity world transform
+        if (body.isActive()) {
+            
+            const currentTransform = body.getWorldTransform();
+            const linearVelocity   = body.getLinearVelocity();
+            const angularVelocity  = body.getAngularVelocity();
+            const currentPosition  = currentTransform.getOrigin();
+            const currentRotation  = currentTransform.getRotation();
+
+            const interpolationPos = _vec31.set(
+                currentPosition.x() + linearVelocity.x() * extrapolationTime,
+                currentPosition.y() + linearVelocity.y() * extrapolationTime,
+                currentPosition.z() + linearVelocity.z() * extrapolationTime
+            );
+
+            const angularVelocityO = _vec32.set(angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
+            const interpolationRot = _quat1.set(currentRotation.x(), currentRotation.y(), currentRotation.z(), currentRotation.w());
+
+            this._interpolationRotationByAngularVelocity(interpolationRot, angularVelocityO, extrapolationTime, interpolationRot);
+
+            const entity = this.entity;
+            const component = entity.collision;
+
+            if (component && component._hasOffset) {
+                const lo = component.data.linearOffset;
+                const ao = component.data.angularOffset;
+
+                // Un-rotate the angular offset and then use the new rotation to
+                // un-translate the linear offset in local space
+                // Order of operations matter here
+                const invertedAo = _quat2.copy(ao).invert();
+
+                interpolationRot.mul(invertedAo);
+                interpolationRot.transformVector(lo, _vec32);
+                interpolationPos.sub(_vec32);
+            }
+
+            entity.setPositionAndRotation(
+                interpolationPos,
+                interpolationRot
+            );
         }
     }
 
