@@ -125,7 +125,7 @@ class AppOptions {
 
     /**
      * Use fixedUpdate calls with a fixed step for physics calculations
-     * 
+     *
      * @type {boolean}
      */
     useFixedTimeForPhysics = false;

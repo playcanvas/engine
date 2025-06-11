@@ -219,8 +219,8 @@ class AppBase extends EventHandler {
     timeScale = 1;
 
     /**
-     * A frame rate independent interval that dictates when physics calculations and fixedUpdate events are performed. Defaults to 0.02
-     * 
+     * A frame rate independent interval that dictates when physics calculations and fixedUpdate events are performed. Defaults to 0.02.
+     *
      * @type {number}
      * @example
      * this.app.fixedTimeStep = 0.02; // (1 / 50) fixedUpdate calls 50 times per second
@@ -229,7 +229,7 @@ class AppBase extends EventHandler {
 
     /**
      * Use fixedUpdate calls with a fixed step for physics calculations
-     * 
+     *
      * @type {boolean}
      * @example
      * this.app.useFixedTimeForPhysics = true;
@@ -1063,8 +1063,7 @@ class AppBase extends EventHandler {
 
             this.systems.fire('physics-update', dt);
             this.fire('physics-update', dt);
-        }
-        else {
+        } else {
             this._fixedTimeDebt = 0;
         }
 

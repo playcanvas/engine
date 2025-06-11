@@ -1066,7 +1066,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * A list of tasks that the system needs to perform after the physics step.
-     * @param {number} dt The amount of simulation time processed in the last simulation tick.
+     * @param {number} dt - The amount of simulation time processed in the last simulation tick.
      */
     _beforeStepSimulation(dt) {
 
@@ -1106,7 +1106,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * A list of tasks that the system needs to perform after the physics step.
-     * @param {number} dt The amount of simulation time processed in the last simulation tick.
+     * @param {number} dt - The amount of simulation time processed in the last simulation tick.
      */
     _afterStepSimulation(dt) {
 
@@ -1145,17 +1145,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     onPhysicsUpdate(dt) {
-
+        let i, len;
         this._internalTime += dt;
-        
-        // TODO: add interpolation type for component
 
+        // TODO: add interpolation type for component
         if (this._internalTime >= this._lastFixedTimeStep && this._lastFixedTimeStep > 0) {
             const numSimulationSubSteps = Math.floor(this._internalTime / this._lastFixedTimeStep);
             this._internalTime -= numSimulationSubSteps * this._lastFixedTimeStep;
         }
-        
-        let i, len;
 
         // Apply transform interpolation to all entities referencing the dynamic body.
         const extrapolationTime = this._internalTime - this._lastFixedTimeStep;

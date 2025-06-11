@@ -1097,7 +1097,7 @@ class RigidBodyComponent extends Component {
         } else {
             entity.setPositionAndRotation(
                 _vec31.set(p.x(), p.y(), p.z()),
-                _quat1.set(q.x(), q.y(), q.z(), q.w()),
+                _quat1.set(q.x(), q.y(), q.z(), q.w())
             );
         }
     }
@@ -1105,7 +1105,9 @@ class RigidBodyComponent extends Component {
     /**
      * Sets an entity's transform to match that of the world transformation matrix of a dynamic
      * rigid body's motion state.
-     * @param {boolean} fromMotionState set transform from body motionsState
+     *
+     * @param {boolean} fromMotionState - set transform from body motionsState
+     *
      * @private
      */
     _updateDynamic(fromMotionState = true) {
@@ -1125,8 +1127,7 @@ class RigidBodyComponent extends Component {
                     motionState.getWorldTransform(_ammoTransform);
                     this._setEntityPosAndRotFormTransform(_ammoTransform);
                 }
-            }
-            else {
+            } else {
                 const currentTransform = body.getWorldTransform();
                 this._setEntityPosAndRotFormTransform(currentTransform);
             }
@@ -1134,26 +1135,26 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * @param {Quat} rotation 
-     * @param {Vec3} angularVelocity 
-     * @param {number} timeStep 
-     * @param {Quat} out 
-     * 
+     * Performs interpolation of the body's rotation based on current rotation and angular velocity.
+     *
+     * @param {Quat} rotation - The current rotation of the body represented as a quaternion. Defines the body's current orientation.
+     * @param {Vec3} angularVelocity - The angular velocity vector of the body, indicating how fast and in which direction the body is rotating around its axes.
+     * @param {number} timeStep - The interpolation time step, representing the duration over which to interpolate. Typically a small value such as the time between frames.
+     * @param {Quat} out - The output quaternion where the interpolated rotation will be stored. Used to return the result without creating a new object.
      * @private
      */
     _interpolationRotationByAngularVelocity(rotation, angularVelocity, timeStep, out) {
+        let fAngle = angularVelocity.length();
 
-		let fAngle = angularVelocity.length();
+        // limit the angular motion
+        if (fAngle * timeStep > ANGULAR_MOTION_THRESHOLD) {
+            fAngle = ANGULAR_MOTION_THRESHOLD / timeStep;
+        }
 
-		//limit the angular motion
-		if (fAngle * timeStep > ANGULAR_MOTION_THRESHOLD) {
-			fAngle = ANGULAR_MOTION_THRESHOLD / timeStep;
-		}
+        const factor = fAngle < 0.001 ?
+            0.5 * timeStep - (timeStep * timeStep * timeStep) * 0.020833333333 * fAngle * fAngle : // use Taylor's expansions of sync function
+            Math.sin(0.5 * fAngle * timeStep) / fAngle;                                            // sync(fAngle) = sin(c*fAngle)/t
 
-        const factor = fAngle < 0.001
-            ? 0.5 * timeStep - (timeStep * timeStep * timeStep) * 0.020833333333 * fAngle * fAngle // use Taylor's expansions of sync function
-            : Math.sin(0.5 * fAngle * timeStep) / fAngle;                                          // sync(fAngle) = sin(c*fAngle)/t
-        
         // q1 = q(angularVelocity, Math.cos(fAngle * timeStep * 0.5))
         // out = q1 * q2
 
@@ -1171,11 +1172,11 @@ class RigidBodyComponent extends Component {
         const cz = q1x * q2y - q1y * q2x;
 
         const dot = q1x * q2x + q1y * q2y + q1z * q2z;
-    
+
         out.x = q1x * q2w + q2x * q1w + cx;
         out.y = q1y * q2w + q2y * q1w + cy;
         out.z = q1z * q2w + q2z * q1w + cz;
-        out.w = q1w * q2w - dot
+        out.w = q1w * q2w - dot;
     }
 
     _applyInterpolation(extrapolationTime) {
@@ -1189,7 +1190,7 @@ class RigidBodyComponent extends Component {
         // If a dynamic body is frozen, we can assume its motion state transform is
         // the same is the entity world transform
         if (body.isActive()) {
-            
+
             const currentTransform = body.getWorldTransform();
             const linearVelocity   = body.getLinearVelocity();
             const angularVelocity  = body.getAngularVelocity();
