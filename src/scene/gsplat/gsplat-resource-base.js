@@ -88,6 +88,9 @@ class GSplatResourceBase {
         this.mesh.setIndices(meshIndices);
         this.mesh.update();
 
+        // keep extra reference since mesh is shared between instances
+        this.mesh.incRefCount();
+
         this.mesh.aabb.copy(this.aabb);
 
         this.instanceIndices = new VertexBuffer(device, vertexFormat, numSplatInstances, {
@@ -107,6 +110,12 @@ class GSplatResourceBase {
 
     get numSplats() {
         return this.gsplatData.numSplats;
+    }
+
+    configureMaterial(material) {
+    }
+
+    evalTextureSize(count) {
     }
 
     /**
