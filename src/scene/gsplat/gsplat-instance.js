@@ -66,6 +66,9 @@ class GSplatInstance {
         if (material) {
             // material is provided
             this._material = material;
+
+            // patch splat order
+            this._material.setParameter('splatOrder', this.orderTexture);
         } else {
             // construct the material
             this._material = new ShaderMaterial({
@@ -124,6 +127,9 @@ class GSplatInstance {
             // set the new material
             this._material = value;
 
+            // patch order texture
+            this._material.setParameter('splatOrder', this.orderTexture);
+
             if (this.meshInstance) {
                 this.meshInstance.material = value;
             }
@@ -152,7 +158,7 @@ class GSplatInstance {
         material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
         material.cull = CULLFACE_NONE;
         material.blendType = options.dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
-        material.depthWrite = options.dither;
+        material.depthWrite = !!options.dither;
     }
 
     updateViewport(cameraNode) {
