@@ -9,7 +9,7 @@ fn prepareOutputFromGamma(gammaColor: vec3f) -> vec3f {
     #if TONEMAP == NONE
         #if GAMMA == NONE
             // convert to linear space
-            return decodeGamma(gammaColor);
+            return decodeGamma3(gammaColor);
         #else 
             // output gamma space color directly
             return gammaColor;

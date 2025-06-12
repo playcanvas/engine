@@ -7,9 +7,6 @@ uniform highp sampler2D scales;
 uniform vec3 means_mins;
 uniform vec3 means_maxs;
 
-uniform vec3 quats_mins;
-uniform vec3 quats_maxs;
-
 uniform vec3 scales_mins;
 uniform vec3 scales_maxs;
 

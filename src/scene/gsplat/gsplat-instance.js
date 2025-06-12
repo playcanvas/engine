@@ -145,6 +145,7 @@ class GSplatInstance {
         this.resource.configureMaterial(material);
 
         // set instance properties
+        material.setParameter('numSplats', 0);
         material.setParameter('splatOrder', this.orderTexture);
         material.setParameter('alphaClip', 0.3);
         material.setDefine(`DITHER_${dither ? 'BLUENOISE' : 'NONE'}`, '');

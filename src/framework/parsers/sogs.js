@@ -37,7 +37,7 @@ class SogsParser {
             const files = meta[sub]?.files ?? [];
             textures[sub] = files.map((filename) => {
                 const texture = new Asset(filename, 'texture', {
-                    url: asset.options?.mapUrl?.(filename) ?? (new URL(filename, url.load)).toString(),
+                    url: asset.options?.mapUrl?.(filename) ?? (new URL(filename, new URL(url.load, window.location.href).toString())).toString(),
                     filename
                 }, {
                     mipmaps: false
