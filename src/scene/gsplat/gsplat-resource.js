@@ -92,6 +92,7 @@ class GSplatResource extends GSplatResourceBase {
         this.sh4to7Texture?.destroy();
         this.sh8to11Texture?.destroy();
         this.sh12to15Texture?.destroy();
+        super.destroy();
     }
 
     configureMaterial(material) {

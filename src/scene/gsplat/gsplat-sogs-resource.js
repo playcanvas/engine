@@ -4,6 +4,7 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
 class GSplatSogsResource extends GSplatResourceBase {
     destroy() {
         this.gsplatData.destroy();
+        super.destroy();
     }
 
     configureMaterial(material) {

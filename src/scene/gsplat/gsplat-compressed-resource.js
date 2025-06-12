@@ -88,6 +88,7 @@ class GSplatCompressedResource extends GSplatResourceBase {
         this.shTexture0?.destroy();
         this.shTexture1?.destroy();
         this.shTexture2?.destroy();
+        super.destroy();
     }
 
     configureMaterial(material) {
