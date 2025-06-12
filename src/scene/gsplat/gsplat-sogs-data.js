@@ -317,7 +317,7 @@ class GSplatSogsData {
             fragmentWGSL: wgslGsplatSogsReorderPS
         });
 
-        let targetTexture = new Texture(device, {
+        const sourceTexture = new Texture(device, {
             width: width,
             height: height,
             format: PIXELFORMAT_RGBA8,
@@ -331,10 +331,10 @@ class GSplatSogsData {
         device.setDepthState(DepthState.NODEPTH);
 
         members.forEach((member) => {
-            const sourceTexture = this[member];
+            const targetTexture = this[member];
 
             // spherical harmonics labels are missing when no SH data is present
-            if (!sourceTexture) {
+            if (!targetTexture) {
                 return;
             }
 
@@ -344,6 +344,10 @@ class GSplatSogsData {
                 mipLevel: 0
             });
 
+            // patch source texture with data from target
+            sourceTexture._levels[0] = targetTexture._levels[0];
+            sourceTexture.upload();
+
             resolve(scope, {
                 orderTexture,
                 sourceTexture,
@@ -352,16 +356,10 @@ class GSplatSogsData {
 
             drawQuadWithShader(device, renderTarget, shader);
 
-            this[member] = targetTexture;
-            targetTexture.name = sourceTexture.name;
-            targetTexture._levels = sourceTexture._levels;
-            sourceTexture._levels = [];
-            targetTexture = sourceTexture;
-
             renderTarget.destroy();
         });
 
-        targetTexture.destroy();
+        sourceTexture.destroy();
     }
 
     // construct an array containing the Morton order of the splats
