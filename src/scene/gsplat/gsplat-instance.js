@@ -158,7 +158,7 @@ class GSplatInstance {
         material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
         material.cull = CULLFACE_NONE;
         material.blendType = options.dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
-        material.depthWrite = options.dither;
+        material.depthWrite = !!options.dither;
     }
 
     updateViewport(cameraNode) {
