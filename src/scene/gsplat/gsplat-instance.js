@@ -66,6 +66,9 @@ class GSplatInstance {
         if (material) {
             // material is provided
             this._material = material;
+
+            // patch splat order
+            this._material.setParameter('splatOrder', this.orderTexture);
         } else {
             // construct the material
             this._material = new ShaderMaterial({
@@ -123,6 +126,9 @@ class GSplatInstance {
         if (this._material !== value) {
             // set the new material
             this._material = value;
+
+            // patch order texture
+            this._material.setParameter('splatOrder', this.orderTexture);
 
             if (this.meshInstance) {
                 this.meshInstance.material = value;
