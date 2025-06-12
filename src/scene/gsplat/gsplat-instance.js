@@ -138,9 +138,10 @@ class GSplatInstance {
      * Configure the material with gsplat instance and resource properties.
      *
      * @param {ShaderMaterial} material - The material to configure.
-     * @param {boolean} dither - Specify true to configure the material for dithered rendering (stochastic alpha).
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.dither] - Specify true to configure the material for dithered rendering (stochastic alpha).
      */
-    configureMaterial(material, dither = false) {
+    configureMaterial(material, options = {}) {
         // allow resource to configure the material
         this.resource.configureMaterial(material);
 
@@ -148,10 +149,10 @@ class GSplatInstance {
         material.setParameter('numSplats', 0);
         material.setParameter('splatOrder', this.orderTexture);
         material.setParameter('alphaClip', 0.3);
-        material.setDefine(`DITHER_${dither ? 'BLUENOISE' : 'NONE'}`, '');
+        material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
         material.cull = CULLFACE_NONE;
-        material.blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
-        material.depthWrite = dither;
+        material.blendType = options.dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
+        material.depthWrite = options.dither;
     }
 
     updateViewport(cameraNode) {
