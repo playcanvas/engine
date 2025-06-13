@@ -17,8 +17,9 @@ class ShaderGeneratorShader extends ShaderGenerator {
         const vsHashWGSL = desc.vertexWGSL ? hashCode(desc.vertexWGSL) : 0;
         const fsHashWGSL = desc.fragmentWGSL ? hashCode(desc.fragmentWGSL) : 0;
         const definesHash = ShaderGenerator.definesHash(options.defines);
+        const chunksKey = options.shaderChunks?.key ?? '';
 
-        let key = `${desc.uniqueName}_${definesHash}_${vsHashGLSL}_${fsHashGLSL}_${vsHashWGSL}_${fsHashWGSL}`;
+        let key = `${desc.uniqueName}_${definesHash}_${vsHashGLSL}_${fsHashGLSL}_${vsHashWGSL}_${fsHashWGSL}_${chunksKey}`;
 
         if (options.skin)                       key += '_skin';
         if (options.useInstancing)              key += '_inst';
@@ -85,7 +86,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
     createShaderDefinition(device, options) {
 
         const desc = options.shaderDesc;
-        const wgsl = device.isWebGPU && !!desc.vertexWGSL && !!desc.fragmentWGSL;
+        const wgsl = device.isWebGPU && !!desc.vertexWGSL && !!desc.fragmentWGSL && (options.shaderChunks?.useWGSL ?? true);
         const definitionOptions = {
             name: `ShaderMaterial-${desc.uniqueName}`,
             shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,

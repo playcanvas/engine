@@ -1,16 +1,15 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
-import { DITHER_NONE } from '../constants.js';
+import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatSorter } from './gsplat-sorter.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
+import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
 
 /**
  * @import { Camera } from '../camera.js'
  * @import { GSplatResourceBase } from './gsplat-resource-base.js'
  * @import { GraphNode } from '../graph-node.js'
- * @import { Material } from '../materials/material.js'
- * @import { SplatMaterialOptions } from './gsplat-material.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
@@ -24,14 +23,14 @@ class GSplatInstance {
     /** @type {GSplatResourceBase} */
     resource;
 
-    /** @type {MeshInstance} */
-    meshInstance;
-
-    /** @type {Material} */
-    material;
-
     /** @type {Texture} */
     orderTexture;
+
+    /** @type {ShaderMaterial} */
+    _material;
+
+    /** @type {MeshInstance} */
+    meshInstance;
 
     options = {};
 
@@ -52,13 +51,10 @@ class GSplatInstance {
 
     /**
      * @param {GSplatResourceBase} resource - The splat instance.
-     * @param {SplatMaterialOptions} options - The options.
+     * @param {ShaderMaterial|null} material - The material instance.
      */
-    constructor(resource, options) {
+    constructor(resource, material) {
         this.resource = resource;
-
-        // clone options object
-        options = Object.assign(this.options, options);
 
         // create the order texture
         this.orderTexture = resource.createTexture(
@@ -67,10 +63,34 @@ class GSplatInstance {
             resource.evalTextureSize(resource.numSplats)
         );
 
-        // material
-        this.createMaterial(options);
+        if (material) {
+            // material is provided
+            this._material = material;
 
-        this.meshInstance = new MeshInstance(resource.mesh, this.material);
+            // patch splat order
+            this._material.setParameter('splatOrder', this.orderTexture);
+        } else {
+            // construct the material
+            this._material = new ShaderMaterial({
+                uniqueName: 'SplatMaterial',
+                vertexGLSL: '#include "gsplatVS"',
+                fragmentGLSL: '#include "gsplatPS"',
+                vertexWGSL: '#include "gsplatVS"',
+                fragmentWGSL: '#include "gsplatPS"',
+                attributes: {
+                    vertex_position: SEMANTIC_POSITION,
+                    vertex_id_attrib: SEMANTIC_ATTR13
+                }
+            });
+
+            // default configure
+            this.configureMaterial(this._material);
+
+            // update
+            this._material.update();
+        }
+
+        this.meshInstance = new MeshInstance(resource.mesh, this._material);
         this.meshInstance.setInstancing(resource.instanceIndices, true);
         this.meshInstance.gsplatInstance = this;
 
@@ -82,17 +102,15 @@ class GSplatInstance {
         const chunks = resource.chunks?.slice();
 
         // create sorter
-        if (!options.dither || options.dither === DITHER_NONE) {
-            this.sorter = new GSplatSorter();
-            this.sorter.init(this.orderTexture, centers, chunks);
-            this.sorter.on('updated', (count) => {
-                // limit splat render count to exclude those behind the camera
-                this.meshInstance.instancingCount = Math.ceil(count / resource.instanceSize);
+        this.sorter = new GSplatSorter();
+        this.sorter.init(this.orderTexture, centers, chunks);
+        this.sorter.on('updated', (count) => {
+            // limit splat render count to exclude those behind the camera
+            this.meshInstance.instancingCount = Math.ceil(count / resource.instanceSize);
 
-                // update splat count on the material
-                this.material.setParameter('numSplats', count);
-            });
-        }
+            // update splat count on the material
+            this.material.setParameter('numSplats', count);
+        });
     }
 
     destroy() {
@@ -101,17 +119,46 @@ class GSplatInstance {
         this.sorter?.destroy();
     }
 
-    clone() {
-        return new GSplatInstance(this.resource, this.options);
+    /**
+     * @param {ShaderMaterial} value - The material instance.
+     */
+    set material(value) {
+        if (this._material !== value) {
+            // set the new material
+            this._material = value;
+
+            // patch order texture
+            this._material.setParameter('splatOrder', this.orderTexture);
+
+            if (this.meshInstance) {
+                this.meshInstance.material = value;
+            }
+        }
     }
 
-    createMaterial(options) {
-        this.material = this.resource.createMaterial(options);
-        this.material.setParameter('splatOrder', this.orderTexture);
-        this.material.setParameter('alphaClip', 0.3);
-        if (this.meshInstance) {
-            this.meshInstance.material = this.material;
-        }
+    get material() {
+        return this._material;
+    }
+
+    /**
+     * Configure the material with gsplat instance and resource properties.
+     *
+     * @param {ShaderMaterial} material - The material to configure.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.dither] - Specify true to configure the material for dithered rendering (stochastic alpha).
+     */
+    configureMaterial(material, options = {}) {
+        // allow resource to configure the material
+        this.resource.configureMaterial(material);
+
+        // set instance properties
+        material.setParameter('numSplats', 0);
+        material.setParameter('splatOrder', this.orderTexture);
+        material.setParameter('alphaClip', 0.3);
+        material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
+        material.cull = CULLFACE_NONE;
+        material.blendType = options.dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
+        material.depthWrite = !!options.dither;
     }
 
     updateViewport(cameraNode) {

@@ -68,10 +68,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Render pipeline currently set on the device.
      *
-     * @type {GPURenderPipeline}
+     * @type {GPURenderPipeline|null}
      * @private
      */
-    pipeline;
+    pipeline = null;
 
     /**
      * An array of bind group formats, based on currently assigned bind groups
@@ -176,7 +176,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.samples = this.backBufferAntialias ? 4 : 1;
 
         // WGSL features
-        const wgslFeatures = navigator.gpu.wgslLanguageFeatures;
+        const wgslFeatures = window.navigator.gpu.wgslLanguageFeatures;
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
 
         this.initCapsDefines();
@@ -216,7 +216,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         /** @type {GPURequestAdapterOptions} */
         const adapterOptions = {
-            powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined
+            powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined,
+            xrCompatible: this.initOptions.xrCompatible
         };
 
         /**
@@ -291,7 +292,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         let canvasToneMapping = 'standard';
 
         // pixel format of the framebuffer that is the most efficient one on the system
-        let preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
+        let preferredCanvasFormat = window.navigator.gpu.getPreferredCanvasFormat();
 
         // display format the user asked for
         const displayFormat = this.initOptions.displayFormat;
@@ -346,7 +347,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // (this allows us to view the preferred format as srgb)
             viewFormats: displayFormat === DISPLAYFORMAT_LDR_SRGB ? [this.backBufferViewFormat] : []
         };
-        this.gpuContext.configure(this.canvasConfig);
+        this.gpuContext?.configure(this.canvasConfig);
 
         this.createBackbuffer();
 
@@ -411,8 +412,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.memory(this);
         WebgpuDebug.validate(this);
 
-        // current frame color output buffer
-        const outColorBuffer = this.gpuContext.getCurrentTexture();
+        // current frame color output buffer (fallback to external backbuffer if not available)
+        const outColorBuffer = this.gpuContext?.getCurrentTexture?.() ?? this.externalBackbuffer?.impl.gpuTexture;
         DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
         // reallocate framebuffer if dimensions change, to match the output texture
@@ -552,7 +553,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         _uniqueLocations.clear();
     }
 
-    draw(primitive, numInstances = 1, keepBuffers) {
+    draw(primitive, indexBuffer, numInstances = 1, first = true, last = true) {
 
         if (this.shader.ready && !this.shader.failed) {
 
@@ -561,35 +562,38 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             const passEncoder = this.passEncoder;
             Debug.assert(passEncoder);
 
+            let pipeline = this.pipeline;
+
             // vertex buffers
             const vb0 = this.vertexBuffers[0];
             const vb1 = this.vertexBuffers[1];
 
-            if (vb0) {
-                const vbSlot = this.submitVertexBuffer(vb0, 0);
-                if (vb1) {
-                    Debug.call(() => this.validateVBLocations(vb0, vb1));
-                    this.submitVertexBuffer(vb1, vbSlot);
+            if (first) {
+
+                if (vb0) {
+                    const vbSlot = this.submitVertexBuffer(vb0, 0);
+                    if (vb1) {
+                        Debug.call(() => this.validateVBLocations(vb0, vb1));
+                        this.submitVertexBuffer(vb1, vbSlot);
+                    }
+                }
+
+                Debug.call(() => this.validateAttributes(this.shader, vb0?.format, vb1?.format));
+
+                // render pipeline
+                pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
+                    this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                    this.stencilEnabled, this.stencilFront, this.stencilBack);
+                Debug.assert(pipeline);
+
+                if (this.pipeline !== pipeline) {
+                    this.pipeline = pipeline;
+                    passEncoder.setPipeline(pipeline);
                 }
             }
 
-            Debug.call(() => this.validateAttributes(this.shader, vb0?.format, vb1?.format));
-
-            const ib = this.indexBuffer;
-
-            // render pipeline
-            const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, ib?.format, this.shader, this.renderTarget,
-                this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                this.stencilEnabled, this.stencilFront, this.stencilBack);
-            Debug.assert(pipeline);
-
-            if (this.pipeline !== pipeline) {
-                this.pipeline = pipeline;
-                passEncoder.setPipeline(pipeline);
-            }
-
             // draw
-            if (ib) {
+            if (indexBuffer) {
                 passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
                 passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex || 0, 0);
             } else {
@@ -599,15 +603,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             WebgpuDebug.end(this, 'Drawing', {
                 vb0,
                 vb1,
-                ib,
+                indexBuffer,
                 primitive,
                 numInstances,
                 pipeline
             });
         }
 
-        this.vertexBuffers.length = 0;
-        this.indexBuffer = null;
+        if (last) {
+            // empty array of vertex buffers
+            this.clearVertexBuffer();
+            this.pipeline = null;
+        }
     }
 
     setShader(shader, asyncCompile = false) {

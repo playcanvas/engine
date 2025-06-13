@@ -2,15 +2,12 @@ import { Vec2 } from '../../core/math/vec2.js';
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
-import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 
 /**
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Texture } from '../../platform/graphics/texture.js';
- * @import { Material } from '../materials/material.js'
- * @import { SplatMaterialOptions } from './gsplat-material.js'
  */
 
 // copy data with padding
@@ -91,26 +88,21 @@ class GSplatCompressedResource extends GSplatResourceBase {
         this.shTexture0?.destroy();
         this.shTexture1?.destroy();
         this.shTexture2?.destroy();
+        super.destroy();
     }
 
-    /**
-     * @param {SplatMaterialOptions} options - The splat material options.
-     * @returns {Material} material - The material to set up for the splat rendering.
-     */
-    createMaterial(options) {
-        const result = createGSplatMaterial(this.device, options);
-        result.setDefine('GSPLAT_COMPRESSED_DATA', true);
-        result.setParameter('packedTexture', this.packedTexture);
-        result.setParameter('chunkTexture', this.chunkTexture);
+    configureMaterial(material) {
+        material.setDefine('GSPLAT_COMPRESSED_DATA', true);
+        material.setParameter('packedTexture', this.packedTexture);
+        material.setParameter('chunkTexture', this.chunkTexture);
         if (this.shTexture0) {
-            result.setDefine('SH_BANDS', 3);
-            result.setParameter('shTexture0', this.shTexture0);
-            result.setParameter('shTexture1', this.shTexture1);
-            result.setParameter('shTexture2', this.shTexture2);
+            material.setDefine('SH_BANDS', 3);
+            material.setParameter('shTexture0', this.shTexture0);
+            material.setParameter('shTexture1', this.shTexture1);
+            material.setParameter('shTexture2', this.shTexture2);
         } else {
-            result.setDefine('SH_BANDS', 0);
+            material.setDefine('SH_BANDS', 0);
         }
-        return result;
     }
 
     /**
