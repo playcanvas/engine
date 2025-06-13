@@ -27,8 +27,10 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * requested to have a depth buffer of at least 16 bits. Defaults to true.
  * @param {boolean} [options.stencil] - Boolean that indicates that the drawing buffer is
  * requested to have a stencil buffer of at least 8 bits. Defaults to true.
- * @param {string} [options.glslangUrl] - The URL to the glslang script. Required if the
- * {@link DEVICETYPE_WEBGPU} type is added to deviceTypes array. Not used for
+ * @param {string} [options.glslangUrl] - The URL to the glslang script. Required only if
+ * user-defined shaders or shader chunk overrides are specified in GLSL and need to be transpiled to
+ * WGSL for use with the {@link DEVICETYPE_WEBGPU} device type. This is not required if only the
+ * engine's built-in shaders are used, as those are provided directly in WGSL. Not used for
  * {@link DEVICETYPE_WEBGL2} device type creation.
  * @param {string} [options.twgslUrl] - An url to twgsl script, required if glslangUrl was specified.
  * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
