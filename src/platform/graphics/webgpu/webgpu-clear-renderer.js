@@ -16,6 +16,7 @@ import { DepthState } from '../depth-state.js';
 const primitive = {
     type: PRIMITIVE_TRISTRIP,
     base: 0,
+    baseVertex: 0,
     count: 4,
     indexed: false
 };
