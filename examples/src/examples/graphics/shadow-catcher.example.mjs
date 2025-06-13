@@ -112,6 +112,11 @@ assetListLoader.load(() => {
         app.scene.envAtlas = envAtlas;
     };
 
+    // when device is lost, we need to regenerate the skybox textures from HDRI
+    device.on('devicerestored', () => {
+        applyHdri(assets.hdri_street.resource);
+    });
+
     applyHdri(assets.hdri_street.resource);
     app.scene.exposure = 0.4;
     app.scene.sky.type = pc.SKYTYPE_DOME;

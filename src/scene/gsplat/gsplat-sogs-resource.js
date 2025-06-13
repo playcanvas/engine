@@ -2,10 +2,9 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 
 class GSplatSogsResource extends GSplatResourceBase {
-    device;
-
     destroy() {
         this.gsplatData.destroy();
+        super.destroy();
     }
 
     configureMaterial(material) {
@@ -15,7 +14,9 @@ class GSplatSogsResource extends GSplatResourceBase {
         material.setDefine('SH_BANDS', this.gsplatData.shBands);
 
         ['means_l', 'means_u', 'quats', 'scales', 'sh0', 'sh_centroids', 'sh_labels'].forEach((name) => {
-            material.setParameter(name, gsplatData[name]);
+            if (gsplatData[name]) {
+                material.setParameter(name, gsplatData[name]);
+            }
         });
 
         ['means', 'scales', 'sh0', 'shN'].forEach((name) => {

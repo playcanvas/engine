@@ -172,19 +172,21 @@ class OutlineRenderer {
     getMeshInstances(entity, recursive) {
         const meshInstances = [];
 
-        const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
-        renders.forEach((render) => {
-            if (render.meshInstances) {
-                meshInstances.push(...render.meshInstances);
-            }
-        });
+        if (entity) {
+            const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
+            renders.forEach((render) => {
+                if (render.meshInstances) {
+                    meshInstances.push(...render.meshInstances);
+                }
+            });
 
-        const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
-        models.forEach((model) => {
-            if (model.meshInstances) {
-                meshInstances.push(...model.meshInstances);
-            }
-        });
+            const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
+            models.forEach((model) => {
+                if (model.meshInstances) {
+                    meshInstances.push(...model.meshInstances);
+                }
+            });
+        }
 
         return meshInstances;
     }

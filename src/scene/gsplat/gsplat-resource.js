@@ -92,13 +92,13 @@ class GSplatResource extends GSplatResourceBase {
         this.sh4to7Texture?.destroy();
         this.sh8to11Texture?.destroy();
         this.sh12to15Texture?.destroy();
+        super.destroy();
     }
 
     configureMaterial(material) {
         material.setParameter('splatColor', this.colorTexture);
         material.setParameter('transformA', this.transformATexture);
         material.setParameter('transformB', this.transformBTexture);
-        material.setParameter('numSplats', this.numSplats);
         material.setDefine('SH_BANDS', this.shBands);
         if (this.sh1to3Texture) material.setParameter('splatSH_1to3', this.sh1to3Texture);
         if (this.sh4to7Texture) material.setParameter('splatSH_4to7', this.sh4to7Texture);
