@@ -124,11 +124,11 @@ class AppOptions {
     resourceHandlers = [];
 
     /**
-     * Use fixedUpdate calls with a fixed step for physics calculations
+     * Use event postFixedUpdate for physics simulation
      *
      * @type {boolean}
      */
-    useFixedTimeForPhysics = false;
+    usePostFixedUpdateForPhysicsSim = false;
 }
 
 export { AppOptions };

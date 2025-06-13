@@ -4,7 +4,7 @@ import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-import { BODYFLAG_NORESPONSE_OBJECT, EVENT_PHYSICS_FIXED_UPDATE, EVENT_PHYSICS_UPDATE } from './constants.js';
+import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
@@ -417,13 +417,25 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @type {number}
      * @private
      */
-    _internalTime = 0;
+    _dynamicTime = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _fixedTime = 0;
 
     /**
      * @type {number}
      * @private
      */
     _lastFixedTimeStep = 0;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _usePostFixedUpdate = false;
 
     /**
      * Create a new RigidBodyComponentSystem.
@@ -483,13 +495,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
 
             this.app.systems.on('update', this.onUpdate, this);
-            this.app.systems.on(EVENT_PHYSICS_FIXED_UPDATE, this.onPhysicsFixedUpdate, this);
-            this.app.systems.on(EVENT_PHYSICS_UPDATE, this.onPhysicsUpdate, this);
+            this.app.systems.on('postFixedUpdate', this.onPostFixedUpdate, this);
         } else {
             // Unbind the update function if we haven't loaded Ammo by now
             this.app.systems.off('update', this.onUpdate, this);
-            this.app.systems.off(EVENT_PHYSICS_FIXED_UPDATE, this.onPhysicsFixedUpdate, this);
-            this.app.systems.off(EVENT_PHYSICS_UPDATE, this.onPhysicsUpdate, this);
+            this.app.systems.off('postFixedUpdate', this.onPostFixedUpdate, this);
         }
     }
 
@@ -1123,79 +1133,89 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
     }
 
-    onPhysicsFixedUpdate(dt) {
+    /**
+     * Resets the time counters and switch usePostFixedUpdate flag if a change in the physical mode is detected.
+     */
+    _resetTimeCountersAndFlagOnChange() {
 
-        this._lastFixedTimeStep = dt;
-
-        // #if _PROFILER
-        this._stats.physicsStart = now();
-        // #endif
-
-        this._beforeStepSimulation(dt);
-
-        // Step the physics simulation
-        this.dynamicsWorld.stepSimulation(dt, 0);
-
-        this._afterStepSimulation(dt);
-
-        // ???
-        // #if _PROFILER
-        this._stats.physicsTime = now() - this._stats.physicsStart;
-        // #endif
+        if (this._usePostFixedUpdate !== this.app.usePostFixedUpdateForPhysicsSim) {
+            this._usePostFixedUpdate = this.app.usePostFixedUpdateForPhysicsSim;
+            this._fixedTime = 0;
+            this._dynamicTime = 0;
+            this._lastFixedTimeStep = 0;
+            this._fixedTimeDebt = 0;
+        }
     }
 
-    onPhysicsUpdate(dt) {
-        let i, len;
-        this._internalTime += dt;
+    onPostFixedUpdate(dt) {
 
-        // TODO: add interpolation type for component
-        if (this._internalTime >= this._lastFixedTimeStep && this._lastFixedTimeStep > 0) {
-            const numSimulationSubSteps = Math.floor(this._internalTime / this._lastFixedTimeStep);
-            this._internalTime -= numSimulationSubSteps * this._lastFixedTimeStep;
+        this._resetTimeCountersAndFlagOnChange();
+
+        if (this._usePostFixedUpdate) {
+
+            // #if _PROFILER
+            this._stats.physicsStart = now();
+            // #endif
+
+            this._fixedTime += dt;
+            this._lastFixedTimeStep = dt;
+
+            this._beforeStepSimulation(dt);
+
+            // Performs one physics step without applying interpolation
+            this.dynamicsWorld.stepSimulation(dt, 0);
+
+            this._afterStepSimulation(dt);
+
+            // ???
+            // #if _PROFILER
+            this._stats.physicsTime = now() - this._stats.physicsStart;
+            // #endif
         }
-
-        // Apply transform interpolation to all entities referencing the dynamic body.
-        // multiply 2 because the fixedUpdate step was before physicsFixedUpdate,
-        // this will allow the lag to be synchronized
-        const extrapolationTime = this._internalTime - (this._lastFixedTimeStep * 2);
-        const dynamic = this._dynamic;
-        for (i = 0, len = dynamic.length; i < len; i++) {
-            dynamic[i]._applyInterpolation(extrapolationTime);
-        }
-
-        // #if _PROFILER
-        this._stats.physicsTime = now() - this._stats.physicsStart;
-        // #endif
     }
 
     onUpdate(dt) {
 
-        if (this.app.useFixedTimeForPhysics) {
-            return;
+        this._resetTimeCountersAndFlagOnChange();
+
+        if (this._usePostFixedUpdate) {
+
+            this._dynamicTime += dt;
+            
+            // Apply transform interpolation to all entities referencing the dynamic body.
+            // subtract lastFixedTimeStep to synchronize the transformation
+            // between the last fixedUpdate and postFixedUpdate
+            const extrapolationTime = this._dynamicTime - this._fixedTime - this._lastFixedTimeStep * 2;
+
+            const dynamic = this._dynamic;
+            for (let i = 0, len = dynamic.length; i < len; i++) {
+                dynamic[i]._applyInterpolation(extrapolationTime);
+            }
+
+        } else {
+
+            // #if _PROFILER
+            this._stats.physicsStart = now();
+            // #endif
+
+            this._beforeStepSimulation(dt);
+
+            // Step the physics simulation
+            this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
+
+            this._afterStepSimulation(dt);
+
+            // #if _PROFILER
+            this._stats.physicsTime = now() - this._stats.physicsStart;
+            // #endif
         }
-
-        // #if _PROFILER
-        this._stats.physicsStart = now();
-        // #endif
-
-        this._beforeStepSimulation(dt);
-
-        // Step the physics simulation
-        this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
-
-        this._afterStepSimulation(dt);
-
-        // #if _PROFILER
-        this._stats.physicsTime = now() - this._stats.physicsStart;
-        // #endif
     }
 
     destroy() {
         super.destroy();
 
+        this.app.systems.off('postFixedUpdate', this.onPostFixedUpdate, this);
         this.app.systems.off('update', this.onUpdate, this);
-        this.app.systems.off(EVENT_PHYSICS_FIXED_UPDATE, this.onPhysicsFixedUpdate, this);
-        this.app.systems.off(EVENT_PHYSICS_UPDATE, this.onPhysicsUpdate, this);
 
         if (typeof Ammo !== 'undefined') {
             Ammo.destroy(this.dynamicsWorld);

@@ -1106,11 +1106,9 @@ class RigidBodyComponent extends Component {
      * Sets an entity's transform to match that of the world transformation matrix of a dynamic
      * rigid body's motion state.
      *
-     * @param {boolean} fromMotionState - set transform from body motionsState
-     *
      * @private
      */
-    _updateDynamic(fromMotionState = true) {
+    _updateDynamic() {
 
         const body = this._body;
 
@@ -1118,18 +1116,12 @@ class RigidBodyComponent extends Component {
         // the same is the entity world transform
         if (body.isActive()) {
 
-            if (fromMotionState) {
-
-                // Update the motion state. Note that the test for the presence of the motion
-                // state is technically redundant since the engine creates one for all bodies.
-                const motionState = body.getMotionState();
-                if (motionState) {
-                    motionState.getWorldTransform(_ammoTransform);
-                    this._setEntityPosAndRotFromTransform(_ammoTransform);
-                }
-            } else {
-                const currentTransform = body.getWorldTransform();
-                this._setEntityPosAndRotFromTransform(currentTransform);
+            // Update the motion state. Note that the test for the presence of the motion
+            // state is technically redundant since the engine creates one for all bodies.
+            const motionState = body.getMotionState();
+            if (motionState) {
+                motionState.getWorldTransform(_ammoTransform);
+                this._setEntityPosAndRotFromTransform(_ammoTransform);
             }
         }
     }
@@ -1191,44 +1183,48 @@ class RigidBodyComponent extends Component {
         // the same is the entity world transform
         if (body.isActive()) {
 
-            const currentTransform = body.getWorldTransform();
-            const linearVelocity   = body.getLinearVelocity();
-            const angularVelocity  = body.getAngularVelocity();
-            const currentPosition  = currentTransform.getOrigin();
-            const currentRotation  = currentTransform.getRotation();
+            const motionState = body.getMotionState();
+            if (motionState) {
+                motionState.getWorldTransform(_ammoTransform);
 
-            const interpolationPos = _vec31.set(
-                currentPosition.x() + linearVelocity.x() * extrapolationTime,
-                currentPosition.y() + linearVelocity.y() * extrapolationTime,
-                currentPosition.z() + linearVelocity.z() * extrapolationTime
-            );
+                const currentPosition = _ammoTransform.getOrigin();
+                const currentRotation = _ammoTransform.getRotation();
+                const linearVelocity  = body.getLinearVelocity();
+                const angularVelocity = body.getAngularVelocity();
 
-            const angularVelocityO = _vec32.set(angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
-            const interpolationRot = _quat1.set(currentRotation.x(), currentRotation.y(), currentRotation.z(), currentRotation.w());
+                const interpolationPos = _vec31.set(
+                    currentPosition.x() + linearVelocity.x() * extrapolationTime,
+                    currentPosition.y() + linearVelocity.y() * extrapolationTime,
+                    currentPosition.z() + linearVelocity.z() * extrapolationTime
+                );
 
-            this._interpolationRotationByAngularVelocity(interpolationRot, angularVelocityO, extrapolationTime, interpolationRot);
+                const angularVelocityO = _vec32.set(angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
+                const interpolationRot = _quat1.set(currentRotation.x(), currentRotation.y(), currentRotation.z(), currentRotation.w());
 
-            const entity = this.entity;
-            const component = entity.collision;
+                this._interpolationRotationByAngularVelocity(interpolationRot, angularVelocityO, extrapolationTime, interpolationRot);
 
-            if (component && component._hasOffset) {
-                const lo = component.data.linearOffset;
-                const ao = component.data.angularOffset;
+                const entity = this.entity;
+                const component = entity.collision;
 
-                // Un-rotate the angular offset and then use the new rotation to
-                // un-translate the linear offset in local space
-                // Order of operations matter here
-                const invertedAo = _quat2.copy(ao).invert();
+                if (component && component._hasOffset) {
+                    const lo = component.data.linearOffset;
+                    const ao = component.data.angularOffset;
 
-                interpolationRot.mul(invertedAo);
-                interpolationRot.transformVector(lo, _vec32);
-                interpolationPos.sub(_vec32);
+                    // Un-rotate the angular offset and then use the new rotation to
+                    // un-translate the linear offset in local space
+                    // Order of operations matter here
+                    const invertedAo = _quat2.copy(ao).invert();
+
+                    interpolationRot.mul(invertedAo);
+                    interpolationRot.transformVector(lo, _vec32);
+                    interpolationPos.sub(_vec32);
+                }
+
+                entity.setPositionAndRotation(
+                    interpolationPos,
+                    interpolationRot
+                );
             }
-
-            entity.setPositionAndRotation(
-                interpolationPos,
-                interpolationRot
-            );
         }
     }
 

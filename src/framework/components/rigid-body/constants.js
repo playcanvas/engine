@@ -1,18 +1,4 @@
 /**
- * Event triggered after fixedUpdate to perform the physics step.
- *
- * @category Physics
- */
-export const EVENT_PHYSICS_FIXED_UPDATE = 'physics-fixed-update';
-
-/**
- * Event that occurs after the physics simulation.
- *
- * @category Physics
- */
-export const EVENT_PHYSICS_UPDATE = 'physics-update';
-
-/**
  * Rigid body has infinite mass and cannot move.
  *
  * @category Physics
