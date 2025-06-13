@@ -1181,7 +1181,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         if (this._usePostFixedUpdate) {
 
             this._dynamicTime += dt;
-            
+
             // Apply transform interpolation to all entities referencing the dynamic body.
             // subtract lastFixedTimeStep to synchronize the transformation
             // between the last fixedUpdate and postFixedUpdate
