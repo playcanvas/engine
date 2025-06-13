@@ -19,7 +19,6 @@ class ApplicationStats {
             ms: 0,
             dt: 0,
 
-            fixedTimeStep: 0,
             fixedUpdateCount: 0,
 
             updateStart: 0,
