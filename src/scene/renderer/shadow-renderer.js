@@ -300,6 +300,12 @@ class ShadowRenderer {
             const meshInstance = visibleCasters[i];
             const mesh = meshInstance.mesh;
 
+            // skip instanced rendering with 0 instances
+            const instancingData = meshInstance.instancingData;
+            if (instancingData && instancingData.count <= 0) {
+                continue;
+            }
+
             meshInstance.ensureMaterial(device);
             const material = meshInstance.material;
 
@@ -337,14 +343,23 @@ class ShadowRenderer {
             renderer.setVertexBuffers(device, mesh);
             renderer.setMorphing(device, meshInstance.morphInstance);
 
-            this.renderer.setupMeshUniformBuffers(shaderInstance, meshInstance);
+            if (instancingData) {
+                device.setVertexBuffer(instancingData.vertexBuffer);
+            }
 
-            const style = meshInstance.renderStyle;
-            device.setIndexBuffer(mesh.indexBuffer[style]);
+            // mesh / mesh normal matrix
+            renderer.setMeshInstanceMatrices(meshInstance);
+
+            renderer.setupMeshUniformBuffers(shaderInstance);
 
             // draw
-            renderer.drawInstance(device, meshInstance, mesh, style);
+            const style = meshInstance.renderStyle;
+            device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count);
+
             renderer._shadowDrawCalls++;
+            if (instancingData) {
+                renderer._instancedDrawCalls++;
+            }
 
             DebugGraphics.popGpuMarker(device);
         }
@@ -427,7 +442,7 @@ class ShadowRenderer {
         const renderer = this.renderer;
         renderer.setCameraUniforms(shadowCam, rt);
         if (device.supportsUniformBuffers) {
-            renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, 1);
+            renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, null);
         }
 
         if (insideRenderPass) {
