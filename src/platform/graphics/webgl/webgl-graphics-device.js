@@ -1708,6 +1708,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * device.draw({
      *     type: pc.PRIMITIVE_TRIANGLES,
      *     base: 0,
+     *     baseVertex: 0,
      *     count: 3,
      *     indexed: false
      * });
