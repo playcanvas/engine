@@ -1,8 +1,11 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { TEXTURELOCK_READ } from '../../platform/graphics/constants.js';
+import { platform } from '../../core/platform.js';
 
 // sort blind set of data
 function SortWorker() {
+    const myself = (typeof self !== 'undefined' && self) || (require('node:worker_threads').parentPort);
+
     let order;
     let centers;
     let chunks;
@@ -196,7 +199,7 @@ function SortWorker() {
         }
 
         // send results
-        self.postMessage({
+        myself.postMessage({
             order: order.buffer,
             count
         }, [order.buffer]);
@@ -204,18 +207,20 @@ function SortWorker() {
         order = null;
     };
 
-    self.onmessage = (message) => {
-        if (message.data.order) {
-            order = new Uint32Array(message.data.order);
+    myself.addEventListener('message', (message) => {
+        const msgData = message.data ?? message;
+
+        if (msgData.order) {
+            order = new Uint32Array(msgData.order);
         }
-        if (message.data.centers) {
-            centers = new Float32Array(message.data.centers);
+        if (msgData.centers) {
+            centers = new Float32Array(msgData.centers);
             forceUpdate = true;
 
-            if (message.data.chunks) {
-                const chunksSrc = new Float32Array(message.data.chunks);
+            if (msgData.chunks) {
+                const chunksSrc = new Float32Array(msgData.chunks);
                 // reuse chunks memory, but we only need 4 floats per chunk
-                chunks = new Float32Array(message.data.chunks, 0, chunksSrc.length * 4 / 6);
+                chunks = new Float32Array(msgData.chunks, 0, chunksSrc.length * 4 / 6);
 
                 boundMin.x = chunksSrc[0];
                 boundMin.y = chunksSrc[1];
@@ -297,15 +302,15 @@ function SortWorker() {
                 }
             }
         }
-        if (message.data.hasOwnProperty('mapping')) {
-            mapping = message.data.mapping ? new Uint32Array(message.data.mapping) : null;
+        if (msgData.hasOwnProperty('mapping')) {
+            mapping = msgData.mapping ? new Uint32Array(msgData.mapping) : null;
             forceUpdate = true;
         }
-        if (message.data.cameraPosition) cameraPosition = message.data.cameraPosition;
-        if (message.data.cameraDirection) cameraDirection = message.data.cameraDirection;
+        if (msgData.cameraPosition) cameraPosition = msgData.cameraPosition;
+        if (msgData.cameraDirection) cameraDirection = msgData.cameraDirection;
 
         update();
-    };
+    });
 }
 
 class GSplatSorter extends EventHandler {
@@ -318,12 +323,23 @@ class GSplatSorter extends EventHandler {
     constructor() {
         super();
 
-        this.worker = new Worker(URL.createObjectURL(new Blob([`(${SortWorker.toString()})()`], {
-            type: 'application/javascript'
-        })));
+        const workerSource = `(${SortWorker.toString()})()`;
+        const nodeEnv = platform.environment === 'node';
 
-        this.worker.onmessage = (message) => {
-            const newOrder = message.data.order;
+        if (nodeEnv) {
+            this.worker = new Worker(workerSource, {
+                eval: true
+            });
+        } else {
+            this.worker = new Worker(URL.createObjectURL(new Blob([workerSource], {
+                type: 'application/javascript'
+            })));
+        }
+
+        this.worker[nodeEnv ? 'on' : 'addEventListener']('message', (message) => {
+            const msgData = message.data ?? message;
+
+            const newOrder = msgData.order;
             const oldOrder = this.orderTexture._levels[0].buffer;
 
             // send vertex storage to worker to start the next frame
@@ -336,8 +352,8 @@ class GSplatSorter extends EventHandler {
             this.orderTexture.upload();
 
             // set new data directly on texture
-            this.fire('updated', message.data.count);
-        };
+            this.fire('updated', msgData.count);
+        });
     }
 
     destroy() {
