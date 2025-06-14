@@ -336,7 +336,7 @@ class GSplatSorter extends EventHandler {
             })));
         }
 
-        this.worker[nodeEnv ? 'on': 'addEventListener']('message', (message) => {
+        this.worker[nodeEnv ? 'on' : 'addEventListener']('message', (message) => {
             const msgData = message.data ?? message;
 
             const newOrder = msgData.order;
