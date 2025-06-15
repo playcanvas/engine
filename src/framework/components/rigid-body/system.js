@@ -7,6 +7,8 @@ import { ComponentSystem } from '../system.js';
 import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
+import { Trigger } from '../collision/trigger.js';
+import { CollisionComponent } from '../collision/component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -402,13 +404,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
     _kinematic = [];
 
     /**
-     * @type {RigidBodyComponent[]}
+     * @type {Trigger[]}
      * @private
      */
     _triggers = [];
 
     /**
-     * @type {RigidBodyComponent[]}
+     * @type {CollisionComponent[]}
      * @private
      */
     _compounds = [];
