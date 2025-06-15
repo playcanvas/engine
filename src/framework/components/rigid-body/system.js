@@ -10,9 +10,9 @@ import { RigidBodyComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { CollisionComponent } from '../collision/component.js'
  * @import { Entity } from '../../entity.js'
  * @import { Trigger } from '../collision/trigger.js'
- * @import { CollisionComponent } from '../collision/component.js'
  */
 
 let ammoRayStart, ammoRayEnd;
