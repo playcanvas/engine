@@ -7,12 +7,12 @@ import { ComponentSystem } from '../system.js';
 import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
-import { Trigger } from '../collision/trigger.js';
-import { CollisionComponent } from '../collision/component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { Entity } from '../../entity.js'
+ * @import { Trigger } from '../collision/trigger.js'
+ * @import { CollisionComponent } from '../collision/component.js'
  */
 
 let ammoRayStart, ammoRayEnd;
