@@ -122,6 +122,8 @@ class CollisionComponent extends Component {
      */
     static EVENT_TRIGGERLEAVE = 'triggerleave';
 
+    static order = 2;
+
     /** @private */
     _compoundParent = null;
 
