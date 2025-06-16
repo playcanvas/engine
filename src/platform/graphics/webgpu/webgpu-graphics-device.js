@@ -595,7 +595,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // draw
             if (indexBuffer) {
                 passEncoder.setIndexBuffer(indexBuffer.impl.buffer, indexBuffer.impl.format);
-                passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex || 0, 0);
+                passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex ?? 0, 0);
             } else {
                 passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
             }
