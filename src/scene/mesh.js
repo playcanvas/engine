@@ -201,7 +201,7 @@ class Mesh extends RefCountedObject {
      *   - {@link PRIMITIVE_TRIFAN}
      *
      * - `base` is the offset of the first index or vertex to dispatch in the draw call.
-     * - `baseVertex` is the number added to each index value before indexing into the vertex buffers. (available only for WebGPU and Batching)
+     * - `baseVertex` is the number added to each index value before indexing into the vertex buffers. (supported only in WebGPU, ignored in WebGL2)
      * - `count` is the number of indices or vertices to dispatch in the draw call.
      * - `indexed` specifies whether to interpret the primitive as indexed, thereby using the
      * currently set index buffer.
