@@ -12,8 +12,6 @@ const angles = new Vec3();
 const rotation = new Quat();
 const rotation2 = new Quat();
 
-const EPSILON = 0.001;
-
 /**
  * Calculate the damp rate.
  *
@@ -22,6 +20,28 @@ const EPSILON = 0.001;
  * @returns {number} - The lerp rate.
  */
 const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
+
+/**
+ * Calculate the magnitude of an array.
+ *
+ * @param {number[]} array - The array of numbers.
+ * @returns {number} - The magnitude of the array.
+ */
+const magnitude = array => array.reduce((sum, value) => sum + value * value, 0);
+
+/**
+ * Check if two poses are almost equal.
+ *
+ * @param {Pose} pose1 - The first pose.
+ * @param {Pose} pose2 - The second pose.
+ * @param {number} [epsilon] - The threshold for equality.
+ * @returns {boolean} - True if the poses are almost equal, false otherwise.
+ */
+const almostEqualPose = (pose1, pose2, epsilon = 0.001) => {
+    return pose1.position.distance(pose2.position) < epsilon &&
+        pose1.angles.distance(pose2.angles) < epsilon &&
+        Math.abs(pose1.distance - pose2.distance) < epsilon;
+};
 
 /**
  * The orbit controller.
@@ -162,13 +182,8 @@ class OrbitController extends InputController {
 
         // check focus interrupt
         if (this._focusing) {
-            const moveLen = Math.sqrt(move[0] * move[0] + move[1] * move[1]);
-            const rotateLen = Math.sqrt(rotate[0] * rotate[0] + rotate[1] * rotate[1]);
-            const zoomLen = Math.abs(move[2]);
-            if (moveLen + rotateLen + zoomLen > 0) {
-                this._targetRootPose.copy(this._rootPose);
-                this._targetChildPose.copy(this._childPose);
-                this._focusing = false;
+            if (magnitude(move) + magnitude(rotate) > 0) {
+                this.detach();
             }
         }
 
@@ -197,11 +212,8 @@ class OrbitController extends InputController {
 
         // check focus ended
         if (this._focusing) {
-            const rootDelta = this._rootPose.position.distance(this._targetRootPose.position) +
-                this._rootPose.angles.distance(this._targetRootPose.angles);
-            const childDelta = this._childPose.position.distance(this._targetChildPose.position) +
-                this._childPose.angles.distance(this._targetChildPose.angles);
-            if (rootDelta + childDelta < EPSILON) {
+            if (almostEqualPose(this._rootPose, this._targetRootPose) &&
+                almostEqualPose(this._childPose, this._targetChildPose)) {
                 this._focusing = false;
             }
         }
