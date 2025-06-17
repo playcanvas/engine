@@ -115,10 +115,6 @@ class OrbitController extends InputController {
         return this._rootPose.position;
     }
 
-    get zoom() {
-        return this._childPose.position.length();
-    }
-
     set pitchRange(range) {
         this._targetRootPose.pitchRange.copy(range);
         this._rootPose.copy(this._targetRootPose.rotate(Vec3.ZERO));

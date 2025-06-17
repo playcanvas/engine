@@ -667,7 +667,7 @@ class CameraControls extends Script {
         const position = this._camera.entity.getPosition();
         const focus = this._camera.entity.getRotation()
         .transformVector(Vec3.FORWARD, tmpV1)
-        .mulScalar(this._orbitController.zoom)
+        .mulScalar(this._pose.distance)
         .add(position);
 
         // attach new controller
@@ -768,7 +768,7 @@ class CameraControls extends Script {
         const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
             this.moveSlowSpeed : this.moveSpeed) * this.sceneSize;
         const zoomMult = math.clamp(
-            this._orbitController.zoom / (ZOOM_SCALE_MULT * this.sceneSize),
+            this._pose.distance / (ZOOM_SCALE_MULT * this.sceneSize),
             this.zoomScaleMin,
             1
         ) * this.zoomSpeed * this.sceneSize;
@@ -778,7 +778,7 @@ class CameraControls extends Script {
         const v = tmpV1.set(0, 0, 0);
         const keyMove = this._state.axis.clone().normalize().mulScalar(moveMult);
         v.add(keyMove.mulScalar(fly * (1 - pan)));
-        const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._orbitController.zoom);
+        const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._pose.distance);
         v.add(panMove.mulScalar(orbit * pan));
         const wheelMove = new Vec3(0, 0, wheel[0]).mulScalar(zoomMult);
         v.add(wheelMove.mulScalar(orbit));
@@ -794,7 +794,7 @@ class CameraControls extends Script {
         v.set(0, 0, 0);
         const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(moveMult);
         v.add(flyMove.mulScalar(fly * (1 - pan)));
-        const orbitMove = screenToWorld(this._camera, touch[0], touch[1], this._orbitController.zoom);
+        const orbitMove = screenToWorld(this._camera, touch[0], touch[1], this._pose.distance);
         v.add(orbitMove.mulScalar(orbit * pan));
         const pinchMove = new Vec3(0, 0, pinch[0]).mulScalar(zoomMult * this.zoomPinchSens);
         v.add(pinchMove.mulScalar(orbit));
