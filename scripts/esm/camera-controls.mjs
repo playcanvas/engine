@@ -583,9 +583,7 @@ class CameraControls extends Script {
             console.warn(`CameraControls: invalid mobile input layout: ${layout}`);
             return;
         }
-        if (this._flyMobileInput.layout !== layout) {
-            this._flyMobileInput.layout = layout;
-        }
+        this._flyMobileInput.layout = layout;
     }
 
     get mobileInputLayout() {
