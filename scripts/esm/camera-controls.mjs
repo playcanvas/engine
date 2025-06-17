@@ -590,13 +590,6 @@ class CameraControls extends Script {
             // reattach input (clears pointer events)
             this._flyMobileInput.detach();
             this._flyMobileInput.attach(this.app.graphicsDevice.canvas);
-
-            // reset state
-            this._state.axis.set(0, 0, 0);
-            this._state.shift = 0;
-            this._state.ctrl = 0;
-            this._state.mouse.fill(0);
-            this._state.touches = 0;
         }
     }
 
