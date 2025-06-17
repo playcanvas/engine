@@ -712,7 +712,9 @@ class CameraControls extends Script {
      */
     _onWheel(event) {
         event.preventDefault();
-        this._zoom(event.deltaY);
+        let delta = event.deltaY;
+        delta = Math.abs(delta) > 25 ? delta : delta * 10;
+        this._zoom(delta);
     }
 
     /**
