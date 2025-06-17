@@ -1,8 +1,10 @@
 import { math } from '../../core/math/math.js';
+import { Quat } from '../../core/math/quat.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 const tmpV1 = new Vec3();
+const rotation = new Quat();
 
 /**
  * Represents a pose in 3D space, including position and rotation.
@@ -163,6 +165,19 @@ class Pose {
         const azim = Math.atan2(-dir.x, -dir.z) * math.RAD_TO_DEG;
         this.angles.set(-elev, azim, 0);
         return this;
+    }
+
+    /**
+     * Gets the focus point of the pose, which is the position plus the forward vector scaled by the distance.
+     *
+     * @param {Vec3} [out] - The output vector to store the focus point.
+     * @returns {Vec3} The focus point of the pose.
+     */
+    getFocus(out) {
+        return rotation.setFromEulerAngles(this.angles)
+        .transformVector(Vec3.FORWARD, out)
+        .mulScalar(this.distance)
+        .add(this.position);
     }
 }
 

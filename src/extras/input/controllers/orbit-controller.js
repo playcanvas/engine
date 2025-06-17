@@ -146,11 +146,7 @@ class OrbitController extends InputController {
      * @param {boolean} [smooth] - Whether to smooth the transition.
      */
     attach(pose, smooth = true) {
-        const focus = rotation.setFromEulerAngles(pose.angles)
-        .transformVector(Vec3.FORWARD, dir)
-        .mulScalar(pose.distance)
-        .add(pose.position);
-        this._targetRootPose.set(focus, pose.angles, 0);
+        this._targetRootPose.set(pose.getFocus(dir), pose.angles, 0);
         this._targetChildPose.position.set(0, 0, pose.distance);
 
         if (smooth) {
