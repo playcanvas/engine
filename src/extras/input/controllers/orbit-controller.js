@@ -5,9 +5,12 @@ import { Pose } from '../pose.js';
 
 /** @import { InputFrame } from '../input.js'; */
 
-const tmpV1 = new Vec3();
-const tmpQ1 = new Quat();
-const tmpQ2 = new Quat();
+const dir = new Vec3();
+const offset = new Vec3();
+const angles = new Vec3();
+
+const rotation = new Quat();
+const rotation2 = new Quat();
 
 const EPSILON = 0.001;
 
@@ -128,8 +131,8 @@ class OrbitController extends InputController {
      * @param {boolean} [smooth] - Whether to smooth the transition.
      */
     attach(pose, smooth = true) {
-        const focus = tmpQ1.setFromEulerAngles(pose.angles)
-        .transformVector(Vec3.FORWARD, tmpV1)
+        const focus = rotation.setFromEulerAngles(pose.angles)
+        .transformVector(Vec3.FORWARD, dir)
         .mulScalar(pose.distance)
         .add(pose.position);
         this._targetRootPose.set(focus, pose.angles, 0);
@@ -170,14 +173,13 @@ class OrbitController extends InputController {
         }
 
         // move
-        tmpV1.set(move[0], move[1], 0);
-        const rotation = tmpQ1.setFromEulerAngles(this._rootPose.angles);
-        rotation.transformVector(tmpV1, tmpV1);
-        this._targetRootPose.move(tmpV1);
-        this._targetChildPose.move(tmpV1.set(0, 0, move[2]));
+        offset.set(move[0], move[1], 0);
+        rotation.setFromEulerAngles(this._rootPose.angles).transformVector(offset, offset);
+        this._targetRootPose.move(offset);
+        this._targetChildPose.move(offset.set(0, 0, move[2]));
 
         // rotate
-        this._targetRootPose.rotate(tmpV1.set(-rotate[1], -rotate[0], 0));
+        this._targetRootPose.rotate(angles.set(-rotate[1], -rotate[0], 0));
 
         // smoothing
         this._rootPose.lerp(
@@ -205,11 +207,11 @@ class OrbitController extends InputController {
         }
 
         // calculate final pose
-        tmpQ1.setFromEulerAngles(this._rootPose.angles)
-        .transformVector(this._childPose.position, tmpV1)
+        rotation.setFromEulerAngles(this._rootPose.angles)
+        .transformVector(this._childPose.position, offset)
         .add(this._rootPose.position);
-        tmpQ1.mul(tmpQ2.setFromEulerAngles(this._childPose.angles));
-        return this._pose.set(tmpV1, tmpQ1.getEulerAngles(), this._childPose.position.length());
+        rotation.mul(rotation2.setFromEulerAngles(this._childPose.angles));
+        return this._pose.set(offset, rotation.getEulerAngles(), this._childPose.position.length());
     }
 
     destroy() {
