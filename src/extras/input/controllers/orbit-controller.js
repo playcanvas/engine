@@ -10,7 +10,6 @@ const offset = new Vec3();
 const angles = new Vec3();
 
 const rotation = new Quat();
-const rotation2 = new Quat();
 
 /**
  * Calculate the damp rate.
@@ -218,7 +217,6 @@ class OrbitController extends InputController {
         rotation.setFromEulerAngles(this._rootPose.angles)
         .transformVector(this._childPose.position, offset)
         .add(this._rootPose.position);
-        rotation.mul(rotation2.setFromEulerAngles(this._childPose.angles));
         return this._pose.set(offset, rotation.getEulerAngles(), this._childPose.position.length());
     }
 
