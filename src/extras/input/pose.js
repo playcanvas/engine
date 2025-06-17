@@ -151,14 +151,14 @@ class Pose {
     /**
      * Sets the pose to look in the direction of the given vector.
      *
-     * @param {Vec3} position - The position of the pose.
-     * @param {Vec3} focus - The point to look at.
+     * @param {Vec3} from - The point from which to look.
+     * @param {Vec3} to - The point to look at.
      * @returns {Pose} The updated Pose instance.
      */
-    look(position, focus) {
-        this.position.copy(focus);
-        this.distance = position.distance(focus);
-        const dir = tmpV1.sub2(focus, position).normalize();
+    look(from, to) {
+        this.position.copy(to);
+        this.distance = from.distance(to);
+        const dir = tmpV1.sub2(to, from).normalize();
         const elev = Math.atan2(-dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(-dir.x, -dir.z) * math.RAD_TO_DEG;
         this.angles.set(-elev, azim, 0);
