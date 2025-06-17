@@ -7,6 +7,7 @@ import {
     KeyboardMouseSource,
     MultiTouchSource,
     OrbitController,
+    Pose,
     PROJECTION_PERSPECTIVE,
     Script,
     Vec2,
@@ -26,6 +27,8 @@ import {
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+
+const pose = new Pose();
 
 const frame = new InputFrame({
     move: [0, 0, 0],
@@ -396,7 +399,7 @@ class CameraControls extends Script {
         if (this._controller instanceof OrbitController) {
             const position = this._camera.entity.getPosition();
             this._startZoomDist = position.distance(point);
-            this._controller.attach(position, point, false);
+            this._controller.attach(pose.look(position, point), false);
             this.update(0);
         }
     }
@@ -634,7 +637,7 @@ class CameraControls extends Script {
 
         // attach new controller
         this._controller = this._mode === CameraControls.MODE_ORBIT ? this._orbitController : this._flyController;
-        this._controller.attach(position, focus, false);
+        this._controller.attach(pose.look(position, focus), false);
     }
 
     /**
@@ -842,7 +845,7 @@ class CameraControls extends Script {
             const position = tmpV1.copy(this._camera.entity.forward)
             .mulScalar(-zoomDist)
             .add(focus);
-            this._controller.attach(position, focus);
+            this._controller.attach(pose.look(position, focus));
         }
     }
 
@@ -860,7 +863,7 @@ class CameraControls extends Script {
                 .normalize()
                 .mulScalar(this._startZoomDist)
                 .add(focus) : this._camera.entity.getPosition();
-            this._controller.attach(position, focus);
+            this._controller.attach(pose.look(position, focus));
         }
     }
 
@@ -872,7 +875,7 @@ class CameraControls extends Script {
         this._setMode(CameraControls.MODE_ORBIT);
 
         if (this._controller instanceof OrbitController) {
-            this._controller.attach(position, focus);
+            this._controller.attach(pose.look(position, focus));
         }
     }
 

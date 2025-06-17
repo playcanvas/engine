@@ -1,7 +1,5 @@
 import { Pose } from './pose.js';
 
-/** @import { Vec3 } from '../../core/math/vec3.js'; */
-
 /**
  * Represents an input delta.
  *
@@ -183,11 +181,10 @@ class InputController extends InputConsumer {
     _pose = new Pose();
 
     /**
-     * @param {Vec3} position - The controller position.
-     * @param {Vec3} focus - The focus point
+     * @param {Pose} pose - The initial pose of the controller.
      * @param {boolean} [smooth] - Whether to smooth the transition.
      */
-    attach(position, focus, smooth = true) {
+    attach(pose, smooth = true) {
     }
 
     detach() {

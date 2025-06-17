@@ -7,6 +7,7 @@ import { Pose } from '../pose.js';
 
 const tmpV1 = new Vec3();
 const tmpQ1 = new Quat();
+const tmpQ2 = new Quat();
 
 const EPSILON = 0.001;
 
@@ -123,13 +124,16 @@ class OrbitController extends InputController {
     }
 
     /**
-     * @param {Vec3} position - The controller position.
-     * @param {Vec3} focus - The focus point.
+     * @param {Pose} pose - The initial pose of the controller.
      * @param {boolean} [smooth] - Whether to smooth the transition.
      */
-    attach(position, focus, smooth = true) {
-        this._targetRootPose.look(position, focus);
-        this._targetChildPose.position.set(0, 0, focus.distance(position));
+    attach(pose, smooth = true) {
+        const focus = tmpQ1.setFromEulerAngles(pose.angles)
+        .transformVector(Vec3.FORWARD, tmpV1)
+        .mulScalar(pose.distance)
+        .add(pose.position);
+        this._targetRootPose.set(focus, pose.angles, 0);
+        this._targetChildPose.position.set(0, 0, pose.distance);
 
         if (smooth) {
             this._focusing = true;
@@ -201,7 +205,11 @@ class OrbitController extends InputController {
         }
 
         // calculate final pose
-        return this._pose.mul2(this._rootPose, this._childPose);
+        tmpQ1.setFromEulerAngles(this._rootPose.angles)
+        .transformVector(this._childPose.position, tmpV1)
+        .add(this._rootPose.position);
+        tmpQ1.mul(tmpQ2.setFromEulerAngles(this._childPose.angles));
+        return this._pose.set(tmpV1, tmpQ1.getEulerAngles(), this._childPose.position.length());
     }
 
     destroy() {
