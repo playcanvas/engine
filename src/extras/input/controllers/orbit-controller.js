@@ -6,7 +6,7 @@ import { Pose } from '../pose.js';
 /** @import { InputFrame } from '../input.js'; */
 
 const dir = new Vec3();
-const offset = new Vec3();
+const position = new Vec3();
 const angles = new Vec3();
 
 const rotation = new Quat();
@@ -179,10 +179,10 @@ class OrbitController extends InputController {
         }
 
         // move
-        offset.set(move[0], move[1], 0);
-        rotation.setFromEulerAngles(this._rootPose.angles).transformVector(offset, offset);
-        this._targetRootPose.move(offset);
-        this._targetChildPose.move(offset.set(0, 0, move[2]));
+        position.set(move[0], move[1], 0);
+        rotation.setFromEulerAngles(this._rootPose.angles).transformVector(position, position);
+        this._targetRootPose.move(position);
+        this._targetChildPose.move(position.set(0, 0, move[2]));
 
         // rotate
         this._targetRootPose.rotate(angles.set(-rotate[1], -rotate[0], 0));
@@ -211,9 +211,9 @@ class OrbitController extends InputController {
 
         // calculate final pose
         rotation.setFromEulerAngles(this._rootPose.angles)
-        .transformVector(this._childPose.position, offset)
+        .transformVector(this._childPose.position, position)
         .add(this._rootPose.position);
-        return this._pose.set(offset, rotation.getEulerAngles(), this._childPose.position.length());
+        return this._pose.set(position, this._rootPose.angles, this._childPose.position.length());
     }
 
     destroy() {
