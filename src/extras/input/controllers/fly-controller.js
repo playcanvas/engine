@@ -72,6 +72,7 @@ class FlyController extends InputController {
      */
     attach(position, focus, smooth = true) {
         this._targetPose.look(position, focus);
+        this._targetPose.position.copy(position);
 
         if (!smooth) {
             this._pose.copy(this._targetPose);

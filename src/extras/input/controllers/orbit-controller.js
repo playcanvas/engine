@@ -129,7 +129,6 @@ class OrbitController extends InputController {
      */
     attach(position, focus, smooth = true) {
         this._targetRootPose.look(position, focus);
-        this._targetRootPose.position.copy(focus);
         this._targetChildPose.position.set(0, 0, focus.distance(position));
 
         if (smooth) {
