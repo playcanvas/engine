@@ -772,6 +772,7 @@ class CameraControls extends Script {
             this.zoomScaleMin,
             1
         ) * this.zoomSpeed * this.sceneSize;
+
         const { deltas } = frame;
 
         // desktop move
