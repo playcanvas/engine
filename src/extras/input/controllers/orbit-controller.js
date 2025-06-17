@@ -128,8 +128,8 @@ class OrbitController extends InputController {
      * @param {boolean} [smooth] - Whether to smooth the transition.
      */
     attach(position, focus, smooth = true) {
+        this._targetRootPose.look(position, focus);
         this._targetRootPose.position.copy(focus);
-        this._targetRootPose.look(tmpV1.sub2(focus, position).normalize());
         this._targetChildPose.position.set(0, 0, focus.distance(position));
 
         if (smooth) {

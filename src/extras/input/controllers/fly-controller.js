@@ -67,12 +67,11 @@ class FlyController extends InputController {
 
     /**
      * @param {Vec3} position - The controller position.
-     * @param {Vec3} focus - The focus point
+     * @param {Vec3} focus - The focus point.
      * @param {boolean} [smooth] - Whether to smooth the transition.
      */
     attach(position, focus, smooth = true) {
-        this._targetPose.position.copy(position);
-        this._targetPose.look(tmpV1.sub2(focus, position).normalize());
+        this._targetPose.look(position, focus);
 
         if (!smooth) {
             this._pose.copy(this._targetPose);
