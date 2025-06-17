@@ -350,34 +350,6 @@ class CameraControls extends Script {
      */
     joystickEventName = 'joystick';
 
-    /**
-     * @type {number}
-     * @private
-     */
-    get _moveMult() {
-        const speed = this._state.shift ?
-            this.moveFastSpeed : this._state.ctrl ? this.moveSlowSpeed : this.moveSpeed;
-        return speed * this.sceneSize;
-    }
-
-    /**
-     * @type {number}
-     * @private
-     */
-    get _zoomMult() {
-        const zoom = this._orbitController.zoom / (ZOOM_SCALE_MULT * this.sceneSize);
-        const scale = math.clamp(zoom, this.zoomScaleMin, 1);
-        return scale * this.zoomSpeed * this.sceneSize;
-    }
-
-    get _flags() {
-        const orbit = +(this._mode === CameraControls.MODE_ORBIT);
-        const fly = 1 - orbit;
-        const pan = +(this.enablePan &&
-            ((orbit && this._state.shift) || this._state.mouse[1] || this._state.touches > 1));
-        return { fly, orbit, pan };
-    }
-
     initialize() {
         if (!this.entity.camera) {
             console.error('CameraControls: camera component not found');
@@ -790,18 +762,25 @@ class CameraControls extends Script {
         this._state.touches += count[0];
 
         const orbit = +(this._mode === CameraControls.MODE_ORBIT);
-        const fly = 1 - orbit;
+        const fly = +(this._mode === CameraControls.MODE_FLY);
         const pan = +(this.enablePan &&
             ((orbit && this._state.shift) || this._state.mouse[1] || this._state.touches > 1));
+        const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
+            this.moveSlowSpeed : this.moveSpeed) * this.sceneSize;
+        const zoomMult = math.clamp(
+            this._orbitController.zoom / (ZOOM_SCALE_MULT * this.sceneSize),
+            this.zoomScaleMin,
+            1
+        ) * this.zoomSpeed * this.sceneSize;
         const { deltas } = frame;
 
         // desktop move
         const v = tmpV1.set(0, 0, 0);
-        const keyMove = this._state.axis.clone().normalize().mulScalar(this._moveMult);
+        const keyMove = this._state.axis.clone().normalize().mulScalar(moveMult);
         v.add(keyMove.mulScalar(fly * (1 - pan)));
         const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._orbitController.zoom);
         v.add(panMove.mulScalar(orbit * pan));
-        const wheelMove = new Vec3(0, 0, wheel[0]).mulScalar(this._zoomMult);
+        const wheelMove = new Vec3(0, 0, wheel[0]).mulScalar(zoomMult);
         v.add(wheelMove.mulScalar(orbit));
         deltas.move.append([v.x, v.y, v.z]);
 
@@ -813,11 +792,11 @@ class CameraControls extends Script {
 
         // mobile move
         v.set(0, 0, 0);
-        const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(this._moveMult);
+        const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(moveMult);
         v.add(flyMove.mulScalar(fly * (1 - pan)));
         const orbitMove = screenToWorld(this._camera, touch[0], touch[1], this._orbitController.zoom);
         v.add(orbitMove.mulScalar(orbit * pan));
-        const pinchMove = new Vec3(0, 0, pinch[0]).mulScalar(this._zoomMult * this.zoomPinchSens);
+        const pinchMove = new Vec3(0, 0, pinch[0]).mulScalar(zoomMult * this.zoomPinchSens);
         v.add(pinchMove.mulScalar(orbit));
         deltas.move.append([v.x, v.y, v.z]);
 
@@ -832,7 +811,7 @@ class CameraControls extends Script {
 
         // gamepad move
         v.set(0, 0, 0);
-        const stickMove = new Vec3(leftStick[0], 0, -leftStick[1]).mulScalar(this._moveMult);
+        const stickMove = new Vec3(leftStick[0], 0, -leftStick[1]).mulScalar(moveMult);
         v.add(stickMove.mulScalar(fly * (1 - pan)));
         deltas.move.append([v.x, v.y, v.z]);
 
