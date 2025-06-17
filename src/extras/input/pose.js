@@ -65,9 +65,10 @@ class Pose {
      *
      * @param {Vec3} [position] - The position of the pose.
      * @param {Vec3} [angles] - The angles of the pose in degrees.
+     * @param {number} [distance] - The focus distance from the position to the pose.
      */
-    constructor(position = Vec3.ZERO, angles = Vec3.ZERO) {
-        this.set(position, angles);
+    constructor(position = Vec3.ZERO, angles = Vec3.ZERO, distance = 0) {
+        this.set(position, angles, distance);
     }
 
     /**
@@ -75,11 +76,13 @@ class Pose {
      *
      * @param {Vec3} position - The new position.
      * @param {Vec3} angles - The new angles in degrees.
+     * @param {number} distance - The new focus distance.
      * @returns {Pose} The updated Pose instance.
      */
-    set(position, angles) {
+    set(position, angles, distance) {
         this.position.copy(position);
         this.angles.copy(angles);
+        this.distance = distance;
         return this;
     }
 
@@ -90,7 +93,7 @@ class Pose {
      * @returns {Pose} The updated Pose instance.
      */
     copy(other) {
-        return this.set(other.position, other.angles);
+        return this.set(other.position, other.angles, other.distance);
     }
 
     /**
@@ -179,7 +182,7 @@ class Pose {
         tmpQ1.transformVector(rhs.position, tmpV1).add(lhs.position);
         tmpQ1.mul(tmpQ2);
 
-        return this.set(tmpV1, tmpQ1.getEulerAngles());
+        return this.set(tmpV1, tmpQ1.getEulerAngles(), 0);
     }
 }
 
