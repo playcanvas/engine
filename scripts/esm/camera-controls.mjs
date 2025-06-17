@@ -620,7 +620,11 @@ class CameraControls extends Script {
             this._flyMobileInput.attach(this.app.graphicsDevice.canvas);
 
             // reset state
-            this._resetState();
+            this._state.axis.set(0, 0, 0);
+            this._state.shift = 0;
+            this._state.ctrl = 0;
+            this._state.mouse.fill(0);
+            this._state.touches = 0;
         }
     }
 
@@ -700,131 +704,6 @@ class CameraControls extends Script {
     }
 
     /**
-     * @private
-     */
-    _resetState() {
-        this._state.axis.set(0, 0, 0);
-        this._state.shift = 0;
-        this._state.ctrl = 0;
-        this._state.mouse.fill(0);
-        this._state.touches = 0;
-    }
-
-    /**
-     * @param {InputFrame<{ move: number[], rotate: number[] }>} frame - The input frame.
-     * @private
-     */
-    _addDesktopInputFrame({ deltas } = frame) {
-        const { key, button, mouse, wheel } = this._desktopInput.read();
-
-        // destructure keys
-        const [forward, back, left, right, down, up, /** space */, shift, ctrl] = key;
-
-        // left mouse button, middle mouse button, mouse wheel
-        const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
-
-        // right mouse button or any movement key
-        const switchToFly = button[2] === 1 ||
-            forward === 1 || back === 1 || left === 1 || right === 1 || up === 1 || down === 1;
-
-        // switch mode if required
-        if (switchToOrbit) {
-            this._setMode(CameraControls.MODE_ORBIT);
-        } else if (switchToFly) {
-            this._setMode(CameraControls.MODE_FLY);
-        }
-
-        // update state
-        this._state.axis.add(tmpV1.set(right - left, up - down, forward - back));
-        for (let i = 0; i < this._state.mouse.length; i++) {
-            this._state.mouse[i] += button[i];
-        }
-        this._state.shift += shift;
-        this._state.ctrl += ctrl;
-
-        // flags
-        const { orbit, fly, pan } = this._flags;
-
-        // move input
-        const v = tmpV1.set(0, 0, 0);
-        const keyMove = this._state.axis.clone().normalize().mulScalar(this._moveMult);
-        v.add(keyMove.mulScalar(fly * (1 - pan)));
-        const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._orbitController.zoom);
-        v.add(panMove.mulScalar(orbit * pan));
-        const wheelMove = new Vec3(0, 0, wheel[0]).mulScalar(this._zoomMult);
-        v.add(wheelMove.mulScalar(orbit));
-        deltas.move.append([v.x, v.y, v.z]);
-
-        // rotate input
-        v.set(0, 0, 0);
-        const mouseRotate = new Vec3(mouse[0], mouse[1], 0).mulScalar(this.rotateSpeed);
-        v.add(mouseRotate.mulScalar(1 - pan));
-        deltas.rotate.append([v.x, v.y, v.z]);
-    }
-
-    /**
-     * @param {InputFrame<{ move: number[], rotate: number[] }>} frame - The input frame.
-     * @private
-     */
-    _addMobileInputFrame({ deltas }) {
-        const { touch, pinch, count } = this._orbitMobileInput.read();
-        const { leftInput, rightInput } = this._flyMobileInput.read();
-
-        // update state
-        this._state.touches += count[0];
-
-        // flags
-        const { orbit, fly, pan } = this._flags;
-
-        // move input
-        const v = tmpV1.set(0, 0, 0);
-        const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(this._moveMult);
-        v.add(flyMove.mulScalar(fly * (1 - pan)));
-        const panMove = screenToWorld(this._camera, touch[0], touch[1], this._orbitController.zoom);
-        v.add(panMove.mulScalar(orbit * pan));
-        const pinchMove = new Vec3(0, 0, pinch[0]).mulScalar(this._zoomMult * this.zoomPinchSens);
-        v.add(pinchMove.mulScalar(orbit));
-        deltas.move.append([v.x, v.y, v.z]);
-
-        // rotate input
-        v.set(0, 0, 0);
-        const orbitRotate = new Vec3(touch[0], touch[1], 0).mulScalar(this.rotateSpeed);
-        v.add(orbitRotate.mulScalar(orbit * (1 - pan)));
-        const flyRotate = new Vec3(rightInput[0], rightInput[1], 0).mulScalar(this.rotateSpeed +
-            +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens);
-        v.add(flyRotate.mulScalar(fly * (1 - pan)));
-        deltas.rotate.append([v.x, v.y, v.z]);
-    }
-
-    /**
-     * @param {InputFrame<{ move: number[], rotate: number[] }>} frame - The input frame.
-     * @private
-     */
-    _addGamepadInputFrame({ deltas }) {
-        const { leftStick, rightStick } = this._gamepadInput.read();
-
-        // apply dead zone to gamepad sticks
-        applyDeadZone(leftStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
-        applyDeadZone(rightStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
-
-        // flags
-        const { fly, pan } = this._flags;
-
-        // move input
-        const v = tmpV1.set(0, 0, 0);
-        const stickMove = tmpV1.set(leftStick[0], 0, -leftStick[1]).mulScalar(this._moveMult);
-        v.add(stickMove.mulScalar(fly * (1 - pan)));
-        deltas.move.append([v.x, v.y, v.z]);
-
-        // rotate input
-        v.set(0, 0, 0);
-        const stickRotate = new Vec3(rightStick[0], rightStick[1], 0).mulScalar(this.rotateSpeed *
-            this.rotateJoystickSens);
-        v.add(stickRotate.mulScalar(fly * (1 - pan)));
-        deltas.rotate.append([v.x, v.y, v.z]);
-    }
-
-    /**
      * @param {Vec3} focus - The focus point.
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
@@ -875,19 +754,103 @@ class CameraControls extends Script {
      * @param {number} dt - The time delta.
      */
     update(dt) {
-        // combine input frames
-        this._addDesktopInputFrame(frame);
-        this._addMobileInputFrame(frame);
-        this._addGamepadInputFrame(frame);
+        const { key, button, mouse, wheel } = this._desktopInput.read();
+        const { touch, pinch, count } = this._orbitMobileInput.read();
+        const { leftInput, rightInput } = this._flyMobileInput.read();
+        const { leftStick, rightStick } = this._gamepadInput.read();
 
+        // apply dead zone to gamepad sticks
+        applyDeadZone(leftStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
+        applyDeadZone(rightStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
+
+        // destructure keys
+        const [forward, back, left, right, down, up, /** space */, shift, ctrl] = key;
+
+        // left mouse button, middle mouse button, mouse wheel
+        const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
+
+        // right mouse button or any movement key
+        const switchToFly = button[2] === 1 ||
+            forward === 1 || back === 1 || left === 1 || right === 1 || up === 1 || down === 1;
+
+        // switch mode if required
+        if (switchToOrbit) {
+            this._setMode(CameraControls.MODE_ORBIT);
+        } else if (switchToFly) {
+            this._setMode(CameraControls.MODE_FLY);
+        }
+
+        // update state
+        this._state.axis.add(tmpV1.set(right - left, up - down, forward - back));
+        for (let i = 0; i < this._state.mouse.length; i++) {
+            this._state.mouse[i] += button[i];
+        }
+        this._state.shift += shift;
+        this._state.ctrl += ctrl;
+        this._state.touches += count[0];
+
+        const orbit = +(this._mode === CameraControls.MODE_ORBIT);
+        const fly = 1 - orbit;
+        const pan = +(this.enablePan &&
+            ((orbit && this._state.shift) || this._state.mouse[1] || this._state.touches > 1));
+        const { deltas } = frame;
+
+        // desktop move
+        const v = tmpV1.set(0, 0, 0);
+        const keyMove = this._state.axis.clone().normalize().mulScalar(this._moveMult);
+        v.add(keyMove.mulScalar(fly * (1 - pan)));
+        const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._orbitController.zoom);
+        v.add(panMove.mulScalar(orbit * pan));
+        const wheelMove = new Vec3(0, 0, wheel[0]).mulScalar(this._zoomMult);
+        v.add(wheelMove.mulScalar(orbit));
+        deltas.move.append([v.x, v.y, v.z]);
+
+        // desktop rotate
+        v.set(0, 0, 0);
+        const mouseRotate = new Vec3(mouse[0], mouse[1], 0).mulScalar(this.rotateSpeed);
+        v.add(mouseRotate.mulScalar(1 - pan));
+        deltas.rotate.append([v.x, v.y, v.z]);
+
+        // mobile move
+        v.set(0, 0, 0);
+        const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(this._moveMult);
+        v.add(flyMove.mulScalar(fly * (1 - pan)));
+        const orbitMove = screenToWorld(this._camera, touch[0], touch[1], this._orbitController.zoom);
+        v.add(orbitMove.mulScalar(orbit * pan));
+        const pinchMove = new Vec3(0, 0, pinch[0]).mulScalar(this._zoomMult * this.zoomPinchSens);
+        v.add(pinchMove.mulScalar(orbit));
+        deltas.move.append([v.x, v.y, v.z]);
+
+        // mobile rotate
+        v.set(0, 0, 0);
+        const orbitRotate = new Vec3(touch[0], touch[1], 0).mulScalar(this.rotateSpeed);
+        v.add(orbitRotate.mulScalar(orbit * (1 - pan)));
+        const flyRotate = new Vec3(rightInput[0], rightInput[1], 0).mulScalar(this.rotateSpeed +
+            +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens);
+        v.add(flyRotate.mulScalar(fly * (1 - pan)));
+        deltas.rotate.append([v.x, v.y, v.z]);
+
+        // gamepad move
+        v.set(0, 0, 0);
+        const stickMove = tmpV1.set(leftStick[0], 0, -leftStick[1]).mulScalar(this._moveMult);
+        v.add(stickMove.mulScalar(fly * (1 - pan)));
+        deltas.move.append([v.x, v.y, v.z]);
+
+        // gamepad rotate
+        v.set(0, 0, 0);
+        const stickRotate = new Vec3(rightStick[0], rightStick[1], 0).mulScalar(this.rotateSpeed *
+            this.rotateJoystickSens);
+        v.add(stickRotate.mulScalar(fly * (1 - pan)));
+        deltas.rotate.append([v.x, v.y, v.z]);
+
+        // check for skip update, just read frame to clear it
         if (this.skipUpdate) {
-            // skip update, just read frame to clear it
             frame.read();
             return;
         }
 
+        // check if XR is active, just read frame to clear it
         if (this.app.xr?.active) {
-            // skip update, just read frame to clear it
             frame.read();
             return;
         }
