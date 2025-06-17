@@ -832,7 +832,7 @@ class CameraControls extends Script {
 
         // gamepad move
         v.set(0, 0, 0);
-        const stickMove = tmpV1.set(leftStick[0], 0, -leftStick[1]).mulScalar(this._moveMult);
+        const stickMove = new Vec3(leftStick[0], 0, -leftStick[1]).mulScalar(this._moveMult);
         v.add(stickMove.mulScalar(fly * (1 - pan)));
         deltas.move.append([v.x, v.y, v.z]);
 
