@@ -5,9 +5,14 @@ import { Pose } from '../pose.js';
 
 /** @import { InputFrame } from '../input.js'; */
 
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpQ1 = new Quat();
+const offset = new Vec3();
+const angles = new Vec3();
+
+const forward = new Vec3();
+const right = new Vec3();
+const up = new Vec3();
+
+const rotation = new Quat();
 
 /**
  * Calculate the damp rate.
@@ -90,19 +95,19 @@ class FlyController extends InputController {
         const { move, rotate } = frame.read();
 
         // rotate
-        this._targetPose.rotate(tmpV1.set(-rotate[1], -rotate[0], 0));
+        this._targetPose.rotate(angles.set(-rotate[1], -rotate[0], 0));
 
         // move
-        const rotation = tmpQ1.setFromEulerAngles(this._pose.angles);
-        const forward = rotation.transformVector(Vec3.FORWARD, new Vec3());
-        const right = rotation.transformVector(Vec3.RIGHT, new Vec3());
-        const up = rotation.transformVector(Vec3.UP, new Vec3());
-        tmpV1.set(0, 0, 0);
-        tmpV1.add(tmpV2.copy(forward).mulScalar(move[2]));
-        tmpV1.add(tmpV2.copy(right).mulScalar(move[0]));
-        tmpV1.add(tmpV2.copy(up).mulScalar(move[1]));
-        tmpV1.mulScalar(dt);
-        this._targetPose.move(tmpV1);
+        rotation.setFromEulerAngles(this._pose.angles);
+        rotation.transformVector(Vec3.FORWARD, forward);
+        rotation.transformVector(Vec3.RIGHT, right);
+        rotation.transformVector(Vec3.UP, up);
+        offset.set(0, 0, 0);
+        offset.add(forward.mulScalar(move[2]));
+        offset.add(right.mulScalar(move[0]));
+        offset.add(up.mulScalar(move[1]));
+        offset.mulScalar(dt);
+        this._targetPose.move(offset);
 
         // smoothing
         return this._pose.lerp(
