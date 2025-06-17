@@ -19,7 +19,7 @@ class Pose {
     position = new Vec3();
 
     /**
-     * The angles of the pose in degrees.
+     * The angles of the pose in degrees calculated from the forward vector.
      *
      * @type {Vec3}
      */
