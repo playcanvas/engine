@@ -584,12 +584,7 @@ class CameraControls extends Script {
             return;
         }
         if (this._flyMobileInput.layout !== layout) {
-            // update layout
             this._flyMobileInput.layout = layout;
-
-            // reattach input (clears pointer events)
-            this._flyMobileInput.detach();
-            this._flyMobileInput.attach(this.app.graphicsDevice.canvas);
         }
     }
 

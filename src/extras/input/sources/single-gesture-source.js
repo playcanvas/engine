@@ -53,7 +53,16 @@ class SingleGestureSource extends InputSource {
      * @type {'joystick' | 'touch'}
      */
     set layout(value) {
+        if (this._layout === value) {
+            return;
+        }
         this._layout = value;
+
+        // reset deltas
+        this.read();
+
+        // reset pointer events
+        this._pointerData.clear();
     }
 
     get layout() {
