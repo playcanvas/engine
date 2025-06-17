@@ -738,24 +738,18 @@ class CameraControls extends Script {
 
         // move input
         const v = tmpV1.set(0, 0, 0);
-
         const keyMove = this._state.axis.clone().normalize().mulScalar(this._moveMult);
         v.add(keyMove.mulScalar(fly * (1 - pan)));
-
         const panMove = this._screenToWorld(mouse[0], mouse[1], this._orbitController.zoom);
         v.add(panMove.mulScalar(orbit * pan));
-
         const wheelMove = new Vec3(0, 0, wheel[0]).mulScalar(this._zoomMult);
         v.add(wheelMove.mulScalar(orbit));
-
         deltas.move.append([v.x, v.y, v.z]);
 
         // rotate input
         v.set(0, 0, 0);
-
         const mouseRotate = new Vec3(mouse[0], mouse[1], 0).mulScalar(this.rotateSpeed);
         v.add(mouseRotate.mulScalar(1 - pan));
-
         deltas.rotate.append([v.x, v.y, v.z]);
     }
 
@@ -775,28 +769,21 @@ class CameraControls extends Script {
 
         // move input
         const v = tmpV1.set(0, 0, 0);
-
         const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(this._moveMult);
         v.add(flyMove.mulScalar(fly * (1 - pan)));
-
         const panMove = this._screenToWorld(touch[0], touch[1], this._orbitController.zoom);
         v.add(panMove.mulScalar(orbit * pan));
-
         const pinchMove = new Vec3(0, 0, pinch[0]).mulScalar(this._zoomMult * this.zoomPinchSens);
         v.add(pinchMove.mulScalar(orbit));
-
         deltas.move.append([v.x, v.y, v.z]);
 
         // rotate input
         v.set(0, 0, 0);
-
         const orbitRotate = new Vec3(touch[0], touch[1], 0).mulScalar(this.rotateSpeed);
         v.add(orbitRotate.mulScalar(orbit * (1 - pan)));
-
         const flyRotate = new Vec3(rightInput[0], rightInput[1], 0).mulScalar(this.rotateSpeed +
             +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens);
         v.add(flyRotate.mulScalar(fly * (1 - pan)));
-
         deltas.rotate.append([v.x, v.y, v.z]);
     }
 
@@ -816,19 +803,15 @@ class CameraControls extends Script {
 
         // move input
         const v = tmpV1.set(0, 0, 0);
-
         const stickMove = tmpV1.set(leftStick[0], 0, -leftStick[1]).mulScalar(this._moveMult);
         v.add(stickMove.mulScalar(fly * (1 - pan)));
-
         deltas.move.append([v.x, v.y, v.z]);
 
         // rotate input
         v.set(0, 0, 0);
-
         const stickRotate = new Vec3(rightStick[0], rightStick[1], 0).mulScalar(this.rotateSpeed *
             this.rotateJoystickSens);
         v.add(stickRotate.mulScalar(fly * (1 - pan)));
-
         deltas.rotate.append([v.x, v.y, v.z]);
     }
 
