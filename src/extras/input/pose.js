@@ -29,6 +29,13 @@ class Pose {
     angles = new Vec3();
 
     /**
+     * The focus distance from the position to the pose.
+     *
+     * @type {number}
+     */
+    distance = 0;
+
+    /**
      * @type {Vec2}
      */
     pitchRange = new Vec2(-Infinity, Infinity);
@@ -149,7 +156,8 @@ class Pose {
      * @returns {Pose} The updated Pose instance.
      */
     look(position, focus) {
-        this.position.copy(position);
+        this.position.copy(focus);
+        this.distance = position.distance(focus);
         const dir = tmpV1.sub2(focus, position).normalize();
         const elev = Math.atan2(-dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(-dir.x, -dir.z) * math.RAD_TO_DEG;
@@ -172,16 +180,6 @@ class Pose {
         tmpQ1.mul(tmpQ2);
 
         return this.set(tmpV1, tmpQ1.getEulerAngles());
-    }
-
-    /**
-     * Calculates the linear distance to another pose.
-     *
-     * @param {Pose} other - The other pose to compare with.
-     * @returns {number} The distance between the two poses.
-     */
-    distance(other) {
-        return this.position.distance(other.position) + this.angles.distance(other.angles);
     }
 }
 
