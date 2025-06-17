@@ -53,6 +53,59 @@ const applyDeadZone = (stick, low, high) => {
     stick[1] *= scale / mag;
 };
 
+/**
+ * Converts screen space mouse deltas to world space pan vector.
+ *
+ * @param {CameraComponent} camera - The camera component.
+ * @param {number} dx - The mouse delta x value.
+ * @param {number} dy - The mouse delta y value.
+ * @param {number} dz - The world space zoom delta value.
+ * @param {Vec3} [out] - The output vector to store the pan result.
+ * @returns {Vec3} - The pan vector in world space.
+ * @private
+ */
+const screenToWorld = (camera, dx, dy, dz, out = new Vec3()) => {
+    const { system, fov, aspectRatio, horizontalFov, projection, orthoHeight } = camera;
+    const { width, height } = system.app.graphicsDevice.clientRect;
+
+    // normalize deltas to device coord space
+    out.set(
+        -(dx / width) * 2,
+        (dy / height) * 2,
+        0
+    );
+
+    // calculate half size of the view frustum at the current distance
+    const halfSize = tmpV2.set(0, 0, 0);
+    if (projection === PROJECTION_PERSPECTIVE) {
+        const halfSlice = dz * Math.tan(0.5 * fov * math.DEG_TO_RAD);
+        if (horizontalFov) {
+            halfSize.set(
+                halfSlice,
+                halfSlice / aspectRatio,
+                0
+            );
+        } else {
+            halfSize.set(
+                halfSlice * aspectRatio,
+                halfSlice,
+                0
+            );
+        }
+    } else {
+        halfSize.set(
+            orthoHeight * aspectRatio,
+            orthoHeight,
+            0
+        );
+    }
+
+    // scale by device coord space
+    out.mul(halfSize);
+
+    return out;
+};
+
 class CameraControls extends Script {
     static scriptName = 'cameraControls';
 
@@ -153,6 +206,12 @@ class CameraControls extends Script {
      */
     // @ts-ignore
     _controller;
+
+    /**
+     * @type {Pose}
+     * @private
+     */
+    _pose = new Pose();
 
     /**
      * @type {CameraControls.MODE_ORBIT|CameraControls.MODE_FLY}
@@ -652,56 +711,6 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {number} dx - The mouse delta x value.
-     * @param {number} dy - The mouse delta y value.
-     * @param {number} dz - The world space zoom delta value.
-     * @param {Vec3} [out] - The output vector to store the pan result.
-     * @returns {Vec3} - The pan vector in world space.
-     * @private
-     */
-    _screenToWorld(dx, dy, dz, out = new Vec3()) {
-        const { system, fov, aspectRatio, horizontalFov, projection, orthoHeight } = this._camera;
-        const { width, height } = system.app.graphicsDevice.clientRect;
-
-        // normalize deltas to device coord space
-        out.set(
-            -(dx / width) * 2,
-            (dy / height) * 2,
-            0
-        );
-
-        // calculate half size of the view frustum at the current distance
-        const halfSize = tmpV2.set(0, 0, 0);
-        if (projection === PROJECTION_PERSPECTIVE) {
-            const halfSlice = dz * Math.tan(0.5 * fov * math.DEG_TO_RAD);
-            if (horizontalFov) {
-                halfSize.set(
-                    halfSlice,
-                    halfSlice / aspectRatio,
-                    0
-                );
-            } else {
-                halfSize.set(
-                    halfSlice * aspectRatio,
-                    halfSlice,
-                    0
-                );
-            }
-        } else {
-            halfSize.set(
-                orthoHeight * aspectRatio,
-                orthoHeight,
-                0
-            );
-        }
-
-        // scale by device coord space
-        out.mul(halfSize);
-
-        return out;
-    }
-
-    /**
      * @param {InputFrame<{ move: number[], rotate: number[] }>} frame - The input frame.
      * @private
      */
@@ -740,7 +749,7 @@ class CameraControls extends Script {
         const v = tmpV1.set(0, 0, 0);
         const keyMove = this._state.axis.clone().normalize().mulScalar(this._moveMult);
         v.add(keyMove.mulScalar(fly * (1 - pan)));
-        const panMove = this._screenToWorld(mouse[0], mouse[1], this._orbitController.zoom);
+        const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._orbitController.zoom);
         v.add(panMove.mulScalar(orbit * pan));
         const wheelMove = new Vec3(0, 0, wheel[0]).mulScalar(this._zoomMult);
         v.add(wheelMove.mulScalar(orbit));
@@ -771,7 +780,7 @@ class CameraControls extends Script {
         const v = tmpV1.set(0, 0, 0);
         const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(this._moveMult);
         v.add(flyMove.mulScalar(fly * (1 - pan)));
-        const panMove = this._screenToWorld(touch[0], touch[1], this._orbitController.zoom);
+        const panMove = screenToWorld(this._camera, touch[0], touch[1], this._orbitController.zoom);
         v.add(panMove.mulScalar(orbit * pan));
         const pinchMove = new Vec3(0, 0, pinch[0]).mulScalar(this._zoomMult * this.zoomPinchSens);
         v.add(pinchMove.mulScalar(orbit));
@@ -884,9 +893,9 @@ class CameraControls extends Script {
         }
 
         // update controller by consuming frame
-        const pose = this._controller.update(frame, dt);
-        this._camera.entity.setPosition(pose.position);
-        this._camera.entity.setEulerAngles(pose.angles);
+        this._pose.copy(this._controller.update(frame, dt));
+        this._camera.entity.setPosition(this._pose.position);
+        this._camera.entity.setEulerAngles(this._pose.angles);
     }
 }
 
