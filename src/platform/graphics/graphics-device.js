@@ -733,9 +733,9 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Retrieves the slot in internal {@link StorageBuffer}, which is used for indirect rendering.
-     * This slot can be used in by a {@link Compute} to generate indirect draw parameters, and by
-     * setting up indirect drawing by using {@link MeshInstance#setIndirect}.
+     * Retrieves the available slot in the {@link indirectDrawBuffer} used for indirect rendering,
+     * which can be utilized by a {@link Compute} shader to generate indirect draw parameters and by
+     * {@link MeshInstance#setIndirect} to configure indirect draw calls.
      *
      * @returns {number} - The slot used for indirect rendering.
      */
