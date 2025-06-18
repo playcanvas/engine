@@ -4,8 +4,7 @@ import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
     BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
     PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8, DISPLAYFORMAT_HDR,
-    PIXELFORMAT_RGBA16F,
-    UNUSED_UNIFORM_NAME
+    PIXELFORMAT_RGBA16F, UNUSED_UNIFORM_NAME, BUFFERUSAGE_INDIRECT
 } from '../constants.js';
 import { BindGroupFormat } from '../bind-group-format.js';
 import { BindGroup } from '../bind-group.js';
@@ -31,14 +30,16 @@ import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
+import { StorageBuffer } from '../storage-buffer.js';
 
 /**
- * @import { BindGroup } from '../bind-group.js'
  * @import { RenderPass } from '../render-pass.js'
- * @import { WebgpuBuffer } from './webgpu-buffer.js'
  */
 
 const _uniqueLocations = new Map();
+
+// size of indirect draw entry in bytes, 5 x 32bit
+const _indirectEntryByteSize = 5 * 4;
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -50,6 +51,30 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * Object responsible for caching and creation of compute pipelines.
      */
     computePipeline = new WebgpuComputePipeline(this);
+
+    /**
+     * Buffer used to store arguments for indirect draw calls.
+     *
+     * @type {StorageBuffer|null}
+     * @private
+     */
+    _indirectDrawBuffer = null;
+
+    /**
+     * Number of indirect draw slots allocated.
+     *
+     * @type {number}
+     * @private
+     */
+    indirectDrawBufferCount = 0;
+
+    /**
+     * Next unused index in indirectDrawBuffer.
+     *
+     * @type {number}
+     * @private
+     */
+    indirectDrawNextIndex = 0;
 
     /**
      * Object responsible for clearing the rendering surface by rendering a quad.
@@ -452,6 +477,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (!this.contextLost) {
             this.gpuProfiler.request();
         }
+
+        this.indirectDrawNextIndex = 0;
     }
 
     createBufferImpl(usageFlags) {
@@ -492,6 +519,38 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     createComputeImpl(compute) {
         return new WebgpuCompute(compute);
+    }
+
+    get indirectDrawBuffer() {
+        this.allocateIndirectDrawBuffer();
+        return this._indirectDrawBuffer;
+    }
+
+    allocateIndirectDrawBuffer() {
+
+        // handle reallocation
+        if (this.indirectDrawNextIndex === 0 && this.indirectDrawBufferCount < this.maxIndirectDrawCount) {
+            this._indirectDrawBuffer?.destroy();
+            this._indirectDrawBuffer = null;
+        }
+
+        // allocate buffer
+        if (this._indirectDrawBuffer === null) {
+            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * 4, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this.indirectDrawBufferCount = this.maxIndirectDrawCount;
+        }
+    }
+
+    getIndirectDrawSlot() {
+
+        // make sure the buffer is allocated
+        this.allocateIndirectDrawBuffer();
+
+        // allocate slot
+        const slot = this.indirectDrawNextIndex;
+        Debug.assert(slot < this.maxIndirectDrawCount, `Insufficient indirect draw slots per frame (currently ${this.indirectDrawNextIndex}), please adjust GraphicsDevice#maxIndirectDrawCount`);
+        this.indirectDrawNextIndex++;
+        return slot;
     }
 
     /**
@@ -553,7 +612,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         _uniqueLocations.clear();
     }
 
-    draw(primitive, indexBuffer, numInstances = 1, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances = 1, indirectSlot, first = true, last = true) {
 
         if (this.shader.ready && !this.shader.failed) {
 
@@ -592,12 +651,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 }
             }
 
-            // draw
             if (indexBuffer) {
                 passEncoder.setIndexBuffer(indexBuffer.impl.buffer, indexBuffer.impl.format);
-                passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex ?? 0, 0);
+            }
+
+            // draw
+            if (indirectSlot !== undefined) {
+                const indirectOffset = indirectSlot * _indirectEntryByteSize;
+                const indirectBuffer = this.indirectDrawBuffer.impl.buffer;
+                if (indexBuffer) {
+                    passEncoder.drawIndexedIndirect(indirectBuffer, indirectOffset);
+                } else {
+                    passEncoder.drawIndirect(indirectBuffer, indirectOffset);
+                }
             } else {
-                passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
+                if (indexBuffer) {
+                    passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex ?? 0, 0);
+                } else {
+                    passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
+                }
             }
 
             WebgpuDebug.end(this, 'Drawing', {

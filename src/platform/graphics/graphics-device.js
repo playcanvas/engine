@@ -126,6 +126,15 @@ class GraphicsDevice extends EventHandler {
     scope;
 
     /**
+     * The maximum number of indirect draw calls that can be used within a single frame. Used on
+     * WebGPU only. This needs to be adjusted based on the maximum number of draw calls that can
+     * be used within a single frame. Defaults to 1024.
+     *
+     * @type {number}
+     */
+    maxIndirectDrawCount = 1024;
+
+    /**
      * The maximum supported texture anisotropy setting.
      *
      * @type {number}
@@ -412,6 +421,14 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     capsDefines = new Map();
+
+    /**
+     * A set of maps to clear at the end of the frame. Used internally.
+     *
+     * @type {Set<Map>}
+     * @ignore
+     */
+    mapsToClear = new Set();
 
     static EVENT_RESIZE = 'resizecanvas';
 
@@ -715,6 +732,31 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Retrieves the slot in internal {@link StorageBuffer}, which is used for indirect rendering.
+     * This slot can be used in by a {@link Compute} to generate indirect draw parameters, and by
+     * setting up indirect drawing by using {@link MeshInstance#setIndirect}.
+     *
+     * @returns {number} - The slot used for indirect rendering.
+     */
+    getIndirectDrawSlot() {
+        return 0;
+    }
+
+    /**
+     * Returns the buffer used to store arguments for indirect draw calls. The size of the buffer is
+     * controlled by the {@link GraphicsDevice#maxIndirectDrawCount} property. This buffer can be
+     * passed to {@link Compute} shader along with a slot obtained by calling
+     * {@link GraphicsDevice#getIndirectDrawSlot}, in order to prepare indirect draw parameters.
+     * Also see {@link MeshInstance#setIndirect}.
+     * Only available on WebGPU, returns null on other platforms.
+     *
+     * @type {StorageBuffer|null}
+     */
+    get indirectDrawBuffer() {
+        return null;
+    }
+
+    /**
      * Queries the currently set render target on the device.
      *
      * @returns {RenderTarget} The current render target.
@@ -776,6 +818,7 @@ class GraphicsDevice extends EventHandler {
      * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
      * @param {number} [numInstances] - The number of instances to render when using instancing.
      * Defaults to 1.
+     * @param {number} [indirectSlot] - The slot of the indirect buffer to use for the draw call.
      * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
      * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
@@ -791,7 +834,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @ignore
      */
-    draw(primitive, indexBuffer, numInstances, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
         Debug.assert(false);
     }
 
@@ -981,6 +1024,9 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
+        // clear all maps scheduled for end of frame clearing
+        this.mapsToClear.forEach(map => map.clear());
+        this.mapsToClear.clear();
     }
 
     /**
