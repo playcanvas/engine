@@ -2,6 +2,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Quat } from '../../../core/math/quat.js';
 import { InputController } from '../input.js';
 import { Pose } from '../pose.js';
+import { damp } from '../math.js';
 
 /** @import { InputFrame } from '../input.js'; */
 
@@ -13,15 +14,6 @@ const right = new Vec3();
 const up = new Vec3();
 
 const rotation = new Quat();
-
-/**
- * Calculate the damp rate.
- *
- * @param {number} damping - The damping.
- * @param {number} dt - The delta time.
- * @returns {number} - The lerp rate.
- */
-const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 /**
  * The fly controller.

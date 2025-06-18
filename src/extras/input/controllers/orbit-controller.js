@@ -1,6 +1,7 @@
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { InputController } from '../input.js';
+import { damp } from '../math.js';
 import { Pose } from '../pose.js';
 
 /** @import { InputFrame } from '../input.js'; */
@@ -10,23 +11,6 @@ const position = new Vec3();
 const angles = new Vec3();
 
 const rotation = new Quat();
-
-/**
- * Calculate the damp rate.
- *
- * @param {number} damping - The damping.
- * @param {number} dt - The delta time.
- * @returns {number} - The lerp rate.
- */
-const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
-
-/**
- * Calculate the magnitude of an array.
- *
- * @param {number[]} array - The array of numbers.
- * @returns {number} - The magnitude of the array.
- */
-const magnitude = array => array.reduce((sum, value) => sum + value * value, 0);
 
 /**
  * Check if two poses are almost equal.
