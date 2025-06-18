@@ -64,6 +64,20 @@ class InputDelta {
     }
 
     /**
+     * The magnitude of the delta, calculated as the square root of the sum of squares
+     * of the values.
+     *
+     * @returns {number} - The magnitude of the delta.
+     */
+    length() {
+        let sum = 0;
+        for (const value of this._value) {
+            sum += value * value;
+        }
+        return Math.sqrt(sum);
+    }
+
+    /**
      * Returns the current value of the delta and resets it to zero.
      *
      * @returns {number[]} - The current value of the delta.

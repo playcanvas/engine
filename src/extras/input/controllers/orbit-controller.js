@@ -169,14 +169,16 @@ class OrbitController extends InputController {
      * @returns {Pose} - The controller pose.
      */
     update(frame, dt) {
-        const { move, rotate } = frame.read();
-
-        // check focus interrupt
+        // check focus end
         if (this._focusing) {
-            if (magnitude(move) + magnitude(rotate) > 0) {
+            const focusInterrupt = frame.deltas.move.length() + frame.deltas.rotate.length() > 0;
+            const focusComplete = almostEqualPose(this._rootPose, this._targetRootPose) && almostEqualPose(this._childPose, this._targetChildPose);
+            if (focusInterrupt || focusComplete) {
                 this.detach();
             }
         }
+
+        const { move, rotate } = frame.read();
 
         // move
         position.set(move[0], move[1], 0);
@@ -202,14 +204,6 @@ class OrbitController extends InputController {
             1,
             1
         );
-
-        // check focus ended
-        if (this._focusing) {
-            if (almostEqualPose(this._rootPose, this._targetRootPose) &&
-                almostEqualPose(this._childPose, this._targetChildPose)) {
-                this._focusing = false;
-            }
-        }
 
         // calculate final pose
         rotation.setFromEulerAngles(this._rootPose.angles)
