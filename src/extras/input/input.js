@@ -178,6 +178,8 @@ class InputConsumer {
      * @returns {any} - The controller pose.
      */
     update(frame, dt) {
+        // discard frame by default
+        frame.read();
     }
 }
 
@@ -211,6 +213,8 @@ class InputController extends InputConsumer {
      * @override
      */
     update(frame, dt) {
+        super.update(frame, dt);
+
         return this._pose;
     }
 
