@@ -218,13 +218,6 @@ class CameraControls extends Script {
     _pose = new Pose();
 
     /**
-     * @type  {'orbit' | 'fly' | 'focus'}
-     * @private
-     */
-    // @ts-ignore
-    _prevMode;
-
-    /**
      * @type {'orbit' | 'fly' | 'focus'}
      * @private
      */
@@ -651,7 +644,6 @@ class CameraControls extends Script {
         if (this._mode === mode) {
             return;
         }
-        this._prevMode = this._mode;
         this._mode = mode;
 
         // detach old controller
@@ -833,7 +825,7 @@ class CameraControls extends Script {
             const focusInterrupt = deltas.move.length() + deltas.rotate.length() > 0;
             const focusComplete = this._focusController.complete();
             if (focusInterrupt || focusComplete) {
-                this._setMode(this._prevMode);
+                this._setMode('orbit');
             }
         }
 
