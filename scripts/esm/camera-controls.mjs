@@ -750,62 +750,66 @@ class CameraControls extends Script {
         const fly = +(this._mode === 'fly');
         const pan = +(this.enablePan &&
             ((orbit && this._state.shift) || this._state.mouse[1] || this._state.touches > 1));
+        const mobileJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
+
+        // multipliers
         const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
-            this.moveSlowSpeed : this.moveSpeed) * this.sceneSize;
+            this.moveSlowSpeed : this.moveSpeed) * this.sceneSize * dt;
         const zoomMult = math.clamp(
             this._pose.distance / (ZOOM_SCALE_MULT * this.sceneSize),
             this.zoomScaleMin,
             1
-        ) * this.zoomSpeed * this.sceneSize;
+        ) * this.zoomSpeed * this.sceneSize * 60 * dt;
+        const zoomTouchMult = zoomMult * this.zoomPinchSens;
+        const rotateMult = this.rotateSpeed * 60 * dt;
+        const rotateJoystickMult = this.rotateSpeed * this.rotateJoystickSens * 60 * dt;
 
         const { deltas } = frame;
 
         // desktop move
         const v = tmpV1.set(0, 0, 0);
-        const keyMove = this._state.axis.clone().normalize().mulScalar(moveMult);
-        v.add(keyMove.mulScalar(fly * (1 - pan)));
+        const keyMove = this._state.axis.clone().normalize();
+        v.add(keyMove.mulScalar(fly * (1 - pan) * moveMult));
         const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._pose.distance);
         v.add(panMove.mulScalar(orbit * pan));
-        const wheelMove = new Vec3(0, 0, wheel[0]).mulScalar(zoomMult);
-        v.add(wheelMove.mulScalar(orbit));
+        const wheelMove = new Vec3(0, 0, wheel[0]);
+        v.add(wheelMove.mulScalar(orbit * zoomMult));
         deltas.move.append([v.x, v.y, v.z]);
 
         // desktop rotate
         v.set(0, 0, 0);
-        const mouseRotate = new Vec3(mouse[0], mouse[1], 0).mulScalar(this.rotateSpeed);
-        v.add(mouseRotate.mulScalar(1 - pan));
+        const mouseRotate = new Vec3(mouse[0], mouse[1], 0);
+        v.add(mouseRotate.mulScalar((1 - pan) * rotateMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // mobile move
         v.set(0, 0, 0);
-        const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]).mulScalar(moveMult);
-        v.add(flyMove.mulScalar(fly * (1 - pan)));
+        const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]);
+        v.add(flyMove.mulScalar(fly * (1 - pan) * moveMult));
         const orbitMove = screenToWorld(this._camera, touch[0], touch[1], this._pose.distance);
         v.add(orbitMove.mulScalar(orbit * pan));
-        const pinchMove = new Vec3(0, 0, pinch[0]).mulScalar(zoomMult * this.zoomPinchSens);
-        v.add(pinchMove.mulScalar(orbit));
+        const pinchMove = new Vec3(0, 0, pinch[0]);
+        v.add(pinchMove.mulScalar(orbit * zoomTouchMult));
         deltas.move.append([v.x, v.y, v.z]);
 
         // mobile rotate
         v.set(0, 0, 0);
-        const orbitRotate = new Vec3(touch[0], touch[1], 0).mulScalar(this.rotateSpeed);
-        v.add(orbitRotate.mulScalar(orbit * (1 - pan)));
-        const flyRotate = new Vec3(rightInput[0], rightInput[1], 0).mulScalar(this.rotateSpeed +
-            +(this._flyMobileInput.layout.endsWith('joystick')) * this.rotateJoystickSens);
-        v.add(flyRotate.mulScalar(fly * (1 - pan)));
+        const orbitRotate = new Vec3(touch[0], touch[1], 0);
+        v.add(orbitRotate.mulScalar(orbit * (1 - pan) * rotateMult));
+        const flyRotate = new Vec3(rightInput[0], rightInput[1], 0);
+        v.add(flyRotate.mulScalar(fly * (1 - pan) * (mobileJoystick ? rotateJoystickMult : rotateMult)));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // gamepad move
         v.set(0, 0, 0);
-        const stickMove = new Vec3(leftStick[0], 0, -leftStick[1]).mulScalar(moveMult);
-        v.add(stickMove.mulScalar(fly * (1 - pan)));
+        const stickMove = new Vec3(leftStick[0], 0, -leftStick[1]);
+        v.add(stickMove.mulScalar(fly * (1 - pan) * moveMult));
         deltas.move.append([v.x, v.y, v.z]);
 
         // gamepad rotate
         v.set(0, 0, 0);
-        const stickRotate = new Vec3(rightStick[0], rightStick[1], 0).mulScalar(this.rotateSpeed *
-            this.rotateJoystickSens);
-        v.add(stickRotate.mulScalar(fly * (1 - pan)));
+        const stickRotate = new Vec3(rightStick[0], rightStick[1], 0);
+        v.add(stickRotate.mulScalar(fly * (1 - pan) * rotateJoystickMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // check for skip update, just read frame to clear it

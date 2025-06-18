@@ -98,7 +98,6 @@ class FlyController extends InputController {
         offset.add(forward.mulScalar(move[2]));
         offset.add(right.mulScalar(move[0]));
         offset.add(up.mulScalar(move[1]));
-        offset.mulScalar(dt);
         this._targetPose.move(offset);
 
         // smoothing
