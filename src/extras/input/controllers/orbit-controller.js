@@ -6,25 +6,13 @@ import { Pose } from '../pose.js';
 
 /** @import { InputFrame } from '../input.js'; */
 
+const EPSILON = 0.001;
+
 const dir = new Vec3();
 const position = new Vec3();
 const angles = new Vec3();
 
 const rotation = new Quat();
-
-/**
- * Check if two poses are almost equal.
- *
- * @param {Pose} pose1 - The first pose.
- * @param {Pose} pose2 - The second pose.
- * @param {number} [epsilon] - The threshold for equality.
- * @returns {boolean} - True if the poses are almost equal, false otherwise.
- */
-const almostEqualPose = (pose1, pose2, epsilon = 0.001) => {
-    return pose1.position.distance(pose2.position) < epsilon &&
-        pose1.angles.distance(pose2.angles) < epsilon &&
-        Math.abs(pose1.distance - pose2.distance) < epsilon;
-};
 
 /**
  * The orbit controller.
@@ -156,7 +144,7 @@ class OrbitController extends InputController {
         // check focus end
         if (this._focusing) {
             const focusInterrupt = frame.deltas.move.length() + frame.deltas.rotate.length() > 0;
-            const focusComplete = almostEqualPose(this._rootPose, this._targetRootPose) && almostEqualPose(this._childPose, this._targetChildPose);
+            const focusComplete = this._rootPose.equalsApprox(this._targetRootPose, EPSILON) && this._childPose.equalsApprox(this._targetChildPose, EPSILON);
             if (focusInterrupt || focusComplete) {
                 this.detach();
             }
