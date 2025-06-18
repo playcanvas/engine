@@ -31,6 +31,7 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
+ * @import { StorageBuffer } from './storage-buffer.js';
  */
 
 const _tempSet = new Set();
