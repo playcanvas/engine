@@ -70,11 +70,13 @@ assetListLoader.load(() => {
     camera.setLocalPosition(-3, 1, 2);
 
     // instantiate guitar with a custom shader
-    const guitar = assets.guitar.resource.instantiate({
-        vertex: files['shader.vert']
+    const guitar = new pc.Entity('guitar');
+    guitar.addComponent('gsplat', {
+        asset: assets.guitar
     });
-    guitar.name = 'guitar';
+    guitar.gsplat.material.getShaderChunks('glsl').set('gsplatVS', files['shader.vert']);
     guitar.setLocalPosition(0, 0.8, 0);
+    guitar.setLocalEulerAngles(0, 0, 180);
     guitar.setLocalScale(0.4, 0.4, 0.4);
     app.root.addChild(guitar);
 
@@ -118,25 +120,35 @@ assetListLoader.load(() => {
     data.on('shader:set', () => {
         // Apply custom or default material options to the splats when the button is clicked. Note
         // that this uses non-public API, which is subject to change when a proper API is added.
-        const materialOptions = {
-            fragment: files['shader.frag'],
-            vertex: files['shader.vert']
-        };
-        biker1.gsplat.materialOptions = useCustomShader ? materialOptions : null;
-        biker2.gsplat.materialOptions = useCustomShader ? materialOptions : null;
+        const vs = files['shader.vert'];
 
-        // biker 2 uses a different shader variant
-        biker2.gsplat.material.setDefine('CUTOUT', true);
+        const mat1 = biker1.gsplat.material;
+        if (useCustomShader) {
+            mat1.getShaderChunks('glsl').set('gsplatVS', vs);
+        } else {
+            mat1.getShaderChunks('glsl').delete('gsplatVS');
+        }
+        mat1.update();
+
+        const mat2 = biker2.gsplat.material;
+        if (useCustomShader) {
+            mat2.getShaderChunks('glsl').set('gsplatVS', vs);
+        } else {
+            mat2.getShaderChunks('glsl').delete('gsplatVS');
+        }
+        mat2.setDefine('CUTOUT', true);
+        mat2.update();
 
         useCustomShader = !useCustomShader;
     });
+
+    const uTime = app.graphicsDevice.scope.resolve('uTime');
 
     let currentTime = 0;
     app.on('update', (dt) => {
         currentTime += dt;
 
-        const material = guitar.gsplat?.material;
-        material?.setParameter('uTime', currentTime);
+        uTime.setValue(currentTime);
 
         biker2.rotate(0, 80 * dt, 0);
     });

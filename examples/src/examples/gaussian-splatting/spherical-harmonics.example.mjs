@@ -47,13 +47,7 @@ app.on('destroy', () => {
 
 const assets = {
     skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.ply` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    hdri_street: new pc.Asset(
-        'hdri',
-        'texture',
-        { url: `${rootPath}/static/assets/hdri/st-peters-square.hdr` },
-        { mipmaps: false }
-    )
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

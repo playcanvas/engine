@@ -11,6 +11,10 @@ import { QuadRender } from '../graphics/quad-render.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
+/**
+ * @import { EventHandle } from '../../core/event-handle.js';
+ */
+
 const _viewport = new Vec4();
 
 // for rendering of cookies, store inverse view projection matrices for 6 faces, allowing cubemap faces to be copied into the atlas
@@ -30,6 +34,16 @@ class RenderPassCookieRenderer extends RenderPass {
 
     _filteredLights = [];
 
+    _forceCopy = false;
+
+    /**
+     * Event handle for device restored event.
+     *
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtDeviceRestored = null;
+
     constructor(device, cubeSlotsOffsets) {
         super(device);
         this._cubeSlotsOffsets = cubeSlotsOffsets;
@@ -38,6 +52,8 @@ class RenderPassCookieRenderer extends RenderPass {
 
         this.blitTextureId = device.scope.resolve('blitTexture');
         this.invViewProjId = device.scope.resolve('invViewProj');
+
+        this._evtDeviceRestored = device.on('devicerestored', this.onDeviceRestored, this);
     }
 
     destroy() {
@@ -46,6 +62,9 @@ class RenderPassCookieRenderer extends RenderPass {
 
         this._quadRendererCube?.destroy();
         this._quadRendererCube = null;
+
+        this._evtDeviceRestored?.off();
+        this._evtDeviceRestored = null;
     }
 
     static create(renderTarget, cubeSlotsOffsets) {
@@ -59,6 +78,10 @@ class RenderPassCookieRenderer extends RenderPass {
         renderPass.depthStencilOps.clearDepth = false;
 
         return renderPass;
+    }
+
+    onDeviceRestored() {
+        this._forceCopy = true;
     }
 
     update(lights) {
@@ -87,7 +110,7 @@ class RenderPassCookieRenderer extends RenderPass {
             }
 
             // only render cookie when the slot is reassigned (assuming the cookie texture is static)
-            if (!light.atlasSlotUpdated) {
+            if (!light.atlasSlotUpdated && !this._forceCopy) {
                 continue;
             }
 
@@ -95,6 +118,8 @@ class RenderPassCookieRenderer extends RenderPass {
                 filteredLights.push(light);
             }
         }
+
+        this._forceCopy = false;
     }
 
     initInvViewProjMatrices() {

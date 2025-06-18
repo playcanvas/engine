@@ -8,35 +8,11 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { CULLFACE_NONE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
-import { createShaderFromCode } from '../shader-lib/shader-utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import glslGsplatSogsReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplat-sogs-reorder.js';
+import wgslGsplatSogsReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplat-sogs-reorder.js';
 
 const SH_C0 = 0.28209479177387814;
-
-const reorderVS = /* glsl */`
-    attribute vec2 vertex_position;
-    void main(void) {
-        gl_Position = vec4(vertex_position, 0.0, 1.0);
-    }
-`;
-
-const reorderFS = /* glsl */`
-    uniform usampler2D orderTexture;
-    uniform sampler2D sourceTexture;
-    uniform highp uint numSplats;
-
-    void main(void) {
-        uint w = uint(textureSize(sourceTexture, 0).x);
-        uint idx = uint(gl_FragCoord.x) + uint(gl_FragCoord.y) * w;
-        if (idx >= numSplats) discard;
-
-        // fetch the source index and calculate source uv
-        uint sidx = texelFetch(orderTexture, ivec2(gl_FragCoord.xy), 0).x;
-        uvec2 suv = uvec2(sidx % w, sidx / w);
-
-        // sample the source texture
-        gl_FragColor = texelFetch(sourceTexture, ivec2(suv), 0);
-    }
-`;
 
 const readImageDataAsync = (texture) => {
     return texture.read(0, 0, texture.width, texture.height, {
@@ -333,11 +309,15 @@ class GSplatSogsData {
         const { device, height, width } = orderTexture;
         const { scope } = device;
 
-        const shader = createShaderFromCode(device, reorderVS, reorderFS, 'reorderShader', {
-            vertex_position: SEMANTIC_POSITION
+        const shader = ShaderUtils.createShader(device, {
+            uniqueName: 'GsplatSogsReorderShader',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentGLSL: glslGsplatSogsReorderPS,
+            fragmentWGSL: wgslGsplatSogsReorderPS
         });
 
-        let targetTexture = new Texture(device, {
+        const sourceTexture = new Texture(device, {
             width: width,
             height: height,
             format: PIXELFORMAT_RGBA8,
@@ -351,10 +331,10 @@ class GSplatSogsData {
         device.setDepthState(DepthState.NODEPTH);
 
         members.forEach((member) => {
-            const sourceTexture = this[member];
+            const targetTexture = this[member];
 
             // spherical harmonics labels are missing when no SH data is present
-            if (!sourceTexture) {
+            if (!targetTexture) {
                 return;
             }
 
@@ -364,6 +344,10 @@ class GSplatSogsData {
                 mipLevel: 0
             });
 
+            // patch source texture with data from target
+            sourceTexture._levels[0] = targetTexture._levels[0];
+            sourceTexture.upload();
+
             resolve(scope, {
                 orderTexture,
                 sourceTexture,
@@ -372,17 +356,10 @@ class GSplatSogsData {
 
             drawQuadWithShader(device, renderTarget, shader);
 
-            this[member] = targetTexture;
-            targetTexture.name = sourceTexture.name;
-            targetTexture._levels = sourceTexture._levels;
-            sourceTexture._levels = [];
-            targetTexture = sourceTexture;
-
             renderTarget.destroy();
         });
 
-        targetTexture.destroy();
-        shader.destroy();
+        sourceTexture.destroy();
     }
 
     // construct an array containing the Morton order of the splats
