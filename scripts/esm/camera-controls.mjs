@@ -444,14 +444,9 @@ class CameraControls extends Script {
      * @type {Vec3}
      */
     set focusPoint(point) {
-        this._setMode('orbit');
-
-        if (this._controller instanceof OrbitController) {
-            const position = this._camera.entity.getPosition();
-            this._startZoomDist = position.distance(point);
-            this._controller.attach(pose.look(position, point), false);
-            this.update(0);
-        }
+        const position = this._camera.entity.getPosition();
+        this._startZoomDist = position.distance(point);
+        this._controller.attach(pose.look(position, point), false);
     }
 
     get focusPoint() {
