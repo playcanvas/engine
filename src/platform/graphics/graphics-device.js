@@ -745,10 +745,10 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Returns the buffer used to store arguments for indirect draw calls. The size of the buffer is
-     * controlled by the {@link GraphicsDevice#maxIndirectDrawCount} property. This buffer can be
-     * passed to a {@link Compute} shader along with a slot obtained by calling
-     * {@link GraphicsDevice#getIndirectDrawSlot}, in order to prepare indirect draw parameters.
-     * Also see {@link MeshInstance#setIndirect}.
+     * controlled by the {@link maxIndirectDrawCount} property. This buffer can be passed to a
+     * {@link Compute} shader along with a slot obtained by calling {@link getIndirectDrawSlot}, in
+     * order to prepare indirect draw parameters. Also see {@link MeshInstance#setIndirect}.
+     *
      * Only available on WebGPU, returns null on other platforms.
      *
      * @type {StorageBuffer|null}
