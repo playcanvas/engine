@@ -370,6 +370,14 @@ class CameraControls extends Script {
         this._exposeJoystickEvents(this._flyMobileInput.leftJoystick, 'left');
         this._exposeJoystickEvents(this._flyMobileInput.rightJoystick, 'right');
 
+        // pose
+        const position = this._camera.entity.getPosition();
+        const focus = this._camera.entity.getRotation()
+        .transformVector(Vec3.FORWARD, tmpV1)
+        .mulScalar(this._pose.distance)
+        .add(position);
+        this._pose.look(position, focus);
+
         // mode
         this._setMode(CameraControls.MODE_ORBIT);
 
@@ -649,16 +657,9 @@ class CameraControls extends Script {
             this._controller.detach();
         }
 
-        // calculate new pose and focus
-        const position = this._camera.entity.getPosition();
-        const focus = this._camera.entity.getRotation()
-        .transformVector(Vec3.FORWARD, tmpV1)
-        .mulScalar(this._pose.distance)
-        .add(position);
-
         // attach new controller
         this._controller = this._mode === CameraControls.MODE_ORBIT ? this._orbitController : this._flyController;
-        this._controller.attach(pose.look(position, focus), false);
+        this._controller.attach(this._pose, false);
     }
 
     /**
