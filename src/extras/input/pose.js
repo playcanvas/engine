@@ -99,14 +99,16 @@ class Pose {
      * @param {Pose} lhs - The left-hand side pose.
      * @param {Pose} rhs - The right-hand side pose.
      * @param {number} alpha1 - The alpha value for position interpolation.
-     * @param {number} alpha2 - The alpha value for angles interpolation.
+     * @param {number} [alpha2] - The alpha value for angles interpolation.
+     * @param {number} [alpha3] - The alpha value for distance interpolation.
      * @returns {Pose} The updated Pose instance.
      */
-    lerp(lhs, rhs, alpha1, alpha2) {
+    lerp(lhs, rhs, alpha1, alpha2 = alpha1, alpha3 = alpha1) {
         this.position.lerp(lhs.position, rhs.position, alpha1);
         this.angles.x = math.lerpAngle(lhs.angles.x, rhs.angles.x, alpha2) % 360;
         this.angles.y = math.lerpAngle(lhs.angles.y, rhs.angles.y, alpha2) % 360;
         this.angles.z = math.lerpAngle(lhs.angles.z, rhs.angles.z, alpha2) % 360;
+        this.distance = math.lerp(lhs.distance, rhs.distance, alpha3);
         return this;
     }
 

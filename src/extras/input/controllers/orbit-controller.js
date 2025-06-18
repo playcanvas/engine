@@ -192,12 +192,14 @@ class OrbitController extends InputController {
             this._rootPose,
             this._targetRootPose,
             damp(this._focusing ? this.focusDamping : this.moveDamping, dt),
-            damp(this._focusing ? this.focusDamping : this.rotateDamping, dt)
+            damp(this._focusing ? this.focusDamping : this.rotateDamping, dt),
+            1
         );
         this._childPose.lerp(
             this._childPose,
             this._targetChildPose,
             damp(this._focusing ? this.focusDamping : this.zoomDamping, dt),
+            1,
             1
         );
 
