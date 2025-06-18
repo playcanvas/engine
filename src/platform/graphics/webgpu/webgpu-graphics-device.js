@@ -74,7 +74,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @type {number}
      * @private
      */
-    indirectDrawNextIndex = 0;
+    _indirectDrawNextIndex = 0;
 
     /**
      * Object responsible for clearing the rendering surface by rendering a quad.
@@ -478,7 +478,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             this.gpuProfiler.request();
         }
 
-        this.indirectDrawNextIndex = 0;
+        this._indirectDrawNextIndex = 0;
     }
 
     createBufferImpl(usageFlags) {
@@ -529,7 +529,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     allocateIndirectDrawBuffer() {
 
         // handle reallocation
-        if (this.indirectDrawNextIndex === 0 && this._indirectDrawBufferCount < this.maxIndirectDrawCount) {
+        if (this._indirectDrawNextIndex === 0 && this._indirectDrawBufferCount < this.maxIndirectDrawCount) {
             this._indirectDrawBuffer?.destroy();
             this._indirectDrawBuffer = null;
         }
@@ -547,9 +547,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.allocateIndirectDrawBuffer();
 
         // allocate slot
-        const slot = this.indirectDrawNextIndex;
-        Debug.assert(slot < this.maxIndirectDrawCount, `Insufficient indirect draw slots per frame (currently ${this.indirectDrawNextIndex}), please adjust GraphicsDevice#maxIndirectDrawCount`);
-        this.indirectDrawNextIndex++;
+        const slot = this._indirectDrawNextIndex;
+        Debug.assert(slot < this.maxIndirectDrawCount, `Insufficient indirect draw slots per frame (currently ${this._indirectDrawNextIndex}), please adjust GraphicsDevice#maxIndirectDrawCount`);
+        this._indirectDrawNextIndex++;
         return slot;
     }
 
