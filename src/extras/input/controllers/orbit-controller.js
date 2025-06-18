@@ -6,8 +6,6 @@ import { Pose } from '../pose.js';
 
 /** @import { InputFrame } from '../input.js'; */
 
-const EPSILON = 0.001;
-
 const dir = new Vec3();
 const position = new Vec3();
 const angles = new Vec3();
@@ -21,12 +19,6 @@ const rotation = new Quat();
  * @alpha
  */
 class OrbitController extends InputController {
-    /**
-     * @type {boolean}
-     * @private
-     */
-    _focusing = false;
-
     /**
      * @type {Pose}
      * @private
@@ -50,14 +42,6 @@ class OrbitController extends InputController {
      * @private
      */
     _childPose = new Pose();
-
-    /**
-     * The focus damping. In the range 0 to 1, where a value of 0 means no damping and 1 means
-     * full damping. Default is 0.98.
-     *
-     * @type {number}
-     */
-    focusDamping = 0.98;
 
     /**
      * The rotation damping. In the range 0 to 1, where a value of 0 means no damping and 1 means
@@ -117,9 +101,7 @@ class OrbitController extends InputController {
         this._targetRootPose.set(pose.getFocus(dir), pose.angles, 0);
         this._targetChildPose.position.set(0, 0, pose.distance);
 
-        if (smooth) {
-            this._focusing = true;
-        } else {
+        if (!smooth) {
             this._rootPose.copy(this._targetRootPose);
             this._childPose.copy(this._targetChildPose);
         }
@@ -128,7 +110,6 @@ class OrbitController extends InputController {
     detach() {
         this._targetRootPose.copy(this._rootPose);
         this._targetChildPose.copy(this._childPose);
-        this._focusing = false;
     }
 
     /**
@@ -137,15 +118,6 @@ class OrbitController extends InputController {
      * @returns {Pose} - The controller pose.
      */
     update(frame, dt) {
-        // check focus end
-        if (this._focusing) {
-            const focusInterrupt = frame.deltas.move.length() + frame.deltas.rotate.length() > 0;
-            const focusComplete = this._rootPose.equalsApprox(this._targetRootPose, EPSILON) && this._childPose.equalsApprox(this._targetChildPose, EPSILON);
-            if (focusInterrupt || focusComplete) {
-                this.detach();
-            }
-        }
-
         const { move, rotate } = frame.read();
 
         // move
@@ -161,14 +133,14 @@ class OrbitController extends InputController {
         this._rootPose.lerp(
             this._rootPose,
             this._targetRootPose,
-            damp(this._focusing ? this.focusDamping : this.moveDamping, dt),
-            damp(this._focusing ? this.focusDamping : this.rotateDamping, dt),
+            damp(this.moveDamping, dt),
+            damp(this.rotateDamping, dt),
             1
         );
         this._childPose.lerp(
             this._childPose,
             this._targetChildPose,
-            damp(this._focusing ? this.focusDamping : this.zoomDamping, dt),
+            damp(this.zoomDamping, dt),
             1,
             1
         );

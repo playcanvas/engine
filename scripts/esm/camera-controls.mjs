@@ -218,14 +218,14 @@ class CameraControls extends Script {
     _pose = new Pose();
 
     /**
-     * @type  {'orbit' | 'fly'}
+     * @type  {'orbit' | 'fly' | 'focus'}
      * @private
      */
     // @ts-ignore
     _prevMode;
 
     /**
-     * @type {'orbit' | 'fly'}
+     * @type {'orbit' | 'fly' | 'focus'}
      * @private
      */
     // @ts-ignore
@@ -242,12 +242,6 @@ class CameraControls extends Script {
         mouse: [0, 0, 0],
         touches: 0
     };
-
-    /**
-     * @type {boolean}
-     * @private
-     */
-    _focusing = false;
 
     /**
      * Whether to skip the update.
@@ -473,11 +467,11 @@ class CameraControls extends Script {
      * @type {number}
      */
     set focusDamping(damping) {
-        this._orbitController.focusDamping = damping;
+        this._focusController.focusDamping = damping;
     }
 
     get focusDamping() {
-        return this._orbitController.focusDamping;
+        return this._focusController.focusDamping;
     }
 
     /**
@@ -638,7 +632,7 @@ class CameraControls extends Script {
     }
 
     /**
-     * @param {'orbit' | 'fly'} mode - The mode to set.
+     * @param {'orbit' | 'fly' | 'focus'} mode - The mode to set.
      * @private
      */
     _setMode(mode) {
@@ -662,6 +656,7 @@ class CameraControls extends Script {
         if (this._mode === mode) {
             return;
         }
+        this._prevMode = this._mode;
         this._mode = mode;
 
         // detach old controller
@@ -670,7 +665,20 @@ class CameraControls extends Script {
         }
 
         // attach new controller
-        this._controller = this._mode === 'orbit' ? this._orbitController : this._flyController;
+        switch (this._mode) {
+            case 'orbit': {
+                this._controller = this._orbitController;
+                break;
+            }
+            case 'fly': {
+                this._controller = this._flyController;
+                break;
+            }
+            case 'focus': {
+                this._controller = this._focusController;
+                break;
+            }
+        }
         this._controller.attach(this._pose, false);
     }
 
@@ -679,16 +687,13 @@ class CameraControls extends Script {
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
     focus(focus, resetZoom = false) {
-        this._setMode('orbit');
-
-        if (this._controller instanceof OrbitController) {
-            const zoomDist = resetZoom ?
-                this._startZoomDist : this._camera.entity.getPosition().distance(focus);
-            const position = tmpV1.copy(this._camera.entity.forward)
-            .mulScalar(-zoomDist)
-            .add(focus);
-            this._controller.attach(pose.look(position, focus));
-        }
+        this._setMode('focus');
+        const zoomDist = resetZoom ?
+            this._startZoomDist : this._camera.entity.getPosition().distance(focus);
+        const position = tmpV1.copy(this._camera.entity.forward)
+        .mulScalar(-zoomDist)
+        .add(focus);
+        this._controller.attach(pose.look(position, focus));
     }
 
     /**
@@ -696,17 +701,14 @@ class CameraControls extends Script {
      * @param {boolean} [resetZoom] - Whether to reset the zoom.
      */
     look(focus, resetZoom = false) {
-        this._setMode('orbit');
-
-        if (this._controller instanceof OrbitController) {
-            const position = resetZoom ?
-                tmpV1.copy(this._camera.entity.getPosition())
-                .sub(focus)
-                .normalize()
-                .mulScalar(this._startZoomDist)
-                .add(focus) : this._camera.entity.getPosition();
-            this._controller.attach(pose.look(position, focus));
-        }
+        this._setMode('focus');
+        const position = resetZoom ?
+            tmpV1.copy(this._camera.entity.getPosition())
+            .sub(focus)
+            .normalize()
+            .mulScalar(this._startZoomDist)
+            .add(focus) : this._camera.entity.getPosition();
+        this._controller.attach(pose.look(position, focus));
     }
 
     /**
@@ -714,14 +716,8 @@ class CameraControls extends Script {
      * @param {Vec3} position - The start point.
      */
     reset(focus, position) {
-        // this._setMode('orbit');
-
-        // if (this._controller instanceof OrbitController) {
-        //     this._controller.attach(pose.look(position, focus));
-        // }
-        this._focusController.attach(this._pose, false);
-        this._focusController.attach(pose.look(position, focus), true);
-        this._focusing = true;
+        this._setMode('focus');
+        this._controller.attach(pose.look(position, focus));
     }
 
     /**
@@ -838,22 +834,16 @@ class CameraControls extends Script {
         }
 
         // check focus end
-        if (this._focusing) {
+        if (this._mode === 'focus') {
             const focusInterrupt = deltas.move.length() + deltas.rotate.length() > 0;
             const focusComplete = this._focusController.complete();
             if (focusInterrupt || focusComplete) {
-                this._focusController.detach();
-                this._controller.attach(this._pose, false);
-                this._focusing = false;
+                this._setMode(this._prevMode);
             }
         }
 
         // update controller by consuming frame
-        if (this._focusing) {
-            this._pose.copy(this._focusController.update(frame, dt));
-        } else {
-            this._pose.copy(this._controller.update(frame, dt));
-        }
+        this._pose.copy(this._controller.update(frame, dt));
         this._camera.entity.setPosition(this._pose.position);
         this._camera.entity.setEulerAngles(this._pose.angles);
     }

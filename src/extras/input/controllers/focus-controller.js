@@ -14,7 +14,7 @@ const position = new Vec3();
 const rotation = new Quat();
 
 /**
- * The orbit controller.
+ * The focus controller.
  *
  * @category Input Controller
  * @alpha
@@ -82,7 +82,7 @@ class FocusController extends InputController {
      * @returns {Pose} - The controller pose.
      */
     update(frame, dt) {
-        // discard frame
+        // discard frame as inputs not used
         frame.read();
 
         // smoothing
