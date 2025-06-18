@@ -2,6 +2,7 @@ import {
     math,
     DualGestureSource,
     FlyController,
+    FocusController,
     GamepadSource,
     InputFrame,
     KeyboardMouseSource,
@@ -36,6 +37,15 @@ const frame = new InputFrame({
 });
 
 const ZOOM_SCALE_MULT = 10;
+
+/**
+ * Calculate the damp rate.
+ *
+ * @param {number} damping - The damping.
+ * @param {number} dt - The delta time.
+ * @returns {number} - The lerp rate.
+ */
+export const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 /**
  * @param {number[]} stick - The stick
@@ -189,6 +199,12 @@ class CameraControls extends Script {
     _orbitController = new OrbitController();
 
     /**
+     * @type {FocusController}
+     * @private
+     */
+    _focusController = new FocusController();
+
+    /**
      * @type {InputController}
      * @private
      */
@@ -200,6 +216,13 @@ class CameraControls extends Script {
      * @private
      */
     _pose = new Pose();
+
+    /**
+     * @type  {'orbit' | 'fly'}
+     * @private
+     */
+    // @ts-ignore
+    _prevMode;
 
     /**
      * @type {'orbit' | 'fly'}
@@ -219,6 +242,12 @@ class CameraControls extends Script {
         mouse: [0, 0, 0],
         touches: 0
     };
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _focusing = false;
 
     /**
      * Whether to skip the update.
@@ -685,11 +714,14 @@ class CameraControls extends Script {
      * @param {Vec3} position - The start point.
      */
     reset(focus, position) {
-        this._setMode('orbit');
+        // this._setMode('orbit');
 
-        if (this._controller instanceof OrbitController) {
-            this._controller.attach(pose.look(position, focus));
-        }
+        // if (this._controller instanceof OrbitController) {
+        //     this._controller.attach(pose.look(position, focus));
+        // }
+        this._focusController.attach(this._pose, false);
+        this._focusController.attach(pose.look(position, focus), true);
+        this._focusing = true;
     }
 
     /**
@@ -805,8 +837,23 @@ class CameraControls extends Script {
             return;
         }
 
+        // check focus end
+        if (this._focusing) {
+            const focusInterrupt = deltas.move.length() + deltas.rotate.length() > 0;
+            const focusComplete = this._focusController.complete();
+            if (focusInterrupt || focusComplete) {
+                this._focusController.detach();
+                this._controller.attach(this._pose, false);
+                this._focusing = false;
+            }
+        }
+
         // update controller by consuming frame
-        this._pose.copy(this._controller.update(frame, dt));
+        if (this._focusing) {
+            this._pose.copy(this._focusController.update(frame, dt));
+        } else {
+            this._pose.copy(this._controller.update(frame, dt));
+        }
         this._camera.entity.setPosition(this._pose.position);
         this._camera.entity.setEulerAngles(this._pose.angles);
     }

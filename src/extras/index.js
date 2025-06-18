@@ -41,6 +41,7 @@ export { GamepadSource } from './input/sources/gamepad-source.js';
 // INPUT CONTROLLERS
 export { FlyController } from './input/controllers/fly-controller.js';
 export { OrbitController } from './input/controllers/orbit-controller.js';
+export { FocusController } from './input/controllers/focus-controller.js';
 
 // GIZMOS
 export {
