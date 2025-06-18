@@ -424,7 +424,7 @@ class GraphicsDevice extends EventHandler {
     capsDefines = new Map();
 
     /**
-     * A set of maps to clear at the end of the frame. Used internally.
+     * A set of maps to clear at the end of the frame.
      *
      * @type {Set<Map>}
      * @ignore
