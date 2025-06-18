@@ -432,12 +432,7 @@ class CameraControls extends Script {
     }
 
     get focusPoint() {
-        this._setMode('orbit');
-
-        if (this._controller instanceof OrbitController) {
-            return this._controller.focus;
-        }
-        return this._camera.entity.getPosition();
+        return this._pose.getFocus(tmpV1);
     }
 
     /**

@@ -82,10 +82,6 @@ class OrbitController extends InputController {
      */
     zoomDamping = 0.98;
 
-    get focus() {
-        return this._rootPose.position;
-    }
-
     set pitchRange(range) {
         this._targetRootPose.pitchRange.copy(range);
         this._rootPose.copy(this._targetRootPose.rotate(Vec3.ZERO));
