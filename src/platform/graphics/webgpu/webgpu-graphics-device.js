@@ -66,7 +66,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @type {number}
      * @private
      */
-    indirectDrawBufferCount = 0;
+    _indirectDrawBufferCount = 0;
 
     /**
      * Next unused index in indirectDrawBuffer.
@@ -529,7 +529,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     allocateIndirectDrawBuffer() {
 
         // handle reallocation
-        if (this.indirectDrawNextIndex === 0 && this.indirectDrawBufferCount < this.maxIndirectDrawCount) {
+        if (this.indirectDrawNextIndex === 0 && this._indirectDrawBufferCount < this.maxIndirectDrawCount) {
             this._indirectDrawBuffer?.destroy();
             this._indirectDrawBuffer = null;
         }
@@ -537,7 +537,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // allocate buffer
         if (this._indirectDrawBuffer === null) {
             this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * 4, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
-            this.indirectDrawBufferCount = this.maxIndirectDrawCount;
+            this._indirectDrawBufferCount = this.maxIndirectDrawCount;
         }
     }
 
