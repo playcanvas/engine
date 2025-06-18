@@ -71,21 +71,6 @@ class Pose {
     }
 
     /**
-     * Sets the position and rotation of the pose.
-     *
-     * @param {Vec3} position - The new position.
-     * @param {Vec3} angles - The new angles in degrees.
-     * @param {number} distance - The new focus distance.
-     * @returns {Pose} The updated Pose instance.
-     */
-    set(position, angles, distance) {
-        this.position.copy(position);
-        this.angles.copy(angles);
-        this.distance = distance;
-        return this;
-    }
-
-    /**
      * Copies the position and rotation from another pose.
      *
      * @param {Pose} other - The pose to copy from.
@@ -93,6 +78,19 @@ class Pose {
      */
     copy(other) {
         return this.set(other.position, other.angles, other.distance);
+    }
+
+    /**
+     * Checks if this pose is approximately equal to another pose within a given epsilon.
+     *
+     * @param {Pose} other - The pose to compare with.
+     * @param {number} [epsilon] - The tolerance for comparison.
+     * @returns {boolean} True if the poses are approximately equal, false otherwise.
+     */
+    equalsApprox(other, epsilon = 1e-6) {
+        return this.position.equalsApprox(other.position, epsilon) &&
+            this.angles.equalsApprox(other.angles, epsilon) &&
+            Math.abs(this.distance - other.distance) < epsilon;
     }
 
     /**
@@ -147,6 +145,21 @@ class Pose {
         this.angles.x = math.clamp(this.angles.x, this.pitchRange.x, this.pitchRange.y);
         this.angles.y = math.clamp(this.angles.y, this.yawRange.x, this.yawRange.y);
 
+        return this;
+    }
+
+    /**
+     * Sets the position and rotation of the pose.
+     *
+     * @param {Vec3} position - The new position.
+     * @param {Vec3} angles - The new angles in degrees.
+     * @param {number} distance - The new focus distance.
+     * @returns {Pose} The updated Pose instance.
+     */
+    set(position, angles, distance) {
+        this.position.copy(position);
+        this.angles.copy(angles);
+        this.distance = distance;
         return this;
     }
 
