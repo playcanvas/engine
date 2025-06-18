@@ -81,6 +81,15 @@ class Pose {
     }
 
     /**
+     * Creates a clone of this pose.
+     *
+     * @returns {Pose} A new Pose instance with the same position, angles, and distance.
+     */
+    clone() {
+        return new Pose(this.position.clone(), this.angles.clone(), this.distance);
+    }
+
+    /**
      * Checks if this pose is approximately equal to another pose within a given epsilon.
      *
      * @param {Pose} other - The pose to compare with.
