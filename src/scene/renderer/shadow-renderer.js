@@ -12,6 +12,8 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 import {
     BLUR_GAUSSIAN,
+    EVENT_POSTCULL,
+    EVENT_PRECULL,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
@@ -163,6 +165,9 @@ class ShadowRenderer {
      */
     cullShadowCasters(comp, light, visible, camera, casters) {
 
+        // event before the camera is culling
+        this.renderer.scene?.fire(EVENT_PRECULL, camera);
+
         visible.length = 0;
 
         // if the casters are supplied, use them
@@ -193,6 +198,9 @@ class ShadowRenderer {
 
         // this sorts the shadow casters by the shader id
         visible.sort(this.sortCompareShader);
+
+        // event after the camera is done with culling
+        this.renderer.scene?.fire(EVENT_POSTCULL, camera);
     }
 
     sortCompareShader(drawCallA, drawCallB) {
