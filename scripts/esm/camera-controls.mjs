@@ -711,6 +711,8 @@ class CameraControls extends Script {
      * @param {number} dt - The time delta.
      */
     update(dt) {
+        const { keycode } = KeyboardMouseSource;
+
         const { key, button, mouse, wheel } = this._desktopInput.read();
         const { touch, pinch, count } = this._orbitMobileInput.read();
         const { leftInput, rightInput } = this._flyMobileInput.read();
@@ -720,31 +722,26 @@ class CameraControls extends Script {
         applyDeadZone(leftStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
         applyDeadZone(rightStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
 
-        // destructure keys
-        const [forward, back, left, right, down, up, /** space */, shift, ctrl] = key;
-
-        // left mouse button, middle mouse button, mouse wheel
-        const switchToOrbit = button[0] === 1 || button[1] === 1 || wheel[0] !== 0;
-
-        // right mouse button or any movement key
-        const switchToFly = button[2] === 1 ||
-            forward === 1 || back === 1 || left === 1 || right === 1 || up === 1 || down === 1;
-
-        // switch mode if required
-        if (switchToOrbit) {
-            this._setMode('orbit');
-        } else if (switchToFly) {
-            this._setMode('fly');
-        }
-
         // update state
-        this._state.axis.add(tmpV1.set(right - left, up - down, forward - back));
+        this._state.axis.add(tmpV1.set(
+            (key[keycode.D] - key[keycode.A]) + (key[keycode.RIGHT] - key[keycode.LEFT]),
+            (key[keycode.E] - key[keycode.Q]),
+            (key[keycode.W] - key[keycode.S]) + (key[keycode.UP] - key[keycode.DOWN])
+        ));
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }
-        this._state.shift += shift;
-        this._state.ctrl += ctrl;
+        this._state.shift += key[keycode.SHIFT];
+        this._state.ctrl += key[keycode.CTRL];
         this._state.touches += count[0];
+
+        if (button[0] === 1 || button[1] === 1 || wheel[0] !== 0) {
+            // left mouse button, middle mouse button, mouse wheel
+            this._setMode('orbit');
+        } else if (button[2] === 1 || this._state.axis.length() > 0) {
+            // right mouse button or any movement
+            this._setMode('fly');
+        }
 
         const orbit = +(this._mode === 'orbit');
         const fly = +(this._mode === 'fly');
