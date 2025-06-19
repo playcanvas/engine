@@ -1960,7 +1960,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
             test();
         });
-    };
+    }
 
     /**
      * Asynchronously reads a block of pixels from a specified rectangle of the current color framebuffer
