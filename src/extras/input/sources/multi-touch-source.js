@@ -52,12 +52,14 @@ class MultiTouchSource extends InputSource {
      * @private
      */
     _onPointerDown(event) {
-        if (event.pointerType !== 'touch') {
+        const { pointerId, pointerType } = event;
+
+        if (pointerType !== 'touch') {
             return;
         }
-        this._element?.setPointerCapture(event.pointerId);
+        this._element?.setPointerCapture(pointerId);
 
-        this._pointerEvents.set(event.pointerId, event);
+        this._pointerEvents.set(pointerId, event);
 
         this.deltas.count.append([1]);
         if (this._pointerEvents.size > 1) {
@@ -74,16 +76,18 @@ class MultiTouchSource extends InputSource {
      * @private
      */
     _onPointerMove(event) {
-        if (event.pointerType !== 'touch') {
+        const { pointerType, target, pointerId, movementX, movementY } = event;
+
+        if (pointerType !== 'touch') {
             return;
         }
-        if (event.target !== this._element) {
+        if (target !== this._element) {
             return;
         }
         if (this._pointerEvents.size === 0) {
             return;
         }
-        this._pointerEvents.set(event.pointerId, event);
+        this._pointerEvents.set(pointerId, event);
 
         if (this._pointerEvents.size > 1) {
             // pan
@@ -98,7 +102,7 @@ class MultiTouchSource extends InputSource {
             }
             this._pinchDist = pinchDist;
         } else {
-            this.deltas.touch.append([event.movementX, event.movementY]);
+            this.deltas.touch.append([movementX, movementY]);
         }
     }
 
@@ -107,12 +111,14 @@ class MultiTouchSource extends InputSource {
      * @private
      */
     _onPointerUp(event) {
-        if (event.pointerType !== 'touch') {
+        const { pointerType, pointerId } = event;
+
+        if (pointerType !== 'touch') {
             return;
         }
-        this._element?.releasePointerCapture(event.pointerId);
+        this._element?.releasePointerCapture(pointerId);
 
-        this._pointerEvents.delete(event.pointerId);
+        this._pointerEvents.delete(pointerId);
 
         this.deltas.count.append([-1]);
         if (this._pointerEvents.size < 2) {
