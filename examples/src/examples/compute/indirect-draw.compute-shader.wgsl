@@ -1,11 +1,6 @@
-// Indexed draw call parameters
-struct DrawIndexedIndirectArgs {
-    indexCount: u32,
-    instanceCount: u32,
-    firstIndex: u32,
-    baseVertex: i32,
-    firstInstance: u32
-};
+// include built-in engine chunk, which gives us DrawIndexedIndirectArgs (but also DrawIndirectArgs)
+// structs, defining the format of the indirect draw parameters / buffer
+#include "indirectCoreCS"
 
 // Binding 0: uniform buffer holding draw call metadata and runtime config
 struct Uniforms {
