@@ -239,7 +239,7 @@ class GSplatSogsData {
         if (shBands > 0) {
             sh_labels._levels[0] = await readImageDataAsync(sh_labels);
             sh_centroids._levels[0] = await readImageDataAsync(sh_centroids);
-        
+
             const shMembers = [];
             for (let i = 0; i < 45; ++i) {
                 shMembers.push(`f_rest_${i}`);
