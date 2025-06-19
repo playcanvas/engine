@@ -692,7 +692,7 @@ class ParticleEmitter {
         // shader 3
         shaderOptions.uniqueName = `ParticleUpdateStop-${shaderUniqueId}`;
         defines.set('ON_STOP', '');
-        this.shaderParticleUpdateNoRespawn = ShaderUtils.createShader(gd, shaderOptions);
+        this.shaderParticleUpdateOnStop = ShaderUtils.createShader(gd, shaderOptions);
 
         // allocate various buffers
         this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
