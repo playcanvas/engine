@@ -1,4 +1,7 @@
+import { EventHandler } from '../../core/event-handler.js';
 import { Pose } from './pose.js';
+
+/** @import { HandleEventCallback } from '../../core/event-handler.js' */
 
 /**
  * Represents an input delta.
@@ -143,6 +146,43 @@ class InputSource extends InputFrame {
     _element = null;
 
     /**
+     * @type {EventHandler}
+     * @private
+     */
+    _events = new EventHandler();
+
+    /**
+     * Adds an event listener for the specified event.
+     *
+     * @param {string} event - The event name to listen for.
+     * @param {HandleEventCallback} callback - The callback function to execute when the event is
+     * triggered.
+     */
+    on(event, callback) {
+        this._events.on(event, callback);
+    }
+
+    /**
+     * Removes an event listener for the specified event.
+     *
+     * @param {string} event - The event name to stop listening for.
+     * @param {HandleEventCallback} callback - The callback function to remove.
+     */
+    off(event, callback) {
+        this._events.off(event, callback);
+    }
+
+    /**
+     * Fires an event with the given name and arguments.
+     *
+     * @param {string} event - The event name to fire.
+     * @param {...any} args - The arguments to pass to the event listeners.
+     */
+    fire(event, ...args) {
+        this._events.fire(event, ...args);
+    }
+
+    /**
      * @param {HTMLElement} element - The element.
      */
     attach(element) {
@@ -162,6 +202,7 @@ class InputSource extends InputFrame {
 
     destroy() {
         this.detach();
+        this._events.off();
     }
 }
 
