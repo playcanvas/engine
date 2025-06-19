@@ -78,18 +78,20 @@ class SingleGestureSource extends InputSource {
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerDown(event) {
-        if (event.pointerType !== 'touch') {
+        const { pointerType, pointerId, clientX, clientY } = event;
+
+        if (pointerType !== 'touch') {
             return;
         }
-        this._element?.setPointerCapture(event.pointerId);
+        this._element?.setPointerCapture(pointerId);
 
-        this._pointerData.set(event.pointerId, {
-            x: event.clientX,
-            y: event.clientY
+        this._pointerData.set(pointerId, {
+            x: clientX,
+            y: clientY
         });
 
         if (this._layout === 'joystick') {
-            this._joystick.down(event.clientX, event.clientY);
+            this._joystick.down(clientX, clientY);
         }
     }
 
@@ -98,23 +100,25 @@ class SingleGestureSource extends InputSource {
      * @private
      */
     _onPointerMove(event) {
-        if (event.pointerType !== 'touch') {
+        const { pointerType, pointerId, clientX, clientY, movementX, movementY } = event;
+
+        if (pointerType !== 'touch') {
             return;
         }
         if (event.target !== this._element) {
             return;
         }
-        const data = this._pointerData.get(event.pointerId);
+        const data = this._pointerData.get(pointerId);
         if (!data) {
             return;
         }
-        data.x = event.clientX;
-        data.y = event.clientY;
+        data.x = clientX;
+        data.y = clientY;
 
         if (this._layout === 'joystick') {
-            this._joystick.move(event.clientX, event.clientY);
+            this._joystick.move(clientX, clientY);
         } else {
-            this.deltas.input.append([event.movementX, event.movementY]);
+            this.deltas.input.append([movementX, movementY]);
         }
     }
 
@@ -123,16 +127,18 @@ class SingleGestureSource extends InputSource {
      * @private
      */
     _onPointerUp(event) {
-        if (event.pointerType !== 'touch') {
+        const { pointerType, pointerId } = event;
+
+        if (pointerType !== 'touch') {
             return;
         }
-        this._element?.releasePointerCapture(event.pointerId);
+        this._element?.releasePointerCapture(pointerId);
 
-        const data = this._pointerData.get(event.pointerId);
+        const data = this._pointerData.get(pointerId);
         if (!data) {
             return;
         }
-        this._pointerData.delete(event.pointerId);
+        this._pointerData.delete(pointerId);
 
         if (this._layout === 'joystick') {
             this._joystick.up();
