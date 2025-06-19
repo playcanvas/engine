@@ -133,12 +133,12 @@ class DualGestureSource extends InputSource {
      * @private
      */
     _onPointerMove(event) {
-        const { pointerType, pointerId, clientX, clientY, movementX, movementY } = event;
+        const { pointerType, pointerId, target, clientX, clientY, movementX, movementY } = event;
 
         if (pointerType !== 'touch') {
             return;
         }
-        if (event.target !== this._element) {
+        if (target !== this._element) {
             return;
         }
         const data = this._pointerData.get(pointerId);
