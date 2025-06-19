@@ -21,7 +21,7 @@ export default /* glsl */`
 
 // Fast approximate e^x based on https://nic.schraudolph.org/pubs/Schraudolph99.pdf
 const float  EXP_A      = 12102203.0;   // ≈ 2^23 / ln(2)
-const int    EXP_BC_RMS = 1064866808;   // (127 << 23) - 60 801*8
+const int    EXP_BC_RMS = 1064866808;   // (127 << 23) - 60801 * 8
 float fastExp(float x) {
     int i = int(EXP_A * x) + EXP_BC_RMS;
     return intBitsToFloat(i);
