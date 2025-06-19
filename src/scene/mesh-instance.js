@@ -229,8 +229,8 @@ class ShaderInstance {
  *
  * **Examples**
  *
- * {@link https://playcanvas.github.io/#graphics/instancing-basic graphics/instancing-basic}
- * {@link https://playcanvas.github.io/#graphics/instancing-custom graphics/instancing-custom}
+ * - {@link https://playcanvas.github.io/#graphics/instancing-basic graphics/instancing-basic}
+ * - {@link https://playcanvas.github.io/#graphics/instancing-custom graphics/instancing-custom}
  *
  * ### Indirect Rendering (GPU-driven)
  *
