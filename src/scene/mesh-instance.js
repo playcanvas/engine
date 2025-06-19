@@ -232,9 +232,9 @@ class ShaderInstance {
  * - {@link https://playcanvas.github.io/#graphics/instancing-basic graphics/instancing-basic}
  * - {@link https://playcanvas.github.io/#graphics/instancing-custom graphics/instancing-custom}
  *
- * ### Indirect Rendering (GPU-driven)
+ * ### GPU-Driven Indirect Rendering (WebGPU Only)
  *
- * WebGPU-only: instead of issuing draw calls from the CPU, parameters are written into a GPU
+ * Instead of issuing draw calls from the CPU, parameters are written into a GPU
  * storage buffer and executed via indirect draw commands. Allocate a slot with
  * `GraphicsDevice.getIndirectDrawSlot()`, then bind the mesh instance to that slot:
  *
