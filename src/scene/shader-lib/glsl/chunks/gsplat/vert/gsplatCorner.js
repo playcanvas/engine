@@ -46,7 +46,7 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
     float lambda2 = max(mid - radius, 0.1);
 
     // Use the smaller viewport dimension to limit the kernel size relative to the screen resolution.
-    float vmin = min(viewport.x, viewport.y);
+    float vmin = min(1024.0, min(viewport.x, viewport.y));
 
     float l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     float l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);

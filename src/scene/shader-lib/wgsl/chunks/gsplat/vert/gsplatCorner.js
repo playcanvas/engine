@@ -47,7 +47,7 @@ fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCen
     let lambda2 = max(mid - radius, 0.1);
 
     // Use the smaller viewport dimension to limit the kernel size relative to the screen resolution.
-    let vmin = min(uniform.viewport.x, uniform.viewport.y);
+    let vmin = min(1024.0, min(uniform.viewport.x, uniform.viewport.y));
 
     let l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     let l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
