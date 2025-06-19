@@ -213,6 +213,40 @@ class ShaderInstance {
  * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
  * have different transforms and materials.
  *
+ * ### Instancing
+ *
+ * Hardware instancing lets the GPU draw many copies of the same geometry with a single draw call.
+ * Use {@link setInstancing} to attach a vertex buffer that holds per-instance data
+ * (for example a mat4 world-matrix for every instance). Set {@link instancingCount}
+ * to control how many instances are rendered. Passing `null` to {@link setInstancing}
+ * disables instancing once again.
+ *
+ * ```javascript
+ * // vb is a vertex buffer with one 4×4 matrix per instance
+ * meshInstance.setInstancing(vb);
+ * meshInstance.instancingCount = numInstances;
+ * ```
+ *
+ * **Examples**
+ *
+ * {@link https://playcanvas.github.io/#graphics/instancing-basic graphics/instancing-basic}
+ * {@link https://playcanvas.github.io/#graphics/instancing-custom graphics/instancing-custom}
+ *
+ * ### Indirect Rendering (GPU-driven)
+ *
+ * WebGPU-only: instead of issuing draw calls from the CPU, parameters are written into a GPU
+ * storage buffer and executed via indirect draw commands. Allocate a slot with
+ * `GraphicsDevice.getIndirectDrawSlot()`, then bind the mesh instance to that slot:
+ *
+ * ```javascript
+ * const slot = app.graphicsDevice.getIndirectDrawSlot();
+ * meshInstance.setIndirect(null, slot); // first arg can be a CameraComponent or null
+ * ```
+ *
+ * **Example**
+ *
+ * {@link https://playcanvas.github.io/#compute/indirect-draw compute/indirect-draw}
+ *
  * @category Graphics
  */
 class MeshInstance {
