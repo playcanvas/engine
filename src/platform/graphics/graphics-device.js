@@ -31,6 +31,7 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
+ * @import { StorageBuffer } from './storage-buffer.js';
  */
 
 const _tempSet = new Set();
@@ -124,6 +125,15 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     scope;
+
+    /**
+     * The maximum number of indirect draw calls that can be used within a single frame. Used on
+     * WebGPU only. This needs to be adjusted based on the maximum number of draw calls that can
+     * be used within a single frame. Defaults to 1024.
+     *
+     * @type {number}
+     */
+    maxIndirectDrawCount = 1024;
 
     /**
      * The maximum supported texture anisotropy setting.
@@ -412,6 +422,14 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     capsDefines = new Map();
+
+    /**
+     * A set of maps to clear at the end of the frame.
+     *
+     * @type {Set<Map>}
+     * @ignore
+     */
+    mapsToClear = new Set();
 
     static EVENT_RESIZE = 'resizecanvas';
 
@@ -715,6 +733,31 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Retrieves the available slot in the {@link indirectDrawBuffer} used for indirect rendering,
+     * which can be utilized by a {@link Compute} shader to generate indirect draw parameters and by
+     * {@link MeshInstance#setIndirect} to configure indirect draw calls.
+     *
+     * @returns {number} - The slot used for indirect rendering.
+     */
+    getIndirectDrawSlot() {
+        return 0;
+    }
+
+    /**
+     * Returns the buffer used to store arguments for indirect draw calls. The size of the buffer is
+     * controlled by the {@link maxIndirectDrawCount} property. This buffer can be passed to a
+     * {@link Compute} shader along with a slot obtained by calling {@link getIndirectDrawSlot}, in
+     * order to prepare indirect draw parameters. Also see {@link MeshInstance#setIndirect}.
+     *
+     * Only available on WebGPU, returns null on other platforms.
+     *
+     * @type {StorageBuffer|null}
+     */
+    get indirectDrawBuffer() {
+        return null;
+    }
+
+    /**
      * Queries the currently set render target on the device.
      *
      * @returns {RenderTarget} The current render target.
@@ -776,6 +819,7 @@ class GraphicsDevice extends EventHandler {
      * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
      * @param {number} [numInstances] - The number of instances to render when using instancing.
      * Defaults to 1.
+     * @param {number} [indirectSlot] - The slot of the indirect buffer to use for the draw call.
      * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
      * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
@@ -791,7 +835,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @ignore
      */
-    draw(primitive, indexBuffer, numInstances, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
         Debug.assert(false);
     }
 
@@ -981,6 +1025,9 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
+        // clear all maps scheduled for end of frame clearing
+        this.mapsToClear.forEach(map => map.clear());
+        this.mapsToClear.clear();
     }
 
     /**

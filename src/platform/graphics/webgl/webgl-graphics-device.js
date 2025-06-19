@@ -1675,7 +1675,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
     }
 
-    draw(primitive, indexBuffer, numInstances, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
 
         const shader = this.shader;
         if (shader) {
@@ -1938,6 +1938,30 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     }
 
+    clientWaitAsync(flags, interval_ms) {
+        const gl = this.gl;
+        const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+        this.submit();
+
+        return new Promise((resolve, reject) => {
+            function test() {
+                const res = gl.clientWaitSync(sync, flags, 0);
+                if (res === gl.TIMEOUT_EXPIRED) {
+                    // check again in a while
+                    setTimeout(test, interval_ms);
+                } else {
+                    gl.deleteSync(sync);
+                    if (res === gl.WAIT_FAILED) {
+                        reject(new Error('webgl clientWaitSync sync failed'));
+                    } else {
+                        resolve();
+                    }
+                }
+            }
+            test();
+        });
+    }
+
     /**
      * Asynchronously reads a block of pixels from a specified rectangle of the current color framebuffer
      * into an ArrayBufferView object.
@@ -1953,27 +1977,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     async readPixelsAsync(x, y, w, h, pixels) {
         const gl = this.gl;
 
-        const clientWaitAsync = (flags, interval_ms) => {
-            const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-            this.submit();
-
-            return new Promise((resolve, reject) => {
-                function test() {
-                    const res = gl.clientWaitSync(sync, flags, 0);
-                    if (res === gl.WAIT_FAILED) {
-                        gl.deleteSync(sync);
-                        reject(new Error('webgl clientWaitSync sync failed'));
-                    } else if (res === gl.TIMEOUT_EXPIRED) {
-                        setTimeout(test, interval_ms);
-                    } else {
-                        gl.deleteSync(sync);
-                        resolve();
-                    }
-                }
-                test();
-            });
-        };
-
         const impl = this.renderTarget.colorBuffer?.impl;
         const format = impl?._glFormat ?? gl.RGBA;
         const pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
@@ -1986,7 +1989,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
 
         // async wait for previous read to finish
-        await clientWaitAsync(0, 20);
+        await this.clientWaitAsync(0, 16);
 
         // copy the resulting data once it's arrived
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
@@ -2025,6 +2028,27 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 resolve(data);
             }).catch(reject);
         });
+    }
+
+    async writeTextureAsync(texture, x, y, width, height, data) {
+        const gl = this.gl;
+        const impl = texture.impl;
+        const format = impl?._glFormat ?? gl.RGBA;
+        const pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
+
+        // create temporary (gpu-side) buffer and copy data into it
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, buf);
+        gl.bufferData(gl.PIXEL_UNPACK_BUFFER, data, gl.STREAM_DRAW);
+        gl.bindTexture(gl.TEXTURE_2D, impl._glTexture);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, width, height, format, pixelType, 0);
+        gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+
+        texture._needsUpload = false;
+        texture._mipmapsUploaded = false;
+
+        // async wait for previous read to finish
+        await this.clientWaitAsync(0, 16);
     }
 
     /**

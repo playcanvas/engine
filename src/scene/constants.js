@@ -1081,15 +1081,22 @@ export const EVENT_PRERENDER_LAYER = 'prerender:layer';
 export const EVENT_POSTRENDER_LAYER = 'postrender:layer';
 
 /**
- * Name of event fired before visibility culling is performed for the camera
+ * Name of event fired before visibility culling is performed for the camera.
  *
  * @ignore
  */
 export const EVENT_PRECULL = 'precull';
 
 /**
- * Name of event after before visibility culling is performed for the camera
+ * Name of event after visibility culling is performed for the camera.
  *
  * @ignore
  */
 export const EVENT_POSTCULL = 'postcull';
+
+/**
+ * Name of event after the engine has finished culling all cameras.
+ *
+ * @ignore
+ */
+export const EVENT_CULL_END = 'cull:end';
