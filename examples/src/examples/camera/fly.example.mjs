@@ -141,25 +141,34 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
         boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)'
     });
 
-    app.on(`${cc.joystickBaseEventName}:${side}`, (x, y) => {
-        const left = x - baseSize * 0.5;
-        const top = y - baseSize * 0.5;
+    /**
+     * @param {HTMLElement} el - The element to set position for.
+     * @param {number} size - The size of the element.
+     * @param {number} x - The x position.
+     * @param {number} y - The y position.
+     */
+    const show = (el, size, x, y) => {
+        el.style.display = 'block';
+        el.style.left = `${x - size * 0.5}px`;
+        el.style.top = `${y - size * 0.5}px`;
+    };
 
-        base.style.display = 'block';
-        base.style.left = `${left}px`;
-        base.style.top = `${top}px`;
-    });
-    app.on(`${cc.joystickStickEventName}:${side}`, (x, y) => {
-        const left = x - stickSize * 0.5;
-        const top = y - stickSize * 0.5;
+    /**
+     * @param {HTMLElement} el - The element to hide.
+     */
+    const hide = (el) => {
+        el.style.display = 'none';
+    };
 
-        stick.style.display = 'block';
-        stick.style.left = `${left}px`;
-        stick.style.top = `${top}px`;
-    });
-    app.on(`${cc.joystickResetEventName}:${side}`, () => {
-        base.style.display = 'none';
-        stick.style.display = 'none';
+    app.on(`${cc.joystickEventName}:${side}`, (bx, by, sx, sy) => {
+        if (bx < 0 || by < 0 || sx < 0 || sy < 0) {
+            hide(base);
+            hide(stick);
+            return;
+        }
+
+        show(base, baseSize, bx, by);
+        show(stick, stickSize, sx, sy);
     });
 
     document.body.append(base, stick);

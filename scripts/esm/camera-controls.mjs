@@ -15,7 +15,7 @@ import {
     Vec3
 } from 'playcanvas';
 
-/** @import { CameraComponent, EventHandler, InputController } from 'playcanvas' */
+/** @import { CameraComponent, InputController } from 'playcanvas' */
 
 /**
  * @typedef {object} CameraControlsState
@@ -371,8 +371,18 @@ class CameraControls extends Script {
         this._gamepadInput.attach(this.app.graphicsDevice.canvas);
 
         // expose ui events
-        this._exposeJoystickEvents(this._flyMobileInput.leftJoystick, 'left');
-        this._exposeJoystickEvents(this._flyMobileInput.rightJoystick, 'right');
+        this._flyMobileInput.on('joystick:position:left', ([bx, by, sx, sy]) => {
+            if (this._mode !== 'fly') {
+                return;
+            }
+            this.app.fire(`${this.joystickEventName}:left`, bx, by, sx, sy);
+        });
+        this._flyMobileInput.on('joystick:position:right', ([bx, by, sx, sy]) => {
+            if (this._mode !== 'fly') {
+                return;
+            }
+            this.app.fire(`${this.joystickEventName}:right`, bx, by, sx, sy);
+        });
 
         // pose
         const position = this._camera.entity.getPosition();
@@ -603,20 +613,6 @@ class CameraControls extends Script {
 
         this._flyController.destroy();
         this._orbitController.destroy();
-    }
-
-    /**
-     * @param {EventHandler} joystick - The joystick.
-     * @param {string} side - The chirality.
-     * @private
-     */
-    _exposeJoystickEvents(joystick, side) {
-        joystick.on('position', (bx, by, sx, sy) => {
-            if (this._mode !== 'fly') {
-                return;
-            }
-            this.app.fire(`${this.joystickEventName}:${side}`, bx, by, sx, sy);
-        });
     }
 
     /**

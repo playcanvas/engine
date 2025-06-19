@@ -1,10 +1,9 @@
 import { math } from '../../../core/math/math.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-import { EventHandler } from '../../../core/event-handler.js';
 
 const v = new Vec2();
 
-class VirtualJoystick extends EventHandler {
+class VirtualJoystick {
     /**
      * @type {number}
      * @private
@@ -15,13 +14,7 @@ class VirtualJoystick extends EventHandler {
      * @type {Vec2}
      * @private
      */
-    _base = new Vec2();
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _stick = new Vec2();
+    _position = new Vec2();
 
     /**
      * @type {Vec2}
@@ -34,26 +27,7 @@ class VirtualJoystick extends EventHandler {
      * @param {number} [options.range] - The inner max distance of the joystick.
      */
     constructor({ range } = {}) {
-        super();
         this._range = range ?? this._range;
-    }
-
-    /**
-     * The base position of the joystick, where the stick is anchored.
-     *
-     * @type {Vec2}
-     */
-    get base() {
-        return this._base;
-    }
-
-    /**
-     * The position of the stick, which moves based on user input.
-     *
-     * @type {Vec2}
-     */
-    get stick() {
-        return this._stick;
     }
 
     /**
@@ -68,19 +42,21 @@ class VirtualJoystick extends EventHandler {
     /**
      * @param {number} x - The x position.
      * @param {number} y - The y position.
+     * @returns {number[]} - An array containing the base and stick positions.
      */
     down(x, y) {
-        this._base.set(x, y);
+        this._position.set(x, y);
         this._value.set(0, 0);
-        this.fire('position', x, y, x, y);
+        return [x, y, x, y];
     }
 
     /**
      * @param {number} x - The x position of the stick
      * @param {number} y - The y position of the stick
+     * @returns {number[]} - An array containing the base and stick positions.
      */
     move(x, y) {
-        v.set(x - this._base.x, y - this._base.y);
+        v.set(x - this._position.x, y - this._position.y);
         if (v.length() > this._range) {
             v.normalize().mulScalar(this._range);
         }
@@ -88,16 +64,19 @@ class VirtualJoystick extends EventHandler {
             math.clamp(v.x / this._range, -1, 1),
             math.clamp(v.y / this._range, -1, 1)
         );
-        this._stick.copy(v).add(this._base);
-        const { x: bx, y: by } = this._base;
-        const { x: sx, y: sy } = this._stick;
-        this.fire('position', bx, by, sx, sy);
+        const { x: bx, y: by } = this._position;
+        return [bx, by, bx + v.x, by + v.y];
     }
 
+    /**
+     * Resets the joystick to its initial state.
+     *
+     * @returns {number[]} - An array containing the base and stick positions, both set to -1.
+     */
     up() {
-        this._base.set(0, 0);
+        this._position.set(0, 0);
         this._value.set(0, 0);
-        this.fire('position', -1, -1, -1, -1);
+        return [-1, -1, -1, -1];
     }
 }
 

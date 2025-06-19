@@ -121,10 +121,10 @@ class DualGestureSource extends InputSource {
         });
 
         if (left && startsWith(this._layout, 'joystick')) {
-            this._leftJoystick.down(clientX, clientY);
+            this.fire('joystick:position:left', this._leftJoystick.down(clientX, clientY));
         }
         if (!left && endsWith(this._layout, 'joystick')) {
-            this._rightJoystick.down(clientX, clientY);
+            this.fire('joystick:position:right', this._rightJoystick.down(clientX, clientY));
         }
     }
 
@@ -151,13 +151,13 @@ class DualGestureSource extends InputSource {
 
         if (left) {
             if (startsWith(this._layout, 'joystick')) {
-                this._leftJoystick.move(clientX, clientY);
+                this.fire('joystick:position:left', this._leftJoystick.move(clientX, clientY));
             } else {
                 this.deltas.leftInput.append([movementX, movementY]);
             }
         } else {
             if (endsWith(this._layout, 'joystick')) {
-                this._rightJoystick.move(clientX, clientY);
+                this.fire('joystick:position:right', this._rightJoystick.move(clientX, clientY));
             } else {
                 this.deltas.rightInput.append([movementX, movementY]);
             }
@@ -184,12 +184,10 @@ class DualGestureSource extends InputSource {
         this._pointerData.delete(pointerId);
 
         if (left && startsWith(this._layout, 'joystick')) {
-            this._leftJoystick.up();
-            this.fire('joystick:position:left', -1, -1, -1, -1);
+            this.fire('joystick:position:left', this._leftJoystick.up());
         }
         if (!left && endsWith(this._layout, 'joystick')) {
-            this._rightJoystick.up();
-            this.fire('joystick:position:right', -1, -1, -1, -1);
+            this.fire('joystick:position:right', this._rightJoystick.up());
         }
 
     }
