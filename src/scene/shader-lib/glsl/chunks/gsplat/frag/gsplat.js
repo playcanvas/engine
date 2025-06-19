@@ -19,9 +19,6 @@ export default /* glsl */`
     #include "floatAsUintPS"
 #endif
 
-varying mediump vec2 gaussianUV;
-varying mediump vec4 gaussianColor;
-
 // Fast approximate e^x based on https://nic.schraudolph.org/pubs/Schraudolph99.pdf
 const float  EXP_A      = 12102203.0;   // ≈ 2^23 / ln(2)
 const int    EXP_BC_RMS = 1064866808;   // (127 << 23) - 60 801*8
@@ -30,6 +27,9 @@ float fastExp(float x) {
     return intBitsToFloat(i);
 }
 
+varying mediump vec2 gaussianUV;
+varying mediump vec4 gaussianColor;
+
 void main(void) {
     mediump float A = dot(gaussianUV, gaussianUV);
     if (A > 1.0) {
@@ -37,9 +37,7 @@ void main(void) {
     }
 
     // evaluate alpha
-    mediump float alpha = exp(-A * 4.0) * gaussianColor.a;
-    // mediump float alpha = fastExp(-A * 4.0) * gaussianColor.a;
-    // mediump float alpha = pow(1.0 - A, 3.0) * gaussianColor.a;
+    mediump float alpha = fastExp(-A * 4.0) * gaussianColor.a;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < alphaClip) {
