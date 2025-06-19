@@ -121,6 +121,9 @@ assetListLoader.load(() => {
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
             cshader: files['compute-shader.wgsl'],
 
+            // include all WGSL chunks to be available for including in the compute shader
+            cincludes: pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_WGSL),
+
             // format of a uniform buffer used by the compute shader
             computeUniformBufferFormats: {
                 ub: new pc.UniformBufferFormat(device, [
