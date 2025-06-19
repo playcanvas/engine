@@ -106,23 +106,25 @@ class DualGestureSource extends InputSource {
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerDown(event) {
-        if (event.pointerType !== 'touch') {
+        const { pointerType, pointerId, clientX, clientY } = event;
+
+        if (pointerType !== 'touch') {
             return;
         }
-        this._element?.setPointerCapture(event.pointerId);
+        this._element?.setPointerCapture(pointerId);
 
-        const left = event.clientX < window.innerWidth * 0.5;
-        this._pointerData.set(event.pointerId, {
-            x: event.clientX,
-            y: event.clientY,
+        const left = clientX < window.innerWidth * 0.5;
+        this._pointerData.set(pointerId, {
+            x: clientX,
+            y: clientY,
             left
         });
 
         if (left && startsWith(this._layout, 'joystick')) {
-            this._leftJoystick.down(event.clientX, event.clientY);
+            this._leftJoystick.down(clientX, clientY);
         }
         if (!left && endsWith(this._layout, 'joystick')) {
-            this._rightJoystick.down(event.clientX, event.clientY);
+            this._rightJoystick.down(clientX, clientY);
         }
     }
 
@@ -131,31 +133,33 @@ class DualGestureSource extends InputSource {
      * @private
      */
     _onPointerMove(event) {
-        if (event.pointerType !== 'touch') {
+        const { pointerType, pointerId, clientX, clientY, movementX, movementY } = event;
+
+        if (pointerType !== 'touch') {
             return;
         }
         if (event.target !== this._element) {
             return;
         }
-        const data = this._pointerData.get(event.pointerId);
+        const data = this._pointerData.get(pointerId);
         if (!data) {
             return;
         }
         const { left } = data;
-        data.x = event.clientX;
-        data.y = event.clientY;
+        data.x = clientX;
+        data.y = clientY;
 
         if (left) {
             if (startsWith(this._layout, 'joystick')) {
-                this._leftJoystick.move(event.clientX, event.clientY);
+                this._leftJoystick.move(clientX, clientY);
             } else {
-                this.deltas.leftInput.append([event.movementX, event.movementY]);
+                this.deltas.leftInput.append([movementX, movementY]);
             }
         } else {
             if (endsWith(this._layout, 'joystick')) {
-                this._rightJoystick.move(event.clientX, event.clientY);
+                this._rightJoystick.move(clientX, clientY);
             } else {
-                this.deltas.rightInput.append([event.movementX, event.movementY]);
+                this.deltas.rightInput.append([movementX, movementY]);
             }
         }
     }
@@ -165,23 +169,27 @@ class DualGestureSource extends InputSource {
      * @private
      */
     _onPointerUp(event) {
-        if (event.pointerType !== 'touch') {
+        const { pointerType, pointerId } = event;
+
+        if (pointerType !== 'touch') {
             return;
         }
-        this._element?.releasePointerCapture(event.pointerId);
+        this._element?.releasePointerCapture(pointerId);
 
-        const data = this._pointerData.get(event.pointerId);
+        const data = this._pointerData.get(pointerId);
         if (!data) {
             return;
         }
         const { left } = data;
-        this._pointerData.delete(event.pointerId);
+        this._pointerData.delete(pointerId);
 
         if (left && startsWith(this._layout, 'joystick')) {
             this._leftJoystick.up();
+            this.fire('joystick:position:left', -1, -1, -1, -1);
         }
         if (!left && endsWith(this._layout, 'joystick')) {
             this._rightJoystick.up();
+            this.fire('joystick:position:right', -1, -1, -1, -1);
         }
 
     }
@@ -223,6 +231,9 @@ class DualGestureSource extends InputSource {
         return super.read();
     }
 
+    /**
+     * @override
+     */
     destroy() {
         this._leftJoystick.up();
         this._rightJoystick.up();
