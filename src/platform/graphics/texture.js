@@ -1173,6 +1173,22 @@ class Texture {
     read(x, y, width, height, options = {}) {
         return this.impl.read?.(x, y, width, height, options);
     }
+
+    /**
+     * Upload texture data asynchronously to the GPU.
+     *
+     * @param {number} x - The left edge of the rectangle.
+     * @param {number} y - The top edge of the rectangle.
+     * @param {number} width - The width of the rectangle.
+     * @param {number} height - The height of the rectangle.
+     * @param {Uint8Array|Uint16Array|Uint32Array|Float32Array} data - The pixel data to upload. This should be a typed array.
+     *
+     * @returns {Promise<void>} A promise that resolves when the upload is complete.
+     * @ignore
+     */
+    write(x, y, width, height, data) {
+        return this.impl.write?.(x, y, width, height, data);
+    }
 }
 
 export { Texture };
