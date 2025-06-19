@@ -245,7 +245,7 @@ class ShaderInstance {
  *
  * **Example**
  *
- * {@link https://playcanvas.github.io/#compute/indirect-draw compute/indirect-draw}
+ * - {@link https://playcanvas.github.io/#compute/indirect-draw compute/indirect-draw}
  *
  * @category Graphics
  */
