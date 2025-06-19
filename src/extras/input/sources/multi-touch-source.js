@@ -142,6 +142,9 @@ class MultiTouchSource extends InputSource {
      * @private
      */
     _getMidPoint(out) {
+        if (this._pointerEvents.size < 2) {
+            return out.set(0, 0);
+        }
         const [a, b] = this._pointerEvents.values();
         const dx = a.clientX - b.clientX;
         const dy = a.clientY - b.clientY;
@@ -153,6 +156,9 @@ class MultiTouchSource extends InputSource {
      * @private
      */
     _getPinchDist() {
+        if (this._pointerEvents.size < 2) {
+            return 0;
+        }
         const [a, b] = this._pointerEvents.values();
         const dx = a.clientX - b.clientX;
         const dy = a.clientY - b.clientY;
