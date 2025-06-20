@@ -41,7 +41,19 @@ class GamepadSource extends InputSource {
         const gamepads = navigator.getGamepads();
         for (let i = 0; i < gamepads.length; i++) {
             const gp = gamepads[i];
+
+            // check if gamepad is connected
             if (!gp) {
+                continue;
+            }
+
+            // check if gamepad is a standard gamepad
+            if (gp.mapping !== 'standard') {
+                continue;
+            }
+
+            // check if gamepad has two sticks
+            if (gp.axes.length < 4) {
                 continue;
             }
 
