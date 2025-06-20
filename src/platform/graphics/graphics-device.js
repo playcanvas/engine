@@ -5,7 +5,7 @@ import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Tracing } from '../../core/tracing.js';
-import { Color } from '../../core/math/color.js';
+import { Color } from '../../core/math/color';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 import {
     CULLFACE_BACK,

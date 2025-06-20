@@ -12,7 +12,7 @@ import {
     LAYERID_DEPTH,
     SHADER_PREPASS
 } from '../../scene/constants.js';
-import { Color } from '../../core/math/color.js';
+import { Color } from '../../core/math/color';
 import { FloatPacking } from '../../core/math/float-packing.js';
 
 /**

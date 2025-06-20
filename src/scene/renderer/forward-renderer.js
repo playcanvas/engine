@@ -1,7 +1,7 @@
 import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { Color } from '../../core/math/color.js';
+import { Color } from '../../core/math/color';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import {
     FOG_NONE, FOG_LINEAR,

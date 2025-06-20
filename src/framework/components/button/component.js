@@ -1,6 +1,6 @@
 import { now } from '../../../core/time.js';
 import { math } from '../../../core/math/math.js';
-import { Color } from '../../../core/math/color.js';
+import { Color } from '../../../core/math/color';
 
 import { GraphNode } from '../../../scene/graph-node.js';
 

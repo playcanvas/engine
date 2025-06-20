@@ -3,7 +3,7 @@ import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
-import { Color } from '../../core/math/color.js';
+import { Color } from '../../core/math/color';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     CULLFACE_NONE,

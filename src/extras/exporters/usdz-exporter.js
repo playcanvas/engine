@@ -1,6 +1,6 @@
 import { CoreExporter } from './core-exporter.js';
 import { zipSync, strToU8 } from 'fflate';
-import { Color } from '../../core/math/color.js';
+import { Color } from '../../core/math/color';
 
 import {
     SEMANTIC_POSITION,

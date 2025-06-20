@@ -255,7 +255,9 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
             entryFileNames: chunkInfo => `${chunkInfo.name.replace(/node_modules/g, 'modules')}.js`
         },
         plugins: [
-            resolve(),
+            resolve({
+                extensions: ['.js', '.ts', '.json']
+            }),
             jscc(getJSCCOptions(isMin ? 'release' : buildType, isUMD)),
             isUMD ? treeshakeIgnore(TREESHAKE_IGNORE_REGEXES) : undefined,
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,

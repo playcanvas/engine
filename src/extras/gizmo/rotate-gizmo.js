@@ -1,5 +1,5 @@
 import { math } from '../../core/math/math.js';
-import { Color } from '../../core/math/color.js';
+import { Color } from '../../core/math/color';
 import { Quat } from '../../core/math/quat.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';

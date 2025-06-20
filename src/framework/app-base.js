@@ -7,7 +7,7 @@ import { path } from '../core/path.js';
 import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
-import { Color } from '../core/math/color.js';
+import { Color } from '../core/math/color';
 import { Mat4 } from '../core/math/mat4.js';
 import { math } from '../core/math/math.js';
 import { Quat } from '../core/math/quat.js';

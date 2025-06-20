@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
-import { Color } from '../../core/math/color.js';
+import { Color } from '../../core/math/color';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
 import { isIntegerPixelFormat, pixelFormatInfo } from './constants.js';
 

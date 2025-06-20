@@ -1,4 +1,4 @@
-import { Color } from '../../../core/math/color.js';
+import { Color } from '../../../core/math/color';
 import {
     CULLFACE_NONE,
     PIXELFORMAT_SRGBA8

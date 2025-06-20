@@ -6,7 +6,7 @@ import { Component } from '../component.js';
 import { properties } from './data.js';
 
 /**
- * @import { Color } from '../../../core/math/color.js'
+ * @import { Color } from '../../../core/math/color'
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { LightComponentData } from './data.js'
  * @import { Light } from '../../../scene/light.js'

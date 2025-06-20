@@ -1,4 +1,4 @@
-import { Color } from '../../core/math/color.js';
+import { Color } from '../../core/math/color';
 import { Entity } from '../../framework/entity.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import {

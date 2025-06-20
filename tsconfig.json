@@ -14,5 +14,5 @@
         "target": "es6",
         "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types" ]
     },
-    "include": ["src/**/*.js", "scripts/**/*.mjs", "rollup.config.mjs", "playcanvas.d.ts"],
+    "include": ["src/**/*.js", "src/**/*.ts", "scripts/**/*.mjs", "rollup.config.mjs", "playcanvas.d.ts"],
 }

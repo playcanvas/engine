@@ -1,5 +1,5 @@
 /**
- * @import { Color } from './color.js'
+ * @import { Color } from './color'
  */
 
 const floatView = new Float32Array(1);

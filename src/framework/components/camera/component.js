@@ -7,7 +7,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
 
 /**
  * @import { CameraComponentSystem } from './system.js'
- * @import { Color } from '../../../core/math/color.js'
+ * @import { Color } from '../../../core/math/color'
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Frustum } from '../../../core/shape/frustum.js'

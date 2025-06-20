@@ -1,4 +1,4 @@
-import { Color } from '../../core/math/color.js';
+import { Color } from '../../core/math/color';
 import { Texture } from '../../platform/graphics/texture.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';

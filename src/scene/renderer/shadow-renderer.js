@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
-import { Color } from '../../core/math/color.js';
+import { Color } from '../../core/math/color';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
