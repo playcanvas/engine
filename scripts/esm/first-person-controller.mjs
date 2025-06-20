@@ -1,6 +1,7 @@
 import {
     math,
     CameraComponent,
+    InputFrame,
     KeyboardMouseSource,
     DualGestureSource,
     GamepadSource,
@@ -27,6 +28,11 @@ const right = new Vec3();
 const up = new Vec3();
 
 const rotation = new Quat();
+
+const frame = new InputFrame({
+    move: [0, 0, 0],
+    rotate: [0, 0, 0]
+});
 
 /**
  * Calculate the damp rate.
@@ -364,13 +370,59 @@ class FirstPersonController extends Script {
     }
 
     /**
+     * @param {InputFrame<{ move: number[], rotate: number[] }>} frame - The input frame.
+     * @param {number} dt - The delta time.
+     * @private
+     */
+    _updateController(frame, dt) {
+        const { move, rotate } = frame.read();
+
+        // check if grounded
+        const start = this.entity.getPosition();
+        const end = v.copy(start).add(Vec3.DOWN);
+        end.y -= 0.1;
+        const system = /** @type {RigidBodyComponentSystem} */ (this._rigidbody.system);
+        this._grounded = system.raycastFirst(start, end);
+
+        // jump
+        if (this._rigidbody.linearVelocity.y < 0) {
+            this._jumping = false;
+        }
+        if (this._state.space && !this._jumping && this._grounded) {
+            this._jumping = true;
+            this._rigidbody.applyImpulse(0, this.jumpForce, 0);
+        }
+
+        // rotate
+        this._angles.add(v.set(-rotate[1], -rotate[0], 0));
+
+        // move
+        rotation.setFromEulerAngles(this._angles);
+        rotation.transformVector(Vec3.FORWARD, forward);
+        rotation.transformVector(Vec3.RIGHT, right);
+        rotation.transformVector(Vec3.UP, up);
+        v.set(0, 0, 0);
+        v.add(forward.mulScalar(move[2]));
+        v.add(right.mulScalar(move[0]));
+        v.add(up.mulScalar(move[1]));
+        const velocity = this._rigidbody.linearVelocity.add(v);
+        const alpha = damp(this._grounded ? this.velocityDampingGround : this.velocityDampingAir, dt);
+        velocity.x = math.lerp(velocity.x, 0, alpha);
+        velocity.z = math.lerp(velocity.z, 0, alpha);
+
+        // apply changes
+        this.camera.entity.setLocalEulerAngles(this._angles);
+        this._rigidbody.linearVelocity = velocity;
+    }
+
+    /**
      * @param {number} dt - The delta time.
      */
     update(dt) {
         const { keycode } = KeyboardMouseSource;
 
         const { key, button, mouse } = this._desktopInput.read();
-        // const { leftInput, rightInput } = this._mobileInput.read();
+        const { leftInput, rightInput } = this._mobileInput.read();
         const { leftStick, rightStick } = this._gamepadInput.read();
 
         // apply dead zone to gamepad sticks
@@ -390,46 +442,52 @@ class FirstPersonController extends Script {
         this._state.shift += key[keycode.SHIFT];
         this._state.ctrl += key[keycode.CTRL];
 
-        const speed = (this._grounded ? this.speedGround : this.speedAir) + this._state.space * this.sprintMult;
-        const damping = this._grounded ? this.velocityDampingGround : this.velocityDampingAir;
+        const moveMult = (this._grounded ? this.speedGround : this.speedAir) *
+            (this._state.shift ? this.sprintMult : 1) * dt;
+        const rotateMult = this.lookSens * 60 * dt;
+        const rotateTouchMult = this._mobileTurnSpeed * 60 * dt;
+        const rotateJoystickMult = this.gamePadTurnSpeed * 60 * dt;
 
-        // check if grounded
-        const start = this.entity.getPosition();
-        const end = v.copy(start).add(Vec3.DOWN);
-        end.y -= 0.1;
-        const system = /** @type {RigidBodyComponentSystem} */ (this._rigidbody.system);
-        this._grounded = system.raycastFirst(start, end);
+        const { deltas } = frame;
 
-        // jump
-        if (this._rigidbody.linearVelocity.y < 0) {
-            this._jumping = false;
-        }
-        if (this._state.space && !this._jumping && this._grounded) {
-            this._jumping = true;
-            this._rigidbody.applyImpulse(0, this.jumpForce, 0);
-        }
-
-        // look
-        this._angles.add(v.set(-mouse[1], -mouse[0], 0).mulScalar(this.lookSens));
-        this.camera.entity.setLocalEulerAngles(this._angles);
-
-        // rotate movement axis
-        rotation.setFromEulerAngles(this._angles);
-        rotation.transformVector(Vec3.FORWARD, forward);
-        rotation.transformVector(Vec3.RIGHT, right);
-        rotation.transformVector(Vec3.UP, up);
+        // desktop move
         v.set(0, 0, 0);
-        v.add(forward.mulScalar(this._state.axis.z));
-        v.add(right.mulScalar(this._state.axis.x));
-        v.add(up.mulScalar(this._state.axis.y));
-        v.mulScalar(speed * dt);
+        const keyMove = this._state.axis.clone().normalize();
+        v.add(keyMove.mulScalar(moveMult));
+        deltas.move.append([v.x, v.y, v.z]);
 
-        // update rigidbody velocity
-        const velocity = this._rigidbody.linearVelocity.add(v);
-        const alpha = damp(damping, dt);
-        velocity.x = math.lerp(velocity.x, 0, alpha);
-        velocity.z = math.lerp(velocity.z, 0, alpha);
-        this._rigidbody.linearVelocity = velocity;
+        // desktop rotate
+        v.set(0, 0, 0);
+        const mouseRotate = new Vec3(mouse[0], mouse[1], 0);
+        v.add(mouseRotate.mulScalar(rotateMult));
+        deltas.rotate.append([v.x, v.y, v.z]);
+
+        // mobile move
+        v.set(0, 0, 0);
+        const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]);
+        v.add(flyMove.mulScalar(moveMult));
+        deltas.move.append([v.x, v.y, v.z]);
+
+        // mobile rotate
+        v.set(0, 0, 0);
+        const mobileRotate = new Vec3(rightInput[0], rightInput[1], 0);
+        v.add(mobileRotate.mulScalar(rotateTouchMult));
+        deltas.rotate.append([v.x, v.y, v.z]);
+
+        // gamepad move
+        v.set(0, 0, 0);
+        const stickMove = new Vec3(leftStick[0], 0, -leftStick[1]);
+        v.add(stickMove.mulScalar(moveMult));
+        deltas.move.append([v.x, v.y, v.z]);
+
+        // gamepad rotate
+        v.set(0, 0, 0);
+        const stickRotate = new Vec3(rightStick[0], rightStick[1], 0);
+        v.add(stickRotate.mulScalar(rotateJoystickMult));
+        deltas.rotate.append([v.x, v.y, v.z]);
+
+        // update controller
+        this._updateController(frame, dt);
     }
 
     destroy() {
