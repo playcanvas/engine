@@ -113,6 +113,12 @@ class FirstPersonController extends Script {
     _angles = new Vec3();
 
     /**
+     * @type {Vec3}
+     * @private
+     */
+    _velocity = new Vec3();
+
+    /**
      * @type {boolean}
      * @private
      */
@@ -394,6 +400,7 @@ class FirstPersonController extends Script {
 
         // rotate
         this._angles.add(v.set(-rotate[1], -rotate[0], 0));
+        this.camera.entity.setLocalEulerAngles(this._angles);
 
         // move
         rotation.setFromEulerAngles(this._angles);
@@ -408,9 +415,6 @@ class FirstPersonController extends Script {
         const alpha = damp(this._grounded ? this.velocityDampingGround : this.velocityDampingAir, dt);
         velocity.x = math.lerp(velocity.x, 0, alpha);
         velocity.z = math.lerp(velocity.z, 0, alpha);
-
-        // apply changes
-        this.camera.entity.setLocalEulerAngles(this._angles);
         this._rigidbody.linearVelocity = velocity;
     }
 
