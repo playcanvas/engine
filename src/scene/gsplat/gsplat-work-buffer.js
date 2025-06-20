@@ -26,16 +26,12 @@ const gsplatSource = /* glsl */`
     bool initSource(out SplatSource source) {
         uint w = uint(textureSize(splatOrder, 0).x);
         uint idx = uint(gl_FragCoord.x) + uint(gl_FragCoord.y) * w;
-        if (idx >= numSplats) discard;
+        if (idx >= numSplats) {
+            discard;    // out of range
+        }
 
         source.order = idx;
-
-        ivec2 uv = ivec2(idx % w, idx / w);
-
-        // read splat id
-        source.id = texelFetch(splatOrder, uv, 0).r;
-
-        // map id to uv
+        source.id = texelFetch(splatOrder, ivec2(source.order % w, source.order / w), 0).r;
         source.uv = ivec2(source.id % w, source.id / w);
 
         return true;
@@ -98,7 +94,7 @@ const genFS = /* glsl */`
         #if SH_BANDS > 0
             // calculate the model-space view direction
             vec3 dir = normalize(center.view * mat3(center.modelView));
-            clr.xyz += evalSH(source, dir);
+            // clr.xyz += evalSH(source, dir);
         #endif
 
         clipCorner(corner, clr.w);
