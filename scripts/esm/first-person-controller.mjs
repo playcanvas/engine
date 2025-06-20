@@ -116,6 +116,12 @@ class FirstPersonController extends Script {
      * @type {boolean}
      * @private
      */
+    _grounded = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
     _jumping = false;
 
     /**
@@ -377,13 +383,6 @@ class FirstPersonController extends Script {
     _updateController(frame, dt) {
         const { move, rotate } = frame.read();
 
-        // check if grounded
-        const start = this.entity.getPosition();
-        const end = v.copy(start).add(Vec3.DOWN);
-        end.y -= 0.1;
-        const system = /** @type {RigidBodyComponentSystem} */ (this._rigidbody.system);
-        this._grounded = system.raycastFirst(start, end);
-
         // jump
         if (this._rigidbody.linearVelocity.y < 0) {
             this._jumping = false;
@@ -441,6 +440,13 @@ class FirstPersonController extends Script {
         this._state.space += key[keycode.SPACE];
         this._state.shift += key[keycode.SHIFT];
         this._state.ctrl += key[keycode.CTRL];
+
+        // check if grounded
+        const start = this.entity.getPosition();
+        const end = v.copy(start).add(Vec3.DOWN);
+        end.y -= 0.1;
+        const system = /** @type {RigidBodyComponentSystem} */ (this._rigidbody.system);
+        this._grounded = !!system.raycastFirst(start, end);
 
         const moveMult = (this._grounded ? this.speedGround : this.speedAir) *
             (this._state.shift ? this.sprintMult : 1) * dt;
