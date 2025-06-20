@@ -4,7 +4,6 @@ import {
     KeyboardMouseSource,
     DualGestureSource,
     GamepadSource,
-    Mat4,
     Quat,
     Script,
     Vec3
