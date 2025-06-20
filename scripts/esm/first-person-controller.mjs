@@ -27,6 +27,7 @@ const forward = new Vec3();
 const right = new Vec3();
 const up = new Vec3();
 
+const offset = new Vec3();
 const rotation = new Quat();
 
 const frame = new InputFrame({
@@ -407,11 +408,11 @@ class FirstPersonController extends Script {
         rotation.transformVector(Vec3.FORWARD, forward);
         rotation.transformVector(Vec3.RIGHT, right);
         rotation.transformVector(Vec3.UP, up);
-        v.set(0, 0, 0);
-        v.add(forward.mulScalar(move[2]));
-        v.add(right.mulScalar(move[0]));
-        v.add(up.mulScalar(move[1]));
-        const velocity = this._rigidbody.linearVelocity.add(v);
+        offset.set(0, 0, 0);
+        offset.add(forward.mulScalar(move[2]));
+        offset.add(right.mulScalar(move[0]));
+        offset.add(up.mulScalar(move[1]));
+        const velocity = this._rigidbody.linearVelocity.add(offset);
         const alpha = damp(this._grounded ? this.velocityDampingGround : this.velocityDampingAir, dt);
         velocity.x = math.lerp(velocity.x, 0, alpha);
         velocity.z = math.lerp(velocity.z, 0, alpha);
