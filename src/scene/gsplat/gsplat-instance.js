@@ -1,8 +1,9 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatSorter } from './gsplat-sorter.js';
+import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
 
@@ -34,12 +35,15 @@ class GSplatInstance {
 
     options = {};
 
-    /** @type {GSplatSorter | null} */
+    /** @type {GSplatSorter|null} */
     sorter = null;
 
     lastCameraPosition = new Vec3();
 
     lastCameraDirection = new Vec3();
+
+    /** @type {GSplatWorkBuffer|null} */
+    gsplatWorkBuffer = null;
 
     /**
      * List of cameras this instance is visible for. Updated every frame by the renderer.
@@ -56,11 +60,13 @@ class GSplatInstance {
     constructor(resource, material) {
         this.resource = resource;
 
+        const texSize = resource.evalTextureSize(resource.numSplats);
+
         // create the order texture
         this.orderTexture = resource.createTexture(
             'splatOrder',
             PIXELFORMAT_R32U,
-            resource.evalTextureSize(resource.numSplats)
+            texSize
         );
 
         if (material) {
@@ -111,12 +117,15 @@ class GSplatInstance {
             // update splat count on the material
             this.material.setParameter('numSplats', count);
         });
+
+        this.gsplatWorkBuffer = new GSplatWorkBuffer(resource.device, this);
     }
 
     destroy() {
         this.material?.destroy();
         this.meshInstance?.destroy();
         this.sorter?.destroy();
+        this.gsplatWorkBuffer?.destroy();
     }
 
     /**
@@ -211,6 +220,10 @@ class GSplatInstance {
             // TODO: extend to support multiple cameras
             const camera = this.cameras[0];
             this.sort(camera._node);
+
+            if (!window.nocull) {
+                this.gsplatWorkBuffer?.update(camera._node, this.meshInstance.node.getWorldTransform());
+            }
 
             // we get new list of cameras each frame
             this.cameras.length = 0;

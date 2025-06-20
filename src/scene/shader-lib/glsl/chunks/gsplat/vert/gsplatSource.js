@@ -17,10 +17,8 @@ bool initSource(out SplatSource source) {
         return false;
     }
 
-    ivec2 orderUV = ivec2(source.order % w, source.order / w);
-
     // read splat id
-    source.id = texelFetch(splatOrder, orderUV, 0).r;
+    source.id = source.order;
 
     // map id to uv
     source.uv = ivec2(source.id % w, source.id / w);

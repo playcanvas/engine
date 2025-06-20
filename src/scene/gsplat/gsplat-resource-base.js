@@ -115,6 +115,11 @@ class GSplatResourceBase {
     configureMaterial(material) {
     }
 
+    /**
+     * @description Evaluates the size of the texture based on the number of splats.
+     * @param {number} count 
+     * @returns {Vec2} Returns a Vec2 object representing the size of the texture.
+     */
     evalTextureSize(count) {
     }
 
