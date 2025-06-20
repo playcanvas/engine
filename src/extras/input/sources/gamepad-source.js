@@ -14,7 +14,7 @@ import { InputSource } from '../input.js';
  */
 class GamepadSource extends InputSource {
     /**
-     * The button codes.
+     * The button codes (based on Xbox controller layout).
      *
      * @readonly
      */
