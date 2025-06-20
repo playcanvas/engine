@@ -87,6 +87,18 @@ class SoundSlot extends EventHandler {
     static EVENT_STOP = 'stop';
 
     /**
+     * Fired when a sound instance stops playing because it reached its end. The handler is passed
+     * the {@link SoundInstance} that ended.
+     *
+     * @event
+     * @example
+     * slot.on('end', (instance) => {
+     *     console.log('Sound instance playback ended');
+     * });
+     */
+    static EVENT_END = 'end';
+
+    /**
      * Fired when the sound {@link Asset} assigned to the slot is loaded. The handler is passed the
      * loaded {@link Sound} resource.
      *

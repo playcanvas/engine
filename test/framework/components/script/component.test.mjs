@@ -1,8 +1,10 @@
 import { expect } from 'chai';
 
+import { Debug } from '../../../../src/core/debug.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createScript } from '../../../../src/framework/script/script-create.js';
+import { Script } from '../../../../src/framework/script/script.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
@@ -2923,6 +2925,58 @@ describe('ScriptComponent', function () {
         expect(e.script.has('')).to.equal(false);
         expect(e.script.has(undefined)).to.equal(false);
         expect(e.script.has(null)).to.equal(false);
+    });
+
+    it('warns when an ESM Script class does not have a static "scriptName" property', function () {
+        class TestScript extends Script {}
+        const a =  new Entity();
+        a.addComponent('script', { enabled: true });
+        a.script.create(TestScript);
+
+        expect(Debug._loggedMessages.has(
+            'The Script class "TestScript" must have a static "scriptName" property: `TestScript.scriptName = "testScript";`. This will be an error in future versions of PlayCanvas.'
+        )).to.equal(true);
+    });
+
+    it('correctly registers an ESM script with its scriptName', function () {
+        class TestScript extends Script {
+            static scriptName = 'myTestScript';
+        }
+        const a = new Entity();
+        a.addComponent('script', { enabled: true });
+        a.script.create(TestScript);
+
+        expect(a.script.has('testScript')).to.equal(false);
+        expect(a.script.has('myTestScript')).to.equal(true);
+    });
+
+    it('falls back to camelCase script name if scriptName is not defined', function () {
+        class TestScript extends Script {}
+        const a = new Entity();
+        a.addComponent('script', { enabled: true });
+        a.script.create(TestScript);
+
+        expect(a.script.has('testScript')).to.equal(true);
+        expect(a.script.has('myTestScript')).to.equal(false);
+    });
+
+    it('does not warn when a ScriptType is used', function () {
+        Debug._loggedMessages.clear();
+        createScript('nullScript');
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['nullScript'],
+            scripts: {
+                nullScript: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        expect(Debug._loggedMessages.size).to.equal(0);
+        expect(e.script.has('nullScript')).to.equal(true);
     });
 
 });

@@ -118,7 +118,7 @@ assetListLoader.load(() => {
         data: data
     });
 
-    // create a forest by intantiating a tree model and setting it up for instancing
+    // create a forest by instantiating a tree model and setting it up for instancing
     const forest = assets.tree.resource.instantiateRenderEntity();
     app.root.addChild(forest);
 

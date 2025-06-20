@@ -1,23 +1,44 @@
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
+import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import glslBilateralDeNoisePS from '../../scene/shader-lib/glsl/chunks/lightmapper/frag/bilateralDeNoise.js';
+import glslDilatePS from '../../scene/shader-lib/glsl/chunks/lightmapper/frag/dilate.js';
+import wgslBilateralDeNoisePS from '../../scene/shader-lib/wgsl/chunks/lightmapper/frag/bilateralDeNoise.js';
+import wgslDilatePS from '../../scene/shader-lib/wgsl/chunks/lightmapper/frag/dilate.js';
+import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 // size of the kernel - needs to match the constant in the shader
 const DENOISE_FILTER_SIZE = 15;
 
+// glsl shaders
+const lightmapFiltersChunksGLSL = {
+    glslBilateralDeNoisePS,
+    glslDilatePS
+};
+
+// wgsl shaders
+const lightmapFiltersChunksWLSL = {
+    wgslBilateralDeNoisePS,
+    wgslDilatePS
+};
+
 // helper class used by lightmapper, wrapping functionality of dilate and denoise shaders
 class LightmapFilters {
+    shaderDilate = [];
+
+    shaderDenoise = [];
+
     constructor(device) {
         this.device = device;
-        this.shaderDilate = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunksLightmapper.dilatePS, 'lmDilate');
+
+        // register shader chunks
+        ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).add(lightmapFiltersChunksGLSL);
+        ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).add(lightmapFiltersChunksWLSL);
 
         this.constantTexSource = device.scope.resolve('source');
 
         this.constantPixelOffset = device.scope.resolve('pixelOffset');
         this.pixelOffset = new Float32Array(2);
 
-        // denoise is optional and gets created only when needed
-        this.shaderDenoise = [];
         this.sigmas = null;
         this.constantSigmas = null;
         this.kernel = null;
@@ -39,9 +60,21 @@ class LightmapFilters {
 
         const index = bakeHDR ? 0 : 1;
         if (!this.shaderDenoise[index]) {
-            const name = `lmBilateralDeNoise-${bakeHDR ? 'hdr' : 'rgbm'}`;
-            const define = bakeHDR ? '#define HDR\n' : '';
-            this.shaderDenoise[index] = createShaderFromCode(this.device, shaderChunks.fullscreenQuadVS, define + shaderChunksLightmapper.bilateralDeNoisePS, name);
+
+            const defines = new Map();
+            defines.set('{MSIZE}', 15);
+            if (bakeHDR) defines.set('HDR', '');
+
+            this.shaderDenoise[index] = ShaderUtils.createShader(this.device, {
+                uniqueName: `lmBilateralDeNoise-${bakeHDR ? 'hdr' : 'rgbm'}`,
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('fullscreenQuadVS'),
+                vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('fullscreenQuadVS'),
+                fragmentGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('glslBilateralDeNoisePS'),
+                fragmentWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('wgslBilateralDeNoisePS'),
+                fragmentDefines: defines
+            });
+
             this.sigmas = new Float32Array(2);
             this.constantSigmas = this.device.scope.resolve('sigmas');
             this.constantKernel = this.device.scope.resolve('kernel[0]');
@@ -63,9 +96,15 @@ class LightmapFilters {
     getDilate(device, bakeHDR) {
         const index = bakeHDR ? 0 : 1;
         if (!this.shaderDilate[index]) {
-            const name = `lmDilate-${bakeHDR ? 'hdr' : 'rgbm'}`;
             const define = bakeHDR ? '#define HDR\n' : '';
-            this.shaderDilate[index] = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, define + shaderChunksLightmapper.dilatePS, name);
+            this.shaderDilate[index] = ShaderUtils.createShader(device, {
+                uniqueName: `lmDilate-${bakeHDR ? 'hdr' : 'rgbm'}`,
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('fullscreenQuadVS'),
+                vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('fullscreenQuadVS'),
+                fragmentGLSL: define + ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('glslDilatePS'),
+                fragmentWGSL: define + ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('wgslDilatePS')
+            });
         }
         return this.shaderDilate[index];
     }

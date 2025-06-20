@@ -121,6 +121,11 @@ class EventHandle {
     get removed() {
         return this._removed;
     }
+
+    // don't stringify EventHandle to JSON by JSON.stringify
+    toJSON(key) {
+        return undefined;
+    }
 }
 
 export { EventHandle };

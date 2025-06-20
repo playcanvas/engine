@@ -301,7 +301,8 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the camera aperture in f-stops. Default is 16. Higher value means less exposure.
+     * Sets the camera aperture in f-stops. Default is 16. Higher value means less exposure. Used
+     * if {@link Scene#physicalUnits} is true.
      *
      * @type {number}
      */
@@ -674,6 +675,8 @@ class CameraComponent extends Component {
                 layer?.addCamera(this);
             });
         }
+
+        this.fire('set:layers');
     }
 
     /**
@@ -910,7 +913,8 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the camera sensitivity in ISO. Defaults to 1000. Higher value means more exposure.
+     * Sets the camera sensitivity in ISO. Defaults to 1000. Higher value means more exposure. Used
+     * if {@link Scene#physicalUnits} is true.
      *
      * @type {number}
      */
@@ -928,7 +932,8 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the camera shutter speed in seconds. Defaults to 1/1000s. Longer shutter means more exposure.
+     * Sets the camera shutter speed in seconds. Defaults to 1/1000s. Longer shutter means more
+     * exposure. Used if {@link Scene#physicalUnits} is true.
      *
      * @type {number}
      */

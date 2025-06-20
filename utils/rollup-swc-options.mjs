@@ -16,7 +16,7 @@ function swcOptions(isDebug, isUMD, minify) {
             target: isUMD ? 'es5' : 'es2022',
             minify: {
                 format: {
-                    comments: !isDebug || minify ? false : 'all'
+                    comments: !isDebug || minify ? 'some' : 'all'
                 },
                 mangle: minify,
                 compress: (!isDebug && minify) ? {

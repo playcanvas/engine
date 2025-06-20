@@ -137,17 +137,17 @@ assetListLoader.load(() => {
     });
     app.root.addChild(boardEntity);
 
-    // override output shader chunk for the material of the chess board, to inject our
-    // custom shader chunk which outputs to multiple render targets during our custom
-    // shader pass
-    const outputChunk = files['output.frag'];
+    // override output shader chunk for the material of the chess board, to inject our custom shader
+    // chunk which outputs to multiple render targets during our custom shader pass
     /** @type {Array<pc.RenderComponent>} */
     const renders = boardEntity.findComponents('render');
     renders.forEach((render) => {
         const meshInstances = render.meshInstances;
         for (let i = 0; i < meshInstances.length; i++) {
-            // @ts-ignore engine-tsd
-            meshInstances[i].material.chunks.outputPS = outputChunk;
+            const material = meshInstances[i].material;
+            material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('outputPS', files['output-glsl.frag']);
+            material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('outputPS', files['output-wgsl.frag']);
+            material.shaderChunksVersion = '2.8';
         }
     });
 

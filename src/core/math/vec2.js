@@ -691,8 +691,8 @@ class Vec2 {
     /**
      * Converts the vector to an array.
      *
-     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the color components. If not specified,
-     * a new array is created.
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the vector's number
+     * components. If not specified, a new array is created.
      * @param {number} [offset] - The zero-based index at which to start copying elements to the
      * array. Default is 0.
      * @returns {number[]|ArrayBufferView} The vector as an array.

@@ -165,7 +165,6 @@ export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
-export { CameraShaderParams } from './scene/camera-shader-params.js'; // needed by the Editor
 export { WorldClusters } from './scene/lighting/world-clusters.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
@@ -190,7 +189,7 @@ export { StencilParameters } from './platform/graphics/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
 // SCENE / ANIMATION
-export { Animation, Key, Node } from './scene/animation/animation.js';
+export { Animation, AnimationKey, AnimationNode } from './scene/animation/animation.js';
 export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
@@ -225,20 +224,22 @@ export { FogParams } from './scene/fog-params.js';
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
-export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';
+export { ShaderUtils, createShader, createShaderFromCode } from './scene/shader-lib/shader-utils.js';
 export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
-export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
-export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
 export { ChunkUtils } from './scene/shader-lib/chunk-utils.js';
+export { ShaderChunks } from './scene/shader-lib/shader-chunks.js';
 
 // SCENE / SKY
 export { Sky } from './scene/skybox/sky.js';
 
 // SCENE / SPLAT
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
-export { GSplat } from './scene/gsplat/gsplat.js';
+export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
+export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
+export { GSplatSogsResource } from './scene/gsplat/gsplat-sogs-resource.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
@@ -367,7 +368,6 @@ export { CssHandler } from './framework/handlers/css.js';
 export { CubemapHandler } from './framework/handlers/cubemap.js';
 export { FolderHandler } from './framework/handlers/folder.js';
 export { FontHandler } from './framework/handlers/font.js';
-export { GSplatResource } from './framework/parsers/gsplat-resource.js';
 export { HierarchyHandler } from './framework/handlers/hierarchy.js';
 export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';

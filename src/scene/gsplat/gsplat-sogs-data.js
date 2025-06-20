@@ -2,21 +2,31 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
-
-let offscreen = null;
-let ctx = null;
-
-const readImageData = (imageBitmap) => {
-    if (!offscreen || offscreen.width !== imageBitmap.width || offscreen.height !== imageBitmap.height) {
-        offscreen = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
-        ctx = offscreen.getContext('2d');
-        ctx.globalCompositeOperation = 'copy';
-    }
-    ctx.drawImage(imageBitmap, 0, 0);
-    return ctx.getImageData(0, 0, imageBitmap.width, imageBitmap.height).data;
-};
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { CULLFACE_NONE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import glslGsplatSogsReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplat-sogs-reorder.js';
+import wgslGsplatSogsReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplat-sogs-reorder.js';
 
 const SH_C0 = 0.28209479177387814;
+
+const readImageDataAsync = (texture) => {
+    return texture.read(0, 0, texture.width, texture.height, {
+        mipLevel: 0,
+        face: 0,
+        immediate: true
+    });
+};
+
+const resolve = (scope, values) => {
+    for (const key in values) {
+        scope.resolve(key).setValue(values[key]);
+    }
+};
 
 class GSplatSogsIterator {
     constructor(data, p, r, s, c, sh) {
@@ -25,16 +35,16 @@ class GSplatSogsIterator {
 
         // extract means for centers
         const { meta } = data;
-        const { means, quats, scales, opacities, sh0, shN } = meta;
-        const means_l_data = p && readImageData(data.means_l._levels[0]);
-        const means_u_data = p && readImageData(data.means_u._levels[0]);
-        const quats_data = r && readImageData(data.quats._levels[0]);
-        const scales_data = s && readImageData(data.scales._levels[0]);
-        const opacities_data = c && readImageData(data.opacities._levels[0]);
-        const sh0_data = c && readImageData(data.sh0._levels[0]);
-        const sh_labels_l_data = sh && readImageData(data.sh_labels_l._levels[0]);
-        const sh_labels_u_data = sh && readImageData(data.sh_labels_u._levels[0]);
-        const sh_centroids_data = sh && readImageData(data.sh_centroids._levels[0]);
+        const { means, scales, sh0, shN } = meta;
+        const means_l_data = p && data.means_l._levels[0];
+        const means_u_data = p && data.means_u._levels[0];
+        const quats_data = r && data.quats._levels[0];
+        const scales_data = s && data.scales._levels[0];
+        const sh0_data = c && data.sh0._levels[0];
+        const sh_labels_data = sh && data.sh_labels._levels[0];
+        const sh_centroids_data = sh && data.sh_centroids._levels[0];
+
+        const norm = 2.0 / Math.sqrt(2.0);
 
         this.read = (i) => {
             if (p) {
@@ -48,11 +58,18 @@ class GSplatSogsIterator {
             }
 
             if (r) {
-                const qx = lerp(quats.mins[0], quats.maxs[0], quats_data[i * 4 + 0] / 255);
-                const qy = lerp(quats.mins[1], quats.maxs[1], quats_data[i * 4 + 1] / 255);
-                const qz = lerp(quats.mins[2], quats.maxs[2], quats_data[i * 4 + 2] / 255);
-                const qw = Math.sqrt(Math.max(0, 1 - (qx * qx + qy * qy + qz * qz)));
-                r.set(qy, qz, qw, qx);
+                const a = (quats_data[i * 4 + 0] / 255 - 0.5) * norm;
+                const b = (quats_data[i * 4 + 1] / 255 - 0.5) * norm;
+                const c = (quats_data[i * 4 + 2] / 255 - 0.5) * norm;
+                const d = Math.sqrt(Math.max(0, 1 - (a * a + b * b + c * c)));
+                const mode = quats_data[i * 4 + 3] - 252;
+
+                switch (mode) {
+                    case 0: r.set(a, b, c, d); break;
+                    case 1: r.set(d, b, c, a); break;
+                    case 2: r.set(b, d, c, a); break;
+                    case 3: r.set(b, c, d, a); break;
+                }
             }
 
             if (s) {
@@ -66,18 +83,18 @@ class GSplatSogsIterator {
                 const r = lerp(sh0.mins[0], sh0.maxs[0], sh0_data[i * 4 + 0] / 255);
                 const g = lerp(sh0.mins[1], sh0.maxs[1], sh0_data[i * 4 + 1] / 255);
                 const b = lerp(sh0.mins[2], sh0.maxs[2], sh0_data[i * 4 + 2] / 255);
-                const a = lerp(opacities.mins[0], opacities.maxs[0], opacities_data[i * 4 + 0] / 255);
+                const a = lerp(sh0.mins[3], sh0.maxs[3], sh0_data[i * 4 + 3] / 255);
 
                 c.set(
                     0.5 + r * SH_C0,
                     0.5 + g * SH_C0,
                     0.5 + b * SH_C0,
-                    1.0 / (1.0 + Math.exp(a * -1.0))
+                    1.0 / (1.0 + Math.exp(-a))
                 );
             }
 
             if (sh) {
-                const n = sh_labels_l_data[i * 4 + 0] + (sh_labels_u_data[i * 4 + 0] << 8);
+                const n = sh_labels_data[i * 4 + 0] + (sh_labels_data[i * 4 + 1] << 8);
                 const u = (n % 64) * 15;
                 const v = Math.floor(n / 64);
 
@@ -96,8 +113,6 @@ class GSplatSogsData {
 
     numSplats;
 
-    shBands;
-
     means_l;
 
     means_u;
@@ -106,15 +121,24 @@ class GSplatSogsData {
 
     scales;
 
-    opacities;
-
     sh0;
 
     sh_centroids;
 
-    sh_labels_l;
+    sh_labels;
 
-    sh_labels_u;
+    // if data is reordered at load, this texture stores the reorder indices.
+    orderTexture;
+
+    destroy() {
+        this.means_l?.destroy();
+        this.means_u?.destroy();
+        this.quats?.destroy();
+        this.scales?.destroy();
+        this.sh0?.destroy();
+        this.sh_centroids?.destroy();
+        this.sh_labels?.destroy();
+    }
 
     createIter(p, r, s, c, sh) {
         return new GSplatSogsIterator(this, p, r, s, c, sh);
@@ -139,15 +163,39 @@ class GSplatSogsData {
     }
 
     getCenters(result) {
-        const p = new Vec3();
-        const iter = this.createIter(p);
+        const { meta, means_l, means_u, numSplats } = this;
+        const { means } = meta;
+        const means_u_data = new Uint32Array(means_u._levels[0].buffer);
+        const means_l_data = new Uint32Array(means_l._levels[0].buffer);
+        const order = this.orderTexture?._levels[0];
 
-        for (let i = 0; i < this.numSplats; i++) {
-            iter.read(i);
+        const mx = means.mins[0] / 65535;
+        const my = means.mins[1] / 65535;
+        const mz = means.mins[2] / 65535;
+        const Mx = means.maxs[0] / 65535;
+        const My = means.maxs[1] / 65535;
+        const Mz = means.maxs[2] / 65535;
 
-            result[i * 3 + 0] = p.x;
-            result[i * 3 + 1] = p.y;
-            result[i * 3 + 2] = p.z;
+        for (let i = 0; i < numSplats; i++) {
+            const idx = order ? order[i] : i;
+
+            const means_u = means_u_data[idx];
+            const means_l = means_l_data[idx];
+
+            const wx = ((means_u <<  8) & 0xff00) |  (means_l         & 0xff);
+            const wy =  (means_u        & 0xff00) | ((means_l >>> 8)  & 0xff);
+            const wz = ((means_u >>> 8) & 0xff00) | ((means_l >>> 16) & 0xff);
+
+            const nx = mx * (65535 - wx) + Mx * wx;
+            const ny = my * (65535 - wy) + My * wy;
+            const nz = mz * (65535 - wz) + Mz * wz;
+
+            const ax = nx < 0 ? -nx : nx;
+            const ay = ny < 0 ? -ny : ny;
+            const az = nz < 0 ? -nz : nz;
+            result[i * 3]     = (nx < 0 ? -1 : 1) * (Math.exp(ax) - 1);
+            result[i * 3 + 1] = (ny < 0 ? -1 : 1) * (Math.exp(ay) - 1);
+            result[i * 3 + 2] = (nz < 0 ? -1 : 1) * (Math.exp(az) - 1);
         }
     }
 
@@ -159,7 +207,17 @@ class GSplatSogsData {
         return true;
     }
 
-    decompress() {
+    get shBands() {
+        // sh palette has 64 sh entries per row. use width to calculate number of bands
+        const widths = {
+            192: 1,     // 64 * 3
+            512: 2,     // 64 * 8
+            960: 3      // 64 * 15
+        };
+        return widths[this.sh_centroids?.width] ?? 0;
+    }
+
+    async decompress() {
         const members = [
             'x', 'y', 'z',
             'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity',
@@ -169,8 +227,19 @@ class GSplatSogsData {
 
         const { shBands } = this;
 
+        // copy back gpu texture data so cpu iterator has access to it
+        const { means_l, means_u, quats, scales, sh0, sh_labels, sh_centroids } = this;
+        means_l._levels[0] = await readImageDataAsync(means_l);
+        means_u._levels[0] = await readImageDataAsync(means_u);
+        quats._levels[0] = await readImageDataAsync(quats);
+        scales._levels[0] = await readImageDataAsync(scales);
+        sh0._levels[0] = await readImageDataAsync(sh0);
+
         // allocate spherical harmonics data
         if (shBands > 0) {
+            sh_labels._levels[0] = await readImageDataAsync(sh_labels);
+            sh_centroids._levels[0] = await readImageDataAsync(sh_centroids);
+
             const shMembers = [];
             for (let i = 0; i < 45; ++i) {
                 shMembers.push(`f_rest_${i}`);
@@ -233,6 +302,129 @@ class GSplatSogsData {
                 };
             })
         }]);
+    }
+
+    // reorder the sogs texture data in gpu memory given the ordering encoded in texture data
+    reorderGpuMemory() {
+        const { orderTexture, numSplats } = this;
+        const { device, height, width } = orderTexture;
+        const { scope } = device;
+
+        const shader = ShaderUtils.createShader(device, {
+            uniqueName: 'GsplatSogsReorderShader',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentGLSL: glslGsplatSogsReorderPS,
+            fragmentWGSL: wgslGsplatSogsReorderPS
+        });
+
+        const sourceTexture = new Texture(device, {
+            width: width,
+            height: height,
+            format: PIXELFORMAT_RGBA8,
+            mipmaps: false
+        });
+
+        const members = ['means_l', 'means_u', 'quats', 'scales', 'sh0', 'sh_labels'];
+
+        device.setBlendState(BlendState.NOBLEND);
+        device.setCullMode(CULLFACE_NONE);
+        device.setDepthState(DepthState.NODEPTH);
+
+        members.forEach((member) => {
+            const targetTexture = this[member];
+
+            // spherical harmonics labels are missing when no SH data is present
+            if (!targetTexture) {
+                return;
+            }
+
+            const renderTarget = new RenderTarget({
+                colorBuffer: targetTexture,
+                depth: false,
+                mipLevel: 0
+            });
+
+            // patch source texture with data from target
+            sourceTexture._levels[0] = targetTexture._levels[0];
+            sourceTexture.upload();
+
+            resolve(scope, {
+                orderTexture,
+                sourceTexture,
+                numSplats
+            });
+
+            drawQuadWithShader(device, renderTarget, shader);
+
+            renderTarget.destroy();
+        });
+
+        sourceTexture.destroy();
+    }
+
+    // construct an array containing the Morton order of the splats
+    // returns an array of 32-bit unsigned integers
+    calcMortonOrder() {
+        // https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/
+        const encodeMorton3 = (x, y, z) => {
+            const Part1By2 = (x) => {
+                x &= 0x000003ff;
+                x = (x ^ (x << 16)) & 0xff0000ff;
+                x = (x ^ (x <<  8)) & 0x0300f00f;
+                x = (x ^ (x <<  4)) & 0x030c30c3;
+                x = (x ^ (x <<  2)) & 0x09249249;
+                return x;
+            };
+
+            return (Part1By2(z) << 2) + (Part1By2(y) << 1) + Part1By2(x);
+        };
+
+        const { means_l, means_u } = this;
+        const means_l_data = means_l._levels[0];
+        const means_u_data = means_u._levels[0];
+        const codes = new BigUint64Array(this.numSplats);
+
+        // generate Morton codes for each splat based on the means directly (i.e. the log-space coordinates)
+        for (let i = 0; i < this.numSplats; ++i) {
+            const ix = (means_u_data[i * 4 + 0] << 2) | (means_l_data[i * 4 + 0] >>> 6);
+            const iy = (means_u_data[i * 4 + 1] << 2) | (means_l_data[i * 4 + 1] >>> 6);
+            const iz = (means_u_data[i * 4 + 2] << 2) | (means_l_data[i * 4 + 2] >>> 6);
+            codes[i] = BigInt(encodeMorton3(ix, iy, iz)) << BigInt(32) | BigInt(i);
+        }
+
+        codes.sort();
+
+        // allocate data for the order buffer, but make it texture-memory sized
+        const order = new Uint32Array(means_l.width * means_l.height);
+        for (let i = 0; i < this.numSplats; ++i) {
+            order[i] = Number(codes[i] & BigInt(0xffffffff));
+        }
+
+        return order;
+    }
+
+    async reorderData() {
+        const { device, height, width } = this.means_l;
+
+        // copy back means_l and means_u data from gpu so cpu reorder has access to it
+        this.means_l._levels[0] = await readImageDataAsync(this.means_l);
+        this.means_u._levels[0] = await readImageDataAsync(this.means_u);
+
+        this.orderTexture = new Texture(device, {
+            name: 'orderTexture',
+            width,
+            height,
+            format: PIXELFORMAT_R32U,
+            mipmaps: false,
+            levels: [this.calcMortonOrder()]
+        });
+
+        device.on('devicerestored', () => {
+            this.reorderGpuMemory();
+        });
+
+        this.reorderGpuMemory();
     }
 }
 
