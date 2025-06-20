@@ -171,6 +171,11 @@ describe('Preprocessor', function () {
             PREC8
         #endif
 
+       // Spaces in and around precedence parens
+        #if ( ( defined(A) && INDEX == 3) ||  (  defined(UNDEFINED) && INDEX > 10  ) ) 
+            PREC9
+        #endif
+
         TESTINJECTION {COUNT}
         INJECTSTRING {STRING}(x)
     `;
@@ -345,5 +350,9 @@ describe('Preprocessor', function () {
 
     it('returns true for PREC8 (multiple levels of nesting)', function () {
         expect(Preprocessor.run(srcData, includes).includes('PREC8')).to.equal(true);
+    });
+
+    it('returns true for PREC9 (spaces inside precedence parens)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC9')).to.equal(true);
     });
 });
