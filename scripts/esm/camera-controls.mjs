@@ -449,7 +449,7 @@ class CameraControls extends Script {
     set focusPoint(point) {
         const position = this._camera.entity.getPosition();
         this._startZoomDist = position.distance(point);
-        this._controller.attach(pose.look(position, point), false);
+        this._controller.attach(this._pose.look(position, point), false);
     }
 
     get focusPoint() {
