@@ -524,6 +524,14 @@ class Preprocessor {
         expr = expr.trim();
         let invert = false;
 
+        // Handle boolean literals
+        if (expr === 'true') {
+            return { result: true, error };
+        }
+        if (expr === 'false') {
+            return { result: false, error };
+        }
+
         // Handle defined(expr) and !defined(expr)
         const definedMatch = DEFINED.exec(expr);
         if (definedMatch) {
@@ -560,8 +568,95 @@ class Preprocessor {
     }
 
     /**
+     * Processes parentheses in an expression by recursively evaluating subexpressions.
+     * Ignores parentheses that are part of defined() calls.
+     *
+     * @param {string} expression - The expression to process.
+     * @param {Map<string, string>} defines - A map containing key-value pairs of defines.
+     * @returns {object} Returns an object containing the processed expression and an error flag.
+     */
+    static processParentheses(expression, defines) {
+        let error = false;
+        let processed = expression.trim();
+
+        // Remove outer parentheses that wrap the entire expression
+        while (processed.startsWith('(') && processed.endsWith(')')) {
+            let depth = 0;
+            let wrapsEntire = true;
+            for (let i = 0; i < processed.length - 1; i++) {
+                if (processed[i] === '(') depth++;
+                else if (processed[i] === ')') {
+                    depth--;
+                    if (depth === 0) {
+                        wrapsEntire = false;
+                        break;
+                    }
+                }
+            }
+            if (wrapsEntire) {
+                processed = processed.slice(1, -1).trim();
+            } else {
+                break;
+            }
+        }
+
+        // Keep processing until no more precedence parentheses exist
+        while (true) {
+            let foundParen = false;
+            let depth = 0;
+            let maxDepth = 0;
+            let deepestStart = -1;
+            let deepestEnd = -1;
+
+            // Find the deepest nested parentheses that aren't part of defined()
+            let inDefinedParen = 0;
+            for (let i = 0; i < processed.length; i++) {
+                if (processed[i] === '(') {
+                    // Check if this is part of defined() - look back for "defined"
+                    const beforeParen = processed.substring(Math.max(0, i - 8), i).trim();
+                    if (beforeParen.endsWith('defined') || beforeParen.endsWith('!defined')) {
+                        inDefinedParen++;
+                    } else if (inDefinedParen === 0) {
+                        depth++;
+                        if (depth > maxDepth) {
+                            maxDepth = depth;
+                            deepestStart = i;
+                        }
+                        foundParen = true;
+                    }
+                } else if (processed[i] === ')') {
+                    if (inDefinedParen > 0) {
+                        inDefinedParen--;
+                    } else if (depth > 0) {
+                        if (depth === maxDepth && deepestStart !== -1) {
+                            deepestEnd = i;
+                        }
+                        depth--;
+                    }
+                }
+            }
+
+            if (!foundParen || deepestStart === -1 || deepestEnd === -1) {
+                break;
+            }
+
+            // Extract and evaluate the subexpression
+            const subExpr = processed.substring(deepestStart + 1, deepestEnd);
+            const { result, error: subError } = Preprocessor.evaluate(subExpr, defines);
+            error = error || subError;
+
+            // Replace the parentheses expression with its result
+            processed = processed.substring(0, deepestStart) +
+                       (result ? 'true' : 'false') +
+                       processed.substring(deepestEnd + 1);
+        }
+
+        return { expression: processed, error };
+    }
+
+    /**
      * Evaluates a complex expression with support for `defined`, `!defined`, comparisons, `&&`,
-     * and `||`. It does not currently handle ( and ).
+     * `||`, and parentheses for precedence.
      *
      * @param {string} expression - The expression to evaluate.
      * @param {Map<string, string>} defines - A map containing key-value pairs of defines.
@@ -571,8 +666,14 @@ class Preprocessor {
         const correct = INVALID.exec(expression) === null;
         Debug.assert(correct, `Resolving expression like this is not supported: ${expression}`);
 
+        // Process parentheses first
+        const { expression: processedExpr, error: parenError } = Preprocessor.processParentheses(expression, defines);
+        if (parenError) {
+            return { result: false, error: true };
+        }
+
         // Step 1: Split by "||" to handle OR conditions
-        const orSegments = expression.split('||');
+        const orSegments = processedExpr.split('||');
         for (const orSegment of orSegments) {
 
             // Step 2: Split each OR segment by "&&" to handle AND conditions
