@@ -9,10 +9,16 @@
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "outDir": "types",
+        "strict": false,
         "strictNullChecks": true,
+        "resolveJsonModule": true,
         "strictPropertyInitialization": true,
         "target": "es6",
         "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types" ]
+    },
+    "ts-node": {
+        "esm": true,
+        "experimentalSpecifierResolution": "node",
     },
     "include": ["src/**/*.js", "src/**/*.ts", "scripts/**/*.mjs", "rollup.config.mjs", "playcanvas.d.ts"],
 }
