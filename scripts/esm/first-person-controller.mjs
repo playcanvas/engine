@@ -81,7 +81,7 @@ class FirstPersonController extends Script {
      * @type {KeyboardMouseSource}
      * @private
      */
-    _desktopInput = new KeyboardMouseSource();
+    _desktopInput = new KeyboardMouseSource({ pointerLock: true });
 
     /**
      * @type {DualGestureSource}
