@@ -2940,7 +2940,7 @@ describe('ScriptComponent', function () {
 
     it('correctly registers an ESM script with its scriptName', function () {
         class TestScript extends Script {
-            static scriptName = 'myTestScript';
+            static __name = 'myTestScript';
         }
         const a = new Entity();
         a.addComponent('script', { enabled: true });

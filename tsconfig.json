@@ -18,6 +18,10 @@
     },
     "ts-node": {
         "esm": true,
+        // It is faster to skip typechecking.
+        // Remove if you want ts-node to do typechecking.
+        "transpileOnly": true,
+        "files": true,
         "experimentalSpecifierResolution": "node",
     },
     "include": ["src/**/*.js", "src/**/*.ts", "scripts/**/*.mjs", "rollup.config.mjs", "playcanvas.d.ts"],
