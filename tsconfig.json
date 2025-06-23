@@ -18,8 +18,9 @@
     },
     "ts-node": {
         "esm": true,
-        // It is faster to skip typechecking.
-        // Remove if you want ts-node to do typechecking.
+        // Note that ts-node is only used by the Mocha test runner.
+        // Remove if you want ts-node to do typechecking during Mocha tests,
+        // but this may require additional configuration like a separate tsconfig.json for tests.
         "transpileOnly": true,
         "files": true,
         "experimentalSpecifierResolution": "node",
