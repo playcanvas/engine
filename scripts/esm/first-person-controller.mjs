@@ -450,8 +450,8 @@ class FirstPersonController extends Script {
         const moveMult = (this._grounded ? this.speedGround : this.speedAir) *
             (this._state.shift ? this.sprintMult : 1) * dt;
         const rotateMult = this.lookSens * 60 * dt;
-        const rotateTouchMult = this._mobileTurnSpeed * 60 * dt;
-        const rotateJoystickMult = this.gamePadTurnSpeed * 60 * dt;
+        const rotateTouchMult = this._mobileTurnSpeed * dt;
+        const rotateJoystickMult = this.gamePadTurnSpeed * dt;
 
         const { deltas } = frame;
 
