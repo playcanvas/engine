@@ -418,10 +418,11 @@ class FirstPersonController extends Script {
      */
     update(dt) {
         const { keycode } = KeyboardMouseSource;
+        const { buttoncode } = GamepadSource;
 
         const { key, button, mouse } = this._desktopInput.read();
         const { leftInput, rightInput } = this._mobileInput.read();
-        const { leftStick, rightStick } = this._gamepadInput.read();
+        const { buttons, leftStick, rightStick } = this._gamepadInput.read();
 
         // apply dead zone to gamepad sticks
         applyDeadZone(leftStick, this.gamePadDeadZoneLow, this.gamePadDeadZoneHigh);
@@ -436,7 +437,7 @@ class FirstPersonController extends Script {
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }
-        this._state.space += key[keycode.SPACE];
+        this._state.space += key[keycode.SPACE] + key[buttoncode.A];
         this._state.shift += key[keycode.SHIFT];
         this._state.ctrl += key[keycode.CTRL];
 
