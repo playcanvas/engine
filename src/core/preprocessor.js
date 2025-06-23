@@ -33,6 +33,9 @@ const DEFINED = /(!|\s)?defined\(([\w-]+)\)/;
 // Matches all defined(...) patterns for parentheses check
 const DEFINED_PARENS = /!?defined\s*\([^)]*\)/g;
 
+// Matches defined or !defined at the end of a string (for parentheses detection)
+const DEFINED_BEFORE_PAREN = /(!?defined)\s*$/;
+
 // Matches comparison operators like ==, !=, <, <=, >, >=
 const COMPARISON = /([a-z_]\w*)\s*(==|!=|<|<=|>|>=)\s*([\w"']+)/i;
 
@@ -615,9 +618,9 @@ class Preprocessor {
             let inDefinedParen = 0;
             for (let i = 0; i < processed.length; i++) {
                 if (processed[i] === '(') {
-                    // Check if this is part of defined() - look back for "defined"
-                    const beforeParen = processed.substring(Math.max(0, i - 8), i).trim();
-                    if (beforeParen.endsWith('defined') || beforeParen.endsWith('!defined')) {
+                    // Check if this is part of defined() - look back for "defined" or "!defined"
+                    const beforeParen = processed.substring(0, i);
+                    if (DEFINED_BEFORE_PAREN.test(beforeParen)) {
                         inDefinedParen++;
                     } else if (inDefinedParen === 0) {
                         depth++;
