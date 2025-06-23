@@ -417,8 +417,8 @@ class FirstPersonController extends Script {
      * @param {number} dt - The delta time.
      */
     update(dt) {
-        const { keycode } = KeyboardMouseSource;
-        const { buttoncode } = GamepadSource;
+        const { keyCode } = KeyboardMouseSource;
+        const { buttonCode } = GamepadSource;
 
         const { key, button, mouse } = this._desktopInput.read();
         const { leftInput, rightInput } = this._mobileInput.read();
@@ -430,16 +430,16 @@ class FirstPersonController extends Script {
 
         // update state
         this._state.axis.add(v.set(
-            (key[keycode.D] - key[keycode.A]) + (key[keycode.RIGHT] - key[keycode.LEFT]),
-            (key[keycode.E] - key[keycode.Q]),
-            (key[keycode.W] - key[keycode.S]) + (key[keycode.UP] - key[keycode.DOWN])
+            (key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]),
+            (key[keyCode.E] - key[keyCode.Q]),
+            (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])
         ));
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }
-        this._state.space += key[keycode.SPACE] + buttons[buttoncode.A];
-        this._state.shift += key[keycode.SHIFT];
-        this._state.ctrl += key[keycode.CTRL];
+        this._state.space += key[keyCode.SPACE] + buttons[buttonCode.A];
+        this._state.shift += key[keyCode.SHIFT];
+        this._state.ctrl += key[keyCode.CTRL];
 
         // check if grounded
         const start = this.entity.getPosition();

@@ -21,11 +21,11 @@ const array = Array(KEY_COUNT).fill(0);
  */
 class KeyboardMouseSource extends InputSource {
     /**
-     * The keycodes.
+     * The key codes for the keyboard keys.
      *
      * @readonly
      */
-    static keycode = {
+    static keyCode = {
         A: 0,
         B: 1,
         C: 2,
@@ -120,32 +120,32 @@ class KeyboardMouseSource extends InputSource {
 
         this._pointerLock = pointerLock ?? false;
 
-        const id = KeyboardMouseSource.keycode;
+        const { keyCode } = KeyboardMouseSource;
 
         // Alphabetical keys
         for (let i = 0; i < 26; i++) {
             const code = `Key${String.fromCharCode('A'.charCodeAt(0) + i)}`;
-            this._keyMap.set(code, id.A + i);
+            this._keyMap.set(code, keyCode.A + i);
         }
 
         // Numeric keys
         for (let i = 0; i < 10; i++) {
             const code = `Digit${i}`;
-            this._keyMap.set(code, id['0'] + i);
+            this._keyMap.set(code, keyCode['0'] + i);
         }
 
         // Arrow keys
-        this._keyMap.set('ArrowUp', id.UP);
-        this._keyMap.set('ArrowDown', id.DOWN);
-        this._keyMap.set('ArrowLeft', id.LEFT);
-        this._keyMap.set('ArrowRight', id.RIGHT);
+        this._keyMap.set('ArrowUp', keyCode.UP);
+        this._keyMap.set('ArrowDown', keyCode.DOWN);
+        this._keyMap.set('ArrowLeft', keyCode.LEFT);
+        this._keyMap.set('ArrowRight', keyCode.RIGHT);
 
         // Special keys
-        this._keyMap.set('Space', id.SPACE);
-        this._keyMap.set('ShiftLeft', id.SHIFT);
-        this._keyMap.set('ShiftRight', id.SHIFT);
-        this._keyMap.set('ControlLeft', id.CTRL);
-        this._keyMap.set('ControlRight', id.CTRL);
+        this._keyMap.set('Space', keyCode.SPACE);
+        this._keyMap.set('ShiftLeft', keyCode.SHIFT);
+        this._keyMap.set('ShiftRight', keyCode.SHIFT);
+        this._keyMap.set('ControlLeft', keyCode.CTRL);
+        this._keyMap.set('ControlRight', keyCode.CTRL);
 
         this._onWheel = this._onWheel.bind(this);
         this._onPointerDown = this._onPointerDown.bind(this);

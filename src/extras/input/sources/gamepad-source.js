@@ -18,7 +18,7 @@ class GamepadSource extends InputSource {
      *
      * @readonly
      */
-    static buttoncode = {
+    static buttonCode = {
         A: 0,
         B: 1,
         X: 2,
