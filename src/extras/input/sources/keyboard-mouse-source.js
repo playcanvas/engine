@@ -78,6 +78,12 @@ class KeyboardMouseSource extends InputSource {
     _pointerId = 0;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _pointerLock;
+
+    /**
      * @type {Map<string, number>}
      * @private
      */
@@ -100,13 +106,19 @@ class KeyboardMouseSource extends InputSource {
      */
     _button = Array(3).fill(0);
 
-    constructor() {
+    /**
+     * @param {object} [options] - The options.
+     * @param {boolean} [options.pointerLock] - Whether to enable pointer lock.
+     */
+    constructor({ pointerLock = false } = {}) {
         super({
             key: Array(KEY_COUNT).fill(0),
             button: [0, 0, 0],
             mouse: [0, 0],
             wheel: [0]
         });
+
+        this._pointerLock = pointerLock ?? false;
 
         const id = KeyboardMouseSource.keycode;
 
@@ -161,7 +173,13 @@ class KeyboardMouseSource extends InputSource {
         if (event.pointerType !== 'mouse') {
             return;
         }
-        this._element?.setPointerCapture(event.pointerId);
+        if (this._pointerLock) {
+            if (document.pointerLockElement !== this._element) {
+                this._element?.requestPointerLock();
+            }
+        } else {
+            this._element?.setPointerCapture(event.pointerId);
+        }
 
         this._clearButtons();
         this._button[event.button] = 1;
@@ -184,8 +202,14 @@ class KeyboardMouseSource extends InputSource {
         if (event.target !== this._element) {
             return;
         }
-        if (this._pointerId !== event.pointerId) {
-            return;
+        if (this._pointerLock) {
+            if (document.pointerLockElement !== this._element) {
+                return;
+            }
+        } else {
+            if (this._pointerId !== event.pointerId) {
+                return;
+            }
         }
         this.deltas.mouse.append([event.movementX, event.movementY]);
     }
@@ -198,7 +222,9 @@ class KeyboardMouseSource extends InputSource {
         if (event.pointerType !== 'mouse') {
             return;
         }
-        this._element?.releasePointerCapture(event.pointerId);
+        if (!this._pointerLock) {
+            this._element?.releasePointerCapture(event.pointerId);
+        }
 
         this._clearButtons();
         this.deltas.button.append(this._button);
@@ -222,6 +248,9 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _onKeyDown(event) {
+        if (this._pointerLock && document.pointerLockElement !== this._element) {
+            return;
+        }
         event.stopPropagation();
         this._setKey(event.code, 1);
     }
