@@ -437,7 +437,7 @@ class FirstPersonController extends Script {
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }
-        this._state.space += key[keycode.SPACE] + key[buttoncode.A];
+        this._state.space += key[keycode.SPACE] + buttons[buttoncode.A];
         this._state.shift += key[keycode.SHIFT];
         this._state.ctrl += key[keycode.CTRL];
 
