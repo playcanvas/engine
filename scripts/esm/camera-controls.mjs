@@ -707,7 +707,7 @@ class CameraControls extends Script {
      * @param {number} dt - The time delta.
      */
     update(dt) {
-        const { keycode } = KeyboardMouseSource;
+        const { keyCode } = KeyboardMouseSource;
 
         const { key, button, mouse, wheel } = this._desktopInput.read();
         const { touch, pinch, count } = this._orbitMobileInput.read();
@@ -720,15 +720,15 @@ class CameraControls extends Script {
 
         // update state
         this._state.axis.add(tmpV1.set(
-            (key[keycode.D] - key[keycode.A]) + (key[keycode.RIGHT] - key[keycode.LEFT]),
-            (key[keycode.E] - key[keycode.Q]),
-            (key[keycode.W] - key[keycode.S]) + (key[keycode.UP] - key[keycode.DOWN])
+            (key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]),
+            (key[keyCode.E] - key[keyCode.Q]),
+            (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])
         ));
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }
-        this._state.shift += key[keycode.SHIFT];
-        this._state.ctrl += key[keycode.CTRL];
+        this._state.shift += key[keyCode.SHIFT];
+        this._state.ctrl += key[keyCode.CTRL];
         this._state.touches += count[0];
 
         if (button[0] === 1 || button[1] === 1 || wheel[0] !== 0) {
