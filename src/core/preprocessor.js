@@ -34,7 +34,7 @@ const DEFINED = /(!|\s)?defined\(([\w-]+)\)/;
 const DEFINED_PARENS = /!?defined\s*\([^)]*\)/g;
 
 // Matches defined or !defined at the end of a string (for parentheses detection)
-const DEFINED_BEFORE_PAREN = /(!?defined)\s*$/;
+const DEFINED_BEFORE_PAREN = /!?defined\s*$/;
 
 // Matches comparison operators like ==, !=, <, <=, >, >=
 const COMPARISON = /([a-z_]\w*)\s*(==|!=|<|<=|>|>=)\s*([\w"']+)/i;
