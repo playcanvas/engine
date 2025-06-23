@@ -30,6 +30,9 @@ const IDENTIFIER = /\{?[\w-]+\}?/;
 // [!]defined(EXPRESSION)
 const DEFINED = /(!|\s)?defined\(([\w-]+)\)/;
 
+// Matches all defined(...) patterns for parentheses check
+const DEFINED_PARENS = /!?defined\s*\([^)]*\)/g;
+
 // Matches comparison operators like ==, !=, <, <=, >, >=
 const COMPARISON = /([a-z_]\w*)\s*(==|!=|<|<=|>|>=)\s*([\w"']+)/i;
 
@@ -666,8 +669,19 @@ class Preprocessor {
         const correct = INVALID.exec(expression) === null;
         Debug.assert(correct, `Resolving expression like this is not supported: ${expression}`);
 
-        // Process parentheses first
-        const { expression: processedExpr, error: parenError } = Preprocessor.processParentheses(expression, defines);
+        // Process parentheses first (skip if no parentheses exist or only defined() parentheses)
+        let processedExpr = expression;
+        let parenError = false;
+
+        // Quick check: remove all defined(...) patterns and see if any parentheses remain
+        // If they do, process them recursively to handle nested parentheses
+        const withoutDefined = expression.replace(DEFINED_PARENS, '');
+        if (withoutDefined.indexOf('(') !== -1) {
+            const processed = Preprocessor.processParentheses(expression, defines);
+            processedExpr = processed.expression;
+            parenError = processed.error;
+        }
+
         if (parenError) {
             return { result: false, error: true };
         }
