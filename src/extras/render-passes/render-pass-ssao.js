@@ -1,5 +1,5 @@
 import { BlueNoise } from '../../core/math/blue-noise.js';
-import { Color } from '../../core/math/color';
+import { Color } from '../../core/math/color.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL

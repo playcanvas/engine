@@ -1,4 +1,4 @@
-import { Color } from '../../core/math/color';
+import { Color } from '../../core/math/color.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';

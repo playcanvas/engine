@@ -1,9 +1,9 @@
 import { EventHandler } from '../../core/event-handler.js';
-import { Color } from '../../core/math/color';
+import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-import { COLOR_BLUE, COLOR_GREEN, COLOR_RED } from './color';
+import { COLOR_BLUE, COLOR_GREEN, COLOR_RED } from './color.js';
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();

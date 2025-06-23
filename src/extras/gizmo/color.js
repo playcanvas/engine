@@ -1,4 +1,4 @@
-import { Color } from '../../core/math/color';
+import { Color } from '../../core/math/color.js';
 
 export const COLOR_RED = Object.freeze(new Color(1, 0.3, 0.3));
 export const COLOR_GREEN = Object.freeze(new Color(0.3, 1, 0.3));

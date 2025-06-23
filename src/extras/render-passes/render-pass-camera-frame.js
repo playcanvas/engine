@@ -15,7 +15,7 @@ import { RenderPassSsao } from './render-pass-ssao.js';
 import { SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE } from './constants.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassDownsample } from './render-pass-downsample.js';
-import { Color } from '../../core/math/color';
+import { Color } from '../../core/math/color.js';
 
 /**
  * Options used to configure the RenderPassCameraFrame. To modify these options, you must create

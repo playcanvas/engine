@@ -1,6 +1,6 @@
 import { string } from '../../core/string.js';
 import { EventHandler } from '../../core/event-handler.js';
-import { Color } from '../../core/math/color';
+import { Color } from '../../core/math/color.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,

@@ -1,4 +1,4 @@
-import { Color } from '../../../core/math/color';
+import { Color } from '../../../core/math/color.js';
 import {
     BLUR_GAUSSIAN,
     LAYERID_WORLD,

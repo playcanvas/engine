@@ -1,5 +1,5 @@
 import { math } from '../../core/math/math.js';
-import { Color } from '../../core/math/color';
+import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Ray } from '../../core/shape/ray.js';
@@ -14,7 +14,7 @@ import {
     COLOR_GRAY,
     color3from4,
     color4from3
-} from './color';
+} from './color.js';
 import { GIZMOAXIS_FACE, GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
 import { Gizmo } from './gizmo.js';
 

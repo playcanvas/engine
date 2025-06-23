@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { Color } from '../../core/math/color';
+import { Color } from '../../core/math/color.js';
 import { Curve } from '../../core/math/curve.js';
 import { CurveSet } from '../../core/math/curve-set.js';
 import { Vec2 } from '../../core/math/vec2.js';

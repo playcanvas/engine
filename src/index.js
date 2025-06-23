@@ -81,7 +81,7 @@ export { Tracing } from './core/tracing.js';
 // CORE / MATH
 export * from './core/math/constants.js';
 export { math } from './core/math/math.js';
-export { Color } from './core/math/color';
+export { Color } from './core/math/color.js';
 export { Curve } from './core/math/curve.js';
 export { CurveSet } from './core/math/curve-set.js';
 export { FloatPacking } from './core/math/float-packing.js';

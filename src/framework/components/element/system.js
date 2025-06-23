@@ -1,4 +1,4 @@
-import { Color } from '../../../core/math/color';
+import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
 import { PIXELFORMAT_SRGBA8 } from '../../../platform/graphics/constants.js';

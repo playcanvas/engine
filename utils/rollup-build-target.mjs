@@ -13,6 +13,7 @@ import { engineLayerImportValidation } from './plugins/rollup-import-validation.
 import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 import { dynamicImportLegacyBrowserSupport, dynamicImportBundlerSuppress } from './plugins/rollup-dynamic.mjs';
 import { treeshakeIgnore } from './plugins/rollup-treeshake-ignore.mjs';
+import { resolveTsExtensions } from './plugins/rollup-resolve-ts-extensions.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
@@ -255,6 +256,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
             entryFileNames: chunkInfo => `${chunkInfo.name.replace(/node_modules/g, 'modules')}.js`
         },
         plugins: [
+            resolveTsExtensions(),
             resolve({
                 extensions: ['.js', '.ts', '.json']
             }),

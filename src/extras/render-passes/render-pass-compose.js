@@ -1,5 +1,5 @@
 import { math } from '../../core/math/math.js';
-import { Color } from '../../core/math/color';
+import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';

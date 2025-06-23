@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { Color } from '../../core/math/color';
+import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
 import { SSAOTYPE_NONE } from './constants.js';

@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { string } from '../../../core/string.js';
 import { math } from '../../../core/math/math.js';
-import { Color } from '../../../core/math/color';
+import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR, SEMANTIC_ATTR8, SEMANTIC_ATTR9, TYPE_FLOAT32 } from '../../../platform/graphics/constants.js';

@@ -1,7 +1,7 @@
 import { math } from '../../../core/math/math.js';
 import { Debug } from '../../../core/debug.js';
 import { platform } from '../../../core/platform.js';
-import { Color } from '../../../core/math/color';
+import { Color } from '../../../core/math/color.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_NONE,

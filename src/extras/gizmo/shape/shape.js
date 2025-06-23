@@ -1,4 +1,4 @@
-import { Color } from '../../../core/math/color';
+import { Color } from '../../../core/math/color.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { ShaderMaterial } from '../../../scene/materials/shader-material.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
@@ -6,7 +6,7 @@ import { Entity } from '../../../framework/entity.js';
 import { CULLFACE_BACK, SEMANTIC_POSITION, SEMANTIC_COLOR } from '../../../platform/graphics/constants.js';
 import { BLEND_NORMAL } from '../../../scene/constants.js';
 
-import { COLOR_GRAY } from '../color';
+import { COLOR_GRAY } from '../color.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { Geometry } from '../../../scene/geometry/geometry.js';
 import { BoxGeometry } from '../../../scene/geometry/box-geometry.js';

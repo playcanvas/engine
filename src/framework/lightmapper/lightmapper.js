@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
-import { Color } from '../../core/math/color';
+import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';

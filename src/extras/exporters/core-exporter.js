@@ -9,7 +9,7 @@ import {
 } from '../../platform/graphics/constants.js';
 
 /**
- * @import { Color } from '../../core/math/color'
+ * @import { Color } from '../../core/math/color.js'
  */
 
 /**

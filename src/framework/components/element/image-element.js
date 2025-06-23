@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { TRACEID_ELEMENT } from '../../../core/constants.js';
 import { math } from '../../../core/math/math.js';
-import { Color } from '../../../core/math/color';
+import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
