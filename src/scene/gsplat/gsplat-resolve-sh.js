@@ -1,10 +1,7 @@
-import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
     CULLFACE_NONE,
     PIXELFORMAT_RGBA8,
-    PIXELFORMAT_R8,
-    PIXELFORMAT_RGBA32U,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
@@ -12,6 +9,8 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 import { Vec2 } from '../../core/math/vec2.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { QuadRender } from '../graphics/quad-render.js';
 
 const genVS = /* glsl */`
     attribute vec2 vertex_position;
@@ -90,22 +89,23 @@ const genFS = /* glsl */`
         return result;
     }
 
-    uniform vec3 dir;
-    uniform highp sampler2D centroids;
-    uniform float shN_mins;
-    uniform float shN_maxs;
+    uniform mediump vec3 dir;
+    uniform mediump sampler2D centroids;
+    uniform mediump float shN_mins;
+    uniform mediump float shN_maxs;
 
     void main(void) {
-        ivec2 uv = ivec2(gl_FragCoord.xy);
-        vec3 coefficients[SH_COEFFS];
+        ivec2 uv = ivec2(gl_FragCoord.xy) * ivec2(SH_COEFFS, 1);
+        mediump vec3 coefficients[SH_COEFFS];
 
         // read coefficients
         for (int i = 0; i < SH_COEFFS; i++) {
-            vec3 s = texelFetch(centroids, ivec2(uv.x * SH_COEFFS + i, uv.y), 0).xyz;
+            vec3 s = texelFetch(centroids, ivec2(uv.x + i, uv.y), 0).xyz;
             coefficients[i] = mix(vec3(shN_mins), vec3(shN_maxs), s);
         }
 
-        gl_FragColor = vec4(evalSH(coefficients, dir) * 0.25 + 0.25, 1.0);
+        // evaluate
+        gl_FragColor = vec4(evalSH(coefficients, dir) * 0.25 + 0.5, 1.0);
     }
 `;
 
@@ -114,6 +114,17 @@ const resolve = (scope, values) => {
         scope.resolve(key).setValue(values[key]);
     }
 };
+
+class CustomRenderPass extends RenderPass {
+    /**
+     * @type {() => void | null}
+     */
+    executeCallback = null;
+
+    execute() {
+        this.executeCallback?.();
+    }
+}
 
 class GSplatResolveSH {
     constructor(device, gsplatInstance) {
@@ -131,7 +142,7 @@ class GSplatResolveSH {
             vertexIncludes: includes,
             fragmentIncludes: includes,
             fragmentDefines: new Map([
-                ['SH_BANDS', '3'],
+                ['SH_BANDS', resource.gsplatData.shBands.toString()],
             ]),
             attributes: {
                 vertex_position: SEMANTIC_POSITION
@@ -143,6 +154,13 @@ class GSplatResolveSH {
             colorBuffer: this.texture,
             depth: false
         });
+
+        this.renderPass = new CustomRenderPass(device);
+        this.renderPass.init(this.renderTarget, {});
+        this.renderPass.colorOps.clear = true;
+        this.quadRender = new QuadRender(this.shader);
+
+        device.scope.resolve('sh_result').setValue(this.texture);
     }
 
     destroy() {
@@ -152,27 +170,32 @@ class GSplatResolveSH {
     }
 
     update(camera, modelMat) {
-        const { device } = this;
 
-        // camera direction in model space
-        const m = modelMat.clone().invert();
-        const dir = m.transformVector(camera.forward);
+        this.renderPass.executeCallback = () => {
+            const { device } = this;
 
-        const { gsplatData } = this.gsplatInstance.resource;
-        const { sh_centroids, meta } = gsplatData;
+            // camera direction in model space
+            const m = modelMat.clone().invert();
+            const dir = m.transformVector(camera.forward);
 
-        resolve(device.scope, {
-            dir: dir.toArray(),
-            centroids: sh_centroids,
-            shN_mins: meta.shN.mins,
-            shN_maxs: meta.shN.maxs
-        });
+            const { sh_centroids, meta } = this.gsplatInstance.resource.gsplatData;
 
-        device.setBlendState(BlendState.NOBLEND);
-        device.setCullMode(CULLFACE_NONE);
-        device.setDepthState(DepthState.NODEPTH);
+            resolve(device.scope, {
+                dir: dir.toArray(),
+                centroids: sh_centroids,
+                shN_mins: meta.shN.mins,
+                shN_maxs: meta.shN.maxs
+            });
 
-        drawQuadWithShader(this.device, this.renderTarget, this.shader);
+            device.setCullMode(CULLFACE_NONE);
+            device.setDepthState(DepthState.NODEPTH);
+            device.setStencilState(null, null);
+            device.setBlendState(BlendState.NOBLEND);
+
+            this.quadRender.render()
+        };
+
+        this.renderPass.render();
     }
 }
 

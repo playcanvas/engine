@@ -11,7 +11,7 @@ class GSplatSogsResource extends GSplatResourceBase {
         const { gsplatData } = this;
 
         material.setDefine('GSPLAT_SOGS_DATA', true);
-        material.setDefine('SH_BANDS', this.gsplatData.shBands);
+        material.setDefine('SH_BANDS', '0'); // this.gsplatData.shBands);
 
         ['means_l', 'means_u', 'quats', 'scales', 'sh0', 'sh_centroids', 'sh_labels'].forEach((name) => {
             if (gsplatData[name]) {
