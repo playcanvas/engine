@@ -114,12 +114,6 @@ class FirstPersonController extends Script {
     _angles = new Vec3();
 
     /**
-     * @type {Vec3}
-     * @private
-     */
-    _velocity = new Vec3();
-
-    /**
      * @type {boolean}
      * @private
      */
