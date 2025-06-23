@@ -395,17 +395,16 @@ class FirstPersonController extends Script {
 
         // rotate
         this._angles.add(v.set(-rotate[1], -rotate[0], 0));
+        this._angles.x = math.clamp(this._angles.x, -90, 90);
         this.camera.entity.setLocalEulerAngles(this._angles);
 
         // move
-        rotation.setFromEulerAngles(this._angles);
+        rotation.setFromEulerAngles(0, this._angles.y, 0);
         rotation.transformVector(Vec3.FORWARD, forward);
         rotation.transformVector(Vec3.RIGHT, right);
-        rotation.transformVector(Vec3.UP, up);
         offset.set(0, 0, 0);
         offset.add(forward.mulScalar(move[2]));
         offset.add(right.mulScalar(move[0]));
-        offset.add(up.mulScalar(move[1]));
         const velocity = this._rigidbody.linearVelocity.add(offset);
         const alpha = damp(this._grounded ? this.velocityDampingGround : this.velocityDampingAir, dt);
         velocity.x = math.lerp(velocity.x, 0, alpha);
