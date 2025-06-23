@@ -8,14 +8,24 @@ uniform highp usampler2D splatOrder;    // per-splat index to source gaussian
 // initialize the splat source structure
 bool initSource(out SplatSource source) {
     uint w = uint(textureSize(splatOrder, 0).x);
-    uint idx = vertex_id_attrib + uint(vertex_position.z);
-    if (idx >= numSplats) {
-        return false;   // out of range
+
+    // calculate splat order
+    source.order = vertex_id_attrib + uint(vertex_position.z);
+
+    // return if out of range (since the last block of splats may be partially full)
+    if (source.order >= numSplats) {
+        return false;
     }
 
-    source.order = idx;
-    source.id = idx;
+    ivec2 orderUV = ivec2(source.order % w, source.order / w);
+
+    // read splat id
+    source.id = texelFetch(splatOrder, orderUV, 0).r;
+
+    // map id to uv
     source.uv = ivec2(source.id % w, source.id / w);
+
+    // get the corner
     source.cornerUV = vertex_position.xy;
 
     return true;

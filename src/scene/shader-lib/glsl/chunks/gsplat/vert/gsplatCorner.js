@@ -70,9 +70,6 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
     corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) * c;
     corner.uv = source.cornerUV;
 
-    corner.v = l1 * diagonalVector;
-    corner.dlen = l2;
-
     return true;
 }
 `;

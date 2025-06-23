@@ -2,8 +2,9 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { MeshInstance } from '../mesh-instance.js';
+import { GSplatResolveSH } from './gsplat-resolve-sh.js';
 import { GSplatSorter } from './gsplat-sorter.js';
-import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
+import { GSplatSogsData } from './gsplat-sogs-data.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
 
@@ -42,8 +43,8 @@ class GSplatInstance {
 
     lastCameraDirection = new Vec3();
 
-    /** @type {GSplatWorkBuffer|null} */
-    gsplatWorkBuffer = null;
+    /** @type {GSplatResolveSH|null} */
+    gsplatResolveSH = null;
 
     /**
      * List of cameras this instance is visible for. Updated every frame by the renderer.
@@ -118,14 +119,17 @@ class GSplatInstance {
             this.material.setParameter('numSplats', count);
         });
 
-        this.gsplatWorkBuffer = new GSplatWorkBuffer(resource.device, this);
+        // sogs
+        if (resource.gsplatData instanceof GSplatSogsData) {
+            this.gsplatResolveSH = new GSplatResolveSH(resource.device, this);
+        }
     }
 
     destroy() {
         this.material?.destroy();
         this.meshInstance?.destroy();
         this.sorter?.destroy();
-        this.gsplatWorkBuffer?.destroy();
+        this.gsplatResolveSH?.destroy();
     }
 
     /**
@@ -221,8 +225,8 @@ class GSplatInstance {
             const camera = this.cameras[0];
             this.sort(camera._node);
 
-            if (!window.nocull) {
-                this.gsplatWorkBuffer?.update(camera._node, this.meshInstance.node.getWorldTransform());
+            if (!window.noGsUpdate) {
+                this.gsplatResolveSH?.update(camera._node, this.meshInstance.node.getWorldTransform());
             }
 
             // we get new list of cameras each frame
