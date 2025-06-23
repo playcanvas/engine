@@ -48,21 +48,6 @@ class GamepadSource extends InputSource {
     }
 
     /**
-     * @param {HTMLElement} element - The element.
-     */
-    attach(element) {
-        super.attach(element);
-    }
-
-    detach() {
-        if (!this._element) {
-            return;
-        }
-
-        super.detach();
-    }
-
-    /**
      * @override
      */
     read() {
