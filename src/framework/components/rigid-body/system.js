@@ -10,7 +10,9 @@ import { RigidBodyComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { CollisionComponent } from '../collision/component.js'
  * @import { Entity } from '../../entity.js'
+ * @import { Trigger } from '../collision/trigger.js'
  */
 
 let ammoRayStart, ammoRayEnd;
@@ -402,13 +404,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
     _kinematic = [];
 
     /**
-     * @type {RigidBodyComponent[]}
+     * @type {Trigger[]}
      * @private
      */
     _triggers = [];
 
     /**
-     * @type {RigidBodyComponent[]}
+     * @type {CollisionComponent[]}
      * @private
      */
     _compounds = [];

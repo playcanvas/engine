@@ -19,6 +19,14 @@ export default /* wgsl */`
     #include "floatAsUintPS"
 #endif
 
+// Fast approximate e^x based on https://nic.schraudolph.org/pubs/Schraudolph99.pdf
+const EXP_A: f32      = 12102203.0;   // ≈ 2^23 / ln(2)
+const EXP_BC_RMS: i32 = 1064866808;   // (127 << 23) - 60801 * 8
+fn fastExp(x: f32) -> f32 {
+    var i: i32 = i32(EXP_A * x) + EXP_BC_RMS;
+    return bitcast<f32>(i);
+}
+
 varying gaussianUV: vec2f;
 varying gaussianColor: vec4f;
 
@@ -33,7 +41,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     }
 
     // evaluate alpha
-    var alpha: f32 = exp(-A * 4.0) * gaussianColor.a;
+    var alpha: f32 = fastExp(-A * 4.0) * gaussianColor.a;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < uniform.alphaClip) {

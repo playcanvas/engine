@@ -1,7 +1,7 @@
 import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 import { http, Http } from '../../platform/net/http.js';
-import { hasAudioContext } from '../../platform/audio/capabilities.js';
+import { hasAudioContext } from '../../platform/sound/capabilities.js';
 import { Sound } from '../../platform/sound/sound.js';
 import { ResourceHandler } from './handler.js';
 

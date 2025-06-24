@@ -1,6 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { math } from '../../core/math/math.js';
-import { hasAudioContext } from '../audio/capabilities.js';
+import { hasAudioContext } from './capabilities.js';
 
 /**
  * @import { SoundManager } from './manager.js'

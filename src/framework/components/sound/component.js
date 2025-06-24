@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { DISTANCE_LINEAR } from '../../../platform/audio/constants.js';
+import { DISTANCE_LINEAR } from '../../../platform/sound/constants.js';
 import { Component } from '../component.js';
 import { SoundSlot } from './slot.js';
 

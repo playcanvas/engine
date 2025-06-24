@@ -658,7 +658,7 @@ class BatchManager {
             batch = new Batch(meshInstances, dynamic, batchGroupId);
             this._batchList.push(batch);
 
-            let indexBase, numIndices, indexData;
+            let indexBase, indexBaseVertex, numIndices, indexData;
             let verticesOffset = 0;
             let indexOffset = 0;
             let transform;
@@ -760,6 +760,7 @@ class BatchManager {
                 // index buffer
                 if (mesh.primitive[0].indexed) {
                     indexBase = mesh.primitive[0].base;
+                    indexBaseVertex = mesh.primitive[0].baseVertex || 0;
                     numIndices = mesh.primitive[0].count;
 
                     // source index buffer data mapped to its format
@@ -767,6 +768,8 @@ class BatchManager {
                     indexData = new typedArrayIndexFormats[srcFormat](mesh.indexBuffer[0].storage);
 
                 } else { // non-indexed
+
+                    indexBaseVertex = 0;
 
                     const primitiveType = mesh.primitive[0].type;
                     if (primitiveType === PRIMITIVE_TRIFAN || primitiveType === PRIMITIVE_TRISTRIP) {
@@ -782,7 +785,7 @@ class BatchManager {
                 }
 
                 for (let j = 0; j < numIndices; j++) {
-                    indices[j + indexOffset] = indexData[indexBase + j] + verticesOffset;
+                    indices[j + indexOffset] = indexData[indexBase + j] + indexBaseVertex + verticesOffset;
                 }
 
                 indexOffset += numIndices;
