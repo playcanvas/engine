@@ -26,6 +26,12 @@ jobs:
           cache: 'npm'
           registry-url: 'https://registry.npmjs.org/'
 
+      - name: Configure Git User
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "Nightly Release Action"
+        shell: bash
+
       - name: Bump version
         run: |
           npm version prerelease --preid=dev
