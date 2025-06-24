@@ -33,12 +33,8 @@ jobs:
           npm version prerelease --preid=dev
           echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
-      - name: Push changes
+      - name: Push version
         run: |
           git push origin HEAD:${{ github.ref_name }}
-        shell: bash
-
-      - name: Push tag
-        run: |
           git push origin --tags
         shell: bash
