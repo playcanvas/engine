@@ -11,7 +11,7 @@
     "clean": "node ./scripts/clean.mjs",
     "develop": "cross-env NODE_ENV=development concurrently --kill-others \"npm run watch\" \"npm run serve\"",
     "lint": "eslint .",
-    "serve": "serve dist -l 5555 --no-request-logging --config ../serve.json",
+    "serve": "PORT=5555 node scripts/serve.js",
     "watch": "npm run -s build:metadata && cross-env NODE_ENV=development rollup -c -w"
   },
   "devDependencies": {
