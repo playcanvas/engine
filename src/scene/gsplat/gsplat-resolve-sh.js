@@ -89,6 +89,15 @@ const fragmentGLSL = /* glsl */`
         return result;
     }
 
+    // takes a normalized 3-component value, convert to (11, 11, 10) bit range and
+    // then package into RGBA8
+    vec4 packRgb(vec3 v) {
+        uvec3 vb = uvec3(clamp(v, vec3(0.0), vec3(1.0)) * vec3(2047.0, 2047.0, 1023.0));
+        uint bits = (vb.x << 21) | (vb.y << 10) | vb.z;
+        return vec4((uvec4(bits) >> uvec4(24, 16, 8, 0)) & uvec4(0xff)) / vec4(255.0);
+    }
+
+
     uniform mediump vec3 dir;
     uniform mediump sampler2D centroids;
     uniform mediump float shN_mins;
@@ -105,7 +114,7 @@ const fragmentGLSL = /* glsl */`
         }
 
         // evaluate
-        gl_FragColor = vec4(evalSH(coefficients, dir) * 0.25 + 0.5, 1.0);
+        gl_FragColor = packRgb(evalSH(coefficients, dir) * 0.25 + 0.5);
     }
 `;
 
@@ -189,6 +198,14 @@ const fragmentWGSL = /* wgsl */`
         return result;
     }
 
+    // takes a normalized 3-component value, convert to (11, 11, 10) bit range and
+    // then package into RGBA8
+    fn packRgb(v: vec3f) -> vec4f {
+        let vb = vec3u(clamp(v, vec3f(0.0), vec3f(1.0)) * vec3f(2047.0, 2047.0, 1023.0));
+        let bits = dot(vb, vec3u(1 << 21, 1 << 10, 1));
+        return vec4f((vec4u(bits) >> vec4u(24, 16, 8, 0)) & vec4u(0xff)) / vec4f(255.0);
+    }
+
     uniform dir: vec3f;
     uniform shN_mins: f32;
     uniform shN_maxs: f32;
@@ -209,7 +226,7 @@ const fragmentWGSL = /* wgsl */`
         }
 
         // evaluate
-        output.color = vec4f(evalSH(coefficients, uniform.dir) * 0.25 + 0.5, 1.0);
+        output.color = packRgb(evalSH(coefficients, uniform.dir) * 0.25 + 0.5);
 
         return output;
     }
@@ -278,8 +295,7 @@ class GSplatResolveSH {
     }
 
     update(camera, modelMat) {
-
-        this.renderPass.executeCallback = () => {
+        const execute = () => {
             const { device } = this;
 
             // camera direction in model space
@@ -303,6 +319,7 @@ class GSplatResolveSH {
             this.quadRender.render()
         };
 
+        this.renderPass.executeCallback = execute;
         this.renderPass.render();
     }
 }
