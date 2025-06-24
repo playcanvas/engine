@@ -42,7 +42,7 @@ export default /* wgsl */`
         #include "particle_normalMapPS"
     #endif
 
-    #if LIGHTING &&NORMAL != NONE
+    #if LIGHTING && NORMAL != NONE
         #ifdef HALF_LAMBERT
             #include "particle_halflambertPS"
         #else
