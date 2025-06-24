@@ -14,25 +14,26 @@ import {
 
 /**
  * @typedef {object} FirstPersonControllerState
- * @property {Vec3} axis - The axis.
- * @property {number} space - The space.
- * @property {number} shift - The shift.
- * @property {number} ctrl - The ctrl.
- * @property {number[]} mouse - The mouse.
+ * @property {Vec3} axis - The movement axis.
+ * @property {number[]} mouse - The mouse position.
+ * @property {number} a - The 'A' button state.
+ * @property {number} space - The space key state.
+ * @property {number} shift - The shift key state.
+ * @property {number} ctrl - The ctrl key state.
  */
 
 const v = new Vec3();
 
 const forward = new Vec3();
 const right = new Vec3();
-const up = new Vec3();
 
 const offset = new Vec3();
 const rotation = new Quat();
 
 const frame = new InputFrame({
     move: [0, 0, 0],
-    rotate: [0, 0, 0]
+    rotate: [0, 0, 0],
+    jump: [0]
 });
 
 /**
@@ -101,10 +102,11 @@ class FirstPersonController extends Script {
      */
     _state = {
         axis: new Vec3(),
+        mouse: [0, 0, 0],
+        a: 0,
         space: 0,
         shift: 0,
-        ctrl: 0,
-        mouse: [0, 0, 0]
+        ctrl: 0
     };
 
     /**
@@ -377,18 +379,18 @@ class FirstPersonController extends Script {
     }
 
     /**
-     * @param {InputFrame<{ move: number[], rotate: number[] }>} frame - The input frame.
+     * @param {InputFrame<{ move: number[], rotate: number[], jump: number[] }>} frame - The input frame.
      * @param {number} dt - The delta time.
      * @private
      */
     _updateController(frame, dt) {
-        const { move, rotate } = frame.read();
+        const { move, rotate, jump } = frame.read();
 
         // jump
         if (this._rigidbody.linearVelocity.y < 0) {
             this._jumping = false;
         }
-        if (this._state.space && !this._jumping && this._grounded) {
+        if (jump[0] && !this._jumping && this._grounded) {
             this._jumping = true;
             this._rigidbody.applyImpulse(0, this.jumpForce, 0);
         }
@@ -436,7 +438,8 @@ class FirstPersonController extends Script {
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }
-        this._state.space += key[keyCode.SPACE] + buttons[buttonCode.A];
+        this._state.a += buttons[buttonCode.A];
+        this._state.space += key[keyCode.SPACE];
         this._state.shift += key[keyCode.SHIFT];
         this._state.ctrl += key[keyCode.CTRL];
 
@@ -467,6 +470,9 @@ class FirstPersonController extends Script {
         v.add(mouseRotate.mulScalar(rotateMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
+        // desktop jump
+        deltas.jump.append([this._state.space]);
+
         // mobile move
         v.set(0, 0, 0);
         const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]);
@@ -479,6 +485,9 @@ class FirstPersonController extends Script {
         v.add(mobileRotate.mulScalar(rotateTouchMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
+        // mobile jump
+        // TODO: implement double tap detection
+
         // gamepad move
         v.set(0, 0, 0);
         const stickMove = new Vec3(leftStick[0], 0, -leftStick[1]);
@@ -490,6 +499,9 @@ class FirstPersonController extends Script {
         const stickRotate = new Vec3(rightStick[0], rightStick[1], 0);
         v.add(stickRotate.mulScalar(rotateJoystickMult));
         deltas.rotate.append([v.x, v.y, v.z]);
+
+        // gamepad jump
+        deltas.jump.append([this._state.a]);
 
         // update controller
         this._updateController(frame, dt);
