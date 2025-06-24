@@ -6,6 +6,11 @@ name: Nightly
 
 on:
   workflow_dispatch:
+    inputs:
+      test:
+        description: 'Run tests'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
