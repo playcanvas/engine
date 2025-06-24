@@ -1,20 +1,16 @@
 name: Nightly
 
-# on:
-#   schedule:
-#     - cron: '0 0 * * *'  # Every day at midnight UTC
-
 on:
-  push:
-    branches: [ nightly ]
+  schedule:
+    - cron: '0 0 * * *'  # Every day at midnight UTC
 
 permissions:
   contents: write
 
 jobs:
-  publish-npm:
+  nightly:
     runs-on: ubuntu-latest
-    if: github.repository == 'playcanvas/engine'
+    if: github.repository == 'playcanvas/engine' && github.ref_name == 'main'
     steps:
       - name: Check out code
         uses: actions/checkout@v4
