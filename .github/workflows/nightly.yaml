@@ -1,0 +1,31 @@
+name: Nightly
+
+# on:
+#   schedule:
+#     - cron: '0 0 * * *'  # Every day at midnight UTC
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    if: github.repository == 'playcanvas/engine'
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 18.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Bump version
+        run: |
+          npm version prerelease --preid=dev
+          echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
