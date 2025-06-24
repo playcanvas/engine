@@ -5,12 +5,8 @@ name: Nightly
 #     - cron: '0 0 * * *'  # Every day at midnight UTC
 
 on:
-  workflow_dispatch:
-    inputs:
-      test:
-        description: 'Run tests'
-        required: false
-        default: 'false'
+  push:
+    branches: [ nightly ]
 
 permissions:
   contents: write
