@@ -1,4 +1,5 @@
 import { LAYERID_WORLD } from '../../../scene/constants.js';
+import { GSplatInstance } from '../../../scene/gsplat/gsplat-instance.js';
 import { Asset } from '../../asset/asset.js';
 import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
@@ -8,9 +9,7 @@ import { Component } from '../component.js';
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { GSplatComponentSystem } from './system.js'
- * @import { GSplatInstance } from '../../../scene/gsplat/gsplat-instance.js'
- * @import { Material } from '../../../scene/materials/material.js'
- * @import { SplatMaterialOptions } from '../../../scene/gsplat/gsplat-material.js'
+ * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
  */
 
 /**
@@ -39,8 +38,9 @@ import { Component } from '../component.js';
  *
  * Relevant Engine API examples:
  *
- * - [Loading a Splat](https://playcanvas.github.io/#/loaders/gsplat)
- * - [Custom Splat Shaders](https://playcanvas.github.io/#/loaders/gsplat-many)
+ * - [Loading a Splat](https://playcanvas.github.io/#/gaussian-splatting/simple)
+ * - [Custom Splat Shaders](https://playcanvas.github.io/#/gaussian-splatting/multi-splat)
+ * - [Splat picking](https://playcanvas.github.io/#/gaussian-splatting/picking)
  *
  * @hideconstructor
  * @category Graphics
@@ -56,6 +56,12 @@ class GSplatComponent extends Component {
     _instance = null;
 
     /**
+     * @type {ShaderMaterial|null}
+     * @private
+     */
+    _materialTmp = null;
+
+    /**
      * @type {BoundingBox|null}
      * @private
      */
@@ -66,12 +72,6 @@ class GSplatComponent extends Component {
      * @private
      */
     _assetReference;
-
-    /**
-     * @type {SplatMaterialOptions|null}
-     * @private
-     */
-    _materialOptions = null;
 
     /**
      * @type {EventHandle|null}
@@ -158,21 +158,15 @@ class GSplatComponent extends Component {
 
         this._instance = value;
 
-        if (this._instance?.meshInstance) {
+        if (this._instance) {
 
             // if mesh instance was created without a node, assign it here
             const mi = this._instance.meshInstance;
             if (!mi.node) {
                 mi.node = this.entity;
             }
-
             mi.castShadow = this._castShadows;
             mi.setCustomAabb(this._customAabb);
-
-            // if we have custom shader options, apply them
-            if (this._materialOptions) {
-                this._instance.createMaterial(this._materialOptions);
-            }
 
             if (this.enabled && this.entity.enabled) {
                 this.addToLayers();
@@ -190,26 +184,26 @@ class GSplatComponent extends Component {
         return this._instance;
     }
 
-    set materialOptions(value) {
-        this._materialOptions = Object.assign({}, value);
-
-        // apply them on the instance if it exists
+    /**
+     * Sets the material used to render the gsplat.
+     *
+     * @param {ShaderMaterial} value - The material instance.
+     */
+    set material(value) {
         if (this._instance) {
-            this._instance.createMaterial(this._materialOptions);
+            this._instance.material = value;
+        } else {
+            this._materialTmp = value;
         }
-    }
-
-    get materialOptions() {
-        return this._materialOptions;
     }
 
     /**
      * Gets the material used to render the gsplat.
      *
-     * @type {Material|undefined}
+     * @type {ShaderMaterial|null}
      */
     get material() {
-        return this._instance?.material;
+        return this._instance?.material ?? this._materialTmp ?? null;
     }
 
     /**
@@ -324,18 +318,6 @@ class GSplatComponent extends Component {
      */
     get asset() {
         return this._assetReference.id;
-    }
-
-    /**
-     * Assign asset id to the component, without updating the component with the new asset.
-     * This can be used to assign the asset id to already fully created component.
-     *
-     * @param {Asset|number} asset - The gsplat asset or asset id to assign.
-     * @ignore
-     */
-    assignAsset(asset) {
-        const id = asset instanceof Asset ? asset.id : asset;
-        this._assetReference.id = id;
     }
 
     /** @private */
@@ -487,7 +469,9 @@ class GSplatComponent extends Component {
         // create new instance
         const asset = this._assetReference.asset;
         if (asset) {
-            this.instance = asset.resource.createInstance();
+            this.instance = new GSplatInstance(asset.resource, this._materialTmp);
+            this._materialTmp = null;
+            this.customAabb = this.instance.resource.aabb.clone();
         }
     }
 

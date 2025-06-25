@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { hasAudioContext } from '../../../platform/audio/capabilities.js';
+import { hasAudioContext } from '../../../platform/sound/capabilities.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { SoundComponent } from './component.js';

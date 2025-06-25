@@ -1,9 +1,11 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>LMB</b>) Fly</div><div>(<b>WASDQE</b>) Move</div></div>
+// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move </div><div>(<b>Hold Shift</b>) Move Fast (<b>Hold Ctrl</b>) Move Slow</div><div>(<b>LMB / RMB </b>) Fly</div></div>
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+
+const tmpVa = new pc.Vec2();
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -59,53 +61,6 @@ await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-/**
- * Calculate the bounding box of an entity.
- *
- * @param {pc.BoundingBox} bbox - The bounding box.
- * @param {pc.Entity} entity - The entity.
- * @returns {pc.BoundingBox} The bounding box.
- */
-const calcEntityAABB = (bbox, entity) => {
-    bbox.center.set(0, 0, 0);
-    bbox.halfExtents.set(0, 0, 0);
-    entity.findComponents('render').forEach((render) => {
-        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
-            bbox.add(mi.aabb);
-        });
-    });
-    return bbox;
-};
-
-/**
- * @param {pc.Entity} focus - The entity to focus the camera on.
- * @returns {CameraControls} The camera-controls script.
- */
-const createFlyCamera = (focus) => {
-    const start = new pc.Vec3(0, 20, 30);
-
-    const camera = new pc.Entity();
-    camera.addComponent('camera');
-    camera.addComponent('script');
-    camera.setPosition(start);
-    app.root.addChild(camera);
-
-    const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
-
-    /** @type {CameraControls} */
-    const script = camera.script.create(CameraControls, {
-        properties: {
-            enableOrbit: false,
-            enablePan: false,
-            focusPoint: bbox.center,
-            sceneSize: bbox.halfExtents.length(),
-            pitchRange: new pc.Vec2(-90, 90)
-        }
-    });
-
-    return script;
-};
-
 app.start();
 
 app.scene.ambientLight.set(0.4, 0.4, 0.4);
@@ -124,29 +79,130 @@ const statue = assets.statue.resource.instantiateRenderEntity();
 statue.setLocalPosition(0, -0.5, 0);
 app.root.addChild(statue);
 
-const multiCameraScript = createFlyCamera(statue);
+/**
+ * Calculate the bounding box of an entity.
+ *
+ * @param {pc.BoundingBox} bbox - The bounding box.
+ * @param {pc.Entity} entity - The entity.
+ * @returns {pc.BoundingBox} The bounding box.
+ */
+const calcEntityAABB = (bbox, entity) => {
+    bbox.center.set(0, 0, 0);
+    bbox.halfExtents.set(0, 0, 0);
+    entity.findComponents('render').forEach((render) => {
+        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
+            bbox.add(mi.aabb);
+        });
+    });
+    return bbox;
+};
 
+const start = new pc.Vec3(0, 20, 30);
+const bbox = calcEntityAABB(new pc.BoundingBox(), statue);
+
+const camera = new pc.Entity();
+camera.addComponent('camera');
+camera.addComponent('script');
+camera.setPosition(start);
+app.root.addChild(camera);
+const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+Object.assign(cc, {
+    sceneSize: bbox.halfExtents.length(),
+    focusPoint: bbox.center,
+    enableOrbit: false,
+    enablePan: false
+});
+
+/**
+ * @param {string} side - The name.
+ * @param {number} baseSize - The base size.
+ * @param {number} stickSize - The stick size.
+ */
+const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
+    const base = document.createElement('div');
+    Object.assign(base.style, {
+        display: 'none',
+        position: 'absolute',
+        width: `${baseSize}px`,
+        height: `${baseSize}px`,
+        borderRadius: '50%',
+        backgroundColor: 'rgba(50, 50, 50, 0.5)',
+        boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5)'
+    });
+
+    const stick = document.createElement('div');
+    Object.assign(stick.style, {
+        display: 'none',
+        position: 'absolute',
+        width: `${stickSize}px`,
+        height: `${stickSize}px`,
+        borderRadius: '50%',
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)'
+    });
+
+    /**
+     * @param {HTMLElement} el - The element to set position for.
+     * @param {number} size - The size of the element.
+     * @param {number} x - The x position.
+     * @param {number} y - The y position.
+     */
+    const show = (el, size, x, y) => {
+        el.style.display = 'block';
+        el.style.left = `${x - size * 0.5}px`;
+        el.style.top = `${y - size * 0.5}px`;
+    };
+
+    /**
+     * @param {HTMLElement} el - The element to hide.
+     */
+    const hide = (el) => {
+        el.style.display = 'none';
+    };
+
+    app.on(`${cc.joystickEventName}:${side}`, (bx, by, sx, sy) => {
+        if (bx < 0 || by < 0 || sx < 0 || sy < 0) {
+            hide(base);
+            hide(stick);
+            return;
+        }
+
+        show(base, baseSize, bx, by);
+        show(stick, stickSize, sx, sy);
+    });
+
+    document.body.append(base, stick);
+};
+
+// Create joystick UI
+createJoystickUI('left');
+createJoystickUI('right');
+
+// Bind controls to camera attributes
 data.set('attr', [
-    'pitchRange',
     'rotateSpeed',
-    'rotateDamping',
+    'rotateJoystickSens',
     'moveSpeed',
     'moveFastSpeed',
     'moveSlowSpeed',
-    'moveDamping'
+    'rotateDamping',
+    'moveDamping',
+    'pitchRange',
+    'yawRange',
+    'gamepadDeadZone',
+    'mobileInputLayout'
 ].reduce((/** @type {Record<string, any>} */ obj, key) => {
-    const value = multiCameraScript[key];
+    const value = cc[key];
 
     if (value instanceof pc.Vec2) {
         obj[key] = [value.x, value.y];
         return obj;
     }
 
-    obj[key] = multiCameraScript[key];
+    obj[key] = cc[key];
     return obj;
 }, {}));
 
-const tmpVa = new pc.Vec2();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key, index] = path.split('.');
     if (category !== 'attr') {
@@ -154,15 +210,16 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     }
 
     if (Array.isArray(value)) {
-        multiCameraScript[key] = tmpVa.set(value[0], value[1]);
+        cc[key] = tmpVa.set(value[0], value[1]);
         return;
     }
     if (index !== undefined) {
         const arr = data.get(`${category}.${key}`);
-        multiCameraScript[key] = tmpVa.set(arr[0], arr[1]);
+        cc[key] = tmpVa.set(arr[0], arr[1]);
         return;
     }
-    multiCameraScript[key] = value;
+
+    cc[key] = value;
 });
 
 export { app };

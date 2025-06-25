@@ -22,6 +22,7 @@ import { FloatPacking } from '../core/math/float-packing.js';
 
 /**
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { EventHandle } from '../core/event-handle.js';
  */
 
 /**
@@ -180,6 +181,14 @@ class Light {
     clusteredData16 = new Uint16Array(this.clusteredData.buffer);
 
     /**
+     * Event handle for device restored event.
+     *
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtDeviceRestored = null;
+
+    /**
      * @param {GraphicsDevice} graphicsDevice - The graphics device.
      * @param {boolean} clusteredLighting - True if the clustered lighting is enabled.
      */
@@ -187,6 +196,8 @@ class Light {
         this.device = graphicsDevice;
         this.clusteredLighting = clusteredLighting;
         this.id = id++;
+
+        this._evtDeviceRestored = graphicsDevice.on('devicerestored', this.onDeviceRestored, this);
 
         // Light properties (defaults)
         this._type = LIGHTTYPE_DIRECTIONAL;
@@ -296,10 +307,20 @@ class Light {
     }
 
     destroy() {
+        this._evtDeviceRestored?.off();
+        this._evtDeviceRestored = null;
+
         this._destroyShadowMap();
 
         this.releaseRenderData();
         this._renderData = null;
+    }
+
+    onDeviceRestored() {
+        // when context is restored, re-render shadow map
+        if (this.shadowUpdateMode === SHADOWUPDATE_NONE) {
+            this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+        }
     }
 
     releaseRenderData() {

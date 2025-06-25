@@ -96,7 +96,7 @@ class NullGraphicsDevice extends GraphicsDevice {
         return new NullRenderTarget(renderTarget);
     }
 
-    draw(primitive, numInstances = 1, keepBuffers) {
+    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
     }
 
     setShader(shader, asyncCompile = false) {

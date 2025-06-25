@@ -12,6 +12,8 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 import {
     BLUR_GAUSSIAN,
+    EVENT_POSTCULL,
+    EVENT_PRECULL,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
@@ -163,6 +165,9 @@ class ShadowRenderer {
      */
     cullShadowCasters(comp, light, visible, camera, casters) {
 
+        // event before the camera is culling
+        this.renderer.scene?.fire(EVENT_PRECULL, camera);
+
         visible.length = 0;
 
         // if the casters are supplied, use them
@@ -193,6 +198,9 @@ class ShadowRenderer {
 
         // this sorts the shadow casters by the shader id
         visible.sort(this.sortCompareShader);
+
+        // event after the camera is done with culling
+        this.renderer.scene?.fire(EVENT_POSTCULL, camera);
     }
 
     sortCompareShader(drawCallA, drawCallB) {
@@ -300,6 +308,12 @@ class ShadowRenderer {
             const meshInstance = visibleCasters[i];
             const mesh = meshInstance.mesh;
 
+            // skip instanced rendering with 0 instances
+            const instancingData = meshInstance.instancingData;
+            if (instancingData && instancingData.count <= 0) {
+                continue;
+            }
+
             meshInstance.ensureMaterial(device);
             const material = meshInstance.material;
 
@@ -337,14 +351,24 @@ class ShadowRenderer {
             renderer.setVertexBuffers(device, mesh);
             renderer.setMorphing(device, meshInstance.morphInstance);
 
-            this.renderer.setupMeshUniformBuffers(shaderInstance, meshInstance);
+            if (instancingData) {
+                device.setVertexBuffer(instancingData.vertexBuffer);
+            }
 
-            const style = meshInstance.renderStyle;
-            device.setIndexBuffer(mesh.indexBuffer[style]);
+            // mesh / mesh normal matrix
+            renderer.setMeshInstanceMatrices(meshInstance);
+
+            renderer.setupMeshUniformBuffers(shaderInstance);
 
             // draw
-            renderer.drawInstance(device, meshInstance, mesh, style);
+            const style = meshInstance.renderStyle;
+            const indirectSlot = meshInstance.indirectData?.get(camera);
+            device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectSlot);
+
             renderer._shadowDrawCalls++;
+            if (instancingData) {
+                renderer._instancedDrawCalls++;
+            }
 
             DebugGraphics.popGpuMarker(device);
         }
@@ -427,7 +451,7 @@ class ShadowRenderer {
         const renderer = this.renderer;
         renderer.setCameraUniforms(shadowCam, rt);
         if (device.supportsUniformBuffers) {
-            renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, 1);
+            renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, null);
         }
 
         if (insideRenderPass) {

@@ -84,7 +84,7 @@ class GpuProfiler {
 
             // store frame duration
             if (timings.length > 0) {
-                this._frameTime = timings[0];
+                this._frameTime = timings.reduce((sum, t) => sum + t, 0);
             }
 
             // log out timings

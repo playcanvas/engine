@@ -102,9 +102,6 @@ export { Plane } from './core/shape/plane.js';
 export { Tri } from './core/shape/tri.js';
 export { Ray } from './core/shape/ray.js';
 
-// PLATFORM / AUDIO
-export * from './platform/audio/constants.js';
-
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
@@ -152,6 +149,7 @@ export { getTouchTargetCoords, Touch, TouchEvent } from './platform/input/touch-
 export { http, Http } from './platform/net/http.js';
 
 // PLATFORM / SOUND
+export * from './platform/sound/constants.js';
 export { SoundManager } from './platform/sound/manager.js';
 export { Sound } from './platform/sound/sound.js';
 export { SoundInstance } from './platform/sound/instance.js';
@@ -234,9 +232,11 @@ export { Sky } from './scene/skybox/sky.js';
 
 // SCENE / SPLAT
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
-export { GSplat } from './scene/gsplat/gsplat.js';
+export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
+export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
+export { GSplatSogsResource } from './scene/gsplat/gsplat-sogs-resource.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
@@ -365,7 +365,6 @@ export { CssHandler } from './framework/handlers/css.js';
 export { CubemapHandler } from './framework/handlers/cubemap.js';
 export { FolderHandler } from './framework/handlers/folder.js';
 export { FontHandler } from './framework/handlers/font.js';
-export { GSplatResource } from './framework/parsers/gsplat-resource.js';
 export { HierarchyHandler } from './framework/handlers/hierarchy.js';
 export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';

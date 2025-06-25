@@ -24,8 +24,7 @@ import {
     VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
     LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
-    EVENT_PRECULL,
-    EVENT_POSTCULL
+    EVENT_PRECULL, EVENT_POSTCULL, EVENT_CULL_END
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
@@ -225,6 +224,7 @@ class Renderer {
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
         this.viewIndexId = scope.resolve('view_index');
+        this.viewIndexId.setValue(0);
 
         this.blueNoiseJitterVersion = 0;
         this.blueNoiseJitterVec = new Vec4();
@@ -298,13 +298,13 @@ class Renderer {
         // flipping proj matrix
         const flipY = target?.flipY;
 
-        let viewCount = 1;
+        let viewList = null;
         if (camera.xr && camera.xr.session) {
             const transform = camera._node?.parent?.getWorldTransform() || null;
             const views = camera.xr.views;
-            viewCount = views.list.length;
-            for (let v = 0; v < viewCount; v++) {
-                const view = views.list[v];
+            viewList = views.list;
+            for (let v = 0; v < viewList.length; v++) {
+                const view = viewList[v];
                 view.updateTransforms(transform);
                 camera.frustum.setFromMat4(view.projViewOffMat);
             }
@@ -422,7 +422,7 @@ class Renderer {
         // exposure
         this.exposureId.setValue(this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure);
 
-        return viewCount;
+        return viewList;
     }
 
     /**
@@ -713,12 +713,18 @@ class Renderer {
 
             // format of the view uniform buffer
             const uniforms = [
+                new UniformFormat('matrix_view', UNIFORMTYPE_MAT4),
+                new UniformFormat('matrix_viewInverse', UNIFORMTYPE_MAT4),
+                new UniformFormat('matrix_projection', UNIFORMTYPE_MAT4),
+                new UniformFormat('matrix_projectionSkybox', UNIFORMTYPE_MAT4),
                 new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4),
+                new UniformFormat('matrix_view3', UNIFORMTYPE_MAT3),
                 new UniformFormat('cubeMapRotationMatrix', UNIFORMTYPE_MAT3),
                 new UniformFormat('view_position', UNIFORMTYPE_VEC3),
                 new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
-                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT)
+                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
+                new UniformFormat('view_index', UNIFORMTYPE_FLOAT)
             ];
 
             if (isClustered) {
@@ -765,13 +771,29 @@ class Renderer {
         }
     }
 
-    setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewCount) {
+    /**
+     * Set up uniforms for an XR view.
+     */
+    setupViewUniforms(view, index) {
+
+        // any view uniforms need to be part of the view uniform buffer, see initViewBindGroupFormat
+        this.projId.setValue(view.projMat.data);
+        this.projSkyboxId.setValue(view.projMat.data);
+        this.viewId.setValue(view.viewOffMat.data);
+        this.viewInvId.setValue(view.viewInvOffMat.data);
+        this.viewId3.setValue(view.viewMat3.data);
+        this.viewProjId.setValue(view.projViewOffMat.data);
+        this.viewPosId.setValue(view.positionData);
+        this.viewIndexId.setValue(index);
+    }
+
+    setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewList) {
 
         Debug.assert(Array.isArray(viewBindGroups), 'viewBindGroups must be an array');
+        const { device } = this;
 
-        const device = this.device;
-        Debug.assert(viewCount === 1, 'This code does not handle the viewCount yet');
-
+        // make sure we have bind group for each view
+        const viewCount = viewList?.length ?? 1;
         while (viewBindGroups.length < viewCount) {
             const ub = new UniformBuffer(device, viewUniformFormat, false);
             const bg = new BindGroup(device, viewBindGroupFormat, ub);
@@ -779,24 +801,36 @@ class Renderer {
             viewBindGroups.push(bg);
         }
 
-        // update view bind group / uniforms
-        const viewBindGroup = viewBindGroups[0];
-        viewBindGroup.defaultUniformBuffer.update();
-        viewBindGroup.update();
+        if (viewList) {
 
-        // TODO; this needs to be moved to drawInstance functions to handle XR
-        device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
+            for (let i = 0; i < viewCount; i++) {
+
+                // set up view uniforms
+                const view = viewList[i];
+                this.setupViewUniforms(view, i);
+
+                // update view bind group / uniforms
+                const viewBindGroup = viewBindGroups[i];
+                viewBindGroup.defaultUniformBuffer.update();
+                viewBindGroup.update();
+            }
+        } else {
+
+            const viewBindGroup = viewBindGroups[0];
+            viewBindGroup.defaultUniformBuffer.update();
+            viewBindGroup.update();
+        }
+
+        // bind it when a single view is used, otherwise this is handled per view inside rendering loop
+        if (!viewList) {
+            device.setBindGroup(BINDGROUP_VIEW, viewBindGroups[0]);
+        }
     }
 
-    setupMeshUniformBuffers(shaderInstance, meshInstance) {
+    setupMeshUniformBuffers(shaderInstance) {
 
         const device = this.device;
         if (device.supportsUniformBuffers) {
-
-            // TODO: model matrix setup is part of the drawInstance call, but with uniform buffer it's needed
-            // earlier here. This needs to be refactored for multi-view anyways.
-            this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
-            this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
 
             // update mesh bind group / uniform buffer
             const meshBindGroup = shaderInstance.getBindGroup(device);
@@ -809,44 +843,11 @@ class Renderer {
         }
     }
 
-    drawInstance(device, meshInstance, mesh, style, normal) {
-
+    setMeshInstanceMatrices(meshInstance, setNormalMatrix = false) {
         const modelMatrix = meshInstance.node.worldTransform;
         this.modelMatrixId.setValue(modelMatrix.data);
-        if (normal) {
+        if (setNormalMatrix) {
             this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
-        }
-
-        const instancingData = meshInstance.instancingData;
-        if (instancingData) {
-            if (instancingData.count > 0) {
-                this._instancedDrawCalls++;
-                device.setVertexBuffer(instancingData.vertexBuffer);
-                device.draw(mesh.primitive[style], instancingData.count);
-            } else {
-                device.clearVertexBuffer();
-                device.clearIndexBuffer();
-            }
-        } else {
-            device.draw(mesh.primitive[style]);
-        }
-    }
-
-    // used for stereo
-    drawInstance2(device, meshInstance, mesh, style) {
-
-        const instancingData = meshInstance.instancingData;
-        if (instancingData) {
-            if (instancingData.count > 0) {
-                this._instancedDrawCalls++;
-                device.draw(mesh.primitive[style], instancingData.count, true);
-            } else {
-                device.clearVertexBuffer();
-                device.clearIndexBuffer();
-            }
-        } else {
-            // matrices are already set
-            device.draw(mesh.primitive[style], undefined, true);
         }
     }
 
@@ -1134,6 +1135,9 @@ class Renderer {
 
         // cull shadow casters for all lights
         this.cullShadowmaps(comp);
+
+        // event after the engine has finished culling all cameras
+        scene?.fire(EVENT_CULL_END);
 
         // #if _PROFILER
         this._cullTime += now() - cullTime;

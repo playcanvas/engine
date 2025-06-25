@@ -240,9 +240,7 @@ class StandardMaterialOptionsBuilder {
         options.normalDetailPackedNormal = isPackedNormalMap(stdMat.normalDetailMap);
         options.diffuseDetailMode = stdMat.diffuseDetailMode;
         options.aoDetailMode = stdMat.aoDetailMode;
-        options.clearCoatTint = equalish(stdMat.clearCoat, 1.0);
         options.clearCoatGloss = !!stdMat.clearCoatGloss;
-        options.clearCoatGlossTint = (stdMat.clearCoatGloss !== 1.0);
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
         options.iorTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
 
@@ -390,15 +388,18 @@ class StandardMaterialOptionsBuilder {
 
             if (sortedLights) {
                 LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask);
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask);
+
+                if (!scene.clusteredLightingEnabled) {
+                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask);
+                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask);
+                }
             }
             options.litOptions.lights = lightsFiltered;
         } else {
             options.litOptions.lights = [];
         }
 
-        if (options.litOptions.lights.length === 0) {
+        if (options.litOptions.lights.length === 0 && !scene.clusteredLightingEnabled) {
             options.litOptions.noShadow = true;
         }
     }

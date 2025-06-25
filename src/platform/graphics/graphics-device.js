@@ -31,6 +31,7 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
+ * @import { StorageBuffer } from './storage-buffer.js';
  */
 
 const _tempSet = new Set();
@@ -124,6 +125,15 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     scope;
+
+    /**
+     * The maximum number of indirect draw calls that can be used within a single frame. Used on
+     * WebGPU only. This needs to be adjusted based on the maximum number of draw calls that can
+     * be used within a single frame. Defaults to 1024.
+     *
+     * @type {number}
+     */
+    maxIndirectDrawCount = 1024;
 
     /**
      * The maximum supported texture anisotropy setting.
@@ -413,6 +423,14 @@ class GraphicsDevice extends EventHandler {
      */
     capsDefines = new Map();
 
+    /**
+     * A set of maps to clear at the end of the frame.
+     *
+     * @type {Set<Map>}
+     * @ignore
+     */
+    mapsToClear = new Set();
+
     static EVENT_RESIZE = 'resizecanvas';
 
     constructor(canvas, options) {
@@ -596,7 +614,6 @@ class GraphicsDevice extends EventHandler {
     }
 
     initializeContextCaches() {
-        this.indexBuffer = null;
         this.vertexBuffers = [];
         this.shader = null;
         this.shaderValid = undefined;
@@ -693,21 +710,11 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Sets the current index buffer on the graphics device. For subsequent draw calls, the
-     * specified index buffer will be used to provide index data for any indexed primitives.
-     *
-     * @param {IndexBuffer|null} indexBuffer - The index buffer to assign to the device.
-     */
-    setIndexBuffer(indexBuffer) {
-        // Store the index buffer
-        this.indexBuffer = indexBuffer;
-    }
-
-    /**
      * Sets the current vertex buffer on the graphics device. For subsequent draw calls, the
      * specified vertex buffer(s) will be used to provide vertex data for any primitives.
      *
      * @param {VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
+     * @ignore
      */
     setVertexBuffer(vertexBuffer) {
 
@@ -726,12 +733,28 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Clears the index buffer set on the graphics device. This is called automatically by the
-     * renderer.
-     * @ignore
+     * Retrieves the available slot in the {@link indirectDrawBuffer} used for indirect rendering,
+     * which can be utilized by a {@link Compute} shader to generate indirect draw parameters and by
+     * {@link MeshInstance#setIndirect} to configure indirect draw calls.
+     *
+     * @returns {number} - The slot used for indirect rendering.
      */
-    clearIndexBuffer() {
-        this.indexBuffer = null;
+    getIndirectDrawSlot() {
+        return 0;
+    }
+
+    /**
+     * Returns the buffer used to store arguments for indirect draw calls. The size of the buffer is
+     * controlled by the {@link maxIndirectDrawCount} property. This buffer can be passed to a
+     * {@link Compute} shader along with a slot obtained by calling {@link getIndirectDrawSlot}, in
+     * order to prepare indirect draw parameters. Also see {@link MeshInstance#setIndirect}.
+     *
+     * Only available on WebGPU, returns null on other platforms.
+     *
+     * @type {StorageBuffer|null}
+     */
+    get indirectDrawBuffer() {
+        return null;
     }
 
     /**
@@ -770,6 +793,50 @@ class GraphicsDevice extends EventHandler {
         // #if _PROFILER
         this._renderTargetCreationTime += now() - startTime;
         // #endif
+    }
+
+    /**
+     * Submits a graphical primitive to the hardware for immediate rendering.
+     *
+     * @param {object} primitive - Primitive object describing how to submit current vertex/index
+     * buffers.
+     * @param {number} primitive.type - The type of primitive to render. Can be:
+     *
+     * - {@link PRIMITIVE_POINTS}
+     * - {@link PRIMITIVE_LINES}
+     * - {@link PRIMITIVE_LINELOOP}
+     * - {@link PRIMITIVE_LINESTRIP}
+     * - {@link PRIMITIVE_TRIANGLES}
+     * - {@link PRIMITIVE_TRISTRIP}
+     * - {@link PRIMITIVE_TRIFAN}
+     *
+     * @param {number} primitive.base - The offset of the first index or vertex to dispatch in the
+     * draw call.
+     * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw
+     * call.
+     * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby
+     * using the currently set index buffer and false otherwise.
+     * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
+     * @param {number} [numInstances] - The number of instances to render when using instancing.
+     * Defaults to 1.
+     * @param {number} [indirectSlot] - The slot of the indirect buffer to use for the draw call.
+     * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
+     * When set to true, vertex and index buffers related state is set up. Defaults to true.
+     * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
+     * When set to true, vertex and index buffers related state is cleared. Defaults to true.
+     * @example
+     * // Render a single, unindexed triangle
+     * device.draw({
+     *     type: pc.PRIMITIVE_TRIANGLES,
+     *     base: 0,
+     *     count: 3,
+     *     indexed: false
+     * });
+     *
+     * @ignore
+     */
+    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
+        Debug.assert(false);
     }
 
     /**
@@ -958,6 +1025,9 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
+        // clear all maps scheduled for end of frame clearing
+        this.mapsToClear.forEach(map => map.clear());
+        this.mapsToClear.clear();
     }
 
     /**

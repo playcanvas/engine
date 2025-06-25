@@ -1,7 +1,8 @@
 import { Asset } from '../../framework/asset/asset.js';
 import { http, Http } from '../../platform/net/http.js';
-import { GSplatResource } from './gsplat-resource.js';
+import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
+import { GSplatSogsResource } from '../../scene/gsplat/gsplat-sogs-resource.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -36,7 +37,7 @@ class SogsParser {
             const files = meta[sub]?.files ?? [];
             textures[sub] = files.map((filename) => {
                 const texture = new Asset(filename, 'texture', {
-                    url: asset.options?.mapUrl?.(filename) ?? (new URL(filename, url.load)).toString(),
+                    url: asset.options?.mapUrl?.(filename) ?? (new URL(filename, new URL(url.load, window.location.href).toString())).toString(),
                     filename
                 }, {
                     mipmaps: false
@@ -74,7 +75,9 @@ class SogsParser {
             await data.reorderData();
         }
 
-        const resource = new GSplatResource(this.app, (asset.data?.decompress) ? (await data.decompress()) : data, []);
+        const resource = asset.data?.decompress ?
+            new GSplatResource(this.app.graphicsDevice, await data.decompress()) :
+            new GSplatSogsResource(this.app.graphicsDevice, data);
 
         callback(null, resource);
     }

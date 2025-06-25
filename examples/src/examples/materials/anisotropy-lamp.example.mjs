@@ -57,10 +57,17 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
+    // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
+    // Move the depth layer to take place after World and Skydome layers, to capture both of them.
+    const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+    app.scene.layers.remove(depthLayer);
+    app.scene.layers.insertOpaque(depthLayer, 2);
+
     // Setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
     app.scene.skyboxIntensity = 0.5;
+    app.scene.skyboxMip = 1;
 
     const leftEntity = assets.model.resource.instantiateRenderEntity();
     leftEntity.setLocalEulerAngles(0, 0, 0);
