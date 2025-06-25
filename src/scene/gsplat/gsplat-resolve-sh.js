@@ -1,3 +1,5 @@
+import { Vec3 } from '../../core/math/vec3.js';
+import { Mat4 } from '../../core/math/mat4.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
     CULLFACE_NONE,
@@ -159,21 +161,21 @@ const fragmentWGSL = /* wgsl */`
 
     // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
     fn evalSH(sh: array<vec3f, SH_COEFFS>, dir: vec3f) -> vec3f {
-        let x: f32 = dir.x;
-        let y: f32 = dir.y;
-        let z: f32 = dir.z;
+        let x = dir.x;
+        let y = dir.y;
+        let z = dir.z;
 
         // 1st degree
         var result: vec3f = SH_C1 * (-sh[0] * y + sh[1] * z - sh[2] * x);
 
         #if SH_BANDS > 1
             // 2nd degree
-            let xx: f32 = x * x;
-            let yy: f32 = y * y;
-            let zz: f32 = z * z;
-            let xy: f32 = x * y;
-            let yz: f32 = y * z;
-            let xz: f32 = x * z;
+            let xx = x * x;
+            let yy = y * y;
+            let zz = z * z;
+            let xy = x * y;
+            let yz = y * z;
+            let xz = x * z;
 
             result +=
                 sh[3] * (SH_C2_0 * xy) +
@@ -249,7 +251,15 @@ class CustomRenderPass extends RenderPass {
     }
 }
 
+const invModelMat = new Mat4();
+const dir = new Vec3();
+
 class GSplatResolveSH {
+
+    prevDir = new Vec3();
+
+    updateMode = 'enable'; // 'enable', 'disable', 'always'
+
     constructor(device, gsplatInstance) {
         this.device = device;
         this.gsplatInstance = gsplatInstance;
@@ -294,14 +304,27 @@ class GSplatResolveSH {
         this.shader.destroy();
     }
 
-    update(camera, modelMat) {
+    render(camera, modelMat) {
+        const { prevDir, updateMode } = this;
+
+        // disabled
+        if (updateMode === 'disable') {
+            return;
+        }
+
+        // calculate camera Z in model space
+        invModelMat.invert(modelMat);
+        invModelMat.transformVector(camera.forward, dir);
+
+        // if direction hasn't changed early out
+        dir.normalize();
+        if (updateMode === 'enable' && dir.equalsApprox(prevDir, 1e-3)) {
+            return;
+        }
+        prevDir.copy(dir);
+
         const execute = () => {
             const { device } = this;
-
-            // camera direction in model space
-            const m = modelMat.clone().invert();
-            const dir = m.transformVector(camera.forward);
-
             const { sh_centroids, meta } = this.gsplatInstance.resource.gsplatData;
 
             resolve(device.scope, {

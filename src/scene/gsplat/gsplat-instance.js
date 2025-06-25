@@ -119,17 +119,19 @@ class GSplatInstance {
             this.material.setParameter('numSplats', count);
         });
 
-        // sogs
-        if (resource.gsplatData instanceof GSplatSogsData) {
+        // configure sogs
+        const { gsplatData } = resource;
+        if (gsplatData instanceof GSplatSogsData && gsplatData.shBands > 0 && !gsplatData.fullSH) {
             this.gsplatResolveSH = new GSplatResolveSH(resource.device, this);
+            this.material.setDefine('SH_BANDS', '0');
         }
     }
 
     destroy() {
+        this.gsplatResolveSH?.destroy();
         this.material?.destroy();
         this.meshInstance?.destroy();
         this.sorter?.destroy();
-        this.gsplatResolveSH?.destroy();
     }
 
     /**
@@ -162,7 +164,7 @@ class GSplatInstance {
      */
     configureMaterial(material, options = {}) {
         // allow resource to configure the material
-        this.resource.configureMaterial(material);
+        this.resource.configureMaterial(material, options);
 
         // set instance properties
         material.setParameter('numSplats', 0);
@@ -225,9 +227,8 @@ class GSplatInstance {
             const camera = this.cameras[0];
             this.sort(camera._node);
 
-            if (!window.noGsUpdate) {
-                this.gsplatResolveSH?.update(camera._node, this.meshInstance.node.getWorldTransform());
-            }
+            // for debuggging - disable sh resolve on a global
+            this.gsplatResolveSH?.render(camera._node, this.meshInstance.node.getWorldTransform());
 
             // we get new list of cameras each frame
             this.cameras.length = 0;
