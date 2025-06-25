@@ -117,7 +117,7 @@ class GSplatInstance {
             this.material.setParameter('numSplats', count);
         });
 
-        // configure sogs
+        // configure sogs sh resolve
         const { gsplatData } = resource;
         if (gsplatData instanceof GSplatSogsData && gsplatData.shBands > 0 && !gsplatData.fullSH) {
             this.resolveSH = new GSplatResolveSH(resource.device, this);
@@ -162,7 +162,7 @@ class GSplatInstance {
      */
     configureMaterial(material, options = {}) {
         // allow resource to configure the material
-        this.resource.configureMaterial(material, options);
+        this.resource.configureMaterial(material);
 
         // set instance properties
         material.setParameter('numSplats', 0);
