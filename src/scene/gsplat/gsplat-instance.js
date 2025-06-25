@@ -225,7 +225,7 @@ class GSplatInstance {
             const camera = this.cameras[0];
             this.sort(camera._node);
 
-            // for debuggging - disable sh resolve on a global
+            // resolve spherical harmonics
             this.resolveSH?.render(camera._node, this.meshInstance.node.getWorldTransform());
 
             // we get new list of cameras each frame
