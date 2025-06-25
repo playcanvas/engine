@@ -1,6 +1,6 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatResolveSH } from './gsplat-resolve-sh.js';
 import { GSplatSorter } from './gsplat-sorter.js';
@@ -44,7 +44,7 @@ class GSplatInstance {
     lastCameraDirection = new Vec3();
 
     /** @type {GSplatResolveSH|null} */
-    gsplatResolveSH = null;
+    resolveSH = null;
 
     /**
      * List of cameras this instance is visible for. Updated every frame by the renderer.
@@ -122,13 +122,13 @@ class GSplatInstance {
         // configure sogs
         const { gsplatData } = resource;
         if (gsplatData instanceof GSplatSogsData && gsplatData.shBands > 0 && !gsplatData.fullSH) {
-            this.gsplatResolveSH = new GSplatResolveSH(resource.device, this);
+            this.resolveSH = new GSplatResolveSH(resource.device, this);
             this.material.setDefine('SH_BANDS', '0');
         }
     }
 
     destroy() {
-        this.gsplatResolveSH?.destroy();
+        this.resolveSH?.destroy();
         this.material?.destroy();
         this.meshInstance?.destroy();
         this.sorter?.destroy();
@@ -228,7 +228,7 @@ class GSplatInstance {
             this.sort(camera._node);
 
             // for debuggging - disable sh resolve on a global
-            this.gsplatResolveSH?.render(camera._node, this.meshInstance.node.getWorldTransform());
+            this.resolveSH?.render(camera._node, this.meshInstance.node.getWorldTransform());
 
             // we get new list of cameras each frame
             this.cameras.length = 0;
