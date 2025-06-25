@@ -255,7 +255,6 @@ const invModelMat = new Mat4();
 const dir = new Vec3();
 
 class GSplatResolveSH {
-
     prevDir = new Vec3();
 
     updateMode = 'enable'; // 'enable', 'disable', 'always'
@@ -277,7 +276,7 @@ class GSplatResolveSH {
             vertexIncludes: includes,
             fragmentIncludes: includes,
             fragmentDefines: new Map([
-                ['SH_BANDS', resource.gsplatData.shBands.toString()],
+                ['SH_BANDS', resource.gsplatData.shBands.toString()]
             ]),
             attributes: {
                 vertex_position: SEMANTIC_POSITION
@@ -339,7 +338,7 @@ class GSplatResolveSH {
             device.setStencilState(null, null);
             device.setBlendState(BlendState.NOBLEND);
 
-            this.quadRender.render()
+            this.quadRender.render();
         };
 
         this.renderPass.executeCallback = execute;
