@@ -127,7 +127,12 @@ class GlbContainerResource {
             node._cloneInternal(entity);
 
             // first entity becomes the root
-            if (!root) root = entity;
+            if (!root) {
+                root = entity;
+                // magnopus patched
+                root._objectModelPointers = new Map();
+            }
+            root._objectModelPointers.set(entity._objectModelPointer, entity);
 
             // find all components needed for this node
             let attachedMi = null;
