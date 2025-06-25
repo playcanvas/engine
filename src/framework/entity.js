@@ -99,6 +99,16 @@ class Entity extends GraphNode {
      */
     anim;
 
+    // magnopus patched
+    /**
+     * a lookup table of object model pointers, used to get entities by a unique path
+     * a lookup table of object model pointers, used to get entities by a unique path
+     *
+     * @type {Map|undefined}
+     * @readonly
+     */
+    _objectModelPointers = undefined;
+
     /**
      * Gets the {@link AnimationComponent} attached to this entity.
      *
@@ -374,6 +384,39 @@ class Entity extends GraphNode {
         return this._app.systems.zone.zones.filter(
             z => z.entities.indexOf(this) !== -1
         );
+    }
+
+    /**
+     * Find an entity by its gltf object model pointer.
+     * https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/ObjectModel.adoc
+     * @param {string} pointer - The gltf object model pointer to search for.
+     * @returns {Entity|null} The entity with the matching pointer or null if no entity is found.
+     * @example
+     * const pointer = '/nodes/3';
+     * const entity = app.root.findByObjectModelPointer(pointer);
+     * if (entity) {
+     *     console.log(`Found entity with pointer: ${pointer}`);
+     * } else {
+     *     console.log(`No entity found with pointer: ${pointer}`);
+     * }
+     * @memberof Entity
+     */
+    // magnopus patched
+    findByObjectModelPointer(pointer) {
+        if (!this._objectModelPointers) {
+            Debug.error('Entity: _objectModelPointers is not initialized');
+            return null;
+        }
+        return this._objectModelPointers.get(pointer);
+    }
+
+    /**
+     * Get the object model pointer for this entity.
+     * @returns {string|undefined} The object model pointer for this entity, or undefined if not set.
+     * @memberof Entity
+     */
+    get objectModelPointer() {
+        return this._objectModelPointer;
     }
 
     /**

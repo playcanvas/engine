@@ -57,7 +57,11 @@ function createScript(name, app) {
     if (reservedScriptNames.has(name)) {
         throw new Error(`Script name '${name}' is reserved, please rename the script`);
     }
-
+    // magnopus patched need to ensure this comment is not removed
+    /**
+     * @type Class
+     * @param {*} args - Arguments passed to the script constructor.
+     */
     const scriptType = function (args) {
         EventHandler.prototype.initEventHandler.call(this);
         ScriptType.prototype.initScriptType.call(this, args);

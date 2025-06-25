@@ -1788,6 +1788,8 @@ const createNodes = (gltf, options, nodeInstancingMap) => {
             preprocess(gltfNode);
         }
         const node = process(gltfNode, index, nodeInstancingMap);
+        // magnopus patched - allow unique access to an entity within the gltf as an object model pointer
+        node._objectModelPointer = `/nodes/${index}`;
         if (postprocess) {
             // magnopus patched - pass gltf node index as a unique id
             postprocess(gltfNode, node, index);
