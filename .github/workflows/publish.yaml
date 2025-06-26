@@ -52,7 +52,7 @@ jobs:
 
       - name: Publish to code.playcanvas.com
         run: |
-          if ! curl -sS -X POST -H "Content-Type: application/json" \
+          if ! curl -fsS -X POST -H "Content-Type: application/json" \
             -d '{ "engineVersion": "${{ env.VERSION }}" }' ${{ secrets.PUBLISH_ENDPOINT }}; then
             echo "Failed to publish to code.playcanvas.com"
             exit 1
