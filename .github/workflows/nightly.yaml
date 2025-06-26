@@ -2,6 +2,11 @@ name: Nightly
 
 on:
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force release even if no changes detected'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -28,13 +33,14 @@ jobs:
         shell: bash
 
       - name: Check for changes
+        if: ${{ github.event.inputs.force == 'false' }}
         run: |
           last_tag=$(git describe --tags --abbrev=0)
           if ! git diff --quiet --exit-code $last_tag; then
             echo "Changes found since v$last_tag"
           else
             echo "No changes detected since v$last_tag"
-            exit 0
+            exit 1
           fi
 
       - name: Bump version
