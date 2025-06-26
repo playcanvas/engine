@@ -30,7 +30,6 @@ jobs:
       - name: Bump version
         run: |
           npm version prerelease --preid=dev
-          echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
       - name: Push version
         run: |
