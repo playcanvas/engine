@@ -35,7 +35,7 @@ jobs:
         shell: bash
 
       - name: Check for changes
-        if: ${{ github.event.inputs.force == 'false' }}
+        if: github.event.inputs.force == 'false'
         run: |
           last_tag=$(git describe --tags --abbrev=0)
           if ! git diff --quiet --exit-code $last_tag; then
