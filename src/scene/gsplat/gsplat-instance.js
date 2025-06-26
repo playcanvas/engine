@@ -121,7 +121,6 @@ class GSplatInstance {
         const { gsplatData } = resource;
         if (gsplatData instanceof GSplatSogsData && gsplatData.shBands > 0 && !gsplatData.fullSH) {
             this.resolveSH = new GSplatResolveSH(resource.device, this);
-            this.material.setDefine('SH_BANDS', '0');
         }
     }
 
