@@ -1,4 +1,4 @@
-name: Nightly
+name: Beta
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 jobs:
-  nightly:
+  beta:
     runs-on: ubuntu-latest
     if: github.repository == 'playcanvas/engine' && github.ref_name == 'main'
     steps:
@@ -47,7 +47,7 @@ jobs:
 
       - name: Bump version
         run: |
-          npm version prerelease --preid=dev
+          npm version prerelease --preid=beta
 
       - name: Push version
         run: |

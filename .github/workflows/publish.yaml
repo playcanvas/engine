@@ -5,7 +5,7 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
       - 'v[0-9]+.[0-9]+.[0-9]+-preview.[0-9]+'
-      - 'v[0-9]+.[0-9]+.[0-9]+-dev.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+'
 
 jobs:
   publish:
@@ -41,8 +41,8 @@ jobs:
         run: |
           if [[ "${{ env.TAG }}" =~ "preview" ]]; then
             tag=preview
-          elif [[ "${{ env.TAG }}" =~ "dev" ]]; then
-            tag=dev
+          elif [[ "${{ env.TAG }}" =~ "beta" ]]; then
+            tag=beta
           else
             tag=latest
           fi
