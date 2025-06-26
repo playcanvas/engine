@@ -16,22 +16,23 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'playcanvas/engine' && github.ref_name == 'main'
     steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_KEY }}
+
       - name: Check out code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Set up Node.js 22.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: 'npm'
-          registry-url: 'https://registry.npmjs.org/'
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Configure Git User
         run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
+          git config --global user.email "playcanvas[bot]@users.noreply.github.com"
+          git config --global user.name "PlayCanvas [bot]"
         shell: bash
 
       - name: Check for changes
