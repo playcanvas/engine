@@ -62,7 +62,7 @@ class GSplatComponent extends Component {
     _materialTmp = null;
 
     /** @private */
-    _fullSH = false;
+    _fastSH = true;
 
     /**
      * @type {BoundingBox|null}
@@ -210,33 +210,34 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets whether the full spherical-harmonic calculation is used when rendering SOGS data.
+     * Sets whether to use the fast (but approximate) spherical-harmonic calculation when rendering SOGS data.
      *
-     * When disabled, an approximate calculation is used which evaluates all spherical
-     * harmonics using the camera's Z-axis instead of the view vector. This means that
-     * gaussians in the center of the screen will have accurate spherical harmonics and
-     * those further away from center will have less accurate.
+     * The fast approximation evaluates the scene's spherical harmonic contributions
+     * along the camera's Z-axis instead of using each gaussian's view vector. This results
+     * in gaussians being accurate at the center of the screen and becoming less accurate
+     * as they appear further from the center. This is a good trade-off for performance
+     * when rendering large SOGS datasets, especially on mobile devices.
      *
-     * Defaults to false.
+     * Defaults to true.
      *
      * @type {boolean}
      */
-    set fullSH(value) {
-        if (value !== this._fullSH) {
-            this._fullSH = value;
+    set fastSH(value) {
+        if (value !== this._fastSH) {
+            this._fastSH = value;
             if (this._instance) {
-                this._instance.setFullSH(value);
+                this._instance.setFastSH(value);
             }
         }
     }
 
     /**
-     * Gets whether the full spherical-harmonic solver is enabled when rendering SOGS data.
+     * Gets whether the fast spherical-harmonic calculation is used when rendering SOGS data.
      *
      * @type {boolean}
      */
-    get fullSH() {
-        return this._fullSH;
+    get fastSH() {
+        return this._fastSH;
     }
 
     /**
@@ -504,7 +505,7 @@ class GSplatComponent extends Component {
         if (asset) {
             this.instance = new GSplatInstance(asset.resource, {
                 material: this._materialTmp,
-                fullSH: this._fullSH
+                fastSH: this._fastSH
             });
             this._materialTmp = null;
             this.customAabb = this.instance.resource.aabb.clone();

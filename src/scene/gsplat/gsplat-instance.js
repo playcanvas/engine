@@ -58,7 +58,7 @@ class GSplatInstance {
      * @param {GSplatResourceBase} resource - The splat instance.
      * @param {object} [options] - Options for the instance.
      * @param {ShaderMaterial|null} [options.material] - The material instance.
-     * @param {boolean} [options.fullSH] - Whether to resolve full spherical harmonics.
+     * @param {boolean} [options.fastSH] - Whether to use the fast, approximate spherical harmonic calculation. Only applies to SOGS data.
      */
     constructor(resource, options = {}) {
         this.resource = resource;
@@ -120,7 +120,7 @@ class GSplatInstance {
         });
 
         // configure sogs sh resolve
-        this.setFullSH(options.fullSH ?? false);
+        this.setFastSH(options.fastSH ?? false);
     }
 
     destroy() {
@@ -231,18 +231,18 @@ class GSplatInstance {
         }
     }
 
-    setFullSH(value) {
+    setFastSH(value) {
         const { resource } = this;
         const { gsplatData } = resource;
 
-        if (gsplatData instanceof GSplatSogsData && gsplatData.shBands > 0) {
+        if (gsplatData instanceof GSplatSogsData &&
+            gsplatData.shBands > 0 &&
+            value !== !!this.resolveSH) {
 
             if (this.resolveSH) {
                 this.resolveSH.destroy();
                 this.resolveSH = null;
-            }
-
-            if (!value) {
+            } else {
                 this.resolveSH = new GSplatResolveSH(resource.device, this);
             }
         }
