@@ -49,7 +49,14 @@ void main(void) {
     #if SH_BANDS > 0
         // calculate the model-space view direction
         vec3 dir = normalize(center.view * mat3(center.modelView));
-        clr.xyz += evalSH(source, dir);
+
+        // read sh coefficients
+        vec3 sh[SH_COEFFS];
+        float scale;
+        readSHData(source, sh, scale);
+
+        // evaluate
+        clr.xyz += evalSH(sh, dir) * scale;
     #endif
 
     clipCorner(corner, clr.w);

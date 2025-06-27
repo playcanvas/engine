@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { ADDRESS_CLAMP_TO_EDGE, BUFFER_STATIC, FILTER_NEAREST, SEMANTIC_ATTR13, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -7,7 +8,6 @@ import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { Mesh } from '../mesh.js';
 
 /**
- * @import { Vec2 } from '../../core/math/vec2.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatData } from './gsplat-data.js';
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js';
@@ -115,7 +115,14 @@ class GSplatResourceBase {
     configureMaterial(material) {
     }
 
+    /**
+     * Evaluates the size of the texture based on the number of splats.
+     *
+     * @param {number} count - Number of gaussians.
+     * @returns {Vec2} Returns a Vec2 object representing the size of the texture.
+     */
     evalTextureSize(count) {
+        return Vec2.ZERO;
     }
 
     /**
