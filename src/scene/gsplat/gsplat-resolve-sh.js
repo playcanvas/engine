@@ -22,74 +22,7 @@ const vertexGLSL = /* glsl */`
 `;
 
 const fragmentGLSL = /* glsl */`
-    #if SH_BANDS == 1
-        #define SH_COEFFS 3
-    #elif SH_BANDS == 2
-        #define SH_COEFFS 8
-    #elif SH_BANDS == 3
-        #define SH_COEFFS 15
-    #endif
-
-    #define SH_C1 0.4886025119029199f
-
-    #if SH_BANDS > 1
-        #define SH_C2_0 1.0925484305920792f
-        #define SH_C2_1 -1.0925484305920792f
-        #define SH_C2_2 0.31539156525252005f
-        #define SH_C2_3 -1.0925484305920792f
-        #define SH_C2_4 0.5462742152960396f
-    #endif
-
-    #if SH_BANDS > 2
-        #define SH_C3_0 -0.5900435899266435f
-        #define SH_C3_1 2.890611442640554f
-        #define SH_C3_2 -0.4570457994644658f
-        #define SH_C3_3 0.3731763325901154f
-        #define SH_C3_4 -0.4570457994644658f
-        #define SH_C3_5 1.445305721320277f
-        #define SH_C3_6 -0.5900435899266435f
-    #endif
-
-    // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
-    vec3 evalSH(in vec3 sh[SH_COEFFS], in vec3 dir) {
-        float x = dir.x;
-        float y = dir.y;
-        float z = dir.z;
-
-        // 1st degree
-        vec3 result = SH_C1 * (-sh[0] * y + sh[1] * z - sh[2] * x);
-
-        #if SH_BANDS > 1
-            // 2nd degree
-            float xx = x * x;
-            float yy = y * y;
-            float zz = z * z;
-            float xy = x * y;
-            float yz = y * z;
-            float xz = x * z;
-
-            result +=
-                sh[3] * (SH_C2_0 * xy) +
-                sh[4] * (SH_C2_1 * yz) +
-                sh[5] * (SH_C2_2 * (2.0 * zz - xx - yy)) +
-                sh[6] * (SH_C2_3 * xz) +
-                sh[7] * (SH_C2_4 * (xx - yy));
-        #endif
-
-        #if SH_BANDS > 2
-            // 3rd degree
-            result +=
-                sh[8]  * (SH_C3_0 * y * (3.0 * xx - yy)) +
-                sh[9]  * (SH_C3_1 * xy * z) +
-                sh[10] * (SH_C3_2 * y * (4.0 * zz - xx - yy)) +
-                sh[11] * (SH_C3_3 * z * (2.0 * zz - 3.0 * xx - 3.0 * yy)) +
-                sh[12] * (SH_C3_4 * x * (4.0 * zz - xx - yy)) +
-                sh[13] * (SH_C3_5 * z * (xx - yy)) +
-                sh[14] * (SH_C3_6 * x * (xx - 3.0 * yy));
-        #endif
-
-        return result;
-    }
+    #include "gsplatEvalSHVS"
 
     // takes a normalized 3-component value, convert to (11, 11, 10) bit range and
     // then package into RGBA8
@@ -98,7 +31,6 @@ const fragmentGLSL = /* glsl */`
         uint bits = (vb.x << 21) | (vb.y << 10) | vb.z;
         return vec4((uvec4(bits) >> uvec4(24, 16, 8, 0)) & uvec4(0xff)) / vec4(255.0);
     }
-
 
     uniform mediump vec3 dir;
     uniform mediump sampler2D centroids;
@@ -131,74 +63,7 @@ const vertexWGSL = /* wgsl */`
 `;
 
 const fragmentWGSL = /* wgsl */`
-    #if SH_BANDS == 1
-        const SH_COEFFS: i32 = 3;
-    #elif SH_BANDS == 2
-        const SH_COEFFS: i32 = 8;
-    #elif SH_BANDS == 3
-        const SH_COEFFS: i32 = 15;
-    #endif
-
-    const SH_C1: f32 = 0.4886025119029199f;
-
-    #if SH_BANDS > 1
-        const SH_C2_0: f32 = 1.0925484305920792f;
-        const SH_C2_1: f32 = -1.0925484305920792f;
-        const SH_C2_2: f32 = 0.31539156525252005f;
-        const SH_C2_3: f32 = -1.0925484305920792f;
-        const SH_C2_4: f32 = 0.5462742152960396f;
-    #endif
-
-    #if SH_BANDS > 2
-        const SH_C3_0: f32 = -0.5900435899266435f;
-        const SH_C3_1: f32 = 2.890611442640554f;
-        const SH_C3_2: f32 = -0.4570457994644658f;
-        const SH_C3_3: f32 = 0.3731763325901154f;
-        const SH_C3_4: f32 = -0.4570457994644658f;
-        const SH_C3_5: f32 = 1.445305721320277f;
-        const SH_C3_6: f32 = -0.5900435899266435f;
-    #endif
-
-    // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
-    fn evalSH(sh: array<vec3f, SH_COEFFS>, dir: vec3f) -> vec3f {
-        let x = dir.x;
-        let y = dir.y;
-        let z = dir.z;
-
-        // 1st degree
-        var result: vec3f = SH_C1 * (-sh[0] * y + sh[1] * z - sh[2] * x);
-
-        #if SH_BANDS > 1
-            // 2nd degree
-            let xx = x * x;
-            let yy = y * y;
-            let zz = z * z;
-            let xy = x * y;
-            let yz = y * z;
-            let xz = x * z;
-
-            result +=
-                sh[3] * (SH_C2_0 * xy) +
-                sh[4] * (SH_C2_1 * yz) +
-                sh[5] * (SH_C2_2 * (2.0 * zz - xx - yy)) +
-                sh[6] * (SH_C2_3 * xz) +
-                sh[7] * (SH_C2_4 * (xx - yy));
-        #endif
-
-        #if SH_BANDS > 2
-            // 3rd degree
-            result +=
-                sh[8]  * (SH_C3_0 * y * (3.0 * xx - yy)) +
-                sh[9]  * (SH_C3_1 * xy * z) +
-                sh[10] * (SH_C3_2 * y * (4.0 * zz - xx - yy)) +
-                sh[11] * (SH_C3_3 * z * (2.0 * zz - 3.0 * xx - 3.0 * yy)) +
-                sh[12] * (SH_C3_4 * x * (4.0 * zz - xx - yy)) +
-                sh[13] * (SH_C3_5 * z * (xx - yy)) +
-                sh[14] * (SH_C3_6 * x * (xx - 3.0 * yy));
-        #endif
-
-        return result;
-    }
+    #include "gsplatEvalSHVS"
 
     // takes a normalized 3-component value, convert to (11, 11, 10) bit range and
     // then package into RGBA8
@@ -228,7 +93,7 @@ const fragmentWGSL = /* wgsl */`
         }
 
         // evaluate
-        output.color = packRgb(evalSH(coefficients, uniform.dir) * 0.25 + 0.5);
+        output.color = packRgb(evalSH(&coefficients, uniform.dir) * 0.25 + 0.5);
 
         return output;
     }
@@ -334,7 +199,7 @@ class GSplatResolveSH {
 
         const { resource } = gsplatInstance;
 
-        const includes = new Map(ShaderChunks.get(device, 'glsl'));
+        const includes = new Map(ShaderChunks.get(device, device.isWebGPU ? 'wgsl' : 'glsl'));
 
         this.shader = ShaderUtils.createShader(device, {
             uniqueName: 'gsplatResolveSH',
