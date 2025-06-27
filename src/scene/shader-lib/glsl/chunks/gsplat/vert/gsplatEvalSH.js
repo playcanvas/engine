@@ -11,24 +11,24 @@ export default /* glsl */`
 
     #if SH_BANDS > 0
 
-    #define SH_C1 0.4886025119029199f
+    const float SH_C1 = 0.4886025119029199f;
 
     #if SH_BANDS > 1
-        #define SH_C2_0 1.0925484305920792f
-        #define SH_C2_1 -1.0925484305920792f
-        #define SH_C2_2 0.31539156525252005f
-        #define SH_C2_3 -1.0925484305920792f
-        #define SH_C2_4 0.5462742152960396f
+        const float SH_C2_0 = 1.0925484305920792f;
+        const float SH_C2_1 = -1.0925484305920792f;
+        const float SH_C2_2 = 0.31539156525252005f;
+        const float SH_C2_3 = -1.0925484305920792f;
+        const float SH_C2_4 = 0.5462742152960396f;
     #endif
 
     #if SH_BANDS > 2
-        #define SH_C3_0 -0.5900435899266435f
-        #define SH_C3_1 2.890611442640554f
-        #define SH_C3_2 -0.4570457994644658f
-        #define SH_C3_3 0.3731763325901154f
-        #define SH_C3_4 -0.4570457994644658f
-        #define SH_C3_5 1.445305721320277f
-        #define SH_C3_6 -0.5900435899266435f
+        const float SH_C3_0 = -0.5900435899266435f;
+        const float SH_C3_1 = 2.890611442640554f;
+        const float SH_C3_2 = -0.4570457994644658f;
+        const float SH_C3_3 = 0.3731763325901154f;
+        const float SH_C3_4 = -0.4570457994644658f;
+        const float SH_C3_5 = 1.445305721320277f;
+        const float SH_C3_6 = -0.5900435899266435f;
     #endif
 
     // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
