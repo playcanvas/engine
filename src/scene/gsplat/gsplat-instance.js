@@ -56,10 +56,11 @@ class GSplatInstance {
 
     /**
      * @param {GSplatResourceBase} resource - The splat instance.
-     * @param {ShaderMaterial|null} material - The material instance.
-     * @param {boolean} fullSH - Whether to resolve full spherical harmonics.
+     * @param {object} [options] - Options for the instance.
+     * @param {ShaderMaterial|null} [options.material] - The material instance.
+     * @param {boolean} [options.fullSH] - Whether to resolve full spherical harmonics.
      */
-    constructor(resource, material, fullSH) {
+    constructor(resource, options = {}) {
         this.resource = resource;
 
         // create the order texture
@@ -69,9 +70,9 @@ class GSplatInstance {
             resource.evalTextureSize(resource.numSplats)
         );
 
-        if (material) {
+        if (options.material) {
             // material is provided
-            this._material = material;
+            this._material = options.material;
 
             // patch splat order
             this._material.setParameter('splatOrder', this.orderTexture);
@@ -119,7 +120,7 @@ class GSplatInstance {
         });
 
         // configure sogs sh resolve
-        this.setFullSH(fullSH);
+        this.setFullSH(options.fullSH ?? false);
     }
 
     destroy() {

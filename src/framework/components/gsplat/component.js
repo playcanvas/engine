@@ -61,10 +61,7 @@ class GSplatComponent extends Component {
      */
     _materialTmp = null;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _fullSH = false;
 
     /**
@@ -213,7 +210,12 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets whether the full spherical-harmonic solver is enabled when rendering SOGS data.
+     * Sets whether the full spherical-harmonic calculation is used when rendering SOGS data.
+     *
+     * When disabled, an approximate calculation is used which evaluates all spherical
+     * harmonics using the camera's Z-axis instead of the view vector. This means that
+     * gaussians in the center of the screen will have accurate spherical harmonics and
+     * those further away from center will have less accurate.
      *
      * Defaults to false.
      *
@@ -500,7 +502,10 @@ class GSplatComponent extends Component {
         // create new instance
         const asset = this._assetReference.asset;
         if (asset) {
-            this.instance = new GSplatInstance(asset.resource, this._materialTmp, this._fullSH);
+            this.instance = new GSplatInstance(asset.resource, {
+                material: this._materialTmp,
+                fullSH: this._fullSH
+            });
             this._materialTmp = null;
             this.customAabb = this.instance.resource.aabb.clone();
         }
