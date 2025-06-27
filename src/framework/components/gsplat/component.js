@@ -213,8 +213,7 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets the flag indicating whether to use full spherical harmonic calculation 
-     * for SOGS. Full lighting is slower than the approximation.
+     * Sets whether the full spherical-harmonic solver is enabled when rendering SOGS data.
      * 
      * Defaults to false.
      * 
@@ -230,8 +229,7 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Gets the flag indicating whether to use full spherical harmonic calculation
-     * for SOGS. Full lighting is slower than the approximation.
+     * Gets whether the full spherical-harmonic solver is enabled when rendering SOGS data.
      * 
      * @type {boolean}
      */
