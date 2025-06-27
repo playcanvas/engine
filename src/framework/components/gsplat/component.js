@@ -214,9 +214,9 @@ class GSplatComponent extends Component {
 
     /**
      * Sets whether the full spherical-harmonic solver is enabled when rendering SOGS data.
-     * 
+     *
      * Defaults to false.
-     * 
+     *
      * @type {boolean}
      */
     set fullSH(value) {
@@ -230,7 +230,7 @@ class GSplatComponent extends Component {
 
     /**
      * Gets whether the full spherical-harmonic solver is enabled when rendering SOGS data.
-     * 
+     *
      * @type {boolean}
      */
     get fullSH() {
