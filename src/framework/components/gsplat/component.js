@@ -62,6 +62,12 @@ class GSplatComponent extends Component {
     _materialTmp = null;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _fullSH = false;
+
+    /**
      * @type {BoundingBox|null}
      * @private
      */
@@ -204,6 +210,33 @@ class GSplatComponent extends Component {
      */
     get material() {
         return this._instance?.material ?? this._materialTmp ?? null;
+    }
+
+    /**
+     * Sets the flag indicating whether to use full spherical harmonic calculation 
+     * for SOGS. Full lighting is slower than the approximation.
+     * 
+     * Defaults to false.
+     * 
+     * @type {boolean}
+     */
+    set fullSH(value) {
+        if (value !== this._fullSH) {
+            this._fullSH = value;
+            if (this._instance) {
+                this._instance.setFullSH(value);
+            }
+        }
+    }
+
+    /**
+     * Gets the flag indicating whether to use full spherical harmonic calculation
+     * for SOGS. Full lighting is slower than the approximation.
+     * 
+     * @type {boolean}
+     */
+    get fullSH() {
+        return this._fullSH;
     }
 
     /**
@@ -469,7 +502,7 @@ class GSplatComponent extends Component {
         // create new instance
         const asset = this._assetReference.asset;
         if (asset) {
-            this.instance = new GSplatInstance(asset.resource, this._materialTmp);
+            this.instance = new GSplatInstance(asset.resource, this._materialTmp, this._fullSH);
             this._materialTmp = null;
             this.customAabb = this.instance.resource.aabb.clone();
         }

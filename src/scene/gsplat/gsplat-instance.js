@@ -57,8 +57,9 @@ class GSplatInstance {
     /**
      * @param {GSplatResourceBase} resource - The splat instance.
      * @param {ShaderMaterial|null} material - The material instance.
+     * @param {boolean} fullSH - Whether to resolve full spherical harmonics.
      */
-    constructor(resource, material) {
+    constructor(resource, material, fullSH) {
         this.resource = resource;
 
         // create the order texture
@@ -118,10 +119,7 @@ class GSplatInstance {
         });
 
         // configure sogs sh resolve
-        const { gsplatData } = resource;
-        if (gsplatData instanceof GSplatSogsData && gsplatData.shBands > 0 && !gsplatData.fullSH) {
-            this.resolveSH = new GSplatResolveSH(resource.device, this);
-        }
+        this.setFullSH(fullSH);
     }
 
     destroy() {
@@ -229,6 +227,23 @@ class GSplatInstance {
 
             // we get new list of cameras each frame
             this.cameras.length = 0;
+        }
+    }
+
+    setFullSH(value) {
+        const { resource } = this;
+        const { gsplatData } = resource;
+
+        if (gsplatData instanceof GSplatSogsData && gsplatData.shBands > 0) {
+
+            if (this.resolveSH) {
+                this.resolveSH.destroy();
+                this.resolveSH = null;
+            }
+
+            if (!value) {
+                this.resolveSH = new GSplatResolveSH(resource.device, this);
+            }
         }
     }
 }

@@ -370,10 +370,25 @@ class GSplatResolveSH {
         shaderChunks.glsl.set('gsplatSogsColorVS', gsplatSogsColorGLSL);
         shaderChunks.wgsl.set('gsplatSogsColorVS', gsplatSogsColorWGSL);
 
+        material.update();
+
         device.scope.resolve('sh_result').setValue(this.texture);
     }
 
     destroy() {
+        const { gsplatInstance } = this;
+
+        const { material } = gsplatInstance;
+        material.setDefine('SH_BANDS', gsplatInstance.resource.gsplatData.shBands.toString());
+
+        const { shaderChunks } = material;
+        shaderChunks.glsl.delete('gsplatSogsColorVS');
+        shaderChunks.wgsl.delete('gsplatSogsColorVS');
+
+        material.update();
+
+        this.quadRender.destroy();
+        this.renderPass.destroy();
         this.renderTarget.destroy();
         this.texture.destroy();
         this.shader.destroy();
