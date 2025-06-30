@@ -76,6 +76,22 @@ describe('Quat', function () {
 
     });
 
+    describe('#dot()', function () {
+
+        it('returns 1 for the identity quaternion', function () {
+            const q = new Quat();
+            expect(q.dot(q)).to.equal(1);
+        });
+
+        it('returns the dot product of two quaternions', function () {
+            const q1 = new Quat(1, 2, 3, 4);
+            const q2 = new Quat(5, 6, 7, 8);
+            const dot = q1.dot(q2);
+            expect(dot).to.equal(70);
+        });
+
+    });
+
     describe('#equals()', function () {
 
         it('checks for equality of the same quaternion', function () {
@@ -288,6 +304,50 @@ describe('Quat', function () {
             const q = new Quat(1, 2, 3, 4);
             expect(q.lengthSq()).to.equal(30);
         });
+
+    });
+
+    describe('#lerp()', function () {
+
+        it('linearly interpolates between two vectors with alpha of 0', function () {
+            const q1 = new Quat();
+            q1.setFromEulerAngles(10, 20, 30);
+            const q2 = new Quat();
+            q2.setFromEulerAngles(40, 50, 60);
+            const q = new Quat();
+            q.lerp(q1, q2, 0);
+            const eulers = q.getEulerAngles();
+            expect(eulers.x).to.be.closeTo(10, 0.00001);
+            expect(eulers.y).to.be.closeTo(20, 0.00001);
+            expect(eulers.z).to.be.closeTo(30, 0.00001);
+        });
+
+        it('linearly interpolates between two vectors with alpha of 0.5', function () {
+            const q1 = new Quat();
+            q1.setFromEulerAngles(10, 20, 30);
+            const q2 = new Quat();
+            q2.setFromEulerAngles(40, 50, 60);
+            const q = new Quat();
+            q.lerp(q1, q2, 0.5);
+            const eulers = q.getEulerAngles();
+            expect(eulers.x).to.be.closeTo(21.123283358418572, 0.00001);
+            expect(eulers.y).to.be.closeTo(36.50540428432963, 0.00001);
+            expect(eulers.z).to.be.closeTo(41.12328335841857, 0.00001);
+        });
+
+        it('linearly interpolates between two vectors with alpha of 1', function () {
+            const q1 = new Quat();
+            q1.setFromEulerAngles(10, 20, 30);
+            const q2 = new Quat();
+            q2.setFromEulerAngles(40, 50, 60);
+            const q = new Quat();
+            q.lerp(q1, q2, 1);
+            const eulers = q.getEulerAngles();
+            expect(eulers.x).to.be.closeTo(40, 0.00001);
+            expect(eulers.y).to.be.closeTo(50, 0.00001);
+            expect(eulers.z).to.be.closeTo(60, 0.00001);
+        });
+
 
     });
 
