@@ -46,9 +46,12 @@ const shaderDesc = {
     vertexGLSL: /* glsl */`
         attribute vec3 vertex_position;
         attribute vec4 vertex_color;
+    
         varying vec4 vColor;
+    
         uniform mat4 matrix_model;
         uniform mat4 matrix_viewProjection;
+    
         void main(void) {
             gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
             gl_Position.z = clamp(gl_Position.z, -abs(gl_Position.w), abs(gl_Position.w));
@@ -57,10 +60,44 @@ const shaderDesc = {
     `,
     fragmentGLSL: /* glsl */`
         #include "gammaPS"
+    
         precision highp float;
+    
         varying vec4 vColor;
+
         void main(void) {
             gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(vColor)), vColor.w);
+        }
+    `,
+    vertexWGSL: /* wgsl */`
+        attribute vertex_position: vec3f;
+        attribute vertex_color: vec4f;
+
+        uniform matrix_model: mat4x4f;
+        uniform matrix_viewProjection: mat4x4f;
+
+        varying vColor: vec4f;
+
+        @vertex
+        fn vertexMain(input: VertexInput) -> VertexOutput {
+            var output: VertexOutput;
+            output.vColor = input.vertex_color;
+            let pos = vec4f(input.vertex_position, 1.0);
+            output.position = uniform.matrix_viewProjection * uniform.matrix_model * pos;
+            output.position.z = clamp(output.position.z, -abs(output.position.w), abs(output.position.w));
+            return output;
+        }
+    `,
+    fragmentWGSL: /* wgsl */`
+        #include "gammaPS"
+
+        varying vColor: vec4f;
+
+        @fragment
+        fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+            var output: FragmentOutput;
+            output.color = vec4f(gammaCorrectOutput(decodeGamma(input.vColor)), input.vColor.w);
+            return output;
         }
     `
 };
