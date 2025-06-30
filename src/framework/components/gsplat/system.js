@@ -16,9 +16,10 @@ const _schema = [
 // order matters here
 const _properties = [
     'castShadows',
+    'material',
+    'highQualitySH',
     'asset',
-    'layers',
-    'material'
+    'layers'
 ];
 
 /**
