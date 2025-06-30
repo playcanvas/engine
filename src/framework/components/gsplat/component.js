@@ -62,7 +62,7 @@ class GSplatComponent extends Component {
     _materialTmp = null;
 
     /** @private */
-    _fastSH = true;
+    _highQualitySH = false;
 
     /**
      * @type {BoundingBox|null}
@@ -210,34 +210,34 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets whether to use the fast (but approximate) spherical-harmonic calculation when rendering SOGS data.
+     * Sets whether to use the high quality or the approximate (but fast) spherical-harmonic calculation when rendering SOGS data.
      *
-     * The fast approximation evaluates the scene's spherical harmonic contributions
+     * The low quality approximation evaluates the scene's spherical harmonic contributions
      * along the camera's Z-axis instead of using each gaussian's view vector. This results
      * in gaussians being accurate at the center of the screen and becoming less accurate
      * as they appear further from the center. This is a good trade-off for performance
      * when rendering large SOGS datasets, especially on mobile devices.
      *
-     * Defaults to true.
+     * Defaults to false.
      *
      * @type {boolean}
      */
-    set fastSH(value) {
-        if (value !== this._fastSH) {
-            this._fastSH = value;
+    set highQualitySH(value) {
+        if (value !== this._highQualitySH) {
+            this._highQualitySH = value;
             if (this._instance) {
-                this._instance.setFastSH(value);
+                this._instance.setHighQualitySH(value);
             }
         }
     }
 
     /**
-     * Gets whether the fast spherical-harmonic calculation is used when rendering SOGS data.
+     * Gets whether the high quality (true) or the fast approximate (false) spherical-harmonic calculation is used when rendering SOGS data.
      *
      * @type {boolean}
      */
-    get fastSH() {
-        return this._fastSH;
+    get highQualitySH() {
+        return this._highQualitySH;
     }
 
     /**
@@ -505,7 +505,7 @@ class GSplatComponent extends Component {
         if (asset) {
             this.instance = new GSplatInstance(asset.resource, {
                 material: this._materialTmp,
-                fastSH: this._fastSH
+                highQualitySH: this._highQualitySH
             });
             this._materialTmp = null;
             this.customAabb = this.instance.resource.aabb.clone();

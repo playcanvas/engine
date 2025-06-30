@@ -17,7 +17,7 @@ const _schema = [
 const _properties = [
     'castShadows',
     'material',
-    'fastSH',
+    'highQualitySH',
     'asset',
     'layers'
 ];
