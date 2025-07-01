@@ -751,7 +751,7 @@ class Material {
 
         Debug.call(() => {
             if (data === undefined) {
-                Debug.warnOnce(`Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`);
+                Debug.warnOnce(`Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`, this);
             }
         });
 
