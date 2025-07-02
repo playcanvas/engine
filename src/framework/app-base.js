@@ -1984,9 +1984,6 @@ class AppBase extends EventHandler {
     }
 }
 
-// static data
-const _frameEndData = {};
-
 /**
  * Create tick function to be wrapped in closure.
  *
@@ -1998,9 +1995,9 @@ const makeTick = function (_app) {
     const application = _app;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [xrFrame] - XRFrame from requestAnimationFrame callback.
      */
-    return function (timestamp, frame) {
+    return function (timestamp, xrFrame) {
         if (!application.graphicsDevice) {
             return;
         }
@@ -2046,16 +2043,16 @@ const makeTick = function (_app) {
 
         application.fire('frameupdate', ms);
 
-        let shouldRenderFrame = true;
+        let skipUpdate = false;
 
-        if (frame) {
-            shouldRenderFrame = application.xr?.update(frame);
-            application.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
+        if (xrFrame) {
+            skipUpdate = !application.xr?.update(xrFrame);
+            application.graphicsDevice.defaultFramebuffer = xrFrame.session.renderState.baseLayer.framebuffer;
         } else {
             application.graphicsDevice.defaultFramebuffer = null;
         }
 
-        if (shouldRenderFrame) {
+        if (!skipUpdate) {
 
             Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${application.frame}`);
             Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
@@ -2074,11 +2071,7 @@ const makeTick = function (_app) {
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
             }
 
-            // set event data
-            _frameEndData.timestamp = now();
-            _frameEndData.target = application;
-
-            application.fire('frameend', _frameEndData);
+            application.fire('frameend');
         }
 
         application._inFrameUpdate = false;
