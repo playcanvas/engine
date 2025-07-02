@@ -899,6 +899,10 @@ class GraphicsDevice extends EventHandler {
         this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
     }
 
+    update() {
+        this.updateClientRect();
+    }
+
     updateClientRect() {
         if (platform.worker) {
             // Web Workers don't do page layout, so getBoundingClientRect is not available
