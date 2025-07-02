@@ -1013,7 +1013,7 @@ class AppBase extends EventHandler {
     update(dt) {
         this.frame++;
 
-        this.graphicsDevice.updateClientRect();
+        this.graphicsDevice.update();
 
         // #if _PROFILER
         this.stats.frame.updateStart = now();
@@ -1034,14 +1034,6 @@ class AppBase extends EventHandler {
         // #endif
     }
 
-    frameStart() {
-        this.graphicsDevice.frameStart();
-    }
-
-    frameEnd() {
-        this.graphicsDevice.frameEnd();
-    }
-
     /**
      * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
      * rendered. This function is called internally in the application's main loop and does not
@@ -1050,6 +1042,10 @@ class AppBase extends EventHandler {
      * @ignore
      */
     render() {
+        this.updateCanvasSize();
+
+        this.graphicsDevice.frameStart();
+
         // #if _PROFILER
         this.stats.frame.renderStart = now();
         // #endif
@@ -1073,6 +1069,8 @@ class AppBase extends EventHandler {
         // #if _PROFILER
         this.stats.frame.renderTime = now() - this.stats.frame.renderStart;
         // #endif
+
+        this.graphicsDevice.frameEnd();
     }
 
     // render a layer composition
@@ -1986,9 +1984,6 @@ class AppBase extends EventHandler {
     }
 }
 
-// static data
-const _frameEndData = {};
-
 /**
  * Create tick function to be wrapped in closure.
  *
@@ -2000,9 +1995,9 @@ const makeTick = function (_app) {
     const application = _app;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [xrFrame] - XRFrame from requestAnimationFrame callback.
      */
-    return function (timestamp, frame) {
+    return function (timestamp, xrFrame) {
         if (!application.graphicsDevice) {
             return;
         }
@@ -2048,16 +2043,16 @@ const makeTick = function (_app) {
 
         application.fire('frameupdate', ms);
 
-        let shouldRenderFrame = true;
+        let skipUpdate = false;
 
-        if (frame) {
-            shouldRenderFrame = application.xr?.update(frame);
-            application.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
+        if (xrFrame) {
+            skipUpdate = !application.xr?.update(xrFrame);
+            application.graphicsDevice.defaultFramebuffer = xrFrame.session.renderState.baseLayer.framebuffer;
         } else {
             application.graphicsDevice.defaultFramebuffer = null;
         }
 
-        if (shouldRenderFrame) {
+        if (!skipUpdate) {
 
             Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${application.frame}`);
             Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
@@ -2066,25 +2061,17 @@ const makeTick = function (_app) {
 
             application.fire('framerender');
 
-
             if (application.autoRender || application.renderNextFrame) {
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
 
-                application.updateCanvasSize();
-                application.frameStart();
                 application.render();
-                application.frameEnd();
                 application.renderNextFrame = false;
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
             }
 
-            // set event data
-            _frameEndData.timestamp = now();
-            _frameEndData.target = application;
-
-            application.fire('frameend', _frameEndData);
+            application.fire('frameend');
         }
 
         application._inFrameUpdate = false;
