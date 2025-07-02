@@ -568,10 +568,14 @@ class Camera {
      * @returns {Vec3} The world space coordinate.
      */
     screenToWorld(x, y, z, cw, ch, worldCoord = new Vec3()) {
-
         // Calculate the screen click as a point on the far plane of the normalized device coordinate 'box' (z=1)
+        const { x: rx, y: ry, z: rw, w: rh } = this._rect;
         const range = this.farClip - this.nearClip;
-        _deviceCoord.set(x / cw, (ch - y) / ch, z / range);
+        _deviceCoord.set(
+            (x - rx * cw) / (rw * cw),
+            1 - (y - (1 - ry - rh) * ch) / (rh * ch),
+            z / range
+        );
         _deviceCoord.mulScalar(2);
         _deviceCoord.sub(Vec3.ONE);
 
