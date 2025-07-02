@@ -1013,7 +1013,7 @@ class AppBase extends EventHandler {
     update(dt) {
         this.frame++;
 
-        this.graphicsDevice.updateClientRect();
+        this.graphicsDevice.update();
 
         // #if _PROFILER
         this.stats.frame.updateStart = now();
@@ -1034,14 +1034,6 @@ class AppBase extends EventHandler {
         // #endif
     }
 
-    frameStart() {
-        this.graphicsDevice.frameStart();
-    }
-
-    frameEnd() {
-        this.graphicsDevice.frameEnd();
-    }
-
     /**
      * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
      * rendered. This function is called internally in the application's main loop and does not
@@ -1050,6 +1042,10 @@ class AppBase extends EventHandler {
      * @ignore
      */
     render() {
+        this.updateCanvasSize();
+
+        this.graphicsDevice.frameStart();
+
         // #if _PROFILER
         this.stats.frame.renderStart = now();
         // #endif
@@ -1073,6 +1069,8 @@ class AppBase extends EventHandler {
         // #if _PROFILER
         this.stats.frame.renderTime = now() - this.stats.frame.renderStart;
         // #endif
+
+        this.graphicsDevice.frameEnd();
     }
 
     // render a layer composition
@@ -2066,15 +2064,11 @@ const makeTick = function (_app) {
 
             application.fire('framerender');
 
-
             if (application.autoRender || application.renderNextFrame) {
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
 
-                application.updateCanvasSize();
-                application.frameStart();
                 application.render();
-                application.frameEnd();
                 application.renderNextFrame = false;
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
