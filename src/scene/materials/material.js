@@ -71,7 +71,7 @@ let id = 0;
  * This is a base class and cannot be instantiated and used directly. Only subclasses such
  * as {@link ShaderMaterial} and {@link StandardMaterial} can be used to define materials
  * for rendering.
-
+ *
  * @category Graphics
  */
 class Material {
