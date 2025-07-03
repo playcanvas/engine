@@ -238,6 +238,10 @@ export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
 export { GSplatSogsResource } from './scene/gsplat/gsplat-sogs-resource.js';
 
+/**
+ * @typedef {import('./framework/parsers/sogs.js').SogsMeta} SogsMeta
+ */
+
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
