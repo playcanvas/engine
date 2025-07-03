@@ -173,6 +173,12 @@ class RigidBodyComponent extends Component {
     /** @private */
     _type = BODYTYPE_STATIC;
 
+    /** @private */
+    _position = new Vec3();
+
+    /** @private */
+    _rotation = new Quat();
+
     /** @ignore */
     static onLibraryLoaded() {
         // Lazily create shared variable
@@ -194,6 +200,26 @@ class RigidBodyComponent extends Component {
         _ammoVec1 = null;
         _ammoVec2 = null;
         _ammoQuat = null;
+    }
+
+    /**
+     * The position of the rigidbody.
+     *
+     * @returns {Vec3} the position of the rigidbody.
+     */
+    get position() {
+        this.getPositionAndRotation(this._position, this._rotation);
+        return this._position;
+    }
+
+    /**
+     * The rotation of the rigidbody.
+     *
+     * @returns {Quat} the rotation of the rigidbody.
+     */
+    get rotation() {
+        this.getPositionAndRotation(this._position, this._rotation);
+        return this._rotation;
     }
 
     /**
@@ -1063,6 +1089,44 @@ class RigidBodyComponent extends Component {
                 }
             }
             body.activate();
+        }
+    }
+
+    /**
+     * Returns the position and rotation of the rigidbody
+     *
+     * @param {Vec3} goalPos - The out position of the rigidbody.
+     * @param {Quat} goalRot - The out rotation of the rigidbody.
+     */
+    getPositionAndRotation(goalPos, goalRot) {
+
+        if (this._body && this._type === BODYTYPE_DYNAMIC) {
+
+            const t = this._body.getWorldTransform();
+            const p = t.getOrigin();
+            const q = t.getRotation();
+
+            const component = this.entity.collision;
+            if (component && component._hasOffset) {
+                const lo = component.data.linearOffset;
+                const ao = component.data.angularOffset;
+
+                // Un-rotate the angular offset and then use the new rotation to
+                // un-translate the linear offset in local space
+                // Order of operations matter here
+                const invertedAo = _quat2.copy(ao).invert();
+
+                goalRot.set(q.x(), q.y(), q.z(), q.w()).mul(invertedAo);
+                goalRot.transformVector(lo, _vec3);
+                goalPos.set(p.x() - _vec3.x, p.y() - _vec3.y, p.z() - _vec3.z);
+
+            } else {
+                goalPos.set(p.x(), p.y(), p.z());
+                goalRot.set(q.x(), q.y(), q.z(), q.w());
+            }
+        } else {
+            goalPos.copy(this.entity.getPosition());
+            goalRot.copy(this.entity.getRotation());
         }
     }
 
