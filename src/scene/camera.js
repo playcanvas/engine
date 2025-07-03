@@ -557,7 +557,7 @@ class Camera {
     }
 
     /**
-     * Convert a point from 2D canvas pixel space to 3D world space.
+     * Convert a point from 2D canvas pixel space to 3D world space based on the camera's rect.
      *
      * @param {number} x - X coordinate on PlayCanvas' canvas element.
      * @param {number} y - Y coordinate on PlayCanvas' canvas element.
