@@ -62,8 +62,8 @@ app.on('destroy', () => {
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
 // Create a couple of materials for our objects
-const red = new pc.StandardMaterial({diffuse: new pc.Color(0.7, 0.3, 0.3)});
-const gray = new pc.StandardMaterial({diffuse: new pc.Color(0.7, 0.7, 0.7)});
+const red = new pc.StandardMaterial({ diffuse: new pc.Color(0.7, 0.3, 0.3) });
+const gray = new pc.StandardMaterial({ diffuse: new pc.Color(0.7, 0.7, 0.7) });
 
 // Define a scene hierarchy in JSON format. This is loaded/parsed in
 // the parseScene function below

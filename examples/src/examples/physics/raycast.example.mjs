@@ -68,8 +68,8 @@ assetListLoader.load(() => {
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
     // Create a couple of materials
-    const red = new pc.StandardMaterial({diffuse: pc.Color.RED});
-    const green = new pc.StandardMaterial({diffuse: pc.Color.GREEN});
+    const red = new pc.StandardMaterial({ diffuse: pc.Color.RED });
+    const green = new pc.StandardMaterial({ diffuse: pc.Color.GREEN });
 
     // Create light
     const light = new pc.Entity();

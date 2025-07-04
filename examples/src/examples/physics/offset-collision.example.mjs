@@ -95,8 +95,8 @@ assetListLoader.load(() => {
     app.systems.rigidbody.gravity.set(0, -9.81, 0);
 
     // create a few materials for our objects
-    const red = new pc.StandardMaterial({diffuse: new pc.Color(1, 0.3, 0.3)});
-    const gray = new pc.StandardMaterial({diffuse: new pc.Color(0.7, 0.7, 0.7)});
+    const red = new pc.StandardMaterial({ diffuse: new pc.Color(1, 0.3, 0.3) });
+    const gray = new pc.StandardMaterial({ diffuse: new pc.Color(0.7, 0.7, 0.7) });
 
     const floor = new pc.Entity();
     floor.addComponent('render', {
