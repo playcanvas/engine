@@ -1085,15 +1085,15 @@ class MeshInstance {
 
     updateKey() {
 
-        // 31      : sign bit (leave)
-        // 30 - 25 : 8 bits for draw bucket - this is the highest priority for sorting
-        // 24      : 1 bit for alpha test / coverage, to render them after opaque to keep GPU efficiency
-        // 23 - 0  : 24 bits for material ID
+        // 31      : sign bit (leave as 0)
+        // 30 - 23 : 8 bits for draw bucket - highest priority for sorting
+        // 22      : 1 bit for alpha test / coverage, to render them after opaque for GPU efficiency
+        // 21 - 0  : 22 bits for material ID
         const { material } = this;
         this._sortKeyForward =
-            (this._drawBucket << 25) |
-            ((material.alphaToCoverage || material.alphaTest) ? 0x1000000 : 0) |
-            (material.id & 0xffffff);
+            (this._drawBucket << 23) |
+            ((material.alphaToCoverage || material.alphaTest) ? 0x400000 : 0) |
+            (material.id & 0x3fffff);
     }
 
     /**
