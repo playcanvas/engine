@@ -126,6 +126,56 @@ describe('Preprocessor', function () {
             CMP5
         #endif
 
+        // Test parentheses precedence
+        #define A
+        #define B
+        #define C
+
+        // Without parentheses, AND has higher precedence than OR
+        #if defined(A) || defined(B) && defined(UNDEFINED)
+            PREC1
+        #endif
+
+        // With parentheses, force OR to be evaluated first
+        #if (defined(A) || defined(B)) && defined(UNDEFINED)
+            PREC2
+        #endif
+
+        // Nested parentheses
+        #if (defined(A) && (defined(B) || defined(UNDEFINED))) && defined(C)
+            PREC3
+        #endif
+
+        // Complex expression with multiple parentheses
+        #if (defined(A) || defined(UNDEFINED)) && (defined(B) || defined(UNDEFINED)) && defined(C)
+            PREC4
+        #endif
+
+        // Parentheses with comparisons
+        #if (INDEX > 2) && (INDEX < 4)
+            PREC5
+        #endif
+
+        // Mixed defined() and comparisons with parentheses
+        #if (defined(A) && INDEX == 3) || (defined(UNDEFINED) && INDEX > 10)
+            PREC6
+        #endif
+
+        // Make sure defined() parentheses are not treated as precedence
+        #if defined(A) && defined(B)
+            PREC7
+        #endif
+
+        // Multiple levels of nesting
+        #if ((defined(A) || defined(B)) && (defined(C) || defined(UNDEFINED))) || defined(UNDEFINED)
+            PREC8
+        #endif
+
+       // Spaces in and around precedence parens
+        #if ( ( defined(A) && INDEX == 3) ||  (  defined(UNDEFINED) && INDEX > 10  ) ) 
+            PREC9
+        #endif
+
         TESTINJECTION {COUNT}
         INJECTSTRING {STRING}(x)
     `;
@@ -267,5 +317,42 @@ describe('Preprocessor', function () {
 
     it('returns true for ORS3', function () {
         expect(Preprocessor.run(srcData, includes).includes('ORS3')).to.equal(true);
+    });
+
+    // Parentheses precedence tests
+    it('returns true for PREC1 (without parentheses, A || B && UNDEFINED)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC1')).to.equal(true);
+    });
+
+    it('returns false for PREC2 (with parentheses, (A || B) && UNDEFINED)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC2')).to.equal(false);
+    });
+
+    it('returns true for PREC3 (nested parentheses)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC3')).to.equal(true);
+    });
+
+    it('returns true for PREC4 (complex expression with parentheses)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC4')).to.equal(true);
+    });
+
+    it('returns true for PREC5 (parentheses with comparisons)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC5')).to.equal(true);
+    });
+
+    it('returns true for PREC6 (mixed defined and comparisons)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC6')).to.equal(true);
+    });
+
+    it('returns true for PREC7 (defined() parentheses not treated as precedence)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC7')).to.equal(true);
+    });
+
+    it('returns true for PREC8 (multiple levels of nesting)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC8')).to.equal(true);
+    });
+
+    it('returns true for PREC9 (spaces inside precedence parens)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC9')).to.equal(true);
     });
 });
