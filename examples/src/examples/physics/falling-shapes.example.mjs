@@ -69,21 +69,10 @@ assetListLoader.load(() => {
 
     // Set the gravity for our rigid bodies
     app.systems.rigidbody.gravity.set(0, -9.81, 0);
-    /**
-     * @param {pc.Color} color - The color of the material.
-     * @returns {pc.StandardMaterial} The new material.
-     */
-    function createMaterial(color) {
-        const material = new pc.StandardMaterial();
-        material.diffuse = color;
-        // we need to call material.update when we change its properties
-        material.update();
-        return material;
-    }
 
     // create a few materials for our objects
-    const red = createMaterial(new pc.Color(1, 0.3, 0.3));
-    const gray = createMaterial(new pc.Color(0.7, 0.7, 0.7));
+    const red = new pc.StandardMaterial({diffuse: new pc.Color(1, 0.3, 0.3)});
+    const gray = new pc.StandardMaterial({diffuse: new pc.Color(0.7, 0.7, 0.7)});
 
     // ***********    Create our floor   *******************
 
