@@ -151,8 +151,12 @@ class GSplatManager {
 
                 // Update LOD for each splat individually
                 this.splats.forEach((splat) => {
+                    // this updates LOD intervals and interval texture
                     splat.lod.update(cameraNode);
                 });
+
+                // generate centers for evaluated lods
+                // note that the work buffer is not updated yet, and only when we get sorted centers
                 this.workBuffer.updateCenters(this.splats);
 
                 let activeCount = 0;
