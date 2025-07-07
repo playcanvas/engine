@@ -42,6 +42,9 @@ class GSplatResourceBase {
     /** @type {VertexBuffer} */
     instanceIndices;
 
+    /** @type {boolean} */
+    hasLod = false;
+
     constructor(device, gsplatData) {
         this.device = device;
         this.gsplatData = gsplatData;
@@ -197,39 +200,11 @@ class GSplatResourceBase {
     }
 
     /**
-     * Generate LODs with all splats at level 0 (simple implementation)
-     * This is the default implementation for formats that don't use complex LOD logic
+     * Generate LODs if supported. To be implemented by derived classes.
      *
      * @protected
      */
     generateLods() {
-        if (this.lodBlocks) return;
-        this.lodBlocks = new GSplatLodBlocks();
-
-        const numSplats = this.gsplatData.numSplats;
-        const blockSize = this.lodBlocks.blockSize;
-        const numBlocks = Math.ceil(numSplats / blockSize);
-
-        // Initialize LOD arrays
-        this.lodBlocks.blocksLodInfo = new Uint32Array(numBlocks * 3);
-        this.lodBlocks.blocksCenter = new Float32Array(numBlocks * 3);
-        const blocksLodInfo = this.lodBlocks.blocksLodInfo;
-        const blocksCenter = this.lodBlocks.blocksCenter;
-
-        // All splats are level 0 (large) - simple LOD approach
-        for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
-            const startIdx = blockIdx * blockSize;
-            const endIdx = Math.min(startIdx + blockSize, numSplats);
-            const blockSplatCount = endIdx - startIdx;
-
-            const blockLodsBase = blockIdx * 3;
-            blocksLodInfo[blockLodsBase] = blockSplatCount;     // level 0: all splats
-            blocksLodInfo[blockLodsBase + 1] = 0;               // level 1: no splats
-            blocksLodInfo[blockLodsBase + 2] = 0;               // level 2: no splats
-        }
-
-        // Calculate block centers
-        this.calculateBlockCenters(numSplats, blockSize, numBlocks, blocksCenter);
     }
 
     instantiate() {

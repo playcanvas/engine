@@ -321,6 +321,7 @@ class GSplatResource extends GSplatResourceBase {
     generateLods() {
 
         if (this.lodBlocks) return;
+        this.hasLod = true;
         this.lodBlocks = new GSplatLodBlocks();
 
         const gsplatData = this.gsplatData;

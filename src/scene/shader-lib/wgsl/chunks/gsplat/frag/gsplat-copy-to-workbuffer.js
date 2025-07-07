@@ -14,8 +14,10 @@ uniform uTransform: mat4x4f;
 uniform uStartLine: i32;      // Start row in destination texture
 uniform uViewportWidth: i32;  // Width of the destination viewport in pixels
 
-// LOD intervals texture
-var uIntervalsTexture: texture_2d<u32>;
+#ifdef GSPLAT_LOD
+    // LOD intervals texture
+    var uIntervalsTexture: texture_2d<u32>;
+#endif
 
 // number of splats
 uniform uActiveSplats: i32;
@@ -40,12 +42,14 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     } else {
 
-        // Use intervals texture to remap target index to source index
-        let intervalsSize = i32(textureDimensions(uIntervalsTexture, 0).x);
-        let intervalUV = vec2i(targetIndex % intervalsSize, targetIndex / intervalsSize);
-
-        // Fetch the original splat index from intervals texture
-        let originalIndex = textureLoad(uIntervalsTexture, intervalUV, 0).r;
+        #ifdef GSPLAT_LOD
+            // Use intervals texture to remap target index to source index
+            let intervalsSize = i32(textureDimensions(uIntervalsTexture, 0).x);
+            let intervalUV = vec2i(targetIndex % intervalsSize, targetIndex / intervalsSize);
+            let originalIndex = textureLoad(uIntervalsTexture, intervalUV, 0).r;
+        #else
+            let originalIndex = targetIndex;
+        #endif
         
         // source texture size
         var srcSize: u32;

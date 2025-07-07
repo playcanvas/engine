@@ -184,26 +184,32 @@ class GSplatWorkBuffer {
      */
     updateCentersWithLod(splat, textureSize) {
         const resource = splat.resource;
+        const hasLod = resource.hasLod;
         const srcCenters = resource.centers;
         const dstBaseOffset = splat.lineStart * 3 * textureSize;
         const intervals = splat.lod.intervals;
         const centers = this.centers;
         let targetIndex = 0;
 
-        // copy centers based on LOD intervals
-        for (let i = 0; i < intervals.length; i += 2) {
-            const intervalStart = intervals[i];
-            const intervalEnd = intervals[i + 1];
-            const intervalLength = intervalEnd - intervalStart;
+        if (hasLod) {
+            // copy centers based on LOD intervals
+            for (let i = 0; i < intervals.length; i += 2) {
+                const intervalStart = intervals[i];
+                const intervalEnd = intervals[i + 1];
+                const intervalLength = intervalEnd - intervalStart;
 
-            // Calculate source and destination ranges
-            const srcStart = intervalStart * 3;
-            const srcEnd = intervalEnd * 3;
-            const dstStart = dstBaseOffset + targetIndex * 3;
+                // Calculate source and destination ranges
+                const srcStart = intervalStart * 3;
+                const srcEnd = intervalEnd * 3;
+                const dstStart = dstBaseOffset + targetIndex * 3;
 
-            centers.set(srcCenters.subarray(srcStart, srcEnd), dstStart);
+                centers.set(srcCenters.subarray(srcStart, srcEnd), dstStart);
 
-            targetIndex += intervalLength;
+                targetIndex += intervalLength;
+            }
+        } else {
+            // copy all centers
+            centers.set(srcCenters, dstBaseOffset);
         }
     }
 }

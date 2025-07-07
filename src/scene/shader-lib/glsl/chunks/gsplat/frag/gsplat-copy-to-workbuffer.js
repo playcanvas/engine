@@ -14,8 +14,10 @@ uniform mat4 uTransform;
 uniform int uStartLine;      // Start row in destination texture
 uniform int uViewportWidth;  // Width of the destination viewport in pixels
 
-// LOD intervals texture
-uniform usampler2D uIntervalsTexture;
+#ifdef GSPLAT_LOD
+    // LOD intervals texture
+    uniform usampler2D uIntervalsTexture;
+#endif
 
 // number of splats
 uniform int uActiveSplats;
@@ -36,12 +38,14 @@ void main(void) {
 
     } else {
 
-        // Use intervals texture to remap target index to source index
-        int intervalsSize = int(textureSize(uIntervalsTexture, 0).x);
-        ivec2 intervalUV = ivec2(targetIndex % intervalsSize, targetIndex / intervalsSize);
-
-        // Fetch the original splat index from intervals texture
-        uint originalIndex = texelFetch(uIntervalsTexture, intervalUV, 0).r;
+        #ifdef GSPLAT_LOD
+            // Use intervals texture to remap target index to source index
+            int intervalsSize = int(textureSize(uIntervalsTexture, 0).x);
+            ivec2 intervalUV = ivec2(targetIndex % intervalsSize, targetIndex / intervalsSize);
+            uint originalIndex = texelFetch(uIntervalsTexture, intervalUV, 0).r;
+        #else
+            uint originalIndex = uint(targetIndex);
+        #endif
         
         // source texture size
         #ifdef GSPLAT_SOGS_DATA

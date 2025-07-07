@@ -17,6 +17,9 @@ class GSplatLod {
     /** @type {GSplatInfo} */
     splat;
 
+    /** @type {boolean} */
+    hasLod = false;
+
     /** @type {number} */
     activeSplats = 0;
 
@@ -31,7 +34,7 @@ class GSplatLod {
     /**
      * Texture that maps target indices to source splat indices based on intervals
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     intervalsTexture = null;
 
@@ -40,9 +43,6 @@ class GSplatLod {
      */
     constructor(splat) {
         this.splat = splat;
-
-        // Create initial 1x1 texture
-        this.intervalsTexture = this.createTexture('intervalsTexture', PIXELFORMAT_R32U, 1, 1);
     }
 
     destroy() {
@@ -75,6 +75,11 @@ class GSplatLod {
         let textureWidth = Math.ceil(Math.sqrt(totalSplats));
         textureWidth = Math.min(textureWidth, maxTextureSize);
         const textureHeight = Math.ceil(totalSplats / textureWidth);
+
+        // Create initial 1x1 texture
+        if (!this.intervalsTexture) {
+            this.intervalsTexture = this.createTexture('intervalsTexture', PIXELFORMAT_R32U, 1, 1);
+        }
 
         // Resize texture if dimensions changed
         if (this.intervalsTexture.width !== textureWidth || this.intervalsTexture.height !== textureHeight) {
@@ -123,6 +128,10 @@ class GSplatLod {
 
         const splat = this.splat;
         const resource = splat.resource;
+        if (!resource.hasLod) {
+            this.activeSplats = resource.numSplats;
+            return;
+        }
 
         // skip if resource doesn't have required data
         if (!resource.lodBlocks.blocksCenter || !resource.lodBlocks.blocksLodInfo) {

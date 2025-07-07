@@ -60,6 +60,7 @@ class GSplatInfo {
 
         // defines configured on the material that set up correct shader variant to be compiled
         const defines = new Map(this.material.defines);
+        if (resource.hasLod) defines.set('GSPLAT_LOD', '');
         const definesKey = Array.from(defines.entries()).map(([k, v]) => `${k}=${v}`).join(';');
         this.copyShader = ShaderUtils.createShader(device, {
             uniqueName: `SplatCopyToWorkBuffer:${definesKey}`,
