@@ -6,7 +6,6 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { Mesh } from '../mesh.js';
-import { GSplatLodBlocks } from './unified/gsplat-lod-blocks.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
