@@ -9,9 +9,10 @@ import { Mesh } from '../mesh.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { GSplatData } from './gsplat-data.js';
- * @import { GSplatCompressedData } from './gsplat-compressed-data.js';
- * @import { GSplatSogsData } from './gsplat-sogs-data.js';
+ * @import { GSplatData } from './gsplat-data.js'
+ * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
+ * @import { GSplatSogsData } from './gsplat-sogs-data.js'
+ * @import { GSplatLodBlocks } from './unified/gsplat-lod-blocks.js'
  */
 
 /**
