@@ -1,3 +1,7 @@
+// temporarily disable all lint warnings in this in-progress file
+/* eslint-disable */
+// @ts-nocheck
+
 // sort blind set of data
 function UnifiedSortWorker() {
     const myself = (typeof self !== 'undefined' && self) || (require('node:worker_threads').parentPort);
@@ -180,15 +184,12 @@ function UnifiedSortWorker() {
             //     const z = centers[istride + 2] - pz;
             //     const d = x * dx + y * dy + z * dz;
             //     const sortKey = Math.floor((d - minDist) * divider);
-    
+
             //     distances[i] = sortKey;
-    
+
             //     // count occurrences of each distance
             //     countBuffer[sortKey]++;
             // }
-
-
-
 
 
             sortParams.forEach((params) => {
@@ -214,17 +215,6 @@ function UnifiedSortWorker() {
                 }
 
             });
-
-
-
-
-
-
-
-
-
-
-
 
 
         }
@@ -254,9 +244,6 @@ function UnifiedSortWorker() {
 
         // const count = dist(numVertices - 1) >= 0 ? findZero() : numVertices;
         const count = numVertices;
-
-
-
 
 
         // apply mapping

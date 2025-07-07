@@ -1,10 +1,10 @@
-import { Debug } from "../../../core/debug.js";
-import { Vec4 } from "../../../core/math/vec4.js";
-import { SEMANTIC_POSITION } from "../../../platform/graphics/constants.js";
-import { drawQuadWithShader } from "../../graphics/quad-render-utils.js";
-import { ShaderMaterial } from "../../materials/shader-material.js";
-import { ShaderUtils } from "../../shader-lib/shader-utils.js";
-import { GSplatLod } from "./gspat-lod.js";
+import { Debug } from '../../../core/debug.js';
+import { Vec4 } from '../../../core/math/vec4.js';
+import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
+import { drawQuadWithShader } from '../../graphics/quad-render-utils.js';
+import { ShaderMaterial } from '../../materials/shader-material.js';
+import { ShaderUtils } from '../../shader-lib/shader-utils.js';
+import { GSplatLod } from './gspat-lod.js';
 import glslGsplatCopyToWorkBufferPS from '../../shader-lib/glsl/chunks/gsplat/frag/gsplat-copy-to-workbuffer.js';
 import wgslGsplatCopyToWorkBufferPS from '../../shader-lib/wgsl/chunks/gsplat/frag/gsplat-copy-to-workbuffer.js';
 

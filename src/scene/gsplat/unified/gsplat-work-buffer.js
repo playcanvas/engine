@@ -1,6 +1,6 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F } from "../../../platform/graphics/constants.js";
-import { RenderTarget } from "../../../platform/graphics/render-target.js";
-import { Texture } from "../../../platform/graphics/texture.js";
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F } from '../../../platform/graphics/constants.js';
+import { RenderTarget } from '../../../platform/graphics/render-target.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 
 /**
  * @import { GSplatInfo } from "./gsplat-info.js"
