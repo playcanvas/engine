@@ -4,6 +4,7 @@ import { Texture } from '../../../platform/graphics/texture.js';
 
 /**
  * @import { GSplatInfo } from "./gsplat-info.js"
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  */
 
 /**
