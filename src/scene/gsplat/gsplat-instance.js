@@ -5,12 +5,12 @@ import { MeshInstance } from '../mesh-instance.js';
 import { GSplatResolveSH } from './gsplat-resolve-sh.js';
 import { GSplatSorter } from './gsplat-sorter.js';
 import { GSplatSogsData } from './gsplat-sogs-data.js';
+import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
 
 /**
  * @import { Camera } from '../camera.js'
- * @import { GSplatResourceBase } from './gsplat-resource-base.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
@@ -113,7 +113,7 @@ class GSplatInstance {
         this.sorter.init(this.orderTexture, centers, chunks);
         this.sorter.on('updated', (count) => {
             // limit splat render count to exclude those behind the camera
-            this.meshInstance.instancingCount = Math.ceil(count / resource.instanceSize);
+            this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
 
             // update splat count on the material
             this.material.setParameter('numSplats', count);

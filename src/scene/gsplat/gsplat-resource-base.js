@@ -6,6 +6,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { Mesh } from '../mesh.js';
+import { GSplatLodBlocks } from './unified/gsplat-lod-blocks.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -25,6 +26,9 @@ class GSplatResourceBase {
 
     /** @type {GSplatData | GSplatCompressedData | GSplatSogsData} */
     gsplatData;
+
+    /** @type {GSplatLodBlocks|null} */
+    lodBlocks = null;
 
     /** @type {Float32Array} */
     centers;
@@ -49,11 +53,26 @@ class GSplatResourceBase {
         gsplatData.calcAabb(this.aabb);
 
         // construct the mesh
+        const { mesh, instanceIndices } = GSplatResourceBase.createMesh(device, gsplatData.numSplats);
+        this.mesh = mesh;
+        this.instanceIndices = instanceIndices;
 
+        // keep extra reference since mesh is shared between instances
+        this.mesh.incRefCount();
+
+        this.mesh.aabb.copy(this.aabb);
+    }
+
+    destroy() {
+        this.mesh?.destroy();
+        this.instanceIndices?.destroy();
+    }
+
+    static createMesh(device, splatCount) {
         // number of quads to combine into a single instance. this is to increase occupancy
         // in the vertex shader.
-        const splatInstanceSize = 128;
-        const numSplats = Math.ceil(gsplatData.numSplats / splatInstanceSize) * splatInstanceSize;
+        const splatInstanceSize = GSplatResourceBase.instanceSize;
+        const numSplats = Math.ceil(splatCount / splatInstanceSize) * splatInstanceSize;
         const numSplatInstances = numSplats / splatInstanceSize;
 
         // specify the base splat index per instance
@@ -61,10 +80,6 @@ class GSplatResourceBase {
         for (let i = 0; i < numSplatInstances; ++i) {
             indexData[i] = i * splatInstanceSize;
         }
-
-        const vertexFormat = new VertexFormat(device, [
-            { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_UINT32, asInt: true }
-        ]);
 
         // build the instance mesh
         const meshPositions = new Float32Array(12 * splatInstanceSize);
@@ -83,28 +98,27 @@ class GSplatResourceBase {
             ], i * 6);
         }
 
-        this.mesh = new Mesh(device);
-        this.mesh.setPositions(meshPositions, 3);
-        this.mesh.setIndices(meshIndices);
-        this.mesh.update();
+        const mesh = new Mesh(device);
+        mesh.setPositions(meshPositions, 3);
+        mesh.setIndices(meshIndices);
+        mesh.update();
 
-        // keep extra reference since mesh is shared between instances
-        this.mesh.incRefCount();
+        const vertexFormat = new VertexFormat(device, [
+            { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_UINT32, asInt: true }
+        ]);
 
-        this.mesh.aabb.copy(this.aabb);
-
-        this.instanceIndices = new VertexBuffer(device, vertexFormat, numSplatInstances, {
+        const instanceIndices = new VertexBuffer(device, vertexFormat, numSplatInstances, {
             usage: BUFFER_STATIC,
             data: indexData.buffer
         });
+
+        return {
+            mesh,
+            instanceIndices
+        };
     }
 
-    destroy() {
-        this.mesh?.destroy();
-        this.instanceIndices?.destroy();
-    }
-
-    get instanceSize() {
+    static get instanceSize() {
         return 128; // number of splats per instance
     }
 
@@ -148,6 +162,74 @@ class GSplatResourceBase {
             addressV: ADDRESS_CLAMP_TO_EDGE,
             ...(data ? { levels: [data] } : { })
         });
+    }
+
+    /**
+     * Calculate block centers by averaging splat centers within each block
+     *
+     * @param {number} numSplats - Total number of splats
+     * @param {number} blockSize - Size of each block
+     * @param {number} numBlocks - Number of blocks (avoids recalculation)
+     * @param {Float32Array} blocksCenter - Output array for block centers (3 floats per block)
+     * @protected
+     */
+    calculateBlockCenters(numSplats, blockSize, numBlocks, blocksCenter) {
+        for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
+            const startIdx = blockIdx * blockSize;
+            const endIdx = Math.min(startIdx + blockSize, numSplats);
+            const blockSplatCount = endIdx - startIdx;
+
+            // Calculate block center by averaging all splat centers in this block
+            let centerX = 0, centerY = 0, centerZ = 0;
+            for (let i = startIdx; i < endIdx; i++) {
+                const centerBase = i * 3;
+                centerX += this.centers[centerBase];
+                centerY += this.centers[centerBase + 1];
+                centerZ += this.centers[centerBase + 2];
+            }
+
+            // Store average center in blocksCenter
+            const blockCenterBase = blockIdx * 3;
+            blocksCenter[blockCenterBase] = centerX / blockSplatCount;
+            blocksCenter[blockCenterBase + 1] = centerY / blockSplatCount;
+            blocksCenter[blockCenterBase + 2] = centerZ / blockSplatCount;
+        }
+    }
+
+    /**
+     * Generate LODs with all splats at level 0 (simple implementation)
+     * This is the default implementation for formats that don't use complex LOD logic
+     *
+     * @protected
+     */
+    generateLods() {
+        if (this.lodBlocks) return;
+        this.lodBlocks = new GSplatLodBlocks();
+
+        const numSplats = this.gsplatData.numSplats;
+        const blockSize = this.lodBlocks.blockSize;
+        const numBlocks = Math.ceil(numSplats / blockSize);
+
+        // Initialize LOD arrays
+        this.lodBlocks.blocksLodInfo = new Uint32Array(numBlocks * 3);
+        this.lodBlocks.blocksCenter = new Float32Array(numBlocks * 3);
+        const blocksLodInfo = this.lodBlocks.blocksLodInfo;
+        const blocksCenter = this.lodBlocks.blocksCenter;
+
+        // All splats are level 0 (large) - simple LOD approach
+        for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
+            const startIdx = blockIdx * blockSize;
+            const endIdx = Math.min(startIdx + blockSize, numSplats);
+            const blockSplatCount = endIdx - startIdx;
+
+            const blockLodsBase = blockIdx * 3;
+            blocksLodInfo[blockLodsBase] = blockSplatCount;     // level 0: all splats
+            blocksLodInfo[blockLodsBase + 1] = 0;               // level 1: no splats
+            blocksLodInfo[blockLodsBase + 2] = 0;               // level 2: no splats
+        }
+
+        // Calculate block centers
+        this.calculateBlockCenters(numSplats, blockSize, numBlocks, blocksCenter);
     }
 
     instantiate() {
