@@ -17,9 +17,6 @@ class GSplatLod {
     /** @type {GSplatInfo} */
     splat;
 
-    /** @type {boolean} */
-    hasLod = false;
-
     /** @type {number} */
     activeSplats = 0;
 
