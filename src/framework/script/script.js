@@ -17,6 +17,7 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  *
  * - `Script#initialize` - Called once when the script is initialized.
  * - `Script#postInitialize` - Called once after all scripts have been initialized.
+ * - `Script#fixedUpdate` - Called every fixed time, if the script is enabled.
  * - `Script#update` - Called every frame, if the script is enabled.
  * - `Script#postUpdate` - Called every frame, after all scripts have been updated.
  * - `Script#swap` - Called when a script is redefined.
@@ -324,6 +325,13 @@ export class Script extends EventHandler {
      * @function
      * @name Script#[postInitialize]
      * @description Called after all initialize methods are executed in the same tick or enabling chain of actions.
+     */
+
+    /**
+     * @function
+     * @name Script#[fixedUpdate]
+     * @description Called for enabled (running state) scripts on each fixed tick.
+     * @param {number} dt - The fixed delta time in seconds.
      */
 
     /**
