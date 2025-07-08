@@ -5,8 +5,8 @@ import { drawQuadWithShader } from '../../graphics/quad-render-utils.js';
 import { ShaderMaterial } from '../../materials/shader-material.js';
 import { ShaderUtils } from '../../shader-lib/shader-utils.js';
 import { GSplatLod } from './gspat-lod.js';
-import glslGsplatCopyToWorkBufferPS from '../../shader-lib/glsl/chunks/gsplat/frag/gsplat-copy-to-workbuffer.js';
-import wgslGsplatCopyToWorkBufferPS from '../../shader-lib/wgsl/chunks/gsplat/frag/gsplat-copy-to-workbuffer.js';
+import glslGsplatCopyToWorkBufferPS from '../../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
+import wgslGsplatCopyToWorkBufferPS from '../../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 
 /**

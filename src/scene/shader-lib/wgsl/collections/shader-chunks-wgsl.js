@@ -57,7 +57,6 @@ import gsplatSourceFormatVS from '../chunks/gsplat/vert/gsplatSourceFormat.js';
 import gsplatCornerVS from '../chunks/gsplat/vert/gsplatCorner.js';
 import gsplatDataVS from '../chunks/gsplat/vert/gsplatData.js';
 import gsplatOutputVS from '../chunks/gsplat/vert/gsplatOutput.js';
-import gsplatCopyToWorkBufferPS from '../chunks/gsplat/frag/gsplat-copy-to-workbuffer.js';
 import gsplatPS from '../chunks/gsplat/frag/gsplat.js';
 import gsplatSHVS from '../chunks/gsplat/vert/gsplatSH.js';
 import gsplatSourceVS from '../chunks/gsplat/vert/gsplatSource.js';
@@ -227,7 +226,6 @@ const shaderChunksWGSL = {
     gsplatCenterVS,
     gsplatCornerVS,
     gsplatColorVS,
-    gsplatCopyToWorkBufferPS,
     gsplatCommonVS,
     gsplatCompressedDataVS,
     gsplatCompressedSHVS,
