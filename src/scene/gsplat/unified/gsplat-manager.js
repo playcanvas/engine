@@ -19,6 +19,7 @@ const mat = new Mat4();
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
 const viewport = [0, 0];
+const tempSplats = [];
 
 /**
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
@@ -52,6 +53,9 @@ class GSplatManager {
     /** @type {number} */
     sortedVersion = 0;
 
+    /** @type {number} */
+    updateVersion = 0;
+
     /** @type {Vec3} */
     lastCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
@@ -61,9 +65,7 @@ class GSplatManager {
 
         resources.forEach((resource, i) => {
             resource.generateLods();
-            const splatInfo = new GSplatInfo(device, resource);
-            splatInfo.node = nodes[i];
-
+            const splatInfo = new GSplatInfo(device, resource, nodes[i]);
             this.splats.push(splatInfo);
         });
 
@@ -137,16 +139,63 @@ class GSplatManager {
         });
     }
 
+    /**
+     * Updates the order of splats based on their world matrix being updated, with splats that have
+     * changed within a window going to the end.
+     *
+     * @returns {number} The index of the first changed splat.
+     */
+    updateSplatOrder() {
+
+        // detect which splats have changed
+        this.updateVersion++;
+        const updateVersion = this.updateVersion;
+        const splats = this.splats;
+        splats.forEach((splat) => {
+            splat.update(updateVersion);
+        });
+
+        // Copy splat references before sorting, to detect changes later
+        tempSplats.length = splats.length;
+        for (let i = 0; i < splats.length; i++) {
+            tempSplats[i] = splats[i];
+        }
+
+        // Sort: splats changed within a window go to the end
+        const activityWindow = 100;
+        splats.sort((a, b) => {
+            const aActive = updateVersion - a.updateVersion <= activityWindow;
+            const bActive = updateVersion - b.updateVersion <= activityWindow;
+
+            if (aActive && !bActive) return 1;
+            if (!aActive && bActive) return -1;
+
+            // if both changed, most recently changed splat goes last
+            return a.updateVersion - b.updateVersion;
+        });
+
+        // Find the first index that changed
+        const firstChangedIndex = splats.findIndex((splat, i) => splat !== tempSplats[i]);
+
+        tempSplats.length = 0;
+
+        return firstChangedIndex;
+    }
+
     update(cameraNode) {
 
-        // Get current camera position in world space
-        const currentCameraPos = cameraNode.getWorldTransform().getTranslation();
+        // reorder splats based on update version - active splats at the end
+        const firstChangedIndex = this.updateSplatOrder();
 
+        // do not allow any workbuffer modifications till we get sorted centers back
         if (this.sortedVersion === this.workBuffer.centersVersion) {
 
-            // Check if camera has moved more than 1 unit since last LOD update
+            // how far has the camera moved
+            const currentCameraPos = cameraNode.getWorldTransform().getTranslation();
             const distance = this.lastCameraPos.distance(currentCameraPos);
-            if (distance > 1.0) {
+
+            // if camera moved or splats have been reordered, give updated centers to sorter
+            if (distance > 1.0 || firstChangedIndex !== -1) {
                 this.lastCameraPos.copy(currentCameraPos);
 
                 // Update LOD for each splat individually
@@ -165,8 +214,20 @@ class GSplatManager {
                 });
 
                 this.sorter.setCenters(this.workBuffer.centers, this.workBuffer.centersVersion, activeCount);
+
+            } else { // sorter centers are not updated, we can update work buffer if needed
+
+                // any splats that have changed this frame need to be re-rendered to work buffer
+                const updateVersion = this.updateVersion;
+                const rt = this.workBuffer.renderTarget;
+                this.splats.forEach((splat) => {
+                    if (splat.updateVersion === updateVersion) {
+                        splat.render(rt);
+                    }
+                });
             }
 
+            // update data for the sorter
             this.sort(cameraNode);
         }
     }

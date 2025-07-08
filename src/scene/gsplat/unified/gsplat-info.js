@@ -7,6 +7,7 @@ import { ShaderUtils } from '../../shader-lib/shader-utils.js';
 import { GSplatLod } from './gspat-lod.js';
 import glslGsplatCopyToWorkBufferPS from '../../shader-lib/glsl/chunks/gsplat/frag/gsplat-copy-to-workbuffer.js';
 import wgslGsplatCopyToWorkBufferPS from '../../shader-lib/wgsl/chunks/gsplat/frag/gsplat-copy-to-workbuffer.js';
+import { Mat4 } from '../../../core/math/mat4.js';
 
 /**
  * @import { GraphNode } from "../../graph-node.js";
@@ -42,6 +43,12 @@ class GSplatInfo {
     /** @type {GSplatLod} */
     lod;
 
+    /** @type {Mat4} */
+    previousWorldTransform = new Mat4();
+
+    /** @type {number} */
+    updateVersion = 0;
+
     /**
      * Material is used as a container for parameters only.
      *
@@ -49,9 +56,13 @@ class GSplatInfo {
      */
     material;
 
-    constructor(device, resource) {
+    constructor(device, resource, node) {
+        Debug.assert(resource);
+        Debug.assert(node);
+
         this.device = device;
         this.resource = resource;
+        this.node = node;
         this.numSplats = resource.centers.length / 3;
         this.lod = new GSplatLod(this);
 
@@ -83,6 +94,17 @@ class GSplatInfo {
         this.lineStart = start;
         this.lineCount = count;
         this.viewport.set(0, start, textureSize, count);
+    }
+
+    update(updateVersion) {
+
+        // if the object's matrix has changed, store the update version to know when it happened
+        const worldMatrix = this.node.getWorldTransform();
+        const worldMatrixChanged = !this.previousWorldTransform.equals(worldMatrix);
+        if (worldMatrixChanged) {
+            this.previousWorldTransform.copy(worldMatrix);
+            this.updateVersion = updateVersion;
+        }
     }
 
     render(renderTarget) {

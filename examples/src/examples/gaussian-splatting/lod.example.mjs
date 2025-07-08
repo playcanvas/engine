@@ -112,7 +112,21 @@ assetListLoader.load(() => {
     const worldLayer = app.scene.layers.getLayerByName('World');
     worldLayer.addMeshInstances([manager.meshInstance]);
 
+    let time = 0;
+    let guitarTime = 0;
     app.on('update', (/** @type {number} */ dt) => {
+        time += dt;
+
+        logo.rotateLocal(0, 100 * dt, 0);
+
+        // each even second, update the guitar as well
+        if (Math.floor(time) % 2 === 0) {
+            guitarTime += dt;
+
+            // orbit guitar around
+            guitar.setLocalPosition(2.5 * Math.sin(guitarTime), 2, 2.5 * Math.cos(guitarTime) + 1);
+        }
+
         manager.update(camera);
     });
 });
