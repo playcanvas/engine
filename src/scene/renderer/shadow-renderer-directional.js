@@ -162,11 +162,12 @@ class ShadowRendererDirectional {
 
             // find out AABB of visible shadow casters
             const visibleCasters = lightRenderData.visibleCasters;
+            const numVisibleCasters = visibleCasters.length;
 
-            if (visibleCasters.length > 0) {
+            if (numVisibleCasters > 0) {
                 const firstMeshInstance = visibleCasters[0];
                 visibleSceneAabb.copy(firstMeshInstance.aabb);
-                for (let i = 1; i < visibleCasters.length; i++) {
+                for (let i = 1; i < numVisibleCasters; i++) {
                     const meshInstance = visibleCasters[i];
                     visibleSceneAabb.add(meshInstance.aabb);
                 }
