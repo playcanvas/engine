@@ -321,7 +321,10 @@ class CameraFrame {
 
         // handle layer changes on the camera - render passes need to be update to reflect the changes
         this.cameraLayersChanged = cameraComponent.on('set:layers', () => {
-            if (this.renderPassCamera) this.renderPassCamera.layersDirty = true;
+            if (this.renderPassCamera) {
+                // magnopus patched https://magnopus.atlassian.net/browse/OB-4477
+                this.update();
+            }
         });
     }
 
