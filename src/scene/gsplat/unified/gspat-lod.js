@@ -38,7 +38,8 @@ class GSplatLod {
     /**
      * @param {GSplatInfo} splat - The splat info this LOD manager handles
      */
-    constructor(splat) {
+    constructor(device, splat) {
+        this.device = device;
         this.splat = splat;
     }
 
@@ -67,8 +68,7 @@ class GSplatLod {
         }
 
         // Estimate roughly square texture size
-        const device = this.splat.resource.device || this.splat.node.app?.graphicsDevice;
-        const maxTextureSize = device?.maxTextureSize || 4096;
+        const maxTextureSize = this.device.maxTextureSize || 4096;
         let textureWidth = Math.ceil(Math.sqrt(totalSplats));
         textureWidth = Math.min(textureWidth, maxTextureSize);
         const textureHeight = Math.ceil(totalSplats / textureWidth);
@@ -103,8 +103,7 @@ class GSplatLod {
     }
 
     createTexture(name, format, width, height) {
-        const device = this.splat.resource.device || this.splat.node.app?.graphicsDevice;
-        return new Texture(device, {
+        return new Texture(this.device, {
             name: name,
             width: width,
             height: height,
