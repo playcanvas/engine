@@ -56,10 +56,10 @@ function texelCoordSolidAngle(u, v, size) {
  * @async
  * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device
  * @param {import('../../platform/graphics/texture.js').Texture} source - The source cubemap texture (must be RGBA8 format and synced to CPU)
- * @param {boolean} [dontFlipX=false] - If true, doesn't flip the X direction when calculating coefficients
+ * @param {boolean} [dontFlipX] - If true, doesn't flip the X direction when calculating coefficients
  * @returns {Promise<Float32Array|null>} A Float32Array containing 27 coefficients (9 spherical harmonics × 3 color channels),
- *          or null if the input cubemap doesn't meet requirements
- * 
+ * or null if the input cubemap doesn't meet requirements
+ *
  * @example
  * // Get SH coefficients from a cubemap
  * const shCoefficients = await shFromCubemap(device, cubemapTexture);
