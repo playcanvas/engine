@@ -32,10 +32,10 @@ class GSplatInfo {
     node;
 
     /** @type {number} */
-    lineStart;
+    lineStart = 0;
 
     /** @type {number} */
-    lineCount;
+    lineCount = 0;
 
     /** @type {Vec4} */
     viewport = new Vec4();

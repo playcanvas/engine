@@ -204,6 +204,9 @@ class GSplatManager {
                     splat.lod.update(cameraNode);
                 });
 
+                // Reassign lines based on current LOD active splats
+                this.workBuffer.assignLines(this.splats, this.workBuffer.width);
+
                 // generate centers for evaluated lods
                 // note that the work buffer is not updated yet, and only when we get sorted centers
                 this.workBuffer.updateCenters(this.splats);

@@ -75,7 +75,6 @@ class GSplatWorkBuffer {
      */
     allocate(splats) {
         const textureSize = this.estimateTextureWidth(splats, this.device.maxTextureSize);
-        this.assignLines(splats, textureSize);
 
         this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA16F, textureSize, textureSize);
         this.covATexture = this.createTexture('covA', PIXELFORMAT_RGBA16F, textureSize, textureSize);
@@ -148,9 +147,6 @@ class GSplatWorkBuffer {
      * @param {GSplatInfo[]} splats - The splats to update with.
      */
     updateCenters(splats) {
-
-        // Reassign lines based on current LOD active splats
-        this.assignLines(splats, this.orderTexture.width);
 
         if (!this.centers) {
             this.centers = new Float32Array(this.orderTexture.width * this.orderTexture.width * 3);
