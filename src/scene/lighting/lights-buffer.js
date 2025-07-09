@@ -1,11 +1,10 @@
 import { Vec3 } from '../../core/math/vec3.js';
-import { PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
 import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE, LIGHT_COLOR_DIVIDER } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { LightCamera } from '../renderer/light-camera.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
-import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 const tempVec3 = new Vec3();
 const tempAreaLightSizes = new Float32Array(6);
@@ -34,22 +33,22 @@ const TextureIndexFloat = {
 
 // enums supplied to the shader as inject-defines
 const enums = {
-    '{LIGHTSHAPE_PUNCTUAL}': `${LIGHTSHAPE_PUNCTUAL}u`,
-    '{LIGHTSHAPE_RECT}': `${LIGHTSHAPE_RECT}u`,
-    '{LIGHTSHAPE_DISK}': `${LIGHTSHAPE_DISK}u`,
-    '{LIGHTSHAPE_SPHERE}': `${LIGHTSHAPE_SPHERE}u`,
-    '{LIGHT_COLOR_DIVIDER}': `${LIGHT_COLOR_DIVIDER}.0`
+    'LIGHTSHAPE_PUNCTUAL': `${LIGHTSHAPE_PUNCTUAL}u`,
+    'LIGHTSHAPE_RECT': `${LIGHTSHAPE_RECT}u`,
+    'LIGHTSHAPE_DISK': `${LIGHTSHAPE_DISK}u`,
+    'LIGHTSHAPE_SPHERE': `${LIGHTSHAPE_SPHERE}u`,
+    'LIGHT_COLOR_DIVIDER': `${LIGHT_COLOR_DIVIDER}.0`
 };
 
-// converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1"
+// converts object with properties to a list of these as an example: "#define {CLUSTER_TEXTURE_8_BLAH} 1"
 const buildShaderDefines = (object, prefix) => {
     return Object.keys(object)
-    .map(key => `#define ${prefix}${key} ${object[key]}`)
+    .map(key => `#define {${prefix}${key}} ${object[key]}`)
     .join('\n');
 };
 
 // create a shader chunk with defines for the light buffer textures
-shaderChunks.lightBufferDefinesPS = shaderChunksWGSL.lightBufferDefinesPS = `\n
+const lightBufferDefines = `\n
     ${buildShaderDefines(TextureIndexFloat, 'CLUSTER_TEXTURE_')}
     ${buildShaderDefines(enums, '')}
 `;
@@ -61,6 +60,10 @@ class LightsBuffer {
     constructor(device) {
 
         this.device = device;
+
+        // shader chunk with defines
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('lightBufferDefinesPS', lightBufferDefines);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('lightBufferDefinesPS', lightBufferDefines);
 
         // features
         this.cookiesEnabled = false;

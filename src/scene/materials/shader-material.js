@@ -4,7 +4,7 @@ import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor
 import { SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_SKIN } from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { shaderGeneratorShader } from '../shader-lib/programs/shader-generator-shader.js';
-import { getCoreDefines } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { Material } from './material.js';
 
 /**
@@ -23,7 +23,7 @@ import { Material } from './material.js';
  * inputs to the shader. Defaults to undefined, which generates the default attributes.
  * @property {string | string[]} [fragmentOutputTypes] - Fragment shader output types, which default to
  * vec4. Passing a string will set the output type for all color attachments. Passing an array will
- * set the output type for each color attachment. @see ShaderUtils.createDefinition
+ * set the output type for each color attachment. @see ShaderDefinitionUtils.createDefinition
  */
 
 /**
@@ -132,7 +132,7 @@ class ShaderMaterial extends Material {
 
         const { objDefs } = params;
         const options = {
-            defines: getCoreDefines(this, params),
+            defines: ShaderUtils.getCoreDefines(this, params),
             skin: (objDefs & SHADERDEF_SKIN) !== 0,
             useInstancing: (objDefs & SHADERDEF_INSTANCING) !== 0,
             useMorphPosition: (objDefs & SHADERDEF_MORPH_POSITION) !== 0,
@@ -144,7 +144,7 @@ class ShaderMaterial extends Material {
             toneMapping: params.cameraShaderParams.toneMapping,
             fog: params.cameraShaderParams.fog,
             shaderDesc: this.shaderDesc,
-            chunks: this.chunks ?? {} // override chunks from the material
+            shaderChunks: this.shaderChunks // override chunks from the material
         };
 
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);

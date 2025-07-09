@@ -466,7 +466,12 @@ class XrManager extends EventHandler {
             optionalFeatures: []
         };
 
-        const webgl = this.app.graphicsDevice?.isWebGL2;
+        const device = this.app.graphicsDevice;
+        if (device?.isWebGPU) {
+            opts.requiredFeatures.push('webgpu');
+        }
+
+        const webgl = device?.isWebGL2;
 
         if (type === XRTYPE_AR) {
             opts.optionalFeatures.push('light-estimation');

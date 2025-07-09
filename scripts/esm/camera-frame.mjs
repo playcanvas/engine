@@ -1,4 +1,10 @@
+// Camera Frame v 1.1
+
 import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
+
+/**
+ * @import { Asset } from 'playcanvas';
+ */
 
 /** @enum {number} */
 const ToneMapping = {
@@ -218,6 +224,24 @@ class Grading {
 }
 
 /** @interface */
+class ColorLUT {
+    /**
+     * @attribute
+     * @type {Asset}
+     * @resource texture
+     */
+    texture = null;
+
+    /**
+     * @visibleif {texture}
+     * @range [0, 1]
+     * @precision 3
+     * @step 0.001
+     */
+    intensity = 1;
+}
+
+/** @interface */
 class Vignette {
     enabled = false;
 
@@ -333,6 +357,8 @@ class Dof {
 }
 
 class CameraFrame extends Script {
+    static scriptName = 'cameraFrame';
+
     /**
      * @attribute
      * @type {Rendering}
@@ -356,6 +382,12 @@ class CameraFrame extends Script {
      * @type {Grading}
      */
     grading = new Grading();
+
+    /**
+     * @attribute
+     * @type {ColorLUT}
+     */
+    colorLUT = new ColorLUT();
 
     /**
      * @attribute
@@ -407,7 +439,7 @@ class CameraFrame extends Script {
     postUpdate(dt) {
 
         const cf = this.engineCameraFrame;
-        const { rendering, bloom, grading, vignette, fringing, taa, ssao, dof } = this;
+        const { rendering, bloom, grading, vignette, fringing, taa, ssao, dof, colorLUT } = this;
 
         const dstRendering = cf.rendering;
         dstRendering.renderFormats.length = 0;
@@ -449,6 +481,15 @@ class CameraFrame extends Script {
             dstGrading.contrast = grading.contrast;
             dstGrading.saturation = grading.saturation;
             dstGrading.tint.copy(grading.tint);
+        }
+
+        // colorLUT
+        const dstColorLUT = cf.colorLUT;
+        if (colorLUT.texture?.resource) {
+            dstColorLUT.texture = colorLUT.texture.resource;
+            dstColorLUT.intensity = colorLUT.intensity;
+        } else {
+            dstColorLUT.texture = null;
         }
 
         // vignette

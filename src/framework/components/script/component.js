@@ -714,7 +714,16 @@ class ScriptComponent extends Component {
         if (typeof scriptType === 'string') {
             scriptType = this.system.app.scripts.get(scriptType);
         } else if (scriptType) {
-            scriptName = scriptType.__name ??= toLowerCamelCase(getScriptName(scriptType));
+
+            const inferredScriptName = getScriptName(scriptType);
+            const lowerInferredScriptName = toLowerCamelCase(inferredScriptName);
+
+            if (!(scriptType.prototype instanceof ScriptType) && !scriptType.scriptName) {
+                Debug.warnOnce(`The Script class "${inferredScriptName}" must have a static "scriptName" property: \`${inferredScriptName}.scriptName = "${lowerInferredScriptName}";\`. This will be an error in future versions of PlayCanvas.`);
+            }
+
+            scriptType.__name ??= scriptType.scriptName ?? lowerInferredScriptName;
+            scriptName = scriptType.__name;
         }
 
         if (scriptType) {

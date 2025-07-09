@@ -6,7 +6,6 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    CHUNKAPI_1_65,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_RGBA8,
@@ -30,8 +29,6 @@ import {
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { LightingParams } from '../../scene/lighting/lighting-params.js';
 import { WorldClusters } from '../../scene/lighting/world-clusters.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
 import { Camera } from '../../scene/camera.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
@@ -232,41 +229,28 @@ class Lightmapper {
         }
     }
 
-    createMaterialForPass(device, scene, pass, addAmbient) {
+    createMaterialForPass(scene, pass, addAmbient) {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
-        material.chunks.APIVersion = CHUNKAPI_1_65;
         material.setDefine('UV1LAYOUT', '');    // draw into UV1 texture space
+        material.setDefine('LIT_LIGHTMAP_BAKING', '');
 
         if (pass === PASS_COLOR) {
-            let bakeLmEndChunk = shaderChunksLightmapper.bakeLmEndPS; // encode to RGBM
+            material.setDefine('LIT_LIGHTMAP_BAKING_COLOR', '');
             if (addAmbient) {
-                // diffuse light stores accumulated AO, apply contrast and brightness to it
-                // and multiply ambient light color by the AO
-                bakeLmEndChunk = `
-                    dDiffuseLight = ((dDiffuseLight - 0.5) * max(${scene.ambientBakeOcclusionContrast.toFixed(1)} + 1.0, 0.0)) + 0.5;
-                    dDiffuseLight += vec3(${scene.ambientBakeOcclusionBrightness.toFixed(1)});
-                    dDiffuseLight = saturate(dDiffuseLight);
-                    dDiffuseLight *= dAmbientLight;
-                    ${bakeLmEndChunk}
-                `;
+                material.setDefine('LIT_LIGHTMAP_BAKING_ADD_AMBIENT', '');
             } else {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
             }
-            material.chunks.basePS = shaderChunks.basePS + (this.bakeHDR ? '' : '\n#define LIGHTMAP_RGBM\n');
-            material.chunks.endPS = bakeLmEndChunk;
+
+            if (!this.bakeHDR) material.setDefine('LIGHTMAP_RGBM', '');
+
             material.lightMap = this.blackTex;
         } else {
-            material.chunks.basePS = `
-                #define STD_LIGHTMAP_DIR
-                ${shaderChunks.basePS}
-                uniform float bakeDir;
-            `;
-            material.chunks.endPS = shaderChunksLightmapper.bakeDirLmEndPS;
+            material.setDefine('LIT_LIGHTMAP_BAKING_DIR', '');
+            material.setDefine('STD_LIGHTMAP_DIR', '');
         }
 
-        // avoid writing unrelated things to alpha
-        material.chunks.outputAlphaPS = '\n';
         material.cull = CULLFACE_NONE;
         material.forceUv1 = true; // provide data to xformUv1
         material.update();
@@ -277,13 +261,13 @@ class Lightmapper {
     createMaterials(device, scene, passCount) {
         for (let pass = 0; pass < passCount; pass++) {
             if (!this.passMaterials[pass]) {
-                this.passMaterials[pass] = this.createMaterialForPass(device, scene, pass, false);
+                this.passMaterials[pass] = this.createMaterialForPass(scene, pass, false);
             }
         }
 
         // material used on last render of ambient light to multiply accumulated AO in lightmap by ambient light
         if (!this.ambientAOMaterial) {
-            this.ambientAOMaterial = this.createMaterialForPass(device, scene, 0, true);
+            this.ambientAOMaterial = this.createMaterialForPass(scene, 0, true);
             this.ambientAOMaterial.onUpdateShader = function (options) {
                 // mark LM as without ambient, to add it
                 options.litOptions.lightMapWithoutAmbient = true;
@@ -694,6 +678,10 @@ class Lightmapper {
 
         // apply scene settings
         this.renderer.setSceneConstants();
+
+        // uniforms
+        this.device.scope.resolve('ambientBakeOcclusionContrast').setValue(this.scene.ambientBakeOcclusionContrast);
+        this.device.scope.resolve('ambientBakeOcclusionBrightness').setValue(this.scene.ambientBakeOcclusionBrightness);
     }
 
     restoreScene() {

@@ -295,14 +295,14 @@ class Color {
     }
 
     /**
-     * Converts the color to an array of numbers.
+     * Converts the color to an array.
      *
-     * @param {number[]} [arr] - The array to populate with the color components. If not specified,
-     * a new array is created. Default is true.
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the color's number
+     * components. If not specified, a new array is created.
      * @param {number} [offset] - The zero-based index at which to start copying elements to the
      * array. Default is 0.
      * @param {boolean} [alpha] - If true, the output array will include the alpha value.
-     * @returns {number[]} The color as an array of numbers.
+     * @returns {number[]|ArrayBufferView} The color as an array.
      * @example
      * const c = new pc.Color(1, 1, 1);
      * // Outputs [1, 1, 1, 1]

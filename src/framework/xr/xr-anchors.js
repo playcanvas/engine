@@ -178,7 +178,7 @@ class XrAnchors extends EventHandler {
 
     /** @private */
     _onSessionStart() {
-        const available = this.manager.session.enabledFeatures.indexOf('anchors') !== -1;
+        const available = this.manager.session.enabledFeatures?.indexOf('anchors') >= 0;
         if (!available) return;
         this._available = available;
         this.fire('available');

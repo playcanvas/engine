@@ -37,7 +37,8 @@ const COMPARISON = /([a-z_]\w*)\s*(==|!=|<|<=|>|>=)\s*([\w"']+)/i;
 const INVALID = /[+\-]/g;
 
 // #include "identifier" or optional second identifier #include "identifier1, identifier2"
-const INCLUDE = /include[ \t]+"([\w-]+)(?:\s*,\s*([\w-]+))?"\r?(?:\n|$)/g;
+// Matches only up to the closing quote of the include directive
+const INCLUDE = /include[ \t]+"([\w-]+)(?:\s*,\s*([\w-]+))?"/g;
 
 // loop index to replace, in the format {i}
 const LOOP_INDEX = /\{i\}/g;
@@ -461,7 +462,7 @@ class Preprocessor {
                                     includeSource = result;
 
                                 } else {
-                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
+                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { originalSource: originalSource, source: source });
                                     error = true;
                                 }
                             }
@@ -472,7 +473,7 @@ class Preprocessor {
                             // process the just included test
                             KEYWORD.lastIndex = include.index - 1;
                         } else {
-                            console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`, { source: originalSource });
+                            console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`, { originalSource: originalSource, source: source });
                             error = true;
                             continue;
                         }

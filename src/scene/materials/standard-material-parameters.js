@@ -26,6 +26,7 @@ const standardMaterialParameterTypes = {
     ..._textureParameter('ao'),
     ..._textureParameter('aoDetail', true, false),
     aoDetailMode: 'string',
+    aoIntensity: 'number',
 
     diffuse: 'rgb',
     ..._textureParameter('diffuse'),
@@ -43,10 +44,13 @@ const standardMaterialParameterTypes = {
     useMetalness: 'boolean',
     metalness: 'number',
     enableGGXSpecular: 'boolean',
-    anisotropy: 'number',
     metalnessTint: 'boolean',
     ..._textureParameter('metalness'),
     useMetalnessSpecularColor: 'boolean',
+
+    anisotropyIntensity: 'number',
+    anisotropyRotation: 'number',
+    ..._textureParameter('anisotropy'),
 
     shininess: 'number',
     gloss: 'number',
@@ -191,7 +195,8 @@ const standardMaterialRemovedParameters = {
     conserveEnergy: 'boolean',
     useGamma: 'boolean',
     useGammaTonemap: 'boolean',
-    sheenGlossTint: 'boolean'
+    sheenGlossTint: 'boolean',
+    anisotropy: 'boolean'
 };
 
 export {

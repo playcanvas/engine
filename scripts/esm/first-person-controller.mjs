@@ -663,6 +663,8 @@ class GamePadInput {
 }
 
 class FirstPersonController extends Script {
+    static scriptName = 'firstPersonController';
+
     /**
      * @type {RigidBodyComponent}
      * @private

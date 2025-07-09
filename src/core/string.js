@@ -221,19 +221,19 @@ const string = {
      *
      * @param {...number} args - The code points to convert to a string.
      * @returns {string} The converted string.
+     * @ignore
      */
-    fromCodePoint(/* ...args */) {
-        const chars = [];
-        let current;
-        let codePoint;
-        let units;
-        for (let i = 0; i < arguments.length; ++i) {
-            current = Number(arguments[i]);
-            codePoint = current - 0x10000;
-            units = current > 0xFFFF ? [(codePoint >> 10) + 0xD800, (codePoint % 0x400) + 0xDC00] : [current];
-            chars.push(String.fromCharCode.apply(null, units));
-        }
-        return chars.join('');
+    fromCodePoint(...args) {
+        return args.map((codePoint) => {
+            if (codePoint > 0xFFFF) {
+                codePoint -= 0x10000;
+                return String.fromCharCode(
+                    (codePoint >> 10) + 0xD800,
+                    (codePoint % 0x400) + 0xDC00
+                );
+            }
+            return String.fromCharCode(codePoint);
+        }).join('');
     }
 };
 

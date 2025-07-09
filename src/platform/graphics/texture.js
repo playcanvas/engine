@@ -272,7 +272,7 @@ class Texture {
         this._compareOnRead = options.compareOnRead ?? false;
         this._compareFunc = options.compareFunc ?? FUNC_LESS;
 
-        this._type = options.hasOwnProperty('type') ? options.type : TEXTURETYPE_DEFAULT;
+        this._type = options.type ?? TEXTURETYPE_DEFAULT;
         Debug.assert(!options.hasOwnProperty('rgbm'), 'Use options.type.');
         Debug.assert(!options.hasOwnProperty('swizzleGGGR'), 'Use options.type.');
 
@@ -804,7 +804,7 @@ class Texture {
     /**
      * Sets the texture type.
      *
-     * @type {number}
+     * @type {string}
      * @ignore
      */
     set type(value) {
@@ -819,7 +819,7 @@ class Texture {
     /**
      * Gets the texture type.
      *
-     * @type {number}
+     * @type {string}
      * @ignore
      */
     get type() {
@@ -1177,7 +1177,7 @@ class Texture {
 
     /**
      * Download texture's top level data from graphics memory to local memory.
-     *
+     * magnopus patched - not sure if we need this?
      * @ignore
      */
     async downloadAsync() {
@@ -1187,6 +1187,22 @@ class Texture {
             promises.push(promise);
         }
         await Promise.all(promises);
+    }
+
+    /**
+     * Upload texture data asynchronously to the GPU.
+     *
+     * @param {number} x - The left edge of the rectangle.
+     * @param {number} y - The top edge of the rectangle.
+     * @param {number} width - The width of the rectangle.
+     * @param {number} height - The height of the rectangle.
+     * @param {Uint8Array|Uint16Array|Uint32Array|Float32Array} data - The pixel data to upload. This should be a typed array.
+     *
+     * @returns {Promise<void>} A promise that resolves when the upload is complete.
+     * @ignore
+     */
+    write(x, y, width, height, data) {
+        return this.impl.write?.(x, y, width, height, data);
     }
 }
 

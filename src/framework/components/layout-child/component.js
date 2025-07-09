@@ -14,10 +14,16 @@ class LayoutChildComponent extends Component {
     /** @private */
     _minHeight = 0;
 
-    /** @private */
+    /**
+     * @type {number|null}
+     * @private
+     */
     _maxWidth = null;
 
-    /** @private */
+    /**
+     * @type {number|null}
+     * @private
+     */
     _maxHeight = null;
 
     /** @private */

@@ -95,7 +95,7 @@ class RenderPassPicker extends RenderPass {
 
                         renderer.setCameraUniforms(camera.camera, renderTarget);
                         if (device.supportsUniformBuffers) {
-                            renderer.setupViewUniformBuffers(this.viewBindGroups, renderer.viewUniformFormat, renderer.viewBindGroupFormat, 1);
+                            renderer.setupViewUniformBuffers(this.viewBindGroups, renderer.viewUniformFormat, renderer.viewBindGroupFormat, null);
                         }
 
                         renderer.renderForward(camera.camera, renderTarget, tempMeshInstances, lights, SHADER_PICK, (meshInstance) => {

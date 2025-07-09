@@ -100,7 +100,7 @@ class RenderPassPrepass extends RenderPass {
     }
 
     after() {
-        // Assign the lienar depth texture to the uniform
+        // Assign the linear depth texture to the uniform
         this.device.scope.resolve(DEPTH_UNIFORM_NAME).setValue(this.linearDepthTexture);
     }
 
