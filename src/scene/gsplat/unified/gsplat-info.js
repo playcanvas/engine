@@ -64,7 +64,7 @@ class GSplatInfo {
         this.resource = resource;
         this.node = node;
         this.numSplats = resource.centers.length / 3;
-        this.lod = new GSplatLod(device, this);
+        this.lod = new GSplatLod(device, resource, node);
 
         this.material = new ShaderMaterial();
         resource.configureMaterial(this.material);

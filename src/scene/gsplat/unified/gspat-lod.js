@@ -1,9 +1,11 @@
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U } from '../../../platform/graphics/constants.js';
+
 /**
  * @import { GraphNode } from "../../graph-node.js"
- * @import { GSplatInfo } from "./gsplat-info.js"
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ * @import { GSplatResource } from '../gsplat-resource.js'
  */
 
 const localCameraPos = new Vec3();
@@ -14,8 +16,14 @@ const localCameraPos = new Vec3();
  * @ignore
  */
 class GSplatLod {
-    /** @type {GSplatInfo} */
-    splat;
+    /** @type {GraphicsDevice} */
+    device;
+
+    /** @type {GSplatResource} */
+    resource;
+
+    /** @type {GraphNode} */
+    node;
 
     /** @type {number} */
     activeSplats = 0;
@@ -36,11 +44,14 @@ class GSplatLod {
     intervalsTexture = null;
 
     /**
-     * @param {GSplatInfo} splat - The splat info this LOD manager handles
+     * @param {GraphicsDevice} device - The graphics device
+     * @param {GSplatResource} resource - The splat resource this LOD manager handles
+     * @param {GraphNode} node - The node this splat belongs to
      */
-    constructor(device, splat) {
+    constructor(device, resource, node) {
         this.device = device;
-        this.splat = splat;
+        this.resource = resource;
+        this.node = node;
     }
 
     destroy() {
@@ -122,8 +133,7 @@ class GSplatLod {
      */
     update(cameraNode) {
 
-        const splat = this.splat;
-        const resource = splat.resource;
+        const resource = this.resource;
         if (!resource.hasLod) {
             this.activeSplats = resource.numSplats;
             return;
@@ -145,7 +155,7 @@ class GSplatLod {
         const lodCounts = [0, 0, 0]; // [lod0, lod1, lod2]
 
         // Transform camera position to local space of this splat
-        const splatTransform = splat.node.getWorldTransform();
+        const splatTransform = this.node.getWorldTransform();
         const invSplatTransform = splatTransform.clone().invert();
         invSplatTransform.transformPoint(cameraPos, localCameraPos);
 
