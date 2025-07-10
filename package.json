@@ -41,6 +41,10 @@
       "production": {
         "import": "./build/playcanvas/src/index.js",
         "require": "./build/playcanvas.js"
+      },
+      "default": {
+        "import": "./build/playcanvas/src/index.js",
+        "require": "./build/playcanvas.js"
       }
     },
     "./debug": {
