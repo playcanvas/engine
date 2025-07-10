@@ -22,6 +22,8 @@ import {
  * @property {number} ctrl - The ctrl key state.
  */
 
+const EPSILON = 0.0001;
+
 const v = new Vec3();
 
 const forward = new Vec3();
@@ -468,8 +470,7 @@ class FirstPersonController extends Script {
         const system = /** @type {RigidBodyComponentSystem} */ (this._rigidbody.system);
         this._grounded = !!system.raycastFirst(start, end);
 
-        const moveMult = (this._grounded ? this.speedGround : this.speedAir) *
-            (this._state.shift ? this.sprintMult : 1) * dt;
+        const moveMult = (this._grounded ? this.speedGround : this.speedAir) * dt;
         const rotateMult = this.lookSens * 60 * dt;
         const rotateTouchMult = this._mobileTurnSpeed * dt;
         const rotateJoystickMult = this.gamePadTurnSpeed * dt;
@@ -479,7 +480,7 @@ class FirstPersonController extends Script {
         // desktop move
         v.set(0, 0, 0);
         const keyMove = this._state.axis.clone().normalize();
-        v.add(keyMove.mulScalar(moveMult));
+        v.add(keyMove.mulScalar(moveMult * (this._state.shift ? this.sprintMult : 1)));
         deltas.move.append([v.x, v.y, v.z]);
 
         // desktop rotate
@@ -494,7 +495,12 @@ class FirstPersonController extends Script {
         // mobile move
         v.set(0, 0, 0);
         const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]);
-        v.add(flyMove.mulScalar(moveMult));
+        flyMove.mulScalar(2);
+        const mag = flyMove.length();
+        if (mag > 1) {
+            flyMove.normalize();
+        }
+        v.add(flyMove.mulScalar(moveMult * (mag > 2 - EPSILON ? this.sprintMult : 1)));
         deltas.move.append([v.x, v.y, v.z]);
 
         // mobile rotate
