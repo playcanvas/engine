@@ -157,7 +157,7 @@ class GSplatState {
         }
 
         // skip if resource doesn't have required data
-        if (!resource.lodBlocks.blocksCenter || !resource.lodBlocks.blocksLodInfo) {
+        if (!resource.lodBlocks || !resource.lodBlocks.blocksCenter || !resource.lodBlocks.blocksLodInfo) {
             return;
         }
 
@@ -169,7 +169,7 @@ class GSplatState {
         const numBlocks = resource.lodBlocks.numBlocks;
 
         // DEBUG: LOD distribution tracking per splat (can be removed for production)
-        const lodCounts = [0, 0, 0]; // [lod0, lod1, lod2]
+        const lodCounts = {}; // Track LOD usage counts
 
         // Transform camera position to local space of this splat
         const splatTransform = this.node.getWorldTransform();
@@ -188,55 +188,52 @@ class GSplatState {
             // Calculate distance from camera to block center
             const distance = localCameraPos.distance(blockCenter);
 
-            // Assign LOD based on distance
-            // < 5: LOD 0 (high detail), < 10: LOD 1 (medium), >= 10: LOD 2 (low detail)
-            // TODO: make more generic and exposed
-            let selectedLod;
-            if (distance < 5) {
-                selectedLod = 0;
-            } else if (distance < 10) {
-                selectedLod = 1;
-            } else {
-                selectedLod = 2;
+            // Define distance thresholds for LOD selection (supports up to 5 levels)
+            // TODO: make this configurable and exposed
+            const distanceThresholds = [6, 12, 20, 35];
+            const numLevels = resource.lodBlocks.blockLevels;
+
+            // Use only the thresholds we need based on numLevels
+            const activeThresholds = distanceThresholds.slice(0, numLevels - 1);
+
+            // Assign LOD based on distance thresholds
+            let selectedLod = 0;
+            for (let i = 0; i < activeThresholds.length; i++) {
+                if (distance >= activeThresholds[i]) {
+                    selectedLod = i + 1;
+                }
             }
 
+            // Clamp to valid range
+            selectedLod = Math.min(selectedLod, numLevels - 1);
+
             // DEBUG: Count LOD usage per splat (can be removed for production)
+            if (!lodCounts[selectedLod]) lodCounts[selectedLod] = 0;
             lodCounts[selectedLod]++;
 
             // Get splat counts for each LOD level
-            const lodInfoBase = blockIdx * 3;
-            const splatCount0 = resource.lodBlocks.blocksLodInfo[lodInfoBase + 0];     // LOD 0 splats
-            const splatCount1 = resource.lodBlocks.blocksLodInfo[lodInfoBase + 1];     // LOD 1 splats
-            const splatCount2 = resource.lodBlocks.blocksLodInfo[lodInfoBase + 2];     // LOD 2 splats
+            const lodInfoBase = blockIdx * numLevels;
+            const splatCounts = new Array(numLevels);
+            for (let level = 0; level < numLevels; level++) {
+                splatCounts[level] = resource.lodBlocks.blocksLodInfo[lodInfoBase + level];
+            }
 
             // Calculate block base offset
             const blockBase = blockIdx * blockSize;
 
             // Create intervals based on selected LOD
-            // Level 0: large splats (size > 0.01)
-            // Level 1: medium splats
-            // Level 2: small splats (size < 0.005)
-            if (selectedLod === 0) {
-                // Close distance: show all splats (large + medium + small)
-                if (splatCount0 + splatCount1 + splatCount2 > 0) {
-                    const start = blockBase;
-                    const end = blockBase + splatCount0 + splatCount1 + splatCount2;
-                    this.intervals.push(start, end);
-                }
-            } else if (selectedLod === 1) {
-                // Medium distance: show large and medium splats (skip small)
-                if (splatCount0 + splatCount1 > 0) {
-                    const start = blockBase;
-                    const end = blockBase + splatCount0 + splatCount1;  // Skip small splats
-                    this.intervals.push(start, end);
-                }
-            } else { // selectedLod === 2
-                // Far distance: show only large splats
-                if (splatCount0 > 0) {
-                    const start = blockBase;
-                    const end = blockBase + splatCount0;  // Only large splats
-                    this.intervals.push(start, end);
-                }
+            // selectedLod represents detail level: 0=highest detail (all levels), higher=lower detail
+            // Show splats from level 0 up to (numLevels - 1 - selectedLod) inclusive
+            const maxLevelToShow = numLevels - 1 - selectedLod;
+            let totalSplats = 0;
+            for (let level = 0; level <= maxLevelToShow; level++) {
+                totalSplats += splatCounts[level];
+            }
+
+            if (totalSplats > 0) {
+                const start = blockBase;
+                const end = blockBase + totalSplats;
+                this.intervals.push(start, end);
             }
         }
 

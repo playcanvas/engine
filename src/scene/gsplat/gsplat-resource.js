@@ -292,11 +292,25 @@ class GSplatResource extends GSplatResourceBase {
      *
      * @param {GSplatData} gsplatData - The source data
      * @param {number} numSplats - Number of splats
-     * @returns {Uint8Array} Array of splat levels (0=large, 1=medium, 2=small)
+     * @param {number} numLevels - Number of LOD levels
+     * @returns {Uint8Array} Array of splat levels (0=largest, higher numbers=smaller)
      * @ignore
      */
-    estimateSplatImportance(gsplatData, numSplats) {
+    estimateSplatImportance(gsplatData, numSplats, numLevels) {
         const splatLevels = new Uint8Array(numSplats);
+
+        // Define extreme size values and interpolate between them
+        // Larger sizes get lower level numbers (higher priority)
+        const largeSize = 0.05;
+        const smallSize = 0.005;
+
+        // Generate thresholds by linearly interpolating between extremes
+        const activeThresholds = [];
+        for (let i = 1; i < numLevels; i++) {
+            const t = i / numLevels; // interpolation factor for all levels
+            const threshold = largeSize - t * (largeSize - smallSize);
+            activeThresholds.push(threshold);
+        }
 
         const p = new Vec3();
         const r = new Quat();
@@ -305,14 +319,20 @@ class GSplatResource extends GSplatResourceBase {
 
         for (let i = 0; i < numSplats; i++) {
             iter.read(i);
-            const maxSize = Math.max(s.x, s.y, s.z);
+            const size = Math.max(s.x, s.y, s.z);
 
-            // TODO: make this configurable
-            if (numSplats < 1000000) {
-                splatLevels[i] = (maxSize < 0.009) ? 2 : (maxSize < 0.015) ? 1 : 0;
-            } else {
-                splatLevels[i] = (maxSize < 0.01) ? 2 : (maxSize < 0.02) ? 1 : 0;
+            // Assign level based on size thresholds
+            let level = 0;
+            for (let j = 0; j < activeThresholds.length; j++) {
+                if (size < activeThresholds[j]) {
+                    level = j + 1;
+                } else {
+                    break;
+                }
             }
+
+            // Clamp to valid range
+            splatLevels[i] = Math.min(level, numLevels - 1);
         }
 
         return splatLevels;
@@ -327,14 +347,15 @@ class GSplatResource extends GSplatResourceBase {
         const gsplatData = this.gsplatData;
         const numSplats = gsplatData.numSplats;
 
-        // Estimate splat importance based on scale
-        const splatLevels = this.estimateSplatImportance(gsplatData, numSplats);
-
         const blockSize = this.lodBlocks.blockSize;
+        const blockLevels = this.lodBlocks.blockLevels;
         const numBlocks = Math.ceil(numSplats / blockSize);
 
-        // Initialize chunkLods array (3 numbers per chunk: level0, level1, level2 counts)
-        this.lodBlocks.blocksLodInfo = new Uint32Array(numBlocks * 3);
+        // Estimate splat importance based on scale
+        const splatLevels = this.estimateSplatImportance(gsplatData, numSplats, blockLevels);
+
+        // Initialize chunkLods array (blockLevels numbers per chunk for level counts)
+        this.lodBlocks.blocksLodInfo = new Uint32Array(numBlocks * blockLevels);
 
         // Initialize chunkCenter array (3 floats per chunk: x, y, z center coordinates)
         this.lodBlocks.blocksCenter = new Float32Array(numBlocks * 3);
@@ -349,25 +370,26 @@ class GSplatResource extends GSplatResourceBase {
             const endIdx = Math.min(startIdx + blockSize, numSplats);
 
             // Count splats by level in this block using counting sort
-            const levelCounts = [0, 0, 0];
+            const levelCounts = new Array(blockLevels).fill(0);
             for (let i = startIdx; i < endIdx; i++) {
                 levelCounts[splatLevels[i]]++;
             }
 
             // Store counts in chunkLods
-            const chunkLodsBase = blockIdx * 3;
-            this.lodBlocks.blocksLodInfo[chunkLodsBase] = levelCounts[0];     // large splats (level 0)
-            this.lodBlocks.blocksLodInfo[chunkLodsBase + 1] = levelCounts[1]; // medium splats (level 1)
-            this.lodBlocks.blocksLodInfo[chunkLodsBase + 2] = levelCounts[2]; // small splats (level 2)
+            const chunkLodsBase = blockIdx * blockLevels;
+            for (let level = 0; level < blockLevels; level++) {
+                this.lodBlocks.blocksLodInfo[chunkLodsBase + level] = levelCounts[level];
+            }
 
             // Block center calculation will be done separately after the loop
 
             // Calculate starting positions for each level in the global mapping
-            const levelStartPos = [
-                outputIndex,                           // level 0 starts here
-                outputIndex + levelCounts[0],          // level 1 starts after level 0
-                outputIndex + levelCounts[0] + levelCounts[1] // level 2 starts after level 0 and 1
-            ];
+            const levelStartPos = new Array(blockLevels);
+            let currentPos = outputIndex;
+            for (let level = 0; level < blockLevels; level++) {
+                levelStartPos[level] = currentPos;
+                currentPos += levelCounts[level];
+            }
 
             // Copy indices directly to global mapping
             for (let i = startIdx; i < endIdx; i++) {

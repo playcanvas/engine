@@ -5,7 +5,7 @@
  */
 class GSplatLodBlocks {
     /**
-     * Each 3 consecutive numbers represent the count of splats at level 0, 1, and 2 for a block
+     * Each blockLevels consecutive numbers represent the count of splats at each LOD level for a block
      *
      * @type {Uint32Array | undefined}
      */
@@ -24,6 +24,13 @@ class GSplatLodBlocks {
      * @type {number}
      */
     blockSize = 4096;
+
+    /**
+     * Number of LOD levels per block.
+     *
+     * @type {number}
+     */
+    blockLevels = 4;
 
     get numBlocks() {
         return this.blocksCenter ? this.blocksCenter.length / 3 : 0;
