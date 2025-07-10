@@ -284,22 +284,24 @@ function buildJSOptions({
  * Build rollup options for TypeScript definitions.
  *
  * @param {object} options - The build target options.
+ * @param {string} [options.root] - The root directory for finding the TypeScript definitions.
  * @param {string} [options.dir] - The output directory for the TypeScript definitions.
  * @returns {RollupOptions} Rollup targets.
  */
 function buildTypesOption({
+    root = '.',
     dir = 'build'
 } = {}) {
     return {
-        input: 'build/playcanvas/src/index.d.ts',
+        input: `${root}/build/playcanvas/src/index.d.ts`,
         output: [{
             file: `${dir}/playcanvas.d.ts`,
             footer: 'export as namespace pc;\nexport as namespace pcx;',
             format: 'es'
         }],
         plugins: [
-            runTsc('tsconfig.build.json'),
-            typesFixup(),
+            runTsc(`${root}/tsconfig.build.json`),
+            typesFixup(root),
             dts()
         ]
     };

@@ -11,7 +11,7 @@ import { exampleMetaData } from './cache/metadata.mjs';
 import { copy } from './utils/plugins/rollup-copy.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
-import { buildJSOptions } from '../utils/rollup-build-target.mjs';
+import { buildJSOptions, buildTypesOption } from '../utils/rollup-build-target.mjs';
 import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
 import { buildShare } from './utils/plugins/rollup-build-share.mjs';
 import { removePc } from './utils/plugins/rollup-remove-pc.mjs';
@@ -198,17 +198,13 @@ const engineRollupOptions = () => {
     const options = [];
 
     // Types
-    if (!fs.existsSync('../build/playcanvas.d.ts')) {
-        const cmd = 'npm run build target:types --prefix ../';
-        console.log('\x1b[32m%s\x1b[0m', cmd);
-        execSync(cmd);
-    }
-    options.push(staticRollupOption({
-        src: '../build/playcanvas.d.ts',
-        dest: 'dist/playcanvas.d.ts'
+    // Outputs: dist/iframe/playcanvas.d.ts
+    options.push(buildTypesOption({
+        root: '..',
+        dir: 'dist/iframe'
     }));
 
-    // engine sources
+    // Sources
     if (ENGINE_PATH) {
         const src = path.resolve(ENGINE_PATH);
         const content = fs.readFileSync(src, 'utf8');
@@ -228,7 +224,7 @@ const engineRollupOptions = () => {
         return options;
     }
 
-    // engine builds
+    // Builds
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.mjs
         options.push(
