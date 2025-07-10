@@ -59,7 +59,7 @@ export default /* glsl */`
         #endif
 
         // Apply Tone Mapping
-        result = toneMap(result);
+        result = toneMap(max(vec3(0.0), result));
 
         // Apply Color LUT after tone mapping, in LDR space
         #ifdef COLOR_LUT
