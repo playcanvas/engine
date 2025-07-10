@@ -442,7 +442,7 @@ class FirstPersonController extends Script {
         const { buttonCode } = GamepadSource;
 
         const { key, button, mouse } = this._desktopInput.read();
-        const { leftInput, rightInput } = this._mobileInput.read();
+        const { leftInput, rightInput, doubleTap } = this._mobileInput.read();
         const { buttons, leftStick, rightStick } = this._gamepadInput.read();
 
         // apply dead zone to gamepad sticks
@@ -510,7 +510,7 @@ class FirstPersonController extends Script {
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // mobile jump
-        // TODO: implement double tap detection
+        deltas.jump.append([doubleTap[0]]);
 
         // gamepad move
         v.set(0, 0, 0);
