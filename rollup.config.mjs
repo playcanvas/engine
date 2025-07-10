@@ -10,21 +10,9 @@ const BOLD_OUT = '\x1b[1m';
 const REGULAR_OUT = '\x1b[22m';
 const RESET_OUT = '\x1b[0m';
 
-/**
- * @type {['release', 'debug', 'profiler', 'min']}
- */
-const BUILD_TYPES = ['release', 'debug', 'profiler', 'min'];
-
-/**
- * @type {['umd', 'esm']}
- */
-const MODULE_FORMAT = ['umd', 'esm'];
-
-/**
- * @type {['unbundled', 'bundled']}
- */
-const BUNDLE_STATES = ['unbundled', 'bundled'];
-
+const BUILD_TYPES = /** @type {const} */ (['release', 'debug', 'profiler', 'min']);
+const MODULE_FORMAT = /** @type {const} */ (['umd', 'esm']);
+const BUNDLE_STATES = /** @type {const} */ (['unbundled', 'bundled']);
 
 const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
 
