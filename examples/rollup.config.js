@@ -21,7 +21,32 @@ const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
     '../src/index.js' : process.env.ENGINE_PATH ?? '';
 
-const STATIC_FILES = [
+/**
+ * Rollup option for static files.
+ *
+ * @param {object} item - The static files.
+ * @param {string} item.src - The source directory.
+ * @param {string} item.dest - The destination directory.
+ * @param {boolean} [item.once] - Copy only once.
+ * @returns {RollupOptions} - The rollup option.
+ */
+const staticRollupOption = (item) => {
+    return {
+        input: 'templates/placeholder.html',
+        output: {
+            file: 'cache/output.tmp'
+        },
+        watch: {
+            skipWrite: true
+        },
+        treeshake: false,
+        plugins: [
+            copy([item], NODE_ENV === 'development')
+        ]
+    };
+};
+
+const STATIC_TARGETS = [
     // static main page src
     { src: './src/static', dest: 'dist/' },
 
@@ -51,43 +76,9 @@ const STATIC_FILES = [
 
     // fflate (for when using ENGINE_PATH)
     { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' }
-];
+].map(item => staticRollupOption(item));
 
-/**
- * Rollup option for static files.
- *
- * @param {object} item - The static files.
- * @param {string} item.src - The source directory.
- * @param {string} item.dest - The destination directory.
- * @param {boolean} [item.once] - Copy only once.
- * @returns {RollupOptions} - The rollup option.
- */
-const staticRollupOption = (item) => {
-    return {
-        input: 'templates/placeholder.html',
-        output: {
-            file: 'cache/output.tmp'
-        },
-        watch: {
-            skipWrite: true
-        },
-        treeshake: false,
-        plugins: [
-            copy([item], NODE_ENV === 'development')
-        ]
-    };
-};
-
-/**
- * Rollup options for each example.
- *
- * @param {object} data - The example data.
- * @param {string} data.categoryKebab - The category kebab name.
- * @param {string} data.exampleNameKebab - The example kebab name.
- * @param {string} data.path - The path to the example directory.
- * @returns {RollupOptions[]} - The rollup options.
- */
-const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
+const EXAMPLE_TARGETS = exampleMetaData.flatMap(({ categoryKebab, exampleNameKebab, path }) => {
     /** @type {RollupOptions[]} */
     const options = [];
 
@@ -185,14 +176,9 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
         }));
     }
     return options;
-};
+});
 
-/**
- * Rollup options for the engine.
- *
- * @returns {RollupOptions[]} - The rollup options;
- */
-const engineRollupOptions = () => {
+const ENGINE_TARGETS = (() => {
     /** @type {RollupOptions[]} */
     const options = [];
 
@@ -261,35 +247,37 @@ const engineRollupOptions = () => {
         );
     }
     return options;
-};
+})();
+
+const APP_TARGETS = [{
+    // A debug build is ~2.3MB and a release build ~0.6MB
+    input: 'src/app/index.mjs',
+    output: {
+        dir: 'dist',
+        format: 'umd'
+    },
+    treeshake: 'smallest',
+    plugins: [
+        // @ts-ignore
+        commonjs(),
+        treeshakeIgnore([/@playcanvas\/pcui/g]), // ignore PCUI treeshake
+        // @ts-ignore
+        resolve(),
+        // @ts-ignore
+        replace({
+            values: {
+                'process.env.NODE_ENV': JSON.stringify(NODE_ENV) // for REACT bundling
+            },
+            preventAssignment: true
+        }),
+        // @ts-ignore
+        NODE_ENV === 'production' && terser()
+    ]
+}];
 
 export default [
-    ...exampleMetaData.flatMap(data => exampleRollupOptions(data)),
-    ...engineRollupOptions(),
-    ...STATIC_FILES.map(item => staticRollupOption(item)),
-    {
-        // A debug build is ~2.3MB and a release build ~0.6MB
-        input: 'src/app/index.mjs',
-        output: {
-            dir: 'dist',
-            format: 'umd'
-        },
-        treeshake: 'smallest',
-        plugins: [
-            // @ts-ignore
-            commonjs(),
-            treeshakeIgnore([/@playcanvas\/pcui/g]), // ignore PCUI treeshake
-            // @ts-ignore
-            resolve(),
-            // @ts-ignore
-            replace({
-                values: {
-                    'process.env.NODE_ENV': JSON.stringify(NODE_ENV) // for REACT bundling
-                },
-                preventAssignment: true
-            }),
-            // @ts-ignore
-            NODE_ENV === 'production' && terser()
-        ]
-    }
+    ...STATIC_TARGETS,
+    ...EXAMPLE_TARGETS,
+    ...ENGINE_TARGETS,
+    ...APP_TARGETS
 ];
