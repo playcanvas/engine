@@ -229,7 +229,7 @@ class FirstPersonController extends Script {
 
     /**
      * The joystick event name for the UI position for the base and stick elements.
-     * The event name is appended with the side: 'left' or 'right'.
+     * The event name is appended with the side: ':left' or ':right'.
      *
      * @attribute
      * @title Joystick Base Event Name
