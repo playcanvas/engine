@@ -1,13 +1,6 @@
 import * as fs from 'node:fs';
 import { version, revision } from './utils/rollup-version-revision.mjs';
-import { buildTarget } from './utils/rollup-build-target.mjs';
-
-// unofficial package plugins
-import dts from 'rollup-plugin-dts';
-
-// custom plugins
-import { runTsc } from './utils/plugins/rollup-run-tsc.mjs';
-import { typesFixup } from './utils/plugins/rollup-types-fixup.mjs';
+import { buildJSOptions, buildTypesOption } from './utils/rollup-build-target.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 
@@ -31,23 +24,6 @@ const MODULE_FORMAT = ['umd', 'esm'];
  * @type {['unbundled', 'bundled']}
  */
 const BUNDLE_STATES = ['unbundled', 'bundled'];
-
-/**
- * @type {RollupOptions[]}
- */
-const TYPES_TARGET = [{
-    input: 'build/playcanvas/src/index.d.ts',
-    output: [{
-        file: 'build/playcanvas.d.ts',
-        footer: 'export as namespace pc;\nexport as namespace pcx;',
-        format: 'es'
-    }],
-    plugins: [
-        runTsc('tsconfig.build.json'),
-        typesFixup(),
-        dts()
-    ]
-}];
 
 
 const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
@@ -94,7 +70,7 @@ BUILD_TYPES.forEach((buildType) => {
                 return;
             }
 
-            targets.push(...buildTarget({
+            targets.push(...buildJSOptions({
                 moduleFormat,
                 buildType,
                 bundleState
@@ -104,7 +80,7 @@ BUILD_TYPES.forEach((buildType) => {
 });
 
 if (envTarget === null || envTarget === 'types') {
-    targets.push(...TYPES_TARGET);
+    targets.push(buildTypesOption());
 }
 
 if (!targets.length) {

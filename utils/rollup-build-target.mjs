@@ -4,6 +4,7 @@ import strip from '@rollup/plugin-strip';
 import swcPlugin from '@rollup/plugin-swc';
 
 // unofficial package plugins
+import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
 
@@ -13,6 +14,8 @@ import { engineLayerImportValidation } from './plugins/rollup-import-validation.
 import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 import { dynamicImportLegacyBrowserSupport, dynamicImportBundlerSuppress } from './plugins/rollup-dynamic.mjs';
 import { treeshakeIgnore } from './plugins/rollup-treeshake-ignore.mjs';
+import { runTsc } from './plugins/rollup-run-tsc.mjs';
+import { typesFixup } from './plugins/rollup-types-fixup.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
@@ -160,7 +163,7 @@ function getOutPlugins(type) {
 }
 
 /**
- * Build a target that Rollup is supposed to build (bundled and unbundled).
+ * Build rollup options for JS (bundled and unbundled).
  *
  * For faster subsequent builds, the unbundled and release builds are cached in the HISTORY map to
  * be used for bundled and minified builds. They are stored in the HISTORY map with the key:
@@ -174,7 +177,13 @@ function getOutPlugins(type) {
  * @param {string} [options.dir] - Only used for examples to change the output location.
  * @returns {RollupOptions[]} Rollup targets.
  */
-function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.js', dir = 'build' }) {
+function buildJSOptions({
+    moduleFormat,
+    buildType,
+    bundleState,
+    input = 'src/index.js',
+    dir = 'build'
+}) {
     const isUMD = moduleFormat === 'umd';
     const isDebug = buildType === 'debug';
     const isMin = buildType === 'min';
@@ -274,4 +283,31 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
     return targets;
 }
 
-export { buildTarget };
+/**
+ * Build rollup options for TypeScript definitions.
+ *
+ * @param {object} options - The build target options.
+ * @param {string} [options.input] - The input TypeScript definition file.
+ * @param {string} [options.dir] - The output directory for the TypeScript definitions.
+ * @returns {RollupOptions} Rollup targets.
+ */
+function buildTypesOption({
+    input = 'build/playcanvas/src/index.d.ts',
+    dir = 'build'
+} = {}) {
+    return {
+        input,
+        output: [{
+            file: `${dir}/playcanvas.d.ts`,
+            footer: 'export as namespace pc;\nexport as namespace pcx;',
+            format: 'es'
+        }],
+        plugins: [
+            runTsc('tsconfig.build.json'),
+            typesFixup(),
+            dts()
+        ]
+    };
+}
+
+export { buildJSOptions, buildTypesOption };

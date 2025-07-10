@@ -11,7 +11,7 @@ import { exampleMetaData } from './cache/metadata.mjs';
 import { copy } from './utils/plugins/rollup-copy.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
-import { buildTarget } from '../utils/rollup-build-target.mjs';
+import { buildJSOptions } from '../utils/rollup-build-target.mjs';
 import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
 import { buildShare } from './utils/plugins/rollup-build-share.mjs';
 import { removePc } from './utils/plugins/rollup-remove-pc.mjs';
@@ -232,7 +232,7 @@ const engineRollupOptions = () => {
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.mjs
         options.push(
-            ...buildTarget({
+            ...buildJSOptions({
                 moduleFormat: 'esm',
                 buildType: 'release',
                 bundleState: 'bundled',
@@ -244,7 +244,7 @@ const engineRollupOptions = () => {
     if (NODE_ENV === 'production' || NODE_ENV === 'development') {
         // Outputs: dist/iframe/playcanvas.dbg.mjs
         options.push(
-            ...buildTarget({
+            ...buildJSOptions({
                 moduleFormat: 'esm',
                 buildType: 'debug',
                 bundleState: 'bundled',
@@ -256,7 +256,7 @@ const engineRollupOptions = () => {
     if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
         // Outputs: dist/iframe/playcanvas.prf.mjs
         options.push(
-            ...buildTarget({
+            ...buildJSOptions({
                 moduleFormat: 'esm',
                 buildType: 'profiler',
                 bundleState: 'bundled',
