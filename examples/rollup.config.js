@@ -208,24 +208,27 @@ const engineRollupOptions = () => {
         dest: 'dist/playcanvas.d.ts'
     }));
 
+    // engine sources
     if (ENGINE_PATH) {
-        // Unpacked source
         const src = path.resolve(ENGINE_PATH);
         const content = fs.readFileSync(src, 'utf8');
         const isUnpacked = isModuleWithExternalDependencies(content);
-        if (isUnpacked) {
-            const srcDir = path.dirname(src);
-            const dest = 'dist/iframe/ENGINE_PATH';
-            options.push(staticRollupOption({ src: srcDir, dest }));
-            return options;
-        }
 
-        // Packed source
-        const dest = 'dist/iframe/ENGINE_PATH/index.js';
-        options.push(staticRollupOption({ src, dest }));
+        if (isUnpacked) {
+            options.push(staticRollupOption({
+                src: path.dirname(src),
+                dest: 'dist/iframe/ENGINE_PATH'
+            }));
+        } else {
+            options.push(staticRollupOption({
+                src,
+                dest: 'dist/iframe/ENGINE_PATH/index.js'
+            }));
+        }
         return options;
     }
 
+    // engine builds
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.mjs
         options.push(
