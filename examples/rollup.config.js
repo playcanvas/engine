@@ -113,7 +113,8 @@ const EXAMPLE_TARGETS = exampleMetaData.flatMap(({ categoryKebab, exampleNameKeb
                     'playcanvas',
                     'examples/files',
                     'examples/observer',
-                    'examples/utils'
+                    'examples/utils',
+                    /^https?:\/\/.+/
                 ],
                 plugins: [
                     removePc(),
@@ -138,7 +139,8 @@ const EXAMPLE_TARGETS = exampleMetaData.flatMap(({ categoryKebab, exampleNameKeb
                     'playcanvas',
                     'examples/files',
                     'examples/observer',
-                    'examples/utils'
+                    'examples/utils',
+                    /^https?:\/\/.+/
                 ],
                 plugins: [
                     removePc(),
@@ -164,7 +166,8 @@ const EXAMPLE_TARGETS = exampleMetaData.flatMap(({ categoryKebab, exampleNameKeb
                 },
                 context: 'this',
                 external: [
-                    'playcanvas'
+                    'playcanvas',
+                    /^https?:\/\/.+/
                 ]
             });
             continue;
