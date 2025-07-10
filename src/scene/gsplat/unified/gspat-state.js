@@ -1,6 +1,7 @@
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U } from '../../../platform/graphics/constants.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 /**
  * @import { GraphNode } from "../../graph-node.js"
@@ -11,11 +12,12 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U } from '../../.
 const localCameraPos = new Vec3();
 
 /**
- * GSplatLod handles LOD management for a single splat.
+ * GSplatState stores a state of a splat, including its LOD configuration, allocated space in
+ * various global buffers and similar.
  *
  * @ignore
  */
-class GSplatLod {
+class GSplatState {
     /** @type {GraphicsDevice} */
     device;
 
@@ -35,6 +37,15 @@ class GSplatLod {
      * @type {number[]}
      */
     intervals = [];
+
+    /** @type {number} */
+    lineStart = 0;
+
+    /** @type {number} */
+    lineCount = 0;
+
+    /** @type {Vec4} */
+    viewport = new Vec4();
 
     /**
      * Texture that maps target indices to source splat indices based on intervals
@@ -58,6 +69,12 @@ class GSplatLod {
         this.intervals.length = 0;
         this.intervalsTexture?.destroy();
         this.intervalsTexture = null;
+    }
+
+    setLines(start, count, textureSize) {
+        this.lineStart = start;
+        this.lineCount = count;
+        this.viewport.set(0, start, textureSize, count);
     }
 
     /**
@@ -233,4 +250,4 @@ class GSplatLod {
     }
 }
 
-export { GSplatLod };
+export { GSplatState };

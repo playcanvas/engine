@@ -1,10 +1,9 @@
 import { Debug } from '../../../core/debug.js';
-import { Vec4 } from '../../../core/math/vec4.js';
 import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../../graphics/quad-render-utils.js';
 import { ShaderMaterial } from '../../materials/shader-material.js';
 import { ShaderUtils } from '../../shader-lib/shader-utils.js';
-import { GSplatLod } from './gspat-lod.js';
+import { GSplatState } from './gspat-state.js';
 import glslGsplatCopyToWorkBufferPS from '../../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
 import wgslGsplatCopyToWorkBufferPS from '../../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
 import { Mat4 } from '../../../core/math/mat4.js';
@@ -31,17 +30,24 @@ class GSplatInfo {
     /** @type {GraphNode} */
     node;
 
-    /** @type {number} */
-    lineStart = 0;
+    /**
+     * A state of the splat currently used for rendering. This matches the work buffer.
+     *
+     * @type {GSplatState}
+     */
+    renderState;
 
-    /** @type {number} */
-    lineCount = 0;
+    /**
+     * A state of the splat currently used for sorting. When the sorting is done, this state will
+     * become the render state. This is where the next render state is prepared, but it's not used
+     * until we get back the sorting data.
+     *
+     * @type {GSplatState|null}
+     */
+    prepareState = null;
 
-    /** @type {Vec4} */
-    viewport = new Vec4();
-
-    /** @type {GSplatLod} */
-    lod;
+    /** @type {GSplatState|null} */
+    unusedState = null;
 
     /** @type {Mat4} */
     previousWorldTransform = new Mat4();
@@ -64,7 +70,8 @@ class GSplatInfo {
         this.resource = resource;
         this.node = node;
         this.numSplats = resource.centers.length / 3;
-        this.lod = new GSplatLod(device, resource, node);
+        this.renderState = new GSplatState(device, resource, node);
+        this.unusedState = new GSplatState(device, resource, node);
 
         this.material = new ShaderMaterial();
         resource.configureMaterial(this.material);
@@ -87,13 +94,21 @@ class GSplatInfo {
     destroy() {
         this.device = null;
         this.resource = null;
-        this.lod.destroy();
+        this.renderState.destroy();
+        this.prepareState.destroy();
     }
 
-    setLines(start, count, textureSize) {
-        this.lineStart = start;
-        this.lineCount = count;
-        this.viewport.set(0, start, textureSize, count);
+    activatePrepareState() {
+
+        // no longer using render state, keep it for the future
+        this.unusedState = this.renderState;
+
+        // prepared state is now used for rendering
+        this.renderState = this.prepareState;
+
+        // done preparing
+        // TODO: can we release some data here
+        this.prepareState = null;
     }
 
     update(updateVersion) {
@@ -118,13 +133,14 @@ class GSplatInfo {
         this.device.scope.resolve('uTransform').setValue(this.node.getWorldTransform().data);
 
         // Set LOD intervals texture for remapping of indices
-        device.scope.resolve('uIntervalsTexture').setValue(this.lod.intervalsTexture);
+        device.scope.resolve('uIntervalsTexture').setValue(this.renderState.intervalsTexture);
 
-        device.scope.resolve('uActiveSplats').setValue(this.lod.activeSplats);
-        device.scope.resolve('uStartLine').setValue(this.lineStart);
-        device.scope.resolve('uViewportWidth').setValue(this.viewport.z);
+        const renderState = this.renderState;
+        device.scope.resolve('uActiveSplats').setValue(renderState.activeSplats);
+        device.scope.resolve('uStartLine').setValue(renderState.lineStart);
+        device.scope.resolve('uViewportWidth').setValue(renderState.viewport.z);
 
-        drawQuadWithShader(device, renderTarget, this.copyShader, this.viewport, this.viewport);
+        drawQuadWithShader(device, renderTarget, this.copyShader, renderState.viewport, renderState.viewport);
     }
 }
 

@@ -126,22 +126,6 @@ class GSplatWorkBuffer {
     }
 
     /**
-     * Assigns lines to each splat based on the texture size.
-     *
-     * @param {GSplatInfo[]} splats - The splats to assign lines to.
-     * @param {number} size - The texture size.
-     */
-    assignLines(splats, size) {
-        let start = 0;
-        for (const splat of splats) {
-            const activeSplats = splat.lod.activeSplats;
-            const numLines = Math.ceil(activeSplats / size);
-            splat.setLines(start, numLines, size);
-            start += numLines;
-        }
-    }
-
-    /**
      * Updates the centers buffer with the given splats.
      *
      * @param {GSplatInfo[]} splats - The splats to update with.
@@ -182,8 +166,8 @@ class GSplatWorkBuffer {
         const resource = splat.resource;
         const hasLod = resource.hasLod;
         const srcCenters = resource.centers;
-        const dstBaseOffset = splat.lineStart * 3 * textureSize;
-        const intervals = splat.lod.intervals;
+        const dstBaseOffset = splat.prepareState.lineStart * 3 * textureSize;
+        const intervals = splat.prepareState.intervals;
         const centers = this.centers;
         let targetIndex = 0;
 

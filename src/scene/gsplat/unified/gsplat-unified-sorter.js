@@ -111,6 +111,8 @@ class GSplatUnifiedSorter extends EventHandler {
     setCenters(centers, version, sortSplatCount) {
         this.centers = centers.slice();
 
+        // console.log('sorting', sortSplatCount.toLocaleString(), ' of ', (centers.length / 3).toLocaleString());
+
         this.worker.postMessage({
             version: version,
             sortSplatCount: sortSplatCount,

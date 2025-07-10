@@ -124,19 +124,28 @@ class GSplatManager {
         this.sorter = new GSplatUnifiedSorter();
         this.sorter.init(workBuffer.orderTexture, centers, chunks);
         this.sorter.on('updated', (count, version) => {
-
-            // limit splat render count to exclude those behind the camera
-            this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
-
-            // update splat count on the material
-            this._material.setParameter('numSplats', count);
-
-            if (this.sortedVersion !== version) {
-                this.sortedVersion = version;
-                workBuffer.render(this.splats);
-                // console.log('splat count:', this.workBuffer.centers.length / 3);
-            }
+            this.onSorted(count, version);
         });
+    }
+
+    onSorted(count, version) {
+
+        // limit splat render count to exclude those behind the camera
+        this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
+
+        // update splat count on the material
+        this._material.setParameter('numSplats', count);
+
+        if (this.sortedVersion !== version) {
+            this.sortedVersion = version;
+
+            this.splats.forEach((splat) => {
+                splat.activatePrepareState();
+            });
+
+            this.workBuffer.render(this.splats);
+            // console.log('splat count:', this.workBuffer.centers.length / 3);
+        }
     }
 
     /**
@@ -200,12 +209,18 @@ class GSplatManager {
 
                 // Update LOD for each splat individually
                 this.splats.forEach((splat) => {
+
+                    // start preparing a state
+                    Debug.assert(splat.prepareState === null);
+                    splat.prepareState = splat.unusedState;
+                    splat.unusedState = null;
+
                     // this updates LOD intervals and interval texture
-                    splat.lod.update(cameraNode);
+                    splat.prepareState.update(cameraNode);
                 });
 
                 // Reassign lines based on current LOD active splats
-                this.workBuffer.assignLines(this.splats, this.workBuffer.width);
+                this.assignLines(this.splats, this.workBuffer.width);
 
                 // generate centers for evaluated lods
                 // note that the work buffer is not updated yet, and only when we get sorted centers
@@ -213,25 +228,42 @@ class GSplatManager {
 
                 let activeCount = 0;
                 this.splats.forEach((splat) => {
-                    activeCount += splat.lineCount * splat.viewport.z;
+                    const prepareState = splat.prepareState;
+                    activeCount += prepareState.lineCount * prepareState.viewport.z;
                 });
 
                 this.sorter.setCenters(this.workBuffer.centers, this.workBuffer.centersVersion, activeCount);
 
-            } else { // sorter centers are not updated, we can update work buffer if needed
-
-                // any splats that have changed this frame need to be re-rendered to work buffer
-                const updateVersion = this.updateVersion;
-                const rt = this.workBuffer.renderTarget;
-                this.splats.forEach((splat) => {
-                    if (splat.updateVersion === updateVersion) {
-                        splat.render(rt);
-                    }
-                });
             }
+
+            // any splats that have changed this frame need to be re-rendered to work buffer
+            const updateVersion = this.updateVersion;
+            const rt = this.workBuffer.renderTarget;
+            this.splats.forEach((splat) => {
+                if (splat.updateVersion === updateVersion) {
+                    splat.render(rt);
+                }
+            });
 
             // update data for the sorter
             this.sort(cameraNode);
+        }
+    }
+
+    /**
+     * Assigns lines to each splat based on the texture size.
+     *
+     * @param {GSplatInfo[]} splats - The splats to assign lines to.
+     * @param {number} size - The texture size.
+     */
+    assignLines(splats, size) {
+        let start = 0;
+        for (const splat of splats) {
+            const prepareState = splat.prepareState;
+            const activeSplats = prepareState.activeSplats;
+            const numLines = Math.ceil(activeSplats / size);
+            prepareState.setLines(start, numLines, size);
+            start += numLines;
         }
     }
 
@@ -284,10 +316,12 @@ class GSplatManager {
                 const cameraPositionTransformed = invModelMat.transformPoint(cameraPosition).mulScalar(scale.x);
                 const cameraDirectionTransformed = invModelMat.transformVector(cameraDirection).mulScalar(scale.x);
 
+                const state = splat.prepareState ?? splat.renderState;
+
                 // range of splats for this node
                 const textureSize = this.workBuffer.orderTexture.width;
-                const startIndex = splat.lineStart * textureSize;
-                const endIndex = startIndex + splat.lineCount * textureSize;
+                const startIndex = state.lineStart * textureSize;
+                const endIndex = startIndex + state.lineCount * textureSize;
 
                 sorterRequest.push({
                     cameraPosition: cameraPositionTransformed,
