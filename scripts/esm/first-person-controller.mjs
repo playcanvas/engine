@@ -225,6 +225,16 @@ class FirstPersonController extends Script {
      */
     jumpForce = 600;
 
+    /**
+     * The joystick event name for the UI position for the base and stick elements.
+     * The event name is appended with the side: 'left' or 'right'.
+     *
+     * @attribute
+     * @title Joystick Base Event Name
+     * @type {string}
+     */
+    joystickEventName = 'joystick';
+
     initialize() {
         // check camera
         if (!this._camera) {
@@ -257,6 +267,14 @@ class FirstPersonController extends Script {
         this._desktopInput.attach(this.app.graphicsDevice.canvas);
         this._mobileInput.attach(this.app.graphicsDevice.canvas);
         this._gamepadInput.attach(this.app.graphicsDevice.canvas);
+
+        // expose ui events
+        this._mobileInput.on('joystick:position:left', ([bx, by, sx, sy]) => {
+            this.app.fire(`${this.joystickEventName}:left`, bx, by, sx, sy);
+        });
+        this._mobileInput.on('joystick:position:right', ([bx, by, sx, sy]) => {
+            this.app.fire(`${this.joystickEventName}:right`, bx, by, sx, sy);
+        });
 
         this.on('destroy', this.destroy, this);
     }
