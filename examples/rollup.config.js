@@ -22,30 +22,6 @@ const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
     '../src/index.js' : process.env.ENGINE_PATH ?? '';
 
-/**
- * Get the engine path files.
- *
- * @returns {{ src: string, dest: string }[]} - The engine path files.
- */
-const getEnginePathFiles = () => {
-    if (!ENGINE_PATH) {
-        return [];
-    }
-
-    const src = path.resolve(ENGINE_PATH);
-    const content = fs.readFileSync(src, 'utf8');
-    const isUnpacked = isModuleWithExternalDependencies(content);
-    if (isUnpacked) {
-        const srcDir = path.dirname(src);
-        const dest = 'dist/iframe/ENGINE_PATH';
-        return [{ src: srcDir, dest }];
-    }
-
-    // packed module builds
-    const dest = 'dist/iframe/ENGINE_PATH/index.js';
-    return [{ src, dest }];
-};
-
 const STATIC_FILES = [
     // static main page src
     { src: './src/static', dest: 'dist/' },
@@ -65,9 +41,6 @@ const STATIC_FILES = [
     // engine scripts
     { src: '../scripts', dest: 'dist/static/scripts/' },
 
-    // playcanvas engine types
-    { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-
     // playcanvas observer
     {
         src: './node_modules/@playcanvas/observer/dist/index.mjs',
@@ -78,10 +51,7 @@ const STATIC_FILES = [
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
 
     // fflate (for when using ENGINE_PATH)
-    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
-
-    // engine path
-    ...getEnginePathFiles()
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' }
 ];
 
 /**
@@ -224,18 +194,38 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
  * @returns {RollupOptions[]} - The rollup options;
  */
 const engineRollupOptions = () => {
-    // Checks for types for app building
+    /** @type {RollupOptions[]} */
+    const options = [];
+
+    // Types
     if (!fs.existsSync('../build/playcanvas.d.ts')) {
         const cmd = 'npm run build target:types --prefix ../';
         console.log('\x1b[32m%s\x1b[0m', cmd);
         execSync(cmd);
     }
+    options.push(staticRollupOption({
+        src: '../build/playcanvas.d.ts',
+        dest: 'dist/playcanvas.d.ts'
+    }));
 
-    /** @type {RollupOptions[]} */
-    const options = [];
     if (ENGINE_PATH) {
+        // Unpacked source
+        const src = path.resolve(ENGINE_PATH);
+        const content = fs.readFileSync(src, 'utf8');
+        const isUnpacked = isModuleWithExternalDependencies(content);
+        if (isUnpacked) {
+            const srcDir = path.dirname(src);
+            const dest = 'dist/iframe/ENGINE_PATH';
+            options.push(staticRollupOption({ src: srcDir, dest }));
+            return options;
+        }
+
+        // Packed source
+        const dest = 'dist/iframe/ENGINE_PATH/index.js';
+        options.push(staticRollupOption({ src, dest }));
         return options;
     }
+
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.mjs
         options.push(
