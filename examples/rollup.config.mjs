@@ -261,12 +261,9 @@ const APP_TARGETS = [{
     },
     treeshake: 'smallest',
     plugins: [
-        // @ts-ignore
         commonjs(),
         treeshakeIgnore([/@playcanvas\/pcui/g]), // ignore PCUI treeshake
-        // @ts-ignore
         resolve(),
-        // @ts-ignore
         replace({
             values: {
                 'process.env.NODE_ENV': JSON.stringify(NODE_ENV) // for REACT bundling
