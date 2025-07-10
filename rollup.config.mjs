@@ -1,4 +1,4 @@
-import * as fs from 'node:fs';
+import fs from 'fs';
 import { version, revision } from './utils/rollup-version-revision.mjs';
 import { buildJSOptions, buildTypesOption } from './utils/rollup-build-target.mjs';
 
