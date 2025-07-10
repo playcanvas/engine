@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import { version, revision } from './utils/rollup-version-revision.mjs';
 import { buildJSOptions, buildTypesOption } from './utils/rollup-build-target.mjs';
 
-/** @typedef {import('rollup').RollupOptions} RollupOptions */
+/** @import { RollupOptions } from 'rollup' */
 
 const BLUE_OUT = '\x1b[34m';
 const RED_OUT = '\x1b[31m';

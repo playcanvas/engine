@@ -24,16 +24,13 @@ import { swcOptions } from './rollup-swc-options.mjs';
 import { dirname, resolve as pathResolve } from 'path';
 import { fileURLToPath } from 'url';
 
+/** @import { RollupOptions, OutputOptions } from 'rollup' */
+
 // Find path to the repo root
 // @ts-ignore import.meta not allowed by tsconfig module:es6, but it works
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = pathResolve(__dirname, '..');
-
-/** @typedef {import('rollup').RollupOptions} RollupOptions */
-/** @typedef {import('rollup').OutputOptions} OutputOptions */
-/** @typedef {import('rollup').ModuleFormat} ModuleFormat */
-/** @typedef {import('@rollup/plugin-strip').RollupStripOptions} RollupStripOptions */
 
 const TREESHAKE_IGNORE_REGEXES = [
     /polyfill/
