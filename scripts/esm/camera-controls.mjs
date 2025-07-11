@@ -315,7 +315,7 @@ class CameraControls extends Script {
      * @title Zoom Speed
      * @type {number}
      */
-    zoomSpeed = 0.005;
+    zoomSpeed = 0.001;
 
     /**
      * The touch zoom pinch sensitivity.
@@ -325,15 +325,6 @@ class CameraControls extends Script {
      * @type {number}
      */
     zoomPinchSens = 5;
-
-    /**
-     * The minimum scale the camera can zoom (absolute value).
-     *
-     * @attribute
-     * @title Zoom Scale Min
-     * @type {number}
-     */
-    zoomScaleMin = 0.001;
 
     /**
      * The gamepad dead zone.
@@ -362,7 +353,7 @@ class CameraControls extends Script {
         this._camera = this.entity.camera;
 
         // set orbit controller defaults
-        this._orbitController.zoomRange = new Vec2(0, Infinity);
+        this._orbitController.zoomRange = new Vec2(0.01, Infinity);
 
         // attach input
         this._desktopInput.attach(this.app.graphicsDevice.canvas);
@@ -748,11 +739,7 @@ class CameraControls extends Script {
         // multipliers
         const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
             this.moveSlowSpeed : this.moveSpeed) * this.sceneSize * dt;
-        const zoomMult = math.clamp(
-            this._pose.distance / (ZOOM_SCALE_MULT * this.sceneSize),
-            this.zoomScaleMin,
-            1
-        ) * this.zoomSpeed * this.sceneSize * 60 * dt;
+        const zoomMult = this.zoomSpeed * 60 * dt;
         const zoomTouchMult = zoomMult * this.zoomPinchSens;
         const rotateMult = this.rotateSpeed * 60 * dt;
         const rotateJoystickMult = this.rotateSpeed * this.rotateJoystickSens * 60 * dt;
