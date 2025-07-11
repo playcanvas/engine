@@ -299,6 +299,9 @@ function buildTypesOption({
             footer: 'export as namespace pc;\nexport as namespace pcx;',
             format: 'es'
         }],
+        watch: {
+            include: `${root}/src/**`
+        },
         plugins: [
             runTsc(`${root}/tsconfig.build.json`),
             typesFixup(root),
