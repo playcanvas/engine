@@ -36,8 +36,6 @@ const frame = new InputFrame({
     rotate: [0, 0, 0]
 });
 
-const ZOOM_SCALE_MULT = 10;
-
 /**
  * Calculate the damp rate.
  *
