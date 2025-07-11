@@ -1,4 +1,3 @@
-import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -11,7 +10,7 @@ import { exampleMetaData } from './cache/metadata.mjs';
 import { copy } from './utils/plugins/rollup-copy.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
-import { buildTarget } from '../utils/rollup-build-target.mjs';
+import { buildJSOptions, buildTypesOption } from '../utils/rollup-build-target.mjs';
 import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
 import { buildShare } from './utils/plugins/rollup-build-share.mjs';
 import { removePc } from './utils/plugins/rollup-remove-pc.mjs';
@@ -21,68 +20,6 @@ import { removePc } from './utils/plugins/rollup-remove-pc.mjs';
 const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
     '../src/index.js' : process.env.ENGINE_PATH ?? '';
-
-/**
- * Get the engine path files.
- *
- * @returns {{ src: string, dest: string }[]} - The engine path files.
- */
-const getEnginePathFiles = () => {
-    if (!ENGINE_PATH) {
-        return [];
-    }
-
-    const src = path.resolve(ENGINE_PATH);
-    const content = fs.readFileSync(src, 'utf8');
-    const isUnpacked = isModuleWithExternalDependencies(content);
-    if (isUnpacked) {
-        const srcDir = path.dirname(src);
-        const dest = 'dist/iframe/ENGINE_PATH';
-        return [{ src: srcDir, dest }];
-    }
-
-    // packed module builds
-    const dest = 'dist/iframe/ENGINE_PATH/index.js';
-    return [{ src, dest }];
-};
-
-const STATIC_FILES = [
-    // static main page src
-    { src: './src/static', dest: 'dist/' },
-
-    // static iframe src
-    { src: './iframe', dest: 'dist/iframe' },
-
-    // assets used in examples
-    { src: './assets', dest: 'dist/static/assets/' },
-
-    // thumbnails used in examples
-    { src: './thumbnails', dest: 'dist/thumbnails/' },
-
-    // external libraries used in examples
-    { src: './src/lib', dest: 'dist/static/lib/' },
-
-    // engine scripts
-    { src: '../scripts', dest: 'dist/static/scripts/' },
-
-    // playcanvas engine types
-    { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-
-    // playcanvas observer
-    {
-        src: './node_modules/@playcanvas/observer/dist/index.mjs',
-        dest: 'dist/iframe/playcanvas-observer.mjs'
-    },
-
-    // monaco loader
-    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
-
-    // fflate (for when using ENGINE_PATH)
-    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
-
-    // engine path
-    ...getEnginePathFiles()
-];
 
 /**
  * Rollup option for static files.
@@ -109,16 +46,39 @@ const staticRollupOption = (item) => {
     };
 };
 
-/**
- * Rollup options for each example.
- *
- * @param {object} data - The example data.
- * @param {string} data.categoryKebab - The category kebab name.
- * @param {string} data.exampleNameKebab - The example kebab name.
- * @param {string} data.path - The path to the example directory.
- * @returns {RollupOptions[]} - The rollup options.
- */
-const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
+const STATIC_TARGETS = [
+    // static main page src
+    { src: './src/static', dest: 'dist/' },
+
+    // static iframe src
+    { src: './iframe', dest: 'dist/iframe' },
+
+    // assets used in examples
+    { src: './assets', dest: 'dist/static/assets/' },
+
+    // thumbnails used in examples
+    { src: './thumbnails', dest: 'dist/thumbnails/' },
+
+    // external libraries used in examples
+    { src: './src/lib', dest: 'dist/static/lib/' },
+
+    // engine scripts
+    { src: '../scripts', dest: 'dist/static/scripts/' },
+
+    // playcanvas observer
+    {
+        src: './node_modules/@playcanvas/observer/dist/index.mjs',
+        dest: 'dist/iframe/playcanvas-observer.mjs'
+    },
+
+    // monaco loader
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
+
+    // fflate (for when using ENGINE_PATH)
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' }
+].map(item => staticRollupOption(item));
+
+const EXAMPLE_TARGETS = exampleMetaData.flatMap(({ categoryKebab, exampleNameKebab, path }) => {
     /** @type {RollupOptions[]} */
     const options = [];
 
@@ -153,7 +113,8 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
                     'playcanvas',
                     'examples/files',
                     'examples/observer',
-                    'examples/utils'
+                    'examples/utils',
+                    /^https?:\/\/.+/
                 ],
                 plugins: [
                     removePc(),
@@ -178,7 +139,8 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
                     'playcanvas',
                     'examples/files',
                     'examples/observer',
-                    'examples/utils'
+                    'examples/utils',
+                    /^https?:\/\/.+/
                 ],
                 plugins: [
                     removePc(),
@@ -204,7 +166,8 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
                 },
                 context: 'this',
                 external: [
-                    'playcanvas'
+                    'playcanvas',
+                    /^https?:\/\/.+/
                 ]
             });
             continue;
@@ -216,30 +179,44 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
         }));
     }
     return options;
-};
+});
 
-/**
- * Rollup options for the engine.
- *
- * @returns {RollupOptions[]} - The rollup options;
- */
-const engineRollupOptions = () => {
-    // Checks for types for app building
-    if (!fs.existsSync('../build/playcanvas.d.ts')) {
-        const cmd = 'npm run build target:types --prefix ../';
-        console.log('\x1b[32m%s\x1b[0m', cmd);
-        execSync(cmd);
-    }
-
+const ENGINE_TARGETS = (() => {
     /** @type {RollupOptions[]} */
     const options = [];
+
+    // Types
+    // Outputs: dist/iframe/playcanvas.d.ts
+    options.push(buildTypesOption({
+        root: '..',
+        dir: 'dist/iframe'
+    }));
+
+    // Sources
     if (ENGINE_PATH) {
+        const src = path.resolve(ENGINE_PATH);
+        const content = fs.readFileSync(src, 'utf8');
+        const isUnpacked = isModuleWithExternalDependencies(content);
+
+        if (isUnpacked) {
+            options.push(staticRollupOption({
+                src: path.dirname(src),
+                dest: 'dist/iframe/ENGINE_PATH'
+            }));
+        } else {
+            options.push(staticRollupOption({
+                src,
+                dest: 'dist/iframe/ENGINE_PATH/index.js'
+            }));
+        }
         return options;
     }
+
+    // Builds
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.mjs
         options.push(
-            ...buildTarget({
+            ...buildJSOptions({
                 moduleFormat: 'esm',
                 buildType: 'release',
                 bundleState: 'bundled',
@@ -251,7 +228,7 @@ const engineRollupOptions = () => {
     if (NODE_ENV === 'production' || NODE_ENV === 'development') {
         // Outputs: dist/iframe/playcanvas.dbg.mjs
         options.push(
-            ...buildTarget({
+            ...buildJSOptions({
                 moduleFormat: 'esm',
                 buildType: 'debug',
                 bundleState: 'bundled',
@@ -263,7 +240,7 @@ const engineRollupOptions = () => {
     if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
         // Outputs: dist/iframe/playcanvas.prf.mjs
         options.push(
-            ...buildTarget({
+            ...buildJSOptions({
                 moduleFormat: 'esm',
                 buildType: 'profiler',
                 bundleState: 'bundled',
@@ -273,35 +250,34 @@ const engineRollupOptions = () => {
         );
     }
     return options;
-};
+})();
+
+const APP_TARGETS = [{
+    // A debug build is ~2.3MB and a release build ~0.6MB
+    input: 'src/app/index.mjs',
+    output: {
+        dir: 'dist',
+        format: 'umd'
+    },
+    treeshake: 'smallest',
+    plugins: [
+        commonjs(),
+        treeshakeIgnore([/@playcanvas\/pcui/g]), // ignore PCUI treeshake
+        resolve(),
+        replace({
+            values: {
+                'process.env.NODE_ENV': JSON.stringify(NODE_ENV) // for REACT bundling
+            },
+            preventAssignment: true
+        }),
+        // @ts-ignore
+        NODE_ENV === 'production' && terser()
+    ]
+}];
 
 export default [
-    ...exampleMetaData.flatMap(data => exampleRollupOptions(data)),
-    ...engineRollupOptions(),
-    ...STATIC_FILES.map(item => staticRollupOption(item)),
-    {
-        // A debug build is ~2.3MB and a release build ~0.6MB
-        input: 'src/app/index.mjs',
-        output: {
-            dir: 'dist',
-            format: 'umd'
-        },
-        treeshake: 'smallest',
-        plugins: [
-            // @ts-ignore
-            commonjs(),
-            treeshakeIgnore([/@playcanvas\/pcui/g]), // ignore PCUI treeshake
-            // @ts-ignore
-            resolve(),
-            // @ts-ignore
-            replace({
-                values: {
-                    'process.env.NODE_ENV': JSON.stringify(NODE_ENV) // for REACT bundling
-                },
-                preventAssignment: true
-            }),
-            // @ts-ignore
-            NODE_ENV === 'production' && terser()
-        ]
-    }
+    ...STATIC_TARGETS,
+    ...EXAMPLE_TARGETS,
+    ...ENGINE_TARGETS,
+    ...APP_TARGETS
 ];
