@@ -1079,15 +1079,15 @@ class Mesh extends RefCountedObject {
 
             const base = this.primitive[RENDERSTYLE_SOLID].base;
             const count = this.primitive[RENDERSTYLE_SOLID].count;
+            const baseVertex = this.primitive[RENDERSTYLE_SOLID].baseVertex || 0;
             const indexBuffer = this.indexBuffer[RENDERSTYLE_SOLID];
             const srcIndices = new typedArrayIndexFormats[indexBuffer.format](indexBuffer.storage);
-
             const seen = new Set();
 
             for (let j = base; j < base + count; j += 3) {
                 for (let k = 0; k < 3; k++) {
-                    const i1 = srcIndices[j + offsets[k][0]];
-                    const i2 = srcIndices[j + offsets[k][1]];
+                    const i1 = srcIndices[j + offsets[k][0]] + baseVertex;
+                    const i2 = srcIndices[j + offsets[k][1]] + baseVertex;
                     const hash = (i1 > i2) ? ((i2 * numVertices) + i1) : ((i1 * numVertices) + i2);
                     if (!seen.has(hash)) {
                         seen.add(hash);
