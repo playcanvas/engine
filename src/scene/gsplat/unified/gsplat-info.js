@@ -7,6 +7,7 @@ import { GSplatState } from './gspat-state.js';
 import glslGsplatCopyToWorkBufferPS from '../../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
 import wgslGsplatCopyToWorkBufferPS from '../../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
 import { Mat4 } from '../../../core/math/mat4.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 /**
  * @import { GraphNode } from "../../graph-node.js";
@@ -51,6 +52,9 @@ class GSplatInfo {
 
     /** @type {Mat4} */
     previousWorldTransform = new Mat4();
+
+    /** @type {Vec3} */
+    previousPosition = new Vec3();
 
     /** @type {number} */
     updateVersion = 0;
@@ -120,6 +124,16 @@ class GSplatInfo {
             this.previousWorldTransform.copy(worldMatrix);
             this.updateVersion = updateVersion;
         }
+
+        // if position has moved by more than 1 meter, mark lod dirty
+        const position = this.node.getPosition();
+        const length = position.distance(this.previousPosition);
+        if (length > 1) {
+            this.previousPosition.copy(position);
+        }
+
+        // return true if position has moved by more than 1 meter, which requires LOD to be re-calculated
+        return length > 1;
     }
 
     render(renderTarget) {

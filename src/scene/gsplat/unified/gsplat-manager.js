@@ -157,9 +157,9 @@ class GSplatManager {
 
     /**
      * Updates the order of splats based on their world matrix being updated, with splats that have
-     * changed within a window going to the end.
+     * changed within a time window going to the end.
      *
-     * @returns {number} The index of the first changed splat.
+     * @returns {boolean} True if any splat has changed and LOD needs to be re-calculated.
      */
     updateSplatOrder() {
 
@@ -167,8 +167,9 @@ class GSplatManager {
         this.updateVersion++;
         const updateVersion = this.updateVersion;
         const splats = this.splats;
+        let lodDirty = false;
         splats.forEach((splat) => {
-            splat.update(updateVersion);
+            lodDirty = lodDirty || splat.update(updateVersion);
         });
 
         // Copy splat references before sorting, to detect changes later
@@ -195,7 +196,7 @@ class GSplatManager {
 
         tempSplats.length = 0;
 
-        return firstChangedIndex;
+        return lodDirty || firstChangedIndex !== -1;
     }
 
     update(cameraNode) {
@@ -208,10 +209,10 @@ class GSplatManager {
             const distance = this.lastCameraPos.distance(currentCameraPos);
 
             // reorder splats based on update version - active splats at the end
-            const firstChangedIndex = this.updateSplatOrder();
+            const lodDirty = this.updateSplatOrder();
 
             // if camera moved or splats have been reordered, give updated centers to sorter
-            if (distance > 1.0 || firstChangedIndex !== -1) {
+            if (distance > 1.0 || lodDirty) {
                 this.lastCameraPos.copy(currentCameraPos);
 
                 // Update LOD for each splat individually
@@ -259,7 +260,6 @@ class GSplatManager {
                 }
             });
         }
-
     }
 
     /**
