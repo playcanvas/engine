@@ -200,15 +200,15 @@ class GSplatManager {
 
     update(cameraNode) {
 
-        // reorder splats based on update version - active splats at the end
-        const firstChangedIndex = this.updateSplatOrder();
-
         // do not allow any workbuffer modifications till we get sorted centers back
         if (this.sortedVersion === this.centerBuffer.version) {
 
             // how far has the camera moved
             const currentCameraPos = cameraNode.getWorldTransform().getTranslation();
             const distance = this.lastCameraPos.distance(currentCameraPos);
+
+            // reorder splats based on update version - active splats at the end
+            const firstChangedIndex = this.updateSplatOrder();
 
             // if camera moved or splats have been reordered, give updated centers to sorter
             if (distance > 1.0 || firstChangedIndex !== -1) {
@@ -245,20 +245,21 @@ class GSplatManager {
 
             // update data for the sorter
             this.sort(cameraNode);
-
-            // if we got sorted centers at least one time, which makes the renderState valid
-            if (this.sortedVersion > 0) {
-
-                // any splats that have changed this frame need to be re-rendered to work buffer
-                const updateVersion = this.updateVersion;
-                const rt = this.workBuffer.renderTarget;
-                this.splats.forEach((splat) => {
-                    if (splat.updateVersion === updateVersion) {
-                        splat.render(rt);
-                    }
-                });
-            }
         }
+
+        // if we got sorted centers at least one time, which makes the renderState valid
+        if (this.sortedVersion > 0) {
+
+            // any splats that have changed this frame need to be re-rendered to work buffer
+            const updateVersion = this.updateVersion;
+            const rt = this.workBuffer.renderTarget;
+            this.splats.forEach((splat) => {
+                if (splat.updateVersion === updateVersion) {
+                    splat.render(rt);
+                }
+            });
+        }
+
     }
 
     /**
