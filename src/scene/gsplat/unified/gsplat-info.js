@@ -132,8 +132,10 @@ class GSplatInfo {
         // matrix to transform splats to the world space
         this.device.scope.resolve('uTransform').setValue(this.node.getWorldTransform().data);
 
-        // Set LOD intervals texture for remapping of indices
-        device.scope.resolve('uIntervalsTexture').setValue(this.renderState.intervalsTexture);
+        if (resource.hasLod) {
+            // Set LOD intervals texture for remapping of indices
+            device.scope.resolve('uIntervalsTexture').setValue(this.renderState.intervalsTexture);
+        }
 
         const renderState = this.renderState;
         device.scope.resolve('uActiveSplats').setValue(renderState.activeSplats);

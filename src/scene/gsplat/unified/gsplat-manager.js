@@ -241,20 +241,23 @@ class GSplatManager {
                 });
 
                 this.sorter.setCenters(centers, this.centerBuffer.version, activeCount);
-
             }
-
-            // any splats that have changed this frame need to be re-rendered to work buffer
-            const updateVersion = this.updateVersion;
-            const rt = this.workBuffer.renderTarget;
-            this.splats.forEach((splat) => {
-                if (splat.updateVersion === updateVersion) {
-                    splat.render(rt);
-                }
-            });
 
             // update data for the sorter
             this.sort(cameraNode);
+
+            // if we got sorted centers at least one time, which makes the renderState valid
+            if (this.sortedVersion > 0) {
+
+                // any splats that have changed this frame need to be re-rendered to work buffer
+                const updateVersion = this.updateVersion;
+                const rt = this.workBuffer.renderTarget;
+                this.splats.forEach((splat) => {
+                    if (splat.updateVersion === updateVersion) {
+                        splat.render(rt);
+                    }
+                });
+            }
         }
     }
 

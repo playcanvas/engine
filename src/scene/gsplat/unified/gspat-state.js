@@ -2,6 +2,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U } from '../../../platform/graphics/constants.js';
 import { Vec4 } from '../../../core/math/vec4.js';
+import { Debug } from '../../../core/debug.js';
 
 /**
  * @import { GraphNode } from "../../graph-node.js"
@@ -156,10 +157,9 @@ class GSplatState {
             return;
         }
 
-        // skip if resource doesn't have required data
-        if (!resource.lodBlocks || !resource.lodBlocks.blocksCenter || !resource.lodBlocks.blocksLodInfo) {
-            return;
-        }
+        Debug.assert(resource.lodBlocks);
+        Debug.assert(resource.lodBlocks.blocksCenter);
+        Debug.assert(resource.lodBlocks.blocksLodInfo);
 
         // Get camera position in world space
         const cameraPos = cameraNode.getWorldTransform().getTranslation();
