@@ -29,12 +29,6 @@ class GSplatWorkBuffer {
     /** @type {RenderTarget} */
     renderTarget;
 
-    /** @type {Float32Array | null} */
-    centers = null;
-
-    /** @type {number} */
-    centersVersion = 0;
-
     constructor(device) {
         this.device = device;
     }
@@ -126,26 +120,6 @@ class GSplatWorkBuffer {
     }
 
     /**
-     * Updates the centers buffer with the given splats.
-     *
-     * @param {GSplatInfo[]} splats - The splats to update with.
-     */
-    updateCenters(splats) {
-
-        if (!this.centers) {
-            this.centers = new Float32Array(this.orderTexture.width * this.orderTexture.width * 3);
-        }
-
-        const textureSize = this.width;
-        splats.forEach((splat) => {
-            // Update centers using LOD intervals for remapping
-            this.updateCentersWithLod(splat, textureSize);
-        });
-
-        this.centersVersion++;
-    }
-
-    /**
      * Render given splats to the work buffer.
      *
      * @param {GSplatInfo[]} splats - The splats to render.
@@ -154,43 +128,6 @@ class GSplatWorkBuffer {
         splats.forEach((splat) => {
             splat.render(this.renderTarget);
         });
-    }
-
-    /**
-     * Updates centers array using LOD intervals for remapping
-     *
-     * @param {GSplatInfo} splat - The splat to update centers for
-     * @param {number} textureSize - The texture size
-     */
-    updateCentersWithLod(splat, textureSize) {
-        const resource = splat.resource;
-        const hasLod = resource.hasLod;
-        const srcCenters = resource.centers;
-        const dstBaseOffset = splat.prepareState.lineStart * 3 * textureSize;
-        const intervals = splat.prepareState.intervals;
-        const centers = this.centers;
-        let targetIndex = 0;
-
-        if (hasLod) {
-            // copy centers based on LOD intervals
-            for (let i = 0; i < intervals.length; i += 2) {
-                const intervalStart = intervals[i];
-                const intervalEnd = intervals[i + 1];
-                const intervalLength = intervalEnd - intervalStart;
-
-                // Calculate source and destination ranges
-                const srcStart = intervalStart * 3;
-                const srcEnd = intervalEnd * 3;
-                const dstStart = dstBaseOffset + targetIndex * 3;
-
-                centers.set(srcCenters.subarray(srcStart, srcEnd), dstStart);
-
-                targetIndex += intervalLength;
-            }
-        } else {
-            // copy all centers
-            centers.set(srcCenters, dstBaseOffset);
-        }
     }
 }
 

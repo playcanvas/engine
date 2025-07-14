@@ -8,8 +8,6 @@ class GSplatUnifiedSorter extends EventHandler {
 
     orderTexture;
 
-    centers;
-
     constructor() {
         super();
 
@@ -29,7 +27,8 @@ class GSplatUnifiedSorter extends EventHandler {
             this.orderTexture.upload();
 
             // set new data directly on texture
-            this.fire('updated', msgData.count, msgData.version);
+            const returnCenters = msgData.returnCenters ? new Float32Array(msgData.returnCenters) : null;
+            this.fire('updated', msgData.count, msgData.version, returnCenters);
         };
 
         const workerSource = `(${UnifiedSortWorker.toString()})()`;
@@ -52,9 +51,8 @@ class GSplatUnifiedSorter extends EventHandler {
         this.worker = null;
     }
 
-    init(orderTexture, centers, chunks) {
+    init(orderTexture) {
         this.orderTexture = orderTexture;
-        this.centers = centers?.slice();
 
         // get the texture's storage buffer and make a copy
         const orderBuffer = this.orderTexture.lock({
@@ -68,57 +66,25 @@ class GSplatUnifiedSorter extends EventHandler {
         }
 
         const obj = {
-            order: orderBuffer.buffer,
-            centers: centers?.buffer,
-            chunks: chunks?.buffer
+            order: orderBuffer.buffer
         };
 
-        const transfer = [orderBuffer.buffer]
-        .concat(centers ? [centers.buffer] : [])
-        .concat(chunks ? [chunks.buffer] : []);
+        const transfer = [orderBuffer.buffer];
 
         // send the initial buffer to worker
         this.worker.postMessage(obj, transfer);
     }
 
-    setMapping(mapping) {
-        if (mapping) {
-            // create new centers array
-            const centers = new Float32Array(mapping.length * 3);
-            for (let i = 0; i < mapping.length; ++i) {
-                const src = mapping[i] * 3;
-                const dst = i * 3;
-                centers[dst + 0] = this.centers[src + 0];
-                centers[dst + 1] = this.centers[src + 1];
-                centers[dst + 2] = this.centers[src + 2];
-            }
-
-            // update worker with new centers and mapping for the subset of splats
-            this.worker.postMessage({
-                centers: centers.buffer,
-                mapping: mapping.buffer
-            }, [centers.buffer, mapping.buffer]);
-        } else {
-            // restore original centers
-            const centers = this.centers.slice();
-            this.worker.postMessage({
-                centers: centers.buffer,
-                mapping: null
-            }, [centers.buffer]);
-        }
-    }
-
     setCenters(centers, version, sortSplatCount) {
-        this.centers = centers.slice();
 
         // console.log('sorting', sortSplatCount.toLocaleString(), ' of ', (centers.length / 3).toLocaleString());
 
         this.worker.postMessage({
             version: version,
             sortSplatCount: sortSplatCount,
-            centers: this.centers.buffer,
+            centers: centers.buffer,
             mapping: null
-        }, [this.centers.buffer]);
+        }, [centers.buffer]);
     }
 
     setCamera(pos, dir) {

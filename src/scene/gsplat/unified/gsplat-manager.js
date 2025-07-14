@@ -7,6 +7,7 @@ import { GraphNode } from '../../graph-node.js';
 import { ShaderMaterial } from '../../materials/shader-material.js';
 import { MeshInstance } from '../../mesh-instance.js';
 import { GSplatResourceBase } from '../gsplat-resource-base.js';
+import { GSplatCentersBuffers } from './gsplat-centers-buffer.js';
 import { GSplatInfo } from './gsplat-info.js';
 import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
@@ -37,6 +38,9 @@ class GSplatManager {
     /** @type {GSplatWorkBuffer} */
     workBuffer;
 
+    /** @type {GSplatCentersBuffers} */
+    centerBuffer;
+
     /**
      * An array of all splats managed by this manager.
      *
@@ -62,6 +66,7 @@ class GSplatManager {
     constructor(device, resources, nodes) {
         this.device = device;
         this.workBuffer = new GSplatWorkBuffer(device);
+        this.centerBuffer = new GSplatCentersBuffers();
 
         resources.forEach((resource, i) => {
             resource.generateLods();
@@ -117,18 +122,20 @@ class GSplatManager {
         // only start rendering the splat after we've received the splat order data
         this.meshInstance.instancingCount = 0;
 
-        const centers = workBuffer.centers;
-        const chunks = null;
-
         // create sorter
         this.sorter = new GSplatUnifiedSorter();
-        this.sorter.init(workBuffer.orderTexture, centers, chunks);
-        this.sorter.on('updated', (count, version) => {
-            this.onSorted(count, version);
+        this.sorter.init(workBuffer.orderTexture);
+        this.sorter.on('updated', (count, version, returnCenters) => {
+            this.onSorted(count, version, returnCenters);
         });
     }
 
-    onSorted(count, version) {
+    onSorted(count, version, returnCenters) {
+
+        // reclaim returned centers buffer if available
+        if (returnCenters) {
+            this.centerBuffer.put(returnCenters);
+        }
 
         // limit splat render count to exclude those behind the camera
         this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
@@ -197,7 +204,7 @@ class GSplatManager {
         const firstChangedIndex = this.updateSplatOrder();
 
         // do not allow any workbuffer modifications till we get sorted centers back
-        if (this.sortedVersion === this.workBuffer.centersVersion) {
+        if (this.sortedVersion === this.centerBuffer.version) {
 
             // how far has the camera moved
             const currentCameraPos = cameraNode.getWorldTransform().getTranslation();
@@ -224,7 +231,8 @@ class GSplatManager {
 
                 // generate centers for evaluated lods
                 // note that the work buffer is not updated yet, and only when we get sorted centers
-                this.workBuffer.updateCenters(this.splats);
+                const textureSize = this.workBuffer.width;
+                const centers = this.centerBuffer.update(this.splats, textureSize);
 
                 let activeCount = 0;
                 this.splats.forEach((splat) => {
@@ -232,7 +240,7 @@ class GSplatManager {
                     activeCount += prepareState.lineCount * prepareState.viewport.z;
                 });
 
-                this.sorter.setCenters(this.workBuffer.centers, this.workBuffer.centersVersion, activeCount);
+                this.sorter.setCenters(centers, this.centerBuffer.version, activeCount);
 
             }
 

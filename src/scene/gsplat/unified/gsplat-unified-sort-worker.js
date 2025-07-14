@@ -8,6 +8,7 @@ function UnifiedSortWorker() {
 
     let order;
     let centers;
+    let returnCenters;
     let chunks;
     let mapping;
     let cameraPosition;
@@ -254,13 +255,23 @@ function UnifiedSortWorker() {
         }
 
         // send results
-        myself.postMessage({
+        const transferList = [order.buffer];
+        const response = {
             order: order.buffer,
             count,
             version
-        }, [order.buffer]);
+        };
+        
+        // include returnCenters buffer if available
+        if (returnCenters) {
+            response.returnCenters = returnCenters.buffer;
+            transferList.push(returnCenters.buffer);
+        }
+        
+        myself.postMessage(response, transferList);
 
         order = null;
+        returnCenters = null;
     };
 
     myself.addEventListener('message', (message) => {
@@ -278,6 +289,7 @@ function UnifiedSortWorker() {
             order = new Uint32Array(msgData.order);
         }
         if (msgData.centers) {
+            returnCenters = centers; // return old centers buffer
             centers = new Float32Array(msgData.centers);
             forceUpdate = true;
 
