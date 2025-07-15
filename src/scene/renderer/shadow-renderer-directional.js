@@ -182,7 +182,10 @@ class ShadowRendererDirectional {
                 }
             }
 
-            visibleCasters.length = numVisibleCasters;
+            // remove empty tail
+            if (origNumVisibleCasters !== numVisibleCasters) {
+                visibleCasters.length = numVisibleCasters;
+            }
 
             // calculate depth range of the caster's AABB from the point of view of the shadow camera
             shadowCamView.copy(shadowCamNode.getWorldTransform()).invert();
