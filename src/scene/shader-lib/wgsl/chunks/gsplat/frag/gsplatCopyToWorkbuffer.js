@@ -1,10 +1,10 @@
 // fragment shader to copy splats in any supported format to MRT work-buffer
 export default /* wgsl */`
-struct SplatSource {
-    uv: vec2i,
-    id: u32, // only used for compressed splats       
-};
 
+#define GSPLAT_CENTER_NOPROJ
+
+#include "gsplatStructsVS"
+#include "gsplatCenterVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
 #include "gsplatSourceFormatVS"
@@ -67,8 +67,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         source.uv = vec2i(i32(source.id % srcSize), i32(source.id / srcSize));
 
         // read and transform center
-        var center = readCenter(&source);
-        center = (uniform.uTransform * vec4f(center, 1.0)).xyz;
+        var modelCenter = readCenter(&source);
+        modelCenter = (uniform.uTransform * vec4f(modelCenter, 1.0)).xyz;
+        var center: SplatCenter;
+        initCenter(modelCenter, &center);
 
         // read and transform covariance
         var covA: vec3f;
@@ -86,11 +88,25 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         covB = vec3f(Ct[1][1], Ct[1][2], Ct[2][2]);
 
         // read color
-        let color = readColor(&source);
+        var color = readColor(&source);
+
+        // evaluate spherical harmonics
+        #if SH_BANDS > 0
+            // calculate the model-space view direction
+            let dir = normalize(center.view * mat3x3f(center.modelView[0].xyz, center.modelView[1].xyz, center.modelView[2].xyz));
+
+            // read sh coefficients
+            var sh: array<vec3f, SH_COEFFS>;
+            var scale: f32;
+            readSHData(&source, &sh, &scale);
+
+            // evaluate
+            color = vec4f(color.xyz + evalSH(&sh, dir) * scale, color.w);
+        #endif
 
         // write out results
         output.color = color;
-        output.color1 = vec4f(center, 1.0);
+        output.color1 = vec4f(modelCenter, 1.0);
         output.color2 = vec4f(covA, 1.0);
         output.color3 = vec4f(covB, 1.0);
     }

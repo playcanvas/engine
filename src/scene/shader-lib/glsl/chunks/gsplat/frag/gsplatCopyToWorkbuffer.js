@@ -1,10 +1,10 @@
 // fragment shader to copy splats in any supported format to MRT work-buffer
 export default /* glsl */`
-struct SplatSource {
-    ivec2 uv;    
-    uint id; // only used for compressed splats       
-};
 
+#define GSPLAT_CENTER_NOPROJ
+
+#include "gsplatStructsVS"
+#include "gsplatCenterVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
 #include "gsplatSourceFormatVS"
@@ -62,8 +62,10 @@ void main(void) {
         source.uv = ivec2(source.id % srcSize, source.id / srcSize);
 
         // read and transform center
-        vec3 center = readCenter(source);
-        center = (uTransform * vec4(center, 1.0)).xyz;
+        vec3 modelCenter = readCenter(source);
+        modelCenter = (uTransform * vec4(modelCenter, 1.0)).xyz;
+        SplatCenter center;
+        initCenter(modelCenter, center);
 
         // read and transform covariance
         vec3 covA, covB;
@@ -82,9 +84,23 @@ void main(void) {
         // read color
         vec4 color = readColor(source);
 
+        // evaluate spherical harmonics
+        #if SH_BANDS > 0
+            // calculate the model-space view direction
+            vec3 dir = normalize(center.view * mat3(center.modelView));
+
+            // read sh coefficients
+            vec3 sh[SH_COEFFS];
+            float scale;
+            readSHData(source, sh, scale);
+
+            // evaluate
+            color.xyz += evalSH(sh, dir) * scale;
+        #endif
+
         // write out results
         pcFragColor0 = color;
-        pcFragColor1 = vec4(center, 1.0);
+        pcFragColor1 = vec4(modelCenter, 1.0);
         pcFragColor2 = vec4(covA, 1.0);
         pcFragColor3 = vec4(covB, 1.0);
     }

@@ -5,6 +5,7 @@ import { Texture } from '../../../platform/graphics/texture.js';
 /**
  * @import { GSplatInfo } from "./gsplat-info.js"
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ * @import { GraphNode } from '../../graph-node.js';
  */
 
 /**
@@ -123,10 +124,11 @@ class GSplatWorkBuffer {
      * Render given splats to the work buffer.
      *
      * @param {GSplatInfo[]} splats - The splats to render.
+     * @param {GraphNode} cameraNode - The camera node.
      */
-    render(splats) {
+    render(splats, cameraNode) {
         splats.forEach((splat) => {
-            splat.render(this.renderTarget);
+            splat.render(this.renderTarget, cameraNode);
         });
     }
 }

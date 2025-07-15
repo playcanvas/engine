@@ -63,8 +63,12 @@ class GSplatManager {
     /** @type {Vec3} */
     lastCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
-    constructor(device, resources, nodes) {
+    /** @type {GraphNode} */
+    cameraNode;
+
+    constructor(device, cameraNode, resources, nodes) {
         this.device = device;
+        this.cameraNode = cameraNode;
         this.workBuffer = new GSplatWorkBuffer(device);
         this.centerBuffer = new GSplatCentersBuffers();
 
@@ -150,7 +154,7 @@ class GSplatManager {
                 splat.activatePrepareState();
             });
 
-            this.workBuffer.render(this.splats);
+            this.workBuffer.render(this.splats, this.cameraNode);
             // console.log('splat count:', this.workBuffer.centers.length / 3);
         }
     }
@@ -199,13 +203,13 @@ class GSplatManager {
         return lodDirty || firstChangedIndex !== -1;
     }
 
-    update(cameraNode) {
+    update() {
 
         // do not allow any workbuffer modifications till we get sorted centers back
         if (this.sortedVersion === this.centerBuffer.version) {
 
             // how far has the camera moved
-            const currentCameraPos = cameraNode.getWorldTransform().getTranslation();
+            const currentCameraPos = this.cameraNode.getWorldTransform().getTranslation();
             const distance = this.lastCameraPos.distance(currentCameraPos);
 
             // reorder splats based on update version - active splats at the end
@@ -224,7 +228,7 @@ class GSplatManager {
                     splat.unusedState = null;
 
                     // this updates LOD intervals and interval texture
-                    splat.prepareState.update(cameraNode);
+                    splat.prepareState.update(this.cameraNode);
                 });
 
                 // Reassign lines based on current LOD active splats
@@ -245,7 +249,7 @@ class GSplatManager {
             }
 
             // update data for the sorter
-            this.sort(cameraNode);
+            this.sort(this.cameraNode);
         }
 
         // if we got sorted centers at least one time, which makes the renderState valid
@@ -256,7 +260,7 @@ class GSplatManager {
             const rt = this.workBuffer.renderTarget;
             this.splats.forEach((splat) => {
                 if (splat.updateVersion === updateVersion) {
-                    splat.render(rt);
+                    splat.render(rt, this.cameraNode);
                 }
             });
         }
