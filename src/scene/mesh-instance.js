@@ -267,7 +267,7 @@ class MeshInstance {
      * Note that this property only affects shadow casting when shadows are enabled {@link castShadow},
      * it does not add the mesh instance to the appropriate list of shadow casters on {@link Layer}.
      * Instead, it allows the mesh to be skipped during cascade shadow rendering while it remains in the list.
-     * 
+     *
      * @type {number}
      */
     shadowCascadeFlags = SHADOW_CASCADE_ALL;
