@@ -262,14 +262,14 @@ class MeshInstance {
     castShadow = false;
 
     /**
-     * Mask that enables or disables shadow casting for each shadow cascade
-     * used by a mesh instance under a {@link LIGHTTYPE_DIRECTIONAL}.
-     * This property takes effect only when the {@link castShadow} is enabled.
-     * Defaults to {@link SHADOW_CASCADE_ALL}.
+     * Specifies a bitmask that controls which shadow cascades a mesh instance contributes
+     * to when rendered with a {@link LIGHTTYPE_DIRECTIONAL} light source.
+     * This setting is only effective if the {@link castShadow} property is enabled.
+     * Defaults to {@link SHADOW_CASCADE_ALL}, which means the mesh casts shadows into all available cascades.
      *
      * @type {number}
      */
-    shadowCascadeFlags = SHADOW_CASCADE_ALL;
+    shadowCascadeMask = SHADOW_CASCADE_ALL;
 
     /**
      * Controls whether the mesh instance can be culled by frustum culling (see
