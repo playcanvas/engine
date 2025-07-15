@@ -437,18 +437,11 @@ export const SHADOW_CASCADE_2 = 4;
 export const SHADOW_CASCADE_3 = 8;
 
 /**
- * The flag that controls shadow rendering for the 4 cascade
- *
- * @category Graphics
- */
-export const SHADOW_CASCADE_4 = 16;
-
-/**
  * The flag that controls shadow rendering for the all cascades
  *
  * @category Graphics
  */
-export const SHADOW_CASCADE_ALL = 32767;
+export const SHADOW_CASCADE_ALL = 255;
 
 /**
  * Box filter.
