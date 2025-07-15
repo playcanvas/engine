@@ -265,6 +265,7 @@ class MeshInstance {
      * Mask that enables or disables shadow casting for each shadow cascade
      * used by a mesh instance under a {@link LIGHTTYPE_DIRECTIONAL}.
      * This property takes effect only when the {@link castShadow} is enabled.
+     * Defaults to {@link SHADOW_CASCADE_ALL}.
      *
      * @type {number}
      */
