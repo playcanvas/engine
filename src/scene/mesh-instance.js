@@ -9,7 +9,8 @@ import {
     RENDERSTYLE_SOLID,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    SHADOW_CASCADE_ALL
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
@@ -259,6 +260,17 @@ class MeshInstance {
      * @type {boolean}
      */
     castShadow = false;
+
+    /**
+     * Mask describing which enable shadow casting in the cascade {@link ShadowRendererDirectional} for this mesh instance.
+     * Use this property to turn shadow casting in the cascade on or off without needing to remove the object from the scene.
+     * Note that this property only affects shadow casting when shadows are enabled {@link castShadow},
+     * it does not add the mesh instance to the appropriate list of shadow casters on {@link Layer}.
+     * Instead, it allows the mesh to be skipped during cascade shadow rendering while it remains in the list.
+     * 
+     * @type {number}
+     */
+    shadowCascadeFlags = SHADOW_CASCADE_ALL;
 
     /**
      * Controls whether the mesh instance can be culled by frustum culling (see

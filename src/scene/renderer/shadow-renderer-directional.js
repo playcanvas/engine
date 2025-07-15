@@ -15,6 +15,7 @@ import { RenderPassShadowDirectional } from './render-pass-shadow-directional.js
  * @import { Light } from '../light.js'
  * @import { Renderer } from './renderer.js'
  * @import { ShadowRenderer } from './shadow-renderer.js'
+ * @import { MeshInstance } from '../mesh-instance.js';
  */
 
 const visibleSceneAabb = new BoundingBox();
@@ -160,16 +161,28 @@ class ShadowRendererDirectional {
             this.renderer.updateCameraFrustum(shadowCam);
             this.shadowRenderer.cullShadowCasters(comp, light, lightRenderData.visibleCasters, shadowCam, casters);
 
-            // find out AABB of visible shadow casters
+            const cascadeFlag = 1 << cascade;
             const visibleCasters = lightRenderData.visibleCasters;
-            const numVisibleCasters = visibleCasters.length;
+            const origNumVisibleCasters = lightRenderData.visibleCasters.length;
 
-            if (numVisibleCasters > 0) {
-                visibleSceneAabb.copy(visibleCasters[0].aabb);
-                for (let i = 1; i < numVisibleCasters; i++) {
-                    visibleSceneAabb.add(visibleCasters[i].aabb);
+            let numVisibleCasters = 0;
+
+            // exclude all mesh instances that are hidden for this cascade.
+            // find out AABB of visible shadow casters
+
+            for (let i = 0; i < origNumVisibleCasters; i++) {
+                const meshInstance = visibleCasters[i];
+                if (meshInstance.shadowCascadeFlags & cascadeFlag) {
+                    visibleCasters[numVisibleCasters++] = visibleCasters[i];
+                    if (numVisibleCasters === 0) {
+                        visibleSceneAabb.copy(meshInstance.aabb);
+                    } else {
+                        visibleSceneAabb.add(meshInstance.aabb);
+                    }
                 }
             }
+
+            visibleCasters.length = numVisibleCasters;
 
             // calculate depth range of the caster's AABB from the point of view of the shadow camera
             shadowCamView.copy(shadowCamNode.getWorldTransform()).invert();
