@@ -49,21 +49,21 @@ pc.Tracing.set(pc.TRACEID_SHADER_ALLOC, true);
 const assets = {
     biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
     // church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/church.ply` }),
-//    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/onsen.ply` }),
+    //    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/onsen.ply` }),
     // church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/uzumasa.ply` }),
     church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
 
     // logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/playcanvas-logo/meta.json` }),
-   logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pclogo.ply` }),
+    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pclogo.ply` }),
     // logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pokemon.ply` }),
-//    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/anneli.ply` }),
-//    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/museum.ply` }),
+    //    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/anneli.ply` }),
+    //    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/museum.ply` }),
     // logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/uzumasa.ply` }),
     guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
 
     shoe: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/shoe-with-sh.ply` }),
     shoeNoSh: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/shoe-without-sh.ply` }),
-    
+
     fly: new pc.Asset('fly', 'script', { url: `${rootPath}/static/scripts/camera/fly-camera.js` }),
     orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
 };
@@ -76,13 +76,13 @@ assetListLoader.load(() => {
     const biker = new pc.Entity();
     biker.setLocalPosition(2.5, 3, 1);
     biker.setLocalEulerAngles(180, 90, 0);
-//    biker.setLocalScale(0.7, 0.7, 0.7);
+    //    biker.setLocalScale(0.7, 0.7, 0.7);
     biker.setLocalScale(7, 7, 7);
 
     const biker2 = new pc.Entity();
     biker2.setLocalPosition(2.5, 3, 0);
     biker2.setLocalEulerAngles(180, 90, 0);
-//    biker2.setLocalScale(0.7, 0.7, 0.7);
+    //    biker2.setLocalScale(0.7, 0.7, 0.7);
     biker2.setLocalScale(7, 7, 7);
 
 
