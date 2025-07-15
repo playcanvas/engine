@@ -174,7 +174,7 @@ class ShadowRendererDirectional {
                 const meshInstance = visibleCasters[i];
                 if (meshInstance.shadowCascadeFlags & cascadeFlag) {
                     visibleCasters[numVisibleCasters++] = visibleCasters[i];
-                    if (numVisibleCasters === 0) {
+                    if (numVisibleCasters === 1) {
                         visibleSceneAabb.copy(meshInstance.aabb);
                     } else {
                         visibleSceneAabb.add(meshInstance.aabb);

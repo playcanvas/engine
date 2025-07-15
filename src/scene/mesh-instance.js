@@ -262,11 +262,9 @@ class MeshInstance {
     castShadow = false;
 
     /**
-     * Mask describing which enable shadow casting in the cascade {@link ShadowRendererDirectional} for this mesh instance.
-     * Use this property to turn shadow casting in the cascade on or off without needing to remove the object from the scene.
-     * Note that this property only affects shadow casting when shadows are enabled {@link castShadow},
-     * it does not add the mesh instance to the appropriate list of shadow casters on {@link Layer}.
-     * Instead, it allows the mesh to be skipped during cascade shadow rendering while it remains in the list.
+     * Mask that enables or disables shadow casting for each shadow cascade
+     * used by a mesh instance under a {@link LIGHTTYPE_DIRECTIONAL}.
+     * This property takes effect only when the {@link castShadow} is enabled.
      *
      * @type {number}
      */
