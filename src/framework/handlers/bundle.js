@@ -50,8 +50,7 @@ class BundleHandler extends ResourceHandler {
         }
 
         this._fetchRetries(url.load, {
-            mode: 'cors',
-            credentials: 'include'
+            mode: 'cors'
         }, this.maxRetries).then((res) => {
             const bundle = new Bundle();
             callback(null, bundle);
