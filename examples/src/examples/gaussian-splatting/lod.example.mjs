@@ -74,13 +74,13 @@ assetListLoader.load(() => {
 
     // create a splat entity and place it in the world
     const biker = new pc.Entity();
-    biker.setLocalPosition(2.5, 3, 1);
+    biker.setLocalPosition(2.5, 1, 1);
     biker.setLocalEulerAngles(180, 90, 0);
     //    biker.setLocalScale(0.7, 0.7, 0.7);
     biker.setLocalScale(7, 7, 7);
 
     const biker2 = new pc.Entity();
-    biker2.setLocalPosition(2.5, 3, 0);
+    biker2.setLocalPosition(2.5, 1, 0);
     biker2.setLocalEulerAngles(180, 90, 0);
     //    biker2.setLocalScale(0.7, 0.7, 0.7);
     biker2.setLocalScale(7, 7, 7);

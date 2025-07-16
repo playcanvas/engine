@@ -19,6 +19,8 @@ import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
 const mat = new Mat4();
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
+const translation = new Vec3();
+const invModelMat = new Mat4();
 const viewport = [0, 0];
 const tempSplats = [];
 
@@ -301,55 +303,47 @@ class GSplatManager {
     }
 
     sort(cameraNode) {
-        if (this.sorter) {
+        if (!this.sorter) return;
 
-            // camera transform
-            const cameraMat = cameraNode.getWorldTransform();
-            cameraMat.getTranslation(cameraPosition);
-            cameraMat.getZ(cameraDirection);
+        // Get camera's world-space properties
+        const cameraMat = cameraNode.getWorldTransform();
+        cameraMat.getTranslation(cameraPosition);
+        cameraMat.getZ(cameraDirection).normalize();
 
-            // TODO: handle a case the camera has not changed
-            // TODO: handle a case the splats have moved
+        const sorterRequest = [];
+        this.splats.forEach((splat) => {
 
-            // sorter request per splat
-            const sorterRequest = [];
-            this.splats.forEach((splat) => {
+            const modelMat = splat.node.getWorldTransform();
+            invModelMat.copy(modelMat).invert();
 
-                // splat transform
-                const modelMat = splat.node.getWorldTransform();
-                const invModelMat = mat.invert(modelMat);
+            // uniform scale
+            const uniformScale = modelMat.getScale().x;
 
-                const scale = modelMat.getScale();
-                Debug.call(() => {
-                    const isUniform = Math.abs(scale.x - scale.y) < 1e-6 && Math.abs(scale.y - scale.z) < 1e-6;
-                    if (!isUniform) {
-                        Debug.warnOnce(`Scale of a GSplat ${splat.node.name} is not uniform, which causes problems with their global sorting.`, scale);
-                    }
-                });
+            // camera direction in splat's rotated space
+            // transform by the full inverse matrix and then normalize, which cancels the (1/s) scaling factor
+            const transformedDirection = invModelMat.transformVector(cameraDirection).normalize();
 
-                // transform camera position and direction to model space of the splat, to avoid trannsforming centers to world space
-                // also pre-scale those, to make the sorter generate distances from camera uneffected by the scale
-                const cameraPositionTransformed = invModelMat.transformPoint(cameraPosition).mulScalar(scale.x);
-                const cameraDirectionTransformed = invModelMat.transformVector(cameraDirection).mulScalar(scale.x);
+            // world-space offset
+            modelMat.getTranslation(translation);
+            const offset = translation.sub(cameraPosition).dot(cameraDirection);
 
-                const state = splat.prepareState ?? splat.renderState;
+            // Get sorting range
+            const state = splat.prepareState ?? splat.renderState;
+            const textureSize = this.workBuffer.orderTexture.width;
+            const startIndex = state.lineStart * textureSize;
+            const endIndex = startIndex + state.lineCount * textureSize;
 
-                // range of splats for this node
-                const textureSize = this.workBuffer.orderTexture.width;
-                const startIndex = state.lineStart * textureSize;
-                const endIndex = startIndex + state.lineCount * textureSize;
-
-                sorterRequest.push({
-                    cameraPosition: cameraPositionTransformed,
-                    cameraDirection: cameraDirectionTransformed,
-                    startIndex,
-                    endIndex
-                });
+            // sorter parameters
+            sorterRequest.push({
+                transformedDirection,
+                offset,
+                scale: uniformScale,
+                startIndex,
+                endIndex
             });
+        });
 
-            this.sorter.setSortParams(sorterRequest);
-        }
-
+        this.sorter.setSortParams(sorterRequest);
         this.updateViewport(cameraNode);
     }
 }

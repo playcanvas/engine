@@ -194,28 +194,31 @@ function UnifiedSortWorker() {
 
 
             sortParams.forEach((params) => {
-                const { cameraPosition, cameraDirection, startIndex, endIndex } = params;
-                const px = cameraPosition.x;
-                const py = cameraPosition.y;
-                const pz = cameraPosition.z;
-                const dx = cameraDirection.x;
-                const dy = cameraDirection.y;
-                const dz = cameraDirection.z;
+                const { transformedDirection, offset, scale, startIndex, endIndex } = params;
+
+                const dx = transformedDirection.x;
+                const dy = transformedDirection.y;
+                const dz = transformedDirection.z;
 
                 for (let i = startIndex; i < endIndex; i++) {
                     const istride = i * 3;
-                    const x = centers[istride + 0] - px;
-                    const y = centers[istride + 1] - py;
-                    const z = centers[istride + 2] - pz;
-                    const d = x * dx + y * dy + z * dz;
-                    const sortKey = Math.floor((d - minDist) * divider);
 
+                    // local space coordinates of the splat
+                    const x = centers[istride + 0];
+                    const y = centers[istride + 1];
+                    const z = centers[istride + 2];
+
+                    // distance
+                    const dotProduct = x * dx + y * dy + z * dz;
+                    const distance = scale * dotProduct + offset;
+
+                    // sorting key
+                    const sortKey = Math.floor((distance - minDist) * divider);
                     distances[i] = sortKey;
-                    // count occurrences of each distance
                     countBuffer[sortKey]++;
                 }
+            });            
 
-            });
 
 
         }
