@@ -16,7 +16,6 @@ import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
  */
 
-const mat = new Mat4();
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
 const translation = new Vec3();
