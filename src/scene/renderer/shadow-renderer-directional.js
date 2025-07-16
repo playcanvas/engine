@@ -162,9 +162,8 @@ class ShadowRendererDirectional {
             this.renderer.updateCameraFrustum(shadowCam);
             this.shadowRenderer.cullShadowCasters(comp, light, lightRenderData.visibleCasters, shadowCam, casters);
 
-            const cascadeFlag = 1 << cascade;
             const visibleCasters = lightRenderData.visibleCasters;
-            const origNumVisibleCasters = lightRenderData.visibleCasters.length;
+            const origNumVisibleCasters = visibleCasters.length;
 
             let numVisibleCasters = 0;
 
@@ -174,6 +173,7 @@ class ShadowRendererDirectional {
             if (origNumVisibleCasters > 0) {
                 visibleSceneAabb.copy(emptySceneAabb);
 
+                const cascadeFlag = 1 << cascade;
                 for (let i = 0; i < origNumVisibleCasters; i++) {
                     const meshInstance = visibleCasters[i];
                     if (meshInstance.shadowCascadeMask & cascadeFlag) {
