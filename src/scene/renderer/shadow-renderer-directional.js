@@ -18,6 +18,7 @@ import { RenderPassShadowDirectional } from './render-pass-shadow-directional.js
  * @import { MeshInstance } from '../mesh-instance.js';
  */
 
+const emptySceneAabb = new BoundingBox();
 const visibleSceneAabb = new BoundingBox();
 const center = new Vec3();
 const shadowCamView = new Mat4();
@@ -169,14 +170,13 @@ class ShadowRendererDirectional {
 
             // exclude all mesh instances that are hidden for this cascade.
             // find out AABB of visible shadow casters
-
-            for (let i = 0; i < origNumVisibleCasters; i++) {
-                const meshInstance = visibleCasters[i];
-                if (meshInstance.shadowCascadeMask & cascadeFlag) {
-                    visibleCasters[numVisibleCasters++] = visibleCasters[i];
-                    if (numVisibleCasters === 1) {
-                        visibleSceneAabb.copy(meshInstance.aabb);
-                    } else {
+            
+            if (origNumVisibleCasters > 0) {
+                visibleSceneAabb.copy(emptySceneAabb);
+                for (let i = 0; i < origNumVisibleCasters; i++) {
+                    const meshInstance = visibleCasters[i];
+                    if (meshInstance.shadowCascadeMask & cascadeFlag) {
+                        visibleCasters[numVisibleCasters++] = meshInstance;
                         visibleSceneAabb.add(meshInstance.aabb);
                     }
                 }
