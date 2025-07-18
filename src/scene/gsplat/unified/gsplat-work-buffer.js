@@ -1,6 +1,9 @@
+import { Debug } from '../../../core/debug.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F } from '../../../platform/graphics/constants.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
+
+let id = 0;
 
 /**
  * @import { GSplatInfo } from "./gsplat-info.js"
@@ -15,29 +18,50 @@ class GSplatWorkBuffer {
     /** @type {GraphicsDevice} */
     device;
 
+    /** @type {number} */
+    id = id++;
+
     /** @type {Texture} */
     colorTexture;
 
     /** @type {Texture} */
-    transformATexture;
+    covATexture;
 
     /** @type {Texture} */
-    transformBTexture;
+    covBTexture;
 
     /** @type {Texture} */
-    orderTexture;
+    centerTexture;
 
     /** @type {RenderTarget} */
     renderTarget;
 
+    /** @type {Texture} */
+    orderTexture;
+
     constructor(device) {
         this.device = device;
+
+        this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA16F, 1, 1);
+        this.covATexture = this.createTexture('covA', PIXELFORMAT_RGBA16F, 1, 1);
+        this.covBTexture = this.createTexture('covB', PIXELFORMAT_RGBA16F, 1, 1);
+        this.centerTexture = this.createTexture('center', PIXELFORMAT_RGBA16F, 1, 1);
+
+        this.renderTarget = new RenderTarget({
+            name: `GsplatWorkBuffer-MRT-${this.id}`,
+            colorBuffers: [this.colorTexture, this.centerTexture, this.covATexture, this.covBTexture],
+            depth: false,
+            flipY: true
+        });
+
+        this.orderTexture = this.createTexture('SplatGlobalOrder', PIXELFORMAT_R32U, 1, 1);
     }
 
     destroy() {
         this.colorTexture?.destroy();
-        this.transformATexture?.destroy();
-        this.transformBTexture?.destroy();
+        this.covATexture?.destroy();
+        this.covBTexture?.destroy();
+        this.centerTexture?.destroy();
         this.orderTexture?.destroy();
         this.renderTarget?.destroy();
     }
@@ -48,6 +72,12 @@ class GSplatWorkBuffer {
 
     get height() {
         return this.orderTexture.height;
+    }
+
+    setOrderData(data) {
+        // upload data to texture
+        this.orderTexture._levels[0] = data;
+        this.orderTexture.upload();
     }
 
     createTexture(name, format, w, h) {
@@ -66,23 +96,24 @@ class GSplatWorkBuffer {
     }
 
     /**
-     * @param {GSplatInfo[]} splats - The splats to the space for allocate.
+     * @param {GSplatInfo[]} splats - The splats to allocate space for.
      */
     allocate(splats) {
+
+
+        //////////// remove allocate function
+
+        this.resize(splats);
+    }
+
+    /**
+     * @param {GSplatInfo[]} splats - The splats to allocate space for.
+     */
+    resize(splats) {
         const textureSize = this.estimateTextureWidth(splats, this.device.maxTextureSize);
-
-        this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA16F, textureSize, textureSize);
-        this.covATexture = this.createTexture('covA', PIXELFORMAT_RGBA16F, textureSize, textureSize);
-        this.covBTexture = this.createTexture('covB', PIXELFORMAT_RGBA16F, textureSize, textureSize);
-        this.centerTexture = this.createTexture('center', PIXELFORMAT_RGBA16F, textureSize, textureSize);
-        this.orderTexture = this.createTexture('SplatGlobalOrder', PIXELFORMAT_R32U, textureSize, textureSize);
-
-        this.renderTarget = new RenderTarget({
-            name: 'GsplatWorkBuffer-MRT',
-            colorBuffers: [this.colorTexture, this.centerTexture, this.covATexture, this.covBTexture],
-            depth: false,
-            flipY: true
-        });
+        Debug.assert(textureSize);
+        this.renderTarget.resize(textureSize, textureSize);
+        this.orderTexture.resize(textureSize, textureSize);
     }
 
     /**
@@ -118,6 +149,20 @@ class GSplatWorkBuffer {
         }
 
         return bestSize;
+    }
+
+    /**
+     * Get buffer for order data for sorting
+     *
+     * @returns {Uint32Array} - The order data buffer
+     */
+    getOrderData() {
+        const textureSize = this.width;
+        const orderData = new Uint32Array(textureSize * textureSize);
+        for (let i = 0; i < orderData.length; ++i) {
+            orderData[i] = i;
+        }
+        return orderData;
     }
 
     /**

@@ -1,34 +1,20 @@
 import { EventHandler } from '../../../core/event-handler.js';
-import { TEXTURELOCK_READ } from '../../../platform/graphics/constants.js';
 import { platform } from '../../../core/platform.js';
 import { UnifiedSortWorker } from './gsplat-unified-sort-worker.js';
 
 class GSplatUnifiedSorter extends EventHandler {
     worker;
 
-    orderTexture;
-
     constructor() {
         super();
 
+        // message from the worker
         const messageHandler = (message) => {
             const msgData = message.data ?? message;
-
-            const newOrder = msgData.order;
-            const oldOrder = this.orderTexture._levels[0].buffer;
-
-            // send vertex storage to worker to start the next frame
-            this.worker.postMessage({
-                order: oldOrder
-            }, [oldOrder]);
-
-            // write the new order data to gpu texture memory
-            this.orderTexture._levels[0] = new Uint32Array(newOrder);
-            this.orderTexture.upload();
-
-            // set new data directly on texture
             const returnCenters = msgData.returnCenters ? new Float32Array(msgData.returnCenters) : null;
-            this.fire('updated', msgData.count, msgData.version, returnCenters);
+            const orderData = new Uint32Array(msgData.order);
+
+            this.fire('sorted', msgData.count, msgData.version, returnCenters, orderData);
         };
 
         const workerSource = `(${UnifiedSortWorker.toString()})()`;
@@ -51,53 +37,33 @@ class GSplatUnifiedSorter extends EventHandler {
         this.worker = null;
     }
 
-    init(orderTexture) {
-        this.orderTexture = orderTexture;
-
-        // get the texture's storage buffer and make a copy
-        const orderBuffer = this.orderTexture.lock({
-            mode: TEXTURELOCK_READ
-        }).slice();
-        this.orderTexture.unlock();
-
-        // initialize order data
-        for (let i = 0; i < orderBuffer.length; ++i) {
-            orderBuffer[i] = i;
-        }
-
-        const obj = {
-            order: orderBuffer.buffer
-        };
-
-        const transfer = [orderBuffer.buffer];
-
-        // send the initial buffer to worker
-        this.worker.postMessage(obj, transfer);
-    }
-
-    setCenters(centers, version, sortSplatCount) {
-
-        // console.log('sorting', sortSplatCount.toLocaleString(), ' of ', (centers.length / 3).toLocaleString());
-
+    /**
+     * Sends new centers buffer to the sorter. Called infrequently. Each centers buffer modification
+     * has incremented version. This version is returned back with sorted data to identify it.
+     *
+     * @param {Float32Array} centers - The centers buffer.
+     * @param {number} version - The version of the centers buffer.
+     * @param {number} sortSplatCount - The number of splats to sort (part of centers buffer).
+     */
+    setData(centers, version, sortSplatCount) {
         this.worker.postMessage({
-            version: version,
-            sortSplatCount: sortSplatCount,
             centers: centers.buffer,
-            mapping: null
+            version: version,
+            sortSplatCount: sortSplatCount
         }, [centers.buffer]);
     }
 
-    setCamera(pos, dir) {
+    /**
+     * Sends sorting parameters to the sorter. Called every frame sorting is needed.
+     *
+     * @param {object} params - The sorting parameters - camera positions and directions per splat range ..
+     * @param {Uint32Array} orderData - The output buffer to store sorted indices.
+     */
+    setSortParams(params, orderData) {
         this.worker.postMessage({
-            cameraPosition: { x: pos.x, y: pos.y, z: pos.z },
-            cameraDirection: { x: dir.x, y: dir.y, z: dir.z }
-        });
-    }
-
-    setSortParams(params) {
-        this.worker.postMessage({
-            sortParams: params
-        });
+            sortParams: params,
+            order: orderData.buffer
+        }, [orderData.buffer]);
     }
 }
 

@@ -122,15 +122,15 @@ assetListLoader.load(() => {
     const manager = new pc.GSplatManager(app.graphicsDevice, camera,
         [
             assets.church.resource,
-            assets.shoe.resource,
-            assets.shoeNoSh.resource,
+            // assets.shoe.resource,
+            // assets.shoeNoSh.resource,
             assets.logo.resource,
             assets.guitar.resource
         ],
         [
             church,
-            biker,
-            biker2,
+            // biker,
+            // biker2,
             logo,
             guitar
         ]
@@ -139,23 +139,58 @@ assetListLoader.load(() => {
     const worldLayer = app.scene.layers.getLayerByName('World');
     worldLayer.addMeshInstances([manager.meshInstance]);
 
+    let timeToChange = 1;
     let time = 0;
     let guitarTime = 0;
+    let added = false;
     app.on('update', (/** @type {number} */ dt) => {
         time += dt;
+        timeToChange -= dt;
 
         logo.rotateLocal(0, 100 * dt, 0);
 
         // each even second, update the guitar as well
-        if (Math.floor(time) % 2 === 0) {
+//        if (Math.floor(time) % 2 === 0) {
             guitarTime += dt;
 
             // orbit guitar around
-            guitar.setLocalPosition(2.5 * Math.sin(guitarTime), 2, 2.5 * Math.cos(guitarTime) + 1);
-        }
+            guitar.setLocalPosition(0.5 * Math.sin(guitarTime), 2, 0.5 * Math.cos(guitarTime) + 1);
+//        }
 
         // ping pong logo between two positions along x-axies
-        logo.setLocalPosition(5.5 + 5 * Math.sin(time), 1.5, 1);
+        logo.setLocalPosition(5.5 + 5 * Math.sin(time), 1.5, -2);
+
+
+
+
+        if (timeToChange <= 0) {
+
+            if (!added) {
+                console.log('adding shoe');
+                added = true;
+                timeToChange = 1;
+
+                // worldLayer.removeMeshInstances([manager.meshInstance]);
+                manager.add(assets.shoe.resource, biker);
+                // manager.add(assets.shoe.resource, biker2);
+                // worldLayer.addMeshInstances([manager.meshInstance]);
+
+            } else {
+                console.log('removing shoe');
+                added = false;
+                timeToChange = 1;
+
+                // // worldLayer.removeMeshInstances([manager.meshInstance]);
+
+
+
+                manager.remove(biker);
+                // manager.remove(biker2);
+                // // worldLayer.addMeshInstances([manager.meshInstance]);
+            }
+        }
+
+
 
         manager.update();
     });

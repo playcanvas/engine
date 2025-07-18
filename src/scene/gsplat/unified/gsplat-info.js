@@ -99,11 +99,18 @@ class GSplatInfo {
     destroy() {
         this.device = null;
         this.resource = null;
-        this.renderState.destroy();
-        this.prepareState.destroy();
+        this.renderState?.destroy();
+        this.renderState = null;
+        this.prepareState?.destroy();
+        this.prepareState = null;
+        this.unusedState?.destroy();
+        this.unusedState = null;
     }
 
     activatePrepareState() {
+
+        Debug.assert(this.renderState);
+        Debug.assert(this.prepareState);
 
         // no longer using render state, keep it for the future
         this.unusedState = this.renderState;
@@ -114,6 +121,13 @@ class GSplatInfo {
         // done preparing
         // TODO: can we release some data here
         this.prepareState = null;
+    }
+
+    cancelPrepareState() {
+        if (this.prepareState) {
+            this.unusedState = this.prepareState;
+            this.prepareState = null;
+        }
     }
 
     update(updateVersion) {

@@ -55,11 +55,29 @@ class GSplatManager {
     /** @type {GSplatUnifiedSorter | null} */
     sorter = null;
 
-    /** @type {number} */
+    /**
+     * The version of the splats that were returned sorted by the worker.
+     *
+     * @type {number}
+     */
     sortedVersion = 0;
+
+    /**
+     * The minimum version of the splats that is required for rendering. Initialize to 1 to ensure
+     * first work buffer update is done after first sorting.
+     *
+     * @type {number}
+     */
+    sortedVersionMin = 1;
 
     /** @type {number} */
     updateVersion = 0;
+
+    /** @type {boolean} */
+    forceCentersUpdate = false;
+
+    /** @type {boolean} */
+    workBufferResizeRequest = false;
 
     /** @type {Vec3} */
     lastCameraPos = new Vec3(Infinity, Infinity, Infinity);
@@ -116,7 +134,28 @@ class GSplatManager {
         this._material.depthWrite = !!dither;
         this._material.update();
 
-        const { mesh, instanceIndices } = GSplatResourceBase.createMesh(device, workBuffer.width * workBuffer.height);
+        this.createMeshInstance();
+        this.createSorter();
+    }
+
+    destroy() {
+        this.workBuffer.destroy();
+        this.centerBuffer.destroy();
+        this._material.destroy();
+        this.meshInstance.destroy();
+        this.sorter.destroy();
+    }
+
+    createSorter() {
+        // create sorter
+        this.sorter = new GSplatUnifiedSorter();
+        this.sorter.on('sorted', (count, version, returnCenters, orderData) => {
+            this.onSorted(count, version, returnCenters, orderData);
+        });
+    }
+
+    createMeshInstance() {
+        const { mesh, instanceIndices } = GSplatResourceBase.createMesh(this.device, this.workBuffer.width * this.workBuffer.height);
         this.meshInstance = new MeshInstance(mesh, this._material);
         this.meshInstance.node = this.node;
         this.meshInstance.setInstancing(instanceIndices, true);
@@ -126,21 +165,81 @@ class GSplatManager {
 
         // only start rendering the splat after we've received the splat order data
         this.meshInstance.instancingCount = 0;
-
-        // create sorter
-        this.sorter = new GSplatUnifiedSorter();
-        this.sorter.init(workBuffer.orderTexture);
-        this.sorter.on('updated', (count, version, returnCenters) => {
-            this.onSorted(count, version, returnCenters);
-        });
     }
 
-    onSorted(count, version, returnCenters) {
+    add(resource, node) {
+
+        resource.generateLods();
+        const splatInfo = new GSplatInfo(this.device, resource, node);
+        this.splats.push(splatInfo);
+
+        this.onChange();
+    }
+
+    remove(node) {
+        const splatInfo = this.splats.find(s => s.node === node);
+        if (splatInfo) {
+            this.splats.splice(this.splats.indexOf(splatInfo), 1);
+            splatInfo.destroy();
+
+            this.onChange();
+        }
+    }
+
+    onChange() {
+
+        // user might have unloaded splat asset, and so we can no longer use it to render to workbuffer,
+        // so no rendering to workbuffer till sorter has delivered the next version of centers
+        this.sortedVersionMin = this.centerBuffer.version + 1;
+
+        // force centers update
+        this.forceCentersUpdate = true;
+
+        // cancel any pending prepare states - as those are prepared for previous version
+        this.splats.forEach(s => s.cancelPrepareState());
+
+
+
+
+        /// note that calling update on centerBuffer does this
+        // so we need to update list of splats, and update centers buffer
+        // and when sorting is done, update the render buffer
+
+        // .update calls this when LOD changes
+        // - add 'force' option here 
+
+
+
+        // this.workBuffer.resize(this.splats);
+
+        // this.meshInstance.destroy();
+        // this.createMeshInstance();
+
+        // this.sorter.destroy();
+        // this.createSorter();
+
+
+        // // no updates to centers buffer till sorting is done
+        // this.centerBuffer.version = this.sortedVersion;
+
+        // // no rendering till sorting is done
+        // this.sortedVersionMin = this.sortedVersion;
+    }
+
+    onSorted(count, version, returnCenters, orderData) {
 
         // reclaim returned centers buffer if available
         if (returnCenters) {
             this.centerBuffer.put(returnCenters);
         }
+
+        // skip older version that got sorted, this can no longer be used for rendering
+        if (version < this.sortedVersionMin) {
+            return;
+        }
+
+        // update order texture
+        this.workBuffer.setOrderData(orderData);
 
         // limit splat render count to exclude those behind the camera
         this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
@@ -148,15 +247,22 @@ class GSplatManager {
         // update splat count on the material
         this._material.setParameter('numSplats', count);
 
+        // when a new version was sorted for the first time, we need to fully update work buffer to match
+        // centers buffer / sorted data
         if (this.sortedVersion !== version) {
             this.sortedVersion = version;
+
+            // if (this.workBufferResizeRequest) {
+            //     console.log("resize");
+            //     this.workBuffer.resize(this.splats);
+            //     this.workBufferResizeRequest = false;
+            // }
 
             this.splats.forEach((splat) => {
                 splat.activatePrepareState();
             });
 
             this.workBuffer.render(this.splats, this.cameraNode);
-            // console.log('splat count:', this.workBuffer.centers.length / 3);
         }
     }
 
@@ -206,8 +312,8 @@ class GSplatManager {
 
     update() {
 
-        // do not allow any workbuffer modifications till we get sorted centers back
-        if (this.sortedVersion === this.centerBuffer.version) {
+        // do not allow any center buffer modifications till we get sorted centers back
+        if (this.sortedVersion === this.centerBuffer.version || this.forceCentersUpdate) {
 
             // how far has the camera moved
             const currentCameraPos = this.cameraNode.getWorldTransform().getTranslation();
@@ -216,8 +322,13 @@ class GSplatManager {
             // reorder splats based on update version - active splats at the end
             const lodDirty = this.updateSplatOrder();
 
+            // Capture texture size once to ensure consistency
+            const textureSize = this.workBuffer.width;
+
             // if camera moved or splats have been reordered, give updated centers to sorter
-            if (distance > 1.0 || lodDirty) {
+            if (distance > 1.0 || lodDirty || this.forceCentersUpdate) {
+                this.forceCentersUpdate = false;
+
                 this.lastCameraPos.copy(currentCameraPos);
 
                 // Update LOD for each splat individually
@@ -226,6 +337,7 @@ class GSplatManager {
                     // start preparing a state
                     Debug.assert(splat.prepareState === null);
                     splat.prepareState = splat.unusedState;
+                    Debug.assert(splat.prepareState);
                     splat.unusedState = null;
 
                     // this updates LOD intervals and interval texture
@@ -233,11 +345,10 @@ class GSplatManager {
                 });
 
                 // Reassign lines based on current LOD active splats
-                this.assignLines(this.splats, this.workBuffer.width);
+                this.assignLines(this.splats, textureSize);
 
-                // generate centers for evaluated lods
+                // generate centers for evaluated lods - this increaments centers version
                 // note that the work buffer is not updated yet, and only when we get sorted centers
-                const textureSize = this.workBuffer.width;
                 const centers = this.centerBuffer.update(this.splats, textureSize);
 
                 let activeCount = 0;
@@ -246,15 +357,15 @@ class GSplatManager {
                     activeCount += prepareState.lineCount * prepareState.viewport.z;
                 });
 
-                this.sorter.setCenters(centers, this.centerBuffer.version, activeCount);
+                this.sorter.setData(centers, this.centerBuffer.version, activeCount);
             }
 
-            // update data for the sorter
-            this.sort(this.cameraNode);
+            // update data for the sorter - use the same textureSize
+            this.sort(this.cameraNode, textureSize);
         }
 
-        // if we got sorted centers at least one time, which makes the renderState valid
-        if (this.sortedVersion > 0) {
+        // if we got valid sorted centers, which makes the renderState valid
+        if (this.sortedVersion >= this.sortedVersionMin) {
 
             // any splats that have changed this frame need to be re-rendered to work buffer
             const updateVersion = this.updateVersion;
@@ -301,9 +412,7 @@ class GSplatManager {
         this._material.setParameter('viewport', viewport);
     }
 
-    sort(cameraNode) {
-        if (!this.sorter) return;
-
+    sort(cameraNode, textureSize) {
         // Get camera's world-space properties
         const cameraMat = cameraNode.getWorldTransform();
         cameraMat.getTranslation(cameraPosition);
@@ -311,7 +420,6 @@ class GSplatManager {
 
         const sorterRequest = [];
         this.splats.forEach((splat) => {
-
             const modelMat = splat.node.getWorldTransform();
             invModelMat.copy(modelMat).invert();
 
@@ -328,7 +436,6 @@ class GSplatManager {
 
             // Get sorting range
             const state = splat.prepareState ?? splat.renderState;
-            const textureSize = this.workBuffer.orderTexture.width;
             const startIndex = state.lineStart * textureSize;
             const endIndex = startIndex + state.lineCount * textureSize;
 
@@ -342,7 +449,8 @@ class GSplatManager {
             });
         });
 
-        this.sorter.setSortParams(sorterRequest);
+        const orderData = this.workBuffer.getOrderData();
+        this.sorter.setSortParams(sorterRequest, orderData);
         this.updateViewport(cameraNode);
     }
 }
