@@ -199,15 +199,12 @@ class GSplatManager {
         this.splats.forEach(s => s.cancelPrepareState());
 
 
-
-
-        /// note that calling update on centerBuffer does this
+        // / note that calling update on centerBuffer does this
         // so we need to update list of splats, and update centers buffer
         // and when sorting is done, update the render buffer
 
         // .update calls this when LOD changes
-        // - add 'force' option here 
-
+        // - add 'force' option here
 
 
         // this.workBuffer.resize(this.splats);

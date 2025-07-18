@@ -150,17 +150,15 @@ assetListLoader.load(() => {
         logo.rotateLocal(0, 100 * dt, 0);
 
         // each even second, update the guitar as well
-//        if (Math.floor(time) % 2 === 0) {
-            guitarTime += dt;
+        //        if (Math.floor(time) % 2 === 0) {
+        guitarTime += dt;
 
-            // orbit guitar around
-            guitar.setLocalPosition(0.5 * Math.sin(guitarTime), 2, 0.5 * Math.cos(guitarTime) + 1);
-//        }
+        // orbit guitar around
+        guitar.setLocalPosition(0.5 * Math.sin(guitarTime), 2, 0.5 * Math.cos(guitarTime) + 1);
+        //        }
 
         // ping pong logo between two positions along x-axies
         logo.setLocalPosition(5.5 + 5 * Math.sin(time), 1.5, -2);
-
-
 
 
         if (timeToChange <= 0) {
@@ -183,13 +181,11 @@ assetListLoader.load(() => {
                 // // worldLayer.removeMeshInstances([manager.meshInstance]);
 
 
-
                 manager.remove(biker);
                 // manager.remove(biker2);
                 // // worldLayer.addMeshInstances([manager.meshInstance]);
             }
         }
-
 
 
         manager.update();

@@ -101,7 +101,7 @@ class GSplatWorkBuffer {
     allocate(splats) {
 
 
-        //////////// remove allocate function
+        // ////////// remove allocate function
 
         this.resize(splats);
     }
