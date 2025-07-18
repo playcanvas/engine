@@ -1,5 +1,21 @@
 import { InputSource } from '../input.js';
 
+const BUTTON_CODES = /** @type {const} */ ({
+    A: 0,
+    B: 1,
+    X: 2,
+    Y: 3,
+    LB: 4,
+    RB: 5,
+    LT: 6,
+    RT: 7,
+    SELECT: 8,
+    START: 9,
+    LEFT_STICK: 10,
+    RIGHT_STICK: 11
+});
+const BUTTON_COUNT = Object.keys(BUTTON_CODES).length;
+
 /**
  * Game pad input source class
  *
@@ -18,30 +34,17 @@ class GamepadSource extends InputSource {
      *
      * @readonly
      */
-    static buttonCode = {
-        A: 0,
-        B: 1,
-        X: 2,
-        Y: 3,
-        LB: 4,
-        RB: 5,
-        LT: 6,
-        RT: 7,
-        SELECT: 8,
-        START: 9,
-        LEFT_STICK: 10,
-        RIGHT_STICK: 11
-    };
+    static buttonCode = BUTTON_CODES;
 
     /**
      * @type {number[]}
      * @private
      */
-    _buttonPrev = Array(11).fill(0);
+    _buttonPrev = Array(BUTTON_COUNT).fill(0);
 
     constructor() {
         super({
-            buttons: Array(11).fill(0),
+            buttons: Array(BUTTON_COUNT).fill(0),
             leftStick: [0, 0],
             rightStick: [0, 0]
         });
@@ -71,7 +74,7 @@ class GamepadSource extends InputSource {
             }
 
             // check if gamepad has enough buttons
-            if (gp.buttons.length < 12) {
+            if (gp.buttons.length < BUTTON_COUNT) {
                 continue;
             }
 
