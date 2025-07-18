@@ -1,7 +1,7 @@
 import { InputSource } from '../input.js';
 
 const PASSIVE = /** @type {AddEventListenerOptions & EventListenerOptions} */ ({ passive: false });
-const KEYS = /** @type {const} */ ({
+const KEY_CODES = /** @type {const} */ ({
     A: 0,
     B: 1,
     C: 2,
@@ -46,7 +46,7 @@ const KEYS = /** @type {const} */ ({
     SHIFT: 41,
     CTRL: 42
 });
-const KEY_COUNT = Object.keys(KEYS).length;
+const KEY_COUNT = Object.keys(KEY_CODES).length;
 
 const array = Array(KEY_COUNT).fill(0);
 
@@ -69,7 +69,7 @@ class KeyboardMouseSource extends InputSource {
      *
      * @readonly
      */
-    static keyCode = KEYS;
+    static keyCode = KEY_CODES;
 
     /**
      * @type {number}
