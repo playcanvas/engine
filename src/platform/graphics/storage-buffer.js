@@ -75,8 +75,8 @@ class StorageBuffer {
      * storage buffer.
      * @ignore
      */
-    read(offset = 0, size = this.byteSize, data = null) {
-        return this.impl.read(this.device, offset, size, data);
+    read(offset = 0, size = this.byteSize, data = null, immediate = false) {
+        return this.impl.read(this.device, offset, size, data, immediate);
     }
 
     /**
