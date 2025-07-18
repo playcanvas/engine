@@ -211,16 +211,6 @@ class GSplatManager {
 
         // this.meshInstance.destroy();
         // this.createMeshInstance();
-
-        // this.sorter.destroy();
-        // this.createSorter();
-
-
-        // // no updates to centers buffer till sorting is done
-        // this.centerBuffer.version = this.sortedVersion;
-
-        // // no rendering till sorting is done
-        // this.sortedVersionMin = this.sortedVersion;
     }
 
     onSorted(count, version, returnCenters, orderData) {
