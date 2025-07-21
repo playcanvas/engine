@@ -56,9 +56,8 @@ class GSplatResourceBase {
         gsplatData.calcAabb(this.aabb);
 
         // construct the mesh
-        const { mesh, instanceIndices } = GSplatResourceBase.createMesh(device, gsplatData.numSplats);
-        this.mesh = mesh;
-        this.instanceIndices = instanceIndices;
+        this.mesh = GSplatResourceBase.createMesh(device, gsplatData.numSplats);
+        this.instanceIndices = GSplatResourceBase.createInstanceIndices(device, gsplatData.numSplats);
 
         // keep extra reference since mesh is shared between instances
         this.mesh.incRefCount();
@@ -75,14 +74,6 @@ class GSplatResourceBase {
         // number of quads to combine into a single instance. this is to increase occupancy
         // in the vertex shader.
         const splatInstanceSize = GSplatResourceBase.instanceSize;
-        const numSplats = Math.ceil(splatCount / splatInstanceSize) * splatInstanceSize;
-        const numSplatInstances = numSplats / splatInstanceSize;
-
-        // specify the base splat index per instance
-        const indexData = new Uint32Array(numSplatInstances);
-        for (let i = 0; i < numSplatInstances; ++i) {
-            indexData[i] = i * splatInstanceSize;
-        }
 
         // build the instance mesh
         const meshPositions = new Float32Array(12 * splatInstanceSize);
@@ -106,6 +97,19 @@ class GSplatResourceBase {
         mesh.setIndices(meshIndices);
         mesh.update();
 
+        return mesh;
+    }
+
+    static createInstanceIndices(device, splatCount) {
+        const splatInstanceSize = GSplatResourceBase.instanceSize;
+        const numSplats = Math.ceil(splatCount / splatInstanceSize) * splatInstanceSize;
+        const numSplatInstances = numSplats / splatInstanceSize;
+
+        const indexData = new Uint32Array(numSplatInstances);
+        for (let i = 0; i < numSplatInstances; ++i) {
+            indexData[i] = i * splatInstanceSize;
+        }
+
         const vertexFormat = new VertexFormat(device, [
             { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_UINT32, asInt: true }
         ]);
@@ -115,10 +119,7 @@ class GSplatResourceBase {
             data: indexData.buffer
         });
 
-        return {
-            mesh,
-            instanceIndices
-        };
+        return instanceIndices;
     }
 
     static get instanceSize() {

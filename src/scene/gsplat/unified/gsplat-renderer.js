@@ -71,8 +71,9 @@ class GSplatRenderer {
             this.meshInstance.destroy();
         }
 
-
-        const { mesh, instanceIndices } = GSplatResourceBase.createMesh(this.device, this.workBuffer.width * this.workBuffer.height);
+        const numSplats = this.workBuffer.width * this.workBuffer.height;
+        const mesh = GSplatResourceBase.createMesh(this.device, numSplats);
+        const instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, numSplats);
         this.meshInstance = new MeshInstance(mesh, this._material);
         this.meshInstance.node = this.node;
         this.meshInstance.setInstancing(instanceIndices, true);
