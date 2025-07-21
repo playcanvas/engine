@@ -2,7 +2,6 @@ import { Debug } from '../../../core/debug.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { GraphNode } from '../../graph-node.js';
-import { GSplatResourceBase } from '../gsplat-resource-base.js';
 import { GSplatCentersBuffers } from './gsplat-centers-buffer.js';
 import { GSplatInfo } from './gsplat-info.js';
 import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
