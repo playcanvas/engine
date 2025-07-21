@@ -129,7 +129,7 @@ class RenderComponent extends Component {
 
     /**
      * Material used to render meshes other than asset type. It gets priority when set to
-     * something else than defaultMaterial, otherwise materialASsets[0] is used.
+     * something else than defaultMaterial, otherwise materialAssets[0] is used.
      *
      * @type {Material}
      * @private
@@ -324,7 +324,7 @@ class RenderComponent extends Component {
     }
 
     /**
-     * Sets the array of meshInstances contained in the component.
+     * Sets the array of MeshInstances contained in the component.
      *
      * @type {MeshInstance[]}
      */
@@ -338,17 +338,7 @@ class RenderComponent extends Component {
 
             const mi = this._meshInstances;
             for (let i = 0; i < mi.length; i++) {
-
-                // if mesh instance was created without a node, assign it here
-                if (!mi[i].node) {
-                    mi[i].node = this.entity;
-                }
-
-                mi[i].castShadow = this._castShadows;
-                mi[i].receiveShadow = this._receiveShadows;
-                mi[i].renderStyle = this._renderStyle;
-                mi[i].setLightmapped(this._lightmapped);
-                mi[i].setCustomAabb(this._customAabb);
+                this._updateMeshInstance(mi[i]);
             }
 
             if (this.enabled && this.entity.enabled) {
@@ -760,6 +750,75 @@ class RenderComponent extends Component {
         return this._rootBone;
     }
 
+    /**
+     * @param {MeshInstance} meshInstance - MeshInstance that needs its properties updated.
+     * @private
+     */
+    _updateMeshInstance(meshInstance) {
+        // if mesh instance was created without a node, assign it here
+        if (!meshInstance.node) {
+            meshInstance.node = this.entity;
+        }
+
+        meshInstance.castShadow = this._castShadows;
+        meshInstance.receiveShadow = this._receiveShadows;
+        meshInstance.renderStyle = this._renderStyle;
+        meshInstance.setLightmapped(this._lightmapped);
+        meshInstance.setCustomAabb(this._customAabb);
+    }
+
+    /**
+     * Adds a MeshInstance to this component.
+     *
+     * @param {MeshInstance} meshInstance - MeshInstance to add.
+     */
+    addMeshInstance(meshInstance) {
+        Debug.assert(meshInstance instanceof MeshInstance, 'Invalid MeshInstance');
+        const meshInstances = this._meshInstances;
+
+        if (meshInstances) {
+            const index = meshInstances.indexOf(meshInstance);
+            if (index >= 0) {
+                Debug.warn('This MeshInstance already exists in this component');
+                return;
+            }
+            meshInstances.push(meshInstance);
+        } else {
+            this._meshInstances = [meshInstance];
+        }
+
+        this._updateMeshInstance(meshInstance);
+
+        if (this.enabled && this.entity.enabled) {
+            this.addToLayers(meshInstance);
+        }
+    }
+
+    /**
+     * Removes a MeshInstance from this component.
+     *
+     * @param {MeshInstance} instance - MeshInstance to remove.
+     */
+    removeMeshInstance(instance) {
+        Debug.assert(instance instanceof MeshInstance, 'Invalid MeshInstance');
+        const meshInstances = this._meshInstances;
+
+        if (meshInstances) {
+            const j = meshInstances.indexOf(instance);
+            if (j >= 0) {
+                const meshInstance = meshInstances[j];
+
+                this.removeFromLayers(meshInstance);
+                this._clearSkinInstance(meshInstance);
+
+                meshInstances.splice(j, 1);
+
+                // TODO
+                // do we want to destroy it on remove?
+            }
+        }
+    }
+
     /** @private */
     destroyMeshInstances() {
         const meshInstances = this._meshInstances;
@@ -776,24 +835,45 @@ class RenderComponent extends Component {
         }
     }
 
-    /** @private */
-    addToLayers() {
-        const layers = this.system.app.scene.layers;
-        for (let i = 0; i < this._layers.length; i++) {
-            const layer = layers.getLayerById(this._layers[i]);
+    /**
+     * @param {MeshInstance | null} [meshInstance] - An optional MeshInstance to add to layers. If
+     * not provided, all mesh instances will be added.
+     * @private
+     */
+    addToLayers(meshInstance = null) {
+        const sceneLayers = this.system.app.scene.layers;
+        const componentLayers = this._layers;
+        const meshInstances = this._meshInstances;
+
+        for (let i = 0; i < componentLayers.length; i++) {
+            const layer = sceneLayers.getLayerById(componentLayers[i]);
             if (layer) {
-                layer.addMeshInstances(this._meshInstances);
+                if (meshInstance) {
+                    layer.addMeshInstance(meshInstance);
+                } else {
+                    layer.addMeshInstances(meshInstances);
+                }
             }
         }
     }
 
-    removeFromLayers() {
-        if (this._meshInstances && this._meshInstances.length) {
-            const layers = this.system.app.scene.layers;
-            for (let i = 0; i < this._layers.length; i++) {
-                const layer = layers.getLayerById(this._layers[i]);
-                if (layer) {
-                    layer.removeMeshInstances(this._meshInstances);
+    /**
+     * @param {MeshInstance | null} [meshInstance] - An optional MeshInstance to remove. If not
+     * provided, all mesh instances will be removed.
+     * @private
+     */
+    removeFromLayers(meshInstance = null) {
+        const sceneLayers = this.system.app.scene.layers;
+        const componentLayers = this._layers;
+        const meshInstances = this._meshInstances;
+
+        for (let i = 0; i < componentLayers.length; i++) {
+            const layer = sceneLayers.getLayerById(componentLayers[i]);
+            if (layer) {
+                if (meshInstance) {
+                    layer.removeMeshInstance(meshInstance);
+                } else if (meshInstances?.length) {
+                    layer.removeMeshInstances(meshInstances);
                 }
             }
         }
@@ -964,13 +1044,19 @@ class RenderComponent extends Component {
     }
 
     _clearSkinInstances() {
-        for (let i = 0; i < this._meshInstances.length; i++) {
-            const meshInstance = this._meshInstances[i];
-
-            // remove it from the cache
-            SkinInstanceCache.removeCachedSkinInstance(meshInstance.skinInstance);
-            meshInstance.skinInstance = null;
+        const meshInstances = this._meshInstances;
+        for (let i = 0; i < meshInstances.length; i++) {
+            this._clearSkinInstance(meshInstances[i]);
         }
+    }
+
+    /**
+     * @param {MeshInstance} meshInstance - MeshInstance that needs to have skin instnace cleared.
+     */
+    _clearSkinInstance(meshInstance) {
+        // remove it from the cache
+        SkinInstanceCache.removeCachedSkinInstance(meshInstance.skinInstance);
+        meshInstance.skinInstance = null;
     }
 
     _cloneSkinInstances() {
