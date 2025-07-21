@@ -24,8 +24,7 @@ import {
     VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
     LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
-    EVENT_PRECULL,
-    EVENT_POSTCULL
+    EVENT_PRECULL, EVENT_POSTCULL, EVENT_CULL_END
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
@@ -1141,6 +1140,9 @@ class Renderer {
 
         // cull shadow casters for all lights
         this.cullShadowmaps(comp);
+
+        // event after the engine has finished culling all cameras
+        scene?.fire(EVENT_CULL_END);
 
         // #if _PROFILER
         this._cullTime += now() - cullTime;

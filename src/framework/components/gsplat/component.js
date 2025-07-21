@@ -61,6 +61,9 @@ class GSplatComponent extends Component {
      */
     _materialTmp = null;
 
+    /** @private */
+    _highQualitySH = false;
+
     /**
      * @type {BoundingBox|null}
      * @private
@@ -204,6 +207,37 @@ class GSplatComponent extends Component {
      */
     get material() {
         return this._instance?.material ?? this._materialTmp ?? null;
+    }
+
+    /**
+     * Sets whether to use the high quality or the approximate (but fast) spherical-harmonic calculation when rendering SOGS data.
+     *
+     * The low quality approximation evaluates the scene's spherical harmonic contributions
+     * along the camera's Z-axis instead of using each gaussian's view vector. This results
+     * in gaussians being accurate at the center of the screen and becoming less accurate
+     * as they appear further from the center. This is a good trade-off for performance
+     * when rendering large SOGS datasets, especially on mobile devices.
+     *
+     * Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set highQualitySH(value) {
+        if (value !== this._highQualitySH) {
+            this._highQualitySH = value;
+            if (this._instance) {
+                this._instance.setHighQualitySH(value);
+            }
+        }
+    }
+
+    /**
+     * Gets whether the high quality (true) or the fast approximate (false) spherical-harmonic calculation is used when rendering SOGS data.
+     *
+     * @type {boolean}
+     */
+    get highQualitySH() {
+        return this._highQualitySH;
     }
 
     /**
@@ -469,7 +503,10 @@ class GSplatComponent extends Component {
         // create new instance
         const asset = this._assetReference.asset;
         if (asset) {
-            this.instance = new GSplatInstance(asset.resource, this._materialTmp);
+            this.instance = new GSplatInstance(asset.resource, {
+                material: this._materialTmp,
+                highQualitySH: this._highQualitySH
+            });
             this._materialTmp = null;
             this.customAabb = this.instance.resource.aabb.clone();
         }

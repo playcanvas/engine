@@ -1,14 +1,8 @@
 export default /* wgsl */`
-#ifdef STD_CLEARCOAT_CONSTANT
-    uniform material_clearCoat: f32;
-#endif
+uniform material_clearCoat: f32;
 
 fn getClearCoat() {
-    ccSpecularity = 1.0;
-
-    #ifdef STD_CLEARCOAT_CONSTANT
-    ccSpecularity = ccSpecularity * uniform.material_clearCoat;
-    #endif
+    ccSpecularity = uniform.material_clearCoat;
 
     #ifdef STD_CLEARCOAT_TEXTURE
     ccSpecularity = ccSpecularity * textureSampleBias({STD_CLEARCOAT_TEXTURE_NAME}, {STD_CLEARCOAT_TEXTURE_NAME}Sampler, {STD_CLEARCOAT_TEXTURE_UV}, uniform.textureBias).{STD_CLEARCOAT_TEXTURE_CHANNEL};

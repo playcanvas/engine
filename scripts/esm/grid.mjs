@@ -16,7 +16,7 @@ const tmpVa = new Vec2();
 
 const EPISILON = 1e-3;
 
-const vertexCode = /* glsl */ `
+const vertexGLSL = /* glsl */ `
     attribute vec3 vertex_position;
     attribute vec2 aUv0;
 
@@ -31,7 +31,7 @@ const vertexCode = /* glsl */ `
     }
 `;
 
-const fragmentCode = /* glsl */ `
+const fragmentGLSL = /* glsl */ `
     uniform vec2 uHalfExtents;
     uniform vec3 uColorX;
     uniform vec3 uColorZ;
@@ -121,6 +121,117 @@ const fragmentCode = /* glsl */ `
     }
 `;
 
+const vertexWGSL = /* wgsl */ `
+    attribute vertex_position: vec3f;
+    attribute aUv0: vec2f;
+
+    uniform matrix_model: mat4x4f;
+    uniform matrix_viewProjection: mat4x4f;
+
+    varying uv0: vec2f;
+
+    @vertex
+    fn vertexMain(input: VertexInput) -> VertexOutput {
+        var output: VertexOutput;
+        output.position = uniform.matrix_viewProjection * uniform.matrix_model * vec4f(input.vertex_position, 1.0);
+        output.uv0 = input.aUv0;
+        return output;
+    }
+`;
+
+const fragmentWGSL = /* wgsl */ `
+    uniform uHalfExtents: vec2f;
+    uniform uColorX: vec3f;
+    uniform uColorZ: vec3f;
+    uniform uResolution: u32;
+
+    varying uv0: vec2f;
+
+    // https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8#1e7c
+    fn pristineGrid(uv: vec2f, ddx: vec2f, ddy: vec2f, lineWidth: vec2f) -> f32 {
+        let uvDeriv = vec2f(length(vec2f(ddx.x, ddy.x)), length(vec2f(ddx.y, ddy.y)));
+        let invertLine = vec2<bool>(lineWidth.x > 0.5, lineWidth.y > 0.5);
+        let targetWidth = vec2f(
+            select(lineWidth.x, 1.0 - lineWidth.x, invertLine.x),
+            select(lineWidth.y, 1.0 - lineWidth.y, invertLine.y)
+        );
+        let drawWidth = clamp(targetWidth, uvDeriv, vec2f(0.5));
+        let lineAA = uvDeriv * 1.5;
+        var gridUV = abs(fract(uv) * 2.0 - 1.0);
+        gridUV.x = select(1.0 - gridUV.x, gridUV.x, invertLine.x);
+        gridUV.y = select(1.0 - gridUV.y, gridUV.y, invertLine.y);
+        var grid2 = smoothstep(drawWidth + lineAA, drawWidth - lineAA, gridUV);
+
+        grid2 *= clamp(targetWidth / drawWidth, vec2f(0.0), vec2f(1.0));
+        grid2 = mix(grid2, targetWidth, clamp(uvDeriv * 2.0 - 1.0, vec2f(0.0), vec2f(1.0)));
+        grid2.x = select(grid2.x, 1.0 - grid2.x, invertLine.x);
+        grid2.y = select(grid2.y, 1.0 - grid2.y, invertLine.y);
+
+        return mix(grid2.x, 1.0, grid2.y);
+    }
+
+    @fragment
+    fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+        var output: FragmentOutput;
+        let uv: vec2f = input.uv0;
+
+        let pos: vec2f = (uv * 2.0 - 1.0) * uniform.uHalfExtents;
+        let ddx: vec2f = dpdx(pos);
+        let ddy: vec2f = dpdy(pos);
+
+        let epsilon: f32 = 1.0 / 255.0;
+
+        var levelPos: vec2f;
+        var levelSize: f32;
+        var levelAlpha: f32;
+
+        levelPos = pos * 0.1;
+        levelSize = 2.0 / 1000.0;
+        levelAlpha = pristineGrid(levelPos, ddx * 0.1, ddy * 0.1, vec2f(levelSize));
+        if (levelAlpha > epsilon) {
+            var color: vec3f;
+            if (abs(levelPos.x) < levelSize) {
+                if (abs(levelPos.y) < levelSize) {
+                    color = vec3f(1.0);
+                } else {
+                    color = uniform.uColorZ;
+                }
+            } else if (abs(levelPos.y) < levelSize) {
+                color = uniform.uColorX;
+            } else {
+                color = vec3f(0.9);
+            }
+            output.color = vec4f(color, levelAlpha);
+            return output;
+        }
+
+        levelPos = pos;
+        levelSize = 1.0 / 100.0;
+        levelAlpha = pristineGrid(levelPos, ddx, ddy, vec2f(levelSize));
+        if (levelAlpha > epsilon) {
+            if (uniform.uResolution < 1) {
+                discard;
+            }
+            output.color = vec4f(vec3f(0.7), levelAlpha);
+            return output;
+        }
+
+        levelPos = pos * 10.0;
+        levelSize = 1.0 / 100.0;
+        levelAlpha = pristineGrid(levelPos, ddx * 10.0, ddy * 10.0, vec2f(levelSize));
+        if (levelAlpha > epsilon) {
+            if (uniform.uResolution < 2) {
+                discard;
+            }
+            output.color = vec4f(vec3f(0.7), levelAlpha);
+            return output;
+        }
+
+        discard;
+        return output;
+    }
+`;
+
 class Grid extends Script {
     static scriptName = 'grid';
 
@@ -190,8 +301,10 @@ class Grid extends Script {
         // create shader material
         this._material = new ShaderMaterial({
             uniqueName: 'grid-shader',
-            vertexGLSL: vertexCode,
-            fragmentGLSL: fragmentCode,
+            vertexGLSL: vertexGLSL,
+            fragmentGLSL: fragmentGLSL,
+            vertexWGSL: vertexWGSL,
+            fragmentWGSL: fragmentWGSL,
             attributes: {
                 vertex_position: SEMANTIC_POSITION,
                 aUv0: SEMANTIC_TEXCOORD0

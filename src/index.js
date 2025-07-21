@@ -102,9 +102,6 @@ export { Plane } from './core/shape/plane.js';
 export { Tri } from './core/shape/tri.js';
 export { Ray } from './core/shape/ray.js';
 
-// PLATFORM / AUDIO
-export * from './platform/audio/constants.js';
-
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
@@ -152,6 +149,7 @@ export { getTouchTargetCoords, Touch, TouchEvent } from './platform/input/touch-
 export { http, Http } from './platform/net/http.js';
 
 // PLATFORM / SOUND
+export * from './platform/sound/constants.js';
 export { SoundManager } from './platform/sound/manager.js';
 export { Sound } from './platform/sound/sound.js';
 export { SoundInstance } from './platform/sound/instance.js';

@@ -20,6 +20,7 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
  * A material for rendering particle geometry by the particle emitter.
  *
  * @category Graphics
+ * @ignore
  */
 class ParticleMaterial extends Material {
     /**

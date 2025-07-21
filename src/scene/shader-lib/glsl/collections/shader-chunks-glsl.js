@@ -50,6 +50,8 @@ import gsplatColorVS from '../chunks/gsplat/vert/gsplatColor.js';
 import gsplatCommonVS from '../chunks/gsplat/vert/gsplatCommon.js';
 import gsplatCompressedDataVS from '../chunks/gsplat/vert/gsplatCompressedData.js';
 import gsplatCompressedSHVS from '../chunks/gsplat/vert/gsplatCompressedSH.js';
+import gsplatEvalSHVS from '../chunks/gsplat/vert/gsplatEvalSH.js';
+import gsplatQuatToMat3VS from '../chunks/gsplat/vert/gsplatQuatToMat3.js';
 import gsplatSogsColorVS from '../chunks/gsplat/vert/gsplatSogsColor.js';
 import gsplatSogsDataVS from '../chunks/gsplat/vert/gsplatSogsData.js';
 import gsplatSogsSHVS from '../chunks/gsplat/vert/gsplatSogsSH.js';
@@ -232,6 +234,8 @@ const shaderChunksGLSL = {
     gsplatCommonVS,
     gsplatCompressedDataVS,
     gsplatCompressedSHVS,
+    gsplatEvalSHVS,
+    gsplatQuatToMat3VS,
     gsplatSogsColorVS,
     gsplatSogsDataVS,
     gsplatSogsSHVS,

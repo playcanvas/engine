@@ -253,9 +253,7 @@ class StandardMaterialOptionsBuilder {
         options.normalDetailPackedNormal = isPackedNormalMap(stdMat.normalDetailMap);
         options.diffuseDetailMode = stdMat.diffuseDetailMode;
         options.aoDetailMode = stdMat.aoDetailMode;
-        options.clearCoatTint = equalish(stdMat.clearCoat, 1.0);
         options.clearCoatGloss = !!stdMat.clearCoatGloss;
-        options.clearCoatGlossTint = (stdMat.clearCoatGloss !== 1.0);
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
         options.iorTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
 

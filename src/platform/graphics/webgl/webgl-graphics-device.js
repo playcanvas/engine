@@ -1675,7 +1675,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
     }
 
-    draw(primitive, indexBuffer, numInstances, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
 
         const shader = this.shader;
         if (shader) {
@@ -1713,7 +1713,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                         // missing generic texture
                         if (!samplerValue) {
-                            Debug.errorOnce(`Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`);
+                            Debug.errorOnce(`Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`, shader);
                             samplerValue = getBuiltInTexture(this, 'pink');
                         }
                     }

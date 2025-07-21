@@ -53,7 +53,14 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         // calculate the model-space view direction
         let modelView3x3 = mat3x3f(center.modelView[0].xyz, center.modelView[1].xyz, center.modelView[2].xyz);
         let dir = normalize(modelView3x3 * center.view);
-        clr = vec4f(clr.xyz + evalSH(&source, dir), clr.a);
+
+        // read sh coefficients
+        var sh: array<vec3f, SH_COEFFS>;
+        var scale: f32;
+        readSHData(&source, &sh, &scale);
+
+        // evaluate
+        clr = vec4f(clr.xyz + evalSH(&sh, dir) * scale, clr.a);
     #endif
 
     clipCorner(&corner, clr.w);

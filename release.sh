@@ -2,7 +2,7 @@
 
 MAIN_BRANCH="main"
 
-PRE_ID_DEV="dev"
+PRE_ID_BETA="beta"
 PRE_ID_PREVIEW="preview"
 
 RELEASE_PREFIX="release-"
@@ -64,7 +64,7 @@ if [[ "$BRANCH" == "$MAIN_BRANCH" ]]; then
     git branch "$RELEASE_BRANCH" "$BRANCH"
 
     # Bump minor prerelease version on main 
-    npm version preminor --preid=$PRE_ID_DEV --no-git-tag-version
+    npm version preminor --preid=$PRE_ID_BETA --no-git-tag-version
     git commit -m "$RELEASE_MESSAGE" -- package.json package-lock.json
 
     # Switch to release branch

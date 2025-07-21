@@ -1,20 +1,21 @@
-name: Publish to npm
+name: Publish
 
 on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
       - 'v[0-9]+.[0-9]+.[0-9]+-preview.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+'
 
 jobs:
-  publish-npm:
+  publish:
     runs-on: ubuntu-latest
     if: github.repository == 'playcanvas/engine'
     steps:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 18.x
+      - name: Set up Node.js 22.x
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
@@ -40,6 +41,8 @@ jobs:
         run: |
           if [[ "${{ env.TAG }}" =~ "preview" ]]; then
             tag=preview
+          elif [[ "${{ env.TAG }}" =~ "beta" ]]; then
+            tag=beta
           else
             tag=latest
           fi
@@ -49,7 +52,7 @@ jobs:
 
       - name: Publish to code.playcanvas.com
         run: |
-          if ! curl -sS -X POST -H "Content-Type: application/json" \
+          if ! curl -fsS -X POST -H "Content-Type: application/json" \
             -d '{ "engineVersion": "${{ env.VERSION }}" }' ${{ secrets.PUBLISH_ENDPOINT }}; then
             echo "Failed to publish to code.playcanvas.com"
             exit 1

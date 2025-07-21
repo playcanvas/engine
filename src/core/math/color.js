@@ -295,6 +295,22 @@ class Color {
     }
 
     /**
+     * @overload
+     * @param {number[]} [arr] - The array to populate with the color's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]} The color as an array.
+     */
+    /**
+     * @overload
+     * @param {ArrayBufferView} arr - The array to populate with the color's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {ArrayBufferView} The color as an array.
+     */
+    /**
      * Converts the color to an array.
      *
      * @param {number[]|ArrayBufferView} [arr] - The array to populate with the color's number

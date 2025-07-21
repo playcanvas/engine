@@ -609,6 +609,9 @@ class PlyParser {
                     }
                 );
 
+                // allow application to process the data
+                asset.fire('load:data', data);
+
                 // reorder data
                 if (!data.isCompressed) {
                     if (asset.data.reorder ?? true) {

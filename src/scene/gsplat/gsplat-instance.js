@@ -2,7 +2,9 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
 import { MeshInstance } from '../mesh-instance.js';
+import { GSplatResolveSH } from './gsplat-resolve-sh.js';
 import { GSplatSorter } from './gsplat-sorter.js';
+import { GSplatSogsData } from './gsplat-sogs-data.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
 
@@ -34,12 +36,15 @@ class GSplatInstance {
 
     options = {};
 
-    /** @type {GSplatSorter | null} */
+    /** @type {GSplatSorter|null} */
     sorter = null;
 
     lastCameraPosition = new Vec3();
 
     lastCameraDirection = new Vec3();
+
+    /** @type {GSplatResolveSH|null} */
+    resolveSH = null;
 
     /**
      * List of cameras this instance is visible for. Updated every frame by the renderer.
@@ -51,9 +56,11 @@ class GSplatInstance {
 
     /**
      * @param {GSplatResourceBase} resource - The splat instance.
-     * @param {ShaderMaterial|null} material - The material instance.
+     * @param {object} [options] - Options for the instance.
+     * @param {ShaderMaterial|null} [options.material] - The material instance.
+     * @param {boolean} [options.highQualitySH] - Whether to use the high quality or the approximate spherical harmonic calculation. Only applies to SOGS data.
      */
-    constructor(resource, material) {
+    constructor(resource, options = {}) {
         this.resource = resource;
 
         // create the order texture
@@ -63,9 +70,9 @@ class GSplatInstance {
             resource.evalTextureSize(resource.numSplats)
         );
 
-        if (material) {
+        if (options.material) {
             // material is provided
-            this._material = material;
+            this._material = options.material;
 
             // patch splat order
             this._material.setParameter('splatOrder', this.orderTexture);
@@ -111,9 +118,13 @@ class GSplatInstance {
             // update splat count on the material
             this.material.setParameter('numSplats', count);
         });
+
+        // configure sogs sh resolve
+        this.setHighQualitySH(options.highQualitySH ?? false);
     }
 
     destroy() {
+        this.resolveSH?.destroy();
         this.material?.destroy();
         this.meshInstance?.destroy();
         this.sorter?.destroy();
@@ -212,8 +223,28 @@ class GSplatInstance {
             const camera = this.cameras[0];
             this.sort(camera._node);
 
+            // resolve spherical harmonics
+            this.resolveSH?.render(camera._node, this.meshInstance.node.getWorldTransform());
+
             // we get new list of cameras each frame
             this.cameras.length = 0;
+        }
+    }
+
+    setHighQualitySH(value) {
+        const { resource } = this;
+        const { gsplatData } = resource;
+
+        if (gsplatData instanceof GSplatSogsData &&
+            gsplatData.shBands > 0 &&
+            value === !!this.resolveSH) {
+
+            if (this.resolveSH) {
+                this.resolveSH.destroy();
+                this.resolveSH = null;
+            } else {
+                this.resolveSH = new GSplatResolveSH(resource.device, this);
+            }
         }
     }
 }

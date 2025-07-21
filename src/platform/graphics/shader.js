@@ -75,6 +75,9 @@ class Shader {
      * @param {Map<string, string>} [definition.fincludes] - A map containing key-value pairs
      * of include names and their content. These are used for resolving #include directives in the
      * fragment shader source.
+     * @param {Map<string, string>} [definition.cincludes] - A map containing key-value pairs
+     * of include names and their content. These are used for resolving #include directives in the
+     * compute shader source.
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
      * post-VS data to a buffer.
      * @param {string | string[]} [definition.fragmentOutputTypes] - Fragment shader output types,
@@ -123,6 +126,13 @@ class Shader {
         if (definition.cshader) {
             Debug.assert(graphicsDevice.supportsCompute, 'Compute shaders are not supported on this device.');
             Debug.assert(!definition.vshader && !definition.fshader, 'Vertex and fragment shaders are not supported when creating a compute shader.');
+
+            // pre-process compute shader source
+            definition.cshader = Preprocessor.run(definition.cshader, definition.cincludes, {
+                sourceName: `compute shader for ${this.label}`,
+                stripDefines: true
+            });
+
         } else {
             Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
             Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');

@@ -817,6 +817,22 @@ class Quat {
     }
 
     /**
+     * @overload
+     * @param {number[]} [arr] - The array to populate with the quaternion's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]} The quaternion as an array.
+     */
+    /**
+     * @overload
+     * @param {ArrayBufferView} arr - The array to populate with the quaternion's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {ArrayBufferView} The quaternion as an array.
+     */
+    /**
      * Converts the quaternion to an array.
      *
      * @param {number[]|ArrayBufferView} [arr] - The array to populate with the quaternion's number
