@@ -86,7 +86,7 @@ class GSplatManager {
     cameraNode;
 
 
-    ///////////////// remove app, that's hack for now
+    // /////////////// remove app, that's hack for now
 
     constructor(app, device, cameraNode) {
         this.app = app;
@@ -159,7 +159,6 @@ class GSplatManager {
             worldLayer.removeMeshInstances([this.meshInstance]);
             this.meshInstance.destroy();
         }
-   
 
 
         const { mesh, instanceIndices } = GSplatResourceBase.createMesh(this.device, this.workBuffer.width * this.workBuffer.height);

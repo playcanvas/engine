@@ -2,7 +2,7 @@
  * @import { GSplatInfo } from "./gsplat-info.js"
  */
 
-import { Debug } from "../../../core/debug.js";
+import { Debug } from '../../../core/debug.js';
 
 /**
  * Manages a buffer to store gsplat centers.
