@@ -30,7 +30,7 @@ class GSplatManager {
     device;
 
     /** @type {GraphNode} */
-    node = new GraphNode();
+    node = new GraphNode('GSplatManager');
 
     /** @type {GSplatWorkBuffer} */
     workBuffer;
@@ -81,16 +81,12 @@ class GSplatManager {
     /** @type {GraphNode} */
     cameraNode;
 
-
-    // /////////////// remove app, that's hack for now
-
-    constructor(app, device, cameraNode) {
-        this.app = app;
+    constructor(device, cameraNode) {
         this.device = device;
         this.cameraNode = cameraNode;
         this.workBuffer = new GSplatWorkBuffer(device);
         this.centerBuffer = new GSplatCentersBuffers();
-        this.renderer = new GSplatRenderer(device, this.node, this.workBuffer, app);
+        this.renderer = new GSplatRenderer(device, this.node, this.workBuffer);
         this.createSorter();
     }
 
@@ -164,10 +160,12 @@ class GSplatManager {
             if (this.workBufferResizeRequest) {
                 this.workBufferResizeRequest = false;
 
-                this.workBuffer.resize(this.centerBuffer.textureSize);
+                const textureSize = this.centerBuffer.textureSize;
+
+                this.workBuffer.resize(textureSize);
                 this.workBuffer.setOrderData(orderData);
 
-                this.renderer.createMeshInstance();
+                this.renderer.setMaxNumSplats(textureSize * textureSize);
             }
 
             this.splats.forEach((splat) => {
@@ -180,11 +178,8 @@ class GSplatManager {
         // update order texture
         this.workBuffer.setOrderData(orderData);
 
-        // limit splat render count to exclude those behind the camera
-        this.renderer.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
-
-        // update splat count on the material
-        this.renderer._material.setParameter('numSplats', count);
+        // number of splats to render
+        this.renderer.setNumSplats(count);
     }
 
     /**

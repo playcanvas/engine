@@ -4,6 +4,10 @@ import { ShaderMaterial } from '../../materials/shader-material.js';
 import { MeshInstance } from '../../mesh-instance.js';
 import { GSplatResourceBase } from '../gsplat-resource-base.js';
 
+/**
+ * @import { VertexBuffer } from '../../../platform/graphics/vertex-buffer.js'
+ */
+
 const viewport = [0, 0];
 
 class GSplatRenderer {
@@ -13,11 +17,20 @@ class GSplatRenderer {
     /** @type {MeshInstance} */
     meshInstance;
 
-    constructor(device, node, workBuffer, app) {
+    /** @type {number} */
+    maxNumSplats = 0;
+
+    /** @type {VertexBuffer} */
+    instanceIndices;
+
+    // TODO: is this the best option, or do we want to generate AABB
+    // - ideally generate aabb from individual splats, update each frame
+    cull = false;
+
+    constructor(device, node, workBuffer) {
         this.device = device;
         this.node = node;
         this.workBuffer = workBuffer;
-        this.app = app;
 
         // construct the material which renders the splats from the work buffer
         this._material = new ShaderMaterial({
@@ -61,32 +74,43 @@ class GSplatRenderer {
         this.meshInstance.destroy();
     }
 
+    setNumSplats(count) {
+
+        // limit splat render count to exclude those behind the camera
+        this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
+
+        // update splat count on the material
+        this._material.setParameter('numSplats', count);
+
+        // disable rendering if no splats to render
+        this.meshInstance.visible = count > 0;
+    }
+
+    setMaxNumSplats(numSplats) {
+
+        if (this.maxNumSplats !== numSplats) {
+            this.maxNumSplats = numSplats;
+
+            // destroy old instance indices
+            this.instanceIndices?.destroy();
+
+            // create new instance indices
+            this.instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, numSplats);
+            this.meshInstance.setInstancing(this.instanceIndices, this.cull);
+        }
+    }
+
     createMeshInstance() {
 
-
-        const worldLayer = this.app.scene.layers.getLayerByName('World');
-
-        if (this.meshInstance) {
-            worldLayer.removeMeshInstances([this.meshInstance]);
-            this.meshInstance.destroy();
-        }
-
-        const numSplats = this.workBuffer.width * this.workBuffer.height;
-        const mesh = GSplatResourceBase.createMesh(this.device, numSplats);
-        const instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, numSplats);
+        const mesh = GSplatResourceBase.createMesh(this.device);
+        const instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, this.workBuffer.width * this.workBuffer.height);
         this.meshInstance = new MeshInstance(mesh, this._material);
         this.meshInstance.node = this.node;
-        this.meshInstance.setInstancing(instanceIndices, true);
-
-        // TODO: is this the best option, or do we want to generate AABB
-        // - ideally generate aabb from individual splats, update each frame
-        this.meshInstance.cull = false;
+        this.meshInstance.setInstancing(instanceIndices, this.cull);
+        this.meshInstance.cull = this.cull;
 
         // only start rendering the splat after we've received the splat order data
         this.meshInstance.instancingCount = 0;
-
-
-        worldLayer.addMeshInstances([this.meshInstance]);
     }
 
     updateViewport(cameraNode) {

@@ -56,7 +56,7 @@ class GSplatResourceBase {
         gsplatData.calcAabb(this.aabb);
 
         // construct the mesh
-        this.mesh = GSplatResourceBase.createMesh(device, gsplatData.numSplats);
+        this.mesh = GSplatResourceBase.createMesh(device);
         this.instanceIndices = GSplatResourceBase.createInstanceIndices(device, gsplatData.numSplats);
 
         // keep extra reference since mesh is shared between instances
@@ -70,7 +70,7 @@ class GSplatResourceBase {
         this.instanceIndices?.destroy();
     }
 
-    static createMesh(device, splatCount) {
+    static createMesh(device) {
         // number of quads to combine into a single instance. this is to increase occupancy
         // in the vertex shader.
         const splatInstanceSize = GSplatResourceBase.instanceSize;

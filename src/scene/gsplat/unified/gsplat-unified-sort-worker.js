@@ -97,12 +97,11 @@ function UnifiedSortWorker() {
         // }
 
 
-        const minDist = -1300;
-        const maxDist = 1300;
+        const minDist = -2300;
+        const maxDist = 2300;
 
 
         const numVertices = sortSplatCount ?? centers.length / 3;
-        // console.log('sorting', numVertices);
 
         // calculate number of bits needed to store sorting result
         const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));
@@ -284,7 +283,7 @@ function UnifiedSortWorker() {
             version = msgData.version;
         }
 
-        if (msgData.sortSplatCount) {
+        if (msgData.sortSplatCount !== undefined) {
             sortSplatCount = msgData.sortSplatCount;
         }
 

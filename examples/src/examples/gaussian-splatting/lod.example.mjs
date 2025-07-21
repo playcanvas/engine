@@ -55,7 +55,6 @@ const assets = {
 
     // logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/playcanvas-logo/meta.json` }),
     logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pclogo.ply` }),
-    // logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pokemon.ply` }),
     //    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/anneli.ply` }),
     //    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/museum.ply` }),
     // logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/uzumasa.ply` }),
@@ -63,6 +62,9 @@ const assets = {
 
     shoe: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/shoe-with-sh.ply` }),
     shoeNoSh: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/shoe-without-sh.ply` }),
+
+    // pokemon: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pokemon.ply` }),
+    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.ply` }),
 
     fly: new pc.Asset('fly', 'script', { url: `${rootPath}/static/scripts/camera/fly-camera.js` }),
     orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
@@ -76,8 +78,8 @@ assetListLoader.load(() => {
     const biker = new pc.Entity();
     biker.setLocalPosition(2.5, 1, 1);
     biker.setLocalEulerAngles(180, 90, 0);
-    //    biker.setLocalScale(0.7, 0.7, 0.7);
-    biker.setLocalScale(7, 7, 7);
+    //biker.setLocalScale(0.7, 0.7, 0.7);
+    //biker.setLocalScale(7, 7, 7);
 
     const biker2 = new pc.Entity();
     biker2.setLocalPosition(2.5, 1, 0);
@@ -119,13 +121,15 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
 
     // temporary API
-    const manager = new pc.GSplatManager(app, app.graphicsDevice, camera);
+    const manager = new pc.GSplatManager(app.graphicsDevice, camera);
+
+    const worldLayer = app.scene.layers.getLayerByName('World');
+    worldLayer.addMeshInstances([manager.renderer.meshInstance]);
 
     manager.add(assets.church.resource, church);
     manager.add(assets.guitar.resource, guitar);
     manager.add(assets.logo.resource, logo);
-    // const worldLayer = app.scene.layers.getLayerByName('World');
-    // worldLayer.addMeshInstances([manager.meshInstance]);
+
 
     let timeToChange = 1;
     let time = 0;
@@ -157,7 +161,7 @@ assetListLoader.load(() => {
                 timeToChange = 1;
 
                 // worldLayer.removeMeshInstances([manager.meshInstance]);
-                manager.add(assets.shoe.resource, biker);
+                manager.add(assets.skull.resource, biker);
                 // manager.add(assets.shoe.resource, biker2);
                 // worldLayer.addMeshInstances([manager.meshInstance]);
 
