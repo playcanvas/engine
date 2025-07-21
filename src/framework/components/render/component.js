@@ -798,8 +798,9 @@ class RenderComponent extends Component {
      * Removes a MeshInstance from this component.
      *
      * @param {MeshInstance} instance - MeshInstance to remove.
+     * @param {boolean} destroy - If true (default), destroys MeshInstance after remove.
      */
-    removeMeshInstance(instance) {
+    removeMeshInstance(instance, destroy = true) {
         Debug.assert(instance instanceof MeshInstance, 'Invalid MeshInstance');
         const meshInstances = this._meshInstances;
 
@@ -813,8 +814,9 @@ class RenderComponent extends Component {
 
                 meshInstances.splice(j, 1);
 
-                // TODO
-                // do we want to destroy it on remove?
+                if (destroy) {
+                    meshInstance.destroy();
+                }
             }
         }
     }
