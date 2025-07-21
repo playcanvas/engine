@@ -119,25 +119,13 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
 
     // temporary API
-    const manager = new pc.GSplatManager(app.graphicsDevice, camera,
-        [
-            assets.church.resource,
-            // assets.shoe.resource,
-            // assets.shoeNoSh.resource,
-            assets.logo.resource,
-            assets.guitar.resource
-        ],
-        [
-            church,
-            // biker,
-            // biker2,
-            logo,
-            guitar
-        ]
-    );
+    const manager = new pc.GSplatManager(app, app.graphicsDevice, camera);
 
-    const worldLayer = app.scene.layers.getLayerByName('World');
-    worldLayer.addMeshInstances([manager.meshInstance]);
+    manager.add(assets.church.resource, church);
+    manager.add(assets.guitar.resource, guitar);
+    manager.add(assets.logo.resource, logo);
+    // const worldLayer = app.scene.layers.getLayerByName('World');
+    // worldLayer.addMeshInstances([manager.meshInstance]);
 
     let timeToChange = 1;
     let time = 0;
@@ -178,12 +166,12 @@ assetListLoader.load(() => {
                 added = false;
                 timeToChange = 1;
 
-                // // worldLayer.removeMeshInstances([manager.meshInstance]);
+                // worldLayer.removeMeshInstances([manager.meshInstance]);
 
 
                 manager.remove(biker);
                 // manager.remove(biker2);
-                // // worldLayer.addMeshInstances([manager.meshInstance]);
+                // worldLayer.addMeshInstances([manager.meshInstance]);
             }
         }
 

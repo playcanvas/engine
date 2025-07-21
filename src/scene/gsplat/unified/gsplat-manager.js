@@ -85,19 +85,15 @@ class GSplatManager {
     /** @type {GraphNode} */
     cameraNode;
 
-    constructor(device, cameraNode, resources, nodes) {
+
+    ///////////////// remove app, that's hack for now
+
+    constructor(app, device, cameraNode) {
+        this.app = app;
         this.device = device;
         this.cameraNode = cameraNode;
         this.workBuffer = new GSplatWorkBuffer(device);
         this.centerBuffer = new GSplatCentersBuffers();
-
-        resources.forEach((resource, i) => {
-            resource.generateLods();
-            const splatInfo = new GSplatInfo(device, resource, nodes[i]);
-            this.splats.push(splatInfo);
-        });
-
-        this.workBuffer.allocate(this.splats);
 
         // construct the material which renders the splats from the work buffer
         this._material = new ShaderMaterial({
@@ -155,16 +151,31 @@ class GSplatManager {
     }
 
     createMeshInstance() {
+
+
+        const worldLayer = this.app.scene.layers.getLayerByName('World');
+
+        if (this.meshInstance) {
+            worldLayer.removeMeshInstances([this.meshInstance]);
+            this.meshInstance.destroy();
+        }
+   
+
+
         const { mesh, instanceIndices } = GSplatResourceBase.createMesh(this.device, this.workBuffer.width * this.workBuffer.height);
         this.meshInstance = new MeshInstance(mesh, this._material);
         this.meshInstance.node = this.node;
         this.meshInstance.setInstancing(instanceIndices, true);
 
         // TODO: is this the best option, or do we want to generate AABB
+        // - ideally generate aabb from individual splats, update each frame
         this.meshInstance.cull = false;
 
         // only start rendering the splat after we've received the splat order data
         this.meshInstance.instancingCount = 0;
+
+
+        worldLayer.addMeshInstances([this.meshInstance]);
     }
 
     add(resource, node) {
@@ -195,22 +206,11 @@ class GSplatManager {
         // force centers update
         this.forceCentersUpdate = true;
 
+        // request work buffer resize
+        this.workBufferResizeRequest = true;
+
         // cancel any pending prepare states - as those are prepared for previous version
         this.splats.forEach(s => s.cancelPrepareState());
-
-
-        // / note that calling update on centerBuffer does this
-        // so we need to update list of splats, and update centers buffer
-        // and when sorting is done, update the render buffer
-
-        // .update calls this when LOD changes
-        // - add 'force' option here
-
-
-        // this.workBuffer.resize(this.splats);
-
-        // this.meshInstance.destroy();
-        // this.createMeshInstance();
     }
 
     onSorted(count, version, returnCenters, orderData) {
@@ -225,6 +225,27 @@ class GSplatManager {
             return;
         }
 
+        // when a new version was sorted for the first time, we need to fully update work buffer to match
+        // centers buffer / sorted data
+        if (this.sortedVersion !== version && version === this.centerBuffer.version) {
+            this.sortedVersion = version;
+
+            if (this.workBufferResizeRequest) {
+                this.workBufferResizeRequest = false;
+
+                this.workBuffer.resize(this.centerBuffer.textureSize);
+                this.workBuffer.setOrderData(orderData);
+
+                this.createMeshInstance();
+            }
+
+            this.splats.forEach((splat) => {
+                splat.activatePrepareState();
+            });
+
+            this.workBuffer.render(this.splats, this.cameraNode);
+        }
+
         // update order texture
         this.workBuffer.setOrderData(orderData);
 
@@ -233,24 +254,6 @@ class GSplatManager {
 
         // update splat count on the material
         this._material.setParameter('numSplats', count);
-
-        // when a new version was sorted for the first time, we need to fully update work buffer to match
-        // centers buffer / sorted data
-        if (this.sortedVersion !== version) {
-            this.sortedVersion = version;
-
-            // if (this.workBufferResizeRequest) {
-            //     console.log("resize");
-            //     this.workBuffer.resize(this.splats);
-            //     this.workBufferResizeRequest = false;
-            // }
-
-            this.splats.forEach((splat) => {
-                splat.activatePrepareState();
-            });
-
-            this.workBuffer.render(this.splats, this.cameraNode);
-        }
     }
 
     /**
@@ -309,9 +312,6 @@ class GSplatManager {
             // reorder splats based on update version - active splats at the end
             const lodDirty = this.updateSplatOrder();
 
-            // Capture texture size once to ensure consistency
-            const textureSize = this.workBuffer.width;
-
             // if camera moved or splats have been reordered, give updated centers to sorter
             if (distance > 1.0 || lodDirty || this.forceCentersUpdate) {
                 this.forceCentersUpdate = false;
@@ -331,6 +331,9 @@ class GSplatManager {
                     splat.prepareState.update(this.cameraNode);
                 });
 
+                this.centerBuffer.estimateTextureWidth(this.splats, this.device.maxTextureSize);
+                const textureSize = this.centerBuffer.textureSize;
+
                 // Reassign lines based on current LOD active splats
                 this.assignLines(this.splats, textureSize);
 
@@ -348,7 +351,7 @@ class GSplatManager {
             }
 
             // update data for the sorter - use the same textureSize
-            this.sort(this.cameraNode, textureSize);
+            this.sort(this.cameraNode, this.centerBuffer.textureSize);
         }
 
         // if we got valid sorted centers, which makes the renderState valid
@@ -436,8 +439,7 @@ class GSplatManager {
             });
         });
 
-        const orderData = this.workBuffer.getOrderData();
-        this.sorter.setSortParams(sorterRequest, orderData);
+        this.sorter.setSortParams(sorterRequest);
         this.updateViewport(cameraNode);
     }
 }

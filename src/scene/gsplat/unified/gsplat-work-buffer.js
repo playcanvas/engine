@@ -75,6 +75,13 @@ class GSplatWorkBuffer {
     }
 
     setOrderData(data) {
+
+        const len = this.orderTexture.width * this.orderTexture.height;
+        if (len !== data.length) {
+            console.error("setOrderData: data length mismatch, got:", data.length, "expected:", len, `(${this.orderTexture.width}x${this.orderTexture.height})`);
+        }
+
+
         // upload data to texture
         this.orderTexture._levels[0] = data;
         this.orderTexture.upload();
@@ -96,73 +103,12 @@ class GSplatWorkBuffer {
     }
 
     /**
-     * @param {GSplatInfo[]} splats - The splats to allocate space for.
+     * @param {number} textureSize - The texture size to resize to.
      */
-    allocate(splats) {
-
-
-        // ////////// remove allocate function
-
-        this.resize(splats);
-    }
-
-    /**
-     * @param {GSplatInfo[]} splats - The splats to allocate space for.
-     */
-    resize(splats) {
-        const textureSize = this.estimateTextureWidth(splats, this.device.maxTextureSize);
+    resize(textureSize) {
         Debug.assert(textureSize);
         this.renderTarget.resize(textureSize, textureSize);
         this.orderTexture.resize(textureSize, textureSize);
-    }
-
-    /**
-     * Estimates the minimal texture size width that can store all splats, using a fixed max texture
-     * height and binary search over width.
-     *
-     * @param {GSplatInfo[]} splats - The splats to the space for allocate.
-     * @param {number} maxSize - Max texture width and height.
-     * @returns {number | null} - Size of a square texture or null if it can't fit.
-     */
-    estimateTextureWidth(splats, maxSize) {
-        const fits = (size) => {
-            let rows = 0;
-            for (const splat of splats) {
-                rows += Math.ceil(splat.numSplats / size);
-                if (rows > size) return false;
-            }
-            return true;
-        };
-
-        let low = 1;
-        let high = maxSize;
-        let bestSize = null;
-
-        while (low <= high) {
-            const mid = Math.floor((low + high) / 2);
-            if (fits(mid)) {
-                bestSize = mid;
-                high = mid - 1;
-            } else {
-                low = mid + 1;
-            }
-        }
-
-        return bestSize;
-    }
-
-    /**
-     * Get buffer for order data for sorting
-     *
-     * @returns {Uint32Array} - The order data buffer
-     */
-    getOrderData() {
-        const textureSize = this.width;
-        const orderData = new Uint32Array(textureSize * textureSize);
-        for (let i = 0; i < orderData.length; ++i) {
-            orderData[i] = i;
-        }
-        return orderData;
     }
 
     /**

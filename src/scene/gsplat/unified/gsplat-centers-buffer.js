@@ -2,6 +2,8 @@
  * @import { GSplatInfo } from "./gsplat-info.js"
  */
 
+import { Debug } from "../../../core/debug.js";
+
 /**
  * Manages a buffer to store gsplat centers.
  *
@@ -16,6 +18,9 @@ class GSplatCentersBuffers {
 
     /** @type {Float32Array[]} */
     _available = [];
+
+    /** @type {number} */
+    textureSize = 0;
 
     /**
      * Get a buffer from the pool, or allocate a new one.
@@ -99,6 +104,48 @@ class GSplatCentersBuffers {
             // copy all centers
             centers.set(srcCenters, dstBaseOffset);
         }
+    }
+
+    /**
+     * Estimates the square texture size width that can store all splats, using binary search to
+     * find the smallest size that fits.
+     *
+     * @param {GSplatInfo[]} splats - The splats to the space for allocate.
+     * @param {number} maxSize - Max texture width and height.
+     * @returns {boolean} - True if the texture size was found.
+     */
+    estimateTextureWidth(splats, maxSize) {
+        const fits = (size) => {
+            let rows = 0;
+            for (const splat of splats) {
+                rows += Math.ceil(splat.numSplats / size);
+                if (rows > size) return false;
+            }
+            return true;
+        };
+
+        let low = 1;
+        let high = maxSize;
+        let bestSize = null;
+
+        while (low <= high) {
+            const mid = Math.floor((low + high) / 2);
+            if (fits(mid)) {
+                bestSize = mid;
+                high = mid - 1;
+            } else {
+                low = mid + 1;
+            }
+        }
+
+        if (bestSize === null) {
+            this.textureSize = 0;
+            Debug.error('estimateTextureWidth: failed to find a valid texture size');
+            return false;
+        }
+
+        this.textureSize = bestSize;
+        return true;
     }
 }
 
