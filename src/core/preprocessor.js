@@ -686,7 +686,9 @@ class Preprocessor {
         }
 
         if (parenError) {
-            return { result: false, error: true };
+            const errorMessage = `Parenthesis parsing error in expression: "${expression}"`;
+            Debug.log(errorMessage, TRACEID);
+            return { result: false, error: true, message: errorMessage };
         }
 
         // Step 1: Split by "||" to handle OR conditions
