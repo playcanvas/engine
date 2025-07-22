@@ -5,7 +5,7 @@ import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
 import { GSplatSogsResource } from '../../scene/gsplat/gsplat-sogs-resource.js';
 
 // combine the progress updates from multiple assets
-// and fire process events on the target
+// and fire progress events on the target
 const combineProgress = (target, assets) => {
     const map = new Map();
 
