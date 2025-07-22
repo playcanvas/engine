@@ -1,5 +1,5 @@
 import {
-    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
+    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR11, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERLANGUAGE_GLSL,
@@ -222,8 +222,8 @@ class LitShader {
             // for the user to provide required attributes using material.setAttribute
             const languageChunks = ShaderChunks.get(this.device, this.shaderLanguage);
             if (this.chunks.get('transformInstancingVS') === languageChunks.get('transformInstancingVS')) {
-                attributes.instance_line1 = SEMANTIC_ATTR12;
-                attributes.instance_line2 = SEMANTIC_ATTR13;
+                attributes.instance_line1 = SEMANTIC_ATTR11;
+                attributes.instance_line2 = SEMANTIC_ATTR12;
                 attributes.instance_line3 = SEMANTIC_ATTR14;
                 attributes.instance_line4 = SEMANTIC_ATTR15;
             }
