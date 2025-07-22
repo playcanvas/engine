@@ -108,21 +108,21 @@ class Http {
         const result = this.request('GET', url, options, callback);
 
         const { progress } = options;
-
         if (progress) {
             const handler = (event) => {
                 if (event.lengthComputable) {
                     progress.fire('progress', event.loaded, event.total);
                 }
             };
-            result.addEventListener('loadstart', handler);
-            result.addEventListener('progress', handler);
-            result.addEventListener('loadend', (event) => {
+            const endHandler = (event) => {
                 handler(event);
                 result.removeEventListener('loadstart', handler);
                 result.removeEventListener('progress', handler);
-                result.removeEventListener('loadend', handler);
-            });
+                result.removeEventListener('loadend', endHandler);
+            };
+            result.addEventListener('loadstart', handler);
+            result.addEventListener('progress', handler);
+            result.addEventListener('loadend', endHandler);
         }
 
         return result;
