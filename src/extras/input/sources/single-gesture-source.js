@@ -1,3 +1,4 @@
+import { DOUBLE_TAP_THRESHOLD, DOUBLE_TAP_VARIANCE } from '../constants.js';
 import { InputSource } from '../input.js';
 import { VirtualJoystick } from './virtual-joystick.js';
 
@@ -9,6 +10,7 @@ import { VirtualJoystick } from './virtual-joystick.js';
  *
  * @typedef {object} SingleGestureSourceDeltas
  * @property {number[]} input - The input deltas, represented as an array of [x, y] coordinates.
+ * @property {number[]} doubleTap - The double tap delta.
  * @augments {InputSource<SingleGestureSourceDeltas>}
  */
 class SingleGestureSource extends InputSource {
@@ -25,6 +27,12 @@ class SingleGestureSource extends InputSource {
     _pointerData = new Map();
 
     /**
+     * @type {{ x: number, y: number, time: number }}
+     * @private
+     */
+    _lastPointer = { x: 0, y: 0, time: 0 };
+
+    /**
      * @type {VirtualJoystick}
      * @private
      */
@@ -32,7 +40,8 @@ class SingleGestureSource extends InputSource {
 
     constructor() {
         super({
-            input: [0, 0]
+            input: [0, 0],
+            doubleTap: [0]
         });
 
         this._joystick = new VirtualJoystick();
@@ -89,6 +98,15 @@ class SingleGestureSource extends InputSource {
             x: clientX,
             y: clientY
         });
+
+        const now = Date.now();
+        const sqrDist = (this._lastPointer.x - clientX) ** 2 + (this._lastPointer.y - clientY) ** 2;
+        if (sqrDist < DOUBLE_TAP_VARIANCE && now - this._lastPointer.time < DOUBLE_TAP_THRESHOLD) {
+            this.deltas.doubleTap.append([1]);
+        }
+        this._lastPointer.x = clientX;
+        this._lastPointer.y = clientY;
+        this._lastPointer.time = now;
 
         if (this._layout === 'joystick') {
             this.fire('joystick:position', this._joystick.down(clientX, clientY));

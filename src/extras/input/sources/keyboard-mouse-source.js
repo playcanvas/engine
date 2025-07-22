@@ -1,9 +1,54 @@
 import { InputSource } from '../input.js';
 
-/** @type {AddEventListenerOptions & EventListenerOptions} */
-const PASSIVE = { passive: false };
+const PASSIVE = /** @type {AddEventListenerOptions & EventListenerOptions} */ ({ passive: false });
+const KEY_CODES = /** @type {const} */ ({
+    A: 0,
+    B: 1,
+    C: 2,
+    D: 3,
+    E: 4,
+    F: 5,
+    G: 6,
+    H: 7,
+    I: 8,
+    J: 9,
+    K: 10,
+    L: 11,
+    M: 12,
+    N: 13,
+    O: 14,
+    P: 15,
+    Q: 16,
+    R: 17,
+    S: 18,
+    T: 19,
+    U: 20,
+    V: 21,
+    W: 22,
+    X: 23,
+    Y: 24,
+    Z: 25,
+    '0': 26,
+    '1': 27,
+    '2': 28,
+    '3': 29,
+    '4': 30,
+    '5': 31,
+    '6': 32,
+    '7': 33,
+    '8': 34,
+    '9': 35,
+    UP: 36,
+    DOWN: 37,
+    LEFT: 38,
+    RIGHT: 39,
+    SPACE: 40,
+    SHIFT: 41,
+    CTRL: 42
+});
+const KEY_COUNT = Object.keys(KEY_CODES).length;
 
-const array12 = Array(12).fill(0);
+const array = Array(KEY_COUNT).fill(0);
 
 /**
  * Keyboard and mouse input source class
@@ -20,25 +65,11 @@ const array12 = Array(12).fill(0);
  */
 class KeyboardMouseSource extends InputSource {
     /**
-     * The keycodes.
+     * The key codes for the keyboard keys.
      *
      * @readonly
      */
-    static keycode = {
-        W: 0,
-        S: 1,
-        A: 2,
-        D: 3,
-        Q: 4,
-        E: 5,
-        UP: 6,
-        DOWN: 7,
-        LEFT: 8,
-        RIGHT: 9,
-        SPACE: 10,
-        SHIFT: 11,
-        CTRL: 12
-    };
+    static keyCode = KEY_CODES;
 
     /**
      * @type {number}
@@ -47,29 +78,74 @@ class KeyboardMouseSource extends InputSource {
     _pointerId = 0;
 
     /**
-     * @type {number[]}
+     * @type {boolean}
      * @private
      */
-    _keyPrev = Array(12).fill(0);
+    _pointerLock;
+
+    /**
+     * @type {Map<string, number>}
+     * @private
+     */
+    _keyMap = new Map();
 
     /**
      * @type {number[]}
      * @private
      */
-    _keyNow = Array(12).fill(0);
+    _keyPrev = Array(KEY_COUNT).fill(0);
+
+    /**
+     * @type {number[]}
+     * @private
+     */
+    _keyNow = Array(KEY_COUNT).fill(0);
 
     /**
      * @type {number[]}
      */
     _button = Array(3).fill(0);
 
-    constructor() {
+    /**
+     * @param {object} [options] - The options.
+     * @param {boolean} [options.pointerLock] - Whether to enable pointer lock.
+     */
+    constructor({ pointerLock = false } = {}) {
         super({
-            key: Array(12).fill(0),
+            key: Array(KEY_COUNT).fill(0),
             button: [0, 0, 0],
             mouse: [0, 0],
             wheel: [0]
         });
+
+        this._pointerLock = pointerLock ?? false;
+
+        const { keyCode } = KeyboardMouseSource;
+
+        // Alphabetical keys
+        for (let i = 0; i < 26; i++) {
+            const code = `Key${String.fromCharCode('A'.charCodeAt(0) + i)}`;
+            this._keyMap.set(code, keyCode.A + i);
+        }
+
+        // Numeric keys
+        for (let i = 0; i < 10; i++) {
+            const code = `Digit${i}`;
+            this._keyMap.set(code, keyCode['0'] + i);
+        }
+
+        // Arrow keys
+        this._keyMap.set('ArrowUp', keyCode.UP);
+        this._keyMap.set('ArrowDown', keyCode.DOWN);
+        this._keyMap.set('ArrowLeft', keyCode.LEFT);
+        this._keyMap.set('ArrowRight', keyCode.RIGHT);
+
+        // Special keys
+        this._keyMap.set('Space', keyCode.SPACE);
+        this._keyMap.set('ShiftLeft', keyCode.SHIFT);
+        this._keyMap.set('ShiftRight', keyCode.SHIFT);
+        this._keyMap.set('ControlLeft', keyCode.CTRL);
+        this._keyMap.set('ControlRight', keyCode.CTRL);
 
         this._onWheel = this._onWheel.bind(this);
         this._onPointerDown = this._onPointerDown.bind(this);
@@ -97,7 +173,13 @@ class KeyboardMouseSource extends InputSource {
         if (event.pointerType !== 'mouse') {
             return;
         }
-        this._element?.setPointerCapture(event.pointerId);
+        if (this._pointerLock) {
+            if (document.pointerLockElement !== this._element) {
+                this._element?.requestPointerLock();
+            }
+        } else {
+            this._element?.setPointerCapture(event.pointerId);
+        }
 
         this._clearButtons();
         this._button[event.button] = 1;
@@ -120,8 +202,14 @@ class KeyboardMouseSource extends InputSource {
         if (event.target !== this._element) {
             return;
         }
-        if (this._pointerId !== event.pointerId) {
-            return;
+        if (this._pointerLock) {
+            if (document.pointerLockElement !== this._element) {
+                return;
+            }
+        } else {
+            if (this._pointerId !== event.pointerId) {
+                return;
+            }
         }
         this.deltas.mouse.append([event.movementX, event.movementY]);
     }
@@ -134,7 +222,9 @@ class KeyboardMouseSource extends InputSource {
         if (event.pointerType !== 'mouse') {
             return;
         }
-        this._element?.releasePointerCapture(event.pointerId);
+        if (!this._pointerLock) {
+            this._element?.releasePointerCapture(event.pointerId);
+        }
 
         this._clearButtons();
         this.deltas.button.append(this._button);
@@ -158,6 +248,9 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _onKeyDown(event) {
+        if (this._pointerLock && document.pointerLockElement !== this._element) {
+            return;
+        }
         event.stopPropagation();
         this._setKey(event.code, 1);
     }
@@ -190,50 +283,10 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _setKey(code, value) {
-        const id = KeyboardMouseSource.keycode;
-        switch (code) {
-            case 'KeyW':
-                this._keyNow[id.W] = value;
-                break;
-            case 'KeyS':
-                this._keyNow[id.S] = value;
-                break;
-            case 'KeyA':
-                this._keyNow[id.A] = value;
-                break;
-            case 'KeyD':
-                this._keyNow[id.D] = value;
-                break;
-            case 'KeyQ':
-                this._keyNow[id.Q] = value;
-                break;
-            case 'KeyE':
-                this._keyNow[id.E] = value;
-                break;
-            case 'ArrowUp':
-                this._keyNow[id.UP] = value;
-                break;
-            case 'ArrowDown':
-                this._keyNow[id.DOWN] = value;
-                break;
-            case 'ArrowLeft':
-                this._keyNow[id.LEFT] = value;
-                break;
-            case 'ArrowRight':
-                this._keyNow[id.RIGHT] = value;
-                break;
-            case 'Space':
-                this._keyNow[id.SPACE] = value;
-                break;
-            case 'ShiftLeft':
-            case 'ShiftRight':
-                this._keyNow[id.SHIFT] = value;
-                break;
-            case 'ControlLeft':
-            case 'ControlRight':
-                this._keyNow[id.CTRL] = value;
-                break;
+        if (!this._keyMap.has(code)) {
+            return;
         }
+        this._keyNow[this._keyMap.get(code) ?? 0] = value;
     }
 
     /**
@@ -278,11 +331,11 @@ class KeyboardMouseSource extends InputSource {
      * @override
      */
     read() {
-        for (let i = 0; i < array12.length; i++) {
-            array12[i] = this._keyNow[i] - this._keyPrev[i];
+        for (let i = 0; i < array.length; i++) {
+            array[i] = this._keyNow[i] - this._keyPrev[i];
             this._keyPrev[i] = this._keyNow[i];
         }
-        this.deltas.key.append(array12);
+        this.deltas.key.append(array);
 
         return super.read();
     }

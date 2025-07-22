@@ -65,9 +65,12 @@ let id = 0;
  */
 
 /**
- * A material determines how a particular {@link MeshInstance} is rendered. It specifies the
- * {@link Shader} and render state that is set before the mesh instance is submitted to the
- * {@link GraphicsDevice}.
+ * A material determines how a particular {@link MeshInstance} is rendered, and specifies
+ * render state including uniforms, textures, defines, and other properties.
+ *
+ * This is a base class and cannot be instantiated and used directly. Only subclasses such
+ * as {@link ShaderMaterial} and {@link StandardMaterial} can be used to define materials
+ * for rendering.
  *
  * @category Graphics
  */
@@ -751,7 +754,7 @@ class Material {
 
         Debug.call(() => {
             if (data === undefined) {
-                Debug.warnOnce(`Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`);
+                Debug.warnOnce(`Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`, this);
             }
         });
 

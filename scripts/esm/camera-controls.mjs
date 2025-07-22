@@ -36,8 +36,6 @@ const frame = new InputFrame({
     rotate: [0, 0, 0]
 });
 
-const ZOOM_SCALE_MULT = 10;
-
 /**
  * Calculate the damp rate.
  *
@@ -315,7 +313,7 @@ class CameraControls extends Script {
      * @title Zoom Speed
      * @type {number}
      */
-    zoomSpeed = 0.005;
+    zoomSpeed = 0.001;
 
     /**
      * The touch zoom pinch sensitivity.
@@ -325,15 +323,6 @@ class CameraControls extends Script {
      * @type {number}
      */
     zoomPinchSens = 5;
-
-    /**
-     * The minimum scale the camera can zoom (absolute value).
-     *
-     * @attribute
-     * @title Zoom Scale Min
-     * @type {number}
-     */
-    zoomScaleMin = 0.001;
 
     /**
      * The gamepad dead zone.
@@ -362,7 +351,7 @@ class CameraControls extends Script {
         this._camera = this.entity.camera;
 
         // set orbit controller defaults
-        this._orbitController.zoomRange = new Vec2(0, Infinity);
+        this._orbitController.zoomRange = new Vec2(0.01, Infinity);
 
         // attach input
         this._desktopInput.attach(this.app.graphicsDevice.canvas);
@@ -707,7 +696,7 @@ class CameraControls extends Script {
      * @param {number} dt - The time delta.
      */
     update(dt) {
-        const { keycode } = KeyboardMouseSource;
+        const { keyCode } = KeyboardMouseSource;
 
         const { key, button, mouse, wheel } = this._desktopInput.read();
         const { touch, pinch, count } = this._orbitMobileInput.read();
@@ -720,15 +709,15 @@ class CameraControls extends Script {
 
         // update state
         this._state.axis.add(tmpV1.set(
-            (key[keycode.D] - key[keycode.A]) + (key[keycode.RIGHT] - key[keycode.LEFT]),
-            (key[keycode.E] - key[keycode.Q]),
-            (key[keycode.W] - key[keycode.S]) + (key[keycode.UP] - key[keycode.DOWN])
+            (key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]),
+            (key[keyCode.E] - key[keyCode.Q]),
+            (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])
         ));
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }
-        this._state.shift += key[keycode.SHIFT];
-        this._state.ctrl += key[keycode.CTRL];
+        this._state.shift += key[keyCode.SHIFT];
+        this._state.ctrl += key[keyCode.CTRL];
         this._state.touches += count[0];
 
         if (button[0] === 1 || button[1] === 1 || wheel[0] !== 0) {
@@ -748,11 +737,7 @@ class CameraControls extends Script {
         // multipliers
         const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
             this.moveSlowSpeed : this.moveSpeed) * this.sceneSize * dt;
-        const zoomMult = math.clamp(
-            this._pose.distance / (ZOOM_SCALE_MULT * this.sceneSize),
-            this.zoomScaleMin,
-            1
-        ) * this.zoomSpeed * this.sceneSize * 60 * dt;
+        const zoomMult = this.zoomSpeed * 60 * dt;
         const zoomTouchMult = zoomMult * this.zoomPinchSens;
         const rotateMult = this.rotateSpeed * 60 * dt;
         const rotateJoystickMult = this.rotateSpeed * this.rotateJoystickSens * 60 * dt;

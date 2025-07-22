@@ -60,7 +60,7 @@ export default /* wgsl */`
         #endif
 
         // Apply Tone Mapping
-        result = toneMap(result);
+        result = toneMap(max(vec3f(0.0), result));
 
         // Apply Color LUT after tone mapping, in LDR space
         #ifdef COLOR_LUT

@@ -1,14 +1,8 @@
 export default /* glsl */`
-#ifdef STD_CLEARCOATGLOSS_CONSTANT
 uniform float material_clearCoatGloss;
-#endif
 
 void getClearCoatGlossiness() {
-    ccGlossiness = 1.0;
-
-    #ifdef STD_CLEARCOATGLOSS_CONSTANT
-    ccGlossiness *= material_clearCoatGloss;
-    #endif
+    ccGlossiness = material_clearCoatGloss;
 
     #ifdef STD_CLEARCOATGLOSS_TEXTURE
     ccGlossiness *= texture2DBias({STD_CLEARCOATGLOSS_TEXTURE_NAME}, {STD_CLEARCOATGLOSS_TEXTURE_UV}, textureBias).{STD_CLEARCOATGLOSS_TEXTURE_CHANNEL};

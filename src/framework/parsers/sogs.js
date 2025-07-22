@@ -73,6 +73,8 @@ class SogsParser {
 
         if (asset.data?.reorder ?? true) {
             await data.reorderData();
+        } else {
+            await data.readMeansImageData();
         }
 
         const resource = asset.data?.decompress ?

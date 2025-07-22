@@ -289,7 +289,7 @@ class Texture {
         this._levels = options.levels;
         const upload = !!options.levels;
         if (!this._levels) {
-            this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
+            this._clearLevels();
         }
 
         this.recreateImpl(upload);
@@ -350,9 +350,16 @@ class Texture {
         }
     }
 
+    _clearLevels() {
+        this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
+    }
+
     /**
-     * Resizes the texture. Only supported for render target textures, as it does not resize the
-     * existing content of the texture, but only the allocated buffer for rendering into.
+     * Resizes the texture. This operation is supported for render target textures, and it resizes
+     * the allocated buffer used for rendering, not the existing content of the texture.
+     *
+     * It is also supported for textures with data provided via the {@link lock} method. After
+     * resizing, the appropriately sized data must be assigned by calling {@link lock} again.
      *
      * @param {number} width - The new width of the texture.
      * @param {number} height - The new height of the texture.
@@ -365,6 +372,7 @@ class Texture {
         const device = this.device;
         this.adjustVramSizeTracking(device._vram, -this._gpuSize);
         this.impl.destroy(device);
+        this._clearLevels();
 
         this._width = Math.floor(width);
         this._height = Math.floor(height);
