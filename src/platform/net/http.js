@@ -6,6 +6,10 @@ import { URI } from '../../core/uri.js';
 import { math } from '../../core/math/math.js';
 
 /**
+ * @import { EventHandler } from '../../core/event-handler.js';
+ */
+
+/**
  * @callback HttpResponseCallback
  * Callback used by {@link Http#get}, {@link Http#post}, {@link Http#put}, {@link Http#del}, and
  * {@link Http#request}.
@@ -82,6 +86,7 @@ class Http {
      * @param {boolean} [options.retry] - If true then if the request fails it will be retried with an exponential backoff.
      * @param {number} [options.maxRetries] - If options.retry is true this specifies the maximum number of retries. Defaults to 5.
      * @param {number} [options.maxRetryDelay] - If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
+     * @param {EventHandler} [options.progress] - Object to use for firing progress events.
      * @param {HttpResponseCallback} callback - The callback used when the response has returned. Passed (err, data)
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
@@ -99,7 +104,17 @@ class Http {
             callback = options;
             options = {};
         }
-        return this.request('GET', url, options, callback);
+        const result = this.request('GET', url, options, callback);
+
+        if (options.progress) {
+            result.addEventListener('progress', (event) => {
+                if (event.lengthComputable) {
+                    options.progress.fire('progress', event.loaded, event.total);
+                }
+            });
+        }
+
+        return result;
     }
 
     /**
