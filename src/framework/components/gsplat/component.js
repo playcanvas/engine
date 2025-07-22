@@ -62,7 +62,7 @@ class GSplatComponent extends Component {
     _materialTmp = null;
 
     /** @private */
-    _highQualitySH = false;
+    _highQualitySH = true;
 
     /**
      * @type {BoundingBox|null}
