@@ -118,7 +118,7 @@ class RenderPassCameraFrame extends RenderPass {
      */
     rt = null;
 
-    constructor(cameraFrame, app, cameraComponent, options = {}) {
+    constructor(app, cameraFrame, cameraComponent, options = {}) {
         Debug.assert(app);
         super(app.graphicsDevice);
         this.app = app;
