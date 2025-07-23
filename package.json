@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "2.10.0-beta.0",
+  "version": "2.10.0-beta.1",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -39,6 +39,10 @@
         "require": "./build/playcanvas.prf.js"
       },
       "production": {
+        "import": "./build/playcanvas/src/index.js",
+        "require": "./build/playcanvas.js"
+      },
+      "default": {
         "import": "./build/playcanvas/src/index.js",
         "require": "./build/playcanvas.js"
       }

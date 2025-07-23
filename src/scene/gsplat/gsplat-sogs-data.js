@@ -165,6 +165,7 @@ class GSplatSogsData {
     getCenters(result) {
         const { meta, means_l, means_u, numSplats } = this;
         const { means } = meta;
+
         const means_u_data = new Uint32Array(means_u._levels[0].buffer);
         const means_l_data = new Uint32Array(means_l._levels[0].buffer);
         const order = this.orderTexture?._levels[0];
@@ -425,6 +426,12 @@ class GSplatSogsData {
         });
 
         this.reorderGpuMemory();
+    }
+
+    async readMeansImageData() {
+        const { means_l, means_u } = this;
+        means_l._levels[0] = await readImageDataAsync(means_l);
+        means_u._levels[0] = await readImageDataAsync(means_u);
     }
 }
 
