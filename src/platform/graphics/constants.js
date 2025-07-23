@@ -2134,6 +2134,27 @@ export const typedArrayToType = {
 export const typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
 export const typedArrayIndexFormatsByteSize = [1, 2, 4];
 
+// map of primitive GLSL types to their corresponding WGSL types
+export const primitiveGlslToWgslTypeMap = new Map([
+    // floating-point
+    ['float',  'f32'],
+    ['vec2',   'vec2f'],
+    ['vec3',   'vec3f'],
+    ['vec4',   'vec4f'],
+
+    // signed integer
+    ['int',    'i32'],
+    ['ivec2',  'vec2i'],
+    ['ivec3',  'vec3i'],
+    ['ivec4',  'vec4i'],
+
+    // unsigned integer
+    ['uint',   'u32'],
+    ['uvec2',  'vec2u'],
+    ['uvec3',  'vec3u'],
+    ['uvec4',  'vec4u']
+]);
+
 /**
  * Map of engine semantics into location on device in range 0..15 (note - semantics mapping to the
  * same location cannot be used at the same time) organized in a way that ATTR0-ATTR7 do not

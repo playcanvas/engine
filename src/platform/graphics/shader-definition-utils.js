@@ -4,7 +4,8 @@ import {
     SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT,
     SHADERLANGUAGE_WGSL,
-    SHADERLANGUAGE_GLSL
+    SHADERLANGUAGE_GLSL,
+    primitiveGlslToWgslTypeMap
 } from './constants.js';
 import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
@@ -81,6 +82,15 @@ class ShaderDefinitionUtils {
         Debug.assert(!options.fragmentDefines || options.fragmentDefines instanceof Map);
         Debug.assert(!options.fragmentIncludes || options.fragmentIncludes instanceof Map);
 
+        // Normalize fragmentOutputTypes to an array
+        const normalizedOutputTypes = (options) => {
+            let fragmentOutputTypes = options.fragmentOutputTypes ?? 'vec4';
+            if (!Array.isArray(fragmentOutputTypes)) {
+                fragmentOutputTypes = [fragmentOutputTypes];
+            }
+            return fragmentOutputTypes;
+        };
+
         const getDefines = (gpu, gl2, isVertex, options) => {
 
             const deviceIntro = device.isWebGPU ? gpu : gl2;
@@ -90,11 +100,7 @@ class ShaderDefinitionUtils {
 
             // Define the fragment shader output type, vec4 by default
             if (!isVertex) {
-                // Normalize fragmentOutputTypes to an array
-                let fragmentOutputTypes = options.fragmentOutputTypes ?? 'vec4';
-                if (!Array.isArray(fragmentOutputTypes)) {
-                    fragmentOutputTypes = [fragmentOutputTypes];
-                }
+                const fragmentOutputTypes = normalizedOutputTypes(options);
 
                 for (let i = 0; i < device.maxColorAttachments; i++) {
                     attachmentsDefine += `#define COLOR_ATTACHMENT_${i}\n`;
@@ -104,6 +110,26 @@ class ShaderDefinitionUtils {
             }
 
             return attachmentsDefine + deviceIntro;
+        };
+
+        const getDefinesWgsl = (isVertex, options) => {
+
+            let attachmentsDefine = '';
+
+            // Define the fragment shader output type, vec4 by default
+            if (!isVertex) {
+                const fragmentOutputTypes = normalizedOutputTypes(options);
+
+                // create alias for each output type
+                for (let i = 0; i < device.maxColorAttachments; i++) {
+                    const glslOutType = fragmentOutputTypes[i] ?? 'vec4';
+                    const wgslOutType = primitiveGlslToWgslTypeMap.get(glslOutType);
+                    Debug.assert(wgslOutType, `Unknown output type translation: ${glslOutType} -> ${wgslOutType}`);
+                    attachmentsDefine += `alias pcOutType${i} = ${wgslOutType};\n`;
+                }
+            }
+
+            return attachmentsDefine;
         };
 
         const name = options.name ?? 'Untitled';
@@ -117,6 +143,7 @@ class ShaderDefinitionUtils {
         if (wgsl) {
 
             vertCode = `
+                ${getDefinesWgsl(true, options)}
                 ${wgslVS}
                 ${sharedWGSL}
                 ${vertexDefinesCode}
@@ -124,6 +151,7 @@ class ShaderDefinitionUtils {
             `;
 
             fragCode = `
+                ${getDefinesWgsl(false, options)}
                 ${wgslFS}
                 ${sharedWGSL}
                 ${fragmentDefinesCode}
