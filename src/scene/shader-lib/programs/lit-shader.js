@@ -3,7 +3,8 @@ import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL
+    SHADERLANGUAGE_WGSL,
+    primitiveGlslToWgslTypeMap
 } from '../../../platform/graphics/constants.js';
 import {
     LIGHTSHAPE_PUNCTUAL,
@@ -34,13 +35,6 @@ const builtinAttributes = {
     vertex_boneWeights: SEMANTIC_BLENDWEIGHT,
     vertex_boneIndices: SEMANTIC_BLENDINDICES
 };
-
-export const varyingsWGSLTypes = new Map([
-    ['vec4', 'vec4f'],
-    ['vec3', 'vec3f'],
-    ['vec2', 'vec2f'],
-    ['float', 'f32']
-]);
 
 class LitShader {
     /**
@@ -330,7 +324,7 @@ class LitShader {
         varyings.forEach((type, name) => {
             this.varyingsCode += `#define VARYING_${name.toUpperCase()}\n`;
             this.varyingsCode += this.shaderLanguage === SHADERLANGUAGE_WGSL ?
-                `varying ${name}: ${varyingsWGSLTypes.get(type)};\n` :
+                `varying ${name}: ${primitiveGlslToWgslTypeMap.get(type)};\n` :
                 `varying ${type} ${name};\n`;
         });
 
