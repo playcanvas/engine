@@ -7,7 +7,7 @@ uniform means_maxs: vec3f;
 uniform scales_mins: vec3f;
 uniform scales_maxs: vec3f;
 
-vec4 unpackU32(u: u32) -> vec4f {
+fn unpackU32(u: u32) -> vec4f {
     return vec4f(
         f32((u >> 24u) & 0xFFu) / 255.0,
         f32((u >> 16u) & 0xFFu) / 255.0,
@@ -16,7 +16,7 @@ vec4 unpackU32(u: u32) -> vec4f {
     );
 }
 
-vec4<u32> packedSample;
+var<private> packedSample: vec4<u32>;
 
 // read the model-space center of the gaussian
 fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
