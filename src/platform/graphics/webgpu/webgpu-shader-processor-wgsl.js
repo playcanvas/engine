@@ -777,7 +777,7 @@ class WebgpuShaderProcessorWGSL {
         let structCode = 'struct FragmentOutput {\n';
 
         for (let i = 0; i < numRenderTargets; i++) {
-            structCode += `    @location(${i}) color${i > 0 ? i : ''} : vec4f,\n`;
+            structCode += `    @location(${i}) color${i > 0 ? i : ''} : pcOutType${i},\n`;
         }
 
         // find if the src contains `.fragDepth =`, ignoring whitespace before = sign
