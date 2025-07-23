@@ -13,7 +13,8 @@ import {
     // magnopus patched additional UVS
     SHADERDEF_UV2,
     SHADERDEF_UV3,
-    SHADERDEF_UV4
+    SHADERDEF_UV4,
+    SHADOW_CASCADE_ALL
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
@@ -263,6 +264,16 @@ class MeshInstance {
      * @type {boolean}
      */
     castShadow = false;
+
+    /**
+     * Specifies a bitmask that controls which shadow cascades a mesh instance contributes
+     * to when rendered with a {@link LIGHTTYPE_DIRECTIONAL} light source.
+     * This setting is only effective if the {@link castShadow} property is enabled.
+     * Defaults to {@link SHADOW_CASCADE_ALL}, which means the mesh casts shadows into all available cascades.
+     *
+     * @type {number}
+     */
+    shadowCascadeMask = SHADOW_CASCADE_ALL;
 
     /**
      * Controls whether the mesh instance can be culled by frustum culling (see

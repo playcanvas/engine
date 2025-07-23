@@ -3,9 +3,8 @@ import { hashCode } from '../../core/hash.js';
 import { math } from '../../core/math/math.js';
 import { StringIds } from '../../core/string-ids.js';
 import {
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
-    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames,
-    SEMANTIC_TEXCOORD2,
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR11, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
+    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames, SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3,
     SEMANTIC_TEXCOORD4
 } from './constants.js';
@@ -242,8 +241,8 @@ class VertexFormat {
         // get it from the device cache, or create a new one if not cached yet
         return deviceCache.get(graphicsDevice, () => {
             return new VertexFormat(graphicsDevice, [
+                { semantic: SEMANTIC_ATTR11, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR12, components: 4, type: TYPE_FLOAT32 },
-                { semantic: SEMANTIC_ATTR13, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR14, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR15, components: 4, type: TYPE_FLOAT32 }
             ]);

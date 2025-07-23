@@ -61,7 +61,7 @@ class ImgParser extends TextureParser {
         }
 
         if (this.device.supportsImageBitmap) {
-            this._loadImageBitmap(url.load, url.original, crossOrigin, handler);
+            this._loadImageBitmap(url.load, url.original, crossOrigin, handler, asset);
         } else {
             this._loadImage(url.load, url.original, crossOrigin, handler);
         }
@@ -125,12 +125,13 @@ class ImgParser extends TextureParser {
         image.src = url;
     }
 
-    _loadImageBitmap(url, originalUrl, crossOrigin, callback) {
+    _loadImageBitmap(url, originalUrl, crossOrigin, callback, asset) {
         const options = {
             cache: true,
             responseType: 'blob',
             retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
+            maxRetries: this.maxRetries,
+            progress: asset
         };
         http.get(url, options, (err, blob) => {
             if (err) {
