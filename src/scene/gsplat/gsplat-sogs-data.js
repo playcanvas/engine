@@ -6,7 +6,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { CULLFACE_NONE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, PIXELFORMAT_RGBA32U, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import glslGsplatSogsReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplat-sogs-reorder.js';
@@ -127,8 +127,7 @@ class GSplatSogsData {
 
     sh_labels;
 
-    // if data is reordered at load, this texture stores the reorder indices.
-    orderTexture;
+    packedTexture;
 
     destroy() {
         this.means_l?.destroy();
@@ -138,6 +137,7 @@ class GSplatSogsData {
         this.sh0?.destroy();
         this.sh_centroids?.destroy();
         this.sh_labels?.destroy();
+        this.packedTexture?.destroy();
     }
 
     createIter(p, r, s, c, sh) {
@@ -168,7 +168,6 @@ class GSplatSogsData {
 
         const means_u_data = new Uint32Array(means_u._levels[0].buffer);
         const means_l_data = new Uint32Array(means_l._levels[0].buffer);
-        const order = this.orderTexture?._levels[0];
 
         const mx = means.mins[0] / 65535;
         const my = means.mins[1] / 65535;
@@ -178,7 +177,7 @@ class GSplatSogsData {
         const Mz = means.maxs[2] / 65535;
 
         for (let i = 0; i < numSplats; i++) {
-            const idx = order ? order[i] : i;
+            const idx = i;
 
             const means_u = means_u_data[idx];
             const means_l = means_l_data[idx];
@@ -305,10 +304,10 @@ class GSplatSogsData {
         }]);
     }
 
-    // reorder the sogs texture data in gpu memory given the ordering encoded in texture data
-    reorderGpuMemory() {
-        const { orderTexture, numSplats } = this;
-        const { device, height, width } = orderTexture;
+    // pack the means, quats, scales and sh_labels data into one RGBA32U texture
+    packGpuMemory() {
+        const { means_l, means_u, quats, scales, sh_labels, numSplats } = this;
+        const { device } = means_l;
         const { scope } = device;
 
         const shader = ShaderUtils.createShader(device, {
@@ -316,122 +315,55 @@ class GSplatSogsData {
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatSogsReorderPS,
-            fragmentWGSL: wgslGsplatSogsReorderPS
+            fragmentWGSL: wgslGsplatSogsReorderPS,
+            fragmentOutputTypes: ['uvec4']
         });
 
-        const sourceTexture = new Texture(device, {
-            width: width,
-            height: height,
-            format: PIXELFORMAT_RGBA8,
-            mipmaps: false
+        const renderTarget = new RenderTarget({
+            colorBuffer: this.packedTexture,
+            depth: false,
+            mipLevel: 0
         });
 
-        const members = ['means_l', 'means_u', 'quats', 'scales', 'sh0', 'sh_labels'];
-
-        device.setBlendState(BlendState.NOBLEND);
         device.setCullMode(CULLFACE_NONE);
+        device.setBlendState(BlendState.NOBLEND);
         device.setDepthState(DepthState.NODEPTH);
 
-        members.forEach((member) => {
-            const targetTexture = this[member];
-
-            // spherical harmonics labels are missing when no SH data is present
-            if (!targetTexture) {
-                return;
-            }
-
-            const renderTarget = new RenderTarget({
-                colorBuffer: targetTexture,
-                depth: false,
-                mipLevel: 0
-            });
-
-            // patch source texture with data from target
-            sourceTexture._levels[0] = targetTexture._levels[0];
-            sourceTexture.upload();
-
-            resolve(scope, {
-                orderTexture,
-                sourceTexture,
-                numSplats
-            });
-
-            drawQuadWithShader(device, renderTarget, shader);
-
-            renderTarget.destroy();
+        resolve(scope, {
+            means_l,
+            means_u,
+            quats,
+            scales,
+            sh_labels,
+            numSplats
         });
 
-        sourceTexture.destroy();
+        drawQuadWithShader(device, renderTarget, shader);
+
+        renderTarget.destroy();
+        shader.destroy();
     }
 
-    // construct an array containing the Morton order of the splats
-    // returns an array of 32-bit unsigned integers
-    calcMortonOrder() {
-        // https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/
-        const encodeMorton3 = (x, y, z) => {
-            const Part1By2 = (x) => {
-                x &= 0x000003ff;
-                x = (x ^ (x << 16)) & 0xff0000ff;
-                x = (x ^ (x <<  8)) & 0x0300f00f;
-                x = (x ^ (x <<  4)) & 0x030c30c3;
-                x = (x ^ (x <<  2)) & 0x09249249;
-                return x;
-            };
-
-            return (Part1By2(z) << 2) + (Part1By2(y) << 1) + Part1By2(x);
-        };
-
-        const { means_l, means_u } = this;
-        const means_l_data = means_l._levels[0];
-        const means_u_data = means_u._levels[0];
-        const codes = new BigUint64Array(this.numSplats);
-
-        // generate Morton codes for each splat based on the means directly (i.e. the log-space coordinates)
-        for (let i = 0; i < this.numSplats; ++i) {
-            const ix = (means_u_data[i * 4 + 0] << 2) | (means_l_data[i * 4 + 0] >>> 6);
-            const iy = (means_u_data[i * 4 + 1] << 2) | (means_l_data[i * 4 + 1] >>> 6);
-            const iz = (means_u_data[i * 4 + 2] << 2) | (means_l_data[i * 4 + 2] >>> 6);
-            codes[i] = BigInt(encodeMorton3(ix, iy, iz)) << BigInt(32) | BigInt(i);
-        }
-
-        codes.sort();
-
-        // allocate data for the order buffer, but make it texture-memory sized
-        const order = new Uint32Array(means_l.width * means_l.height);
-        for (let i = 0; i < this.numSplats; ++i) {
-            order[i] = Number(codes[i] & BigInt(0xffffffff));
-        }
-
-        return order;
-    }
-
-    async reorderData() {
+    async prepareGpuData() {
         const { device, height, width } = this.means_l;
 
-        // copy back means_l and means_u data from gpu so cpu reorder has access to it
+        // copy back means_l and means_u data so cpu reorder has access to it
         this.means_l._levels[0] = await readImageDataAsync(this.means_l);
         this.means_u._levels[0] = await readImageDataAsync(this.means_u);
 
-        this.orderTexture = new Texture(device, {
-            name: 'orderTexture',
-            width,
-            height,
-            format: PIXELFORMAT_R32U,
-            mipmaps: false,
-            levels: [this.calcMortonOrder()]
+        this.packedTexture = new Texture(device, {
+            name: 'sogsPackedTexture',
+            width: width,
+            height: height,
+            format: PIXELFORMAT_RGBA32U,
+            mipmaps: false
         });
 
         device.on('devicerestored', () => {
-            this.reorderGpuMemory();
+            this.packGpuMemory();
         });
 
-        this.reorderGpuMemory();
-    }
-
-    async readMeansImageData() {
-        const { means_l, means_u } = this;
-        means_l._levels[0] = await readImageDataAsync(means_l);
-        means_u._levels[0] = await readImageDataAsync(means_u);
+        this.packGpuMemory();
     }
 }
 
