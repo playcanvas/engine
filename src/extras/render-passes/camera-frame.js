@@ -366,7 +366,7 @@ class CameraFrame {
      * @returns {RenderPassCameraFrame} - The render pass.
      */
     createRenderPass() {
-        return new RenderPassCameraFrame(this.app, this.cameraComponent, this.options);
+        return new RenderPassCameraFrame(this, this.app, this.cameraComponent, this.options);
     }
 
     /**
