@@ -334,7 +334,8 @@ class GSplatSogsData {
             means_u,
             quats,
             scales,
-            sh_labels,
+            // use means_l as dummy texture for sh_labels if there is no spherical harmonics data
+            sh_labels: sh_labels ?? means_l,
             numSplats
         });
 
