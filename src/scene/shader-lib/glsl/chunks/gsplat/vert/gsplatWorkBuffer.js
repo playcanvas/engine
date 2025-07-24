@@ -17,5 +17,5 @@ void readCovariance(in SplatSource source, out vec3 cov_A, out vec3 cov_B) {
 
 vec4 readColor(in SplatSource source) {
     return texelFetch(splatColor, source.uv, 0);
-}   
+}
 `;

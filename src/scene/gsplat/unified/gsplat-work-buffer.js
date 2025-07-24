@@ -91,7 +91,7 @@ class GSplatWorkBuffer {
         return new Texture(this.device, {
             name: name,
             width: w,
-            height: w,
+            height: h,
             format: format,
             cubemap: false,
             mipmaps: false,
