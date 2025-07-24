@@ -1,3 +1,4 @@
+import { DOUBLE_TAP_THRESHOLD, DOUBLE_TAP_VARIANCE } from '../constants.js';
 import { InputSource } from '../input.js';
 import { VirtualJoystick } from './virtual-joystick.js';
 
@@ -24,6 +25,7 @@ const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length
  * @typedef {object} DualGestureSourceDeltas
  * @property {number[]} leftInput - The left input deltas.
  * @property {number[]} rightInput - The right input deltas.
+ * @property {number[]} doubleTap - The double tap delta.
  * @augments {InputSource<DualGestureSourceDeltas>}
  */
 class DualGestureSource extends InputSource {
@@ -38,6 +40,12 @@ class DualGestureSource extends InputSource {
      * @private
      */
     _pointerData = new Map();
+
+    /**
+     * @type {{ x: number, y: number, time: number }}
+     * @private
+     */
+    _lastPointer = { x: 0, y: 0, time: 0 };
 
     /**
      * @type {VirtualJoystick}
@@ -58,7 +66,8 @@ class DualGestureSource extends InputSource {
     constructor(layout) {
         super({
             leftInput: [0, 0],
-            rightInput: [0, 0]
+            rightInput: [0, 0],
+            doubleTap: [0]
         });
 
         if (layout) {
@@ -119,6 +128,15 @@ class DualGestureSource extends InputSource {
             y: clientY,
             left
         });
+
+        const now = Date.now();
+        const sqrDist = (this._lastPointer.x - clientX) ** 2 + (this._lastPointer.y - clientY) ** 2;
+        if (sqrDist < DOUBLE_TAP_VARIANCE && now - this._lastPointer.time < DOUBLE_TAP_THRESHOLD) {
+            this.deltas.doubleTap.append([1]);
+        }
+        this._lastPointer.x = clientX;
+        this._lastPointer.y = clientY;
+        this._lastPointer.time = now;
 
         if (left && startsWith(this._layout, 'joystick')) {
             this.fire('joystick:position:left', this._leftJoystick.down(clientX, clientY));

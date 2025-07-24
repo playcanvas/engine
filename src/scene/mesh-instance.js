@@ -9,7 +9,8 @@ import {
     RENDERSTYLE_SOLID,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    SHADOW_CASCADE_ALL
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
@@ -259,6 +260,16 @@ class MeshInstance {
      * @type {boolean}
      */
     castShadow = false;
+
+    /**
+     * Specifies a bitmask that controls which shadow cascades a mesh instance contributes
+     * to when rendered with a {@link LIGHTTYPE_DIRECTIONAL} light source.
+     * This setting is only effective if the {@link castShadow} property is enabled.
+     * Defaults to {@link SHADOW_CASCADE_ALL}, which means the mesh casts shadows into all available cascades.
+     *
+     * @type {number}
+     */
+    shadowCascadeMask = SHADOW_CASCADE_ALL;
 
     /**
      * Controls whether the mesh instance can be culled by frustum culling (see
@@ -1085,15 +1096,15 @@ class MeshInstance {
 
     updateKey() {
 
-        // 31      : sign bit (leave)
-        // 30 - 25 : 8 bits for draw bucket - this is the highest priority for sorting
-        // 24      : 1 bit for alpha test / coverage, to render them after opaque to keep GPU efficiency
-        // 23 - 0  : 24 bits for material ID
+        // 31      : sign bit (leave as 0)
+        // 30 - 23 : 8 bits for draw bucket - highest priority for sorting
+        // 22      : 1 bit for alpha test / coverage, to render them after opaque for GPU efficiency
+        // 21 - 0  : 22 bits for material ID
         const { material } = this;
         this._sortKeyForward =
-            (this._drawBucket << 25) |
-            ((material.alphaToCoverage || material.alphaTest) ? 0x1000000 : 0) |
-            (material.id & 0xffffff);
+            (this._drawBucket << 23) |
+            ((material.alphaToCoverage || material.alphaTest) ? 0x400000 : 0) |
+            (material.id & 0x3fffff);
     }
 
     /**

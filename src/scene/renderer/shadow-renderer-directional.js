@@ -15,6 +15,7 @@ import { RenderPassShadowDirectional } from './render-pass-shadow-directional.js
  * @import { Light } from '../light.js'
  * @import { Renderer } from './renderer.js'
  * @import { ShadowRenderer } from './shadow-renderer.js'
+ * @import { MeshInstance } from '../mesh-instance.js';
  */
 
 const visibleSceneAabb = new BoundingBox();
@@ -160,18 +161,30 @@ class ShadowRendererDirectional {
             this.renderer.updateCameraFrustum(shadowCam);
             this.shadowRenderer.cullShadowCasters(comp, light, lightRenderData.visibleCasters, shadowCam, casters);
 
-            // find out AABB of visible shadow casters
-            let emptyAabb = true;
+            const cascadeFlag = 1 << cascade;
             const visibleCasters = lightRenderData.visibleCasters;
-            for (let i = 0; i < visibleCasters.length; i++) {
-                const meshInstance = visibleCasters[i];
+            const origNumVisibleCasters = visibleCasters.length;
 
-                if (emptyAabb) {
-                    emptyAabb = false;
-                    visibleSceneAabb.copy(meshInstance.aabb);
-                } else {
-                    visibleSceneAabb.add(meshInstance.aabb);
+            let numVisibleCasters = 0;
+
+            // exclude all mesh instances that are hidden for this cascade.
+            // find out AABB of visible shadow casters
+
+            for (let i = 0; i < origNumVisibleCasters; i++) {
+                const meshInstance = visibleCasters[i];
+                if (meshInstance.shadowCascadeMask & cascadeFlag) {
+                    visibleCasters[numVisibleCasters++] = meshInstance;
+                    if (numVisibleCasters === 1) {
+                        visibleSceneAabb.copy(meshInstance.aabb);
+                    } else {
+                        visibleSceneAabb.add(meshInstance.aabb);
+                    }
                 }
+            }
+
+            // remove empty tail
+            if (origNumVisibleCasters !== numVisibleCasters) {
+                visibleCasters.length = numVisibleCasters;
             }
 
             // calculate depth range of the caster's AABB from the point of view of the shadow camera

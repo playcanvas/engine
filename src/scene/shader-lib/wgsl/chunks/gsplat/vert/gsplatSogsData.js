@@ -1,8 +1,5 @@
 export default /* wgsl */`
-var means_u: texture_2d<f32>;
-var means_l: texture_2d<f32>;
-var quats: texture_2d<f32>;
-var scales: texture_2d<f32>;
+var packedTexture: texture_2d<u32>;
 
 uniform means_mins: vec3f;
 uniform means_maxs: vec3f;
@@ -10,13 +7,27 @@ uniform means_maxs: vec3f;
 uniform scales_mins: vec3f;
 uniform scales_maxs: vec3f;
 
+fn unpackU32(u: u32) -> vec4f {
+    return vec4f(
+        f32((u >> 24u) & 0xFFu) / 255.0,
+        f32((u >> 16u) & 0xFFu) / 255.0,
+        f32((u >> 8u) & 0xFFu) / 255.0,
+        f32(u & 0xFFu) / 255.0
+    );
+}
+
+var<private> packedSample: vec4<u32>;
+
 // read the model-space center of the gaussian
 fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
-    let u: vec3f = textureLoad(means_u, source.uv, 0).xyz;
-    let l: vec3f = textureLoad(means_l, source.uv, 0).xyz;
-    let n: vec3f = (l * 255.0 + u * 255.0 * 256.0) / 65535.0;
 
+    packedSample = textureLoad(packedTexture, source.uv, 0);
+
+    let l: vec3f = unpackU32(packedSample.x).xyz;
+    let u: vec3f = unpackU32(packedSample.y).xyz;
+    let n: vec3f = (l * 255.0 + u * 255.0 * 256.0) / 65535.0;
     let v: vec3f = mix(uniform.means_mins, uniform.means_maxs, n);
+
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
@@ -24,7 +35,9 @@ const norm: f32 = 2.0 / sqrt(2.0);
 
 // sample covariance vectors
 fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
-    let qdata: vec4f = textureLoad(quats, source.uv, 0);
+    let qdata: vec4f = unpackU32(packedSample.z);
+    let sdata: vec3f = unpackU32(packedSample.w).xyz;
+
     let abc: vec3f = (qdata.xyz - 0.5) * norm;
     let d: f32 = sqrt(max(0.0, 1.0 - dot(abc, abc)));
 
@@ -43,7 +56,7 @@ fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, ve
 
 
     let rot: mat3x3f = quatToMat3(quat);
-    let scale: vec3f = exp(mix(uniform.scales_mins, uniform.scales_maxs, textureLoad(scales, source.uv, 0).xyz));
+    let scale: vec3f = exp(mix(uniform.scales_mins, uniform.scales_maxs, sdata));
 
     // M = S * R
     let M: mat3x3f = transpose(mat3x3f(

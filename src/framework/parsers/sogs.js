@@ -4,6 +4,41 @@ import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
 import { GSplatSogsResource } from '../../scene/gsplat/gsplat-sogs-resource.js';
 
+// combine the progress updates from multiple assets
+// and fire progress events on the target
+const combineProgress = (target, assets) => {
+    const map = new Map();
+
+    const fire = () => {
+        let loaded = 0;
+        let total = 0;
+
+        map.forEach((value) => {
+            loaded += value.loaded;
+            total += value.total;
+        });
+
+        target.fire('progress', loaded, total);
+    };
+
+    assets.forEach((asset) => {
+        const progress = (loaded, total) => {
+            map.set(asset, { loaded, total });
+            fire();
+        };
+
+        const done = () => {
+            asset.off('progress', progress);
+            asset.off('load', done);
+            asset.off('error', done);
+        };
+
+        asset.on('progress', progress);
+        asset.on('load', done);
+        asset.on('error', done);
+    });
+};
+
 /**
  * @import { AppBase } from '../app-base.js'
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
@@ -56,6 +91,8 @@ class SogsParser {
             });
         });
 
+        combineProgress(asset, subs.map(sub => textures[sub]).flat());
+
         // wait for all textures to complete loading
         await Promise.allSettled(promises);
 
@@ -71,11 +108,14 @@ class SogsParser {
         data.sh_centroids = textures.shN?.[0]?.resource;
         data.sh_labels = textures.shN?.[1]?.resource;
 
-        if (asset.data?.reorder ?? true) {
-            await data.reorderData();
+        const decompress = asset.data?.decompress;
+
+        if (!decompress) {
+            // no need to prepare gpu data if decompressing
+            await data.prepareGpuData();
         }
 
-        const resource = asset.data?.decompress ?
+        const resource = decompress ?
             new GSplatResource(this.app.graphicsDevice, await data.decompress()) :
             new GSplatSogsResource(this.app.graphicsDevice, data);
 

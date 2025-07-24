@@ -130,7 +130,8 @@ const sandShader = pc.ShaderUtils.createShader(device, {
     uniqueName: 'SandShader',
     attributes: { aPosition: pc.SEMANTIC_POSITION },
     vertexChunk: 'quadVS',
-    fragmentGLSL: files['sandSimulation.frag'],
+    fragmentGLSL: files['sandSimulation.glsl.frag'],
+    fragmentWGSL: files['sandSimulation.wgsl.frag'],
     // Note that we are changing the shader output type to 'uint'
     // This means we only have to return a single integer value from the shader,
     // whereas the default is to return a vec4. This option allows you to pass

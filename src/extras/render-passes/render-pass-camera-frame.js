@@ -18,6 +18,10 @@ import { RenderPassDownsample } from './render-pass-downsample.js';
 import { Color } from '../../core/math/color.js';
 
 /**
+ * @import { CameraFrame } from './camera-frame.js'
+ */
+
+/**
  * Options used to configure the RenderPassCameraFrame. To modify these options, you must create
  * a new instance of the RenderPassCameraFrame with the desired settings.
  *
@@ -102,16 +106,24 @@ class RenderPassCameraFrame extends RenderPass {
     layersDirty = false;
 
     /**
+     * The camera frame that this render pass belongs to.
+     *
+     * @type {CameraFrame}
+     */
+    cameraFrame;
+
+    /**
      * @type {RenderTarget|null}
      * @private
      */
     rt = null;
 
-    constructor(app, cameraComponent, options = {}) {
+    constructor(app, cameraFrame, cameraComponent, options = {}) {
         Debug.assert(app);
         super(app.graphicsDevice);
         this.app = app;
         this.cameraComponent = cameraComponent;
+        this.cameraFrame = cameraFrame;
 
         this.options = this.sanitizeOptions(options);
         this.setupRenderPasses(this.options);
@@ -476,7 +488,7 @@ class RenderPassCameraFrame extends RenderPass {
 
         // trigger update if layers were added or removed
         if (this.layersDirty) {
-            this.update(this.options);
+            this.cameraFrame.update();
         }
 
         super.frameUpdate();

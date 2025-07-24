@@ -66,6 +66,11 @@ fn customFace(InstanceCoords: vec3f, quadXY: vec2f) -> vec3f {
     return pos;
 }
 
+fn safeNormalize(v: vec2f) -> vec2f {
+    let l = length(v);
+    return select(v, v / l, l > 1e-06);
+}
+
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
@@ -94,7 +99,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #endif
     var rotMatrix: mat2x2f;
 
-    let inAngle = input.particle_vertexData2.x;
+    var inAngle = input.particle_vertexData2.x;
     var particlePosMoved = vec3f(0.0);
     let meshLocalPos = input.particle_vertexData3.xyz;
 `;

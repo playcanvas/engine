@@ -1,5 +1,4 @@
 export default /* glsl */`
-uniform highp sampler2D sh_labels;
 uniform highp sampler2D sh_centroids;
 
 uniform float shN_mins;
@@ -9,7 +8,7 @@ uniform float shN_maxs;
 
 void readSHData(in SplatSource source, out vec3 sh[SH_COEFFS], out float scale) {
     // extract spherical harmonics palette index
-    ivec2 t = ivec2(texelFetch(sh_labels, source.uv, 0).xy * 255.0);
+    ivec2 t = ivec2(packedSample.x & 255u, packedSample.y & 255u);
     int n = t.x + t.y * 256;
     int u = (n % 64) * SH_COEFFS;
     int v = n / 64;
