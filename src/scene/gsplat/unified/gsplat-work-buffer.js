@@ -78,7 +78,7 @@ class GSplatWorkBuffer {
 
         const len = this.orderTexture.width * this.orderTexture.height;
         if (len !== data.length) {
-            console.error('setOrderData: data length mismatch, got:', data.length, 'expected:', len, `(${this.orderTexture.width}x${this.orderTexture.height})`);
+            Debug.error('setOrderData: data length mismatch, got:', data.length, 'expected:', len, `(${this.orderTexture.width}x${this.orderTexture.height})`);
         }
 
 
