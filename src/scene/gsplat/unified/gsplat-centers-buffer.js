@@ -110,7 +110,7 @@ class GSplatCentersBuffers {
      * Estimates the square texture size width that can store all splats, using binary search to
      * find the smallest size that fits.
      *
-     * @param {GSplatInfo[]} splats - The splats to the space for allocate.
+     * @param {GSplatInfo[]} splats - The splats to allocate space for.
      * @param {number} maxSize - Max texture width and height.
      * @returns {boolean} - True if the texture size was found.
      */
