@@ -77,6 +77,20 @@ function UnifiedSortWorker() {
         }
     };
 
+    const countingSort = (bucketCount, countBuffer, numVertices, distances, order) => {
+        // Change countBuffer[i] so that it contains actual position of this digit in outputArray
+        for (let i = 1; i < bucketCount; i++) {
+            countBuffer[i] += countBuffer[i - 1];
+        }
+
+        // Build the output array
+        for (let i = 0; i < numVertices; i++) {
+            const distance = distances[i];
+            const destIndex = --countBuffer[distance];
+            order[destIndex] = i;
+        }
+    };
+
     const update = () => {
         if (!order || !centers || centers.length === 0/* || !cameraPosition || !cameraDirection*/ || !sortParams) return;
 
@@ -226,20 +240,9 @@ function UnifiedSortWorker() {
 
             evaluateSortKeys(sortParams, centers, minDist, divider, distances, countBuffer);
 
+            countingSort(bucketCount, countBuffer, numVertices, distances, order);
 
 
-        }
-
-        // Change countBuffer[i] so that it contains actual position of this digit in outputArray
-        for (let i = 1; i < bucketCount; i++) {
-            countBuffer[i] += countBuffer[i - 1];
-        }
-
-        // Build the output array
-        for (let i = 0; i < numVertices; i++) {
-            const distance = distances[i];
-            const destIndex = --countBuffer[distance];
-            order[destIndex] = i;
         }
 
         // // Find splat with distance 0 to limit rendering behind the camera
