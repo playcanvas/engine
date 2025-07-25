@@ -53,6 +53,8 @@ import gsplatQuatToMat3VS from '../chunks/gsplat/vert/gsplatQuatToMat3.js';
 import gsplatSogsColorVS from '../chunks/gsplat/vert/gsplatSogsColor.js';
 import gsplatSogsDataVS from '../chunks/gsplat/vert/gsplatSogsData.js';
 import gsplatSogsSHVS from '../chunks/gsplat/vert/gsplatSogsSH.js';
+import gsplatSourceFormatVS from '../chunks/gsplat/vert/gsplatSourceFormat.js';
+import gsplatStructsVS from '../chunks/gsplat/vert/gsplatStructs.js';
 import gsplatCornerVS from '../chunks/gsplat/vert/gsplatCorner.js';
 import gsplatDataVS from '../chunks/gsplat/vert/gsplatData.js';
 import gsplatOutputVS from '../chunks/gsplat/vert/gsplatOutput.js';
@@ -60,6 +62,7 @@ import gsplatPS from '../chunks/gsplat/frag/gsplat.js';
 import gsplatSHVS from '../chunks/gsplat/vert/gsplatSH.js';
 import gsplatSourceVS from '../chunks/gsplat/vert/gsplatSource.js';
 import gsplatVS from '../chunks/gsplat/vert/gsplat.js';
+import gsplatWorkBufferVS from '../chunks/gsplat/vert/gsplatWorkBuffer.js';
 import quadVS from '../chunks/common/vert/quad.js';
 import indirectCoreCS from '../chunks/common/comp/indirect-core.js';
 import immediateLinePS from '../chunks/internal/frag/immediateLine.js';
@@ -228,6 +231,8 @@ const shaderChunksWGSL = {
     gsplatCompressedDataVS,
     gsplatCompressedSHVS,
     gsplatEvalSHVS,
+    gsplatSourceFormatVS,
+    gsplatStructsVS,
     gsplatQuatToMat3VS,
     gsplatSogsColorVS,
     gsplatSogsDataVS,
@@ -238,6 +243,7 @@ const shaderChunksWGSL = {
     gsplatSHVS,
     gsplatSourceVS,
     gsplatVS,
+    gsplatWorkBufferVS,
     quadVS,
     indirectCoreCS,
     immediateLinePS,

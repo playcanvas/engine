@@ -3,10 +3,7 @@ uniform vec2 viewport;                  // viewport dimensions
 uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
 
 // calculate the clip-space offset from the center for this gaussian
-bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) {
-    // get covariance
-    vec3 covA, covB;
-    readCovariance(source, covA, covB);
+bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corner, vec3 covA, vec3 covB) {
 
     mat3 Vrk = mat3(
         covA.x, covA.y, covA.z, 
@@ -71,5 +68,12 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
     corner.uv = source.cornerUV;
 
     return true;
+}
+
+// calculate the clip-space offset from the center for this gaussian
+bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) {
+    vec3 covA, covB;
+    readCovariance(source, covA, covB);
+    return initCornerCov(source, center, corner, covA, covB);
 }
 `;

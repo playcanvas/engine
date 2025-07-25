@@ -9,8 +9,8 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { CULLFACE_NONE, PIXELFORMAT_RGBA32U, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import glslGsplatSogsReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplat-sogs-reorder.js';
-import wgslGsplatSogsReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplat-sogs-reorder.js';
+import glslGsplatSogsReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogsReorder.js';
+import wgslGsplatSogsReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsReorder.js';
 
 const SH_C0 = 0.28209479177387814;
 
