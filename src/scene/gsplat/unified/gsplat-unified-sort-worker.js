@@ -49,6 +49,34 @@ function UnifiedSortWorker() {
         return ~m;
     };
 
+    const evaluateSortKeys = (sortParams, centers, minDist, divider, distances, countBuffer) => {
+        for (let paramIdx = 0; paramIdx < sortParams.length; paramIdx++) {
+            const params = sortParams[paramIdx];
+            const { transformedDirection, offset, scale, startIndex, endIndex } = params;
+
+            const dx = transformedDirection.x;
+            const dy = transformedDirection.y;
+            const dz = transformedDirection.z;
+
+            // Pre-calculate constants - CORRECTED
+            const scaledDivider = scale * divider;
+            const offsetMinusMinDistTimesDivider = (offset - minDist) * divider;
+
+            let istride = startIndex * 3;
+            for (let i = startIndex; i < endIndex; i++, istride += 3) {
+                const x = centers[istride];
+                const y = centers[istride + 1];
+                const z = centers[istride + 2];
+
+                const dotProduct = x * dx + y * dy + z * dz;
+                const sortKey = Math.floor(dotProduct * scaledDivider + offsetMinusMinDistTimesDivider);
+                
+                distances[i] = sortKey;
+                countBuffer[sortKey]++;
+            }
+        }
+    };
+
     const update = () => {
         if (!order || !centers || centers.length === 0/* || !cameraPosition || !cameraDirection*/ || !sortParams) return;
 
@@ -196,31 +224,7 @@ function UnifiedSortWorker() {
             // }
 
 
-            sortParams.forEach((params) => {
-                const { transformedDirection, offset, scale, startIndex, endIndex } = params;
-
-                const dx = transformedDirection.x;
-                const dy = transformedDirection.y;
-                const dz = transformedDirection.z;
-
-                for (let i = startIndex; i < endIndex; i++) {
-                    const istride = i * 3;
-
-                    // local space coordinates of the splat
-                    const x = centers[istride + 0];
-                    const y = centers[istride + 1];
-                    const z = centers[istride + 2];
-
-                    // distance
-                    const dotProduct = x * dx + y * dy + z * dz;
-                    const distance = scale * dotProduct + offset;
-
-                    // sorting key
-                    const sortKey = Math.floor((distance - minDist) * divider);
-                    distances[i] = sortKey;
-                    countBuffer[sortKey]++;
-                }
-            });            
+            evaluateSortKeys(sortParams, centers, minDist, divider, distances, countBuffer);
 
 
 
