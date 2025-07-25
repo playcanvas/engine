@@ -374,20 +374,13 @@ class CameraControls extends Script {
         });
 
         // pose
-        const position = this._camera.entity.getPosition();
-        const focus = this._camera.entity.getRotation()
-        .transformVector(Vec3.FORWARD, tmpV1)
-        .mulScalar(this._pose.distance)
-        .add(position);
-        this._pose.look(position, focus);
+        this._pose.look(this._camera.entity.getPosition(), Vec3.ZERO);
 
         // mode
         this._setMode('orbit');
 
         // destroy
         this.on('destroy', this._destroy, this);
-
-        console.log('CameraControls: initialized');
     }
 
     /**
