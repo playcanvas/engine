@@ -367,6 +367,7 @@ class GSplatSogsData {
         this.packGpuMemory();
     }
 
+    // keep this function for backwards compatibility
     reorderData() {
         return this.prepareGpuData();
     }
