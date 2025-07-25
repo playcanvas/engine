@@ -54,7 +54,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         // source texture size
         var srcSize: u32;
         #ifdef GSPLAT_SOGS_DATA
-            srcSize = u32(textureDimensions(scales, 0).x);
+            srcSize = u32(textureDimensions(packedTexture, 0).x);
         #elif GSPLAT_COMPRESSED_DATA
             srcSize = u32(textureDimensions(packedTexture, 0).x);
         #else

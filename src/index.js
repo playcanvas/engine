@@ -235,7 +235,6 @@ export { GSplatData } from './scene/gsplat/gsplat-data.js';
 export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
 export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
-export { GSplatManager } from './scene/gsplat/unified/gsplat-manager.js'; // temporary till proper API is exposed
 export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
 export { GSplatSogsResource } from './scene/gsplat/gsplat-sogs-resource.js';
 

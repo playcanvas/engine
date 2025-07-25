@@ -13,6 +13,7 @@ import { Material } from './materials/material.js';
  * @import { LightComponent } from '../framework/components/light/component.js'
  * @import { MeshInstance } from './mesh-instance.js'
  * @import { Vec3 } from '../core/math/vec3.js'
+ * @import { GSplatPlacement } from './gsplat/unified/gsplat-placement.js'
  */
 
 // Layers
@@ -170,6 +171,20 @@ class Layer {
      * @ignore
      */
     camerasSet = new Set();
+
+    /**
+     * @type {GSplatPlacement[]}
+     * @ignore
+     */
+    gsplatPlacements = [];
+
+    /**
+     * True if the gsplatPlacements array was modified.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    gsplatPlacementsDirty = true;
 
     /**
      * True if the composition is invalidated.
@@ -337,6 +352,7 @@ class Layer {
     set enabled(val) {
         if (val !== this._enabled) {
             this._dirtyComposition = true;
+            this.gsplatPlacementsDirty = true;
             this._enabled = val;
             if (val) {
                 this.incrementCounter();
@@ -469,6 +485,33 @@ class Layer {
             return;
         }
         this._refCounter--;
+    }
+
+    /**
+     * Adds a gsplat placement to this layer.
+     *
+     * @param {GSplatPlacement} placement - A placement of a gsplat.
+     * @ignore
+     */
+    addGSplatPlacement(placement) {
+        if (!this.gsplatPlacements.includes(placement)) {
+            this.gsplatPlacements.push(placement);
+            this.gsplatPlacementsDirty = true;
+        }
+    }
+
+    /**
+     * Removes a gsplat placement from this layer.
+     *
+     * @param {GSplatPlacement} placement - A placement of a gsplat.
+     * @ignore
+     */
+    removeGSplatPlacement(placement) {
+        const index = this.gsplatPlacements.indexOf(placement);
+        if (index >= 0) {
+            this.gsplatPlacements.splice(index, 1);
+            this.gsplatPlacementsDirty = true;
+        }
     }
 
     /**

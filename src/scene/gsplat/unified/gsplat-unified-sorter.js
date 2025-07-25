@@ -21,7 +21,7 @@ class GSplatUnifiedSorter extends EventHandler {
             this.fire('sorted', msgData.count, msgData.version, returnCenters, orderData);
 
             // reuse order data
-            if (orderData.length / 3 === this.bufferLength) {
+            if (orderData.length === this.bufferLength) {
                 this.availableOrderData.push(orderData);
             }
         };

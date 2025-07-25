@@ -10,6 +10,7 @@ import { GSplatRenderer } from './gsplat-renderer.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
+ * @import { GSplatPlacement } from './gsplat-placement.js';
  */
 
 const cameraPosition = new Vec3();
@@ -47,7 +48,7 @@ class GSplatManager {
      */
     splats = [];
 
-    /** @type {GSplatUnifiedSorter | null} */
+    /** @type {GSplatUnifiedSorter} */
     sorter = null;
 
     /**
@@ -80,45 +81,89 @@ class GSplatManager {
     /** @type {GraphNode} */
     cameraNode;
 
-    constructor(device, cameraNode) {
+    /** @type {Set<GSplatPlacement>} */
+    placements = new Set();
+
+    constructor(device, layer, cameraNode) {
         this.device = device;
         this.cameraNode = cameraNode;
         this.workBuffer = new GSplatWorkBuffer(device);
         this.centerBuffer = new GSplatCentersBuffers();
-        this.renderer = new GSplatRenderer(device, this.node, this.workBuffer);
-        this.createSorter();
+        this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
+        this.sorter = this.createSorter();
     }
 
     destroy() {
         this.workBuffer.destroy();
-        this.centerBuffer.destroy();
         this.renderer.destroy();
         this.sorter.destroy();
     }
 
     createSorter() {
         // create sorter
-        this.sorter = new GSplatUnifiedSorter();
-        this.sorter.on('sorted', (count, version, returnCenters, orderData) => {
+        const sorter = new GSplatUnifiedSorter();
+        sorter.on('sorted', (count, version, returnCenters, orderData) => {
             this.onSorted(count, version, returnCenters, orderData);
         });
+        return sorter;
     }
 
-    add(resource, node) {
-
-        resource.generateLods();
-        const splatInfo = new GSplatInfo(this.device, resource, node);
-        this.splats.push(splatInfo);
-
-        this.onChange();
+    /**
+     * Adds a new splat to the manager.
+     *
+     * @param {GSplatPlacement} placement - The placement of the splat.
+     */
+    add(placement) {
+        if (!this.placements.has(placement)) {
+            const resource = placement.resource;
+            resource.generateLods();
+            const splatInfo = new GSplatInfo(this.device, resource, placement.node);
+            this.splats.push(splatInfo);
+            this.placements.add(placement);
+        }
     }
 
-    remove(node) {
-        const splatInfo = this.splats.find(s => s.node === node);
+    /**
+     * Removes a splat from the manager.
+     *
+     * @param {GSplatPlacement} placement - The placement of the splat.
+     */
+    remove(placement) {
+        const splatInfo = this.splats.find(s => s.node === placement.node);
         if (splatInfo) {
             this.splats.splice(this.splats.indexOf(splatInfo), 1);
             splatInfo.destroy();
+            this.placements.delete(placement);
+        }
+    }
 
+    /**
+     * Reconciles the manager with the given placements. This is used to update the manager when
+     * the layer's placements have changed.
+     *
+     * @param {GSplatPlacement[]} placements - The placements to reconcile with.
+     */
+    reconcile(placements) {
+
+        let anyChanges = false;
+
+        // remove all placements that are not in the new list
+        this.placements.forEach((p) => {
+            if (!placements.includes(p)) {
+                this.remove(p);
+                anyChanges = true;
+            }
+        });
+
+        // add all placements that are in the new list
+        placements.forEach((p) => {
+            if (!this.placements.has(p)) {
+                this.add(p);
+                anyChanges = true;
+            }
+        });
+
+        if (anyChanges) {
             this.onChange();
         }
     }
@@ -276,7 +321,7 @@ class GSplatManager {
             }
 
             // update data for the sorter - use the same textureSize
-            this.sort(this.cameraNode, this.centerBuffer.textureSize);
+            this.sort(this.centerBuffer.textureSize);
         }
 
         // if we got valid sorted centers, which makes the renderState valid
@@ -310,8 +355,10 @@ class GSplatManager {
         }
     }
 
-    sort(cameraNode, textureSize) {
+    sort(textureSize) {
+
         // Get camera's world-space properties
+        const cameraNode = this.cameraNode;
         const cameraMat = cameraNode.getWorldTransform();
         cameraMat.getTranslation(cameraPosition);
         cameraMat.getZ(cameraDirection).normalize();

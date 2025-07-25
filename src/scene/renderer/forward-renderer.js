@@ -1005,6 +1005,9 @@ class ForwardRenderer extends Renderer {
         this.beginFrame(comp);
         this.setSceneConstants();
 
+        // update gsplat director
+        this.gsplatDirector.update(comp);
+
         // visibility culling of lights, meshInstances, shadows casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
         this.cullComposition(comp);
