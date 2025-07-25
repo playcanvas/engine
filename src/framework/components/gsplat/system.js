@@ -15,6 +15,7 @@ const _schema = [
 
 // order matters here
 const _properties = [
+    'unified',
     'castShadows',
     'material',
     'highQualitySH',

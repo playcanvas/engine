@@ -97,14 +97,18 @@ function UnifiedSortWorker() {
         // }
 
 
-        const minDist = -2300;
-        const maxDist = 2300;
+        const minDist = -1000;
+        const maxDist = 1000;
+        // const minDist = -50;
+        // const maxDist = 10;
 
 
         const numVertices = sortSplatCount ?? centers.length / 3;
 
         // calculate number of bits needed to store sorting result
-        const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));
+        //const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));
+        const compareBits = 20;
+
         const bucketCount = 2 ** compareBits + 1;
 
         // create distance buffer

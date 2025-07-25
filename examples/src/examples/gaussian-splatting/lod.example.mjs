@@ -47,23 +47,9 @@ app.on('destroy', () => {
 pc.Tracing.set(pc.TRACEID_SHADER_ALLOC, true);
 
 const assets = {
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
-    // church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/church.ply` }),
-    //    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/onsen.ply` }),
-    // church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/uzumasa.ply` }),
     church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
-
-    // logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/playcanvas-logo/meta.json` }),
     logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pclogo.ply` }),
-    //    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/anneli.ply` }),
-    //    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/museum.ply` }),
-    // logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/uzumasa.ply` }),
     guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
-
-    shoe: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/shoe-with-sh.ply` }),
-    shoeNoSh: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/shoe-without-sh.ply` }),
-
-    // pokemon: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pokemon.ply` }),
     skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.ply` }),
 
     fly: new pc.Asset('fly', 'script', { url: `${rootPath}/static/scripts/camera/fly-camera.js` }),
@@ -75,28 +61,42 @@ assetListLoader.load(() => {
     app.start();
 
     // create a splat entity and place it in the world
-    const biker = new pc.Entity();
-    biker.setLocalPosition(2.5, 1, 1);
-    biker.setLocalEulerAngles(180, 90, 0);
-    // biker.setLocalScale(0.7, 0.7, 0.7);
-    // biker.setLocalScale(7, 7, 7);
+    const skull = new pc.Entity();
+    skull.addComponent('gsplat', {
+        asset: assets.skull,
+        unified: true
+    });
+    skull.setLocalPosition(2.5, 1, 1);
+    skull.setLocalEulerAngles(180, 90, 0);
+    skull.setLocalScale(0.7, 0.7, 0.7);
+    app.root.addChild(skull);
 
-    const biker2 = new pc.Entity();
-    biker2.setLocalPosition(2.5, 1, 0);
-    biker2.setLocalEulerAngles(180, 90, 0);
-    //    biker2.setLocalScale(0.7, 0.7, 0.7);
-    biker2.setLocalScale(7, 7, 7);
-
-
+    // create a splat entity and place it in the world
     const logo = new pc.Entity();
+    logo.addComponent('gsplat', {
+        asset: assets.logo,
+        unified: true
+    });
+    app.root.addChild(logo);
     logo.setLocalPosition(0, 1.5, 1);
     logo.setLocalEulerAngles(180, 0, 0);
     logo.setLocalScale(0.5, 0.5, 0.5);
 
+    // create a splat entity and place it in the world
     const church = new pc.Entity();
+    church.addComponent('gsplat', {
+        asset: assets.church,
+        unified: true
+    });
+    app.root.addChild(church);
     church.setLocalEulerAngles(180, 90, 0);
 
     const guitar = new pc.Entity();
+    guitar.addComponent('gsplat', {
+        asset: assets.guitar,
+        unified: true
+    });
+    app.root.addChild(guitar);
     guitar.setLocalPosition(0, 0.6, 4);
     guitar.setLocalEulerAngles(180, 0, 0);
     guitar.setLocalScale(0.5, 0.5, 0.5);
@@ -120,17 +120,6 @@ assetListLoader.load(() => {
 
     app.root.addChild(camera);
 
-    // temporary API
-    const manager = new pc.GSplatManager(app.graphicsDevice, camera);
-
-    const worldLayer = app.scene.layers.getLayerByName('World');
-    worldLayer.addMeshInstances([manager.renderer.meshInstance]);
-
-    manager.add(assets.church.resource, church);
-    manager.add(assets.guitar.resource, guitar);
-    manager.add(assets.logo.resource, logo);
-
-
     let timeToChange = 1;
     let time = 0;
     let guitarTime = 0;
@@ -139,48 +128,31 @@ assetListLoader.load(() => {
         time += dt;
         timeToChange -= dt;
 
-        logo.rotateLocal(0, 100 * dt, 0);
-
-        // each even second, update the guitar as well
-        //        if (Math.floor(time) % 2 === 0) {
-        guitarTime += dt;
-
-        // orbit guitar around
-        guitar.setLocalPosition(0.5 * Math.sin(guitarTime), 2, 0.5 * Math.cos(guitarTime) + 1);
-        //        }
-
         // ping pong logo between two positions along x-axies
         logo.setLocalPosition(5.5 + 5 * Math.sin(time), 1.5, -2);
+        logo.rotateLocal(0, 100 * dt, 0);
 
+        // update the guitar as well
+        guitarTime += dt;
+        guitar.setLocalPosition(0.5 * Math.sin(guitarTime), 2, 0.5 * Math.cos(guitarTime) + 1);
 
         if (timeToChange <= 0) {
 
             if (!added) {
-                console.log('adding shoe');
+                console.log('adding skull');
                 added = true;
                 timeToChange = 1;
 
-                // worldLayer.removeMeshInstances([manager.meshInstance]);
-                manager.add(assets.skull.resource, biker);
-                // manager.add(assets.shoe.resource, biker2);
-                // worldLayer.addMeshInstances([manager.meshInstance]);
+                skull.enabled = true;
 
             } else {
-                console.log('removing shoe');
+                console.log('removing skull');
                 added = false;
                 timeToChange = 1;
 
-                // worldLayer.removeMeshInstances([manager.meshInstance]);
-
-
-                manager.remove(biker);
-                // manager.remove(biker2);
-                // worldLayer.addMeshInstances([manager.meshInstance]);
+                skull.enabled = false;
             }
         }
-
-
-        manager.update();
     });
 });
 

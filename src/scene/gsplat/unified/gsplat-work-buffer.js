@@ -81,7 +81,6 @@ class GSplatWorkBuffer {
             Debug.error('setOrderData: data length mismatch, got:', data.length, 'expected:', len, `(${this.orderTexture.width}x${this.orderTexture.height})`);
         }
 
-
         // upload data to texture
         this.orderTexture._levels[0] = data;
         this.orderTexture.upload();
