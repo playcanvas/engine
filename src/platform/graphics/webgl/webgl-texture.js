@@ -793,6 +793,22 @@ class WebglTexture {
         this._glCreated = true;
     }
 
+    /**
+     * @param {WebglGraphicsDevice} device - The graphics device.
+     * @param {Texture} texture - The texture.
+     */
+    uploadImmediate(device, texture) {
+
+        if (texture._needsUpload || texture._needsMipmapsUpload) {
+
+            device.setTexture(texture, 0);
+            this.upload(device, texture);
+
+            texture._needsUpload = false;
+            texture._needsMipmapsUpload = false;
+        }
+    }
+
     read(x, y, width, height, options) {
 
         const texture = this.texture;

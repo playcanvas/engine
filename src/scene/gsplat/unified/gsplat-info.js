@@ -16,6 +16,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
  */
 
 const _viewMat = new Mat4();
+
 /**
  * @ignore
  */
@@ -33,14 +34,14 @@ class GSplatInfo {
     node;
 
     /**
-     * A state of the splat currently used for rendering. This matches the work buffer.
+     * The state of the splat currently used for rendering. This matches the work buffer.
      *
      * @type {GSplatState}
      */
     renderState;
 
     /**
-     * A state of the splat currently used for sorting. When the sorting is done, this state will
+     * The state of the splat currently used for sorting. When the sorting is done, this state will
      * become the render state. This is where the next render state is prepared, but it's not used
      * until we get back the sorting data.
      *
@@ -121,6 +122,18 @@ class GSplatInfo {
         // done preparing
         // TODO: can we release some data here
         this.prepareState = null;
+    }
+
+    startPrepareState(cameraNode) {
+
+        // swap states
+        Debug.assert(this.prepareState === null);
+        this.prepareState = this.unusedState;
+        Debug.assert(this.prepareState);
+        this.unusedState = null;
+
+        // this updates LOD intervals and interval texture
+        this.prepareState.update(cameraNode);
     }
 
     cancelPrepareState() {
