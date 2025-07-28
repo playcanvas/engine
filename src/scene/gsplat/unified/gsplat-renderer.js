@@ -116,7 +116,8 @@ class GSplatRenderer {
     createMeshInstance() {
 
         const mesh = GSplatResourceBase.createMesh(this.device);
-        const instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, this.workBuffer.width * this.workBuffer.height);
+        const textureSize = this.workBuffer.textureSize;
+        const instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, textureSize * textureSize);
         const meshInstance = new MeshInstance(mesh, this._material);
         meshInstance.node = this.node;
         meshInstance.setInstancing(instanceIndices, true);

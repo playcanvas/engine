@@ -72,9 +72,6 @@ class GSplatManager {
     /** @type {boolean} */
     forceCentersUpdate = false;
 
-    /** @type {boolean} */
-    workBufferResizeRequest = false;
-
     /** @type {Vec3} */
     lastCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
@@ -177,9 +174,6 @@ class GSplatManager {
         // force centers update
         this.forceCentersUpdate = true;
 
-        // request work buffer resize
-        this.workBufferResizeRequest = true;
-
         // cancel any pending prepare states - as those are prepared for previous version
         this.splats.forEach(s => s.cancelPrepareState());
     }
@@ -201,11 +195,10 @@ class GSplatManager {
         if (this.sortedVersion !== version && version === this.centerBuffer.version) {
             this.sortedVersion = version;
 
-            if (this.workBufferResizeRequest) {
-                this.workBufferResizeRequest = false;
+            const textureSize = this.centerBuffer.textureSize;
 
-                const textureSize = this.centerBuffer.textureSize;
-
+            const workBufferResizeRequest = textureSize !== this.workBuffer.textureSize;
+            if (workBufferResizeRequest) {
                 this.workBuffer.resize(textureSize);
                 this.workBuffer.setOrderData(orderData);
 
@@ -291,17 +284,11 @@ class GSplatManager {
                 // Update LOD for each splat individually
                 this.splats.forEach((splat) => {
 
-                    // start preparing a state
-                    Debug.assert(splat.prepareState === null);
-                    splat.prepareState = splat.unusedState;
-                    Debug.assert(splat.prepareState);
-                    splat.unusedState = null;
-
-                    // this updates LOD intervals and interval texture
-                    splat.prepareState.update(this.cameraNode);
+                    // start preparing a state - updates LOD intervals and interval texture
+                    splat.startPrepareState(this.cameraNode);
                 });
 
-                this.centerBuffer.estimateTextureWidth(this.splats, this.device.maxTextureSize);
+                this.centerBuffer.estimateTextureSize(this.splats, this.device.maxTextureSize);
                 const textureSize = this.centerBuffer.textureSize;
 
                 // Reassign lines based on current LOD active splats
@@ -311,13 +298,8 @@ class GSplatManager {
                 // note that the work buffer is not updated yet, and only when we get sorted centers
                 const centers = this.centerBuffer.update(this.splats, textureSize);
 
-                let activeCount = 0;
-                this.splats.forEach((splat) => {
-                    const prepareState = splat.prepareState;
-                    activeCount += prepareState.lineCount * prepareState.viewport.z;
-                });
-
-                this.sorter.setData(centers, this.centerBuffer.version, activeCount);
+                // this.sorter.setData(centers, this.centerBuffer.version, activeCount);
+                this.sorter.setData(centers, this.centerBuffer.version, textureSize * textureSize);
             }
 
             // update data for the sorter - use the same textureSize

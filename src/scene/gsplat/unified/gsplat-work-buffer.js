@@ -66,12 +66,8 @@ class GSplatWorkBuffer {
         this.renderTarget?.destroy();
     }
 
-    get width() {
+    get textureSize() {
         return this.orderTexture.width;
-    }
-
-    get height() {
-        return this.orderTexture.height;
     }
 
     setOrderData(data) {

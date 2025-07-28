@@ -124,6 +124,18 @@ class GSplatInfo {
         this.prepareState = null;
     }
 
+    startPrepareState(cameraNode) {
+
+        // swap states
+        Debug.assert(this.prepareState === null);
+        this.prepareState = this.unusedState;
+        Debug.assert(this.prepareState);
+        this.unusedState = null;
+
+        // this updates LOD intervals and interval texture
+        this.prepareState.update(cameraNode);
+    }
+
     cancelPrepareState() {
         if (this.prepareState) {
             this.unusedState = this.prepareState;

@@ -97,7 +97,7 @@ class GSplatState {
         }
 
         // Estimate roughly square texture size
-        const maxTextureSize = this.device.maxTextureSize || 4096;
+        const maxTextureSize = this.device.maxTextureSize;
         let textureWidth = Math.ceil(Math.sqrt(totalSplats));
         textureWidth = Math.min(textureWidth, maxTextureSize);
         const textureHeight = Math.ceil(totalSplats / textureWidth);
