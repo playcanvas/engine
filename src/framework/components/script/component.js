@@ -744,7 +744,7 @@ class ScriptComponent extends Component {
                 if (!(scriptInstance instanceof ScriptType)) {
 
                     // Store the Attribute data
-                    this._attributeDataMap.set(scriptName, args.attributes);
+                    this._attributeDataMap.set(scriptName, { ...args.attributes });
 
                 }
 
