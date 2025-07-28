@@ -26,7 +26,7 @@ class GSplatPlacement {
     /**
      * Create a new GSplatPlacement.
      *
-     * @param {GSplatResource} resource - The resource that of the splat.
+     * @param {GSplatResource} resource - The resource of the splat.
      * @param {GraphNode} node - The node that the gsplat is linked to.
      */
     constructor(resource, node) {
