@@ -66,12 +66,8 @@ class GSplatWorkBuffer {
         this.renderTarget?.destroy();
     }
 
-    get width() {
+    get textureSize() {
         return this.orderTexture.width;
-    }
-
-    get height() {
-        return this.orderTexture.height;
     }
 
     setOrderData(data) {
@@ -80,7 +76,6 @@ class GSplatWorkBuffer {
         if (len !== data.length) {
             Debug.error('setOrderData: data length mismatch, got:', data.length, 'expected:', len, `(${this.orderTexture.width}x${this.orderTexture.height})`);
         }
-
 
         // upload data to texture
         this.orderTexture._levels[0] = data;

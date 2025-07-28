@@ -21,7 +21,7 @@ class GSplatUnifiedSorter extends EventHandler {
             this.fire('sorted', msgData.count, msgData.version, returnCenters, orderData);
 
             // reuse order data
-            if (orderData.length / 3 === this.bufferLength) {
+            if (orderData.length === this.bufferLength) {
                 this.availableOrderData.push(orderData);
             }
         };
@@ -79,17 +79,17 @@ class GSplatUnifiedSorter extends EventHandler {
     setSortParams(params) {
 
         // reuse or allocate new order data
+        let initOrderData = false;
         let orderData = this.availableOrderData.pop();
         if (!orderData) {
             orderData = new Uint32Array(this.bufferLength);
-            for (let i = 0; i < orderData.length; ++i) {
-                orderData[i] = i;
-            }
+            initOrderData = true;
         }
 
         this.worker.postMessage({
             sortParams: params,
-            order: orderData.buffer
+            order: orderData.buffer,
+            initOrderData: initOrderData
         }, [orderData.buffer]);
     }
 }
