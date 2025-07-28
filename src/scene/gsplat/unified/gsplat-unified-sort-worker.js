@@ -300,6 +300,11 @@ function UnifiedSortWorker() {
 
         if (msgData.order) {
             order = new Uint32Array(msgData.order);
+            if (msgData.initOrderData) {
+                for (let i = 0; i < order.length; ++i) {
+                    order[i] = i;
+                }
+            }
         }
         if (msgData.centers) {
             returnCenters = centers; // return old centers buffer
