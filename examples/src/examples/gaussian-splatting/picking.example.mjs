@@ -47,7 +47,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/playcanvas-logo/meta.json` }),
+    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/playcanvas-logo/meta.json` }),
     orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
@@ -73,7 +73,7 @@ assetListLoader.load(() => {
         // create a splat entity and place it in the world
         const splat = new pc.Entity(`splat-${i}`);
         splat.addComponent('gsplat', {
-            asset: assets.skull,
+            asset: assets.logo,
             castShadows: false
         });
 

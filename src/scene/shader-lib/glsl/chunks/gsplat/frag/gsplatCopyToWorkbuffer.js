@@ -48,9 +48,7 @@ void main(void) {
         #endif
         
         // source texture size
-        #ifdef GSPLAT_SOGS_DATA
-            uint srcSize = uint(textureSize(scales, 0).x);
-        #elif GSPLAT_COMPRESSED_DATA
+        #if defined(GSPLAT_SOGS_DATA) || defined(GSPLAT_COMPRESSED_DATA)
             uint srcSize = uint(textureSize(packedTexture, 0).x);
         #else
             uint srcSize = uint(textureSize(splatColor, 0).x);

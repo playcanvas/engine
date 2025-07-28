@@ -1,15 +1,20 @@
 import { SEMANTIC_POSITION, SEMANTIC_ATTR13, CULLFACE_NONE } from '../../../platform/graphics/constants.js';
 import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../../constants.js';
 import { ShaderMaterial } from '../../materials/shader-material.js';
-import { MeshInstance } from '../../mesh-instance.js';
 import { GSplatResourceBase } from '../gsplat-resource-base.js';
+import { MeshInstance } from '../../mesh-instance.js';
 
 /**
  * @import { VertexBuffer } from '../../../platform/graphics/vertex-buffer.js'
+ * @import { Layer } from '../../layer.js'
+ * @import { GraphNode } from '../../graph-node.js'
  */
 
-const viewport = [0, 0];
-
+/**
+ * Class that renders the splats from the work buffer.
+ *
+ * @ignore
+ */
 class GSplatRenderer {
     /** @type {ShaderMaterial} */
     _material;
@@ -20,16 +25,22 @@ class GSplatRenderer {
     /** @type {number} */
     maxNumSplats = 0;
 
-    /** @type {VertexBuffer} */
-    instanceIndices;
+    /** @type {VertexBuffer|null} */
+    instanceIndices = null;
 
-    // TODO: is this the best option, or do we want to generate AABB
-    // - ideally generate aabb from individual splats, update each frame
-    cull = false;
+    /** @type {Layer} */
+    layer;
 
-    constructor(device, node, workBuffer) {
+    /** @type {GraphNode} */
+    cameraNode;
+
+    viewportParams = [0, 0];
+
+    constructor(device, node, cameraNode, layer, workBuffer) {
         this.device = device;
         this.node = node;
+        this.cameraNode = cameraNode;
+        this.layer = layer;
         this.workBuffer = workBuffer;
 
         // construct the material which renders the splats from the work buffer
@@ -66,10 +77,12 @@ class GSplatRenderer {
         this._material.depthWrite = !!dither;
         this._material.update();
 
-        this.createMeshInstance();
+        this.meshInstance = this.createMeshInstance();
+        layer.addMeshInstances([this.meshInstance]);
     }
 
     destroy() {
+        this.layer.removeMeshInstances([this.meshInstance]);
         this._material.destroy();
         this.meshInstance.destroy();
     }
@@ -96,30 +109,42 @@ class GSplatRenderer {
 
             // create new instance indices
             this.instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, numSplats);
-            this.meshInstance.setInstancing(this.instanceIndices, this.cull);
+            this.meshInstance.setInstancing(this.instanceIndices, true);
         }
     }
 
     createMeshInstance() {
 
         const mesh = GSplatResourceBase.createMesh(this.device);
-        const instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, this.workBuffer.width * this.workBuffer.height);
-        this.meshInstance = new MeshInstance(mesh, this._material);
-        this.meshInstance.node = this.node;
-        this.meshInstance.setInstancing(instanceIndices, this.cull);
-        this.meshInstance.cull = this.cull;
+        const textureSize = this.workBuffer.textureSize;
+        const instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, textureSize * textureSize);
+        const meshInstance = new MeshInstance(mesh, this._material);
+        meshInstance.node = this.node;
+        meshInstance.setInstancing(instanceIndices, true);
 
         // only start rendering the splat after we've received the splat order data
-        this.meshInstance.instancingCount = 0;
+        meshInstance.instancingCount = 0;
+
+        // custom culling to only disable rendering for matching camera
+        // TODO: consider using aabb as well to avoid rendering off-screen splats
+        const thisCamera = this.cameraNode.camera;
+        meshInstance.isVisibleFunc = (camera) => {
+            const vis = thisCamera.camera === camera;
+            return vis;
+        };
+
+        return meshInstance;
     }
 
     updateViewport(cameraNode) {
-        const camera = cameraNode?.camera;
+        const camera = cameraNode.camera;
+        const cameraRect = camera.rect;
         const renderTarget = camera?.renderTarget;
         const { width, height } = renderTarget ?? this.device;
 
-        viewport[0] = width;
-        viewport[1] = height;
+        const viewport = this.viewportParams;
+        viewport[0] = width * cameraRect.z;
+        viewport[1] = height * cameraRect.w;
 
         // adjust viewport for stereoscopic VR sessions
         const xr = camera?.camera?.xr;

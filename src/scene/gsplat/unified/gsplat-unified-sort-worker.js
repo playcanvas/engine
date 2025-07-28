@@ -49,6 +49,48 @@ function UnifiedSortWorker() {
         return ~m;
     };
 
+    const evaluateSortKeys = (sortParams, centers, minDist, divider, distances, countBuffer) => {
+        for (let paramIdx = 0; paramIdx < sortParams.length; paramIdx++) {
+            const params = sortParams[paramIdx];
+            const { transformedDirection, offset, scale, startIndex, endIndex } = params;
+
+            const dx = transformedDirection.x;
+            const dy = transformedDirection.y;
+            const dz = transformedDirection.z;
+
+            // Pre-calculate constants - CORRECTED
+            const scaledDivider = scale * divider;
+            const offsetMinusMinDistTimesDivider = (offset - minDist) * divider;
+
+            let istride = startIndex * 3;
+            for (let i = startIndex; i < endIndex; i++, istride += 3) {
+                const x = centers[istride];
+                const y = centers[istride + 1];
+                const z = centers[istride + 2];
+
+                const dotProduct = x * dx + y * dy + z * dz;
+                const sortKey = Math.floor(dotProduct * scaledDivider + offsetMinusMinDistTimesDivider);
+                
+                distances[i] = sortKey;
+                countBuffer[sortKey]++;
+            }
+        }
+    };
+
+    const countingSort = (bucketCount, countBuffer, numVertices, distances, order) => {
+        // Change countBuffer[i] so that it contains actual position of this digit in outputArray
+        for (let i = 1; i < bucketCount; i++) {
+            countBuffer[i] += countBuffer[i - 1];
+        }
+
+        // Build the output array
+        for (let i = 0; i < numVertices; i++) {
+            const distance = distances[i];
+            const destIndex = --countBuffer[distance];
+            order[destIndex] = i;
+        }
+    };
+
     const update = () => {
         if (!order || !centers || centers.length === 0/* || !cameraPosition || !cameraDirection*/ || !sortParams) return;
 
@@ -97,14 +139,18 @@ function UnifiedSortWorker() {
         // }
 
 
-        const minDist = -2300;
-        const maxDist = 2300;
+        const minDist = -1000;
+        const maxDist = 1000;
+        // const minDist = -50;
+        // const maxDist = 10;
 
 
         const numVertices = sortSplatCount ?? centers.length / 3;
 
         // calculate number of bits needed to store sorting result
-        const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));
+        //const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));
+        const compareBits = 20;
+
         const bucketCount = 2 ** compareBits + 1;
 
         // create distance buffer
@@ -192,46 +238,11 @@ function UnifiedSortWorker() {
             // }
 
 
-            sortParams.forEach((params) => {
-                const { transformedDirection, offset, scale, startIndex, endIndex } = params;
+            evaluateSortKeys(sortParams, centers, minDist, divider, distances, countBuffer);
 
-                const dx = transformedDirection.x;
-                const dy = transformedDirection.y;
-                const dz = transformedDirection.z;
-
-                for (let i = startIndex; i < endIndex; i++) {
-                    const istride = i * 3;
-
-                    // local space coordinates of the splat
-                    const x = centers[istride + 0];
-                    const y = centers[istride + 1];
-                    const z = centers[istride + 2];
-
-                    // distance
-                    const dotProduct = x * dx + y * dy + z * dz;
-                    const distance = scale * dotProduct + offset;
-
-                    // sorting key
-                    const sortKey = Math.floor((distance - minDist) * divider);
-                    distances[i] = sortKey;
-                    countBuffer[sortKey]++;
-                }
-            });            
+            countingSort(bucketCount, countBuffer, numVertices, distances, order);
 
 
-
-        }
-
-        // Change countBuffer[i] so that it contains actual position of this digit in outputArray
-        for (let i = 1; i < bucketCount; i++) {
-            countBuffer[i] += countBuffer[i - 1];
-        }
-
-        // Build the output array
-        for (let i = 0; i < numVertices; i++) {
-            const distance = distances[i];
-            const destIndex = --countBuffer[distance];
-            order[destIndex] = i;
         }
 
         // // Find splat with distance 0 to limit rendering behind the camera
@@ -289,6 +300,11 @@ function UnifiedSortWorker() {
 
         if (msgData.order) {
             order = new Uint32Array(msgData.order);
+            if (msgData.initOrderData) {
+                for (let i = 0; i < order.length; ++i) {
+                    order[i] = i;
+                }
+            }
         }
         if (msgData.centers) {
             returnCenters = centers; // return old centers buffer
