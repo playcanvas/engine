@@ -741,7 +741,7 @@ class ScriptComponent extends Component {
                 }
 
                 // If the script is not a ScriptType then we must store attribute data on the component
-                if (!(scriptInstance instanceof ScriptType)) {
+                if (!(scriptInstance instanceof ScriptType) && args.attributes) {
 
                     // Store the Attribute data
                     this._attributeDataMap.set(scriptName, { ...args.attributes });
