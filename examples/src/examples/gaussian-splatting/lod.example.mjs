@@ -1,6 +1,8 @@
 // @config HIDDEN
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -50,10 +52,7 @@ const assets = {
     church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
     logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pclogo.ply` }),
     guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
-    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.ply` }),
-
-    fly: new pc.Asset('fly', 'script', { url: `${rootPath}/static/scripts/camera/fly-camera.js` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.ply` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -109,16 +108,19 @@ assetListLoader.load(() => {
         toneMapping: pc.TONEMAP_ACES
     });
     camera.setLocalPosition(-0.8, 2, 3);
+    camera.lookAt(2, 2, 0);
+    app.root.addChild(camera);
+
     camera.addComponent('script');
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    camera.script.create('flyCamera', {
-        attributes: {
-            speed: 2
-        }
+    const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+    Object.assign(cc, {
+        sceneSize: 500,
+        moveSpeed: 0.005,
+        moveFastSpeed: 0.03,
+        enableOrbit: false,
+        enablePan: false
     });
 
-    app.root.addChild(camera);
 
     let timeToChange = 1;
     let time = 0;

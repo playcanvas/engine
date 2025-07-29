@@ -9,22 +9,14 @@ class GSplatUnifiedSorter extends EventHandler {
 
     availableOrderData = [];
 
+    // track how many jobs are in flight
+    jobsInFlight = 0;
+
+    // true if we have new version to process
+    hasNewVersion = false;
+
     constructor() {
         super();
-
-        // message from the worker
-        const messageHandler = (message) => {
-            const msgData = message.data ?? message;
-            const returnCenters = msgData.returnCenters ? new Float32Array(msgData.returnCenters) : null;
-            const orderData = new Uint32Array(msgData.order);
-
-            this.fire('sorted', msgData.count, msgData.version, returnCenters, orderData);
-
-            // reuse order data
-            if (orderData.length === this.bufferLength) {
-                this.availableOrderData.push(orderData);
-            }
-        };
 
         const workerSource = `(${UnifiedSortWorker.toString()})()`;
 
@@ -32,12 +24,29 @@ class GSplatUnifiedSorter extends EventHandler {
             this.worker = new Worker(workerSource, {
                 eval: true
             });
-            this.worker.on('message', messageHandler);
+            this.worker.on('message', this.onSorted.bind(this));
         } else {
             this.worker = new Worker(URL.createObjectURL(new Blob([workerSource], {
                 type: 'application/javascript'
             })));
-            this.worker.addEventListener('message', messageHandler);
+            this.worker.addEventListener('message', this.onSorted.bind(this));
+        }
+    }
+
+    onSorted(message) {
+
+        const msgData = message.data ?? message;
+        const returnCenters = msgData.returnCenters ? new Float32Array(msgData.returnCenters) : null;
+        const orderData = new Uint32Array(msgData.order);
+
+        // decrement jobs in flight counter
+        this.jobsInFlight--;
+
+        this.fire('sorted', msgData.count, msgData.version, returnCenters, orderData);
+
+        // reuse order data
+        if (orderData.length === this.bufferLength) {
+            this.availableOrderData.push(orderData);
         }
     }
 
@@ -55,6 +64,9 @@ class GSplatUnifiedSorter extends EventHandler {
      * @param {number} sortSplatCount - The number of splats to sort (part of centers buffer).
      */
     setData(centers, version, sortSplatCount) {
+
+        // we have a new version to process
+        this.hasNewVersion = true;
 
         // output size matches input size, clear available data when it changes
         const newLength = centers.length / 3;  // 3 floats per center
@@ -78,19 +90,30 @@ class GSplatUnifiedSorter extends EventHandler {
      */
     setSortParams(params) {
 
-        // reuse or allocate new order data
-        let initOrderData = false;
-        let orderData = this.availableOrderData.pop();
-        if (!orderData) {
-            orderData = new Uint32Array(this.bufferLength);
-            initOrderData = true;
-        }
+        // only process job requests if we have a new version or no jobs are in flight
+        if (this.hasNewVersion || this.jobsInFlight === 0) {
 
-        this.worker.postMessage({
-            sortParams: params,
-            order: orderData.buffer,
-            initOrderData: initOrderData
-        }, [orderData.buffer]);
+            // reuse or allocate new order data
+            let initOrderData = false;
+            let orderData = this.availableOrderData.pop();
+            if (!orderData) {
+                orderData = new Uint32Array(this.bufferLength);
+                initOrderData = true;
+            }
+
+            // worker management
+            this.jobsInFlight++;
+            this.hasNewVersion = false;
+
+            // send job to worker
+            this.worker.postMessage({
+                sortParams: params,
+                order: orderData.buffer,
+                initOrderData: initOrderData
+            }, [
+                orderData.buffer
+            ]);
+        }
     }
 }
 
