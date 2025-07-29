@@ -15,7 +15,6 @@ function UnifiedSortWorker() {
     let cameraDirection;
     let version = 0;
     let sortSplatCount;
-    let sortParams;
 
     let forceUpdate = false;
 
@@ -91,8 +90,7 @@ function UnifiedSortWorker() {
         }
     };
 
-    const update = () => {
-        if (!order || !centers || centers.length === 0/* || !cameraPosition || !cameraDirection*/ || !sortParams) return;
+    const update = (sortParams) => {
 
         // const px = cameraPosition.x;
         // const py = cameraPosition.y;
@@ -404,10 +402,8 @@ function UnifiedSortWorker() {
         if (msgData.cameraDirection) cameraDirection = msgData.cameraDirection;
 
         if (msgData.sortParams) {
-            sortParams = msgData.sortParams;
+            update(msgData.sortParams);
         }
-
-        update();
     });
 }
 
