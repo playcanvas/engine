@@ -52,7 +52,7 @@ const assets = {
     church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
     logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pclogo.ply` }),
     guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
-    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.ply` }),
+    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.ply` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
