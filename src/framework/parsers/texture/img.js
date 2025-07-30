@@ -97,11 +97,11 @@ class ImgParser extends TextureParser {
         const dummySize = 1024 * 1024;
 
         // HTMLImageElement doesn't support progress events, so we emulate it instead
-        asset.fire('progress', 0, dummySize);
+        asset?.fire('progress', 0, dummySize);
 
         // Call success callback after opening Texture
         image.onload = function () {
-            asset.fire('progress', dummySize, dummySize);
+            asset?.fire('progress', dummySize, dummySize);
             callback(null, image);
         };
 
