@@ -106,8 +106,7 @@ assetListLoader.load(() => {
         matrix.setTRS(pos, rot, scl);
 
         // copy matrix elements into array of floats
-        matrices.set(matrix.data, matrixIndex);
-        matrixIndex += 16;
+        for (let m = 0; m < 16; m++) matrices[matrixIndex++] = matrix.data[m];
     }
 
     // create static vertex buffer containing the matrices

@@ -54,7 +54,19 @@ class Mat3 {
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
     copy(rhs) {
-        this.data.set(rhs.data);
+        const src = rhs.data;
+        const dst = this.data;
+
+        dst[0] = src[0];
+        dst[1] = src[1];
+        dst[2] = src[2];
+        dst[3] = src[3];
+        dst[4] = src[4];
+        dst[5] = src[5];
+        dst[6] = src[6];
+        dst[7] = src[7];
+        dst[8] = src[8];
+
         return this;
     }
 
@@ -68,7 +80,18 @@ class Mat3 {
      * dst.set([0, 1, 2, 3, 4, 5, 6, 7, 8]);
      */
     set(src) {
-        this.data.set(src);
+        const dst = this.data;
+
+        dst[0] = src[0];
+        dst[1] = src[1];
+        dst[2] = src[2];
+        dst[3] = src[3];
+        dst[4] = src[4];
+        dst[5] = src[5];
+        dst[6] = src[6];
+        dst[7] = src[7];
+        dst[8] = src[8];
+
         return this;
     }
 
