@@ -15,6 +15,9 @@ class GSplatUnifiedSorter extends EventHandler {
     // true if we have new version to process
     hasNewVersion = false;
 
+    /** @type {Set<number>} */
+    centersSet = new Set();
+
     constructor() {
         super();
 
@@ -36,13 +39,12 @@ class GSplatUnifiedSorter extends EventHandler {
     onSorted(message) {
 
         const msgData = message.data ?? message;
-        const returnCenters = msgData.returnCenters ? new Float32Array(msgData.returnCenters) : null;
         const orderData = new Uint32Array(msgData.order);
 
         // decrement jobs in flight counter
         this.jobsInFlight--;
 
-        this.fire('sorted', msgData.count, msgData.version, returnCenters, orderData);
+        this.fire('sorted', msgData.count, msgData.version, orderData);
 
         // reuse order data
         if (orderData.length === this.bufferLength) {
@@ -56,31 +58,62 @@ class GSplatUnifiedSorter extends EventHandler {
     }
 
     /**
-     * Sends new centers buffer to the sorter. Called infrequently. Each centers buffer modification
-     * has incremented version. This version is returned back with sorted data to identify it.
+     * Adds or removes centers from the sorter.
      *
-     * @param {Float32Array} centers - The centers buffer.
-     * @param {number} version - The version of the centers buffer.
-     * @param {number} sortSplatCount - The number of splats to sort (part of centers buffer).
+     * @param {number} id - The id of the centers.
+     * @param {Float32Array|null} centers - The centers buffer.
      */
-    setData(centers, version, sortSplatCount) {
+    setCenters(id, centers) {
+
+        if (centers) { // add
+
+            if (!this.centersSet.has(id)) {
+                this.centersSet.add(id);
+
+                // clone centers buffer
+                const centersBuffer = centers.buffer.slice();
+
+                // post centers to worker
+                this.worker.postMessage({
+                    command: 'addCenters',
+                    id: id,
+                    centers: centersBuffer
+                }, [centersBuffer]);
+            }
+
+        } else { // remove
+
+            if (this.centersSet.has(id)) {
+                this.centersSet.delete(id);
+
+                // post centers to worker
+                this.worker.postMessage({
+                    command: 'removeCenters',
+                    id: id
+                });
+            }
+        }
+    }
+
+    /**
+     * Sends a payload to the sorter.
+     *
+     * @param {object} payload - The payload to send.
+     */
+    setIntervals(payload) {
 
         // we have a new version to process
         this.hasNewVersion = true;
 
         // output size matches input size, clear available data when it changes
-        const newLength = centers.length / 3;  // 3 floats per center
+        const { textureSize } = payload;
+        const newLength = textureSize * textureSize;
         if (newLength !== this.bufferLength) {
             this.bufferLength = newLength;
             this.availableOrderData.length = 0;
         }
 
-        // post data to worker
-        this.worker.postMessage({
-            centers: centers.buffer,
-            version: version,
-            sortSplatCount: sortSplatCount
-        }, [centers.buffer]);
+        this.worker.postMessage(payload);
     }
 
     /**
@@ -107,6 +140,7 @@ class GSplatUnifiedSorter extends EventHandler {
 
             // send job to worker
             this.worker.postMessage({
+                command: 'sort',
                 sortParams: params,
                 order: orderData.buffer,
                 initOrderData: initOrderData

@@ -45,6 +45,9 @@ class GSplatState {
     /** @type {number} */
     lineCount = 0;
 
+    /** @type {number} */
+    padding = 0;
+
     /** @type {Vec4} */
     viewport = new Vec4();
 
@@ -72,9 +75,10 @@ class GSplatState {
         this.intervalsTexture = null;
     }
 
-    setLines(start, count, textureSize) {
+    setLines(start, count, textureSize, activeSplats) {
         this.lineStart = start;
         this.lineCount = count;
+        this.padding = textureSize * count - activeSplats;
         this.viewport.set(0, start, textureSize, count);
     }
 

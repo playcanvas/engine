@@ -15,6 +15,8 @@ import { Mesh } from '../mesh.js';
  * @import { GSplatLodBlocks } from './unified/gsplat-lod-blocks.js'
  */
 
+let id = 0;
+
 /**
  * Base class for a GSplat resource and defines common properties.
  *
@@ -44,6 +46,9 @@ class GSplatResourceBase {
 
     /** @type {boolean} */
     hasLod = false;
+
+    /** @type {number} */
+    id = id++;
 
     constructor(device, gsplatData) {
         this.device = device;
