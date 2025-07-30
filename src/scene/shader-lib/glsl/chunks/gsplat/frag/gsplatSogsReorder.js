@@ -1,9 +1,9 @@
 export default /* glsl */`
-    uniform sampler2D means_l;
-    uniform sampler2D means_u;
-    uniform sampler2D quats;
-    uniform sampler2D scales;
-    uniform sampler2D sh_labels;
+    uniform highp sampler2D means_l;
+    uniform highp sampler2D means_u;
+    uniform highp sampler2D quats;
+    uniform highp sampler2D scales;
+    uniform highp sampler2D sh_labels;
 
     uniform highp uint numSplats;
 
