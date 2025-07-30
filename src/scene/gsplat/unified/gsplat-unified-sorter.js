@@ -127,11 +127,9 @@ class GSplatUnifiedSorter extends EventHandler {
         if (this.hasNewVersion || this.jobsInFlight === 0) {
 
             // reuse or allocate new order data
-            let initOrderData = false;
             let orderData = this.availableOrderData.pop();
             if (!orderData) {
                 orderData = new Uint32Array(this.bufferLength);
-                initOrderData = true;
             }
 
             // worker management
@@ -142,8 +140,7 @@ class GSplatUnifiedSorter extends EventHandler {
             this.worker.postMessage({
                 command: 'sort',
                 sortParams: params,
-                order: orderData.buffer,
-                initOrderData: initOrderData
+                order: orderData.buffer
             }, [
                 orderData.buffer
             ]);

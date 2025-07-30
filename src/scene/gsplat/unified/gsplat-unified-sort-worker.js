@@ -273,20 +273,6 @@ function UnifiedSortWorker() {
             // sort
             case 'sort': {
                 const order = new Uint32Array(msgData.order);
-
-
-
-
-
-                ////// TODO: any point on doing this????
-                // do we ever read from this array, or only write to it.
-
-
-                // if (msgData.initOrderData) {
-                //     for (let i = 0; i < order.length; ++i) {
-                //         order[i] = i;
-                //     }
-                // }
                 sort(msgData.sortParams, order, centersData);
                 break;
             }
