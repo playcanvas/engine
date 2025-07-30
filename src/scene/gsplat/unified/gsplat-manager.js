@@ -98,8 +98,8 @@ class GSplatManager {
     createSorter() {
         // create sorter
         const sorter = new GSplatUnifiedSorter();
-        sorter.on('sorted', (count, version, returnCenters, orderData) => {
-            this.onSorted(count, version, returnCenters, orderData);
+        sorter.on('sorted', (count, version, orderData) => {
+            this.onSorted(count, version, orderData);
         });
         return sorter;
     }
@@ -116,6 +116,9 @@ class GSplatManager {
             const splatInfo = new GSplatInfo(this.device, resource, placement.node);
             this.splats.push(splatInfo);
             this.placements.add(placement);
+
+            // add centers to sorter
+            this.sorter.setCenters(resource.id, resource.centers);
         }
     }
 
@@ -130,6 +133,10 @@ class GSplatManager {
             this.splats.splice(this.splats.indexOf(splatInfo), 1);
             splatInfo.destroy();
             this.placements.delete(placement);
+
+            // remove centers from sorter
+            const resource = placement.resource;
+            this.sorter.setCenters(resource.id, null);
         }
     }
 
@@ -177,12 +184,7 @@ class GSplatManager {
         this.splats.forEach(s => s.cancelPrepareState());
     }
 
-    onSorted(count, version, returnCenters, orderData) {
-
-        // reclaim returned centers buffer if available
-        if (returnCenters) {
-            this.centerBuffer.put(returnCenters);
-        }
+    onSorted(count, version, orderData) {
 
         // skip older version that got sorted, this can no longer be used for rendering
         if (version < this.sortedVersionMin) {
@@ -194,13 +196,11 @@ class GSplatManager {
         if (this.sortedVersion !== version && version === this.centerBuffer.version) {
             this.sortedVersion = version;
 
+            // resize work buffer if needed
             const textureSize = this.centerBuffer.textureSize;
-
             const workBufferResizeRequest = textureSize !== this.workBuffer.textureSize;
             if (workBufferResizeRequest) {
                 this.workBuffer.resize(textureSize);
-                this.workBuffer.setOrderData(orderData);
-
                 this.renderer.setMaxNumSplats(textureSize * textureSize);
             }
 
@@ -208,6 +208,7 @@ class GSplatManager {
                 splat.activatePrepareState();
             });
 
+            // render all splats to work buffer
             this.workBuffer.render(this.splats, this.cameraNode);
         }
 
@@ -293,16 +294,13 @@ class GSplatManager {
                 // Reassign lines based on current LOD active splats
                 this.assignLines(this.splats, textureSize);
 
-                // generate centers for evaluated lods - this increaments centers version
-                // note that the work buffer is not updated yet, and only when we get sorted centers
-                const centers = this.centerBuffer.update(this.splats, textureSize);
-
-                // this.sorter.setData(centers, this.centerBuffer.version, activeCount);
-                this.sorter.setData(centers, this.centerBuffer.version, textureSize * textureSize);
+                // give sorter info related it needs to generate global centers array for sorting
+                const payload = this.centerBuffer.update(this.splats);
+                this.sorter.setIntervals(payload);
             }
 
-            // update data for the sorter - use the same textureSize
-            this.sort(this.centerBuffer.textureSize);
+            // update data for the sorter
+            this.sort();
         }
 
         // if we got valid sorted centers, which makes the renderState valid
@@ -331,12 +329,12 @@ class GSplatManager {
             const prepareState = splat.prepareState;
             const activeSplats = prepareState.activeSplats;
             const numLines = Math.ceil(activeSplats / size);
-            prepareState.setLines(start, numLines, size);
+            prepareState.setLines(start, numLines, size, activeSplats);
             start += numLines;
         }
     }
 
-    sort(textureSize) {
+    sort() {
 
         // Get camera's world-space properties
         const cameraNode = this.cameraNode;
@@ -360,18 +358,11 @@ class GSplatManager {
             modelMat.getTranslation(translation);
             const offset = translation.sub(cameraPosition).dot(cameraDirection);
 
-            // Get sorting range
-            const state = splat.prepareState ?? splat.renderState;
-            const startIndex = state.lineStart * textureSize;
-            const endIndex = startIndex + state.lineCount * textureSize;
-
             // sorter parameters
             sorterRequest.push({
                 transformedDirection,
                 offset,
-                scale: uniformScale,
-                startIndex,
-                endIndex
+                scale: uniformScale
             });
         });
 

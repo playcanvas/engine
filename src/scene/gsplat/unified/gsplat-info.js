@@ -183,7 +183,7 @@ class GSplatInfo {
         const renderState = this.renderState;
         scope.resolve('uActiveSplats').setValue(renderState.activeSplats);
         scope.resolve('uStartLine').setValue(renderState.lineStart);
-        scope.resolve('uViewportWidth').setValue(renderState.viewport.z);
+        scope.resolve('uViewportWidth').setValue(renderState.viewport.z);  // this is textureSize, TODO: replace it
 
         // SH related
         scope.resolve('matrix_model').setValue(this.node.getWorldTransform().data);
