@@ -294,7 +294,7 @@ class GSplatManager {
                 // Reassign lines based on current LOD active splats
                 this.assignLines(this.splats, textureSize);
 
-                // give sorter info related it needs to generate global centers array for sorting
+                // give sorter info it needs to generate global centers array for sorting
                 const payload = this.centerBuffer.update(this.splats);
                 this.sorter.setIntervals(payload);
             }
