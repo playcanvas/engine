@@ -121,8 +121,11 @@ function UnifiedSortWorker() {
         //     }
         // }
 
-        const minDist = -1000;
-        const maxDist = 1000;
+        // const minDist = -1000;
+        // const maxDist = 1000;
+        const minDist = -1872;
+        const maxDist = 1891;
+
         // const minDist = -50;
         // const maxDist = 10;
 
@@ -131,8 +134,7 @@ function UnifiedSortWorker() {
         const numVertices = textureSize * textureSize;
 
         // calculate number of bits needed to store sorting result
-        // const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));
-        const compareBits = 20;
+        const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));
 
         const bucketCount = 2 ** compareBits + 1;
 

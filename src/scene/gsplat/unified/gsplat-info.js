@@ -169,7 +169,10 @@ class GSplatInfo {
         const scope = device.scope;
         Debug.assert(resource);
 
-        // set up splat resource properties
+        // render using render state
+        const { activeSplats, lineStart, viewport, intervalTexture } = this.renderState;
+
+        // assign material properties to scope
         this.material.setParameters(this.device);
 
         // matrix to transform splats to the world space
@@ -177,13 +180,12 @@ class GSplatInfo {
 
         if (resource.hasLod) {
             // Set LOD intervals texture for remapping of indices
-            scope.resolve('uIntervalsTexture').setValue(this.renderState.intervalsTexture);
+            scope.resolve('uIntervalsTexture').setValue(intervalTexture.texture);
         }
 
-        const renderState = this.renderState;
-        scope.resolve('uActiveSplats').setValue(renderState.activeSplats);
-        scope.resolve('uStartLine').setValue(renderState.lineStart);
-        scope.resolve('uViewportWidth').setValue(renderState.viewport.z);  // this is textureSize, TODO: replace it
+        scope.resolve('uActiveSplats').setValue(activeSplats);
+        scope.resolve('uStartLine').setValue(lineStart);
+        scope.resolve('uViewportWidth').setValue(viewport.z);
 
         // SH related
         scope.resolve('matrix_model').setValue(this.node.getWorldTransform().data);
@@ -192,7 +194,7 @@ class GSplatInfo {
         const viewMat = _viewMat.copy(viewInvMat).invert();
         scope.resolve('matrix_view').setValue(viewMat.data);
 
-        drawQuadWithShader(device, renderTarget, this.copyShader, renderState.viewport, renderState.viewport);
+        drawQuadWithShader(device, renderTarget, this.copyShader, viewport, viewport);
     }
 }
 
