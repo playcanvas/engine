@@ -1,8 +1,7 @@
 import { Vec3 } from '../../../core/math/vec3.js';
-import { Texture } from '../../../platform/graphics/texture.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U } from '../../../platform/graphics/constants.js';
 import { Vec4 } from '../../../core/math/vec4.js';
 import { Debug } from '../../../core/debug.js';
+import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
 
 /**
  * @import { GraphNode } from "../../graph-node.js"
@@ -45,15 +44,18 @@ class GSplatState {
     /** @type {number} */
     lineCount = 0;
 
+    /** @type {number} */
+    padding = 0;
+
     /** @type {Vec4} */
     viewport = new Vec4();
 
     /**
-     * Texture that maps target indices to source splat indices based on intervals
+     * Manager for the intervals texture generation
      *
-     * @type {Texture|null}
+     * @type {GSplatIntervalTexture}
      */
-    intervalsTexture = null;
+    intervalTexture;
 
     /**
      * @param {GraphicsDevice} device - The graphics device
@@ -64,86 +66,20 @@ class GSplatState {
         this.device = device;
         this.resource = resource;
         this.node = node;
+        this.intervalTexture = new GSplatIntervalTexture(device);
     }
 
     destroy() {
         this.intervals.length = 0;
-        this.intervalsTexture?.destroy();
-        this.intervalsTexture = null;
+        this.intervalTexture.destroy();
     }
 
-    setLines(start, count, textureSize) {
+    setLines(start, count, textureSize, activeSplats) {
         this.lineStart = start;
         this.lineCount = count;
+        this.padding = textureSize * count - activeSplats;
+        Debug.assert(this.padding >= 0);
         this.viewport.set(0, start, textureSize, count);
-    }
-
-    /**
-     * Creates a texture that maps target indices to source splat indices based on intervals
-     */
-    updateIntervalsTexture() {
-        // Count total number of splats referenced by intervals
-        let totalSplats = 0;
-        for (let i = 0; i < this.intervals.length; i += 2) {
-            const start = this.intervals[i];
-            const end = this.intervals[i + 1];
-            totalSplats += (end - start);
-        }
-
-        this.activeSplats = totalSplats;
-
-        if (totalSplats === 0) {
-            return;
-        }
-
-        // Estimate roughly square texture size
-        const maxTextureSize = this.device.maxTextureSize;
-        let textureWidth = Math.ceil(Math.sqrt(totalSplats));
-        textureWidth = Math.min(textureWidth, maxTextureSize);
-        const textureHeight = Math.ceil(totalSplats / textureWidth);
-
-        // Create initial 1x1 texture
-        if (!this.intervalsTexture) {
-            this.intervalsTexture = this.createTexture('intervalsTexture', PIXELFORMAT_R32U, 1, 1);
-        }
-
-        // Resize texture if dimensions changed
-        if (this.intervalsTexture.width !== textureWidth || this.intervalsTexture.height !== textureHeight) {
-            this.intervalsTexture.resize(textureWidth, textureHeight);
-        }
-
-        // update mapping data
-        if (this.intervalsTexture) {
-            const pixels = this.intervalsTexture.lock();
-            let targetIndex = 0;
-
-            for (let i = 0; i < this.intervals.length; i += 2) {
-                const start = this.intervals[i];
-                const end = this.intervals[i + 1];
-
-                for (let splatIndex = start; splatIndex < end; splatIndex++) {
-                    pixels[targetIndex] = splatIndex;
-                    targetIndex++;
-                }
-            }
-
-            this.intervalsTexture.unlock();
-        }
-    }
-
-    createTexture(name, format, width, height) {
-        return new Texture(this.device, {
-            name: name,
-            width: width,
-            height: height,
-            format: format,
-            cubemap: false,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
     }
 
     /**
@@ -243,7 +179,7 @@ class GSplatState {
         //     console.log(`Block LOD Distribution (blocks: ${numBlocks}): LOD 0: ${pcts[0]}%, LOD 1: ${pcts[1]}%, LOD 2: ${pcts[2]}%`);
         // }
 
-        this.updateIntervalsTexture();
+        this.activeSplats = this.intervalTexture.update(this.intervals);
     }
 }
 

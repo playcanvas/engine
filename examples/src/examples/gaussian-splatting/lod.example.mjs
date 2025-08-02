@@ -49,7 +49,8 @@ app.on('destroy', () => {
 pc.Tracing.set(pc.TRACEID_SHADER_ALLOC, true);
 
 const assets = {
-    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
+//    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
+    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/dubai.ply` }),
     logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pclogo.ply` }),
     guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
     skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.ply` })
