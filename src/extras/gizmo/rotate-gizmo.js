@@ -219,17 +219,6 @@ class RotateGizmo extends TransformGizmo {
             this._nodeRotations.clear();
             this._nodeOffsets.clear();
         });
-
-        this._app.on('prerender', () => {
-            this._shapesLookAtCamera();
-
-            if (this._dragging) {
-                const gizmoPos = this.root.getPosition();
-                this._drawGuideAngleLine(gizmoPos, this._selectedAxis,
-                    this._guideAngleStart, this._guideAngleStartColor);
-                this._drawGuideAngleLine(gizmoPos, this._selectedAxis, this._guideAngleEnd);
-            }
-        });
     }
 
     /**
@@ -558,6 +547,26 @@ class RotateGizmo extends TransformGizmo {
         }
 
         return angle;
+    }
+
+    /**
+     * @override
+     */
+    prerender() {
+        super.prerender();
+
+        if (!this.root.enabled) {
+            return;
+        }
+
+        this._shapesLookAtCamera();
+
+        if (this._dragging) {
+            const gizmoPos = this.root.getPosition();
+            this._drawGuideAngleLine(gizmoPos, this._selectedAxis,
+                this._guideAngleStart, this._guideAngleStartColor);
+            this._drawGuideAngleLine(gizmoPos, this._selectedAxis, this._guideAngleEnd);
+        }
     }
 }
 

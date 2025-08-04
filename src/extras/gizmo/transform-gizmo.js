@@ -252,13 +252,6 @@ class TransformGizmo extends Gizmo {
     constructor(camera, layer) {
         super(camera, layer);
 
-        this._app.on('prerender', () => {
-            if (!this.root.enabled) {
-                return;
-            }
-            this._drawGuideLines();
-        });
-
         this.on(Gizmo.EVENT_POINTERDOWN, (x, y, meshInstance) => {
             const shape = this._shapeMap.get(meshInstance);
             if (shape?.disabled) {
@@ -730,6 +723,19 @@ class TransformGizmo extends Gizmo {
         }
 
         return !this._shapes[shapeAxis].disabled;
+    }
+
+    /**
+     * @override
+     */
+    prerender() {
+        super.prerender();
+
+        if (!this.root.enabled) {
+            return;
+        }
+
+        this._drawGuideLines();
     }
 
     /**

@@ -277,12 +277,8 @@ class Gizmo extends EventHandler {
         this._device.canvas.addEventListener('pointermove', this._onPointerMove);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
-        this._app.on('update', () => {
-            this._updatePosition();
-            this._updateRotation();
-            this._updateScale();
-        });
-
+        this._app.on('prerender', () => this.prerender());
+        this._app.on('update', () => this.update());
         this._app.on('destroy', () => this.destroy());
     }
 
@@ -565,6 +561,31 @@ class Gizmo extends EventHandler {
         this.fire(Gizmo.EVENT_NODESDETACH);
 
         this.nodes = [];
+    }
+
+    /**
+     * Pre-render method. This is called before the gizmo is rendered.
+     *
+     * @example
+     * const gizmo = new pc.Gizmo(camera, layer);
+     * gizmo.attach([boxA, boxB]);
+     * gizmo.prerender();
+     */
+    prerender() {
+    }
+
+    /**
+     * Updates the gizmo position, rotation, and scale.
+     *
+     * @example
+     * const gizmo = new pc.Gizmo(camera, layer);
+     * gizmo.attach([boxA, boxB]);
+     * gizmo.update();
+     */
+    update() {
+        this._updatePosition();
+        this._updateRotation();
+        this._updateScale();
     }
 
     /**

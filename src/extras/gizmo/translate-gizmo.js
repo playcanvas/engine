@@ -181,10 +181,6 @@ class TranslateGizmo extends TransformGizmo {
             this._nodeLocalPositions.clear();
             this._nodePositions.clear();
         });
-
-        this._app.on('prerender', () => {
-            this._shapesLookAtCamera();
-        });
     }
 
     /**
@@ -501,6 +497,19 @@ class TranslateGizmo extends TransformGizmo {
         }
 
         return point;
+    }
+
+    /**
+     * @override
+     */
+    prerender() {
+        super.prerender();
+
+        if (!this.root.enabled) {
+            return;
+        }
+
+        this._shapesLookAtCamera();
     }
 }
 

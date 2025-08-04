@@ -184,10 +184,6 @@ class ScaleGizmo extends TransformGizmo {
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
             this._nodeScales.clear();
         });
-
-        this._app.on('prerender', () => {
-            this._shapesLookAtCamera();
-        });
     }
 
     set coordSpace(value) {
@@ -531,6 +527,19 @@ class ScaleGizmo extends TransformGizmo {
         }
 
         return point;
+    }
+
+    /**
+     * @override
+     */
+    prerender() {
+        super.prerender();
+
+        if (!this.root.enabled) {
+            return;
+        }
+
+        this._shapesLookAtCamera();
     }
 }
 
