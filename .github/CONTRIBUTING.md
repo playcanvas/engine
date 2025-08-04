@@ -1,4 +1,4 @@
-# Contributing to PlayCanvas Engine
+# Contributing to the PlayCanvas Engine
 
 Welcome! We're excited that you want to contribute to PlayCanvas. This guide will help you get started, whether you're fixing a typo or adding a major feature.
 
