@@ -16,6 +16,7 @@ import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { EventHandle } from '../../core/event-handle.js'
  * @import { Shape } from './shape/shape.js'
  */
 
@@ -188,6 +189,14 @@ class Gizmo extends EventHandler {
     _device;
 
     /**
+     * Internal list of app event handles for the gizmo.
+     *
+     * @type {EventHandle[]}
+     * @protected
+     */
+    _handles = [];
+
+    /**
      * Internal reference to camera component to view the gizmo.
      *
      * @type {CameraComponent}
@@ -277,9 +286,9 @@ class Gizmo extends EventHandler {
         this._device.canvas.addEventListener('pointermove', this._onPointerMove);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
-        this._app.on('prerender', () => this.prerender());
-        this._app.on('update', () => this.update());
-        this._app.on('destroy', () => this.destroy());
+        this._handles.push(this._app.on('prerender', () => this.prerender()));
+        this._handles.push(this._app.on('update', () => this.update()));
+        this._handles.push(this._app.on('destroy', () => this.destroy()));
     }
 
     /**
@@ -603,7 +612,10 @@ class Gizmo extends EventHandler {
         this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
+        this._handles.forEach(handle => handle.off());
+
         this.root.destroy();
+
     }
 }
 
