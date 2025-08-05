@@ -265,12 +265,12 @@ class Gizmo extends EventHandler {
         Debug.assert(camera instanceof CameraComponent, 'Incorrect parameters for Gizmos\'s constructor. Use new Gizmo(camera, layer)');
         super();
 
-        this._camera = camera;
-        this._app = camera.system.app;
-        this._device = this._app.graphicsDevice;
-
         this._layer = layer;
-        camera.layers = camera.layers.concat(layer.id);
+        this._camera = camera;
+        this._camera.layers = this._camera.layers.concat([this._layer.id]);
+
+        this._app = this._camera.system.app;
+        this._device = this._app.graphicsDevice;
 
         this.root = new Entity('gizmo');
         this._app.root.addChild(this.root);
@@ -294,10 +294,47 @@ class Gizmo extends EventHandler {
     /**
      * Sets the gizmo render layer.
      *
+     * @param {Layer} layer - The layer to render the gizmo.
+     */
+    set layer(layer) {
+        if (this._layer === layer) {
+            return;
+        }
+        this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
+        this._layer = layer;
+        this._camera.layers = this._camera.layers.concat(this._layer.id);
+    }
+
+    /**
+     * Gets the gizmo render layer.
+     *
      * @type {Layer}
      */
     get layer() {
         return this._layer;
+    }
+
+    /**
+     * Sets the camera component to view the gizmo.
+     *
+     * @type {CameraComponent} camera - The camera component.
+     */
+    set camera(camera) {
+        if (this._camera === camera) {
+            return;
+        }
+        this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
+        this._camera = camera;
+        this._camera.layers = this._camera.layers.concat(this._layer.id);
+    }
+
+    /**
+     * Gets the camera component to view the gizmo.
+     *
+     * @type {CameraComponent} The camera component.
+     */
+    get camera() {
+        return this._camera;
     }
 
     /**
