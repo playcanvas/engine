@@ -267,7 +267,7 @@ class Gizmo extends EventHandler {
 
         this._layer = layer;
         this._camera = camera;
-        this._camera.layers = this._camera.layers.concat([this._layer.id]);
+        this._camera.layers = this._camera.layers.concat(this._layer.id);
 
         this._app = this._camera.system.app;
         this._device = this._app.graphicsDevice;
