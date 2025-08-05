@@ -43,7 +43,7 @@ export default /* wgsl */`
         // parallax
         #ifdef STD_HEIGHT_MAP
             var<private> dUvOffset: vec2f;
-            #ifdef STD_DIFFUSE_TEXTURE_ALLOCATE
+            #ifdef STD_HEIGHT_TEXTURE_ALLOCATE
                 var texture_heightMap : texture_2d<f32>;
                 var texture_heightMapSampler : sampler;
             #endif
