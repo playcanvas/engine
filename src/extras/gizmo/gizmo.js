@@ -383,13 +383,23 @@ class Gizmo extends EventHandler {
      * @type {Vec3}
      * @protected
      */
-    get facing() {
+    get facingDir() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             const gizmoPos = this.root.getPosition();
             const cameraPos = this._camera.entity.getPosition();
             return tmpV2.sub2(cameraPos, gizmoPos).normalize();
         }
         return tmpV2.copy(this._camera.entity.forward).mulScalar(-1);
+    }
+
+    /**
+     * @type {Vec3}
+     * @protected
+     */
+    get cameraDir() {
+        const cameraPos = this._camera.entity.getPosition();
+        const gizmoPos = this.root.getPosition();
+        return tmpV2.sub2(cameraPos, gizmoPos).normalize();
     }
 
     /**

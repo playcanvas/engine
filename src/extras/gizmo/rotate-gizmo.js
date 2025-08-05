@@ -346,7 +346,7 @@ class RotateGizmo extends TransformGizmo {
         const isFacing = axis === GIZMOAXIS_FACE;
 
         if (isFacing) {
-            tmpV1.copy(this.facing);
+            tmpV1.copy(this.facingDir);
         } else {
             tmpV1.set(0, 0, 0);
             tmpV1[axis] = 1;
@@ -398,7 +398,7 @@ class RotateGizmo extends TransformGizmo {
         }
 
         // axes shapes
-        const facingDir = tmpV1.copy(this.facing);
+        const facingDir = tmpV1.copy(this.facingDir);
         tmpQ1.copy(this.root.getRotation()).invert().transformVector(facingDir, facingDir);
         let angle = Math.atan2(facingDir.z, facingDir.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
@@ -520,7 +520,7 @@ class RotateGizmo extends TransformGizmo {
         let angle = 0;
 
         // calculate angle
-        const facingDir = tmpV2.copy(this.facing);
+        const facingDir = tmpV2.copy(this.facingDir);
         const facingDot = plane.normal.dot(facingDir);
         if (this.orbitRotation || Math.abs(facingDot) > FACING_THRESHOLD) {
             // plane facing camera so based on mouse position around gizmo

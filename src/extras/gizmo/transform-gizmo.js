@@ -544,7 +544,7 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _createPlane(axis, isFacing, isLine) {
-        const facingDir = tmpV1.copy(this.facing);
+        const facingDir = tmpV1.copy(this.facingDir);
         const normal = tmpP1.normal.set(0, 0, 0);
 
         if (isFacing) {
