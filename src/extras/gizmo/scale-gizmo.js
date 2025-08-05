@@ -184,10 +184,6 @@ class ScaleGizmo extends TransformGizmo {
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
             this._nodeScales.clear();
         });
-
-        this._app.on('prerender', () => {
-            this._shapesLookAtCamera();
-        });
     }
 
     set coordSpace(value) {
@@ -404,37 +400,37 @@ class ScaleGizmo extends TransformGizmo {
      * @private
      */
     _shapesLookAtCamera() {
-        const facingDir = this.facing;
+        const cameraDir = this.cameraDir;
 
         // axes
-        let dot = facingDir.dot(this.root.right);
+        let dot = cameraDir.dot(this.root.right);
         this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.x.flipped = dot < 0;
         }
-        dot = facingDir.dot(this.root.up);
+        dot = cameraDir.dot(this.root.up);
         this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.y.flipped = dot < 0;
         }
-        dot = facingDir.dot(this.root.forward);
+        dot = cameraDir.dot(this.root.forward);
         this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.z.flipped = dot > 0;
         }
 
         // planes
-        tmpV1.cross(facingDir, this.root.right);
+        tmpV1.cross(cameraDir, this.root.right);
         this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
         }
-        tmpV1.cross(facingDir, this.root.forward);
+        tmpV1.cross(cameraDir, this.root.forward);
         this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
         }
-        tmpV1.cross(facingDir, this.root.up);
+        tmpV1.cross(cameraDir, this.root.up);
         this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
@@ -531,6 +527,19 @@ class ScaleGizmo extends TransformGizmo {
         }
 
         return point;
+    }
+
+    /**
+     * @override
+     */
+    prerender() {
+        super.prerender();
+
+        if (!this.root.enabled) {
+            return;
+        }
+
+        this._shapesLookAtCamera();
     }
 }
 

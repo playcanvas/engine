@@ -16,6 +16,7 @@ import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { EventHandle } from '../../core/event-handle.js'
  * @import { Shape } from './shape/shape.js'
  */
 
@@ -27,7 +28,6 @@ const tmpM2 = new Mat4();
 const tmpR1 = new Ray();
 
 // constants
-const LAYER_NAME = 'Gizmo';
 const MIN_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
@@ -188,6 +188,14 @@ class Gizmo extends EventHandler {
     _device;
 
     /**
+     * Internal list of app event handles for the gizmo.
+     *
+     * @type {EventHandle[]}
+     * @protected
+     */
+    _handles = [];
+
+    /**
      * Internal reference to camera component to view the gizmo.
      *
      * @type {CameraComponent}
@@ -232,14 +240,14 @@ class Gizmo extends EventHandler {
      * @param {number} [layerIndex] - The layer index. Defaults to the end of the layer list.
      * @returns {Layer} The new layer.
      */
-    static createLayer(app, layerName = LAYER_NAME, layerIndex) {
+    static createLayer(app, layerName = 'Gizmo', layerIndex = app.scene.layers.layerList.length) {
         const layer = new Layer({
             name: layerName,
             clearDepthBuffer: true,
             opaqueSortMode: SORTMODE_NONE,
             transparentSortMode: SORTMODE_NONE
         });
-        app.scene.layers.insert(layer, layerIndex ?? app.scene.layers.layerList.length);
+        app.scene.layers.insert(layer, layerIndex);
         return layer;
     }
 
@@ -256,12 +264,12 @@ class Gizmo extends EventHandler {
         Debug.assert(camera instanceof CameraComponent, 'Incorrect parameters for Gizmos\'s constructor. Use new Gizmo(camera, layer)');
         super();
 
-        this._camera = camera;
-        this._app = camera.system.app;
-        this._device = this._app.graphicsDevice;
-
         this._layer = layer;
-        camera.layers = camera.layers.concat(layer.id);
+        this._camera = camera;
+        this._camera.layers = this._camera.layers.concat(this._layer.id);
+
+        this._app = this._camera.system.app;
+        this._device = this._app.graphicsDevice;
 
         this.root = new Entity('gizmo');
         this._app.root.addChild(this.root);
@@ -277,22 +285,55 @@ class Gizmo extends EventHandler {
         this._device.canvas.addEventListener('pointermove', this._onPointerMove);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
-        this._app.on('update', () => {
-            this._updatePosition();
-            this._updateRotation();
-            this._updateScale();
-        });
-
-        this._app.on('destroy', () => this.destroy());
+        this._handles.push(this._app.on('prerender', () => this.prerender()));
+        this._handles.push(this._app.on('update', () => this.update()));
+        this._handles.push(this._app.on('destroy', () => this.destroy()));
     }
 
     /**
      * Sets the gizmo render layer.
      *
+     * @param {Layer} layer - The layer to render the gizmo.
+     */
+    set layer(layer) {
+        if (this._layer === layer) {
+            return;
+        }
+        this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
+        this._layer = layer;
+        this._camera.layers = this._camera.layers.concat(this._layer.id);
+    }
+
+    /**
+     * Gets the gizmo render layer.
+     *
      * @type {Layer}
      */
     get layer() {
         return this._layer;
+    }
+
+    /**
+     * Sets the camera component to view the gizmo.
+     *
+     * @type {CameraComponent} camera - The camera component.
+     */
+    set camera(camera) {
+        if (this._camera === camera) {
+            return;
+        }
+        this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
+        this._camera = camera;
+        this._camera.layers = this._camera.layers.concat(this._layer.id);
+    }
+
+    /**
+     * Gets the camera component to view the gizmo.
+     *
+     * @type {CameraComponent} The camera component.
+     */
+    get camera() {
+        return this._camera;
     }
 
     /**
@@ -342,13 +383,23 @@ class Gizmo extends EventHandler {
      * @type {Vec3}
      * @protected
      */
-    get facing() {
+    get facingDir() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             const gizmoPos = this.root.getPosition();
             const cameraPos = this._camera.entity.getPosition();
             return tmpV2.sub2(cameraPos, gizmoPos).normalize();
         }
         return tmpV2.copy(this._camera.entity.forward).mulScalar(-1);
+    }
+
+    /**
+     * @type {Vec3}
+     * @protected
+     */
+    get cameraDir() {
+        const cameraPos = this._camera.entity.getPosition();
+        const gizmoPos = this.root.getPosition();
+        return tmpV2.sub2(cameraPos, gizmoPos).normalize();
     }
 
     /**
@@ -568,6 +619,31 @@ class Gizmo extends EventHandler {
     }
 
     /**
+     * Pre-render method. This is called before the gizmo is rendered.
+     *
+     * @example
+     * const gizmo = new pc.Gizmo(camera, layer);
+     * gizmo.attach([boxA, boxB]);
+     * gizmo.prerender();
+     */
+    prerender() {
+    }
+
+    /**
+     * Updates the gizmo position, rotation, and scale.
+     *
+     * @example
+     * const gizmo = new pc.Gizmo(camera, layer);
+     * gizmo.attach([boxA, boxB]);
+     * gizmo.update();
+     */
+    update() {
+        this._updatePosition();
+        this._updateRotation();
+        this._updateScale();
+    }
+
+    /**
      * Detaches all graph nodes and destroys the gizmo instance.
      *
      * @example
@@ -582,7 +658,10 @@ class Gizmo extends EventHandler {
         this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
+        this._handles.forEach(handle => handle.off());
+
         this.root.destroy();
+
     }
 }
 
