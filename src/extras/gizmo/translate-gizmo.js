@@ -143,11 +143,18 @@ class TranslateGizmo extends TransformGizmo {
     snapIncrement = 1;
 
     /**
+     * Whether to flip the axes to face the camera.
+     *
+     * @type {boolean}
+     */
+    flipAxes = true;
+
+    /**
      * Flips the planes to face the camera.
      *
      * @type {boolean}
      */
-    flipShapes = true;
+    flipPlanes = true;
 
     /**
      * Creates a new TranslateGizmo object. Use {@link Gizmo.createLayer} to create the layer
@@ -394,34 +401,34 @@ class TranslateGizmo extends TransformGizmo {
         // axes
         let dot = cameraDir.dot(this.root.right);
         this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipAxes) {
             this._shapes.x.flipped = dot < 0;
         }
         dot = cameraDir.dot(this.root.up);
         this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipAxes) {
             this._shapes.y.flipped = dot < 0;
         }
         dot = cameraDir.dot(this.root.forward);
         this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipAxes) {
             this._shapes.z.flipped = dot > 0;
         }
 
         // planes
         tmpV1.cross(cameraDir, this.root.right);
         this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipPlanes) {
             this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
         }
         tmpV1.cross(cameraDir, this.root.forward);
         this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipPlanes) {
             this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
         }
         tmpV1.cross(cameraDir, this.root.up);
         this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipPlanes) {
             this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
         }
     }
