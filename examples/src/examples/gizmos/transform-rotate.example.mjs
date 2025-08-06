@@ -98,10 +98,16 @@ data.set('gizmo', {
     size: gizmo.size,
     snapIncrement: gizmo.snapIncrement,
     orbitRotation: gizmo.orbitRotation,
-    xAxisColor: Object.values(gizmo.xAxisColor),
-    yAxisColor: Object.values(gizmo.yAxisColor),
-    zAxisColor: Object.values(gizmo.zAxisColor),
-    colorAlpha: gizmo.colorAlpha,
+    xAxisColor: gizmo.xAxisColor.toArray(),
+    yAxisColor: gizmo.yAxisColor.toArray(),
+    zAxisColor: gizmo.zAxisColor.toArray(),
+    xHoverColor: gizmo.xHoverColor.toArray(),
+    yHoverColor: gizmo.yHoverColor.toArray(),
+    zHoverColor: gizmo.zHoverColor.toArray(),
+    disabledColor: gizmo.disabledColor.toArray(),
+    xGuideColor: gizmo.xGuideColor.toArray(),
+    yGuideColor: gizmo.yGuideColor.toArray(),
+    zGuideColor: gizmo.zGuideColor.toArray(),
     shading: gizmo.shading,
     coordSpace: gizmo.coordSpace,
     ringTolerance: gizmo.ringTolerance,
@@ -137,7 +143,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             // @ts-ignore
             if (gizmo[key] instanceof pc.Color) {
                 // @ts-ignore
-                gizmo[key] = tmpC.set(...value);
+                gizmo[key] = tmpC.fromArray(value);
                 return;
             }
 

@@ -1,4 +1,3 @@
-import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
@@ -12,7 +11,6 @@ import {
     COLOR_BLUE,
     COLOR_YELLOW,
     COLOR_GRAY,
-    color3from4,
     color4from3
 } from './color.js';
 import { GIZMOAXIS_FACE, GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
@@ -78,14 +76,6 @@ class TransformGizmo extends Gizmo {
     static EVENT_TRANSFORMEND = 'transform:end';
 
     /**
-     * Internal color alpha value.
-     *
-     * @type {number}
-     * @private
-     */
-    _colorAlpha = 0.6;
-
-    /**
      * Internal color for meshes.
      *
      * @type {{ axis: Record<string, Color>, hover: Record<string, Color>, disabled: Color }}
@@ -93,11 +83,11 @@ class TransformGizmo extends Gizmo {
      */
     _meshColors = {
         axis: {
-            x: this._colorSemi(COLOR_RED),
-            y: this._colorSemi(COLOR_GREEN),
-            z: this._colorSemi(COLOR_BLUE),
-            xyz: this._colorSemi(Color.WHITE),
-            f: this._colorSemi(Color.WHITE)
+            x: color4from3(COLOR_RED, 0.6),
+            y: color4from3(COLOR_GREEN, 0.6),
+            z: color4from3(COLOR_BLUE, 0.6),
+            xyz: color4from3(Color.WHITE, 0.6),
+            f: color4from3(Color.WHITE, 0.6)
         },
         hover: {
             x: COLOR_RED.clone(),
@@ -416,18 +406,66 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * Sets the color alpha for all axes.
+     * Sets the X axis hover color.
      *
-     * @type {number}
+     * @type {Color}
      */
-    set colorAlpha(value) {
-        this._colorAlpha = math.clamp(value, 0, 1);
+    set xHoverColor(value) {
+        this._updateHoverColor(GIZMOAXIS_X, value);
+    }
 
-        this._meshColors.axis.x.copy(this._colorSemi(this._meshColors.axis.x));
-        this._meshColors.axis.y.copy(this._colorSemi(this._meshColors.axis.y));
-        this._meshColors.axis.z.copy(this._colorSemi(this._meshColors.axis.z));
-        this._meshColors.axis.xyz.copy(this._colorSemi(this._meshColors.axis.xyz));
-        this._meshColors.axis.f.copy(this._colorSemi(this._meshColors.axis.f));
+    /**
+     * Gets the X axis hover color.
+     *
+     * @type {Color}
+     */
+    get xHoverColor() {
+        return this._meshColors.hover.x;
+    }
+
+    /**
+     * Sets the Y axis hover color.
+     *
+     * @type {Color}
+     */
+    set yHoverColor(value) {
+        this._updateHoverColor(GIZMOAXIS_Y, value);
+    }
+
+    /**
+     * Gets the Y axis hover color.
+     *
+     * @type {Color}
+     */
+    get yHoverColor() {
+        return this._meshColors.hover.y;
+    }
+
+    /**
+     * Sets the Z axis color.
+     *
+     * @type {Color}
+     */
+    set zHoverColor(value) {
+        this._updateHoverColor(GIZMOAXIS_Z, value);
+    }
+
+    /**
+     * Gets the Z axis hover color.
+     *
+     * @type {Color}
+     */
+    get zHoverColor() {
+        return this._meshColors.hover.z;
+    }
+
+    /**
+     * Sets the disabled color.
+     *
+     * @type {Color}
+     */
+    set disabledColor(value) {
+        this._meshColors.disabled.copy(value);
 
         for (const name in this._shapes) {
             this._shapes[name].hover(!!this._hoverAxis);
@@ -435,35 +473,89 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * Gets the color alpha for all axes.
+     * Gets the disabled color.
      *
-     * @type {number}
+     * @type {Color}
      */
-    get colorAlpha() {
-        return this._colorAlpha;
+    get disabledColor() {
+        return this._meshColors.disabled;
     }
 
     /**
-     * @param {Color} color - The color to set.
-     * @returns {Color} - The color with alpha applied.
-     * @private
+     * Sets the X guide color.
+     *
+     * @type {Color}
      */
-    _colorSemi(color) {
-        return color4from3(color, this._colorAlpha);
+    set xGuideColor(value) {
+        this._guideColors.x.copy(value);
+    }
+
+    /**
+     * Gets the X guide color.
+     *
+     * @type {Color}
+     */
+    get xGuideColor() {
+        return this._guideColors.x;
+    }
+
+    /**
+     * Sets the Y guide color.
+     *
+     * @type {Color}
+     */
+    set yGuideColor(value) {
+        this._guideColors.y.copy(value);
+    }
+
+    /**
+     * Gets the Y guide color.
+     *
+     * @type {Color}
+     */
+    get yGuideColor() {
+        return this._guideColors.y;
+    }
+
+    /**
+     * Sets the Z guide color.
+     *
+     * @type {Color}
+     */
+    set zGuideColor(value) {
+        this._guideColors.z.copy(value);
+    }
+
+    /**
+     * Gets the Z guide color.
+     *
+     * @type {Color}
+     */
+    get zGuideColor() {
+        return this._guideColors.z;
     }
 
     /**
      * @param {string} axis - The axis to update.
-     * @param {any} value - The value to set.
+     * @param {Color} color - The value to set.
      * @private
      */
-    _updateAxisColor(axis, value) {
-        const color3 = color3from4(value);
-        const color4 = this._colorSemi(value);
+    _updateAxisColor(axis, color) {
+        this._guideColors[axis].copy(color);
+        this._meshColors.axis[axis].copy(color);
 
-        this._guideColors[axis].copy(color3);
-        this._meshColors.axis[axis].copy(color4);
-        this._meshColors.hover[axis].copy(color3);
+        for (const name in this._shapes) {
+            this._shapes[name].hover(!!this._hoverAxis);
+        }
+    }
+
+    /**
+     * @param {string} axis - The axis to update.
+     * @param {Color} color - The value to set.
+     * @private
+     */
+    _updateHoverColor(axis, color) {
+        this._meshColors.hover[axis].copy(color);
 
         for (const name in this._shapes) {
             this._shapes[name].hover(!!this._hoverAxis);

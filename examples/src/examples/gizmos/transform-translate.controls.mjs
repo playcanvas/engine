@@ -55,6 +55,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 LabelGroup,
                 { text: 'X Axis' },
                 jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.xAxisColor' }
                 })
@@ -63,6 +64,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 LabelGroup,
                 { text: 'Y Axis' },
                 jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.yAxisColor' }
                 })
@@ -71,19 +73,72 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 LabelGroup,
                 { text: 'Z Axis' },
                 jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.zAxisColor' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Color Alpha' },
-                jsx(SliderInput, {
+                { text: 'X Hover' },
+                jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.colorAlpha' },
-                    min: 0,
-                    max: 1,
-                    precision: 2
+                    link: { observer, path: 'gizmo.xHoverColor' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Y Hover' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.yHoverColor' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Z Hover' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.zHoverColor' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Disabled' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.disabledColor' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'X Guide' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.xGuideColor' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Y Guide' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.yGuideColor' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Z Guide' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.zGuideColor' }
                 })
             ),
             jsx(
