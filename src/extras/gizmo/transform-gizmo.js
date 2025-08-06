@@ -177,14 +177,6 @@ class TransformGizmo extends Gizmo {
     _hoverIsPlane = false;
 
     /**
-     * Internal state of if there is no selection.
-     *
-     * @type {boolean}
-     * @private
-     */
-    _noSelection = false;
-
-    /**
      * Internal currently selected axis.
      *
      * @type {string}
@@ -207,14 +199,6 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _selectionStartPoint = new Vec3();
-
-    /**
-     * Internal state for if the gizmo is being dragged.
-     *
-     * @type {boolean}
-     * @protected
-     */
-    _dragging = false;
 
     /**
      * Internal state for if snapping is enabled. Defaults to false.
@@ -253,21 +237,21 @@ class TransformGizmo extends Gizmo {
             }
 
             if (!meshInstance) {
-                this._noSelection = true;
                 return;
             }
 
+            this._hoverAxis = '';
+            this._hoverIsPlane = false;
             this._selectedAxis = this._getAxis(meshInstance);
             this._selectedIsPlane =  this._getIsPlane(meshInstance);
+
             this._rootStartPos.copy(this.root.getPosition());
             this._rootStartRot.copy(this.root.getRotation());
             const point = this._screenToPoint(x, y);
             this._selectionStartPoint.copy(point);
-            this._dragging = true;
+
             this.fire(TransformGizmo.EVENT_TRANSFORMSTART, point, x, y);
 
-            this._hoverAxis = '';
-            this._hoverIsPlane = false;
         });
 
         this.on(Gizmo.EVENT_POINTERMOVE, (x, y, meshInstance) => {
@@ -276,38 +260,32 @@ class TransformGizmo extends Gizmo {
                 return;
             }
 
-            if (!this._noSelection) {
-                this._hover(meshInstance);
-            }
+            this._hover(meshInstance);
 
             if (!this._dragging) {
                 return;
             }
 
             const point = this._screenToPoint(x, y);
-            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, point, x, y);
 
-            this._hoverAxis = '';
-            this._hoverIsPlane = false;
+            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, point, x, y);
         });
 
         this.on(Gizmo.EVENT_POINTERUP, (x, y, meshInstance) => {
-            this._noSelection = false;
             this._hover(meshInstance);
 
             if (!this._dragging) {
                 return;
             }
-            this._dragging = false;
-            this.fire(TransformGizmo.EVENT_TRANSFORMEND);
 
             if (meshInstance) {
                 this._hoverAxis = this._selectedAxis;
                 this._hoverIsPlane = this._selectedIsPlane;
             }
-
             this._selectedAxis = '';
             this._selectedIsPlane = false;
+
+            this.fire(TransformGizmo.EVENT_TRANSFORMEND);
         });
 
         this.on(Gizmo.EVENT_NODESDETACH, () => {
@@ -543,6 +521,10 @@ class TransformGizmo extends Gizmo {
         return this._guideColors.z;
     }
 
+    get _dragging() {
+        return !this._hoverAxis && this._selectedAxis;
+    }
+
     /**
      * @param {string} axis - The axis to update.
      * @param {Color} color - The value to set.
@@ -728,11 +710,9 @@ class TransformGizmo extends Gizmo {
         const gizmoRot = tmpQ1.copy(this.root.getRotation());
         const checkAxis = this._hoverAxis || this._selectedAxis;
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
-        const selected = !this._hoverAxis && !!this._selectedAxis;
-        const faceAxis = checkAxis === GIZMOAXIS_FACE;
         for (let i = 0; i < VEC3_AXES.length; i++) {
             const axis = VEC3_AXES[i];
-            if (selected || faceAxis) {
+            if (this._dragging || checkAxis === GIZMOAXIS_XYZ) {
                 this._drawSpanLine(gizmoPos, gizmoRot, axis);
                 continue;
             }
