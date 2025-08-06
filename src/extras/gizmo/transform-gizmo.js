@@ -728,10 +728,11 @@ class TransformGizmo extends Gizmo {
         const gizmoRot = tmpQ1.copy(this.root.getRotation());
         const checkAxis = this._hoverAxis || this._selectedAxis;
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
-        console.log('axis', this._hoverAxis, this._selectedAxis);
+        const selected = !this._hoverAxis && !!this._selectedAxis;
+        const faceAxis = checkAxis === GIZMOAXIS_FACE;
         for (let i = 0; i < VEC3_AXES.length; i++) {
             const axis = VEC3_AXES[i];
-            if (checkAxis === GIZMOAXIS_XYZ) {
+            if (selected || faceAxis) {
                 this._drawSpanLine(gizmoPos, gizmoRot, axis);
                 continue;
             }
