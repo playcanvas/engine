@@ -265,6 +265,9 @@ class TransformGizmo extends Gizmo {
             this._selectionStartPoint.copy(point);
             this._dragging = true;
             this.fire(TransformGizmo.EVENT_TRANSFORMSTART, point, x, y);
+
+            this._hoverAxis = '';
+            this._hoverIsPlane = false;
         });
 
         this.on(Gizmo.EVENT_POINTERMOVE, (x, y, meshInstance) => {
@@ -297,6 +300,11 @@ class TransformGizmo extends Gizmo {
             }
             this._dragging = false;
             this.fire(TransformGizmo.EVENT_TRANSFORMEND);
+
+            if (meshInstance) {
+                this._hoverAxis = this._selectedAxis;
+                this._hoverIsPlane = this._selectedIsPlane;
+            }
 
             this._selectedAxis = '';
             this._selectedIsPlane = false;
@@ -720,6 +728,7 @@ class TransformGizmo extends Gizmo {
         const gizmoRot = tmpQ1.copy(this.root.getRotation());
         const checkAxis = this._hoverAxis || this._selectedAxis;
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
+        console.log('axis', this._hoverAxis, this._selectedAxis);
         for (let i = 0; i < VEC3_AXES.length; i++) {
             const axis = VEC3_AXES[i];
             if (checkAxis === GIZMOAXIS_XYZ) {
