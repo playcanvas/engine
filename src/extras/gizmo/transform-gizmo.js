@@ -711,7 +711,7 @@ class TransformGizmo extends Gizmo {
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
         for (let i = 0; i < AXES.length; i++) {
             const axis = AXES[i];
-            if (this._dragging || checkAxis === GIZMOAXIS_XYZ) {
+            if (checkAxis === GIZMOAXIS_XYZ) {
                 this._drawSpanLine(gizmoPos, gizmoRot, axis);
                 continue;
             }
