@@ -30,7 +30,7 @@ const tmpR1 = new Ray();
 const tmpP1 = new Plane();
 
 // constants
-const VEC3_AXES = Object.keys(tmpV1);
+const AXES = ['x', 'y', 'z'];
 
 /**
  * The base class for all transform gizmos.
@@ -709,8 +709,8 @@ class TransformGizmo extends Gizmo {
         const gizmoRot = this.root.getRotation();
         const checkAxis = this._hoverAxis || this._selectedAxis;
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
-        for (let i = 0; i < VEC3_AXES.length; i++) {
-            const axis = VEC3_AXES[i];
+        for (let i = 0; i < AXES.length; i++) {
+            const axis = AXES[i];
             if (this._dragging || checkAxis === GIZMOAXIS_XYZ) {
                 this._drawSpanLine(gizmoPos, gizmoRot, axis);
                 continue;
