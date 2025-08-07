@@ -66,6 +66,12 @@ class FirstPersonController extends Script {
     static scriptName = 'firstPersonController';
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _ready = false;
+
+    /**
      * @type {RigidBodyComponent}
      * @private
      */
@@ -279,6 +285,8 @@ class FirstPersonController extends Script {
         });
 
         this.on('destroy', this.destroy, this);
+
+        this._ready = true;
     }
 
     /**
@@ -429,6 +437,10 @@ class FirstPersonController extends Script {
      * @param {number} dt - The delta time.
      */
     update(dt) {
+        if (!this._ready) {
+            return;
+        }
+
         const { keyCode } = KeyboardMouseSource;
         const { buttonCode } = GamepadSource;
 
