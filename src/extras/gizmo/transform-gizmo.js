@@ -630,8 +630,8 @@ class TransformGizmo extends Gizmo {
         const normal = tmpP1.normal.set(0, 0, 0);
 
         if (isFacing) {
-            // all axes so set normal to plane facing camera
-            normal.copy(facingDir);
+            // set plane normal to face camera
+            normal.copy(this._camera.entity.forward).mulScalar(-1);
         } else {
             // set plane normal based on axis
             normal[axis] = 1;
