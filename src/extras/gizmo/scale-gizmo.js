@@ -174,7 +174,11 @@ class ScaleGizmo extends TransformGizmo {
         this._createTransform();
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
+            // store initial scales of nodes
             this._storeNodeScales();
+
+            // hide shapes that are not selected
+            this._drag(true);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
@@ -186,6 +190,10 @@ class ScaleGizmo extends TransformGizmo {
             }
             pointDelta.mulScalar(1 / this._scale);
             this._setNodeScales(pointDelta.add(Vec3.ONE));
+        });
+
+        this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+            this._drag(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
@@ -442,6 +450,32 @@ class ScaleGizmo extends TransformGizmo {
         if (this.flipPlanes) {
             this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
         }
+    }
+
+    /**
+     * @param {boolean} state - The state.
+     * @private
+     */
+    _drag(state) {
+        for (const axis in this._shapes) {
+            const shape = this._shapes[axis];
+
+            // facing axis
+            if (this._selectedAxis === GIZMOAXIS_XYZ) {
+                shape.visible = state ? axis.length === 1 : true;
+                continue;
+            }
+
+            // planes
+            if (this._selectedIsPlane) {
+                shape.visible = state ? axis.length === 1 && !axis.includes(this._selectedAxis) : true;
+                continue;
+            }
+
+            shape.visible = state ? axis === this._selectedAxis : true;
+        }
+
+        this.fire(TransformGizmo.EVENT_RENDERUPDATE);
     }
 
     /**

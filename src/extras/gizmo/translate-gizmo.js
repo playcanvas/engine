@@ -171,7 +171,11 @@ class TranslateGizmo extends TransformGizmo {
         this._createTransform();
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
+            // store the initial positions of the nodes
             this._storeNodePositions();
+
+            // hide shapes that are not selected
+            this._drag(true);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
@@ -182,6 +186,10 @@ class TranslateGizmo extends TransformGizmo {
                 pointDelta.mulScalar(this.snapIncrement);
             }
             this._setNodePositions(pointDelta);
+        });
+
+        this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+            this._drag(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
@@ -431,6 +439,32 @@ class TranslateGizmo extends TransformGizmo {
         if (this.flipPlanes) {
             this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
         }
+    }
+
+    /**
+     * @param {boolean} state - The state.
+     * @private
+     */
+    _drag(state) {
+        for (const axis in this._shapes) {
+            const shape = this._shapes[axis];
+
+            // facing axis
+            if (this._selectedAxis === GIZMOAXIS_FACE) {
+                shape.visible = !state;
+                continue;
+            }
+
+            // planes
+            if (this._selectedIsPlane) {
+                shape.visible = state ? axis.length === 1 && !axis.includes(this._selectedAxis) : true;
+                continue;
+            }
+
+            shape.visible = state ? axis === this._selectedAxis : true;
+        }
+
+        this.fire(TransformGizmo.EVENT_RENDERUPDATE);
     }
 
     /**

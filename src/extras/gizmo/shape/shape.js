@@ -190,7 +190,9 @@ class Shape {
 
     _shading = true;
 
-    _disabled;
+    _disabled = false;
+
+    _visible = true;
 
     _defaultColor = Color.WHITE;
 
@@ -244,6 +246,7 @@ class Shape {
         this._scale = options.scale ?? new Vec3(1, 1, 1);
 
         this._disabled = options.disabled ?? false;
+        this._visible = options.hidden ?? false;
 
         this._layers = options.layers ?? this._layers;
         this._shading = options.shading ?? this._shading;
@@ -268,6 +271,17 @@ class Shape {
 
     get disabled() {
         return this._disabled;
+    }
+
+    set visible(value) {
+        for (let i = 0; i < this.meshInstances.length; i++) {
+            this.meshInstances[i].visible = value;
+        }
+        this._visible = value;
+    }
+
+    get visible() {
+        return this._visible;
     }
 
     set shading(value) {

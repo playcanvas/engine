@@ -139,7 +139,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal object containing the gizmo shapes to render.
      *
-     * @type {Object.<string, Shape>}
+     * @type {Record<string, Shape>}
      * @protected
      */
     _shapes = {};
