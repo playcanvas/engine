@@ -68,8 +68,8 @@ class TranslateGizmo extends TransformGizmo {
             axis: GIZMOAXIS_FACE,
             layers: [this._layer.id],
             shading: this._shading,
-            defaultColor: this._meshColors.axis.xyz,
-            hoverColor: this._meshColors.hover.xyz
+            defaultColor: this._meshColors.axis.f,
+            hoverColor: this._meshColors.hover.f
         }),
         yz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_X,
@@ -466,18 +466,15 @@ class TranslateGizmo extends TransformGizmo {
                 case 'selected': {
                     // facing axis
                     if (this._selectedAxis === GIZMOAXIS_FACE) {
-                        shape.visible = !state;
+                        shape.visible = state ? axis.length === 1 : true;
                         continue;
                     }
-
                     // planes
                     if (this._selectedIsPlane) {
                         shape.visible = state ? axis.length === 1 && !axis.includes(this._selectedAxis) : true;
                         continue;
                     }
-
                     shape.visible = state ? axis === this._selectedAxis : true;
-                    continue;
                 }
             }
         }

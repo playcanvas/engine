@@ -485,7 +485,6 @@ class ScaleGizmo extends TransformGizmo {
                         shape.visible = state ? axis.length === 1 && !axis.includes(this._selectedAxis) : true;
                         continue;
                     }
-
                     shape.visible = state ? axis === this._selectedAxis : true;
                     continue;
                 }
