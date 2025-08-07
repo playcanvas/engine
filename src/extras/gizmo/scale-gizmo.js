@@ -153,6 +153,13 @@ class ScaleGizmo extends TransformGizmo {
     flipPlanes = true;
 
     /**
+     * Whether to hide the shapes when dragging.
+     *
+     * @type {'show' | 'hide' | 'selected'}
+     */
+    dragMode = 'show';
+
+    /**
      * The lower bound for scaling.
      *
      * @type {Vec3}
@@ -459,20 +466,30 @@ class ScaleGizmo extends TransformGizmo {
     _drag(state) {
         for (const axis in this._shapes) {
             const shape = this._shapes[axis];
+            switch (this.dragMode) {
+                case 'show': {
+                    continue;
+                }
+                case 'hide': {
+                    shape.visible = !state;
+                    continue;
+                }
+                case 'selected': {
+                    // all axes
+                    if (this._selectedAxis === GIZMOAXIS_XYZ) {
+                        shape.visible = state ? axis.length === 1 : true;
+                        continue;
+                    }
+                    // planes
+                    if (this._selectedIsPlane) {
+                        shape.visible = state ? axis.length === 1 && !axis.includes(this._selectedAxis) : true;
+                        continue;
+                    }
 
-            // facing axis
-            if (this._selectedAxis === GIZMOAXIS_XYZ) {
-                shape.visible = state ? axis.length === 1 : true;
-                continue;
+                    shape.visible = state ? axis === this._selectedAxis : true;
+                    continue;
+                }
             }
-
-            // planes
-            if (this._selectedIsPlane) {
-                shape.visible = state ? axis.length === 1 && !axis.includes(this._selectedAxis) : true;
-                continue;
-            }
-
-            shape.visible = state ? axis === this._selectedAxis : true;
         }
 
         this.fire(TransformGizmo.EVENT_RENDERUPDATE);

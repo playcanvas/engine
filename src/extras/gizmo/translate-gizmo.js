@@ -157,6 +157,13 @@ class TranslateGizmo extends TransformGizmo {
     flipPlanes = true;
 
     /**
+     * Whether to hide the shapes when dragging.
+     *
+     * @type {'show' | 'hide' | 'selected'}
+     */
+    dragMode = 'show';
+
+    /**
      * Creates a new TranslateGizmo object. Use {@link Gizmo.createLayer} to create the layer
      * required to display the gizmo.
      *
@@ -448,20 +455,31 @@ class TranslateGizmo extends TransformGizmo {
     _drag(state) {
         for (const axis in this._shapes) {
             const shape = this._shapes[axis];
+            switch (this.dragMode) {
+                case 'show': {
+                    continue;
+                }
+                case 'hide': {
+                    shape.visible = !state;
+                    continue;
+                }
+                case 'selected': {
+                    // facing axis
+                    if (this._selectedAxis === GIZMOAXIS_FACE) {
+                        shape.visible = !state;
+                        continue;
+                    }
 
-            // facing axis
-            if (this._selectedAxis === GIZMOAXIS_FACE) {
-                shape.visible = !state;
-                continue;
+                    // planes
+                    if (this._selectedIsPlane) {
+                        shape.visible = state ? axis.length === 1 && !axis.includes(this._selectedAxis) : true;
+                        continue;
+                    }
+
+                    shape.visible = state ? axis === this._selectedAxis : true;
+                    continue;
+                }
             }
-
-            // planes
-            if (this._selectedIsPlane) {
-                shape.visible = state ? axis.length === 1 && !axis.includes(this._selectedAxis) : true;
-                continue;
-            }
-
-            shape.visible = state ? axis === this._selectedAxis : true;
         }
 
         this.fire(TransformGizmo.EVENT_RENDERUPDATE);
