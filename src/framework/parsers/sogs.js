@@ -84,14 +84,17 @@ class SogsParser {
                 });
 
                 assets.add(texture);
-                assets.load(texture);
                 promises.push(promise);
 
                 return texture;
             });
         });
 
-        combineProgress(asset, subs.map(sub => textures[sub]).flat());
+        const textureAssets = subs.map(sub => textures[sub]).flat();
+
+        combineProgress(asset, textureAssets);
+
+        textureAssets.forEach(t => assets.load(t));
 
         // wait for all textures to complete loading
         await Promise.allSettled(promises);
@@ -108,13 +111,14 @@ class SogsParser {
         data.sh_centroids = textures.shN?.[0]?.resource;
         data.sh_labels = textures.shN?.[1]?.resource;
 
-        if (asset.data?.reorder ?? true) {
-            await data.reorderData();
-        } else {
-            await data.readMeansImageData();
+        const decompress = asset.data?.decompress;
+
+        if (!decompress) {
+            // no need to prepare gpu data if decompressing
+            await data.prepareGpuData();
         }
 
-        const resource = asset.data?.decompress ?
+        const resource = decompress ?
             new GSplatResource(this.app.graphicsDevice, await data.decompress()) :
             new GSplatSogsResource(this.app.graphicsDevice, data);
 

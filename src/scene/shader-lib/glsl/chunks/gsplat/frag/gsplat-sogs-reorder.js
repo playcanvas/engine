@@ -1,18 +1,41 @@
 export default /* glsl */`
-    uniform usampler2D orderTexture;
-    uniform sampler2D sourceTexture;
+    uniform highp sampler2D means_l;
+    uniform highp sampler2D means_u;
+    uniform highp sampler2D quats;
+    uniform highp sampler2D scales;
+    uniform highp sampler2D sh_labels;
+
     uniform highp uint numSplats;
 
+    uint packU32(vec4 v) {
+        return uint(v.x * 255.0) << 24u |
+               uint(v.y * 255.0) << 16u |
+               uint(v.z * 255.0) << 8u |
+               uint(v.w * 255.0);
+    }
+
+    uvec4 packU32(vec4 a, vec4 b, vec4 c, vec4 d) {
+        return uvec4(packU32(a), packU32(b), packU32(c), packU32(d));
+    }
+
     void main(void) {
-        uint w = uint(textureSize(sourceTexture, 0).x);
-        uint idx = uint(gl_FragCoord.x) + uint(gl_FragCoord.y) * w;
-        if (idx >= numSplats) discard;
+        int w = int(textureSize(means_l, 0).x);
+        ivec2 uv = ivec2(gl_FragCoord.xy);
+        if (uint(uv.x + uv.y * w) >= numSplats) {
+            discard;
+        }
 
-        // fetch the source index and calculate source uv
-        uint sidx = texelFetch(orderTexture, ivec2(gl_FragCoord.xy), 0).x;
-        uvec2 suv = uvec2(sidx % w, sidx / w);
+        vec3 meansLSample = texelFetch(means_l, uv, 0).xyz;
+        vec3 meansUSample = texelFetch(means_u, uv, 0).xyz;
+        vec4 quatsSample = texelFetch(quats, uv, 0);
+        vec3 scalesSample = texelFetch(scales, uv, 0).xyz;
+        vec2 shLabelsSample = texelFetch(sh_labels, uv, 0).xy;
 
-        // sample the source texture
-        gl_FragColor = texelFetch(sourceTexture, ivec2(suv), 0);
+        pcFragColor0 = packU32(
+            vec4(meansLSample, shLabelsSample.x),
+            vec4(meansUSample, shLabelsSample.y),
+            vec4(quatsSample),
+            vec4(scalesSample, 0.0)
+        );
     }
 `;

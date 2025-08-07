@@ -13,7 +13,7 @@ class GSplatSogsResource extends GSplatResourceBase {
         material.setDefine('GSPLAT_SOGS_DATA', true);
         material.setDefine('SH_BANDS', this.gsplatData.shBands);
 
-        ['means_l', 'means_u', 'quats', 'scales', 'sh0', 'sh_centroids', 'sh_labels'].forEach((name) => {
+        ['packedTexture', 'sh0', 'sh_centroids'].forEach((name) => {
             if (gsplatData[name]) {
                 material.setParameter(name, gsplatData[name]);
             }
