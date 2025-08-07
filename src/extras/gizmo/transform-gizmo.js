@@ -26,7 +26,6 @@ import { Gizmo } from './gizmo.js';
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
-const tmpQ1 = new Quat();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
 
@@ -707,7 +706,7 @@ class TransformGizmo extends Gizmo {
      */
     _drawGuideLines() {
         const gizmoPos = this.root.getPosition();
-        const gizmoRot = tmpQ1.copy(this.root.getRotation());
+        const gizmoRot = this.root.getRotation();
         const checkAxis = this._hoverAxis || this._selectedAxis;
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
         for (let i = 0; i < VEC3_AXES.length; i++) {
