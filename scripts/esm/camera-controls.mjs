@@ -158,7 +158,7 @@ class CameraControls extends Script {
      * @type {Vec2}
      * @private
      */
-    _zoomRange = new Vec2();
+    _zoomRange = new Vec2(0.01, 0);
 
     /**
      * @type {KeyboardMouseSource}
@@ -343,7 +343,8 @@ class CameraControls extends Script {
      */
     joystickEventName = 'joystick';
 
-    initialize() {
+    constructor({ app, entity, ...args }) {
+        super({ app, entity, ...args });
         if (!this.entity.camera) {
             console.error('CameraControls: camera component not found');
             return;
@@ -389,6 +390,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Enable Orbit
      * @type {boolean}
+     * @default true
      */
     set enableOrbit(enable) {
         this._enableOrbit = enable;
@@ -408,6 +410,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Enable Fly
      * @type {boolean}
+     * @default true
      */
     set enableFly(enable) {
         this._enableFly = enable;
@@ -427,6 +430,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Focus Point
      * @type {Vec3}
+     * @default [0, 0, 0]
      */
     set focusPoint(point) {
         const position = this._camera.entity.getPosition();
@@ -445,6 +449,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Rotate Damping
      * @type {number}
+     * @default 0.98
      */
     set focusDamping(damping) {
         this._focusController.focusDamping = damping;
@@ -461,6 +466,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Rotate Damping
      * @type {number}
+     * @default 0.98
      */
     set rotateDamping(damping) {
         this._flyController.rotateDamping = damping;
@@ -478,6 +484,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Move Damping
      * @type {number}
+     * @default 0.98
      */
     set moveDamping(damping) {
         this._flyController.moveDamping = damping;
@@ -494,6 +501,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Zoom Damping
      * @type {number}
+     * @default 0.98
      */
     set zoomDamping(damping) {
         this._orbitController.zoomDamping = damping;
@@ -510,6 +518,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Pitch Range
      * @type {Vec2}
+     * @default [-360, 360]
      */
     set pitchRange(range) {
         this._pitchRange.x = math.clamp(range.x, -360, 360);
@@ -529,6 +538,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Yaw Range
      * @type {Vec2}
+     * @default [-360, 360]
      */
     set yawRange(range) {
         this._yawRange.x = math.clamp(range.x, -360, 360);
@@ -547,6 +557,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Zoom Range
      * @type {Vec2}
+     * @default [0.01, 0]
      */
     set zoomRange(range) {
         this._zoomRange.x = range.x;
@@ -571,6 +582,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Use Virtual Gamepad
      * @type {string}
+     * @default 'joystick-touch'
      */
     set mobileInputLayout(layout) {
         if (!/(?:joystick|touch)-(?:joystick|touch)/.test(layout)) {
