@@ -520,8 +520,12 @@ class TransformGizmo extends Gizmo {
         return this._guideColors.z;
     }
 
+    /**
+     * @type {boolean}
+     * @protected
+     */
     get _dragging() {
-        return !this._hoverAxis && this._selectedAxis;
+        return !this._hoverAxis && !!this._selectedAxis;
     }
 
     /**
