@@ -1,12 +1,6 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { WebgpuDebug } from './webgpu-debug.js';
-
-/**
- * @import { BindGroup } from '../bind-group.js'
- * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
- * @import { WebgpuTexture } from './webgpu-texture.js'
- */
-
+import { WebgpuTextureView } from './webgpu-texture.js';
 /**
  * A WebGPU implementation of the BindGroup, which is a wrapper over GPUBindGroup.
  *
@@ -91,9 +85,14 @@ class WebgpuBindGroup {
             const wgpuTexture = tex.impl;
             const textureFormat = format.textureFormats[textureIndex];
             const slot = textureFormats[textureIndex].slot;
+            // magnopus patched - add support for texture views
+            let view;
+            if (tex instanceof WebgpuTextureView) {
+                view = tex.view;
+            } else {
+                view = wgpuTexture.getView(device);
+            }
 
-            // texture
-            const view = wgpuTexture.getView(device);
             Debug.assert(view, 'NULL texture view cannot be used by the bind group');
             Debug.call(() => {
                 this.debugFormat += `${slot}: ${bindGroup.format.textureFormats[textureIndex].name}\n`;
@@ -128,7 +127,13 @@ class WebgpuBindGroup {
             const slot = storageTextureFormats[textureIndex].slot;
 
             // texture
-            const view = wgpuTexture.getView(device);
+            let view;
+            // magnopus patched - add support for texture views
+            if (tex instanceof WebgpuTextureView) {
+                view = tex.view;
+            } else {
+                view = wgpuTexture.getView(device);
+            }
             Debug.assert(view, 'NULL texture view cannot be used by the bind group');
             Debug.call(() => {
                 this.debugFormat += `${slot}: ${bindGroup.format.storageTextureFormats[textureIndex].name}\n`;

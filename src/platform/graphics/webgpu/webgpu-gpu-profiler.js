@@ -12,7 +12,8 @@ class WebgpuGpuProfiler extends GpuProfiler {
         this.device = device;
 
         // gpu timing queries
-        this.timestampQueriesSet = device.supportsTimestampQuery ? new WebgpuQuerySet(device, true, 512) : null;
+        // magnopus patch - disale timestamp queries because it creates too many
+        this.timestampQueriesSet = device.supportsTimestampQuery ? null : null;
     }
 
     destroy() {

@@ -39,6 +39,18 @@ const dummyUse = (thingOne) => {
     // so lint thinks we're doing something with thingOne
 };
 
+// Magnopus patched - Added a simple class to represent a specific view of a texture
+class WebgpuTextureView {
+    /**
+     * @param {WebgpuTexture} gpuTexture - The texture to create a view for.
+     * @param {GPUTextureViewDescriptor} viewDescr - The descriptor for the texture view.
+     */
+    constructor(gpuTexture, viewDescr) {
+        this.impl = gpuTexture;
+        this.view = gpuTexture.createView(viewDescr);
+    }
+}
+
 /**
  * A WebGPU implementation of the Texture.
  *
@@ -56,6 +68,7 @@ class WebgpuTexture {
      * @private
      */
     view;
+
 
     /**
      * An array of samplers, addressed by SAMPLETYPE_*** constant, allowing texture to be sampled
@@ -88,6 +101,7 @@ class WebgpuTexture {
         Debug.assert(this.format !== '', `WebGPU does not support texture format ${texture.format} [${pixelFormatInfo.get(texture.format)?.name}] for texture ${texture.name}`, texture);
 
         this.create(texture.device);
+        this.mipViews = [];
     }
 
     create(device) {
@@ -154,11 +168,14 @@ class WebgpuTexture {
      * @param {any} device - The Graphics Device.
      * @returns {any} - Returns the view.
      */
-    getView(device) {
+    getView(device, mipLevel) {
 
         this.uploadImmediate(device, this.texture);
 
         Debug.assert(this.view);
+        if (mipLevel !== undefined && mipLevel >= 0 && mipLevel < this.texture.numLevels) {
+            return this.mipViews[mipLevel];
+        }
         return this.view;
     }
 
@@ -184,7 +201,10 @@ class WebgpuTexture {
             baseMipLevel: options.baseMipLevel ?? 0,
             mipLevelCount: options.mipLevelCount ?? textureDescr.mipLevelCount,
             baseArrayLayer: options.baseArrayLayer ?? 0,
-            arrayLayerCount: options.arrayLayerCount ?? textureDescr.depthOrArrayLayers
+            arrayLayerCount: options.arrayLayerCount ?? textureDescr.depthOrArrayLayers,
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC |
+                (isCompressedPixelFormat(texture.format) ? 0 : GPUTextureUsage.RENDER_ATTACHMENT) |
+                (options.storage ? GPUTextureUsage.STORAGE_BINDING : texture.storage ? GPUTextureUsage.STORAGE_BINDING : 0)
         };
 
         const view = this.gpuTexture.createView(desc);
@@ -437,7 +457,7 @@ class WebgpuTexture {
         dummyUse(image instanceof HTMLCanvasElement && image.getContext('2d'));
 
         Debug.trace(TRACEID_RENDER_QUEUE, `IMAGE-TO-TEX: mip:${mipLevel} index:${index} ${this.texture.name}`);
-        device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
+        device.wgpu.importExternalTexture(src, dst, copySize);
     }
 
     uploadTypedArrayData(device, data, mipLevel, index) {
@@ -565,6 +585,23 @@ class WebgpuTexture {
             return data ?? target;
         });
     }
+
+    createViewForMip(mipLevel) {
+        if (mipLevel < 0 || mipLevel > this.texture.numLevels) {
+            Debug.error(`Invalid mip level ${mipLevel} for texture ${this.texture.name} with ${this.desc.mipLevelCount} mip levels`);
+            return null;
+        }
+        const viewDescr = {
+            ...this.desc,
+            baseMipLevel: mipLevel,
+            mipLevelCount: 1
+        };
+
+        // create a texture view for the specified mip level
+        const view = new WebgpuTextureView(this, viewDescr);
+        this.mipViews[mipLevel] = view;
+        return view;
+    }
 }
 
-export { WebgpuTexture };
+export { WebgpuTexture, WebgpuTextureView };

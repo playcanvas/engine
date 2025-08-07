@@ -15,6 +15,8 @@ import {
     PIXELFORMAT_ASTC_4x4_SRGB,
     PIXELFORMAT_DEPTH16
 } from '../constants.js';
+// mangopus patched - add support for texture views
+import { WebgpuTexture, WebgpuTextureView } from './webgpu-texture.js';
 
 // map of PIXELFORMAT_*** to GPUTextureFormat
 export const gpuTextureFormats = [];
@@ -86,3 +88,5 @@ gpuTextureFormats[PIXELFORMAT_ETC2_SRGB] = 'etc2-rgb8unorm-srgb';
 gpuTextureFormats[PIXELFORMAT_ETC2_SRGBA] = 'etc2-rgba8unorm-srgb';
 gpuTextureFormats[PIXELFORMAT_BC7_SRGBA] = 'bc7-rgba-unorm-srgb';
 gpuTextureFormats[PIXELFORMAT_ASTC_4x4_SRGB] = 'astc-4x4-unorm-srgb';
+// mangopus patched - add support for texture views
+export { WebgpuTexture, WebgpuTextureView };
