@@ -29,9 +29,6 @@ const tmpV2 = new Vec3();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
 
-// constants
-const AXES = ['x', 'y', 'z'];
-
 /**
  * The base class for all transform gizmos.
  *
@@ -706,26 +703,25 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * @private
+     * @param {Vec3} pos - The position.
+     * @param {Quat} rot - The rotation.
+     * @param {string} activeAxis - The active axis.
+     * @param {boolean} activeIsPlane - Whether the active axis is a plane.
+     * @protected
      */
-    _drawGuideLines() {
-        const gizmoPos = this.root.getPosition();
-        const gizmoRot = this.root.getRotation();
-        const checkAxis = this._hoverAxis || this._selectedAxis;
-        const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
-        for (let i = 0; i < AXES.length; i++) {
-            const axis = AXES[i];
-            if (checkAxis === GIZMOAXIS_XYZ) {
-                this._drawSpanLine(gizmoPos, gizmoRot, axis);
+    _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
+        for (const axis in Vec3.ZERO) {
+            if (activeAxis === GIZMOAXIS_XYZ) {
+                this._drawSpanLine(pos, rot, axis);
                 continue;
             }
-            if (checkIsPlane) {
-                if (axis !== checkAxis) {
-                    this._drawSpanLine(gizmoPos, gizmoRot, axis);
+            if (activeIsPlane) {
+                if (axis !== activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
                 }
             } else {
-                if (axis === checkAxis) {
-                    this._drawSpanLine(gizmoPos, gizmoRot, axis);
+                if (axis === activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
                 }
             }
         }
@@ -735,7 +731,7 @@ class TransformGizmo extends Gizmo {
      * @param {Vec3} pos - The position.
      * @param {Quat} rot - The rotation.
      * @param {string} axis - The axis.
-     * @private
+     * @protected
      */
     _drawSpanLine(pos, rot, axis) {
         tmpV1.set(0, 0, 0);
@@ -820,7 +816,11 @@ class TransformGizmo extends Gizmo {
             return;
         }
 
-        this._drawGuideLines();
+        const gizmoPos = this.root.getPosition();
+        const gizmoRot = this.root.getRotation();
+        const activeAxis = this._hoverAxis || this._selectedAxis;
+        const activeIsPlane = this._hoverIsPlane || this._selectedIsPlane;
+        this._drawGuideLines(gizmoPos, gizmoRot, activeAxis, activeIsPlane);
     }
 
     /**

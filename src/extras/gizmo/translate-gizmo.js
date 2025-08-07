@@ -3,7 +3,7 @@ import { Quat } from '../../core/math/quat.js';
 
 import {
     GIZMOSPACE_LOCAL,
-    GIZMOAXIS_FACE,
+    GIZMOAXIS_XYZ,
     GIZMOAXIS_X,
     GIZMOAXIS_Y,
     GIZMOAXIS_Z
@@ -64,12 +64,12 @@ const GLANCE_EPSILON = 0.98;
  */
 class TranslateGizmo extends TransformGizmo {
     _shapes = {
-        face: new SphereShape(this._device, {
-            axis: GIZMOAXIS_FACE,
+        xyz: new SphereShape(this._device, {
+            axis: GIZMOAXIS_XYZ,
             layers: [this._layer.id],
             shading: this._shading,
-            defaultColor: this._meshColors.axis.f,
-            hoverColor: this._meshColors.hover.f
+            defaultColor: this._meshColors.axis.xyz,
+            hoverColor: this._meshColors.hover.xyz
         }),
         yz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_X,
@@ -355,7 +355,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     set axisCenterSize(value) {
-        this._shapes.face.size = value;
+        this._shapes.xyz.size = value;
     }
 
     /**
@@ -364,7 +364,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     get axisCenterSize() {
-        return this._shapes.face.size;
+        return this._shapes.xyz.size;
     }
 
     /**
@@ -373,7 +373,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     set axisCenterTolerance(value) {
-        this._shapes.face.tolerance = value;
+        this._shapes.xyz.tolerance = value;
     }
 
     /**
@@ -382,7 +382,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     get axisCenterTolerance() {
-        return this._shapes.face.tolerance;
+        return this._shapes.xyz.tolerance;
     }
 
     /**
@@ -465,7 +465,7 @@ class TranslateGizmo extends TransformGizmo {
                 }
                 case 'selected': {
                     // facing axis
-                    if (this._selectedAxis === GIZMOAXIS_FACE) {
+                    if (this._selectedAxis === GIZMOAXIS_XYZ) {
                         shape.visible = state ? axis.length === 1 : true;
                         continue;
                     }
@@ -539,7 +539,7 @@ class TranslateGizmo extends TransformGizmo {
         const isPlane = this._selectedIsPlane;
 
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, !isPlane);
+        const plane = this._createPlane(axis, axis === GIZMOAXIS_XYZ, !isPlane);
 
         const point = new Vec3();
 
@@ -548,11 +548,36 @@ class TranslateGizmo extends TransformGizmo {
         // rotate point back to world coords
         tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
 
-        if (!isPlane && axis !== GIZMOAXIS_FACE) {
+        if (!isPlane && axis !== GIZMOAXIS_XYZ) {
             this._projectToAxis(point, axis);
         }
 
         return point;
+    }
+
+    /**
+     * @param {Vec3} pos - The position.
+     * @param {Quat} rot - The rotation.
+     * @param {string} activeAxis - The active axis.
+     * @param {boolean} activeIsPlane - Whether the active axis is a plane.
+     * @override
+     */
+    _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
+        for (const axis in Vec3.ZERO) {
+            if (this._dragging || activeAxis === GIZMOAXIS_XYZ) {
+                this._drawSpanLine(pos, rot, axis);
+                continue;
+            }
+            if (activeIsPlane) {
+                if (axis !== activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
+                }
+            } else {
+                if (axis === activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
+                }
+            }
+        }
     }
 
     /**
