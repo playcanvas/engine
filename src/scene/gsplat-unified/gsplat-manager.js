@@ -1,14 +1,16 @@
-import { Mat4 } from '../../../core/math/mat4.js';
-import { Vec3 } from '../../../core/math/vec3.js';
-import { GraphNode } from '../../graph-node.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { GraphNode } from '../graph-node.js';
 import { GSplatCentersBuffers } from './gsplat-centers-buffer.js';
 import { GSplatInfo } from './gsplat-info.js';
 import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
+import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
+import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 
 /**
- * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
  * @import { GSplatPlacement } from './gsplat-placement.js';
  */
 
@@ -48,7 +50,7 @@ class GSplatManager {
     splats = [];
 
     /** @type {GSplatUnifiedSorter} */
-    sorter = null;
+    sorter;
 
     /**
      * The version of the splats that were returned sorted by the worker.
@@ -80,8 +82,12 @@ class GSplatManager {
     /** @type {Set<GSplatPlacement>} */
     placements = new Set();
 
-    constructor(device, layer, cameraNode) {
+    /** @type {GSplatOctreeInstance[]} */
+    octreeInstances = [];
+
+    constructor(device, director, layer, cameraNode) {
         this.device = device;
+        this.director = director;
         this.cameraNode = cameraNode;
         this.workBuffer = new GSplatWorkBuffer(device);
         this.centerBuffer = new GSplatCentersBuffers();
@@ -110,16 +116,21 @@ class GSplatManager {
      * @param {GSplatPlacement} placement - The placement of the splat.
      */
     add(placement) {
-        if (!this.placements.has(placement)) {
-            const resource = placement.resource;
-            resource.generateLods();
-            const splatInfo = new GSplatInfo(this.device, resource, placement.node);
+        const resource = placement.resource;
+        if (resource instanceof GSplatOctreeResource) { // octree resource
+
+            this.octreeInstances.push(new GSplatOctreeInstance(resource.octree, placement, this.director.assetLoader));
+
+        } else { // gsplat resource
+
+            const splatInfo = new GSplatInfo(this.device, resource, placement);
             this.splats.push(splatInfo);
-            this.placements.add(placement);
 
             // add centers to sorter
             this.sorter.setCenters(resource.id, resource.centers);
         }
+
+        this.placements.add(placement);
     }
 
     /**
@@ -128,15 +139,24 @@ class GSplatManager {
      * @param {GSplatPlacement} placement - The placement of the splat.
      */
     remove(placement) {
-        const splatInfo = this.splats.find(s => s.node === placement.node);
-        if (splatInfo) {
-            this.splats.splice(this.splats.indexOf(splatInfo), 1);
-            splatInfo.destroy();
+        const resource = placement.resource;
+
+        if (resource instanceof GSplatOctreeResource) {
+
             this.placements.delete(placement);
 
-            // remove centers from sorter
-            const resource = placement.resource;
-            this.sorter.setCenters(resource.id, null);
+        } else {
+
+            // Handle regular gsplat placement removal
+            const splatInfo = this.splats.find(s => s.placement.node === placement.node);
+            if (splatInfo) {
+                this.splats.splice(this.splats.indexOf(splatInfo), 1);
+                splatInfo.destroy();
+                this.placements.delete(placement);
+
+                // remove centers from sorter
+                this.sorter.setCenters(resource.id, null);
+            }
         }
     }
 
@@ -152,9 +172,13 @@ class GSplatManager {
 
         // remove all placements that are not in the new list
         this.placements.forEach((p) => {
-            if (!placements.includes(p)) {
-                this.remove(p);
-                anyChanges = true;
+
+            // ignore secondary placements, those are managed by the octree instances
+            if (!p.secondary) {
+                if (!placements.includes(p)) {
+                    this.remove(p);
+                    anyChanges = true;
+                }
             }
         });
 
@@ -177,11 +201,14 @@ class GSplatManager {
         // so no rendering to workbuffer till sorter has delivered the next version of centers
         this.sortedVersionMin = this.centerBuffer.version + 1;
 
-        // force centers update
-        this.forceCentersUpdate = true;
+        if (!this.forceCentersUpdate) {
 
-        // cancel any pending prepare states - as those are prepared for previous version
-        this.splats.forEach(s => s.cancelPrepareState());
+            // force centers update
+            this.forceCentersUpdate = true;
+
+            // cancel any pending prepare states - as those are prepared for previous version
+            this.splats.forEach(s => s.cancelPrepareState());
+        }
     }
 
     onSorted(count, version, orderData) {
@@ -268,6 +295,11 @@ class GSplatManager {
         // do not allow any center buffer modifications till we get sorted centers back
         if (this.sortedVersion === this.centerBuffer.version || this.forceCentersUpdate) {
 
+            // update all octree instances
+            this.octreeInstances.forEach((octreeInstance) => {
+                octreeInstance.update(this);
+            });
+
             // how far has the camera moved
             const currentCameraPos = this.cameraNode.getWorldTransform().getTranslation();
             const distance = this.lastCameraPos.distance(currentCameraPos);
@@ -281,11 +313,16 @@ class GSplatManager {
 
                 this.lastCameraPos.copy(currentCameraPos);
 
+                // update LOD for all octree instances
+                this.octreeInstances.forEach((octreeInstance) => {
+                    octreeInstance.updateLod(this.cameraNode, this);
+                });
+
                 // Update LOD for each splat individually
                 this.splats.forEach((splat) => {
 
                     // start preparing a state - updates LOD intervals and interval texture
-                    splat.startPrepareState(this.cameraNode);
+                    splat.startPrepareState();
                 });
 
                 this.centerBuffer.estimateTextureSize(this.splats, this.device.maxTextureSize);
@@ -344,7 +381,7 @@ class GSplatManager {
 
         const sorterRequest = [];
         this.splats.forEach((splat) => {
-            const modelMat = splat.node.getWorldTransform();
+            const modelMat = splat.placement.node.getWorldTransform();
             invModelMat.copy(modelMat).invert();
 
             // uniform scale

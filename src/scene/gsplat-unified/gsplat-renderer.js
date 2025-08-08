@@ -1,13 +1,13 @@
-import { SEMANTIC_POSITION, SEMANTIC_ATTR13, CULLFACE_NONE } from '../../../platform/graphics/constants.js';
-import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../../constants.js';
-import { ShaderMaterial } from '../../materials/shader-material.js';
-import { GSplatResourceBase } from '../gsplat-resource-base.js';
-import { MeshInstance } from '../../mesh-instance.js';
+import { SEMANTIC_POSITION, SEMANTIC_ATTR13, CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
+import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
+import { MeshInstance } from '../mesh-instance.js';
 
 /**
- * @import { VertexBuffer } from '../../../platform/graphics/vertex-buffer.js'
- * @import { Layer } from '../../layer.js'
- * @import { GraphNode } from '../../graph-node.js'
+ * @import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js'
+ * @import { Layer } from '../layer.js'
+ * @import { GraphNode } from '../graph-node.js'
  */
 
 /**

@@ -1,19 +1,19 @@
-import { Texture } from '../../../platform/graphics/texture.js';
+import { Texture } from '../../platform/graphics/texture.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RG32U, CULLFACE_NONE,
     SEMANTIC_POSITION
-} from '../../../platform/graphics/constants.js';
-import { RenderTarget } from '../../../platform/graphics/render-target.js';
-import { drawQuadWithShader } from '../../../scene/graphics/quad-render-utils.js';
-import { BlendState } from '../../../platform/graphics/blend-state.js';
-import { DepthState } from '../../../platform/graphics/depth-state.js';
-import { ShaderUtils } from '../../shader-lib/shader-utils.js';
-import gsplatIntervalTextureGLSL from '../../shader-lib/glsl/chunks/gsplat/frag/gsplatIntervalTexture.js';
-import gsplatIntervalTextureWGSL from '../../shader-lib/wgsl/chunks/gsplat/frag/gsplatIntervalTexture.js';
+} from '../../platform/graphics/constants.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import gsplatIntervalTextureGLSL from '../shader-lib/glsl/chunks/gsplat/frag/gsplatIntervalTexture.js';
+import gsplatIntervalTextureWGSL from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatIntervalTexture.js';
 
 /**
- * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
- * @import { Shader } from '../../../platform/graphics/shader.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
  */
 
 /**
@@ -158,6 +158,7 @@ class GSplatIntervalTexture {
             intervalsData[i * 2] = start;          // R: interval start
             intervalsData[i * 2 + 1] = runningSum; // G: accumulated sum
         }
+
         this.intervalsDataTexture.unlock();
 
         // Generate intervals texture on GPU

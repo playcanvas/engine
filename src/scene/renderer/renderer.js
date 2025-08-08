@@ -36,7 +36,7 @@ import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
-import { GSplatDirector } from '../gsplat/unified/gsplat-director.js';
+import { GSplatDirector } from '../gsplat-unified/gsplat-director.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -108,6 +108,9 @@ class Renderer {
     /** @type {boolean} */
     clustersDebugRendered = false;
 
+    /** @type {Scene} */
+    scene;
+
     /**
      * A set of visible mesh instances which need further processing before being rendered, e.g.
      * skinning or morphing. Extracted during culling.
@@ -159,22 +162,19 @@ class Renderer {
     /**
      * A gsplat director for unified splat rendering.
      *
-     * @type {GSplatDirector}
+     * @type {GSplatDirector|null}
      */
-    gsplatDirector;
+    gsplatDirector = null;
 
     /**
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {Scene} scene - The scene.
      */
-    constructor(graphicsDevice) {
+    constructor(graphicsDevice, scene) {
         this.device = graphicsDevice;
-
-        /** @type {Scene|null} */
-        this.scene = null;
-
-        this.gsplatDirector = new GSplatDirector(graphicsDevice);
+        this.scene = scene;
 
         // TODO: allocate only when the scene has clustered lighting enabled
         this.worldClustersAllocator = new WorldClustersAllocator(graphicsDevice);
