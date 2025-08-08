@@ -1,4 +1,5 @@
 import { GSplatOctreeNode } from './gsplat-octree-node.js';
+import { path } from '../../core/path.js';
 
 /**
  * @import { GSplatResource } from '../gsplat/gsplat-resource.js'
@@ -18,6 +19,13 @@ class GSplatOctree {
     files;
 
     /**
+     * The file URL of the container asset, used as the base for resolving relative URLs.
+     *
+     * @type {string}
+     */
+    assetFileUrl;
+
+    /**
      * Resources of individual files, identified by their filename.
      *
      * @type {Map<string, GSplatResource>}
@@ -25,12 +33,14 @@ class GSplatOctree {
     fileResources = new Map();
 
     /**
+     * @param {string} assetFileUrl - The file URL of the container asset.
      * @param {Object} data - The parsed JSON data containing files and nodes.
      */
-    constructor(data) {
+    constructor(assetFileUrl, data) {
 
         // files - now an array instead of a map
         this.files = data.files;
+        this.assetFileUrl = assetFileUrl;
 
         // Create nodes from the parsed data
         this.nodes = data.nodes.map((nodeData) => {
@@ -46,9 +56,9 @@ class GSplatOctree {
     }
 
     getFullUrl(url) {
-        // TODO: fix properly
-        const folder = '/static/assets/splats/lod/';
-        return (new URL(url, new URL(folder, window.location.href).toString())).toString();
+        // Extract the base directory from the asset file URL and join with the relative URL
+        const baseUrl = path.getDirectory(this.assetFileUrl);
+        return path.join(baseUrl, url);
     }
 
     getFileResource(url) {

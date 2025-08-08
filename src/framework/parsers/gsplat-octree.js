@@ -48,8 +48,8 @@ class GSplatOctreeParser {
 
         http.get(url.load, options, (err, data) => {
             if (!err) {
-                // create a resource with the parsed data
-                const resource = new GSplatOctreeResource(data);
+                // create a resource with the parsed data, passing the asset's file URL
+                const resource = new GSplatOctreeResource(asset.file.url, data);
                 callback(null, resource);
             } else {
                 callback(`Error loading gsplat octree: ${url.original} [${err}]`);

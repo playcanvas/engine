@@ -8,8 +8,12 @@ class GSplatOctreeResource {
     /** @type {GSplatOctree} */
     octree;
 
-    constructor(data) {
-        this.octree = new GSplatOctree(data);
+    /**
+     * @param {string} assetFileUrl - The file URL of the container asset.
+     * @param {object} data - Parsed JSON data.
+     */
+    constructor(assetFileUrl, data) {
+        this.octree = new GSplatOctree(assetFileUrl, data);
 
         // handle aabb
     }
