@@ -46,6 +46,7 @@ import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Scene } from '../scene.js'
+ * @import { GSplatDirector } from '../gsplat-unified/gsplat-director.js'
  */
 
 let _skinUpdateIndex = 0;
