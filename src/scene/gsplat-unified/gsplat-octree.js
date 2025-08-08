@@ -46,6 +46,7 @@ class GSplatOctree {
     }
 
     getFullUrl(url) {
+        // TODO: fix properly
         const folder = '/static/assets/splats/lod/';
         return (new URL(url, new URL(folder, window.location.href).toString())).toString();
     }
