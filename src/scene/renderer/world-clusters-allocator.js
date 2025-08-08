@@ -84,8 +84,6 @@ class WorldClustersAllocator {
     // assign light clusters to render actions that need it
     assign(renderPasses) {
 
-        const empty = this.empty;
-
         // reuse previously allocated clusters
         tempClusterArray.push(...this._allocated);
         this._allocated.length = 0;
@@ -130,7 +128,7 @@ class WorldClustersAllocator {
 
                     // no clustered lights, use the cluster with no lights
                     if (!ra.lightClusters) {
-                        ra.lightClusters = empty;
+                        ra.lightClusters = this.empty;
                     }
                 }
             }
