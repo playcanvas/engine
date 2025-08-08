@@ -1,5 +1,5 @@
-import { EventHandler } from '../../../core/event-handler.js';
-import { platform } from '../../../core/platform.js';
+import { EventHandler } from '../../core/event-handler.js';
+import { platform } from '../../core/platform.js';
 import { UnifiedSortWorker } from './gsplat-unified-sort-worker.js';
 
 class GSplatUnifiedSorter extends EventHandler {

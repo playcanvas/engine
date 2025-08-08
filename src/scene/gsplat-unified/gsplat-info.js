@@ -1,18 +1,18 @@
-import { Debug } from '../../../core/debug.js';
-import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
-import { drawQuadWithShader } from '../../graphics/quad-render-utils.js';
-import { ShaderMaterial } from '../../materials/shader-material.js';
-import { ShaderUtils } from '../../shader-lib/shader-utils.js';
+import { Debug } from '../../core/debug.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { GSplatState } from './gspat-state.js';
-import glslGsplatCopyToWorkBufferPS from '../../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
-import wgslGsplatCopyToWorkBufferPS from '../../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
-import { Mat4 } from '../../../core/math/mat4.js';
-import { Vec3 } from '../../../core/math/vec3.js';
+import glslGsplatCopyToWorkBufferPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
+import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
 
 /**
- * @import { GraphNode } from "../../graph-node.js";
- * @import { GraphicsDevice } from "../../../platform/graphics/graphics-device.js";
- * @import { GSplatResource } from "../gsplat-resource.js"
+ * @import { GraphicsDevice } from "../../platform/graphics/graphics-device.js";
+ * @import { GSplatResource } from "../gsplat/gsplat-resource.js"
+ * @import { GSplatPlacement } from "./gsplat-placement.js"
  */
 
 const _viewMat = new Mat4();
@@ -30,8 +30,8 @@ class GSplatInfo {
     /** @type {number} */
     numSplats;
 
-    /** @type {GraphNode} */
-    node;
+    /** @type {GSplatPlacement} */
+    placement;
 
     /**
      * The state of the splat currently used for rendering. This matches the work buffer.
@@ -68,23 +68,30 @@ class GSplatInfo {
      */
     material;
 
-    constructor(device, resource, node) {
+    /**
+     * Create a new GSplatInfo.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatResource} resource - The splat resource.
+     * @param {GSplatPlacement} placement - The placement of the splat.
+     */
+    constructor(device, resource, placement) {
         Debug.assert(resource);
-        Debug.assert(node);
+        Debug.assert(placement);
 
         this.device = device;
         this.resource = resource;
-        this.node = node;
+        this.placement = placement;
         this.numSplats = resource.centers.length / 3;
-        this.renderState = new GSplatState(device, resource, node);
-        this.unusedState = new GSplatState(device, resource, node);
+        this.renderState = new GSplatState(device, resource, placement);
+        this.unusedState = new GSplatState(device, resource, placement);
 
         this.material = new ShaderMaterial();
         resource.configureMaterial(this.material);
 
         // defines configured on the material that set up correct shader variant to be compiled
         const defines = new Map(this.material.defines);
-        if (resource.hasLod) defines.set('GSPLAT_LOD', '');
+        if (placement.intervals.size > 0) defines.set('GSPLAT_LOD', '');
         const definesKey = Array.from(defines.entries()).map(([k, v]) => `${k}=${v}`).join(';');
         this.copyShader = ShaderUtils.createShader(device, {
             uniqueName: `SplatCopyToWorkBuffer:${definesKey}`,
@@ -124,7 +131,7 @@ class GSplatInfo {
         this.prepareState = null;
     }
 
-    startPrepareState(cameraNode) {
+    startPrepareState() {
 
         // swap states
         Debug.assert(this.prepareState === null);
@@ -133,7 +140,7 @@ class GSplatInfo {
         this.unusedState = null;
 
         // this updates LOD intervals and interval texture
-        this.prepareState.update(cameraNode);
+        this.prepareState.update();
     }
 
     cancelPrepareState() {
@@ -146,7 +153,7 @@ class GSplatInfo {
     update(updateVersion) {
 
         // if the object's matrix has changed, store the update version to know when it happened
-        const worldMatrix = this.node.getWorldTransform();
+        const worldMatrix = this.placement.node.getWorldTransform();
         const worldMatrixChanged = !this.previousWorldTransform.equals(worldMatrix);
         if (worldMatrixChanged) {
             this.previousWorldTransform.copy(worldMatrix);
@@ -154,7 +161,7 @@ class GSplatInfo {
         }
 
         // if position has moved by more than 1 meter, mark lod dirty
-        const position = this.node.getPosition();
+        const position = this.placement.node.getPosition();
         const length = position.distance(this.previousPosition);
         if (length > 1) {
             this.previousPosition.copy(position);
@@ -176,9 +183,9 @@ class GSplatInfo {
         this.material.setParameters(this.device);
 
         // matrix to transform splats to the world space
-        scope.resolve('uTransform').setValue(this.node.getWorldTransform().data);
+        scope.resolve('uTransform').setValue(this.placement.node.getWorldTransform().data);
 
-        if (resource.hasLod) {
+        if (intervalTexture.texture) {
             // Set LOD intervals texture for remapping of indices
             scope.resolve('uIntervalsTexture').setValue(intervalTexture.texture);
         }
@@ -188,7 +195,7 @@ class GSplatInfo {
         scope.resolve('uViewportWidth').setValue(viewport.z);
 
         // SH related
-        scope.resolve('matrix_model').setValue(this.node.getWorldTransform().data);
+        scope.resolve('matrix_model').setValue(this.placement.node.getWorldTransform().data);
 
         const viewInvMat = cameraNode.getWorldTransform();
         const viewMat = _viewMat.copy(viewInvMat).invert();

@@ -1,14 +1,14 @@
-import { Debug } from '../../../core/debug.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F } from '../../../platform/graphics/constants.js';
-import { RenderTarget } from '../../../platform/graphics/render-target.js';
-import { Texture } from '../../../platform/graphics/texture.js';
+import { Debug } from '../../core/debug.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F } from '../../platform/graphics/constants.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
 let id = 0;
 
 /**
  * @import { GSplatInfo } from "./gsplat-info.js"
- * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
- * @import { GraphNode } from '../../graph-node.js';
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { GraphNode } from '../graph-node.js';
  */
 
 /**

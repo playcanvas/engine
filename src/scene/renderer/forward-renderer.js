@@ -75,9 +75,10 @@ class ForwardRenderer extends Renderer {
      * Create a new ForwardRenderer instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {Scene} scene - The scene.
      */
-    constructor(graphicsDevice) {
-        super(graphicsDevice);
+    constructor(graphicsDevice, scene) {
+        super(graphicsDevice, scene);
 
         const device = this.device;
 
@@ -1006,7 +1007,7 @@ class ForwardRenderer extends Renderer {
         this.setSceneConstants();
 
         // update gsplat director
-        this.gsplatDirector.update(comp);
+        this.gsplatDirector?.update(comp);
 
         // visibility culling of lights, meshInstances, shadows casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible

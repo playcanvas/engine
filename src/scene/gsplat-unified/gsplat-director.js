@@ -1,12 +1,18 @@
+import { GSplatManager } from './gsplat-manager.js';
+
 /**
- * @import { LayerComposition } from '../../composition/layer-composition.js'
- * @import { Camera } from '../../camera.js'
- * @import { Layer } from '../../layer.js'
- * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
- * @import { GraphNode } from '../../graph-node.js';
+ * @import { GSplatOctree } from './gsplat-octree.js';
  */
 
-import { GSplatManager } from './gsplat-manager.js';
+/**
+ * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { Camera } from '../camera.js'
+ * @import { Layer } from '../layer.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { GraphNode } from '../graph-node.js'
+ * @import { GSplatOctreeResource } from './gsplat-octree.resource.js'
+ * @import { GSplatAssetLoaderBase } from './gsplat-asset-loader-base.js'
+ */
 
 /**
  * Per layer data the director keeps track of.
@@ -21,11 +27,12 @@ class GSplatLayerData {
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatDirector} director - The director.
      * @param {Layer} layer - The layer.
      * @param {GraphNode} cameraNode - The camera node.
      */
-    constructor(device, layer, cameraNode) {
-        this.gsplatManager = new GSplatManager(device, layer, cameraNode);
+    constructor(device, director, layer, cameraNode) {
+        this.gsplatManager = new GSplatManager(device, director, layer, cameraNode);
     }
 
     destroy() {
@@ -57,10 +64,10 @@ class GSplatCameraData {
         }
     }
 
-    getLayerData(device, layer, cameraNode) {
+    getLayerData(device, director, layer, cameraNode) {
         let layerData = this.layersMap.get(layer);
         if (!layerData) {
-            layerData = new GSplatLayerData(device, layer, cameraNode);
+            layerData = new GSplatLayerData(device, director, layer, cameraNode);
             this.layersMap.set(layer, layerData);
         }
         return layerData;
@@ -79,15 +86,31 @@ class GSplatDirector {
     device;
 
     /**
+     * Per camera data.
+     *
      * @type {Map<Camera, GSplatCameraData>}
      */
     camerasMap = new Map();
 
     /**
-     * @param {GraphicsDevice} device - The graphics device.
+     * Global octrees, allowing sharing between its placements.
+     *
+     * @type {Map<GSplatOctreeResource, GSplatOctree>}
      */
-    constructor(device) {
+    octrees = new Map();
+
+    /**
+     * @type {GSplatAssetLoaderBase}
+     */
+    assetLoader;
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
+     */
+    constructor(device, assetLoader) {
         this.device = device;
+        this.assetLoader = assetLoader;
     }
 
     getCameraData(camera) {
@@ -155,7 +178,7 @@ class GSplatDirector {
 
                             // update gsplat manager with modified placements
                             cameraData ??= this.getCameraData(camera);
-                            const layerData = cameraData.getLayerData(this.device, layer, camera.node);
+                            const layerData = cameraData.getLayerData(this.device, this, layer, camera.node);
                             layerData.gsplatManager.reconcile(placements);
                         }
                     }

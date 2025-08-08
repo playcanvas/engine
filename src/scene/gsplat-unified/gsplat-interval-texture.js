@@ -1,19 +1,19 @@
-import { Texture } from '../../../platform/graphics/texture.js';
+import { Texture } from '../../platform/graphics/texture.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RG32U, CULLFACE_NONE,
     SEMANTIC_POSITION
-} from '../../../platform/graphics/constants.js';
-import { RenderTarget } from '../../../platform/graphics/render-target.js';
-import { drawQuadWithShader } from '../../../scene/graphics/quad-render-utils.js';
-import { BlendState } from '../../../platform/graphics/blend-state.js';
-import { DepthState } from '../../../platform/graphics/depth-state.js';
-import { ShaderUtils } from '../../shader-lib/shader-utils.js';
-import gsplatIntervalTextureGLSL from '../../shader-lib/glsl/chunks/gsplat/frag/gsplatIntervalTexture.js';
-import gsplatIntervalTextureWGSL from '../../shader-lib/wgsl/chunks/gsplat/frag/gsplatIntervalTexture.js';
+} from '../../platform/graphics/constants.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import gsplatIntervalTextureGLSL from '../shader-lib/glsl/chunks/gsplat/frag/gsplatIntervalTexture.js';
+import gsplatIntervalTextureWGSL from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatIntervalTexture.js';
 
 /**
- * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
- * @import { Shader } from '../../../platform/graphics/shader.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
  */
 
 /**
@@ -33,6 +33,13 @@ class GSplatIntervalTexture {
      * @type {Texture|null}
      */
     texture = null;
+
+    /**
+     * Render target for the intervals texture
+     *
+     * @type {RenderTarget|null}
+     */
+    rt = null;
 
     /**
      * Texture that stores interval data (start + accumulated sum pairs) for GPU processing
@@ -58,6 +65,8 @@ class GSplatIntervalTexture {
     destroy() {
         this.texture?.destroy();
         this.texture = null;
+        this.rt?.destroy();
+        this.rt = null;
         this.intervalsDataTexture?.destroy();
         this.intervalsDataTexture = null;
         this.shader = null;
@@ -124,12 +133,21 @@ class GSplatIntervalTexture {
         textureWidth = Math.min(textureWidth, maxTextureSize);
         const textureHeight = Math.ceil(totalSplats / textureWidth);
 
-        // Create/resize main intervals texture
+        // Create main intervals texture
         if (!this.texture) {
             this.texture = this.createTexture('intervalsTexture', PIXELFORMAT_R32U, textureWidth, textureHeight);
         }
-        if (this.texture.width !== textureWidth || this.texture.height !== textureHeight) {
-            this.texture.resize(textureWidth, textureHeight);
+
+        if (!this.rt) {
+            this.rt = new RenderTarget({
+                colorBuffer: this.texture,
+                depth: false
+            });
+        }
+
+        // resize texture / rt
+        if (this.rt.width !== textureWidth || this.rt.height !== textureHeight) {
+            this.rt.resize(textureWidth, textureHeight);
         }
 
         // Prepare intervals data with CPU prefix sum
@@ -158,14 +176,10 @@ class GSplatIntervalTexture {
             intervalsData[i * 2] = start;          // R: interval start
             intervalsData[i * 2 + 1] = runningSum; // G: accumulated sum
         }
+
         this.intervalsDataTexture.unlock();
 
         // Generate intervals texture on GPU
-        const renderTarget = new RenderTarget({
-            colorBuffer: this.texture,
-            depth: false
-        });
-
         const scope = this.device.scope;
         scope.resolve('uIntervalsTexture').setValue(this.intervalsDataTexture);
         scope.resolve('uNumIntervals').setValue(numIntervals);
@@ -176,9 +190,8 @@ class GSplatIntervalTexture {
         this.device.setBlendState(BlendState.NOBLEND);
         this.device.setDepthState(DepthState.NODEPTH);
 
-        drawQuadWithShader(this.device, renderTarget, this.getShader());
+        drawQuadWithShader(this.device, this.rt, this.getShader());
 
-        renderTarget.destroy();
         return totalSplats;
     }
 }
