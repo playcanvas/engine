@@ -36,7 +36,6 @@ import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
-import { GSplatDirector } from '../gsplat-unified/gsplat-director.js';
 
 /**
  * @import { Camera } from '../camera.js'
