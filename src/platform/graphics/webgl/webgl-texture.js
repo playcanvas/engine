@@ -659,37 +659,20 @@ class WebglTexture {
             } else {
                 // ----- 2D -----
                 if (device._isBrowserInterface(mipObject)) {
-                    // Downsize images that are too large to be used as textures
-                    if (device._isImageBrowserInterface(mipObject)) {
-                        if (mipObject.width > device.maxTextureSize || mipObject.height > device.maxTextureSize) {
-                            mipObject = downsampleImage(mipObject, device.maxTextureSize);
-                            if (mipLevel === 0) {
-                                texture._width = mipObject.width;
-                                texture._height = mipObject.height;
-                            }
-                        }
-                    }
+                    // Handle HTML elements using texElement2D if supported
+                    if (device._isHTMLElementInterface(mipObject) && device.supportsTexElement2D) {
+                        // Use texElement2D for HTML elements
+                        device.setUnpackFlipY(texture._flipY);
+                        device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
 
-                    const w = mipObject.width || mipObject.videoWidth;
-                    const h = mipObject.height || mipObject.videoHeight;
+                        // Get dimensions from the HTML element
+                        const rect = mipObject.getBoundingClientRect();
+                        const w = Math.floor(rect.width) || texture._width;
+                        const h = Math.floor(rect.height) || texture._height;
 
-                    // Upload the image, canvas or video
-                    device.setUnpackFlipY(texture._flipY);
-                    device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-
-                    // TEMP: disable fast path for video updates until
-                    // https://bugs.chromium.org/p/chromium/issues/detail?id=1511207 is resolved
-                    if (this._glCreated && texture._width === w && texture._height === h && !device._isImageVideoInterface(mipObject)) {
-                        gl.texSubImage2D(
-                            gl.TEXTURE_2D,
-                            mipLevel,
-                            0, 0,
-                            this._glFormat,
-                            this._glPixelType,
-                            mipObject
-                        );
-                    } else {
-                        gl.texImage2D(
+                        // texElement2D has a different signature than texImage2D
+                        // According to the proposal: texElement2D(target, level, internalformat, format, type, element)
+                        gl.texElement2D(
                             gl.TEXTURE_2D,
                             mipLevel,
                             this._glInternalFormat,
@@ -701,6 +684,51 @@ class WebglTexture {
                         if (mipLevel === 0) {
                             texture._width = w;
                             texture._height = h;
+                        }
+                    } else {
+                        // Downsize images that are too large to be used as textures
+                        if (device._isImageBrowserInterface(mipObject)) {
+                            if (mipObject.width > device.maxTextureSize || mipObject.height > device.maxTextureSize) {
+                                mipObject = downsampleImage(mipObject, device.maxTextureSize);
+                                if (mipLevel === 0) {
+                                    texture._width = mipObject.width;
+                                    texture._height = mipObject.height;
+                                }
+                            }
+                        }
+
+                        const w = mipObject.width || mipObject.videoWidth;
+                        const h = mipObject.height || mipObject.videoHeight;
+
+                        // Upload the image, canvas or video
+                        device.setUnpackFlipY(texture._flipY);
+                        device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
+
+                        // TEMP: disable fast path for video updates until
+                        // https://bugs.chromium.org/p/chromium/issues/detail?id=1511207 is resolved
+                        if (this._glCreated && texture._width === w && texture._height === h && !device._isImageVideoInterface(mipObject)) {
+                            gl.texSubImage2D(
+                                gl.TEXTURE_2D,
+                                mipLevel,
+                                0, 0,
+                                this._glFormat,
+                                this._glPixelType,
+                                mipObject
+                            );
+                        } else {
+                            gl.texImage2D(
+                                gl.TEXTURE_2D,
+                                mipLevel,
+                                this._glInternalFormat,
+                                this._glFormat,
+                                this._glPixelType,
+                                mipObject
+                            );
+
+                            if (mipLevel === 0) {
+                                texture._width = w;
+                                texture._height = h;
+                            }
                         }
                     }
                 } else {

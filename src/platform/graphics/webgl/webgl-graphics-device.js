@@ -797,6 +797,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
         this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
+
+        // Check for HTML-in-Canvas support (texElement2D)
+        // This is a proposed API that may not be available yet
+        this.supportsTexElement2D = typeof gl.texElement2D === 'function';
     }
 
     /**
