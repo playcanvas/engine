@@ -39,7 +39,7 @@ struct RotateResult {
 fn rotateWithMatrix(quadXY: vec2f, pRotation: f32) -> RotateResult {
     let c = cos(pRotation);
     let s = sin(pRotation);
-    let m = mat2x2f(vec2f(c, s), vec2f(-s, c));
+    let m = mat2x2f(vec2f(c, -s), vec2f(s, c));
     return RotateResult(m * quadXY, m);
 }
 
