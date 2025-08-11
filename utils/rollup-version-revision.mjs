@@ -5,15 +5,14 @@ import { execSync } from 'node:child_process';
  * @returns {string} Version string like `1.58.0-dev`
  */
 function getVersion() {
-    let version;
+    let path;
     try {
-        const root = execSync('git rev-parse --show-toplevel').toString().trim();
-        const pkg = JSON.parse(readFileSync(`${root}/package.json`, 'utf8'));
-        version = pkg.version;
+        path = execSync('git rev-parse --show-toplevel').toString().trim();
     } catch (e) {
-        version = '0.0.0';
+        path = '.';
     }
-    return version;
+    const pkg = JSON.parse(readFileSync(`${path}/package.json`, 'utf-8'));
+    return pkg.version;
 }
 
 /**
