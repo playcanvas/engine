@@ -13,7 +13,7 @@ import { Material } from './materials/material.js';
  * @import { LightComponent } from '../framework/components/light/component.js'
  * @import { MeshInstance } from './mesh-instance.js'
  * @import { Vec3 } from '../core/math/vec3.js'
- * @import { GSplatPlacement } from './gsplat/unified/gsplat-placement.js'
+ * @import { GSplatPlacement } from './gsplat-unified/gsplat-placement.js'
  */
 
 // Layers
