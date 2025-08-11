@@ -189,7 +189,7 @@ class Renderer {
         this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
 
         // clustered passes
-        if (scene.clusteredLightingEnabled) {
+        if (this.scene.clusteredLightingEnabled) {
             this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
                 this._shadowRendererLocal, this.lightTextureAtlas);
         }
