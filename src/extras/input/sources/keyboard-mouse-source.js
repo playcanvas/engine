@@ -211,7 +211,6 @@ class KeyboardMouseSource extends InputSource {
                 return;
             }
         }
-        console.log(this._pointerLock, this._pointerId, event.pointerId);
         this.deltas.mouse.append([event.movementX, event.movementY]);
     }
 
