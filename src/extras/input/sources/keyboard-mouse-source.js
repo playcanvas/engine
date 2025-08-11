@@ -75,7 +75,7 @@ class KeyboardMouseSource extends InputSource {
      * @type {number}
      * @private
      */
-    _pointerId = 0;
+    _pointerId = -1;
 
     /**
      * @type {boolean}
@@ -185,7 +185,7 @@ class KeyboardMouseSource extends InputSource {
         this._button[event.button] = 1;
         this.deltas.button.append(this._button);
 
-        if (this._pointerId) {
+        if (this._pointerId !== -1) {
             return;
         }
         this._pointerId = event.pointerId;
@@ -211,6 +211,7 @@ class KeyboardMouseSource extends InputSource {
                 return;
             }
         }
+        console.log(this._pointerLock, this._pointerId, event.pointerId);
         this.deltas.mouse.append([event.movementX, event.movementY]);
     }
 
@@ -232,7 +233,7 @@ class KeyboardMouseSource extends InputSource {
         if (this._pointerId !== event.pointerId) {
             return;
         }
-        this._pointerId = 0;
+        this._pointerId = -1;
     }
 
     /**
