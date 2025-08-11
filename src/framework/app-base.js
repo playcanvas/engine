@@ -524,8 +524,7 @@ class AppBase extends EventHandler {
         // Placeholder texture for area light LUTs
         AreaLightLuts.createPlaceholder(graphicsDevice);
 
-        this.renderer = new ForwardRenderer(graphicsDevice);
-        this.renderer.scene = this.scene;
+        this.renderer = new ForwardRenderer(graphicsDevice, this.scene);
 
         if (lightmapper) {
             this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);

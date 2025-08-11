@@ -12,7 +12,6 @@ import { Mesh } from '../mesh.js';
  * @import { GSplatData } from './gsplat-data.js'
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
  * @import { GSplatSogsData } from './gsplat-sogs-data.js'
- * @import { GSplatLodBlocks } from './unified/gsplat-lod-blocks.js'
  */
 
 let id = 0;
@@ -29,9 +28,6 @@ class GSplatResourceBase {
     /** @type {GSplatData | GSplatCompressedData | GSplatSogsData} */
     gsplatData;
 
-    /** @type {GSplatLodBlocks|null} */
-    lodBlocks = null;
-
     /** @type {Float32Array} */
     centers;
 
@@ -43,9 +39,6 @@ class GSplatResourceBase {
 
     /** @type {VertexBuffer} */
     instanceIndices;
-
-    /** @type {boolean} */
-    hasLod = false;
 
     /** @type {number} */
     id = id++;
@@ -171,46 +164,6 @@ class GSplatResourceBase {
             addressV: ADDRESS_CLAMP_TO_EDGE,
             ...(data ? { levels: [data] } : { })
         });
-    }
-
-    /**
-     * Calculate block centers by averaging splat centers within each block
-     *
-     * @param {number} numSplats - Total number of splats
-     * @param {number} blockSize - Size of each block
-     * @param {number} numBlocks - Number of blocks (avoids recalculation)
-     * @param {Float32Array} blocksCenter - Output array for block centers (3 floats per block)
-     * @protected
-     */
-    calculateBlockCenters(numSplats, blockSize, numBlocks, blocksCenter) {
-        for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
-            const startIdx = blockIdx * blockSize;
-            const endIdx = Math.min(startIdx + blockSize, numSplats);
-            const blockSplatCount = endIdx - startIdx;
-
-            // Calculate block center by averaging all splat centers in this block
-            let centerX = 0, centerY = 0, centerZ = 0;
-            for (let i = startIdx; i < endIdx; i++) {
-                const centerBase = i * 3;
-                centerX += this.centers[centerBase];
-                centerY += this.centers[centerBase + 1];
-                centerZ += this.centers[centerBase + 2];
-            }
-
-            // Store average center in blocksCenter
-            const blockCenterBase = blockIdx * 3;
-            blocksCenter[blockCenterBase] = centerX / blockSplatCount;
-            blocksCenter[blockCenterBase + 1] = centerY / blockSplatCount;
-            blocksCenter[blockCenterBase + 2] = centerZ / blockSplatCount;
-        }
-    }
-
-    /**
-     * Generate LODs if supported. To be implemented by derived classes.
-     *
-     * @protected
-     */
-    generateLods() {
     }
 
     instantiate() {
