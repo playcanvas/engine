@@ -263,8 +263,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.textureFloatFilterable = requireFeature('float32-filterable');
         this.textureFloatBlendable = requireFeature('float32-blendable');
         this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
+        this.extCompressedTextureS3TCSliced3D = requireFeature('texture-compression-bc-sliced-3d');
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
+        this.extCompressedTextureASTCSliced3D = requireFeature('texture-compression-astc-sliced-3d');
         this.supportsTimestampQuery = requireFeature('timestamp-query');
         this.supportsDepthClip = requireFeature('depth-clip-control');
         this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
