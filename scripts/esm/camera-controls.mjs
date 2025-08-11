@@ -158,7 +158,7 @@ class CameraControls extends Script {
      * @type {Vec2}
      * @private
      */
-    _zoomRange = new Vec2();
+    _zoomRange = new Vec2(0.01, 0);
 
     /**
      * @type {KeyboardMouseSource}
@@ -343,7 +343,8 @@ class CameraControls extends Script {
      */
     joystickEventName = 'joystick';
 
-    initialize() {
+    constructor({ app, entity, ...args }) {
+        super({ app, entity, ...args });
         if (!this.entity.camera) {
             console.error('CameraControls: camera component not found');
             return;
@@ -374,20 +375,13 @@ class CameraControls extends Script {
         });
 
         // pose
-        const position = this._camera.entity.getPosition();
-        const focus = this._camera.entity.getRotation()
-        .transformVector(Vec3.FORWARD, tmpV1)
-        .mulScalar(this._pose.distance)
-        .add(position);
-        this._pose.look(position, focus);
+        this._pose.look(this._camera.entity.getPosition(), Vec3.ZERO);
 
         // mode
         this._setMode('orbit');
 
         // destroy
         this.on('destroy', this._destroy, this);
-
-        console.log('CameraControls: initialized');
     }
 
     /**
@@ -396,6 +390,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Enable Orbit
      * @type {boolean}
+     * @default true
      */
     set enableOrbit(enable) {
         this._enableOrbit = enable;
@@ -415,6 +410,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Enable Fly
      * @type {boolean}
+     * @default true
      */
     set enableFly(enable) {
         this._enableFly = enable;
@@ -434,6 +430,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Focus Point
      * @type {Vec3}
+     * @default [0, 0, 0]
      */
     set focusPoint(point) {
         const position = this._camera.entity.getPosition();
@@ -452,6 +449,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Rotate Damping
      * @type {number}
+     * @default 0.98
      */
     set focusDamping(damping) {
         this._focusController.focusDamping = damping;
@@ -468,6 +466,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Rotate Damping
      * @type {number}
+     * @default 0.98
      */
     set rotateDamping(damping) {
         this._flyController.rotateDamping = damping;
@@ -485,6 +484,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Move Damping
      * @type {number}
+     * @default 0.98
      */
     set moveDamping(damping) {
         this._flyController.moveDamping = damping;
@@ -501,6 +501,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Zoom Damping
      * @type {number}
+     * @default 0.98
      */
     set zoomDamping(damping) {
         this._orbitController.zoomDamping = damping;
@@ -517,6 +518,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Pitch Range
      * @type {Vec2}
+     * @default [-360, 360]
      */
     set pitchRange(range) {
         this._pitchRange.x = math.clamp(range.x, -360, 360);
@@ -536,6 +538,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Yaw Range
      * @type {Vec2}
+     * @default [-360, 360]
      */
     set yawRange(range) {
         this._yawRange.x = math.clamp(range.x, -360, 360);
@@ -554,6 +557,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Zoom Range
      * @type {Vec2}
+     * @default [0.01, 0]
      */
     set zoomRange(range) {
         this._zoomRange.x = range.x;
@@ -578,6 +582,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Use Virtual Gamepad
      * @type {string}
+     * @default 'joystick-touch'
      */
     set mobileInputLayout(layout) {
         if (!/(?:joystick|touch)-(?:joystick|touch)/.test(layout)) {
@@ -730,8 +735,9 @@ class CameraControls extends Script {
 
         const orbit = +(this._mode === 'orbit');
         const fly = +(this._mode === 'fly');
-        const pan = +(this.enablePan &&
-            ((orbit && this._state.shift) || this._state.mouse[1] || this._state.touches > 1));
+        const double = +(this._state.touches > 1);
+        const pan = +this.enablePan &&
+            ((orbit && this._state.shift) || this._state.mouse[1] || +(button[1] === -1));
         const mobileJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
 
         // multipliers
@@ -747,7 +753,7 @@ class CameraControls extends Script {
         // desktop move
         const v = tmpV1.set(0, 0, 0);
         const keyMove = this._state.axis.clone().normalize();
-        v.add(keyMove.mulScalar(fly * (1 - pan) * moveMult));
+        v.add(keyMove.mulScalar(fly * moveMult));
         const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._pose.distance);
         v.add(panMove.mulScalar(orbit * pan));
         const wheelMove = new Vec3(0, 0, wheel[0]);
@@ -763,31 +769,31 @@ class CameraControls extends Script {
         // mobile move
         v.set(0, 0, 0);
         const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]);
-        v.add(flyMove.mulScalar(fly * (1 - pan) * moveMult));
+        v.add(flyMove.mulScalar(fly * moveMult));
         const orbitMove = screenToWorld(this._camera, touch[0], touch[1], this._pose.distance);
-        v.add(orbitMove.mulScalar(orbit * pan));
+        v.add(orbitMove.mulScalar(orbit * double));
         const pinchMove = new Vec3(0, 0, pinch[0]);
-        v.add(pinchMove.mulScalar(orbit * zoomTouchMult));
+        v.add(pinchMove.mulScalar(orbit * double * zoomTouchMult));
         deltas.move.append([v.x, v.y, v.z]);
 
         // mobile rotate
         v.set(0, 0, 0);
         const orbitRotate = new Vec3(touch[0], touch[1], 0);
-        v.add(orbitRotate.mulScalar(orbit * (1 - pan) * rotateMult));
+        v.add(orbitRotate.mulScalar(orbit * (1 - double) * rotateMult));
         const flyRotate = new Vec3(rightInput[0], rightInput[1], 0);
-        v.add(flyRotate.mulScalar(fly * (1 - pan) * (mobileJoystick ? rotateJoystickMult : rotateMult)));
+        v.add(flyRotate.mulScalar(fly * (mobileJoystick ? rotateJoystickMult : rotateMult)));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // gamepad move
         v.set(0, 0, 0);
         const stickMove = new Vec3(leftStick[0], 0, -leftStick[1]);
-        v.add(stickMove.mulScalar(fly * (1 - pan) * moveMult));
+        v.add(stickMove.mulScalar(fly * moveMult));
         deltas.move.append([v.x, v.y, v.z]);
 
         // gamepad rotate
         v.set(0, 0, 0);
         const stickRotate = new Vec3(rightStick[0], rightStick[1], 0);
-        v.add(stickRotate.mulScalar(fly * (1 - pan) * rotateJoystickMult));
+        v.add(stickRotate.mulScalar(fly * rotateJoystickMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // check for skip update, just read frame to clear it

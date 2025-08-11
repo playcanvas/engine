@@ -366,6 +366,11 @@ class GSplatSogsData {
 
         this.packGpuMemory();
     }
+
+    // temporary, for backwards compatibility
+    reorderData() {
+        return this.prepareGpuData();
+    }
 }
 
 export { GSplatSogsData };

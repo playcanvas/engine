@@ -84,14 +84,17 @@ class SogsParser {
                 });
 
                 assets.add(texture);
-                assets.load(texture);
                 promises.push(promise);
 
                 return texture;
             });
         });
 
-        combineProgress(asset, subs.map(sub => textures[sub]).flat());
+        const textureAssets = subs.map(sub => textures[sub]).flat();
+
+        combineProgress(asset, textureAssets);
+
+        textureAssets.forEach(t => assets.load(t));
 
         // wait for all textures to complete loading
         await Promise.allSettled(promises);
