@@ -310,6 +310,7 @@ class GSplatSogsData {
         const { device } = means_l;
         const { scope } = device;
 
+        // Note: do not destroy it, keep it available for the lifetime of the app
         const shader = ShaderUtils.createShader(device, {
             uniqueName: 'GsplatSogsReorderShader',
             attributes: { vertex_position: SEMANTIC_POSITION },
@@ -342,7 +343,6 @@ class GSplatSogsData {
         drawQuadWithShader(device, renderTarget, shader);
 
         renderTarget.destroy();
-        shader.destroy();
     }
 
     async prepareGpuData() {
