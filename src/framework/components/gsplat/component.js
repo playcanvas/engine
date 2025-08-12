@@ -4,7 +4,7 @@ import { Asset } from '../../asset/asset.js';
 import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
 import { Debug } from '../../../core/debug.js';
-import { GSplatPlacement } from '../../../scene/gsplat/unified/gsplat-placement.js';
+import { GSplatPlacement } from '../../../scene/gsplat-unified/gsplat-placement.js';
 
 /**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'

@@ -4,7 +4,7 @@ import { Component } from 'react';
 import { Link } from 'react-router-dom';
 
 import { exampleMetaData } from '../../../cache/metadata.mjs';
-import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
+import { MIN_DESKTOP_WIDTH, VERSION } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { thumbnailPath } from '../paths.mjs';
@@ -269,7 +269,7 @@ class SideBar extends TypedComponent {
     render() {
         const { observer, collapsed, orientation } = this.state;
         const panelOptions = {
-            headerText: 'EXAMPLES',
+            headerText: `EXAMPLES - v${VERSION}`,
             collapsible: true,
             collapsed: false,
             id: 'sideBar',
