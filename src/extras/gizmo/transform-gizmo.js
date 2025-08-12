@@ -72,12 +72,12 @@ class TransformGizmo extends Gizmo {
     static EVENT_TRANSFORMEND = 'transform:end';
 
     /**
-     * Internal color for meshes.
+     * Internal theme.
      *
      * @type {{ axis: Record<string, Color>, hover: Record<string, Color>, disabled: Color }}
      * @protected
      */
-    _meshColors = {
+    _theme = {
         axis: {
             x: color4from3(COLOR_RED, 0.6),
             y: color4from3(COLOR_GREEN, 0.6),
@@ -348,7 +348,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     get xAxisColor() {
-        return this._meshColors.axis.x;
+        return this._theme.axis.x;
     }
 
     /**
@@ -366,7 +366,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     get yAxisColor() {
-        return this._meshColors.axis.y;
+        return this._theme.axis.y;
     }
 
     /**
@@ -384,7 +384,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     get zAxisColor() {
-        return this._meshColors.axis.z;
+        return this._theme.axis.z;
     }
 
     /**
@@ -402,7 +402,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     get xHoverColor() {
-        return this._meshColors.hover.x;
+        return this._theme.hover.x;
     }
 
     /**
@@ -420,7 +420,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     get yHoverColor() {
-        return this._meshColors.hover.y;
+        return this._theme.hover.y;
     }
 
     /**
@@ -438,7 +438,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     get zHoverColor() {
-        return this._meshColors.hover.z;
+        return this._theme.hover.z;
     }
 
     /**
@@ -447,7 +447,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     set disabledColor(value) {
-        this._meshColors.disabled.copy(value);
+        this._theme.disabled.copy(value);
 
         for (const name in this._shapes) {
             this._shapes[name].hover(!!this._hoverAxis);
@@ -460,7 +460,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     get disabledColor() {
-        return this._meshColors.disabled;
+        return this._theme.disabled;
     }
 
     /**
@@ -532,7 +532,7 @@ class TransformGizmo extends Gizmo {
      */
     _updateAxisColor(axis, color) {
         this._guideColors[axis].copy(color);
-        this._meshColors.axis[axis].copy(color);
+        this._theme.axis[axis].copy(color);
 
         for (const name in this._shapes) {
             this._shapes[name].hover(!!this._hoverAxis);
@@ -545,7 +545,7 @@ class TransformGizmo extends Gizmo {
      * @private
      */
     _updateHoverColor(axis, color) {
-        this._meshColors.hover[axis].copy(color);
+        this._theme.hover[axis].copy(color);
 
         for (const name in this._shapes) {
             this._shapes[name].hover(!!this._hoverAxis);

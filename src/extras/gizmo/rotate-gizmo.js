@@ -69,8 +69,8 @@ class RotateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(90, 0, 90),
-            defaultColor: this._meshColors.axis.z,
-            hoverColor: this._meshColors.hover.z,
+            defaultColor: this._theme.axis.z,
+            hoverColor: this._theme.hover.z,
             sectorAngle: 180
         }),
         x: new ArcShape(this._device, {
@@ -78,8 +78,8 @@ class RotateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._meshColors.axis.x,
-            hoverColor: this._meshColors.hover.x,
+            defaultColor: this._theme.axis.x,
+            hoverColor: this._theme.hover.x,
             sectorAngle: 180
         }),
         y: new ArcShape(this._device, {
@@ -87,8 +87,8 @@ class RotateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._meshColors.axis.y,
-            hoverColor: this._meshColors.hover.y,
+            defaultColor: this._theme.axis.y,
+            hoverColor: this._theme.hover.y,
             sectorAngle: 180
         }),
         face: new ArcShape(this._device, {
@@ -96,8 +96,8 @@ class RotateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             shading: this._shading,
             rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
-            defaultColor: this._meshColors.axis.f,
-            hoverColor: this._meshColors.hover.f,
+            defaultColor: this._theme.axis.f,
+            hoverColor: this._theme.hover.f,
             ringRadius: 0.55
         })
     };

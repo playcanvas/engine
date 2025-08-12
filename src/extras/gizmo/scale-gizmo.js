@@ -62,56 +62,56 @@ class ScaleGizmo extends TransformGizmo {
             axis: GIZMOAXIS_XYZ,
             layers: [this._layer.id],
             shading: this._shading,
-            defaultColor: this._meshColors.axis.xyz,
-            hoverColor: this._meshColors.hover.xyz
+            defaultColor: this._theme.axis.xyz,
+            hoverColor: this._theme.hover.xyz
         }),
         yz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._meshColors.axis.x,
-            hoverColor: this._meshColors.hover.x
+            defaultColor: this._theme.axis.x,
+            hoverColor: this._theme.hover.x
         }),
         xz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._meshColors.axis.y,
-            hoverColor: this._meshColors.hover.y
+            defaultColor: this._theme.axis.y,
+            hoverColor: this._theme.hover.y
         }),
         xy: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._meshColors.axis.z,
-            hoverColor: this._meshColors.hover.z
+            defaultColor: this._theme.axis.z,
+            hoverColor: this._theme.hover.z
         }),
         x: new BoxLineShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._meshColors.axis.x,
-            hoverColor: this._meshColors.hover.x
+            defaultColor: this._theme.axis.x,
+            hoverColor: this._theme.hover.x
         }),
         y: new BoxLineShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._meshColors.axis.y,
-            hoverColor: this._meshColors.hover.y
+            defaultColor: this._theme.axis.y,
+            hoverColor: this._theme.hover.y
         }),
         z: new BoxLineShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._meshColors.axis.z,
-            hoverColor: this._meshColors.hover.z
+            defaultColor: this._theme.axis.z,
+            hoverColor: this._theme.hover.z
         })
     };
 
