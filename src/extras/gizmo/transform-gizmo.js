@@ -358,7 +358,8 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * @deprecated
+     * @type {Color}
+     * @deprecated Use {@link TransformGizmo#setTheme} instead.
      * @ignore
      */
     set xAxisColor(value) {
@@ -376,7 +377,8 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * @deprecated
+     * @type {Color}
+     * @deprecated Use {@link TransformGizmo#theme} instead.
      * @ignore
      */
     get xAxisColor() {
@@ -384,7 +386,8 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * @deprecated
+     * @type {Color}
+     * @deprecated Use {@link TransformGizmo#setTheme} instead.
      * @ignore
      */
     set yAxisColor(value) {
@@ -403,7 +406,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated
+     * @deprecated Use {@link TransformGizmo#theme} instead.
      * @ignore
      */
     get yAxisColor() {
@@ -412,7 +415,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated
+     * @deprecated Use {@link TransformGizmo#setTheme} instead.
      * @ignore
      */
     set zAxisColor(value) {
@@ -431,7 +434,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated
+     * @deprecated Use {@link TransformGizmo#theme} instead.
      * @ignore
      */
     get zAxisColor() {
@@ -440,7 +443,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {number}
-     * @deprecated
+     * @deprecated Use {@link TransformGizmo#setTheme} instead.
      * @ignore
      */
     set colorAlpha(value) {
@@ -457,7 +460,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {number}
-     * @deprecated
+     * @deprecated Use {@link TransformGizmo#theme} instead.
      * @ignore
      */
     get colorAlpha() {
