@@ -38,6 +38,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Snap' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.snap' }
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Snap Increment' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -59,49 +68,140 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
         ),
         jsx(
             Panel,
-            { headerText: 'Color' },
+            { headerText: 'Theme' },
             jsx(
                 LabelGroup,
-                { text: 'X Axis' },
+                { text: 'Axis X' },
                 jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.xAxisColor' }
+                    link: { observer, path: 'gizmo.theme.axis.x' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Y Axis' },
+                { text: 'Axis Y' },
                 jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.yAxisColor' }
+                    link: { observer, path: 'gizmo.theme.axis.y' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Z Axis' },
+                { text: 'Axis Z' },
                 jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.zAxisColor' }
+                    link: { observer, path: 'gizmo.theme.axis.z' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Color Alpha' },
-                jsx(SliderInput, {
+                { text: 'Axis XYZ' },
+                jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.colorAlpha' },
-                    min: 0,
-                    max: 1,
-                    precision: 2
+                    link: { observer, path: 'gizmo.theme.axis.xyz' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Shading' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+                { text: 'Axis Face' },
+                jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.shading' }
+                    link: { observer, path: 'gizmo.theme.axis.f' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Hover X' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.hover.x' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Hover Y' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.hover.y' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Hover Z' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.hover.z' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Hover XYZ' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.hover.xyz' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Hover Face' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.hover.f' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Guide X' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.guide.x' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Guide Y' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.guide.y' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Guide Z' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.guide.z' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Guide Face' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.guide.f' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Disabled' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.disabled' }
                 })
             )
         ),
@@ -123,6 +223,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
         jsx(
             Panel,
             { headerText: 'Render' },
+            jsx(
+                LabelGroup,
+                { text: 'Shading' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.shading' }
+                })
+            ),
             jsx(
                 LabelGroup,
                 { text: 'XYZ Tube Radius' },
