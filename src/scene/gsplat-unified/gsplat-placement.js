@@ -41,6 +41,13 @@ class GSplatPlacement {
     intervals = new Map();
 
     /**
+     * The LOD index for this placement.
+     *
+     * @type {number}
+     */
+    lodIndex = 0;
+
+    /**
      * Create a new GSplatPlacement.
      *
      * @param {GSplatResource|null} resource - The resource of the splat.

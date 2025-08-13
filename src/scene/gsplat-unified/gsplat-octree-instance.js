@@ -1,4 +1,6 @@
+import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
+import { Vec3 } from '../../core/math/vec3.js';
 import { GSplatPlacement } from './gsplat-placement.js';
 
 /**
@@ -8,8 +10,8 @@ import { GSplatPlacement } from './gsplat-placement.js';
  * @import { GSplatAssetLoaderBase } from './gsplat-asset-loader-base.js'
  */
 
-// const invWorldMat = new Mat4();
-// const _tempVec3 = new Vec3();
+const _invWorldMat = new Mat4();
+const _localCameraPos = new Vec3();
 
 const _tempCompletedUrls = [];
 
@@ -70,21 +72,25 @@ class GSplatOctreeInstance {
     }
 
     /**
-     * Calculate LOD index for a specific node.
-     * @param {GraphNode} cameraNode - The camera node.
+     * Calculate LOD index for a specific node using pre-calculated local camera position.
+     * @param {Vec3} localCameraPosition - The camera position in local space.
      * @param {number} nodeIndex - The node index.
      * @returns {number} The LOD index for this node, or -1 if node should not be rendered.
      */
-    calculateNodeLod(cameraNode, nodeIndex) {
-        // For now, use the same global logic - distance from camera to octree
-        // Later this will be per-node based on node-specific criteria
-        const worldCameraPosition = cameraNode.getPosition();
-        const distance = worldCameraPosition.distance(this.placement.node.getPosition());
+    calculateNodeLod(localCameraPosition, nodeIndex) {
+        const node = this.octree.nodes[nodeIndex];
 
-        if (distance > 30) {
-            return -1; // Node not rendered at all
+        // Calculate distance in local space (no transforms needed)
+        const distance = localCameraPosition.distance(node.bounds.center);
+
+        // Simple distance-based LOD selection
+        if (distance > 10) {
+            return 1;
         }
-        return distance < 10 ? 0 : 1;
+        //return distance < 5 ? 0 : 1;
+        return 0;
+
+        // return -1 for past far plane
     }
 
     /**
@@ -94,18 +100,19 @@ class GSplatOctreeInstance {
      * @param {GSplatManager} manager - The manager.
      */
     updateLod(cameraNode, manager) {
-        // use the placement to transform camera position to octree space
-        // const octreeWorldTransform = this.placement.node.getWorldTransform();
-        // invWorldMat.copy(octreeWorldTransform).invert();
-        // const octreeCameraPosition = invWorldMat.transformPoint(worldCameraPosition, _tempVec3);
+        // Transform camera position to octree local space once (shared calculation)
+        const worldCameraPosition = cameraNode.getPosition();
+        const octreeWorldTransform = this.placement.node.getWorldTransform();
+        _invWorldMat.copy(octreeWorldTransform).invert();
+        const localCameraPosition = _invWorldMat.transformPoint(worldCameraPosition, _localCameraPos);
 
         // Process all nodes in a single loop
         const nodes = this.octree.nodes;
         for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
             const node = nodes[nodeIndex];
 
-            // Calculate LOD for this specific node
-            const newLodIndex = this.calculateNodeLod(cameraNode, nodeIndex);
+            // Calculate LOD for this specific node using pre-calculated local camera position
+            const newLodIndex = this.calculateNodeLod(localCameraPosition, nodeIndex);
             const currentLodIndex = this.nodeLods[nodeIndex];
 
             // Check if LOD changed for this node
@@ -144,6 +151,7 @@ class GSplatOctreeInstance {
         if (oldCount === 0) {
             // Create placement (with null resource initially)
             const newPlacement = new GSplatPlacement(null, this.placement.node, true);
+            newPlacement.lodIndex = lodIndex;
             this.filePlacements[fileIndex] = newPlacement;
 
             // Try to add to manager if resource is already loaded

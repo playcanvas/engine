@@ -85,6 +85,9 @@ class GSplatManager {
     /** @type {GSplatOctreeInstance[]} */
     octreeInstances = [];
 
+    /** @type {Map<number, number>} */
+    pendingRemovals = new Map(); // resourceId -> version when it was removed
+
     constructor(device, director, layer, cameraNode) {
         this.device = device;
         this.director = director;
@@ -123,11 +126,19 @@ class GSplatManager {
 
         } else { // gsplat resource
 
+            // If this resource was pending removal, cancel it since we're adding it back
+            if (this.pendingRemovals.has(resource.id)) {
+                this.pendingRemovals.delete(resource.id);
+            }
+
             const splatInfo = new GSplatInfo(this.device, resource, placement);
             this.splats.push(splatInfo);
 
             // add centers to sorter
             this.sorter.setCenters(resource.id, resource.centers);
+
+            this.onChange();
+
         }
 
         this.placements.add(placement);
@@ -148,14 +159,16 @@ class GSplatManager {
         } else {
 
             // Handle regular gsplat placement removal
-            const splatInfo = this.splats.find(s => s.placement.node === placement.node);
+            const splatInfo = this.splats.find(s => s.resource.id === resource.id);
             if (splatInfo) {
                 this.splats.splice(this.splats.indexOf(splatInfo), 1);
                 splatInfo.destroy();
                 this.placements.delete(placement);
 
-                // remove centers from sorter
-                this.sorter.setCenters(resource.id, null);
+                // Don't remove centers from worker immediately - defer until safe
+                this.pendingRemovals.set(resource.id, this.centerBuffer.version + 1);
+
+                this.onChange();
             }
         }
     }
@@ -222,7 +235,6 @@ class GSplatManager {
         // centers buffer / sorted data
         if (this.sortedVersion !== version && version === this.centerBuffer.version) {
             this.sortedVersion = version;
-
             // resize work buffer if needed
             const textureSize = this.centerBuffer.textureSize;
             const workBufferResizeRequest = textureSize !== this.workBuffer.textureSize;
@@ -244,6 +256,14 @@ class GSplatManager {
 
         // number of splats to render
         this.renderer.setNumSplats(count);
+
+        // Process any pending removals that are now safe
+        for (const [resourceId, removalVersion] of this.pendingRemovals) {
+            if (version >= removalVersion) {
+                this.sorter.setCenters(resourceId, null);
+                this.pendingRemovals.delete(resourceId);
+            }
+        }
     }
 
     /**
@@ -312,7 +332,6 @@ class GSplatManager {
                 this.forceCentersUpdate = false;
 
                 this.lastCameraPos.copy(currentCameraPos);
-
                 // update LOD for all octree instances
                 this.octreeInstances.forEach((octreeInstance) => {
                     octreeInstance.updateLod(this.cameraNode, this);

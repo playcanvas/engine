@@ -19,6 +19,11 @@ class GSplatOctree {
     files;
 
     /**
+     * @type {number}
+     */
+    lodLevels;
+
+    /**
      * The file URL of the container asset, used as the base for resolving relative URLs.
      *
      * @type {string}
@@ -34,25 +39,68 @@ class GSplatOctree {
 
     /**
      * @param {string} assetFileUrl - The file URL of the container asset.
-     * @param {Object} data - The parsed JSON data containing files and nodes.
+     * @param {Object} data - The parsed JSON data containing info, filenames and tree.
      */
     constructor(assetFileUrl, data) {
 
-        // files - now an array instead of a map
-        this.files = data.files;
+        this.files = data.filenames;
+        this.lodLevels = data.lodLevels;
         this.assetFileUrl = assetFileUrl;
 
-        // Create nodes from the parsed data
-        this.nodes = data.nodes.map((nodeData) => {
+        // Extract leaf nodes from hierarchical tree structure
+        const leafNodes = [];
+        this._extractLeafNodes(data.tree, leafNodes);
+
+        // Create nodes from the extracted leaf nodes
+        this.nodes = leafNodes.map((nodeData) => {
             /** @type {GSplatOctreeNodeLod[]} */
-            const lods = nodeData.lods.map(lodData => ({
-                file: this.files[lodData.file] || '',
-                fileIndex: lodData.file,
-                offset: lodData.offset || 0,
-                count: lodData.count || 0
-            }));
-            return new GSplatOctreeNode(lods);
+            const lods = [];
+
+            // Ensure we have exactly lodLevels entries
+            for (let i = 0; i < this.lodLevels; i++) {
+                const lodData = nodeData.lods[i.toString()];
+                if (lodData) {
+                    lods.push({
+                        file: this.files[lodData.file] || '',
+                        fileIndex: lodData.file,
+                        offset: lodData.offset || 0,
+                        count: lodData.count || 0
+                    });
+                } else {
+                    // Missing LOD entry - fill with defaults
+                    lods.push({
+                        file: '',
+                        fileIndex: -1,
+                        offset: 0,
+                        count: 0
+                    });
+                }
+            }
+
+            return new GSplatOctreeNode(lods, nodeData.bound);
         });
+    }
+
+    /**
+     * Recursively extracts leaf nodes (nodes with 'lods' property) from the hierarchical tree.
+     *
+     * @param {Object} node - The current tree node to process.
+     * @param {Array} leafNodes - Array to collect leaf nodes.
+     * @private
+     */
+    _extractLeafNodes(node, leafNodes) {
+        if (node.lods) {
+            // This is a leaf node with LOD data
+            leafNodes.push({
+                lods: node.lods,
+                bound: node.bound
+            });
+        } else if (node.children) {
+            // This is a branch node, recurse into children
+            for (const child of node.children) {
+                this._extractLeafNodes(child, leafNodes);
+            }
+        }
     }
 
     getFullUrl(url) {

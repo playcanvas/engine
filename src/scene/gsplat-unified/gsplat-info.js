@@ -15,6 +15,17 @@ import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/
  * @import { GSplatPlacement } from "./gsplat-placement.js"
  */
 
+const _lodColors = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+    [1, 1, 0],
+    [1, 0, 1]
+];
+
+// enable to colorize LODs
+const colorizeLod = true;
+
 const _viewMat = new Mat4();
 
 /**
@@ -92,6 +103,7 @@ class GSplatInfo {
         // defines configured on the material that set up correct shader variant to be compiled
         const defines = new Map(this.material.defines);
         if (placement.intervals.size > 0) defines.set('GSPLAT_LOD', '');
+        if (colorizeLod) defines.set('GSPLAT_COLORIZE', '');
         const definesKey = Array.from(defines.entries()).map(([k, v]) => `${k}=${v}`).join(';');
         this.copyShader = ShaderUtils.createShader(device, {
             uniqueName: `SplatCopyToWorkBuffer:${definesKey}`,
@@ -133,6 +145,8 @@ class GSplatInfo {
 
     startPrepareState() {
 
+        this.cancelPrepareState();
+
         // swap states
         Debug.assert(this.prepareState === null);
         this.prepareState = this.unusedState;
@@ -171,37 +185,40 @@ class GSplatInfo {
         return length > 1;
     }
 
-    render(renderTarget, cameraNode) {
+    render(renderTarget, cameraNode, lodIndex = 0) {
         const { device, resource } = this;
         const scope = device.scope;
         Debug.assert(resource);
 
         // render using render state
         const { activeSplats, lineStart, viewport, intervalTexture } = this.renderState;
+        if (activeSplats > 0) {
 
-        // assign material properties to scope
-        this.material.setParameters(this.device);
+            // assign material properties to scope
+            this.material.setParameters(this.device);
 
-        // matrix to transform splats to the world space
-        scope.resolve('uTransform').setValue(this.placement.node.getWorldTransform().data);
+            // matrix to transform splats to the world space
+            scope.resolve('uTransform').setValue(this.placement.node.getWorldTransform().data);
 
-        if (intervalTexture.texture) {
-            // Set LOD intervals texture for remapping of indices
-            scope.resolve('uIntervalsTexture').setValue(intervalTexture.texture);
+            if (intervalTexture.texture) {
+                // Set LOD intervals texture for remapping of indices
+                scope.resolve('uIntervalsTexture').setValue(intervalTexture.texture);
+            }
+
+            scope.resolve('uActiveSplats').setValue(activeSplats);
+            scope.resolve('uStartLine').setValue(lineStart);
+            scope.resolve('uViewportWidth').setValue(viewport.z);
+            scope.resolve('uLodColor').setValue(_lodColors[lodIndex]);
+
+            // SH related
+            scope.resolve('matrix_model').setValue(this.placement.node.getWorldTransform().data);
+
+            const viewInvMat = cameraNode.getWorldTransform();
+            const viewMat = _viewMat.copy(viewInvMat).invert();
+            scope.resolve('matrix_view').setValue(viewMat.data);
+
+            drawQuadWithShader(device, renderTarget, this.copyShader, viewport, viewport);
         }
-
-        scope.resolve('uActiveSplats').setValue(activeSplats);
-        scope.resolve('uStartLine').setValue(lineStart);
-        scope.resolve('uViewportWidth').setValue(viewport.z);
-
-        // SH related
-        scope.resolve('matrix_model').setValue(this.placement.node.getWorldTransform().data);
-
-        const viewInvMat = cameraNode.getWorldTransform();
-        const viewMat = _viewMat.copy(viewInvMat).invert();
-        scope.resolve('matrix_view').setValue(viewMat.data);
-
-        drawQuadWithShader(device, renderTarget, this.copyShader, viewport, viewport);
     }
 }
 

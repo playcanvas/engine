@@ -114,7 +114,7 @@ class GSplatWorkBuffer {
      */
     render(splats, cameraNode) {
         splats.forEach((splat) => {
-            splat.render(this.renderTarget, cameraNode);
+            splat.render(this.renderTarget, cameraNode, splat.placement.lodIndex);
         });
     }
 }
