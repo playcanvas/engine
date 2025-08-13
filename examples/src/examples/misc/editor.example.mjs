@@ -174,9 +174,6 @@ const setGizmoControls = () => {
         type: gizmoHandler.type,
         size: gizmoHandler.gizmo.size,
         snapIncrement: gizmoHandler.gizmo.snapIncrement,
-        xAxisColor: Object.values(gizmoHandler.gizmo.xAxisColor),
-        yAxisColor: Object.values(gizmoHandler.gizmo.yAxisColor),
-        zAxisColor: Object.values(gizmoHandler.gizmo.zAxisColor),
         colorAlpha: gizmoHandler.gizmo.colorAlpha,
         coordSpace: gizmoHandler.gizmo.coordSpace
     });
