@@ -134,7 +134,6 @@ data.set('gizmo', {
     axisPlaneGap: gizmo.axisPlaneGap,
     axisCenterSize: gizmo.axisCenterSize
 });
-window.gizmo = gizmo; // for debugging
 
 // create grid
 const gridEntity = new pc.Entity('grid');
