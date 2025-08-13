@@ -358,6 +358,119 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
+     * @deprecated
+     * @ignore
+     */
+    set xAxisColor(value) {
+        this.setTheme({
+            axis: {
+                x: value
+            },
+            hover: {
+                x: color4from3(value, this.colorAlpha)
+            },
+            guide: {
+                x: value
+            }
+        });
+    }
+
+    /**
+     * @deprecated
+     * @ignore
+     */
+    get xAxisColor() {
+        return this._theme.axis.x;
+    }
+
+    /**
+     * @deprecated
+     * @ignore
+     */
+    set yAxisColor(value) {
+        this.setTheme({
+            axis: {
+                y: value
+            },
+            hover: {
+                y: color4from3(value, this.colorAlpha)
+            },
+            guide: {
+                y: value
+            }
+        });
+    }
+
+    /**
+     * @type {Color}
+     * @deprecated
+     * @ignore
+     */
+    get yAxisColor() {
+        return this._theme.axis.y;
+    }
+
+    /**
+     * @type {Color}
+     * @deprecated
+     * @ignore
+     */
+    set zAxisColor(value) {
+        this.setTheme({
+            axis: {
+                z: value
+            },
+            hover: {
+                z: color4from3(value, this.colorAlpha)
+            },
+            guide: {
+                z: value
+            }
+        });
+    }
+
+    /**
+     * @type {Color}
+     * @deprecated
+     * @ignore
+     */
+    get zAxisColor() {
+        return this._theme.axis.z;
+    }
+
+    /**
+     * @type {number}
+     * @deprecated
+     * @ignore
+     */
+    set colorAlpha(value) {
+        this.setTheme({
+            hover: {
+                x: color4from3(this._theme.hover.x, value),
+                y: color4from3(this._theme.hover.y, value),
+                z: color4from3(this._theme.hover.z, value),
+                xyz: color4from3(this._theme.hover.xyz, value),
+                f: color4from3(this._theme.hover.f, value)
+            }
+        });
+    }
+
+    /**
+     * @type {number}
+     * @deprecated
+     * @ignore
+     */
+    get colorAlpha() {
+        return (
+            this._theme.hover.x.a +
+            this._theme.hover.y.a +
+            this._theme.hover.z.a +
+            this._theme.hover.xyz.a +
+            this._theme.hover.f.a
+        ) / 5;
+    }
+
+    /**
      * @type {boolean}
      * @protected
      */
@@ -623,7 +736,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Sets the theme or partial theme for the gizmo.
      *
-     * @param {Partial<GizmoTheme>} partial - The partial theme to update.
+     * @param {{ [K in keyof GizmoTheme]?: Partial<GizmoTheme[K]> }} partial - The partial theme to set.
      */
     setTheme(partial) {
         const theme = { ...this._theme, ...partial };
