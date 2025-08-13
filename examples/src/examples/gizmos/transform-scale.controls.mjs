@@ -26,6 +26,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Snap' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.snap' }
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Snap Increment' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -34,7 +43,16 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     max: 10,
                     precision: 0
                 })
-            )
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Uniform' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.uniform' }
+                })
+            ),
         ),
         jsx(
             Panel,

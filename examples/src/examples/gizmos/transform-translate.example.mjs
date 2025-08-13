@@ -96,6 +96,7 @@ const gizmo = new pc.TranslateGizmo(camera.camera, layer);
 gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
+    snap: gizmo.snap,
     snapIncrement: gizmo.snapIncrement,
     theme: {
         axis: {

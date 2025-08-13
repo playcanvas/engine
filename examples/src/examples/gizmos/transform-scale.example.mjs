@@ -96,7 +96,9 @@ const gizmo = new pc.ScaleGizmo(camera.camera, layer);
 gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
+    snap: gizmo.snap,
     snapIncrement: gizmo.snapIncrement,
+    uniform: gizmo.uniform,
     theme: {
         axis: {
             x: gizmo.theme.axis.x.toArray(),

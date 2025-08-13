@@ -96,6 +96,7 @@ const gizmo = new pc.RotateGizmo(camera.camera, layer);
 gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
+    snap: gizmo.snap,
     snapIncrement: gizmo.snapIncrement,
     orbitRotation: gizmo.orbitRotation,
     theme: {
