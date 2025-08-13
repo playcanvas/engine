@@ -26,6 +26,15 @@ class GSplatSogsResource extends GSplatResourceBase {
                 material.setParameter(`${name}_maxs`, v.maxs);
             }
         });
+
+        material.setParameter('scales_codebook[0]', gsplatData.meta.scales.codebook);
+        material.setParameter('opacity_codebook[0]', gsplatData.meta.sh0.opacityCodebook);
+        material.setParameter('sh0_codebook[0]', gsplatData.meta.sh0.codebook);
+        material.setParameter('shN_codebook[0]', [
+            ...(gsplatData.meta.shN?.codebook1 ?? []),
+            ...(gsplatData.meta.shN?.codebook2 ?? []),
+            ...(gsplatData.meta.shN?.codebook3 ?? [])
+        ]);
     }
 
     evalTextureSize(count) {

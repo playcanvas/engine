@@ -7,13 +7,10 @@ uniform vec3 means_maxs;
 uniform vec3 scales_mins;
 uniform vec3 scales_maxs;
 
+uniform vec4 scales_codebook[64];
+
 vec4 unpackU32(uint v) {
-    return vec4(
-        float((v >> 24u) & 0xFFu) / 255.0,
-        float((v >> 16u) & 0xFFu) / 255.0,
-        float((v >> 8u) & 0xFFu) / 255.0,
-        float(v & 0xFFu) / 255.0
-    );
+    return vec4((uvec4(v) >> uvec4(24u, 16u, 8u, 0u)) & 0xffu) / 255.0;
 }
 
 uvec4 packedSample;
@@ -36,8 +33,8 @@ const float norm = 2.0 / sqrt(2.0);
 
 // sample covariance vectors
 void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
+    // decode rotation quaternion
     vec4 qdata = unpackU32(packedSample.z);
-    vec3 sdata = unpackU32(packedSample.w).xyz;
 
     vec3 abc = (qdata.xyz - 0.5) * norm;
     float d = sqrt(max(0.0, 1.0 - dot(abc, abc)));
@@ -49,7 +46,14 @@ void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
                 ((mode == 2u) ? vec4(abc.xy, d, abc.z) : vec4(abc, d)));
 
     mat3 rot = quatToMat3(quat);
-    vec3 scale = exp(mix(scales_mins, scales_maxs, sdata));
+
+    // decode scale
+    uvec3 idx = (uvec3(packedSample.w) >> uvec3(24u, 16u, 8u)) & 0xffu;
+    vec3 scale = exp(vec3(
+        (scales_codebook[idx.x >> 2u])[idx.x & 3u],
+        (scales_codebook[idx.y >> 2u])[idx.y & 3u],
+        (scales_codebook[idx.z >> 2u])[idx.z & 3u]
+    ));
 
     // M = S * R
     mat3 M = transpose(mat3(
