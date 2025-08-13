@@ -397,6 +397,25 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
+     * @type {boolean}
+     * @deprecated Use {@link ScaleGizmo#flipAxes} or {@link ScaleGizmo#flipPlanes} instead.
+     * @ignore
+     */
+    set flipShapes(value) {
+        this.flipAxes = value;
+        this.flipPlanes = value;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link ScaleGizmo#flipAxes} or {@link ScaleGizmo#flipPlanes} instead.
+     * @ignore
+     */
+    get flipShapes() {
+        return this.flipAxes && this.flipPlanes;
+    }
+
+    /**
      * @param {string} prop - The property name.
      * @param {any} value - The property value.
      * @private
