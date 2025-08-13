@@ -532,48 +532,42 @@ class ScaleGizmo extends TransformGizmo {
         const axis = this._selectedAxis;
 
         const isPlane = this._selectedIsPlane;
-        const isScaleUniform = (this._uniform && isPlane) || axis === GIZMOAXIS_XYZ;
 
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, isScaleUniform, !isPlane);
+        const plane = this._createPlane(axis, axis === GIZMOAXIS_XYZ, !isPlane);
 
         const point = new Vec3();
 
         plane.intersectsRay(ray, point);
 
-        if (isScaleUniform) {
+        // uniform scaling for XYZ axis
+        if (axis === GIZMOAXIS_XYZ) {
             // calculate projecion vector for scale direction
-            switch (axis) {
-                case GIZMOAXIS_X:
-                    tmpV1.copy(this.root.up);
-                    tmpV2.copy(this.root.forward).mulScalar(-1);
-                    break;
-                case GIZMOAXIS_Y:
-                    tmpV1.copy(this.root.right);
-                    tmpV2.copy(this.root.forward).mulScalar(-1);
-                    break;
-                case GIZMOAXIS_Z:
-                    tmpV1.copy(this.root.up);
-                    tmpV2.copy(this.root.right);
-                    break;
-                default:
-                    // defaults to all axes
-                    tmpV1.copy(this._camera.entity.up);
-                    tmpV2.copy(this._camera.entity.right);
-                    break;
-            }
-            tmpV2.add(tmpV1).normalize();
-            tmpV1.sub2(point, gizmoPos);
-            const length = tmpV1.length();
-            const v = length * tmpV1.normalize().dot(tmpV2);
+            const projDir = tmpV2.add2(this._camera.entity.up, this._camera.entity.right).normalize();
+
+            // calculate direction vector for scaling
+            const dir = tmpV1.sub2(point, gizmoPos);
+
+            // normalize vector and project it to scale direction
+            const v = dir.length() * dir.normalize().dot(projDir);
             point.set(v, v, v);
 
-            // keep scale of axis constant if not all axes are selected
-            if (axis !== GIZMOAXIS_XYZ) {
-                point[axis] = 1;
-            }
-
             return point;
+        }
+
+        // uniform scaling for planes
+        if (this._uniform && isPlane) {
+            // calculate direction vector for scaling
+            const dir = tmpV1.sub2(point, gizmoPos);
+
+            // average the scale in all 3 axes (as plane one axis is always 0)
+            const scale = (dir.x + dir.y + dir.z) / 2;
+            point.set(scale, scale, scale);
+
+            // set the axis that is not in the plane to 0
+            point[axis] = 0;
+
+            point.add(gizmoPos);
         }
 
         // rotate point back to world coords
