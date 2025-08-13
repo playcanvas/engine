@@ -363,7 +363,7 @@ class RotateGizmo extends TransformGizmo {
      * @param {Color} [color] - The color.
      * @private
      */
-    _drawGuideAngleLine(pos, axis, point, color = this._guideColors[axis]) {
+    _drawGuideAngleLine(pos, axis, point, color = this._theme.guide[axis]) {
         tmpV1.set(0, 0, 0);
         tmpV2.copy(point).mulScalar(this._scale);
         this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this._layer);

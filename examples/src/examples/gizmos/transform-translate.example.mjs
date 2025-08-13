@@ -97,20 +97,33 @@ gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
     snapIncrement: gizmo.snapIncrement,
-    xAxisColor: gizmo.xAxisColor.toArray(),
-    yAxisColor: gizmo.yAxisColor.toArray(),
-    zAxisColor: gizmo.zAxisColor.toArray(),
-    xHoverColor: gizmo.xHoverColor.toArray(),
-    yHoverColor: gizmo.yHoverColor.toArray(),
-    zHoverColor: gizmo.zHoverColor.toArray(),
-    disabledColor: gizmo.disabledColor.toArray(),
-    xGuideColor: gizmo.xGuideColor.toArray(),
-    yGuideColor: gizmo.yGuideColor.toArray(),
-    zGuideColor: gizmo.zGuideColor.toArray(),
-    shading: gizmo.shading,
+    theme: {
+        axis: {
+            x: gizmo.theme.axis.x.toArray(),
+            y: gizmo.theme.axis.y.toArray(),
+            z: gizmo.theme.axis.z.toArray(),
+            xyz: gizmo.theme.axis.xyz.toArray(),
+            f: gizmo.theme.axis.f.toArray()
+        },
+        hover: {
+            x: gizmo.theme.hover.x.toArray(),
+            y: gizmo.theme.hover.y.toArray(),
+            z: gizmo.theme.hover.z.toArray(),
+            xyz: gizmo.theme.hover.xyz.toArray(),
+            f: gizmo.theme.hover.f.toArray()
+        },
+        guide: {
+            x: gizmo.theme.guide.x.toArray(),
+            y: gizmo.theme.guide.y.toArray(),
+            z: gizmo.theme.guide.z.toArray(),
+            f: gizmo.theme.guide.f.toArray()
+        },
+        disabled: gizmo.theme.disabled.toArray()
+    },
     coordSpace: gizmo.coordSpace,
     axisLineTolerance: gizmo.axisLineTolerance,
     axisCenterTolerance: gizmo.axisCenterTolerance,
+    shading: gizmo.shading,
     axisGap: gizmo.axisGap,
     axisLineThickness: gizmo.axisLineThickness,
     axisLineLength: gizmo.axisLineLength,
@@ -120,6 +133,7 @@ data.set('gizmo', {
     axisPlaneGap: gizmo.axisPlaneGap,
     axisCenterSize: gizmo.axisCenterSize
 });
+window.gizmo = gizmo; // for debugging
 
 // create grid
 const gridEntity = new pc.Entity('grid');
@@ -131,9 +145,9 @@ gridEntity.script.create(Grid);
 // controls hook
 const tmpC = new pc.Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
-    const [category, key] = path.split('.');
+    const [category, key, ...parts] = path.split('.');
     switch (category) {
-        case 'camera':
+        case 'camera': {
             switch (key) {
                 case 'proj':
                     camera.camera.projection = value - 1;
@@ -142,17 +156,21 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     camera.camera.fov = value;
                     break;
             }
-            return;
-        case 'gizmo':
-            // @ts-ignore
-            if (gizmo[key] instanceof pc.Color) {
-                // @ts-ignore
-                gizmo[key] = tmpC.fromArray(value);
+            break;
+        }
+        case 'gizmo': {
+            if (key === 'theme') {
+                gizmo.setTheme({
+                    [parts[0]]: {
+                        [parts[1]]: tmpC.fromArray(value)
+                    }
+                });
                 return;
             }
-
             // @ts-ignore
             gizmo[key] = value;
+            break;
+        }
     }
 });
 

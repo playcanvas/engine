@@ -13,7 +13,7 @@ import {
     COLOR_GRAY,
     color4from3
 } from './color.js';
-import { GIZMOAXIS_FACE, GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
+import { GIZMOAXIS_FACE, GIZMOAXIS_XYZ } from './constants.js';
 import { Gizmo } from './gizmo.js';
 
 /**
@@ -21,6 +21,28 @@ import { Gizmo } from './gizmo.js';
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../../scene/layer.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ */
+
+/**
+ * @typedef {object} GizmoTheme
+ * @property {object} axis - The axis colors.
+ * @property {Color} axis.x - The X axis color.
+ * @property {Color} axis.y - The Y axis color.
+ * @property {Color} axis.z - The Z axis color.
+ * @property {Color} axis.xyz - The XYZ axis color.
+ * @property {Color} axis.f - The face axis color.
+ * @property {object} hover - The hover colors.
+ * @property {Color} hover.x - The X axis hover color.
+ * @property {Color} hover.y - The Y axis hover color.
+ * @property {Color} hover.z - The Z axis hover color.
+ * @property {Color} hover.xyz - The XYZ axis hover color.
+ * @property {Color} hover.f - The face axis hover color.
+ * @property {object} guide - The guide line colors.
+ * @property {Color} guide.x - The X axis guide color.
+ * @property {Color} guide.y - The Y axis guide color.
+ * @property {Color} guide.z - The Z axis guide color.
+ * @property {Color} guide.f - The face axis guide color.
+ * @property {Color} disabled - The disabled color.
  */
 
 // temporary variables
@@ -74,10 +96,10 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal theme.
      *
-     * @type {{ axis: Record<string, Color>, hover: Record<string, Color>, disabled: Color }}
+     * @type {GizmoTheme}
      * @protected
      */
-    _theme = {
+    _theme = Object.freeze({
         axis: {
             x: color4from3(COLOR_RED, 0.6),
             y: color4from3(COLOR_GREEN, 0.6),
@@ -92,21 +114,14 @@ class TransformGizmo extends Gizmo {
             xyz: Color.WHITE.clone(),
             f: COLOR_YELLOW.clone()
         },
+        guide: {
+            x: COLOR_RED.clone(),
+            y: COLOR_GREEN.clone(),
+            z: COLOR_BLUE.clone(),
+            f: COLOR_YELLOW.clone()
+        },
         disabled: COLOR_GRAY.clone()
-    };
-
-    /**
-     * Internal version of the guide line color.
-     *
-     * @type {Record<string, Color>}
-     * @protected
-     */
-    _guideColors = {
-        x: COLOR_RED.clone(),
-        y: COLOR_GREEN.clone(),
-        z: COLOR_BLUE.clone(),
-        f: COLOR_YELLOW.clone()
-    };
+    });
 
     /**
      * Internal gizmo starting rotation in world space.
@@ -334,187 +349,12 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * Sets the X axis color.
+     * Gets the current theme for the gizmo.
      *
-     * @type {Color}
+     * @type {GizmoTheme}
      */
-    set xAxisColor(value) {
-        this._updateAxisColor(GIZMOAXIS_X, value);
-    }
-
-    /**
-     * Gets the X axis color.
-     *
-     * @type {Color}
-     */
-    get xAxisColor() {
-        return this._theme.axis.x;
-    }
-
-    /**
-     * Sets the Y axis color.
-     *
-     * @type {Color}
-     */
-    set yAxisColor(value) {
-        this._updateAxisColor(GIZMOAXIS_Y, value);
-    }
-
-    /**
-     * Gets the Y axis color.
-     *
-     * @type {Color}
-     */
-    get yAxisColor() {
-        return this._theme.axis.y;
-    }
-
-    /**
-     * Sets the Z axis color.
-     *
-     * @type {Color}
-     */
-    set zAxisColor(value) {
-        this._updateAxisColor(GIZMOAXIS_Z, value);
-    }
-
-    /**
-     * Gets the Z axis color.
-     *
-     * @type {Color}
-     */
-    get zAxisColor() {
-        return this._theme.axis.z;
-    }
-
-    /**
-     * Sets the X axis hover color.
-     *
-     * @type {Color}
-     */
-    set xHoverColor(value) {
-        this._updateHoverColor(GIZMOAXIS_X, value);
-    }
-
-    /**
-     * Gets the X axis hover color.
-     *
-     * @type {Color}
-     */
-    get xHoverColor() {
-        return this._theme.hover.x;
-    }
-
-    /**
-     * Sets the Y axis hover color.
-     *
-     * @type {Color}
-     */
-    set yHoverColor(value) {
-        this._updateHoverColor(GIZMOAXIS_Y, value);
-    }
-
-    /**
-     * Gets the Y axis hover color.
-     *
-     * @type {Color}
-     */
-    get yHoverColor() {
-        return this._theme.hover.y;
-    }
-
-    /**
-     * Sets the Z axis color.
-     *
-     * @type {Color}
-     */
-    set zHoverColor(value) {
-        this._updateHoverColor(GIZMOAXIS_Z, value);
-    }
-
-    /**
-     * Gets the Z axis hover color.
-     *
-     * @type {Color}
-     */
-    get zHoverColor() {
-        return this._theme.hover.z;
-    }
-
-    /**
-     * Sets the disabled color.
-     *
-     * @type {Color}
-     */
-    set disabledColor(value) {
-        this._theme.disabled.copy(value);
-
-        for (const name in this._shapes) {
-            this._shapes[name].hover(!!this._hoverAxis);
-        }
-    }
-
-    /**
-     * Gets the disabled color.
-     *
-     * @type {Color}
-     */
-    get disabledColor() {
-        return this._theme.disabled;
-    }
-
-    /**
-     * Sets the X guide color.
-     *
-     * @type {Color}
-     */
-    set xGuideColor(value) {
-        this._guideColors.x.copy(value);
-    }
-
-    /**
-     * Gets the X guide color.
-     *
-     * @type {Color}
-     */
-    get xGuideColor() {
-        return this._guideColors.x;
-    }
-
-    /**
-     * Sets the Y guide color.
-     *
-     * @type {Color}
-     */
-    set yGuideColor(value) {
-        this._guideColors.y.copy(value);
-    }
-
-    /**
-     * Gets the Y guide color.
-     *
-     * @type {Color}
-     */
-    get yGuideColor() {
-        return this._guideColors.y;
-    }
-
-    /**
-     * Sets the Z guide color.
-     *
-     * @type {Color}
-     */
-    set zGuideColor(value) {
-        this._guideColors.z.copy(value);
-    }
-
-    /**
-     * Gets the Z guide color.
-     *
-     * @type {Color}
-     */
-    get zGuideColor() {
-        return this._guideColors.z;
+    get theme() {
+        return this._theme;
     }
 
     /**
@@ -523,33 +363,6 @@ class TransformGizmo extends Gizmo {
      */
     get _dragging() {
         return !this._hoverAxis && !!this._selectedAxis;
-    }
-
-    /**
-     * @param {string} axis - The axis to update.
-     * @param {Color} color - The value to set.
-     * @private
-     */
-    _updateAxisColor(axis, color) {
-        this._guideColors[axis].copy(color);
-        this._theme.axis[axis].copy(color);
-
-        for (const name in this._shapes) {
-            this._shapes[name].hover(!!this._hoverAxis);
-        }
-    }
-
-    /**
-     * @param {string} axis - The axis to update.
-     * @param {Color} color - The value to set.
-     * @private
-     */
-    _updateHoverColor(axis, color) {
-        this._theme.hover[axis].copy(color);
-
-        for (const name in this._shapes) {
-            this._shapes[name].hover(!!this._hoverAxis);
-        }
     }
 
     /**
@@ -731,16 +544,17 @@ class TransformGizmo extends Gizmo {
      * @param {Vec3} pos - The position.
      * @param {Quat} rot - The rotation.
      * @param {string} axis - The axis.
+     * @param {Color} [color] - The color.
      * @protected
      */
-    _drawSpanLine(pos, rot, axis) {
+    _drawSpanLine(pos, rot, axis, color = this._theme.guide[axis]) {
         tmpV1.set(0, 0, 0);
         tmpV1[axis] = 1;
         tmpV1.mulScalar(this._camera.farClip - this._camera.nearClip);
         tmpV2.copy(tmpV1).mulScalar(-1);
         rot.transformVector(tmpV1, tmpV1);
         rot.transformVector(tmpV2, tmpV2);
-        this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], true);
+        this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, true);
     }
 
     /**
@@ -804,6 +618,76 @@ class TransformGizmo extends Gizmo {
         }
 
         return !this._shapes[shapeAxis].disabled;
+    }
+
+    /**
+     * Sets the theme or partial theme for the gizmo.
+     *
+     * @param {Partial<GizmoTheme>} partial - The partial theme to update.
+     */
+    setTheme(partial) {
+        const theme = { ...this._theme, ...partial };
+        if (typeof theme !== 'object' || typeof theme.axis !== 'object' || typeof theme.hover !== 'object') {
+            return;
+        }
+
+        // axis colors
+        if (theme.axis.x instanceof Color) {
+            this._theme.axis.x.copy(theme.axis.x);
+        }
+        if (theme.axis.y instanceof Color) {
+            this._theme.axis.y.copy(theme.axis.y);
+        }
+        if (theme.axis.z instanceof Color) {
+            this._theme.axis.z.copy(theme.axis.z);
+        }
+        if (theme.axis.xyz instanceof Color) {
+            this._theme.axis.xyz.copy(theme.axis.xyz);
+        }
+        if (theme.axis.f instanceof Color) {
+            this._theme.axis.f.copy(theme.axis.f);
+        }
+
+        // hover colors
+        if (theme.hover.x instanceof Color) {
+            this._theme.hover.x.copy(theme.hover.x);
+        }
+        if (theme.hover.y instanceof Color) {
+            this._theme.hover.y.copy(theme.hover.y);
+        }
+        if (theme.hover.z instanceof Color) {
+            this._theme.hover.z.copy(theme.hover.z);
+        }
+        if (theme.hover.xyz instanceof Color) {
+            this._theme.hover.xyz.copy(theme.hover.xyz);
+        }
+        if (theme.hover.f instanceof Color) {
+            this._theme.hover.f.copy(theme.hover.f);
+        }
+
+        // guide colors
+        if (theme.guide.x instanceof Color) {
+            this._theme.guide.x.copy(theme.guide.x);
+        }
+        if (theme.guide.y instanceof Color) {
+            this._theme.guide.y.copy(theme.guide.y);
+        }
+        if (theme.guide.z instanceof Color) {
+            this._theme.guide.z.copy(theme.guide.z);
+        }
+        if (theme.guide.f instanceof Color) {
+            this._theme.guide.f.copy(theme.guide.f);
+        }
+
+        // disabled color
+        if (theme.disabled instanceof Color) {
+            this._theme.disabled.copy(theme.disabled);
+        }
+
+        // update shapes
+        for (const name in this._shapes) {
+            this._shapes[name].hover(!!this._hoverAxis);
+        }
     }
 
     /**
