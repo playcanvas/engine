@@ -131,7 +131,7 @@ class ScaleGizmo extends TransformGizmo {
      * @type {boolean}
      * @protected
      */
-    _useUniformScaling = false;
+    _uniform = false;
 
     /**
      * @override
@@ -222,7 +222,7 @@ class ScaleGizmo extends TransformGizmo {
      * @type {boolean}
      */
     set uniform(value) {
-        this._useUniformScaling = value ?? true;
+        this._uniform = value ?? true;
     }
 
     /**
@@ -231,7 +231,7 @@ class ScaleGizmo extends TransformGizmo {
      * @type {boolean}
      */
     get uniform() {
-        return this._useUniformScaling;
+        return this._uniform;
     }
 
     /**
@@ -532,7 +532,7 @@ class ScaleGizmo extends TransformGizmo {
         const axis = this._selectedAxis;
 
         const isPlane = this._selectedIsPlane;
-        const isScaleUniform = (this._useUniformScaling && isPlane) || axis === GIZMOAXIS_XYZ;
+        const isScaleUniform = (this._uniform && isPlane) || axis === GIZMOAXIS_XYZ;
 
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, isScaleUniform, !isPlane);
