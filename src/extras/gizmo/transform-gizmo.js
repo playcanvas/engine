@@ -51,6 +51,9 @@ const tmpV2 = new Vec3();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
 
+// constants
+const AXES = ['x', 'y', 'z'];
+
 /**
  * The base class for all transform gizmos.
  *
@@ -639,7 +642,7 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
-        for (const axis in Vec3.ZERO) {
+        for (const axis of AXES) {
             if (activeAxis === GIZMOAXIS_XYZ) {
                 this._drawSpanLine(pos, rot, axis);
                 continue;

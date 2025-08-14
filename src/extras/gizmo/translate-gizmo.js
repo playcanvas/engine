@@ -27,6 +27,7 @@ const tmpQ1 = new Quat();
 
 // constants
 const GLANCE_EPSILON = 0.98;
+const AXES = ['x', 'y', 'z'];
 
 /**
  * The TranslateGizmo provides interactive 3D manipulation handles for translating/moving
@@ -585,7 +586,7 @@ class TranslateGizmo extends TransformGizmo {
      * @override
      */
     _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
-        for (const axis in Vec3.ZERO) {
+        for (const axis of AXES) {
             if (this._dragging || activeAxis === GIZMOAXIS_XYZ) {
                 this._drawSpanLine(pos, rot, axis);
                 continue;
