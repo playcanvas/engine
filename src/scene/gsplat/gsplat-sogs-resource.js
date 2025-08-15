@@ -13,13 +13,13 @@ class GSplatSogsResource extends GSplatResourceBase {
         material.setDefine('GSPLAT_SOGS_DATA', true);
         material.setDefine('SH_BANDS', this.gsplatData.shBands);
 
-        ['packedTexture', 'sh0', 'sh_centroids'].forEach((name) => {
+        ['packedTexture', 'sh0', 'sh_centroids', 'sh_codebooks'].forEach((name) => {
             if (gsplatData[name]) {
                 material.setParameter(name, gsplatData[name]);
             }
         });
 
-        ['means', 'scales', 'sh0', 'shN'].forEach((name) => {
+        ['means', 'scales', 'sh0'].forEach((name) => {
             const v = gsplatData.meta[name];
             if (v) {
                 material.setParameter(`${name}_mins`, v.mins);
@@ -30,11 +30,6 @@ class GSplatSogsResource extends GSplatResourceBase {
         material.setParameter('scales_codebook[0]', gsplatData.meta.scales.codebook);
         material.setParameter('opacity_codebook[0]', gsplatData.meta.sh0.opacityCodebook);
         material.setParameter('sh0_codebook[0]', gsplatData.meta.sh0.codebook);
-        material.setParameter('shN_codebook[0]', [
-            ...(gsplatData.meta.shN?.codebook1 ?? []),
-            ...(gsplatData.meta.shN?.codebook2 ?? []),
-            ...(gsplatData.meta.shN?.codebook3 ?? [])
-        ]);
     }
 
     evalTextureSize(count) {

@@ -3,6 +3,8 @@ import { http, Http } from '../../platform/net/http.js';
 import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
 import { GSplatSogsResource } from '../../scene/gsplat/gsplat-sogs-resource.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
 
 // combine the progress updates from multiple assets
 // and fire progress events on the target
@@ -110,6 +112,16 @@ class SogsParser {
         data.sh0 = textures.sh0[0].resource;
         data.sh_centroids = textures.shN?.[0]?.resource;
         data.sh_labels = textures.shN?.[1]?.resource;
+
+        if (meta.shN.codebooks) {
+            data.sh_codebooks = new Texture(this.app.graphicsDevice, {
+                width: 64,
+                height: meta.shN.codebooks.length,
+                format: PIXELFORMAT_RGBA32F,
+                mipmaps: false,
+                levels: [new Float32Array(meta.shN.codebooks.flat())]
+            });
+        }
 
         const decompress = asset.data?.decompress;
 

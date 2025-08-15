@@ -43,6 +43,7 @@ class GSplatSogsIterator {
         const sh0_data = c && data.sh0._levels[0];
         const sh_labels_data = sh && data.sh_labels._levels[0];
         const sh_centroids_data = sh && data.sh_centroids._levels[0];
+        const sh_codebook_data = sh && data.meta.shN?.codebooks?.flat();
 
         const norm = 2.0 / Math.sqrt(2.0);
 
@@ -127,6 +128,8 @@ class GSplatSogsData {
 
     sh_labels;
 
+    sh_codebooks;
+
     packedTexture;
 
     destroy() {
@@ -137,6 +140,7 @@ class GSplatSogsData {
         this.sh0?.destroy();
         this.sh_centroids?.destroy();
         this.sh_labels?.destroy();
+        this.sh_codebooks.destroy();
         this.packedTexture?.destroy();
     }
 
