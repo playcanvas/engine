@@ -91,7 +91,7 @@ class RotateGizmo extends TransformGizmo {
             hoverColor: this._theme.shapeHover.y,
             sectorAngle: 180
         }),
-        face: new ArcShape(this._device, {
+        f: new ArcShape(this._device, {
             axis: GIZMOAXIS_FACE,
             layers: [this._layer.id],
             shading: this._shading,
@@ -263,7 +263,7 @@ class RotateGizmo extends TransformGizmo {
      * @type {number}
      */
     set faceTubeRadius(value) {
-        this._shapes.face.tubeRadius = value;
+        this._shapes.f.tubeRadius = value;
     }
 
     /**
@@ -272,7 +272,7 @@ class RotateGizmo extends TransformGizmo {
      * @type {number}
      */
     get faceTubeRadius() {
-        return this._shapes.face.tubeRadius;
+        return this._shapes.f.tubeRadius;
     }
 
     /**
@@ -281,7 +281,7 @@ class RotateGizmo extends TransformGizmo {
      * @type {number}
      */
     set faceRingRadius(value) {
-        this._shapes.face.ringRadius = value;
+        this._shapes.f.ringRadius = value;
     }
 
     /**
@@ -290,7 +290,7 @@ class RotateGizmo extends TransformGizmo {
      * @type {number}
      */
     get faceRingRadius() {
-        return this._shapes.face.ringRadius;
+        return this._shapes.f.ringRadius;
     }
 
     /**
@@ -300,7 +300,7 @@ class RotateGizmo extends TransformGizmo {
      */
     set ringTolerance(value) {
         this._setDiskProp('tolerance', value);
-        this._shapes.face.tolerance = value;
+        this._shapes.f.tolerance = value;
     }
 
     /**
@@ -391,12 +391,12 @@ class RotateGizmo extends TransformGizmo {
     _shapesLookAtCamera() {
         // face shape
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            this._shapes.face.entity.lookAt(this._camera.entity.getPosition());
-            this._shapes.face.entity.rotateLocal(90, 0, 0);
+            this._shapes.f.entity.lookAt(this._camera.entity.getPosition());
+            this._shapes.f.entity.rotateLocal(90, 0, 0);
         } else {
             tmpQ1.copy(this._camera.entity.getRotation()).getEulerAngles(tmpV1);
-            this._shapes.face.entity.setEulerAngles(tmpV1);
-            this._shapes.face.entity.rotateLocal(-90, 0, 0);
+            this._shapes.f.entity.setEulerAngles(tmpV1);
+            this._shapes.f.entity.rotateLocal(-90, 0, 0);
         }
 
         // axes shapes

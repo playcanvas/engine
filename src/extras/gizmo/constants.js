@@ -66,4 +66,4 @@ export const GIZMOAXIS_XYZ = 'xyz';
  *
  * @category Gizmo
  */
-export const GIZMOAXIS_FACE = 'face';
+export const GIZMOAXIS_FACE = 'f';
