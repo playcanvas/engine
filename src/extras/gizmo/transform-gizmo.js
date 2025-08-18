@@ -24,24 +24,20 @@ import { Gizmo } from './gizmo.js';
  */
 
 /**
+ * @typedef {object} GizmoColorGroup
+ * @property {Color} x - The X axis color.
+ * @property {Color} y - The Y axis color.
+ * @property {Color} z - The Z axis color.
+ * @property {Color} xyz - The XYZ axis color.
+ * @property {Color} f - The face axis color.
+ */
+
+/**
  * @typedef {object} GizmoTheme
- * @property {object} axis - The axis colors.
- * @property {Color} axis.x - The X axis color.
- * @property {Color} axis.y - The Y axis color.
- * @property {Color} axis.z - The Z axis color.
- * @property {Color} axis.xyz - The XYZ axis color.
- * @property {Color} axis.f - The face axis color.
- * @property {object} hover - The hover colors.
- * @property {Color} hover.x - The X axis hover color.
- * @property {Color} hover.y - The Y axis hover color.
- * @property {Color} hover.z - The Z axis hover color.
- * @property {Color} hover.xyz - The XYZ axis hover color.
- * @property {Color} hover.f - The face axis hover color.
- * @property {object} guide - The guide line colors.
- * @property {Color} guide.x - The X axis guide color.
- * @property {Color} guide.y - The Y axis guide color.
- * @property {Color} guide.z - The Z axis guide color.
- * @property {Color} guide.f - The face axis guide color.
+ * @property {GizmoColorGroup} axis - The axis colors.
+ * @property {GizmoColorGroup} hover - The hover colors.
+ * @property {GizmoColorGroup} guide - The guide line colors.
+ * @property {GizmoColorGroup} occluded - The occluded colors.
  * @property {Color} disabled - The disabled color.
  */
 
@@ -102,7 +98,7 @@ class TransformGizmo extends Gizmo {
      * @type {GizmoTheme}
      * @protected
      */
-    _theme = Object.freeze({
+    _theme = {
         axis: {
             x: color4from3(COLOR_RED, 0.6),
             y: color4from3(COLOR_GREEN, 0.6),
@@ -121,10 +117,18 @@ class TransformGizmo extends Gizmo {
             x: COLOR_RED.clone(),
             y: COLOR_GREEN.clone(),
             z: COLOR_BLUE.clone(),
+            xyz: Color.WHITE.clone(),
             f: COLOR_YELLOW.clone()
         },
+        occluded: {
+            x: color4from3(COLOR_RED, 0.1),
+            y: color4from3(COLOR_GREEN, 0.1),
+            z: color4from3(COLOR_BLUE, 0.1),
+            xyz: color4from3(Color.WHITE, 0.1),
+            f: color4from3(COLOR_YELLOW, 0.1)
+        },
         disabled: COLOR_GRAY.clone()
-    });
+    };
 
     /**
      * Internal gizmo starting rotation in world space.
@@ -663,17 +667,17 @@ class TransformGizmo extends Gizmo {
      * @param {Vec3} pos - The position.
      * @param {Quat} rot - The rotation.
      * @param {string} axis - The axis.
-     * @param {Color} [color] - The color.
      * @protected
      */
-    _drawSpanLine(pos, rot, axis, color = this._theme.guide[axis]) {
+    _drawSpanLine(pos, rot, axis) {
         tmpV1.set(0, 0, 0);
         tmpV1[axis] = 1;
         tmpV1.mulScalar(this._camera.farClip - this._camera.nearClip);
         tmpV2.copy(tmpV1).mulScalar(-1);
-        rot.transformVector(tmpV1, tmpV1);
-        rot.transformVector(tmpV2, tmpV2);
-        this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, true);
+        const from = rot.transformVector(tmpV1, tmpV1).add(pos);
+        const to = rot.transformVector(tmpV2, tmpV2).add(pos);
+        this._app.drawLine(from, to, this._theme.occluded[axis], false, this._layer);
+        this._app.drawLine(from, to, this._theme.guide[axis], true);
     }
 
     /**
@@ -746,56 +750,40 @@ class TransformGizmo extends Gizmo {
      */
     setTheme(partial) {
         const theme = { ...this._theme, ...partial };
-        if (typeof theme !== 'object' || typeof theme.axis !== 'object' || typeof theme.hover !== 'object') {
+        if (typeof theme !== 'object' ||
+            typeof theme.axis !== 'object' ||
+            typeof theme.hover !== 'object' ||
+            typeof theme.guide !== 'object' ||
+            typeof theme.occluded !== 'object') {
             return;
         }
 
         // axis colors
-        if (theme.axis.x instanceof Color) {
-            this._theme.axis.x.copy(theme.axis.x);
-        }
-        if (theme.axis.y instanceof Color) {
-            this._theme.axis.y.copy(theme.axis.y);
-        }
-        if (theme.axis.z instanceof Color) {
-            this._theme.axis.z.copy(theme.axis.z);
-        }
-        if (theme.axis.xyz instanceof Color) {
-            this._theme.axis.xyz.copy(theme.axis.xyz);
-        }
-        if (theme.axis.f instanceof Color) {
-            this._theme.axis.f.copy(theme.axis.f);
+        for (const axis in theme.axis) {
+            if (theme.axis[axis] instanceof Color) {
+                this._theme.axis[axis].copy(theme.axis[axis]);
+            }
         }
 
         // hover colors
-        if (theme.hover.x instanceof Color) {
-            this._theme.hover.x.copy(theme.hover.x);
-        }
-        if (theme.hover.y instanceof Color) {
-            this._theme.hover.y.copy(theme.hover.y);
-        }
-        if (theme.hover.z instanceof Color) {
-            this._theme.hover.z.copy(theme.hover.z);
-        }
-        if (theme.hover.xyz instanceof Color) {
-            this._theme.hover.xyz.copy(theme.hover.xyz);
-        }
-        if (theme.hover.f instanceof Color) {
-            this._theme.hover.f.copy(theme.hover.f);
+        for (const axis in theme.hover) {
+            if (theme.hover[axis] instanceof Color) {
+                this._theme.hover[axis].copy(theme.hover[axis]);
+            }
         }
 
         // guide colors
-        if (theme.guide.x instanceof Color) {
-            this._theme.guide.x.copy(theme.guide.x);
+        for (const axis in theme.guide) {
+            if (theme.guide[axis] instanceof Color) {
+                this._theme.guide[axis].copy(theme.guide[axis]);
+            }
         }
-        if (theme.guide.y instanceof Color) {
-            this._theme.guide.y.copy(theme.guide.y);
-        }
-        if (theme.guide.z instanceof Color) {
-            this._theme.guide.z.copy(theme.guide.z);
-        }
-        if (theme.guide.f instanceof Color) {
-            this._theme.guide.f.copy(theme.guide.f);
+
+        // occluded colors
+        for (const axis in theme.occluded) {
+            if (theme.occluded[axis] instanceof Color) {
+                this._theme.occluded[axis].copy(theme.occluded[axis]);
+            }
         }
 
         // disabled color
