@@ -379,6 +379,9 @@ class TransformGizmo extends Gizmo {
             },
             guideBase: {
                 x: value
+            },
+            guideOccluded: {
+                x: color4from3(value, 0)
             }
         });
     }
@@ -407,6 +410,9 @@ class TransformGizmo extends Gizmo {
             },
             guideBase: {
                 y: value
+            },
+            guideOccluded: {
+                y: color4from3(value, 0)
             }
         });
     }
@@ -435,6 +441,9 @@ class TransformGizmo extends Gizmo {
             },
             guideBase: {
                 z: value
+            },
+            guideOccluded: {
+                z: color4from3(value, 0)
             }
         });
     }
