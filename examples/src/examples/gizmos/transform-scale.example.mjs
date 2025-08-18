@@ -98,6 +98,9 @@ data.set('gizmo', {
     size: gizmo.size,
     snap: gizmo.snap,
     snapIncrement: gizmo.snapIncrement,
+    flipAxes: gizmo.flipAxes,
+    flipPlanes: gizmo.flipPlanes,
+    dragMode: gizmo.dragMode,
     uniform: gizmo.uniform,
     theme: {
         shapeBase: {

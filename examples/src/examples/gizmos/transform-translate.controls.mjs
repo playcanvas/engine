@@ -55,6 +55,37 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     max: 10,
                     precision: 0
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Flip Axes' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.flipAxes' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Flip Planes' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.flipPlanes' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Drag Mode' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 'show', t: 'Show' },
+                        { v: 'hide', t: 'Hide' },
+                        { v: 'selected', t: 'Selected' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.dragMode' }
+                })
             )
         ),
         jsx(
