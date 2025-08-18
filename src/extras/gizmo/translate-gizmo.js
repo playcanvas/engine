@@ -69,56 +69,56 @@ class TranslateGizmo extends TransformGizmo {
             axis: GIZMOAXIS_XYZ,
             layers: [this._layer.id],
             shading: this._shading,
-            defaultColor: this._theme.axis.xyz,
-            hoverColor: this._theme.hover.xyz
+            defaultColor: this._theme.shapeBase.xyz,
+            hoverColor: this._theme.shapeHover.xyz
         }),
         yz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._theme.axis.x,
-            hoverColor: this._theme.hover.x
+            defaultColor: this._theme.shapeBase.x,
+            hoverColor: this._theme.shapeHover.x
         }),
         xz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._theme.axis.y,
-            hoverColor: this._theme.hover.y
+            defaultColor: this._theme.shapeBase.y,
+            hoverColor: this._theme.shapeHover.y
         }),
         xy: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._theme.axis.z,
-            hoverColor: this._theme.hover.z
+            defaultColor: this._theme.shapeBase.z,
+            hoverColor: this._theme.shapeHover.z
         }),
         x: new ArrowShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._theme.axis.x,
-            hoverColor: this._theme.hover.x
+            defaultColor: this._theme.shapeBase.x,
+            hoverColor: this._theme.shapeHover.x
         }),
         y: new ArrowShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._theme.axis.y,
-            hoverColor: this._theme.hover.y
+            defaultColor: this._theme.shapeBase.y,
+            hoverColor: this._theme.shapeHover.y
         }),
         z: new ArrowShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._theme.axis.z,
-            hoverColor: this._theme.hover.z
+            defaultColor: this._theme.shapeBase.z,
+            hoverColor: this._theme.shapeHover.z
         })
     };
 

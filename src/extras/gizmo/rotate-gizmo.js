@@ -69,8 +69,8 @@ class RotateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(90, 0, 90),
-            defaultColor: this._theme.axis.z,
-            hoverColor: this._theme.hover.z,
+            defaultColor: this._theme.shapeBase.z,
+            hoverColor: this._theme.shapeHover.z,
             sectorAngle: 180
         }),
         x: new ArcShape(this._device, {
@@ -78,8 +78,8 @@ class RotateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._theme.axis.x,
-            hoverColor: this._theme.hover.x,
+            defaultColor: this._theme.shapeBase.x,
+            hoverColor: this._theme.shapeHover.x,
             sectorAngle: 180
         }),
         y: new ArcShape(this._device, {
@@ -87,8 +87,8 @@ class RotateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._theme.axis.y,
-            hoverColor: this._theme.hover.y,
+            defaultColor: this._theme.shapeBase.y,
+            hoverColor: this._theme.shapeHover.y,
             sectorAngle: 180
         }),
         face: new ArcShape(this._device, {
@@ -96,8 +96,8 @@ class RotateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             shading: this._shading,
             rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
-            defaultColor: this._theme.axis.f,
-            hoverColor: this._theme.hover.f,
+            defaultColor: this._theme.shapeBase.f,
+            hoverColor: this._theme.shapeHover.f,
             ringRadius: 0.55
         })
     };
@@ -363,7 +363,7 @@ class RotateGizmo extends TransformGizmo {
      * @param {Color} [color] - The color.
      * @private
      */
-    _drawGuideAngleLine(pos, axis, point, color = this._theme.guide[axis]) {
+    _drawGuideAngleLine(pos, axis, point, color = this._theme.guideBase[axis]) {
         tmpV1.set(0, 0, 0);
         tmpV2.copy(point).mulScalar(this._scale);
         this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this._layer);

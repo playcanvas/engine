@@ -34,10 +34,10 @@ import { Gizmo } from './gizmo.js';
 
 /**
  * @typedef {object} GizmoTheme
- * @property {GizmoColorGroup} axis - The axis colors.
- * @property {GizmoColorGroup} hover - The hover colors.
- * @property {GizmoColorGroup} guide - The guide line colors.
- * @property {GizmoColorGroup} occluded - The occluded colors.
+ * @property {GizmoColorGroup} shapeBase - The axis colors.
+ * @property {GizmoColorGroup} shapeHover - The hover colors.
+ * @property {GizmoColorGroup} guideBase - The guide line colors.
+ * @property {GizmoColorGroup} guideOccluded - The occluded colors.
  * @property {Color} disabled - The disabled color.
  */
 
@@ -99,28 +99,28 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _theme = {
-        axis: {
+        shapeBase: {
             x: color4from3(COLOR_RED, 0.6),
             y: color4from3(COLOR_GREEN, 0.6),
             z: color4from3(COLOR_BLUE, 0.6),
             xyz: color4from3(Color.WHITE, 0.6),
             f: color4from3(Color.WHITE, 0.6)
         },
-        hover: {
+        shapeHover: {
             x: COLOR_RED.clone(),
             y: COLOR_GREEN.clone(),
             z: COLOR_BLUE.clone(),
             xyz: Color.WHITE.clone(),
             f: COLOR_YELLOW.clone()
         },
-        guide: {
+        guideBase: {
             x: COLOR_RED.clone(),
             y: COLOR_GREEN.clone(),
             z: COLOR_BLUE.clone(),
             xyz: Color.WHITE.clone(),
             f: COLOR_YELLOW.clone()
         },
-        occluded: {
+        guideOccluded: {
             x: color4from3(COLOR_RED, 0.1),
             y: color4from3(COLOR_GREEN, 0.1),
             z: color4from3(COLOR_BLUE, 0.1),
@@ -371,13 +371,13 @@ class TransformGizmo extends Gizmo {
      */
     set xAxisColor(value) {
         this.setTheme({
-            axis: {
+            shapeBase: {
                 x: value
             },
-            hover: {
+            shapeHover: {
                 x: color4from3(value, this.colorAlpha)
             },
-            guide: {
+            guideBase: {
                 x: value
             }
         });
@@ -389,7 +389,7 @@ class TransformGizmo extends Gizmo {
      * @ignore
      */
     get xAxisColor() {
-        return this._theme.axis.x;
+        return this._theme.shapeBase.x;
     }
 
     /**
@@ -399,13 +399,13 @@ class TransformGizmo extends Gizmo {
      */
     set yAxisColor(value) {
         this.setTheme({
-            axis: {
+            shapeBase: {
                 y: value
             },
-            hover: {
+            shapeHover: {
                 y: color4from3(value, this.colorAlpha)
             },
-            guide: {
+            guideBase: {
                 y: value
             }
         });
@@ -417,7 +417,7 @@ class TransformGizmo extends Gizmo {
      * @ignore
      */
     get yAxisColor() {
-        return this._theme.axis.y;
+        return this._theme.shapeBase.y;
     }
 
     /**
@@ -427,13 +427,13 @@ class TransformGizmo extends Gizmo {
      */
     set zAxisColor(value) {
         this.setTheme({
-            axis: {
+            shapeBase: {
                 z: value
             },
-            hover: {
+            shapeHover: {
                 z: color4from3(value, this.colorAlpha)
             },
-            guide: {
+            guideBase: {
                 z: value
             }
         });
@@ -445,7 +445,7 @@ class TransformGizmo extends Gizmo {
      * @ignore
      */
     get zAxisColor() {
-        return this._theme.axis.z;
+        return this._theme.shapeBase.z;
     }
 
     /**
@@ -455,12 +455,12 @@ class TransformGizmo extends Gizmo {
      */
     set colorAlpha(value) {
         this.setTheme({
-            hover: {
-                x: color4from3(this._theme.hover.x, value),
-                y: color4from3(this._theme.hover.y, value),
-                z: color4from3(this._theme.hover.z, value),
-                xyz: color4from3(this._theme.hover.xyz, value),
-                f: color4from3(this._theme.hover.f, value)
+            shapeHover: {
+                x: color4from3(this._theme.shapeHover.x, value),
+                y: color4from3(this._theme.shapeHover.y, value),
+                z: color4from3(this._theme.shapeHover.z, value),
+                xyz: color4from3(this._theme.shapeHover.xyz, value),
+                f: color4from3(this._theme.shapeHover.f, value)
             }
         });
     }
@@ -472,11 +472,11 @@ class TransformGizmo extends Gizmo {
      */
     get colorAlpha() {
         return (
-            this._theme.hover.x.a +
-            this._theme.hover.y.a +
-            this._theme.hover.z.a +
-            this._theme.hover.xyz.a +
-            this._theme.hover.f.a
+            this._theme.shapeHover.x.a +
+            this._theme.shapeHover.y.a +
+            this._theme.shapeHover.z.a +
+            this._theme.shapeHover.xyz.a +
+            this._theme.shapeHover.f.a
         ) / 5;
     }
 
@@ -676,8 +676,8 @@ class TransformGizmo extends Gizmo {
         tmpV2.copy(tmpV1).mulScalar(-1);
         const from = rot.transformVector(tmpV1, tmpV1).add(pos);
         const to = rot.transformVector(tmpV2, tmpV2).add(pos);
-        this._app.drawLine(from, to, this._theme.occluded[axis], false, this._layer);
-        this._app.drawLine(from, to, this._theme.guide[axis], true);
+        this._app.drawLine(from, to, this._theme.guideOccluded[axis], false, this._layer);
+        this._app.drawLine(from, to, this._theme.guideBase[axis], true);
     }
 
     /**
@@ -751,38 +751,38 @@ class TransformGizmo extends Gizmo {
     setTheme(partial) {
         const theme = { ...this._theme, ...partial };
         if (typeof theme !== 'object' ||
-            typeof theme.axis !== 'object' ||
-            typeof theme.hover !== 'object' ||
-            typeof theme.guide !== 'object' ||
-            typeof theme.occluded !== 'object') {
+            typeof theme.shapeBase !== 'object' ||
+            typeof theme.shapeHover !== 'object' ||
+            typeof theme.guideBase !== 'object' ||
+            typeof theme.guideOccluded !== 'object') {
             return;
         }
 
         // axis colors
-        for (const axis in theme.axis) {
-            if (theme.axis[axis] instanceof Color) {
-                this._theme.axis[axis].copy(theme.axis[axis]);
+        for (const axis in theme.shapeBase) {
+            if (theme.shapeBase[axis] instanceof Color) {
+                this._theme.shapeBase[axis].copy(theme.shapeBase[axis]);
             }
         }
 
         // hover colors
-        for (const axis in theme.hover) {
-            if (theme.hover[axis] instanceof Color) {
-                this._theme.hover[axis].copy(theme.hover[axis]);
+        for (const axis in theme.shapeHover) {
+            if (theme.shapeHover[axis] instanceof Color) {
+                this._theme.shapeHover[axis].copy(theme.shapeHover[axis]);
             }
         }
 
         // guide colors
-        for (const axis in theme.guide) {
-            if (theme.guide[axis] instanceof Color) {
-                this._theme.guide[axis].copy(theme.guide[axis]);
+        for (const axis in theme.guideBase) {
+            if (theme.guideBase[axis] instanceof Color) {
+                this._theme.guideBase[axis].copy(theme.guideBase[axis]);
             }
         }
 
         // occluded colors
-        for (const axis in theme.occluded) {
-            if (theme.occluded[axis] instanceof Color) {
-                this._theme.occluded[axis].copy(theme.occluded[axis]);
+        for (const axis in theme.guideOccluded) {
+            if (theme.guideOccluded[axis] instanceof Color) {
+                this._theme.guideOccluded[axis].copy(theme.guideOccluded[axis]);
             }
         }
 
