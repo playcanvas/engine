@@ -3,7 +3,7 @@ import { Quat } from '../../core/math/quat.js';
 
 import {
     GIZMOSPACE_LOCAL,
-    GIZMOAXIS_FACE,
+    GIZMOAXIS_XYZ,
     GIZMOAXIS_X,
     GIZMOAXIS_Y,
     GIZMOAXIS_Z
@@ -27,6 +27,7 @@ const tmpQ1 = new Quat();
 
 // constants
 const GLANCE_EPSILON = 0.98;
+const AXES = ['x', 'y', 'z'];
 
 /**
  * The TranslateGizmo provides interactive 3D manipulation handles for translating/moving
@@ -64,60 +65,60 @@ const GLANCE_EPSILON = 0.98;
  */
 class TranslateGizmo extends TransformGizmo {
     _shapes = {
-        face: new SphereShape(this._device, {
-            axis: GIZMOAXIS_FACE,
+        xyz: new SphereShape(this._device, {
+            axis: GIZMOAXIS_XYZ,
             layers: [this._layer.id],
             shading: this._shading,
-            defaultColor: this._meshColors.axis.xyz,
-            hoverColor: this._meshColors.hover.xyz
+            defaultColor: this._theme.axis.xyz,
+            hoverColor: this._theme.hover.xyz
         }),
         yz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._meshColors.axis.x,
-            hoverColor: this._meshColors.hover.x
+            defaultColor: this._theme.axis.x,
+            hoverColor: this._theme.hover.x
         }),
         xz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._meshColors.axis.y,
-            hoverColor: this._meshColors.hover.y
+            defaultColor: this._theme.axis.y,
+            hoverColor: this._theme.hover.y
         }),
         xy: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._meshColors.axis.z,
-            hoverColor: this._meshColors.hover.z
+            defaultColor: this._theme.axis.z,
+            hoverColor: this._theme.hover.z
         }),
         x: new ArrowShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._meshColors.axis.x,
-            hoverColor: this._meshColors.hover.x
+            defaultColor: this._theme.axis.x,
+            hoverColor: this._theme.hover.x
         }),
         y: new ArrowShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._meshColors.axis.y,
-            hoverColor: this._meshColors.hover.y
+            defaultColor: this._theme.axis.y,
+            hoverColor: this._theme.hover.y
         }),
         z: new ArrowShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._meshColors.axis.z,
-            hoverColor: this._meshColors.hover.z
+            defaultColor: this._theme.axis.z,
+            hoverColor: this._theme.hover.z
         })
     };
 
@@ -143,11 +144,28 @@ class TranslateGizmo extends TransformGizmo {
     snapIncrement = 1;
 
     /**
+     * Whether to flip the axes to face the camera.
+     *
+     * @type {boolean}
+     */
+    flipAxes = true;
+
+    /**
      * Flips the planes to face the camera.
      *
      * @type {boolean}
      */
-    flipShapes = true;
+    flipPlanes = true;
+
+    /**
+     * Whether to hide the shapes when dragging. This can be one of the following:
+     * - 'show': always show the shapes
+     * - 'hide': hide the shapes when dragging
+     * - 'selected': show only the axis shapes for the affected axes
+     *
+     * @type {'show' | 'hide' | 'selected'}
+     */
+    dragMode = 'show';
 
     /**
      * Creates a new TranslateGizmo object. Use {@link Gizmo.createLayer} to create the layer
@@ -164,7 +182,11 @@ class TranslateGizmo extends TransformGizmo {
         this._createTransform();
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
+            // store the initial positions of the nodes
             this._storeNodePositions();
+
+            // hide shapes that are not selected
+            this._drag(true);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
@@ -175,6 +197,10 @@ class TranslateGizmo extends TransformGizmo {
                 pointDelta.mulScalar(this.snapIncrement);
             }
             this._setNodePositions(pointDelta);
+        });
+
+        this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+            this._drag(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
@@ -333,7 +359,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     set axisCenterSize(value) {
-        this._shapes.face.size = value;
+        this._shapes.xyz.size = value;
     }
 
     /**
@@ -342,7 +368,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     get axisCenterSize() {
-        return this._shapes.face.size;
+        return this._shapes.xyz.size;
     }
 
     /**
@@ -351,7 +377,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     set axisCenterTolerance(value) {
-        this._shapes.face.tolerance = value;
+        this._shapes.xyz.tolerance = value;
     }
 
     /**
@@ -360,7 +386,26 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     get axisCenterTolerance() {
-        return this._shapes.face.tolerance;
+        return this._shapes.xyz.tolerance;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link TranslateGizmo#flipAxes} or {@link TranslateGizmo#flipPlanes} instead.
+     * @ignore
+     */
+    set flipShapes(value) {
+        this.flipAxes = value;
+        this.flipPlanes = value;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link TranslateGizmo#flipAxes} or {@link TranslateGizmo#flipPlanes} instead.
+     * @ignore
+     */
+    get flipShapes() {
+        return this.flipAxes && this.flipPlanes;
     }
 
     /**
@@ -394,36 +439,70 @@ class TranslateGizmo extends TransformGizmo {
         // axes
         let dot = cameraDir.dot(this.root.right);
         this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipAxes) {
             this._shapes.x.flipped = dot < 0;
         }
         dot = cameraDir.dot(this.root.up);
         this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipAxes) {
             this._shapes.y.flipped = dot < 0;
         }
         dot = cameraDir.dot(this.root.forward);
         this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipAxes) {
             this._shapes.z.flipped = dot > 0;
         }
 
         // planes
         tmpV1.cross(cameraDir, this.root.right);
         this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipPlanes) {
             this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
         }
         tmpV1.cross(cameraDir, this.root.forward);
         this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipPlanes) {
             this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
         }
         tmpV1.cross(cameraDir, this.root.up);
         this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
-        if (this.flipShapes) {
+        if (this.flipPlanes) {
             this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
         }
+    }
+
+    /**
+     * @param {boolean} state - The state.
+     * @private
+     */
+    _drag(state) {
+        for (const axis in this._shapes) {
+            const shape = this._shapes[axis];
+            switch (this.dragMode) {
+                case 'show': {
+                    continue;
+                }
+                case 'hide': {
+                    shape.visible = !state;
+                    continue;
+                }
+                case 'selected': {
+                    // facing axis
+                    if (this._selectedAxis === GIZMOAXIS_XYZ) {
+                        shape.visible = state ? axis.length === 1 : true;
+                        continue;
+                    }
+                    // planes
+                    if (this._selectedIsPlane) {
+                        shape.visible = state ? axis.length === 1 && !axis.includes(this._selectedAxis) : true;
+                        continue;
+                    }
+                    shape.visible = state ? axis === this._selectedAxis : true;
+                }
+            }
+        }
+
+        this.fire(TransformGizmo.EVENT_RENDERUPDATE);
     }
 
     /**
@@ -483,7 +562,7 @@ class TranslateGizmo extends TransformGizmo {
         const isPlane = this._selectedIsPlane;
 
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, !isPlane);
+        const plane = this._createPlane(axis, axis === GIZMOAXIS_XYZ, !isPlane);
 
         const point = new Vec3();
 
@@ -492,11 +571,36 @@ class TranslateGizmo extends TransformGizmo {
         // rotate point back to world coords
         tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
 
-        if (!isPlane && axis !== GIZMOAXIS_FACE) {
+        if (!isPlane && axis !== GIZMOAXIS_XYZ) {
             this._projectToAxis(point, axis);
         }
 
         return point;
+    }
+
+    /**
+     * @param {Vec3} pos - The position.
+     * @param {Quat} rot - The rotation.
+     * @param {string} activeAxis - The active axis.
+     * @param {boolean} activeIsPlane - Whether the active axis is a plane.
+     * @override
+     */
+    _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
+        for (const axis of AXES) {
+            if (this._dragging || activeAxis === GIZMOAXIS_XYZ) {
+                this._drawSpanLine(pos, rot, axis);
+                continue;
+            }
+            if (activeIsPlane) {
+                if (axis !== activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
+                }
+            } else {
+                if (axis === activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
+                }
+            }
+        }
     }
 
     /**
