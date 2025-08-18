@@ -23,10 +23,10 @@ const tmpV4 = new Vec3();
 const tmpM1 = new Mat4();
 const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
+const tmpC1 = new Color();
 
 // constants
 const FACING_THRESHOLD = 0.9;
-const GUIDE_ANGLE_COLOR = new Color(0, 0, 0, 0.3);
 
 /**
  * The RotateGizmo provides interactive 3D manipulation handles for rotating/reorienting
@@ -133,14 +133,6 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _nodeOffsets = new Map();
-
-    /**
-     * Internal color for guide angle starting line.
-     *
-     * @type {Color}
-     * @private
-     */
-    _guideAngleStartColor = GUIDE_ANGLE_COLOR.clone();
 
     /**
      * Internal vector for the start point of the guide line angle.
@@ -358,12 +350,11 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * @param {Vec3} pos - The position.
-     * @param {string} axis - The axis.
      * @param {Vec3} point - The point.
-     * @param {Color} [color] - The color.
+     * @param {Color} color - The color.
      * @private
      */
-    _drawGuideAngleLine(pos, axis, point, color = this._theme.guideBase[axis]) {
+    _drawGuideAngleLine(pos, point, color) {
         tmpV1.set(0, 0, 0);
         tmpV2.copy(point).mulScalar(this._scale);
         if (color.a !== 0) {
@@ -565,9 +556,11 @@ class RotateGizmo extends TransformGizmo {
 
         if (this._dragging) {
             const gizmoPos = this.root.getPosition();
-            this._drawGuideAngleLine(gizmoPos, this._selectedAxis,
-                this._guideAngleStart, this._guideAngleStartColor);
-            this._drawGuideAngleLine(gizmoPos, this._selectedAxis, this._guideAngleEnd);
+            const color = this._theme.guideBase[this._selectedAxis];
+            const startColor = tmpC1.copy(color);
+            startColor.a *= 0.3;
+            this._drawGuideAngleLine(gizmoPos, this._guideAngleStart, startColor);
+            this._drawGuideAngleLine(gizmoPos, this._guideAngleEnd, color);
         }
     }
 }
