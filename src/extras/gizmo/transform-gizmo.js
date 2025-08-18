@@ -99,7 +99,7 @@ class TransformGizmo extends Gizmo {
      * @type {GizmoTheme}
      * @protected
      */
-    _theme = Object.freeze({
+    _theme = {
         shapeBase: {
             x: color4from3(COLOR_RED, 0.6),
             y: color4from3(COLOR_GREEN, 0.6),
@@ -122,7 +122,7 @@ class TransformGizmo extends Gizmo {
         },
         guideOcclusion: 1,
         disabled: COLOR_GRAY.clone()
-    });
+    };
 
     /**
      * Internal gizmo starting rotation in world space.
