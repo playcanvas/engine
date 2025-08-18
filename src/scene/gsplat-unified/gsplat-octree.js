@@ -31,6 +31,13 @@ class GSplatOctree {
     assetFileUrl;
 
     /**
+     * Pre-computed base directory for resolving relative URLs.
+     *
+     * @type {string}
+     */
+    baseDir;
+
+    /**
      * Resources of individual files, identified by their filename.
      *
      * @type {Map<string, GSplatResource>}
@@ -46,6 +53,7 @@ class GSplatOctree {
         this.files = data.filenames;
         this.lodLevels = data.lodLevels;
         this.assetFileUrl = assetFileUrl;
+        this.baseDir = path.getDirectory(assetFileUrl);
 
         // Extract leaf nodes from hierarchical tree structure
         const leafNodes = [];
@@ -104,9 +112,8 @@ class GSplatOctree {
     }
 
     getFullUrl(url) {
-        // Extract the base directory from the asset file URL and join with the relative URL
-        const baseUrl = path.getDirectory(this.assetFileUrl);
-        return path.join(baseUrl, url);
+        // Use pre-computed base directory for fast path joining
+        return path.join(this.baseDir, url);
     }
 
     getFileResource(url) {
@@ -122,7 +129,6 @@ class GSplatOctree {
      * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
      */
     ensureFileResource(url, assetLoader) {
-        const fullUrl = this.getFullUrl(url);
 
         // Check if we already have the resource
         if (this.fileResources.has(url)) {
@@ -130,6 +136,7 @@ class GSplatOctree {
         }
 
         // Check if the resource is now available from the asset loader
+        const fullUrl = this.getFullUrl(url);
         const res = assetLoader.getResource(fullUrl);
         if (res) {
             this.fileResources.set(url, res);

@@ -57,6 +57,9 @@ function UnifiedSortWorker() {
             // source centers
             const id = ids[paramIdx];
             const centers = centersMap.get(id);
+            if (!centers) {
+                console.error('UnifiedSortWorker: No centers found for id', id);
+            }
 
             // start index in unified buffer
             let targetIndex = lineStarts[paramIdx] * textureSize;
@@ -85,6 +88,11 @@ function UnifiedSortWorker() {
 
             // add padding, to make sure the whole buffer (including padding) is sorted
             countBuffer[0] += padding[paramIdx];
+
+            // set distance values for padding positions to prevent garbage data
+            for (let p = 0; p < padding[paramIdx]; p++) {
+                distances[targetIndex++] = 0;
+            }
         }
     };
 
@@ -130,8 +138,7 @@ function UnifiedSortWorker() {
         // const maxDist = 10;
 
 
-        const textureSize = centersData.textureSize;
-        const numVertices = textureSize * textureSize;
+        const numVertices = centersData.totalUsedPixels;
 
         // calculate number of bits needed to store sorting result
         const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));

@@ -26,13 +26,6 @@ class GSplatPlacement {
     node;
 
     /**
-     * Whether this placement is a secondary placement, generated from an octree.
-     *
-     * @type {boolean}
-     */
-    secondary = false;
-
-    /**
      * Map of intervals for octree nodes using this placement.
      * Key is octree node index, value is Vec2 representing start and end index (inclusive).
      *
@@ -52,13 +45,12 @@ class GSplatPlacement {
      *
      * @param {GSplatResource|null} resource - The resource of the splat.
      * @param {GraphNode} node - The node that the gsplat is linked to.
-     * @param {boolean} secondary - Whether this placement is a secondary placement, generated from
-     * an octree.
+     * @param {number} lodIndex - The LOD index for this placement.
      */
-    constructor(resource, node, secondary = false) {
+    constructor(resource, node, lodIndex = 0) {
         this.resource = resource;
         this.node = node;
-        this.secondary = secondary;
+        this.lodIndex = lodIndex;
     }
 }
 

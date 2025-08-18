@@ -96,11 +96,11 @@ class GSplatUnifiedSorter extends EventHandler {
     }
 
     /**
-     * Sends a payload to the sorter.
+     * Sets sort parameters data for sorting of splats.
      *
-     * @param {object} payload - The payload to send.
+     * @param {object} payload - The sort parameters payload to send.
      */
-    setIntervals(payload) {
+    setSortParameters(payload) {
 
         // we have a new version to process
         this.hasNewVersion = true;
