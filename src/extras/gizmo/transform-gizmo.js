@@ -11,6 +11,7 @@ import {
     COLOR_BLUE,
     COLOR_YELLOW,
     COLOR_GRAY,
+    COLOR_TRANSPARENT,
     color4from3
 } from './color.js';
 import { GIZMOAXIS_FACE, GIZMOAXIS_XYZ } from './constants.js';
@@ -121,11 +122,11 @@ class TransformGizmo extends Gizmo {
             f: COLOR_YELLOW.clone()
         },
         guideOccluded: {
-            x: color4from3(COLOR_RED, 0.1),
-            y: color4from3(COLOR_GREEN, 0.1),
-            z: color4from3(COLOR_BLUE, 0.1),
-            xyz: color4from3(Color.WHITE, 0.1),
-            f: color4from3(COLOR_YELLOW, 0.1)
+            x: COLOR_TRANSPARENT.clone(),
+            y: COLOR_TRANSPARENT.clone(),
+            z: COLOR_TRANSPARENT.clone(),
+            xyz: COLOR_TRANSPARENT.clone(),
+            f: COLOR_TRANSPARENT.clone()
         },
         disabled: COLOR_GRAY.clone()
     };
@@ -381,7 +382,7 @@ class TransformGizmo extends Gizmo {
                 x: value
             },
             guideOccluded: {
-                x: color4from3(value, 0)
+                x: COLOR_TRANSPARENT.clone()
             }
         });
     }
@@ -412,7 +413,7 @@ class TransformGizmo extends Gizmo {
                 y: value
             },
             guideOccluded: {
-                y: color4from3(value, 0)
+                y: COLOR_TRANSPARENT.clone()
             }
         });
     }
@@ -443,7 +444,7 @@ class TransformGizmo extends Gizmo {
                 z: value
             },
             guideOccluded: {
-                z: color4from3(value, 0)
+                z: COLOR_TRANSPARENT.clone()
             }
         });
     }
@@ -685,8 +686,12 @@ class TransformGizmo extends Gizmo {
         tmpV2.copy(tmpV1).mulScalar(-1);
         const from = rot.transformVector(tmpV1, tmpV1).add(pos);
         const to = rot.transformVector(tmpV2, tmpV2).add(pos);
-        this._app.drawLine(from, to, this._theme.guideOccluded[axis], false, this._layer);
-        this._app.drawLine(from, to, this._theme.guideBase[axis], true);
+        if (this._theme.guideOccluded[axis].a !== 0) {
+            this._app.drawLine(from, to, this._theme.guideOccluded[axis], false, this._layer);
+        }
+        if (this._theme.guideBase[axis].a !== 0) {
+            this._app.drawLine(from, to, this._theme.guideBase[axis], true);
+        }
     }
 
     /**
