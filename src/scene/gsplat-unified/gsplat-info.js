@@ -1,19 +1,31 @@
 import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { Vec3 } from '../../core/math/vec3.js';
 import { SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import { GSplatState } from './gspat-state.js';
+import { Vec4 } from '../../core/math/vec4.js';
 import glslGsplatCopyToWorkBufferPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
 import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
+import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
 
 /**
  * @import { GraphicsDevice } from "../../platform/graphics/graphics-device.js";
  * @import { GSplatResource } from "../gsplat/gsplat-resource.js"
  * @import { GSplatPlacement } from "./gsplat-placement.js"
+ * @import { GraphNode } from '../graph-node.js';
  */
+
+const _lodColors = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+    [1, 1, 0],
+    [1, 0, 1]
+];
+
+// enable to colorize LODs
+const colorizeLod = false;
 
 const _viewMat = new Mat4();
 
@@ -27,36 +39,40 @@ class GSplatInfo {
     /** @type {GSplatResource} */
     resource;
 
+    /** @type {GraphNode} */
+    node;
+
+    /** @type {number} */
+    lodIndex;
+
     /** @type {number} */
     numSplats;
 
-    /** @type {GSplatPlacement} */
-    placement;
+    /** @type {number} */
+    activeSplats = 0;
 
     /**
-     * The state of the splat currently used for rendering. This matches the work buffer.
+     * Array of intervals for remapping of indices, each two consecutive numbers represent
+     * start and end of a range of splats.
      *
-     * @type {GSplatState}
+     * @type {number[]}
      */
-    renderState;
+    intervals = [];
 
-    /**
-     * The state of the splat currently used for sorting. When the sorting is done, this state will
-     * become the render state. This is where the next render state is prepared, but it's not used
-     * until we get back the sorting data.
-     *
-     * @type {GSplatState|null}
-     */
-    prepareState = null;
+    /** @type {number} */
+    lineStart = 0;
 
-    /** @type {GSplatState|null} */
-    unusedState = null;
+    /** @type {number} */
+    lineCount = 0;
+
+    /** @type {number} */
+    padding = 0;
+
+    /** @type {Vec4} */
+    viewport = new Vec4();
 
     /** @type {Mat4} */
     previousWorldTransform = new Mat4();
-
-    /** @type {Vec3} */
-    previousPosition = new Vec3();
 
     /** @type {number} */
     updateVersion = 0;
@@ -67,6 +83,13 @@ class GSplatInfo {
      * @type {ShaderMaterial}
      */
     material;
+
+    /**
+     * Manager for the intervals texture generation
+     *
+     * @type {GSplatIntervalTexture}
+     */
+    intervalTexture;
 
     /**
      * Create a new GSplatInfo.
@@ -81,19 +104,37 @@ class GSplatInfo {
 
         this.device = device;
         this.resource = resource;
-        this.placement = placement;
+        this.node = placement.node;
+        this.lodIndex = placement.lodIndex;
         this.numSplats = resource.centers.length / 3;
-        this.renderState = new GSplatState(device, resource, placement);
-        this.unusedState = new GSplatState(device, resource, placement);
+
+        this.intervalTexture = new GSplatIntervalTexture(device);
+        this.updateIntervals(placement.intervals);
 
         this.material = new ShaderMaterial();
         resource.configureMaterial(this.material);
 
+        this.copyShader = this.createCopyShader(placement.intervals);
+    }
+
+    destroy() {
+        this.device = null;
+        this.resource = null;
+        this.copyShader = null;
+
+        this.intervals.length = 0;
+        this.intervalTexture.destroy();
+        this.material.destroy();
+    }
+
+    createCopyShader(intervals) {
+
         // defines configured on the material that set up correct shader variant to be compiled
         const defines = new Map(this.material.defines);
-        if (placement.intervals.size > 0) defines.set('GSPLAT_LOD', '');
+        if (intervals.size > 0) defines.set('GSPLAT_LOD', '');
+        if (colorizeLod) defines.set('GSPLAT_COLORIZE', '');
         const definesKey = Array.from(defines.entries()).map(([k, v]) => `${k}=${v}`).join(';');
-        this.copyShader = ShaderUtils.createShader(device, {
+        return ShaderUtils.createShader(this.device, {
             uniqueName: `SplatCopyToWorkBuffer:${definesKey}`,
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexDefines: defines,
@@ -104,86 +145,59 @@ class GSplatInfo {
         });
     }
 
-    destroy() {
-        this.device = null;
-        this.resource = null;
-        this.renderState?.destroy();
-        this.renderState = null;
-        this.prepareState?.destroy();
-        this.prepareState = null;
-        this.unusedState?.destroy();
-        this.unusedState = null;
+    setLines(start, count, textureSize, activeSplats) {
+        this.lineStart = start;
+        this.lineCount = count;
+        this.padding = textureSize * count - activeSplats;
+        Debug.assert(this.padding >= 0);
+        this.viewport.set(0, start, textureSize, count);
     }
 
-    activatePrepareState() {
+    updateIntervals(intervals) {
 
-        Debug.assert(this.renderState);
-        Debug.assert(this.prepareState);
+        const resource = this.resource;
+        this.intervals.length = 0;
+        this.activeSplats = resource.numSplats;
 
-        // no longer using render state, keep it for the future
-        this.unusedState = this.renderState;
+        // If placement has intervals defined
+        if (intervals.size > 0) {
 
-        // prepared state is now used for rendering
-        this.renderState = this.prepareState;
+            // copy the intervals to the state
+            for (const interval of intervals.values()) {
+                this.intervals.push(interval.x, interval.y + 1);
+            }
 
-        // done preparing
-        // TODO: can we release some data here
-        this.prepareState = null;
-    }
-
-    startPrepareState() {
-
-        // swap states
-        Debug.assert(this.prepareState === null);
-        this.prepareState = this.unusedState;
-        Debug.assert(this.prepareState);
-        this.unusedState = null;
-
-        // this updates LOD intervals and interval texture
-        this.prepareState.update();
-    }
-
-    cancelPrepareState() {
-        if (this.prepareState) {
-            this.unusedState = this.prepareState;
-            this.prepareState = null;
+            this.activeSplats = this.intervalTexture.update(this.intervals);
         }
     }
 
     update(updateVersion) {
 
         // if the object's matrix has changed, store the update version to know when it happened
-        const worldMatrix = this.placement.node.getWorldTransform();
+        const worldMatrix = this.node.getWorldTransform();
         const worldMatrixChanged = !this.previousWorldTransform.equals(worldMatrix);
         if (worldMatrixChanged) {
             this.previousWorldTransform.copy(worldMatrix);
             this.updateVersion = updateVersion;
         }
 
-        // if position has moved by more than 1 meter, mark lod dirty
-        const position = this.placement.node.getPosition();
-        const length = position.distance(this.previousPosition);
-        if (length > 1) {
-            this.previousPosition.copy(position);
-        }
-
-        // return true if position has moved by more than 1 meter, which requires LOD to be re-calculated
-        return length > 1;
+        return worldMatrixChanged;
     }
 
-    render(renderTarget, cameraNode) {
+    render(renderTarget, cameraNode, lodIndex = 0) {
         const { device, resource } = this;
         const scope = device.scope;
         Debug.assert(resource);
 
         // render using render state
-        const { activeSplats, lineStart, viewport, intervalTexture } = this.renderState;
+        const { activeSplats, lineStart, viewport, intervalTexture } = this;
+        Debug.assert(activeSplats > 0);
 
         // assign material properties to scope
         this.material.setParameters(this.device);
 
         // matrix to transform splats to the world space
-        scope.resolve('uTransform').setValue(this.placement.node.getWorldTransform().data);
+        scope.resolve('uTransform').setValue(this.node.getWorldTransform().data);
 
         if (intervalTexture.texture) {
             // Set LOD intervals texture for remapping of indices
@@ -194,8 +208,12 @@ class GSplatInfo {
         scope.resolve('uStartLine').setValue(lineStart);
         scope.resolve('uViewportWidth').setValue(viewport.z);
 
+        if (colorizeLod) {
+            scope.resolve('uLodColor').setValue(_lodColors[lodIndex]);
+        }
+
         // SH related
-        scope.resolve('matrix_model').setValue(this.placement.node.getWorldTransform().data);
+        scope.resolve('matrix_model').setValue(this.node.getWorldTransform().data);
 
         const viewInvMat = cameraNode.getWorldTransform();
         const viewMat = _viewMat.copy(viewInvMat).invert();

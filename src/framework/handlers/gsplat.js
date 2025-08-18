@@ -31,7 +31,7 @@ class GSplatHandler extends ResourceHandler {
     _getParser(url) {
 
         const basename = path.getBasename(this._getUrlWithoutParams(url)).toLowerCase();
-        if (basename.endsWith('.gsplat-octree.json')) {
+        if (basename === 'lod-meta.json') {
             return this.parsers.octree;
         }
 
