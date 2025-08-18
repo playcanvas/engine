@@ -49,8 +49,10 @@ app.on('destroy', () => {
 pc.Tracing.set(pc.TRACEID_SHADER_ALLOC, true);
 
 const assets = {
-    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
-    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/lod/logo.gsplat-octree.json` }),
+    // church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
+    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco/lod-meta.json` }),
+    // church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/garage/lod-meta.json` }),
+    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/lod/lod-meta.json` }),
     guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
     skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.ply` })
 };
@@ -60,7 +62,7 @@ assetListLoader.load(() => {
     app.start();
 
     // create a splat entity and place it in the world
-    const skull = new pc.Entity();
+    const skull = new pc.Entity('skull');
     skull.addComponent('gsplat', {
         asset: assets.skull,
         unified: true
@@ -71,7 +73,7 @@ assetListLoader.load(() => {
     app.root.addChild(skull);
 
     // create a splat entity and place it in the world
-    const logo = new pc.Entity();
+    const logo = new pc.Entity('logo');
     logo.addComponent('gsplat', {
         asset: assets.logo,
         unified: true
@@ -82,7 +84,7 @@ assetListLoader.load(() => {
     logo.setLocalScale(0.5, 0.5, 0.5);
 
     // create a splat entity and place it in the world
-    const church = new pc.Entity();
+    const church = new pc.Entity('church');
     church.addComponent('gsplat', {
         asset: assets.church,
         unified: true
@@ -90,7 +92,7 @@ assetListLoader.load(() => {
     app.root.addChild(church);
     church.setLocalEulerAngles(180, 90, 0);
 
-    const guitar = new pc.Entity();
+    const guitar = new pc.Entity('guitar');
     guitar.addComponent('gsplat', {
         asset: assets.guitar,
         unified: true
@@ -122,10 +124,10 @@ assetListLoader.load(() => {
     });
 
 
-    let timeToChange = 1;
+    let timeToChange = 3;
     let time = 0;
     let guitarTime = 0;
-    let added = false;
+    let added = true;
     app.on('update', (/** @type {number} */ dt) => {
         time += dt;
         timeToChange -= dt;
@@ -141,16 +143,16 @@ assetListLoader.load(() => {
         if (timeToChange <= 0) {
 
             if (!added) {
-                console.log('adding skull');
+                // console.log('adding skull');
                 added = true;
-                timeToChange = 1;
+                timeToChange = 3;
 
                 skull.enabled = true;
 
             } else {
-                console.log('removing skull');
+                // console.log('removing skull');
                 added = false;
-                timeToChange = 1;
+                timeToChange = 3;
 
                 skull.enabled = false;
             }
