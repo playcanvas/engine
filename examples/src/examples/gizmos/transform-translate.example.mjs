@@ -99,26 +99,27 @@ data.set('gizmo', {
     snap: gizmo.snap,
     snapIncrement: gizmo.snapIncrement,
     theme: {
-        axis: {
-            x: gizmo.theme.axis.x.toArray(),
-            y: gizmo.theme.axis.y.toArray(),
-            z: gizmo.theme.axis.z.toArray(),
-            xyz: gizmo.theme.axis.xyz.toArray(),
-            f: gizmo.theme.axis.f.toArray()
+        shapeBase: {
+            x: gizmo.theme.shapeBase.x.toArray(),
+            y: gizmo.theme.shapeBase.y.toArray(),
+            z: gizmo.theme.shapeBase.z.toArray(),
+            xyz: gizmo.theme.shapeBase.xyz.toArray(),
+            f: gizmo.theme.shapeBase.f.toArray()
         },
-        hover: {
-            x: gizmo.theme.hover.x.toArray(),
-            y: gizmo.theme.hover.y.toArray(),
-            z: gizmo.theme.hover.z.toArray(),
-            xyz: gizmo.theme.hover.xyz.toArray(),
-            f: gizmo.theme.hover.f.toArray()
+        shapeHover: {
+            x: gizmo.theme.shapeHover.x.toArray(),
+            y: gizmo.theme.shapeHover.y.toArray(),
+            z: gizmo.theme.shapeHover.z.toArray(),
+            xyz: gizmo.theme.shapeHover.xyz.toArray(),
+            f: gizmo.theme.shapeHover.f.toArray()
         },
-        guide: {
-            x: gizmo.theme.guide.x.toArray(),
-            y: gizmo.theme.guide.y.toArray(),
-            z: gizmo.theme.guide.z.toArray(),
-            f: gizmo.theme.guide.f.toArray()
+        guideBase: {
+            x: gizmo.theme.guideBase.x.toArray(),
+            y: gizmo.theme.guideBase.y.toArray(),
+            z: gizmo.theme.guideBase.z.toArray(),
+            f: gizmo.theme.guideBase.f.toArray()
         },
+        guideOcclusion: gizmo.theme.guideOcclusion,
         disabled: gizmo.theme.disabled.toArray()
     },
     coordSpace: gizmo.coordSpace,
@@ -160,11 +161,17 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         }
         case 'gizmo': {
             if (key === 'theme') {
-                gizmo.setTheme({
-                    [parts[0]]: {
-                        [parts[1]]: tmpC.fromArray(value)
-                    }
-                });
+                if (parts.length === 0) {
+                    return;
+                }
+                const theme = /** @type {any} */ ({});
+                let cursor = theme;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    cursor[parts[i]] = {};
+                    cursor = cursor[parts[i]];
+                }
+                cursor[parts[parts.length - 1]] = Array.isArray(value) ? tmpC.fromArray(value) : value;
+                gizmo.setTheme(theme);
                 return;
             }
             // @ts-ignore

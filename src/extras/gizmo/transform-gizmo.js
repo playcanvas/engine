@@ -1,3 +1,4 @@
+import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
@@ -11,7 +12,6 @@ import {
     COLOR_BLUE,
     COLOR_YELLOW,
     COLOR_GRAY,
-    COLOR_TRANSPARENT,
     color4from3
 } from './color.js';
 import { GIZMOAXIS_FACE, GIZMOAXIS_XYZ } from './constants.js';
@@ -25,20 +25,19 @@ import { Gizmo } from './gizmo.js';
  */
 
 /**
- * @typedef {object} GizmoColorGroup
+ * @typedef {object} GizmoAxisColor
  * @property {Color} x - The X axis color.
  * @property {Color} y - The Y axis color.
  * @property {Color} z - The Z axis color.
- * @property {Color} xyz - The XYZ axis color.
  * @property {Color} f - The face axis color.
  */
 
 /**
  * @typedef {object} GizmoTheme
- * @property {GizmoColorGroup} shapeBase - The axis colors.
- * @property {GizmoColorGroup} shapeHover - The hover colors.
- * @property {GizmoColorGroup} guideBase - The guide line colors.
- * @property {GizmoColorGroup} guideOccluded - The occluded colors.
+ * @property {GizmoAxisColor & { xyz: Color }} shapeBase - The axis colors.
+ * @property {GizmoAxisColor& { xyz: Color }} shapeHover - The hover colors.
+ * @property {GizmoAxisColor} guideBase - The guide line colors.
+ * @property {number} guideOcclusion - The guide occlusion value. Defaults to 1.
  * @property {Color} disabled - The disabled color.
  */
 
@@ -47,6 +46,7 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
+const tmpC1 = new Color();
 
 // constants
 const AXES = ['x', 'y', 'z'];
@@ -99,7 +99,7 @@ class TransformGizmo extends Gizmo {
      * @type {GizmoTheme}
      * @protected
      */
-    _theme = {
+    _theme = Object.freeze({
         shapeBase: {
             x: color4from3(COLOR_RED, 0.6),
             y: color4from3(COLOR_GREEN, 0.6),
@@ -118,18 +118,11 @@ class TransformGizmo extends Gizmo {
             x: COLOR_RED.clone(),
             y: COLOR_GREEN.clone(),
             z: COLOR_BLUE.clone(),
-            xyz: Color.WHITE.clone(),
             f: COLOR_YELLOW.clone()
         },
-        guideOccluded: {
-            x: COLOR_TRANSPARENT.clone(),
-            y: COLOR_TRANSPARENT.clone(),
-            z: COLOR_TRANSPARENT.clone(),
-            xyz: COLOR_TRANSPARENT.clone(),
-            f: COLOR_TRANSPARENT.clone()
-        },
+        guideOcclusion: 1,
         disabled: COLOR_GRAY.clone()
-    };
+    });
 
     /**
      * Internal gizmo starting rotation in world space.
@@ -381,9 +374,7 @@ class TransformGizmo extends Gizmo {
             guideBase: {
                 x: value
             },
-            guideOccluded: {
-                x: COLOR_TRANSPARENT.clone()
-            }
+            guideOcclusion: 1
         });
     }
 
@@ -412,9 +403,7 @@ class TransformGizmo extends Gizmo {
             guideBase: {
                 y: value
             },
-            guideOccluded: {
-                y: COLOR_TRANSPARENT.clone()
-            }
+            guideOcclusion: 1
         });
     }
 
@@ -443,9 +432,7 @@ class TransformGizmo extends Gizmo {
             guideBase: {
                 z: value
             },
-            guideOccluded: {
-                z: COLOR_TRANSPARENT.clone()
-            }
+            guideOcclusion: 1
         });
     }
 
@@ -686,11 +673,14 @@ class TransformGizmo extends Gizmo {
         tmpV2.copy(tmpV1).mulScalar(-1);
         const from = rot.transformVector(tmpV1, tmpV1).add(pos);
         const to = rot.transformVector(tmpV2, tmpV2).add(pos);
-        if (this._theme.guideOccluded[axis].a !== 0) {
-            this._app.drawLine(from, to, this._theme.guideOccluded[axis], false, this._layer);
+        const color = this._theme.guideBase[axis];
+        if (this._theme.guideOcclusion < 1) {
+            const occluded = tmpC1.copy(color);
+            occluded.a *= (1 - this._theme.guideOcclusion);
+            this._app.drawLine(from, to, occluded, false, this._layer);
         }
-        if (this._theme.guideBase[axis].a !== 0) {
-            this._app.drawLine(from, to, this._theme.guideBase[axis], true);
+        if (color.a !== 0) {
+            this._app.drawLine(from, to, color, true);
         }
     }
 
@@ -767,40 +757,33 @@ class TransformGizmo extends Gizmo {
         if (typeof theme !== 'object' ||
             typeof theme.shapeBase !== 'object' ||
             typeof theme.shapeHover !== 'object' ||
-            typeof theme.guideBase !== 'object' ||
-            typeof theme.guideOccluded !== 'object') {
+            typeof theme.guideBase !== 'object') {
             return;
         }
 
-        // axis colors
+        // shape
         for (const axis in theme.shapeBase) {
             if (theme.shapeBase[axis] instanceof Color) {
                 this._theme.shapeBase[axis].copy(theme.shapeBase[axis]);
             }
         }
-
-        // hover colors
         for (const axis in theme.shapeHover) {
             if (theme.shapeHover[axis] instanceof Color) {
                 this._theme.shapeHover[axis].copy(theme.shapeHover[axis]);
             }
         }
 
-        // guide colors
+        // guide
         for (const axis in theme.guideBase) {
             if (theme.guideBase[axis] instanceof Color) {
                 this._theme.guideBase[axis].copy(theme.guideBase[axis]);
             }
         }
-
-        // occluded colors
-        for (const axis in theme.guideOccluded) {
-            if (theme.guideOccluded[axis] instanceof Color) {
-                this._theme.guideOccluded[axis].copy(theme.guideOccluded[axis]);
-            }
+        if (typeof theme.guideOcclusion === 'number') {
+            this._theme.guideOcclusion = math.clamp(theme.guideOcclusion, 0, 1);
         }
 
-        // disabled color
+        // disabled
         if (theme.disabled instanceof Color) {
             this._theme.disabled.copy(theme.disabled);
         }
