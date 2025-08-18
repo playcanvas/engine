@@ -79,6 +79,8 @@ camera.script.create('orbitCameraInputTouch');
 camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
 orbitCamera.distance = 5 * camera.camera.aspectRatio;
+orbitCamera.pitchAngleMax = 89.99;
+orbitCamera.pitchAngleMin = -89.99;
 data.set('camera', {
     proj: camera.camera.projection + 1,
     fov: camera.camera.fov
