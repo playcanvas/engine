@@ -16,6 +16,7 @@ import {
 } from './color.js';
 import { GIZMOAXIS_FACE, GIZMOAXIS_XYZ } from './constants.js';
 import { Gizmo } from './gizmo.js';
+import { Debug } from '../../core/debug.js';
 
 /**
  * @import { Shape } from './shape/shape.js'
@@ -716,6 +717,10 @@ class TransformGizmo extends Gizmo {
      * @param {boolean} enabled - The enabled state of shape.
      */
     enableShape(shapeAxis, enabled) {
+        if (shapeAxis === 'face') {
+            Debug.deprecated('"face" literal is deprecated used "GIZMOAXIS_FACE" or "f" literal instead');
+            shapeAxis = GIZMOAXIS_FACE;
+        }
         if (!this._shapes.hasOwnProperty(shapeAxis)) {
             return;
         }
@@ -740,6 +745,10 @@ class TransformGizmo extends Gizmo {
      * @returns {boolean} - Then enabled state of the shape
      */
     isShapeEnabled(shapeAxis) {
+        if (shapeAxis === 'face') {
+            Debug.deprecated('"face" literal is deprecated used "GIZMOAXIS_FACE" or "f" literal instead');
+            shapeAxis = GIZMOAXIS_FACE;
+        }
         if (!this._shapes.hasOwnProperty(shapeAxis)) {
             return false;
         }
