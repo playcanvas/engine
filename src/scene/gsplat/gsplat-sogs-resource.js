@@ -7,11 +7,15 @@ class GSplatSogsResource extends GSplatResourceBase {
         super.destroy();
     }
 
-    configureMaterial(material) {
-        const { gsplatData } = this;
+    configureMaterialDefines(defines) {
+        defines.set('GSPLAT_SOGS_DATA', true);
+        defines.set('SH_BANDS', this.gsplatData.shBands);
+    }
 
-        material.setDefine('GSPLAT_SOGS_DATA', true);
-        material.setDefine('SH_BANDS', this.gsplatData.shBands);
+    configureMaterial(material) {
+        this.configureMaterialDefines(material.defines);
+
+        const { gsplatData } = this;
 
         ['packedTexture', 'sh0', 'sh_centroids'].forEach((name) => {
             if (gsplatData[name]) {
