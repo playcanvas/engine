@@ -100,6 +100,7 @@ data.set('gizmo', {
     size: gizmo.size,
     snap: gizmo.snap,
     snapIncrement: gizmo.snapIncrement,
+    dragMode: gizmo.dragMode,
     orbitRotation: gizmo.orbitRotation,
     theme: {
         shapeBase: {

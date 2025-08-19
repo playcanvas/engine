@@ -158,16 +158,6 @@ class TranslateGizmo extends TransformGizmo {
     flipPlanes = true;
 
     /**
-     * Whether to hide the shapes when dragging. This can be one of the following:
-     * - 'show': always show the shapes
-     * - 'hide': hide the shapes when dragging
-     * - 'selected': show only the axis shapes for the affected axes
-     *
-     * @type {'show' | 'hide' | 'selected'}
-     */
-    dragMode = 'show';
-
-    /**
      * Creates a new TranslateGizmo object. Use {@link Gizmo.createLayer} to create the layer
      * required to display the gizmo.
      *

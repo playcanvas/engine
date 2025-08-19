@@ -58,6 +58,19 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Drag Mode' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 'show', t: 'Show' },
+                        { v: 'hide', t: 'Hide' },
+                        { v: 'selected', t: 'Selected' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.dragMode' }
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Orbit Rotation' },
                 jsx(BooleanInput, {
                     type: 'toggle',

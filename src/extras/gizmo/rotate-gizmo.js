@@ -357,7 +357,7 @@ class RotateGizmo extends TransformGizmo {
     _drawGuideAngleLine(pos, point, color) {
         tmpV1.set(0, 0, 0);
         tmpV2.copy(point).mulScalar(this._scale);
-        if (color.a !== 0) {
+        if (this.dragMode !== 'show' && color.a !== 0) {
             this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this._layer);
         }
     }
@@ -408,10 +408,28 @@ class RotateGizmo extends TransformGizmo {
     _drag(state) {
         for (const axis in this._shapes) {
             const shape = this._shapes[axis];
-            if (axis === this._selectedAxis) {
-                shape.drag(state);
-            } else {
-                shape.hide(state);
+            switch (this.dragMode) {
+                case 'show': {
+                    break;
+                }
+                case 'hide': {
+                    if (axis === this._selectedAxis) {
+                        shape.drag(state);
+                    } else {
+                        shape.hide(state);
+                    }
+                    continue;
+                }
+                case 'selected': {
+                    if (axis === this._selectedAxis) {
+                        shape.drag(state);
+                    } else {
+                        if (!state) {
+                            shape.hide(state);
+                        }
+                    }
+                    break;
+                }
             }
         }
         this.fire(TransformGizmo.EVENT_RENDERUPDATE);

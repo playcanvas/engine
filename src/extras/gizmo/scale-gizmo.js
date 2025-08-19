@@ -153,16 +153,6 @@ class ScaleGizmo extends TransformGizmo {
     flipPlanes = true;
 
     /**
-     * Whether to hide the shapes when dragging. This can be one of the following:
-     * - 'show': always show the shapes
-     * - 'hide': hide the shapes when dragging
-     * - 'selected': show only the axis shapes for the affected axes
-     *
-     * @type {'show' | 'hide' | 'selected'}
-     */
-    dragMode = 'show';
-
-    /**
      * The lower bound for scaling.
      *
      * @type {Vec3}
