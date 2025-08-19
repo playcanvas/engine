@@ -39,13 +39,6 @@ class GizmoHandler {
 
         for (const type in this._gizmos) {
             const gizmo = this._gizmos[type];
-
-            // settings
-            gizmo.setTheme({
-                guideOcclusion: 0.8
-            });
-
-            // events
             gizmo.on('pointer:down', (_x, _y, /** @type {pc.MeshInstance} */ meshInstance) => {
                 app.fire('gizmo:pointer', !!meshInstance);
             });

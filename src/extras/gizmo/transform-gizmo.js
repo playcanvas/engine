@@ -121,7 +121,7 @@ class TransformGizmo extends Gizmo {
             z: COLOR_BLUE.clone(),
             f: COLOR_YELLOW.clone()
         },
-        guideOcclusion: 1,
+        guideOcclusion: 0.8,
         disabled: COLOR_GRAY.clone()
     };
 
