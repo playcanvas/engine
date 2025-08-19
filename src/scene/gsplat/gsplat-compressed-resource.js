@@ -91,17 +91,20 @@ class GSplatCompressedResource extends GSplatResourceBase {
         super.destroy();
     }
 
+    configureMaterialDefines(defines) {
+        defines.set('GSPLAT_COMPRESSED_DATA', true);
+        defines.set('SH_BANDS', this.shTexture0 ? 3 : 0);
+    }
+
     configureMaterial(material) {
-        material.setDefine('GSPLAT_COMPRESSED_DATA', true);
+        this.configureMaterialDefines(material.defines);
+
         material.setParameter('packedTexture', this.packedTexture);
         material.setParameter('chunkTexture', this.chunkTexture);
         if (this.shTexture0) {
-            material.setDefine('SH_BANDS', 3);
             material.setParameter('shTexture0', this.shTexture0);
             material.setParameter('shTexture1', this.shTexture1);
             material.setParameter('shTexture2', this.shTexture2);
-        } else {
-            material.setDefine('SH_BANDS', 0);
         }
     }
 

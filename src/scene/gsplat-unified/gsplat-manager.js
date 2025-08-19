@@ -22,6 +22,7 @@ const translation = new Vec3();
 const invModelMat = new Mat4();
 const tempNonOctreePlacements = new Set();
 const tempOctreePlacements = new Set();
+const _updatedSplats = [];
 
 /**
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
@@ -338,12 +339,19 @@ class GSplatManager {
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (sortedState) {
             const updateVersion = ++this.updateVersion;
-            const rt = this.workBuffer.renderTarget;
+
+            // Collect splats that have been updated
             sortedState.splats.forEach((splat) => {
                 if (splat.update(updateVersion)) {
-                    splat.render(rt, this.cameraNode, splat.lodIndex);
+                    _updatedSplats.push(splat);
                 }
             });
+
+            // Batch render all updated splats in a single render pass
+            if (_updatedSplats.length > 0) {
+                this.workBuffer.render(_updatedSplats, this.cameraNode);
+                _updatedSplats.length = 0;
+            }
         }
     }
 
