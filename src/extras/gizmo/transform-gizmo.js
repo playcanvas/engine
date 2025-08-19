@@ -236,7 +236,7 @@ class TransformGizmo extends Gizmo {
      *
      * @type {'show' | 'hide' | 'selected'}
      */
-    dragMode = 'show';
+    dragMode = 'selected';
 
     /**
      * Creates a new TransformGizmo object.
