@@ -36,7 +36,7 @@ import { Debug } from '../../core/debug.js';
 /**
  * @typedef {object} GizmoTheme
  * @property {GizmoAxisColor & { xyz: Color }} shapeBase - The axis colors.
- * @property {GizmoAxisColor& { xyz: Color }} shapeHover - The hover colors.
+ * @property {GizmoAxisColor & { xyz: Color }} shapeHover - The hover colors.
  * @property {GizmoAxisColor} guideBase - The guide line colors.
  * @property {number} guideOcclusion - The guide occlusion value. Defaults to 0.8.
  * @property {Color} disabled - The disabled color.
