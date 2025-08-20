@@ -2,6 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { GSplatWorkBufferRenderPass } from './gsplat-work-buffer-render-pass.js';
 
 let id = 0;
 
@@ -39,6 +40,9 @@ class GSplatWorkBuffer {
     /** @type {Texture} */
     orderTexture;
 
+    /** @type {GSplatWorkBufferRenderPass} */
+    renderPass;
+
     constructor(device) {
         this.device = device;
 
@@ -55,9 +59,14 @@ class GSplatWorkBuffer {
         });
 
         this.orderTexture = this.createTexture('SplatGlobalOrder', PIXELFORMAT_R32U, 1, 1);
+
+        // Create the optimized render pass for batched splat rendering
+        this.renderPass = new GSplatWorkBufferRenderPass(device);
+        this.renderPass.init(this.renderTarget);
     }
 
     destroy() {
+        this.renderPass?.destroy();
         this.colorTexture?.destroy();
         this.covATexture?.destroy();
         this.covBTexture?.destroy();
@@ -113,9 +122,10 @@ class GSplatWorkBuffer {
      * @param {GraphNode} cameraNode - The camera node.
      */
     render(splats, cameraNode) {
-        splats.forEach((splat) => {
-            splat.render(this.renderTarget, cameraNode, splat.lodIndex);
-        });
+        // render splats using render pass
+        if (this.renderPass.update(splats, cameraNode)) {
+            this.renderPass.render();
+        }
     }
 }
 
