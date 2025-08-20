@@ -381,6 +381,12 @@ class Shape {
         ]);
     }
 
+    /**
+     * Sets the hover state of the shape.
+     *
+     * @param {boolean} state - Whether the shape is hovered.
+     * @returns {void}
+     */
     hover(state) {
         if (this._disabled) {
             return;
