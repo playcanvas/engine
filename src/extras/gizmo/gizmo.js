@@ -260,7 +260,6 @@ class Gizmo extends EventHandler {
      * const gizmo = new pc.Gizmo(camera, layer);
      */
     constructor(camera, layer) {
-        Debug.assert(camera instanceof CameraComponent, 'Incorrect parameters for Gizmos\'s constructor. Use new Gizmo(camera, layer)');
         super();
 
         this._layer = layer;
