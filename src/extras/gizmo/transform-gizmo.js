@@ -14,7 +14,6 @@ import {
     COLOR_GRAY,
     color4from3
 } from './color.js';
-import { GIZMOAXIS_FACE, GIZMOAXIS_XYZ } from './constants.js';
 import { Gizmo } from './gizmo.js';
 import { Debug } from '../../core/debug.js';
 
@@ -23,21 +22,14 @@ import { Debug } from '../../core/debug.js';
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../../scene/layer.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
- */
-
-/**
- * @typedef {object} GizmoAxisColor
- * @property {Color} x - The X axis color.
- * @property {Color} y - The Y axis color.
- * @property {Color} z - The Z axis color.
- * @property {Color} f - The face axis color.
+ * @import { GizmoAxis, GizmoDragMode } from './constants.js'
  */
 
 /**
  * @typedef {object} GizmoTheme
- * @property {GizmoAxisColor & { xyz: Color }} shapeBase - The axis colors.
- * @property {GizmoAxisColor & { xyz: Color }} shapeHover - The hover colors.
- * @property {GizmoAxisColor} guideBase - The guide line colors.
+ * @property {{ [K in 'x' | 'y' | 'z' | 'f' | 'xyz']: Color }} shapeBase - The axis colors.
+ * @property {{ [K in 'x' | 'y' | 'z' | 'f' | 'xyz']: Color }} shapeHover - The hover colors.
+ * @property {{ [K in 'x' | 'y' | 'z' | 'f']: Color }} guideBase - The guide line colors.
  * @property {number} guideOcclusion - The guide occlusion value. Defaults to 0.8.
  * @property {Color} disabled - The disabled color.
  */
@@ -58,10 +50,6 @@ const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
  * @category Gizmo
  */
 class TransformGizmo extends Gizmo {
-    /**
-     * @typedef {('x' | 'y' | 'z' | 'f' | 'xy' | 'xz' | 'yz' | 'xyz' | '')} GizmoAxis
-     */
-
     /**
      * Fired when when the transformation has started.
      *
@@ -233,12 +221,9 @@ class TransformGizmo extends Gizmo {
     snapIncrement = 1;
 
     /**
-     * Whether to hide the shapes when dragging. This can be one of the following:
-     * - 'show': always show the shapes
-     * - 'hide': hide the shapes when dragging
-     * - 'selected': show only the axis shapes for the affected axes
+     * Whether to hide the shapes when dragging. Defaults to 'selected'.
      *
-     * @type {'show' | 'hide' | 'selected'}
+     * @type {GizmoDragMode}
      */
     dragMode = 'selected';
 
@@ -298,7 +283,7 @@ class TransformGizmo extends Gizmo {
             this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, point, x, y);
         });
 
-        this.on(Gizmo.EVENT_POINTERUP, (x, y, meshInstance) => {
+        this.on(Gizmo.EVENT_POINTERUP, (_x, _y, meshInstance) => {
             this._hover(meshInstance);
 
             if (!this._dragging) {
@@ -645,7 +630,7 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _dirFromAxis(axis, dir) {
-        if (axis === GIZMOAXIS_FACE) {
+        if (axis === 'f') {
             dir.copy(this._camera.entity.forward).mulScalar(-1);
         } else {
             dir.set(0, 0, 0);
@@ -696,13 +681,13 @@ class TransformGizmo extends Gizmo {
     /**
      * @param {Vec3} pos - The position.
      * @param {Quat} rot - The rotation.
-     * @param {string} activeAxis - The active axis.
+     * @param {GizmoAxis | ''} activeAxis - The active axis.
      * @param {boolean} activeIsPlane - Whether the active axis is a plane.
      * @protected
      */
     _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
         for (const axis of AXES) {
-            if (activeAxis === GIZMOAXIS_XYZ) {
+            if (activeAxis === 'xyz') {
                 this._drawSpanLine(pos, rot, axis);
                 continue;
             }
@@ -721,7 +706,7 @@ class TransformGizmo extends Gizmo {
     /**
      * @param {Vec3} pos - The position.
      * @param {Quat} rot - The rotation.
-     * @param {string} axis - The axis.
+     * @param {'x' | 'y' | 'z'} axis - The axis.
      * @protected
      */
     _drawSpanLine(pos, rot, axis) {
@@ -760,57 +745,37 @@ class TransformGizmo extends Gizmo {
     /**
      * Set the shape to be enabled or disabled.
      *
-     * @param {string} shapeAxis - The shape axis. Can be:
-     *
-     * - {@link GIZMOAXIS_X}
-     * - {@link GIZMOAXIS_Y}
-     * - {@link GIZMOAXIS_Z}
-     * - {@link GIZMOAXIS_YZ}
-     * - {@link GIZMOAXIS_XZ}
-     * - {@link GIZMOAXIS_XY}
-     * - {@link GIZMOAXIS_XYZ}
-     * - {@link GIZMOAXIS_FACE}
-     *
+     * @param {GizmoAxis | 'face'} shapeAxis - The shape axis.
      * @param {boolean} enabled - The enabled state of shape.
      */
     enableShape(shapeAxis, enabled) {
         if (shapeAxis === 'face') {
-            Debug.deprecated('"face" literal is deprecated used "GIZMOAXIS_FACE" or "f" literal instead');
-            shapeAxis = GIZMOAXIS_FACE;
+            Debug.deprecated('"face" literal is deprecated use "f" literal instead');
+            shapeAxis = 'f';
         }
-        if (!this._shapes.hasOwnProperty(shapeAxis)) {
+        const shape = this._shapes[shapeAxis];
+        if (!shape) {
             return;
         }
-
-        this._shapes[shapeAxis].disabled = !enabled;
+        shape.disabled = !enabled;
     }
 
     /**
      * Get the enabled state of the shape.
      *
-     * @param {string} shapeAxis - The shape axis. Can be:
-     *
-     * - {@link GIZMOAXIS_X}
-     * - {@link GIZMOAXIS_Y}
-     * - {@link GIZMOAXIS_Z}
-     * - {@link GIZMOAXIS_YZ}
-     * - {@link GIZMOAXIS_XZ}
-     * - {@link GIZMOAXIS_XY}
-     * - {@link GIZMOAXIS_XYZ}
-     * - {@link GIZMOAXIS_FACE}
-     *
+     * @param {GizmoAxis | 'face'} shapeAxis - The shape axis. Can be:
      * @returns {boolean} - Then enabled state of the shape
      */
     isShapeEnabled(shapeAxis) {
         if (shapeAxis === 'face') {
-            Debug.deprecated('"face" literal is deprecated used "GIZMOAXIS_FACE" or "f" literal instead');
-            shapeAxis = GIZMOAXIS_FACE;
+            Debug.deprecated('"face" literal is deprecated use "f" literal instead');
+            shapeAxis = 'f';
         }
-        if (!this._shapes.hasOwnProperty(shapeAxis)) {
+        const shape = this._shapes[shapeAxis];
+        if (!shape) {
             return false;
         }
-
-        return !this._shapes[shapeAxis].disabled;
+        return !shape.disabled;
     }
 
     /**

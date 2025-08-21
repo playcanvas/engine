@@ -9,8 +9,6 @@ import { PROJECTION_PERSPECTIVE, SORTMODE_NONE } from '../../scene/constants.js'
 import { Entity } from '../../framework/entity.js';
 import { Layer } from '../../scene/layer.js';
 
-import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
-
 /**
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { GraphNode } from '../../scene/graph-node.js'
@@ -18,6 +16,7 @@ import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
  * @import { EventHandle } from '../../core/event-handle.js'
  * @import { Shape } from './shape/shape.js'
+ * @import { GizmoSpace } from './constants.js'
  */
 
 // temporary variables
@@ -164,12 +163,12 @@ class Gizmo extends EventHandler {
     _scale = 1;
 
     /**
-     * Internal version of coordinate space. Defaults to {@link GIZMOSPACE_WORLD}.
+     * Internal version of coordinate space. Defaults to 'world'.
      *
-     * @type {string}
+     * @type {GizmoSpace}
      * @protected
      */
-    _coordSpace = GIZMOSPACE_WORLD;
+    _coordSpace = 'world';
 
     /**
      * Internal reference to the app containing the gizmo.
@@ -337,24 +336,19 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * Sets the gizmo coordinate space. Can be:
+     * Sets the gizmo coordinate space. Defaults to 'world'
      *
-     * - {@link GIZMOSPACE_LOCAL}
-     * - {@link GIZMOSPACE_WORLD}
-     *
-     * Defaults to {@link GIZMOSPACE_WORLD}.
-     *
-     * @type {string}
+     * @type {GizmoSpace}
      */
     set coordSpace(value) {
-        this._coordSpace = value ?? GIZMOSPACE_WORLD;
+        this._coordSpace = value ?? this._coordSpace;
         this._updateRotation();
     }
 
     /**
      * Gets the gizmo coordinate space.
      *
-     * @type {string}
+     * @type {GizmoSpace}
      */
     get coordSpace() {
         return this._coordSpace;
@@ -483,7 +477,7 @@ class Gizmo extends EventHandler {
      */
     _updateRotation() {
         tmpV1.set(0, 0, 0);
-        if (this._coordSpace === GIZMOSPACE_LOCAL && this.nodes.length !== 0) {
+        if (this._coordSpace === 'local' && this.nodes.length !== 0) {
             tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
         }
 

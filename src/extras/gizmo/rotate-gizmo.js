@@ -6,13 +6,13 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
 import { ArcShape } from './shape/arc-shape.js';
-import { GIZMOSPACE_LOCAL, GIZMOAXIS_FACE, GIZMOAXIS_X, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
 import { TransformGizmo } from './transform-gizmo.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { Layer } from '../../scene/layer.js'
+ * @import { GizmoAxis } from './constants.js'
  */
 
 // temporary variables
@@ -65,7 +65,7 @@ const FACING_THRESHOLD = 0.9;
 class RotateGizmo extends TransformGizmo {
     _shapes = {
         z: new ArcShape(this._device, {
-            axis: GIZMOAXIS_Z,
+            axis: 'z',
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(90, 0, 90),
@@ -74,7 +74,7 @@ class RotateGizmo extends TransformGizmo {
             sectorAngle: 180
         }),
         x: new ArcShape(this._device, {
-            axis: GIZMOAXIS_X,
+            axis: 'x',
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, -90),
@@ -83,7 +83,7 @@ class RotateGizmo extends TransformGizmo {
             sectorAngle: 180
         }),
         y: new ArcShape(this._device, {
-            axis: GIZMOAXIS_Y,
+            axis: 'y',
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, 0),
@@ -92,7 +92,7 @@ class RotateGizmo extends TransformGizmo {
             sectorAngle: 180
         }),
         f: new ArcShape(this._device, {
-            axis: GIZMOAXIS_FACE,
+            axis: 'f',
             layers: [this._layer.id],
             shading: this._shading,
             rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
@@ -192,6 +192,9 @@ class RotateGizmo extends TransformGizmo {
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point, x, y) => {
             const axis = this._selectedAxis;
+            if (!axis) {
+                return;
+            }
 
             let angleDelta = this._calculateAngle(point, x, y) - this._selectionStartAngle;
             if (this.snap) {
@@ -321,7 +324,7 @@ class RotateGizmo extends TransformGizmo {
     _storeGuidePoints() {
         const gizmoPos = this.root.getPosition();
         const axis = this._selectedAxis;
-        const isFacing = axis === GIZMOAXIS_FACE;
+        const isFacing = axis === 'f';
         const scale = isFacing ? this.faceRingRadius : this.xyzRingRadius;
 
         this._guideAngleStart.copy(this._selectionStartPoint).sub(gizmoPos).normalize();
@@ -335,7 +338,7 @@ class RotateGizmo extends TransformGizmo {
      */
     _updateGuidePoints(angleDelta) {
         const axis = this._selectedAxis;
-        const isFacing = axis === GIZMOAXIS_FACE;
+        const isFacing = axis === 'f';
 
         if (isFacing) {
             tmpV1.copy(this.facingDir);
@@ -449,20 +452,20 @@ class RotateGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {string} axis - The axis.
+     * @param {GizmoAxis} axis - The axis.
      * @param {number} angleDelta - The angle delta.
      * @private
      */
     _setNodeRotations(axis, angleDelta) {
         const gizmoPos = this.root.getPosition();
-        const isFacing = axis === GIZMOAXIS_FACE;
+        const isFacing = axis === 'f';
 
         // calculate rotation from axis and angle
         tmpQ1.setFromAxisAngle(this._dirFromAxis(axis, tmpV1), angleDelta);
 
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            if (!isFacing && this._coordSpace === GIZMOSPACE_LOCAL) {
+            if (!isFacing && this._coordSpace === 'local') {
                 const rot = this._nodeLocalRotations.get(node);
                 if (!rot) {
                     continue;
@@ -488,7 +491,7 @@ class RotateGizmo extends TransformGizmo {
             }
         }
 
-        if (this._coordSpace === GIZMOSPACE_LOCAL) {
+        if (this._coordSpace === 'local') {
             this._updateRotation();
         }
     }
@@ -505,7 +508,7 @@ class RotateGizmo extends TransformGizmo {
         const axis = this._selectedAxis;
 
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, false);
+        const plane = this._createPlane(axis, axis === 'f', false);
 
         const point = new Vec3();
 
@@ -526,7 +529,7 @@ class RotateGizmo extends TransformGizmo {
 
         const axis = this._selectedAxis;
 
-        const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, false);
+        const plane = this._createPlane(axis, axis === 'f', false);
 
         let angle = 0;
 
