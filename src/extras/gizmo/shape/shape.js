@@ -217,7 +217,6 @@ class Shape {
      */
     entity;
 
-
     /**
      * The triangle data of the shape.
      *
