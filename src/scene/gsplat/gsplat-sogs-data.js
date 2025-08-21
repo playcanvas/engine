@@ -12,6 +12,9 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import glslGsplatSogsReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogsReorder.js';
 import wgslGsplatSogsReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsReorder.js';
 
+import glslGsplatSogsReorderSh from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogsReorderSh.js';
+import gsplatPackingPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatPacking.js';
+
 const SH_C0 = 0.28209479177387814;
 
 const readImageDataAsync = (texture) => {
@@ -131,6 +134,8 @@ class GSplatSogsData {
 
     packedSh0;
 
+    packedShN;
+
     destroy() {
         this.means_l?.destroy();
         this.means_u?.destroy();
@@ -139,8 +144,9 @@ class GSplatSogsData {
         this.sh0?.destroy();
         this.sh_centroids?.destroy();
         this.sh_labels?.destroy();
-        this.packedSh0?.destroy();
         this.packedTexture?.destroy();
+        this.packedSh0?.destroy();
+        this.packedShN?.destroy();  
     }
 
     createIter(p, r, s, c, sh) {
@@ -320,7 +326,8 @@ class GSplatSogsData {
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatSogsReorderPS,
             fragmentWGSL: wgslGsplatSogsReorderPS,
-            fragmentOutputTypes: ['uvec4']
+            fragmentOutputTypes: ['uvec4', 'vec4'],
+            fragmentIncludes: new Map([['gsplatPackingPS', gsplatPackingPS]])
         });
 
         const renderTarget = new RenderTarget({
@@ -351,6 +358,39 @@ class GSplatSogsData {
         renderTarget.destroy();
     }
 
+    packShMemory() {
+        const { sh_centroids } = this;
+        const { device } = sh_centroids;
+        const { scope } = device;
+
+        const shader = ShaderUtils.createShader(device, {
+            uniqueName: 'GsplatSogsReorderShShader',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentGLSL: glslGsplatSogsReorderSh,
+            fragmentIncludes: new Map([['gsplatPackingPS', gsplatPackingPS]])
+        });
+
+        const renderTarget = new RenderTarget({
+            colorBuffer: this.packedShN,
+            depth: false,
+            mipLevel: 0
+        });
+
+        device.setCullMode(CULLFACE_NONE);
+        device.setBlendState(BlendState.NOBLEND);
+        device.setDepthState(DepthState.NODEPTH);
+
+        resolve(scope, {
+            sh_centroids,
+            'shN_codebook[0]': this.meta.shN.codebook
+        });
+
+        drawQuadWithShader(device, renderTarget, shader);
+
+        renderTarget.destroy();
+    }
+
     async prepareGpuData() {
         const { device, height, width } = this.means_l;
 
@@ -374,11 +414,21 @@ class GSplatSogsData {
             mipmaps: false
         });
 
+        this.packedShN = new Texture(device, {
+            name: 'sogsPackedShN',
+            width: this.sh_centroids.width,
+            height: this.sh_centroids.height,
+            format: PIXELFORMAT_RGBA8,
+            mipmaps: false
+        });
+
         device.on('devicerestored', () => {
             this.packGpuMemory();
+            this.packShMemory();
         });
 
         this.packGpuMemory();
+        this.packShMemory();
     }
 
     // temporary, for backwards compatibility

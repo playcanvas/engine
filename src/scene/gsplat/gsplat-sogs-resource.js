@@ -13,7 +13,7 @@ class GSplatSogsResource extends GSplatResourceBase {
         material.setDefine('GSPLAT_SOGS_DATA', true);
         material.setDefine('SH_BANDS', this.gsplatData.shBands);
 
-        ['packedTexture', 'packedSh0', 'sh_centroids'].forEach((name) => {
+        ['packedTexture', 'packedSh0', 'packedShN'].forEach((name) => {
             if (gsplatData[name]) {
                 material.setParameter(name, gsplatData[name]);
             }
@@ -36,7 +36,8 @@ class GSplatSogsResource extends GSplatResourceBase {
         material.setParameter('shN_mins', gsplatData.meta.shN.codebook[0]);
         material.setParameter('shN_maxs', gsplatData.meta.shN.codebook[255]);
 
-        material.setParameter('shN_codebook[0]', gsplatData.meta.shN.codebook);
+        material.setParameter('shN_mins', gsplatData.meta.shN.codebook[0]);
+        material.setParameter('shN_maxs', gsplatData.meta.shN.codebook[255]);
     }
 
     evalTextureSize(count) {

@@ -1,4 +1,6 @@
 export default /* glsl */`
+#include "gsplatPackingPS"
+
 uniform highp usampler2D packedTexture;
 
 uniform vec3 means_mins;
@@ -6,14 +8,6 @@ uniform vec3 means_maxs;
 
 uniform float scales_mins;
 uniform float scales_maxs;
-
-vec4 unpack8888(uint v) {
-    return vec4((uvec4(v) >> uvec4(24u, 16u, 8u, 0u)) & 0xffu) / 255.0;
-}
-
-vec3 unpack101010(uint v) {
-    return vec3((uvec3(v) >> uvec3(20u, 10u, 0u)) & 0x3ffu) / 1023.0;
-}
 
 uvec4 packedSample;
 
