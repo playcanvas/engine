@@ -281,10 +281,8 @@ class Shape {
      * @type {boolean}
      */
     set disabled(value) {
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            const color = value ? this._disabledColor : this._defaultColor;
-            this._material.setParameter('uColor', color.toArray());
-        }
+        const color = value ? this._disabledColor : this._defaultColor;
+        this._material.setParameter('uColor', color.toArray());
         this._disabled = value ?? false;
     }
 
