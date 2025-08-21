@@ -464,11 +464,11 @@ class Gizmo extends EventHandler {
         }
         tmpV1.mulScalar(1.0 / (this.nodes.length || 1));
 
-        if (tmpV1.distance(this.root.getPosition()) < UPDATE_EPSILON) {
+        if (tmpV1.distance(this.root.getLocalPosition()) < UPDATE_EPSILON) {
             return;
         }
 
-        this.root.setPosition(tmpV1);
+        this.root.setLocalPosition(tmpV1);
         this.fire(Gizmo.EVENT_POSITIONUPDATE, tmpV1);
     }
 
@@ -478,14 +478,14 @@ class Gizmo extends EventHandler {
     _updateRotation() {
         tmpV1.set(0, 0, 0);
         if (this._coordSpace === 'local' && this.nodes.length !== 0) {
-            tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
+            tmpV1.copy(this.nodes[this.nodes.length - 1].getLocalEulerAngles());
         }
 
-        if (tmpV1.distance(this.root.getEulerAngles()) < UPDATE_EPSILON) {
+        if (tmpV1.distance(this.root.getLocalEulerAngles()) < UPDATE_EPSILON) {
             return;
         }
 
-        this.root.setEulerAngles(tmpV1);
+        this.root.setLocalEulerAngles(tmpV1);
         this.fire(Gizmo.EVENT_ROTATIONUPDATE, tmpV1);
     }
 
