@@ -533,9 +533,8 @@ class TransformGizmo extends Gizmo {
             return;
         }
 
-        const remove = new Set(this._hovering);
-
         // track changes
+        const remove = new Set(this._hovering);
         let changed = false;
         const add = (/** @type {GizmoAxis} */ axis) => {
             if (remove.has(axis)) {
