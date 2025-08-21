@@ -41,6 +41,45 @@ const combineProgress = (target, assets) => {
     });
 };
 
+// given a v1 meta.json, upgrade it to the v2 shape
+const upgradeMeta = (meta) => {
+
+    const scalesMin = Math.min(...meta.scales.mins);
+    const scalesMax = Math.max(...meta.scales.maxs);
+    const sh0Min = Math.min(...meta.sh0.mins);
+    const sh0Max = Math.max(...meta.sh0.maxs);
+
+    const result = {
+        version: 2,
+        count: meta.means.shape[0],
+        means: {
+            mins: meta.means.mins,
+            maxs: meta.means.maxs,
+            files: meta.means.files
+        },
+        scales: {
+            codebook: new Array(256).fill(0).map((_, i) => scalesMin + (scalesMax - scalesMin) * (i / 255)),
+            files: meta.scales.files
+        },
+        quats: {
+            files: meta.quats.files
+        },
+        sh0: {
+            codebook: new Array(256).fill(0).map((_, i) => sh0Min + (sh0Max - sh0Min) * (i / 255)),
+            files: meta.sh0.files
+        }
+    };
+
+    if (meta.shN) {
+        result.shN = {
+            codebook: new Array(256).fill(0).map((_, i) => meta.shN.mins + (meta.shN.maxs - meta.shN.mins) * (i / 255)),
+            files: meta.shN.files
+        };
+    }
+
+    return result;
+};
+
 /**
  * @import { AppBase } from '../app-base.js'
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
@@ -63,6 +102,11 @@ class SogsParser {
     }
 
     async loadTextures(url, callback, asset, meta) {
+        // transform meta to latest shape
+        if (meta.version !== 2) {
+            meta = upgradeMeta(meta);
+        }
+
         const { assets } = this.app;
 
         const subs = ['means', 'quats', 'scales', 'sh0', 'shN'];
@@ -104,7 +148,7 @@ class SogsParser {
         // construct the gsplat resource
         const data = new GSplatSogsData();
         data.meta = meta;
-        data.numSplats = meta.means.shape[0];
+        data.numSplats = meta.count;
         data.means_l = textures.means[0].resource;
         data.means_u = textures.means[1].resource;
         data.quats = textures.quats[0].resource;
@@ -112,16 +156,6 @@ class SogsParser {
         data.sh0 = textures.sh0[0].resource;
         data.sh_centroids = textures.shN?.[0]?.resource;
         data.sh_labels = textures.shN?.[1]?.resource;
-
-        if (meta.shN.codebooks) {
-            data.sh_codebooks = new Texture(this.app.graphicsDevice, {
-                width: 64,
-                height: meta.shN.codebooks.length,
-                format: PIXELFORMAT_RGBA32F,
-                mipmaps: false,
-                levels: [new Float32Array(meta.shN.codebooks.flat())]
-            });
-        }
 
         const decompress = asset.data?.decompress;
 

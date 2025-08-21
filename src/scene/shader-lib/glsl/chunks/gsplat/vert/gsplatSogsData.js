@@ -4,13 +4,15 @@ uniform highp usampler2D packedTexture;
 uniform vec3 means_mins;
 uniform vec3 means_maxs;
 
-uniform vec3 scales_mins;
-uniform vec3 scales_maxs;
+uniform float scales_mins;
+uniform float scales_maxs;
 
-uniform vec4 scales_codebook[64];
-
-vec4 unpackU32(uint v) {
+vec4 unpack8888(uint v) {
     return vec4((uvec4(v) >> uvec4(24u, 16u, 8u, 0u)) & 0xffu) / 255.0;
+}
+
+vec3 unpack101010(uint v) {
+    return vec3((uvec3(v) >> uvec3(20u, 10u, 0u)) & 0x3ffu) / 1023.0;
 }
 
 uvec4 packedSample;
@@ -21,8 +23,8 @@ vec3 readCenter(SplatSource source) {
     // read the packed texture sample
     packedSample = texelFetch(packedTexture, source.uv, 0);
 
-    vec3 l = unpackU32(packedSample.x).xyz;
-    vec3 u = unpackU32(packedSample.y).xyz;
+    vec3 l = unpack8888(packedSample.x).xyz;
+    vec3 u = unpack8888(packedSample.y).xyz;
     vec3 n = (l * 255.0 + u * 255.0 * 256.0) / 65535.0;
     vec3 v = mix(means_mins, means_maxs, n);
 
@@ -34,7 +36,8 @@ const float norm = 2.0 / sqrt(2.0);
 // sample covariance vectors
 void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
     // decode rotation quaternion
-    vec4 qdata = unpackU32(packedSample.z);
+    vec4 qdata = unpack8888(packedSample.z & 0xffffffc0u);
+    vec3 sdata = unpack101010(packedSample.w >> 2u);
 
     vec3 abc = (qdata.xyz - 0.5) * norm;
     float d = sqrt(max(0.0, 1.0 - dot(abc, abc)));
@@ -48,12 +51,7 @@ void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
     mat3 rot = quatToMat3(quat);
 
     // decode scale
-    uvec3 idx = (uvec3(packedSample.w) >> uvec3(24u, 16u, 8u)) & 0xffu;
-    vec3 scale = exp(vec3(
-        (scales_codebook[idx.x >> 2u])[idx.x & 3u],
-        (scales_codebook[idx.y >> 2u])[idx.y & 3u],
-        (scales_codebook[idx.z >> 2u])[idx.z & 3u]
-    ));
+    vec3 scale = exp(mix(vec3(scales_mins), vec3(scales_maxs), sdata));
 
     // M = S * R
     mat3 M = transpose(mat3(

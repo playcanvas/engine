@@ -6,7 +6,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { CULLFACE_NONE, PIXELFORMAT_RGBA32U, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, PIXELFORMAT_RGBA32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import glslGsplatSogsReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogsReorder.js';
@@ -43,7 +43,6 @@ class GSplatSogsIterator {
         const sh0_data = c && data.sh0._levels[0];
         const sh_labels_data = sh && data.sh_labels._levels[0];
         const sh_centroids_data = sh && data.sh_centroids._levels[0];
-        const sh_codebook_data = sh && data.meta.shN?.codebooks?.flat();
 
         const norm = 2.0 / Math.sqrt(2.0);
 
@@ -128,9 +127,9 @@ class GSplatSogsData {
 
     sh_labels;
 
-    sh_codebooks;
-
     packedTexture;
+
+    packedSh0;
 
     destroy() {
         this.means_l?.destroy();
@@ -140,7 +139,7 @@ class GSplatSogsData {
         this.sh0?.destroy();
         this.sh_centroids?.destroy();
         this.sh_labels?.destroy();
-        this.sh_codebooks.destroy();
+        this.packedSh0?.destroy();
         this.packedTexture?.destroy();
     }
 
@@ -310,7 +309,7 @@ class GSplatSogsData {
 
     // pack the means, quats, scales and sh_labels data into one RGBA32U texture
     packGpuMemory() {
-        const { means_l, means_u, quats, scales, sh_labels, numSplats } = this;
+        const { means_l, means_u, quats, scales, sh0, sh_labels, numSplats } = this;
         const { device } = means_l;
         const { scope } = device;
 
@@ -325,7 +324,7 @@ class GSplatSogsData {
         });
 
         const renderTarget = new RenderTarget({
-            colorBuffer: this.packedTexture,
+            colorBuffers: [this.packedTexture, this.packedSh0],
             depth: false,
             mipLevel: 0
         });
@@ -339,9 +338,12 @@ class GSplatSogsData {
             means_u,
             quats,
             scales,
+            sh0,
             // use means_l as dummy texture for sh_labels if there is no spherical harmonics data
             sh_labels: sh_labels ?? means_l,
-            numSplats
+            numSplats,
+            'scales_codebook[0]': this.meta.scales.codebook,
+            'sh0_codebook[0]': this.meta.sh0.codebook
         });
 
         drawQuadWithShader(device, renderTarget, shader);
@@ -358,9 +360,17 @@ class GSplatSogsData {
 
         this.packedTexture = new Texture(device, {
             name: 'sogsPackedTexture',
-            width: width,
-            height: height,
+            width,
+            height,
             format: PIXELFORMAT_RGBA32U,
+            mipmaps: false
+        });
+
+        this.packedSh0 = new Texture(device, {
+            name: 'sogsPackedSh0',
+            width,
+            height,
+            format: PIXELFORMAT_RGBA8,
             mipmaps: false
         });
 
