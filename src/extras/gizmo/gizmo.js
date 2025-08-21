@@ -1,16 +1,15 @@
-import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { EventHandler } from '../../core/event-handler.js';
-import { CameraComponent } from '../../framework/components/camera/component.js';
 import { PROJECTION_PERSPECTIVE, SORTMODE_NONE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
 import { Layer } from '../../scene/layer.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js';
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
@@ -257,9 +256,11 @@ class Gizmo extends EventHandler {
      * @param {Layer} layer - The render layer. This can be provided by the user or will be created
      * and added to the scene and camera if not provided. Successive gizmos will share the same layer
      * and will be removed from the camera and scene when the last gizmo is destroyed.
+     * @param {string} [name] - The name of the gizmo. Defaults to 'gizmo'.
+     * @example
      * const gizmo = new pc.Gizmo(camera, layer);
      */
-    constructor(camera, layer) {
+    constructor(camera, layer, name = 'gizmo') {
         super();
 
         this._layer = layer;
@@ -269,7 +270,7 @@ class Gizmo extends EventHandler {
         this._app = this._camera.system.app;
         this._device = this._app.graphicsDevice;
 
-        this.root = new Entity('gizmo');
+        this.root = new Entity(name);
         this._app.root.addChild(this.root);
         this.root.enabled = false;
 

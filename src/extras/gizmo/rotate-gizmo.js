@@ -168,7 +168,7 @@ class RotateGizmo extends TransformGizmo {
      * const gizmo = new pc.RotateGizmo(camera, layer);
      */
     constructor(camera, layer) {
-        super(camera, layer);
+        super(camera, layer, 'gizmo:rotate');
 
         this._createTransform();
 

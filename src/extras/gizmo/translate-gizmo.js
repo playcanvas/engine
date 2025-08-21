@@ -154,7 +154,7 @@ class TranslateGizmo extends TransformGizmo {
      * const gizmo = new pc.TranslateGizmo(camera, layer);
      */
     constructor(camera, layer) {
-        super(camera, layer);
+        super(camera, layer, 'gizmo:translate');
 
         this._createTransform();
 

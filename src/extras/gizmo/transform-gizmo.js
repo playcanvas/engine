@@ -224,11 +224,12 @@ class TransformGizmo extends Gizmo {
      *
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
+     * @param {string} [name] - The name of the gizmo.
      * @example
      * const gizmo = new pc.TransformGizmo(camera, layer);
      */
-    constructor(camera, layer) {
-        super(camera, layer);
+    constructor(camera, layer, name = 'gizmo:transform') {
+        super(camera, layer, name);
 
         this.on(Gizmo.EVENT_POINTERDOWN, (x, y, meshInstance) => {
             const shape = this._shapeMap.get(meshInstance);

@@ -166,7 +166,7 @@ class ScaleGizmo extends TransformGizmo {
      * const gizmo = new pc.ScaleGizmo(camera, layer);
      */
     constructor(camera, layer) {
-        super(camera, layer);
+        super(camera, layer, 'gizmo:scale');
 
         this._createTransform();
 
