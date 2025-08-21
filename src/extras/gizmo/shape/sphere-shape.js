@@ -14,10 +14,6 @@ class SphereShape extends Shape {
             new TriData(new SphereGeometry(), 2)
         ];
 
-        this._createCenter();
-    }
-
-    _createCenter() {
         this._createRoot('sphereCenter');
         this._updateTransform();
 

@@ -22,7 +22,11 @@ class PlaneShape extends Shape {
             new TriData(new PlaneGeometry())
         ];
 
-        this._createPlane();
+        this._createRoot('plane');
+        this._updateTransform();
+
+        // plane
+        this._addRenderMesh(this.entity, 'plane', this._shading);
     }
 
     set size(value) {
@@ -64,14 +68,6 @@ class PlaneShape extends Shape {
         );
         position[this.axis] = 0;
         return position;
-    }
-
-    _createPlane() {
-        this._createRoot('plane');
-        this._updateTransform();
-
-        // plane
-        this._addRenderMesh(this.entity, 'plane', this._shading);
     }
 
     _updateTransform() {

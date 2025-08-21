@@ -14,10 +14,6 @@ class BoxShape extends Shape {
             new TriData(new BoxGeometry(), 2)
         ];
 
-        this._createCenter();
-    }
-
-    _createCenter() {
         this._createRoot('boxCenter');
         this._updateTransform();
 

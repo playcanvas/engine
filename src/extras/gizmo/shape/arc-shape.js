@@ -27,7 +27,14 @@ class ArcShape extends Shape {
             new TriData(this._createTorusGeometry())
         ];
 
-        this._createDisk();
+        this._createRoot('disk');
+
+        // arc/circle
+        this._createRenderComponent(this.entity, [
+            this._createTorusMesh(this._sectorAngle),
+            this._createTorusMesh(360)
+        ]);
+        this.drag(false);
     }
 
     _createTorusGeometry() {
@@ -47,17 +54,6 @@ class ArcShape extends Shape {
             segments: TORUS_RENDER_SEGMENTS
         });
         return this._createMesh(geom, this._shading);
-    }
-
-    _createDisk() {
-        this._createRoot('disk');
-
-        // arc/circle
-        this._createRenderComponent(this.entity, [
-            this._createTorusMesh(this._sectorAngle),
-            this._createTorusMesh(360)
-        ]);
-        this.drag(false);
     }
 
     set tubeRadius(value) {

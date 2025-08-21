@@ -37,7 +37,19 @@ class ArrowShape extends Shape {
             new TriData(new CylinderGeometry(), 1)
         ];
 
-        this._createArrow();
+        this._createRoot('arrow');
+
+        // head
+        this._head = new Entity(`head:${this.axis}`);
+        this.entity.addChild(this._head);
+        this._updateHead();
+        this._addRenderMesh(this._head, 'cone', this._shading);
+
+        // line
+        this._line = new Entity(`line:${this.axis}`);
+        this.entity.addChild(this._line);
+        this._updateLine();
+        this._addRenderMesh(this._line, 'cylinder', this._shading);
     }
 
     set gap(value) {
@@ -114,22 +126,6 @@ class ArrowShape extends Shape {
 
     get flipped() {
         return this._flipped;
-    }
-
-    _createArrow() {
-        this._createRoot('arrow');
-
-        // head
-        this._head = new Entity(`head:${this.axis}`);
-        this.entity.addChild(this._head);
-        this._updateHead();
-        this._addRenderMesh(this._head, 'cone', this._shading);
-
-        // line
-        this._line = new Entity(`line:${this.axis}`);
-        this.entity.addChild(this._line);
-        this._updateLine();
-        this._addRenderMesh(this._line, 'cylinder', this._shading);
     }
 
     _updateHead() {
