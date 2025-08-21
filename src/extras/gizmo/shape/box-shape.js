@@ -11,6 +11,9 @@ import { Shape } from './shape.js';
  * @property {number} [tolerance] - The intersection tolerance of the box.
  */
 
+/**
+ * @ignore
+ */
 class BoxShape extends Shape {
     /**
      * The internal size of the box.

@@ -11,6 +11,9 @@ import { Shape } from './shape.js';
  * @property {number} [tolerance] - The intersection tolerance of the sphere.
  */
 
+/**
+ * @ignore
+ */
 class SphereShape extends Shape {
     /**
      * The internal size of the sphere.
