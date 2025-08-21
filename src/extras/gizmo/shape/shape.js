@@ -105,7 +105,6 @@ tmpG.normals = [];
  * @property {Color} [defaultColor] - The default color of the shape.
  * @property {Color} [hoverColor] - The hover color of the shape.
  * @property {Color} [disabledColor] - The disabled color of the shape.
- * @ignore
  */
 
 /**
