@@ -39,7 +39,7 @@
  * Local coordinate space.
  *
  * @category Gizmo
- * @deprecated Use the literal 'local' instead.
+ * @deprecated Use the literal 'local' instead - {@link GizmoSpace}
  */
 export const GIZMOSPACE_LOCAL = 'local';
 
@@ -47,7 +47,7 @@ export const GIZMOSPACE_LOCAL = 'local';
  * World coordinate space.
  *
  * @category Gizmo
- * @deprecated Use the literal 'world' instead.
+ * @deprecated Use the literal 'world' instead - {@link GizmoSpace}
  */
 export const GIZMOSPACE_WORLD = 'world';
 
@@ -55,7 +55,7 @@ export const GIZMOSPACE_WORLD = 'world';
  * Gizmo axis for the line X.
  *
  * @category Gizmo
- * @deprecated Use the literal 'x' instead.
+ * @deprecated Use the literal 'x' instead - {@link GizmoAxis}.
  */
 export const GIZMOAXIS_X = 'x';
 
@@ -63,7 +63,7 @@ export const GIZMOAXIS_X = 'x';
  * Gizmo axis for the line Y.
  *
  * @category Gizmo
- * @deprecated Use the literal 'y' instead.
+ * @deprecated Use the literal 'y' instead - {@link GizmoAxis}.
  */
 export const GIZMOAXIS_Y = 'y';
 
@@ -71,7 +71,7 @@ export const GIZMOAXIS_Y = 'y';
  * Gizmo axis for the line Z.
  *
  * @category Gizmo
- * @deprecated Use the literal 'z' instead.
+ * @deprecated Use the literal 'z' instead - {@link GizmoAxis}.
  */
 export const GIZMOAXIS_Z = 'z';
 
@@ -79,7 +79,7 @@ export const GIZMOAXIS_Z = 'z';
  * Gizmo axis for the plane YZ.
  *
  * @category Gizmo
- * @deprecated Use the literal 'yz' instead.
+ * @deprecated Use the literal 'yz' instead - {@link GizmoAxis}.
  */
 export const GIZMOAXIS_YZ = 'yz';
 
@@ -87,7 +87,7 @@ export const GIZMOAXIS_YZ = 'yz';
  * Gizmo axis for the plane XZ.
  *
  * @category Gizmo
- * @deprecated Use the literal 'xz' instead.
+ * @deprecated Use the literal 'xz' instead - {@link GizmoAxis}.
  */
 export const GIZMOAXIS_XZ = 'xz';
 
@@ -95,7 +95,7 @@ export const GIZMOAXIS_XZ = 'xz';
  * Gizmo axis for the plane XY.
  *
  * @category Gizmo
- * @deprecated Use the literal 'xy' instead.
+ * @deprecated Use the literal 'xy' instead - {@link GizmoAxis}.
  */
 export const GIZMOAXIS_XY = 'xy';
 
@@ -103,7 +103,7 @@ export const GIZMOAXIS_XY = 'xy';
  * Gizmo axis for all directions XYZ.
  *
  * @category Gizmo
- * @deprecated Use the literal 'xyz' instead.
+ * @deprecated Use the literal 'xyz' instead - {@link GizmoAxis}.
  */
 export const GIZMOAXIS_XYZ = 'xyz';
 
@@ -111,6 +111,6 @@ export const GIZMOAXIS_XYZ = 'xyz';
  * Gizmo axis for facing the camera (facing the camera).
  *
  * @category Gizmo
- * @deprecated Use the literal 'f' instead.
+ * @deprecated Use the literal 'f' instead - {@link GizmoAxis}.
  */
 export const GIZMOAXIS_FACE = 'f';
