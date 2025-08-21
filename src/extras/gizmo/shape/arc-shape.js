@@ -2,41 +2,86 @@ import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
+/** @import { ShapeArgs } from './shape.js' */
+/** @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js' */
+/** @import { Mesh } from '../../../index.js' */
+
 const TORUS_RENDER_SEGMENTS = 80;
 const TORUS_INTERSECT_SEGMENTS = 20;
 
+/**
+ * @typedef {object} ArcShapeArgs
+ * @property {number} [tubeRadius] - The tube radius.
+ * @property {number} [ringRadius] - The ring radius.
+ * @property {number} [sectorAngle] - The sector angle.
+ */
+
 class ArcShape extends Shape {
+    /**
+     * The internal tube radius of the arc.
+     *
+     * @type {number}
+     * @private
+     */
     _tubeRadius = 0.01;
 
+    /**
+     * The internal ring radius of the arc.
+     *
+     * @type {number}
+     * @private
+     */
     _ringRadius = 0.5;
 
-    _sectorAngle;
+    /**
+     * The internal sector angle of the arc.
+     *
+     * @type {number}
+     * @private
+     */
+    _sectorAngle = 360;
 
-    _lightDir;
-
+    /**
+     * The internal intersection tolerance of the arc.
+     *
+     * @type {number}
+     * @private
+     */
     _tolerance = 0.05;
 
-    constructor(device, options = {}) {
-        super(device, options);
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {ShapeArgs & ArcShapeArgs} args - The shape options.
+     */
+    constructor(device, args = {}) {
+        super(device, 'disk', args);
 
-        this._tubeRadius = options.tubeRadius ?? this._tubeRadius;
-        this._ringRadius = options.ringRadius ?? this._ringRadius;
-        this._sectorAngle = options.sectorAngle ?? this._sectorAngle;
+        this._tubeRadius = args.tubeRadius ?? this._tubeRadius;
+        this._ringRadius = args.ringRadius ?? this._ringRadius;
+        this._sectorAngle = args.sectorAngle ?? this._sectorAngle;
 
+        // intersect
         this.triData = [
             new TriData(this._createTorusGeometry())
         ];
 
-        this._createRoot('disk');
-
-        // arc/circle
+        // render
         this._createRenderComponent(this.entity, [
             this._createTorusMesh(this._sectorAngle),
             this._createTorusMesh(360)
         ]);
         this.drag(false);
+
+        // update transform
+        this._update();
     }
 
+    /**
+     * Create the torus geometry.
+     *
+     * @returns {TorusGeometry} The torus geometry.
+     * @private
+     */
     _createTorusGeometry() {
         return new TorusGeometry({
             tubeRadius: this._tubeRadius + this._tolerance,
@@ -46,6 +91,13 @@ class ArcShape extends Shape {
         });
     }
 
+    /**
+     * Create the torus mesh.
+     *
+     * @param {number} sectorAngle - The sector angle.
+     * @returns {Mesh} The torus mesh.
+     * @private
+     */
     _createTorusMesh(sectorAngle) {
         const geom = new TorusGeometry({
             tubeRadius: this._tubeRadius,
@@ -56,34 +108,70 @@ class ArcShape extends Shape {
         return this._createMesh(geom, this._shading);
     }
 
+    /**
+     * Set the tube radius.
+     *
+     * @type {number}
+     */
     set tubeRadius(value) {
-        this._tubeRadius = value ?? 0.1;
-        this._updateTransform();
+        this._tubeRadius = value ?? this._tubeRadius;
+        this._update();
     }
 
+    /**
+     * Get the tube radius.
+     *
+     * @type {number}
+     */
     get tubeRadius() {
         return this._tubeRadius;
     }
 
+    /**
+     * Set the ring radius.
+     *
+     * @type {number}
+     */
     set ringRadius(value) {
-        this._ringRadius = value ?? 0.1;
-        this._updateTransform();
+        this._ringRadius = value ?? this._ringRadius;
+        this._update();
     }
 
+    /**
+     * Get the ring radius.
+     *
+     * @type {number}
+     */
     get ringRadius() {
         return this._ringRadius;
     }
 
+    /**
+     * Set the intersection tolerance.
+     *
+     * @type {number}
+     */
     set tolerance(value) {
-        this._tolerance = value;
-        this._updateTransform();
+        this._tolerance = value ?? this._tolerance;
+        this._update();
     }
 
+    /**
+     * Get the intersection tolerance.
+     *
+     * @type {number}
+     */
     get tolerance() {
         return this._tolerance;
     }
 
-    _updateTransform() {
+    /**
+     * Update the shape's transform.
+     *
+     * @protected
+     * @override
+     */
+    _update() {
         // intersect
         this.triData[0].fromGeometry(this._createTorusGeometry());
 
@@ -92,11 +180,21 @@ class ArcShape extends Shape {
         this.meshInstances[1].mesh = this._createTorusMesh(360);
     }
 
+    /**
+     * Enable or disable dragging.
+     *
+     * @param {boolean} state - The dragging state.
+     */
     drag(state) {
         this.meshInstances[0].visible = !state;
         this.meshInstances[1].visible = state;
     }
 
+    /**
+     * Hide the shape.
+     *
+     * @param {boolean} state - The hiding state.
+     */
     hide(state) {
         if (state) {
             this.meshInstances[0].visible = false;

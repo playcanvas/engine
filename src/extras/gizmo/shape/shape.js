@@ -179,27 +179,108 @@ const setMeshColor = (mesh, color) => {
     mesh.update();
 };
 
+/**
+ * @typedef {object} ShapeArgs
+ * @property {string} [axis] - The axis of the shape (e.g., 'x', 'y', 'z').
+ * @property {Vec3} [position] - The position of the shape.
+ * @property {Vec3} [rotation] - The rotation of the shape.
+ * @property {Vec3} [scale] - The scale of the shape.
+ * @property {boolean} [disabled] - Whether the shape is disabled.
+ * @property {boolean} [hidden] - Whether the shape is hidden.
+ * @property {string[]} [layers] - The layers the shape belongs to.
+ * @property {boolean} [shading] - Whether the shape is shaded.
+ * @property {Color} [defaultColor] - The default color of the shape.
+ * @property {Color} [hoverColor] - The hover color of the shape.
+ * @property {Color} [disabledColor] - The disabled color of the shape.
+ */
+
 class Shape {
-    _position;
+    /**
+     * The internal position of the shape.
+     *
+     * @type {Vec3}
+     * @protected
+     */
+    _position = new Vec3();
 
-    _rotation;
+    /**
+     * The internal rotation of the shape.
+     *
+     * @type {Vec3}
+     * @protected
+     */
+    _rotation = new Vec3();
 
-    _scale;
+    /**
+     * The internal scale of the shape.
+     *
+     * @type {Vec3}
+     * @protected
+     */
+    _scale = new Vec3(1, 1, 1);
 
+    /**
+     * The internal render component layers of the shape.
+     *
+     * @type {string[]}
+     * @protected
+     */
     _layers = [];
 
+    /**
+     * The internal shading state of the shape.
+     *
+     * @type {boolean}
+     * @protected
+     */
     _shading = true;
 
+    /**
+     * The internal disabled state of the shape.
+     *
+     * @protected
+     * @type {boolean}
+     */
     _disabled = false;
 
+    /**
+     * The internal visibility state of the shape.
+     *
+     * @type {boolean}
+     * @protected
+     */
     _visible = true;
 
+    /**
+     * The internal default color of the shape.
+     *
+     * @type {Color}
+     * @protected
+     */
     _defaultColor = Color.WHITE;
 
+    /**
+     * The internal hover color of the shape.
+     *
+     * @type {Color}
+     * @protected
+     */
     _hoverColor = Color.BLACK;
 
+    /**
+     * The internal disabled color of the shape.
+     *
+     * @type {Color}
+     * @protected
+     */
     _disabledColor = COLOR_GRAY;
 
+    /**
+     * The internal culling state of the shape.
+     *
+     * @type {number}
+     * @protected
+     */
     _cull = CULLFACE_BACK;
 
     /**
@@ -238,30 +319,55 @@ class Shape {
      */
     meshInstances = [];
 
-    constructor(device, options) {
+    /**
+     * Create a shape.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {string} name - The name of the shape.
+     * @param {ShapeArgs} args - The options for the shape.
+     */
+    constructor(device, name, args) {
         this.device = device;
-        this.axis = options.axis ?? 'x';
-        this._position = options.position ?? new Vec3();
-        this._rotation = options.rotation ?? new Vec3();
-        this._scale = options.scale ?? new Vec3(1, 1, 1);
+        this.axis = args.axis ?? 'x';
 
-        this._disabled = options.disabled ?? false;
-        this._visible = options.hidden ?? false;
+        if (args.position instanceof Vec3) {
+            this._position.copy(args.position);
+        }
+        if (args.rotation instanceof Vec3) {
+            this._rotation.copy(args.rotation);
+        }
+        if (args.scale instanceof Vec3) {
+            this._scale.copy(args.scale);
+        }
 
-        this._layers = options.layers ?? this._layers;
-        this._shading = options.shading ?? this._shading;
+        this._disabled = args.disabled ?? false;
+        this._visible = args.hidden ?? false;
 
-        if (options.defaultColor instanceof Color) {
-            this._defaultColor = options.defaultColor;
+        this._layers = args.layers ?? this._layers;
+        this._shading = args.shading ?? this._shading;
+
+        if (args.defaultColor instanceof Color) {
+            this._defaultColor = args.defaultColor;
         }
-        if (options.hoverColor instanceof Color) {
-            this._hoverColor = options.hoverColor;
+        if (args.hoverColor instanceof Color) {
+            this._hoverColor = args.hoverColor;
         }
-        if (options.disabledColor instanceof Color) {
-            this._disabledColor = options.disabledColor;
+        if (args.disabledColor instanceof Color) {
+            this._disabledColor = args.disabledColor;
         }
+
+        // entity
+        this.entity = new Entity(`${name}:${this.axis}`);
+        this.entity.setLocalPosition(this._position);
+        this.entity.setLocalEulerAngles(this._rotation);
+        this.entity.setLocalScale(this._scale);
     }
 
+    /**
+     * Set the disabled state of the shape.
+     *
+     * @type {boolean}
+     */
     set disabled(value) {
         for (let i = 0; i < this.meshInstances.length; i++) {
             setMeshColor(this.meshInstances[i].mesh, value ? this._disabledColor : this._defaultColor);
@@ -269,10 +375,20 @@ class Shape {
         this._disabled = value ?? false;
     }
 
+    /**
+     * Get the disabled state of the shape.
+     *
+     * @type {boolean}
+     */
     get disabled() {
         return this._disabled;
     }
 
+    /**
+     * Set the visibility state of the shape.
+     *
+     * @type {boolean}
+     */
     set visible(value) {
         for (let i = 0; i < this.meshInstances.length; i++) {
             this.meshInstances[i].visible = value;
@@ -280,18 +396,28 @@ class Shape {
         this._visible = value;
     }
 
+    /**
+     * Get the visibility state of the shape.
+     *
+     * @type {boolean}
+     */
     get visible() {
         return this._visible;
     }
 
+    /**
+     * Set the shading state of the shape.
+     *
+     * @type {boolean}
+     */
     set shading(value) {
         this._shading = value ?? true;
 
         const color = this._disabled ? this._disabledColor : this._defaultColor;
         for (let i = 0; i < this.meshInstances.length; i++) {
             const mesh = this.meshInstances[i].mesh;
-            mesh.getPositions(tmpG.positions);
-            mesh.getNormals(tmpG.normals);
+            mesh.getPositions(tmpG.positions ?? []);
+            mesh.getNormals(tmpG.normals ?? []);
             const shadow = applyShadowColor(
                 tmpG,
                 color,
@@ -302,15 +428,13 @@ class Shape {
         }
     }
 
+    /**
+     * Get the shading state of the shape.
+     *
+     * @type {boolean}
+     */
     get shading() {
         return this._shading;
-    }
-
-    _createRoot(name) {
-        this.entity = new Entity(`${name}:${this.axis}`);
-        this.entity.setLocalPosition(this._position);
-        this.entity.setLocalEulerAngles(this._rotation);
-        this.entity.setLocalScale(this._scale);
     }
 
     /**
@@ -382,6 +506,17 @@ class Shape {
     }
 
     /**
+     * Update the shape's transform.
+     *
+     * @protected
+     */
+    _update() {
+        this.entity.setLocalPosition(this._position);
+        this.entity.setLocalEulerAngles(this._rotation);
+        this.entity.setLocalScale(this._scale);
+    }
+
+    /**
      * Sets the hover state of the shape.
      *
      * @param {boolean} state - Whether the shape is hovered.
@@ -398,6 +533,11 @@ class Shape {
         }
     }
 
+    /**
+     * Destroys the shape and its entity.
+     *
+     * @returns {void}
+     */
     destroy() {
         this.entity.destroy();
     }
