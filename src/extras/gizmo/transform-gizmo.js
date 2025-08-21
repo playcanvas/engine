@@ -134,14 +134,6 @@ class TransformGizmo extends Gizmo {
     _rootStartRot = new Quat();
 
     /**
-     * Internal state of if shading is enabled. Defaults to true.
-     *
-     * @type {boolean}
-     * @protected
-     */
-    _shading = false;
-
-    /**
      * Internal object containing the gizmo shapes to render.
      *
      * @type {{ [key in GizmoAxis]?: Shape }}
@@ -307,28 +299,6 @@ class TransformGizmo extends Gizmo {
             this._hover();
             this.fire(Gizmo.EVENT_POINTERUP);
         });
-    }
-
-    /**
-     * Sets whether shading are enabled. Defaults to true.
-     *
-     * @type {boolean}
-     */
-    set shading(value) {
-        this._shading = this.root.enabled && value;
-
-        for (const name in this._shapes) {
-            this._shapes[name].shading = this._shading;
-        }
-    }
-
-    /**
-     * Gets whether shading are enabled. Defaults to true.
-     *
-     * @type {boolean}
-     */
-    get shading() {
-        return this._shading;
     }
 
     /**

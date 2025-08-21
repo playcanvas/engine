@@ -99,7 +99,6 @@ tmpG.normals = [];
  * @property {boolean} [disabled] - Whether the shape is disabled.
  * @property {boolean} [hidden] - Whether the shape is hidden.
  * @property {number[]} [layers] - The layers the shape belongs to.
- * @property {boolean} [shading] - Whether the shape is shaded.
  * @property {Color} [defaultColor] - The default color of the shape.
  * @property {Color} [hoverColor] - The hover color of the shape.
  * @property {Color} [disabledColor] - The disabled color of the shape.
@@ -255,7 +254,6 @@ class Shape {
         this._visible = args.hidden ?? false;
 
         this._layers = args.layers ?? this._layers;
-        this._shading = args.shading ?? this._shading;
 
         if (args.defaultColor instanceof Color) {
             this._defaultColor = args.defaultColor;

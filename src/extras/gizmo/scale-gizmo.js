@@ -61,14 +61,12 @@ class ScaleGizmo extends TransformGizmo {
         xyz: new BoxShape(this._device, {
             axis: 'xyz',
             layers: [this._layer.id],
-            shading: this._shading,
             defaultColor: this._theme.shapeBase.xyz,
             hoverColor: this._theme.shapeHover.xyz
         }),
         yz: new PlaneShape(this._device, {
             axis: 'x',
             layers: [this._layer.id],
-            shading: this._shading,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._theme.shapeBase.x,
             hoverColor: this._theme.shapeHover.x
@@ -76,7 +74,6 @@ class ScaleGizmo extends TransformGizmo {
         xz: new PlaneShape(this._device, {
             axis: 'y',
             layers: [this._layer.id],
-            shading: this._shading,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._theme.shapeBase.y,
             hoverColor: this._theme.shapeHover.y
@@ -84,7 +81,6 @@ class ScaleGizmo extends TransformGizmo {
         xy: new PlaneShape(this._device, {
             axis: 'z',
             layers: [this._layer.id],
-            shading: this._shading,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._theme.shapeBase.z,
             hoverColor: this._theme.shapeHover.z
@@ -92,7 +88,6 @@ class ScaleGizmo extends TransformGizmo {
         x: new BoxLineShape(this._device, {
             axis: 'x',
             layers: [this._layer.id],
-            shading: this._shading,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._theme.shapeBase.x,
             hoverColor: this._theme.shapeHover.x
@@ -100,7 +95,6 @@ class ScaleGizmo extends TransformGizmo {
         y: new BoxLineShape(this._device, {
             axis: 'y',
             layers: [this._layer.id],
-            shading: this._shading,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._theme.shapeBase.y,
             hoverColor: this._theme.shapeHover.y
@@ -108,7 +102,6 @@ class ScaleGizmo extends TransformGizmo {
         z: new BoxLineShape(this._device, {
             axis: 'z',
             layers: [this._layer.id],
-            shading: this._shading,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._theme.shapeBase.z,
             hoverColor: this._theme.shapeHover.z
