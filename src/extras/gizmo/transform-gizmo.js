@@ -308,7 +308,7 @@ class TransformGizmo extends Gizmo {
      * @type {boolean}
      */
     set snap(value) {
-        this._snap = this.root.enabled && value;
+        this._snap = this.enabled && value;
     }
 
     /**
@@ -802,7 +802,7 @@ class TransformGizmo extends Gizmo {
     prerender() {
         super.prerender();
 
-        if (!this.root.enabled) {
+        if (!this.enabled) {
             return;
         }
 
