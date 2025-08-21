@@ -40,6 +40,7 @@
  *
  * @category Gizmo
  * @deprecated Use the literal 'local' instead - {@link GizmoSpace}
+ * @ignore
  */
 export const GIZMOSPACE_LOCAL = 'local';
 
@@ -48,6 +49,7 @@ export const GIZMOSPACE_LOCAL = 'local';
  *
  * @category Gizmo
  * @deprecated Use the literal 'world' instead - {@link GizmoSpace}
+ * @ignore
  */
 export const GIZMOSPACE_WORLD = 'world';
 
@@ -56,6 +58,7 @@ export const GIZMOSPACE_WORLD = 'world';
  *
  * @category Gizmo
  * @deprecated Use the literal 'x' instead - {@link GizmoAxis}.
+ * @ignore
  */
 export const GIZMOAXIS_X = 'x';
 
@@ -64,6 +67,7 @@ export const GIZMOAXIS_X = 'x';
  *
  * @category Gizmo
  * @deprecated Use the literal 'y' instead - {@link GizmoAxis}.
+ * @ignore
  */
 export const GIZMOAXIS_Y = 'y';
 
@@ -72,6 +76,7 @@ export const GIZMOAXIS_Y = 'y';
  *
  * @category Gizmo
  * @deprecated Use the literal 'z' instead - {@link GizmoAxis}.
+ * @ignore
  */
 export const GIZMOAXIS_Z = 'z';
 
@@ -80,6 +85,7 @@ export const GIZMOAXIS_Z = 'z';
  *
  * @category Gizmo
  * @deprecated Use the literal 'yz' instead - {@link GizmoAxis}.
+ * @ignore
  */
 export const GIZMOAXIS_YZ = 'yz';
 
@@ -88,6 +94,7 @@ export const GIZMOAXIS_YZ = 'yz';
  *
  * @category Gizmo
  * @deprecated Use the literal 'xz' instead - {@link GizmoAxis}.
+ * @ignore
  */
 export const GIZMOAXIS_XZ = 'xz';
 
@@ -96,6 +103,7 @@ export const GIZMOAXIS_XZ = 'xz';
  *
  * @category Gizmo
  * @deprecated Use the literal 'xy' instead - {@link GizmoAxis}.
+ * @ignore
  */
 export const GIZMOAXIS_XY = 'xy';
 
@@ -104,6 +112,7 @@ export const GIZMOAXIS_XY = 'xy';
  *
  * @category Gizmo
  * @deprecated Use the literal 'xyz' instead - {@link GizmoAxis}.
+ * @ignore
  */
 export const GIZMOAXIS_XYZ = 'xyz';
 
@@ -112,5 +121,6 @@ export const GIZMOAXIS_XYZ = 'xyz';
  *
  * @category Gizmo
  * @deprecated Use the literal 'f' instead - {@link GizmoAxis}.
+ * @ignore
  */
 export const GIZMOAXIS_FACE = 'face';
