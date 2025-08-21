@@ -46,7 +46,7 @@ class BoxShape extends Shape {
         ];
 
         // render
-        this._addRenderMesh(this.entity, 'box', this._shading);
+        this._addRenderMesh(this.entity, 'box');
 
         // update transform
         this._update();

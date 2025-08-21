@@ -66,7 +66,7 @@ class PlaneShape extends Shape {
         ];
 
         // render
-        this._addRenderMesh(this.entity, 'plane', this._shading);
+        this._addRenderMesh(this.entity, 'plane');
 
         // update transform
         this._update();

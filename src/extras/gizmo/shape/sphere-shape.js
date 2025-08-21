@@ -46,7 +46,7 @@ class SphereShape extends Shape {
         ];
 
         // render
-        this._addRenderMesh(this.entity, 'sphere', this._shading);
+        this._addRenderMesh(this.entity, 'sphere');
 
         // update transform
         this._update();

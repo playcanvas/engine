@@ -111,10 +111,10 @@ class BoxLineShape extends Shape {
         // render
         this._box = new Entity(`box:${this.axis}`);
         this.entity.addChild(this._box);
-        this._addRenderMesh(this._box, 'box', this._shading);
+        this._addRenderMesh(this._box, 'box');
         this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
-        this._addRenderMesh(this._line, 'cylinder', this._shading);
+        this._addRenderMesh(this._line, 'cylinder');
 
         // update transform
         this._update();

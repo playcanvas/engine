@@ -121,10 +121,10 @@ class ArrowShape extends Shape {
         // render
         this._head = new Entity(`head:${this.axis}`);
         this.entity.addChild(this._head);
-        this._addRenderMesh(this._head, 'cone', this._shading);
+        this._addRenderMesh(this._head, 'cone');
         this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
-        this._addRenderMesh(this._line, 'cylinder', this._shading);
+        this._addRenderMesh(this._line, 'cylinder');
 
         // update
         this._update();

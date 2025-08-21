@@ -1,10 +1,10 @@
 import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
+import { Mesh } from '../../../scene/mesh.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
 /** @import { ShapeArgs } from './shape.js' */
 /** @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js' */
-/** @import { Mesh } from '../../../index.js' */
 
 const TORUS_RENDER_SEGMENTS = 80;
 const TORUS_INTERSECT_SEGMENTS = 20;
@@ -105,7 +105,7 @@ class ArcShape extends Shape {
             sectorAngle: sectorAngle,
             segments: TORUS_RENDER_SEGMENTS
         });
-        return this._createMesh(geom, this._shading);
+        return Mesh.fromGeometry(this.device, geom);
     }
 
     /**
