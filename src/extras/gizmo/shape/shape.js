@@ -21,6 +21,9 @@ import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
  * @import { TriData } from '../tri-data.js';
  */
 
+/**
+ * @type {Record<string, typeof Geometry>}
+ */
 const GEOMETRIES = {
     box: BoxGeometry,
     cone: ConeGeometry,
