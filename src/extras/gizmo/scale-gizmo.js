@@ -219,7 +219,7 @@ class ScaleGizmo extends TransformGizmo {
      * @type {boolean}
      */
     set uniform(value) {
-        this._uniform = value ?? true;
+        this._uniform = value ?? this._uniform;
     }
 
     /**
