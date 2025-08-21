@@ -113,4 +113,4 @@ export const GIZMOAXIS_XYZ = 'xyz';
  * @category Gizmo
  * @deprecated Use the literal 'f' instead - {@link GizmoAxis}.
  */
-export const GIZMOAXIS_FACE = 'f';
+export const GIZMOAXIS_FACE = 'face';
