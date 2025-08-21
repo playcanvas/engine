@@ -58,11 +58,12 @@ export default /* glsl */`
         uint scale = pack101010(resolveCodebook(scalesSample, scales_codebook));    // resolve scale to 10,10,10 bits
         uint sh0 = pack111110(resolveCodebook(sh0Sample.xyz, sh0_codebook));        // resolve sh0 to 11,11,10 bits
         uint alpha = uint(sh0Sample.w * 255.0);
+        uint qmode = uint(quatsSample.w * 255.0) - 252u;
 
         pcFragColor0 = uvec4(
             pack8888(vec4(meansLSample, shLabelsSample.x)),
             pack8888(vec4(meansUSample, shLabelsSample.y)),
-            pack8888(quatsSample) | (alpha >> 2u),
+            pack8888(vec4(quatsSample.xyz, 0.0)) | (qmode << 6) | (alpha >> 2u),
             (scale << 2u) | (alpha & 0x3u)
         );
         pcFragColor1 = unpack8888(sh0);
