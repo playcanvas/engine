@@ -187,7 +187,7 @@ const setMeshColor = (mesh, color) => {
  * @property {Vec3} [scale] - The scale of the shape.
  * @property {boolean} [disabled] - Whether the shape is disabled.
  * @property {boolean} [hidden] - Whether the shape is hidden.
- * @property {string[]} [layers] - The layers the shape belongs to.
+ * @property {number[]} [layers] - The layers the shape belongs to.
  * @property {boolean} [shading] - Whether the shape is shaded.
  * @property {Color} [defaultColor] - The default color of the shape.
  * @property {Color} [hoverColor] - The hover color of the shape.
@@ -222,7 +222,7 @@ class Shape {
     /**
      * The internal render component layers of the shape.
      *
-     * @type {string[]}
+     * @type {number[]}
      * @protected
      */
     _layers = [];
