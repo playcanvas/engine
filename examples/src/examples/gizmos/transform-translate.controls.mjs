@@ -55,6 +55,37 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     max: 10,
                     precision: 0
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Flip Axes' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.flipAxes' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Flip Planes' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.flipPlanes' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Drag Mode' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 'show', t: 'Show' },
+                        { v: 'hide', t: 'Hide' },
+                        { v: 'selected', t: 'Selected' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.dragMode' }
+                })
             )
         ),
         jsx(
@@ -62,128 +93,139 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'Theme' },
             jsx(
                 LabelGroup,
-                { text: 'Axis X' },
+                { text: 'Shape Base X' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.axis.x' }
+                    link: { observer, path: 'gizmo.theme.shapeBase.x' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Axis Y' },
+                { text: 'Shape Base Y' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.axis.y' }
+                    link: { observer, path: 'gizmo.theme.shapeBase.y' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Axis Z' },
+                { text: 'Shape Base Z' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.axis.z' }
+                    link: { observer, path: 'gizmo.theme.shapeBase.z' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Axis XYZ' },
+                { text: 'Shape Base XYZ' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.axis.xyz' }
+                    link: { observer, path: 'gizmo.theme.shapeBase.xyz' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Axis Face' },
+                { text: 'Shape Base Face' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.axis.f' }
+                    link: { observer, path: 'gizmo.theme.shapeBase.f' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Hover X' },
+                { text: 'Shape Hover X' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.hover.x' }
+                    link: { observer, path: 'gizmo.theme.shapeHover.x' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Hover Y' },
+                { text: 'Shape Hover Y' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.hover.y' }
+                    link: { observer, path: 'gizmo.theme.shapeHover.y' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Hover Z' },
+                { text: 'Shape Hover Z' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.hover.z' }
+                    link: { observer, path: 'gizmo.theme.shapeHover.z' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Hover XYZ' },
+                { text: 'Shape Hover XYZ' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.hover.xyz' }
+                    link: { observer, path: 'gizmo.theme.shapeHover.xyz' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Hover Face' },
+                { text: 'Shape Hover Face' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.hover.f' }
+                    link: { observer, path: 'gizmo.theme.shapeHover.f' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Guide X' },
+                { text: 'Guide Base X' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.guide.x' }
+                    link: { observer, path: 'gizmo.theme.guideBase.x' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Guide Y' },
+                { text: 'Guide Base Y' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.guide.y' }
+                    link: { observer, path: 'gizmo.theme.guideBase.y' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Guide Z' },
+                { text: 'Guide Base Z' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.guide.z' }
+                    link: { observer, path: 'gizmo.theme.guideBase.z' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Guide Face' },
+                { text: 'Guide Base Face' },
                 jsx(ColorPicker, {
                     channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.guide.f' }
+                    link: { observer, path: 'gizmo.theme.guideBase.f' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Guide Occlusion' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.guideOcclusion' },
+                    min: 0,
+                    max: 1,
+                    precision: 2
                 })
             ),
             jsx(

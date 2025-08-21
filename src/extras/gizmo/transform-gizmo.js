@@ -1,3 +1,4 @@
+import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
@@ -13,35 +14,23 @@ import {
     COLOR_GRAY,
     color4from3
 } from './color.js';
-import { GIZMOAXIS_FACE, GIZMOAXIS_XYZ } from './constants.js';
 import { Gizmo } from './gizmo.js';
+import { Debug } from '../../core/debug.js';
 
 /**
  * @import { Shape } from './shape/shape.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../../scene/layer.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { GizmoAxis, GizmoDragMode } from './constants.js'
  */
 
 /**
  * @typedef {object} GizmoTheme
- * @property {object} axis - The axis colors.
- * @property {Color} axis.x - The X axis color.
- * @property {Color} axis.y - The Y axis color.
- * @property {Color} axis.z - The Z axis color.
- * @property {Color} axis.xyz - The XYZ axis color.
- * @property {Color} axis.f - The face axis color.
- * @property {object} hover - The hover colors.
- * @property {Color} hover.x - The X axis hover color.
- * @property {Color} hover.y - The Y axis hover color.
- * @property {Color} hover.z - The Z axis hover color.
- * @property {Color} hover.xyz - The XYZ axis hover color.
- * @property {Color} hover.f - The face axis hover color.
- * @property {object} guide - The guide line colors.
- * @property {Color} guide.x - The X axis guide color.
- * @property {Color} guide.y - The Y axis guide color.
- * @property {Color} guide.z - The Z axis guide color.
- * @property {Color} guide.f - The face axis guide color.
+ * @property {{ [K in 'x' | 'y' | 'z' | 'f' | 'xyz']: Color }} shapeBase - The axis colors.
+ * @property {{ [K in 'x' | 'y' | 'z' | 'f' | 'xyz']: Color }} shapeHover - The hover colors.
+ * @property {{ [K in 'x' | 'y' | 'z' | 'f']: Color }} guideBase - The guide line colors.
+ * @property {number} guideOcclusion - The guide occlusion value. Defaults to 0.8.
  * @property {Color} disabled - The disabled color.
  */
 
@@ -50,9 +39,10 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
+const tmpC1 = new Color();
 
 // constants
-const AXES = ['x', 'y', 'z'];
+const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
  * The base class for all transform gizmos.
@@ -102,29 +92,30 @@ class TransformGizmo extends Gizmo {
      * @type {GizmoTheme}
      * @protected
      */
-    _theme = Object.freeze({
-        axis: {
+    _theme = {
+        shapeBase: {
             x: color4from3(COLOR_RED, 0.6),
             y: color4from3(COLOR_GREEN, 0.6),
             z: color4from3(COLOR_BLUE, 0.6),
             xyz: color4from3(Color.WHITE, 0.6),
             f: color4from3(Color.WHITE, 0.6)
         },
-        hover: {
+        shapeHover: {
             x: COLOR_RED.clone(),
             y: COLOR_GREEN.clone(),
             z: COLOR_BLUE.clone(),
             xyz: Color.WHITE.clone(),
             f: COLOR_YELLOW.clone()
         },
-        guide: {
+        guideBase: {
             x: COLOR_RED.clone(),
             y: COLOR_GREEN.clone(),
             z: COLOR_BLUE.clone(),
             f: COLOR_YELLOW.clone()
         },
+        guideOcclusion: 0.8,
         disabled: COLOR_GRAY.clone()
-    });
+    };
 
     /**
      * Internal gizmo starting rotation in world space.
@@ -143,17 +134,9 @@ class TransformGizmo extends Gizmo {
     _rootStartRot = new Quat();
 
     /**
-     * Internal state of if shading is enabled. Defaults to true.
-     *
-     * @type {boolean}
-     * @protected
-     */
-    _shading = false;
-
-    /**
      * Internal object containing the gizmo shapes to render.
      *
-     * @type {Record<string, Shape>}
+     * @type {{ [key in GizmoAxis]?: Shape }}
      * @protected
      */
     _shapes = {};
@@ -167,17 +150,17 @@ class TransformGizmo extends Gizmo {
     _shapeMap = new Map();
 
     /**
-     * Internal currently hovered shape.
+     * Internal currently hovered axes
      *
-     * @type {Shape | null}
+     * @type {Set<GizmoAxis>}
      * @private
      */
-    _hoverShape = null;
+    _hovering = new Set();
 
     /**
      * Internal currently hovered axis.
      *
-     * @type {string}
+     * @type {GizmoAxis | ''}
      * @private
      */
     _hoverAxis = '';
@@ -193,7 +176,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal currently selected axis.
      *
-     * @type {string}
+     * @type {GizmoAxis | ''}
      * @protected
      */
     _selectedAxis = '';
@@ -230,15 +213,23 @@ class TransformGizmo extends Gizmo {
     snapIncrement = 1;
 
     /**
+     * Whether to hide the shapes when dragging. Defaults to 'selected'.
+     *
+     * @type {GizmoDragMode}
+     */
+    dragMode = 'selected';
+
+    /**
      * Creates a new TransformGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
+     * @param {string} [name] - The name of the gizmo.
      * @example
      * const gizmo = new pc.TransformGizmo(camera, layer);
      */
-    constructor(camera, layer) {
-        super(camera, layer);
+    constructor(camera, layer, name = 'gizmo:transform') {
+        super(camera, layer, name);
 
         this.on(Gizmo.EVENT_POINTERDOWN, (x, y, meshInstance) => {
             const shape = this._shapeMap.get(meshInstance);
@@ -285,7 +276,7 @@ class TransformGizmo extends Gizmo {
             this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, point, x, y);
         });
 
-        this.on(Gizmo.EVENT_POINTERUP, (x, y, meshInstance) => {
+        this.on(Gizmo.EVENT_POINTERUP, (_x, _y, meshInstance) => {
             this._hover(meshInstance);
 
             if (!this._dragging) {
@@ -309,28 +300,6 @@ class TransformGizmo extends Gizmo {
             this._hover();
             this.fire(Gizmo.EVENT_POINTERUP);
         });
-    }
-
-    /**
-     * Sets whether shading are enabled. Defaults to true.
-     *
-     * @type {boolean}
-     */
-    set shading(value) {
-        this._shading = this.root.enabled && value;
-
-        for (const name in this._shapes) {
-            this._shapes[name].shading = this._shading;
-        }
-    }
-
-    /**
-     * Gets whether shading are enabled. Defaults to true.
-     *
-     * @type {boolean}
-     */
-    get shading() {
-        return this._shading;
     }
 
     /**
@@ -367,15 +336,16 @@ class TransformGizmo extends Gizmo {
      */
     set xAxisColor(value) {
         this.setTheme({
-            axis: {
+            shapeBase: {
                 x: value
             },
-            hover: {
+            shapeHover: {
                 x: color4from3(value, this.colorAlpha)
             },
-            guide: {
+            guideBase: {
                 x: value
-            }
+            },
+            guideOcclusion: 1
         });
     }
 
@@ -385,7 +355,7 @@ class TransformGizmo extends Gizmo {
      * @ignore
      */
     get xAxisColor() {
-        return this._theme.axis.x;
+        return this._theme.shapeBase.x;
     }
 
     /**
@@ -395,15 +365,16 @@ class TransformGizmo extends Gizmo {
      */
     set yAxisColor(value) {
         this.setTheme({
-            axis: {
+            shapeBase: {
                 y: value
             },
-            hover: {
+            shapeHover: {
                 y: color4from3(value, this.colorAlpha)
             },
-            guide: {
+            guideBase: {
                 y: value
-            }
+            },
+            guideOcclusion: 1
         });
     }
 
@@ -413,7 +384,7 @@ class TransformGizmo extends Gizmo {
      * @ignore
      */
     get yAxisColor() {
-        return this._theme.axis.y;
+        return this._theme.shapeBase.y;
     }
 
     /**
@@ -423,15 +394,16 @@ class TransformGizmo extends Gizmo {
      */
     set zAxisColor(value) {
         this.setTheme({
-            axis: {
+            shapeBase: {
                 z: value
             },
-            hover: {
+            shapeHover: {
                 z: color4from3(value, this.colorAlpha)
             },
-            guide: {
+            guideBase: {
                 z: value
-            }
+            },
+            guideOcclusion: 1
         });
     }
 
@@ -441,7 +413,7 @@ class TransformGizmo extends Gizmo {
      * @ignore
      */
     get zAxisColor() {
-        return this._theme.axis.z;
+        return this._theme.shapeBase.z;
     }
 
     /**
@@ -451,12 +423,12 @@ class TransformGizmo extends Gizmo {
      */
     set colorAlpha(value) {
         this.setTheme({
-            hover: {
-                x: color4from3(this._theme.hover.x, value),
-                y: color4from3(this._theme.hover.y, value),
-                z: color4from3(this._theme.hover.z, value),
-                xyz: color4from3(this._theme.hover.xyz, value),
-                f: color4from3(this._theme.hover.f, value)
+            shapeHover: {
+                x: color4from3(this._theme.shapeHover.x, value),
+                y: color4from3(this._theme.shapeHover.y, value),
+                z: color4from3(this._theme.shapeHover.z, value),
+                xyz: color4from3(this._theme.shapeHover.xyz, value),
+                f: color4from3(this._theme.shapeHover.f, value)
             }
         });
     }
@@ -468,11 +440,11 @@ class TransformGizmo extends Gizmo {
      */
     get colorAlpha() {
         return (
-            this._theme.hover.x.a +
-            this._theme.hover.y.a +
-            this._theme.hover.z.a +
-            this._theme.hover.xyz.a +
-            this._theme.hover.f.a
+            this._theme.shapeHover.x.a +
+            this._theme.shapeHover.y.a +
+            this._theme.shapeHover.z.a +
+            this._theme.shapeHover.xyz.a +
+            this._theme.shapeHover.f.a
         ) / 5;
     }
 
@@ -486,14 +458,14 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @param {MeshInstance} [meshInstance] - The mesh instance.
-     * @returns {string} - The axis.
+     * @returns {GizmoAxis | ''} - The axis.
      * @private
      */
     _getAxis(meshInstance) {
         if (!meshInstance) {
             return '';
         }
-        return meshInstance.node.name.split(':')[1];
+        return /** @type {GizmoAxis | ''} */ (meshInstance.node.name.split(':')[1]);
     }
 
     /**
@@ -516,21 +488,64 @@ class TransformGizmo extends Gizmo {
         if (this._dragging) {
             return;
         }
+
+        // track changes
+        const remove = new Set(this._hovering);
+        let changed = false;
+        const add = (/** @type {GizmoAxis} */ axis) => {
+            if (remove.has(axis)) {
+                remove.delete(axis);
+            } else {
+                this._hovering.add(axis);
+                this._shapes[axis]?.hover(true);
+                changed = true;
+            }
+        };
+
+        // determine which axis is hovered
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane = this._getIsPlane(meshInstance);
-        const shape = meshInstance ? this._shapeMap.get(meshInstance) ?? null : null;
-        if (shape === this._hoverShape) {
-            return;
+
+        // add shapes that are hovered
+        if (this._hoverAxis) {
+            if (this._hoverAxis === 'xyz') {
+                add('x');
+                add('y');
+                add('z');
+                add('xyz');
+            } else if (this._hoverIsPlane) {
+                switch (this._hoverAxis) {
+                    case 'x':
+                        add('y');
+                        add('z');
+                        add('yz');
+                        break;
+                    case 'y':
+                        add('x');
+                        add('z');
+                        add('xz');
+                        break;
+                    case 'z':
+                        add('x');
+                        add('y');
+                        add('xy');
+                        break;
+                }
+            } else {
+                add(this._hoverAxis);
+            }
         }
-        if (this._hoverShape) {
-            this._hoverShape.hover(false);
-            this._hoverShape = null;
+
+        // unhover removed shapes
+        for (const axis of remove) {
+            this._hovering.delete(axis);
+            this._shapes[axis]?.hover(false);
+            changed = true;
         }
-        if (shape) {
-            shape.hover(true);
-            this._hoverShape = shape;
+
+        if (changed) {
+            this.fire(Gizmo.EVENT_RENDERUPDATE);
         }
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
     }
 
     /**
@@ -586,7 +601,7 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _dirFromAxis(axis, dir) {
-        if (axis === GIZMOAXIS_FACE) {
+        if (axis === 'f') {
             dir.copy(this._camera.entity.forward).mulScalar(-1);
         } else {
             dir.set(0, 0, 0);
@@ -637,13 +652,13 @@ class TransformGizmo extends Gizmo {
     /**
      * @param {Vec3} pos - The position.
      * @param {Quat} rot - The rotation.
-     * @param {string} activeAxis - The active axis.
+     * @param {GizmoAxis | ''} activeAxis - The active axis.
      * @param {boolean} activeIsPlane - Whether the active axis is a plane.
      * @protected
      */
     _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
         for (const axis of AXES) {
-            if (activeAxis === GIZMOAXIS_XYZ) {
+            if (activeAxis === 'xyz') {
                 this._drawSpanLine(pos, rot, axis);
                 continue;
             }
@@ -662,18 +677,25 @@ class TransformGizmo extends Gizmo {
     /**
      * @param {Vec3} pos - The position.
      * @param {Quat} rot - The rotation.
-     * @param {string} axis - The axis.
-     * @param {Color} [color] - The color.
+     * @param {'x' | 'y' | 'z'} axis - The axis.
      * @protected
      */
-    _drawSpanLine(pos, rot, axis, color = this._theme.guide[axis]) {
+    _drawSpanLine(pos, rot, axis) {
         tmpV1.set(0, 0, 0);
         tmpV1[axis] = 1;
         tmpV1.mulScalar(this._camera.farClip - this._camera.nearClip);
         tmpV2.copy(tmpV1).mulScalar(-1);
-        rot.transformVector(tmpV1, tmpV1);
-        rot.transformVector(tmpV2, tmpV2);
-        this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, true);
+        const from = rot.transformVector(tmpV1, tmpV1).add(pos);
+        const to = rot.transformVector(tmpV2, tmpV2).add(pos);
+        const color = this._theme.guideBase[axis];
+        if (this._theme.guideOcclusion < 1) {
+            const occluded = tmpC1.copy(color);
+            occluded.a *= (1 - this._theme.guideOcclusion);
+            this._app.drawLine(from, to, occluded, false, this._layer);
+        }
+        if (color.a !== 0) {
+            this._app.drawLine(from, to, color, true);
+        }
     }
 
     /**
@@ -694,49 +716,37 @@ class TransformGizmo extends Gizmo {
     /**
      * Set the shape to be enabled or disabled.
      *
-     * @param {string} shapeAxis - The shape axis. Can be:
-     *
-     * - {@link GIZMOAXIS_X}
-     * - {@link GIZMOAXIS_Y}
-     * - {@link GIZMOAXIS_Z}
-     * - {@link GIZMOAXIS_YZ}
-     * - {@link GIZMOAXIS_XZ}
-     * - {@link GIZMOAXIS_XY}
-     * - {@link GIZMOAXIS_XYZ}
-     * - {@link GIZMOAXIS_FACE}
-     *
+     * @param {GizmoAxis | 'face'} shapeAxis - The shape axis.
      * @param {boolean} enabled - The enabled state of shape.
      */
     enableShape(shapeAxis, enabled) {
-        if (!this._shapes.hasOwnProperty(shapeAxis)) {
+        if (shapeAxis === 'face') {
+            Debug.deprecated('"face" literal is deprecated use "f" literal instead');
+            shapeAxis = 'f';
+        }
+        const shape = this._shapes[shapeAxis];
+        if (!shape) {
             return;
         }
-
-        this._shapes[shapeAxis].disabled = !enabled;
+        shape.disabled = !enabled;
     }
 
     /**
      * Get the enabled state of the shape.
      *
-     * @param {string} shapeAxis - The shape axis. Can be:
-     *
-     * - {@link GIZMOAXIS_X}
-     * - {@link GIZMOAXIS_Y}
-     * - {@link GIZMOAXIS_Z}
-     * - {@link GIZMOAXIS_YZ}
-     * - {@link GIZMOAXIS_XZ}
-     * - {@link GIZMOAXIS_XY}
-     * - {@link GIZMOAXIS_XYZ}
-     * - {@link GIZMOAXIS_FACE}
-     *
+     * @param {GizmoAxis | 'face'} shapeAxis - The shape axis. Can be:
      * @returns {boolean} - Then enabled state of the shape
      */
     isShapeEnabled(shapeAxis) {
-        if (!this._shapes.hasOwnProperty(shapeAxis)) {
+        if (shapeAxis === 'face') {
+            Debug.deprecated('"face" literal is deprecated use "f" literal instead');
+            shapeAxis = 'f';
+        }
+        const shape = this._shapes[shapeAxis];
+        if (!shape) {
             return false;
         }
-
-        return !this._shapes[shapeAxis].disabled;
+        return !shape.disabled;
     }
 
     /**
@@ -746,59 +756,36 @@ class TransformGizmo extends Gizmo {
      */
     setTheme(partial) {
         const theme = { ...this._theme, ...partial };
-        if (typeof theme !== 'object' || typeof theme.axis !== 'object' || typeof theme.hover !== 'object') {
+        if (typeof theme !== 'object' ||
+            typeof theme.shapeBase !== 'object' ||
+            typeof theme.shapeHover !== 'object' ||
+            typeof theme.guideBase !== 'object') {
             return;
         }
 
-        // axis colors
-        if (theme.axis.x instanceof Color) {
-            this._theme.axis.x.copy(theme.axis.x);
+        // shape
+        for (const axis in theme.shapeBase) {
+            if (theme.shapeBase[axis] instanceof Color) {
+                this._theme.shapeBase[axis].copy(theme.shapeBase[axis]);
+            }
         }
-        if (theme.axis.y instanceof Color) {
-            this._theme.axis.y.copy(theme.axis.y);
-        }
-        if (theme.axis.z instanceof Color) {
-            this._theme.axis.z.copy(theme.axis.z);
-        }
-        if (theme.axis.xyz instanceof Color) {
-            this._theme.axis.xyz.copy(theme.axis.xyz);
-        }
-        if (theme.axis.f instanceof Color) {
-            this._theme.axis.f.copy(theme.axis.f);
+        for (const axis in theme.shapeHover) {
+            if (theme.shapeHover[axis] instanceof Color) {
+                this._theme.shapeHover[axis].copy(theme.shapeHover[axis]);
+            }
         }
 
-        // hover colors
-        if (theme.hover.x instanceof Color) {
-            this._theme.hover.x.copy(theme.hover.x);
+        // guide
+        for (const axis in theme.guideBase) {
+            if (theme.guideBase[axis] instanceof Color) {
+                this._theme.guideBase[axis].copy(theme.guideBase[axis]);
+            }
         }
-        if (theme.hover.y instanceof Color) {
-            this._theme.hover.y.copy(theme.hover.y);
-        }
-        if (theme.hover.z instanceof Color) {
-            this._theme.hover.z.copy(theme.hover.z);
-        }
-        if (theme.hover.xyz instanceof Color) {
-            this._theme.hover.xyz.copy(theme.hover.xyz);
-        }
-        if (theme.hover.f instanceof Color) {
-            this._theme.hover.f.copy(theme.hover.f);
+        if (typeof theme.guideOcclusion === 'number') {
+            this._theme.guideOcclusion = math.clamp(theme.guideOcclusion, 0, 1);
         }
 
-        // guide colors
-        if (theme.guide.x instanceof Color) {
-            this._theme.guide.x.copy(theme.guide.x);
-        }
-        if (theme.guide.y instanceof Color) {
-            this._theme.guide.y.copy(theme.guide.y);
-        }
-        if (theme.guide.z instanceof Color) {
-            this._theme.guide.z.copy(theme.guide.z);
-        }
-        if (theme.guide.f instanceof Color) {
-            this._theme.guide.f.copy(theme.guide.f);
-        }
-
-        // disabled color
+        // disabled
         if (theme.disabled instanceof Color) {
             this._theme.disabled.copy(theme.disabled);
         }
