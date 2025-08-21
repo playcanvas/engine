@@ -50,7 +50,7 @@ const tmpP1 = new Plane();
 const tmpC1 = new Color();
 
 // constants
-const AXES = ['x', 'y', 'z'];
+const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
  * The base class for all transform gizmos.
@@ -58,6 +58,10 @@ const AXES = ['x', 'y', 'z'];
  * @category Gizmo
  */
 class TransformGizmo extends Gizmo {
+    /**
+     * @typedef {('x' | 'y' | 'z' | 'f' | 'xy' | 'xz' | 'yz' | 'xyz' | '')} GizmoAxis
+     */
+
     /**
      * Fired when when the transformation has started.
      *
@@ -152,7 +156,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal object containing the gizmo shapes to render.
      *
-     * @type {Record<string, Shape>}
+     * @type {{ [key in GizmoAxis]?: Shape }}
      * @protected
      */
     _shapes = {};
@@ -166,17 +170,17 @@ class TransformGizmo extends Gizmo {
     _shapeMap = new Map();
 
     /**
-     * Internal currently hovered shape.
+     * Internal currently hovered axes
      *
-     * @type {Shape | null}
+     * @type {Set<GizmoAxis>}
      * @private
      */
-    _hoverShape = null;
+    _hovering = new Set();
 
     /**
      * Internal currently hovered axis.
      *
-     * @type {string}
+     * @type {GizmoAxis | ''}
      * @private
      */
     _hoverAxis = '';
@@ -192,7 +196,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal currently selected axis.
      *
-     * @type {string}
+     * @type {GizmoAxis | ''}
      * @protected
      */
     _selectedAxis = '';
@@ -498,14 +502,14 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @param {MeshInstance} [meshInstance] - The mesh instance.
-     * @returns {string} - The axis.
+     * @returns {GizmoAxis | ''} - The axis.
      * @private
      */
     _getAxis(meshInstance) {
         if (!meshInstance) {
             return '';
         }
-        return meshInstance.node.name.split(':')[1];
+        return /** @type {GizmoAxis | ''} */ (meshInstance.node.name.split(':')[1]);
     }
 
     /**
@@ -528,21 +532,65 @@ class TransformGizmo extends Gizmo {
         if (this._dragging) {
             return;
         }
+
+        const remove = new Set(this._hovering);
+
+        // track changes
+        let changed = false;
+        const add = (/** @type {GizmoAxis} */ axis) => {
+            if (remove.has(axis)) {
+                remove.delete(axis);
+            } else {
+                this._hovering.add(axis);
+                this._shapes[axis]?.hover(true);
+                changed = true;
+            }
+        };
+
+        // determine which axis is hovered
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane = this._getIsPlane(meshInstance);
-        const shape = meshInstance ? this._shapeMap.get(meshInstance) ?? null : null;
-        if (shape === this._hoverShape) {
-            return;
+
+        // add shapes that are hovered
+        if (this._hoverAxis) {
+            if (this._hoverAxis === 'xyz') {
+                add('x');
+                add('y');
+                add('z');
+                add('xyz');
+            } else if (this._hoverIsPlane) {
+                switch (this._hoverAxis) {
+                    case 'x':
+                        add('y');
+                        add('z');
+                        add('yz');
+                        break;
+                    case 'y':
+                        add('x');
+                        add('z');
+                        add('xz');
+                        break;
+                    case 'z':
+                        add('x');
+                        add('y');
+                        add('xy');
+                        break;
+                }
+            } else {
+                add(this._hoverAxis);
+            }
         }
-        if (this._hoverShape) {
-            this._hoverShape.hover(false);
-            this._hoverShape = null;
+
+        // unhover removed shapes
+        for (const axis of remove) {
+            this._hovering.delete(axis);
+            this._shapes[axis]?.hover(false);
+            changed = true;
         }
-        if (shape) {
-            shape.hover(true);
-            this._hoverShape = shape;
+
+        if (changed) {
+            this.fire(Gizmo.EVENT_RENDERUPDATE);
         }
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
     }
 
     /**
