@@ -529,7 +529,7 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {Vec3} The point in world space.
+     * @returns {Vec3} The point (space is {@link TransformGizmo#coordSpace}).
      * @protected
      */
     _screenToPoint(x, y) {
@@ -563,26 +563,30 @@ class ScaleGizmo extends TransformGizmo {
             return point;
         }
 
-        // uniform scaling for planes
-        if (this._uniform && isPlane) {
-            // calculate direction vector for scaling
-            const dir = tmpV1.sub2(point, gizmoPos);
-
-            // average the scale in all 3 axes (as plane one axis is always 0)
-            const scale = (dir.x + dir.y + dir.z) / 2;
-            point.set(scale, scale, scale);
-
-            // set the axis that is not in the plane to 0
-            point[axis] = 0;
-
-            point.add(gizmoPos);
-        }
-
         // rotate point back to world coords
         tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
 
+        // project point onto axis
         if (!isPlane) {
             this._projectToAxis(point, axis);
+        }
+
+        // mirror axes
+        const cameraDir = this.cameraDir;
+        let dot = cameraDir.dot(this.root.right);
+        point.x *= dot < 0 ? -1 : 1;
+        dot = cameraDir.dot(this.root.up);
+        point.y *= dot < 0 ? -1 : 1;
+        dot = cameraDir.dot(this.root.forward);
+        point.z *= dot > 0 ? -1 : 1;
+
+        // uniform scaling for planes
+        if (this._uniform && isPlane) {
+            // project to diagonal line
+            tmpV1.set(1, 1, 1);
+            tmpV1[axis] = 0;
+            point.copy(tmpV1.mulScalar(tmpV1.dot(point)));
+            point[axis] = 0;
         }
 
         return point;

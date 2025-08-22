@@ -527,7 +527,7 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {Vec3} The point in world space.
+     * @returns {Vec3} The point (space is {@link TransformGizmo#coordSpace}).
      * @protected
      */
     _screenToPoint(x, y) {
@@ -547,6 +547,7 @@ class TranslateGizmo extends TransformGizmo {
         // rotate point back to world coords
         tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
 
+        // project point onto axis
         if (!isPlane && axis !== 'xyz') {
             this._projectToAxis(point, axis);
         }
