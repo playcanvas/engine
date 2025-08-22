@@ -584,6 +584,15 @@ class ScaleGizmo extends TransformGizmo {
             this._projectToAxis(point, axis);
         }
 
+        // mirror axes
+        const cameraDir = this.cameraDir;
+        let dot = cameraDir.dot(this.root.right);
+        point.x *= dot < 0 ? -1 : 1;
+        dot = cameraDir.dot(this.root.up);
+        point.y *= dot < 0 ? -1 : 1;
+        dot = cameraDir.dot(this.root.forward);
+        point.z *= dot > 0 ? -1 : 1;
+
         return point;
     }
 
