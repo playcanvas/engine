@@ -1,20 +1,13 @@
 export default /* wgsl */`
+#include "gsplatPackingPS"
+
 var packedTexture: texture_2d<u32>;
 
 uniform means_mins: vec3f;
 uniform means_maxs: vec3f;
 
-uniform scales_mins: vec3f;
-uniform scales_maxs: vec3f;
-
-fn unpackU32(u: u32) -> vec4f {
-    return vec4f(
-        f32((u >> 24u) & 0xFFu) / 255.0,
-        f32((u >> 16u) & 0xFFu) / 255.0,
-        f32((u >> 8u) & 0xFFu) / 255.0,
-        f32(u & 0xFFu) / 255.0
-    );
-}
+uniform scales_mins: f32;
+uniform scales_maxs: f32;
 
 var<private> packedSample: vec4<u32>;
 
@@ -23,10 +16,10 @@ fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
 
     packedSample = textureLoad(packedTexture, source.uv, 0);
 
-    let l: vec3f = unpackU32(packedSample.x).xyz;
-    let u: vec3f = unpackU32(packedSample.y).xyz;
-    let n: vec3f = (l * 255.0 + u * 255.0 * 256.0) / 65535.0;
-    let v: vec3f = mix(uniform.means_mins, uniform.means_maxs, n);
+    let l = unpack8888(packedSample.x).xyz;
+    let u = unpack8888(packedSample.y).xyz;
+    let n = (l * 255.0 + u * 255.0 * 256.0) / 65535.0;
+    let v = mix(uniform.means_mins, uniform.means_maxs, n);
 
     return sign(v) * (exp(abs(v)) - 1.0);
 }
@@ -35,13 +28,12 @@ const norm: f32 = 2.0 / sqrt(2.0);
 
 // sample covariance vectors
 fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
-    let qdata: vec4f = unpackU32(packedSample.z);
-    let sdata: vec3f = unpackU32(packedSample.w).xyz;
+    let qdata = unpack8888(packedSample.z).xyz;
+    let sdata = unpack101010(packedSample.w >> 2u);
 
-    let abc: vec3f = (qdata.xyz - 0.5) * norm;
-    let d: f32 = sqrt(max(0.0, 1.0 - dot(abc, abc)));
-
-    let mode: u32 = u32(qdata.w * 255.0 + 0.5) - 252u;
+    let mode = (packedSample.z >> 6u) & 0x3u;
+    let abc = (qdata - 0.5) * norm;
+    let d = sqrt(max(0.0, 1.0 - dot(abc, abc)));
 
     var quat: vec4f;
     if (mode == 0u) {
@@ -54,12 +46,11 @@ fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, ve
         quat = vec4f(abc.x, abc.y, abc.z, d);
     }
 
-
-    let rot: mat3x3f = quatToMat3(quat);
-    let scale: vec3f = exp(mix(uniform.scales_mins, uniform.scales_maxs, sdata));
+    let rot = quatToMat3(quat);
+    let scale = exp(mix(vec3f(uniform.scales_mins), vec3f(uniform.scales_maxs), sdata));
 
     // M = S * R
-    let M: mat3x3f = transpose(mat3x3f(
+    let M = transpose(mat3x3f(
         scale.x * rot[0],
         scale.y * rot[1],
         scale.z * rot[2]

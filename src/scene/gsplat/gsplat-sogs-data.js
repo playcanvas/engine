@@ -13,7 +13,10 @@ import glslGsplatSogsReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gspla
 import wgslGsplatSogsReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsReorder.js';
 
 import glslGsplatSogsReorderSh from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogsReorderSh.js';
-import gsplatPackingPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatPacking.js';
+import glslGsplatPackingPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatPacking.js';
+
+import wgslGsplatSogsReorderSH from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsReorderSh.js';
+import wgslGsplatPackingPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatPacking.js';
 
 const SH_C0 = 0.28209479177387814;
 
@@ -327,7 +330,7 @@ class GSplatSogsData {
             fragmentGLSL: glslGsplatSogsReorderPS,
             fragmentWGSL: wgslGsplatSogsReorderPS,
             fragmentOutputTypes: ['uvec4', 'vec4'],
-            fragmentIncludes: new Map([['gsplatPackingPS', gsplatPackingPS]])
+            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]])
         });
 
         const renderTarget = new RenderTarget({
@@ -368,7 +371,8 @@ class GSplatSogsData {
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatSogsReorderSh,
-            fragmentIncludes: new Map([['gsplatPackingPS', gsplatPackingPS]])
+            fragmentWGSL: wgslGsplatSogsReorderSH,
+            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]])
         });
 
         const renderTarget = new RenderTarget({
