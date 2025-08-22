@@ -13,7 +13,7 @@ fn readSHData(source: ptr<function, SplatSource>, sh: ptr<function, array<vec3f,
 
     // calculate offset into the centroids texture and read consecutive texels
     for (var i: i32 = 0; i < SH_COEFFS; i = i + 1) {
-        sh[i] = mix(vec3f(uniform.shN_mins), vec3f(uniform.shN_maxs), unpack111110(pack8888(textureLoad(packedShN, vec2<i32>(u + i, v), 0))));
+        sh[i] = mix(vec3f(uniform.shN_mins), vec3f(uniform.shN_maxs), unpack111110(pack8888(textureLoad(packedShN, vec2i(u + i, v), 0))));
     }
 
     *scale = 1.0;
