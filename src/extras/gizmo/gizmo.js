@@ -30,6 +30,7 @@ const MIN_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
 const UPDATE_EPSILON = 1e-6;
+const DIST_EPSILON = 1e-4;
 
 /**
  * The base class for all gizmos.
@@ -290,6 +291,29 @@ class Gizmo extends EventHandler {
     }
 
     /**
+     * Sets the gizmo enabled state.
+     *
+     * @type {boolean}
+     */
+    set enabled(state) {
+        const cameraDist = this.root.getPosition().distance(this.camera.entity.getPosition());
+        const enabled = state ? this.nodes.length > 0 && cameraDist > DIST_EPSILON : false;
+        if (enabled !== this.root.enabled) {
+            this.root.enabled = enabled;
+            this.fire(Gizmo.EVENT_RENDERUPDATE);
+        }
+    }
+
+    /**
+     * Gets the gizmo enabled state.
+     *
+     * @type {boolean}
+     */
+    get enabled() {
+        return this.root.enabled;
+    }
+
+    /**
      * Sets the gizmo render layer.
      *
      * @param {Layer} layer - The layer to render the gizmo.
@@ -301,6 +325,8 @@ class Gizmo extends EventHandler {
         this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
         this._layer = layer;
         this._camera.layers = this._camera.layers.concat(this._layer.id);
+
+        this.enabled = true;
     }
 
     /**
@@ -324,6 +350,8 @@ class Gizmo extends EventHandler {
         this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
         this._camera = camera;
         this._camera.layers = this._camera.layers.concat(this._layer.id);
+
+        this.enabled = true;
     }
 
     /**
@@ -401,7 +429,7 @@ class Gizmo extends EventHandler {
      * @private
      */
     _onPointerDown(e) {
-        if (!this.root.enabled || document.pointerLockElement) {
+        if (!this.enabled || document.pointerLockElement) {
             return;
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
@@ -422,7 +450,7 @@ class Gizmo extends EventHandler {
      * @private
      */
     _onPointerMove(e) {
-        if (!this.root.enabled || document.pointerLockElement) {
+        if (!this.enabled || document.pointerLockElement) {
             return;
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
@@ -438,7 +466,7 @@ class Gizmo extends EventHandler {
      * @private
      */
     _onPointerUp(e) {
-        if (!this.root.enabled || document.pointerLockElement) {
+        if (!this.enabled || document.pointerLockElement) {
             return;
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
@@ -584,15 +612,14 @@ class Gizmo extends EventHandler {
         } else {
             this.nodes = [nodes];
         }
+
         this._updatePosition();
         this._updateRotation();
         this._updateScale();
 
         this.fire(Gizmo.EVENT_NODESATTACH);
 
-        this.root.enabled = true;
-
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
+        this.enabled = true;
     }
 
     /**
@@ -604,9 +631,8 @@ class Gizmo extends EventHandler {
      * gizmo.detach();
      */
     detach() {
-        this.root.enabled = false;
+        this.enabled = false;
 
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
         this.fire(Gizmo.EVENT_NODESDETACH);
 
         this.nodes = [];

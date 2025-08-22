@@ -584,7 +584,7 @@ class TranslateGizmo extends TransformGizmo {
     prerender() {
         super.prerender();
 
-        if (!this.root.enabled) {
+        if (!this.enabled) {
             return;
         }
 
