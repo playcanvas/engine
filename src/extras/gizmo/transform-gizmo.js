@@ -250,7 +250,7 @@ class TransformGizmo extends Gizmo {
             this._selectedAxis = this._getAxis(meshInstance);
             this._selectedIsPlane =  this._getIsPlane(meshInstance);
 
-            this._rootStartPos.copy(this.root.getPosition());
+            this._rootStartPos.copy(this.root.getLocalPosition());
             this._rootStartRot.copy(this.root.getRotation());
             const point = this._screenToPoint(x, y);
             this._selectionStartPoint.copy(point);
@@ -644,7 +644,9 @@ class TransformGizmo extends Gizmo {
         const plane = this._createPlane(axis, isFacing, isLine);
 
         const point = new Vec3();
-        plane.intersectsRay(ray, point);
+        if (!plane.intersectsRay(ray, point)) {
+            point.copy(this.root.getLocalPosition());
+        }
 
         return point;
     }
@@ -806,7 +808,7 @@ class TransformGizmo extends Gizmo {
             return;
         }
 
-        const gizmoPos = this.root.getPosition();
+        const gizmoPos = this.root.getLocalPosition();
         const gizmoRot = this.root.getRotation();
         const activeAxis = this._hoverAxis || this._selectedAxis;
         const activeIsPlane = this._hoverIsPlane || this._selectedIsPlane;

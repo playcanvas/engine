@@ -540,8 +540,9 @@ class TranslateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === 'xyz', !isPlane);
 
         const point = new Vec3();
-
-        plane.intersectsRay(ray, point);
+        if (!plane.intersectsRay(ray, point)) {
+            point.copy(this.root.getLocalPosition());
+        }
 
         // rotate point back to world coords
         tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);

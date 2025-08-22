@@ -296,7 +296,7 @@ class Gizmo extends EventHandler {
      * @type {boolean}
      */
     set enabled(state) {
-        const cameraDist = this.root.getPosition().distance(this.camera.entity.getPosition());
+        const cameraDist = this.root.getLocalPosition().distance(this.camera.entity.getPosition());
         const enabled = state ? this.nodes.length > 0 && cameraDist > DIST_EPSILON : false;
         if (enabled !== this.root.enabled) {
             this.root.enabled = enabled;
@@ -407,7 +407,7 @@ class Gizmo extends EventHandler {
      */
     get facingDir() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            const gizmoPos = this.root.getPosition();
+            const gizmoPos = this.root.getLocalPosition();
             const cameraPos = this._camera.entity.getPosition();
             return tmpV2.sub2(cameraPos, gizmoPos).normalize();
         }
@@ -420,7 +420,7 @@ class Gizmo extends EventHandler {
      */
     get cameraDir() {
         const cameraPos = this._camera.entity.getPosition();
-        const gizmoPos = this.root.getPosition();
+        const gizmoPos = this.root.getLocalPosition();
         return tmpV2.sub2(cameraPos, gizmoPos).normalize();
     }
 
@@ -522,7 +522,7 @@ class Gizmo extends EventHandler {
      */
     _updateScale() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            const gizmoPos = this.root.getPosition();
+            const gizmoPos = this.root.getLocalPosition();
             const cameraPos = this._camera.entity.getPosition();
             const dist = gizmoPos.distance(cameraPos);
             this._scale = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD) * dist * PERS_SCALE_RATIO;

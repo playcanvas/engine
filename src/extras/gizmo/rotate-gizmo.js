@@ -318,7 +318,7 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _storeGuidePoints() {
-        const gizmoPos = this.root.getPosition();
+        const gizmoPos = this.root.getLocalPosition();
         const axis = this._selectedAxis;
         const isFacing = axis === 'f';
         const scale = isFacing ? this.faceRingRadius : this.xyzRingRadius;
@@ -438,7 +438,7 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _storeNodeRotations() {
-        const gizmoPos = this.root.getPosition();
+        const gizmoPos = this.root.getLocalPosition();
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
             this._nodeLocalRotations.set(node, node.getLocalRotation().clone());
@@ -453,7 +453,7 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _setNodeRotations(axis, angleDelta) {
-        const gizmoPos = this.root.getPosition();
+        const gizmoPos = this.root.getLocalPosition();
         const isFacing = axis === 'f';
 
         // calculate rotation from axis and angle
@@ -507,8 +507,9 @@ class RotateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === 'f', false);
 
         const point = new Vec3();
-
-        plane.intersectsRay(ray, point);
+        if (!plane.intersectsRay(ray, point)) {
+            point.copy(this.root.getLocalPosition());
+        }
 
         return point;
     }
@@ -521,7 +522,7 @@ class RotateGizmo extends TransformGizmo {
      * @protected
      */
     _calculateAngle(point, x, y) {
-        const gizmoPos = this.root.getPosition();
+        const gizmoPos = this.root.getLocalPosition();
 
         const axis = this._selectedAxis;
 
@@ -572,7 +573,7 @@ class RotateGizmo extends TransformGizmo {
         this._shapesLookAtCamera();
 
         if (this._dragging) {
-            const gizmoPos = this.root.getPosition();
+            const gizmoPos = this.root.getLocalPosition();
             const color = this._theme.guideBase[this._selectedAxis];
             const startColor = tmpC1.copy(color);
             startColor.a *= 0.3;
