@@ -79,7 +79,7 @@ camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1),
     farClip: 1000
 });
-const cameraOffset = 4 * camera.camera?.aspectRatio;
+const cameraOffset = 4 * camera.camera.aspectRatio;
 camera.setPosition(cameraOffset, cameraOffset, cameraOffset);
 app.root.addChild(camera);
 
