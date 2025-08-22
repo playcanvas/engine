@@ -507,8 +507,9 @@ class RotateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === 'f', false);
 
         const point = new Vec3();
-
-        plane.intersectsRay(ray, point);
+        if (!plane.intersectsRay(ray, point)) {
+            point.copy(this.root.getLocalPosition());
+        }
 
         return point;
     }

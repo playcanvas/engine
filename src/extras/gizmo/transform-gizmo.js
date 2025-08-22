@@ -644,7 +644,9 @@ class TransformGizmo extends Gizmo {
         const plane = this._createPlane(axis, isFacing, isLine);
 
         const point = new Vec3();
-        plane.intersectsRay(ray, point);
+        if (!plane.intersectsRay(ray, point)) {
+            point.copy(this.root.getLocalPosition());
+        }
 
         return point;
     }
