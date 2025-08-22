@@ -3,8 +3,6 @@ import { http, Http } from '../../platform/net/http.js';
 import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
 import { GSplatSogsResource } from '../../scene/gsplat/gsplat-sogs-resource.js';
-import { Texture } from '../../platform/graphics/texture.js';
-import { PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
 
 // combine the progress updates from multiple assets
 // and fire progress events on the target

@@ -9,9 +9,10 @@ class GSplatSogsResource extends GSplatResourceBase {
 
     configureMaterial(material) {
         const { gsplatData } = this;
+        const { meta } = gsplatData;
 
         material.setDefine('GSPLAT_SOGS_DATA', true);
-        material.setDefine('SH_BANDS', this.gsplatData.shBands);
+        material.setDefine('SH_BANDS', gsplatData.shBands);
 
         ['packedTexture', 'packedSh0', 'packedShN'].forEach((name) => {
             if (gsplatData[name]) {
@@ -20,24 +21,20 @@ class GSplatSogsResource extends GSplatResourceBase {
         });
 
         ['means'].forEach((name) => {
-            const v = gsplatData.meta[name];
+            const v = meta[name];
             if (v) {
                 material.setParameter(`${name}_mins`, v.mins);
                 material.setParameter(`${name}_maxs`, v.maxs);
             }
         });
 
-        material.setParameter('scales_mins', gsplatData.meta.scales.codebook[0]);
-        material.setParameter('scales_maxs', gsplatData.meta.scales.codebook[255]);
-
-        material.setParameter('sh0_mins', gsplatData.meta.sh0.codebook[0]);
-        material.setParameter('sh0_maxs', gsplatData.meta.sh0.codebook[255]);
-
-        material.setParameter('shN_mins', gsplatData.meta.shN.codebook[0]);
-        material.setParameter('shN_maxs', gsplatData.meta.shN.codebook[255]);
-
-        material.setParameter('shN_mins', gsplatData.meta.shN.codebook[0]);
-        material.setParameter('shN_maxs', gsplatData.meta.shN.codebook[255]);
+        ['scales', 'sh0', 'shN'].forEach((name) => {
+            const v = meta[name];
+            if (v) {
+                material.setParameter(`${name}_mins`, v.codebook[0]);
+                material.setParameter(`${name}_maxs`, v.codebook[255]);
+            }
+        });
     }
 
     evalTextureSize(count) {
