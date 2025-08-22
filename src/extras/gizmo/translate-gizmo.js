@@ -546,6 +546,7 @@ class TranslateGizmo extends TransformGizmo {
         // rotate point back to world coords
         tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
 
+        // project point onto axis
         if (!isPlane && axis !== 'xyz') {
             this._projectToAxis(point, axis);
         }
