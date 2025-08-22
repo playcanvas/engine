@@ -533,7 +533,7 @@ class ScaleGizmo extends TransformGizmo {
      * @protected
      */
     _screenToPoint(x, y) {
-        const gizmoPos = this.root.getPosition();
+        const gizmoPos = this.root.getLocalPosition();
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
         const axis = this._selectedAxis;
