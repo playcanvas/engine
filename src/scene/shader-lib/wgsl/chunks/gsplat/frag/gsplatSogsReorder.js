@@ -18,7 +18,7 @@ export default /* wgsl */`
         var output: FragmentOutput;
 
         let w: u32 = textureDimensions(means_l, 0).x;
-        let uv: vec2<u32> = vec2<u32>(pcPosition.xy);
+        let uv: vec2<u32> = vec2<u32>(input.position.xy);
         if (uv.x + uv.y * w >= uniform.numSplats) {
             discard;
             return output;

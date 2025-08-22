@@ -9,7 +9,7 @@ uniform shN_codebook: array<vec4f, 64>;
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
 
-    var uv = vec2i(pcPosition.xy);
+    var uv = vec2i(input.position.xy);
 
     var shNSample = textureLoad(sh_centroids, uv, 0).xyz;
 
