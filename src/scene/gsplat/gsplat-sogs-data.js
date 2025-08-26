@@ -359,7 +359,7 @@ class GSplatSogsData {
             fragmentWGSL: wgslGsplatSogsReorderPS,
             fragmentOutputTypes: ['uvec4', 'vec4'],
             fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]]),
-            fragmentDefines: (meta.version < 2) ? new Map([['REORDER_V1', '1']]) : undefined
+            fragmentDefines: (meta.version === 2) ? undefined : new Map([['REORDER_V1', '1']])
         });
 
         const renderTarget = new RenderTarget({
@@ -407,7 +407,7 @@ class GSplatSogsData {
             fragmentGLSL: glslGsplatSogsReorderSh,
             fragmentWGSL: wgslGsplatSogsReorderSH,
             fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]]),
-            fragmentDefines: (meta.version < 2) ? new Map([['REORDER_V1', '1']]) : undefined
+            fragmentDefines: (meta.version === 2) ? undefined : new Map([['REORDER_V1', '1']])
         });
 
         const renderTarget = new RenderTarget({
