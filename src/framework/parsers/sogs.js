@@ -66,7 +66,8 @@ const upgradeMeta = (meta) => {
 
     if (meta.shN) {
         result.shN = {
-            codebook: new Array(256).fill(0).map((_, i) => meta.shN.mins + (meta.shN.maxs - meta.shN.mins) * (i / 255)),
+            mins: meta.shN.mins,
+            maxs: meta.shN.maxs,
             files: meta.shN.files
         };
     }

@@ -79,24 +79,44 @@ class GSplatSogsIterator {
             }
 
             if (s) {
-                const sx = lerp(scales.mins[0], scales.maxs[0], scales_data[i * 4 + 0] / 255);
-                const sy = lerp(scales.mins[1], scales.maxs[1], scales_data[i * 4 + 1] / 255);
-                const sz = lerp(scales.mins[2], scales.maxs[2], scales_data[i * 4 + 2] / 255);
-                s.set(sx, sy, sz);
+                if (meta.version === 2) {
+                    const sx = scales.codebook[scales_data[i * 4 + 0]];
+                    const sy = scales.codebook[scales_data[i * 4 + 1]];
+                    const sz = scales.codebook[scales_data[i * 4 + 2]];
+                    s.set(sx, sy, sz);
+                } else {
+                    const sx = lerp(scales.mins[0], scales.maxs[0], scales_data[i * 4 + 0] / 255);
+                    const sy = lerp(scales.mins[1], scales.maxs[1], scales_data[i * 4 + 1] / 255);
+                    const sz = lerp(scales.mins[2], scales.maxs[2], scales_data[i * 4 + 2] / 255);
+                    s.set(sx, sy, sz);
+                }
             }
 
             if (c) {
-                const r = lerp(sh0.mins[0], sh0.maxs[0], sh0_data[i * 4 + 0] / 255);
-                const g = lerp(sh0.mins[1], sh0.maxs[1], sh0_data[i * 4 + 1] / 255);
-                const b = lerp(sh0.mins[2], sh0.maxs[2], sh0_data[i * 4 + 2] / 255);
-                const a = lerp(sh0.mins[3], sh0.maxs[3], sh0_data[i * 4 + 3] / 255);
+                if (meta.version === 2) {
+                    const r = sh0.codebook[sh0_data[i * 4 + 0]];
+                    const g = sh0.codebook[sh0_data[i * 4 + 1]];
+                    const b = sh0.codebook[sh0_data[i * 4 + 2]];
+                    const a = sh0_data[i * 4 + 3] / 255;
+                    c.set(
+                        0.5 + r * SH_C0,
+                        0.5 + g * SH_C0,
+                        0.5 + b * SH_C0,
+                        a
+                    );
+                } else {
+                    const r = lerp(sh0.mins[0], sh0.maxs[0], sh0_data[i * 4 + 0] / 255);
+                    const g = lerp(sh0.mins[1], sh0.maxs[1], sh0_data[i * 4 + 1] / 255);
+                    const b = lerp(sh0.mins[2], sh0.maxs[2], sh0_data[i * 4 + 2] / 255);
+                    const a = lerp(sh0.mins[3], sh0.maxs[3], sh0_data[i * 4 + 3] / 255);
 
-                c.set(
-                    0.5 + r * SH_C0,
-                    0.5 + g * SH_C0,
-                    0.5 + b * SH_C0,
-                    1.0 / (1.0 + Math.exp(-a))
-                );
+                    c.set(
+                        0.5 + r * SH_C0,
+                        0.5 + g * SH_C0,
+                        0.5 + b * SH_C0,
+                        1.0 / (1.0 + Math.exp(-a))
+                    );
+                }
             }
 
             if (sh) {
@@ -104,9 +124,17 @@ class GSplatSogsIterator {
                 const u = (n % 64) * 15;
                 const v = Math.floor(n / 64);
 
-                for (let j = 0; j < 3; ++j) {
-                    for (let k = 0; k < 15; ++k) {
-                        sh[j * 15 + k] = lerp(shN.mins, shN.maxs, sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)] / 255);
+                if (meta.version === 2) {
+                    for (let j = 0; j < 3; ++j) {
+                        for (let k = 0; k < 15; ++k) {
+                            sh[j * 15 + k] = shN.codebook[sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)]];
+                        }
+                    }
+                } else {
+                    for (let j = 0; j < 3; ++j) {
+                        for (let k = 0; k < 15; ++k) {
+                            sh[j * 15 + k] = lerp(shN.mins, shN.maxs, sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)] / 255);
+                        }
                     }
                 }
             }
