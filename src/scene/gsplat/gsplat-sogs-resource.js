@@ -31,8 +31,8 @@ class GSplatSogsResource extends GSplatResourceBase {
         ['scales', 'sh0', 'shN'].forEach((name) => {
             const v = meta[name];
             if (v) {
-                material.setParameter(`${name}_mins`, v.codebook[0]);
-                material.setParameter(`${name}_maxs`, v.codebook[255]);
+                material.setParameter(`${name}_mins`, v?.codebook?.[0] ?? Math.min(...v.mins.slice(0, 3)));
+                material.setParameter(`${name}_maxs`, v?.codebook?.[255] ?? Math.max(...v.maxs.slice(0, 3)));
             }
         });
     }

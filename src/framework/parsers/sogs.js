@@ -41,14 +41,8 @@ const combineProgress = (target, assets) => {
 
 // given a v1 meta.json, upgrade it to the v2 shape
 const upgradeMeta = (meta) => {
-
-    const scalesMin = Math.min(...meta.scales.mins);
-    const scalesMax = Math.max(...meta.scales.maxs);
-    const sh0Min = Math.min(...meta.sh0.mins);
-    const sh0Max = Math.max(...meta.sh0.maxs);
-
     const result = {
-        version: 2,
+        version: 1,
         count: meta.means.shape[0],
         means: {
             mins: meta.means.mins,
@@ -56,14 +50,16 @@ const upgradeMeta = (meta) => {
             files: meta.means.files
         },
         scales: {
-            codebook: new Array(256).fill(0).map((_, i) => scalesMin + (scalesMax - scalesMin) * (i / 255)),
+            mins: meta.scales.mins,
+            maxs: meta.scales.maxs,
             files: meta.scales.files
         },
         quats: {
             files: meta.quats.files
         },
         sh0: {
-            codebook: new Array(256).fill(0).map((_, i) => sh0Min + (sh0Max - sh0Min) * (i / 255)),
+            mins: meta.sh0.mins,
+            maxs: meta.sh0.maxs,
             files: meta.sh0.files
         }
     };

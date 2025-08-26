@@ -13,7 +13,11 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     var shNSample = textureLoad(sh_centroids, uv, 0).xyz;
 
+#ifdef REORDER_V1
+    output.color = unpack8888(pack111110(shNSample));
+#else
     output.color = unpack8888(pack111110(resolveCodebook(shNSample, &uniform.shN_codebook)));
+#endif
 
     return output;
 }

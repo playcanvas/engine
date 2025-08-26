@@ -318,7 +318,7 @@ class GSplatSogsData {
 
     // pack the means, quats, scales and sh_labels data into one RGBA32U texture
     packGpuMemory() {
-        const { means_l, means_u, quats, scales, sh0, sh_labels, numSplats } = this;
+        const { meta, means_l, means_u, quats, scales, sh0, sh_labels, numSplats } = this;
         const { device } = means_l;
         const { scope } = device;
 
@@ -330,7 +330,8 @@ class GSplatSogsData {
             fragmentGLSL: glslGsplatSogsReorderPS,
             fragmentWGSL: wgslGsplatSogsReorderPS,
             fragmentOutputTypes: ['uvec4', 'vec4'],
-            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]])
+            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]]),
+            fragmentDefines: (meta.version < 2) ? new Map([['REORDER_V1', '1']]) : undefined
         });
 
         const renderTarget = new RenderTarget({
@@ -353,7 +354,12 @@ class GSplatSogsData {
             sh_labels: sh_labels ?? means_l,
             numSplats,
             'scales_codebook[0]': this.meta.scales.codebook,
-            'sh0_codebook[0]': this.meta.sh0.codebook
+            'sh0_codebook[0]': this.meta.sh0.codebook,
+            // V1
+            scalesMins: meta.scales.mins,
+            scalesMaxs: meta.scales.maxs,
+            sh0Mins: meta.sh0.mins,
+            sh0Maxs: meta.sh0.maxs
         });
 
         drawQuadWithShader(device, renderTarget, shader);
@@ -362,7 +368,7 @@ class GSplatSogsData {
     }
 
     packShMemory() {
-        const { sh_centroids } = this;
+        const { meta, sh_centroids } = this;
         const { device } = sh_centroids;
         const { scope } = device;
 
@@ -372,7 +378,8 @@ class GSplatSogsData {
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatSogsReorderSh,
             fragmentWGSL: wgslGsplatSogsReorderSH,
-            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]])
+            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]]),
+            fragmentDefines: (meta.version < 2) ? new Map([['REORDER_V1', '1']]) : undefined
         });
 
         const renderTarget = new RenderTarget({
