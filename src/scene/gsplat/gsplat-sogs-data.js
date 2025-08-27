@@ -177,7 +177,7 @@ class GSplatSogsData {
         this.sh_labels?.destroy();
         this.packedTexture?.destroy();
         this.packedSh0?.destroy();
-        this.packedShN?.destroy();  
+        this.packedShN?.destroy();
     }
 
     createIter(p, r, s, c, sh) {
