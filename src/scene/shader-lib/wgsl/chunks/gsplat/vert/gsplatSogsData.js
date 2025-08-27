@@ -31,16 +31,16 @@ fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, ve
     let qdata = unpack8888(packedSample.z).xyz;
     let sdata = unpack101010(packedSample.w >> 2u);
 
-    let mode = (packedSample.z >> 6u) & 0x3u;
+    let qmode = packedSample.w & 0x3u;
     let abc = (qdata - 0.5) * norm;
     let d = sqrt(max(0.0, 1.0 - dot(abc, abc)));
 
     var quat: vec4f;
-    if (mode == 0u) {
+    if (qmode == 0u) {
         quat = vec4f(d, abc);
-    } else if (mode == 1u) {
+    } else if (qmode == 1u) {
         quat = vec4f(abc.x, d, abc.y, abc.z);
-    } else if (mode == 2u) {
+    } else if (qmode == 2u) {
         quat = vec4f(abc.x, abc.y, d, abc.z);
     } else {
         quat = vec4f(abc.x, abc.y, abc.z, d);

@@ -42,11 +42,11 @@ void main(void) {
     #ifdef REORDER_V1
         uint scale = pack101010(resolve(scalesMins, scalesMaxs, scalesSample));
         uint sh0 = pack111110(resolve(sh0Mins.xyz, sh0Maxs.xyz, sh0Sample.xyz));
-        uint alpha = uint(sigmoid(mix(sh0Mins.w, sh0Maxs.w, sh0Sample.w)) * 255.0);
+        float alpha = sigmoid(mix(sh0Mins.w, sh0Maxs.w, sh0Sample.w));
     #else
         uint scale = pack101010(resolveCodebook(scalesSample, scales_codebook));    // resolve scale to 10,10,10 bits
         uint sh0 = pack111110(resolveCodebook(sh0Sample.xyz, sh0_codebook));        // resolve sh0 to 11,11,10 bits
-        uint alpha = uint(sh0Sample.w * 255.0);
+        float alpha = sh0Sample.w;
     #endif
 
     uint qmode = uint(quatsSample.w * 255.0) - 252u;
@@ -54,8 +54,8 @@ void main(void) {
     pcFragColor0 = uvec4(
         pack8888(vec4(meansLSample, shLabelsSample.x)),
         pack8888(vec4(meansUSample, shLabelsSample.y)),
-        pack8888(vec4(quatsSample.xyz, 0.0)) | (qmode << 6) | (alpha >> 2u),
-        (scale << 2u) | (alpha & 0x3u)
+        pack8888(vec4(quatsSample.xyz, alpha)),
+        (scale << 2u) | qmode
     );
     pcFragColor1 = unpack8888(sh0);
 }

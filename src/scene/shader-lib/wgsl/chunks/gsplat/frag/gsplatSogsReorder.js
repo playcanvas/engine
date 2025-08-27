@@ -47,11 +47,11 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     #ifdef REORDER_V1
         let scale = pack101010(resolve(uniform.scalesMins, uniform.scalesMaxs, scalesSample));
         let sh0 = pack111110(resolve(uniform.sh0Mins.xyz, uniform.sh0Maxs.xyz, sh0Sample.xyz));
-        let alpha = u32(sigmoid(mix(uniform.sh0Mins.w, uniform.sh0Maxs.w, sh0Sample.w)) * 255.0);
+        let alpha = sigmoid(mix(uniform.sh0Mins.w, uniform.sh0Maxs.w, sh0Sample.w));
     #else
         let scale = pack101010(resolveCodebook(scalesSample, &uniform.scales_codebook));    // resolve scale to 10,10,10 bits
         let sh0 = pack111110(resolveCodebook(sh0Sample.xyz, &uniform.sh0_codebook));        // resolve sh0 to 11,11,10 bits
-        let alpha = u32(sh0Sample.w * 255.0);
+        let alpha = sh0Sample.w;
     #endif
 
     let qmode = u32(quatsSample.w * 255.0) - 252u;
@@ -59,8 +59,8 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     output.color = vec4u(
         pack8888(vec4f(meansLSample, shLabelsSample.x)),
         pack8888(vec4f(meansUSample, shLabelsSample.y)),
-        pack8888(vec4f(quatsSample.xyz, 0.0)) | (qmode << 6) | (alpha >> 2u),
-        (scale << 2u) | (alpha & 0x3u)
+        pack8888(vec4f(quatsSample.xyz, alpha)),
+        (scale << 2u) | qmode
     );
 
     output.color1 = unpack8888(sh0);
