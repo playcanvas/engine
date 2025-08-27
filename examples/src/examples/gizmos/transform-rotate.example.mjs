@@ -2,6 +2,7 @@ import { data } from 'examples/observer';
 import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 const { Grid } = await fileImport(`${rootPath}/static/scripts/esm/grid.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -38,7 +39,6 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // load assets
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
 };
 /**
@@ -66,22 +66,37 @@ box.addComponent('render', {
 });
 app.root.addChild(box);
 
-// create camera entity
+// camera
+data.set('camera', {
+    proj: pc.PROJECTION_PERSPECTIVE + 1,
+    dist: 1,
+    fov: 45,
+    orthoHeight: 10
+});
 const camera = new pc.Entity('camera');
+camera.addComponent('script');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1),
     farClip: 1000
 });
-camera.addComponent('script');
-const orbitCamera = camera.script.create('orbitCamera');
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-camera.setPosition(1, 1, 1);
+const cameraOffset = 4 * camera.camera.aspectRatio;
+camera.setPosition(cameraOffset, cameraOffset, cameraOffset);
 app.root.addChild(camera);
-orbitCamera.distance = 5 * camera.camera.aspectRatio;
-data.set('camera', {
-    proj: camera.camera.projection + 1,
-    fov: camera.camera.fov
+
+// camera controls
+const cc = /** @type {CameraControls} */ (camera.script.create(CameraControls));
+Object.assign(cc, {
+    focusPoint: pc.Vec3.ZERO,
+    sceneSize: 5,
+    rotateDamping: 0.97,
+    moveDamping: 0.97,
+    zoomDamping: 0.97,
+    pitchRange: new pc.Vec2(-89.99, 89.99),
+    zoomRange: new pc.Vec2(2, 10),
+    enableFly: false
+});
+app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
+    cc.skipUpdate = hasPointer;
 });
 
 // create light entity
@@ -93,18 +108,46 @@ light.setEulerAngles(0, 0, -60);
 // create gizmo
 const layer = pc.Gizmo.createLayer(app);
 const gizmo = new pc.RotateGizmo(camera.camera, layer);
+gizmo.on('pointer:down', (_x, _y, /** @type {pc.MeshInstance} */ meshInstance) => {
+    app.fire('gizmo:pointer', !!meshInstance);
+});
+gizmo.on('pointer:up', () => {
+    app.fire('gizmo:pointer', false);
+});
 gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
+    snap: gizmo.snap,
     snapIncrement: gizmo.snapIncrement,
+    dragMode: gizmo.dragMode,
     orbitRotation: gizmo.orbitRotation,
-    xAxisColor: Object.values(gizmo.xAxisColor),
-    yAxisColor: Object.values(gizmo.yAxisColor),
-    zAxisColor: Object.values(gizmo.zAxisColor),
-    colorAlpha: gizmo.colorAlpha,
-    shading: gizmo.shading,
+    theme: {
+        shapeBase: {
+            x: gizmo.theme.shapeBase.x.toArray(),
+            y: gizmo.theme.shapeBase.y.toArray(),
+            z: gizmo.theme.shapeBase.z.toArray(),
+            xyz: gizmo.theme.shapeBase.xyz.toArray(),
+            f: gizmo.theme.shapeBase.f.toArray()
+        },
+        shapeHover: {
+            x: gizmo.theme.shapeHover.x.toArray(),
+            y: gizmo.theme.shapeHover.y.toArray(),
+            z: gizmo.theme.shapeHover.z.toArray(),
+            xyz: gizmo.theme.shapeHover.xyz.toArray(),
+            f: gizmo.theme.shapeHover.f.toArray()
+        },
+        guideBase: {
+            x: gizmo.theme.guideBase.x.toArray(),
+            y: gizmo.theme.guideBase.y.toArray(),
+            z: gizmo.theme.guideBase.z.toArray(),
+            f: gizmo.theme.guideBase.f.toArray()
+        },
+        guideOcclusion: gizmo.theme.guideOcclusion,
+        disabled: gizmo.theme.disabled.toArray()
+    },
     coordSpace: gizmo.coordSpace,
     ringTolerance: gizmo.ringTolerance,
+    shading: gizmo.shading,
     xyzTubeRadius: gizmo.xyzTubeRadius,
     xyzRingRadius: gizmo.xyzRingRadius,
     faceTubeRadius: gizmo.faceTubeRadius,
@@ -121,9 +164,9 @@ gridEntity.script.create(Grid);
 // controls hook
 const tmpC = new pc.Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
-    const [category, key] = path.split('.');
+    const [category, key, ...parts] = path.split('.');
     switch (category) {
-        case 'camera':
+        case 'camera': {
             switch (key) {
                 case 'proj':
                     camera.camera.projection = value - 1;
@@ -132,17 +175,27 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     camera.camera.fov = value;
                     break;
             }
-            return;
-        case 'gizmo':
-            // @ts-ignore
-            if (gizmo[key] instanceof pc.Color) {
-                // @ts-ignore
-                gizmo[key] = tmpC.set(...value);
+            break;
+        }
+        case 'gizmo': {
+            if (key === 'theme') {
+                if (parts.length === 0) {
+                    return;
+                }
+                const theme = /** @type {any} */ ({});
+                let cursor = theme;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    cursor[parts[i]] = {};
+                    cursor = cursor[parts[i]];
+                }
+                cursor[parts[parts.length - 1]] = Array.isArray(value) ? tmpC.fromArray(value) : value;
+                gizmo.setTheme(theme);
                 return;
             }
-
             // @ts-ignore
             gizmo[key] = value;
+            break;
+        }
     }
 });
 

@@ -1,21 +1,14 @@
 import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
-import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
-import { ShaderMaterial } from '../materials/shader-material.js';
-import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import { GSplatState } from './gspat-state.js';
-import glslGsplatCopyToWorkBufferPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
-import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
+import { Vec4 } from '../../core/math/vec4.js';
+import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
 
 /**
  * @import { GraphicsDevice } from "../../platform/graphics/graphics-device.js";
- * @import { GSplatResource } from "../gsplat/gsplat-resource.js"
+ * @import { GSplatResourceBase } from "../gsplat/gsplat-resource-base.js"
  * @import { GSplatPlacement } from "./gsplat-placement.js"
+ * @import { GraphNode } from '../graph-node.js';
  */
-
-const _viewMat = new Mat4();
 
 /**
  * @ignore
@@ -24,55 +17,59 @@ class GSplatInfo {
     /** @type {GraphicsDevice} */
     device;
 
-    /** @type {GSplatResource} */
+    /** @type {GSplatResourceBase} */
     resource;
+
+    /** @type {GraphNode} */
+    node;
+
+    /** @type {number} */
+    lodIndex;
 
     /** @type {number} */
     numSplats;
 
-    /** @type {GSplatPlacement} */
-    placement;
+    /** @type {number} */
+    activeSplats = 0;
 
     /**
-     * The state of the splat currently used for rendering. This matches the work buffer.
+     * Array of intervals for remapping of indices, each two consecutive numbers represent
+     * start and end of a range of splats.
      *
-     * @type {GSplatState}
+     * @type {number[]}
      */
-    renderState;
+    intervals = [];
 
-    /**
-     * The state of the splat currently used for sorting. When the sorting is done, this state will
-     * become the render state. This is where the next render state is prepared, but it's not used
-     * until we get back the sorting data.
-     *
-     * @type {GSplatState|null}
-     */
-    prepareState = null;
+    /** @type {number} */
+    lineStart = 0;
 
-    /** @type {GSplatState|null} */
-    unusedState = null;
+    /** @type {number} */
+    lineCount = 0;
+
+    /** @type {number} */
+    padding = 0;
+
+    /** @type {Vec4} */
+    viewport = new Vec4();
 
     /** @type {Mat4} */
     previousWorldTransform = new Mat4();
-
-    /** @type {Vec3} */
-    previousPosition = new Vec3();
 
     /** @type {number} */
     updateVersion = 0;
 
     /**
-     * Material is used as a container for parameters only.
+     * Manager for the intervals texture generation
      *
-     * @type {ShaderMaterial}
+     * @type {GSplatIntervalTexture}
      */
-    material;
+    intervalTexture;
 
     /**
      * Create a new GSplatInfo.
      *
      * @param {GraphicsDevice} device - The graphics device.
-     * @param {GSplatResource} resource - The splat resource.
+     * @param {GSplatResourceBase} resource - The splat resource.
      * @param {GSplatPlacement} placement - The placement of the splat.
      */
     constructor(device, resource, placement) {
@@ -81,127 +78,56 @@ class GSplatInfo {
 
         this.device = device;
         this.resource = resource;
-        this.placement = placement;
+        this.node = placement.node;
+        this.lodIndex = placement.lodIndex;
         this.numSplats = resource.centers.length / 3;
-        this.renderState = new GSplatState(device, resource, placement);
-        this.unusedState = new GSplatState(device, resource, placement);
 
-        this.material = new ShaderMaterial();
-        resource.configureMaterial(this.material);
-
-        // defines configured on the material that set up correct shader variant to be compiled
-        const defines = new Map(this.material.defines);
-        if (placement.intervals.size > 0) defines.set('GSPLAT_LOD', '');
-        const definesKey = Array.from(defines.entries()).map(([k, v]) => `${k}=${v}`).join(';');
-        this.copyShader = ShaderUtils.createShader(device, {
-            uniqueName: `SplatCopyToWorkBuffer:${definesKey}`,
-            attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexDefines: defines,
-            fragmentDefines: defines,
-            vertexChunk: 'fullscreenQuadVS',
-            fragmentGLSL: glslGsplatCopyToWorkBufferPS,
-            fragmentWGSL: wgslGsplatCopyToWorkBufferPS
-        });
+        this.intervalTexture = new GSplatIntervalTexture(device);
+        this.updateIntervals(placement.intervals);
     }
 
     destroy() {
-        this.device = null;
-        this.resource = null;
-        this.renderState?.destroy();
-        this.renderState = null;
-        this.prepareState?.destroy();
-        this.prepareState = null;
-        this.unusedState?.destroy();
-        this.unusedState = null;
+        this.intervals.length = 0;
+        this.intervalTexture.destroy();
     }
 
-    activatePrepareState() {
-
-        Debug.assert(this.renderState);
-        Debug.assert(this.prepareState);
-
-        // no longer using render state, keep it for the future
-        this.unusedState = this.renderState;
-
-        // prepared state is now used for rendering
-        this.renderState = this.prepareState;
-
-        // done preparing
-        // TODO: can we release some data here
-        this.prepareState = null;
+    setLines(start, count, textureSize, activeSplats) {
+        this.lineStart = start;
+        this.lineCount = count;
+        this.padding = textureSize * count - activeSplats;
+        Debug.assert(this.padding >= 0);
+        this.viewport.set(0, start, textureSize, count);
     }
 
-    startPrepareState() {
+    updateIntervals(intervals) {
 
-        // swap states
-        Debug.assert(this.prepareState === null);
-        this.prepareState = this.unusedState;
-        Debug.assert(this.prepareState);
-        this.unusedState = null;
+        const resource = this.resource;
+        this.intervals.length = 0;
+        this.activeSplats = resource.numSplats;
 
-        // this updates LOD intervals and interval texture
-        this.prepareState.update();
-    }
+        // If placement has intervals defined
+        if (intervals.size > 0) {
 
-    cancelPrepareState() {
-        if (this.prepareState) {
-            this.unusedState = this.prepareState;
-            this.prepareState = null;
+            // copy the intervals to the state
+            for (const interval of intervals.values()) {
+                this.intervals.push(interval.x, interval.y + 1);
+            }
+
+            this.activeSplats = this.intervalTexture.update(this.intervals);
         }
     }
 
     update(updateVersion) {
 
         // if the object's matrix has changed, store the update version to know when it happened
-        const worldMatrix = this.placement.node.getWorldTransform();
+        const worldMatrix = this.node.getWorldTransform();
         const worldMatrixChanged = !this.previousWorldTransform.equals(worldMatrix);
         if (worldMatrixChanged) {
             this.previousWorldTransform.copy(worldMatrix);
             this.updateVersion = updateVersion;
         }
 
-        // if position has moved by more than 1 meter, mark lod dirty
-        const position = this.placement.node.getPosition();
-        const length = position.distance(this.previousPosition);
-        if (length > 1) {
-            this.previousPosition.copy(position);
-        }
-
-        // return true if position has moved by more than 1 meter, which requires LOD to be re-calculated
-        return length > 1;
-    }
-
-    render(renderTarget, cameraNode) {
-        const { device, resource } = this;
-        const scope = device.scope;
-        Debug.assert(resource);
-
-        // render using render state
-        const { activeSplats, lineStart, viewport, intervalTexture } = this.renderState;
-
-        // assign material properties to scope
-        this.material.setParameters(this.device);
-
-        // matrix to transform splats to the world space
-        scope.resolve('uTransform').setValue(this.placement.node.getWorldTransform().data);
-
-        if (intervalTexture.texture) {
-            // Set LOD intervals texture for remapping of indices
-            scope.resolve('uIntervalsTexture').setValue(intervalTexture.texture);
-        }
-
-        scope.resolve('uActiveSplats').setValue(activeSplats);
-        scope.resolve('uStartLine').setValue(lineStart);
-        scope.resolve('uViewportWidth').setValue(viewport.z);
-
-        // SH related
-        scope.resolve('matrix_model').setValue(this.placement.node.getWorldTransform().data);
-
-        const viewInvMat = cameraNode.getWorldTransform();
-        const viewMat = _viewMat.copy(viewInvMat).invert();
-        scope.resolve('matrix_view').setValue(viewMat.data);
-
-        drawQuadWithShader(device, renderTarget, this.copyShader, viewport, viewport);
+        return worldMatrixChanged;
     }
 }
 

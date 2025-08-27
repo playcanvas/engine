@@ -1,24 +1,28 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { GraphNode } from '../graph-node.js';
-import { GSplatCentersBuffers } from './gsplat-centers-buffer.js';
 import { GSplatInfo } from './gsplat-info.js';
 import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
 import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
 import { GSplatOctreeResource } from './gsplat-octree.resource.js';
+import { GSplatWorldState } from './gsplat-world-state.js';
+import { Debug } from '../../core/debug.js';
 
 /**
- * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
- * @import { GSplatPlacement } from './gsplat-placement.js';
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { GSplatPlacement } from './gsplat-placement.js'
+ *
  */
 
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
 const translation = new Vec3();
 const invModelMat = new Mat4();
-const tempSplats = [];
+const tempNonOctreePlacements = new Set();
+const tempOctreePlacements = new Set();
+const _updatedSplats = [];
 
 /**
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
@@ -36,42 +40,31 @@ class GSplatManager {
     /** @type {GSplatWorkBuffer} */
     workBuffer;
 
-    /** @type {GSplatCentersBuffers} */
-    centerBuffer;
-
     /** @type {GSplatRenderer} */
     renderer;
 
     /**
-     * An array of all splats managed by this manager.
+     * A map of versioned world states, keyed by version.
      *
-     * @type {GSplatInfo[]}
+     * @type {Map<number, GSplatWorldState>}
      */
-    splats = [];
+    worldStates = new Map();
+
+    /**
+     * The version of the last world state.
+     *
+     * @type {number}
+     */
+    lastWorldStateVersion = 0;
 
     /** @type {GSplatUnifiedSorter} */
     sorter;
 
-    /**
-     * The version of the splats that were returned sorted by the worker.
-     *
-     * @type {number}
-     */
-    sortedVersion = 0;
-
-    /**
-     * The minimum version of the splats that is required for rendering. Initialize to 1 to ensure
-     * first work buffer update is done after first sorting.
-     *
-     * @type {number}
-     */
-    sortedVersionMin = 1;
-
     /** @type {number} */
     updateVersion = 0;
 
-    /** @type {boolean} */
-    forceCentersUpdate = false;
+    /** @type {number} */
+    sortedVersion = 0;
 
     /** @type {Vec3} */
     lastCameraPos = new Vec3(Infinity, Infinity, Infinity);
@@ -79,18 +72,24 @@ class GSplatManager {
     /** @type {GraphNode} */
     cameraNode;
 
-    /** @type {Set<GSplatPlacement>} */
-    placements = new Set();
+    /**
+     * Layer placements, only non-octree placements are included.
+     *
+     * @type {GSplatPlacement[]}
+     */
+    layerPlacements = [];
 
-    /** @type {GSplatOctreeInstance[]} */
-    octreeInstances = [];
+    /** @type {boolean} */
+    layerPlacementsDirty = false;
+
+    /** @type {Map<GSplatPlacement, GSplatOctreeInstance>} */
+    octreeInstances = new Map();
 
     constructor(device, director, layer, cameraNode) {
         this.device = device;
         this.director = director;
         this.cameraNode = cameraNode;
         this.workBuffer = new GSplatWorkBuffer(device);
-        this.centerBuffer = new GSplatCentersBuffers();
         this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
         this.sorter = this.createSorter();
     }
@@ -111,267 +110,257 @@ class GSplatManager {
     }
 
     /**
-     * Adds a new splat to the manager.
-     *
-     * @param {GSplatPlacement} placement - The placement of the splat.
-     */
-    add(placement) {
-        const resource = placement.resource;
-        if (resource instanceof GSplatOctreeResource) { // octree resource
-
-            this.octreeInstances.push(new GSplatOctreeInstance(resource.octree, placement, this.director.assetLoader));
-
-        } else { // gsplat resource
-
-            const splatInfo = new GSplatInfo(this.device, resource, placement);
-            this.splats.push(splatInfo);
-
-            // add centers to sorter
-            this.sorter.setCenters(resource.id, resource.centers);
-        }
-
-        this.placements.add(placement);
-    }
-
-    /**
-     * Removes a splat from the manager.
-     *
-     * @param {GSplatPlacement} placement - The placement of the splat.
-     */
-    remove(placement) {
-        const resource = placement.resource;
-
-        if (resource instanceof GSplatOctreeResource) {
-
-            this.placements.delete(placement);
-
-        } else {
-
-            // Handle regular gsplat placement removal
-            const splatInfo = this.splats.find(s => s.placement.node === placement.node);
-            if (splatInfo) {
-                this.splats.splice(this.splats.indexOf(splatInfo), 1);
-                splatInfo.destroy();
-                this.placements.delete(placement);
-
-                // remove centers from sorter
-                this.sorter.setCenters(resource.id, null);
-            }
-        }
-    }
-
-    /**
-     * Reconciles the manager with the given placements. This is used to update the manager when
-     * the layer's placements have changed.
+     * Supply the manager with the placements to use. This is used to update the manager when the
+     * layer's placements have changed, called infrequently.
      *
      * @param {GSplatPlacement[]} placements - The placements to reconcile with.
      */
     reconcile(placements) {
 
-        let anyChanges = false;
+        tempNonOctreePlacements.clear();
+        for (const p of placements) {
+            if (p.resource instanceof GSplatOctreeResource) {
 
-        // remove all placements that are not in the new list
-        this.placements.forEach((p) => {
+                // make sure octree instance exists for placement
+                if (!this.octreeInstances.has(p)) {
+                    this.octreeInstances.set(p, new GSplatOctreeInstance(p.resource.octree, p, this.director.assetLoader));
+                }
+                tempOctreePlacements.add(p);
+            } else {
+                // collect non-octree placement
+                tempNonOctreePlacements.add(p);
+            }
+        }
 
-            // ignore secondary placements, those are managed by the octree instances
-            if (!p.secondary) {
-                if (!placements.includes(p)) {
-                    this.remove(p);
-                    anyChanges = true;
+        // destroy and remove octree instances that are no longer present
+        for (const [placement, inst] of this.octreeInstances) {
+            if (!tempOctreePlacements.has(placement)) {
+                this.octreeInstances.delete(placement);
+                inst.destroy();
+            }
+        }
+
+        // compute dirtiness of non-octree placements compared to existing layerPlacements
+        this.layerPlacementsDirty = this.layerPlacements.length !== tempNonOctreePlacements.size;
+        if (!this.layerPlacementsDirty) {
+            for (let i = 0; i < this.layerPlacements.length; i++) {
+                const existing = this.layerPlacements[i];
+                if (!tempNonOctreePlacements.has(existing)) {
+                    this.layerPlacementsDirty = true;
+                    break;
                 }
             }
-        });
-
-        // add all placements that are in the new list
-        placements.forEach((p) => {
-            if (!this.placements.has(p)) {
-                this.add(p);
-                anyChanges = true;
-            }
-        });
-
-        if (anyChanges) {
-            this.onChange();
         }
+
+        // update layerPlacements to new non-octree list
+        this.layerPlacements.length = 0;
+        for (const p of tempNonOctreePlacements) {
+            this.layerPlacements.push(p);
+        }
+
+        // clear temporaries
+        tempNonOctreePlacements.clear();
+        tempOctreePlacements.clear();
     }
 
-    onChange() {
+    updateWorldState() {
 
-        // user might have unloaded splat asset, and so we can no longer use it to render to workbuffer,
-        // so no rendering to workbuffer till sorter has delivered the next version of centers
-        this.sortedVersionMin = this.centerBuffer.version + 1;
+        // update octree instances - this handles loaded pended resources
+        for (const [, inst] of this.octreeInstances) {
+            this.layerPlacementsDirty ||= inst.update();
+        }
 
-        if (!this.forceCentersUpdate) {
+        // Recreate world state if there are changes
+        const worldChanged = this.layerPlacementsDirty || this.worldStates.size === 0;
+        if (worldChanged) {
+            this.lastWorldStateVersion++;
+            const splats = [];
 
-            // force centers update
-            this.forceCentersUpdate = true;
+            // add standalone splats
+            for (const p of this.layerPlacements) {
+                const splatInfo = new GSplatInfo(this.device, p.resource, p);
+                splats.push(splatInfo);
+            }
 
-            // cancel any pending prepare states - as those are prepared for previous version
-            this.splats.forEach(s => s.cancelPrepareState());
+            // add octree splats
+            for (const [, inst] of this.octreeInstances) {
+                inst.activePlacements.forEach((p) => {
+                    splats.push(new GSplatInfo(this.device, p.resource, p));
+                });
+            }
+
+            // add resource centers to sorter
+            splats.forEach((splat) => {
+                this.sorter.setCenters(splat.resource.id, splat.resource.centers);
+            });
+
+            const newState = new GSplatWorldState(this.device, this.lastWorldStateVersion, splats);
+            this.worldStates.set(this.lastWorldStateVersion, newState);
+
+            this.layerPlacementsDirty = false;
         }
     }
 
     onSorted(count, version, orderData) {
 
-        // skip older version that got sorted, this can no longer be used for rendering
-        if (version < this.sortedVersionMin) {
-            return;
+        this.sortedVersion = version;
+
+        // remove old state
+        const oldState = this.worldStates.get(version - 1);
+        if (oldState) {
+            this.worldStates.delete(version - 1);
+            oldState.destroy();
         }
 
-        // when a new version was sorted for the first time, we need to fully update work buffer to match
-        // centers buffer / sorted data
-        if (this.sortedVersion !== version && version === this.centerBuffer.version) {
-            this.sortedVersion = version;
+        // find the world state that has been sorted
+        const worldState = this.worldStates.get(version);
+        Debug.assert(worldState, `World state with version ${version} not found`);
 
-            // resize work buffer if needed
-            const textureSize = this.centerBuffer.textureSize;
-            const workBufferResizeRequest = textureSize !== this.workBuffer.textureSize;
-            if (workBufferResizeRequest) {
-                this.workBuffer.resize(textureSize);
-                this.renderer.setMaxNumSplats(textureSize * textureSize);
+        if (worldState) {
+
+            // when a new version was sorted for the first time, we need to fully update work buffer
+            // to match centers buffer / sorted data
+            if (!worldState.sortedBefore) {
+                worldState.sortedBefore = true;
+
+                // resize work buffer if needed
+                const textureSize = worldState.textureSize;
+                if (textureSize !== this.workBuffer.textureSize) {
+                    this.workBuffer.resize(textureSize);
+                    this.renderer.setMaxNumSplats(textureSize * textureSize);
+                }
+
+                // render all splats to work buffer
+                this.workBuffer.render(worldState.splats, this.cameraNode);
             }
 
-            this.splats.forEach((splat) => {
-                splat.activatePrepareState();
-            });
+            // update order texture
+            this.workBuffer.setOrderData(orderData);
 
-            // render all splats to work buffer
-            this.workBuffer.render(this.splats, this.cameraNode);
+            // number of splats to render
+            this.renderer.setNumSplats(count);
         }
-
-        // update order texture
-        this.workBuffer.setOrderData(orderData);
-
-        // number of splats to render
-        this.renderer.setNumSplats(count);
     }
+
+    // TODO: leaving this commented out for now, it will be refactor and parts of it used
+    // in the following PRs.
 
     /**
      * Updates the order of splats based on their world matrix being updated, with splats that have
      * changed within a time window going to the end.
      *
-     * @returns {boolean} True if any splat has changed and LOD needs to be re-calculated.
      */
-    updateSplatOrder() {
+    // updateSplatOrder() {
 
-        // detect which splats have changed
-        this.updateVersion++;
-        const updateVersion = this.updateVersion;
-        const splats = this.splats;
-        let lodDirty = false;
-        splats.forEach((splat) => {
-            lodDirty = lodDirty || splat.update(updateVersion);
-        });
+    //     // detect which splats have changed
+    //     this.updateVersion++;
+    //     const updateVersion = this.updateVersion;
+    //     const splats = this.splats;
+    //     let lodDirty = false;
+    //     splats.forEach((splat) => {
+    //         lodDirty = lodDirty || splat.update(updateVersion);
+    //     });
 
-        // Copy splat references before sorting, to detect changes later
-        tempSplats.length = splats.length;
-        for (let i = 0; i < splats.length; i++) {
-            tempSplats[i] = splats[i];
-        }
+    //     // Copy splat references before sorting, to detect changes later
+    //     tempSplats.length = splats.length;
+    //     for (let i = 0; i < splats.length; i++) {
+    //         tempSplats[i] = splats[i];
+    //     }
 
-        // Sort: splats changed within a window go to the end
-        const activityWindow = 100;
-        splats.sort((a, b) => {
-            const aActive = updateVersion - a.updateVersion <= activityWindow;
-            const bActive = updateVersion - b.updateVersion <= activityWindow;
 
-            if (aActive && !bActive) return 1;
-            if (!aActive && bActive) return -1;
+    // ///////// can I add order sorting to when the world state is created ???
+    // or maybe trigger new world state for it
 
-            // if both changed, most recently changed splat goes last
-            return a.updateVersion - b.updateVersion;
-        });
 
-        // Find the first index that changed
-        const firstChangedIndex = splats.findIndex((splat, i) => splat !== tempSplats[i]);
+    //     // Sort: splats changed within a window go to the end
+    //     const activityWindow = 100;
+    //     splats.sort((a, b) => {
+    //         const aActive = updateVersion - a.updateVersion <= activityWindow;
+    //         const bActive = updateVersion - b.updateVersion <= activityWindow;
 
-        tempSplats.length = 0;
+    //         if (aActive && !bActive) return 1;
+    //         if (!aActive && bActive) return -1;
 
-        return lodDirty || firstChangedIndex !== -1;
-    }
+    //         // if both changed, most recently changed splat goes last
+    //         return a.updateVersion - b.updateVersion;
+    //     });
+
+    //     // Find the first index that changed
+    //     const firstChangedIndex = splats.findIndex((splat, i) => splat !== tempSplats[i]);
+
+    //     tempSplats.length = 0;
+
+    //     return lodDirty || firstChangedIndex !== -1;
+    // }
 
     update() {
 
-        // do not allow any center buffer modifications till we get sorted centers back
-        if (this.sortedVersion === this.centerBuffer.version || this.forceCentersUpdate) {
-
-            // update all octree instances
-            this.octreeInstances.forEach((octreeInstance) => {
-                octreeInstance.update(this);
-            });
-
-            // how far has the camera moved
-            const currentCameraPos = this.cameraNode.getWorldTransform().getTranslation();
-            const distance = this.lastCameraPos.distance(currentCameraPos);
-
-            // reorder splats based on update version - active splats at the end
-            const lodDirty = this.updateSplatOrder();
-
-            // if camera moved or splats have been reordered, give updated centers to sorter
-            if (distance > 1.0 || lodDirty || this.forceCentersUpdate) {
-                this.forceCentersUpdate = false;
-
-                this.lastCameraPos.copy(currentCameraPos);
-
-                // update LOD for all octree instances
-                this.octreeInstances.forEach((octreeInstance) => {
-                    octreeInstance.updateLod(this.cameraNode, this);
-                });
-
-                // Update LOD for each splat individually
-                this.splats.forEach((splat) => {
-
-                    // start preparing a state - updates LOD intervals and interval texture
-                    splat.startPrepareState();
-                });
-
-                this.centerBuffer.estimateTextureSize(this.splats, this.device.maxTextureSize);
-                const textureSize = this.centerBuffer.textureSize;
-
-                // Reassign lines based on current LOD active splats
-                this.assignLines(this.splats, textureSize);
-
-                // give sorter info it needs to generate global centers array for sorting
-                const payload = this.centerBuffer.update(this.splats);
-                this.sorter.setIntervals(payload);
-            }
-
-            // update data for the sorter
-            this.sort();
+        // check if any octree instances have moved enough to require LOD update
+        let anyOctreeMoved = false;
+        for (const [, inst] of this.octreeInstances) {
+            anyOctreeMoved ||= inst.testMoved();
         }
 
-        // if we got valid sorted centers, which makes the renderState valid
-        if (this.sortedVersion >= this.sortedVersionMin) {
+        // check if camera has moved enough to require LOD update
+        const currentCameraPos = this.cameraNode.getPosition();
+        const distance = this.lastCameraPos.distance(currentCameraPos);
+        const cameraMoved = distance > 1.0;
 
-            // any splats that have changed this frame need to be re-rendered to work buffer
-            const updateVersion = this.updateVersion;
-            const rt = this.workBuffer.renderTarget;
-            this.splats.forEach((splat) => {
-                if (splat.updateVersion === updateVersion) {
-                    splat.render(rt, this.cameraNode);
+        // when camera of octree need LOD evaluated
+        if (cameraMoved || anyOctreeMoved) {
+
+            this.lastCameraPos.copy(currentCameraPos);
+
+            // update LOD for all octree instances
+            for (const [, inst] of this.octreeInstances) {
+                inst.updateLod(this.cameraNode);
+            }
+        }
+
+        // create new world state if needed
+        this.updateWorldState();
+
+        // update sorter with new world state
+        const lastState = this.worldStates.get(this.lastWorldStateVersion);
+        if (lastState) {
+
+            if (!lastState.sortParametersSet) {
+                lastState.sortParametersSet = true;
+
+                const payload = this.prepareSortParameters(lastState);
+                this.sorter.setSortParameters(payload);
+            }
+
+            // kick off sorting
+            this.sort(lastState);
+        }
+
+        // re-render splats that have changed their transform this frame, using last sorted state
+        const sortedState = this.worldStates.get(this.sortedVersion);
+        if (sortedState) {
+            const updateVersion = ++this.updateVersion;
+
+            // Collect splats that have been updated
+            sortedState.splats.forEach((splat) => {
+                if (splat.update(updateVersion)) {
+                    _updatedSplats.push(splat);
                 }
             });
+
+            // Batch render all updated splats in a single render pass
+            if (_updatedSplats.length > 0) {
+                this.workBuffer.render(_updatedSplats, this.cameraNode);
+                _updatedSplats.length = 0;
+            }
         }
     }
 
     /**
-     * Assigns lines to each splat based on the texture size.
+     * Sorts the splats of the given world state.
      *
-     * @param {GSplatInfo[]} splats - The splats to assign lines to.
-     * @param {number} size - The texture size.
+     * @param {GSplatWorldState} lastState - The last world state.
      */
-    assignLines(splats, size) {
-        let start = 0;
-        for (const splat of splats) {
-            const prepareState = splat.prepareState;
-            const activeSplats = prepareState.activeSplats;
-            const numLines = Math.ceil(activeSplats / size);
-            prepareState.setLines(start, numLines, size, activeSplats);
-            start += numLines;
-        }
-    }
-
-    sort() {
+    sort(lastState) {
 
         // Get camera's world-space properties
         const cameraNode = this.cameraNode;
@@ -380,8 +369,8 @@ class GSplatManager {
         cameraMat.getZ(cameraDirection).normalize();
 
         const sorterRequest = [];
-        this.splats.forEach((splat) => {
-            const modelMat = splat.placement.node.getWorldTransform();
+        lastState.splats.forEach((splat) => {
+            const modelMat = splat.node.getWorldTransform();
             invModelMat.copy(modelMat).invert();
 
             // uniform scale
@@ -405,6 +394,27 @@ class GSplatManager {
 
         this.sorter.setSortParams(sorterRequest);
         this.renderer.updateViewport(cameraNode);
+    }
+
+    /**
+     * Prepares sort parameters data for the sorter worker.
+     *
+     * @param {GSplatWorldState} worldState - The world state containing all needed data.
+     * @returns {object} - Data for sorter worker.
+     */
+    prepareSortParameters(worldState) {
+        return {
+            command: 'intervals',
+            textureSize: worldState.textureSize,
+            totalUsedPixels: worldState.totalUsedPixels,
+            version: worldState.version,
+            ids: worldState.splats.map(splat => splat.resource.id),
+            lineStarts: worldState.splats.map(splat => splat.lineStart),
+            padding: worldState.splats.map(splat => splat.padding),
+
+            // TODO: consider storing this in typed array and transfer it to sorter worker
+            intervals: worldState.splats.map(splat => splat.intervals)
+        };
     }
 }
 

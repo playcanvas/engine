@@ -3,7 +3,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { ShaderMaterial } from '../../../scene/materials/shader-material.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Entity } from '../../../framework/entity.js';
-import { CULLFACE_BACK, SEMANTIC_POSITION, SEMANTIC_COLOR } from '../../../platform/graphics/constants.js';
+import { CULLFACE_BACK, SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
 import { BLEND_NORMAL } from '../../../scene/constants.js';
 
 import { COLOR_GRAY } from '../color.js';
@@ -15,19 +15,15 @@ import { ConeGeometry } from '../../../scene/geometry/cone-geometry.js';
 import { PlaneGeometry } from '../../../scene/geometry/plane-geometry.js';
 import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
 import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
-import { Mat4 } from '../../../core/math/mat4.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
  * @import { TriData } from '../tri-data.js';
  */
 
-// constants
-const SHADING_DAMP_SCALE = 0.25;
-const SHADING_DAMP_OFFSET = 0.75;
-
-const LIGHT_DIR = new Vec3(1, 2, 3);
-
+/**
+ * @type {Record<string, typeof Geometry>}
+ */
 const GEOMETRIES = {
     box: BoxGeometry,
     cone: ConeGeometry,
@@ -40,14 +36,10 @@ const GEOMETRIES = {
 const shaderDesc = {
     uniqueName: 'axis-shape',
     attributes: {
-        vertex_position: SEMANTIC_POSITION,
-        vertex_color: SEMANTIC_COLOR
+        vertex_position: SEMANTIC_POSITION
     },
     vertexGLSL: /* glsl */`
         attribute vec3 vertex_position;
-        attribute vec4 vertex_color;
-    
-        varying vec4 vColor;
     
         uniform mat4 matrix_model;
         uniform mat4 matrix_viewProjection;
@@ -55,7 +47,6 @@ const shaderDesc = {
         void main(void) {
             gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
             gl_Position.z = clamp(gl_Position.z, -abs(gl_Position.w), abs(gl_Position.w));
-            vColor = vertex_color;
         }
     `,
     fragmentGLSL: /* glsl */`
@@ -63,25 +54,21 @@ const shaderDesc = {
     
         precision highp float;
     
-        varying vec4 vColor;
+        uniform vec4 uColor;
 
         void main(void) {
-            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(vColor)), vColor.w);
+            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(uColor)), uColor.w);
         }
     `,
     vertexWGSL: /* wgsl */`
         attribute vertex_position: vec3f;
-        attribute vertex_color: vec4f;
 
         uniform matrix_model: mat4x4f;
         uniform matrix_viewProjection: mat4x4f;
 
-        varying vColor: vec4f;
-
         @vertex
         fn vertexMain(input: VertexInput) -> VertexOutput {
             var output: VertexOutput;
-            output.vColor = input.vertex_color;
             let pos = vec4f(input.vertex_position, 1.0);
             output.position = uniform.matrix_viewProjection * uniform.matrix_model * pos;
             output.position.z = clamp(output.position.z, -abs(output.position.w), abs(output.position.w));
@@ -91,113 +78,125 @@ const shaderDesc = {
     fragmentWGSL: /* wgsl */`
         #include "gammaPS"
 
-        varying vColor: vec4f;
+        uniform uColor: vec4f;
 
         @fragment
         fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             var output: FragmentOutput;
-            output.color = vec4f(gammaCorrectOutput(decodeGamma(input.vColor)), input.vColor.w);
+            output.color = vec4f(gammaCorrectOutput(decodeGamma(uniform.uColor)), uniform.uColor.w);
             return output;
         }
     `
 };
 
-const shadingMeshMap = new Map();
-
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpM1 = new Mat4();
 const tmpG = new Geometry();
 tmpG.positions = [];
 tmpG.normals = [];
 
 /**
- * Apply shadow to a geometry.
- *
- * @param {Geometry} geom - The geometry to apply shadow to.
- * @param {Color} color - The color of the geometry.
- * @param {Mat4} [transform] - The transform of the geometry.
- * @returns {number[]} The shadow data.
+ * @typedef {object} ShapeArgs
+ * @property {string} [axis] - The axis of the shape (e.g., 'x', 'y', 'z').
+ * @property {Vec3} [position] - The position of the shape.
+ * @property {Vec3} [rotation] - The rotation of the shape.
+ * @property {Vec3} [scale] - The scale of the shape.
+ * @property {boolean} [disabled] - Whether the shape is disabled.
+ * @property {boolean} [hidden] - Whether the shape is hidden.
+ * @property {number[]} [layers] - The layers the shape belongs to.
+ * @property {Color} [defaultColor] - The default color of the shape.
+ * @property {Color} [hoverColor] - The hover color of the shape.
+ * @property {Color} [disabledColor] - The disabled color of the shape.
  */
-const applyShadowColor = (geom, color, transform) => {
-    if (!geom.normals || !geom.positions) {
-        return [];
-    }
-
-    // transform light direction to local space
-    let localLightDir;
-    if (transform) {
-        localLightDir = tmpM1.copy(transform).invert()
-        .transformVector(tmpV1.copy(LIGHT_DIR), tmpV1)
-        .normalize();
-    }
-
-    // calculate shading intensity and apply to color
-    geom.colors = [];
-    const shading = [];
-    const numVertices = geom.positions.length / 3;
-    for (let i = 0; i < numVertices; i++) {
-        let strength = 1;
-        if (localLightDir) {
-            const x = geom.normals[i * 3];
-            const y = geom.normals[i * 3 + 1];
-            const z = geom.normals[i * 3 + 2];
-            const normal = tmpV2.set(x, y, z);
-            const dot = localLightDir.dot(normal);
-            strength = dot * SHADING_DAMP_SCALE + SHADING_DAMP_OFFSET;
-        }
-        shading.push(strength);
-        geom.colors.push(
-            strength * color.r * 0xFF,
-            strength * color.g * 0xFF,
-            strength * color.b * 0xFF,
-            color.a * 0xFF
-        );
-    }
-
-    return shading;
-};
 
 /**
- * Set the color of a mesh.
- *
- * @param {Mesh} mesh - The mesh to set the color of.
- * @param {Color} color - The color to set the mesh to.
+ * @ignore
  */
-const setMeshColor = (mesh, color) => {
-    const shading = shadingMeshMap.get(mesh);
-    const colors = [];
-    for (let i = 0; i < shading.length; i++) {
-        colors.push(
-            shading[i] * color.r * 0xFF,
-            shading[i] * color.g * 0xFF,
-            shading[i] * color.b * 0xFF,
-            color.a * 0xFF
-        );
-    }
-    mesh.setColors32(colors);
-    mesh.update();
-};
-
 class Shape {
-    _position;
+    /**
+     * The internal position of the shape.
+     *
+     * @type {Vec3}
+     * @protected
+     */
+    _position = new Vec3();
 
-    _rotation;
+    /**
+     * The internal rotation of the shape.
+     *
+     * @type {Vec3}
+     * @protected
+     */
+    _rotation = new Vec3();
 
-    _scale;
+    /**
+     * The internal scale of the shape.
+     *
+     * @type {Vec3}
+     * @protected
+     */
+    _scale = new Vec3(1, 1, 1);
 
+    /**
+     * The internal render component layers of the shape.
+     *
+     * @type {number[]}
+     * @protected
+     */
     _layers = [];
 
-    _shading = true;
+    /**
+     * The internal material state of the shape.
+     *
+     * @type {ShaderMaterial}
+     * @protected
+     */
+    _material = new ShaderMaterial(shaderDesc);
 
-    _disabled;
+    /**
+     * The internal disabled state of the shape.
+     *
+     * @protected
+     * @type {boolean}
+     */
+    _disabled = false;
 
+    /**
+     * The internal visibility state of the shape.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _visible = true;
+
+    /**
+     * The internal default color of the shape.
+     *
+     * @type {Color}
+     * @protected
+     */
     _defaultColor = Color.WHITE;
 
+    /**
+     * The internal hover color of the shape.
+     *
+     * @type {Color}
+     * @protected
+     */
     _hoverColor = Color.BLACK;
 
+    /**
+     * The internal disabled color of the shape.
+     *
+     * @type {Color}
+     * @protected
+     */
     _disabledColor = COLOR_GRAY;
 
+    /**
+     * The internal culling state of the shape.
+     *
+     * @type {number}
+     * @protected
+     */
     _cull = CULLFACE_BACK;
 
     /**
@@ -221,7 +220,6 @@ class Shape {
      */
     entity;
 
-
     /**
      * The triangle data of the shape.
      *
@@ -236,63 +234,43 @@ class Shape {
      */
     meshInstances = [];
 
-    constructor(device, options) {
+    /**
+     * Create a shape.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {string} name - The name of the shape.
+     * @param {ShapeArgs} args - The options for the shape.
+     */
+    constructor(device, name, args) {
         this.device = device;
-        this.axis = options.axis ?? 'x';
-        this._position = options.position ?? new Vec3();
-        this._rotation = options.rotation ?? new Vec3();
-        this._scale = options.scale ?? new Vec3(1, 1, 1);
+        this.axis = args.axis ?? 'x';
 
-        this._disabled = options.disabled ?? false;
-
-        this._layers = options.layers ?? this._layers;
-        this._shading = options.shading ?? this._shading;
-
-        if (options.defaultColor instanceof Color) {
-            this._defaultColor = options.defaultColor;
+        if (args.position instanceof Vec3) {
+            this._position.copy(args.position);
         }
-        if (options.hoverColor instanceof Color) {
-            this._hoverColor = options.hoverColor;
+        if (args.rotation instanceof Vec3) {
+            this._rotation.copy(args.rotation);
         }
-        if (options.disabledColor instanceof Color) {
-            this._disabledColor = options.disabledColor;
+        if (args.scale instanceof Vec3) {
+            this._scale.copy(args.scale);
         }
-    }
 
-    set disabled(value) {
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            setMeshColor(this.meshInstances[i].mesh, value ? this._disabledColor : this._defaultColor);
+        this._disabled = args.disabled ?? false;
+        this._visible = args.hidden ?? false;
+
+        this._layers = args.layers ?? this._layers;
+
+        if (args.defaultColor instanceof Color) {
+            this._defaultColor = args.defaultColor;
         }
-        this._disabled = value ?? false;
-    }
-
-    get disabled() {
-        return this._disabled;
-    }
-
-    set shading(value) {
-        this._shading = value ?? true;
-
-        const color = this._disabled ? this._disabledColor : this._defaultColor;
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            const mesh = this.meshInstances[i].mesh;
-            mesh.getPositions(tmpG.positions);
-            mesh.getNormals(tmpG.normals);
-            const shadow = applyShadowColor(
-                tmpG,
-                color,
-                this._shading ? this.entity.getWorldTransform() : undefined
-            );
-            shadingMeshMap.set(mesh, shadow);
-            setMeshColor(mesh, color);
+        if (args.hoverColor instanceof Color) {
+            this._hoverColor = args.hoverColor;
         }
-    }
+        if (args.disabledColor instanceof Color) {
+            this._disabledColor = args.disabledColor;
+        }
 
-    get shading() {
-        return this._shading;
-    }
-
-    _createRoot(name) {
+        // entity
         this.entity = new Entity(`${name}:${this.axis}`);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
@@ -300,25 +278,44 @@ class Shape {
     }
 
     /**
-     * Create a mesh from a primitive.
+     * Set the disabled state of the shape.
      *
-     * @param {Geometry} geom - The geometry to create the mesh from.
-     * @param {boolean} shading - Whether to apply shading to the primitive.
-     * @returns {Mesh} The mesh created from the primitive.
-     * @throws {Error} If the primitive type is invalid.
-     * @protected
+     * @type {boolean}
      */
-    _createMesh(geom, shading = true) {
-        const color = this._disabled ? this._disabledColor : this._defaultColor;
-        const shadow = applyShadowColor(
-            geom,
-            color,
-            shading ? this.entity.getWorldTransform() : undefined
-        );
-        const mesh = Mesh.fromGeometry(this.device, geom);
-        shadingMeshMap.set(mesh, shadow);
+    set disabled(value) {
+        const color = value ? this._disabledColor : this._defaultColor;
+        this._material.setParameter('uColor', color.toArray());
+        this._disabled = value ?? false;
+    }
 
-        return mesh;
+    /**
+     * Get the disabled state of the shape.
+     *
+     * @type {boolean}
+     */
+    get disabled() {
+        return this._disabled;
+    }
+
+    /**
+     * Set the visibility state of the shape.
+     *
+     * @type {boolean}
+     */
+    set visible(value) {
+        for (let i = 0; i < this.meshInstances.length; i++) {
+            this.meshInstances[i].visible = value;
+        }
+        this._visible = value;
+    }
+
+    /**
+     * Get the visibility state of the shape.
+     *
+     * @type {boolean}
+     */
+    get visible() {
+        return this._visible;
     }
 
     /**
@@ -329,14 +326,15 @@ class Shape {
      * @protected
      */
     _createRenderComponent(entity, meshes) {
-        const material = new ShaderMaterial(shaderDesc);
-        material.cull = this._cull;
-        material.blendType = BLEND_NORMAL;
-        material.update();
+        const color = this._disabled ? this._disabledColor : this._defaultColor;
+        this._material.setParameter('uColor', color.toArray());
+        this._material.cull = this._cull;
+        this._material.blendType = BLEND_NORMAL;
+        this._material.update();
 
         const meshInstances = [];
         for (let i = 0; i < meshes.length; i++) {
-            const mi = new MeshInstance(meshes[i], material);
+            const mi = new MeshInstance(meshes[i], this._material);
             mi.cull = false;
             meshInstances.push(mi);
             this.meshInstances.push(mi);
@@ -353,31 +351,49 @@ class Shape {
      *
      * @param {Entity} entity - The entity to add the render mesh to.
      * @param {string} type - The type of primitive to create.
-     * @param {boolean} shading - Whether to apply shading to the primitive.
      * @throws {Error} If the primitive type is invalid.
      * @protected
      */
-    _addRenderMesh(entity, type, shading) {
+    _addRenderMesh(entity, type) {
         const Geometry = GEOMETRIES[type];
         if (!Geometry) {
             throw new Error('Invalid primitive type.');
         }
         this._createRenderComponent(entity, [
-            this._createMesh(new Geometry(), shading)
+            Mesh.fromGeometry(this.device, new Geometry())
         ]);
     }
 
+    /**
+     * Update the shape's transform.
+     *
+     * @protected
+     */
+    _update() {
+        this.entity.setLocalPosition(this._position);
+        this.entity.setLocalEulerAngles(this._rotation);
+        this.entity.setLocalScale(this._scale);
+    }
+
+    /**
+     * Sets the hover state of the shape.
+     *
+     * @param {boolean} state - Whether the shape is hovered.
+     * @returns {void}
+     */
     hover(state) {
         if (this._disabled) {
             return;
         }
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            const color = state ? this._hoverColor : this._defaultColor;
-            const mesh = this.meshInstances[i].mesh;
-            setMeshColor(mesh, color);
-        }
+        const color = state ? this._hoverColor : this._defaultColor;
+        this._material.setParameter('uColor', color.toArray());
     }
 
+    /**
+     * Destroys the shape and its entity.
+     *
+     * @returns {void}
+     */
     destroy() {
         this.entity.destroy();
     }

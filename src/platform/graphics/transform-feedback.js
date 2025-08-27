@@ -152,7 +152,7 @@ class TransformFeedback {
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);
         device.updateBegin();
-        device.setVertexBuffer(this._inputBuffer, 0);
+        device.setVertexBuffer(this._inputBuffer);
         device.setRaster(false);
         device.setTransformFeedbackBuffer(this._outputBuffer);
         device.setShader(shader);
