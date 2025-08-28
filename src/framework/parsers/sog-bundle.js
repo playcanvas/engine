@@ -12,53 +12,84 @@ import { GSplatSogsResource } from '../../scene/gsplat/gsplat-sogs-resource.js';
  * @param {ArrayBuffer} data - the file data
  * @returns {Array<{filename: string, data: Uint8Array}>} the extracted files
  */
-const extractZipArchiveFiles = (data) => {
+const parseZipArchive = (data) => {
     const dataView = new DataView(data);
-
-    const getUint16 = offset => dataView.getUint16(offset, true);
-    const getUint32 = offset => dataView.getUint32(offset, true);
+    const u16 = offset => dataView.getUint16(offset, true);
+    const u32 = offset => dataView.getUint32(offset, true);
 
     // read the end of central directory record
     const extractEocd = (offset) => {
         return {
-            numFiles: getUint16(offset + 8),
-            cdSizeBytes: getUint32(offset + 12),
-            cdOffsetBytes: getUint32(offset + 16)
+            magic: u32(offset),
+            numFiles: u16(offset + 8),
+            cdSizeBytes: u32(offset + 12),
+            cdOffsetBytes: u32(offset + 16)
         };
     };
 
-    // read a central directory record
     const extractCdr = (offset) => {
-        const length = getUint16(offset + 28);
-        const fileHeaderSize = 30 + length;
+        const filenameLength = u16(offset + 28);
+        const extraFieldLength = u16(offset + 30);
+        const fileCommentLength = u16(offset + 32);
         return {
-            fileSizeBytes: getUint32(offset + 20),
-            fileOffsetBytes: getUint32(offset + 42) + fileHeaderSize,
-            filename: new TextDecoder().decode(new Uint8Array(data, offset + 46, length)),
-            recordSizeBytes: 46 + length
+            magic: u32(offset),
+            compressedSizeBytes: u32(offset + 20),
+            uncompressedSizeBytes: u32(offset + 24),
+            lfhOffsetBytes: u32(offset + 42),
+            filename: new TextDecoder().decode(new Uint8Array(data, offset + 46, filenameLength)),
+            recordSizeBytes: 46 + filenameLength + extraFieldLength + fileCommentLength
         };
     };
 
-    // extract the end of central directory info
+    // read a local file header
+    const extractLfh = (offset) => {
+        const filenameLength = u16(offset + 26);
+        const extraLength = u16(offset + 28);
+        return {
+            magic: u32(offset),
+            flags: u16(offset + 6),
+            compressionMethod: u16(offset + 8),
+            compressedSizeBytes: u32(offset + 18),
+            uncompressedSizeBytes: u32(offset + 22),
+            offsetBytes: offset + 30 + filenameLength + extraLength,
+            filename: new TextDecoder().decode(new Uint8Array(data, offset + 30, filenameLength))
+        };
+    };
+
+    // read the end of central directory record
     const eocd = extractEocd(dataView.byteLength - 22);
 
-    // extract cdr records
-    const cdrs = [];
+    if (eocd.magic !== 0x06054b50) {
+        throw new Error('Invalid zip file: EOCDR not found');
+    }
+
+    if (eocd.cdOffsetBytes === 0xffffffff || eocd.cdSizeBytes === 0xffffffff) {
+        throw new Error('Invalid zip file: Zip64 not supported');
+    }
+
+    // step over central directory records
+    const result = [];
     let offset = eocd.cdOffsetBytes;
     for (let i = 0; i < eocd.numFiles; i++) {
         const cdr = extractCdr(offset);
-        cdrs.push(cdr);
+        if (cdr.magic !== 0x02014b50) {
+            throw new Error('Invalid zip file: CDR not found');
+        }
+
+        const lfh = extractLfh(cdr.lfhOffsetBytes);
+        if (lfh.magic !== 0x04034b50) {
+            throw new Error('Invalid zip file: LFH not found');
+        }
+
+        result.push({
+            filename: cdr.filename,
+            data: new Uint8Array(data, lfh.offsetBytes, cdr.compressedSizeBytes)
+        });
+
         offset += cdr.recordSizeBytes;
     }
 
-    // extract the files
-    return cdrs.map((cdr) => {
-        const fileData = new Uint8Array(data, cdr.fileOffsetBytes, cdr.fileSizeBytes);
-        return {
-            filename: cdr.filename,
-            data: fileData
-        };
-    });
+    return result;
 };
 
 class SogBundleParser {
@@ -83,7 +114,7 @@ class SogBundleParser {
      */
     load(url, callback, asset) {
         const handleArrayBuffer = async (arrayBuffer) => {
-            const files = extractZipArchiveFiles(arrayBuffer);
+            const files = parseZipArchive(arrayBuffer);
 
             // access bundled meta.json
             const metaFile = files.find(f => f.filename === 'meta.json');
