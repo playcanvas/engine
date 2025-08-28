@@ -10,12 +10,13 @@ import { GSplatSogsResource } from '../../scene/gsplat/gsplat-sogs-resource.js';
 
 /**
  * @param {ArrayBuffer} data - the file data
+ * @returns {Array<{filename: string, data: Uint8Array}>} the extracted files
  */
 const extractZipArchiveFiles = (data) => {
     const dataView = new DataView(data);
 
-    const getUint16 = (offset) => dataView.getUint16(offset, true);
-    const getUint32 = (offset) => dataView.getUint32(offset, true);
+    const getUint16 = offset => dataView.getUint16(offset, true);
+    const getUint32 = offset => dataView.getUint32(offset, true);
 
     // read the end of central directory record
     const extractEocd = (offset) => {
@@ -63,6 +64,8 @@ const extractZipArchiveFiles = (data) => {
 class SogBundleParser {
     /** @type {AppBase} */
     app;
+
+    /** @type {number} */
     maxRetries;
 
     constructor(app, maxRetries = 3) {
@@ -78,7 +81,7 @@ class SogBundleParser {
      * the resource is loaded or an error occurs.
      * @param {Asset} asset - Container asset.
      */
-    async load(url, callback, asset) {
+    load(url, callback, asset) {
         const handleArrayBuffer = async (arrayBuffer) => {
             const files = extractZipArchiveFiles(arrayBuffer);
 
