@@ -453,7 +453,7 @@ class GSplatSogsData {
             mipmaps: false
         });
 
-        this.packedShN = new Texture(device, {
+        this.packedShN = this.sh_centroids && new Texture(device, {
             name: 'sogsPackedShN',
             width: this.sh_centroids.width,
             height: this.sh_centroids.height,
@@ -463,11 +463,15 @@ class GSplatSogsData {
 
         device.on('devicerestored', () => {
             this.packGpuMemory();
-            this.packShMemory();
+            if (this.packedShN) {
+                this.packShMemory();
+            }
         });
 
         this.packGpuMemory();
-        this.packShMemory();
+        if (this.packedShN) {
+            this.packShMemory();
+        }
     }
 
     // temporary, for backwards compatibility
