@@ -9,6 +9,8 @@ import { GSplatSogsResource } from '../../scene/gsplat/gsplat-sogs-resource.js';
  */
 
 /**
+ * Parse an ArrayBuffer containing a zip archive.
+ * 
  * @param {ArrayBuffer} data - the file data
  * @returns {Array<{filename: string, data: Uint8Array}>} the extracted files
  */
