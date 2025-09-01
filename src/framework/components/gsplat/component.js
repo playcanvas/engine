@@ -313,6 +313,7 @@ class GSplatComponent extends Component {
      * not enabled. Default is false.
      *
      * @type {boolean}
+     * @alpha
      */
     set unified(value) {
 
@@ -328,6 +329,7 @@ class GSplatComponent extends Component {
      * Gets whether to use the unified gsplat rendering.
      *
      * @type {boolean}
+     * @alpha
      */
     get unified() {
         return this._unified;

@@ -61,9 +61,6 @@ class GSplatManager {
     sorter;
 
     /** @type {number} */
-    updateVersion = 0;
-
-    /** @type {number} */
     sortedVersion = 0;
 
     /** @type {Vec3} */
@@ -165,7 +162,7 @@ class GSplatManager {
 
     updateWorldState() {
 
-        // update octree instances - this handles loaded pended resources
+        // update octree instances - this handles loading of any pending resources
         for (const [, inst] of this.octreeInstances) {
             this.layerPlacementsDirty ||= inst.update();
         }
@@ -242,57 +239,6 @@ class GSplatManager {
         }
     }
 
-    // TODO: leaving this commented out for now, it will be refactor and parts of it used
-    // in the following PRs.
-
-    /**
-     * Updates the order of splats based on their world matrix being updated, with splats that have
-     * changed within a time window going to the end.
-     *
-     */
-    // updateSplatOrder() {
-
-    //     // detect which splats have changed
-    //     this.updateVersion++;
-    //     const updateVersion = this.updateVersion;
-    //     const splats = this.splats;
-    //     let lodDirty = false;
-    //     splats.forEach((splat) => {
-    //         lodDirty = lodDirty || splat.update(updateVersion);
-    //     });
-
-    //     // Copy splat references before sorting, to detect changes later
-    //     tempSplats.length = splats.length;
-    //     for (let i = 0; i < splats.length; i++) {
-    //         tempSplats[i] = splats[i];
-    //     }
-
-
-    // ///////// can I add order sorting to when the world state is created ???
-    // or maybe trigger new world state for it
-
-
-    //     // Sort: splats changed within a window go to the end
-    //     const activityWindow = 100;
-    //     splats.sort((a, b) => {
-    //         const aActive = updateVersion - a.updateVersion <= activityWindow;
-    //         const bActive = updateVersion - b.updateVersion <= activityWindow;
-
-    //         if (aActive && !bActive) return 1;
-    //         if (!aActive && bActive) return -1;
-
-    //         // if both changed, most recently changed splat goes last
-    //         return a.updateVersion - b.updateVersion;
-    //     });
-
-    //     // Find the first index that changed
-    //     const firstChangedIndex = splats.findIndex((splat, i) => splat !== tempSplats[i]);
-
-    //     tempSplats.length = 0;
-
-    //     return lodDirty || firstChangedIndex !== -1;
-    // }
-
     update() {
 
         // check if any octree instances have moved enough to require LOD update
@@ -338,11 +284,10 @@ class GSplatManager {
         // re-render splats that have changed their transform this frame, using last sorted state
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (sortedState) {
-            const updateVersion = ++this.updateVersion;
 
             // Collect splats that have been updated
             sortedState.splats.forEach((splat) => {
-                if (splat.update(updateVersion)) {
+                if (splat.update()) {
                     _updatedSplats.push(splat);
                 }
             });

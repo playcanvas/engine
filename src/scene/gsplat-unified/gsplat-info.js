@@ -55,9 +55,6 @@ class GSplatInfo {
     /** @type {Mat4} */
     previousWorldTransform = new Mat4();
 
-    /** @type {number} */
-    updateVersion = 0;
-
     /**
      * Manager for the intervals texture generation
      *
@@ -117,14 +114,13 @@ class GSplatInfo {
         }
     }
 
-    update(updateVersion) {
+    update() {
 
         // if the object's matrix has changed, store the update version to know when it happened
         const worldMatrix = this.node.getWorldTransform();
         const worldMatrixChanged = !this.previousWorldTransform.equals(worldMatrix);
         if (worldMatrixChanged) {
             this.previousWorldTransform.copy(worldMatrix);
-            this.updateVersion = updateVersion;
         }
 
         return worldMatrixChanged;
