@@ -81,7 +81,10 @@ class GSplatComponentSystem extends ComponentSystem {
         const data = {};
         _properties.forEach((prop) => {
             if (prop === 'material') {
-                data[prop] = gSplatComponent[prop].clone();
+                const srcMaterial = gSplatComponent[prop];
+                if (srcMaterial) {
+                    data[prop] = srcMaterial.clone();
+                }
             } else {
                 data[prop] = gSplatComponent[prop];
             }
