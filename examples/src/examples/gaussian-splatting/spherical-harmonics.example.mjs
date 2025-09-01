@@ -46,7 +46,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.sog` }),
+    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.compressed.ply` }),
     orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
 };
 
