@@ -350,9 +350,11 @@ class GSplatSogsData {
         const { device } = means_l;
         const { scope } = device;
 
+        const shaderKey = meta.version === 2 ? 'v2' : 'v1';
+
         // Note: do not destroy it, keep it available for the lifetime of the app
         const shader = ShaderUtils.createShader(device, {
-            uniqueName: 'GsplatSogsReorderShader',
+            uniqueName: 'GsplatSogsReorderShader-' + shaderKey,
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatSogsReorderPS,
