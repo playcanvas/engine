@@ -1,4 +1,5 @@
 import { Asset } from '../../framework/asset/asset.js';
+import { Debug } from '../../core/debug.js';
 import { http, Http } from '../../platform/net/http.js';
 import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
@@ -99,6 +100,7 @@ class SogsParser {
     async loadTextures(url, callback, asset, meta) {
         // transform meta to latest shape
         if (meta.version !== 2) {
+            Debug.deprecated('Loading SOG v1 data which is deprecated. Please recompress your scene with latest tools.');
             meta = upgradeMeta(meta);
         }
 
