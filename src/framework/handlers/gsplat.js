@@ -2,6 +2,7 @@ import { path } from '../../core/path.js';
 import { PlyParser } from '../parsers/ply.js';
 import { ResourceHandler } from './handler.js';
 import { SogsParser } from '../parsers/sogs.js';
+import { SogBundleParser } from '../parsers/sog-bundle.js';
 import { GSplatOctreeParser } from '../parsers/gsplat-octree.js';
 
 /**
@@ -19,6 +20,7 @@ class GSplatHandler extends ResourceHandler {
         super(app, 'gsplat');
         this.parsers = {
             ply: new PlyParser(app, 3),
+            sog: new SogBundleParser(app),
             json: new SogsParser(app, 3),
             octree: new GSplatOctreeParser(app, 3)
         };
@@ -29,13 +31,13 @@ class GSplatHandler extends ResourceHandler {
     }
 
     _getParser(url) {
-
         const basename = path.getBasename(this._getUrlWithoutParams(url)).toLowerCase();
         if (basename === 'lod-meta.json') {
             return this.parsers.octree;
         }
 
         const ext = path.getExtension(basename).replace('.', '');
+
         return this.parsers[ext] || this.parsers.ply;
     }
 

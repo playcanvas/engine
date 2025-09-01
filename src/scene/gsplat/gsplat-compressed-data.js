@@ -299,7 +299,8 @@ class GSplatCompressedData {
             for (let i = 0; i < 45; ++i) {
                 shMembers.push(`f_rest_${i}`);
             }
-            members.splice(members.indexOf('f_dc_0') + 1, 0, ...shMembers);
+            const location = Math.max(...['f_dc_0', 'f_dc_1', 'f_dc_2'].map(name => members.indexOf(name)));
+            members.splice(location + 1, 0, ...shMembers);
         }
 
         // allocate uncompressed data

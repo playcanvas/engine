@@ -6,11 +6,17 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { CULLFACE_NONE, PIXELFORMAT_RGBA32U, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, PIXELFORMAT_RGBA32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import glslGsplatSogsReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogsReorder.js';
 import wgslGsplatSogsReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsReorder.js';
+
+import glslGsplatSogsReorderSh from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogsReorderSh.js';
+import glslGsplatPackingPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatPacking.js';
+
+import wgslGsplatSogsReorderSH from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsReorderSh.js';
+import wgslGsplatPackingPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatPacking.js';
 
 const SH_C0 = 0.28209479177387814;
 
@@ -73,24 +79,44 @@ class GSplatSogsIterator {
             }
 
             if (s) {
-                const sx = lerp(scales.mins[0], scales.maxs[0], scales_data[i * 4 + 0] / 255);
-                const sy = lerp(scales.mins[1], scales.maxs[1], scales_data[i * 4 + 1] / 255);
-                const sz = lerp(scales.mins[2], scales.maxs[2], scales_data[i * 4 + 2] / 255);
-                s.set(sx, sy, sz);
+                if (meta.version === 2) {
+                    const sx = scales.codebook[scales_data[i * 4 + 0]];
+                    const sy = scales.codebook[scales_data[i * 4 + 1]];
+                    const sz = scales.codebook[scales_data[i * 4 + 2]];
+                    s.set(sx, sy, sz);
+                } else {
+                    const sx = lerp(scales.mins[0], scales.maxs[0], scales_data[i * 4 + 0] / 255);
+                    const sy = lerp(scales.mins[1], scales.maxs[1], scales_data[i * 4 + 1] / 255);
+                    const sz = lerp(scales.mins[2], scales.maxs[2], scales_data[i * 4 + 2] / 255);
+                    s.set(sx, sy, sz);
+                }
             }
 
             if (c) {
-                const r = lerp(sh0.mins[0], sh0.maxs[0], sh0_data[i * 4 + 0] / 255);
-                const g = lerp(sh0.mins[1], sh0.maxs[1], sh0_data[i * 4 + 1] / 255);
-                const b = lerp(sh0.mins[2], sh0.maxs[2], sh0_data[i * 4 + 2] / 255);
-                const a = lerp(sh0.mins[3], sh0.maxs[3], sh0_data[i * 4 + 3] / 255);
+                if (meta.version === 2) {
+                    const r = sh0.codebook[sh0_data[i * 4 + 0]];
+                    const g = sh0.codebook[sh0_data[i * 4 + 1]];
+                    const b = sh0.codebook[sh0_data[i * 4 + 2]];
+                    const a = sh0_data[i * 4 + 3] / 255;
+                    c.set(
+                        0.5 + r * SH_C0,
+                        0.5 + g * SH_C0,
+                        0.5 + b * SH_C0,
+                        a
+                    );
+                } else {
+                    const r = lerp(sh0.mins[0], sh0.maxs[0], sh0_data[i * 4 + 0] / 255);
+                    const g = lerp(sh0.mins[1], sh0.maxs[1], sh0_data[i * 4 + 1] / 255);
+                    const b = lerp(sh0.mins[2], sh0.maxs[2], sh0_data[i * 4 + 2] / 255);
+                    const a = lerp(sh0.mins[3], sh0.maxs[3], sh0_data[i * 4 + 3] / 255);
 
-                c.set(
-                    0.5 + r * SH_C0,
-                    0.5 + g * SH_C0,
-                    0.5 + b * SH_C0,
-                    1.0 / (1.0 + Math.exp(-a))
-                );
+                    c.set(
+                        0.5 + r * SH_C0,
+                        0.5 + g * SH_C0,
+                        0.5 + b * SH_C0,
+                        1.0 / (1.0 + Math.exp(-a))
+                    );
+                }
             }
 
             if (sh) {
@@ -98,9 +124,17 @@ class GSplatSogsIterator {
                 const u = (n % 64) * 15;
                 const v = Math.floor(n / 64);
 
-                for (let j = 0; j < 3; ++j) {
-                    for (let k = 0; k < 15; ++k) {
-                        sh[j * 15 + k] = lerp(shN.mins, shN.maxs, sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)] / 255);
+                if (meta.version === 2) {
+                    for (let j = 0; j < 3; ++j) {
+                        for (let k = 0; k < 15; ++k) {
+                            sh[j * 15 + k] = shN.codebook[sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)]];
+                        }
+                    }
+                } else {
+                    for (let j = 0; j < 3; ++j) {
+                        for (let k = 0; k < 15; ++k) {
+                            sh[j * 15 + k] = lerp(shN.mins, shN.maxs, sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)] / 255);
+                        }
                     }
                 }
             }
@@ -129,6 +163,10 @@ class GSplatSogsData {
 
     packedTexture;
 
+    packedSh0;
+
+    packedShN;
+
     destroy() {
         this.means_l?.destroy();
         this.means_u?.destroy();
@@ -138,6 +176,8 @@ class GSplatSogsData {
         this.sh_centroids?.destroy();
         this.sh_labels?.destroy();
         this.packedTexture?.destroy();
+        this.packedSh0?.destroy();
+        this.packedShN?.destroy();
     }
 
     createIter(p, r, s, c, sh) {
@@ -306,22 +346,26 @@ class GSplatSogsData {
 
     // pack the means, quats, scales and sh_labels data into one RGBA32U texture
     packGpuMemory() {
-        const { means_l, means_u, quats, scales, sh_labels, numSplats } = this;
+        const { meta, means_l, means_u, quats, scales, sh0, sh_labels, numSplats } = this;
         const { device } = means_l;
         const { scope } = device;
 
+        const shaderKey = meta.version === 2 ? 'v2' : 'v1';
+
         // Note: do not destroy it, keep it available for the lifetime of the app
         const shader = ShaderUtils.createShader(device, {
-            uniqueName: 'GsplatSogsReorderShader',
+            uniqueName: `GsplatSogsReorderShader-${shaderKey}`,
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatSogsReorderPS,
             fragmentWGSL: wgslGsplatSogsReorderPS,
-            fragmentOutputTypes: ['uvec4']
+            fragmentOutputTypes: ['uvec4', 'vec4'],
+            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]]),
+            fragmentDefines: (meta.version === 2) ? undefined : new Map([['REORDER_V1', '1']])
         });
 
         const renderTarget = new RenderTarget({
-            colorBuffer: this.packedTexture,
+            colorBuffers: [this.packedTexture, this.packedSh0],
             depth: false,
             mipLevel: 0
         });
@@ -335,9 +379,54 @@ class GSplatSogsData {
             means_u,
             quats,
             scales,
+            sh0,
             // use means_l as dummy texture for sh_labels if there is no spherical harmonics data
             sh_labels: sh_labels ?? means_l,
-            numSplats
+            numSplats,
+            'scales_codebook[0]': this.meta.scales.codebook,
+            'sh0_codebook[0]': this.meta.sh0.codebook,
+            // V1
+            scalesMins: meta.scales.mins,
+            scalesMaxs: meta.scales.maxs,
+            sh0Mins: meta.sh0.mins,
+            sh0Maxs: meta.sh0.maxs
+        });
+
+        drawQuadWithShader(device, renderTarget, shader);
+
+        renderTarget.destroy();
+    }
+
+    packShMemory() {
+        const { meta, sh_centroids } = this;
+        const { device } = sh_centroids;
+        const { scope } = device;
+
+        const shaderKey = meta.version === 2 ? 'v2' : 'v1';
+
+        const shader = ShaderUtils.createShader(device, {
+            uniqueName: `GsplatSogsReorderShShader-${shaderKey}`,
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentGLSL: glslGsplatSogsReorderSh,
+            fragmentWGSL: wgslGsplatSogsReorderSH,
+            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]]),
+            fragmentDefines: (meta.version === 2) ? undefined : new Map([['REORDER_V1', '1']])
+        });
+
+        const renderTarget = new RenderTarget({
+            colorBuffer: this.packedShN,
+            depth: false,
+            mipLevel: 0
+        });
+
+        device.setCullMode(CULLFACE_NONE);
+        device.setBlendState(BlendState.NOBLEND);
+        device.setDepthState(DepthState.NODEPTH);
+
+        resolve(scope, {
+            sh_centroids,
+            'shN_codebook[0]': this.meta.shN.codebook
         });
 
         drawQuadWithShader(device, renderTarget, shader);
@@ -354,17 +443,39 @@ class GSplatSogsData {
 
         this.packedTexture = new Texture(device, {
             name: 'sogsPackedTexture',
-            width: width,
-            height: height,
+            width,
+            height,
             format: PIXELFORMAT_RGBA32U,
+            mipmaps: false
+        });
+
+        this.packedSh0 = new Texture(device, {
+            name: 'sogsPackedSh0',
+            width,
+            height,
+            format: PIXELFORMAT_RGBA8,
+            mipmaps: false
+        });
+
+        this.packedShN = this.sh_centroids && new Texture(device, {
+            name: 'sogsPackedShN',
+            width: this.sh_centroids.width,
+            height: this.sh_centroids.height,
+            format: PIXELFORMAT_RGBA8,
             mipmaps: false
         });
 
         device.on('devicerestored', () => {
             this.packGpuMemory();
+            if (this.packedShN) {
+                this.packShMemory();
+            }
         });
 
         this.packGpuMemory();
+        if (this.packedShN) {
+            this.packShMemory();
+        }
     }
 
     // temporary, for backwards compatibility
