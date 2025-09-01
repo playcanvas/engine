@@ -99,7 +99,6 @@ assetListLoader.load(() => {
 
     // clone the biker and add the clone to the scene
     const skull = createSplatInstance('skull', assets.skull, 1.5, 0.05, 0, 0.7);
-    skull.setLocalPosition(1.5, 0.05, 0);
     skull.rotate(0, 150, 0);
     app.root.addChild(skull);
 
