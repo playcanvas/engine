@@ -376,8 +376,10 @@ class RotateGizmo extends TransformGizmo {
             const color = this._theme.guideBase[this._selectedAxis];
             const startColor = tmpC1.copy(color);
             startColor.a *= 0.3;
-            this._guideAngleLines[0].draw(gizmoPos, this._guideAngleStart, this._scale, startColor);
-            this._guideAngleLines[1].draw(gizmoPos, this._guideAngleEnd, this._scale, color);
+            this._guideAngleLines[0].draw(gizmoPos, tmpV1.copy(this._guideAngleStart).add(gizmoPos),
+                this._scale, startColor);
+            this._guideAngleLines[1].draw(gizmoPos, tmpV1.copy(this._guideAngleEnd).add(gizmoPos),
+                this._scale, color);
         } else {
             this._guideAngleLines[0].hide();
             this._guideAngleLines[1].hide();
