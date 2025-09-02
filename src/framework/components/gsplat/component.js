@@ -328,6 +328,7 @@ class GSplatComponent extends Component {
         }
 
         this._unified = value;
+        this._onGSplatAssetAdded();
     }
 
     /**
