@@ -72,6 +72,9 @@ const shaderDesc = {
     `
 };
 
+/**
+ * @ignore
+ */
 class MeshLine {
     /**
      * @type {number}
