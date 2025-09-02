@@ -149,7 +149,6 @@ data.set('gizmo', {
     coordSpace: gizmo.coordSpace,
     axisLineTolerance: gizmo.axisLineTolerance,
     axisCenterTolerance: gizmo.axisCenterTolerance,
-    shading: gizmo.shading,
     axisGap: gizmo.axisGap,
     axisLineThickness: gizmo.axisLineThickness,
     axisLineLength: gizmo.axisLineLength,

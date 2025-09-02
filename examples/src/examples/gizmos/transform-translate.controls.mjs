@@ -269,15 +269,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'Render' },
             jsx(
                 LabelGroup,
-                { text: 'Shading' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.shading' }
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'Gap' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),

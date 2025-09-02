@@ -249,15 +249,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'Render' },
             jsx(
                 LabelGroup,
-                { text: 'Shading' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.shading' }
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'XYZ Tube Radius' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -287,6 +278,18 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.faceRingRadius' },
                     max: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Angle Guide Thickness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.angleGuideThickness' },
+                    min: 0.001,
+                    max: 0.1,
+                    step: 0.01,
+                    precision: 3
                 })
             )
         ),

@@ -147,11 +147,11 @@ data.set('gizmo', {
     },
     coordSpace: gizmo.coordSpace,
     ringTolerance: gizmo.ringTolerance,
-    shading: gizmo.shading,
     xyzTubeRadius: gizmo.xyzTubeRadius,
     xyzRingRadius: gizmo.xyzRingRadius,
     faceTubeRadius: gizmo.faceTubeRadius,
-    faceRingRadius: gizmo.faceRingRadius
+    faceRingRadius: gizmo.faceRingRadius,
+    angleGuideThickness: gizmo.angleGuideThickness
 });
 
 // create grid
