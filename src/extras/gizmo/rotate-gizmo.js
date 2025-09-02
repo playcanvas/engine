@@ -196,6 +196,9 @@ class RotateGizmo extends TransformGizmo {
 
             // drag handle for disk (arc <-> circle)
             this._drag(true);
+
+            // angle guide lines
+            this._angleGuide(true);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point, x, y) => {
@@ -211,10 +214,14 @@ class RotateGizmo extends TransformGizmo {
             this._setNodeRotations(axis, angleDelta);
 
             this._updateGuidePoints(angleDelta);
+
+            this._angleGuide(true);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
             this._drag(false);
+
+            this._angleGuide(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
@@ -360,10 +367,11 @@ class RotateGizmo extends TransformGizmo {
     }
 
     /**
+     * @param {boolean} state - The state.
      * @private
      */
-    _drawGuideAngleLines() {
-        if (this._dragging && this.dragMode !== 'show') {
+    _angleGuide(state) {
+        if (state && this.dragMode !== 'show') {
             const gizmoPos = this.root.getLocalPosition();
             const color = this._theme.guideBase[this._selectedAxis];
             const startColor = tmpC1.copy(color);
@@ -586,8 +594,6 @@ class RotateGizmo extends TransformGizmo {
         }
 
         this._shapesLookAtCamera();
-
-        this._drawGuideAngleLines();
     }
 }
 
