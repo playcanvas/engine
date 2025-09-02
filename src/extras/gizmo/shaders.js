@@ -1,5 +1,10 @@
 import { SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 
+/** @import { ShaderDesc } from '../../scene/materials/shader-material.js'; */
+
+/**
+ * @type {ShaderDesc}
+ */
 export const materialDesc = {
     uniqueName: 'gizmo-material',
     attributes: {
