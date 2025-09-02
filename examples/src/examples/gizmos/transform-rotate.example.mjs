@@ -147,7 +147,6 @@ data.set('gizmo', {
     },
     coordSpace: gizmo.coordSpace,
     ringTolerance: gizmo.ringTolerance,
-    shading: gizmo.shading,
     xyzTubeRadius: gizmo.xyzTubeRadius,
     xyzRingRadius: gizmo.xyzRingRadius,
     faceTubeRadius: gizmo.faceTubeRadius,
