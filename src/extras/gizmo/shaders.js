@@ -5,8 +5,8 @@ import { SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 /**
  * @type {ShaderDesc}
  */
-export const materialDesc = {
-    uniqueName: 'gizmo-material',
+export const unlitShader = {
+    uniqueName: 'gizmo-unlit',
     attributes: {
         vertex_position: SEMANTIC_POSITION
     },

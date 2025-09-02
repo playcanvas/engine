@@ -15,7 +15,7 @@ import { ConeGeometry } from '../../../scene/geometry/cone-geometry.js';
 import { PlaneGeometry } from '../../../scene/geometry/plane-geometry.js';
 import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
 import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
-import { materialDesc } from '../shaders.js';
+import { unlitShader } from '../shaders.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
@@ -94,7 +94,7 @@ class Shape {
      * @type {ShaderMaterial}
      * @protected
      */
-    _material = new ShaderMaterial(materialDesc);
+    _material = new ShaderMaterial(unlitShader);
 
     /**
      * The internal disabled state of the shape.

@@ -6,7 +6,7 @@ import { CylinderGeometry } from '../../scene/geometry/cylinder-geometry.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { Mesh } from '../../scene/mesh.js';
-import { materialDesc } from './shaders.js';
+import { unlitShader } from './shaders.js';
 
 /**
  * @import { Color } from '../../core/math/color.js'
@@ -30,7 +30,7 @@ class MeshLine {
      * @type {ShaderMaterial}
      * @private
      */
-    _material = new ShaderMaterial(materialDesc);
+    _material = new ShaderMaterial(unlitShader);
 
     /**
      * @type {Entity}
