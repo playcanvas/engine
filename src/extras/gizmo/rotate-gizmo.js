@@ -7,6 +7,7 @@ import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
 import { ArcShape } from './shape/arc-shape.js';
 import { TransformGizmo } from './transform-gizmo.js';
+import { MeshLine } from './mesh-line.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -147,6 +148,14 @@ class RotateGizmo extends TransformGizmo {
     _guideAngleEnd = new Vec3();
 
     /**
+     * Internal mesh lines for guide angles.
+     *
+     * @type {MeshLine[]}
+     * @private
+     */
+    _guideAngleLines = [];
+
+    /**
      * @override
      */
     snapIncrement = 5;
@@ -171,6 +180,9 @@ class RotateGizmo extends TransformGizmo {
         super(camera, layer, 'gizmo:rotate');
 
         this._createTransform();
+
+        this._guideAngleLines.push(new MeshLine(this._app, this._layer));
+        this._guideAngleLines.push(new MeshLine(this._app, this._layer));
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
             // store start angle
@@ -348,16 +360,19 @@ class RotateGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {Vec3} pos - The position.
-     * @param {Vec3} point - The point.
-     * @param {Color} color - The color.
      * @private
      */
-    _drawGuideAngleLine(pos, point, color) {
-        tmpV1.set(0, 0, 0);
-        tmpV2.copy(point).mulScalar(this._scale);
-        if (this.dragMode !== 'show' && color.a !== 0) {
-            this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this._layer);
+    _drawGuideAngleLines() {
+        if (this._dragging && this.dragMode !== 'show') {
+            const gizmoPos = this.root.getLocalPosition();
+            const color = this._theme.guideBase[this._selectedAxis];
+            const startColor = tmpC1.copy(color);
+            startColor.a *= 0.3;
+            this._guideAngleLines[0].draw(gizmoPos, this._guideAngleStart, this._scale, startColor);
+            this._guideAngleLines[1].draw(gizmoPos, this._guideAngleEnd, this._scale, color);
+        } else {
+            this._guideAngleLines[0].hide();
+            this._guideAngleLines[1].hide();
         }
     }
 
@@ -572,14 +587,7 @@ class RotateGizmo extends TransformGizmo {
 
         this._shapesLookAtCamera();
 
-        if (this._dragging) {
-            const gizmoPos = this.root.getLocalPosition();
-            const color = this._theme.guideBase[this._selectedAxis];
-            const startColor = tmpC1.copy(color);
-            startColor.a *= 0.3;
-            this._drawGuideAngleLine(gizmoPos, this._guideAngleStart, startColor);
-            this._drawGuideAngleLine(gizmoPos, this._guideAngleEnd, color);
-        }
+        this._drawGuideAngleLines();
     }
 }
 
