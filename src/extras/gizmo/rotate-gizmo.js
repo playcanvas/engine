@@ -185,6 +185,10 @@ class RotateGizmo extends TransformGizmo {
             new MeshLine(this._app, this._layer),
             new MeshLine(this._app, this._layer)
         ];
+        this._guideAngleLines.forEach((line) => {
+            this._app.root.addChild(line.entity);
+            line.entity.enabled = false;
+        });
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
             // store start angle
@@ -401,9 +405,11 @@ class RotateGizmo extends TransformGizmo {
                 this._scale, startColor);
             this._guideAngleLines[1].draw(gizmoPos, tmpV1.copy(this._guideAngleEnd).add(gizmoPos),
                 this._scale, color);
+            this._guideAngleLines[0].entity.enabled = true;
+            this._guideAngleLines[1].entity.enabled = true;
         } else {
-            this._guideAngleLines[0].hide();
-            this._guideAngleLines[1].hide();
+            this._guideAngleLines[0].entity.enabled = false;
+            this._guideAngleLines[1].entity.enabled = false;
         }
     }
 
