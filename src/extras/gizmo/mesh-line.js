@@ -92,7 +92,7 @@ class MeshLine {
      * @type {Entity}
      * @private
      */
-    _entity = new Entity();
+    _entity = new Entity('mesh-line');
 
     /**
      * @param {AppBase} app - The application instance
