@@ -1,3 +1,4 @@
+import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { GSplatOctree } from './gsplat-octree.js';
 
@@ -14,8 +15,7 @@ class GSplatOctreeResource {
      */
     constructor(assetFileUrl, data) {
         this.octree = new GSplatOctree(assetFileUrl, data);
-
-        // handle aabb
+        this.aabb.setMinMax(new Vec3(data.tree.bound.min), new Vec3(data.tree.bound.max));
     }
 }
 

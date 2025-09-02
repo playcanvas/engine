@@ -119,7 +119,7 @@ class GSplatUnifiedSorter extends EventHandler {
     /**
      * Sends sorting parameters to the sorter. Called every frame sorting is needed.
      *
-     * @param {object} params - The sorting parameters - camera positions and directions per splat range ..
+     * @param {object} params - The sorting parameters - per-splat directions, offsets, scales, AABBs.
      */
     setSortParams(params) {
 

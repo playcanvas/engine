@@ -284,6 +284,7 @@ class GSplatOctreeInstance {
             const placement = this.filePlacements[fileIndex];
             if (placement) {
                 placement.resource = res;
+                placement.aabb.copy(res.aabb);
                 this.activePlacements.add(placement);
                 this.dirtyModifiedPlacements = true;
                 return true;

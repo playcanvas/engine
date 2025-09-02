@@ -2,9 +2,6 @@ import { GSplatManager } from './gsplat-manager.js';
 
 /**
  * @import { GSplatOctree } from './gsplat-octree.js';
- */
-
-/**
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { Camera } from '../camera.js'
  * @import { Layer } from '../layer.js'
@@ -12,6 +9,7 @@ import { GSplatManager } from './gsplat-manager.js';
  * @import { GraphNode } from '../graph-node.js'
  * @import { GSplatOctreeResource } from './gsplat-octree.resource.js'
  * @import { GSplatAssetLoaderBase } from './gsplat-asset-loader-base.js'
+ * @import { Scene } from '../scene.js'
  */
 
 /**
@@ -105,12 +103,19 @@ class GSplatDirector {
     assetLoader;
 
     /**
+     * @type {Scene}
+     */
+    scene;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
+     * @param {Scene} scene - The scene.
      * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
      */
-    constructor(device, assetLoader) {
+    constructor(device, scene, assetLoader) {
         this.device = device;
         this.assetLoader = assetLoader;
+        this.scene = scene;
     }
 
     getCameraData(camera) {
@@ -188,7 +193,7 @@ class GSplatDirector {
             // update gsplat managers
             // const cameraData = this.camerasMap.get(camera);
             cameraData?.layersMap.forEach((layerData) => {
-                layerData.gsplatManager.update();
+                layerData.gsplatManager.update(this.scene);
             });
         }
 

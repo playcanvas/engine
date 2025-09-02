@@ -49,7 +49,7 @@ class GSplatComponentSystem extends ComponentSystem {
 
         // loader for splat LOD assets, as asset system is not available on the scene level
         const gsplatAssetLoader = new GSplatAssetLoader(app.assets);
-        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, gsplatAssetLoader);
+        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.scene, gsplatAssetLoader);
 
         this.on('beforeremove', this.onRemove, this);
     }

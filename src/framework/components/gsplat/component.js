@@ -153,6 +153,11 @@ class GSplatComponent extends Component {
 
         // set it on meshInstance
         this._instance?.meshInstance?.setCustomAabb(this._customAabb);
+
+        // set it on placement
+        if (this._placement && this._customAabb) {
+            this._placement.aabb = this._customAabb;
+        }
     }
 
     /**
