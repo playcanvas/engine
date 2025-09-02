@@ -1,6 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec4 } from '../../core/math/vec4.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
 
 /**
@@ -55,6 +56,9 @@ class GSplatInfo {
     /** @type {Mat4} */
     previousWorldTransform = new Mat4();
 
+    /** @type {BoundingBox} */
+    aabb = new BoundingBox();
+
     /**
      * Manager for the intervals texture generation
      *
@@ -78,6 +82,7 @@ class GSplatInfo {
         this.node = placement.node;
         this.lodIndex = placement.lodIndex;
         this.numSplats = resource.centers.length / 3;
+        this.aabb.copy(placement.aabb);
 
         this.intervalTexture = new GSplatIntervalTexture(device);
         this.updateIntervals(placement.intervals);

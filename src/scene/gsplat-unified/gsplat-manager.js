@@ -9,12 +9,16 @@ import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
 import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
 import { Debug } from '../../core/debug.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { Color } from '../../core/math/color.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatPlacement } from './gsplat-placement.js'
- *
  */
+
+// render aabb's for debugging
+const _debugAabbs = false;
 
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
@@ -239,7 +243,7 @@ class GSplatManager {
         }
     }
 
-    update() {
+    update(scene) {
 
         // check if any octree instances have moved enough to require LOD update
         let anyOctreeMoved = false;
@@ -276,6 +280,17 @@ class GSplatManager {
                 const payload = this.prepareSortParameters(lastState);
                 this.sorter.setSortParameters(payload);
             }
+
+            // debug render world space bounds for all splats
+            Debug.call(() => {
+                if (_debugAabbs) {
+                    const tempAabb = new BoundingBox();
+                    lastState.splats.forEach((splat) => {
+                        tempAabb.setFromTransformedAabb(splat.aabb, splat.node.getWorldTransform());
+                        scene.immediate.drawWireAlignedBox(tempAabb.getMin(), tempAabb.getMax(), Color.WHITE, true, scene.defaultDrawLayer);
+                    });
+                }
+            });
 
             // kick off sorting
             this.sort(lastState);
@@ -329,11 +344,18 @@ class GSplatManager {
             modelMat.getTranslation(translation);
             const offset = translation.sub(cameraPosition).dot(cameraDirection);
 
+
             // sorter parameters
+            const aabbMin = splat.aabb.getMin();
+            const aabbMax = splat.aabb.getMax();
+
             sorterRequest.push({
                 transformedDirection,
                 offset,
-                scale: uniformScale
+                scale: uniformScale,
+                modelMat: modelMat.data.slice(),
+                aabbMin: [aabbMin.x, aabbMin.y, aabbMin.z],
+                aabbMax: [aabbMax.x, aabbMax.y, aabbMax.z]
             });
         });
 
