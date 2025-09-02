@@ -150,10 +150,10 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal mesh lines for guide angles.
      *
-     * @type {MeshLine[]}
+     * @type {[MeshLine, MeshLine]}
      * @private
      */
-    _guideAngleLines = [];
+    _guideAngleLines;
 
     /**
      * @override
@@ -181,8 +181,10 @@ class RotateGizmo extends TransformGizmo {
 
         this._createTransform();
 
-        this._guideAngleLines.push(new MeshLine(this._app, this._layer));
-        this._guideAngleLines.push(new MeshLine(this._app, this._layer));
+        this._guideAngleLines = [
+            new MeshLine(this._app, this._layer),
+            new MeshLine(this._app, this._layer)
+        ];
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
             // store start angle
@@ -320,6 +322,25 @@ class RotateGizmo extends TransformGizmo {
      */
     get ringTolerance() {
         return this._shapes.x.tolerance;
+    }
+
+    /**
+     * Sets the angle guide line thickness.
+     *
+     * @type {number}
+     */
+    set angleGuideThickness(value) {
+        this._guideAngleLines[0].thickness = value;
+        this._guideAngleLines[1].thickness = value;
+    }
+
+    /**
+     * Gets the angle guide line thickness.
+     *
+     * @type {number}
+     */
+    get angleGuideThickness() {
+        return this._guideAngleLines[0].thickness;
     }
 
     /**

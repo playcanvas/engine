@@ -288,6 +288,18 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     link: { observer, path: 'gizmo.faceRingRadius' },
                     max: 2
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Angle Guide Thickness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.angleGuideThickness' },
+                    min: 0.001,
+                    max: 0.1,
+                    step: 0.01,
+                    precision: 3
+                })
             )
         ),
         jsx(

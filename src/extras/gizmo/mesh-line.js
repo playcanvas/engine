@@ -118,6 +118,20 @@ class MeshLine {
     }
 
     /**
+     * @type {number}
+     */
+    set thickness(value) {
+        this._thickness = value ?? this._thickness;
+    }
+
+    /**
+     * @type {number}
+     */
+    get thickness() {
+        return this._thickness;
+    }
+
+    /**
      * Draw a line from one point to another with a specific color.
      *
      * @param {Vec3} from - The starting point of the line.
@@ -140,6 +154,9 @@ class MeshLine {
         this._entity.enabled = true;
     }
 
+    /**
+     * Hides the mesh line.
+     */
     hide() {
         this._entity.enabled = false;
     }
