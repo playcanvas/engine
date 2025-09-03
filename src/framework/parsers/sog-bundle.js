@@ -125,7 +125,7 @@ class SogBundleParser {
             // deflate
             for (const file of files) {
                 if (file.compression === 'deflate') {
-                    file.data = await inflate(file.data);
+                    file.data = await inflate(file.data);   // eslint-disable-line no-await-in-loop
                 }
             }
 
