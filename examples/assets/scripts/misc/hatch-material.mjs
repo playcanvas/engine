@@ -28,7 +28,6 @@ const createHatchMaterial = (device, textures) => {
         addressV: ADDRESS_REPEAT,
         levels: [sources]
     });
-    hatchTexture.upload();
 
     // create a new material with a custom shader
     const material = new ShaderMaterial({

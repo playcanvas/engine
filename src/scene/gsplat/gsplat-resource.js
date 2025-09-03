@@ -11,7 +11,6 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  * @import { GSplatData } from './gsplat-data.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Texture } from '../../platform/graphics/texture.js';
- * @import { Material } from '../materials/material.js'
  */
 
 const getSHData = (gsplatData, numCoeffs) => {
@@ -95,11 +94,15 @@ class GSplatResource extends GSplatResourceBase {
         super.destroy();
     }
 
+    configureMaterialDefines(defines) {
+        defines.set('SH_BANDS', this.shBands);
+    }
+
     configureMaterial(material) {
+        this.configureMaterialDefines(material.defines);
         material.setParameter('splatColor', this.colorTexture);
         material.setParameter('transformA', this.transformATexture);
         material.setParameter('transformB', this.transformBTexture);
-        material.setDefine('SH_BANDS', this.shBands);
         if (this.sh1to3Texture) material.setParameter('splatSH_1to3', this.sh1to3Texture);
         if (this.sh4to7Texture) material.setParameter('splatSH_4to7', this.sh4to7Texture);
         if (this.sh8to11Texture) material.setParameter('splatSH_8to11', this.sh8to11Texture);

@@ -37,6 +37,10 @@ class RenderPassPicker extends RenderPass {
         this.scene = scene;
         this.layers = layers;
         this.mapping = mapping;
+
+        if (scene.clusteredLightingEnabled) {
+            this.emptyWorldClusters = this.renderer.worldClustersAllocator.empty;
+        }
     }
 
     execute() {
@@ -89,7 +93,7 @@ class RenderPassPicker extends RenderPass {
                         // upload clustered lights uniforms
                         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
                         if (clusteredLightingEnabled) {
-                            const lightClusters = renderer.worldClustersAllocator.empty;
+                            const lightClusters = this.emptyWorldClusters;
                             lightClusters.activate();
                         }
 

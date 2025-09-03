@@ -50,6 +50,7 @@ const assets = {
     gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/vr-gallery.glb` }),
     guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
     biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
+    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.sog` }),
     orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
 };
 
@@ -94,13 +95,12 @@ assetListLoader.load(() => {
         return entity;
     };
 
-    const biker1 = createSplatInstance('biker1', assets.biker, -1.5, 0.05, 0, 0.7);
+    const biker = createSplatInstance('biker', assets.biker, -1.5, 0.05, 0, 0.7);
 
     // clone the biker and add the clone to the scene
-    const biker2 = biker1.clone();
-    biker2.setLocalPosition(1.5, 0.05, 0);
-    biker2.rotate(0, 150, 0);
-    app.root.addChild(biker2);
+    const skull = createSplatInstance('skull', assets.skull, 1.5, 0.05, 0, 0.7);
+    skull.rotate(0, 150, 0);
+    app.root.addChild(skull);
 
     // add orbit camera script with a mouse and a touch support
     camera.addComponent('script');
@@ -122,7 +122,7 @@ assetListLoader.load(() => {
         // that this uses non-public API, which is subject to change when a proper API is added.
         const vs = files['shader.vert'];
 
-        const mat1 = biker1.gsplat.material;
+        const mat1 = biker.gsplat.material;
         if (useCustomShader) {
             mat1.getShaderChunks('glsl').set('gsplatVS', vs);
         } else {
@@ -130,7 +130,7 @@ assetListLoader.load(() => {
         }
         mat1.update();
 
-        const mat2 = biker2.gsplat.material;
+        const mat2 = skull.gsplat.material;
         if (useCustomShader) {
             mat2.getShaderChunks('glsl').set('gsplatVS', vs);
         } else {
@@ -150,7 +150,7 @@ assetListLoader.load(() => {
 
         uTime.setValue(currentTime);
 
-        biker2.rotate(0, 80 * dt, 0);
+        skull.rotate(0, 80 * dt, 0);
     });
 });
 

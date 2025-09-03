@@ -124,7 +124,7 @@ class QuadRender {
             device.setScissor(scissor.x, scissor.y, scissor.z, scissor.w);
         }
 
-        device.setVertexBuffer(device.quadVertexBuffer, 0);
+        device.setVertexBuffer(device.quadVertexBuffer);
 
         const shader = this.shader;
         device.setShader(shader);

@@ -1,52 +1,9 @@
 export default /* wgsl */`
 
-// stores the source UV and order of the splat
-struct SplatSource {
-    order: u32,         // render order
-    id: u32,            // splat id
-    uv: vec2<i32>,      // splat uv
-    cornerUV: vec2f,    // corner coordinates for this vertex of the gaussian (-1, -1)..(1, 1)
-}
-
-// stores the camera and clip space position of the gaussian center
-struct SplatCenter {
-    view: vec3f,          // center in view space
-    proj: vec4f,          // center in clip space
-    modelView: mat4x4f,   // model-view matrix
-    projMat00: f32,       // elememt [0][0] of the projection matrix
-}
-
-// stores the offset from center for the current gaussian
-struct SplatCorner {
-    offset: vec2f,        // corner offset from center in clip space
-    uv: vec2f,            // corner uv
-    #if GSPLAT_AA
-        aaFactor: f32, // for scenes generated with antialiasing
-    #endif
-}
-
+#include "gsplatStructsVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
-
-#if GSPLAT_COMPRESSED_DATA
-    #include "gsplatCompressedDataVS"
-    #if SH_BANDS > 0
-        #include "gsplatCompressedSHVS"
-    #endif
-#elif GSPLAT_SOGS_DATA
-    #include "gsplatSogsDataVS"
-    #include "gsplatSogsColorVS"
-    #if SH_BANDS > 0
-        #include "gsplatSogsSHVS"
-    #endif
-#else
-    #include "gsplatDataVS"
-    #include "gsplatColorVS"
-    #if SH_BANDS > 0
-        #include "gsplatSHVS"
-    #endif
-#endif
-
+#include "gsplatSourceFormatVS"
 #include "gsplatSourceVS"
 #include "gsplatCenterVS"
 #include "gsplatCornerVS"

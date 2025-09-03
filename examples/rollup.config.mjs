@@ -11,6 +11,7 @@ import { copy } from './utils/plugins/rollup-copy.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
 import { buildJSOptions, buildTypesOption } from '../utils/rollup-build-target.mjs';
+import { version } from '../utils/rollup-version-revision.mjs';
 import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
 import { buildShare } from './utils/plugins/rollup-build-share.mjs';
 import { removePc } from './utils/plugins/rollup-remove-pc.mjs';
@@ -266,7 +267,8 @@ const APP_TARGETS = [{
         resolve(),
         replace({
             values: {
-                'process.env.NODE_ENV': JSON.stringify(NODE_ENV) // for REACT bundling
+                'process.env.NODE_ENV': JSON.stringify(NODE_ENV), // for REACT bundling
+                'process.env.VERSION': JSON.stringify(version) // for VERSION in constants.mjs
             },
             preventAssignment: true
         }),

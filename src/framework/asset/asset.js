@@ -653,7 +653,8 @@ class Asset extends EventHandler {
                 cache: true,
                 responseType: 'arraybuffer',
                 retry: maxRetries > 0,
-                maxRetries: maxRetries
+                maxRetries: maxRetries,
+                progress: asset
             }, callback);
         }
     }

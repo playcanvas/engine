@@ -1,4 +1,4 @@
-// @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div></div>
+// @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div><div>Snap (Hold Shift), Non-Uniform (Hold Ctrl)</div></div>
 import { data } from 'examples/observer';
 import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
@@ -120,7 +120,7 @@ camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1),
     farClip: 1000
 });
-const cameraOffset = 4 * camera.camera?.aspectRatio;
+const cameraOffset = 4 * camera.camera.aspectRatio;
 camera.setPosition(cameraOffset, cameraOffset, cameraOffset);
 app.root.addChild(camera);
 
@@ -174,9 +174,6 @@ const setGizmoControls = () => {
         type: gizmoHandler.type,
         size: gizmoHandler.gizmo.size,
         snapIncrement: gizmoHandler.gizmo.snapIncrement,
-        xAxisColor: Object.values(gizmoHandler.gizmo.xAxisColor),
-        yAxisColor: Object.values(gizmoHandler.gizmo.yAxisColor),
-        zAxisColor: Object.values(gizmoHandler.gizmo.zAxisColor),
         colorAlpha: gizmoHandler.gizmo.colorAlpha,
         coordSpace: gizmoHandler.gizmo.coordSpace
     });

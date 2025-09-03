@@ -1109,6 +1109,8 @@ class MeshInstance {
 
     /**
      * Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
+     * Note that {@link instancingCount} is automatically set to the number of vertices of the
+     * vertex buffer when it is provided.
      *
      * @param {VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
      * (usually world matrices). Pass null to turn off hardware instancing.

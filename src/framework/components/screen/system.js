@@ -100,6 +100,8 @@ class ScreenComponentSystem extends ComponentSystem {
             enabled: screen.enabled,
             screenSpace: screen.screenSpace,
             scaleMode: screen.scaleMode,
+            scaleBlend: screen.scaleBlend,
+            priority: screen.priority,
             resolution: screen.resolution.clone(),
             referenceResolution: screen.referenceResolution.clone()
         });

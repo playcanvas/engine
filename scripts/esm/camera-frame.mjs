@@ -181,7 +181,7 @@ class Bloom {
     /**
      * @attribute
      * @visibleif {enabled}
-     * @range [0, 16]
+     * @range [1, 16]
      * @precision 0
      * @step 0
      */
