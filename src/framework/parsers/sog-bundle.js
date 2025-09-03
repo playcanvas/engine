@@ -12,7 +12,7 @@ import { GSplatSogsResource } from '../../scene/gsplat/gsplat-sogs-resource.js';
  * Parse an ArrayBuffer containing a zip archive.
  *
  * @param {ArrayBuffer} data - the file data
- * @returns {Array<{filename: string, data: Uint8Array}>} the extracted files
+ * @returns {Array<{filename: string, compression: 'none' | 'deflate' | 'unknown', data: Uint8Array}>} the extracted files
  */
 const parseZipArchive = (data) => {
     const dataView = new DataView(data);
@@ -35,6 +35,7 @@ const parseZipArchive = (data) => {
         const fileCommentLength = u16(offset + 32);
         return {
             magic: u32(offset),
+            compressionMethod: u16(offset + 10),
             compressedSizeBytes: u32(offset + 20),
             uncompressedSizeBytes: u32(offset + 24),
             lfhOffsetBytes: u32(offset + 42),
@@ -49,12 +50,7 @@ const parseZipArchive = (data) => {
         const extraLength = u16(offset + 28);
         return {
             magic: u32(offset),
-            flags: u16(offset + 6),
-            compressionMethod: u16(offset + 8),
-            compressedSizeBytes: u32(offset + 18),
-            uncompressedSizeBytes: u32(offset + 22),
-            offsetBytes: offset + 30 + filenameLength + extraLength,
-            filename: new TextDecoder().decode(new Uint8Array(data, offset + 30, filenameLength))
+            offsetBytes: offset + 30 + filenameLength + extraLength
         };
     };
 
@@ -85,6 +81,7 @@ const parseZipArchive = (data) => {
 
         result.push({
             filename: cdr.filename,
+            compression: { 0: 'none', 8: 'deflate' }[cdr.compressionMethod] ?? 'unknown',
             data: new Uint8Array(data, lfh.offsetBytes, cdr.compressedSizeBytes)
         });
 
@@ -92,6 +89,13 @@ const parseZipArchive = (data) => {
     }
 
     return result;
+};
+
+const inflate = async (compressed) => {
+    const ds = new DecompressionStream('deflate-raw');
+    const out = new Blob([compressed]).stream().pipeThrough(ds);
+    const ab = await new Response(out).arrayBuffer();
+    return new Uint8Array(ab); // uncompressed file bytes
 };
 
 class SogBundleParser {
@@ -117,6 +121,13 @@ class SogBundleParser {
     load(url, callback, asset) {
         const handleArrayBuffer = async (arrayBuffer) => {
             const files = parseZipArchive(arrayBuffer);
+
+            // deflate
+            for (const file of files) {
+                if (file.compression === 'deflate') {
+                    file.data = await inflate(file.data);   // eslint-disable-line no-await-in-loop
+                }
+            }
 
             // access bundled meta.json
             const metaFile = files.find(f => f.filename === 'meta.json');
