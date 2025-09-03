@@ -237,12 +237,10 @@ class Morph extends RefCountedObject {
         // allocate texture arrays to store data from all morph targets
         if (texturesDataPositions.length > 0) {
             this.targetsTexturePositions = this._createTexture('MorphPositionsTexture', this._textureFormat, targets.length, [texturesDataPositions]);
-            this.targetsTexturePositions.upload();
         }
 
         if (texturesDataNormals.length > 0) {
             this.targetsTextureNormals = this._createTexture('MorphNormalsTexture', this._textureFormat, targets.length, [texturesDataNormals]);
-            this.targetsTextureNormals.upload();
         }
 
         // create vertex stream with vertex_id used to map vertex to texture
