@@ -954,6 +954,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     endCommandEncoder() {
 
+        Debug.assert(!this.insideRenderPass, 'Attempted to finish GPUCommandEncoder while inside a pass. This will invalidate the current pass encoder and cause "Parent encoder is already finished" validation errors.');
+
         const { commandEncoder } = this;
         if (commandEncoder) {
 
@@ -974,6 +976,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     submit() {
+
+        Debug.assert(!this.insideRenderPass, 'Attempted to submit command buffers while inside a pass. This finishes the parent command encoder and invalidates the active pass ("Parent encoder is already finished") .');
 
         // end the current encoder
         this.endCommandEncoder();
