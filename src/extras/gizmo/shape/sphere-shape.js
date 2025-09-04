@@ -1,4 +1,5 @@
 import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
+import { Mesh } from '../../../scene/mesh.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
@@ -49,7 +50,9 @@ class SphereShape extends Shape {
         ];
 
         // render
-        this._addRenderMesh(this.entity, 'sphere');
+        this._createRenderComponent(this.entity, [
+            Mesh.fromGeometry(this.device, new SphereGeometry())
+        ]);
 
         // update transform
         this._update();
