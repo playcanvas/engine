@@ -51,7 +51,10 @@ class SphereShape extends Shape {
 
         // render
         this._createRenderComponent(this.entity, [
-            Mesh.fromGeometry(this.device, new SphereGeometry())
+            Mesh.fromGeometry(this.device, new SphereGeometry({
+                latitudeBands: 32,
+                longitudeBands: 32
+            }))
         ]);
 
         // update transform
