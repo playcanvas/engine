@@ -12,6 +12,7 @@ import { unlitShader } from '../shaders.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
+ * @import { Mesh } from '../../../scene/mesh.js';
  * @import { TriData } from '../tri-data.js';
  */
 
