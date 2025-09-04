@@ -339,7 +339,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     set axisCenterSize(value) {
-        this._shapes.xyz.size = value;
+        this._shapes.xyz.radius = value;
     }
 
     /**
@@ -348,7 +348,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     get axisCenterSize() {
-        return this._shapes.xyz.size;
+        return this._shapes.xyz.radius;
     }
 
     /**

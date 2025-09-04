@@ -107,7 +107,7 @@ class RotateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             defaultColor: new Color(0, 0, 0, 0),
             hoverColor: new Color(1, 1, 1, 0.2),
-            size: 1
+            radius: 0.5
         })
     };
 
@@ -346,6 +346,24 @@ class RotateGizmo extends TransformGizmo {
      */
     get faceRingRadius() {
         return this._shapes.f.ringRadius;
+    }
+
+    /**
+     * Sets the center radius.
+     *
+     * @type {number}
+     */
+    set centerRadius(value) {
+        this._shapes.xyz.radius = value;
+    }
+
+    /**
+     * Gets the center radius.
+     *
+     * @type {number}
+     */
+    get centerRadius() {
+        return this._shapes.xyz.radius;
     }
 
     /**

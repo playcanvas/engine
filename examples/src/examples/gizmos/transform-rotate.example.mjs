@@ -151,6 +151,7 @@ data.set('gizmo', {
     xyzRingRadius: gizmo.xyzRingRadius,
     faceTubeRadius: gizmo.faceTubeRadius,
     faceRingRadius: gizmo.faceRingRadius,
+    centerRadius: gizmo.centerRadius,
     angleGuideThickness: gizmo.angleGuideThickness
 });
 

@@ -7,7 +7,7 @@ import { Shape } from './shape.js';
 
 /**
  * @typedef {object} SphereShapeArgs
- * @property {number} [size] - The size of the sphere.
+ * @property {number} [radius] - The radius of the sphere.
  * @property {number} [tolerance] - The intersection tolerance of the sphere.
  */
 
@@ -21,7 +21,7 @@ class SphereShape extends Shape {
      * @type {number}
      * @private
      */
-    _size = 0.12;
+    _radius = 0.06;
 
     /**
      * The internal intersection tolerance of the sphere.
@@ -40,7 +40,7 @@ class SphereShape extends Shape {
     constructor(device, args = {}) {
         super(device, 'sphereCenter', args);
 
-        this._size = args.size ?? this._size;
+        this._radius = args.radius ?? this._radius;
         this._tolerance = args.tolerance ?? this._tolerance;
 
         // intersect
@@ -56,22 +56,22 @@ class SphereShape extends Shape {
     }
 
     /**
-     * Set the rendered size of the sphere.
+     * Set the rendered radius of the sphere.
      *
-     * @param {number} value - The new size of the sphere.
+     * @param {number} value - The new radius of the sphere.
      */
-    set size(value) {
-        this._size = value ?? this._size;
+    set radius(value) {
+        this._radius = value ?? this._radius;
         this._update();
     }
 
     /**
-     * Get the rendered size of the sphere.
+     * Get the rendered radius of the sphere.
      *
-     * @returns {number} The size of the sphere.
+     * @returns {number} The radius of the sphere.
      */
-    get size() {
-        return this._size;
+    get radius() {
+        return this._radius;
     }
 
     /**
@@ -101,7 +101,8 @@ class SphereShape extends Shape {
      */
     _update() {
         // intersect/render
-        this.entity.setLocalScale(this._size, this._size, this._size);
+        const scale = this._radius * 2;
+        this.entity.setLocalScale(scale, scale, scale);
     }
 }
 
