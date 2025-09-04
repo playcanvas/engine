@@ -479,11 +479,11 @@ class RotateGizmo extends TransformGizmo {
                     break;
                 }
                 case 'hide': {
-                    shape.show(axis === this._selectedAxis ? state ? 'ring' : 'none' : 'sector');
+                    shape.show(state ? axis === this._selectedAxis ? 'ring' : 'none' : 'sector');
                     continue;
                 }
                 case 'selected': {
-                    shape.show(axis === this._selectedAxis ? state ? 'ring' : 'sector' : 'sector');
+                    shape.show(state ? axis === this._selectedAxis ? 'ring' : 'sector' : 'sector');
                     break;
                 }
             }
