@@ -558,14 +558,14 @@ class RotateGizmo extends TransformGizmo {
      */
     _setNodeRotations(axis, angleAxis, angleDelta) {
         const gizmoPos = this.root.getLocalPosition();
-        const isFacing = axis === 'f';
 
         // calculate rotation from axis and angle
         tmpQ1.setFromAxisAngle(angleAxis, angleDelta);
 
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            if (!isFacing && this._coordSpace === 'local') {
+
+            if ((axis === 'x' || axis === 'y' || axis === 'z') && this._coordSpace === 'local') {
                 const rot = this._nodeLocalRotations.get(node);
                 if (!rot) {
                     continue;
