@@ -454,6 +454,7 @@ class RotateGizmo extends TransformGizmo {
         this._shapes.y.entity.setLocalEulerAngles(0, angle, 0);
         angle = Math.atan2(facingDir.y, facingDir.x) * math.RAD_TO_DEG;
         this._shapes.z.entity.setLocalEulerAngles(90, 0, angle + 90);
+
         if (!this._dragging) {
             dot = facingDir.dot(this.root.right);
             sector = 1 - Math.abs(dot) > RING_FACING_EPSILON;
@@ -464,6 +465,8 @@ class RotateGizmo extends TransformGizmo {
             dot = facingDir.dot(this.root.forward);
             sector = 1 - Math.abs(dot) > RING_FACING_EPSILON;
             this._shapes.z.show(sector ? 'sector' : 'ring');
+
+            this.fire(TransformGizmo.EVENT_RENDERUPDATE);
         }
     }
 
