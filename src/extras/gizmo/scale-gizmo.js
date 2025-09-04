@@ -20,7 +20,7 @@ const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 // constants
-const GLANCE_EPSILON = 0.98;
+const GLANCE_EPSILON = 0.01;
 
 /**
  * The ScaleGizmo provides interactive 3D manipulation handles for scaling/resizing
@@ -435,34 +435,34 @@ class ScaleGizmo extends TransformGizmo {
 
         // axes
         let dot = cameraDir.dot(this.root.right);
-        this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        this._shapes.x.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
         if (this.flipAxes) {
             this._shapes.x.flipped = dot < 0;
         }
         dot = cameraDir.dot(this.root.up);
-        this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        this._shapes.y.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
         if (this.flipAxes) {
             this._shapes.y.flipped = dot < 0;
         }
         dot = cameraDir.dot(this.root.forward);
-        this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        this._shapes.z.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
         if (this.flipAxes) {
             this._shapes.z.flipped = dot > 0;
         }
 
         // planes
         tmpV1.cross(cameraDir, this.root.right);
-        this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        this._shapes.yz.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
             this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
         }
         tmpV1.cross(cameraDir, this.root.forward);
-        this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        this._shapes.xy.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
             this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
         }
         tmpV1.cross(cameraDir, this.root.up);
-        this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        this._shapes.xz.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
             this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
         }
