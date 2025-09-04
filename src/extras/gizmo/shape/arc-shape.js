@@ -73,7 +73,7 @@ class ArcShape extends Shape {
             this._createTorusMesh(this._sectorAngle),
             this._createTorusMesh(360)
         ]);
-        this.drag(false);
+        this.show('sector');
 
         // update transform
         this._update();
@@ -184,28 +184,26 @@ class ArcShape extends Shape {
     }
 
     /**
-     * Enable or disable dragging.
-     *
-     * @param {boolean} state - The dragging state.
+     * @param {'sector' | 'ring' | 'none'} state - The visibility state.
      */
-    drag(state) {
-        this.meshInstances[0].visible = !state;
-        this.meshInstances[1].visible = state;
-    }
-
-    /**
-     * Hide the shape.
-     *
-     * @param {boolean} state - The hiding state.
-     */
-    hide(state) {
-        if (state) {
-            this.meshInstances[0].visible = false;
-            this.meshInstances[1].visible = false;
-            return;
+    show(state) {
+        switch (state) {
+            case 'sector': {
+                this.meshInstances[0].visible = true;
+                this.meshInstances[1].visible = false;
+                break;
+            }
+            case 'ring': {
+                this.meshInstances[0].visible = false;
+                this.meshInstances[1].visible = true;
+                break;
+            }
+            case 'none': {
+                this.meshInstances[0].visible = false;
+                this.meshInstances[1].visible = false;
+                break;
+            }
         }
-
-        this.drag(false);
     }
 }
 

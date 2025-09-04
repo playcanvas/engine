@@ -436,7 +436,7 @@ class RotateGizmo extends TransformGizmo {
             const dir = this._camera.entity.getPosition().sub(this.root.getPosition()).normalize();
             const elev = Math.atan2(-dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z)) * math.RAD_TO_DEG;
             const azim = Math.atan2(-dir.x, -dir.z) * math.RAD_TO_DEG;
-            this._shapes.f.entity.setLocalEulerAngles(-elev + 90, azim, 0);
+            this._shapes.f.entity.setEulerAngles(-elev + 90, azim, 0);
         } else {
             tmpQ1.copy(this._camera.entity.getRotation()).getEulerAngles(tmpV1);
             this._shapes.f.entity.setEulerAngles(tmpV1);
@@ -466,21 +466,11 @@ class RotateGizmo extends TransformGizmo {
                     break;
                 }
                 case 'hide': {
-                    if (axis === this._selectedAxis) {
-                        shape.drag(state);
-                    } else {
-                        shape.hide(state);
-                    }
+                    shape.show(axis === this._selectedAxis ? state ? 'ring' : 'none' : 'sector');
                     continue;
                 }
                 case 'selected': {
-                    if (axis === this._selectedAxis) {
-                        shape.drag(state);
-                    } else {
-                        if (!state) {
-                            shape.hide(state);
-                        }
-                    }
+                    shape.show(axis === this._selectedAxis ? state ? 'ring' : 'sector' : 'sector');
                     break;
                 }
             }
