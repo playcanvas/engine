@@ -167,14 +167,14 @@ class TranslateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
-            // calculate point delta and update node positions
-            const pointDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
+            // calculate translate delta and update node positions
+            const translateDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
             if (this.snap) {
-                pointDelta.mulScalar(1 / this.snapIncrement);
-                pointDelta.round();
-                pointDelta.mulScalar(this.snapIncrement);
+                translateDelta.mulScalar(1 / this.snapIncrement);
+                translateDelta.round();
+                translateDelta.mulScalar(this.snapIncrement);
             }
-            this._setNodePositions(pointDelta);
+            this._setNodePositions(translateDelta);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
@@ -495,10 +495,10 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {Vec3} pointDelta - The delta to apply to the node positions.
+     * @param {Vec3} translateDelta - The delta to apply to the node positions.
      * @private
      */
-    _setNodePositions(pointDelta) {
+    _setNodePositions(translateDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
 
@@ -507,7 +507,7 @@ class TranslateGizmo extends TransformGizmo {
                 if (!pos) {
                     continue;
                 }
-                tmpV1.copy(pointDelta);
+                tmpV1.copy(translateDelta);
                 node.parent?.getWorldTransform().getScale(tmpV2);
                 tmpV2.x = 1 / tmpV2.x;
                 tmpV2.y = 1 / tmpV2.y;
@@ -520,7 +520,7 @@ class TranslateGizmo extends TransformGizmo {
                 if (!pos) {
                     continue;
                 }
-                node.setPosition(tmpV1.copy(pointDelta).add(pos));
+                node.setPosition(tmpV1.copy(translateDelta).add(pos));
             }
         }
 
