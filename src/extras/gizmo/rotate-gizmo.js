@@ -433,8 +433,10 @@ class RotateGizmo extends TransformGizmo {
     _shapesLookAtCamera() {
         // face shape
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            this._shapes.f.entity.lookAt(this._camera.entity.getPosition());
-            this._shapes.f.entity.rotateLocal(90, 0, 0);
+            const dir = this._camera.entity.getPosition().sub(this.root.getPosition()).normalize();
+            const elev = Math.atan2(-dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z)) * math.RAD_TO_DEG;
+            const azim = Math.atan2(-dir.x, -dir.z) * math.RAD_TO_DEG;
+            this._shapes.f.entity.setLocalEulerAngles(-elev + 90, azim, 0);
         } else {
             tmpQ1.copy(this._camera.entity.getRotation()).getEulerAngles(tmpV1);
             this._shapes.f.entity.setEulerAngles(tmpV1);
