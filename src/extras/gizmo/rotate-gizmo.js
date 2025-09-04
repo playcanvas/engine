@@ -32,6 +32,7 @@ const tmpC1 = new Color();
 // constants
 const ROTATE_FACING_EPSILON = 0.1;
 const RING_FACING_EPSILON = 1e-4;
+const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
  * The RotateGizmo provides interactive 3D manipulation handles for rotating/reorienting
@@ -117,7 +118,6 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _selectionStartAngle = 0;
-
 
     /**
      * Internal selection screen point in 2D space.
@@ -661,6 +661,30 @@ class RotateGizmo extends TransformGizmo {
         }
 
         return angle;
+    }
+
+    /**
+     * @param {Vec3} pos - The position.
+     * @param {Quat} rot - The rotation.
+     * @param {GizmoAxis} activeAxis - The active axis.
+     * @param {boolean} activeIsPlane - Whether the active axis is a plane.
+     * @override
+     */
+    _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
+        for (const axis of AXES) {
+            if (activeAxis === 'xyz') {
+                continue;
+            }
+            if (activeIsPlane) {
+                if (axis !== activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
+                }
+            } else {
+                if (axis === activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
+                }
+            }
+        }
     }
 
     /**

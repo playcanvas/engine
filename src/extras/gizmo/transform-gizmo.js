@@ -682,13 +682,12 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _drawSpanLine(pos, rot, axis) {
-        tmpV1.set(0, 0, 0);
-        tmpV1[axis] = 1;
-        tmpV1.mulScalar(this._camera.farClip - this._camera.nearClip);
-        tmpV2.copy(tmpV1).mulScalar(-1);
-        const from = rot.transformVector(tmpV1, tmpV1).add(pos);
-        const to = rot.transformVector(tmpV2, tmpV2).add(pos);
+        const dir = this._dirFromAxis(axis, tmpV1);
         const color = this._theme.guideBase[axis];
+        const from = tmpV1.copy(dir).mulScalar(this._camera.farClip - this._camera.nearClip);
+        const to = tmpV2.copy(from).mulScalar(-1);
+        rot.transformVector(from, from).add(pos);
+        rot.transformVector(to, to).add(pos);
         if (this._theme.guideOcclusion < 1) {
             const occluded = tmpC1.copy(color);
             occluded.a *= (1 - this._theme.guideOcclusion);
