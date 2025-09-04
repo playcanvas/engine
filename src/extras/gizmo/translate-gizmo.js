@@ -539,10 +539,9 @@ class TranslateGizmo extends TransformGizmo {
         const axis = this._selectedAxis;
         const isPlane = this._selectedIsPlane;
 
+        const point = new Vec3();
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, axis === 'xyz', !isPlane);
-
-        const point = new Vec3();
         if (!plane.intersectsRay(ray, point)) {
             point.copy(this.root.getLocalPosition());
         }
