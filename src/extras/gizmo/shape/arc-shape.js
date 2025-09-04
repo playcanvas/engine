@@ -53,6 +53,14 @@ class ArcShape extends Shape {
     _tolerance = 0.05;
 
     /**
+     * The internal cache for triangle data.
+     *
+     * @type {[TriData, TriData]}
+     * @private
+     */
+    _triDataCache;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {ShapeArgs & ArcShapeArgs} args - The shape options.
      */
@@ -64,9 +72,11 @@ class ArcShape extends Shape {
         this._sectorAngle = args.sectorAngle ?? this._sectorAngle;
 
         // intersect
-        this.triData = [
-            new TriData(this._createTorusGeometry())
+        this._triDataCache = [
+            new TriData(this._createTorusGeometry(this._sectorAngle)),
+            new TriData(this._createTorusGeometry(360))
         ];
+        this.triData = [this._triDataCache[0]];
 
         // render
         this._createRenderComponent(this.entity, [
@@ -82,14 +92,15 @@ class ArcShape extends Shape {
     /**
      * Create the torus geometry.
      *
+     * @param {number} sectorAngle - The sector angle.
      * @returns {TorusGeometry} The torus geometry.
      * @private
      */
-    _createTorusGeometry() {
+    _createTorusGeometry(sectorAngle) {
         return new TorusGeometry({
             tubeRadius: this._tubeRadius + this._tolerance,
             ringRadius: this._ringRadius,
-            sectorAngle: this._sectorAngle,
+            sectorAngle: sectorAngle,
             segments: TORUS_INTERSECT_SEGMENTS
         });
     }
@@ -176,7 +187,8 @@ class ArcShape extends Shape {
      */
     _update() {
         // intersect
-        this.triData[0].fromGeometry(this._createTorusGeometry());
+        this._triDataCache[0].fromGeometry(this._createTorusGeometry(this._sectorAngle));
+        this._triDataCache[1].fromGeometry(this._createTorusGeometry(360));
 
         // render
         this.meshInstances[0].mesh = this._createTorusMesh(this._sectorAngle);
@@ -189,11 +201,13 @@ class ArcShape extends Shape {
     show(state) {
         switch (state) {
             case 'sector': {
+                this.triData[0] = this._triDataCache[0];
                 this.meshInstances[0].visible = true;
                 this.meshInstances[1].visible = false;
                 break;
             }
             case 'ring': {
+                this.triData[0] = this._triDataCache[1];
                 this.meshInstances[0].visible = false;
                 this.meshInstances[1].visible = true;
                 break;
