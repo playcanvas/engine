@@ -585,7 +585,7 @@ class RotateGizmo extends TransformGizmo {
                 tmpQ1.transformVector(tmpV1, tmpV1);
                 tmpQ2.copy(tmpQ1).mul(rot);
 
-                // N.B. Rotation via quaternion when scale inverted causes scale warping?
+                // FIXME: Rotation via quaternion when scale inverted causes scale warping?
                 node.setEulerAngles(tmpQ2.getEulerAngles());
                 node.setPosition(tmpV1.add(gizmoPos));
             }
