@@ -179,21 +179,24 @@ class ScaleGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
-            const pointDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
+            // calculate scale delta and update node scales
+            const scaleDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
             if (this.snap) {
-                pointDelta.mulScalar(1 / this.snapIncrement);
-                pointDelta.round();
-                pointDelta.mulScalar(this.snapIncrement);
+                scaleDelta.mulScalar(1 / this.snapIncrement);
+                scaleDelta.round();
+                scaleDelta.mulScalar(this.snapIncrement);
             }
-            pointDelta.mulScalar(1 / this._scale);
-            this._setNodeScales(pointDelta.add(Vec3.ONE));
+            scaleDelta.mulScalar(1 / this._scale);
+            this._setNodeScales(scaleDelta.add(Vec3.ONE));
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+            // show all shapes
             this._drag(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
+            // reset stored scales
             this._nodeScales.clear();
         });
     }
@@ -512,17 +515,17 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {Vec3} pointDelta - The point delta.
+     * @param {Vec3} scaleDelta - The point delta.
      * @private
      */
-    _setNodeScales(pointDelta) {
+    _setNodeScales(scaleDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
             const scale = this._nodeScales.get(node);
             if (!scale) {
                 continue;
             }
-            node.setLocalScale(tmpV1.copy(scale).mul(pointDelta).max(this.lowerBoundScale));
+            node.setLocalScale(tmpV1.copy(scale).mul(scaleDelta).max(this.lowerBoundScale));
         }
     }
 
