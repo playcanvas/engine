@@ -105,8 +105,8 @@ class RotateGizmo extends TransformGizmo {
         xyz: new SphereShape(this._device, {
             axis: 'xyz',
             layers: [this._layer.id],
-            defaultColor: new Color(0, 0, 0, 0),
-            hoverColor: new Color(1, 1, 1, 0.2),
+            defaultColor: this._theme.shapeBase.xyz,
+            hoverColor: this._theme.shapeHover.xyz,
             radius: 0.5
         })
     };
@@ -198,6 +198,15 @@ class RotateGizmo extends TransformGizmo {
      */
     constructor(camera, layer) {
         super(camera, layer, 'gizmo:rotate');
+
+        this.setTheme({
+            shapeBase: {
+                xyz: new Color(0, 0, 0, 0)
+            },
+            shapeHover: {
+                xyz: new Color(1, 1, 1, 0.2)
+            }
+        });
 
         this._createTransform();
 
