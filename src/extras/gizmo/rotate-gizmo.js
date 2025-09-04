@@ -27,7 +27,8 @@ const tmpQ2 = new Quat();
 const tmpC1 = new Color();
 
 // constants
-const FACING_THRESHOLD = 0.9;
+const ROTATE_FACING_EPSILON = 0.1;
+const RING_FACING_EPSILON = 1e-4;
 
 /**
  * The RotateGizmo provides interactive 3D manipulation handles for rotating/reorienting
@@ -444,14 +445,26 @@ class RotateGizmo extends TransformGizmo {
         }
 
         // axes shapes
+        let angle, dot, sector;
         const facingDir = tmpV1.copy(this.facingDir);
         tmpQ1.copy(this.root.getRotation()).invert().transformVector(facingDir, facingDir);
-        let angle = Math.atan2(facingDir.z, facingDir.y) * math.RAD_TO_DEG;
+        angle = Math.atan2(facingDir.z, facingDir.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
         angle = Math.atan2(facingDir.x, facingDir.z) * math.RAD_TO_DEG;
         this._shapes.y.entity.setLocalEulerAngles(0, angle, 0);
         angle = Math.atan2(facingDir.y, facingDir.x) * math.RAD_TO_DEG;
         this._shapes.z.entity.setLocalEulerAngles(90, 0, angle + 90);
+        if (!this._dragging) {
+            dot = facingDir.dot(this.root.right);
+            sector = 1 - Math.abs(dot) > RING_FACING_EPSILON;
+            this._shapes.x.show(sector ? 'sector' : 'ring');
+            dot = facingDir.dot(this.root.up);
+            sector = 1 - Math.abs(dot) > RING_FACING_EPSILON;
+            this._shapes.y.show(sector ? 'sector' : 'ring');
+            dot = facingDir.dot(this.root.forward);
+            sector = 1 - Math.abs(dot) > RING_FACING_EPSILON;
+            this._shapes.z.show(sector ? 'sector' : 'ring');
+        }
     }
 
     /**
@@ -577,7 +590,7 @@ class RotateGizmo extends TransformGizmo {
         // calculate angle
         const facingDir = tmpV2.copy(this.facingDir);
         const facingDot = plane.normal.dot(facingDir);
-        if (this.orbitRotation || Math.abs(facingDot) > FACING_THRESHOLD) {
+        if (this.orbitRotation || (1 - Math.abs(facingDot)) < ROTATE_FACING_EPSILON) {
             // plane facing camera so based on mouse position around gizmo
             tmpV1.sub2(point, gizmoPos);
 
