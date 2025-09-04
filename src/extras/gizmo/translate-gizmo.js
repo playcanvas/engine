@@ -167,6 +167,7 @@ class TranslateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
+            // calculate point delta and update node positions
             const pointDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
             if (this.snap) {
                 pointDelta.mulScalar(1 / this.snapIncrement);
@@ -177,10 +178,12 @@ class TranslateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+            // show shapes all shapes
             this._drag(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
+            // reset stored positions
             this._nodeLocalPositions.clear();
             this._nodePositions.clear();
         });
