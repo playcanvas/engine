@@ -2021,6 +2021,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return new Promise((resolve, reject) => {
             this.readPixelsAsync(x, y, width, height, data).then((data) => {
 
+                // return if the device was destroyed
+                if (this._destroyed) return;
+
                 // destroy RT if we created it
                 if (!options.renderTarget) {
                     renderTarget.destroy();

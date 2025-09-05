@@ -623,10 +623,7 @@ class Asset extends EventHandler {
 
         // destroy resources
         for (let i = 0; i < old.length; ++i) {
-            const resource = old[i];
-            if (resource && resource.destroy) {
-                resource.destroy();
-            }
+            old[i]?.destroy?.();
         }
     }
 
