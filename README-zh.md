@@ -109,7 +109,7 @@ npm install
 | 命令            | 描述                         | 输出到     |
 | --------------- | --------------------------- | ---------- |
 | `npm run build` | 构建所有引擎构建目标和类型声明 | `build`    |
-| `npm run docs`  | 构建引擎[API参考文档](https://api.playcanvas.com/modules/Engine.htm)   | `docs`     |
+| `npm run docs`  | 构建引擎[API参考文档](https://api.playcanvas.com/modules/Engine.html)   | `docs`     |
 
 ## PlayCanvas 平台
 
