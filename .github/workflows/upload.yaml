@@ -2,10 +2,6 @@ name: Upload
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to upload'
-        required: true
   workflow_run:
     workflows: ["Publish"]
     types:
@@ -14,7 +10,7 @@ on:
 jobs:
   upload:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'playcanvas' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
+    if: github.repository_owner == 'playcanvas' && (github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
     steps:
       - name: Download version
         if: github.event_name == 'workflow_run'
@@ -24,12 +20,15 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Write version
-        if: github.event_name == 'workflow_dispatch'
-        run: echo "${{ github.event.inputs.version }}" > version.txt
-
       - name: Read version
+        if: github.event_name == 'workflow_run'
         run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+
+      - name: Parse tag name
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "VERSION=${TAG_NAME/v/}" >> $GITHUB_ENV
 
       - name: Upload to code.playcanvas.com
         run: |
