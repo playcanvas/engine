@@ -135,6 +135,17 @@ class SogsParser {
 
         const textureAssets = subs.map(sub => textures[sub]).flat();
 
+        // When the parent gsplat asset unloads, remove and unload child texture assets
+        asset.once('unload', () => {
+            textureAssets.forEach((t) => {
+                // remove from registry
+                assets.remove(t);
+
+                // destroys resource
+                t.unload();
+            });
+        });
+
         combineProgress(asset, textureAssets);
 
         textureAssets.forEach(t => assets.load(t));
@@ -159,6 +170,12 @@ class SogsParser {
         if (!decompress) {
             // no need to prepare gpu data if decompressing
             await data.prepareGpuData();
+        }
+
+        // If resource was destroyed before load finished
+        // or device / texture is destroyed, silently bail
+        if (data.destroyed || !data.means_l?.device || !this.app?.graphicsDevice) {
+            return;
         }
 
         const resource = decompress ?
