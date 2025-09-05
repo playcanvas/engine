@@ -89,6 +89,16 @@ class SogsParser {
     maxRetries;
 
     /**
+     * Returns true if the load should silently bail (during shutdown or resource/device destroyed).
+     * @param {GSplatSogsData} data - The SOGS data object being prepared.
+     * @returns {boolean} True if we should quietly stop without error/callback.
+     */
+    _shouldSilentlyBail(data) {
+        const gd = this.app?.graphicsDevice;
+        return !gd || gd._destroyed || data?.destroyed || !data?.means_l?.device;
+    }
+
+    /**
      * @param {AppBase} app - The app instance.
      * @param {number} maxRetries - Maximum amount of retries.
      */
@@ -168,15 +178,13 @@ class SogsParser {
         const decompress = asset.data?.decompress;
 
         if (!decompress) {
+            if (this._shouldSilentlyBail(data)) return;
+
             // no need to prepare gpu data if decompressing
             await data.prepareGpuData();
         }
 
-        // If resource was destroyed before load finished
-        // or device / texture is destroyed, silently bail
-        if (data.destroyed || !data.means_l?.device || !this.app?.graphicsDevice) {
-            return;
-        }
+        if (this._shouldSilentlyBail(data)) return;
 
         const resource = decompress ?
             new GSplatResource(this.app.graphicsDevice, await data.decompress()) :

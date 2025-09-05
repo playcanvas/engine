@@ -452,12 +452,32 @@ class GSplatSogsData {
         this._busy = true;
 
         const { device, height, width } = this.means_l;
+        // safe read helper to avoid crashes during device shutdown
+        const safeRead = async (tex) => {
+            if (this.destroyed || !tex?.device) return null;
+            try {
+                const data = await readImageDataAsync(tex);
+                if (this.destroyed || !tex?.device) return null;
+                return data;
+            } catch (e) {
+                return null;
+            }
+        };
+
         // copy back means_l and means_u data so cpu reorder has access to it
         if (this.destroyed) return; // skip the rest if the resource was destroyed
-        this.means_l._levels[0] = await readImageDataAsync(this.means_l);
+        {
+            const d = await safeRead(this.means_l);
+            if (!d) return;
+            this.means_l._levels[0] = d;
+        }
 
         if (this.destroyed) return; // skip the rest if the resource was destroyed
-        this.means_u._levels[0] = await readImageDataAsync(this.means_u);
+        {
+            const d = await safeRead(this.means_u);
+            if (!d) return;
+            this.means_u._levels[0] = d;
+        }
 
         if (this.destroyed) return; // skip the rest if the resource was destroyed
         this.packedTexture = new Texture(device, {
