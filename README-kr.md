@@ -111,7 +111,7 @@ npm install
 | 명령어           | 설명                                      | 출력 위치  |
 | --------------- | ----------------------------------------- | ---------- |
 | `npm run build` | 모든 엔진 빌드 대상과 타입 선언을 빌드합니다 | `build`    |
-| `npm run docs`  | 엔진 [API 참조 문서](https://api.playcanvas.com/modules/Engine.htm)를 빌드합니다     | `docs`     |
+| `npm run docs`  | 엔진 [API 참조 문서](https://api.playcanvas.com/modules/Engine.html)를 빌드합니다     | `docs`     |
 
 ## PlayCanvas 에디터
 
