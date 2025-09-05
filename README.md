@@ -27,8 +27,6 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 
 You can see more games on the [PlayCanvas website](https://playcanvas.com/explore).
 
-</div>
-
 ## Users
 
 PlayCanvas is used by leading companies in video games, advertising and visualization such as:  
