@@ -590,6 +590,40 @@ class PlyParser {
      */
     async load(url, callback, asset) {
         try {
+            if (asset.cachedData) {
+                // 直接使用asset携带的缓存数据
+                const data = asset.cachedData;
+                let result = null;
+                if (data.isCompressed) {
+                    result = new GSplatCompressedData();
+                    result.comments = data.comments;
+                    result.chunkData = data.chunkData;
+                    result.vertexData = data.vertexData;
+                    result.numSplats = data.numSplats;
+                    result.shData0 = data.shData0;
+                    result.shData1 = data.shData1;
+                    result.shData2 = data.shData2;
+                    result.shBands = data.shBands;
+                } else {
+                    result = new GSplatData(data.elements, data.comments);
+                    result.numSplats = data.numSplats;
+                }
+
+                asset.fire('load:data', result);
+
+                // 解压缩处理（若需要）
+                if (!data.isCompressed && asset.data.reorder) {
+                    result.reorderData();
+                }
+
+                // 创建资源
+                const resource = data.isCompressed ?
+                    new GSplatCompressedResource(this.app.graphicsDevice, result) :
+                    new GSplatResource(this.app.graphicsDevice, result);
+
+                callback(null, resource);
+                return; // 成功使用缓存直接返回
+            }
             // either use the fetch request passed in by the application or initiate it ourselves
             const response = await (asset.file?.contents ?? fetch(url.load));
             if (!response || !response.body) {
