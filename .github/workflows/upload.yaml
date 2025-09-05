@@ -2,6 +2,10 @@ name: Upload
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to upload'
+        required: true
   workflow_run:
     workflows: ["Publish"]
     types:
@@ -10,19 +14,24 @@ on:
 jobs:
   upload:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'playcanvas' && github.event.workflow_run.conclusion == 'success'
+    if: github.repository_owner == 'playcanvas' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
     steps:
       - name: Download version
+        if: github.event_name == 'workflow_run'
         uses: actions/download-artifact@v4
         with:
           name: version
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
+      - name: Write version
+        if: github.event_name == 'workflow_dispatch'
+        run: echo "${{ github.event.inputs.version }}" > version.txt
+
       - name: Read version
         run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
 
-      - name: Publish to code.playcanvas.com
+      - name: Upload to code.playcanvas.com
         run: |
           if ! curl -fsS -X POST -H "Content-Type: application/json" \
             -d '{ "engineVersion": "${{ env.VERSION }}" }' ${{ secrets.PUBLISH_ENDPOINT }}; then
