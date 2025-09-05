@@ -100,7 +100,6 @@ class RotateGizmo extends TransformGizmo {
         f: new ArcShape(this._device, {
             axis: 'f',
             layers: [this._layer.id],
-            rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
             defaultColor: this._theme.shapeBase.f,
             hoverColor: this._theme.shapeHover.f,
             disabledColor: this._theme.disabled,
@@ -484,20 +483,6 @@ class RotateGizmo extends TransformGizmo {
             this._guideAngleLines[0].entity.enabled = false;
             this._guideAngleLines[1].entity.enabled = false;
         }
-    }
-
-    /**
-     * @param {Vec3} position - The position.
-     * @returns {Vec3} The look at euler angles.
-     * @private
-     */
-    _getLookAtEulerAngles(position) {
-        tmpV1.set(0, 0, 0);
-        tmpM1.setLookAt(tmpV1, position, Vec3.UP);
-        tmpQ1.setFromMat4(tmpM1);
-        tmpQ1.getEulerAngles(tmpV1);
-        tmpV1.x += 90;
-        return tmpV1;
     }
 
     /**
