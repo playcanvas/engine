@@ -1,0 +1,31 @@
+name: Upload
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Publish"]
+    types:
+      - completed
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'playcanvas' && github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Download version
+        uses: actions/download-artifact@v4
+        with:
+          name: version
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Read version
+        run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+
+      - name: Publish to code.playcanvas.com
+        run: |
+          if ! curl -fsS -X POST -H "Content-Type: application/json" \
+            -d '{ "engineVersion": "${{ env.VERSION }}" }' ${{ secrets.PUBLISH_ENDPOINT }}; then
+            echo "Failed to publish to code.playcanvas.com"
+            exit 1
+          fi
