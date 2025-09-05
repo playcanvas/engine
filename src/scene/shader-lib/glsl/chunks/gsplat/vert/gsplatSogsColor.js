@@ -1,5 +1,5 @@
 export default /* glsl */`
-uniform mediump sampler2D packedSh0;
+uniform highp sampler2D packedSh0;
 
 uniform float sh0_mins;
 uniform float sh0_maxs;
