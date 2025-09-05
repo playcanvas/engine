@@ -282,6 +282,14 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Center Radius' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.centerRadius' }
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Angle Guide Thickness' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),

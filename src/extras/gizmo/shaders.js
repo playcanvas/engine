@@ -30,6 +30,7 @@ export const unlitShader = {
 
         void main(void) {
             gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(uColor)), uColor.w);
+            gl_FragDepth = 0.0;
         }
     `,
     vertexWGSL: /* wgsl */`
@@ -56,6 +57,7 @@ export const unlitShader = {
         fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             var output: FragmentOutput;
             output.color = vec4f(gammaCorrectOutput(decodeGamma(uniform.uColor)), uniform.uColor.w);
+            output.fragDepth = 0.0;
             return output;
         }
     `
