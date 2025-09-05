@@ -109,7 +109,7 @@ npm install
 | コマンド         | 説明                                                  | 出力先     |
 | --------------- | ----------------------------------------------------- | ---------- |
 | `npm run build` | すべてのエンジンビルドターゲットと型宣言をビルドする       | `build`    |
-| `npm run docs`  | エンジンの[APIリファレンスドキュメント](https://api.playcanvas.com/modules/Engine.htm)をビルドする | `docs`     |
+| `npm run docs`  | エンジンの[APIリファレンスドキュメント](https://api.playcanvas.com/modules/Engine.html)をビルドする | `docs`     |
 
 ## PlayCanvasエディター
 
