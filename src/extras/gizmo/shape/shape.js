@@ -7,32 +7,14 @@ import { CULLFACE_BACK } from '../../../platform/graphics/constants.js';
 import { BLEND_NORMAL } from '../../../scene/constants.js';
 
 import { COLOR_GRAY } from '../color.js';
-import { Mesh } from '../../../scene/mesh.js';
 import { Geometry } from '../../../scene/geometry/geometry.js';
-import { BoxGeometry } from '../../../scene/geometry/box-geometry.js';
-import { CylinderGeometry } from '../../../scene/geometry/cylinder-geometry.js';
-import { ConeGeometry } from '../../../scene/geometry/cone-geometry.js';
-import { PlaneGeometry } from '../../../scene/geometry/plane-geometry.js';
-import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
-import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
 import { unlitShader } from '../shaders.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
+ * @import { Mesh } from '../../../scene/mesh.js';
  * @import { TriData } from '../tri-data.js';
  */
-
-/**
- * @type {Record<string, typeof Geometry>}
- */
-const GEOMETRIES = {
-    box: BoxGeometry,
-    cone: ConeGeometry,
-    cylinder: CylinderGeometry,
-    plane: PlaneGeometry,
-    sphere: SphereGeometry,
-    torus: TorusGeometry
-};
 
 const tmpG = new Geometry();
 tmpG.positions = [];
@@ -289,24 +271,6 @@ class Shape {
             layers: this._layers,
             castShadows: false
         });
-    }
-
-    /**
-     * Add a render mesh to an entity.
-     *
-     * @param {Entity} entity - The entity to add the render mesh to.
-     * @param {string} type - The type of primitive to create.
-     * @throws {Error} If the primitive type is invalid.
-     * @protected
-     */
-    _addRenderMesh(entity, type) {
-        const Geometry = GEOMETRIES[type];
-        if (!Geometry) {
-            throw new Error('Invalid primitive type.');
-        }
-        this._createRenderComponent(entity, [
-            Mesh.fromGeometry(this.device, new Geometry())
-        ]);
     }
 
     /**

@@ -1,6 +1,7 @@
 import { Vec3 } from '../../../core/math/vec3.js';
 import { CULLFACE_NONE } from '../../../platform/graphics/constants.js';
 import { PlaneGeometry } from '../../../scene/geometry/plane-geometry.js';
+import { Mesh } from '../../../scene/mesh.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
@@ -69,7 +70,9 @@ class PlaneShape extends Shape {
         ];
 
         // render
-        this._addRenderMesh(this.entity, 'plane');
+        this._createRenderComponent(this.entity, [
+            Mesh.fromGeometry(this.device, new PlaneGeometry())
+        ]);
 
         // update transform
         this._update();
