@@ -389,6 +389,12 @@ class GraphicsDevice extends EventHandler {
      */
     gpuProfiler;
 
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    _destroyed = false;
+
     defaultClearOptions = {
         color: [0, 0, 0, 1],
         depth: 1,
@@ -539,6 +545,8 @@ class GraphicsDevice extends EventHandler {
 
         this.gpuProfiler?.destroy();
         this.gpuProfiler = null;
+
+        this._destroyed = true;
     }
 
     onDestroyShader(shader) {
