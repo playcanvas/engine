@@ -178,7 +178,7 @@ class TranslateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
-            // show shapes all shapes
+            // show all shapes
             this._drag(false);
         });
 
