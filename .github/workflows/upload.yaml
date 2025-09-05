@@ -3,7 +3,7 @@ name: Upload
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Publish"] # This must match the 'name' of the build.yml workflow
+    workflows: ["Publish"]
     types:
       - completed
 
@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'playcanvas' && github.event.workflow_run.conclusion == 'success'
     steps:
+      - name: Download version
+        uses: actions/download-artifact@v4
+        with:
           name: version
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
