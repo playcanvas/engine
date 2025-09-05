@@ -76,6 +76,7 @@ class RotateGizmo extends TransformGizmo {
             rotation: new Vec3(90, 0, 90),
             defaultColor: this._theme.shapeBase.z,
             hoverColor: this._theme.shapeHover.z,
+            disabledColor: this._theme.disabled,
             sectorAngle: 180
         }),
         x: new ArcShape(this._device, {
@@ -84,6 +85,7 @@ class RotateGizmo extends TransformGizmo {
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._theme.shapeBase.x,
             hoverColor: this._theme.shapeHover.x,
+            disabledColor: this._theme.disabled,
             sectorAngle: 180
         }),
         y: new ArcShape(this._device, {
@@ -92,6 +94,7 @@ class RotateGizmo extends TransformGizmo {
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._theme.shapeBase.y,
             hoverColor: this._theme.shapeHover.y,
+            disabledColor: this._theme.disabled,
             sectorAngle: 180
         }),
         f: new ArcShape(this._device, {
@@ -100,6 +103,7 @@ class RotateGizmo extends TransformGizmo {
             rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
             defaultColor: this._theme.shapeBase.f,
             hoverColor: this._theme.shapeHover.f,
+            disabledColor: this._theme.disabled,
             ringRadius: 0.55
         }),
         xyz: new SphereShape(this._device, {
@@ -107,6 +111,7 @@ class RotateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             defaultColor: this._theme.shapeBase.xyz,
             hoverColor: this._theme.shapeHover.xyz,
+            disabledColor: this._theme.disabled,
             radius: 0.5
         })
     };

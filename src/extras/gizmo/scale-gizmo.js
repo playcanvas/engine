@@ -62,49 +62,56 @@ class ScaleGizmo extends TransformGizmo {
             axis: 'xyz',
             layers: [this._layer.id],
             defaultColor: this._theme.shapeBase.xyz,
-            hoverColor: this._theme.shapeHover.xyz
+            hoverColor: this._theme.shapeHover.xyz,
+            disabledColor: this._theme.disabled
         }),
         yz: new PlaneShape(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._theme.shapeBase.x,
-            hoverColor: this._theme.shapeHover.x
+            hoverColor: this._theme.shapeHover.x,
+            disabledColor: this._theme.disabled
         }),
         xz: new PlaneShape(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._theme.shapeBase.y,
-            hoverColor: this._theme.shapeHover.y
+            hoverColor: this._theme.shapeHover.y,
+            disabledColor: this._theme.disabled
         }),
         xy: new PlaneShape(this._device, {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._theme.shapeBase.z,
-            hoverColor: this._theme.shapeHover.z
+            hoverColor: this._theme.shapeHover.z,
+            disabledColor: this._theme.disabled
         }),
         x: new BoxLineShape(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._theme.shapeBase.x,
-            hoverColor: this._theme.shapeHover.x
+            hoverColor: this._theme.shapeHover.x,
+            disabledColor: this._theme.disabled
         }),
         y: new BoxLineShape(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._theme.shapeBase.y,
-            hoverColor: this._theme.shapeHover.y
+            hoverColor: this._theme.shapeHover.y,
+            disabledColor: this._theme.disabled
         }),
         z: new BoxLineShape(this._device, {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._theme.shapeBase.z,
-            hoverColor: this._theme.shapeHover.z
+            hoverColor: this._theme.shapeHover.z,
+            disabledColor: this._theme.disabled
         })
     };
 
