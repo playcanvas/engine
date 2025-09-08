@@ -29,7 +29,7 @@ export const unlitShader = {
         uniform vec4 uColor;
 
         void main(void) {
-            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(uColor)), uColor.w);
+            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(uColor)), uColor.a);
             #if DEPTH_WRITE == 0
                 gl_FragDepth = 0.0;
             #endif
@@ -58,7 +58,7 @@ export const unlitShader = {
         @fragment
         fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             var output: FragmentOutput;
-            output.color = vec4f(gammaCorrectOutput(decodeGamma(uniform.uColor)), uniform.uColor.w);
+            output.color = vec4f(gammaCorrectOutput(decodeGamma(uniform.uColor)), uniform.uColor.a);
             #if DEPTH_WRITE == 0
                 output.fragDepth = 0.0;
             #endif
