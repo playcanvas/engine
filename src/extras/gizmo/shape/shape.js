@@ -230,6 +230,9 @@ class Shape {
      * @type {boolean}
      */
     set visible(value) {
+        if (value === this._visible) {
+            return;
+        }
         for (let i = 0; i < this.meshInstances.length; i++) {
             this.meshInstances[i].visible = value;
         }
