@@ -30,7 +30,7 @@ class MeshLine {
      * @type {ShaderMaterial}
      * @private
      */
-    _material = new ShaderMaterial(unlitShader);
+    _material = new ShaderMaterial(unlitShader(false));
 
     /**
      * @type {Entity}
