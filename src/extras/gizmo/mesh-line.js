@@ -47,6 +47,7 @@ class MeshLine {
         this._thickness = args.thickness ?? this._thickness;
 
         this._material.blendState = BlendState.ALPHABLEND;
+        this._material.setDefine('DEPTH_WRITE', '0');
         this._material.update();
 
         const mesh = Mesh.fromGeometry(app.graphicsDevice, new CylinderGeometry());

@@ -195,12 +195,14 @@ data.set('viewCube', {
     lineLength: viewCube.lineLength
 });
 const tmpV1 = new pc.Vec3();
+let aligned = false;
 viewCube.on(pc.ViewCube.EVENT_CAMERAALIGN, (/** @type {pc.Vec3} */ dir) => {
     const cameraPos = camera.getPosition();
     const focusPoint = cc.focusPoint;
     const cameraDist = focusPoint.distance(cameraPos);
     const cameraStart = tmpV1.copy(dir).mulScalar(cameraDist).add(focusPoint);
     cc.reset(focusPoint, cameraStart);
+    aligned = true;
 });
 app.on('prerender', () => {
     viewCube.update(camera.getWorldTransform());
@@ -217,6 +219,11 @@ selector.on('select', (/** @type {pc.Entity} */ node, /** @type {boolean} */ cle
     outlineRenderer.addEntity(node, pc.Color.WHITE);
 });
 selector.on('deselect', () => {
+    // do not deselect when view cube has just aligned the camera
+    if (aligned) {
+        aligned = false;
+        return;
+    }
     gizmoHandler.clear();
     outlineRenderer.removeAllEntities();
 });
