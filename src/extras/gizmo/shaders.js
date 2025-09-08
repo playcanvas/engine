@@ -29,7 +29,7 @@ export const unlitShader = {
         uniform vec4 uColor;
 
         void main(void) {
-            if (uColor.a < 1e-4) {
+            if (uColor.a < 1.0 / 255.0) {
                 discard;
             }
             gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(uColor)), uColor.a);
@@ -61,7 +61,7 @@ export const unlitShader = {
         @fragment
         fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             var output: FragmentOutput;
-            if (uniform.uColor.a < 1e-4) {
+            if (uniform.uColor.a < 1.0 / 255.0) {
                 discard;
             }
             output.color = vec4f(gammaCorrectOutput(decodeGamma(uniform.uColor)), uniform.uColor.a);
