@@ -3,6 +3,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Entity } from '../../../framework/entity.js';
 import { ConeGeometry } from '../../../scene/geometry/cone-geometry.js';
 import { CylinderGeometry } from '../../../scene/geometry/cylinder-geometry.js';
+import { Mesh } from '../../../scene/mesh.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
@@ -124,10 +125,14 @@ class ArrowShape extends Shape {
         // render
         this._head = new Entity(`head:${this.axis}`);
         this.entity.addChild(this._head);
-        this._addRenderMesh(this._head, 'cone');
+        this._createRenderComponent(this._head, [
+            Mesh.fromGeometry(this.device, new ConeGeometry())
+        ]);
         this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
-        this._addRenderMesh(this._line, 'cylinder');
+        this._createRenderComponent(this._line, [
+            Mesh.fromGeometry(this.device, new CylinderGeometry())
+        ]);
 
         // update
         this._update();

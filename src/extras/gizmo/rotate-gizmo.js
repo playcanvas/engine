@@ -1,7 +1,6 @@
 import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
-import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
@@ -21,13 +20,13 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpV3 = new Vec3();
 const tmpV4 = new Vec3();
-const tmpM1 = new Mat4();
 const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
 const tmpC1 = new Color();
 
 // constants
-const FACING_THRESHOLD = 0.9;
+const ROTATE_FACING_EPSILON = 0.1;
+const RING_FACING_EPSILON = 1e-4;
 
 /**
  * The RotateGizmo provides interactive 3D manipulation handles for rotating/reorienting
@@ -71,6 +70,7 @@ class RotateGizmo extends TransformGizmo {
             rotation: new Vec3(90, 0, 90),
             defaultColor: this._theme.shapeBase.z,
             hoverColor: this._theme.shapeHover.z,
+            disabledColor: this._theme.disabled,
             sectorAngle: 180
         }),
         x: new ArcShape(this._device, {
@@ -79,6 +79,7 @@ class RotateGizmo extends TransformGizmo {
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._theme.shapeBase.x,
             hoverColor: this._theme.shapeHover.x,
+            disabledColor: this._theme.disabled,
             sectorAngle: 180
         }),
         y: new ArcShape(this._device, {
@@ -87,14 +88,15 @@ class RotateGizmo extends TransformGizmo {
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._theme.shapeBase.y,
             hoverColor: this._theme.shapeHover.y,
+            disabledColor: this._theme.disabled,
             sectorAngle: 180
         }),
         f: new ArcShape(this._device, {
             axis: 'f',
             layers: [this._layer.id],
-            rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
             defaultColor: this._theme.shapeBase.f,
             hoverColor: this._theme.shapeHover.f,
+            disabledColor: this._theme.disabled,
             ringRadius: 0.55
         })
     };
@@ -192,7 +194,7 @@ class RotateGizmo extends TransformGizmo {
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
             // store start angle
-            this._selectionStartAngle = this._calculateAngle(point, x, y);
+            this._selectionStartAngle = this._calculateArcAngle(point, x, y);
 
             // store initial node rotations
             this._storeNodeRotations();
@@ -213,24 +215,30 @@ class RotateGizmo extends TransformGizmo {
                 return;
             }
 
-            let angleDelta = this._calculateAngle(point, x, y) - this._selectionStartAngle;
+            // calculate angle axis and delta and update node rotations
+            let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
             if (this.snap) {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
-            this._setNodeRotations(axis, angleDelta);
+            const angleAxis = this._dirFromAxis(axis, tmpV1);
+            this._setNodeRotations(axis, angleAxis, angleDelta);
 
+            // update guide points and show angle guide
             this._updateGuidePoints(angleDelta);
-
             this._angleGuide(true);
+
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+            // show all shapes
             this._drag(false);
 
+            // hide angle guide
             this._angleGuide(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
+            // reset stored rotations and offsets
             this._nodeLocalRotations.clear();
             this._nodeRotations.clear();
             this._nodeOffsets.clear();
@@ -396,9 +404,11 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _angleGuide(state) {
-        if (state && this.dragMode !== 'show') {
+        const axis = this._selectedAxis;
+
+        if (state && this.dragMode !== 'show' && axis !== 'xyz') {
             const gizmoPos = this.root.getLocalPosition();
-            const color = this._theme.guideBase[this._selectedAxis];
+            const color = this._theme.guideBase[axis];
             const startColor = tmpC1.copy(color);
             startColor.a *= 0.3;
             this._guideAngleLines[0].draw(gizmoPos, tmpV1.copy(this._guideAngleStart).add(gizmoPos),
@@ -414,27 +424,15 @@ class RotateGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {Vec3} position - The position.
-     * @returns {Vec3} The look at euler angles.
-     * @private
-     */
-    _getLookAtEulerAngles(position) {
-        tmpV1.set(0, 0, 0);
-        tmpM1.setLookAt(tmpV1, position, Vec3.UP);
-        tmpQ1.setFromMat4(tmpM1);
-        tmpQ1.getEulerAngles(tmpV1);
-        tmpV1.x += 90;
-        return tmpV1;
-    }
-
-    /**
      * @private
      */
     _shapesLookAtCamera() {
         // face shape
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            this._shapes.f.entity.lookAt(this._camera.entity.getPosition());
-            this._shapes.f.entity.rotateLocal(90, 0, 0);
+            const dir = this._camera.entity.getPosition().sub(this.root.getPosition()).normalize();
+            const elev = Math.atan2(-dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z)) * math.RAD_TO_DEG;
+            const azim = Math.atan2(-dir.x, -dir.z) * math.RAD_TO_DEG;
+            this._shapes.f.entity.setEulerAngles(-elev + 90, azim, 0);
         } else {
             tmpQ1.copy(this._camera.entity.getRotation()).getEulerAngles(tmpV1);
             this._shapes.f.entity.setEulerAngles(tmpV1);
@@ -442,14 +440,29 @@ class RotateGizmo extends TransformGizmo {
         }
 
         // axes shapes
+        let angle, dot, sector;
         const facingDir = tmpV1.copy(this.facingDir);
         tmpQ1.copy(this.root.getRotation()).invert().transformVector(facingDir, facingDir);
-        let angle = Math.atan2(facingDir.z, facingDir.y) * math.RAD_TO_DEG;
+        angle = Math.atan2(facingDir.z, facingDir.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
         angle = Math.atan2(facingDir.x, facingDir.z) * math.RAD_TO_DEG;
         this._shapes.y.entity.setLocalEulerAngles(0, angle, 0);
         angle = Math.atan2(facingDir.y, facingDir.x) * math.RAD_TO_DEG;
         this._shapes.z.entity.setLocalEulerAngles(90, 0, angle + 90);
+
+        if (!this._dragging) {
+            dot = facingDir.dot(this.root.right);
+            sector = 1 - Math.abs(dot) > RING_FACING_EPSILON;
+            this._shapes.x.show(sector ? 'sector' : 'ring');
+            dot = facingDir.dot(this.root.up);
+            sector = 1 - Math.abs(dot) > RING_FACING_EPSILON;
+            this._shapes.y.show(sector ? 'sector' : 'ring');
+            dot = facingDir.dot(this.root.forward);
+            sector = 1 - Math.abs(dot) > RING_FACING_EPSILON;
+            this._shapes.z.show(sector ? 'sector' : 'ring');
+
+            this.fire(TransformGizmo.EVENT_RENDERUPDATE);
+        }
     }
 
     /**
@@ -459,26 +472,19 @@ class RotateGizmo extends TransformGizmo {
     _drag(state) {
         for (const axis in this._shapes) {
             const shape = this._shapes[axis];
+            if (!(shape instanceof ArcShape)) {
+                continue;
+            }
             switch (this.dragMode) {
                 case 'show': {
                     break;
                 }
                 case 'hide': {
-                    if (axis === this._selectedAxis) {
-                        shape.drag(state);
-                    } else {
-                        shape.hide(state);
-                    }
+                    shape.show(state ? axis === this._selectedAxis ? 'ring' : 'none' : 'sector');
                     continue;
                 }
                 case 'selected': {
-                    if (axis === this._selectedAxis) {
-                        shape.drag(state);
-                    } else {
-                        if (!state) {
-                            shape.hide(state);
-                        }
-                    }
+                    shape.show(state ? axis === this._selectedAxis ? 'ring' : 'sector' : 'sector');
                     break;
                 }
             }
@@ -501,19 +507,20 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * @param {GizmoAxis} axis - The axis.
+     * @param {Vec3} angleAxis - The angle axis.
      * @param {number} angleDelta - The angle delta.
      * @private
      */
-    _setNodeRotations(axis, angleDelta) {
+    _setNodeRotations(axis, angleAxis, angleDelta) {
         const gizmoPos = this.root.getLocalPosition();
-        const isFacing = axis === 'f';
 
         // calculate rotation from axis and angle
-        tmpQ1.setFromAxisAngle(this._dirFromAxis(axis, tmpV1), angleDelta);
+        tmpQ1.setFromAxisAngle(angleAxis, angleDelta);
 
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            if (!isFacing && this._coordSpace === 'local') {
+
+            if ((axis === 'x' || axis === 'y' || axis === 'z') && this._coordSpace === 'local') {
                 const rot = this._nodeLocalRotations.get(node);
                 if (!rot) {
                     continue;
@@ -533,7 +540,7 @@ class RotateGizmo extends TransformGizmo {
                 tmpQ1.transformVector(tmpV1, tmpV1);
                 tmpQ2.copy(tmpQ1).mul(rot);
 
-                // N.B. Rotation via quaternion when scale inverted causes scale warping?
+                // FIXME: Rotation via quaternion when scale inverted causes scale warping?
                 node.setEulerAngles(tmpQ2.getEulerAngles());
                 node.setPosition(tmpV1.add(gizmoPos));
             }
@@ -555,10 +562,9 @@ class RotateGizmo extends TransformGizmo {
 
         const axis = this._selectedAxis;
 
+        const point = new Vec3();
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, axis === 'f', false);
-
-        const point = new Vec3();
         if (!plane.intersectsRay(ray, point)) {
             point.copy(this.root.getLocalPosition());
         }
@@ -573,7 +579,7 @@ class RotateGizmo extends TransformGizmo {
      * @returns {number} The angle.
      * @protected
      */
-    _calculateAngle(point, x, y) {
+    _calculateArcAngle(point, x, y) {
         const gizmoPos = this.root.getLocalPosition();
 
         const axis = this._selectedAxis;
@@ -582,10 +588,10 @@ class RotateGizmo extends TransformGizmo {
 
         let angle = 0;
 
-        // calculate angle
+        // arc angle
         const facingDir = tmpV2.copy(this.facingDir);
         const facingDot = plane.normal.dot(facingDir);
-        if (this.orbitRotation || Math.abs(facingDot) > FACING_THRESHOLD) {
+        if (this.orbitRotation || (1 - Math.abs(facingDot)) < ROTATE_FACING_EPSILON) {
             // plane facing camera so based on mouse position around gizmo
             tmpV1.sub2(point, gizmoPos);
 
