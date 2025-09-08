@@ -446,13 +446,13 @@ class GSplatSogsData {
         const { device, height, width } = this.means_l;
 
         // copy back means_l and means_u data so cpu reorder has access to it
-        if (this.destroyed && device._destroyed) return; // skip the rest if the resource was destroyed
+        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
         this.means_l._levels[0] = await readImageDataAsync(this.means_l);
 
-        if (this.destroyed && device._destroyed) return; // skip the rest if the resource was destroyed
+        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
         this.means_u._levels[0] = await readImageDataAsync(this.means_u);
 
-        if (this.destroyed && device._destroyed) return; // skip the rest if the resource was destroyed
+        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
         this.packedTexture = new Texture(device, {
             name: 'sogsPackedTexture',
             width,
@@ -484,10 +484,10 @@ class GSplatSogsData {
             }
         });
 
-        if (this.destroyed && device._destroyed) return; // skip the rest if the resource was destroyed
+        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
         this.packGpuMemory();
         if (this.packedShN) {
-            if (this.destroyed && device._destroyed) return; // skip the rest if the resource was destroyed
+            if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
             this.packShMemory();
         }
     }
