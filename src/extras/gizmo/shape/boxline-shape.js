@@ -3,6 +3,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Entity } from '../../../framework/entity.js';
 import { BoxGeometry } from '../../../scene/geometry/box-geometry.js';
 import { CylinderGeometry } from '../../../scene/geometry/cylinder-geometry.js';
+import { Mesh } from '../../../scene/mesh.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
@@ -114,10 +115,14 @@ class BoxLineShape extends Shape {
         // render
         this._box = new Entity(`box:${this.axis}`);
         this.entity.addChild(this._box);
-        this._addRenderMesh(this._box, 'box');
+        this._createRenderComponent(this._box, [
+            Mesh.fromGeometry(this.device, new BoxGeometry())
+        ]);
         this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
-        this._addRenderMesh(this._line, 'cylinder');
+        this._createRenderComponent(this._line, [
+            Mesh.fromGeometry(this.device, new CylinderGeometry())
+        ]);
 
         // update transform
         this._update();

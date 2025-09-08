@@ -20,7 +20,7 @@ const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 // constants
-const GLANCE_EPSILON = 0.98;
+const GLANCE_EPSILON = 0.01;
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
@@ -63,49 +63,56 @@ class TranslateGizmo extends TransformGizmo {
             axis: 'xyz',
             layers: [this._layer.id],
             defaultColor: this._theme.shapeBase.xyz,
-            hoverColor: this._theme.shapeHover.xyz
+            hoverColor: this._theme.shapeHover.xyz,
+            disabledColor: this._theme.disabled
         }),
         yz: new PlaneShape(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._theme.shapeBase.x,
-            hoverColor: this._theme.shapeHover.x
+            hoverColor: this._theme.shapeHover.x,
+            disabledColor: this._theme.disabled
         }),
         xz: new PlaneShape(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._theme.shapeBase.y,
-            hoverColor: this._theme.shapeHover.y
+            hoverColor: this._theme.shapeHover.y,
+            disabledColor: this._theme.disabled
         }),
         xy: new PlaneShape(this._device, {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._theme.shapeBase.z,
-            hoverColor: this._theme.shapeHover.z
+            hoverColor: this._theme.shapeHover.z,
+            disabledColor: this._theme.disabled
         }),
         x: new ArrowShape(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._theme.shapeBase.x,
-            hoverColor: this._theme.shapeHover.x
+            hoverColor: this._theme.shapeHover.x,
+            disabledColor: this._theme.disabled
         }),
         y: new ArrowShape(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._theme.shapeBase.y,
-            hoverColor: this._theme.shapeHover.y
+            hoverColor: this._theme.shapeHover.y,
+            disabledColor: this._theme.disabled
         }),
         z: new ArrowShape(this._device, {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._theme.shapeBase.z,
-            hoverColor: this._theme.shapeHover.z
+            hoverColor: this._theme.shapeHover.z,
+            disabledColor: this._theme.disabled
         })
     };
 
@@ -167,20 +174,23 @@ class TranslateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
-            const pointDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
+            // calculate translate delta and update node positions
+            const translateDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
             if (this.snap) {
-                pointDelta.mulScalar(1 / this.snapIncrement);
-                pointDelta.round();
-                pointDelta.mulScalar(this.snapIncrement);
+                translateDelta.mulScalar(1 / this.snapIncrement);
+                translateDelta.round();
+                translateDelta.mulScalar(this.snapIncrement);
             }
-            this._setNodePositions(pointDelta);
+            this._setNodePositions(translateDelta);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+            // show all shapes
             this._drag(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
+            // reset stored positions
             this._nodeLocalPositions.clear();
             this._nodePositions.clear();
         });
@@ -336,7 +346,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     set axisCenterSize(value) {
-        this._shapes.xyz.size = value;
+        this._shapes.xyz.radius = value;
     }
 
     /**
@@ -345,7 +355,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     get axisCenterSize() {
-        return this._shapes.xyz.size;
+        return this._shapes.xyz.radius;
     }
 
     /**
@@ -415,34 +425,34 @@ class TranslateGizmo extends TransformGizmo {
 
         // axes
         let dot = cameraDir.dot(this.root.right);
-        this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        this._shapes.x.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
         if (this.flipAxes) {
             this._shapes.x.flipped = dot < 0;
         }
         dot = cameraDir.dot(this.root.up);
-        this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        this._shapes.y.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
         if (this.flipAxes) {
             this._shapes.y.flipped = dot < 0;
         }
         dot = cameraDir.dot(this.root.forward);
-        this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        this._shapes.z.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
         if (this.flipAxes) {
             this._shapes.z.flipped = dot > 0;
         }
 
         // planes
         tmpV1.cross(cameraDir, this.root.right);
-        this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        this._shapes.yz.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
             this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
         }
         tmpV1.cross(cameraDir, this.root.forward);
-        this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        this._shapes.xy.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
             this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
         }
         tmpV1.cross(cameraDir, this.root.up);
-        this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        this._shapes.xz.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
             this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
         }
@@ -492,10 +502,10 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {Vec3} pointDelta - The delta to apply to the node positions.
+     * @param {Vec3} translateDelta - The delta to apply to the node positions.
      * @private
      */
-    _setNodePositions(pointDelta) {
+    _setNodePositions(translateDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
 
@@ -504,7 +514,7 @@ class TranslateGizmo extends TransformGizmo {
                 if (!pos) {
                     continue;
                 }
-                tmpV1.copy(pointDelta);
+                tmpV1.copy(translateDelta);
                 node.parent?.getWorldTransform().getScale(tmpV2);
                 tmpV2.x = 1 / tmpV2.x;
                 tmpV2.y = 1 / tmpV2.y;
@@ -517,7 +527,7 @@ class TranslateGizmo extends TransformGizmo {
                 if (!pos) {
                     continue;
                 }
-                node.setPosition(tmpV1.copy(pointDelta).add(pos));
+                node.setPosition(tmpV1.copy(translateDelta).add(pos));
             }
         }
 
@@ -536,10 +546,9 @@ class TranslateGizmo extends TransformGizmo {
         const axis = this._selectedAxis;
         const isPlane = this._selectedIsPlane;
 
+        const point = new Vec3();
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, axis === 'xyz', !isPlane);
-
-        const point = new Vec3();
         if (!plane.intersectsRay(ray, point)) {
             point.copy(this.root.getLocalPosition());
         }

@@ -1,4 +1,5 @@
 import { BoxGeometry } from '../../../scene/geometry/box-geometry.js';
+import { Mesh } from '../../../scene/mesh.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
@@ -49,7 +50,9 @@ class BoxShape extends Shape {
         ];
 
         // render
-        this._addRenderMesh(this.entity, 'box');
+        this._createRenderComponent(this.entity, [
+            Mesh.fromGeometry(this.device, new BoxGeometry())
+        ]);
 
         // update transform
         this._update();
