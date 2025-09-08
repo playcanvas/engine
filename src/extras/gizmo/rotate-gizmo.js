@@ -1,14 +1,12 @@
 import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
-import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
 import { ArcShape } from './shape/arc-shape.js';
 import { TransformGizmo } from './transform-gizmo.js';
 import { MeshLine } from './mesh-line.js';
-import { SphereShape } from './shape/sphere-shape.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -18,7 +16,6 @@ import { SphereShape } from './shape/sphere-shape.js';
  */
 
 // temporary variables
-const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpV3 = new Vec3();
@@ -30,7 +27,6 @@ const tmpC1 = new Color();
 // constants
 const ROTATE_FACING_EPSILON = 0.1;
 const RING_FACING_EPSILON = 1e-4;
-const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
  * The RotateGizmo provides interactive 3D manipulation handles for rotating/reorienting
@@ -102,14 +98,6 @@ class RotateGizmo extends TransformGizmo {
             hoverColor: this._theme.shapeHover.f,
             disabledColor: this._theme.disabled,
             ringRadius: 0.55
-        }),
-        xyz: new SphereShape(this._device, {
-            axis: 'xyz',
-            layers: [this._layer.id],
-            defaultColor: this._theme.shapeBase.xyz,
-            hoverColor: this._theme.shapeHover.xyz,
-            disabledColor: this._theme.disabled,
-            radius: 0.5
         })
     };
 
@@ -120,14 +108,6 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _selectionStartAngle = 0;
-
-    /**
-     * Internal selection screen point in 2D space.
-     *
-     * @type {Vec2}
-     * @private
-     */
-    _selectionScreenPoint = new Vec2();
 
     /**
      * Internal mapping from each attached node to their starting rotation in local space.
@@ -201,15 +181,6 @@ class RotateGizmo extends TransformGizmo {
     constructor(camera, layer) {
         super(camera, layer, 'gizmo:rotate');
 
-        this.setTheme({
-            shapeBase: {
-                xyz: new Color(0, 0, 0, 0)
-            },
-            shapeHover: {
-                xyz: new Color(1, 1, 1, 0.2)
-            }
-        });
-
         this._createTransform();
 
         this._guideAngleLines = [
@@ -222,9 +193,6 @@ class RotateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
-            // store start screen point
-            this._selectionScreenPoint.set(x, y);
-
             // store start angle
             this._selectionStartAngle = this._calculateArcAngle(point, x, y);
 
@@ -247,27 +215,17 @@ class RotateGizmo extends TransformGizmo {
                 return;
             }
 
-            if (axis === 'xyz') {
-                // calculate angle axis and delta and update node rotations
-                const facingDir = tmpV1.copy(this.facingDir);
-                const delta = tmpV2.copy(point).sub(this._selectionStartPoint);
-                const angleAxis = tmpV1.cross(facingDir, delta).normalize();
-
-                const angleDelta = tmpVa.set(x, y).distance(this._selectionScreenPoint);
-                this._setNodeRotations(axis, angleAxis, angleDelta);
-            } else {
-                // calculate angle axis and delta and update node rotations
-                let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
-                if (this.snap) {
-                    angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
-                }
-                const angleAxis = this._dirFromAxis(axis, tmpV1);
-                this._setNodeRotations(axis, angleAxis, angleDelta);
-
-                // update guide points and show angle guide
-                this._updateGuidePoints(angleDelta);
-                this._angleGuide(true);
+            // calculate angle axis and delta and update node rotations
+            let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
+            if (this.snap) {
+                angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
+            const angleAxis = this._dirFromAxis(axis, tmpV1);
+            this._setNodeRotations(axis, angleAxis, angleDelta);
+
+            // update guide points and show angle guide
+            this._updateGuidePoints(angleDelta);
+            this._angleGuide(true);
 
         });
 
@@ -357,24 +315,6 @@ class RotateGizmo extends TransformGizmo {
      */
     get faceRingRadius() {
         return this._shapes.f.ringRadius;
-    }
-
-    /**
-     * Sets the center radius.
-     *
-     * @type {number}
-     */
-    set centerRadius(value) {
-        this._shapes.xyz.radius = value;
-    }
-
-    /**
-     * Gets the center radius.
-     *
-     * @type {number}
-     */
-    get centerRadius() {
-        return this._shapes.xyz.radius;
     }
 
     /**
@@ -624,7 +564,7 @@ class RotateGizmo extends TransformGizmo {
 
         const point = new Vec3();
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, axis === 'f' || axis === 'xyz', false);
+        const plane = this._createPlane(axis, axis === 'f', false);
         if (!plane.intersectsRay(ray, point)) {
             point.copy(this.root.getLocalPosition());
         }
@@ -676,30 +616,6 @@ class RotateGizmo extends TransformGizmo {
         }
 
         return angle;
-    }
-
-    /**
-     * @param {Vec3} pos - The position.
-     * @param {Quat} rot - The rotation.
-     * @param {GizmoAxis} activeAxis - The active axis.
-     * @param {boolean} activeIsPlane - Whether the active axis is a plane.
-     * @override
-     */
-    _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
-        for (const axis of AXES) {
-            if (activeAxis === 'xyz') {
-                continue;
-            }
-            if (activeIsPlane) {
-                if (axis !== activeAxis) {
-                    this._drawSpanLine(pos, rot, axis);
-                }
-            } else {
-                if (axis === activeAxis) {
-                    this._drawSpanLine(pos, rot, axis);
-                }
-            }
-        }
     }
 
     /**
