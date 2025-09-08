@@ -167,7 +167,10 @@ class GSplatSogsData {
 
     packedShN;
 
-    destroy() {
+    // Marked when resource is destroyed, to abort any in-flight async preparation
+    destroyed = false;
+
+    _destroyGpuResources() {
         this.means_l?.destroy();
         this.means_u?.destroy();
         this.quats?.destroy();
@@ -178,6 +181,11 @@ class GSplatSogsData {
         this.packedTexture?.destroy();
         this.packedSh0?.destroy();
         this.packedShN?.destroy();
+    }
+
+    destroy() {
+        this.destroyed = true;
+        this._destroyGpuResources();
     }
 
     createIter(p, r, s, c, sh) {
@@ -438,9 +446,13 @@ class GSplatSogsData {
         const { device, height, width } = this.means_l;
 
         // copy back means_l and means_u data so cpu reorder has access to it
+        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
         this.means_l._levels[0] = await readImageDataAsync(this.means_l);
+
+        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
         this.means_u._levels[0] = await readImageDataAsync(this.means_u);
 
+        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
         this.packedTexture = new Texture(device, {
             name: 'sogsPackedTexture',
             width,
@@ -472,8 +484,10 @@ class GSplatSogsData {
             }
         });
 
+        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
         this.packGpuMemory();
         if (this.packedShN) {
+            if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
             this.packShMemory();
         }
     }
