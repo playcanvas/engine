@@ -2,6 +2,7 @@ import { Debug } from '../../core/debug.js';
 
 /**
  * @import { GSplatInfo } from './gsplat-info.js'
+ * @import { GSplatOctree } from './gsplat-octree.js'
  */
 
 class GSplatWorldState {
@@ -47,6 +48,13 @@ class GSplatWorldState {
      * @type {number}
      */
     totalUsedPixels = 0;
+
+    /**
+     * Files to decrement when this state becomes active.
+     * Array of tuples: [octree, fileIndex]
+     * @type {Array<[GSplatOctree, number]>}
+     */
+    pendingReleases = [];
 
     constructor(device, version, splats) {
         this.version = version;

@@ -82,6 +82,7 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
     unload(url) {
         const asset = this._urlToAsset.get(url);
         if (asset) {
+            this._registry.remove(asset);
             asset.unload();
             this._urlToAsset.delete(url);
         }

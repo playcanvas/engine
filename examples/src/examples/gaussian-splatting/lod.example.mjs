@@ -47,6 +47,7 @@ app.on('destroy', () => {
 });
 
 pc.Tracing.set(pc.TRACEID_SHADER_ALLOC, true);
+pc.Tracing.set(pc.TRACEID_OCTREE_RESOURCES, true);
 
 const assets = {
     // church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
@@ -54,7 +55,7 @@ const assets = {
     // church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/garage/lod-meta.json` }),
     logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/lod/lod-meta.json` }),
     guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
-    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.ply` })
+    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.sog` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -117,8 +118,10 @@ assetListLoader.load(() => {
     const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
     Object.assign(cc, {
         sceneSize: 500,
-        moveSpeed: 0.005,
-        moveFastSpeed: 0.03,
+        moveSpeed: 0.05,
+        moveFastSpeed: 0.3,
+        // moveSpeed: 0.005,
+        // moveFastSpeed: 0.03,
         enableOrbit: false,
         enablePan: false
     });
