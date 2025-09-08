@@ -580,14 +580,16 @@ class ScaleGizmo extends TransformGizmo {
         }
 
         // mirror axes
-        const cameraDir = this.cameraDir;
-        const rot = tmpQ1.copy(this._rootStartRot);
-        let dot = cameraDir.dot(rot.transformVector(Vec3.RIGHT, tmpV1));
-        point.x *= dot < 0 ? -1 : 1;
-        dot = cameraDir.dot(rot.transformVector(Vec3.UP, tmpV1));
-        point.y *= dot < 0 ? -1 : 1;
-        dot = cameraDir.dot(rot.transformVector(Vec3.FORWARD, tmpV1));
-        point.z *= dot > 0 ? -1 : 1;
+        if (this.flipAxes) {
+            const cameraDir = this.cameraDir;
+            const rot = tmpQ1.copy(this._rootStartRot);
+            let dot = cameraDir.dot(rot.transformVector(Vec3.RIGHT, tmpV1));
+            point.x *= dot < 0 ? -1 : 1;
+            dot = cameraDir.dot(rot.transformVector(Vec3.UP, tmpV1));
+            point.y *= dot < 0 ? -1 : 1;
+            dot = cameraDir.dot(rot.transformVector(Vec3.FORWARD, tmpV1));
+            point.z *= dot > 0 ? -1 : 1;
+        }
 
         // uniform scaling for planes
         if (this._uniform && isPlane) {
