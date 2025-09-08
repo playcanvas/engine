@@ -76,7 +76,7 @@ class Shape {
      * @type {ShaderMaterial}
      * @protected
      */
-    _material = new ShaderMaterial(unlitShader(true));
+    _material = new ShaderMaterial(unlitShader);
 
     /**
      * The internal disabled state of the shape.
