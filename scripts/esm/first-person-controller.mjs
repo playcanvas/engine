@@ -249,28 +249,6 @@ class FirstPersonController extends Script {
             throw new Error('FirstPersonController: Camera entity is required.');
         }
 
-        // check collision and rigidbody
-        if (!this.entity.collision) {
-            this.entity.addComponent('collision', {
-                type: 'capsule',
-                radius: 0.5,
-                height: 2
-            });
-        }
-        if (!this.entity.rigidbody) {
-            this.entity.addComponent('rigidbody', {
-                type: 'dynamic',
-                mass: 100,
-                linearDamping: 0,
-                angularDamping: 0,
-                linearFactor: Vec3.ONE,
-                angularFactor: Vec3.ZERO,
-                friction: 0.5,
-                restitution: 0
-            });
-        }
-        this._rigidbody = /** @type {RigidBodyComponent} */ (this.entity.rigidbody);
-
         // attach input
         this._desktopInput.attach(this.app.graphicsDevice.canvas);
         this._mobileInput.attach(this.app.graphicsDevice.canvas);
@@ -286,7 +264,6 @@ class FirstPersonController extends Script {
 
         this.on('destroy', this.destroy, this);
 
-        this._ready = true;
     }
 
     /**
@@ -438,6 +415,33 @@ class FirstPersonController extends Script {
      */
     update(dt) {
         if (!this._ready) {
+            // check collision and rigidbody
+            if (!this.entity.collision) {
+                this.entity.addComponent('collision', {
+                    type: 'capsule',
+                    radius: 0.5,
+                    height: 2
+                });
+            }
+            if (!this.entity.rigidbody) {
+                this.entity.addComponent('rigidbody', {
+                    type: 'dynamic',
+                    mass: 100,
+                    linearDamping: 0,
+                    angularDamping: 0,
+                    linearFactor: Vec3.ONE,
+                    angularFactor: Vec3.ZERO,
+                    friction: 0.5,
+                    restitution: 0
+                });
+                this._rigidbody = /** @type {RigidBodyComponent} */ (this.entity.rigidbody);
+            }
+
+            this._ready = true;
+        }
+
+        // The physics components were added but may have subsequently been removed. Bail out.
+        if (this.entity.collision || this.entity.rigidbody) {
             return;
         }
 
