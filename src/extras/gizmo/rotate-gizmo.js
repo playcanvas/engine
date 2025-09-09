@@ -655,11 +655,32 @@ class RotateGizmo extends TransformGizmo {
             // plane facing camera so based on mouse position around gizmo
             tmpV1.sub2(point, gizmoPos);
 
-            // transform point so it's facing the camera
-            tmpQ1.copy(this._camera.entity.getRotation()).invert().transformVector(tmpV1, tmpV1);
-
-            // calculate angle
-            angle = Math.sign(facingDot) * Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
+            switch (axis) {
+                case 'x': {
+                    // convert to local space
+                    tmpQ1.copy(this._rootStartRot).invert().transformVector(tmpV1, tmpV1);
+                    angle = Math.atan2(tmpV1.z, tmpV1.y) * math.RAD_TO_DEG;
+                    break;
+                }
+                case 'y': {
+                    // convert to local space
+                    tmpQ1.copy(this._rootStartRot).invert().transformVector(tmpV1, tmpV1);
+                    angle = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
+                    break;
+                }
+                case 'z': {
+                    // convert to local space
+                    tmpQ1.copy(this._rootStartRot).invert().transformVector(tmpV1, tmpV1);
+                    angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
+                    break;
+                }
+                case 'f': {
+                    // convert to camera space
+                    tmpQ1.copy(this._camera.entity.getRotation()).invert().transformVector(tmpV1, tmpV1);
+                    angle = Math.sign(facingDot) * Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
+                    break;
+                }
+            }
         } else {
             // convert rotation axis to screen space
             tmpV1.copy(gizmoPos);
