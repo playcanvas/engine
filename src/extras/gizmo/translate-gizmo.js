@@ -14,10 +14,10 @@ import { SphereShape } from './shape/sphere-shape.js';
  */
 
 // temporary variables
-const vec1 = new Vec3();
-const vec2 = new Vec3();
+const v1 = new Vec3();
+const v2 = new Vec3();
 const delta = new Vec3();
-const quat = new Quat();
+const q = new Quat();
 
 // constants
 const GLANCE_EPSILON = 0.01;
@@ -441,20 +441,20 @@ class TranslateGizmo extends TransformGizmo {
         }
 
         // planes
-        vec1.cross(cameraDir, this.root.right);
-        this._shapes.yz.entity.enabled = 1 - vec1.length() > GLANCE_EPSILON;
+        v1.cross(cameraDir, this.root.right);
+        this._shapes.yz.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
-            this._shapes.yz.flipped = vec2.set(0, +(vec1.dot(this.root.forward) < 0), +(vec1.dot(this.root.up) < 0));
+            this._shapes.yz.flipped = v2.set(0, +(v1.dot(this.root.forward) < 0), +(v1.dot(this.root.up) < 0));
         }
-        vec1.cross(cameraDir, this.root.forward);
-        this._shapes.xy.entity.enabled = 1 - vec1.length() > GLANCE_EPSILON;
+        v1.cross(cameraDir, this.root.forward);
+        this._shapes.xy.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
-            this._shapes.xy.flipped = vec2.set(+(vec1.dot(this.root.up) < 0), +(vec1.dot(this.root.right) > 0), 0);
+            this._shapes.xy.flipped = v2.set(+(v1.dot(this.root.up) < 0), +(v1.dot(this.root.right) > 0), 0);
         }
-        vec1.cross(cameraDir, this.root.up);
-        this._shapes.xz.entity.enabled = 1 - vec1.length() > GLANCE_EPSILON;
+        v1.cross(cameraDir, this.root.up);
+        this._shapes.xz.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
-            this._shapes.xz.flipped = vec2.set(+(vec1.dot(this.root.forward) > 0), 0, +(vec1.dot(this.root.right) > 0));
+            this._shapes.xz.flipped = v2.set(+(v1.dot(this.root.forward) > 0), 0, +(v1.dot(this.root.right) > 0));
         }
     }
 
@@ -514,20 +514,20 @@ class TranslateGizmo extends TransformGizmo {
                 if (!pos) {
                     continue;
                 }
-                vec1.copy(translateDelta);
-                node.parent?.getWorldTransform().getScale(vec2);
-                vec2.x = 1 / vec2.x;
-                vec2.y = 1 / vec2.y;
-                vec2.z = 1 / vec2.z;
-                quat.copy(node.getLocalRotation()).transformVector(vec1, vec1);
-                vec1.mul(vec2);
-                node.setLocalPosition(vec1.add(pos));
+                v1.copy(translateDelta);
+                node.parent?.getWorldTransform().getScale(v2);
+                v2.x = 1 / v2.x;
+                v2.y = 1 / v2.y;
+                v2.z = 1 / v2.z;
+                q.copy(node.getLocalRotation()).transformVector(v1, v1);
+                v1.mul(v2);
+                node.setLocalPosition(v1.add(pos));
             } else {
                 const pos = this._nodePositions.get(node);
                 if (!pos) {
                     continue;
                 }
-                node.setPosition(vec1.copy(translateDelta).add(pos));
+                node.setPosition(v1.copy(translateDelta).add(pos));
             }
         }
 
@@ -554,7 +554,7 @@ class TranslateGizmo extends TransformGizmo {
         }
 
         // rotate point back to world coords
-        quat.copy(this._rootStartRot).invert().transformVector(point, point);
+        q.copy(this._rootStartRot).invert().transformVector(point, point);
 
         // project point onto axis
         if (!isPlane && axis !== 'xyz') {

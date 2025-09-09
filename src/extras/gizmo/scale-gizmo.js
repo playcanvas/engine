@@ -17,7 +17,7 @@ import { BoxLineShape } from './shape/boxline-shape.js';
 const v1 = new Vec3();
 const v2 = new Vec3();
 const delta = new Vec3();
-const quat = new Quat();
+const q = new Quat();
 
 // constants
 const GLANCE_EPSILON = 0.01;
@@ -572,7 +572,7 @@ class ScaleGizmo extends TransformGizmo {
         }
 
         // rotate point back to world coords
-        quat.copy(this._rootStartRot).invert().transformVector(point, point);
+        q.copy(this._rootStartRot).invert().transformVector(point, point);
 
         // project point onto axis
         if (!isPlane) {
@@ -582,7 +582,7 @@ class ScaleGizmo extends TransformGizmo {
         // mirror axes
         if (this.flipAxes) {
             const cameraDir = this.cameraDir;
-            const rot = quat.copy(this._rootStartRot);
+            const rot = q.copy(this._rootStartRot);
             let dot = cameraDir.dot(rot.transformVector(Vec3.RIGHT, v1));
             point.x *= dot < 0 ? -1 : 1;
             dot = cameraDir.dot(rot.transformVector(Vec3.UP, v1));

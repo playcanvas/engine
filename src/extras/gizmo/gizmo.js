@@ -19,12 +19,12 @@ import { Layer } from '../../scene/layer.js';
  */
 
 // temporary variables
+const v = new Vec3();
 const position = new Vec3();
 const angles = new Vec3();
 const dir = new Vec3();
-const vec = new Vec3();
-const mat1 = new Mat4();
-const mat2 = new Mat4();
+const m1 = new Mat4();
+const m2 = new Mat4();
 const ray = new Ray();
 
 // constants
@@ -550,7 +550,7 @@ class Gizmo extends EventHandler {
     _getSelection(x, y) {
         const start = this._camera.screenToWorld(x, y, 0);
         const end = this._camera.screenToWorld(x, y, this._camera.farClip - this._camera.nearClip);
-        const dir = vec.copy(end).sub(start).normalize();
+        const dir = v.copy(end).sub(start).normalize();
 
         const selection = [];
         for (let i = 0; i < this.intersectShapes.length; i++) {
@@ -564,17 +564,17 @@ class Gizmo extends EventHandler {
                 const { tris, transform, priority } = shape.triData[j];
 
                 // combine node world transform with transform of tri relative to parent
-                const triWTM = mat1.copy(parentTM).mul(transform);
-                const invTriWTM = mat2.copy(triWTM).invert();
+                const triWTM = m1.copy(parentTM).mul(transform);
+                const invTriWTM = m2.copy(triWTM).invert();
 
                 invTriWTM.transformPoint(start, ray.origin);
                 invTriWTM.transformVector(dir, ray.direction);
                 ray.direction.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
-                    if (tris[k].intersectsRay(ray, vec)) {
+                    if (tris[k].intersectsRay(ray, v)) {
                         selection.push({
-                            dist: triWTM.transformPoint(vec).sub(start).length(),
+                            dist: triWTM.transformPoint(v).sub(start).length(),
                             meshInstances: shape.meshInstances,
                             priority: priority
                         });

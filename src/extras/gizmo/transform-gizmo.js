@@ -35,8 +35,8 @@ import { Debug } from '../../core/debug.js';
  */
 
 // temporary variables
-const vec1 = new Vec3();
-const vec2 = new Vec3();
+const v1 = new Vec3();
+const v2 = new Vec3();
 const ray = new Ray();
 const plane = new Plane();
 const color = new Color();
@@ -560,7 +560,7 @@ class TransformGizmo extends Gizmo {
             return ray;
         }
         const orthoDepth = this._camera.farClip - this._camera.nearClip;
-        ray.origin.sub2(mouseWPos, vec1.copy(this._camera.entity.forward).mulScalar(orthoDepth));
+        ray.origin.sub2(mouseWPos, v1.copy(this._camera.entity.forward).mulScalar(orthoDepth));
         ray.direction.copy(this._camera.entity.forward);
         return ray;
     }
@@ -573,7 +573,7 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _createPlane(axis, isFacing, isLine) {
-        const facingDir = vec1.copy(this.facingDir);
+        const facingDir = v1.copy(this.facingDir);
         const normal = plane.normal.set(0, 0, 0);
 
         if (isFacing) {
@@ -586,8 +586,8 @@ class TransformGizmo extends Gizmo {
 
             if (isLine) {
                 // set plane normal to face camera but keep normal perpendicular to axis
-                vec2.cross(normal, facingDir).normalize();
-                normal.cross(vec2, normal).normalize();
+                v2.cross(normal, facingDir).normalize();
+                normal.cross(v2, normal).normalize();
             }
         }
 
@@ -617,9 +617,9 @@ class TransformGizmo extends Gizmo {
      */
     _projectToAxis(point, axis) {
         // set normal to axis and project position from plane onto normal
-        vec1.set(0, 0, 0);
-        vec1[axis] = 1;
-        point.copy(vec1.mulScalar(vec1.dot(point)));
+        v1.set(0, 0, 0);
+        v1[axis] = 1;
+        point.copy(v1.mulScalar(v1.dot(point)));
 
         // set other axes to zero (floating point fix)
         const v = point[axis];
@@ -682,10 +682,10 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _drawSpanLine(pos, rot, axis) {
-        const dir = this._dirFromAxis(axis, vec1);
+        const dir = this._dirFromAxis(axis, v1);
         const base = this._theme.guideBase[axis];
-        const from = vec1.copy(dir).mulScalar(this._camera.farClip - this._camera.nearClip);
-        const to = vec2.copy(from).mulScalar(-1);
+        const from = v1.copy(dir).mulScalar(this._camera.farClip - this._camera.nearClip);
+        const to = v2.copy(from).mulScalar(-1);
         rot.transformVector(from, from).add(pos);
         rot.transformVector(to, to).add(pos);
         if (this._theme.guideOcclusion < 1) {
