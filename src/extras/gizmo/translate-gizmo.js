@@ -14,10 +14,10 @@ import { SphereShape } from './shape/sphere-shape.js';
  */
 
 // temporary variables
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpV3 = new Vec3();
-const tmpQ1 = new Quat();
+const vec1 = new Vec3();
+const vec2 = new Vec3();
+const delta = new Vec3();
+const quat = new Quat();
 
 // constants
 const GLANCE_EPSILON = 0.01;
@@ -175,7 +175,7 @@ class TranslateGizmo extends TransformGizmo {
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
             // calculate translate delta and update node positions
-            const translateDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
+            const translateDelta = delta.copy(point).sub(this._selectionStartPoint);
             if (this.snap) {
                 translateDelta.mulScalar(1 / this.snapIncrement);
                 translateDelta.round();
@@ -441,20 +441,20 @@ class TranslateGizmo extends TransformGizmo {
         }
 
         // planes
-        tmpV1.cross(cameraDir, this.root.right);
-        this._shapes.yz.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
+        vec1.cross(cameraDir, this.root.right);
+        this._shapes.yz.entity.enabled = 1 - vec1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
-            this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
+            this._shapes.yz.flipped = vec2.set(0, +(vec1.dot(this.root.forward) < 0), +(vec1.dot(this.root.up) < 0));
         }
-        tmpV1.cross(cameraDir, this.root.forward);
-        this._shapes.xy.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
+        vec1.cross(cameraDir, this.root.forward);
+        this._shapes.xy.entity.enabled = 1 - vec1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
-            this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
+            this._shapes.xy.flipped = vec2.set(+(vec1.dot(this.root.up) < 0), +(vec1.dot(this.root.right) > 0), 0);
         }
-        tmpV1.cross(cameraDir, this.root.up);
-        this._shapes.xz.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
+        vec1.cross(cameraDir, this.root.up);
+        this._shapes.xz.entity.enabled = 1 - vec1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
-            this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
+            this._shapes.xz.flipped = vec2.set(+(vec1.dot(this.root.forward) > 0), 0, +(vec1.dot(this.root.right) > 0));
         }
     }
 
@@ -514,20 +514,20 @@ class TranslateGizmo extends TransformGizmo {
                 if (!pos) {
                     continue;
                 }
-                tmpV1.copy(translateDelta);
-                node.parent?.getWorldTransform().getScale(tmpV2);
-                tmpV2.x = 1 / tmpV2.x;
-                tmpV2.y = 1 / tmpV2.y;
-                tmpV2.z = 1 / tmpV2.z;
-                tmpQ1.copy(node.getLocalRotation()).transformVector(tmpV1, tmpV1);
-                tmpV1.mul(tmpV2);
-                node.setLocalPosition(tmpV1.add(pos));
+                vec1.copy(translateDelta);
+                node.parent?.getWorldTransform().getScale(vec2);
+                vec2.x = 1 / vec2.x;
+                vec2.y = 1 / vec2.y;
+                vec2.z = 1 / vec2.z;
+                quat.copy(node.getLocalRotation()).transformVector(vec1, vec1);
+                vec1.mul(vec2);
+                node.setLocalPosition(vec1.add(pos));
             } else {
                 const pos = this._nodePositions.get(node);
                 if (!pos) {
                     continue;
                 }
-                node.setPosition(tmpV1.copy(translateDelta).add(pos));
+                node.setPosition(vec1.copy(translateDelta).add(pos));
             }
         }
 
@@ -554,7 +554,7 @@ class TranslateGizmo extends TransformGizmo {
         }
 
         // rotate point back to world coords
-        tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
+        quat.copy(this._rootStartRot).invert().transformVector(point, point);
 
         // project point onto axis
         if (!isPlane && axis !== 'xyz') {
