@@ -14,10 +14,10 @@ import { BoxLineShape } from './shape/boxline-shape.js';
  */
 
 // temporary variables
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpV3 = new Vec3();
-const tmpQ1 = new Quat();
+const v1 = new Vec3();
+const v2 = new Vec3();
+const delta = new Vec3();
+const quat = new Quat();
 
 // constants
 const GLANCE_EPSILON = 0.01;
@@ -187,7 +187,7 @@ class ScaleGizmo extends TransformGizmo {
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
             // calculate scale delta and update node scales
-            const scaleDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
+            const scaleDelta = delta.copy(point).sub(this._selectionStartPoint);
             if (this.snap) {
                 scaleDelta.mulScalar(1 / this.snapIncrement);
                 scaleDelta.round();
@@ -461,20 +461,20 @@ class ScaleGizmo extends TransformGizmo {
         }
 
         // planes
-        tmpV1.cross(cameraDir, this.root.right);
-        this._shapes.yz.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
+        v1.cross(cameraDir, this.root.right);
+        this._shapes.yz.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
-            this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
+            this._shapes.yz.flipped = v2.set(0, +(v1.dot(this.root.forward) < 0), +(v1.dot(this.root.up) < 0));
         }
-        tmpV1.cross(cameraDir, this.root.forward);
-        this._shapes.xy.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
+        v1.cross(cameraDir, this.root.forward);
+        this._shapes.xy.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
-            this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
+            this._shapes.xy.flipped = v2.set(+(v1.dot(this.root.up) < 0), +(v1.dot(this.root.right) > 0), 0);
         }
-        tmpV1.cross(cameraDir, this.root.up);
-        this._shapes.xz.entity.enabled = 1 - tmpV1.length() > GLANCE_EPSILON;
+        v1.cross(cameraDir, this.root.up);
+        this._shapes.xz.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
         if (this.flipPlanes) {
-            this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
+            this._shapes.xz.flipped = v2.set(+(v1.dot(this.root.forward) > 0), 0, +(v1.dot(this.root.right) > 0));
         }
     }
 
@@ -532,7 +532,7 @@ class ScaleGizmo extends TransformGizmo {
             if (!scale) {
                 continue;
             }
-            node.setLocalScale(tmpV1.copy(scale).mul(scaleDelta).max(this.lowerBoundScale));
+            node.setLocalScale(v1.copy(scale).mul(scaleDelta).max(this.lowerBoundScale));
         }
     }
 
@@ -559,10 +559,10 @@ class ScaleGizmo extends TransformGizmo {
         // uniform scaling for XYZ axis
         if (axis === 'xyz') {
             // calculate projection vector for scale direction
-            const projDir = tmpV2.add2(this._camera.entity.up, this._camera.entity.right).normalize();
+            const projDir = v2.add2(this._camera.entity.up, this._camera.entity.right).normalize();
 
             // calculate direction vector for scaling
-            const dir = tmpV1.sub2(point, gizmoPos);
+            const dir = v1.sub2(point, gizmoPos);
 
             // normalize vector and project it to scale direction
             const v = dir.length() * dir.normalize().dot(projDir);
@@ -572,7 +572,7 @@ class ScaleGizmo extends TransformGizmo {
         }
 
         // rotate point back to world coords
-        tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
+        quat.copy(this._rootStartRot).invert().transformVector(point, point);
 
         // project point onto axis
         if (!isPlane) {
@@ -582,21 +582,21 @@ class ScaleGizmo extends TransformGizmo {
         // mirror axes
         if (this.flipAxes) {
             const cameraDir = this.cameraDir;
-            const rot = tmpQ1.copy(this._rootStartRot);
-            let dot = cameraDir.dot(rot.transformVector(Vec3.RIGHT, tmpV1));
+            const rot = quat.copy(this._rootStartRot);
+            let dot = cameraDir.dot(rot.transformVector(Vec3.RIGHT, v1));
             point.x *= dot < 0 ? -1 : 1;
-            dot = cameraDir.dot(rot.transformVector(Vec3.UP, tmpV1));
+            dot = cameraDir.dot(rot.transformVector(Vec3.UP, v1));
             point.y *= dot < 0 ? -1 : 1;
-            dot = cameraDir.dot(rot.transformVector(Vec3.FORWARD, tmpV1));
+            dot = cameraDir.dot(rot.transformVector(Vec3.FORWARD, v1));
             point.z *= dot > 0 ? -1 : 1;
         }
 
         // uniform scaling for planes
         if (this._uniform && isPlane) {
             // project to diagonal line
-            tmpV1.set(1, 1, 1);
-            tmpV1[axis] = 0;
-            point.copy(tmpV1.mulScalar(tmpV1.dot(point)));
+            v1.set(1, 1, 1);
+            v1[axis] = 0;
+            point.copy(v1.mulScalar(v1.dot(point)));
             point[axis] = 0;
         }
 
