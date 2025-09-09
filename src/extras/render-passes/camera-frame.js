@@ -171,6 +171,26 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * Implementation of a simple to use camera rendering pass, which supports SSAO, Bloom and
  * other rendering effects.
  *
+ * Overriding compose shader chunks:
+ * The final compose pass registers its shader chunks in a way that does not override any chunks
+ * that were already provided. To customize the compose pass output, set your shader chunks on the
+ * {@link ShaderChunks} map before creating the `CameraFrame`. Those chunks will be picked up by
+ * the compose pass and preserved.
+ *
+ * Example (GLSL):
+ *
+ * @example
+ * // Provide custom compose chunk(s) before constructing CameraFrame
+ * ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).set('composeVignettePS', `
+ *     #ifdef VIGNETTE
+ *         vec3 applyVignette(vec3 color, vec2 uv) {
+ *             return color * uv.u;
+ *         }
+ *     #endif
+ * `);
+ *
+ * // For WebGPU, use SHADERLANGUAGE_WGSL instead.
+ *
  * @category Graphics
  */
 class CameraFrame {
