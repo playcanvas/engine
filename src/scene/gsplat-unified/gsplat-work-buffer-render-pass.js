@@ -14,16 +14,7 @@ import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 
 const _viewMat = new Mat4();
 
-const _lodColors = [
-    [1, 0, 0],
-    [0, 1, 0],
-    [0, 0, 1],
-    [1, 1, 0],
-    [1, 0, 1]
-];
-
-// enable to colorize LODs
-const colorizeLod = false;
+const _whiteColor = [1, 1, 1];
 
 /**
  * A render pass used to render multiple gsplats to a work buffer render target.
@@ -38,12 +29,15 @@ class GSplatWorkBufferRenderPass extends RenderPass {
      */
     splats = [];
 
+    /** @type {number[][]|undefined} */
+    colorsByLod = undefined;
+
     /**
      * The camera node used for rendering.
      *
      * @type {GraphNode}
      */
-    cameraNode;
+    cameraNode = /** @type {any} */ (null);
 
     /**
      * Initialize the render pass with the specified render target.
@@ -61,10 +55,12 @@ class GSplatWorkBufferRenderPass extends RenderPass {
      *
      * @param {GSplatInfo[]} splats - Array of GSplatInfo objects to render.
      * @param {GraphNode} cameraNode - The camera node for rendering.
+     * @param {number[][]|undefined} colorsByLod - Optional array of RGB colors per LOD index.
      * @returns {boolean} True if there are splats to render, false otherwise.
      */
-    update(splats, cameraNode) {
+    update(splats, cameraNode, colorsByLod) {
         this.splats.length = 0;
+        this.colorsByLod = colorsByLod;
 
         // Filter active splats that need rendering
         for (let i = 0; i < splats.length; i++) {
@@ -115,7 +111,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const { intervals, activeSplats, lineStart, viewport, intervalTexture } = splatInfo;
 
         // quad renderer and material are cached in the resource
-        const workBufferRenderInfo = resource.getWorkBufferRenderInfo(intervals.length > 0, colorizeLod);
+        const workBufferRenderInfo = resource.getWorkBufferRenderInfo(intervals.length > 0);
 
         // Assign material properties to scope
         workBufferRenderInfo.material.setParameters(device);
@@ -132,9 +128,9 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         scope.resolve('uStartLine').setValue(lineStart);
         scope.resolve('uViewportWidth').setValue(viewport.z);
 
-        if (colorizeLod) {
-            scope.resolve('uLodColor').setValue(_lodColors[splatInfo.lodIndex]);
-        }
+        // Colorize by LOD using provided colors; otherwise, use white
+        const color = this.colorsByLod?.[splatInfo.lodIndex] ?? _whiteColor;
+        scope.resolve('uColorMultiply').setValue(color);
 
         // SH related
         scope.resolve('matrix_model').setValue(splatInfo.node.getWorldTransform().data);

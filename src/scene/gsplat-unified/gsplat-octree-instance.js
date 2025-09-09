@@ -124,16 +124,14 @@ class GSplatOctreeInstance {
      * @param {Vec3} localCameraPosition - The camera position in local space.
      * @param {number} nodeIndex - The node index.
      * @param {number} maxLod - The maximum LOD index (lodLevels - 1).
+     * @param {number[]} lodDistances - Array of distance thresholds per LOD.
      * @returns {number} The LOD index for this node, or -1 if node should not be rendered.
      */
-    calculateNodeLod(localCameraPosition, nodeIndex, maxLod) {
+    calculateNodeLod(localCameraPosition, nodeIndex, maxLod, lodDistances) {
         const node = this.octree.nodes[nodeIndex];
 
-        // Calculate distance in local space (no transforms needed)
+        // Calculate distance in local space
         const distance = localCameraPosition.distance(node.bounds.center);
-
-        // Distance thresholds for LOD selection
-        const lodDistances = [2, 4, 6, 8, 10];
 
         // Find appropriate LOD based on distance and available LOD levels
         for (let lod = 0; lod < maxLod; lod++) {
@@ -163,6 +161,7 @@ class GSplatOctreeInstance {
 
         // calculate max LOD once for all nodes
         const maxLod = this.octree.lodLevels - 1;
+        const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25];
 
         // process all nodes
         const nodes = this.octree.nodes;
@@ -170,7 +169,7 @@ class GSplatOctreeInstance {
             const node = nodes[nodeIndex];
 
             // LOD for the node
-            const newLodIndex = this.calculateNodeLod(localCameraPosition, nodeIndex, maxLod);
+            const newLodIndex = this.calculateNodeLod(localCameraPosition, nodeIndex, maxLod, lodDistances);
             const currentLodIndex = this.nodeLods[nodeIndex];
 
             // if LOD changed
@@ -327,18 +326,25 @@ class GSplatOctreeInstance {
     }
 
     /**
-     * Tests if the octree instance has moved by more than 1 unit.
+     * Tests if the octree instance has moved by more than the provided LOD update distance.
      *
-     * @returns {boolean} True if the octree instance has moved by more than 1 unit, false otherwise.
+     * @param {number} threshold - Distance threshold to trigger an update.
+     * @returns {boolean} True if the octree instance has moved by more than the threshold, false otherwise.
      */
-    testMoved() {
+    testMoved(threshold) {
         const position = this.placement.node.getPosition();
         const length = position.distance(this.previousPosition);
-        if (length > 1) {
-            this.previousPosition.copy(position);
+        if (length > threshold) {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Updates the previous position of the octree instance.
+     */
+    updateMoved() {
+        this.previousPosition.copy(this.placement.node.getPosition());
     }
 
     /**

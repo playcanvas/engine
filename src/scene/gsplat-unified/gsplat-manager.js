@@ -15,10 +15,8 @@ import { Color } from '../../core/math/color.js';
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatPlacement } from './gsplat-placement.js'
+ * @import { Scene } from '../scene.js'
  */
-
-// render aabb's for debugging
-const _debugAabbs = false;
 
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
@@ -28,6 +26,23 @@ const tempNonOctreePlacements = new Set();
 const tempOctreePlacements = new Set();
 const _updatedSplats = [];
 const tempOctreesTicked = new Set();
+
+const _lodColorsRaw = [
+    [1, 0, 0],  // red
+    [0, 1, 0],  // green
+    [0, 0, 1],  // blue
+    [1, 1, 0],  // yellow
+    [1, 0, 1]   // magenta
+];
+
+// Color instances used by debug wireframe rendering
+const _lodColors = [
+    new Color(1, 0, 0),
+    new Color(0, 1, 0),
+    new Color(0, 0, 1),
+    new Color(1, 1, 0),
+    new Color(1, 0, 1)
+];
 
 /**
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
@@ -77,6 +92,9 @@ class GSplatManager {
     /** @type {GraphNode} */
     cameraNode;
 
+    /** @type {Scene} */
+    scene;
+
     /**
      * Layer placements, only non-octree placements are included.
      *
@@ -100,6 +118,7 @@ class GSplatManager {
 
     constructor(device, director, layer, cameraNode) {
         this.device = device;
+        this.scene = director.scene;
         this.director = director;
         this.cameraNode = cameraNode;
         this.workBuffer = new GSplatWorkBuffer(device);
@@ -204,7 +223,9 @@ class GSplatManager {
             // add octree splats
             for (const [, inst] of this.octreeInstances) {
                 inst.activePlacements.forEach((p) => {
-                    splats.push(new GSplatInfo(this.device, p.resource, p));
+                    if (p.resource) {
+                        splats.push(new GSplatInfo(this.device, p.resource, p));
+                    }
                 });
             }
 
@@ -276,8 +297,9 @@ class GSplatManager {
                     this.renderer.setMaxNumSplats(textureSize * textureSize);
                 }
 
-                // render all splats to work buffer
-                this.workBuffer.render(worldState.splats, this.cameraNode);
+                // render all splats to work buffer with LOD color palette
+                const colorize = this.scene.gsplat.colorizeLod;
+                this.workBuffer.render(worldState.splats, this.cameraNode, colorize ? _lodColorsRaw : undefined);
 
                 // apply pending file-release requests
                 if (worldState.pendingReleases && worldState.pendingReleases.length) {
@@ -298,21 +320,27 @@ class GSplatManager {
         }
     }
 
-    update(scene) {
+    update() {
 
         // check if any octree instances have moved enough to require LOD update
         let anyOctreeMoved = false;
+        const threshold = this.scene.gsplat.lodUpdateThreshold;
         for (const [, inst] of this.octreeInstances) {
-            anyOctreeMoved ||= inst.testMoved();
+            anyOctreeMoved ||= inst.testMoved(threshold);
         }
 
         // check if camera has moved enough to require LOD update
         const currentCameraPos = this.cameraNode.getPosition();
         const distance = this.lastCameraPos.distance(currentCameraPos);
-        const cameraMoved = distance > 1.0;
+        const cameraMoved = distance > threshold;
 
         // when camera of octree need LOD evaluated
         if (cameraMoved || anyOctreeMoved) {
+
+            // update the previous position where LOD was evaluated
+            for (const [, inst] of this.octreeInstances) {
+                inst.updateMoved();
+            }
 
             this.lastCameraPos.copy(currentCameraPos);
 
@@ -338,11 +366,12 @@ class GSplatManager {
 
             // debug render world space bounds for all splats
             Debug.call(() => {
-                if (_debugAabbs) {
+                if (this.scene.gsplat.debugAabbs) {
                     const tempAabb = new BoundingBox();
+                    const scene = this.scene;
                     lastState.splats.forEach((splat) => {
                         tempAabb.setFromTransformedAabb(splat.aabb, splat.node.getWorldTransform());
-                        scene.immediate.drawWireAlignedBox(tempAabb.getMin(), tempAabb.getMax(), Color.WHITE, true, scene.defaultDrawLayer);
+                        scene.immediate.drawWireAlignedBox(tempAabb.getMin(), tempAabb.getMax(), _lodColors[splat.lodIndex], true, scene.defaultDrawLayer);
                     });
                 }
             });
@@ -364,7 +393,8 @@ class GSplatManager {
 
             // Batch render all updated splats in a single render pass
             if (_updatedSplats.length > 0) {
-                this.workBuffer.render(_updatedSplats, this.cameraNode);
+                const colorize = this.scene.gsplat.colorizeLod;
+                this.workBuffer.render(_updatedSplats, this.cameraNode, colorize ? _lodColorsRaw : undefined);
                 _updatedSplats.length = 0;
             }
         }

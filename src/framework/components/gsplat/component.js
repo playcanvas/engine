@@ -73,6 +73,14 @@ class GSplatComponent extends Component {
     _highQualitySH = true;
 
     /**
+     * LOD distance thresholds, stored as a copy.
+     *
+     * @type {number[]|null}
+     * @private
+     */
+    _lodDistances = [5, 10, 15, 20, 25];
+
+    /**
      * @type {BoundingBox|null}
      * @private
      */
@@ -311,6 +319,28 @@ class GSplatComponent extends Component {
      */
     get castShadows() {
         return this._castShadows;
+    }
+
+    /**
+     * Sets LOD distance thresholds used by octree-based gsplat rendering. The provided array
+     * is copied.
+     *
+     * @type {number[]|null}
+     */
+    set lodDistances(value) {
+        this._lodDistances = Array.isArray(value) ? value.slice() : null;
+        if (this._placement) {
+            this._placement.lodDistances = this._lodDistances;
+        }
+    }
+
+    /**
+     * Gets a copy of LOD distance thresholds previously set, or null when not set.
+     *
+     * @type {number[]|null}
+     */
+    get lodDistances() {
+        return this._lodDistances ? this._lodDistances.slice() : null;
     }
 
     /**
@@ -590,6 +620,7 @@ class GSplatComponent extends Component {
 
             if (asset) {
                 this._placement = new GSplatPlacement(asset.resource, this.entity);
+                this._placement.lodDistances = this._lodDistances;
             }
 
         } else {

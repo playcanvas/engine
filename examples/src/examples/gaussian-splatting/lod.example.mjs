@@ -1,5 +1,6 @@
 // @config HIDDEN
 import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { data } from 'examples/observer';
 import * as pc from 'playcanvas';
 
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
@@ -46,8 +47,8 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-pc.Tracing.set(pc.TRACEID_SHADER_ALLOC, true);
-pc.Tracing.set(pc.TRACEID_OCTREE_RESOURCES, true);
+// pc.Tracing.set(pc.TRACEID_SHADER_ALLOC, true);
+// pc.Tracing.set(pc.TRACEID_OCTREE_RESOURCES, true);
 
 const assets = {
     // church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
@@ -61,6 +62,21 @@ const assets = {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
+
+    // initialize UI settings
+    data.set('debugAabbs', false);
+    data.set('debugLod', false);
+    data.set('lod', { distance: 5 });
+    app.scene.gsplat.debugAabbs = !!data.get('debugAabbs');
+    app.scene.gsplat.colorizeLod = !!data.get('debugLod');
+
+    // handle UI changes
+    data.on('debugAabbs:set', () => {
+        app.scene.gsplat.debugAabbs = !!data.get('debugAabbs');
+    });
+    data.on('debugLod:set', () => {
+        app.scene.gsplat.colorizeLod = !!data.get('debugLod');
+    });
 
     // create a splat entity and place it in the world
     const skull = new pc.Entity('skull');
@@ -126,6 +142,15 @@ assetListLoader.load(() => {
         enablePan: false
     });
 
+    // bind LOD distance slider to component lodDistances for church and logo
+    const updateLodDistances = () => {
+        const base = Number(data.get('lod.distance')) || 5;
+        const distances = [base, base * 2, base * 3, base * 4, base * 5];
+        logo.gsplat.lodDistances = distances;
+        church.gsplat.lodDistances = distances;
+    };
+    updateLodDistances();
+    data.on('lod.distance:set', updateLodDistances);
 
     let timeToChange = 3;
     let time = 0;

@@ -19,9 +19,7 @@ uniform int uViewportWidth;  // Width of the destination viewport in pixels
     uniform usampler2D uIntervalsTexture;
 #endif
 
-#ifdef GSPLAT_COLORIZE
-    uniform vec3 uLodColor;
-#endif
+uniform vec3 uColorMultiply;
 
 // number of splats
 uniform int uActiveSplats;
@@ -100,9 +98,7 @@ void main(void) {
             color.xyz += evalSH(sh, dir) * scale;
         #endif
 
-        #ifdef GSPLAT_COLORIZE
-            color.xyz *= uLodColor;
-        #endif
+        color.xyz *= uColorMultiply;
 
         // write out results
         pcFragColor0 = color;
