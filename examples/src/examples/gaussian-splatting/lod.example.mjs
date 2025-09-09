@@ -1,6 +1,6 @@
 // @config HIDDEN
-import { deviceType, rootPath, fileImport } from 'examples/utils';
 import { data } from 'examples/observer';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
