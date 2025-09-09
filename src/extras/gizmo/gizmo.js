@@ -19,11 +19,13 @@ import { Layer } from '../../scene/layer.js';
  */
 
 // temporary variables
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpM1 = new Mat4();
-const tmpM2 = new Mat4();
-const tmpR1 = new Ray();
+const v = new Vec3();
+const position = new Vec3();
+const angles = new Vec3();
+const dir = new Vec3();
+const m1 = new Mat4();
+const m2 = new Mat4();
+const ray = new Ray();
 
 // constants
 const MIN_SCALE = 1e-4;
@@ -409,9 +411,9 @@ class Gizmo extends EventHandler {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             const gizmoPos = this.root.getLocalPosition();
             const cameraPos = this._camera.entity.getPosition();
-            return tmpV2.sub2(cameraPos, gizmoPos).normalize();
+            return dir.sub2(cameraPos, gizmoPos).normalize();
         }
-        return tmpV2.copy(this._camera.entity.forward).mulScalar(-1);
+        return dir.copy(this._camera.entity.forward).mulScalar(-1);
     }
 
     /**
@@ -421,7 +423,7 @@ class Gizmo extends EventHandler {
     get cameraDir() {
         const cameraPos = this._camera.entity.getPosition();
         const gizmoPos = this.root.getLocalPosition();
-        return tmpV2.sub2(cameraPos, gizmoPos).normalize();
+        return dir.sub2(cameraPos, gizmoPos).normalize();
     }
 
     /**
@@ -485,36 +487,36 @@ class Gizmo extends EventHandler {
      * @protected
      */
     _updatePosition() {
-        tmpV1.set(0, 0, 0);
+        position.set(0, 0, 0);
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            tmpV1.add(node.getPosition());
+            position.add(node.getPosition());
         }
-        tmpV1.mulScalar(1.0 / (this.nodes.length || 1));
+        position.mulScalar(1.0 / (this.nodes.length || 1));
 
-        if (tmpV1.distance(this.root.getLocalPosition()) < UPDATE_EPSILON) {
+        if (position.distance(this.root.getLocalPosition()) < UPDATE_EPSILON) {
             return;
         }
 
-        this.root.setLocalPosition(tmpV1);
-        this.fire(Gizmo.EVENT_POSITIONUPDATE, tmpV1);
+        this.root.setLocalPosition(position);
+        this.fire(Gizmo.EVENT_POSITIONUPDATE, position);
     }
 
     /**
      * @protected
      */
     _updateRotation() {
-        tmpV1.set(0, 0, 0);
+        angles.set(0, 0, 0);
         if (this._coordSpace === 'local' && this.nodes.length !== 0) {
-            tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
+            angles.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
         }
 
-        if (tmpV1.distance(this.root.getLocalEulerAngles()) < UPDATE_EPSILON) {
+        if (angles.distance(this.root.getLocalEulerAngles()) < UPDATE_EPSILON) {
             return;
         }
 
-        this.root.setLocalEulerAngles(tmpV1);
-        this.fire(Gizmo.EVENT_ROTATIONUPDATE, tmpV1);
+        this.root.setLocalEulerAngles(angles);
+        this.fire(Gizmo.EVENT_ROTATIONUPDATE, angles);
     }
 
     /**
@@ -548,7 +550,7 @@ class Gizmo extends EventHandler {
     _getSelection(x, y) {
         const start = this._camera.screenToWorld(x, y, 0);
         const end = this._camera.screenToWorld(x, y, this._camera.farClip - this._camera.nearClip);
-        const dir = tmpV1.copy(end).sub(start).normalize();
+        const dir = v.copy(end).sub(start).normalize();
 
         const selection = [];
         for (let i = 0; i < this.intersectShapes.length; i++) {
@@ -562,18 +564,17 @@ class Gizmo extends EventHandler {
                 const { tris, transform, priority } = shape.triData[j];
 
                 // combine node world transform with transform of tri relative to parent
-                const triWTM = tmpM1.copy(parentTM).mul(transform);
-                const invTriWTM = tmpM2.copy(triWTM).invert();
+                const triWTM = m1.copy(parentTM).mul(transform);
+                const invTriWTM = m2.copy(triWTM).invert();
 
-                const ray = tmpR1;
                 invTriWTM.transformPoint(start, ray.origin);
                 invTriWTM.transformVector(dir, ray.direction);
                 ray.direction.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
-                    if (tris[k].intersectsRay(ray, tmpV1)) {
+                    if (tris[k].intersectsRay(ray, v)) {
                         selection.push({
-                            dist: triWTM.transformPoint(tmpV1).sub(start).length(),
+                            dist: triWTM.transformPoint(v).sub(start).length(),
                             meshInstances: shape.meshInstances,
                             priority: priority
                         });

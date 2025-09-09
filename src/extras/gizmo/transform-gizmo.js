@@ -35,11 +35,12 @@ import { Debug } from '../../core/debug.js';
  */
 
 // temporary variables
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpR1 = new Ray();
-const tmpP1 = new Plane();
-const tmpC1 = new Color();
+const v1 = new Vec3();
+const v2 = new Vec3();
+const point = new Vec3();
+const ray = new Ray();
+const plane = new Plane();
+const color = new Color();
 
 // constants
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
@@ -555,14 +556,14 @@ class TransformGizmo extends Gizmo {
      */
     _createRay(mouseWPos) {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            tmpR1.origin.copy(this._camera.entity.getPosition());
-            tmpR1.direction.sub2(mouseWPos, tmpR1.origin).normalize();
-            return tmpR1;
+            ray.origin.copy(this._camera.entity.getPosition());
+            ray.direction.sub2(mouseWPos, ray.origin).normalize();
+            return ray;
         }
         const orthoDepth = this._camera.farClip - this._camera.nearClip;
-        tmpR1.origin.sub2(mouseWPos, tmpV1.copy(this._camera.entity.forward).mulScalar(orthoDepth));
-        tmpR1.direction.copy(this._camera.entity.forward);
-        return tmpR1;
+        ray.origin.sub2(mouseWPos, v1.copy(this._camera.entity.forward).mulScalar(orthoDepth));
+        ray.direction.copy(this._camera.entity.forward);
+        return ray;
     }
 
     /**
@@ -573,8 +574,8 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _createPlane(axis, isFacing, isLine) {
-        const facingDir = tmpV1.copy(this.facingDir);
-        const normal = tmpP1.normal.set(0, 0, 0);
+        const facingDir = v1.copy(this.facingDir);
+        const normal = plane.normal.set(0, 0, 0);
 
         if (isFacing) {
             // set plane normal to face camera
@@ -586,12 +587,12 @@ class TransformGizmo extends Gizmo {
 
             if (isLine) {
                 // set plane normal to face camera but keep normal perpendicular to axis
-                tmpV2.cross(normal, facingDir).normalize();
-                normal.cross(tmpV2, normal).normalize();
+                v2.cross(normal, facingDir).normalize();
+                normal.cross(v2, normal).normalize();
             }
         }
 
-        return tmpP1.setFromPointNormal(this._rootStartPos, normal);
+        return plane.setFromPointNormal(this._rootStartPos, normal);
     }
 
     /**
@@ -617,9 +618,9 @@ class TransformGizmo extends Gizmo {
      */
     _projectToAxis(point, axis) {
         // set normal to axis and project position from plane onto normal
-        tmpV1.set(0, 0, 0);
-        tmpV1[axis] = 1;
-        point.copy(tmpV1.mulScalar(tmpV1.dot(point)));
+        v1.set(0, 0, 0);
+        v1[axis] = 1;
+        point.copy(v1.mulScalar(v1.dot(point)));
 
         // set other axes to zero (floating point fix)
         const v = point[axis];
@@ -640,11 +641,10 @@ class TransformGizmo extends Gizmo {
 
         const axis = this._selectedAxis;
 
-        const point = new Vec3();
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, isFacing, isLine);
         if (!plane.intersectsRay(ray, point)) {
-            point.copy(this.root.getLocalPosition());
+            return point;
         }
 
         return point;
@@ -682,19 +682,19 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _drawSpanLine(pos, rot, axis) {
-        const dir = this._dirFromAxis(axis, tmpV1);
-        const color = this._theme.guideBase[axis];
-        const from = tmpV1.copy(dir).mulScalar(this._camera.farClip - this._camera.nearClip);
-        const to = tmpV2.copy(from).mulScalar(-1);
+        const dir = this._dirFromAxis(axis, v1);
+        const base = this._theme.guideBase[axis];
+        const from = v1.copy(dir).mulScalar(this._camera.farClip - this._camera.nearClip);
+        const to = v2.copy(from).mulScalar(-1);
         rot.transformVector(from, from).add(pos);
         rot.transformVector(to, to).add(pos);
         if (this._theme.guideOcclusion < 1) {
-            const occluded = tmpC1.copy(color);
+            const occluded = color.copy(base);
             occluded.a *= (1 - this._theme.guideOcclusion);
             this._app.drawLine(from, to, occluded, false, this._layer);
         }
-        if (color.a !== 0) {
-            this._app.drawLine(from, to, color, true);
+        if (base.a !== 0) {
+            this._app.drawLine(from, to, base, true);
         }
     }
 
