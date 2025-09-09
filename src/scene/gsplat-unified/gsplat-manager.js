@@ -27,6 +27,7 @@ const invModelMat = new Mat4();
 const tempNonOctreePlacements = new Set();
 const tempOctreePlacements = new Set();
 const _updatedSplats = [];
+const tempOctreesTicked = new Set();
 
 /**
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
@@ -40,6 +41,9 @@ class GSplatManager {
 
     /** @type {GraphNode} */
     node = new GraphNode('GSplatManager');
+
+    /** @type {number} */
+    cooldownTicks;
 
     /** @type {GSplatWorkBuffer} */
     workBuffer;
@@ -86,6 +90,14 @@ class GSplatManager {
     /** @type {Map<GSplatPlacement, GSplatOctreeInstance>} */
     octreeInstances = new Map();
 
+    /**
+     * Octree instances scheduled for destruction. We collect their releases and destroy them
+     * when creating the next world state
+     *
+     * @type {GSplatOctreeInstance[]}
+     */
+    octreeInstancesToDestroy = [];
+
     constructor(device, director, layer, cameraNode) {
         this.device = device;
         this.director = director;
@@ -93,6 +105,7 @@ class GSplatManager {
         this.workBuffer = new GSplatWorkBuffer(device);
         this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
         this.sorter = this.createSorter();
+        this.cooldownTicks = this.director.assetLoader.cooldownTicks;
     }
 
     destroy() {
@@ -133,11 +146,16 @@ class GSplatManager {
             }
         }
 
-        // destroy and remove octree instances that are no longer present
+        // remove octree instances that are no longer present and schedule them for destruction
         for (const [placement, inst] of this.octreeInstances) {
             if (!tempOctreePlacements.has(placement)) {
                 this.octreeInstances.delete(placement);
-                inst.destroy();
+
+                // mark world as dirty since octree set changed
+                this.layerPlacementsDirty = true;
+
+                // queue the instance to be processed during next world state creation
+                this.octreeInstancesToDestroy.push(inst);
             }
         }
 
@@ -196,6 +214,33 @@ class GSplatManager {
             });
 
             const newState = new GSplatWorldState(this.device, this.lastWorldStateVersion, splats);
+
+            // collect file-release requests from octree instances.
+            for (const [, inst] of this.octreeInstances) {
+                if (inst.removedCandidates && inst.removedCandidates.size) {
+                    for (const fileIndex of inst.removedCandidates) {
+                        // each entry represents a single decRef
+                        // pending releases will be applied on onSorted for this state
+                        newState.pendingReleases.push([inst.octree, fileIndex]);
+                    }
+                    inst.removedCandidates.clear();
+                }
+            }
+
+            // handle destruction of octree instances
+            if (this.octreeInstancesToDestroy.length) {
+                for (const inst of this.octreeInstancesToDestroy) {
+
+                    // collect file-release requests from octree instances
+                    const toRelease = inst.getFileDecrements();
+                    for (const fileIndex of toRelease) {
+                        newState.pendingReleases.push([inst.octree, fileIndex]);
+                    }
+                    inst.destroy();
+                }
+                this.octreeInstancesToDestroy.length = 0;
+            }
+
             this.worldStates.set(this.lastWorldStateVersion, newState);
 
             this.layerPlacementsDirty = false;
@@ -233,6 +278,16 @@ class GSplatManager {
 
                 // render all splats to work buffer
                 this.workBuffer.render(worldState.splats, this.cameraNode);
+
+                // apply pending file-release requests
+                if (worldState.pendingReleases && worldState.pendingReleases.length) {
+                    for (const [octree, fileIndex] of worldState.pendingReleases) {
+                        // decrement once for each staged release; refcount system guards against premature unload
+                        octree.decRefCount(fileIndex, this.cooldownTicks);
+                    }
+                    worldState.pendingReleases.length = 0;
+                }
+
             }
 
             // update order texture
@@ -312,6 +367,18 @@ class GSplatManager {
                 this.workBuffer.render(_updatedSplats, this.cameraNode);
                 _updatedSplats.length = 0;
             }
+        }
+
+        // tick cooldowns once per frame per unique octree
+        if (this.octreeInstances.size) {
+            for (const [, inst] of this.octreeInstances) {
+                const octree = inst.octree;
+                if (!tempOctreesTicked.has(octree)) {
+                    tempOctreesTicked.add(octree);
+                    octree.updateCooldownTick(this.director.assetLoader);
+                }
+            }
+            tempOctreesTicked.clear();
         }
     }
 

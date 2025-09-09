@@ -273,6 +273,9 @@ class Renderer {
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
+
+        this.gsplatDirector?.destroy();
+        this.gsplatDirector = null;
     }
 
     /**

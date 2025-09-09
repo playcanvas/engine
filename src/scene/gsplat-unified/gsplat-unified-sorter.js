@@ -18,6 +18,9 @@ class GSplatUnifiedSorter extends EventHandler {
     /** @type {Set<number>} */
     centersSet = new Set();
 
+    /** @type {boolean} */
+    _destroyed = false;
+
     constructor() {
         super();
 
@@ -38,6 +41,10 @@ class GSplatUnifiedSorter extends EventHandler {
 
     onSorted(message) {
 
+        if (this._destroyed) {
+            return;
+        }
+
         const msgData = message.data ?? message;
         const orderData = new Uint32Array(msgData.order);
 
@@ -53,6 +60,7 @@ class GSplatUnifiedSorter extends EventHandler {
     }
 
     destroy() {
+        this._destroyed = true;
         this.worker.terminate();
         this.worker = null;
     }
