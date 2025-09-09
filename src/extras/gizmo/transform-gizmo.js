@@ -37,6 +37,7 @@ import { Debug } from '../../core/debug.js';
 // temporary variables
 const v1 = new Vec3();
 const v2 = new Vec3();
+const point = new Vec3();
 const ray = new Ray();
 const plane = new Plane();
 const color = new Color();
@@ -640,11 +641,10 @@ class TransformGizmo extends Gizmo {
 
         const axis = this._selectedAxis;
 
-        const point = new Vec3();
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, isFacing, isLine);
         if (!plane.intersectsRay(ray, point)) {
-            point.copy(this.root.getLocalPosition());
+            return point;
         }
 
         return point;

@@ -16,6 +16,7 @@ import { SphereShape } from './shape/sphere-shape.js';
 // temporary variables
 const v1 = new Vec3();
 const v2 = new Vec3();
+const point = new Vec3();
 const delta = new Vec3();
 const q = new Quat();
 
@@ -546,11 +547,10 @@ class TranslateGizmo extends TransformGizmo {
         const axis = this._selectedAxis;
         const isPlane = this._selectedIsPlane;
 
-        const point = new Vec3();
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, axis === 'xyz', !isPlane);
         if (!plane.intersectsRay(ray, point)) {
-            point.copy(this.root.getLocalPosition());
+            return point;
         }
 
         // rotate point back to world coords

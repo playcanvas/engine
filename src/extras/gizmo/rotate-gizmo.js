@@ -19,6 +19,7 @@ import { SphereShape } from './shape/sphere-shape.js';
 
 // temporary variables
 const screen = new Vec2();
+const point = new Vec3();
 const v1 = new Vec3();
 const v2 = new Vec3();
 const v3 = new Vec3();
@@ -622,11 +623,10 @@ class RotateGizmo extends TransformGizmo {
 
         const axis = this._selectedAxis;
 
-        const point = new Vec3();
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, axis === 'f' || axis === 'xyz', false);
         if (!plane.intersectsRay(ray, point)) {
-            point.copy(this.root.getLocalPosition());
+            return point;
         }
 
         return point;
