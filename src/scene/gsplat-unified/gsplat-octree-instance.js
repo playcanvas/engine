@@ -52,12 +52,20 @@ class GSplatOctreeInstance {
     pending = new Set();
 
     /**
-     * Map of nodeIndex -> oldFileIndex that needs to be decremented when current LOD loads.
-     * Used to track delayed cleanup from LOD gap prevention.
+     * Map of nodeIndex -> { oldFileIndex, newFileIndex } that needs to be decremented when the
+     * new LOD resource loads. This ensures we decrement even if the node switches LOD again
+     * before the new resource arrives.
      *
-     * @type {Map<number, number>}
+     * @type {Map<number, { oldFileIndex: number, newFileIndex: number }>}
      */
     pendingDecrements = new Map();
+
+    /**
+     * Files that became unused by this instance this update. Each entry represents a single decRef.
+     *
+     * @type {Set<number>}
+     */
+    removedCandidates = new Set();
 
     /**
      * Previous node position at which LOD was last updated. This is used to determine if LOD needs
@@ -93,6 +101,22 @@ class GSplatOctreeInstance {
         this.pending.clear();
         this.pendingDecrements.clear();
         this.filePlacements.length = 0;
+    }
+
+    /**
+     * Returns the file indices currently referenced by this instance that should be decremented
+     * when the instance is destroyed.
+     *
+     * @returns {number[]} Array of file indices to decRef.
+     */
+    getFileDecrements() {
+        const toRelease = [];
+        for (let i = 0; i < this.filePlacements.length; i++) {
+            if (this.filePlacements[i]) {
+                toRelease.push(i);
+            }
+        }
+        return toRelease;
     }
 
     /**
@@ -152,46 +176,44 @@ class GSplatOctreeInstance {
             // if LOD changed
             if (newLodIndex !== currentLodIndex) {
 
-                // FIRST: Execute any existing pending decrement for this node
-                const pendingOldFileIndex = this.pendingDecrements.get(nodeIndex);
-                if (pendingOldFileIndex !== undefined) {
-                    this.decrementFileRef(pendingOldFileIndex, nodeIndex);
+                // execute any existing pending decrement for this node
+                const pendingEntry = this.pendingDecrements.get(nodeIndex);
+                if (pendingEntry) {
+                    this.decrementFileRef(pendingEntry.oldFileIndex, nodeIndex);
                     this.pendingDecrements.delete(nodeIndex);
                 }
 
                 // update the stored LOD index
                 this.nodeLods[nodeIndex] = newLodIndex;
 
-                const wasVisible = currentLodIndex >= 0;
-                const willBeVisible = newLodIndex >= 0;
+                // Determine visibility based on the presence of a valid file index
+                const currentFileIndex = currentLodIndex >= 0 ? node.lods[currentLodIndex].fileIndex : -1;
+                const newFileIndex = newLodIndex >= 0 ? node.lods[newLodIndex].fileIndex : -1;
+                const wasVisible = currentFileIndex !== -1;
+                const willBeVisible = newFileIndex !== -1;
 
                 if (!wasVisible && willBeVisible) {
 
                     // becoming visible (invisible -> visible)
-                    const newFileIndex = node.lods[newLodIndex].fileIndex;
                     this.incrementFileRef(newFileIndex, nodeIndex, newLodIndex);
 
                 } else if (wasVisible && !willBeVisible) {
 
                     // becoming invisible (visible -> invisible)
-                    const oldFileIndex = node.lods[currentLodIndex].fileIndex;
-                    this.decrementFileRef(oldFileIndex, nodeIndex);
+                    this.decrementFileRef(currentFileIndex, nodeIndex);
 
                 } else if (wasVisible && willBeVisible) {
 
                     // switching between visible LODs (visible -> visible)
-                    const newFileIndex = node.lods[newLodIndex].fileIndex;
-                    const oldFileIndex = node.lods[currentLodIndex].fileIndex;
-
                     this.incrementFileRef(newFileIndex, nodeIndex, newLodIndex);
 
                     const newPlacement = this.filePlacements[newFileIndex];
                     if (newPlacement?.resource) {
-                        // New LOD ready - remove old LOD immediately
-                        this.decrementFileRef(oldFileIndex, nodeIndex);
+                        // new LOD ready - remove old LOD immediately
+                        this.decrementFileRef(currentFileIndex, nodeIndex);
                     } else {
-                        // New LOD not ready - track pending decrement for when it loads
-                        this.pendingDecrements.set(nodeIndex, oldFileIndex);
+                        // new LOD not ready - track pending decrement for when it loads
+                        this.pendingDecrements.set(nodeIndex, { oldFileIndex: currentFileIndex, newFileIndex });
                     }
                 }
             }
@@ -217,12 +239,18 @@ class GSplatOctreeInstance {
             placement = new GSplatPlacement(null, this.placement.node, lodIndex);
             this.filePlacements[fileIndex] = placement;
 
+            // If we scheduled a remove for this file in this update, cancel it
+            const removeScheduled = this.removedCandidates.delete(fileIndex);
+            if (!removeScheduled) {
+                this.octree.incRefCount(fileIndex);
+            }
+
             // if resource is already loaded, allow it to be used
             if (!this.addFilePlacement(fileIndex)) {
 
                 // resource not loaded yet, kick off load and add to pending
                 const fileUrl = this.octree.files[fileIndex];
-                this.octree.ensureFileResource(fileUrl, this.assetLoader);
+                this.octree.ensureFileResource(fileUrl, fileIndex, this.assetLoader);
                 this.pending.add(fileIndex);
             }
         }
@@ -264,6 +292,9 @@ class GSplatOctreeInstance {
                 if (placement.resource) {
                     this.activePlacements.delete(placement);
                 }
+
+                // schedule a single decRef via world state
+                this.removedCandidates.add(fileIndex);
                 this.filePlacements[fileIndex] = null;
                 this.pending.delete(fileIndex);
             }
@@ -287,6 +318,8 @@ class GSplatOctreeInstance {
                 placement.aabb.copy(res.aabb);
                 this.activePlacements.add(placement);
                 this.dirtyModifiedPlacements = true;
+                // clear pending removal if we are reusing the file
+                this.removedCandidates.delete(fileIndex);
                 return true;
             }
         }
@@ -321,18 +354,15 @@ class GSplatOctreeInstance {
 
                 // check if the asset has finished loading and store it if so
                 const fileUrl = this.octree.files[fileIndex];
-                this.octree.ensureFileResource(fileUrl, this.assetLoader);
+                this.octree.ensureFileResource(fileUrl, fileIndex, this.assetLoader);
 
-                // add placement if resource is now available and still needed
-                const placement = this.filePlacements[fileIndex];
-                if (placement && placement.intervals.size > 0 && this.addFilePlacement(fileIndex)) {
+                // if resource became available, update placement and execute any pending decrements
+                if (this.addFilePlacement(fileIndex)) {
                     _tempCompletedUrls.push(fileIndex);
 
-                    // execute pending decrements for nodes using this file
-                    for (const [nodeIndex] of placement.intervals) {
-                        // Execute any pending decrements for this node now that resource is loaded
-                        const oldFileIndex = this.pendingDecrements.get(nodeIndex);
-                        if (oldFileIndex !== undefined) {
+                    // Execute any pending decrements for nodes whose tracked newFileIndex now matches
+                    for (const [nodeIndex, { oldFileIndex, newFileIndex }] of this.pendingDecrements) {
+                        if (newFileIndex === fileIndex) {
                             this.decrementFileRef(oldFileIndex, nodeIndex);
                             this.pendingDecrements.delete(nodeIndex);
                         }

@@ -8,6 +8,11 @@ import { Debug } from '../../core/debug.js';
  */
 class GSplatAssetLoaderBase {
     /**
+     * Number of ticks to wait before unloading a zero-ref file.
+     */
+    cooldownTicks = 100;
+
+    /**
      * Initiates loading of a gsplat asset. This is a fire-and-forget operation that starts
      * the loading process.
      *

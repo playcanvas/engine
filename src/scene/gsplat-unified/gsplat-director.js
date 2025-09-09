@@ -1,13 +1,11 @@
 import { GSplatManager } from './gsplat-manager.js';
 
 /**
- * @import { GSplatOctree } from './gsplat-octree.js';
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { Camera } from '../camera.js'
  * @import { Layer } from '../layer.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GraphNode } from '../graph-node.js'
- * @import { GSplatOctreeResource } from './gsplat-octree.resource.js'
  * @import { GSplatAssetLoaderBase } from './gsplat-asset-loader-base.js'
  * @import { Scene } from '../scene.js'
  */
@@ -91,13 +89,6 @@ class GSplatDirector {
     camerasMap = new Map();
 
     /**
-     * Global octrees, allowing sharing between its placements.
-     *
-     * @type {Map<GSplatOctreeResource, GSplatOctree>}
-     */
-    octrees = new Map();
-
-    /**
      * @type {GSplatAssetLoaderBase}
      */
     assetLoader;
@@ -116,6 +107,13 @@ class GSplatDirector {
         this.device = device;
         this.assetLoader = assetLoader;
         this.scene = scene;
+    }
+
+    destroy() {
+
+        // destroy all gsplat managers
+        this.camerasMap.forEach(cameraData => cameraData.destroy());
+        this.camerasMap.clear();
     }
 
     getCameraData(camera) {
