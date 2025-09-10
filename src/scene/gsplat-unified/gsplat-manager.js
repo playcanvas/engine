@@ -89,6 +89,9 @@ class GSplatManager {
     /** @type {Vec3} */
     lastCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
+    /** @type {Vec3} */
+    lastCameraFwd = new Vec3(Infinity, Infinity, Infinity);
+
     /** @type {GraphNode} */
     cameraNode;
 
@@ -205,7 +208,8 @@ class GSplatManager {
 
         // update octree instances - this handles loading of any pending resources
         for (const [, inst] of this.octreeInstances) {
-            this.layerPlacementsDirty ||= inst.update();
+            const isDirty = inst.update();
+            this.layerPlacementsDirty ||= isDirty;
         }
 
         // Recreate world state if there are changes
@@ -320,33 +324,69 @@ class GSplatManager {
         }
     }
 
+    /**
+     * Tests if the camera has moved or rotated enough to require LOD update.
+     *
+     * @returns {boolean} True if camera moved/rotated over thresholds, otherwise false.
+     */
+    testCameraMoved() {
+
+        // distance-based movement check
+        const distanceThreshold = this.scene.gsplat.lodUpdateDistance;
+        const currentCameraPos = this.cameraNode.getPosition();
+        const cameraMoved = this.lastCameraPos.distance(currentCameraPos) > distanceThreshold;
+        if (cameraMoved) {
+            return true;
+        }
+
+        // rotation-based movement check (optional)
+        let cameraRotated = false;
+        const lodUpdateAngleDeg = this.scene.gsplat.lodUpdateAngle;
+        if (lodUpdateAngleDeg > 0) {
+            if (Number.isFinite(this.lastCameraFwd.x)) {
+                const currentCameraFwd = this.cameraNode.forward;
+                const dot = Math.min(1, Math.max(-1, this.lastCameraFwd.dot(currentCameraFwd)));
+                const angle = Math.acos(dot);
+                const rotThreshold = lodUpdateAngleDeg * Math.PI / 180;
+                cameraRotated = angle > rotThreshold;
+            } else {
+                // first run, force update to initialize last orientation
+                cameraRotated = true;
+            }
+        }
+
+        return cameraMoved || cameraRotated;
+    }
+
     update() {
 
         // check if any octree instances have moved enough to require LOD update
         let anyOctreeMoved = false;
-        const threshold = this.scene.gsplat.lodUpdateThreshold;
+        const threshold = this.scene.gsplat.lodUpdateDistance;
         for (const [, inst] of this.octreeInstances) {
-            anyOctreeMoved ||= inst.testMoved(threshold);
+            const moved = inst.testMoved(threshold);
+            anyOctreeMoved ||= moved;
         }
 
-        // check if camera has moved enough to require LOD update
-        const currentCameraPos = this.cameraNode.getPosition();
-        const distance = this.lastCameraPos.distance(currentCameraPos);
-        const cameraMoved = distance > threshold;
+        // check if camera has moved/rotated enough to require LOD update
+        const cameraMovedOrRotated = this.testCameraMoved();
 
         // when camera of octree need LOD evaluated
-        if (cameraMoved || anyOctreeMoved) {
+        if (cameraMovedOrRotated || anyOctreeMoved) {
 
-            // update the previous position where LOD was evaluated
+            // update the previous position where LOD was evaluated for octree instances
             for (const [, inst] of this.octreeInstances) {
                 inst.updateMoved();
             }
 
-            this.lastCameraPos.copy(currentCameraPos);
+            // update last camera data when LOD was evaluated
+            this.lastCameraPos.copy(this.cameraNode.getPosition());
+            this.lastCameraFwd.copy(this.cameraNode.forward);
 
             // update LOD for all octree instances
+            const lodBehindPenalty = this.scene.gsplat.lodBehindPenalty;
             for (const [, inst] of this.octreeInstances) {
-                inst.updateLod(this.cameraNode);
+                inst.updateLod(this.cameraNode, lodBehindPenalty);
             }
         }
 

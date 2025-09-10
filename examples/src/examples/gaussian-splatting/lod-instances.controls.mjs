@@ -3,10 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, BooleanInput, SliderInput, Panel } = ReactPCUI;
-    if (!observer.get('lod')) {
-        observer.set('lod', { distance: 5 });
-    }
+    const { BindingTwoWay, LabelGroup, BooleanInput, Panel } = ReactPCUI;
     return fragment(
         jsx(
             Panel,
@@ -31,22 +28,8 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     value: observer.get('debugLod')
                 })
             )
-        ),
-        jsx(
-            Panel,
-            { headerText: 'LOD' },
-            jsx(
-                LabelGroup,
-                { text: 'Distance' },
-                jsx(SliderInput, {
-                    precision: 1,
-                    min: 3,
-                    max: 20,
-                    step: 0.1,
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'lod.distance' }
-                })
-            )
         )
     );
 };
+
+

@@ -12,6 +12,8 @@ import { GSplatPlacement } from './gsplat-placement.js';
 
 const _invWorldMat = new Mat4();
 const _localCameraPos = new Vec3();
+const _localCameraFwd = new Vec3();
+const _dirToNode = new Vec3();
 
 const _tempCompletedUrls = [];
 
@@ -122,16 +124,33 @@ class GSplatOctreeInstance {
     /**
      * Calculate LOD index for a specific node using pre-calculated local camera position.
      * @param {Vec3} localCameraPosition - The camera position in local space.
+     * @param {Vec3} localCameraForward - The camera forward direction in local space (normalized).
      * @param {number} nodeIndex - The node index.
      * @param {number} maxLod - The maximum LOD index (lodLevels - 1).
      * @param {number[]} lodDistances - Array of distance thresholds per LOD.
+     * @param {number} lodBehindPenalty - Multiplier for behind-camera distance. 1 disables penalty.
      * @returns {number} The LOD index for this node, or -1 if node should not be rendered.
      */
-    calculateNodeLod(localCameraPosition, nodeIndex, maxLod, lodDistances) {
+    calculateNodeLod(localCameraPosition, localCameraForward, nodeIndex, maxLod, lodDistances, lodBehindPenalty) {
         const node = this.octree.nodes[nodeIndex];
 
         // Calculate distance in local space
-        const distance = localCameraPosition.distance(node.bounds.center);
+        _dirToNode.copy(node.bounds.center).sub(localCameraPosition);
+        let distance = _dirToNode.length();
+
+        // Apply angular-based multiplier for nodes behind the camera when enabled
+        if (lodBehindPenalty > 1 && distance > 0.01) {
+
+            // dot using unnormalized direction to avoid extra normalize; divide by distance
+            const dotOverDistance = localCameraForward.dot(_dirToNode) / distance;
+
+            // Only apply penalty when behind the camera (dot < 0)
+            if (dotOverDistance < 0) {
+                const t = -dotOverDistance; // 0 .. 1 for front -> directly behind
+                const factor = 1 + t * (lodBehindPenalty - 1);
+                distance *= factor;
+            }
+        }
 
         // Find appropriate LOD based on distance and available LOD levels
         for (let lod = 0; lod < maxLod; lod++) {
@@ -150,14 +169,17 @@ class GSplatOctreeInstance {
      * Updates the octree instance when LOD needs to be updated.
      *
      * @param {GraphNode} cameraNode - The camera node.
+     * @param {number} lodBehindPenalty - Multiplier for behind-camera distance. 1 disables penalty.
      */
-    updateLod(cameraNode) {
+    updateLod(cameraNode, lodBehindPenalty = 1) {
 
         // transform camera position to octree local space
         const worldCameraPosition = cameraNode.getPosition();
         const octreeWorldTransform = this.placement.node.getWorldTransform();
         _invWorldMat.copy(octreeWorldTransform).invert();
         const localCameraPosition = _invWorldMat.transformPoint(worldCameraPosition, _localCameraPos);
+        const worldCameraForward = cameraNode.forward;
+        const localCameraForward = _invWorldMat.transformVector(worldCameraForward, _localCameraFwd).normalize();
 
         // calculate max LOD once for all nodes
         const maxLod = this.octree.lodLevels - 1;
@@ -169,7 +191,7 @@ class GSplatOctreeInstance {
             const node = nodes[nodeIndex];
 
             // LOD for the node
-            const newLodIndex = this.calculateNodeLod(localCameraPosition, nodeIndex, maxLod, lodDistances);
+            const newLodIndex = this.calculateNodeLod(localCameraPosition, localCameraForward, nodeIndex, maxLod, lodDistances, lodBehindPenalty);
             const currentLodIndex = this.nodeLods[nodeIndex];
 
             // if LOD changed
