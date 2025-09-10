@@ -210,9 +210,8 @@ class Shape {
      * @type {boolean}
      */
     set disabled(value) {
-        const color = value ? this._disabledColor : this._defaultColor;
-        this._material.setParameter('uColor', color.toArray());
         this._disabled = value ?? false;
+        this.hover(false);
     }
 
     /**
@@ -294,10 +293,8 @@ class Shape {
      * @returns {void}
      */
     hover(state) {
-        if (this._disabled) {
-            return;
-        }
-        const color = state ? this._hoverColor : this._defaultColor;
+        const color = this._disabled ?
+            this._disabledColor : state ? this._hoverColor : this._defaultColor;
         this._material.setParameter('uColor', color.toArray());
     }
 
