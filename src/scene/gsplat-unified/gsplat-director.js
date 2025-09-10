@@ -189,11 +189,13 @@ class GSplatDirector {
             }
 
             // update gsplat managers
-            // const cameraData = this.camerasMap.get(camera);
             cameraData?.layersMap.forEach((layerData) => {
                 layerData.gsplatManager.update();
             });
         }
+
+        // clear global gsplat params dirty flag after all updates for this camera
+        this.scene.gsplat.dirty = false;
 
         // clear dirty flags on all layers of the composition
         for (let i = 0; i < comp.layerList.length; i++) {

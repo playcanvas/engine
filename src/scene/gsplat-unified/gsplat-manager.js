@@ -371,8 +371,13 @@ class GSplatManager {
         // check if camera has moved/rotated enough to require LOD update
         const cameraMovedOrRotated = this.testCameraMoved();
 
-        // when camera of octree need LOD evaluated
-        if (cameraMovedOrRotated || anyOctreeMoved) {
+        // if parameters are dirty, rebuild world state
+        if (this.scene.gsplat.dirty) {
+            this.layerPlacementsDirty = true;
+        }
+
+        // when camera or octree need LOD evaluated, or params are dirty
+        if (cameraMovedOrRotated || anyOctreeMoved || this.scene.gsplat.dirty) {
 
             // update the previous position where LOD was evaluated for octree instances
             for (const [, inst] of this.octreeInstances) {
