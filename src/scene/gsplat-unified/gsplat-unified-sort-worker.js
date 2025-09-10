@@ -257,8 +257,6 @@ function UnifiedSortWorker() {
         // const count = dist(numVertices - 1) >= 0 ? findZero() : numVertices;
         const count = numVertices;
 
-        console.log('count', count);
-
         // send results
         const transferList = [order.buffer];
         const response = {
