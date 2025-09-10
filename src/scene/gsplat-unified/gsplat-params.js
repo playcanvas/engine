@@ -89,10 +89,64 @@ class GSplatParams {
     /**
      * Gets behind-camera LOD penalty multiplier.
      *
-     * @returns {number} Current multiplier value.
+     * @type {number}
      */
     get lodBehindPenalty() {
         return this._lodBehindPenalty;
+    }
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lodRangeMin = 0;
+
+    /**
+     * Minimum allowed LOD index (inclusive). Defaults to 0.
+     *
+     * @type {number}
+     */
+    set lodRangeMin(value) {
+        if (this._lodRangeMin !== value) {
+            this._lodRangeMin = value;
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets minimum allowed LOD index (inclusive).
+     *
+     * @type {number}
+     */
+    get lodRangeMin() {
+        return this._lodRangeMin;
+    }
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lodRangeMax = 10;
+
+    /**
+     * Maximum allowed LOD index (inclusive). Defaults to 10.
+     *
+     * @type {number}
+     */
+    set lodRangeMax(value) {
+        if (this._lodRangeMax !== value) {
+            this._lodRangeMax = value;
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets maximum allowed LOD index (inclusive).
+     *
+     * @type {number}
+     */
+    get lodRangeMax() {
+        return this._lodRangeMax;
     }
 }
 

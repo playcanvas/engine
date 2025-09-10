@@ -389,9 +389,8 @@ class GSplatManager {
             this.lastCameraFwd.copy(this.cameraNode.forward);
 
             // update LOD for all octree instances
-            const lodBehindPenalty = this.scene.gsplat.lodBehindPenalty;
             for (const [, inst] of this.octreeInstances) {
-                inst.updateLod(this.cameraNode, lodBehindPenalty);
+                inst.updateLod(this.cameraNode, this.scene.gsplat);
             }
         }
 

@@ -169,9 +169,9 @@ class GSplatOctreeInstance {
      * Updates the octree instance when LOD needs to be updated.
      *
      * @param {GraphNode} cameraNode - The camera node.
-     * @param {number} lodBehindPenalty - Multiplier for behind-camera distance. 1 disables penalty.
+     * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
      */
-    updateLod(cameraNode, lodBehindPenalty = 1) {
+    updateLod(cameraNode, params) {
 
         // transform camera position to octree local space
         const worldCameraPosition = cameraNode.getPosition();
@@ -185,13 +185,18 @@ class GSplatOctreeInstance {
         const maxLod = this.octree.lodLevels - 1;
         const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25];
 
+        // parameters
+        const { lodBehindPenalty, lodRangeMin, lodRangeMax } = params;
+
         // process all nodes
         const nodes = this.octree.nodes;
         for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
             const node = nodes[nodeIndex];
 
-            // LOD for the node
-            const newLodIndex = this.calculateNodeLod(localCameraPosition, localCameraForward, nodeIndex, maxLod, lodDistances, lodBehindPenalty);
+            // LOD for the node, clamped by configured range
+            let newLodIndex = this.calculateNodeLod(localCameraPosition, localCameraForward, nodeIndex, maxLod, lodDistances, lodBehindPenalty);
+            if (newLodIndex < lodRangeMin) newLodIndex = lodRangeMin;
+            if (newLodIndex > lodRangeMax) newLodIndex = lodRangeMax;
             const currentLodIndex = this.nodeLods[nodeIndex];
 
             // if LOD changed

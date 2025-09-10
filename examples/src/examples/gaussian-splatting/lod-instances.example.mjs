@@ -68,6 +68,7 @@ assetListLoader.load(() => {
     // initialize UI settings and wire to scene flags
     data.set('debugAabbs', !!data.get('debugAabbs'));
     data.set('debugLod', !!data.get('debugLod'));
+    data.set('lodPreset', data.get('lodPreset') || 'normal');
     app.scene.gsplat.debugAabbs = !!data.get('debugAabbs');
     app.scene.gsplat.colorizeLod = !!data.get('debugLod');
 
@@ -77,6 +78,26 @@ assetListLoader.load(() => {
     data.on('debugLod:set', () => {
         app.scene.gsplat.colorizeLod = !!data.get('debugLod');
     });
+
+    const applyPreset = () => {
+        const preset = data.get('lodPreset');
+        if (preset === 'ultra') {
+            app.scene.gsplat.lodRangeMin = 0;
+            app.scene.gsplat.lodRangeMax = 0;
+        } else if (preset === 'high') {
+            app.scene.gsplat.lodRangeMin = 1;
+            app.scene.gsplat.lodRangeMax = 2;
+        } else if (preset === 'low') {
+            app.scene.gsplat.lodRangeMin = 2;
+            app.scene.gsplat.lodRangeMax = 2;
+        } else { // normal
+            app.scene.gsplat.lodRangeMin = 0;
+            app.scene.gsplat.lodRangeMax = 2;
+        }
+    };
+
+    applyPreset();
+    data.on('lodPreset:set', applyPreset);
 
     // create grid of instances centered around origin on XZ plane
     const half = (GRID_SIZE - 1) * 0.5;
