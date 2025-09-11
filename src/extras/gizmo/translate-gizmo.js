@@ -353,24 +353,6 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the axis center tolerance.
-     *
-     * @type {number}
-     */
-    set axisCenterTolerance(value) {
-        this._shapes.xyz.tolerance = value;
-    }
-
-    /**
-     * Gets the axis center tolerance.
-     *
-     * @type {number}
-     */
-    get axisCenterTolerance() {
-        return this._shapes.xyz.tolerance;
-    }
-
-    /**
      * @type {boolean}
      * @deprecated Use {@link TranslateGizmo#flipPlanes} instead.
      * @ignore

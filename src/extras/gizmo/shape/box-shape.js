@@ -25,14 +25,6 @@ class BoxShape extends Shape {
     _size = 0.12;
 
     /**
-     * The internal intersection tolerance of the box.
-     *
-     * @type {number}
-     * @private
-     */
-    _tolerance = 0.05;
-
-    /**
      * Create a new BoxShape.
      *
      * @param {GraphicsDevice} device - The graphics device.
@@ -75,25 +67,6 @@ class BoxShape extends Shape {
      */
     get size() {
         return this._size;
-    }
-
-    /**
-     * Set the intersection tolerance of the box.
-     *
-     * @param {number} value - The new tolerance of the box.
-     */
-    set tolerance(value) {
-        this._tolerance = value ?? this._tolerance;
-        this._update();
-    }
-
-    /**
-     * Get the intersection tolerance of the box.
-     *
-     * @returns {number} The tolerance of the box.
-     */
-    get tolerance() {
-        return this._tolerance;
     }
 
     /**

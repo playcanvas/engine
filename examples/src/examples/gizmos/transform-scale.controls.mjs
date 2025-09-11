@@ -239,17 +239,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     max: 0.5,
                     precision: 2
                 })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Center Tolerance' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisCenterTolerance' },
-                    min: 0,
-                    max: 0.5,
-                    precision: 2
-                })
             )
         ),
         jsx(

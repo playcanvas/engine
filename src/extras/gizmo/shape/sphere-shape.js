@@ -25,14 +25,6 @@ class SphereShape extends Shape {
     _radius = 0.06;
 
     /**
-     * The internal intersection tolerance of the sphere.
-     *
-     * @type {number}
-     * @private
-     */
-    _tolerance = 0.05;
-
-    /**
      * Create a new SphereShape.
      *
      * @param {GraphicsDevice} device - The graphics device.
@@ -78,25 +70,6 @@ class SphereShape extends Shape {
      */
     get radius() {
         return this._radius;
-    }
-
-    /**
-     * Set the intersection tolerance of the sphere.
-     *
-     * @param {number} value - The new tolerance of the sphere.
-     */
-    set tolerance(value) {
-        this._tolerance = value ?? this._tolerance;
-        this._update();
-    }
-
-    /**
-     * Get the intersection tolerance of the sphere.
-     *
-     * @returns {number} The tolerance of the sphere.
-     */
-    get tolerance() {
-        return this._tolerance;
     }
 
     /**
