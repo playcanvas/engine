@@ -1106,6 +1106,8 @@ class AppBase extends EventHandler {
         // total draw call
         this.stats.drawCalls.total = this.graphicsDevice._drawCallsPerFrame;
         this.graphicsDevice._drawCallsPerFrame = 0;
+
+        stats.gsplats = this.renderer._gsplatCount;
     }
 
     /** @private */
@@ -1130,7 +1132,6 @@ class AppBase extends EventHandler {
         stats.morphTime = this.renderer._morphTime;
         stats.lightClusters = this.renderer._lightClusters;
         stats.lightClustersTime = this.renderer._lightClustersTime;
-        stats.gsplats = this.renderer._gsplatCount;
         stats.otherPrimitives = 0;
         for (let i = 0; i < prims.length; i++) {
             if (i < PRIMITIVE_TRIANGLES) {
