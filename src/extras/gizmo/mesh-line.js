@@ -93,6 +93,11 @@ class MeshLine {
         this.entity.setLocalPosition(dir.mulScalar(0.5 * length).add(from));
         this.entity.setLocalScale(this._thickness * scale, length, this._thickness * scale);
     }
+
+    destroy() {
+        this._material.destroy();
+        this.entity.destroy();
+    }
 }
 
 export { MeshLine };

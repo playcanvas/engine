@@ -727,6 +727,15 @@ class RotateGizmo extends TransformGizmo {
 
         this._shapesLookAtCamera();
     }
+
+    /**
+     * @override
+     */
+    destroy() {
+        this._guideAngleLines.forEach(line => line.destroy());
+
+        super.destroy();
+    }
 }
 
 export { RotateGizmo };
