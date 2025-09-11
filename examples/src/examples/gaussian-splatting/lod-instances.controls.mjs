@@ -10,6 +10,16 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'Debug' },
             jsx(
                 LabelGroup,
+                { text: 'High Res' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'highRes' },
+                    value: observer.get('highRes') || false
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'AABBs' },
                 jsx(BooleanInput, {
                     type: 'toggle',
@@ -48,6 +58,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
         jsx(
             Panel,
             { headerText: 'Stats' },
+            jsx(
+                LabelGroup,
+                { text: 'Resolution' },
+                jsx(Label, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.stats.resolution' },
+                    value: observer.get('data.stats.resolution')
+                })
+            ),
             jsx(
                 LabelGroup,
                 { text: 'GSplat Count' },

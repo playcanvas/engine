@@ -15,7 +15,6 @@ const gfxOptions = {
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
-device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -39,11 +38,21 @@ app.init(createOptions);
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
-const resize = () => app.resizeCanvas();
-window.addEventListener('resize', resize);
+// High Res toggle (false by default): when false, use half native DPR; when true, use min(DPR, 2)
+data.set('highRes', !!data.get('highRes'));
+const applyResolution = () => {
+    const dpr = window.devicePixelRatio || 1;
+    // auto: treat DPR >= 2 as high-DPI (drops to half); High Res forces native capped at 2
+    device.maxPixelRatio = data.get('highRes') ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
+};
+applyResolution();
+const applyAndResize = () => { applyResolution(); app.resizeCanvas(); };
+data.on('highRes:set', applyAndResize);
+
+// Ensure DPR and canvas are updated when window changes size
+window.addEventListener('resize', applyAndResize);
 app.on('destroy', () => {
-    window.removeEventListener('resize', resize);
+    window.removeEventListener('resize', applyAndResize);
 });
 
 // configuration for grid instances
@@ -163,6 +172,8 @@ assetListLoader.load(() => {
     // update HUD stats every frame
     app.on('update', () => {
         data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
+        const bb = app.graphicsDevice.backBufferSize;
+        data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
     });
 });
 
