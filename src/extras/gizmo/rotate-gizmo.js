@@ -219,8 +219,6 @@ class RotateGizmo extends TransformGizmo {
 
         this._createTransform();
 
-        this._guideMouseLine = new MeshLine(this._app, this._layer);
-
         this._guideAngleLines = [
             new MeshLine(this._app, this._layer),
             new MeshLine(this._app, this._layer)
