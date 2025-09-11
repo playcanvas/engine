@@ -23,13 +23,11 @@ const point = new Vec3();
 const v1 = new Vec3();
 const v2 = new Vec3();
 const v3 = new Vec3();
-const v4 = new Vec3();
 const q1 = new Quat();
 const q2 = new Quat();
 const color = new Color();
 
 // constants
-const ROTATE_FACING_EPSILON = 0.1;
 const RING_FACING_EPSILON = 1e-4;
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
@@ -660,26 +658,34 @@ class RotateGizmo extends TransformGizmo {
         let angle = 0;
 
         // arc angle
-        const facingDir = v2.copy(this.facingDir);
+        const facingDir = this.facingDir;
         const facingDot = plane.normal.dot(facingDir);
-        if (this.orbitRotation || (1 - Math.abs(facingDot)) < ROTATE_FACING_EPSILON) {
+        if (this.orbitRotation) {
             // convert gizmo position to screen space
             const screenPos = this._camera.worldToScreen(gizmoPos, v1);
 
             // calculate angle based on mouse position around gizmo
             const dir = screen.set(x - screenPos.x, y - screenPos.y).normalize();
-            angle = -Math.sign(facingDot) * Math.atan2(dir.y, dir.x) * math.RAD_TO_DEG;
+            angle = Math.sign(facingDot) * Math.atan2(-dir.y, dir.x) * math.RAD_TO_DEG;
         } else {
-            // convert rotation axis to screen space
-            v1.copy(gizmoPos);
-            v2.cross(plane.normal, facingDir).normalize().add(gizmoPos);
+            this._camera.worldToScreen(gizmoPos, v2);
+            if (facingDot > 1 - RING_FACING_EPSILON) {
+                // determine which size of the ring the mouse is on to flip rotation direction
+                v1.set(
+                    this._screenStartPos.y >= v2.y ? 1 : -1,
+                    this._screenStartPos.x >= v2.x ? -1 : 1,
+                    0
+                ).normalize();
+            } else {
+                // calculate projection vector in world space for rotation axis
+                const projDir = v1.cross(plane.normal, facingDir).normalize();
 
-            // convert world space vectors to screen space
-            this._camera.worldToScreen(v1, v3);
-            this._camera.worldToScreen(v2, v4);
+                // convert to screen space
+                this._camera.worldToScreen(projDir.add(gizmoPos), v3);
+                v1.sub2(v3, v2).normalize();
+            }
 
             // angle is dot product with mouse position
-            v1.sub2(v4, v3).normalize();
             v2.set(x, y, 0);
             angle = v1.dot(v2);
         }
