@@ -95,11 +95,11 @@ class TransformGizmo extends Gizmo {
      */
     _theme = {
         shapeBase: {
-            x: color4from3(COLOR_RED, 0.6),
-            y: color4from3(COLOR_GREEN, 0.6),
-            z: color4from3(COLOR_BLUE, 0.6),
-            xyz: color4from3(Color.WHITE, 0.6),
-            f: color4from3(Color.WHITE, 0.6)
+            x: color4from3(COLOR_RED, 0.8),
+            y: color4from3(COLOR_GREEN, 0.8),
+            z: color4from3(COLOR_BLUE, 0.8),
+            xyz: color4from3(Color.WHITE, 0.8),
+            f: color4from3(Color.WHITE, 0.8)
         },
         shapeHover: {
             x: COLOR_RED.clone(),
