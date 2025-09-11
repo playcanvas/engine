@@ -46,15 +46,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Flip Axes' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.flipAxes' }
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'Flip Planes' },
                 jsx(BooleanInput, {
                     type: 'toggle',
