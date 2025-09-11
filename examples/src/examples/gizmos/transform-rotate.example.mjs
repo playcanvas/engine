@@ -120,7 +120,7 @@ data.set('gizmo', {
     snap: gizmo.snap,
     snapIncrement: gizmo.snapIncrement,
     dragMode: gizmo.dragMode,
-    orbitRotation: gizmo.orbitRotation,
+    rotationMode: gizmo.rotationMode,
     theme: {
         shapeBase: {
             x: gizmo.theme.shapeBase.x.toArray(),

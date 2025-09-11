@@ -190,11 +190,16 @@ class RotateGizmo extends TransformGizmo {
     snapIncrement = 5;
 
     /**
-     * This forces the rotation to always be calculated based on the mouse position around the gizmo.
+     * The rotation mode of the gizmo. This can be either:
      *
-     * @type {boolean}
+     * - 'absolute': The rotation is calculated based on the mouse displacement relative to the
+     * initial click point.
+     * - 'orbit': The rotation is calculated based on the gizmos position around the center of
+     * rotation.
+     *
+     * @type {'absolute' | 'orbit'}
      */
-    orbitRotation = false;
+    rotationMode = 'absolute';
 
     /**
      * Creates a new RotateGizmo object. Use {@link Gizmo.createLayer} to create the layer
@@ -658,36 +663,41 @@ class RotateGizmo extends TransformGizmo {
         // arc angle
         const facingDir = this.facingDir;
         const facingDot = plane.normal.dot(facingDir);
-        if (this.orbitRotation) {
-            // convert gizmo position to screen space
-            const screenPos = this._camera.worldToScreen(gizmoPos, v1);
 
-            // calculate angle based on mouse position around gizmo
-            const dir = screen.set(x - screenPos.x, y - screenPos.y).normalize();
-            angle = Math.sign(facingDot) * Math.atan2(-dir.y, dir.x) * math.RAD_TO_DEG;
-        } else {
-            this._camera.worldToScreen(gizmoPos, v2);
-            if (axis === 'f' || facingDot > 1 - RING_FACING_EPSILON) {
-                // determine which size of the ring the mouse is on to flip rotation direction
-                v1.set(
-                    this._screenStartPos.y >= v2.y ? 1 : -1,
-                    this._screenStartPos.x >= v2.x ? -1 : 1,
-                    0
-                ).normalize();
-            } else {
-                // calculate projection vector in world space for rotation axis
-                const projDir = v1.cross(plane.normal, facingDir).normalize();
+        switch (this.rotationMode) {
+            case 'absolute': {
+                // convert gizmo position to screen space§
+                const screenPos = this._camera.worldToScreen(gizmoPos, v1);
 
-                // convert to screen space
-                this._camera.worldToScreen(projDir.add(gizmoPos), v3);
-                v1.sub2(v3, v2).normalize();
+                // calculate angle based on mouse position around gizmo
+                const dir = screen.set(x - screenPos.x, y - screenPos.y).normalize();
+                angle = Math.sign(facingDot) * Math.atan2(-dir.y, dir.x) * math.RAD_TO_DEG;
+                break;
             }
+            case 'orbit': {
+                this._camera.worldToScreen(gizmoPos, v2);
+                if (axis === 'f' || facingDot > 1 - RING_FACING_EPSILON) {
+                    // determine which size of the ring the mouse is on to flip rotation direction
+                    v1.set(
+                        this._screenStartPos.y >= v2.y ? 1 : -1,
+                        this._screenStartPos.x >= v2.x ? -1 : 1,
+                        0
+                    ).normalize();
+                } else {
+                    // calculate projection vector in world space for rotation axis
+                    const projDir = v1.cross(plane.normal, facingDir).normalize();
 
-            // angle is dot product with mouse position
-            v2.set(x, y, 0);
-            angle = v1.dot(v2);
+                    // convert to screen space
+                    this._camera.worldToScreen(projDir.add(gizmoPos), v3);
+                    v1.sub2(v3, v2).normalize();
+                }
+
+                // angle is dot product with mouse position
+                v2.set(x, y, 0);
+                angle = v1.dot(v2);
+                break;
+            }
         }
-
         return angle;
     }
 
