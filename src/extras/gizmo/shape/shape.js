@@ -27,7 +27,7 @@ tmpG.normals = [];
  * @property {Vec3} [rotation] - The rotation of the shape.
  * @property {Vec3} [scale] - The scale of the shape.
  * @property {boolean} [disabled] - Whether the shape is disabled.
- * @property {boolean} [hidden] - Whether the shape is hidden.
+ * @property {boolean} [visible] - Whether the shape is visible.
  * @property {number[]} [layers] - The layers the shape belongs to.
  * @property {Color} [defaultColor] - The default color of the shape.
  * @property {Color} [hoverColor] - The hover color of the shape.
@@ -192,8 +192,8 @@ class Shape {
             this._scale.copy(args.scale);
         }
 
-        this._disabled = args.disabled ?? false;
-        this._visible = args.hidden ?? false;
+        this._disabled = args.disabled ?? this._disabled;
+        this._visible = args.visible ?? this._visible;
 
         this._layers = args.layers ?? this._layers;
 
