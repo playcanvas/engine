@@ -47,7 +47,7 @@ app.on('destroy', () => {
 });
 
 // configuration for grid instances
-const GRID_SIZE = 10; // N x N grid
+const GRID_SIZE = 7; // N x N grid
 const GRID_SPACING = 1.0; // spacing between instances in world units
 const INSTANCE_SCALE = 2;
 const INSTANCE_Y = 0.0; // place on ground plane
@@ -117,7 +117,7 @@ assetListLoader.load(() => {
      * @param {number} base - The base distance in world units.
      * @returns {number[]} The array of distances for LODs 0..4.
      */
-    const lodBase = 1;
+    const lodBase = 0.7;
     const lodDistances = [lodBase, lodBase * 2, lodBase * 3, lodBase * 4, lodBase * 5];
 
     for (let z = 0; z < GRID_SIZE; z++) {
