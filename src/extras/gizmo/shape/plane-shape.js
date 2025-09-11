@@ -34,7 +34,7 @@ class PlaneShape extends Shape {
      * @type {number}
      * @private
      */
-    _size = 0.14;
+    _size = 0.16;
 
     /**
      * The gap between the plane and the center.
@@ -42,7 +42,7 @@ class PlaneShape extends Shape {
      * @type {number}
      * @private
      */
-    _gap = 0.04;
+    _gap = 0;
 
     /**
      * The internal flipped state of the plane.
