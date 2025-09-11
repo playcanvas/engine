@@ -42,7 +42,7 @@ class PlaneShape extends Shape {
      * @type {number}
      * @private
      */
-    _gap = 0.1;
+    _gap = 0;
 
     /**
      * The internal flipped state of the plane.
