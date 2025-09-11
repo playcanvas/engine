@@ -669,7 +669,7 @@ class RotateGizmo extends TransformGizmo {
             angle = Math.sign(facingDot) * Math.atan2(-dir.y, dir.x) * math.RAD_TO_DEG;
         } else {
             this._camera.worldToScreen(gizmoPos, v2);
-            if (facingDot > 1 - RING_FACING_EPSILON) {
+            if (axis === 'f' || facingDot > 1 - RING_FACING_EPSILON) {
                 // determine which size of the ring the mouse is on to flip rotation direction
                 v1.set(
                     this._screenStartPos.y >= v2.y ? 1 : -1,
