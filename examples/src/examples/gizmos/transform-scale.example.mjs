@@ -91,7 +91,7 @@ Object.assign(cc, {
     rotateDamping: 0.97,
     moveDamping: 0.97,
     zoomDamping: 0.97,
-    pitchRange: new pc.Vec2(-89.99, 89.99),
+    pitchRange: new pc.Vec2(-89.999, 89.999),
     zoomRange: new pc.Vec2(2, 10),
     enableFly: false
 });
