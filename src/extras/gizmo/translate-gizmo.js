@@ -65,7 +65,8 @@ class TranslateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             defaultColor: this._theme.shapeBase.xyz,
             hoverColor: this._theme.shapeHover.xyz,
-            disabledColor: this._theme.disabled
+            disabledColor: this._theme.disabled,
+            depth: false
         }),
         yz: new PlaneShape(this._device, {
             axis: 'x',
