@@ -222,12 +222,12 @@ class RotateGizmo extends TransformGizmo {
             line.entity.enabled = false;
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMSTART, (_point, x, y) => {
             // store start screen point
             this._selectionScreenPoint.set(x, y);
 
             // store start angle
-            this._selectionStartAngle = this._calculateArcAngle(point, x, y);
+            this._selectionStartAngle = this._calculateArcAngle(x, y);
 
             // store initial node rotations
             this._storeNodeRotations();
@@ -258,7 +258,7 @@ class RotateGizmo extends TransformGizmo {
                 this._setNodeRotations(axis, angleAxis, angleDelta);
             } else {
                 // calculate angle axis and delta and update node rotations
-                let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
+                let angleDelta = this._calculateArcAngle(x, y) - this._selectionStartAngle;
                 if (this.snap) {
                     angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
                 }
@@ -633,13 +633,12 @@ class RotateGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {Vec3} point - The point.
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
      * @returns {number} The angle.
      * @protected
      */
-    _calculateArcAngle(point, x, y) {
+    _calculateArcAngle(x, y) {
         const gizmoPos = this.root.getLocalPosition();
 
         const axis = this._selectedAxis;
@@ -652,35 +651,12 @@ class RotateGizmo extends TransformGizmo {
         const facingDir = v2.copy(this.facingDir);
         const facingDot = plane.normal.dot(facingDir);
         if (this.orbitRotation || (1 - Math.abs(facingDot)) < ROTATE_FACING_EPSILON) {
-            // plane facing camera so based on mouse position around gizmo
-            v1.sub2(point, gizmoPos);
+            // convert gizmo position to screen space
+            const screenPos = this._camera.worldToScreen(gizmoPos, v1);
 
-            switch (axis) {
-                case 'x': {
-                    // convert to local space
-                    q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
-                    angle = Math.atan2(v1.z, v1.y) * math.RAD_TO_DEG;
-                    break;
-                }
-                case 'y': {
-                    // convert to local space
-                    q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
-                    angle = Math.atan2(v1.x, v1.z) * math.RAD_TO_DEG;
-                    break;
-                }
-                case 'z': {
-                    // convert to local space
-                    q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
-                    angle = Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
-                    break;
-                }
-                case 'f': {
-                    // convert to camera space
-                    q1.copy(this._camera.entity.getRotation()).invert().transformVector(v1, v1);
-                    angle = Math.sign(facingDot) * Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
-                    break;
-                }
-            }
+            // calculate angle based on mouse position around gizmo
+            const dir = screen.set(x - screenPos.x, y - screenPos.y).normalize();
+            angle = -Math.sign(facingDot) * Math.atan2(dir.y, dir.x) * math.RAD_TO_DEG;
         } else {
             // convert rotation axis to screen space
             v1.copy(gizmoPos);
