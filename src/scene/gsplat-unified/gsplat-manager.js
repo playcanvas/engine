@@ -454,6 +454,8 @@ class GSplatManager {
             }
             tempOctreesTicked.clear();
         }
+
+        return this.renderer.maxNumSplats;
     }
 
     /**

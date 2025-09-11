@@ -48,18 +48,29 @@ app.on('destroy', () => {
 });
 
 // configuration for grid instances
-const GRID_SIZE = 7; // N x N grid
+const GRID_SIZE = 10; // N x N grid
 const GRID_SPACING = 1.0; // spacing between instances in world units
 const INSTANCE_SCALE = 2;
 const INSTANCE_Y = 0.0; // place on ground plane
 
 const assets = {
-    flowers: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/flowers/lod-meta.json` })
+    flowers: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/flowers/lod-meta.json` }),
+    envatlas: new pc.Asset(
+        'env-atlas',
+        'texture',
+        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+    )
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
+
+    // setup skydome
+    app.scene.envAtlas = assets.envatlas.resource;
+    app.scene.skyboxMip = 1;
+    app.scene.exposure = 1.5;
 
     // enable rotation-based LOD updates and behind-camera penalty
     app.scene.gsplat.lodUpdateAngle = 90;
@@ -68,7 +79,8 @@ assetListLoader.load(() => {
     // initialize UI settings and wire to scene flags
     data.set('debugAabbs', !!data.get('debugAabbs'));
     data.set('debugLod', !!data.get('debugLod'));
-    data.set('lodPreset', data.get('lodPreset') || 'normal');
+    const defaultPreset = pc.platform.mobile ? 'low' : 'normal';
+    data.set('lodPreset', data.get('lodPreset') || defaultPreset);
     app.scene.gsplat.debugAabbs = !!data.get('debugAabbs');
     app.scene.gsplat.colorizeLod = !!data.get('debugLod');
 
@@ -89,10 +101,10 @@ assetListLoader.load(() => {
             app.scene.gsplat.lodRangeMax = 2;
         } else if (preset === 'low') {
             app.scene.gsplat.lodRangeMin = 2;
-            app.scene.gsplat.lodRangeMax = 2;
+            app.scene.gsplat.lodRangeMax = 3;
         } else { // normal
             app.scene.gsplat.lodRangeMin = 0;
-            app.scene.gsplat.lodRangeMax = 2;
+            app.scene.gsplat.lodRangeMax = 3;
         }
     };
 
@@ -135,9 +147,7 @@ assetListLoader.load(() => {
         toneMapping: pc.TONEMAP_ACES
     });
 
-    const span = Math.max(1, (GRID_SIZE - 1) * GRID_SPACING);
-    camera.setLocalPosition(-span * 0.6, Math.max(4, span * 0.8), span * 1.2);
-    camera.lookAt(0, 0, 0);
+    camera.setLocalPosition(4, 0.6, 4);
     app.root.addChild(camera);
 
     camera.addComponent('script');
@@ -147,7 +157,13 @@ assetListLoader.load(() => {
         moveSpeed: 0.003,
         moveFastSpeed: 0.01,
         enableOrbit: false,
-        enablePan: false
+        enablePan: false,
+        focusPoint: new pc.Vec3(2, 0.6, 0)
+    });
+
+    // update HUD stats every frame
+    app.on('update', () => {
+        data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
     });
 });
 

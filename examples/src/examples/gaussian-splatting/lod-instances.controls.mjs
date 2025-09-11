@@ -3,7 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, Label } = ReactPCUI;
     return fragment(
         jsx(
             Panel,
@@ -20,7 +20,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'LOD' },
+                { text: 'Colorize LOD' },
                 jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
@@ -37,11 +37,24 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     link: { observer, path: 'lodPreset' },
                     value: observer.get('lodPreset') || 'normal',
                     options: [
-                        { v: 'normal', t: 'Normal (0–2)' },
+                        { v: 'normal', t: 'Normal (0–3)' },
                         { v: 'ultra', t: 'Ultra (0–0)' },
                         { v: 'high', t: 'High (1–2)' },
-                        { v: 'low', t: 'Low (2–2)' }
+                        { v: 'low', t: 'Low (2–3)' }
                     ]
+                })
+            )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Stats' },
+            jsx(
+                LabelGroup,
+                { text: 'GSplat Count' },
+                jsx(Label, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.stats.gsplats' },
+                    value: observer.get('data.stats.gsplats')
                 })
             )
         )

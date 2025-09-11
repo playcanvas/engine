@@ -45,6 +45,13 @@ class GpuProfiler {
      */
     _frameTime = 0;
 
+    /**
+     * The maximum number of slots that can be allocated during the frame.
+     *
+     * @type {number}
+     */
+    maxCount = 9999;
+
     loseContext() {
         this.pastFrameAllocations.clear();
     }
@@ -109,10 +116,15 @@ class GpuProfiler {
      * frame. This allows multiple timers to be used during the frame, each with a unique name.
      *
      * @param {string} name - The name of the slot.
-     * @returns {number} The assigned slot index.
+     * @returns {number} The assigned slot index, or -1 if the slot count exceeds the maximum number
+     * of slots.
+     *
      * @ignore
      */
     getSlot(name) {
+        if (this.frameAllocations.length >= this.maxCount) {
+            return -1;
+        }
         const slot = this.frameAllocations.length;
         this.frameAllocations.push(name);
         return slot;
