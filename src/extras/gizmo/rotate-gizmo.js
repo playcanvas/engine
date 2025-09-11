@@ -123,14 +123,6 @@ class RotateGizmo extends TransformGizmo {
     _selectionStartAngle = 0;
 
     /**
-     * Internal selection screen point in 2D space.
-     *
-     * @type {Vec2}
-     * @private
-     */
-    _selectionScreenPoint = new Vec2();
-
-    /**
      * Internal mapping from each attached node to their starting rotation in local space.
      *
      * @type {Map<GraphNode, Quat>}
@@ -153,6 +145,22 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _nodeOffsets = new Map();
+
+    /**
+     * Internal vector for storing the mouse position in screen space.
+     *
+     * @type {Vec2}
+     * @private
+     */
+    _screenPos = new Vec2();
+
+    /**
+     * Internal vector for storing the mouse start position in screen space.
+     *
+     * @type {Vec2}
+     * @private
+     */
+    _screenStartPos = new Vec2();
 
     /**
      * Internal vector for the start point of the guide line angle.
@@ -213,6 +221,8 @@ class RotateGizmo extends TransformGizmo {
 
         this._createTransform();
 
+        this._guideMouseLine = new MeshLine(this._app, this._layer);
+
         this._guideAngleLines = [
             new MeshLine(this._app, this._layer),
             new MeshLine(this._app, this._layer)
@@ -224,7 +234,8 @@ class RotateGizmo extends TransformGizmo {
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, (_point, x, y) => {
             // store start screen point
-            this._selectionScreenPoint.set(x, y);
+            this._screenPos.set(x, y);
+            this._screenStartPos.set(x, y);
 
             // store start angle
             this._selectionStartAngle = this._calculateArcAngle(x, y);
@@ -248,13 +259,15 @@ class RotateGizmo extends TransformGizmo {
                 return;
             }
 
+            // update screen point
+            this._screenPos.set(x, y);
+
             if (axis === 'xyz') {
                 // calculate angle axis and delta and update node rotations
                 const facingDir = v1.copy(this.facingDir);
                 const delta = v2.copy(point).sub(this._selectionStartPoint);
                 const angleAxis = v1.cross(facingDir, delta).normalize();
-
-                const angleDelta = screen.set(x, y).distance(this._selectionScreenPoint);
+                const angleDelta = this._screenPos.distance(this._screenStartPos);
                 this._setNodeRotations(axis, angleAxis, angleDelta);
             } else {
                 // calculate angle axis and delta and update node rotations
@@ -269,7 +282,6 @@ class RotateGizmo extends TransformGizmo {
                 this._updateGuidePoints(angleDelta);
                 this._angleGuide(true);
             }
-
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
@@ -683,6 +695,9 @@ class RotateGizmo extends TransformGizmo {
      * @override
      */
     _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
+        if (this._dragging) {
+            return;
+        }
         for (const axis of AXES) {
             if (activeAxis === 'xyz') {
                 continue;
