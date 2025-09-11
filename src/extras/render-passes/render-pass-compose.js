@@ -82,8 +82,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
         super(graphicsDevice);
 
         // register compose shader chunks
-        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).add(composeChunksGLSL);
-        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).add(composeChunksWGSL);
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).add(composeChunksGLSL, false);
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).add(composeChunksWGSL, false);
 
         const { scope } = graphicsDevice;
         this.sceneTextureId = scope.resolve('sceneTexture');

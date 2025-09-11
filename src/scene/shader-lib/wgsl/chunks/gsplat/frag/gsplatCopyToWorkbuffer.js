@@ -19,9 +19,7 @@ uniform uViewportWidth: i32;  // Width of the destination viewport in pixels
     var uIntervalsTexture: texture_2d<u32>;
 #endif
 
-#ifdef GSPLAT_COLORIZE
-    uniform uLodColor: vec3f;
-#endif
+uniform uColorMultiply: vec3f;
 
 // number of splats
 uniform uActiveSplats: i32;
@@ -106,9 +104,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             color = vec4f(color.xyz + evalSH(&sh, dir) * scale, color.w);
         #endif
 
-        #ifdef GSPLAT_COLORIZE
-            color = vec4f(color.xyz * uniform.uLodColor, color.w);
-        #endif
+        color = vec4f(color.xyz * uniform.uColorMultiply, color.w);
 
         // write out results
         output.color = color;

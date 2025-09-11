@@ -33,11 +33,14 @@ class ShaderChunkMap extends Map {
      * same name already exists, the element will be updated.
      *
      * @param {Object} object - Object containing shader chunks.
+     * @param {boolean} override - Whether to override existing shader chunks. Defaults to true.
      * @returns {this} The ShaderChunkMap instance.
      */
-    add(object) {
+    add(object, override = true) {
         for (const [key, value] of Object.entries(object)) {
-            this.set(key, value);
+            if (override || !this.has(key)) {
+                this.set(key, value);
+            }
         }
         return this;
     }

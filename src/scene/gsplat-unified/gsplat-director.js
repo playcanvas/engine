@@ -191,7 +191,7 @@ class GSplatDirector {
             // update gsplat managers
             // const cameraData = this.camerasMap.get(camera);
             cameraData?.layersMap.forEach((layerData) => {
-                layerData.gsplatManager.update(this.scene);
+                layerData.gsplatManager.update();
             });
         }
 
