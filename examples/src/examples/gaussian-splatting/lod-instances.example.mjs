@@ -46,7 +46,9 @@ const applyResolution = () => {
     device.maxPixelRatio = data.get('highRes') ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
 };
 applyResolution();
-const applyAndResize = () => { applyResolution(); app.resizeCanvas(); };
+const applyAndResize = () => {
+    applyResolution(); app.resizeCanvas();
+};
 data.on('highRes:set', applyAndResize);
 
 // Ensure DPR and canvas are updated when window changes size
