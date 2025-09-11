@@ -666,15 +666,6 @@ class RotateGizmo extends TransformGizmo {
 
         switch (this.rotationMode) {
             case 'absolute': {
-                // convert gizmo position to screen space§
-                const screenPos = this._camera.worldToScreen(gizmoPos, v1);
-
-                // calculate angle based on mouse position around gizmo
-                const dir = screen.set(x - screenPos.x, y - screenPos.y).normalize();
-                angle = Math.sign(facingDot) * Math.atan2(-dir.y, dir.x) * math.RAD_TO_DEG;
-                break;
-            }
-            case 'orbit': {
                 this._camera.worldToScreen(gizmoPos, v2);
                 if (axis === 'f' || facingDot > 1 - RING_FACING_EPSILON) {
                     // determine which size of the ring the mouse is on to flip rotation direction
@@ -695,6 +686,15 @@ class RotateGizmo extends TransformGizmo {
                 // angle is dot product with mouse position
                 v2.set(x, y, 0);
                 angle = v1.dot(v2);
+                break;
+            }
+            case 'orbit': {
+                // convert gizmo position to screen space§
+                const screenPos = this._camera.worldToScreen(gizmoPos, v1);
+
+                // calculate angle based on mouse position around gizmo
+                const dir = screen.set(x - screenPos.x, y - screenPos.y).normalize();
+                angle = Math.sign(facingDot) * Math.atan2(-dir.y, dir.x) * math.RAD_TO_DEG;
                 break;
             }
         }
