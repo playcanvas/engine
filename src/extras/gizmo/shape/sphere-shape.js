@@ -22,7 +22,7 @@ class SphereShape extends Shape {
      * @type {number}
      * @private
      */
-    _radius = 0.06;
+    _radius = 0.04;
 
     /**
      * Create a new SphereShape.

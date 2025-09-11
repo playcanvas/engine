@@ -22,7 +22,7 @@ class BoxShape extends Shape {
      * @type {number}
      * @private
      */
-    _size = 0.12;
+    _size = 0.08;
 
     /**
      * Create a new BoxShape.
