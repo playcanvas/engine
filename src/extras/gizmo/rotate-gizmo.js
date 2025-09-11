@@ -695,9 +695,6 @@ class RotateGizmo extends TransformGizmo {
      * @override
      */
     _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
-        if (this._dragging) {
-            return;
-        }
         for (const axis of AXES) {
             if (activeAxis === 'xyz') {
                 continue;
