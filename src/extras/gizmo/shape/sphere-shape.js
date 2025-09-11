@@ -9,7 +9,6 @@ import { Shape } from './shape.js';
 /**
  * @typedef {object} SphereShapeArgs
  * @property {number} [radius] - The radius of the sphere.
- * @property {number} [tolerance] - The intersection tolerance of the sphere.
  */
 
 /**
@@ -34,7 +33,6 @@ class SphereShape extends Shape {
         super(device, 'sphereCenter', args);
 
         this._radius = args.radius ?? this._radius;
-        this._tolerance = args.tolerance ?? this._tolerance;
 
         // intersect
         this.triData = [

@@ -9,7 +9,6 @@ import { Shape } from './shape.js';
 /**
  * @typedef {object} BoxShapeArgs
  * @property {number} [size] - The size of the box.
- * @property {number} [tolerance] - The intersection tolerance of the box.
  */
 
 /**
@@ -34,7 +33,6 @@ class BoxShape extends Shape {
         super(device, 'boxCenter', args);
 
         this._size = args.size ?? this._size;
-        this._tolerance = args.tolerance ?? this._tolerance;
 
         // intersect
         this.triData = [
