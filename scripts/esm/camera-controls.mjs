@@ -380,6 +380,15 @@ class CameraControls extends Script {
         // mode
         this._setMode('orbit');
 
+        // state
+        this.on('state', () => {
+            // discard inputs
+            this._desktopInput.read();
+            this._orbitMobileInput.read();
+            this._flyMobileInput.read();
+            this._gamepadInput.read();
+        });
+
         // destroy
         this.on('destroy', this._destroy, this);
     }
@@ -796,8 +805,8 @@ class CameraControls extends Script {
         v.add(stickRotate.mulScalar(fly * rotateJoystickMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
-        // check for frame discard (entity disabled, xr active or skipUpdate)
-        if (this.app.xr?.active || !this.entity.enabled || this.skipUpdate) {
+        // check for frame discard (xr active or skipUpdate)
+        if (this.app.xr?.active || this.skipUpdate) {
             frame.read();
             return;
         }
