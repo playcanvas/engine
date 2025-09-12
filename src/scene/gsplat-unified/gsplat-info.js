@@ -85,7 +85,7 @@ class GSplatInfo {
         this.resource = resource;
         this.node = placement.node;
         this.lodIndex = placement.lodIndex;
-        this.numSplats = resource.centers.length / 3;
+        this.numSplats = resource.numSplats;
         this.aabb.copy(placement.aabb);
 
         this.intervalTexture = new GSplatIntervalTexture(device);
@@ -119,46 +119,55 @@ class GSplatInfo {
         // If placement has intervals defined
         if (intervals.size > 0) {
 
-            // collect references to inclusive Vec2 intervals into a reusable array
+            // fast path: if the intervals cover the full range, intervals are not needed
+            // also collect references to inclusive Vec2 intervals into a reusable array for sorting
+            let totalCount = 0;
             let used = 0;
             for (const interval of intervals.values()) {
+                totalCount += (interval.y - interval.x + 1);
                 vecs[used++] = interval;
             }
-            vecs.length = used;
 
-            // sort by start
-            vecs.sort((a, b) => (a.x - b.x));
+            // not full range
+            if (totalCount !== this.numSplats) {
 
-            // pre-size to the upper bound
-            this.intervals.length = used * 2;
+                // finalize temp array length for sorting/merging
+                vecs.length = used;
 
-            // write merged intervals directly to this.intervals
-            let k = 0;
-            let currentStart = vecs[0].x;
-            let currentEnd = vecs[0].y;
-            for (let i = 1; i < used; i++) {
-                const p = vecs[i];
-                if (p.x === currentEnd + 1) {  // adjacent, extend current interval
-                    currentEnd = p.y;
-                } else { // write half-open pair
-                    this.intervals[k++] = currentStart;
-                    this.intervals[k++] = currentEnd + 1;
-                    currentStart = p.x;
-                    currentEnd = p.y;
+                // sort by start
+                vecs.sort((a, b) => (a.x - b.x));
+
+                // pre-size to the upper bound
+                this.intervals.length = used * 2;
+
+                // write merged intervals directly to this.intervals
+                let k = 0;
+                let currentStart = vecs[0].x;
+                let currentEnd = vecs[0].y;
+                for (let i = 1; i < used; i++) {
+                    const p = vecs[i];
+                    if (p.x === currentEnd + 1) {  // adjacent, extend current interval
+                        currentEnd = p.y;
+                    } else { // write half-open pair
+                        this.intervals[k++] = currentStart;
+                        this.intervals[k++] = currentEnd + 1;
+                        currentStart = p.x;
+                        currentEnd = p.y;
+                    }
                 }
-            }
-            // write final half-open pair
-            this.intervals[k++] = currentStart;
-            this.intervals[k++] = currentEnd + 1;
+                // write final half-open pair
+                this.intervals[k++] = currentStart;
+                this.intervals[k++] = currentEnd + 1;
 
-            // trim to actual merged length
-            this.intervals.length = k;
+                // trim to actual merged length
+                this.intervals.length = k;
+
+                // update GPU texture and active splats count
+                this.activeSplats = this.intervalTexture.update(this.intervals);
+            }
 
             // clear temp array
             vecs.length = 0;
-
-            // update GPU texture and active splats count
-            this.activeSplats = this.intervalTexture.update(this.intervals);
         }
     }
 
