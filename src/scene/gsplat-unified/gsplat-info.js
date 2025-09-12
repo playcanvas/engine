@@ -66,9 +66,9 @@ class GSplatInfo {
     /**
      * Manager for the intervals texture generation
      *
-     * @type {GSplatIntervalTexture}
+     * @type {GSplatIntervalTexture|null}
      */
-    intervalTexture;
+    intervalTexture = null;
 
     /**
      * Create a new GSplatInfo.
@@ -88,13 +88,12 @@ class GSplatInfo {
         this.numSplats = resource.numSplats;
         this.aabb.copy(placement.aabb);
 
-        this.intervalTexture = new GSplatIntervalTexture(device);
         this.updateIntervals(placement.intervals);
     }
 
     destroy() {
         this.intervals.length = 0;
-        this.intervalTexture.destroy();
+        this.intervalTexture?.destroy();
     }
 
     setLines(start, count, textureSize, activeSplats) {
@@ -163,7 +162,8 @@ class GSplatInfo {
                 this.intervals.length = k;
 
                 // update GPU texture and active splats count
-                this.activeSplats = this.intervalTexture.update(this.intervals);
+                this.intervalTexture = new GSplatIntervalTexture(this.device);
+                this.activeSplats = this.intervalTexture.update(this.intervals, totalCount);
             }
 
             // clear temp array
