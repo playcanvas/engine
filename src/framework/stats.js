@@ -32,6 +32,7 @@ class ApplicationStats {
             instancingTime: 0, // deprecated
 
             triangles: 0,
+            gsplats: 0,
             otherPrimitives: 0,
             shaders: 0,
             materials: 0,

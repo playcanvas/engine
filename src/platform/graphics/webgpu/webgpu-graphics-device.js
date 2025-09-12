@@ -769,13 +769,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (this.gpuProfiler._enabled) {
             if (this.gpuProfiler.timestampQueriesSet) {
                 const slot = this.gpuProfiler.getSlot(name);
-
-                passDesc = passDesc ?? {};
-                passDesc.timestampWrites = {
-                    querySet: this.gpuProfiler.timestampQueriesSet.querySet,
-                    beginningOfPassWriteIndex: slot * 2,
-                    endOfPassWriteIndex: slot * 2 + 1
-                };
+                if (slot === -1) {
+                    Debug.warnOnce('Too many GPU profiler slots allocated during the frame, ignoring timestamp writes');
+                } else {
+                    passDesc = passDesc ?? {};
+                    passDesc.timestampWrites = {
+                        querySet: this.gpuProfiler.timestampQueriesSet.querySet,
+                        beginningOfPassWriteIndex: slot * 2,
+                        endOfPassWriteIndex: slot * 2 + 1
+                    };
+                }
             }
         }
         return passDesc;

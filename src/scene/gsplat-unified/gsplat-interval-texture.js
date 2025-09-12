@@ -112,55 +112,31 @@ class GSplatIntervalTexture {
      * Updates the intervals texture based on provided intervals array
      *
      * @param {number[]} intervals - Array of intervals (start, end pairs)
+     * @param {number} totalIntervalSplats - Total number of splats referenced by the intervals
      * @returns {number} The number of active splats
      */
-    update(intervals) {
-        if (!intervals || intervals.length === 0) {
-            return 0;
-        }
-
-        // Count total number of splats referenced by intervals
-        let totalSplats = 0;
-        for (let i = 0; i < intervals.length; i += 2) {
-            const start = intervals[i];
-            const end = intervals[i + 1];
-            totalSplats += (end - start);
-        }
+    update(intervals, totalIntervalSplats) {
 
         // Calculate texture dimensions for output intervals texture
         const maxTextureSize = this.device.maxTextureSize;
-        let textureWidth = Math.ceil(Math.sqrt(totalSplats));
+        let textureWidth = Math.ceil(Math.sqrt(totalIntervalSplats));
         textureWidth = Math.min(textureWidth, maxTextureSize);
-        const textureHeight = Math.ceil(totalSplats / textureWidth);
+        const textureHeight = Math.ceil(totalIntervalSplats / textureWidth);
 
         // Create main intervals texture
-        if (!this.texture) {
-            this.texture = this.createTexture('intervalsTexture', PIXELFORMAT_R32U, textureWidth, textureHeight);
-        }
+        this.texture = this.createTexture('intervalsTexture', PIXELFORMAT_R32U, textureWidth, textureHeight);
 
-        if (!this.rt) {
-            this.rt = new RenderTarget({
-                colorBuffer: this.texture,
-                depth: false
-            });
-        }
-
-        // resize texture / rt
-        if (this.rt.width !== textureWidth || this.rt.height !== textureHeight) {
-            this.rt.resize(textureWidth, textureHeight);
-        }
+        this.rt = new RenderTarget({
+            colorBuffer: this.texture,
+            depth: false
+        });
 
         // Prepare intervals data with CPU prefix sum
         const numIntervals = intervals.length / 2;
         const dataTextureSize = Math.ceil(Math.sqrt(numIntervals));
 
-        // Create/resize intervals data texture
-        if (!this.intervalsDataTexture) {
-            this.intervalsDataTexture = this.createTexture('intervalsData', PIXELFORMAT_RG32U, dataTextureSize, dataTextureSize);
-        }
-        if (this.intervalsDataTexture.width !== dataTextureSize) {
-            this.intervalsDataTexture.resize(dataTextureSize, dataTextureSize);
-        }
+        // Create intervals data texture
+        this.intervalsDataTexture = this.createTexture('intervalsData', PIXELFORMAT_RG32U, dataTextureSize, dataTextureSize);
 
         // Compute intervals data with accumulated sums on CPU
         // TODO: consider doing this using compute shader on WebGPU
@@ -184,7 +160,7 @@ class GSplatIntervalTexture {
         scope.resolve('uIntervalsTexture').setValue(this.intervalsDataTexture);
         scope.resolve('uNumIntervals').setValue(numIntervals);
         scope.resolve('uTextureWidth').setValue(textureWidth);
-        scope.resolve('uActiveSplats').setValue(totalSplats);
+        scope.resolve('uActiveSplats').setValue(totalIntervalSplats);
 
         this.device.setCullMode(CULLFACE_NONE);
         this.device.setBlendState(BlendState.NOBLEND);
@@ -192,7 +168,7 @@ class GSplatIntervalTexture {
 
         drawQuadWithShader(this.device, this.rt, this.getShader());
 
-        return totalSplats;
+        return totalIntervalSplats;
     }
 }
 

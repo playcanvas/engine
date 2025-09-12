@@ -64,9 +64,9 @@ assetListLoader.load(() => {
     app.start();
 
     // initialize UI settings
-    data.set('debugAabbs', false);
-    data.set('debugLod', false);
-    data.set('lod', { distance: 5 });
+    data.set('debugAabbs', !!data.get('debugAabbs'));
+    data.set('debugLod', !!data.get('debugLod'));
+    if (!data.get('lod')) data.set('lod', { distance: 5 });
     app.scene.gsplat.debugAabbs = !!data.get('debugAabbs');
     app.scene.gsplat.colorizeLod = !!data.get('debugLod');
 
@@ -143,11 +143,12 @@ assetListLoader.load(() => {
     });
 
     // bind LOD distance slider to component lodDistances for church and logo
+    /** @returns {void} */
     const updateLodDistances = () => {
         const base = Number(data.get('lod.distance')) || 5;
         const distances = [base, base * 2, base * 3, base * 4, base * 5];
-        logo.gsplat.lodDistances = distances;
-        church.gsplat.lodDistances = distances;
+        /** @type {any} */ (logo.gsplat).lodDistances = distances;
+        /** @type {any} */ (church.gsplat).lodDistances = distances;
     };
     updateLodDistances();
     data.on('lod.distance:set', updateLodDistances);
