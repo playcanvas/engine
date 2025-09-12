@@ -9,7 +9,11 @@ import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
  * @import { GSplatResourceBase } from "../gsplat/gsplat-resource-base.js"
  * @import { GSplatPlacement } from "./gsplat-placement.js"
  * @import { GraphNode } from '../graph-node.js';
+ * @import { Vec2 } from '../../core/math/vec2.js';
  */
+
+/** @type {Vec2[]} */
+const vecs = [];
 
 /**
  * @ignore
@@ -101,6 +105,11 @@ class GSplatInfo {
         this.viewport.set(0, start, textureSize, count);
     }
 
+    /**
+     * Updates the flattened intervals array and GPU texture from placement intervals.
+     *
+     * @param {Map<number, Vec2>} intervals - Map of node index to inclusive [x, y] intervals.
+     */
     updateIntervals(intervals) {
 
         const resource = this.resource;
@@ -110,11 +119,45 @@ class GSplatInfo {
         // If placement has intervals defined
         if (intervals.size > 0) {
 
-            // copy the intervals to the state
+            // collect references to inclusive Vec2 intervals into a reusable array
+            let used = 0;
             for (const interval of intervals.values()) {
-                this.intervals.push(interval.x, interval.y + 1);
+                vecs[used++] = interval;
             }
+            vecs.length = used;
 
+            // sort by start
+            vecs.sort((a, b) => (a.x - b.x));
+
+            // pre-size to the upper bound
+            this.intervals.length = used * 2;
+
+            // write merged intervals directly to this.intervals
+            let k = 0;
+            let currentStart = vecs[0].x;
+            let currentEnd = vecs[0].y;
+            for (let i = 1; i < used; i++) {
+                const p = vecs[i];
+                if (p.x === currentEnd + 1) {  // adjacent, extend current interval
+                    currentEnd = p.y;
+                } else { // write half-open pair
+                    this.intervals[k++] = currentStart;
+                    this.intervals[k++] = currentEnd + 1;
+                    currentStart = p.x;
+                    currentEnd = p.y;
+                }
+            }
+            // write final half-open pair
+            this.intervals[k++] = currentStart;
+            this.intervals[k++] = currentEnd + 1;
+
+            // trim to actual merged length
+            this.intervals.length = k;
+
+            // clear temp array
+            vecs.length = 0;
+
+            // update GPU texture and active splats count
             this.activeSplats = this.intervalTexture.update(this.intervals);
         }
     }
