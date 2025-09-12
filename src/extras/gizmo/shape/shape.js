@@ -33,7 +33,7 @@ tmpG.normals = [];
  * @property {Color} [hoverColor] - The hover color of the shape.
  * @property {Color} [disabledColor] - The disabled color of the shape.
  * @property {number} [cull] - The culling mode of the shape.
- * @property {boolean} [depth] - Whether the shape is rendered with depth testing.
+ * @property {number} [depth] - The depth of the shape. -1 is depth is interpolated.
  */
 
 /**
@@ -129,12 +129,12 @@ class Shape {
     _cull = CULLFACE_BACK;
 
     /**
-     * The internal depth state of the shape.
+     * The internal depth state of the shape. -1 is depth is interpolated.
      *
-     * @type {boolean}
+     * @type {number}
      * @protected
      */
-    _depth = true;
+    _depth = -1;
 
     /**
      * The graphics device.
@@ -269,7 +269,8 @@ class Shape {
      */
     _createRenderComponent(entity, meshes) {
         const color = this._disabled ? this._disabledColor : this._defaultColor;
-        this._material.setDefine('DEPTH_WRITE', this._depth ? '1' : '0');
+        this._material.setDefine('DEPTH_WRITE', this._depth > 0 ? '1' : '0');
+        this._material.setParameter('uDepth', this._depth);
         this._material.setParameter('uColor', color.toArray());
         this._material.cull = this._cull;
         this._material.blendType = BLEND_NORMAL;

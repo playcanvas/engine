@@ -64,8 +64,7 @@ class ScaleGizmo extends TransformGizmo {
             layers: [this._layer.id],
             defaultColor: this._theme.shapeBase.xyz,
             hoverColor: this._theme.shapeHover.xyz,
-            disabledColor: this._theme.disabled,
-            depth: false
+            disabledColor: this._theme.disabled
         }),
         yz: new PlaneShape(this._device, {
             axis: 'x',
@@ -73,7 +72,8 @@ class ScaleGizmo extends TransformGizmo {
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._theme.shapeBase.x,
             hoverColor: this._theme.shapeHover.x,
-            disabledColor: this._theme.disabled
+            disabledColor: this._theme.disabled,
+            depth: 1
         }),
         xz: new PlaneShape(this._device, {
             axis: 'y',
@@ -81,7 +81,8 @@ class ScaleGizmo extends TransformGizmo {
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._theme.shapeBase.y,
             hoverColor: this._theme.shapeHover.y,
-            disabledColor: this._theme.disabled
+            disabledColor: this._theme.disabled,
+            depth: 1
         }),
         xy: new PlaneShape(this._device, {
             axis: 'z',
@@ -89,7 +90,8 @@ class ScaleGizmo extends TransformGizmo {
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._theme.shapeBase.z,
             hoverColor: this._theme.shapeHover.z,
-            disabledColor: this._theme.disabled
+            disabledColor: this._theme.disabled,
+            depth: 1
         }),
         x: new BoxLineShape(this._device, {
             axis: 'x',
