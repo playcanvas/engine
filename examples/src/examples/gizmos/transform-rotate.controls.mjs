@@ -71,11 +71,14 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Orbit Rotation' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+                { text: 'Rotation Mode' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 'absolute', t: 'Absolute' },
+                        { v: 'orbit', t: 'Orbit' }
+                    ],
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.orbitRotation' }
+                    link: { observer, path: 'gizmo.rotationMode' }
                 })
             )
         ),
@@ -197,15 +200,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     channels: 4,
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.theme.guideBase.z' }
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Guide Base Face' },
-                jsx(ColorPicker, {
-                    channels: 4,
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.guideBase.f' }
                 })
             ),
             jsx(

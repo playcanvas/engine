@@ -58,15 +58,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Flip Axes' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.flipAxes' }
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'Flip Planes' },
                 jsx(BooleanInput, {
                     type: 'toggle',
@@ -210,15 +201,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Guide Base Face' },
-                jsx(ColorPicker, {
-                    channels: 4,
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.guideBase.f' }
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'Guide Occlusion' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -247,17 +229,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.axisLineTolerance' },
-                    min: 0,
-                    max: 0.5,
-                    precision: 2
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Center Tolerance' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisCenterTolerance' },
                     min: 0,
                     max: 0.5,
                     precision: 2

@@ -119,7 +119,6 @@ data.set('gizmo', {
     size: gizmo.size,
     snap: gizmo.snap,
     snapIncrement: gizmo.snapIncrement,
-    flipAxes: gizmo.flipAxes,
     flipPlanes: gizmo.flipPlanes,
     dragMode: gizmo.dragMode,
     uniform: gizmo.uniform,
@@ -141,15 +140,13 @@ data.set('gizmo', {
         guideBase: {
             x: gizmo.theme.guideBase.x.toArray(),
             y: gizmo.theme.guideBase.y.toArray(),
-            z: gizmo.theme.guideBase.z.toArray(),
-            f: gizmo.theme.guideBase.f.toArray()
+            z: gizmo.theme.guideBase.z.toArray()
         },
         guideOcclusion: gizmo.theme.guideOcclusion,
         disabled: gizmo.theme.disabled.toArray()
     },
     coordSpace: gizmo.coordSpace,
     axisLineTolerance: gizmo.axisLineTolerance,
-    axisCenterTolerance: gizmo.axisCenterTolerance,
     axisGap: gizmo.axisGap,
     axisLineThickness: gizmo.axisLineThickness,
     axisLineLength: gizmo.axisLineLength,

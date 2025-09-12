@@ -65,7 +65,8 @@ class TranslateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             defaultColor: this._theme.shapeBase.xyz,
             hoverColor: this._theme.shapeHover.xyz,
-            disabledColor: this._theme.disabled
+            disabledColor: this._theme.disabled,
+            depth: false
         }),
         yz: new PlaneShape(this._device, {
             axis: 'x',
@@ -137,13 +138,6 @@ class TranslateGizmo extends TransformGizmo {
      * @override
      */
     snapIncrement = 1;
-
-    /**
-     * Whether to flip the axes to face the camera.
-     *
-     * @type {boolean}
-     */
-    flipAxes = true;
 
     /**
      * Flips the planes to face the camera.
@@ -360,40 +354,21 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the axis center tolerance.
-     *
-     * @type {number}
-     */
-    set axisCenterTolerance(value) {
-        this._shapes.xyz.tolerance = value;
-    }
-
-    /**
-     * Gets the axis center tolerance.
-     *
-     * @type {number}
-     */
-    get axisCenterTolerance() {
-        return this._shapes.xyz.tolerance;
-    }
-
-    /**
      * @type {boolean}
-     * @deprecated Use {@link TranslateGizmo#flipAxes} or {@link TranslateGizmo#flipPlanes} instead.
+     * @deprecated Use {@link TranslateGizmo#flipPlanes} instead.
      * @ignore
      */
     set flipShapes(value) {
-        this.flipAxes = value;
         this.flipPlanes = value;
     }
 
     /**
      * @type {boolean}
-     * @deprecated Use {@link TranslateGizmo#flipAxes} or {@link TranslateGizmo#flipPlanes} instead.
+     * @deprecated Use {@link TranslateGizmo#flipPlanes} instead.
      * @ignore
      */
     get flipShapes() {
-        return this.flipAxes && this.flipPlanes;
+        return this.flipPlanes;
     }
 
     /**
@@ -427,13 +402,10 @@ class TranslateGizmo extends TransformGizmo {
         // axes
         let dot = cameraDir.dot(this.root.right);
         this._shapes.x.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        this._shapes.x.flipped = this.flipAxes && dot < 0;
         dot = cameraDir.dot(this.root.up);
         this._shapes.y.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        this._shapes.y.flipped = this.flipAxes && dot < 0;
         dot = cameraDir.dot(this.root.forward);
         this._shapes.z.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        this._shapes.z.flipped = this.flipAxes && dot > 0;
 
         // planes
         v1.cross(cameraDir, this.root.right);

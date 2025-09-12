@@ -120,7 +120,7 @@ data.set('gizmo', {
     snap: gizmo.snap,
     snapIncrement: gizmo.snapIncrement,
     dragMode: gizmo.dragMode,
-    orbitRotation: gizmo.orbitRotation,
+    rotationMode: gizmo.rotationMode,
     theme: {
         shapeBase: {
             x: gizmo.theme.shapeBase.x.toArray(),
@@ -139,8 +139,7 @@ data.set('gizmo', {
         guideBase: {
             x: gizmo.theme.guideBase.x.toArray(),
             y: gizmo.theme.guideBase.y.toArray(),
-            z: gizmo.theme.guideBase.z.toArray(),
-            f: gizmo.theme.guideBase.f.toArray()
+            z: gizmo.theme.guideBase.z.toArray()
         },
         guideOcclusion: gizmo.theme.guideOcclusion,
         disabled: gizmo.theme.disabled.toArray()

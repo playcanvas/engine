@@ -64,7 +64,8 @@ class ScaleGizmo extends TransformGizmo {
             layers: [this._layer.id],
             defaultColor: this._theme.shapeBase.xyz,
             hoverColor: this._theme.shapeHover.xyz,
-            disabledColor: this._theme.disabled
+            disabledColor: this._theme.disabled,
+            depth: false
         }),
         yz: new PlaneShape(this._device, {
             axis: 'x',
@@ -142,13 +143,6 @@ class ScaleGizmo extends TransformGizmo {
      * @override
      */
     snapIncrement = 1;
-
-    /**
-     * Whether to flip the axes to face the camera.
-     *
-     * @type {boolean}
-     */
-    flipAxes = true;
 
     /**
      * Flips the planes to face the camera.
@@ -380,40 +374,21 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the axis center tolerance.
-     *
-     * @type {number}
-     */
-    set axisCenterTolerance(value) {
-        this._shapes.xyz.tolerance = value;
-    }
-
-    /**
-     * Gets the axis center tolerance.
-     *
-     * @type {number}
-     */
-    get axisCenterTolerance() {
-        return this._shapes.xyz.tolerance;
-    }
-
-    /**
      * @type {boolean}
-     * @deprecated Use {@link ScaleGizmo#flipAxes} or {@link ScaleGizmo#flipPlanes} instead.
+     * @deprecated Use {@link ScaleGizmo#flipPlanes} instead.
      * @ignore
      */
     set flipShapes(value) {
-        this.flipAxes = value;
         this.flipPlanes = value;
     }
 
     /**
      * @type {boolean}
-     * @deprecated Use {@link ScaleGizmo#flipAxes} or {@link ScaleGizmo#flipPlanes} instead.
+     * @deprecated Use {@link ScaleGizmo#flipPlanes} instead.
      * @ignore
      */
     get flipShapes() {
-        return this.flipAxes && this.flipPlanes;
+        return this.flipPlanes;
     }
 
     /**
@@ -447,13 +422,10 @@ class ScaleGizmo extends TransformGizmo {
         // axes
         let dot = cameraDir.dot(this.root.right);
         this._shapes.x.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        this._shapes.x.flipped = this.flipAxes && dot < 0;
         dot = cameraDir.dot(this.root.up);
         this._shapes.y.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        this._shapes.y.flipped = this.flipAxes && dot < 0;
         dot = cameraDir.dot(this.root.forward);
         this._shapes.z.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        this._shapes.z.flipped = this.flipAxes && dot > 0;
 
         // planes
         v1.cross(cameraDir, this.root.right);
@@ -565,18 +537,6 @@ class ScaleGizmo extends TransformGizmo {
         // project point onto axis
         if (!isPlane) {
             this._projectToAxis(point, axis);
-        }
-
-        // mirror axes
-        if (this.flipAxes) {
-            const cameraDir = this.cameraDir;
-            const rot = q.copy(this._rootStartRot);
-            let dot = cameraDir.dot(rot.transformVector(Vec3.RIGHT, v1));
-            point.x *= dot < 0 ? -1 : 1;
-            dot = cameraDir.dot(rot.transformVector(Vec3.UP, v1));
-            point.y *= dot < 0 ? -1 : 1;
-            dot = cameraDir.dot(rot.transformVector(Vec3.FORWARD, v1));
-            point.z *= dot > 0 ? -1 : 1;
         }
 
         // uniform scaling for planes
