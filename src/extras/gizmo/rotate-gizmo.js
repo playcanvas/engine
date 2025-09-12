@@ -430,6 +430,24 @@ class RotateGizmo extends TransformGizmo {
     }
 
     /**
+     * @type {boolean}
+     * @deprecated Use {@link RotationGizmo#rotationMode} instead.
+     * @ignore
+     */
+    set orbitRotation(value) {
+        this.rotationMode = value ? 'orbit' : 'absolute';
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link RotationGizmo#rotationMode} instead.
+     * @ignore
+     */
+    get orbitRotation() {
+        return this.rotationMode === 'orbit';
+    }
+
+    /**
      * @param {string} prop - The property.
      * @param {any} value - The value.
      * @private
