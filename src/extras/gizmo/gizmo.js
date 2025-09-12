@@ -500,6 +500,7 @@ class Gizmo extends EventHandler {
 
         this.root.setLocalPosition(position);
         this.fire(Gizmo.EVENT_POSITIONUPDATE, position);
+        this.fire(Gizmo.EVENT_RENDERUPDATE);
     }
 
     /**
@@ -517,6 +518,7 @@ class Gizmo extends EventHandler {
 
         this.root.setLocalEulerAngles(angles);
         this.fire(Gizmo.EVENT_ROTATIONUPDATE, angles);
+        this.fire(Gizmo.EVENT_RENDERUPDATE);
     }
 
     /**
@@ -539,6 +541,7 @@ class Gizmo extends EventHandler {
 
         this.root.setLocalScale(this._scale, this._scale, this._scale);
         this.fire(Gizmo.EVENT_SCALEUPDATE, this._scale);
+        this.fire(Gizmo.EVENT_RENDERUPDATE);
     }
 
     /**
