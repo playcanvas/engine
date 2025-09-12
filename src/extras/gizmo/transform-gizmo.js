@@ -11,8 +11,7 @@ import {
     COLOR_GREEN,
     COLOR_BLUE,
     COLOR_GRAY,
-    color4from3,
-    colorMix
+    color4from3
 } from './color.js';
 import { Gizmo } from './gizmo.js';
 import { Debug } from '../../core/debug.js';
@@ -102,9 +101,9 @@ class TransformGizmo extends Gizmo {
             f: new Color(0.8, 0.8, 0.8, 1)
         },
         shapeHover: {
-            x: colorMix(COLOR_RED, Color.WHITE, 0.75),
-            y: colorMix(COLOR_GREEN, Color.WHITE, 0.75),
-            z: colorMix(COLOR_BLUE, Color.WHITE, 0.75),
+            x: new Color().lerp(COLOR_RED, Color.WHITE, 0.75),
+            y: new Color().lerp(COLOR_GREEN, Color.WHITE, 0.75),
+            z: new Color().lerp(COLOR_BLUE, Color.WHITE, 0.75),
             xyz: Color.WHITE.clone(),
             f: Color.WHITE.clone()
         },
