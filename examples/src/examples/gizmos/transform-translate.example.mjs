@@ -88,9 +88,9 @@ const cc = /** @type {CameraControls} */ (camera.script.create(CameraControls));
 Object.assign(cc, {
     focusPoint: pc.Vec3.ZERO,
     sceneSize: 5,
-    rotateDamping: 0.97,
-    moveDamping: 0.97,
-    zoomDamping: 0.97,
+    rotateDamping: 0.95,
+    moveDamping: 0.95,
+    zoomDamping: 0.95,
     pitchRange: new pc.Vec2(-89.999, 89.999),
     zoomRange: new pc.Vec2(2, 10),
     enableFly: false

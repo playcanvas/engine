@@ -27,14 +27,15 @@ export const unlitShader = {
         precision highp float;
     
         uniform vec4 uColor;
+        uniform float uDepth;
 
         void main(void) {
             if (uColor.a < 1.0 / 255.0) {
                 discard;
             }
             gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(uColor)), uColor.a);
-            #if DEPTH_WRITE == 0
-                gl_FragDepth = 0.0;
+            #if DEPTH_WRITE == 1
+                gl_FragDepth = uDepth;
             #endif
         }
     `,
@@ -57,6 +58,7 @@ export const unlitShader = {
         #include "gammaPS"
 
         uniform uColor: vec4f;
+        uniform uDepth: f32;
 
         @fragment
         fn fragmentMain(input: FragmentInput) -> FragmentOutput {
@@ -65,8 +67,8 @@ export const unlitShader = {
                 discard;
             }
             output.color = vec4f(gammaCorrectOutput(decodeGamma(uniform.uColor)), uniform.uColor.a);
-            #if DEPTH_WRITE == 0
-                output.fragDepth = 0.0;
+            #if DEPTH_WRITE == 1
+                output.fragDepth = uniform.uDepth;
             #endif
             return output;
         }
