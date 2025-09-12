@@ -33,7 +33,7 @@ tmpG.normals = [];
  * @property {Color} [hoverColor] - The hover color of the shape.
  * @property {Color} [disabledColor] - The disabled color of the shape.
  * @property {number} [cull] - The culling mode of the shape.
- * @property {number} [depth] - The depth of the shape. -1 is depth is interpolated.
+ * @property {number} [depth] - The depth of the shape. -1 = interpolated depth.
  */
 
 /**
@@ -129,7 +129,7 @@ class Shape {
     _cull = CULLFACE_BACK;
 
     /**
-     * The internal depth state of the shape. -1 is depth is interpolated.
+     * The internal depth state of the shape. -1 = interpolated depth.
      *
      * @type {number}
      * @protected
