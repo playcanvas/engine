@@ -482,7 +482,7 @@ class RotateGizmo extends TransformGizmo {
 
         if (state && this.dragMode !== 'show' && axis !== 'xyz') {
             const gizmoPos = this.root.getLocalPosition();
-            const baseColor = this._theme.guideBase[axis];
+            const baseColor = this._theme.shapeHover[axis];
             const startColor = color.copy(baseColor);
             startColor.a *= 0.3;
             this._guideAngleLines[0].draw(gizmoPos, v1.copy(this._guideAngleStart).add(gizmoPos),

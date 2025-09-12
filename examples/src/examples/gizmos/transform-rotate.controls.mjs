@@ -204,15 +204,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Guide Base Face' },
-                jsx(ColorPicker, {
-                    channels: 4,
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.theme.guideBase.f' }
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'Guide Occlusion' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),

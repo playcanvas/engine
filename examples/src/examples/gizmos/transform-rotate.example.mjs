@@ -140,7 +140,6 @@ data.set('gizmo', {
             x: gizmo.theme.guideBase.x.toArray(),
             y: gizmo.theme.guideBase.y.toArray(),
             z: gizmo.theme.guideBase.z.toArray(),
-            f: gizmo.theme.guideBase.f.toArray()
         },
         guideOcclusion: gizmo.theme.guideOcclusion,
         disabled: gizmo.theme.disabled.toArray()
