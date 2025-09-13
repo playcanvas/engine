@@ -40,7 +40,7 @@ class GSplatSogsIterator {
         const lerp = (a, b, t) => a * (1 - t) + b * t;
 
         // extract means for centers
-        const { meta } = data;
+        const { meta, shBands } = data;
         const { means, scales, sh0, shN } = meta;
         const means_l_data = p && data.means_l._levels[0];
         const means_u_data = p && data.means_u._levels[0];
@@ -51,6 +51,8 @@ class GSplatSogsIterator {
         const sh_centroids_data = sh && data.sh_centroids._levels[0];
 
         const norm = 2.0 / Math.sqrt(2.0);
+
+        const coeffs = { 1: 3, 2: 8, 3: 15 }[shBands] ?? 0;
 
         this.read = (i) => {
             if (p) {
@@ -121,18 +123,18 @@ class GSplatSogsIterator {
 
             if (sh) {
                 const n = sh_labels_data[i * 4 + 0] + (sh_labels_data[i * 4 + 1] << 8);
-                const u = (n % 64) * 15;
+                const u = (n % 64) * coeffs;
                 const v = Math.floor(n / 64);
 
                 if (meta.version === 2) {
                     for (let j = 0; j < 3; ++j) {
-                        for (let k = 0; k < 15; ++k) {
+                        for (let k = 0; k < coeffs; ++k) {
                             sh[j * 15 + k] = shN.codebook[sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)]];
                         }
                     }
                 } else {
                     for (let j = 0; j < 3; ++j) {
-                        for (let k = 0; k < 15; ++k) {
+                        for (let k = 0; k < coeffs; ++k) {
                             sh[j * 15 + k] = lerp(shN.mins, shN.maxs, sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)] / 255);
                         }
                     }
