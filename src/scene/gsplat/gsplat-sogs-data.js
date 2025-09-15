@@ -249,8 +249,17 @@ class GSplatSogsData {
         }
     }
 
+    // use bound center for focal point
     calcFocalPoint(result, pred) {
-        result.set(0, 0, 0);
+        const { mins, maxs } = this.meta.means;
+
+        const map = v => Math.sign(v) * (Math.exp(Math.abs(v)) - 1);
+
+        result.set(
+            (map(mins[0]) + map(maxs[0])) * 0.5,
+            (map(mins[1]) + map(maxs[1])) * 0.5,
+            (map(mins[2]) + map(maxs[2])) * 0.5
+        );
     }
 
     get isSogs() {
