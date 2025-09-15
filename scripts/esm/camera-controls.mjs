@@ -353,7 +353,7 @@ class CameraControls extends Script {
      * @title Move Speed
      * @type {number}
      */
-    moveSpeed = 2;
+    moveSpeed = 10;
 
     /**
      * The fast fly move speed relative to the scene size.
@@ -362,7 +362,7 @@ class CameraControls extends Script {
      * @title Move Fast Speed
      * @type {number}
      */
-    moveFastSpeed = 4;
+    moveFastSpeed = 20;
 
     /**
      * The slow fly move speed relative to the scene size.
@@ -371,7 +371,7 @@ class CameraControls extends Script {
      * @title Move Slow Speed
      * @type {number}
      */
-    moveSlowSpeed = 1;
+    moveSlowSpeed = 5;
 
     /**
      * The rotate damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
@@ -744,7 +744,7 @@ class CameraControls extends Script {
 
         // multipliers
         const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
-            this.moveSlowSpeed : this.moveSpeed) * 100 * dt;
+            this.moveSlowSpeed : this.moveSpeed) * dt;
         const zoomMult = this.zoomSpeed * 60 * dt;
         const zoomTouchMult = zoomMult * this.zoomPinchSens;
         const rotateMult = this.rotateSpeed * 60 * dt;
