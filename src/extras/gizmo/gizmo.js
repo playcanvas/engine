@@ -518,7 +518,7 @@ class Gizmo extends EventHandler {
         }
 
         this.root.setRotation(rotation);
-        this.fire(Gizmo.EVENT_ROTATIONUPDATE, rotation);
+        this.fire(Gizmo.EVENT_ROTATIONUPDATE, rotation.getEulerAngles());
         this.fire(Gizmo.EVENT_RENDERUPDATE);
     }
 
