@@ -333,8 +333,7 @@ class GSplatOctreeInstance {
      * @returns {boolean} True if placement was updated and added to manager, false otherwise.
      */
     addFilePlacement(fileIndex) {
-        const fileUrl = this.octree.files[fileIndex];
-        const res = this.octree.getFileResource(fileUrl);
+        const res = this.octree.getFileResource(fileIndex);
         if (res) {
             // get the existing placement and update its resource
             const placement = this.filePlacements[fileIndex];
