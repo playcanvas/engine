@@ -494,7 +494,7 @@ class Gizmo extends EventHandler {
         }
         position.mulScalar(1.0 / (this.nodes.length || 1));
 
-        if (position.distance(this.root.getLocalPosition()) < UPDATE_EPSILON) {
+        if (position.equalsApprox(this.root.getLocalPosition(), UPDATE_EPSILON)) {
             return;
         }
 
@@ -512,7 +512,7 @@ class Gizmo extends EventHandler {
             angles.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
         }
 
-        if (angles.distance(this.root.getLocalEulerAngles()) < UPDATE_EPSILON) {
+        if (angles.equalsApprox(this.root.getLocalEulerAngles(), UPDATE_EPSILON)) {
             return;
         }
 
