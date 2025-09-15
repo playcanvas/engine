@@ -419,15 +419,6 @@ class CameraControls extends Script {
     rotateJoystickSens = 2;
 
     /**
-     * The scene size. The zoom, pan and fly speeds are relative to this size.
-     *
-     * @attribute
-     * @title Scene Size
-     * @type {number}
-     */
-    sceneSize = 100;
-
-    /**
      * The zoom damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
      * damping. The damping is applied to the orbit mode.
      *
@@ -753,7 +744,7 @@ class CameraControls extends Script {
 
         // multipliers
         const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
-            this.moveSlowSpeed : this.moveSpeed) * this.sceneSize * dt;
+            this.moveSlowSpeed : this.moveSpeed) * 100 * dt;
         const zoomMult = this.zoomSpeed * 60 * dt;
         const zoomTouchMult = zoomMult * this.zoomPinchSens;
         const rotateMult = this.rotateSpeed * 60 * dt;
