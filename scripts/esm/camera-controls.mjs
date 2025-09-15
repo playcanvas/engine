@@ -295,24 +295,6 @@ class CameraControls extends Script {
     enablePan = true;
 
     /**
-     * The focus point.
-     *
-     * @attribute
-     * @title Focus Point
-     * @type {Vec3}
-     * @default [0, 0, 0]
-     */
-    set focusPoint(point) {
-        const position = this._camera.entity.getPosition();
-        this._startZoomDist = position.distance(point);
-        this._controller.attach(this._pose.look(position, point), false);
-    }
-
-    get focusPoint() {
-        return this._pose.getFocus(tmpV1);
-    }
-
-    /**
      * The focus damping. A higher value means more damping. A value of 0 means no damping.
      * The damping is applied to the orbit mode.
      *
@@ -330,13 +312,22 @@ class CameraControls extends Script {
     }
 
     /**
-     * The gamepad dead zone.
+     * The focus point.
      *
      * @attribute
-     * @title Gamepad Dead Zone
-     * @type {Vec2}
+     * @title Focus Point
+     * @type {Vec3}
+     * @default [0, 0, 0]
      */
-    gamepadDeadZone = new Vec2(0.3, 0.6);
+    set focusPoint(point) {
+        const position = this._camera.entity.getPosition();
+        this._startZoomDist = position.distance(point);
+        this._controller.attach(this._pose.look(position, point), false);
+    }
+
+    get focusPoint() {
+        return this._pose.getFocus(tmpV1);
+    }
 
     /**
      * The move damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
@@ -547,6 +538,15 @@ class CameraControls extends Script {
     get mobileInputLayout() {
         return this._flyMobileInput.layout;
     }
+
+    /**
+     * The gamepad dead zone.
+     *
+     * @attribute
+     * @title Gamepad Dead Zone
+     * @type {Vec2}
+     */
+    gamepadDeadZone = new Vec2(0.3, 0.6);
 
     constructor({ app, entity, ...args }) {
         super({ app, entity, ...args });
