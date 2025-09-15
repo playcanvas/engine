@@ -8,7 +8,7 @@
 [![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
 [![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-| [用户手册](https://developer.playcanvas.com) | [API 参考](https://api.playcanvas.com/engine) | [例子](https://playcanvas.github.io) | [博客](https://blog.playcanvas.com) | [论坛](https://forum.playcanvas.com) |
+| [用户手册](https://developer.playcanvas.com/user-manual/engine/) | [API 参考](https://api.playcanvas.com/engine/) | [例子](https://playcanvas.github.io) | [博客](https://blog.playcanvas.com) | [论坛](https://forum.playcanvas.com) |
 
 PlayCanvas 是一款使用 HTML5 和 WebGL 技术运行游戏以及其他 3D 内容的开源游戏引擎，PlayCanvas 以其独特的性能实现了在任何手机移动端和桌面浏览器端均可以流畅运行。
 
@@ -109,7 +109,7 @@ npm install
 | 命令            | 描述                         | 输出到     |
 | --------------- | --------------------------- | ---------- |
 | `npm run build` | 构建所有引擎构建目标和类型声明 | `build`    |
-| `npm run docs`  | 构建引擎[API参考文档](https://api.playcanvas.com/modules/Engine.html)   | `docs`     |
+| `npm run docs`  | 构建引擎[API参考文档](https://api.playcanvas.com/engine/)   | `docs`     |
 
 ## PlayCanvas 平台
 

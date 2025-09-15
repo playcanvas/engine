@@ -8,7 +8,7 @@
 [![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
 [![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-| [ユーザーマニュアル](https://developer.playcanvas.com) | [APIリファレンス](https://api.playcanvas.com/engine) | [例](https://playcanvas.github.io) | [ブログ](https://blog.playcanvas.com) | [フォーラム](https://forum.playcanvas.com) |
+| [ユーザーマニュアル](https://developer.playcanvas.com/user-manual/engine/) | [APIリファレンス](https://api.playcanvas.com/engine/) | [例](https://playcanvas.github.io) | [ブログ](https://blog.playcanvas.com) | [フォーラム](https://forum.playcanvas.com) |
 
 PlayCanvasは、オープンソースのゲームエンジンです。
 
@@ -38,7 +38,7 @@ PlayCanvasは、ビデオゲーム、広告、ビジュアライゼーション�
 
 PlayCanvasはフル機能のゲームエンジンです。
 
-* 🧊 **グラフィックス** -  WebGL 1.0 & 2.0で構築された高度な2D + 3Dグラフィックスエンジン。
+* 🧊 **グラフィックス** -  WebGL 1.0 & 2.0で構築された高度な2D + 3Dグラフィックスエンジン
 * 🏃 **アニメーション** - キャラクターやシーンに対する強力なステートベースのアニメーション
 * ⚛️ **物理** - 3Dリジッドボディ物理エンジン [ammo.js](https://github.com/kripken/ammo.js)
 * 🎮 **インプット** - マウス、キーボード、タッチ、ゲームパッド、VRコントローラのAPI
@@ -109,7 +109,7 @@ npm install
 | コマンド         | 説明                                                  | 出力先     |
 | --------------- | ----------------------------------------------------- | ---------- |
 | `npm run build` | すべてのエンジンビルドターゲットと型宣言をビルドする       | `build`    |
-| `npm run docs`  | エンジンの[APIリファレンスドキュメント](https://api.playcanvas.com/modules/Engine.html)をビルドする | `docs`     |
+| `npm run docs`  | エンジンの[APIリファレンスドキュメント](https://api.playcanvas.com/engine/)をビルドする | `docs`     |
 
 ## PlayCanvasエディター
 
