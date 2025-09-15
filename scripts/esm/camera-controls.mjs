@@ -114,6 +114,17 @@ const screenToWorld = (camera, dx, dy, dz, out = new Vec3()) => {
     return out;
 };
 
+/**
+ * @enum {string}
+ */
+// eslint-disable-next-line no-unused-vars
+const MobileInputLayout = {
+    JOYSTICK_JOYSTICK: 'joystick-joystick',
+    JOYSTICK_TOUCH: 'joystick-touch',
+    TOUCH_JOYSTICK: 'touch-joystick',
+    TOUCH_TOUCH: 'touch-touch'
+};
+
 class CameraControls extends Script {
     static scriptName = 'cameraControls';
 
@@ -581,7 +592,7 @@ class CameraControls extends Script {
      *
      * @attribute
      * @title Use Virtual Gamepad
-     * @type {string}
+     * @type {MobileInputLayout}
      * @default 'joystick-touch'
      */
     set mobileInputLayout(layout) {
