@@ -1,4 +1,4 @@
-# PlayCanvas WebGL Game Engine
+# PlayCanvas Engine
 
 [![NPM Version](https://img.shields.io/npm/v/playcanvas)](https://www.npmjs.com/package/playcanvas)
 [![NPM Downloads](https://img.shields.io/npm/dw/playcanvas)](https://npmtrends.com/playcanvas)
