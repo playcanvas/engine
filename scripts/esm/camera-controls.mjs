@@ -534,7 +534,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Use Virtual Gamepad
      * @type {MobileInputLayout}
-     * @default 'joystick-touch'
+     * @default joystick-touch
      */
     set mobileInputLayout(layout) {
         if (!/(?:joystick|touch)-(?:joystick|touch)/.test(layout)) {
