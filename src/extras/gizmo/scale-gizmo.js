@@ -72,7 +72,8 @@ class ScaleGizmo extends TransformGizmo {
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._theme.shapeBase.x,
             hoverColor: this._theme.shapeHover.x,
-            disabledColor: this._theme.disabled
+            disabledColor: this._theme.disabled,
+            depth: 1
         }),
         xz: new PlaneShape(this._device, {
             axis: 'y',
@@ -80,7 +81,8 @@ class ScaleGizmo extends TransformGizmo {
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._theme.shapeBase.y,
             hoverColor: this._theme.shapeHover.y,
-            disabledColor: this._theme.disabled
+            disabledColor: this._theme.disabled,
+            depth: 1
         }),
         xy: new PlaneShape(this._device, {
             axis: 'z',
@@ -88,7 +90,8 @@ class ScaleGizmo extends TransformGizmo {
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._theme.shapeBase.z,
             hoverColor: this._theme.shapeHover.z,
-            disabledColor: this._theme.disabled
+            disabledColor: this._theme.disabled,
+            depth: 1
         }),
         x: new BoxLineShape(this._device, {
             axis: 'x',
@@ -142,13 +145,6 @@ class ScaleGizmo extends TransformGizmo {
      * @override
      */
     snapIncrement = 1;
-
-    /**
-     * Whether to flip the axes to face the camera.
-     *
-     * @type {boolean}
-     */
-    flipAxes = true;
 
     /**
      * Flips the planes to face the camera.
@@ -380,40 +376,21 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the axis center tolerance.
-     *
-     * @type {number}
-     */
-    set axisCenterTolerance(value) {
-        this._shapes.xyz.tolerance = value;
-    }
-
-    /**
-     * Gets the axis center tolerance.
-     *
-     * @type {number}
-     */
-    get axisCenterTolerance() {
-        return this._shapes.xyz.tolerance;
-    }
-
-    /**
      * @type {boolean}
-     * @deprecated Use {@link ScaleGizmo#flipAxes} or {@link ScaleGizmo#flipPlanes} instead.
+     * @deprecated Use {@link ScaleGizmo#flipPlanes} instead.
      * @ignore
      */
     set flipShapes(value) {
-        this.flipAxes = value;
         this.flipPlanes = value;
     }
 
     /**
      * @type {boolean}
-     * @deprecated Use {@link ScaleGizmo#flipAxes} or {@link ScaleGizmo#flipPlanes} instead.
+     * @deprecated Use {@link ScaleGizmo#flipPlanes} instead.
      * @ignore
      */
     get flipShapes() {
-        return this.flipAxes && this.flipPlanes;
+        return this.flipPlanes;
     }
 
     /**
@@ -447,36 +424,21 @@ class ScaleGizmo extends TransformGizmo {
         // axes
         let dot = cameraDir.dot(this.root.right);
         this._shapes.x.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        if (this.flipAxes) {
-            this._shapes.x.flipped = dot < 0;
-        }
         dot = cameraDir.dot(this.root.up);
         this._shapes.y.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        if (this.flipAxes) {
-            this._shapes.y.flipped = dot < 0;
-        }
         dot = cameraDir.dot(this.root.forward);
         this._shapes.z.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        if (this.flipAxes) {
-            this._shapes.z.flipped = dot > 0;
-        }
 
         // planes
         v1.cross(cameraDir, this.root.right);
         this._shapes.yz.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
-        if (this.flipPlanes) {
-            this._shapes.yz.flipped = v2.set(0, +(v1.dot(this.root.forward) < 0), +(v1.dot(this.root.up) < 0));
-        }
+        this._shapes.yz.flipped = this.flipPlanes ? v2.set(0, +(v1.dot(this.root.forward) < 0), +(v1.dot(this.root.up) < 0)) : Vec3.ZERO;
         v1.cross(cameraDir, this.root.forward);
         this._shapes.xy.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
-        if (this.flipPlanes) {
-            this._shapes.xy.flipped = v2.set(+(v1.dot(this.root.up) < 0), +(v1.dot(this.root.right) > 0), 0);
-        }
+        this._shapes.xy.flipped = this.flipPlanes ? v2.set(+(v1.dot(this.root.up) < 0), +(v1.dot(this.root.right) > 0), 0) : Vec3.ZERO;
         v1.cross(cameraDir, this.root.up);
         this._shapes.xz.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
-        if (this.flipPlanes) {
-            this._shapes.xz.flipped = v2.set(+(v1.dot(this.root.forward) > 0), 0, +(v1.dot(this.root.right) > 0));
-        }
+        this._shapes.xz.flipped = this.flipPlanes ? v2.set(+(v1.dot(this.root.forward) > 0), 0, +(v1.dot(this.root.right) > 0)) : Vec3.ZERO;
     }
 
     /**
@@ -577,18 +539,6 @@ class ScaleGizmo extends TransformGizmo {
         // project point onto axis
         if (!isPlane) {
             this._projectToAxis(point, axis);
-        }
-
-        // mirror axes
-        if (this.flipAxes) {
-            const cameraDir = this.cameraDir;
-            const rot = q.copy(this._rootStartRot);
-            let dot = cameraDir.dot(rot.transformVector(Vec3.RIGHT, v1));
-            point.x *= dot < 0 ? -1 : 1;
-            dot = cameraDir.dot(rot.transformVector(Vec3.UP, v1));
-            point.y *= dot < 0 ? -1 : 1;
-            dot = cameraDir.dot(rot.transformVector(Vec3.FORWARD, v1));
-            point.z *= dot > 0 ? -1 : 1;
         }
 
         // uniform scaling for planes

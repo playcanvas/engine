@@ -23,13 +23,11 @@ const point = new Vec3();
 const v1 = new Vec3();
 const v2 = new Vec3();
 const v3 = new Vec3();
-const v4 = new Vec3();
 const q1 = new Quat();
 const q2 = new Quat();
 const color = new Color();
 
 // constants
-const ROTATE_FACING_EPSILON = 0.1;
 const RING_FACING_EPSILON = 1e-4;
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
@@ -123,14 +121,6 @@ class RotateGizmo extends TransformGizmo {
     _selectionStartAngle = 0;
 
     /**
-     * Internal selection screen point in 2D space.
-     *
-     * @type {Vec2}
-     * @private
-     */
-    _selectionScreenPoint = new Vec2();
-
-    /**
      * Internal mapping from each attached node to their starting rotation in local space.
      *
      * @type {Map<GraphNode, Quat>}
@@ -153,6 +143,22 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _nodeOffsets = new Map();
+
+    /**
+     * Internal vector for storing the mouse position in screen space.
+     *
+     * @type {Vec2}
+     * @private
+     */
+    _screenPos = new Vec2();
+
+    /**
+     * Internal vector for storing the mouse start position in screen space.
+     *
+     * @type {Vec2}
+     * @private
+     */
+    _screenStartPos = new Vec2();
 
     /**
      * Internal vector for the start point of the guide line angle.
@@ -184,11 +190,16 @@ class RotateGizmo extends TransformGizmo {
     snapIncrement = 5;
 
     /**
-     * This forces the rotation to always be calculated based on the mouse position around the gizmo.
+     * The rotation mode of the gizmo. This can be either:
      *
-     * @type {boolean}
+     * - 'absolute': The rotation is calculated based on the mouse displacement relative to the
+     * initial click point.
+     * - 'orbit': The rotation is calculated based on the gizmos position around the center of
+     * rotation.
+     *
+     * @type {'absolute' | 'orbit'}
      */
-    orbitRotation = false;
+    rotationMode = 'absolute';
 
     /**
      * Creates a new RotateGizmo object. Use {@link Gizmo.createLayer} to create the layer
@@ -222,12 +233,13 @@ class RotateGizmo extends TransformGizmo {
             line.entity.enabled = false;
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMSTART, (_point, x, y) => {
             // store start screen point
-            this._selectionScreenPoint.set(x, y);
+            this._screenPos.set(x, y);
+            this._screenStartPos.set(x, y);
 
             // store start angle
-            this._selectionStartAngle = this._calculateArcAngle(point, x, y);
+            this._selectionStartAngle = this._calculateArcAngle(x, y);
 
             // store initial node rotations
             this._storeNodeRotations();
@@ -248,17 +260,19 @@ class RotateGizmo extends TransformGizmo {
                 return;
             }
 
+            // update screen point
+            this._screenPos.set(x, y);
+
             if (axis === 'xyz') {
                 // calculate angle axis and delta and update node rotations
                 const facingDir = v1.copy(this.facingDir);
                 const delta = v2.copy(point).sub(this._selectionStartPoint);
                 const angleAxis = v1.cross(facingDir, delta).normalize();
-
-                const angleDelta = screen.set(x, y).distance(this._selectionScreenPoint);
+                const angleDelta = this._screenPos.distance(this._screenStartPos);
                 this._setNodeRotations(axis, angleAxis, angleDelta);
             } else {
                 // calculate angle axis and delta and update node rotations
-                let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
+                let angleDelta = this._calculateArcAngle(x, y) - this._selectionStartAngle;
                 if (this.snap) {
                     angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
                 }
@@ -269,7 +283,6 @@ class RotateGizmo extends TransformGizmo {
                 this._updateGuidePoints(angleDelta);
                 this._angleGuide(true);
             }
-
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
@@ -417,6 +430,24 @@ class RotateGizmo extends TransformGizmo {
     }
 
     /**
+     * @type {boolean}
+     * @deprecated Use {@link RotationGizmo#rotationMode} instead.
+     * @ignore
+     */
+    set orbitRotation(value) {
+        this.rotationMode = value ? 'orbit' : 'absolute';
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link RotationGizmo#rotationMode} instead.
+     * @ignore
+     */
+    get orbitRotation() {
+        return this.rotationMode === 'orbit';
+    }
+
+    /**
      * @param {string} prop - The property.
      * @param {any} value - The value.
      * @private
@@ -469,7 +500,7 @@ class RotateGizmo extends TransformGizmo {
 
         if (state && this.dragMode !== 'show' && axis !== 'xyz') {
             const gizmoPos = this.root.getLocalPosition();
-            const baseColor = this._theme.guideBase[axis];
+            const baseColor = this._theme.shapeHover[axis];
             const startColor = color.copy(baseColor);
             startColor.a *= 0.3;
             this._guideAngleLines[0].draw(gizmoPos, v1.copy(this._guideAngleStart).add(gizmoPos),
@@ -600,9 +631,7 @@ class RotateGizmo extends TransformGizmo {
                 v1.copy(offset);
                 q1.transformVector(v1, v1);
                 q2.copy(q1).mul(rot);
-
-                // FIXME: Rotation via quaternion when scale inverted causes scale warping?
-                node.setEulerAngles(q2.getEulerAngles());
+                node.setRotation(q2);
                 node.setPosition(v1.add(gizmoPos));
             }
         }
@@ -633,13 +662,12 @@ class RotateGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {Vec3} point - The point.
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
      * @returns {number} The angle.
      * @protected
      */
-    _calculateArcAngle(point, x, y) {
+    _calculateArcAngle(x, y) {
         const gizmoPos = this.root.getLocalPosition();
 
         const axis = this._selectedAxis;
@@ -649,53 +677,43 @@ class RotateGizmo extends TransformGizmo {
         let angle = 0;
 
         // arc angle
-        const facingDir = v2.copy(this.facingDir);
+        const facingDir = this.facingDir;
         const facingDot = plane.normal.dot(facingDir);
-        if (this.orbitRotation || (1 - Math.abs(facingDot)) < ROTATE_FACING_EPSILON) {
-            // plane facing camera so based on mouse position around gizmo
-            v1.sub2(point, gizmoPos);
 
-            switch (axis) {
-                case 'x': {
-                    // convert to local space
-                    q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
-                    angle = Math.atan2(v1.z, v1.y) * math.RAD_TO_DEG;
-                    break;
+        switch (this.rotationMode) {
+            case 'absolute': {
+                this._camera.worldToScreen(gizmoPos, v2);
+                if (axis === 'f' || facingDot > 1 - RING_FACING_EPSILON) {
+                    // determine which size of the ring the mouse is on to flip rotation direction
+                    v1.set(
+                        this._screenStartPos.y >= v2.y ? 1 : -1,
+                        this._screenStartPos.x >= v2.x ? -1 : 1,
+                        0
+                    ).normalize();
+                } else {
+                    // calculate projection vector in world space for rotation axis
+                    const projDir = v1.cross(plane.normal, facingDir).normalize();
+
+                    // convert to screen space
+                    this._camera.worldToScreen(projDir.add(gizmoPos), v3);
+                    v1.sub2(v3, v2).normalize();
                 }
-                case 'y': {
-                    // convert to local space
-                    q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
-                    angle = Math.atan2(v1.x, v1.z) * math.RAD_TO_DEG;
-                    break;
-                }
-                case 'z': {
-                    // convert to local space
-                    q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
-                    angle = Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
-                    break;
-                }
-                case 'f': {
-                    // convert to camera space
-                    q1.copy(this._camera.entity.getRotation()).invert().transformVector(v1, v1);
-                    angle = Math.sign(facingDot) * Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
-                    break;
-                }
+
+                // angle is dot product with mouse position
+                v2.set(x, y, 0);
+                angle = v1.dot(v2);
+                break;
             }
-        } else {
-            // convert rotation axis to screen space
-            v1.copy(gizmoPos);
-            v2.cross(plane.normal, facingDir).normalize().add(gizmoPos);
+            case 'orbit': {
+                // convert gizmo position to screen space§
+                const screenPos = this._camera.worldToScreen(gizmoPos, v1);
 
-            // convert world space vectors to screen space
-            this._camera.worldToScreen(v1, v3);
-            this._camera.worldToScreen(v2, v4);
-
-            // angle is dot product with mouse position
-            v1.sub2(v4, v3).normalize();
-            v2.set(x, y, 0);
-            angle = v1.dot(v2);
+                // calculate angle based on mouse position around gizmo
+                const dir = screen.set(x - screenPos.x, y - screenPos.y).normalize();
+                angle = Math.sign(facingDot) * Math.atan2(-dir.y, dir.x) * math.RAD_TO_DEG;
+                break;
+            }
         }
-
         return angle;
     }
 
@@ -734,6 +752,15 @@ class RotateGizmo extends TransformGizmo {
         }
 
         this._shapesLookAtCamera();
+    }
+
+    /**
+     * @override
+     */
+    destroy() {
+        this._guideAngleLines.forEach(line => line.destroy());
+
+        super.destroy();
     }
 }
 

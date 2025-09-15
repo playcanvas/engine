@@ -10,7 +10,6 @@ import {
     COLOR_RED,
     COLOR_GREEN,
     COLOR_BLUE,
-    COLOR_YELLOW,
     COLOR_GRAY,
     color4from3
 } from './color.js';
@@ -29,7 +28,7 @@ import { Debug } from '../../core/debug.js';
  * @typedef {object} GizmoTheme
  * @property {{ [K in 'x' | 'y' | 'z' | 'f' | 'xyz']: Color }} shapeBase - The axis colors.
  * @property {{ [K in 'x' | 'y' | 'z' | 'f' | 'xyz']: Color }} shapeHover - The hover colors.
- * @property {{ [K in 'x' | 'y' | 'z' | 'f']: Color }} guideBase - The guide line colors.
+ * @property {{ [K in 'x' | 'y' | 'z']: Color }} guideBase - The guide line colors.
  * @property {number} guideOcclusion - The guide occlusion value. Defaults to 0.8.
  * @property {Color} disabled - The disabled color.
  */
@@ -95,24 +94,23 @@ class TransformGizmo extends Gizmo {
      */
     _theme = {
         shapeBase: {
-            x: color4from3(COLOR_RED, 0.6),
-            y: color4from3(COLOR_GREEN, 0.6),
-            z: color4from3(COLOR_BLUE, 0.6),
-            xyz: color4from3(Color.WHITE, 0.6),
-            f: color4from3(Color.WHITE, 0.6)
-        },
-        shapeHover: {
             x: COLOR_RED.clone(),
             y: COLOR_GREEN.clone(),
             z: COLOR_BLUE.clone(),
+            xyz: new Color(0.8, 0.8, 0.8, 1),
+            f: new Color(0.8, 0.8, 0.8, 1)
+        },
+        shapeHover: {
+            x: new Color().lerp(COLOR_RED, Color.WHITE, 0.75),
+            y: new Color().lerp(COLOR_GREEN, Color.WHITE, 0.75),
+            z: new Color().lerp(COLOR_BLUE, Color.WHITE, 0.75),
             xyz: Color.WHITE.clone(),
-            f: COLOR_YELLOW.clone()
+            f: Color.WHITE.clone()
         },
         guideBase: {
             x: COLOR_RED.clone(),
             y: COLOR_GREEN.clone(),
-            z: COLOR_BLUE.clone(),
-            f: COLOR_YELLOW.clone()
+            z: COLOR_BLUE.clone()
         },
         guideOcclusion: 0.8,
         disabled: COLOR_GRAY.clone()
