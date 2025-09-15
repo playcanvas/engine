@@ -534,7 +534,7 @@ class RotateGizmo extends TransformGizmo {
         // axes shapes
         let angle, dot, sector;
         const facingDir = v1.copy(this.facingDir);
-        q1.copy(this.root.getLocalRotation()).invert().transformVector(facingDir, facingDir);
+        q1.copy(this.root.getRotation()).invert().transformVector(facingDir, facingDir);
         angle = Math.atan2(facingDir.z, facingDir.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
         angle = Math.atan2(facingDir.x, facingDir.z) * math.RAD_TO_DEG;

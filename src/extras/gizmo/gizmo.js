@@ -509,7 +509,7 @@ class Gizmo extends EventHandler {
     _updateRotation() {
         angles.set(0, 0, 0);
         if (this._coordSpace === 'local' && this.nodes.length !== 0) {
-            angles.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
+            this.nodes[this.nodes.length - 1].getRotation().getEulerAngles(angles);
         }
 
         if (angles.equalsApprox(this.root.getLocalEulerAngles(), UPDATE_EPSILON)) {
