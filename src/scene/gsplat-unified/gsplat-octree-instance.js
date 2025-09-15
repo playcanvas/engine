@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+// import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
@@ -202,13 +202,6 @@ class GSplatOctreeInstance {
             // if LOD changed
             if (newLodIndex !== currentLodIndex) {
 
-                // execute any existing pending decrement for this node
-                const pendingEntry = this.pendingDecrements.get(nodeIndex);
-                if (pendingEntry) {
-                    this.decrementFileRef(pendingEntry.oldFileIndex, nodeIndex);
-                    this.pendingDecrements.delete(nodeIndex);
-                }
-
                 // update the stored LOD index
                 this.nodeLods[nodeIndex] = newLodIndex;
 
@@ -218,6 +211,28 @@ class GSplatOctreeInstance {
                 const wasVisible = currentFileIndex !== -1;
                 const willBeVisible = newFileIndex !== -1;
 
+                // if there's a pending transition, manage it without dropping the currently visible LOD
+                const pendingEntry = this.pendingDecrements.get(nodeIndex);
+                if (pendingEntry) {
+                    // if desired target changed while previous target was still loading, cancel previous target for this node
+                    if (pendingEntry.newFileIndex !== newFileIndex) {
+                        // remove this node's interval from the previously pending target if it still exists
+                        const prevPendingPlacement = this.filePlacements[pendingEntry.newFileIndex];
+                        if (prevPendingPlacement) {
+                            this.decrementFileRef(pendingEntry.newFileIndex, nodeIndex);
+                        }
+
+                        // update or clear pending transition
+                        if (wasVisible && willBeVisible) {
+                            this.pendingDecrements.set(nodeIndex, { oldFileIndex: pendingEntry.oldFileIndex, newFileIndex });
+                        } else {
+                            // no longer targeting a visible LOD; clear pending and let normal logic handle hide/show
+                            this.pendingDecrements.delete(nodeIndex);
+                        }
+                    }
+                    // if target stays the same, keep pending as-is until the resource loads
+                }
+
                 if (!wasVisible && willBeVisible) {
 
                     // becoming visible (invisible -> visible)
@@ -226,6 +241,12 @@ class GSplatOctreeInstance {
                 } else if (wasVisible && !willBeVisible) {
 
                     // becoming invisible (visible -> invisible)
+                    // if there was a pending target for this node, cancel it first
+                    const pendingEntry2 = this.pendingDecrements.get(nodeIndex);
+                    if (pendingEntry2) {
+                        this.decrementFileRef(pendingEntry2.newFileIndex, nodeIndex);
+                        this.pendingDecrements.delete(nodeIndex);
+                    }
                     this.decrementFileRef(currentFileIndex, nodeIndex);
 
                 } else if (wasVisible && willBeVisible) {
@@ -237,6 +258,8 @@ class GSplatOctreeInstance {
                     if (newPlacement?.resource) {
                         // new LOD ready - remove old LOD immediately
                         this.decrementFileRef(currentFileIndex, nodeIndex);
+                        // clear any pending for this node if exists
+                        this.pendingDecrements.delete(nodeIndex);
                     } else {
                         // new LOD not ready - track pending decrement for when it loads
                         this.pendingDecrements.set(nodeIndex, { oldFileIndex: currentFileIndex, newFileIndex });
@@ -303,7 +326,9 @@ class GSplatOctreeInstance {
         if (fileIndex === -1) return;
 
         const placement = this.filePlacements[fileIndex];
-        Debug.assert(placement);
+        if (!placement) {
+            return;
+        }
 
         if (placement) {
 
