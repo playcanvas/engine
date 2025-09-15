@@ -259,13 +259,14 @@ class GSplatOctree {
      * - Starts loading if not already started
      * - Checks if loading completed and stores the resource if available
      *
-     * @param {string} url - The url of the file.
      * @param {number} fileIndex - The index of the file in the `files` array.
      * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
      */
-    ensureFileResource(url, fileIndex, assetLoader) {
+    ensureFileResource(fileIndex, assetLoader) {
+        Debug.assert(fileIndex >= 0 && fileIndex < this.files.length);
 
         // resource already loaded
+        const url = this.files[fileIndex];
         if (this.fileResources.has(url)) {
             return;
         }

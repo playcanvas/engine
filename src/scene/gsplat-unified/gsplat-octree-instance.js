@@ -275,8 +275,7 @@ class GSplatOctreeInstance {
             if (!this.addFilePlacement(fileIndex)) {
 
                 // resource not loaded yet, kick off load and add to pending
-                const fileUrl = this.octree.files[fileIndex];
-                this.octree.ensureFileResource(fileUrl, fileIndex, this.assetLoader);
+                this.octree.ensureFileResource(fileIndex, this.assetLoader);
                 this.pending.add(fileIndex);
             }
         }
@@ -386,8 +385,7 @@ class GSplatOctreeInstance {
             for (const fileIndex of this.pending) {
 
                 // check if the asset has finished loading and store it if so
-                const fileUrl = this.octree.files[fileIndex];
-                this.octree.ensureFileResource(fileUrl, fileIndex, this.assetLoader);
+                this.octree.ensureFileResource(fileIndex, this.assetLoader);
 
                 // if resource became available, update placement and execute any pending decrements
                 if (this.addFilePlacement(fileIndex)) {
