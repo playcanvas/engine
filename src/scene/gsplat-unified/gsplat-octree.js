@@ -44,9 +44,9 @@ class GSplatOctree {
     baseDir;
 
     /**
-     * Resources of individual files, identified by their filename.
+     * Resources of individual files, identified by their file index.
      *
-     * @type {Map<string, GSplatResource>}
+     * @type {Map<number, GSplatResource>}
      */
     fileResources = new Map();
 
@@ -123,7 +123,8 @@ class GSplatOctree {
             if (!Tracing.get(TRACEID_OCTREE_RESOURCES)) return;
 
             const loadedCounts = new Map();
-            for (const url of this.fileResources.keys()) {
+            for (const fileIndex of this.fileResources.keys()) {
+                const url = this.files[fileIndex];
                 // parse LOD from the first path segment "<lod>_<tile>/..."
                 const first = url.split('/')[0] || url;
                 const lodStr = first.split('_')[0];
@@ -162,13 +163,15 @@ class GSplatOctree {
         }
     }
 
-    getFullUrl(url) {
+    getFullUrl(fileIndex) {
+        Debug.assert(fileIndex >= 0 && fileIndex < this.files.length);
+        const url = this.files[fileIndex];
         // Use pre-computed base directory for fast path joining
         return path.join(this.baseDir, url);
     }
 
-    getFileResource(url) {
-        return this.fileResources.get(url);
+    getFileResource(fileIndex) {
+        return this.fileResources.get(fileIndex);
     }
 
     /**
@@ -213,13 +216,12 @@ class GSplatOctree {
      */
     unloadResource(fileIndex, assetLoader) {
         Debug.assert(fileIndex >= 0 && fileIndex < this.files.length);
-        const url = this.files[fileIndex];
 
-        if (this.fileResources.has(url)) {
+        if (this.fileResources.has(fileIndex)) {
 
-            const fullUrl = this.getFullUrl(url);
+            const fullUrl = this.getFullUrl(fileIndex);
             assetLoader.unload(fullUrl);
-            this.fileResources.delete(url);
+            this.fileResources.delete(fileIndex);
 
             // trace updated LOD counts after change
             this._traceLodCounts();
@@ -259,22 +261,22 @@ class GSplatOctree {
      * - Starts loading if not already started
      * - Checks if loading completed and stores the resource if available
      *
-     * @param {string} url - The url of the file.
      * @param {number} fileIndex - The index of the file in the `files` array.
      * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
      */
-    ensureFileResource(url, fileIndex, assetLoader) {
+    ensureFileResource(fileIndex, assetLoader) {
+        Debug.assert(fileIndex >= 0 && fileIndex < this.files.length);
 
         // resource already loaded
-        if (this.fileResources.has(url)) {
+        if (this.fileResources.has(fileIndex)) {
             return;
         }
 
         // Check if the resource is now available from the asset loader
-        const fullUrl = this.getFullUrl(url);
+        const fullUrl = this.getFullUrl(fileIndex);
         const res = assetLoader.getResource(fullUrl);
         if (res) {
-            this.fileResources.set(url, res);
+            this.fileResources.set(fileIndex, res);
 
             // if the file finished loading and is no longer needed, schedule a cooldown
             if (this.fileRefCounts[fileIndex] === 0) {

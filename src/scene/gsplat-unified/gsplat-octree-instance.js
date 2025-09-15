@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+// import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
@@ -12,6 +12,8 @@ import { GSplatPlacement } from './gsplat-placement.js';
 
 const _invWorldMat = new Mat4();
 const _localCameraPos = new Vec3();
+const _localCameraFwd = new Vec3();
+const _dirToNode = new Vec3();
 
 const _tempCompletedUrls = [];
 
@@ -122,16 +124,33 @@ class GSplatOctreeInstance {
     /**
      * Calculate LOD index for a specific node using pre-calculated local camera position.
      * @param {Vec3} localCameraPosition - The camera position in local space.
+     * @param {Vec3} localCameraForward - The camera forward direction in local space (normalized).
      * @param {number} nodeIndex - The node index.
      * @param {number} maxLod - The maximum LOD index (lodLevels - 1).
      * @param {number[]} lodDistances - Array of distance thresholds per LOD.
+     * @param {number} lodBehindPenalty - Multiplier for behind-camera distance. 1 disables penalty.
      * @returns {number} The LOD index for this node, or -1 if node should not be rendered.
      */
-    calculateNodeLod(localCameraPosition, nodeIndex, maxLod, lodDistances) {
+    calculateNodeLod(localCameraPosition, localCameraForward, nodeIndex, maxLod, lodDistances, lodBehindPenalty) {
         const node = this.octree.nodes[nodeIndex];
 
         // Calculate distance in local space
-        const distance = localCameraPosition.distance(node.bounds.center);
+        _dirToNode.copy(node.bounds.center).sub(localCameraPosition);
+        let distance = _dirToNode.length();
+
+        // Apply angular-based multiplier for nodes behind the camera when enabled
+        if (lodBehindPenalty > 1 && distance > 0.01) {
+
+            // dot using unnormalized direction to avoid extra normalize; divide by distance
+            const dotOverDistance = localCameraForward.dot(_dirToNode) / distance;
+
+            // Only apply penalty when behind the camera (dot < 0)
+            if (dotOverDistance < 0) {
+                const t = -dotOverDistance; // 0 .. 1 for front -> directly behind
+                const factor = 1 + t * (lodBehindPenalty - 1);
+                distance *= factor;
+            }
+        }
 
         // Find appropriate LOD based on distance and available LOD levels
         for (let lod = 0; lod < maxLod; lod++) {
@@ -150,37 +169,38 @@ class GSplatOctreeInstance {
      * Updates the octree instance when LOD needs to be updated.
      *
      * @param {GraphNode} cameraNode - The camera node.
+     * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
      */
-    updateLod(cameraNode) {
+    updateLod(cameraNode, params) {
 
         // transform camera position to octree local space
         const worldCameraPosition = cameraNode.getPosition();
         const octreeWorldTransform = this.placement.node.getWorldTransform();
         _invWorldMat.copy(octreeWorldTransform).invert();
         const localCameraPosition = _invWorldMat.transformPoint(worldCameraPosition, _localCameraPos);
+        const worldCameraForward = cameraNode.forward;
+        const localCameraForward = _invWorldMat.transformVector(worldCameraForward, _localCameraFwd).normalize();
 
         // calculate max LOD once for all nodes
         const maxLod = this.octree.lodLevels - 1;
         const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25];
+
+        // parameters
+        const { lodBehindPenalty, lodRangeMin, lodRangeMax } = params;
 
         // process all nodes
         const nodes = this.octree.nodes;
         for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
             const node = nodes[nodeIndex];
 
-            // LOD for the node
-            const newLodIndex = this.calculateNodeLod(localCameraPosition, nodeIndex, maxLod, lodDistances);
+            // LOD for the node, clamped by configured range
+            let newLodIndex = this.calculateNodeLod(localCameraPosition, localCameraForward, nodeIndex, maxLod, lodDistances, lodBehindPenalty);
+            if (newLodIndex < lodRangeMin) newLodIndex = lodRangeMin;
+            if (newLodIndex > lodRangeMax) newLodIndex = lodRangeMax;
             const currentLodIndex = this.nodeLods[nodeIndex];
 
             // if LOD changed
             if (newLodIndex !== currentLodIndex) {
-
-                // execute any existing pending decrement for this node
-                const pendingEntry = this.pendingDecrements.get(nodeIndex);
-                if (pendingEntry) {
-                    this.decrementFileRef(pendingEntry.oldFileIndex, nodeIndex);
-                    this.pendingDecrements.delete(nodeIndex);
-                }
 
                 // update the stored LOD index
                 this.nodeLods[nodeIndex] = newLodIndex;
@@ -191,6 +211,28 @@ class GSplatOctreeInstance {
                 const wasVisible = currentFileIndex !== -1;
                 const willBeVisible = newFileIndex !== -1;
 
+                // if there's a pending transition, manage it without dropping the currently visible LOD
+                const pendingEntry = this.pendingDecrements.get(nodeIndex);
+                if (pendingEntry) {
+                    // if desired target changed while previous target was still loading, cancel previous target for this node
+                    if (pendingEntry.newFileIndex !== newFileIndex) {
+                        // remove this node's interval from the previously pending target if it still exists
+                        const prevPendingPlacement = this.filePlacements[pendingEntry.newFileIndex];
+                        if (prevPendingPlacement) {
+                            this.decrementFileRef(pendingEntry.newFileIndex, nodeIndex);
+                        }
+
+                        // update or clear pending transition
+                        if (wasVisible && willBeVisible) {
+                            this.pendingDecrements.set(nodeIndex, { oldFileIndex: pendingEntry.oldFileIndex, newFileIndex });
+                        } else {
+                            // no longer targeting a visible LOD; clear pending and let normal logic handle hide/show
+                            this.pendingDecrements.delete(nodeIndex);
+                        }
+                    }
+                    // if target stays the same, keep pending as-is until the resource loads
+                }
+
                 if (!wasVisible && willBeVisible) {
 
                     // becoming visible (invisible -> visible)
@@ -199,6 +241,12 @@ class GSplatOctreeInstance {
                 } else if (wasVisible && !willBeVisible) {
 
                     // becoming invisible (visible -> invisible)
+                    // if there was a pending target for this node, cancel it first
+                    const pendingEntry2 = this.pendingDecrements.get(nodeIndex);
+                    if (pendingEntry2) {
+                        this.decrementFileRef(pendingEntry2.newFileIndex, nodeIndex);
+                        this.pendingDecrements.delete(nodeIndex);
+                    }
                     this.decrementFileRef(currentFileIndex, nodeIndex);
 
                 } else if (wasVisible && willBeVisible) {
@@ -210,6 +258,8 @@ class GSplatOctreeInstance {
                     if (newPlacement?.resource) {
                         // new LOD ready - remove old LOD immediately
                         this.decrementFileRef(currentFileIndex, nodeIndex);
+                        // clear any pending for this node if exists
+                        this.pendingDecrements.delete(nodeIndex);
                     } else {
                         // new LOD not ready - track pending decrement for when it loads
                         this.pendingDecrements.set(nodeIndex, { oldFileIndex: currentFileIndex, newFileIndex });
@@ -248,8 +298,7 @@ class GSplatOctreeInstance {
             if (!this.addFilePlacement(fileIndex)) {
 
                 // resource not loaded yet, kick off load and add to pending
-                const fileUrl = this.octree.files[fileIndex];
-                this.octree.ensureFileResource(fileUrl, fileIndex, this.assetLoader);
+                this.octree.ensureFileResource(fileIndex, this.assetLoader);
                 this.pending.add(fileIndex);
             }
         }
@@ -277,7 +326,9 @@ class GSplatOctreeInstance {
         if (fileIndex === -1) return;
 
         const placement = this.filePlacements[fileIndex];
-        Debug.assert(placement);
+        if (!placement) {
+            return;
+        }
 
         if (placement) {
 
@@ -307,8 +358,7 @@ class GSplatOctreeInstance {
      * @returns {boolean} True if placement was updated and added to manager, false otherwise.
      */
     addFilePlacement(fileIndex) {
-        const fileUrl = this.octree.files[fileIndex];
-        const res = this.octree.getFileResource(fileUrl);
+        const res = this.octree.getFileResource(fileIndex);
         if (res) {
             // get the existing placement and update its resource
             const placement = this.filePlacements[fileIndex];
@@ -359,8 +409,7 @@ class GSplatOctreeInstance {
             for (const fileIndex of this.pending) {
 
                 // check if the asset has finished loading and store it if so
-                const fileUrl = this.octree.files[fileIndex];
-                this.octree.ensureFileResource(fileUrl, fileIndex, this.assetLoader);
+                this.octree.ensureFileResource(fileIndex, this.assetLoader);
 
                 // if resource became available, update placement and execute any pending decrements
                 if (this.addFilePlacement(fileIndex)) {
