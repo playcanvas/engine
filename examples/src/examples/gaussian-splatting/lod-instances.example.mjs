@@ -162,10 +162,11 @@ assetListLoader.load(() => {
 
     camera.addComponent('script');
     const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+    const sceneSize = 500;
     Object.assign(cc, {
         sceneSize: 500,
-        moveSpeed: 0.003,
-        moveFastSpeed: 0.01,
+        moveSpeed: 0.003 * sceneSize,
+        moveFastSpeed: 0.01 * sceneSize,
         enableOrbit: false,
         enablePan: false,
         focusPoint: new pc.Vec3(2, 0.6, 0)

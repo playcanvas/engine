@@ -132,12 +132,12 @@ assetListLoader.load(() => {
 
     camera.addComponent('script');
     const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+    const sceneSize = 500;
     Object.assign(cc, {
-        sceneSize: 500,
-        moveSpeed: 0.05,
-        moveFastSpeed: 0.3,
-        // moveSpeed: 0.005,
-        // moveFastSpeed: 0.03,
+        moveSpeed: 0.05 * sceneSize,
+        moveFastSpeed: 0.3 * sceneSize,
+        // moveSpeed: 0.005 * sceneSize,
+        // moveFastSpeed: 0.03 * sceneSize,
         enableOrbit: false,
         enablePan: false
     });
