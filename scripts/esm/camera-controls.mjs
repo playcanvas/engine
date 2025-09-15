@@ -317,7 +317,7 @@ class CameraControls extends Script {
      * The damping is applied to the orbit mode.
      *
      * @attribute
-     * @title Rotate Damping
+     * @title Focus Damping
      * @type {number}
      * @default 0.98
      */
