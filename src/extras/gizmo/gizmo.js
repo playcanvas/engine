@@ -510,13 +510,7 @@ class Gizmo extends EventHandler {
     _updateRotation() {
         rotation.set(0, 0, 0, 1);
         if (this._coordSpace === 'local' && this.nodes.length !== 0) {
-            let node = this.nodes[this.nodes.length - 1];
-            while (node.parent && this._app.root !== node.parent) {
-                rotation.mul(node.getLocalRotation());
-                node = node.parent;
-            }
-            rotation.mul(node.getLocalRotation());
-            rotation.normalize();
+            rotation.copy(this.nodes[this.nodes.length - 1].getRotation());
         }
 
         if (rotation.equalsApprox(this.root.getRotation(), UPDATE_EPSILON)) {
