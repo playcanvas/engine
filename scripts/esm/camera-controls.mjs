@@ -798,7 +798,7 @@ class CameraControls extends Script {
         v.add(stickRotate.mulScalar(fly * rotateJoystickMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
-        // check for frame discard (xr active or skipUpdate)
+        // check if XR is active for frame discard
         if (this.app.xr?.active) {
             frame.read();
             return;
