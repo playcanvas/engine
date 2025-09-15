@@ -133,7 +133,7 @@ Object.assign(cc, {
     moveDamping: 0
 });
 app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
-    cc.skipUpdate = hasPointer;
+    cc.enabled = !hasPointer;
 });
 
 // outline renderer

@@ -235,15 +235,6 @@ class CameraControls extends Script {
     };
 
     /**
-     * Whether to skip the update.
-     *
-     * @attribute
-     * @title Skip Update
-     * @type {boolean}
-     */
-    skipUpdate = false;
-
-    /**
      * Enable panning.
      *
      * @attribute
@@ -806,7 +797,7 @@ class CameraControls extends Script {
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // check for frame discard (xr active or skipUpdate)
-        if (this.app.xr?.active || this.skipUpdate) {
+        if (this.app.xr?.active) {
             frame.read();
             return;
         }
