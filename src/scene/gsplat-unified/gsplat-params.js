@@ -148,6 +148,36 @@ class GSplatParams {
     get lodRangeMax() {
         return this._lodRangeMax;
     }
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lodUnderfillLimit = 0;
+
+    /**
+     * Maximum number of LOD levels allowed below the optimal level when the optimal data is not
+     * resident in memory. The system may temporarily use a coarser LOD within this limit until the
+     * optimal LOD is available. Defaults to 0, which disables fallback (always load optimal).
+     * Higher values allow faster loading by using lower-quality data.
+     *
+     * @type {number}
+     */
+    set lodUnderfillLimit(value) {
+        if (this._lodUnderfillLimit !== value) {
+            this._lodUnderfillLimit = value;
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets the maximum allowed underfill LOD range.
+     *
+     * @type {number}
+     */
+    get lodUnderfillLimit() {
+        return this._lodUnderfillLimit;
+    }
 }
 
 export { GSplatParams };
