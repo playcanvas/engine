@@ -114,6 +114,17 @@ const screenToWorld = (camera, dx, dy, dz, out = new Vec3()) => {
     return out;
 };
 
+/**
+ * @enum {string}
+ */
+// eslint-disable-next-line no-unused-vars
+const MobileInputLayout = {
+    JOYSTICK_JOYSTICK: 'joystick-joystick',
+    JOYSTICK_TOUCH: 'joystick-touch',
+    TOUCH_JOYSTICK: 'touch-joystick',
+    TOUCH_TOUCH: 'touch-touch'
+};
+
 class CameraControls extends Script {
     static scriptName = 'cameraControls';
 
@@ -235,6 +246,46 @@ class CameraControls extends Script {
     };
 
     /**
+     * Enable fly camera controls.
+     *
+     * @attribute
+     * @title Enable Fly
+     * @type {boolean}
+     * @default true
+     */
+    set enableFly(enable) {
+        this._enableFly = enable;
+
+        if (!this._enableFly && this._mode === 'fly') {
+            this._setMode('orbit');
+        }
+    }
+
+    get enableFly() {
+        return this._enableFly;
+    }
+
+    /**
+     * Enable orbit camera controls.
+     *
+     * @attribute
+     * @title Enable Orbit
+     * @type {boolean}
+     * @default true
+     */
+    set enableOrbit(enable) {
+        this._enableOrbit = enable;
+
+        if (!this._enableOrbit && this._mode === 'orbit') {
+            this._setMode('fly');
+        }
+    }
+
+    get enableOrbit() {
+        return this._enableOrbit;
+    }
+
+    /**
      * Enable panning.
      *
      * @attribute
@@ -244,13 +295,101 @@ class CameraControls extends Script {
     enablePan = true;
 
     /**
-     * The scene size. The zoom, pan and fly speeds are relative to this size.
+     * The focus damping. A higher value means more damping. A value of 0 means no damping.
+     * The damping is applied to the orbit mode.
      *
      * @attribute
-     * @title Scene Size
+     * @title Focus Damping
+     * @type {number}
+     * @default 0.98
+     */
+    set focusDamping(damping) {
+        this._focusController.focusDamping = damping;
+    }
+
+    get focusDamping() {
+        return this._focusController.focusDamping;
+    }
+
+    /**
+     * The focus point.
+     *
+     * @attribute
+     * @title Focus Point
+     * @type {Vec3}
+     * @default [0, 0, 0]
+     */
+    set focusPoint(point) {
+        const position = this._camera.entity.getPosition();
+        this._startZoomDist = position.distance(point);
+        this._controller.attach(this._pose.look(position, point), false);
+    }
+
+    get focusPoint() {
+        return this._pose.getFocus(tmpV1);
+    }
+
+    /**
+     * The move damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
+     * damping. The damping is applied to the fly mode and the orbit mode when panning.
+     *
+     * @attribute
+     * @title Move Damping
+     * @type {number}
+     * @default 0.98
+     */
+    set moveDamping(damping) {
+        this._flyController.moveDamping = damping;
+    }
+
+    get moveDamping() {
+        return this._flyController.moveDamping;
+    }
+
+    /**
+     * The fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Speed
      * @type {number}
      */
-    sceneSize = 100;
+    moveSpeed = 10;
+
+    /**
+     * The fast fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Fast Speed
+     * @type {number}
+     */
+    moveFastSpeed = 20;
+
+    /**
+     * The slow fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Slow Speed
+     * @type {number}
+     */
+    moveSlowSpeed = 5;
+
+    /**
+     * The rotate damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
+     * damping. The damping is applied to both the fly and orbit modes.
+     *
+     * @attribute
+     * @title Rotate Damping
+     * @type {number}
+     * @default 0.98
+     */
+    set rotateDamping(damping) {
+        this._flyController.rotateDamping = damping;
+        this._orbitController.rotateDamping = damping;
+    }
+
+    get rotateDamping() {
+        return this._orbitController.rotateDamping;
+    }
 
     /**
      * The rotation speed.
@@ -271,40 +410,21 @@ class CameraControls extends Script {
     rotateJoystickSens = 2;
 
     /**
-     * The fly move speed relative to the scene size.
+     * The zoom damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
+     * damping. The damping is applied to the orbit mode.
      *
      * @attribute
-     * @title Move Speed
+     * @title Zoom Damping
      * @type {number}
+     * @default 0.98
      */
-    moveSpeed = 2;
+    set zoomDamping(damping) {
+        this._orbitController.zoomDamping = damping;
+    }
 
-    /**
-     * The fast fly move speed relative to the scene size.
-     *
-     * @attribute
-     * @title Move Fast Speed
-     * @type {number}
-     */
-    moveFastSpeed = 4;
-
-    /**
-     * The slow fly move speed relative to the scene size.
-     *
-     * @attribute
-     * @title Move Slow Speed
-     * @type {number}
-     */
-    moveSlowSpeed = 1;
-
-    /**
-     * The zoom speed relative to the scene size.
-     *
-     * @attribute
-     * @title Zoom Speed
-     * @type {number}
-     */
-    zoomSpeed = 0.001;
+    get zoomDamping() {
+        return this._orbitController.zoomDamping;
+    }
 
     /**
      * The touch zoom pinch sensitivity.
@@ -316,13 +436,71 @@ class CameraControls extends Script {
     zoomPinchSens = 5;
 
     /**
-     * The gamepad dead zone.
+     * The zoom range.
      *
      * @attribute
-     * @title Gamepad Dead Zone
+     * @title Zoom Range
      * @type {Vec2}
+     * @default [0.01, 0]
      */
-    gamepadDeadZone = new Vec2(0.3, 0.6);
+    set zoomRange(range) {
+        this._zoomRange.x = range.x;
+        this._zoomRange.y = range.y <= range.x ? Infinity : range.y;
+        this._orbitController.zoomRange = this._zoomRange;
+    }
+
+    get zoomRange() {
+        return this._zoomRange;
+    }
+
+    /**
+     * The zoom speed relative to the scene size.
+     *
+     * @attribute
+     * @title Zoom Speed
+     * @type {number}
+     */
+    zoomSpeed = 0.001;
+
+    /**
+     * The pitch range. In the range -360 to 360 degrees. The pitch range is applied to the fly mode
+     * and the orbit mode.
+     *
+     * @attribute
+     * @title Pitch Range
+     * @type {Vec2}
+     * @default [-360, 360]
+     */
+    set pitchRange(range) {
+        this._pitchRange.x = math.clamp(range.x, -360, 360);
+        this._pitchRange.y = math.clamp(range.y, -360, 360);
+        this._flyController.pitchRange = this._pitchRange;
+        this._orbitController.pitchRange = this._pitchRange;
+    }
+
+    get pitchRange() {
+        return this._pitchRange;
+    }
+
+    /**
+     * The yaw range. In the range -360 to 360 degrees. The pitch range is applied to the fly mode
+     * and the orbit mode.
+     *
+     * @attribute
+     * @title Yaw Range
+     * @type {Vec2}
+     * @default [-360, 360]
+     */
+    set yawRange(range) {
+        this._yawRange.x = math.clamp(range.x, -360, 360);
+        this._yawRange.y = math.clamp(range.y, -360, 360);
+        this._flyController.yawRange = this._yawRange;
+        this._orbitController.yawRange = this._yawRange;
+    }
+
+    get yawRange() {
+        return this._yawRange;
+    }
 
     /**
      * The joystick event name for the UI position for the base and stick elements.
@@ -333,6 +511,42 @@ class CameraControls extends Script {
      * @type {string}
      */
     joystickEventName = 'joystick';
+
+    /**
+     * The layout of the mobile input. The layout can be one of the following:
+     *
+     * - `joystick-joystick`: Two virtual joysticks.
+     * - `joystick-touch`: One virtual joystick and one touch.
+     * - `touch-joystick`: One touch and one virtual joystick.
+     * - `touch-touch`: Two touches.
+     *
+     * Default is `joystick-touch`.
+     *
+     * @attribute
+     * @title Use Virtual Gamepad
+     * @type {MobileInputLayout}
+     * @default joystick-touch
+     */
+    set mobileInputLayout(layout) {
+        if (!/(?:joystick|touch)-(?:joystick|touch)/.test(layout)) {
+            console.warn(`CameraControls: invalid mobile input layout: ${layout}`);
+            return;
+        }
+        this._flyMobileInput.layout = layout;
+    }
+
+    get mobileInputLayout() {
+        return this._flyMobileInput.layout;
+    }
+
+    /**
+     * The gamepad dead zone.
+     *
+     * @attribute
+     * @title Gamepad Dead Zone
+     * @type {Vec2}
+     */
+    gamepadDeadZone = new Vec2(0.3, 0.6);
 
     constructor({ app, entity, ...args }) {
         super({ app, entity, ...args });
@@ -382,218 +596,6 @@ class CameraControls extends Script {
 
         // destroy
         this.on('destroy', this._destroy, this);
-    }
-
-    /**
-     * Enable orbit camera controls.
-     *
-     * @attribute
-     * @title Enable Orbit
-     * @type {boolean}
-     * @default true
-     */
-    set enableOrbit(enable) {
-        this._enableOrbit = enable;
-
-        if (!this._enableOrbit && this._mode === 'orbit') {
-            this._setMode('fly');
-        }
-    }
-
-    get enableOrbit() {
-        return this._enableOrbit;
-    }
-
-    /**
-     * Enable fly camera controls.
-     *
-     * @attribute
-     * @title Enable Fly
-     * @type {boolean}
-     * @default true
-     */
-    set enableFly(enable) {
-        this._enableFly = enable;
-
-        if (!this._enableFly && this._mode === 'fly') {
-            this._setMode('orbit');
-        }
-    }
-
-    get enableFly() {
-        return this._enableFly;
-    }
-
-    /**
-     * The focus point.
-     *
-     * @attribute
-     * @title Focus Point
-     * @type {Vec3}
-     * @default [0, 0, 0]
-     */
-    set focusPoint(point) {
-        const position = this._camera.entity.getPosition();
-        this._startZoomDist = position.distance(point);
-        this._controller.attach(this._pose.look(position, point), false);
-    }
-
-    get focusPoint() {
-        return this._pose.getFocus(tmpV1);
-    }
-
-    /**
-     * The focus damping. A higher value means more damping. A value of 0 means no damping.
-     * The damping is applied to the orbit mode.
-     *
-     * @attribute
-     * @title Rotate Damping
-     * @type {number}
-     * @default 0.98
-     */
-    set focusDamping(damping) {
-        this._focusController.focusDamping = damping;
-    }
-
-    get focusDamping() {
-        return this._focusController.focusDamping;
-    }
-
-    /**
-     * The rotate damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
-     * damping. The damping is applied to both the fly and orbit modes.
-     *
-     * @attribute
-     * @title Rotate Damping
-     * @type {number}
-     * @default 0.98
-     */
-    set rotateDamping(damping) {
-        this._flyController.rotateDamping = damping;
-        this._orbitController.rotateDamping = damping;
-    }
-
-    get rotateDamping() {
-        return this._orbitController.rotateDamping;
-    }
-
-    /**
-     * The move damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
-     * damping. The damping is applied to the fly mode and the orbit mode when panning.
-     *
-     * @attribute
-     * @title Move Damping
-     * @type {number}
-     * @default 0.98
-     */
-    set moveDamping(damping) {
-        this._flyController.moveDamping = damping;
-    }
-
-    get moveDamping() {
-        return this._flyController.moveDamping;
-    }
-
-    /**
-     * The zoom damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
-     * damping. The damping is applied to the orbit mode.
-     *
-     * @attribute
-     * @title Zoom Damping
-     * @type {number}
-     * @default 0.98
-     */
-    set zoomDamping(damping) {
-        this._orbitController.zoomDamping = damping;
-    }
-
-    get zoomDamping() {
-        return this._orbitController.zoomDamping;
-    }
-
-    /**
-     * The pitch range. In the range -360 to 360 degrees. The pitch range is applied to the fly mode
-     * and the orbit mode.
-     *
-     * @attribute
-     * @title Pitch Range
-     * @type {Vec2}
-     * @default [-360, 360]
-     */
-    set pitchRange(range) {
-        this._pitchRange.x = math.clamp(range.x, -360, 360);
-        this._pitchRange.y = math.clamp(range.y, -360, 360);
-        this._flyController.pitchRange = this._pitchRange;
-        this._orbitController.pitchRange = this._pitchRange;
-    }
-
-    get pitchRange() {
-        return this._pitchRange;
-    }
-
-    /**
-     * The yaw range. In the range -360 to 360 degrees. The pitch range is applied to the fly mode
-     * and the orbit mode.
-     *
-     * @attribute
-     * @title Yaw Range
-     * @type {Vec2}
-     * @default [-360, 360]
-     */
-    set yawRange(range) {
-        this._yawRange.x = math.clamp(range.x, -360, 360);
-        this._yawRange.y = math.clamp(range.y, -360, 360);
-        this._flyController.yawRange = this._yawRange;
-        this._orbitController.yawRange = this._yawRange;
-    }
-
-    get yawRange() {
-        return this._yawRange;
-    }
-
-    /**
-     * The zoom range.
-     *
-     * @attribute
-     * @title Zoom Range
-     * @type {Vec2}
-     * @default [0.01, 0]
-     */
-    set zoomRange(range) {
-        this._zoomRange.x = range.x;
-        this._zoomRange.y = range.y <= range.x ? Infinity : range.y;
-        this._orbitController.zoomRange = this._zoomRange;
-    }
-
-    get zoomRange() {
-        return this._zoomRange;
-    }
-
-    /**
-     * The layout of the mobile input. The layout can be one of the following:
-     *
-     * - `joystick-joystick`: Two virtual joysticks.
-     * - `joystick-touch`: One virtual joystick and one touch.
-     * - `touch-joystick`: One touch and one virtual joystick.
-     * - `touch-touch`: Two touches.
-     *
-     * Default is `joystick-touch`.
-     *
-     * @attribute
-     * @title Use Virtual Gamepad
-     * @type {string}
-     * @default 'joystick-touch'
-     */
-    set mobileInputLayout(layout) {
-        if (!/(?:joystick|touch)-(?:joystick|touch)/.test(layout)) {
-            console.warn(`CameraControls: invalid mobile input layout: ${layout}`);
-            return;
-        }
-        this._flyMobileInput.layout = layout;
-    }
-
-    get mobileInputLayout() {
-        return this._flyMobileInput.layout;
     }
 
     /**
@@ -742,7 +744,7 @@ class CameraControls extends Script {
 
         // multipliers
         const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
-            this.moveSlowSpeed : this.moveSpeed) * this.sceneSize * dt;
+            this.moveSlowSpeed : this.moveSpeed) * dt;
         const zoomMult = this.zoomSpeed * 60 * dt;
         const zoomTouchMult = zoomMult * this.zoomPinchSens;
         const rotateMult = this.rotateSpeed * 60 * dt;
@@ -796,7 +798,7 @@ class CameraControls extends Script {
         v.add(stickRotate.mulScalar(fly * rotateJoystickMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
-        // check for frame discard (xr active or skipUpdate)
+        // check if XR is active for frame discard
         if (this.app.xr?.active) {
             frame.read();
             return;
