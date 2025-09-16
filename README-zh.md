@@ -1,4 +1,4 @@
-# PlayCanvas WebGL 游戏引擎
+# PlayCanvas Engine
 
 [![NPM Version](https://img.shields.io/npm/v/playcanvas)](https://www.npmjs.com/package/playcanvas)
 [![NPM Downloads](https://img.shields.io/npm/dw/playcanvas)](https://npmtrends.com/playcanvas)
@@ -8,7 +8,7 @@
 [![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
 [![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-| [用户手册](https://developer.playcanvas.com) | [API 参考](https://api.playcanvas.com/engine) | [例子](https://playcanvas.github.io) | [博客](https://blog.playcanvas.com) | [论坛](https://forum.playcanvas.com) |
+| [用户手册](https://developer.playcanvas.com/user-manual/engine/) | [API 参考](https://api.playcanvas.com/engine/) | [例子](https://playcanvas.github.io) | [博客](https://blog.playcanvas.com) | [论坛](https://forum.playcanvas.com) |
 
 PlayCanvas 是一款使用 HTML5 和 WebGL 技术运行游戏以及其他 3D 内容的开源游戏引擎，PlayCanvas 以其独特的性能实现了在任何手机移动端和桌面浏览器端均可以流畅运行。
 
@@ -22,7 +22,7 @@ PlayCanvas 是一款使用 HTML5 和 WebGL 技术运行游戏以及其他 3D 内
 许多团队已经成功地使用了 PlayCanvas 引擎开发并发布了游戏和应用。以下是一些项目案例：
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
-[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
+[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Gaussian Splat Statues](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/1224723/266D9C-image-25.jpg)](https://playcanv.as/p/cLkf99ZV/)  
 [![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Global Illumination](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/)
 
 点击此链接查看更多案例： [PlayCanvas website](https://playcanvas.com/explore).
@@ -109,7 +109,7 @@ npm install
 | 命令            | 描述                         | 输出到     |
 | --------------- | --------------------------- | ---------- |
 | `npm run build` | 构建所有引擎构建目标和类型声明 | `build`    |
-| `npm run docs`  | 构建引擎[API参考文档](https://api.playcanvas.com/modules/Engine.html)   | `docs`     |
+| `npm run docs`  | 构建引擎[API参考文档](https://api.playcanvas.com/engine/)   | `docs`     |
 
 ## PlayCanvas 平台
 

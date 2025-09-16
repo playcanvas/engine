@@ -106,9 +106,12 @@ camera.addComponent('script');
 camera.setPosition(start);
 app.root.addChild(camera);
 const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+const sceneSize = bbox.halfExtents.length();
 Object.assign(cc, {
-    sceneSize: bbox.halfExtents.length(),
-    focusPoint: bbox.center
+    focusPoint: bbox.center,
+    moveSpeed: 2 * sceneSize,
+    moveFastSpeed: 4 * sceneSize,
+    moveSlowSpeed: sceneSize
 });
 
 // focus on entity when 'f' key is pressed

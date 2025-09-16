@@ -1,4 +1,5 @@
 import { math } from '../../core/math/math.js';
+import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Ray } from '../../core/shape/ray.js';
@@ -21,8 +22,8 @@ import { Layer } from '../../scene/layer.js';
 // temporary variables
 const v = new Vec3();
 const position = new Vec3();
-const angles = new Vec3();
 const dir = new Vec3();
+const rotation = new Quat();
 const m1 = new Mat4();
 const m2 = new Mat4();
 const ray = new Ray();
@@ -494,7 +495,7 @@ class Gizmo extends EventHandler {
         }
         position.mulScalar(1.0 / (this.nodes.length || 1));
 
-        if (position.distance(this.root.getLocalPosition()) < UPDATE_EPSILON) {
+        if (position.equalsApprox(this.root.getLocalPosition(), UPDATE_EPSILON)) {
             return;
         }
 
@@ -507,17 +508,17 @@ class Gizmo extends EventHandler {
      * @protected
      */
     _updateRotation() {
-        angles.set(0, 0, 0);
+        rotation.set(0, 0, 0, 1);
         if (this._coordSpace === 'local' && this.nodes.length !== 0) {
-            angles.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
+            rotation.copy(this.nodes[this.nodes.length - 1].getRotation());
         }
 
-        if (angles.distance(this.root.getLocalEulerAngles()) < UPDATE_EPSILON) {
+        if (rotation.equalsApprox(this.root.getRotation(), UPDATE_EPSILON)) {
             return;
         }
 
-        this.root.setLocalEulerAngles(angles);
-        this.fire(Gizmo.EVENT_ROTATIONUPDATE, angles);
+        this.root.setRotation(rotation);
+        this.fire(Gizmo.EVENT_ROTATIONUPDATE, rotation.getEulerAngles());
         this.fire(Gizmo.EVENT_RENDERUPDATE);
     }
 

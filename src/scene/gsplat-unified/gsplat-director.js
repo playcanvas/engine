@@ -8,6 +8,7 @@ import { GSplatManager } from './gsplat-manager.js';
  * @import { GraphNode } from '../graph-node.js'
  * @import { GSplatAssetLoaderBase } from './gsplat-asset-loader-base.js'
  * @import { Scene } from '../scene.js'
+ * @import { Renderer } from '../renderer/renderer.js'
  */
 
 /**
@@ -100,11 +101,13 @@ class GSplatDirector {
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
+     * @param {Renderer} renderer - The renderer.
      * @param {Scene} scene - The scene.
      * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
      */
-    constructor(device, scene, assetLoader) {
+    constructor(device, renderer, scene, assetLoader) {
         this.device = device;
+        this.renderer = renderer;
         this.assetLoader = assetLoader;
         this.scene = scene;
     }
@@ -152,6 +155,8 @@ class GSplatDirector {
             }
         });
 
+        let gsplatCount = 0;
+
         // for all cameras in the composition
         const camerasComponents = comp.cameras;
         for (let i = 0; i < camerasComponents.length; i++) {
@@ -189,11 +194,18 @@ class GSplatDirector {
             }
 
             // update gsplat managers
-            // const cameraData = this.camerasMap.get(camera);
-            cameraData?.layersMap.forEach((layerData) => {
-                layerData.gsplatManager.update();
-            });
+            if (cameraData) {
+                for (const layerData of cameraData.layersMap.values()) {
+                    gsplatCount += layerData.gsplatManager.update();
+                }
+            }
         }
+
+        // update stats
+        this.renderer._gsplatCount = gsplatCount;
+
+        // clear global gsplat params dirty flag after all updates for this camera
+        this.scene.gsplat.dirty = false;
 
         // clear dirty flags on all layers of the composition
         for (let i = 0; i < comp.layerList.length; i++) {

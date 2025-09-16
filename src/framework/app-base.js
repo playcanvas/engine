@@ -1106,6 +1106,8 @@ class AppBase extends EventHandler {
         // total draw call
         this.stats.drawCalls.total = this.graphicsDevice._drawCallsPerFrame;
         this.graphicsDevice._drawCallsPerFrame = 0;
+
+        stats.gsplats = this.renderer._gsplatCount;
     }
 
     /** @private */
