@@ -164,8 +164,8 @@ assetListLoader.load(() => {
     const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
     Object.assign(cc, {
         sceneSize: 500,
-        moveSpeed: 0.003,
-        moveFastSpeed: 0.01,
+        moveSpeed: 1.5,
+        moveFastSpeed: 5,
         enableOrbit: false,
         enablePan: false,
         focusPoint: new pc.Vec3(2, 0.6, 0)

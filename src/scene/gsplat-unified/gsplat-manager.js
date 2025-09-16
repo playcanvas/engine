@@ -206,12 +206,6 @@ class GSplatManager {
 
     updateWorldState() {
 
-        // update octree instances - this handles loading of any pending resources
-        for (const [, inst] of this.octreeInstances) {
-            const isDirty = inst.update();
-            this.layerPlacementsDirty ||= isDirty;
-        }
-
         // Recreate world state if there are changes
         const worldChanged = this.layerPlacementsDirty || this.worldStates.size === 0;
         if (worldChanged) {
@@ -360,6 +354,17 @@ class GSplatManager {
 
     update() {
 
+        // process any pending / prefetch resource completions and collect LOD updates
+        let anyInstanceNeedsLodUpdate = false;
+        for (const [, inst] of this.octreeInstances) {
+
+            const isDirty = inst.update();
+            this.layerPlacementsDirty ||= isDirty;
+
+            const instNeeds = inst.consumeNeedsLodUpdate();
+            anyInstanceNeedsLodUpdate ||= instNeeds;
+        }
+
         // check if any octree instances have moved enough to require LOD update
         let anyOctreeMoved = false;
         const threshold = this.scene.gsplat.lodUpdateDistance;
@@ -376,8 +381,8 @@ class GSplatManager {
             this.layerPlacementsDirty = true;
         }
 
-        // when camera or octree need LOD evaluated, or params are dirty
-        if (cameraMovedOrRotated || anyOctreeMoved || this.scene.gsplat.dirty) {
+        // when camera or octree need LOD evaluated, or params are dirty, or resources completed
+        if (cameraMovedOrRotated || anyOctreeMoved || this.scene.gsplat.dirty || anyInstanceNeedsLodUpdate) {
 
             // update the previous position where LOD was evaluated for octree instances
             for (const [, inst] of this.octreeInstances) {
