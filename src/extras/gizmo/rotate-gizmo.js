@@ -29,6 +29,7 @@ const color = new Color();
 
 // constants
 const RING_FACING_EPSILON = 1e-4;
+const UPDATE_EPSILON = 1e-6;
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
@@ -183,6 +184,14 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _guideAngleLines;
+
+    /**
+     * Internal vector for storing the previous facing direction of the camera.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    _facingDir = new Vec3();
 
     /**
      * @override
@@ -531,9 +540,14 @@ class RotateGizmo extends TransformGizmo {
             this._shapes.f.entity.rotateLocal(-90, 0, 0);
         }
 
+        const facingDir = v1.copy(this.facingDir);
+        if (facingDir.equalsApprox(this._facingDir, UPDATE_EPSILON)) {
+            return;
+        }
+        this._facingDir.copy(facingDir);
+
         // axes shapes
         let angle, dot, sector;
-        const facingDir = v1.copy(this.facingDir);
         q1.copy(this.root.getRotation()).invert().transformVector(facingDir, facingDir);
         angle = Math.atan2(facingDir.z, facingDir.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
@@ -552,9 +566,9 @@ class RotateGizmo extends TransformGizmo {
             dot = facingDir.dot(this.root.forward);
             sector = 1 - Math.abs(dot) > RING_FACING_EPSILON;
             this._shapes.z.show(sector ? 'sector' : 'ring');
-
-            this.fire(TransformGizmo.EVENT_RENDERUPDATE);
         }
+
+        this.fire(TransformGizmo.EVENT_RENDERUPDATE);
     }
 
     /**
