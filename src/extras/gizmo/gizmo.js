@@ -213,6 +213,14 @@ class Gizmo extends EventHandler {
     _layer;
 
     /**
+     * Internal flag to track if a render update is required.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _renderUpdate = false;
+
+    /**
      * The graph nodes attached to the gizmo.
      *
      * @type {GraphNode[]}
@@ -302,7 +310,7 @@ class Gizmo extends EventHandler {
         const enabled = state ? this.nodes.length > 0 && cameraDist > DIST_EPSILON : false;
         if (enabled !== this.root.enabled) {
             this.root.enabled = enabled;
-            this.fire(Gizmo.EVENT_RENDERUPDATE);
+            this._renderUpdate = true;
         }
     }
 
@@ -500,7 +508,8 @@ class Gizmo extends EventHandler {
 
         this.root.setLocalPosition(position);
         this.fire(Gizmo.EVENT_POSITIONUPDATE, position);
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
+
+        this._renderUpdate = true;
     }
 
     /**
@@ -518,7 +527,8 @@ class Gizmo extends EventHandler {
 
         this.root.setLocalEulerAngles(angles);
         this.fire(Gizmo.EVENT_ROTATIONUPDATE, angles);
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
+
+        this._renderUpdate = true;
     }
 
     /**
@@ -541,7 +551,8 @@ class Gizmo extends EventHandler {
 
         this.root.setLocalScale(this._scale, this._scale, this._scale);
         this.fire(Gizmo.EVENT_SCALEUPDATE, this._scale);
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
+
+        this._renderUpdate = true;
     }
 
     /**
@@ -662,6 +673,15 @@ class Gizmo extends EventHandler {
      * gizmo.update();
      */
     update() {
+        if (this._renderUpdate) {
+            this._renderUpdate = false;
+            this.fire(Gizmo.EVENT_RENDERUPDATE);
+        }
+
+        if (!this.enabled) {
+            return;
+        }
+
         this._updatePosition();
         this._updateRotation();
         this._updateScale();
