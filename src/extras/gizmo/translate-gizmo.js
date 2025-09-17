@@ -402,23 +402,66 @@ class TranslateGizmo extends TransformGizmo {
         const cameraDir = this.cameraDir;
 
         // axes
-        let dot = cameraDir.dot(this.root.right);
-        this._shapes.x.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
+        let changed = false;
+        let dot, enabled;
+        dot = cameraDir.dot(this.root.right);
+        enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
+        if (this._shapes.x.entity.enabled !== enabled) {
+            this._shapes.x.entity.enabled = enabled;
+            changed = true;
+        }
         dot = cameraDir.dot(this.root.up);
-        this._shapes.y.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
+        enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
+        if (this._shapes.y.entity.enabled !== enabled) {
+            this._shapes.y.entity.enabled = enabled;
+            changed = true;
+        }
         dot = cameraDir.dot(this.root.forward);
-        this._shapes.z.entity.enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
+        enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
+        if (this._shapes.z.entity.enabled !== enabled) {
+            this._shapes.z.entity.enabled = enabled;
+            changed = true;
+        }
 
         // planes
+        let flipped;
         v1.cross(cameraDir, this.root.right);
-        this._shapes.yz.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
-        this._shapes.yz.flipped = this.flipPlanes ? v2.set(0, +(v1.dot(this.root.forward) < 0), +(v1.dot(this.root.up) < 0)) : Vec3.ZERO;
+        enabled = 1 - v1.length() > GLANCE_EPSILON;
+        if (this._shapes.yz.entity.enabled !== enabled) {
+            this._shapes.yz.entity.enabled = enabled;
+            changed = true;
+        }
+        flipped = this.flipPlanes ? v2.set(0, +(v1.dot(this.root.forward) < 0), +(v1.dot(this.root.up) < 0)) : Vec3.ZERO;
+        if (!this._shapes.yz.flipped.equals(flipped)) {
+            this._shapes.yz.flipped = flipped;
+            changed = true;
+        }
         v1.cross(cameraDir, this.root.forward);
-        this._shapes.xy.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
-        this._shapes.xy.flipped = this.flipPlanes ? v2.set(+(v1.dot(this.root.up) < 0), +(v1.dot(this.root.right) > 0), 0) : Vec3.ZERO;
+        enabled = 1 - v1.length() > GLANCE_EPSILON;
+        if (this._shapes.xy.entity.enabled !== enabled) {
+            this._shapes.xy.entity.enabled = enabled;
+            changed = true;
+        }
+        flipped = this.flipPlanes ? v2.set(+(v1.dot(this.root.up) < 0), +(v1.dot(this.root.right) > 0), 0) : Vec3.ZERO;
+        if (!this._shapes.xy.flipped.equals(flipped)) {
+            this._shapes.xy.flipped = flipped;
+            changed = true;
+        }
         v1.cross(cameraDir, this.root.up);
-        this._shapes.xz.entity.enabled = 1 - v1.length() > GLANCE_EPSILON;
-        this._shapes.xz.flipped = this.flipPlanes ? v2.set(+(v1.dot(this.root.forward) > 0), 0, +(v1.dot(this.root.right) > 0)) : Vec3.ZERO;
+        enabled = 1 - v1.length() > GLANCE_EPSILON;
+        if (this._shapes.xz.entity.enabled !== enabled) {
+            this._shapes.xz.entity.enabled = enabled;
+            changed = true;
+        }
+        flipped = this.flipPlanes ? v2.set(+(v1.dot(this.root.forward) > 0), 0, +(v1.dot(this.root.right) > 0)) : Vec3.ZERO;
+        if (!this._shapes.xz.flipped.equals(flipped)) {
+            this._shapes.xz.flipped = flipped;
+            changed = true;
+        }
+
+        if (changed) {
+            this._renderUpdate = true;
+        }
     }
 
     /**
