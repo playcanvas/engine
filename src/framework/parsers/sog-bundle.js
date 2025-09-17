@@ -157,7 +157,7 @@ class SogBundleParser {
                 if (file) {
                     // file is embedded
                     texture = new Asset(filename, 'texture', {
-                        url: filename,
+                        url: `${url.load}/${filename}`,
                         filename,
                         contents: file.data
                     }, {
