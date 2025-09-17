@@ -581,7 +581,8 @@ class RotateGizmo extends TransformGizmo {
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, axis === 'f', false);
         if (!plane.intersectsRay(ray, point)) {
-            return point;
+            // use gizmo position if ray does not intersect to position angle guide correctly
+            return point.copy(this.root.getLocalPosition());
         }
 
         return point;
