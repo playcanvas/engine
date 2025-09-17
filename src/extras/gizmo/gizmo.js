@@ -663,6 +663,10 @@ class Gizmo extends EventHandler {
      * gizmo.update();
      */
     update() {
+        if (!this.enabled) {
+            return;
+        }
+
         this._updatePosition();
         this._updateRotation();
         this._updateScale();
