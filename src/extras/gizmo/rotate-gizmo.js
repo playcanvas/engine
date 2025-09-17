@@ -186,7 +186,7 @@ class RotateGizmo extends TransformGizmo {
     _guideAngleLines;
 
     /**
-     * Internal vector for storing the previous facing direction of the camera.
+     * Internal copy of facing direction to avoid unnecessary updates.
      *
      * @type {Vec3}
      * @private
