@@ -498,6 +498,8 @@ class RotateGizmo extends TransformGizmo {
         }
         q1.setFromAxisAngle(v1, angleDelta);
         q1.transformVector(this._guideAngleStart, this._guideAngleEnd);
+
+        this._renderUpdate = true;
     }
 
     /**
