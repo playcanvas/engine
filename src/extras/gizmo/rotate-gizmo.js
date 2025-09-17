@@ -542,6 +542,7 @@ class RotateGizmo extends TransformGizmo {
             this._shapes.f.entity.rotateLocal(-90, 0, 0);
         }
 
+        // check if facing dir has changed
         const facingDir = v1.copy(this.facingDir);
         if (facingDir.equalsApprox(this._facingDir, UPDATE_EPSILON)) {
             return;
