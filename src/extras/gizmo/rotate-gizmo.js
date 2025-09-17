@@ -29,6 +29,7 @@ const color = new Color();
 
 // constants
 const RING_FACING_EPSILON = 1e-4;
+const UPDATE_EPSILON = 1e-6;
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
@@ -183,6 +184,14 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _guideAngleLines;
+
+    /**
+     * Internal copy of facing direction to avoid unnecessary updates.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    _facingDir = new Vec3();
 
     /**
      * @override
@@ -489,6 +498,8 @@ class RotateGizmo extends TransformGizmo {
         }
         q1.setFromAxisAngle(v1, angleDelta);
         q1.transformVector(this._guideAngleStart, this._guideAngleEnd);
+
+        this._renderUpdate = true;
     }
 
     /**
@@ -552,8 +563,11 @@ class RotateGizmo extends TransformGizmo {
             dot = facingDir.dot(this.root.forward);
             sector = 1 - Math.abs(dot) > RING_FACING_EPSILON;
             this._shapes.z.show(sector ? 'sector' : 'ring');
+        }
 
-            this.fire(TransformGizmo.EVENT_RENDERUPDATE);
+        if (!facingDir.equalsApprox(this._facingDir, UPDATE_EPSILON)) {
+            this._facingDir.copy(facingDir);
+            this._renderUpdate = true;
         }
     }
 
@@ -581,7 +595,8 @@ class RotateGizmo extends TransformGizmo {
                 }
             }
         }
-        this.fire(TransformGizmo.EVENT_RENDERUPDATE);
+
+        this._renderUpdate = true;
     }
 
     /**
