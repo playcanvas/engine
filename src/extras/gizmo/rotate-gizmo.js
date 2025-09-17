@@ -542,15 +542,9 @@ class RotateGizmo extends TransformGizmo {
             this._shapes.f.entity.rotateLocal(-90, 0, 0);
         }
 
-        // check if facing dir has changed
-        const facingDir = v1.copy(this.facingDir);
-        if (facingDir.equalsApprox(this._facingDir, UPDATE_EPSILON)) {
-            return;
-        }
-        this._facingDir.copy(facingDir);
-
         // axes shapes
         let angle, dot, sector;
+        const facingDir = v1.copy(this.facingDir);
         q1.copy(this.root.getRotation()).invert().transformVector(facingDir, facingDir);
         angle = Math.atan2(facingDir.z, facingDir.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
@@ -571,7 +565,10 @@ class RotateGizmo extends TransformGizmo {
             this._shapes.z.show(sector ? 'sector' : 'ring');
         }
 
-        this._renderUpdate = true;
+        if (!facingDir.equalsApprox(this._facingDir, UPDATE_EPSILON)) {
+            this._facingDir.copy(facingDir);
+            this._renderUpdate = true;
+        }
     }
 
     /**
