@@ -663,10 +663,6 @@ class Gizmo extends EventHandler {
      * gizmo.prerender();
      */
     prerender() {
-        if (this._renderUpdate) {
-            this._renderUpdate = false;
-            this.fire(Gizmo.EVENT_RENDERUPDATE);
-        }
     }
 
     /**
@@ -678,6 +674,11 @@ class Gizmo extends EventHandler {
      * gizmo.update();
      */
     update() {
+        if (this._renderUpdate) {
+            this._renderUpdate = false;
+            this.fire(Gizmo.EVENT_RENDERUPDATE);
+        }
+
         if (!this.enabled) {
             return;
         }
