@@ -57,10 +57,31 @@ app.on('destroy', () => {
     window.removeEventListener('resize', applyAndResize);
 });
 
+// Configuration: Uncomment one block below (or add your own) and comment out others
+// const config = {
+//     name: 'iceland-church',
+//     url: `${rootPath}/static/assets/splats/iceland-church/lod-meta.json`,
+//     lodPresetDesktop: 'great',
+//     lodPresetMobile: 'low',
+//     lodDistances: [50, 100, 150, 250, 300],
+//     cameraPosition: [1.3, 2.6, 8.2],
+//     moveSpeed: 4,
+//     moveFastSpeed: 15
+// };
+
+const config = {
+    name: 'skatepark',
+    url: 'https://code.playcanvas.com/examples_data/skatepark/lod-meta.json',
+    lodPresetDesktop: 'great',
+    lodPresetMobile: 'low',
+    lodDistances: [15, 30, 80, 250, 300],
+    cameraPosition: [10.3, 2, 8.2],
+    moveSpeed: 4,
+    moveFastSpeed: 15
+};
+
 const assets = {
-//    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/iceland-church/lod-meta.json` }),
-//    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skatepark/lod-meta.json` }),
-    church: new pc.Asset('gsplat', 'gsplat', { url: 'https://code.playcanvas.com/examples_data/skatepark/lod-meta.json' }),
+    church: new pc.Asset('gsplat', 'gsplat', { url: config.url }),
 
     envatlas: new pc.Asset(
         'env-atlas',
@@ -88,7 +109,7 @@ assetListLoader.load(() => {
     // initialize UI settings and wire to scene flags
     data.set('debugAabbs', false);
     data.set('debugLod', false);
-    data.set('lodPreset', pc.platform.mobile ? 'low' : 'great');
+    data.set('lodPreset', pc.platform.mobile ? config.lodPresetMobile : config.lodPresetDesktop);
 
     app.scene.gsplat.debugAabbs = !!data.get('debugAabbs');
     app.scene.gsplat.colorizeLod = !!data.get('debugLod');
@@ -101,6 +122,7 @@ assetListLoader.load(() => {
     });
 
     // LOD preset definitions: map preset key to [min, max]
+    /** @type {Record<string, number[]>} */
     const LOD_PRESETS = {
         normal: [0, 3],
         great: [0, 1],
@@ -123,9 +145,9 @@ assetListLoader.load(() => {
     data.on('lodPreset:set', applyPreset);
 
     // const lodDistances = [10, 15, 20, 25, 30];
-    const lodDistances = [10, 20, 200, 250, 300];
+    const lodDistances = config.lodDistances;
 
-    const entity = new pc.Entity('church');
+    const entity = new pc.Entity(config.name || 'gsplat');
     entity.addComponent('gsplat', {
         asset: assets.church,
         unified: true
@@ -145,15 +167,17 @@ assetListLoader.load(() => {
         toneMapping: pc.TONEMAP_ACES
     });
 
-    camera.setLocalPosition(1.3, 2.6, 8.2);
+    //    camera.setLocalPosition(1.3, 2.6, 8.2);
+    const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
+    camera.setLocalPosition(camX, camY, camZ);
     app.root.addChild(camera);
 
     camera.addComponent('script');
-    const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+    const cc = /** @type { CameraControls} */ ((/** @type {any} */ (camera.script)).create(CameraControls));
     Object.assign(cc, {
         sceneSize: 500,
-        moveSpeed: 4,
-        moveFastSpeed: 15,
+        moveSpeed: /** @type {number} */ (config.moveSpeed),
+        moveFastSpeed: /** @type {number} */ (config.moveFastSpeed),
         enableOrbit: false,
         enablePan: false,
         focusPoint: new pc.Vec3(0, 0.6, 0)
