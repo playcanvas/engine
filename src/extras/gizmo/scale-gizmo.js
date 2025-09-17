@@ -471,7 +471,7 @@ class ScaleGizmo extends TransformGizmo {
             }
         }
 
-        this.fire(TransformGizmo.EVENT_RENDERUPDATE);
+        this._renderUpdate = true;
     }
 
     /**

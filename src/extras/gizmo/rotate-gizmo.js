@@ -568,7 +568,7 @@ class RotateGizmo extends TransformGizmo {
             this._shapes.z.show(sector ? 'sector' : 'ring');
         }
 
-        this.fire(TransformGizmo.EVENT_RENDERUPDATE);
+        this._renderUpdate = true;
     }
 
     /**
@@ -595,7 +595,8 @@ class RotateGizmo extends TransformGizmo {
                 }
             }
         }
-        this.fire(TransformGizmo.EVENT_RENDERUPDATE);
+
+        this._renderUpdate = true;
     }
 
     /**
