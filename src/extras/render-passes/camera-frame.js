@@ -355,15 +355,11 @@ class CameraFrame {
     }
 
     enable() {
-        Debug.assert(!this.renderPassCamera);
-
         this.renderPassCamera = this.createRenderPass();
         this.cameraComponent.renderPasses = [this.renderPassCamera];
     }
 
     disable() {
-        Debug.assert(this.renderPassCamera);
-
         const cameraComponent = this.cameraComponent;
         cameraComponent.renderPasses?.forEach((renderPass) => {
             renderPass.destroy();
