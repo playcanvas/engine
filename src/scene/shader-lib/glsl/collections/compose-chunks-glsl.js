@@ -17,5 +17,10 @@ export const composeChunksGLSL = {
     composeVignettePS,
     composeFringingPS,
     composeCasPS,
-    composeColorLutPS
+    composeColorLutPS,
+
+    // empty chunks for user customizations
+    composeDeclarationsPS: '',
+    composeMainStartPS: '',
+    composeMainEndPS: ''
 };

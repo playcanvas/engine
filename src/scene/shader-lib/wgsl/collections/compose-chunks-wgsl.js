@@ -17,5 +17,10 @@ export const composeChunksWGSL = {
     composeVignettePS,
     composeFringingPS,
     composeCasPS,
-    composeColorLutPS
+    composeColorLutPS,
+
+    // empty chunks for user customizations
+    composeDeclarationsPS: '',
+    composeMainStartPS: '',
+    composeMainEndPS: ''
 };

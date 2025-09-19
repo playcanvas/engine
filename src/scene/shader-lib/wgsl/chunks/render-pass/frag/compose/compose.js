@@ -16,8 +16,13 @@ export default /* wgsl */`
     #include "composeCasPS"
     #include "composeColorLutPS"
 
+    #include "composeDeclarationsPS"
+
     @fragment
     fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+
+        #include "composeMainStartPS"
+
         var output: FragmentOutput;
         var uv = uv0;
 
@@ -71,6 +76,8 @@ export default /* wgsl */`
         #ifdef VIGNETTE
             result = applyVignette(result, uv);
         #endif
+
+        #include "composeMainEndPS"
 
         // Debug output handling in one centralized location
         #ifdef DEBUG_COMPOSE
