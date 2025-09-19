@@ -460,7 +460,9 @@ class GSplatManager {
             tempOctreesTicked.clear();
         }
 
-        return this.renderer.maxNumSplats;
+        // return the number of visible splats for stats
+        const { textureSize } = this.workBuffer;
+        return textureSize * textureSize;
     }
 
     /**
