@@ -3,6 +3,7 @@ import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
+import { hashCode } from '../../core/hash.js';
 import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { composeChunksGLSL } from '../../scene/shader-lib/glsl/collections/compose-chunks-glsl.js';
@@ -19,6 +20,9 @@ import { composeChunksWGSL } from '../../scene/shader-lib/wgsl/collections/compo
  * @ignore
  */
 class RenderPassCompose extends RenderPassShaderQuad {
+    /**
+     * @type {Texture|null}
+     */
     sceneTexture = null;
 
     bloomIntensity = 0.01;
@@ -77,6 +81,13 @@ class RenderPassCompose extends RenderPassShaderQuad {
     _key = '';
 
     _debug = null;
+
+    // track user-provided custom compose chunks
+    _customComposeChunks = new Map([
+        ['composeDeclarationsPS', ''],
+        ['composeMainStartPS', ''],
+        ['composeMainEndPS', '']
+    ]);
 
     constructor(graphicsDevice) {
         super(graphicsDevice);
@@ -247,11 +258,28 @@ class RenderPassCompose extends RenderPassShaderQuad {
             this._shaderDirty = true;
         }
 
+        const shaderChunks = ShaderChunks.get(this.device, this.device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
+
+        // detect changes to custom compose chunks and mark shader dirty
+        for (const [name, prevValue] of this._customComposeChunks.entries()) {
+            const currentValue = shaderChunks.get(name);
+            if (currentValue !== prevValue) {
+                this._customComposeChunks.set(name, currentValue);
+                this._shaderDirty = true;
+            }
+        }
+
         // need to rebuild shader
         if (this._shaderDirty) {
             this._shaderDirty = false;
 
             const gammaCorrectionName = gammaNames[this._gammaCorrection];
+
+            // include hashes of custom compose chunks to ensure unique program for overrides
+            const customChunks = this._customComposeChunks;
+            const declHash = hashCode(customChunks.get('composeDeclarationsPS') ?? '');
+            const startHash = hashCode(customChunks.get('composeMainStartPS') ?? '');
+            const endHash = hashCode(customChunks.get('composeMainEndPS') ?? '');
 
             const key =
                 `${this.toneMapping}` +
@@ -266,7 +294,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
                 `-${this.taaEnabled ? 'taa' : 'notaa'}` +
                 `-${this.isSharpnessEnabled ? 'cas' : 'nocas'}` +
-                `-${this._debug ?? ''}`;
+                `-${this._debug ?? ''}` +
+                `-decl${declHash}-start${startHash}-end${endHash}`;
 
             if (this._key !== key) {
                 this._key = key;
@@ -286,7 +315,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 if (this.isSharpnessEnabled) defines.set('CAS', true);
                 if (this._debug) defines.set('DEBUG_COMPOSE', this._debug);
 
-                const includes = new Map(ShaderChunks.get(this.device, this.device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL));
+                const includes = new Map(shaderChunks);
 
                 this.shader = ShaderUtils.createShader(this.device, {
                     uniqueName: `ComposeShader-${key}`,
@@ -302,9 +331,10 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     execute() {
 
-        this.sceneTextureId.setValue(this.sceneTexture);
-        this.sceneTextureInvResValue[0] = 1.0 / this.sceneTexture.width;
-        this.sceneTextureInvResValue[1] = 1.0 / this.sceneTexture.height;
+        const sceneTex = this.sceneTexture;
+        this.sceneTextureId.setValue(sceneTex);
+        this.sceneTextureInvResValue[0] = 1.0 / sceneTex.width;
+        this.sceneTextureInvResValue[1] = 1.0 / sceneTex.height;
         this.sceneTextureInvResId.setValue(this.sceneTextureInvResValue);
 
         if (this._bloomTexture) {
