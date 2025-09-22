@@ -150,13 +150,21 @@ class WebglShader {
         const definition = shader.definition;
         const attrs = definition.attributes;
         if (definition.useTransformFeedback) {
-            // Collect all "out_" attributes and use them for output
-            const outNames = [];
-            for (const attr in attrs) {
-                if (attrs.hasOwnProperty(attr)) {
-                    outNames.push(`out_${attr}`);
+
+            let outNames = definition.outVaryings;
+            
+            if (!outNames) {
+
+                outNames = [];
+
+                // Collect all "out_" attributes and use them for output
+                for (const attr in attrs) {
+                    if (attrs.hasOwnProperty(attr)) {
+                        outNames.push(`out_${attr}`);
+                    }
                 }
             }
+
             gl.transformFeedbackVaryings(glProgram, outNames, gl.INTERLEAVED_ATTRIBS);
         }
 
