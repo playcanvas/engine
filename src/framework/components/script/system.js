@@ -10,6 +10,7 @@ import { ScriptComponentData } from './data.js';
 const METHOD_INITIALIZE_ATTRIBUTES = '_onInitializeAttributes';
 const METHOD_INITIALIZE = '_onInitialize';
 const METHOD_POST_INITIALIZE = '_onPostInitialize';
+const METHOD_FIXED_UPDATE = '_onFixedUpdate';
 const METHOD_UPDATE = '_onUpdate';
 const METHOD_POST_UPDATE = '_onPostUpdate';
 
@@ -62,6 +63,7 @@ class ScriptComponentSystem extends ComponentSystem {
         this.on('beforeremove', this._onBeforeRemove, this);
         this.app.systems.on('initialize', this._onInitialize, this);
         this.app.systems.on('postInitialize', this._onPostInitialize, this);
+        this.app.systems.on('fixedUpdate', this._onFixedUpdate, this);
         this.app.systems.on('update', this._onUpdate, this);
         this.app.systems.on('postUpdate', this._onPostUpdate, this);
     }
@@ -163,6 +165,11 @@ class ScriptComponentSystem extends ComponentSystem {
         this._callComponentMethod(this._enabledComponents, METHOD_POST_INITIALIZE);
     }
 
+    _onFixedUpdate(dt) {
+        // call onFixedUpdate on enabled components
+        this._callComponentMethod(this._enabledComponents, METHOD_FIXED_UPDATE, dt);
+    }
+
     _onUpdate(dt) {
         // call onUpdate on enabled components
         this._callComponentMethod(this._enabledComponents, METHOD_UPDATE, dt);
@@ -201,6 +208,7 @@ class ScriptComponentSystem extends ComponentSystem {
 
         this.app.systems.off('initialize', this._onInitialize, this);
         this.app.systems.off('postInitialize', this._onPostInitialize, this);
+        this.app.systems.off('fixedUpdate', this._onFixedUpdate, this);
         this.app.systems.off('update', this._onUpdate, this);
         this.app.systems.off('postUpdate', this._onPostUpdate, this);
     }
