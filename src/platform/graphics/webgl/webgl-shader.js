@@ -150,11 +150,9 @@ class WebglShader {
         const definition = shader.definition;
         const attrs = definition.attributes;
         if (definition.useTransformFeedback) {
-
             let outNames = definition.feedbackVaryings;
-
+            
             if (!outNames) {
-
                 outNames = [];
 
                 // Collect all "out_" attributes and use them for output
