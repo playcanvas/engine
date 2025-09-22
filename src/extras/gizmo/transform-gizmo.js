@@ -543,7 +543,7 @@ class TransformGizmo extends Gizmo {
         }
 
         if (changed) {
-            this.fire(Gizmo.EVENT_RENDERUPDATE);
+            this._renderUpdate = true;
         }
     }
 

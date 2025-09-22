@@ -96,7 +96,7 @@ Object.assign(cc, {
     enableFly: false
 });
 app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
-    cc.skipUpdate = hasPointer;
+    cc.enabled = !hasPointer;
 });
 
 // create light entity
