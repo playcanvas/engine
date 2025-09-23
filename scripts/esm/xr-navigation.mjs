@@ -6,10 +6,10 @@ import { Color, Script, Vec2, Vec3 } from 'playcanvas';
  * Handles VR navigation with support for both teleportation and smooth locomotion.
  * Both methods can be enabled simultaneously, allowing users to choose their preferred
  * navigation method on the fly.
- * 
+ *
  * Teleportation: Point and teleport using trigger/pinch gestures
  * Smooth Locomotion: Use left thumbstick for movement and right thumbstick for snap turning
- * 
+ *
  * This script should be attached to a parent entity of the camera entity used for the XR
  * session. The entity hierarchy should be: XrNavigationEntity > CameraEntity for proper
  * locomotion handling. Use it in conjunction with the `XrControllers` script.
@@ -132,13 +132,18 @@ class XrNavigation extends Script {
 
     // Pre-allocated objects for performance (object pooling)
     tmpVec2A = new Vec2();
+
     tmpVec2B = new Vec2();
+
     tmpVec3A = new Vec3();
+
     tmpVec3B = new Vec3();
 
     // Color objects
     validColor = new Color();
+
     invalidColor = new Color();
+
     rayColor = new Color();
 
     // Camera reference for movement calculations
@@ -156,7 +161,7 @@ class XrNavigation extends Script {
         if (this.enableTeleport) methods.push('teleportation');
         if (this.enableMove) methods.push('smooth movement');
         console.log(`XrNavigation: Enabled methods - ${methods.join(', ')}`);
-        
+
         if (!this.enableTeleport && !this.enableMove) {
             console.warn('XrNavigation: Both teleportation and movement are disabled. Navigation will not work.');
         }
@@ -169,14 +174,14 @@ class XrNavigation extends Script {
         // Find camera entity - should be a child of this entity
         const cameraComponent = this.entity.findComponent('camera');
         this.cameraEntity = cameraComponent ? cameraComponent.entity : null;
-        
+
         if (!this.cameraEntity) {
             console.warn('XrNavigation: Camera entity not found. Looking for camera in children...');
-            
+
             // First try to find by name - cast to Entity since we know it should be one
             const foundByName = this.entity.findByName('camera');
             this.cameraEntity = /** @type {import('playcanvas').Entity | null} */ (foundByName);
-            
+
             // If not found, search children for entity with camera component
             if (!this.cameraEntity) {
                 for (const child of this.entity.children) {
@@ -187,7 +192,7 @@ class XrNavigation extends Script {
                     }
                 }
             }
-            
+
             if (!this.cameraEntity) {
                 console.error('XrNavigation: No camera entity found. Movement calculations may not work correctly.');
             }
@@ -289,7 +294,7 @@ class XrNavigation extends Script {
 
                     // Calculate rotation angle based on camera yaw
                     const rad = Math.atan2(this.tmpVec2B.x, this.tmpVec2B.y) - Math.PI / 2;
-                    
+
                     // Apply rotation to movement vector
                     const t = this.tmpVec2A.x * Math.sin(rad) - this.tmpVec2A.y * Math.cos(rad);
                     this.tmpVec2A.y = this.tmpVec2A.y * Math.sin(rad) + this.tmpVec2A.x * Math.cos(rad);
@@ -297,14 +302,11 @@ class XrNavigation extends Script {
 
                     // Scale by movement speed and delta time
                     this.tmpVec2A.mulScalar(this.movementSpeed * dt);
-                    
+
                     // Apply movement to camera parent (this entity)
                     this.entity.translate(this.tmpVec2A.x, 0, this.tmpVec2A.y);
                 }
-            }
-            
-            // Right controller - snap turning
-            else if (inputSource.handedness === 'right') {
+            } else if (inputSource.handedness === 'right') { // Right controller - snap turning
                 this.handleSnapTurning(inputSource);
             }
         }
@@ -394,7 +396,7 @@ class XrNavigation extends Script {
             // Use pre-allocated vectors to avoid garbage collection
             this.tmpVec3A.set(x1, 0.01, z1);  // Slightly above ground to avoid z-fighting
             this.tmpVec3B.set(x2, 0.01, z2);
-            
+
             this.app.drawLine(this.tmpVec3A, this.tmpVec3B, this.validColor);
         }
     }
