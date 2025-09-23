@@ -240,8 +240,8 @@ class ShaderInstance {
  * `GraphicsDevice.getIndirectDrawSlot(count)`, then bind the mesh instance to that slot:
  *
  * ```javascript
-* const slot = app.graphicsDevice.getIndirectDrawSlot();
-* meshInstance.setIndirect(null, slot); // first arg can be a CameraComponent or null
+ * const slot = app.graphicsDevice.getIndirectDrawSlot();
+ * meshInstance.setIndirect(null, slot); // first arg can be a CameraComponent or null
  * ```
  *
  * **Example**
