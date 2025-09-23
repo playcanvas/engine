@@ -237,11 +237,11 @@ class ShaderInstance {
  *
  * Instead of issuing draw calls from the CPU, parameters are written into a GPU
  * storage buffer and executed via indirect draw commands. Allocate one or more slots with
- * `GraphicsDevice.getIndirectDrawSlot(count)`, then bind the mesh instance to that slot:
+ * `GraphicsDevice.getIndirectDrawSlot(count)`, then bind the mesh instance to those slots:
  *
  * ```javascript
- * const slot = app.graphicsDevice.getIndirectDrawSlot();
- * meshInstance.setIndirect(null, slot); // first arg can be a CameraComponent or null
+ * const slot = app.graphicsDevice.getIndirectDrawSlot(count);
+ * meshInstance.setIndirect(null, slot, count); // first arg can be a CameraComponent or null
  * ```
  *
  * **Example**
