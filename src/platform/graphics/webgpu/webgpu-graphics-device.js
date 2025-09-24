@@ -538,20 +538,21 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // allocate buffer
         if (this._indirectDrawBuffer === null) {
-            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * 4, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * _indirectEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
             this._indirectDrawBufferCount = this.maxIndirectDrawCount;
         }
     }
 
-    getIndirectDrawSlot() {
+    getIndirectDrawSlot(count = 1) {
 
         // make sure the buffer is allocated
         this.allocateIndirectDrawBuffer();
 
-        // allocate slot
+        // allocate consecutive slots
         const slot = this._indirectDrawNextIndex;
-        Debug.assert(slot < this.maxIndirectDrawCount, `Insufficient indirect draw slots per frame (currently ${this._indirectDrawNextIndex}), please adjust GraphicsDevice#maxIndirectDrawCount`);
-        this._indirectDrawNextIndex++;
+        const nextIndex = this._indirectDrawNextIndex + count;
+        Debug.assert(nextIndex <= this.maxIndirectDrawCount, `Insufficient indirect draw slots per frame (requested ${count}, currently ${nextIndex}), please adjust GraphicsDevice#maxIndirectDrawCount`);
+        this._indirectDrawNextIndex = nextIndex;
         return slot;
     }
 
@@ -614,7 +615,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         _uniqueLocations.clear();
     }
 
-    draw(primitive, indexBuffer, numInstances = 1, indirectSlot, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances = 1, indirectData, first = true, last = true) {
 
         if (this.shader.ready && !this.shader.failed) {
 
@@ -658,13 +659,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
 
             // draw
-            if (indirectSlot !== undefined) {
-                const indirectOffset = indirectSlot * _indirectEntryByteSize;
+            if (indirectData !== undefined) {
                 const indirectBuffer = this.indirectDrawBuffer.impl.buffer;
-                if (indexBuffer) {
-                    passEncoder.drawIndexedIndirect(indirectBuffer, indirectOffset);
-                } else {
-                    passEncoder.drawIndirect(indirectBuffer, indirectOffset);
+                const drawsCount = indirectData.count;
+
+                // TODO: when multiDrawIndirect is supported, we can use it here instead of a loop
+                for (let d = 0; d < drawsCount; d++) {
+                    const indirectOffset = (indirectData.index + d) * _indirectEntryByteSize;
+                    if (indexBuffer) {
+                        passEncoder.drawIndexedIndirect(indirectBuffer, indirectOffset);
+                    } else {
+                        passEncoder.drawIndirect(indirectBuffer, indirectOffset);
+                    }
                 }
             } else {
                 if (indexBuffer) {

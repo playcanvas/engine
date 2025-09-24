@@ -89,9 +89,9 @@ class InstancingData {
  */
 class IndirectData {
     /**
-     * A map of camera components to their corresponding slot in the indirect buffer.
+     * A map of camera components to their corresponding indirect draw data.
      *
-     * @type {Map<CameraComponent, number>}
+     * @type {Map<CameraComponent, { index: number, count: number }>}
      */
     map = new Map();
 
@@ -103,11 +103,11 @@ class IndirectData {
     meshMetaData = new Int32Array(4);
 
     /**
-     * Retrieves the slot in the indirect buffer for a specific camera.
+     * Retrieves the indirect draw data for a specific camera.
      *
-     * @param {CameraComponent|null} camera - The camera component to retrieve the slot for, or null
-     * if the slot should be used for all cameras.
-     * @returns {number|undefined} - The slot in the indirect buffer, or undefined.
+     * @param {CameraComponent|null} camera - The camera component to retrieve indirect data for, or
+     * null if the data should be used for all cameras.
+     * @returns {{ index: number, count: number }|undefined} - The indirect draw data, or undefined.
      */
     get(camera) {
         return this.map.get(camera) ?? this.map.get(null);
@@ -236,12 +236,12 @@ class ShaderInstance {
  * ### GPU-Driven Indirect Rendering (WebGPU Only)
  *
  * Instead of issuing draw calls from the CPU, parameters are written into a GPU
- * storage buffer and executed via indirect draw commands. Allocate a slot with
- * `GraphicsDevice.getIndirectDrawSlot()`, then bind the mesh instance to that slot:
+ * storage buffer and executed via indirect draw commands. Allocate one or more slots with
+ * `GraphicsDevice.getIndirectDrawSlot(count)`, then bind the mesh instance to those slots:
  *
  * ```javascript
- * const slot = app.graphicsDevice.getIndirectDrawSlot();
- * meshInstance.setIndirect(null, slot); // first arg can be a CameraComponent or null
+ * const slot = app.graphicsDevice.getIndirectDrawSlot(count);
+ * meshInstance.setIndirect(null, slot, count); // first arg can be a CameraComponent or null
  * ```
  *
  * **Example**
@@ -1146,13 +1146,15 @@ class MeshInstance {
      * null if the indirect slot should be used for all cameras.
      * @param {number} slot - Slot in the buffer to set the draw call parameters. Allocate a slot
      * in the buffer by calling {@link GraphicsDevice#getIndirectDrawSlot}.
+     * @param {number} [count] - Optional number of consecutive slots to reserve and use. Defaults
+     * to 1.
      */
-    setIndirect(camera, slot) {
+    setIndirect(camera, slot, count = 1) {
 
         this._allocIndirectData();
 
         // store camera to slot mapping
-        this.indirectData.map.set(camera?.camera ?? null, slot);
+        this.indirectData.map.set(camera?.camera ?? null, { index: slot, count });
 
         // remove all data from this map at the end of the frame, slot needs to be assigned each frame
         const device = this.mesh.device;

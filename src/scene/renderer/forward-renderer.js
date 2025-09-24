@@ -655,7 +655,7 @@ class ForwardRenderer extends Renderer {
 
             drawCallback?.(drawCall, i);
 
-            const indirectSlot = drawCall.indirectData?.get(camera);
+            const indirectData = drawCall.indirectData?.get(camera);
 
             if (viewList) {
                 for (let v = 0; v < viewList.length; v++) {
@@ -675,7 +675,7 @@ class ForwardRenderer extends Renderer {
 
                     const first = v === 0;
                     const last = v === viewList.length - 1;
-                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectSlot, first, last);
+                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, first, last);
 
                     this._forwardDrawCalls++;
                     if (drawCall.instancingData) {
@@ -683,7 +683,7 @@ class ForwardRenderer extends Renderer {
                     }
                 }
             } else {
-                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectSlot);
+                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData);
 
                 this._forwardDrawCalls++;
                 if (drawCall.instancingData) {
