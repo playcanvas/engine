@@ -741,13 +741,16 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Retrieves the available slot in the {@link indirectDrawBuffer} used for indirect rendering,
-     * which can be utilized by a {@link Compute} shader to generate indirect draw parameters and by
-     * {@link MeshInstance#setIndirect} to configure indirect draw calls.
+     * Retrieves the first available slot in the {@link indirectDrawBuffer} used for indirect
+     * rendering, which can be utilized by a {@link Compute} shader to generate indirect draw
+     * parameters and by {@link MeshInstance#setIndirect} to configure indirect draw calls.
      *
-     * @returns {number} - The slot used for indirect rendering.
+     * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
+     * @returns {number} - The first reserved slot index used for indirect rendering.
      */
-    getIndirectDrawSlot() {
+    getIndirectDrawSlot(count = 1) {
         return 0;
     }
 
@@ -827,7 +830,8 @@ class GraphicsDevice extends EventHandler {
      * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
      * @param {number} [numInstances] - The number of instances to render when using instancing.
      * Defaults to 1.
-     * @param {number} [indirectSlot] - The slot of the indirect buffer to use for the draw call.
+     * @param {{ index: number, count: number }} [indirectData] - The indirect draw data to use for
+     * the draw call.
      * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
      * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
@@ -843,7 +847,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @ignore
      */
-    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, indirectData, first = true, last = true) {
         Debug.assert(false);
     }
 
