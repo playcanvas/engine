@@ -276,6 +276,10 @@ class GSplatOctreeInstance {
         // parameters
         const { lodBehindPenalty, lodRangeMin, lodRangeMax, lodUnderfillLimit = 0 } = params;
 
+        // Clamp configured LOD range to valid bounds [0, maxLod] and ensure min <= max
+        const rangeMin = Math.max(0, Math.min(lodRangeMin ?? 0, maxLod));
+        const rangeMax = Math.max(rangeMin, Math.min(lodRangeMax ?? maxLod, maxLod));
+
 
         // process all nodes
         const nodes = this.octree.nodes;
@@ -285,8 +289,8 @@ class GSplatOctreeInstance {
             // LOD for the node, clamped by configured range
             // optimal target LOD based on distance and range
             let optimalLodIndex = this.calculateNodeLod(localCameraPosition, localCameraForward, nodeIndex, maxLod, lodDistances, lodBehindPenalty);
-            if (optimalLodIndex < lodRangeMin) optimalLodIndex = lodRangeMin;
-            if (optimalLodIndex > lodRangeMax) optimalLodIndex = lodRangeMax;
+            if (optimalLodIndex < rangeMin) optimalLodIndex = rangeMin;
+            if (optimalLodIndex > rangeMax) optimalLodIndex = rangeMax;
             const currentLodIndex = this.nodeLods[nodeIndex];
 
             // Determine desired display LOD using underfill strategy within allowed range
