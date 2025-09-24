@@ -1675,7 +1675,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
     }
 
-    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, indirectData, first = true, last = true) {
 
         const shader = this.shader;
         if (shader) {

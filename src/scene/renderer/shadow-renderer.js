@@ -362,8 +362,8 @@ class ShadowRenderer {
 
             // draw
             const style = meshInstance.renderStyle;
-            const indirectSlot = meshInstance.indirectData?.get(camera);
-            device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectSlot);
+            const indirectData = meshInstance.indirectData?.get(camera);
+            device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectData);
 
             renderer._shadowDrawCalls++;
             if (instancingData) {
