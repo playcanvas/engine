@@ -115,14 +115,16 @@ class TransformFeedback {
      * Creates a transform feedback ready vertex shader from code.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
-     * @param {string} vertexCode - Vertex shader code. Should contain output variables starting with "out_".
+     * @param {string} vertexCode - Vertex shader code. Should contain output variables starting with "out_" or feedbackVaryings.
      * @param {string} name - Unique name for caching the shader.
+     * @param {string[] | undefined} feedbackVaryings - A list of shader output variable names that will be captured.
      * @returns {Shader} A shader to use in the process() function.
      */
-    static createShader(graphicsDevice, vertexCode, name) {
+    static createShader(graphicsDevice, vertexCode, name, feedbackVaryings) {
         return new Shader(graphicsDevice, ShaderDefinitionUtils.createDefinition(graphicsDevice, {
             name,
             vertexCode,
+            feedbackVaryings,
             useTransformFeedback: true,
             fragmentCode: 'void main(void) {gl_FragColor = vec4(0.0);}'
         }));
