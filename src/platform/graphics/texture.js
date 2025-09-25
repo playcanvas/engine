@@ -371,6 +371,7 @@ class Texture {
         // destroy texture impl
         const device = this.device;
         this.adjustVramSizeTracking(device._vram, -this._gpuSize);
+        this._gpuSize = 0;
         this.impl.destroy(device);
         this._clearLevels();
 
