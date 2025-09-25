@@ -82,7 +82,7 @@ class TransformFeedback {
      * Create a new TransformFeedback instance.
      *
      * @param {VertexBuffer} inputBuffer - The input vertex buffer.
-     * @param {VertexBuffer} outputBuffer - The optional output buffer.
+     * @param {VertexBuffer} [outputBuffer] - The optional output buffer.
      * If not specified, a buffer with parameters matching the input buffer will be created.
      * @param {number} [usage] - The optional usage type of the output vertex buffer. Can be:
      *
@@ -110,18 +110,25 @@ class TransformFeedback {
         if (outputBuffer) {
             Debug.assert(outputBuffer.format.interleaved || outputBuffer.format.elements.length <= 1,
                 'Output vertex buffer used by TransformFeedback needs to be interleaved.');
+
+            if (usage === BUFFER_GPUDYNAMIC && outputBuffer.usage !== usage) {
+                // have to recreate input buffer with other usage
+                gl.bindBuffer(gl.ARRAY_BUFFER, outputBuffer.impl.bufferId);
+                gl.bufferData(gl.ARRAY_BUFFER, outputBuffer.storage, gl.DYNAMIC_COPY);
+            }
+
         } else {
             Debug.assert(inputBuffer.format.interleaved || inputBuffer.format.elements.length <= 1,
                 'Input vertex buffer used by TransformFeedback needs to be interleaved.');
+
+            if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
+                // have to recreate input buffer with other usage
+                gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.impl.bufferId);
+                gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
+            }
         }
 
         this._inputBuffer = inputBuffer;
-
-        if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
-            // have to recreate input buffer with other usage
-            gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.impl.bufferId);
-            gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
-        }
 
         this._swapEquivalent = inputBuffer.format === outputBuffer?.format;
         this._destroyOutputBuffer = !outputBuffer;
@@ -137,7 +144,7 @@ class TransformFeedback {
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      * @param {string} vertexCode - Vertex shader code. Should contain output variables starting with "out_" or feedbackVaryings.
      * @param {string} name - Unique name for caching the shader.
-     * @param {string[] | undefined} feedbackVaryings - A list of shader output variable names that will be captured.
+     * @param {string[]} [feedbackVaryings] - A list of shader output variable names that will be captured.
      * @returns {Shader} A shader to use in the process() function.
      */
     static createShader(graphicsDevice, vertexCode, name, feedbackVaryings) {
