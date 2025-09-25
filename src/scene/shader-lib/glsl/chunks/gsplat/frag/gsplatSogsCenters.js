@@ -25,4 +25,3 @@ void main(void) {
     pcFragColor0 = uvec4(floatBitsToUint(center), 0u);
 }
 `;
-

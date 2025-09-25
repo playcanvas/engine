@@ -28,4 +28,3 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     return output;
 }
 `;
-
