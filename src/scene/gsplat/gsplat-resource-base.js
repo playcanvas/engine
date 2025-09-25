@@ -92,8 +92,7 @@ class GSplatResourceBase {
         this.device = device;
         this.gsplatData = gsplatData;
 
-        this.centers = new Float32Array(gsplatData.numSplats * 3);
-        gsplatData.getCenters(this.centers);
+        this.centers = gsplatData.getCenters();
 
         this.aabb = new BoundingBox();
         gsplatData.calcAabb(this.aabb);
