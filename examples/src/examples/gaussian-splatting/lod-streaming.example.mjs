@@ -1,3 +1,4 @@
+// @config HIDDEN
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
@@ -65,9 +66,23 @@ app.on('destroy', () => {
 //     lodPresetMobile: 'low',
 //     lodDistances: [50, 100, 150, 250, 300],
 //     cameraPosition: [1.3, 2.6, 8.2],
+//     eulerAngles: [-90, 0, 0],
 //     moveSpeed: 4,
 //     moveFastSpeed: 15
 // };
+
+// const config = {
+//     name: 'colt-tower',
+//     url: `${rootPath}/static/assets/splats/colt-tower/lod-meta.json`,
+//     lodPresetDesktop: 'normal',
+//     lodPresetMobile: 'low',
+//     lodDistances: [0.5, 1, 2, 8, 10],
+//     cameraPosition: [10.3, 2, 8.2],
+//     eulerAngles: [-90, 0, 0],
+//     moveSpeed: 4,
+//     moveFastSpeed: 15
+// };
+
 
 const config = {
     name: 'skatepark',
@@ -76,9 +91,46 @@ const config = {
     lodPresetMobile: 'low',
     lodDistances: [15, 30, 80, 250, 300],
     cameraPosition: [10.3, 2, 8.2],
+    eulerAngles: [-90, 0, 0],
     moveSpeed: 4,
     moveFastSpeed: 15
 };
+
+// const config = {
+//     name: 'cityblock',
+//     url: `${rootPath}/static/assets/splats/cityblock/lod-meta.json`,
+//     lodPresetDesktop: 'normal',
+//     lodPresetMobile: 'low',
+//     lodDistances: [50, 100, 150, 250, 300],
+//     cameraPosition: [1.3, 200, 8.2],
+//     moveSpeed: 40,
+//     moveFastSpeed: 150
+// };
+
+// const config = {
+//     name: 'skatepark-decimated',
+//     url: `${rootPath}/static/assets/splats/skatepark-decimated/lod-meta.json`,
+//     lodPresetDesktop: 'great',
+//     lodPresetMobile: 'low',
+//     lodDistances: [15, 30, 80, 250, 300],
+//     cameraPosition: [10.3, 2, 8.2],
+//     eulerAngles: [-90, 0, 0],
+//     moveSpeed: 4,
+//     moveFastSpeed: 15
+// };
+
+// const config = {
+//     name: 'grid',
+//     url: `${rootPath}/static/assets/splats/grid/lod-meta.json`,
+//     lodPresetDesktop: 'great',
+//     lodPresetMobile: 'low',
+//     lodDistances: [15, 30, 80, 250, 300],
+//     cameraPosition: [10.3, 2, 8.2],
+//     eulerAngles: [0, 0, 0],
+//     moveSpeed: 4,
+//     moveFastSpeed: 15
+// };
+
 
 const assets = {
     church: new pc.Asset('gsplat', 'gsplat', { url: config.url }),
@@ -99,6 +151,18 @@ assetListLoader.load(() => {
     app.scene.envAtlas = assets.envatlas.resource;
     app.scene.skyboxMip = 1;
     app.scene.exposure = 1.5;
+
+    // Mini-Stats: add VRAM on top of default stats
+    const msOptions = pc.MiniStats.getDefaultOptions();
+    msOptions.stats.push({
+        name: 'VRAM',
+        stats: ['vram.tex'],
+        decimalPlaces: 1,
+        multiplier: 1 / (1024 * 1024),
+        unitsName: 'MB',
+        watermark: 1024
+    });
+    const miniStats = new pc.MiniStats(app, msOptions); // eslint-disable-line no-unused-vars
 
     // enable rotation-based LOD updates and behind-camera penalty
     app.scene.gsplat.lodUpdateAngle = 90;
@@ -153,7 +217,8 @@ assetListLoader.load(() => {
         unified: true
     });
     entity.setLocalPosition(0, 0, 0);
-    entity.setLocalEulerAngles(-90, 0, 0);
+    const [rotX, rotY, rotZ] = /** @type {[number, number, number]} */ (config.eulerAngles || [-90, 0, 0]);
+    entity.setLocalEulerAngles(rotX, rotY, rotZ);
     entity.setLocalScale(1, 1, 1);
     app.root.addChild(entity);
     const gs = /** @type {any} */ (entity.gsplat);
