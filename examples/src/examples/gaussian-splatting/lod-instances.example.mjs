@@ -1,3 +1,4 @@
+// @config HIDDEN
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';

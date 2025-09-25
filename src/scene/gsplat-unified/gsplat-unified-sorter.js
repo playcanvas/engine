@@ -78,8 +78,8 @@ class GSplatUnifiedSorter extends EventHandler {
             if (!this.centersSet.has(id)) {
                 this.centersSet.add(id);
 
-                // clone centers buffer
-                const centersBuffer = centers.buffer.slice();
+                // use the original buffer, as we do not need it on the main thread anymore
+                const centersBuffer = centers.buffer;
 
                 // post centers to worker
                 this.worker.postMessage({
