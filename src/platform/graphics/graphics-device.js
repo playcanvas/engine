@@ -1027,7 +1027,7 @@ class GraphicsDevice extends EventHandler {
                 textures.forEach((texture, index) => {
                     const textureSize  = texture.gpuSize;
                     textureTotal += textureSize;
-                    Debug.log(`${index}. ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
+                    Debug.log(`${index}. Id: ${texture.id} ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
                 });
                 Debug.log(`Total: ${(textureTotal / 1024 / 1024).toFixed(2)}MB`);
             }
