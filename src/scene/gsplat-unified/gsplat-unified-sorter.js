@@ -78,7 +78,7 @@ class GSplatUnifiedSorter extends EventHandler {
             if (!this.centersSet.has(id)) {
                 this.centersSet.add(id);
 
-                // clone centers buffer - requireed when mutliple workers sort the same splat resource
+                // clone centers buffer - required when multiple workers sort the same splat resource
                 const centersBuffer = centers.buffer.slice();
 
                 // post centers to worker
