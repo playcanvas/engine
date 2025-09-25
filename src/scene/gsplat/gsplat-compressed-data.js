@@ -199,10 +199,12 @@ class GSplatCompressedData {
     }
 
     /**
-     * @param {Float32Array} result - Array containing the centers.
+     * Returns a new Float32Array of centers (x, y, z per splat).
+     * @returns {Float32Array} Centers buffer
      */
-    getCenters(result) {
+    getCenters() {
         const { vertexData, chunkData, numChunks, chunkSize } = this;
+        const result = new Float32Array(this.numSplats * 3);
 
         let mx, my, mz, Mx, My, Mz;
 
@@ -226,6 +228,8 @@ class GSplatCompressedData {
                 result[i * 3 + 2] = (1 - pz) * mz + pz * Mz;
             }
         }
+
+        return result;
     }
 
     getChunks(result) {

@@ -129,8 +129,13 @@ class GSplatData {
     }
 
     // access a named property
+    /**
+     * @returns {Float32Array}
+     */
     getProp(name, elementName = 'vertex') {
-        return this.getElement(elementName)?.properties.find(p => p.name === name)?.storage;
+        const el = this.getElement(elementName);
+        const storage = el && el.properties.find(p => p.name === name)?.storage;
+        return /** @type {Float32Array} */ (storage ?? new Float32Array(0));
     }
 
     // access the named element
@@ -259,18 +264,21 @@ class GSplatData {
     }
 
     /**
-     * @param {Float32Array} result - Array containing the centers.
+     * Returns a new Float32Array of centers (x, y, z per splat).
+     * @returns {Float32Array} Centers buffer
      */
-    getCenters(result) {
+    getCenters() {
         const x = this.getProp('x');
         const y = this.getProp('y');
         const z = this.getProp('z');
 
+        const result = new Float32Array(this.numSplats * 3);
         for (let i = 0; i < this.numSplats; ++i) {
             result[i * 3 + 0] = x[i];
             result[i * 3 + 1] = y[i];
             result[i * 3 + 2] = z[i];
         }
+        return result;
     }
 
     /**
