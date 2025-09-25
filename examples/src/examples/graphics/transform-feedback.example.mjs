@@ -145,7 +145,8 @@ assetListLoader.load(() => {
         shader = pc.TransformFeedback.createShader(
             app.graphicsDevice,
             files['shaderFeedback.vert'],
-            'transformShaderExample'
+            'transformShaderExample',
+            ['updated_vertex_position']
         );
     }
 

@@ -82,6 +82,8 @@ class TransformFeedback {
      * Create a new TransformFeedback instance.
      *
      * @param {VertexBuffer} inputBuffer - The input vertex buffer.
+     * @param {VertexBuffer} outputBuffer - The optional output buffer.
+     * If not specified, a buffer with parameters matching the input buffer will be created.
      * @param {number} [usage] - The optional usage type of the output vertex buffer. Can be:
      *
      * - {@link BUFFER_STATIC}
@@ -90,17 +92,29 @@ class TransformFeedback {
      * - {@link BUFFER_GPUDYNAMIC}
      *
      * Defaults to {@link BUFFER_GPUDYNAMIC} (which is recommended for continuous update).
-     * @param {VertexBuffer | undefined} outputBuffer - The optional output buffer.
-     * If not specified, a buffer with parameters matching the input buffer will be created.
      */
-    constructor(inputBuffer, usage = BUFFER_GPUDYNAMIC, outputBuffer = undefined) {
+    constructor(inputBuffer, outputBuffer, usage = BUFFER_GPUDYNAMIC) {
+
+        if (outputBuffer !== undefined && !(outputBuffer instanceof VertexBuffer)) {
+
+            Debug.deprecated('Such a constructor that takes the second parameter usage is deprecated.');
+
+            usage = outputBuffer;
+            outputBuffer = undefined;
+        }
 
         this.device = inputBuffer.device;
+
         const gl = this.device.gl;
 
-        Debug.assert(inputBuffer.format.interleaved || inputBuffer.format.elements.length < 1,
-            'Vertex buffer used by TransformFeedback needs to be interleaved.');
-        
+        if (outputBuffer) {
+            Debug.assert(outputBuffer.format.interleaved || outputBuffer.format.elements.length <= 1,
+                'Output vertex buffer used by TransformFeedback needs to be interleaved.');
+        } else {
+            Debug.assert(inputBuffer.format.interleaved || inputBuffer.format.elements.length <= 1,
+                'Input vertex buffer used by TransformFeedback needs to be interleaved.');
+        }
+
         this._inputBuffer = inputBuffer;
 
         if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
@@ -109,6 +123,8 @@ class TransformFeedback {
             gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
         }
 
+        this._swapEquivalent = inputBuffer.format === outputBuffer?.format;
+        this._destroyOutputBuffer = !outputBuffer;
         this._outputBuffer = outputBuffer ?? new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, {
             usage: usage,
             data: inputBuffer.storage
@@ -138,7 +154,9 @@ class TransformFeedback {
      * Destroys the transform feedback helper object.
      */
     destroy() {
-        this._outputBuffer.destroy();
+        if (this._destroyOutputBuffer) {
+            this._outputBuffer.destroy();
+        }
     }
 
     /**
