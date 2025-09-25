@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
@@ -17,6 +18,9 @@ import glslGsplatPackingPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatPac
 
 import wgslGsplatSogsReorderSH from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsReorderSh.js';
 import wgslGsplatPackingPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatPacking.js';
+
+import glslSogsCentersPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogsCenters.js';
+import wgslSogsCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsCenters.js';
 
 const SH_C0 = 0.28209479177387814;
 
@@ -169,6 +173,14 @@ class GSplatSogsData {
 
     packedShN;
 
+    /**
+     * Cached centers array (x, y, z per splat), length = numSplats * 3.
+     *
+     * @type {Float32Array | null}
+     * @private
+     */
+    _centers = null;
+
     // Marked when resource is destroyed, to abort any in-flight async preparation
     destroyed = false;
 
@@ -212,41 +224,12 @@ class GSplatSogsData {
         );
     }
 
-    getCenters(result) {
-        const { meta, means_l, means_u, numSplats } = this;
-        const { means } = meta;
-
-        const means_u_data = new Uint32Array(means_u._levels[0].buffer);
-        const means_l_data = new Uint32Array(means_l._levels[0].buffer);
-
-        const mx = means.mins[0] / 65535;
-        const my = means.mins[1] / 65535;
-        const mz = means.mins[2] / 65535;
-        const Mx = means.maxs[0] / 65535;
-        const My = means.maxs[1] / 65535;
-        const Mz = means.maxs[2] / 65535;
-
-        for (let i = 0; i < numSplats; i++) {
-            const idx = i;
-
-            const means_u = means_u_data[idx];
-            const means_l = means_l_data[idx];
-
-            const wx = ((means_u <<  8) & 0xff00) |  (means_l         & 0xff);
-            const wy =  (means_u        & 0xff00) | ((means_l >>> 8)  & 0xff);
-            const wz = ((means_u >>> 8) & 0xff00) | ((means_l >>> 16) & 0xff);
-
-            const nx = mx * (65535 - wx) + Mx * wx;
-            const ny = my * (65535 - wy) + My * wy;
-            const nz = mz * (65535 - wz) + Mz * wz;
-
-            const ax = nx < 0 ? -nx : nx;
-            const ay = ny < 0 ? -ny : ny;
-            const az = nz < 0 ? -nz : nz;
-            result[i * 3]     = (nx < 0 ? -1 : 1) * (Math.exp(ax) - 1);
-            result[i * 3 + 1] = (ny < 0 ? -1 : 1) * (Math.exp(ay) - 1);
-            result[i * 3 + 2] = (nz < 0 ? -1 : 1) * (Math.exp(az) - 1);
-        }
+    getCenters() {
+        // centers can be only copied once to avoid making copies.
+        Debug.assert(this._centers);
+        const centers = /** @type {Float32Array} */ this._centers;
+        this._centers = null;
+        return centers;
     }
 
     // use bound center for focal point
@@ -363,6 +346,69 @@ class GSplatSogsData {
         }]);
     }
 
+    async generateCenters() {
+        const { device, width, height } = this.means_l;
+        const { scope } = device;
+
+        // create a temporary texture to render centers into
+        const centersTexture = new Texture(device, {
+            name: 'sogsCentersTexture',
+            width,
+            height,
+            format: PIXELFORMAT_RGBA32U,
+            mipmaps: false
+        });
+
+        const shader = ShaderUtils.createShader(device, {
+            uniqueName: 'GsplatSogsCentersShader',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentGLSL: glslSogsCentersPS,
+            fragmentWGSL: wgslSogsCentersPS,
+            fragmentOutputTypes: ['uvec4'],
+            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]])
+        });
+
+        const renderTarget = new RenderTarget({
+            colorBuffer: centersTexture,
+            depth: false,
+            mipLevel: 0
+        });
+
+        device.setCullMode(CULLFACE_NONE);
+        device.setBlendState(BlendState.NOBLEND);
+        device.setDepthState(DepthState.NODEPTH);
+
+        resolve(scope, {
+            means_l: this.means_l,
+            means_u: this.means_u,
+            numSplats: this.numSplats,
+            means_mins: this.meta.means.mins,
+            means_maxs: this.meta.means.maxs
+        });
+
+        drawQuadWithShader(device, renderTarget, shader);
+
+        renderTarget.destroy();
+
+        const u32 = await readImageDataAsync(centersTexture);
+        if (this.destroyed || device._destroyed) {
+            centersTexture.destroy();
+            return;
+        }
+
+        const asFloat = new Float32Array(u32.buffer);
+        const result = new Float32Array(this.numSplats * 3);
+        for (let i = 0; i < this.numSplats; i++) {
+            const base = i * 4;
+            result[i * 3 + 0] = asFloat[base + 0];
+            result[i * 3 + 1] = asFloat[base + 1];
+            result[i * 3 + 2] = asFloat[base + 2];
+        }
+        this._centers = result;
+        centersTexture.destroy();
+    }
+
     // pack the means, quats, scales and sh_labels data into one RGBA32U texture
     packGpuMemory() {
         const { meta, means_l, means_u, quats, scales, sh0, sh_labels, numSplats } = this;
@@ -456,13 +502,6 @@ class GSplatSogsData {
     async prepareGpuData() {
         const { device, height, width } = this.means_l;
 
-        // copy back means_l and means_u data so cpu reorder has access to it
-        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
-        this.means_l._levels[0] = await readImageDataAsync(this.means_l);
-
-        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
-        this.means_u._levels[0] = await readImageDataAsync(this.means_u);
-
         if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
         this.packedTexture = new Texture(device, {
             name: 'sogsPackedTexture',
@@ -494,6 +533,9 @@ class GSplatSogsData {
                 this.packShMemory();
             }
         });
+
+        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
+        await this.generateCenters();
 
         if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
         this.packGpuMemory();
