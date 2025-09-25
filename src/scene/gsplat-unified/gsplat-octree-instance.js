@@ -93,6 +93,13 @@ class GSplatOctreeInstance {
     prefetchPending = new Set();
 
     /**
+     * Tracks invisible->visible pending adds per node: nodeIndex -> fileIndex.
+     * Ensures only a single pending placement exists for a node while it's not yet displayed.
+     * @type {Map<number, number>}
+     */
+    pendingVisibleAdds = new Map();
+
+    /**
      * @param {GSplatOctree} octree - The octree.
      * @param {GSplatPlacement} placement - The placement.
      * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
@@ -296,11 +303,8 @@ class GSplatOctreeInstance {
             // Determine desired display LOD using underfill strategy within allowed range
             const desiredLodIndex = this.selectDesiredLodIndex(node, optimalLodIndex, maxLod, lodUnderfillLimit);
 
-            // if LOD to display changed
+            // if desired LOD differs from currently displayed LOD
             if (desiredLodIndex !== currentLodIndex) {
-
-                // update the stored displayed LOD index
-                this.nodeLods[nodeIndex] = desiredLodIndex;
 
                 // Determine visibility based on the presence of a valid file index
                 const currentFileIndex = currentLodIndex >= 0 ? node.lods[currentLodIndex].fileIndex : -1;
@@ -333,7 +337,25 @@ class GSplatOctreeInstance {
                 if (!wasVisible && willBeVisible) {
 
                     // becoming visible (invisible -> visible)
+
+                    // if we had a previous pending visible-add for a different file, cancel it
+                    const prevPendingFi = this.pendingVisibleAdds.get(nodeIndex);
+                    if (prevPendingFi !== undefined && prevPendingFi !== desiredFileIndex) {
+                        this.decrementFileRef(prevPendingFi, nodeIndex);
+                        this.pendingVisibleAdds.delete(nodeIndex);
+                    }
+
                     this.incrementFileRef(desiredFileIndex, nodeIndex, desiredLodIndex);
+                    const newPlacement = this.filePlacements[desiredFileIndex];
+                    if (newPlacement?.resource) {
+                        // resource is ready now, display immediately
+                        this.nodeLods[nodeIndex] = desiredLodIndex;
+                        // clear any pending visible-add entry
+                        this.pendingVisibleAdds.delete(nodeIndex);
+                    } else {
+                        // keep displayed as invisible until resource arrives; next update will promote
+                        this.pendingVisibleAdds.set(nodeIndex, desiredFileIndex);
+                    }
 
                 } else if (wasVisible && !willBeVisible) {
 
@@ -345,6 +367,9 @@ class GSplatOctreeInstance {
                         this.pendingDecrements.delete(nodeIndex);
                     }
                     this.decrementFileRef(currentFileIndex, nodeIndex);
+                    this.nodeLods[nodeIndex] = -1;
+                    // clear any pending visible-add entry
+                    this.pendingVisibleAdds.delete(nodeIndex);
 
                 } else if (wasVisible && willBeVisible) {
 
@@ -357,9 +382,16 @@ class GSplatOctreeInstance {
                         this.decrementFileRef(currentFileIndex, nodeIndex);
                         // clear any pending for this node if exists
                         this.pendingDecrements.delete(nodeIndex);
+                        // update displayed lod now that switch is complete
+                        this.nodeLods[nodeIndex] = desiredLodIndex;
+                        // clear any pending visible-add entry
+                        this.pendingVisibleAdds.delete(nodeIndex);
                     } else {
                         // new LOD not ready - track pending decrement for when it loads
                         this.pendingDecrements.set(nodeIndex, { oldFileIndex: currentFileIndex, newFileIndex: desiredFileIndex });
+                        // keep displayed lod as current until pending resolves
+                        // ensure no pending visible-add entry remains
+                        this.pendingVisibleAdds.delete(nodeIndex);
                     }
                 }
             }
@@ -520,6 +552,17 @@ class GSplatOctreeInstance {
                         if (newFileIndex === fileIndex) {
                             this.decrementFileRef(oldFileIndex, nodeIndex);
                             this.pendingDecrements.delete(nodeIndex);
+
+                            // set displayed LOD to the LOD that maps to the newly ready file
+                            let newLodIndex = 0;
+                            const nodeLods = this.octree.nodes[nodeIndex].lods;
+                            for (let li = 0; li < nodeLods.length; li++) {
+                                if (nodeLods[li].fileIndex === newFileIndex) {
+                                    newLodIndex = li;
+                                    break;
+                                }
+                            }
+                            this.nodeLods[nodeIndex] = newLodIndex;
                         }
                     }
                 }
