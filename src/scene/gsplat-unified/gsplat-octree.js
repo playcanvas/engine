@@ -20,7 +20,7 @@ class GSplatOctree {
     nodes;
 
     /**
-     * @type {string[]}
+     * @type {{ url: string, lodLevel: number }[]}
      */
     files;
 
@@ -35,13 +35,6 @@ class GSplatOctree {
      * @type {string}
      */
     assetFileUrl;
-
-    /**
-     * Pre-computed base directory for resolving relative URLs.
-     *
-     * @type {string}
-     */
-    baseDir;
 
     /**
      * Resources of individual files, identified by their file index.
@@ -72,10 +65,15 @@ class GSplatOctree {
      */
     constructor(assetFileUrl, data) {
 
-        this.files = data.filenames;
         this.lodLevels = data.lodLevels;
         this.assetFileUrl = assetFileUrl;
-        this.baseDir = path.getDirectory(assetFileUrl);
+
+        // expand all file paths to full URLs upfront to avoid repeated joins later
+        const baseDir = path.getDirectory(assetFileUrl);
+        this.files = data.filenames.map(url => ({
+            url: path.isRelativePath(url) ? path.join(baseDir, url) : url,
+            lodLevel: -1
+        }));
 
         // initialize per-file ref counts
         this.fileRefCounts = new Int32Array(this.files.length);
@@ -94,11 +92,14 @@ class GSplatOctree {
                 const lodData = nodeData.lods[i.toString()];
                 if (lodData) {
                     lods.push({
-                        file: this.files[lodData.file] || '',
+                        file: this.files[lodData.file].url || '',
                         fileIndex: lodData.file,
                         offset: lodData.offset || 0,
                         count: lodData.count || 0
                     });
+
+                    // record LOD level for the file index
+                    this.files[lodData.file].lodLevel = i;
                 } else {
                     // Missing LOD entry - fill with defaults
                     lods.push({
@@ -124,14 +125,8 @@ class GSplatOctree {
 
             const loadedCounts = new Map();
             for (const fileIndex of this.fileResources.keys()) {
-                const url = this.files[fileIndex];
-                // parse LOD from the first path segment "<lod>_<tile>/..."
-                const first = url.split('/')[0] || url;
-                const lodStr = first.split('_')[0];
-                const lod = parseInt(lodStr, 10);
-                if (Number.isFinite(lod)) {
-                    loadedCounts.set(lod, (loadedCounts.get(lod) || 0) + 1);
-                }
+                const lod = this.files[fileIndex].lodLevel;
+                loadedCounts.set(lod, (loadedCounts.get(lod) || 0) + 1);
             }
 
             // report all LODs from 0..lodLevels-1
@@ -161,13 +156,6 @@ class GSplatOctree {
                 this._extractLeafNodes(child, leafNodes);
             }
         }
-    }
-
-    getFullUrl(fileIndex) {
-        Debug.assert(fileIndex >= 0 && fileIndex < this.files.length);
-        const url = this.files[fileIndex];
-        // Use pre-computed base directory for fast path joining
-        return path.join(this.baseDir, url);
     }
 
     getFileResource(fileIndex) {
@@ -219,7 +207,7 @@ class GSplatOctree {
 
         if (this.fileResources.has(fileIndex)) {
 
-            const fullUrl = this.getFullUrl(fileIndex);
+            const fullUrl = this.files[fileIndex].url;
             assetLoader.unload(fullUrl);
             this.fileResources.delete(fileIndex);
 
@@ -273,7 +261,7 @@ class GSplatOctree {
         }
 
         // Check if the resource is now available from the asset loader
-        const fullUrl = this.getFullUrl(fileIndex);
+        const fullUrl = this.files[fileIndex].url;
         const res = assetLoader.getResource(fullUrl);
         if (res) {
             this.fileResources.set(fileIndex, res);

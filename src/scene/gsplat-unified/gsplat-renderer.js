@@ -22,11 +22,11 @@ class GSplatRenderer {
     /** @type {MeshInstance} */
     meshInstance;
 
-    /** @type {number} */
-    maxNumSplats = 0;
-
     /** @type {VertexBuffer|null} */
     instanceIndices = null;
+
+    /** @type {number} */
+    instanceIndicesCount = 0;
 
     /** @type {Layer} */
     layer;
@@ -101,8 +101,8 @@ class GSplatRenderer {
 
     setMaxNumSplats(numSplats) {
 
-        if (this.maxNumSplats !== numSplats) {
-            this.maxNumSplats = numSplats;
+        if (this.instanceIndicesCount < numSplats) {
+            this.instanceIndicesCount = numSplats;
 
             // destroy old instance indices
             this.instanceIndices?.destroy();
