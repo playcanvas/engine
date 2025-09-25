@@ -65,7 +65,7 @@ class Shader {
      * buffer is assumed.
      * @param {string[]} [definition.feedbackVaryings] - A list of shader output variable
      * names that will be captured when using transform feedback. This setting is only effective
-     * if the {@link definition.useTransformFeedback} property is enabled.
+     * if the useTransformFeedback property is enabled.
      * @param {string} [definition.vshader] - Vertex shader source (GLSL code). Optional when
      * compute shader is specified.
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
