@@ -788,6 +788,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
 
+        this.extMultiDraw = this.getExtension('WEBGL_multi_draw');
+        this.supportsMultiDraw = !!this.extMultiDraw;
+
         // compressed textures
         this.extCompressedTextureETC1 = this.getExtension('WEBGL_compressed_texture_etc1');
         this.extCompressedTextureETC = this.getExtension('WEBGL_compressed_texture_etc');
@@ -1675,7 +1678,39 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
     }
 
-    draw(primitive, indexBuffer, numInstances, indirectData, first = true, last = true) {
+    _multiDrawLoopFallback(mode, primitive, indexBuffer, numInstances, drawCommands) {
+
+        const gl = this.gl;
+
+        if (primitive.indexed) {
+            const format = indexBuffer.impl.glFormat;
+            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands;
+
+            if (numInstances > 0) {
+                for (let i = 0; i < count; i++) {
+                    gl.drawElementsInstanced(mode, glCounts[i], format, glOffsetsBytes[i], glInstanceCounts[i]);
+                }
+            } else {
+                for (let i = 0; i < count; i++) {
+                    gl.drawElements(mode, glCounts[i], format, glOffsetsBytes[i]);
+                }
+            }
+        } else {
+            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands;
+
+            if (numInstances > 0) {
+                for (let i = 0; i < count; i++) {
+                    gl.drawArraysInstanced(mode, glOffsetsBytes[i], glCounts[i], glInstanceCounts[i]);
+                }
+            } else {
+                for (let i = 0; i < count; i++) {
+                    gl.drawArrays(mode, glOffsetsBytes[i], glCounts[i]);
+                }
+            }
+        }
+    }
+
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
 
         const shader = this.shader;
         if (shader) {
@@ -1786,24 +1821,49 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 const mode = this.glPrimitive[primitive.type];
                 const count = primitive.count;
 
-                if (primitive.indexed) {
-                    Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
+                if (drawCommands) { // multi-draw path
 
-                    const format = indexBuffer.impl.glFormat;
-                    const offset = primitive.base * indexBuffer.bytesPerIndex;
+                    // multi-draw extension is supported
+                    if (this.extMultiDraw) {
+                        if (primitive.indexed) {
+                            const format = indexBuffer.impl.glFormat;
 
-                    if (numInstances > 0) {
-                        gl.drawElementsInstanced(mode, count, format, offset, numInstances);
+                            if (numInstances > 0) {
+                                this.extMultiDraw.multiDrawElementsInstancedWEBGL(mode, drawCommands.glCounts, 0, format, drawCommands.glOffsetsBytes, 0, drawCommands.glInstanceCounts, 0, drawCommands.count);
+                            } else {
+                                this.extMultiDraw.multiDrawElementsWEBGL(mode, drawCommands.glCounts, 0, format, drawCommands.glOffsetsBytes, 0, drawCommands.count);
+                            }
+                        } else {
+                            if (numInstances > 0) {
+                                this.extMultiDraw.multiDrawArraysInstancedWEBGL(mode, drawCommands.glOffsetsBytes, 0, drawCommands.glCounts, 0, drawCommands.glInstanceCounts, 0, drawCommands.count);
+                            } else {
+                                this.extMultiDraw.multiDrawArraysWEBGL(mode, drawCommands.glOffsetsBytes, 0, drawCommands.glCounts, 0, drawCommands.count);
+                            }
+                        }
                     } else {
-                        gl.drawElements(mode, count, format, offset);
+                        // multi-draw extension is not supported, use fallback loop
+                        this._multiDrawLoopFallback(mode, primitive, indexBuffer, numInstances, drawCommands);
                     }
                 } else {
-                    const first = primitive.base;
+                    if (primitive.indexed) {
+                        Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
 
-                    if (numInstances > 0) {
-                        gl.drawArraysInstanced(mode, first, count, numInstances);
+                        const format = indexBuffer.impl.glFormat;
+                        const offset = primitive.base * indexBuffer.bytesPerIndex;
+
+                        if (numInstances > 0) {
+                            gl.drawElementsInstanced(mode, count, format, offset, numInstances);
+                        } else {
+                            gl.drawElements(mode, count, format, offset);
+                        }
                     } else {
-                        gl.drawArrays(mode, first, count);
+                        const first = primitive.base;
+
+                        if (numInstances > 0) {
+                            gl.drawArraysInstanced(mode, first, count, numInstances);
+                        } else {
+                            gl.drawArrays(mode, first, count);
+                        }
                     }
                 }
 

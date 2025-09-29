@@ -615,7 +615,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         _uniqueLocations.clear();
     }
 
-    draw(primitive, indexBuffer, numInstances = 1, indirectData, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances = 1, drawCommands, first = true, last = true) {
 
         if (this.shader.ready && !this.shader.failed) {
 
@@ -659,20 +659,23 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
 
             // draw
-            if (indirectData !== undefined) {
-                const indirectBuffer = this.indirectDrawBuffer.impl.buffer;
-                const drawsCount = indirectData.count;
+            if (drawCommands) { // indirect draw path
+
+                const storage = drawCommands.storage ?? this.indirectDrawBuffer;
+                const indirectBuffer = storage.impl.buffer;
+                const drawsCount = drawCommands.count;
 
                 // TODO: when multiDrawIndirect is supported, we can use it here instead of a loop
                 for (let d = 0; d < drawsCount; d++) {
-                    const indirectOffset = (indirectData.index + d) * _indirectEntryByteSize;
+                    const indirectOffset = (drawCommands.slotIndex + d) * _indirectEntryByteSize;
                     if (indexBuffer) {
                         passEncoder.drawIndexedIndirect(indirectBuffer, indirectOffset);
                     } else {
                         passEncoder.drawIndirect(indirectBuffer, indirectOffset);
                     }
                 }
-            } else {
+            } else { // single draw path
+
                 if (indexBuffer) {
                     passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex ?? 0, 0);
                 } else {
