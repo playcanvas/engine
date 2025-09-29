@@ -31,6 +31,7 @@ import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
+import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
@@ -503,6 +504,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return new WebgpuShader(shader);
     }
 
+    createDrawCommandImpl(drawCommands) {
+        return new WebgpuDrawCommands(this);
+    }
+
     createTextureImpl(texture) {
         return new WebgpuTexture(texture);
     }
@@ -661,7 +666,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // draw
             if (drawCommands) { // indirect draw path
 
-                const storage = drawCommands.storage ?? this.indirectDrawBuffer;
+                const storage = drawCommands.impl?.storage ?? this.indirectDrawBuffer;
                 const indirectBuffer = storage.impl.buffer;
                 const drawsCount = drawCommands.count;
 

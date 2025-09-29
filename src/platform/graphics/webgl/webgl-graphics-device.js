@@ -33,6 +33,7 @@ import { DebugGraphics } from '../debug-graphics.js';
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
+import { WebglDrawCommands } from './webgl-draw-commands.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
 import { BlendState } from '../blend-state.js';
@@ -670,6 +671,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     createShaderImpl(shader) {
         return new WebglShader(shader);
+    }
+
+    createDrawCommandImpl(drawCommands) {
+        return new WebglDrawCommands(drawCommands.indexSizeBytes);
     }
 
     createTextureImpl(texture) {
@@ -1684,7 +1689,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         if (primitive.indexed) {
             const format = indexBuffer.impl.glFormat;
-            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands;
+            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
 
             if (numInstances > 0) {
                 for (let i = 0; i < count; i++) {
@@ -1696,7 +1701,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
         } else {
-            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands;
+            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
 
             if (numInstances > 0) {
                 for (let i = 0; i < count; i++) {
@@ -1825,19 +1830,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                     // multi-draw extension is supported
                     if (this.extMultiDraw) {
+                        const impl = drawCommands.impl;
                         if (primitive.indexed) {
                             const format = indexBuffer.impl.glFormat;
 
                             if (numInstances > 0) {
-                                this.extMultiDraw.multiDrawElementsInstancedWEBGL(mode, drawCommands.glCounts, 0, format, drawCommands.glOffsetsBytes, 0, drawCommands.glInstanceCounts, 0, drawCommands.count);
+                                this.extMultiDraw.multiDrawElementsInstancedWEBGL(mode, impl.glCounts, 0, format, impl.glOffsetsBytes, 0, impl.glInstanceCounts, 0, drawCommands.count);
                             } else {
-                                this.extMultiDraw.multiDrawElementsWEBGL(mode, drawCommands.glCounts, 0, format, drawCommands.glOffsetsBytes, 0, drawCommands.count);
+                                this.extMultiDraw.multiDrawElementsWEBGL(mode, impl.glCounts, 0, format, impl.glOffsetsBytes, 0, drawCommands.count);
                             }
                         } else {
                             if (numInstances > 0) {
-                                this.extMultiDraw.multiDrawArraysInstancedWEBGL(mode, drawCommands.glOffsetsBytes, 0, drawCommands.glCounts, 0, drawCommands.glInstanceCounts, 0, drawCommands.count);
+                                this.extMultiDraw.multiDrawArraysInstancedWEBGL(mode, impl.glOffsetsBytes, 0, impl.glCounts, 0, impl.glInstanceCounts, 0, drawCommands.count);
                             } else {
-                                this.extMultiDraw.multiDrawArraysWEBGL(mode, drawCommands.glOffsetsBytes, 0, drawCommands.glCounts, 0, drawCommands.count);
+                                this.extMultiDraw.multiDrawArraysWEBGL(mode, impl.glOffsetsBytes, 0, impl.glCounts, 0, drawCommands.count);
                             }
                         }
                     } else {

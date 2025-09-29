@@ -9,6 +9,7 @@ import { NullRenderTarget } from './null-render-target.js';
 import { NullShader } from './null-shader.js';
 import { NullTexture } from './null-texture.js';
 import { NullVertexBuffer } from './null-vertex-buffer.js';
+import { NullDrawCommands } from './null-draw-commands.js';
 
 class NullGraphicsDevice extends GraphicsDevice {
     constructor(canvas, options = {}) {
@@ -94,6 +95,10 @@ class NullGraphicsDevice extends GraphicsDevice {
 
     createRenderTargetImpl(renderTarget) {
         return new NullRenderTarget(renderTarget);
+    }
+
+    createDrawCommandImpl(drawCommands) {
+        return new NullDrawCommands();
     }
 
     draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {

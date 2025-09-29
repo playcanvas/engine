@@ -1,6 +1,4 @@
 import { Debug } from '../../core/debug.js';
-import { BUFFERUSAGE_COPY_DST, BUFFERUSAGE_INDIRECT } from './constants.js';
-import { StorageBuffer } from './storage-buffer.js';
 
 /**
  * Container holding parameters for multi-draw commands.
@@ -45,53 +43,12 @@ class DrawCommands {
     }
 
     /**
-     * Five integers to describe a draw, WebGPU only.
-     * [ indexCount/vertexCount, instanceCount, firstIndex/firstVertex, baseVertex(signed), firstInstance ]
+     * Platform-specific implementation.
      *
-     * @type {Uint32Array|null}
+     * @type {any}
      * @ignore
      */
-    gpuIndirect = null;
-
-    /**
-     * Signed view over gpuIndirect to write baseVertex, WebGPU only.
-     *
-     * @type {Int32Array|null}
-     * @ignore
-     */
-    gpuIndirectSigned = null;
-
-    /**
-     * GPU storage buffer backing AoS data, WebGPU only.
-     *
-     * @type {StorageBuffer|null}
-     * @ignore
-     */
-    storage = null;
-
-    /**
-     * Per-draw counts. WebGL only.
-     *
-     * @type {Int32Array|null}
-     * @ignore
-     */
-    glCounts = null;
-
-    /**
-     * Per-draw index byte offsets. WebGL only.
-     *
-     * @type {Int32Array|null}
-     * @ignore
-     */
-    glOffsetsBytes = null;
-
-    /**
-     * Per-draw instance counts. WebGL only.
-     *
-     * @type {Int32Array|null}
-     * @ignore
-     */
-    glInstanceCounts = null;
+    impl = null;
 
     /**
      * Number of draw calls to perform.
@@ -126,14 +83,15 @@ class DrawCommands {
     constructor(device, indexSizeBytes = 0) {
         this.device = device;
         this.indexSizeBytes = indexSizeBytes;
+        this.impl = device.createDrawCommandImpl(this);
     }
 
     /**
      * @ignore
      */
     destroy() {
-        this.storage?.destroy();
-        this.storage = null;
+        this.impl?.destroy?.();
+        this.impl = null;
     }
 
     /**
@@ -144,16 +102,7 @@ class DrawCommands {
      */
     allocate(maxCount) {
         this._maxCount = maxCount;
-
-        if (this.device.isWebGPU) {
-            this.gpuIndirect = new Uint32Array(5 * maxCount);
-            this.gpuIndirectSigned = new Int32Array(this.gpuIndirect.buffer);
-            this.storage = new StorageBuffer(this.device, this.gpuIndirect.byteLength, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
-        } else {
-            this.glCounts = new Int32Array(maxCount);
-            this.glOffsetsBytes = new Int32Array(maxCount);
-            this.glInstanceCounts = new Int32Array(maxCount);
-        }
+        this.impl.allocate?.(maxCount);
     }
 
     /**
@@ -168,20 +117,7 @@ class DrawCommands {
      */
     add(i, indexOrVertexCount, instanceCount, firstIndexOrVertex, baseVertex = 0, firstInstance = 0) {
         Debug.assert(i >= 0 && i < this._maxCount);
-
-        if (this.device.isWebGPU) {
-            const o = i * 5;
-            this.gpuIndirect[o + 0] = indexOrVertexCount;
-            this.gpuIndirect[o + 1] = instanceCount;
-            this.gpuIndirect[o + 2] = firstIndexOrVertex;
-            this.gpuIndirectSigned[o + 3] = baseVertex;
-            this.gpuIndirect[o + 4] = firstInstance;
-        } else {
-            // WebGL: SoA lists for WEBGL_multi_draw (elements variants)
-            this.glCounts[i] = indexOrVertexCount;
-            this.glOffsetsBytes[i] = (firstIndexOrVertex * this.indexSizeBytes);
-            this.glInstanceCounts[i] = instanceCount;
-        }
+        this.impl.add(i, indexOrVertexCount, instanceCount, firstIndexOrVertex, baseVertex, firstInstance);
     }
 
     /**
@@ -191,14 +127,7 @@ class DrawCommands {
      */
     update(count) {
         this._count = count;
-
-        // upload only the used portion of data to the storage buffer
-        if (this.device.isWebGPU && this.storage && this.gpuIndirect) {
-            if (this._count > 0) {
-                const used = this._count * 5; // 5 uints per draw
-                this.storage.write(0, this.gpuIndirect, 0, used);
-            }
-        }
+        this.impl.update?.(count);
     }
 }
 
