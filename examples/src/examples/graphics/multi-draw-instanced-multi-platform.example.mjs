@@ -1,5 +1,6 @@
 import files from 'examples/files';
 import { rootPath, deviceType } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 // @config DESCRIPTION Multi-draw instanced rendering of multiple primitives in a single call.
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -170,16 +171,15 @@ assetListLoader.load(() => {
         });
 
         vbData = instanceIndexes;
-        vbFormat = new pc.VertexFormat(app.graphicsDevice, [
-            { semantic: pc.SEMANTIC_ATTR11, components: 1, type: pc.TYPE_INT32, asInt: true },
-        ]);
+        vbFormat = new pc.VertexFormat(app.graphicsDevice, [{
+            semantic: pc.SEMANTIC_ATTR11, components: 1, type: pc.TYPE_INT32, asInt: true
+        }]);
 
         material.setAttribute('aInstanceId', pc.SEMANTIC_ATTR11);
         material.setParameter('uDrawOffsets[0]', drawOffsets);
         material.setParameter('uInstanceMatrices', matricesDataTexture);
         material.update();
-    }
-    else {
+    } else {
         vbData = matrices;
         vbFormat = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
     }
