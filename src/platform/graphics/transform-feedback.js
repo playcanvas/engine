@@ -106,31 +106,21 @@ class TransformFeedback {
         this.device = inputBuffer.device;
 
         const gl = this.device.gl;
+        const outVB = outputBuffer ?? inputBuffer;
 
-        if (outputBuffer) {
-            Debug.assert(outputBuffer.format.interleaved || outputBuffer.format.elements.length <= 1,
-                'Output vertex buffer used by TransformFeedback needs to be interleaved.');
+        Debug.assert(outVB.format.interleaved || outVB.format.elements.length <= 1,
+            outputBuffer
+                ? 'Output vertex buffer used by TransformFeedback needs to be interleaved.'
+                : 'Input vertex buffer used by TransformFeedback needs to be interleaved.'
+        );
 
-            if (usage === BUFFER_GPUDYNAMIC && outputBuffer.usage !== usage) {
-                // have to recreate input buffer with other usage
-                gl.bindBuffer(gl.ARRAY_BUFFER, outputBuffer.impl.bufferId);
-                gl.bufferData(gl.ARRAY_BUFFER, outputBuffer.storage, gl.DYNAMIC_COPY);
-            }
-
-        } else {
-            Debug.assert(inputBuffer.format.interleaved || inputBuffer.format.elements.length <= 1,
-                'Input vertex buffer used by TransformFeedback needs to be interleaved.');
-
-            if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
-                // have to recreate input buffer with other usage
-                gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.impl.bufferId);
-                gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
-            }
+        if (usage === BUFFER_GPUDYNAMIC && outVB.usage !== usage) {
+            // have to recreate input buffer with other usage
+            gl.bindBuffer(gl.ARRAY_BUFFER, outVB.impl.bufferId);
+            gl.bufferData(gl.ARRAY_BUFFER, outVB.storage, gl.DYNAMIC_COPY);
         }
 
         this._inputBuffer = inputBuffer;
-
-        this._swapEquivalent = inputBuffer.format === outputBuffer?.format;
         this._destroyOutputBuffer = !outputBuffer;
         this._outputBuffer = outputBuffer ?? new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, {
             usage: usage,
@@ -203,6 +193,13 @@ class TransformFeedback {
 
         // swap buffers
         if (swap) {
+
+            Debug.call(() => {
+                if (this._inputBuffer.format !== this._outputBuffer.format) {
+                    Debug.warnOnce('Trying to swap buffers with different formats.');
+                }
+            });
+
             let tmp = this._inputBuffer.impl.bufferId;
             this._inputBuffer.impl.bufferId = this._outputBuffer.impl.bufferId;
             this._outputBuffer.impl.bufferId = tmp;
