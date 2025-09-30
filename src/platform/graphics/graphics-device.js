@@ -32,6 +32,7 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
  * @import { StorageBuffer } from './storage-buffer.js';
+ * @import { DrawCommands } from './draw-commands.js';
  */
 
 const _tempSet = new Set();
@@ -207,6 +208,14 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     supportsStencil;
+
+    /**
+     * True if the device supports multi-draw. This is always supported on WebGPU, and support on
+     * WebGL2 is optional, but pretty common.
+     *
+     * @type {boolean}
+     */
+    supportsMultiDraw = true;
 
     /**
      * True if the device supports compute shaders.
@@ -830,8 +839,7 @@ class GraphicsDevice extends EventHandler {
      * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
      * @param {number} [numInstances] - The number of instances to render when using instancing.
      * Defaults to 1.
-     * @param {{ index: number, count: number }} [indirectData] - The indirect draw data to use for
-     * the draw call.
+     * @param {DrawCommands} [drawCommands] - The draw commands to use for the draw call.
      * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
      * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
@@ -847,7 +855,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @ignore
      */
-    draw(primitive, indexBuffer, numInstances, indirectData, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
         Debug.assert(false);
     }
 

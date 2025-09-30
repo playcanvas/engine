@@ -587,6 +587,7 @@ class ForwardRenderer extends Renderer {
         const preparedCallsCount = preparedCalls.drawCalls.length;
         for (let i = 0; i < preparedCallsCount; i++) {
 
+            /** @type {MeshInstance} */
             const drawCall = preparedCalls.drawCalls[i];
 
             // We have a mesh instance
@@ -655,7 +656,7 @@ class ForwardRenderer extends Renderer {
 
             drawCallback?.(drawCall, i);
 
-            const indirectData = drawCall.indirectData?.get(camera);
+            const indirectData = drawCall.getDrawCommands(camera);
 
             if (viewList) {
                 for (let v = 0; v < viewList.length; v++) {
