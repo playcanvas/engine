@@ -2,7 +2,7 @@ import files from 'examples/files';
 import { rootPath, deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-// @config DESCRIPTION Multi-draw instanced rendering of multiple primitives in a single call.
+// @config DESCRIPTION Multi-draw instanced rendering of multiple primitives in a single call. In WebGL2 with GL_ANGLE_multi_draw, gl_InstanceID cannot be reliably used to access instance data due to platform and language constraints. Therefore, storing instance data in an appropriately formatted texture and fetching it in the vertex shader is a necessary hack to implement multi-draw instanced rendering correctly and performantly.
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
