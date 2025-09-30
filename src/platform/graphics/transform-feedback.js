@@ -108,10 +108,9 @@ class TransformFeedback {
         const gl = this.device.gl;
         const outVB = outputBuffer ?? inputBuffer;
 
-        Debug.assert(outVB.format.interleaved || outVB.format.elements.length <= 1,
-            outputBuffer
-                ? 'Output vertex buffer used by TransformFeedback needs to be interleaved.'
-                : 'Input vertex buffer used by TransformFeedback needs to be interleaved.'
+        Debug.assert(outVB.format.interleaved || outVB.format.elements.length <= 1, outputBuffer ?
+            'Output vertex buffer used by TransformFeedback needs to be interleaved.' :
+            'Input vertex buffer used by TransformFeedback needs to be interleaved.'
         );
 
         if (usage === BUFFER_GPUDYNAMIC && outVB.usage !== usage) {
