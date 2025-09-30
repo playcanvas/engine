@@ -157,6 +157,7 @@ assetListLoader.load(() => {
 
     if (app.graphicsDevice.isWebGL2 && app.graphicsDevice.supportsMultiDraw) {
 
+        // webgl2 not support instancing counter use vertex huck
         // update shader transform instancing chunk
         material.shaderChunks.glsl.set('transformInstancingVS', files['transform-instancing.vert']);
 
