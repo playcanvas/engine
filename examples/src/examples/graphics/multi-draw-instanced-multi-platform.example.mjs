@@ -2,7 +2,7 @@ import files from 'examples/files';
 import { rootPath, deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-// @config DESCRIPTION Multi-draw instanced rendering of multiple primitives in a single call. In WebGL2 with GL_ANGLE_multi_draw, gl_InstanceID cannot be reliably used to access instance data due to platform and language constraints. Therefore, storing instance data in an appropriately formatted texture and fetching it in the vertex shader is a necessary hack to implement multi-draw instanced rendering correctly and performantly.
+// @config DESCRIPTION Multi-draw instanced rendering of multiple primitives in a single call. In WebGL2 with GL_ANGLE_multi_draw, gl_InstanceID cannot be reliably used to access instance data due to platform and language constraints. Therefore, storing instance data in an appropriately formatted texture and fetching it in the vertex shader is a necessary workaround to implement multi-draw instanced rendering correctly and performantly.
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -157,7 +157,7 @@ assetListLoader.load(() => {
 
     if (app.graphicsDevice.isWebGL2 && app.graphicsDevice.supportsMultiDraw) {
 
-        // webgl2 not support instancing counter use vertex huck
+        // webgl2 not support instancing counter use vertex workaround
         // update shader transform instancing chunk
         material.shaderChunks.glsl.set('transformInstancingVS', files['transform-instancing.vert']);
 
