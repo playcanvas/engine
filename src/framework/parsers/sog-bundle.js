@@ -189,7 +189,7 @@ class SogBundleParser {
             await Promise.allSettled(promises);
 
             // construct the gsplat resource
-            const data = new GSplatSogsData();
+            const data = new GSplatSogsData(Object.values(textures));
             data.meta = meta;
             data.numSplats = meta.count;
             data.means_l = textures[meta.means.files[0]].resource;
@@ -201,7 +201,7 @@ class SogBundleParser {
             data.sh_labels = textures[meta.shN?.files[1]]?.resource;
 
             const decompress = asset.data?.decompress;
-
+            
             if (!decompress) {
                 // no need to prepare gpu data if decompressing
                 await data.prepareGpuData();

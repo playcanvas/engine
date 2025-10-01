@@ -154,7 +154,7 @@ class SogsParser {
         await Promise.allSettled(promises);
 
         // construct the gsplat resource
-        const data = new GSplatSogsData();
+        const data = new GSplatSogsData(textureAssets);
         data.meta = meta;
         data.numSplats = meta.count;
         data.means_l = textures.means[0].resource;
