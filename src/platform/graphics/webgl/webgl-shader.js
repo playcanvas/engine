@@ -345,6 +345,11 @@ class WebglShader {
             const info = gl.getActiveUniform(glProgram, i);
             const location = gl.getUniformLocation(glProgram, info.name);
 
+            // a built-in variables reported as uniforms for which we do not need to provide any data
+            if (_vertexShaderBuiltins.has(info.name)) {
+                continue;
+            }
+
             const shaderInput = new WebglShaderInput(device, info.name, device.pcUniformType[info.type], location);
 
             if (samplerTypes.has(info.type)) {
