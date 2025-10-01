@@ -168,6 +168,8 @@ assetListLoader.load(() => {
             format: pc.PIXELFORMAT_RGBA32F,
             minFilter: pc.FILTER_NEAREST,
             magFilter: pc.FILTER_NEAREST,
+            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+            addressV: pc.ADDRESS_CLAMP_TO_EDGE,
             mipmaps: false,
             numLevels: 1,
             levels: [matrices]
