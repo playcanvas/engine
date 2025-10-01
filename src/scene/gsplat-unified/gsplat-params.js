@@ -12,6 +12,13 @@ class GSplatParams {
     debugAabbs = false;
 
     /**
+     * Enables debug rendering of AABBs for GSplat octree nodes. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    debugNodeAabbs = false;
+
+    /**
      * Internal dirty flag to trigger update of gsplat managers when some params change.
      *
      * @ignore

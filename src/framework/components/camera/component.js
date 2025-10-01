@@ -461,6 +461,24 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Sets the depth value to clear the depth buffer to. Defaults to 1.
+     *
+     * @type {number}
+     */
+    set clearDepth(value) {
+        this._camera.clearDepth = value;
+    }
+
+    /**
+     * Gets the depth value to clear the depth buffer to.
+     *
+     * @type {number}
+     */
+    get clearDepth() {
+        return this._camera.clearDepth;
+    }
+
+    /**
      * Sets whether the camera will automatically clear the depth buffer before rendering. Defaults to true.
      *
      * @type {boolean}

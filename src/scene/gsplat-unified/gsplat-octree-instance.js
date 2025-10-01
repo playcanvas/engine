@@ -1,13 +1,16 @@
-// import { Debug } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { Color } from '../../core/math/color.js';
 import { GSplatPlacement } from './gsplat-placement.js';
 
 /**
  * @import { GraphNode } from '../graph-node.js'
  * @import { GSplatOctree } from './gsplat-octree.js'
  * @import { GSplatAssetLoaderBase } from './gsplat-asset-loader-base.js'
+ * @import { Scene } from '../scene.js'
  */
 
 const _invWorldMat = new Mat4();
@@ -16,6 +19,16 @@ const _localCameraFwd = new Vec3();
 const _dirToNode = new Vec3();
 
 const _tempCompletedUrls = [];
+const _tempDebugAabb = new BoundingBox();
+
+// Color instances used by debug wireframe rendering for LOD visualization
+const _lodColors = [
+    new Color(1, 0, 0),
+    new Color(0, 1, 0),
+    new Color(0, 0, 1),
+    new Color(1, 1, 0),
+    new Color(1, 0, 1)
+];
 
 class GSplatOctreeInstance {
     /** @type {GSplatOctree} */
@@ -532,9 +545,10 @@ class GSplatOctreeInstance {
     /**
      * Updates the octree instance each frame.
      *
+     * @param {Scene} scene - Optional scene for debug rendering.
      * @returns {boolean} True if octree instance is dirty, false otherwise.
      */
-    update() {
+    update(scene) {
 
         // handle pending loads
         if (this.pending.size) {
@@ -584,6 +598,22 @@ class GSplatOctreeInstance {
 
         // watch prefetched loads for completion to allow promotion
         this.pollPrefetchCompletions();
+
+        // debug render world space bounds for octree nodes based on current LOD selection
+        Debug.call(() => {
+            if (scene.gsplat.debugNodeAabbs) {
+                const modelMat = this.placement.node.getWorldTransform();
+                const nodes = this.octree.nodes;
+                for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
+                    const lodIndex = this.nodeLods[nodeIndex];
+                    if (lodIndex >= 0) {
+                        const color = _lodColors[Math.min(lodIndex, _lodColors.length - 1)];
+                        _tempDebugAabb.setFromTransformedAabb(nodes[nodeIndex].bounds, modelMat);
+                        scene.immediate.drawWireAlignedBox(_tempDebugAabb.getMin(), _tempDebugAabb.getMax(), color, true, scene.defaultDrawLayer);
+                    }
+                }
+            }
+        });
 
         // check if any placements need LOD update
         const dirty = this.dirtyModifiedPlacements;
