@@ -109,7 +109,7 @@ const downloadArrayBuffer = async (url, asset) => {
         if (!response.ok) {
             throw new Error(`Error loading resource: ${response.status} ${response.statusText}`);
         }
-    
+
         const totalLength = parseInt(response.headers.get('content-length') ?? '0', 10);
 
         if (!response.body || !response.body.getReader) {
@@ -124,6 +124,7 @@ const downloadArrayBuffer = async (url, asset) => {
 
         try {
             while (true) {
+                /* eslint-disable no-await-in-loop */
                 const { done, value } = await reader.read();
                 if (done) {
                     break;
@@ -172,7 +173,7 @@ class SogBundleParser {
             // deflate
             for (const file of files) {
                 if (file.compression === 'deflate') {
-                    file.data = await inflate(file.data);   // eslint-disable-line no-await-in-loop
+                    file.data = await inflate(file.data);
                 }
             }
 
