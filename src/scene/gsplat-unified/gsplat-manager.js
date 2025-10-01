@@ -358,7 +358,7 @@ class GSplatManager {
         let anyInstanceNeedsLodUpdate = false;
         for (const [, inst] of this.octreeInstances) {
 
-            const isDirty = inst.update();
+            const isDirty = inst.update(this.scene);
             this.layerPlacementsDirty ||= isDirty;
 
             const instNeeds = inst.consumeNeedsLodUpdate();
