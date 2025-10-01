@@ -166,6 +166,8 @@ assetListLoader.load(() => {
             width: totalInstances * 16 / 4, // write rbga as vec4
             height: 1,
             format: pc.PIXELFORMAT_RGBA32F,
+            minFilter: pc.FILTER_NEAREST,
+            magFilter: pc.FILTER_NEAREST,
             mipmaps: false,
             numLevels: 1,
             levels: [matrices]
