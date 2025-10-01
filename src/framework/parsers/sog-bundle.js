@@ -98,6 +98,51 @@ const inflate = async (compressed) => {
     return new Uint8Array(ab); // uncompressed file bytes
 };
 
+const downloadArrayBuffer = async (url, asset) => {
+    const response = await (asset.file?.contents ?? fetch(url.load));
+    if (!response) {
+        throw new Error('Error loading resource');
+    }
+
+    // handle response object
+    if (response instanceof Response) {
+        if (!response.ok) {
+            throw new Error(`Error loading resource: ${response.status} ${response.statusText}`);
+        }
+    
+        const totalLength = parseInt(response.headers.get('content-length') ?? '0', 10);
+
+        if (!response.body || !response.body.getReader) {
+            const buf = await response.arrayBuffer();
+            asset.fire('progress', buf.byteLength, totalLength);
+            return buf;
+        }
+
+        const reader = response.body.getReader();
+        const chunks = [];
+        let totalReceived = 0;
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    break;
+                }
+                chunks.push(value);
+                totalReceived += value.byteLength;
+                asset.fire('progress', totalReceived, totalLength);
+            }
+        } finally {
+            reader.releaseLock();
+        }
+
+        return new Blob(chunks).arrayBuffer();
+    }
+
+    // assume user passed in an ArrayBuffer directly
+    return response;
+};
+
 class SogBundleParser {
     /** @type {AppBase} */
     app;
@@ -118,8 +163,10 @@ class SogBundleParser {
      * the resource is loaded or an error occurs.
      * @param {Asset} asset - Container asset.
      */
-    load(url, callback, asset) {
-        const handleArrayBuffer = async (arrayBuffer) => {
+    async load(url, callback, asset) {
+        try {
+            const arrayBuffer = await downloadArrayBuffer(url, asset);
+
             const files = parseZipArchive(arrayBuffer);
 
             // deflate
@@ -212,15 +259,9 @@ class SogBundleParser {
                 new GSplatSogsResource(this.app.graphicsDevice, data);
 
             callback(null, resource);
-        };
-
-        Asset.fetchArrayBuffer(url.load, (error, arrayBuffer) => {
-            if (error) {
-                callback(error);
-            } else {
-                handleArrayBuffer(arrayBuffer);
-            }
-        }, asset, this.maxRetries);
+        } catch (err) {
+            callback(err);
+        }
     }
 }
 
