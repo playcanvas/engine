@@ -19,7 +19,6 @@ const _invMatrix = new Mat4();
  * @category Graphics
  */
 class SkinInstance {
-
     /**
      * An array of nodes representing each bone in this skin instance.
      *
@@ -69,13 +68,13 @@ class SkinInstance {
         return this._rootBone;
     }
 
-    get numTexturesInRing() {
-        return this._numTexturesInRing;
-    }
-
     set numTexturesInRing(value) {
         this._numTexturesInRing = value;
         this._resizeBoneTextureRingBuffer(value);
+    }
+
+    get numTexturesInRing() {
+        return this._numTexturesInRing;
     }
 
     get boneTexture() {
