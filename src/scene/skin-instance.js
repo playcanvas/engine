@@ -19,6 +19,7 @@ const _invMatrix = new Mat4();
  * @category Graphics
  */
 class SkinInstance {
+
     /**
      * An array of nodes representing each bone in this skin instance.
      *
@@ -33,6 +34,7 @@ class SkinInstance {
      * matrices to generate the final matrix palette.
      */
     constructor(skin) {
+
         this._dirty = true;
 
         // optional root bone - used for cache lookup, not used for skinning
@@ -43,6 +45,16 @@ class SkinInstance {
 
         // true if bones need to be updated before the frustum culling (bones are needed to update bounds of the MeshInstance)
         this._updateBeforeCull = true;
+
+        // ring buffer size. Multiple slots are used instead of just one to
+        // avoid GPU stalls during asynchronous read/write operations.
+        this._numTexturesInRing = 1;
+
+        // current ring buffer texture index
+        this._currentRingIndex = 0;
+
+        // ring buffer
+        this._boneTextureRingBuffer = [];
 
         if (skin) {
             this.initSkin(skin);
@@ -57,6 +69,69 @@ class SkinInstance {
         return this._rootBone;
     }
 
+    get numTexturesInRing() {
+        return this._numTexturesInRing;
+    }
+
+    set numTexturesInRing(value) {
+        this._numTexturesInRing = value;
+        this._resizeBoneTextureRingBuffer(value);
+    }
+
+    get boneTexture() {
+        return this._boneTextureRingBuffer[this._currentRingIndex];
+    }
+
+    _nextTexture() {
+        this._currentRingIndex = (this._currentRingIndex + 1) % this._boneTextureRingBuffer.length;
+        return this._boneTextureRingBuffer[this._currentRingIndex];
+    }
+
+    _createBoneTexture(device, width, height, data) {
+
+        return new Texture(device, {
+            width: width,
+            height: height,
+            format: PIXELFORMAT_RGBA32F,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            name: 'skin',
+            numLevels: data ? 1 : undefined,
+            levels: data ? [data] : undefined
+        });
+    }
+
+    _resizeBoneTextureRingBuffer(size) {
+
+        Debug.assert(size > 0, 'Bone texture ring buffer size must be more than 0');
+        Debug.assert(this._boneTextureRingBuffer.length > 0, 'Bone texture ring buffer is empty');
+
+        const currentLength = this._boneTextureRingBuffer.length;
+
+        if (currentLength > size) {
+
+            for (let i = size; i < currentLength; i++) {
+                this._boneTextureRingBuffer[i]?.destroy();
+            }
+
+            this._boneTextureRingBuffer.length = size;
+
+        } else if (currentLength < size) {
+
+            const mainTexture = this._boneTextureRingBuffer[0];
+            const device = mainTexture.device;
+            const width = mainTexture.width;
+            const height = mainTexture.height;
+            const data = this.matrixPalette;
+
+            for (let i = currentLength; i < size; i++) {
+                const newTexture = this._createBoneTexture(device, width, height, data);
+                this._boneTextureRingBuffer.push(newTexture);
+            }
+        }
+    }
+
     init(device, numBones) {
 
         // texture size - roughly square that fits all bones, width is multiply of 3 to simplify shader math
@@ -65,25 +140,21 @@ class SkinInstance {
         width = math.roundUp(width, 3);
         const height = Math.ceil(numPixels / width);
 
-        this.boneTexture = new Texture(device, {
-            width: width,
-            height: height,
-            format: PIXELFORMAT_RGBA32F,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            name: 'skin'
-        });
+        const mainBoneTexture = this._createBoneTexture(device, width, height);
 
-        this.matrixPalette = this.boneTexture.lock({ mode: TEXTURELOCK_READ });
-        this.boneTexture.unlock();
+        this.matrixPalette = mainBoneTexture.lock({ mode: TEXTURELOCK_READ });
+
+        mainBoneTexture.unlock();
+
+        this._boneTextureRingBuffer.push(mainBoneTexture);
+
+        this._resizeBoneTextureRingBuffer(this._numTexturesInRing);
     }
 
     destroy() {
-
-        if (this.boneTexture) {
-            this.boneTexture.destroy();
-            this.boneTexture = null;
+        if (this._boneTextureRingBuffer.length) {
+            this._boneTextureRingBuffer.map(x => x?.destroy());
+            this._boneTextureRingBuffer.length = 0;
         }
     }
 
@@ -137,7 +208,7 @@ class SkinInstance {
     }
 
     uploadBones(device) {
-        this.boneTexture.upload();
+        this._nextTexture().upload();
     }
 
     _updateMatrices(rootNode, skinUpdateIndex) {
