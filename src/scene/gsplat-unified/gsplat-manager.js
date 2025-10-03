@@ -308,13 +308,12 @@ class GSplatManager {
                     worldState.pendingReleases.length = 0;
                 }
 
+                // number of splats to render
+                this.renderer.setNumSplats(count);
             }
 
             // update order texture
             this.workBuffer.setOrderData(orderData);
-
-            // number of splats to render
-            this.renderer.setNumSplats(count);
         }
     }
 
