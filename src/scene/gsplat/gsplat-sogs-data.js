@@ -173,6 +173,8 @@ class GSplatSogsData {
 
     packedShN;
 
+    textureAssets;
+
     /**
      * Cached centers array (x, y, z per splat), length = numSplats * 3.
      *
@@ -184,14 +186,15 @@ class GSplatSogsData {
     // Marked when resource is destroyed, to abort any in-flight async preparation
     destroyed = false;
 
+    constructor(textureAssets) {
+        this.textureAssets = textureAssets;
+    }
+
     _destroyGpuResources() {
-        this.means_l?.destroy();
-        this.means_u?.destroy();
-        this.quats?.destroy();
-        this.scales?.destroy();
-        this.sh0?.destroy();
-        this.sh_centroids?.destroy();
-        this.sh_labels?.destroy();
+
+        if(this.textureAssets) 
+            this.textureAssets.forEach(asset => asset.unload());
+
         this.packedTexture?.destroy();
         this.packedSh0?.destroy();
         this.packedShN?.destroy();
@@ -271,6 +274,7 @@ class GSplatSogsData {
 
         // copy back gpu texture data so cpu iterator has access to it
         const { means_l, means_u, quats, scales, sh0, sh_labels, sh_centroids } = this;
+
         means_l._levels[0] = await readImageDataAsync(means_l);
         means_u._levels[0] = await readImageDataAsync(means_u);
         quats._levels[0] = await readImageDataAsync(quats);
