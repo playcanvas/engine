@@ -3,6 +3,7 @@ import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { MeshInstance } from '../mesh-instance.js';
+import { math } from '../../core/math/math.js';
 
 /**
  * @import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js'
@@ -101,8 +102,11 @@ class GSplatRenderer {
 
     setMaxNumSplats(numSplats) {
 
-        if (this.instanceIndicesCount < numSplats) {
-            this.instanceIndicesCount = numSplats;
+        // round up to the nearest multiple of instanceSize (same as createInstanceIndices does internally)
+        const roundedNumSplats = math.roundUp(numSplats, GSplatResourceBase.instanceSize);
+
+        if (this.instanceIndicesCount < roundedNumSplats) {
+            this.instanceIndicesCount = roundedNumSplats;
 
             // destroy old instance indices
             this.instanceIndices?.destroy();
