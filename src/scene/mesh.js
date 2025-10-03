@@ -1072,8 +1072,9 @@ class Mesh extends RefCountedObject {
 
         const numVertices = this.vertexBuffer.numVertices;
 
-        const lines = [];
+        let lines;
         let format;
+
         if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {
             const offsets = [[0, 1], [1, 2], [2, 0]];
 
@@ -1082,7 +1083,10 @@ class Mesh extends RefCountedObject {
             const baseVertex = this.primitive[RENDERSTYLE_SOLID].baseVertex || 0;
             const indexBuffer = this.indexBuffer[RENDERSTYLE_SOLID];
             const srcIndices = new typedArrayIndexFormats[indexBuffer.format](indexBuffer.storage);
+            const tmpIndices = srcIndices.slice(0);
             const seen = new Set();
+
+            let len = 0;
 
             for (let j = base; j < base + count; j += 3) {
                 for (let k = 0; k < 3; k++) {
@@ -1091,23 +1095,38 @@ class Mesh extends RefCountedObject {
                     const hash = (i1 > i2) ? ((i2 * numVertices) + i1) : ((i1 * numVertices) + i2);
                     if (!seen.has(hash)) {
                         seen.add(hash);
-                        lines.push(i1, i2);
+                        tmpIndices[len++] = i1;
+                        tmpIndices[len++] = i2;
                     }
                 }
             }
+
+            seen.clear();
+
             format = indexBuffer.format;
+            lines = srcIndices.slice(0, len);
+
         } else {
+            const safeNumVertices = numVertices - (numVertices % 3);
+            const count = (safeNumVertices / 3) * 6;
+
+            format = count > 65535 ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
+            lines = new (count > 65535 ? Uint32Array : Uint16Array)(count);
+
+            let idx = 0;
+
             for (let i = 0; i < numVertices; i += 3) {
-                lines.push(i, i + 1, i + 1, i + 2, i + 2, i);
+                lines[idx++] = i;
+                lines[idx++] = i + 1;
+                lines[idx++] = i + 1;
+                lines[idx++] = i + 2;
+                lines[idx++] = i + 2;
+                lines[idx++] = i;
             }
-            format = lines.length > 65535 ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
         }
 
-        const wireBuffer = new IndexBuffer(this.vertexBuffer.device, format, lines.length);
-        const dstIndices = new typedArrayIndexFormats[wireBuffer.format](wireBuffer.storage);
-        dstIndices.set(lines);
-        wireBuffer.unlock();
-
+        const wireBuffer = new IndexBuffer(this.vertexBuffer.device, format, lines.length, BUFFER_STATIC, lines.buffer);
+        
         this.primitive[RENDERSTYLE_WIREFRAME] = {
             type: PRIMITIVE_LINES,
             base: 0,
