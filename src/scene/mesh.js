@@ -1104,7 +1104,7 @@ class Mesh extends RefCountedObject {
             seen.clear();
 
             format = indexBuffer.format;
-            lines = srcIndices.slice(0, len);
+            lines = tmpIndices.slice(0, len);
 
         } else {
             const safeNumVertices = numVertices - (numVertices % 3);
@@ -1126,7 +1126,7 @@ class Mesh extends RefCountedObject {
         }
 
         const wireBuffer = new IndexBuffer(this.vertexBuffer.device, format, lines.length, BUFFER_STATIC, lines.buffer);
-        
+
         this.primitive[RENDERSTYLE_WIREFRAME] = {
             type: PRIMITIVE_LINES,
             base: 0,
