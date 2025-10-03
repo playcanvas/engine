@@ -1,4 +1,5 @@
 // @config HIDDEN
+import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -46,22 +47,39 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-pc.Tracing.set(pc.TRACEID_SHADER_ALLOC, true);
+// pc.Tracing.set(pc.TRACEID_SHADER_ALLOC, true);
+// pc.Tracing.set(pc.TRACEID_OCTREE_RESOURCES, true);
 
 const assets = {
-//    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
-    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/dubai.ply` }),
-    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/pclogo.ply` }),
+    // church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco.ply` }),
+    church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/morocco/lod-meta.json` }),
+    // church: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/garage/lod-meta.json` }),
+    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/lod/lod-meta.json` }),
     guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
-    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.ply` })
+    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.sog` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
 
+    // initialize UI settings
+    data.set('debugAabbs', !!data.get('debugAabbs'));
+    data.set('debugLod', !!data.get('debugLod'));
+    if (!data.get('lod')) data.set('lod', { distance: 5 });
+    app.scene.gsplat.debugAabbs = !!data.get('debugAabbs');
+    app.scene.gsplat.colorizeLod = !!data.get('debugLod');
+
+    // handle UI changes
+    data.on('debugAabbs:set', () => {
+        app.scene.gsplat.debugAabbs = !!data.get('debugAabbs');
+    });
+    data.on('debugLod:set', () => {
+        app.scene.gsplat.colorizeLod = !!data.get('debugLod');
+    });
+
     // create a splat entity and place it in the world
-    const skull = new pc.Entity();
+    const skull = new pc.Entity('skull');
     skull.addComponent('gsplat', {
         asset: assets.skull,
         unified: true
@@ -72,7 +90,7 @@ assetListLoader.load(() => {
     app.root.addChild(skull);
 
     // create a splat entity and place it in the world
-    const logo = new pc.Entity();
+    const logo = new pc.Entity('logo');
     logo.addComponent('gsplat', {
         asset: assets.logo,
         unified: true
@@ -83,7 +101,7 @@ assetListLoader.load(() => {
     logo.setLocalScale(0.5, 0.5, 0.5);
 
     // create a splat entity and place it in the world
-    const church = new pc.Entity();
+    const church = new pc.Entity('church');
     church.addComponent('gsplat', {
         asset: assets.church,
         unified: true
@@ -91,7 +109,7 @@ assetListLoader.load(() => {
     app.root.addChild(church);
     church.setLocalEulerAngles(180, 90, 0);
 
-    const guitar = new pc.Entity();
+    const guitar = new pc.Entity('guitar');
     guitar.addComponent('gsplat', {
         asset: assets.guitar,
         unified: true
@@ -114,19 +132,31 @@ assetListLoader.load(() => {
 
     camera.addComponent('script');
     const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+    const sceneSize = 500;
     Object.assign(cc, {
-        sceneSize: 500,
-        moveSpeed: 0.005,
-        moveFastSpeed: 0.03,
+        moveSpeed: 0.05 * sceneSize,
+        moveFastSpeed: 0.3 * sceneSize,
+        // moveSpeed: 0.005 * sceneSize,
+        // moveFastSpeed: 0.03 * sceneSize,
         enableOrbit: false,
         enablePan: false
     });
 
+    // bind LOD distance slider to component lodDistances for church and logo
+    /** @returns {void} */
+    const updateLodDistances = () => {
+        const base = Number(data.get('lod.distance')) || 5;
+        const distances = [base, base * 2, base * 3, base * 4, base * 5];
+        /** @type {any} */ (logo.gsplat).lodDistances = distances;
+        /** @type {any} */ (church.gsplat).lodDistances = distances;
+    };
+    updateLodDistances();
+    data.on('lod.distance:set', updateLodDistances);
 
-    let timeToChange = 1;
+    let timeToChange = 3;
     let time = 0;
     let guitarTime = 0;
-    let added = false;
+    let added = true;
     app.on('update', (/** @type {number} */ dt) => {
         time += dt;
         timeToChange -= dt;
@@ -142,16 +172,16 @@ assetListLoader.load(() => {
         if (timeToChange <= 0) {
 
             if (!added) {
-                console.log('adding skull');
+                // console.log('adding skull');
                 added = true;
-                timeToChange = 1;
+                timeToChange = 3;
 
                 skull.enabled = true;
 
             } else {
-                console.log('removing skull');
+                // console.log('removing skull');
                 added = false;
-                timeToChange = 1;
+                timeToChange = 3;
 
                 skull.enabled = false;
             }

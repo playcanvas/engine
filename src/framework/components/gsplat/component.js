@@ -4,7 +4,7 @@ import { Asset } from '../../asset/asset.js';
 import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
 import { Debug } from '../../../core/debug.js';
-import { GSplatPlacement } from '../../../scene/gsplat/unified/gsplat-placement.js';
+import { GSplatPlacement } from '../../../scene/gsplat-unified/gsplat-placement.js';
 
 /**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
@@ -71,6 +71,14 @@ class GSplatComponent extends Component {
 
     /** @private */
     _highQualitySH = true;
+
+    /**
+     * LOD distance thresholds, stored as a copy.
+     *
+     * @type {number[]|null}
+     * @private
+     */
+    _lodDistances = [5, 10, 15, 20, 25];
 
     /**
      * @type {BoundingBox|null}
@@ -153,6 +161,11 @@ class GSplatComponent extends Component {
 
         // set it on meshInstance
         this._instance?.meshInstance?.setCustomAabb(this._customAabb);
+
+        // set it on placement
+        if (this._placement && this._customAabb) {
+            this._placement.aabb = this._customAabb;
+        }
     }
 
     /**
@@ -309,10 +322,33 @@ class GSplatComponent extends Component {
     }
 
     /**
+     * Sets LOD distance thresholds used by octree-based gsplat rendering. The provided array
+     * is copied.
+     *
+     * @type {number[]|null}
+     */
+    set lodDistances(value) {
+        this._lodDistances = Array.isArray(value) ? value.slice() : null;
+        if (this._placement) {
+            this._placement.lodDistances = this._lodDistances;
+        }
+    }
+
+    /**
+     * Gets a copy of LOD distance thresholds previously set, or null when not set.
+     *
+     * @type {number[]|null}
+     */
+    get lodDistances() {
+        return this._lodDistances ? this._lodDistances.slice() : null;
+    }
+
+    /**
      * Sets whether to use the unified gsplat rendering. Can be changed only when the component is
      * not enabled. Default is false.
      *
      * @type {boolean}
+     * @alpha
      */
     set unified(value) {
 
@@ -322,12 +358,14 @@ class GSplatComponent extends Component {
         }
 
         this._unified = value;
+        this._onGSplatAssetAdded();
     }
 
     /**
      * Gets whether to use the unified gsplat rendering.
      *
      * @type {boolean}
+     * @alpha
      */
     get unified() {
         return this._unified;
@@ -582,6 +620,7 @@ class GSplatComponent extends Component {
 
             if (asset) {
                 this._placement = new GSplatPlacement(asset.resource, this.entity);
+                this._placement.lodDistances = this._lodDistances;
             }
 
         } else {

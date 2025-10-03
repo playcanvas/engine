@@ -65,6 +65,7 @@ import gsplatSHVS from '../chunks/gsplat/vert/gsplatSH.js';
 import gsplatSourceVS from '../chunks/gsplat/vert/gsplatSource.js';
 import gsplatVS from '../chunks/gsplat/vert/gsplat.js';
 import gsplatWorkBufferVS from '../chunks/gsplat/vert/gsplatWorkBuffer.js';
+import gsplatPackingPS from '../chunks/gsplat/frag/gsplatPacking.js';
 import quadVS from '../chunks/common/vert/quad.js';
 import immediateLinePS from '../chunks/internal/frag/immediateLine.js';
 import immediateLineVS from '../chunks/internal/vert/immediateLine.js';
@@ -247,6 +248,7 @@ const shaderChunksGLSL = {
     gsplatSourceVS,
     gsplatVS,
     gsplatWorkBufferVS,
+    gsplatPackingPS,
     quadVS,
     immediateLinePS,
     immediateLineVS,

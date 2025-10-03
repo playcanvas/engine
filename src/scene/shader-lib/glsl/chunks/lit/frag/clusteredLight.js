@@ -108,7 +108,7 @@ struct ClusterLightData {
 
 // Note: on some devices (tested on Pixel 3A XL), this matrix when stored inside the light struct has lower precision compared to
 // when stored outside, so we store it outside to avoid spot shadow flickering. This might need to be done to other / all members
-// of the structure if further similar issues are observed.
+// of the structure if further similar issues are observed. See https://github.com/KhronosGroup/WebGL/issues/3351
 
 // shadow (spot light only) / cookie projection matrix
 mat4 lightProjectionMatrix;

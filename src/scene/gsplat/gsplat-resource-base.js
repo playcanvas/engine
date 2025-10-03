@@ -1,21 +1,62 @@
 import { Debug } from '../../core/debug.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { ADDRESS_CLAMP_TO_EDGE, BUFFER_STATIC, FILTER_NEAREST, SEMANTIC_ATTR13, TYPE_UINT32 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, BUFFER_STATIC, FILTER_NEAREST, SEMANTIC_ATTR13, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { Mesh } from '../mesh.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
+import { QuadRender } from '../graphics/quad-render.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import glslGsplatCopyToWorkBufferPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
+import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatData } from './gsplat-data.js'
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
  * @import { GSplatSogsData } from './gsplat-sogs-data.js'
- * @import { GSplatLodBlocks } from './unified/gsplat-lod-blocks.js'
  */
 
 let id = 0;
+const tempMap = new Map();
+
+/**
+ * A helper class to cache quad renders for work buffer rendering.
+ *
+ * @ignore
+ */
+class WorkBufferRenderInfo {
+    /** @type {ShaderMaterial} */
+    material;
+
+    /** @type {QuadRender} */
+    quadRender;
+
+    constructor(device, key, material) {
+        this.device = device;
+        this.material = material;
+
+        const clonedDefines = new Map(material.defines);
+        const shader = ShaderUtils.createShader(this.device, {
+            uniqueName: `SplatCopyToWorkBuffer:${key}`,
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexDefines: clonedDefines,
+            fragmentDefines: clonedDefines,
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentGLSL: glslGsplatCopyToWorkBufferPS,
+            fragmentWGSL: wgslGsplatCopyToWorkBufferPS
+        });
+
+        this.quadRender = new QuadRender(shader);
+    }
+
+    destroy() {
+        this.material?.destroy();
+        this.quadRender?.destroy();
+    }
+}
 
 /**
  * Base class for a GSplat resource and defines common properties.
@@ -29,9 +70,6 @@ class GSplatResourceBase {
     /** @type {GSplatData | GSplatCompressedData | GSplatSogsData} */
     gsplatData;
 
-    /** @type {GSplatLodBlocks|null} */
-    lodBlocks = null;
-
     /** @type {Float32Array} */
     centers;
 
@@ -44,18 +82,17 @@ class GSplatResourceBase {
     /** @type {VertexBuffer} */
     instanceIndices;
 
-    /** @type {boolean} */
-    hasLod = false;
-
     /** @type {number} */
     id = id++;
+
+    /** @type {Map<string, WorkBufferRenderInfo>} */
+    workBufferRenderInfos = new Map();
 
     constructor(device, gsplatData) {
         this.device = device;
         this.gsplatData = gsplatData;
 
-        this.centers = new Float32Array(gsplatData.numSplats * 3);
-        gsplatData.getCenters(this.centers);
+        this.centers = gsplatData.getCenters();
 
         this.aabb = new BoundingBox();
         gsplatData.calcAabb(this.aabb);
@@ -73,6 +110,40 @@ class GSplatResourceBase {
     destroy() {
         this.mesh?.destroy();
         this.instanceIndices?.destroy();
+        this.workBufferRenderInfos.forEach(info => info.destroy());
+        this.workBufferRenderInfos.clear();
+    }
+
+    /**
+     * Get or create a QuadRender for rendering to work buffer.
+     *
+     * @param {boolean} useIntervals - Whether to use intervals.
+     * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
+     */
+    getWorkBufferRenderInfo(useIntervals) {
+
+        // configure defines to fetch cached data
+        this.configureMaterialDefines(tempMap);
+        if (useIntervals) tempMap.set('GSPLAT_LOD', '');
+        const key = Array.from(tempMap.entries()).map(([k, v]) => `${k}=${v}`).join(';');
+
+        // get or create quad render
+        let info = this.workBufferRenderInfos.get(key);
+        if (!info) {
+
+            const material = new ShaderMaterial();
+            this.configureMaterial(material);
+
+            // copy tempMap to material defines
+            tempMap.forEach((v, k) => material.setDefine(k, v));
+
+            // create new cache entry
+            info = new WorkBufferRenderInfo(this.device, key, material);
+            this.workBufferRenderInfos.set(key, info);
+        }
+
+        tempMap.clear();
+        return info;
     }
 
     static createMesh(device) {
@@ -138,6 +209,9 @@ class GSplatResourceBase {
     configureMaterial(material) {
     }
 
+    configureMaterialDefines(defines) {
+    }
+
     /**
      * Evaluates the size of the texture based on the number of splats.
      *
@@ -171,46 +245,6 @@ class GSplatResourceBase {
             addressV: ADDRESS_CLAMP_TO_EDGE,
             ...(data ? { levels: [data] } : { })
         });
-    }
-
-    /**
-     * Calculate block centers by averaging splat centers within each block
-     *
-     * @param {number} numSplats - Total number of splats
-     * @param {number} blockSize - Size of each block
-     * @param {number} numBlocks - Number of blocks (avoids recalculation)
-     * @param {Float32Array} blocksCenter - Output array for block centers (3 floats per block)
-     * @protected
-     */
-    calculateBlockCenters(numSplats, blockSize, numBlocks, blocksCenter) {
-        for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
-            const startIdx = blockIdx * blockSize;
-            const endIdx = Math.min(startIdx + blockSize, numSplats);
-            const blockSplatCount = endIdx - startIdx;
-
-            // Calculate block center by averaging all splat centers in this block
-            let centerX = 0, centerY = 0, centerZ = 0;
-            for (let i = startIdx; i < endIdx; i++) {
-                const centerBase = i * 3;
-                centerX += this.centers[centerBase];
-                centerY += this.centers[centerBase + 1];
-                centerZ += this.centers[centerBase + 2];
-            }
-
-            // Store average center in blocksCenter
-            const blockCenterBase = blockIdx * 3;
-            blocksCenter[blockCenterBase] = centerX / blockSplatCount;
-            blocksCenter[blockCenterBase + 1] = centerY / blockSplatCount;
-            blocksCenter[blockCenterBase + 2] = centerZ / blockSplatCount;
-        }
-    }
-
-    /**
-     * Generate LODs if supported. To be implemented by derived classes.
-     *
-     * @protected
-     */
-    generateLods() {
     }
 
     instantiate() {

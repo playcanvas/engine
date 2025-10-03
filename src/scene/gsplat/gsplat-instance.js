@@ -124,6 +124,7 @@ class GSplatInstance {
     }
 
     destroy() {
+        this.orderTexture?.destroy();
         this.resolveSH?.destroy();
         this.material?.destroy();
         this.meshInstance?.destroy();

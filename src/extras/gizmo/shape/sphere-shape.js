@@ -1,51 +1,85 @@
 import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
+import { Mesh } from '../../../scene/mesh.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
+/** @import { ShapeArgs } from './shape.js' */
+/** @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js' */
+
+/**
+ * @typedef {object} SphereShapeArgs
+ * @property {number} [radius] - The radius of the sphere.
+ */
+
+/**
+ * @ignore
+ */
 class SphereShape extends Shape {
-    _size = 0.12;
+    /**
+     * The internal size of the sphere.
+     *
+     * @type {number}
+     * @private
+     */
+    _radius = 0.03;
 
-    _tolerance = 0.05;
+    /**
+     * Create a new SphereShape.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {ShapeArgs & SphereShapeArgs} args - The shape options.
+     */
+    constructor(device, args = {}) {
+        super(device, 'sphereCenter', args);
 
-    constructor(device, options = {}) {
-        super(device, options);
+        this._radius = args.radius ?? this._radius;
 
+        // intersect
         this.triData = [
             new TriData(new SphereGeometry(), 2)
         ];
 
-        this._createCenter();
+        // render
+        this._createRenderComponent(this.entity, [
+            Mesh.fromGeometry(this.device, new SphereGeometry({
+                latitudeBands: 32,
+                longitudeBands: 32
+            }))
+        ]);
+
+        // update transform
+        this._update();
     }
 
-    _createCenter() {
-        this._createRoot('sphereCenter');
-        this._updateTransform();
-
-        // box
-        this._addRenderMesh(this.entity, 'sphere', this._shading);
+    /**
+     * Set the rendered radius of the sphere.
+     *
+     * @param {number} value - The new radius of the sphere.
+     */
+    set radius(value) {
+        this._radius = value ?? this._radius;
+        this._update();
     }
 
-    set size(value) {
-        this._size = value ?? 1;
-        this._updateTransform();
+    /**
+     * Get the rendered radius of the sphere.
+     *
+     * @returns {number} The radius of the sphere.
+     */
+    get radius() {
+        return this._radius;
     }
 
-    get size() {
-        return this._size;
-    }
-
-    set tolerance(value) {
-        this._tolerance = value;
-        this._updateTransform();
-    }
-
-    get tolerance() {
-        return this._tolerance;
-    }
-
-    _updateTransform() {
+    /**
+     * Update the shape's transform.
+     *
+     * @protected
+     * @override
+     */
+    _update() {
         // intersect/render
-        this.entity.setLocalScale(this._size, this._size, this._size);
+        const scale = this._radius * 2;
+        this.entity.setLocalScale(scale, scale, scale);
     }
 }
 

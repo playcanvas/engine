@@ -1,37 +1,39 @@
-import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
+import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { EventHandler } from '../../core/event-handler.js';
-import { CameraComponent } from '../../framework/components/camera/component.js';
 import { PROJECTION_PERSPECTIVE, SORTMODE_NONE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
 import { Layer } from '../../scene/layer.js';
 
-import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
-
 /**
  * @import { AppBase } from '../../framework/app-base.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js';
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { EventHandle } from '../../core/event-handle.js'
  * @import { Shape } from './shape/shape.js'
+ * @import { GizmoSpace } from './constants.js'
  */
 
 // temporary variables
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpM1 = new Mat4();
-const tmpM2 = new Mat4();
-const tmpR1 = new Ray();
+const v = new Vec3();
+const position = new Vec3();
+const dir = new Vec3();
+const rotation = new Quat();
+const m1 = new Mat4();
+const m2 = new Mat4();
+const ray = new Ray();
 
 // constants
-const LAYER_NAME = 'Gizmo';
 const MIN_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
 const UPDATE_EPSILON = 1e-6;
+const DIST_EPSILON = 1e-4;
 
 /**
  * The base class for all gizmos.
@@ -164,12 +166,12 @@ class Gizmo extends EventHandler {
     _scale = 1;
 
     /**
-     * Internal version of coordinate space. Defaults to {@link GIZMOSPACE_WORLD}.
+     * Internal version of coordinate space. Defaults to 'world'.
      *
-     * @type {string}
+     * @type {GizmoSpace}
      * @protected
      */
-    _coordSpace = GIZMOSPACE_WORLD;
+    _coordSpace = 'world';
 
     /**
      * Internal reference to the app containing the gizmo.
@@ -188,6 +190,14 @@ class Gizmo extends EventHandler {
     _device;
 
     /**
+     * Internal list of app event handles for the gizmo.
+     *
+     * @type {EventHandle[]}
+     * @protected
+     */
+    _handles = [];
+
+    /**
      * Internal reference to camera component to view the gizmo.
      *
      * @type {CameraComponent}
@@ -202,6 +212,14 @@ class Gizmo extends EventHandler {
      * @protected
      */
     _layer;
+
+    /**
+     * Internal flag to track if a render update is required.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _renderUpdate = false;
 
     /**
      * The graph nodes attached to the gizmo.
@@ -232,14 +250,14 @@ class Gizmo extends EventHandler {
      * @param {number} [layerIndex] - The layer index. Defaults to the end of the layer list.
      * @returns {Layer} The new layer.
      */
-    static createLayer(app, layerName = LAYER_NAME, layerIndex) {
+    static createLayer(app, layerName = 'Gizmo', layerIndex = app.scene.layers.layerList.length) {
         const layer = new Layer({
             name: layerName,
             clearDepthBuffer: true,
             opaqueSortMode: SORTMODE_NONE,
             transparentSortMode: SORTMODE_NONE
         });
-        app.scene.layers.insert(layer, layerIndex ?? app.scene.layers.layerList.length);
+        app.scene.layers.insert(layer, layerIndex);
         return layer;
     }
 
@@ -250,20 +268,21 @@ class Gizmo extends EventHandler {
      * @param {Layer} layer - The render layer. This can be provided by the user or will be created
      * and added to the scene and camera if not provided. Successive gizmos will share the same layer
      * and will be removed from the camera and scene when the last gizmo is destroyed.
+     * @param {string} [name] - The name of the gizmo. Defaults to 'gizmo'.
+     * @example
      * const gizmo = new pc.Gizmo(camera, layer);
      */
-    constructor(camera, layer) {
-        Debug.assert(camera instanceof CameraComponent, 'Incorrect parameters for Gizmos\'s constructor. Use new Gizmo(camera, layer)');
+    constructor(camera, layer, name = 'gizmo') {
         super();
 
+        this._layer = layer;
         this._camera = camera;
-        this._app = camera.system.app;
+        this._camera.layers = this._camera.layers.concat(this._layer.id);
+
+        this._app = this._camera.system.app;
         this._device = this._app.graphicsDevice;
 
-        this._layer = layer;
-        camera.layers = camera.layers.concat(layer.id);
-
-        this.root = new Entity('gizmo');
+        this.root = new Entity(name);
         this._app.root.addChild(this.root);
         this.root.enabled = false;
 
@@ -277,17 +296,52 @@ class Gizmo extends EventHandler {
         this._device.canvas.addEventListener('pointermove', this._onPointerMove);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
-        this._app.on('update', () => {
-            this._updatePosition();
-            this._updateRotation();
-            this._updateScale();
-        });
+        this._handles.push(this._app.on('prerender', () => this.prerender()));
+        this._handles.push(this._app.on('update', () => this.update()));
+        this._handles.push(this._app.on('destroy', () => this.destroy()));
+    }
 
-        this._app.on('destroy', () => this.destroy());
+    /**
+     * Sets the gizmo enabled state.
+     *
+     * @type {boolean}
+     */
+    set enabled(state) {
+        const cameraDist = this.root.getLocalPosition().distance(this.camera.entity.getPosition());
+        const enabled = state ? this.nodes.length > 0 && cameraDist > DIST_EPSILON : false;
+        if (enabled !== this.root.enabled) {
+            this.root.enabled = enabled;
+            this._renderUpdate = true;
+        }
+    }
+
+    /**
+     * Gets the gizmo enabled state.
+     *
+     * @type {boolean}
+     */
+    get enabled() {
+        return this.root.enabled;
     }
 
     /**
      * Sets the gizmo render layer.
+     *
+     * @param {Layer} layer - The layer to render the gizmo.
+     */
+    set layer(layer) {
+        if (this._layer === layer) {
+            return;
+        }
+        this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
+        this._layer = layer;
+        this._camera.layers = this._camera.layers.concat(this._layer.id);
+
+        this.enabled = true;
+    }
+
+    /**
+     * Gets the gizmo render layer.
      *
      * @type {Layer}
      */
@@ -296,24 +350,44 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * Sets the gizmo coordinate space. Can be:
+     * Sets the camera component to view the gizmo.
      *
-     * - {@link GIZMOSPACE_LOCAL}
-     * - {@link GIZMOSPACE_WORLD}
+     * @type {CameraComponent} camera - The camera component.
+     */
+    set camera(camera) {
+        if (this._camera === camera) {
+            return;
+        }
+        this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
+        this._camera = camera;
+        this._camera.layers = this._camera.layers.concat(this._layer.id);
+
+        this.enabled = true;
+    }
+
+    /**
+     * Gets the camera component to view the gizmo.
      *
-     * Defaults to {@link GIZMOSPACE_WORLD}.
+     * @type {CameraComponent} The camera component.
+     */
+    get camera() {
+        return this._camera;
+    }
+
+    /**
+     * Sets the gizmo coordinate space. Defaults to 'world'
      *
-     * @type {string}
+     * @type {GizmoSpace}
      */
     set coordSpace(value) {
-        this._coordSpace = value ?? GIZMOSPACE_WORLD;
+        this._coordSpace = value ?? this._coordSpace;
         this._updateRotation();
     }
 
     /**
      * Gets the gizmo coordinate space.
      *
-     * @type {string}
+     * @type {GizmoSpace}
      */
     get coordSpace() {
         return this._coordSpace;
@@ -342,13 +416,23 @@ class Gizmo extends EventHandler {
      * @type {Vec3}
      * @protected
      */
-    get facing() {
+    get facingDir() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            const gizmoPos = this.root.getPosition();
+            const gizmoPos = this.root.getLocalPosition();
             const cameraPos = this._camera.entity.getPosition();
-            return tmpV2.sub2(cameraPos, gizmoPos).normalize();
+            return dir.sub2(cameraPos, gizmoPos).normalize();
         }
-        return tmpV2.copy(this._camera.entity.forward).mulScalar(-1);
+        return dir.copy(this._camera.entity.forward).mulScalar(-1);
+    }
+
+    /**
+     * @type {Vec3}
+     * @protected
+     */
+    get cameraDir() {
+        const cameraPos = this._camera.entity.getPosition();
+        const gizmoPos = this.root.getLocalPosition();
+        return dir.sub2(cameraPos, gizmoPos).normalize();
     }
 
     /**
@@ -356,7 +440,7 @@ class Gizmo extends EventHandler {
      * @private
      */
     _onPointerDown(e) {
-        if (!this.root.enabled || document.pointerLockElement) {
+        if (!this.enabled || document.pointerLockElement) {
             return;
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
@@ -377,7 +461,7 @@ class Gizmo extends EventHandler {
      * @private
      */
     _onPointerMove(e) {
-        if (!this.root.enabled || document.pointerLockElement) {
+        if (!this.enabled || document.pointerLockElement) {
             return;
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
@@ -393,7 +477,7 @@ class Gizmo extends EventHandler {
      * @private
      */
     _onPointerUp(e) {
-        if (!this.root.enabled || document.pointerLockElement) {
+        if (!this.enabled || document.pointerLockElement) {
             return;
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
@@ -412,36 +496,40 @@ class Gizmo extends EventHandler {
      * @protected
      */
     _updatePosition() {
-        tmpV1.set(0, 0, 0);
+        position.set(0, 0, 0);
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            tmpV1.add(node.getPosition());
+            position.add(node.getPosition());
         }
-        tmpV1.mulScalar(1.0 / (this.nodes.length || 1));
+        position.mulScalar(1.0 / (this.nodes.length || 1));
 
-        if (tmpV1.distance(this.root.getPosition()) < UPDATE_EPSILON) {
+        if (position.equalsApprox(this.root.getLocalPosition(), UPDATE_EPSILON)) {
             return;
         }
 
-        this.root.setPosition(tmpV1);
-        this.fire(Gizmo.EVENT_POSITIONUPDATE, tmpV1);
+        this.root.setLocalPosition(position);
+        this.fire(Gizmo.EVENT_POSITIONUPDATE, position);
+
+        this._renderUpdate = true;
     }
 
     /**
      * @protected
      */
     _updateRotation() {
-        tmpV1.set(0, 0, 0);
-        if (this._coordSpace === GIZMOSPACE_LOCAL && this.nodes.length !== 0) {
-            tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
+        rotation.set(0, 0, 0, 1);
+        if (this._coordSpace === 'local' && this.nodes.length !== 0) {
+            rotation.copy(this.nodes[this.nodes.length - 1].getRotation());
         }
 
-        if (tmpV1.distance(this.root.getEulerAngles()) < UPDATE_EPSILON) {
+        if (rotation.equalsApprox(this.root.getRotation(), UPDATE_EPSILON)) {
             return;
         }
 
-        this.root.setEulerAngles(tmpV1);
-        this.fire(Gizmo.EVENT_ROTATIONUPDATE, tmpV1);
+        this.root.setRotation(rotation);
+        this.fire(Gizmo.EVENT_ROTATIONUPDATE, rotation.getEulerAngles());
+
+        this._renderUpdate = true;
     }
 
     /**
@@ -449,7 +537,7 @@ class Gizmo extends EventHandler {
      */
     _updateScale() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            const gizmoPos = this.root.getPosition();
+            const gizmoPos = this.root.getLocalPosition();
             const cameraPos = this._camera.entity.getPosition();
             const dist = gizmoPos.distance(cameraPos);
             this._scale = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD) * dist * PERS_SCALE_RATIO;
@@ -464,6 +552,8 @@ class Gizmo extends EventHandler {
 
         this.root.setLocalScale(this._scale, this._scale, this._scale);
         this.fire(Gizmo.EVENT_SCALEUPDATE, this._scale);
+
+        this._renderUpdate = true;
     }
 
     /**
@@ -475,7 +565,7 @@ class Gizmo extends EventHandler {
     _getSelection(x, y) {
         const start = this._camera.screenToWorld(x, y, 0);
         const end = this._camera.screenToWorld(x, y, this._camera.farClip - this._camera.nearClip);
-        const dir = tmpV1.copy(end).sub(start).normalize();
+        const dir = v.copy(end).sub(start).normalize();
 
         const selection = [];
         for (let i = 0; i < this.intersectShapes.length; i++) {
@@ -489,18 +579,17 @@ class Gizmo extends EventHandler {
                 const { tris, transform, priority } = shape.triData[j];
 
                 // combine node world transform with transform of tri relative to parent
-                const triWTM = tmpM1.copy(parentTM).mul(transform);
-                const invTriWTM = tmpM2.copy(triWTM).invert();
+                const triWTM = m1.copy(parentTM).mul(transform);
+                const invTriWTM = m2.copy(triWTM).invert();
 
-                const ray = tmpR1;
                 invTriWTM.transformPoint(start, ray.origin);
                 invTriWTM.transformVector(dir, ray.direction);
                 ray.direction.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
-                    if (tris[k].intersectsRay(ray, tmpV1)) {
+                    if (tris[k].intersectsRay(ray, v)) {
                         selection.push({
-                            dist: triWTM.transformPoint(tmpV1).sub(start).length(),
+                            dist: triWTM.transformPoint(v).sub(start).length(),
                             meshInstances: shape.meshInstances,
                             priority: priority
                         });
@@ -539,15 +628,14 @@ class Gizmo extends EventHandler {
         } else {
             this.nodes = [nodes];
         }
+
         this._updatePosition();
         this._updateRotation();
         this._updateScale();
 
         this.fire(Gizmo.EVENT_NODESATTACH);
 
-        this.root.enabled = true;
-
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
+        this.enabled = true;
     }
 
     /**
@@ -559,12 +647,45 @@ class Gizmo extends EventHandler {
      * gizmo.detach();
      */
     detach() {
-        this.root.enabled = false;
+        this.enabled = false;
 
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
         this.fire(Gizmo.EVENT_NODESDETACH);
 
         this.nodes = [];
+    }
+
+    /**
+     * Pre-render method. This is called before the gizmo is rendered.
+     *
+     * @example
+     * const gizmo = new pc.Gizmo(camera, layer);
+     * gizmo.attach([boxA, boxB]);
+     * gizmo.prerender();
+     */
+    prerender() {
+    }
+
+    /**
+     * Updates the gizmo position, rotation, and scale.
+     *
+     * @example
+     * const gizmo = new pc.Gizmo(camera, layer);
+     * gizmo.attach([boxA, boxB]);
+     * gizmo.update();
+     */
+    update() {
+        if (this._renderUpdate) {
+            this._renderUpdate = false;
+            this.fire(Gizmo.EVENT_RENDERUPDATE);
+        }
+
+        if (!this.enabled) {
+            return;
+        }
+
+        this._updatePosition();
+        this._updateRotation();
+        this._updateScale();
     }
 
     /**
@@ -582,7 +703,10 @@ class Gizmo extends EventHandler {
         this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
+        this._handles.forEach(handle => handle.off());
+
         this.root.destroy();
+
     }
 }
 
