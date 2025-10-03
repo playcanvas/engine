@@ -1115,7 +1115,7 @@ class Mesh extends RefCountedObject {
 
             let idx = 0;
 
-            for (let i = 0; i < numVertices; i += 3) {
+            for (let i = 0; i < safeNumVertices; i += 3) {
                 lines[idx++] = i;
                 lines[idx++] = i + 1;
                 lines[idx++] = i + 1;
