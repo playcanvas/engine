@@ -86,6 +86,9 @@ class GSplatManager {
     /** @type {number} */
     sortedVersion = 0;
 
+    /** @type {number} */
+    framesTillFullUpdate = 0;
+
     /** @type {Vec3} */
     lastCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
@@ -353,27 +356,42 @@ class GSplatManager {
 
     update() {
 
-        // process any pending / prefetch resource completions and collect LOD updates
+        let fullUpdate = false;
+        this.framesTillFullUpdate--;
+        if (this.framesTillFullUpdate <= 0) {
+            this.framesTillFullUpdate = 10;
+
+            // if sorter can keep up
+            if (this.sorter.jobsInFlight < 3) {
+                fullUpdate = true;
+            }
+        }
+
         let anyInstanceNeedsLodUpdate = false;
-        for (const [, inst] of this.octreeInstances) {
-
-            const isDirty = inst.update(this.scene);
-            this.layerPlacementsDirty ||= isDirty;
-
-            const instNeeds = inst.consumeNeedsLodUpdate();
-            anyInstanceNeedsLodUpdate ||= instNeeds;
-        }
-
-        // check if any octree instances have moved enough to require LOD update
         let anyOctreeMoved = false;
-        const threshold = this.scene.gsplat.lodUpdateDistance;
-        for (const [, inst] of this.octreeInstances) {
-            const moved = inst.testMoved(threshold);
-            anyOctreeMoved ||= moved;
-        }
+        let cameraMovedOrRotated = false;
+        if (fullUpdate) {
 
-        // check if camera has moved/rotated enough to require LOD update
-        const cameraMovedOrRotated = this.testCameraMoved();
+            // process any pending / prefetch resource completions and collect LOD updates
+            for (const [, inst] of this.octreeInstances) {
+
+                const isDirty = inst.update(this.scene);
+                this.layerPlacementsDirty ||= isDirty;
+
+                const instNeeds = inst.consumeNeedsLodUpdate();
+                anyInstanceNeedsLodUpdate ||= instNeeds;
+            }
+
+            // check if any octree instances have moved enough to require LOD update
+            const threshold = this.scene.gsplat.lodUpdateDistance;
+            for (const [, inst] of this.octreeInstances) {
+                const moved = inst.testMoved(threshold);
+                anyOctreeMoved ||= moved;
+            }
+
+            // check if camera has moved/rotated enough to require LOD update
+            cameraMovedOrRotated = this.testCameraMoved();
+        }
 
         // if parameters are dirty, rebuild world state
         if (this.scene.gsplat.dirty) {
