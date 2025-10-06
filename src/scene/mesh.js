@@ -1082,8 +1082,9 @@ class Mesh extends RefCountedObject {
             const count = this.primitive[RENDERSTYLE_SOLID].count;
             const baseVertex = this.primitive[RENDERSTYLE_SOLID].baseVertex || 0;
             const indexBuffer = this.indexBuffer[RENDERSTYLE_SOLID];
-            const srcIndices = new typedArrayIndexFormats[indexBuffer.format](indexBuffer.storage);
-            const tmpIndices = srcIndices.slice(0);
+            const indicesArrayType = typedArrayIndexFormats[indexBuffer.format];
+            const srcIndices = new indicesArrayType(indexBuffer.storage);
+            const tmpIndices = new indicesArrayType(count * 2);
             const seen = new Set();
 
             let len = 0;
@@ -1111,7 +1112,7 @@ class Mesh extends RefCountedObject {
             const count = (safeNumVertices / 3) * 6;
 
             format = count > 65535 ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
-            lines = new (count > 65535 ? Uint32Array : Uint16Array)(count);
+            lines = count > 65535 ? new Uint32Array(count) : new Uint16Array(count);
 
             let idx = 0;
 
