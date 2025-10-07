@@ -12,6 +12,17 @@ class GSplatParams {
     debugAabbs = false;
 
     /**
+     * Enables radial sorting based on distance from camera (for cubemap rendering). When false,
+     * uses directional sorting along camera forward vector. Defaults to false.
+     *
+     * Note: Radial sorting helps reduce sorting artifacts when the camera rotates (looks around),
+     * while linear sorting is better at minimizing artifacts when the camera translates (moves).
+     *
+     * @type {boolean}
+     */
+    radialSorting = false;
+
+    /**
      * Enables debug rendering of AABBs for GSplat octree nodes. Defaults to false.
      *
      * @type {boolean}

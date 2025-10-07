@@ -507,6 +507,9 @@ class GSplatManager {
             // transform by the full inverse matrix and then normalize, which cancels the (1/s) scaling factor
             const transformedDirection = invModelMat.transformVector(cameraDirection).normalize();
 
+            // camera position in splat's local space (for circular sorting)
+            const transformedPosition = invModelMat.transformPoint(cameraPosition);
+
             // world-space offset
             modelMat.getTranslation(translation);
             const offset = translation.sub(cameraPosition).dot(cameraDirection);
@@ -518,6 +521,7 @@ class GSplatManager {
 
             sorterRequest.push({
                 transformedDirection,
+                transformedPosition,
                 offset,
                 scale: uniformScale,
                 modelMat: modelMat.data.slice(),
@@ -526,7 +530,7 @@ class GSplatManager {
             });
         });
 
-        this.sorter.setSortParams(sorterRequest);
+        this.sorter.setSortParams(sorterRequest, this.scene.gsplat.radialSorting);
         this.renderer.updateViewport(cameraNode);
     }
 

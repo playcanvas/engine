@@ -8,6 +8,9 @@ function UnifiedSortWorker() {
     let distances;
     let countBuffer;
 
+    // Sorting mode: false = forward vector (directional), true = radial distance (for cubemaps)
+    let _radialSort = false;
+
     // camera-relative bin-based precision optimization
     const numBins = 32;
     const binBase = new Array(numBins).fill(0);
@@ -66,7 +69,8 @@ function UnifiedSortWorker() {
         binDivider[numBins] = 0;
     };
 
-    const evaluateSortKeys = (sortParams, minDist, range, distances, countBuffer, centersData) => {
+    // Common sort key evaluation logic
+    const evaluateSortKeysCommon = (sortParams, minDist, range, distances, countBuffer, centersData, processSplatFn) => {
         const { ids, lineStarts, padding, intervals, textureSize } = centersData;
 
         // pre-calculate inverse bin range
@@ -74,19 +78,7 @@ function UnifiedSortWorker() {
 
         // loop over all the splat placements
         for (let paramIdx = 0; paramIdx < sortParams.length; paramIdx++) {
-
-            // camera related params
             const params = sortParams[paramIdx];
-            const { transformedDirection, offset, scale } = params;
-            const dx = transformedDirection.x;
-            const dy = transformedDirection.y;
-            const dz = transformedDirection.z;
-
-            // pre-calculate camera related constants
-            const sdx = dx * scale;
-            const sdy = dy * scale;
-            const sdz = dz * scale;
-            const add = offset - minDist;
 
             // source centers
             const id = ids[paramIdx];
@@ -106,6 +98,36 @@ function UnifiedSortWorker() {
                 const intervalStart = intervalsArray[i] * 3;
                 const intervalEnd = intervalsArray[i + 1] * 3;
 
+                // Process each center in this interval using the provided function
+                targetIndex = processSplatFn(centers, params, intervalStart, intervalEnd, targetIndex,
+                    invBinRange, minDist, range, distances, countBuffer);
+            }
+
+            // add padding, to make sure the whole buffer (including padding) is sorted
+            const pad = padding[paramIdx];
+            countBuffer[0] += pad;
+
+            // set distance values for padding positions to prevent garbage data
+            distances.fill(0, targetIndex, targetIndex + pad);
+            targetIndex += pad;
+        }
+    };
+
+    const evaluateSortKeysLinear = (sortParams, minDist, range, distances, countBuffer, centersData) => {
+        evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData,
+            (centers, params, intervalStart, intervalEnd, targetIndex, invBinRange, minDist, range, distances, countBuffer) => {
+                // camera related params
+                const { transformedDirection, offset, scale } = params;
+                const dx = transformedDirection.x;
+                const dy = transformedDirection.y;
+                const dz = transformedDirection.z;
+
+                // pre-calculate camera related constants
+                const sdx = dx * scale;
+                const sdy = dy * scale;
+                const sdz = dz * scale;
+                const add = offset - minDist;
+
                 // Process each center in this interval
                 for (let srcIndex = intervalStart; srcIndex < intervalEnd; srcIndex += 3) {
                     const x = centers[srcIndex];
@@ -122,16 +144,45 @@ function UnifiedSortWorker() {
                     distances[targetIndex++] = sortKey;
                     countBuffer[sortKey]++;
                 }
-            }
 
-            // add padding, to make sure the whole buffer (including padding) is sorted
-            const pad = padding[paramIdx];
-            countBuffer[0] += pad;
+                return targetIndex;
+            });
+    };
 
-            // set distance values for padding positions to prevent garbage data
-            distances.fill(0, targetIndex, targetIndex + pad);
-            targetIndex += pad;
-        }
+    const evaluateSortKeysRadial = (sortParams, minDist, range, distances, countBuffer, centersData) => {
+        evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData,
+            (centers, params, intervalStart, intervalEnd, targetIndex, invBinRange, minDist, range, distances, countBuffer) => {
+                // camera related params
+                const { transformedPosition, scale } = params;
+
+                // camera position in local space
+                const cx = transformedPosition.x;
+                const cy = transformedPosition.y;
+                const cz = transformedPosition.z;
+
+                // Process each center in this interval
+                for (let srcIndex = intervalStart; srcIndex < intervalEnd; srcIndex += 3) {
+                    const dx = centers[srcIndex] - cx;
+                    const dy = centers[srcIndex + 1] - cy;
+                    const dz = centers[srcIndex + 2] - cz;
+
+                    const distSq = dx * dx + dy * dy + dz * dz;
+                    // World-space radial distance from camera
+                    const dist = Math.sqrt(distSq) * scale;
+
+                    // Bin-based mapping (normalize by minDist for binning)
+                    // Invert distance so far objects get small keys (rendered first, back-to-front)
+                    const invertedDist = range - dist;
+                    const d = invertedDist * invBinRange;
+                    const bin = d >>> 0;
+                    const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
+
+                    distances[targetIndex++] = sortKey;
+                    countBuffer[sortKey]++;
+                }
+
+                return targetIndex;
+            });
     };
 
     const countingSort = (bucketCount, countBuffer, numVertices, distances, order) => {
@@ -150,7 +201,7 @@ function UnifiedSortWorker() {
     };
 
     // compute min/max effective distance using 8-corner local AABB projection per splat
-    const computeEffectiveDistanceRange = (sortParams) => {
+    const computeEffectiveDistanceRangeLinear = (sortParams) => {
         let minDist = Infinity;
         let maxDist = -Infinity;
 
@@ -191,10 +242,48 @@ function UnifiedSortWorker() {
         return { minDist, maxDist };
     };
 
+    // compute min/max radial distance from camera to AABB corners (for radial sort)
+    const computeEffectiveDistanceRangeRadial = (sortParams) => {
+        let maxDist = -Infinity;
+
+        for (let paramIdx = 0; paramIdx < sortParams.length; paramIdx++) {
+            const params = sortParams[paramIdx];
+            const { transformedPosition, scale, aabbMin, aabbMax } = params;
+            const cx = transformedPosition.x;
+            const cy = transformedPosition.y;
+            const cz = transformedPosition.z;
+
+            // Check all 8 corners of the AABB for max radial distance
+            for (let i = 0; i < 8; i++) {
+                const px = (i & 1) ? aabbMax[0] : aabbMin[0];
+                const py = (i & 2) ? aabbMax[1] : aabbMin[1];
+                const pz = (i & 4) ? aabbMax[2] : aabbMin[2];
+
+                const dx = px - cx;
+                const dy = py - cy;
+                const dz = pz - cz;
+
+                const distSq = dx * dx + dy * dy + dz * dz;
+                const dist = Math.sqrt(distSq) * scale;
+
+                if (dist > maxDist) maxDist = dist;
+            }
+        }
+
+        // For radial sort, minDist is always 0 (camera is the origin of radial distances)
+        const minDist = 0;
+        if (maxDist < 0) {
+            maxDist = 0;
+        }
+        return { minDist, maxDist };
+    };
+
     const sort = (sortParams, order, centersData) => {
 
         // distance bounds from AABB projections per splat
-        const { minDist, maxDist } = computeEffectiveDistanceRange(sortParams);
+        const { minDist, maxDist } = _radialSort ?
+            computeEffectiveDistanceRangeRadial(sortParams) :
+            computeEffectiveDistanceRangeLinear(sortParams);
 
         const numVertices = centersData.totalUsedPixels;
 
@@ -217,13 +306,24 @@ function UnifiedSortWorker() {
         const range = maxDist - minDist;
 
         // Set up camera-relative bin weighting for near-camera precision
-        const cameraOffsetFromRangeStart = 0 - minDist;
-        const cameraBinFloat = (cameraOffsetFromRangeStart / range) * numBins;
-        const cameraBin = Math.max(0, Math.min(numBins - 1, Math.floor(cameraBinFloat)));
+        let cameraBin;
+        if (_radialSort) {
+            // For radial sort with inverted distances, camera (dist=0) maps to the last bin
+            cameraBin = numBins - 1;
+        } else {
+            // For linear sort, calculate where camera falls in the projected distance range
+            const cameraOffsetFromRangeStart = 0 - minDist;
+            const cameraBinFloat = (cameraOffsetFromRangeStart / range) * numBins;
+            cameraBin = Math.max(0, Math.min(numBins - 1, Math.floor(cameraBinFloat)));
+        }
 
         setupCameraRelativeBins(cameraBin, bucketCount);
 
-        evaluateSortKeys(sortParams, minDist, range, distances, countBuffer, centersData);
+        if (_radialSort) {
+            evaluateSortKeysRadial(sortParams, minDist, range, distances, countBuffer, centersData);
+        } else {
+            evaluateSortKeysLinear(sortParams, minDist, range, distances, countBuffer, centersData);
+        }
 
         countingSort(bucketCount, countBuffer, numVertices, distances, order);
 
@@ -259,6 +359,7 @@ function UnifiedSortWorker() {
 
             // sort
             case 'sort': {
+                _radialSort = msgData.radialSorting || false;
                 const order = new Uint32Array(msgData.order);
                 sort(msgData.sortParams, order, centersData);
                 break;
