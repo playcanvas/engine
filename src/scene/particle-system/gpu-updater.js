@@ -66,6 +66,7 @@ class ParticleGPUUpdater {
         this.constantMaxVel = gd.scope.resolve('maxVel');
         this.constantFaceTangent = gd.scope.resolve('faceTangent');
         this.constantFaceBinorm = gd.scope.resolve('faceBinorm');
+        this.constantRadialSpeedDivMult = gd.scope.resolve('radialSpeedDivMult');
     }
 
     _setInputBounds() {
@@ -97,6 +98,8 @@ class ParticleGPUUpdater {
         device.setCullMode(CULLFACE_NONE);
 
         this.randomize();
+
+        this.constantRadialSpeedDivMult.setValue(emitter.material.getParameter('radialSpeedDivMult').data);
 
         this.constantGraphSampleSize.setValue(1.0 / emitter.precision);
         this.constantGraphNumSamples.setValue(emitter.precision);

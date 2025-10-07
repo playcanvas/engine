@@ -27,10 +27,15 @@ uniform float numParticles;
 uniform float lifetime;
 uniform float stretch;
 uniform float seed;
-uniform vec3 wrapBounds;
 uniform vec3 emitterScale;
 uniform vec3 faceTangent;
 uniform vec3 faceBinorm;
+
+#ifdef PARTICLE_GPU
+    #ifdef WRAP
+        uniform vec3 wrapBounds;
+    #endif
+#endif
 
 #ifdef PARTICLE_GPU
     uniform highp sampler2D internalTex0;

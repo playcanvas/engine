@@ -26,10 +26,15 @@ uniform numParticles: f32;
 uniform lifetime: f32;
 uniform stretch: f32;
 uniform seed: f32;
-uniform wrapBounds: vec3f;
 uniform emitterScale: vec3f;
 uniform faceTangent: vec3f;
 uniform faceBinorm: vec3f;
+
+#ifdef PARTICLE_GPU
+    #ifdef WRAP
+        uniform wrapBounds: vec3f;
+    #endif
+#endif
 
 #ifdef PARTICLE_GPU
     var internalTex0: texture_2d<f32>;
