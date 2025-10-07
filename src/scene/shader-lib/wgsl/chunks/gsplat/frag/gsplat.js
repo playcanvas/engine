@@ -22,6 +22,9 @@ export default /* wgsl */`
 varying gaussianUV: vec2f;
 varying gaussianColor: vec4f;
 
+// e^-4
+const EXP4: f32 = 0.0183156388887;
+
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
@@ -33,7 +36,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     }
 
     // evaluate alpha
-    var alpha: f32 = (exp(-A * 4.0) - 0.0183156388887) / (1.0 - 0.0183156388887) * gaussianColor.a;
+    var alpha: f32 = (exp(-A * 4.0) - EXP4) / (1.0 - EXP4) * gaussianColor.a;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < uniform.alphaClip) {

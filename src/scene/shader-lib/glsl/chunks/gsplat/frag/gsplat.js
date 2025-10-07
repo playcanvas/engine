@@ -22,6 +22,9 @@ export default /* glsl */`
 varying mediump vec2 gaussianUV;
 varying mediump vec4 gaussianColor;
 
+// e^-4
+#define EXP4 0.0183156388887
+
 void main(void) {
     mediump float A = dot(gaussianUV, gaussianUV);
     if (A > 1.0) {
@@ -29,7 +32,7 @@ void main(void) {
     }
 
     // evaluate alpha
-    mediump float alpha = (exp(-A * 4.0) - 0.0183156388887) / (1.0 - 0.0183156388887) * gaussianColor.a;
+    mediump float alpha = (exp(-A * 4.0) - EXP4) / (1.0 - EXP4) * gaussianColor.a;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < alphaClip) {
