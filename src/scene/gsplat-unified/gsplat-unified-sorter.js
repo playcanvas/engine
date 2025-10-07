@@ -128,8 +128,9 @@ class GSplatUnifiedSorter extends EventHandler {
      * Sends sorting parameters to the sorter. Called every frame sorting is needed.
      *
      * @param {object} params - The sorting parameters - per-splat directions, offsets, scales, AABBs.
+     * @param {boolean} radialSorting - Whether to use radial distance sorting.
      */
-    setSortParams(params) {
+    setSortParams(params, radialSorting) {
 
         // only process job requests if we have a new version or no jobs are in flight
         if (this.hasNewVersion || this.jobsInFlight === 0) {
@@ -148,6 +149,7 @@ class GSplatUnifiedSorter extends EventHandler {
             this.worker.postMessage({
                 command: 'sort',
                 sortParams: params,
+                radialSorting: radialSorting,
                 order: orderData.buffer
             }, [
                 orderData.buffer
