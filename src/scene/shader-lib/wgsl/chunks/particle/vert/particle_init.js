@@ -23,7 +23,6 @@ uniform numParticlesPot: f32;
 uniform graphSampleSize: f32;
 uniform graphNumSamples: f32;
 uniform stretch: f32;
-uniform wrapBounds: vec3f;
 uniform emitterScale: vec3f;
 uniform emitterPos: vec3f;
 uniform faceTangent: vec3f;
@@ -31,11 +30,16 @@ uniform faceBinorm: vec3f;
 uniform rate: f32;
 uniform rateDiv: f32;
 uniform lifetime: f32;
-uniform deltaRandomnessStatic: f32;
 uniform scaleDivMult: f32;
 uniform alphaDivMult: f32;
 uniform seed: f32;
 uniform delta: f32;
+
+#ifdef PARTICLE_GPU
+    #ifdef WRAP
+        uniform wrapBounds: vec3f;
+    #endif
+#endif
 
 var particleTexOUT: texture_2d<f32>;
 var particleTexOUTSampler: sampler;
