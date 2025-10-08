@@ -236,6 +236,18 @@ class SogBundleParser {
 
             await Promise.allSettled(promises);
 
+            const { assets } = this.app;
+
+            asset.once('unload', () => {
+                Object.values(textures).forEach((t) => {
+                    // remove from registry
+                    assets.remove(t);
+
+                    // destroy texture resource
+                    t.unload();
+                });
+            });
+
             // construct the gsplat resource
             const data = new GSplatSogsData();
             data.meta = meta;
