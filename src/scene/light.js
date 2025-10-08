@@ -493,8 +493,8 @@ class Light {
 
         const device = this.device;
 
-        // PCSS requires F16 or F32 render targets
-        if (value === SHADOW_PCSS_32F && !device.textureFloatRenderable && !device.textureHalfFloatRenderable) {
+        // PCSS requires filterable F32 render targets
+        if (value === SHADOW_PCSS_32F && (!device.textureFloatRenderable || !device.textureFloatFilterable)) {
             value = SHADOW_PCF3_32F;
         }
 

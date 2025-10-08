@@ -14,7 +14,7 @@ export default /* wgsl */`
 #endif
 
 var clusterWorldTexture: texture_2d<f32>;
-var lightsTexture: texture_2d<f32>;
+var lightsTexture: texture_2d<uff>;
 
 #ifdef CLUSTER_SHADOWS
     // TODO: when VSM shadow is supported, it needs to use sampler2D in webgl2

@@ -1,8 +1,8 @@
 export default /* wgsl */`
-var center: texture_2d<f32>;
-var covA: texture_2d<f32>;
-var covB: texture_2d<f32>;
-var splatColor: texture_2d<f32>;
+var center: texture_2d<uff>;
+var covA: texture_2d<uff>;
+var covB: texture_2d<uff>;
+var splatColor: texture_2d<uff>;
 
 // read the model-space center of the gaussian
 fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
