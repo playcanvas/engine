@@ -22,8 +22,7 @@ export default /* glsl */`
 varying mediump vec2 gaussianUV;
 varying mediump vec4 gaussianColor;
 
-// e^-4
-#define EXP4 0.0183156388887
+uniform sampler2D expTable;
 
 void main(void) {
     mediump float A = dot(gaussianUV, gaussianUV);
@@ -31,8 +30,7 @@ void main(void) {
         discard;
     }
 
-    // evaluate alpha
-    mediump float alpha = (exp(-A * 4.0) - EXP4) / (1.0 - EXP4) * gaussianColor.a;
+    mediump float alpha = texture2DLod(expTable, vec2(A, 0.5), 0.0).r * gaussianColor.a;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < alphaClip) {
