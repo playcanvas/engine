@@ -22,8 +22,8 @@ export default /* wgsl */`
 varying gaussianUV: vec2f;
 varying gaussianColor: vec4f;
 
-// e^-4
-const EXP4: f32 = 0.0183156388887;
+var expTable: texture_2d<f32>;
+var expTableSampler: sampler;
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
@@ -36,7 +36,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     }
 
     // evaluate alpha
-    var alpha: f32 = (exp(-A * 4.0) - EXP4) / (1.0 - EXP4) * gaussianColor.a;
+    var alpha = textureSampleLevel(expTable, expTableSampler, vec2f(A, 0.5), 0).r * gaussianColor.a;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < uniform.alphaClip) {

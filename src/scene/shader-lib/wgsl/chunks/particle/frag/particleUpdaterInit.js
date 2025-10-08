@@ -1,16 +1,11 @@
 export default /* wgsl */`
 varying vUv0: vec2f;
 
-var particleTexIN: texture_2d<f32>;
-var particleTexINSampler: sampler;
-var internalTex0: texture_2d<f32>;
-var internalTex0Sampler: sampler;
-var internalTex1: texture_2d<f32>;
-var internalTex1Sampler: sampler;
-var internalTex2: texture_2d<f32>;
-var internalTex2Sampler: sampler;
-var internalTex3: texture_2d<f32>;
-var internalTex3Sampler: sampler;
+var particleTexIN: texture_2d<uff>;
+var internalTex0: texture_2d<uff>;
+var internalTex1: texture_2d<uff>;
+var internalTex2: texture_2d<uff>;
+var internalTex3: texture_2d<uff>;
 
 uniform emitterMatrix: mat3x3f;
 uniform emitterMatrixInv: mat3x3f;
