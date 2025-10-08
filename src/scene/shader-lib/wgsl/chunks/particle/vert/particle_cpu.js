@@ -37,12 +37,9 @@ uniform faceBinorm: vec3f;
 #endif
 
 #ifdef PARTICLE_GPU
-    var internalTex0: texture_2d<f32>;
-    var internalTex0Sampler: sampler;
-    var internalTex1: texture_2d<f32>;
-    var internalTex1Sampler: sampler;
-    var internalTex2: texture_2d<f32>;
-    var internalTex2Sampler: sampler;
+    var internalTex0: texture_2d<uff>;
+    var internalTex1: texture_2d<uff>;
+    var internalTex2: texture_2d<uff>;
 #endif
 uniform emitterPos: vec3f;
 

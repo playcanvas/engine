@@ -41,18 +41,13 @@ uniform delta: f32;
     #endif
 #endif
 
-var particleTexOUT: texture_2d<f32>;
-var particleTexOUTSampler: sampler;
-var particleTexIN: texture_2d<f32>;
-var particleTexINSampler: sampler;
+var particleTexOUT: texture_2d<uff>;
+var particleTexIN: texture_2d<uff>;
 
 #ifdef PARTICLE_GPU
-    var internalTex0: texture_2d<f32>;
-    var internalTex0Sampler: sampler;
-    var internalTex1: texture_2d<f32>;
-    var internalTex1Sampler: sampler;
-    var internalTex2: texture_2d<f32>;
-    var internalTex2Sampler: sampler;
+    var internalTex0: texture_2d<uff>;
+    var internalTex1: texture_2d<uff>;
+    var internalTex2: texture_2d<uff>;
 #endif
 
 #ifndef CAMERAPLANES
