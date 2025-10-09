@@ -18,6 +18,9 @@ class GSplatUnifiedSorter extends EventHandler {
     /** @type {Set<number>} */
     centersSet = new Set();
 
+    /** @type {boolean} */
+    _destroyed = false;
+
     constructor() {
         super();
 
@@ -38,6 +41,10 @@ class GSplatUnifiedSorter extends EventHandler {
 
     onSorted(message) {
 
+        if (this._destroyed) {
+            return;
+        }
+
         const msgData = message.data ?? message;
         const orderData = new Uint32Array(msgData.order);
 
@@ -53,6 +60,7 @@ class GSplatUnifiedSorter extends EventHandler {
     }
 
     destroy() {
+        this._destroyed = true;
         this.worker.terminate();
         this.worker = null;
     }
@@ -70,7 +78,7 @@ class GSplatUnifiedSorter extends EventHandler {
             if (!this.centersSet.has(id)) {
                 this.centersSet.add(id);
 
-                // clone centers buffer
+                // clone centers buffer - required when multiple workers sort the same splat resource
                 const centersBuffer = centers.buffer.slice();
 
                 // post centers to worker
@@ -120,8 +128,9 @@ class GSplatUnifiedSorter extends EventHandler {
      * Sends sorting parameters to the sorter. Called every frame sorting is needed.
      *
      * @param {object} params - The sorting parameters - per-splat directions, offsets, scales, AABBs.
+     * @param {boolean} radialSorting - Whether to use radial distance sorting.
      */
-    setSortParams(params) {
+    setSortParams(params, radialSorting) {
 
         // only process job requests if we have a new version or no jobs are in flight
         if (this.hasNewVersion || this.jobsInFlight === 0) {
@@ -140,6 +149,7 @@ class GSplatUnifiedSorter extends EventHandler {
             this.worker.postMessage({
                 command: 'sort',
                 sortParams: params,
+                radialSorting: radialSorting,
                 order: orderData.buffer
             }, [
                 orderData.buffer

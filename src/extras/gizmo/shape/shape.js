@@ -27,11 +27,13 @@ tmpG.normals = [];
  * @property {Vec3} [rotation] - The rotation of the shape.
  * @property {Vec3} [scale] - The scale of the shape.
  * @property {boolean} [disabled] - Whether the shape is disabled.
- * @property {boolean} [hidden] - Whether the shape is hidden.
+ * @property {boolean} [visible] - Whether the shape is visible.
  * @property {number[]} [layers] - The layers the shape belongs to.
  * @property {Color} [defaultColor] - The default color of the shape.
  * @property {Color} [hoverColor] - The hover color of the shape.
  * @property {Color} [disabledColor] - The disabled color of the shape.
+ * @property {number} [cull] - The culling mode of the shape.
+ * @property {number} [depth] - The depth of the shape. -1 = interpolated depth.
  */
 
 /**
@@ -127,6 +129,14 @@ class Shape {
     _cull = CULLFACE_BACK;
 
     /**
+     * The internal depth state of the shape. -1 = interpolated depth.
+     *
+     * @type {number}
+     * @protected
+     */
+    _depth = -1;
+
+    /**
      * The graphics device.
      *
      * @type {GraphicsDevice}
@@ -182,8 +192,8 @@ class Shape {
             this._scale.copy(args.scale);
         }
 
-        this._disabled = args.disabled ?? false;
-        this._visible = args.hidden ?? false;
+        this._disabled = args.disabled ?? this._disabled;
+        this._visible = args.visible ?? this._visible;
 
         this._layers = args.layers ?? this._layers;
 
@@ -196,6 +206,9 @@ class Shape {
         if (args.disabledColor instanceof Color) {
             this._disabledColor = args.disabledColor;
         }
+
+        this._cull = args.cull ?? this._cull;
+        this._depth = args.depth ?? this._depth;
 
         // entity
         this.entity = new Entity(`${name}:${this.axis}`);
@@ -256,6 +269,8 @@ class Shape {
      */
     _createRenderComponent(entity, meshes) {
         const color = this._disabled ? this._disabledColor : this._defaultColor;
+        this._material.setDefine('DEPTH_WRITE', this._depth > 0 ? '1' : '0');
+        this._material.setParameter('uDepth', this._depth);
         this._material.setParameter('uColor', color.toArray());
         this._material.cull = this._cull;
         this._material.blendType = BLEND_NORMAL;

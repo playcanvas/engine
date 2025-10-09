@@ -9,7 +9,6 @@ import { Shape } from './shape.js';
 /**
  * @typedef {object} SphereShapeArgs
  * @property {number} [radius] - The radius of the sphere.
- * @property {number} [tolerance] - The intersection tolerance of the sphere.
  */
 
 /**
@@ -22,15 +21,7 @@ class SphereShape extends Shape {
      * @type {number}
      * @private
      */
-    _radius = 0.06;
-
-    /**
-     * The internal intersection tolerance of the sphere.
-     *
-     * @type {number}
-     * @private
-     */
-    _tolerance = 0.05;
+    _radius = 0.03;
 
     /**
      * Create a new SphereShape.
@@ -42,7 +33,6 @@ class SphereShape extends Shape {
         super(device, 'sphereCenter', args);
 
         this._radius = args.radius ?? this._radius;
-        this._tolerance = args.tolerance ?? this._tolerance;
 
         // intersect
         this.triData = [
@@ -78,25 +68,6 @@ class SphereShape extends Shape {
      */
     get radius() {
         return this._radius;
-    }
-
-    /**
-     * Set the intersection tolerance of the sphere.
-     *
-     * @param {number} value - The new tolerance of the sphere.
-     */
-    set tolerance(value) {
-        this._tolerance = value ?? this._tolerance;
-        this._update();
-    }
-
-    /**
-     * Get the intersection tolerance of the sphere.
-     *
-     * @returns {number} The tolerance of the sphere.
-     */
-    get tolerance() {
-        return this._tolerance;
     }
 
     /**

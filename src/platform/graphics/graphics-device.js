@@ -32,6 +32,7 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
  * @import { StorageBuffer } from './storage-buffer.js';
+ * @import { DrawCommands } from './draw-commands.js';
  */
 
 const _tempSet = new Set();
@@ -207,6 +208,14 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     supportsStencil;
+
+    /**
+     * True if the device supports multi-draw. This is always supported on WebGPU, and support on
+     * WebGL2 is optional, but pretty common.
+     *
+     * @type {boolean}
+     */
+    supportsMultiDraw = true;
 
     /**
      * True if the device supports compute shaders.
@@ -389,6 +398,12 @@ class GraphicsDevice extends EventHandler {
      */
     gpuProfiler;
 
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    _destroyed = false;
+
     defaultClearOptions = {
         color: [0, 0, 0, 1],
         depth: 1,
@@ -521,6 +536,7 @@ class GraphicsDevice extends EventHandler {
         capsDefines.clear();
         if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
         if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
+        if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
     }
 
     /**
@@ -539,6 +555,8 @@ class GraphicsDevice extends EventHandler {
 
         this.gpuProfiler?.destroy();
         this.gpuProfiler = null;
+
+        this._destroyed = true;
     }
 
     onDestroyShader(shader) {
@@ -733,13 +751,16 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Retrieves the available slot in the {@link indirectDrawBuffer} used for indirect rendering,
-     * which can be utilized by a {@link Compute} shader to generate indirect draw parameters and by
-     * {@link MeshInstance#setIndirect} to configure indirect draw calls.
+     * Retrieves the first available slot in the {@link indirectDrawBuffer} used for indirect
+     * rendering, which can be utilized by a {@link Compute} shader to generate indirect draw
+     * parameters and by {@link MeshInstance#setIndirect} to configure indirect draw calls.
      *
-     * @returns {number} - The slot used for indirect rendering.
+     * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
+     * @returns {number} - The first reserved slot index used for indirect rendering.
      */
-    getIndirectDrawSlot() {
+    getIndirectDrawSlot(count = 1) {
         return 0;
     }
 
@@ -819,7 +840,7 @@ class GraphicsDevice extends EventHandler {
      * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
      * @param {number} [numInstances] - The number of instances to render when using instancing.
      * Defaults to 1.
-     * @param {number} [indirectSlot] - The slot of the indirect buffer to use for the draw call.
+     * @param {DrawCommands} [drawCommands] - The draw commands to use for the draw call.
      * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
      * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
@@ -835,7 +856,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @ignore
      */
-    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
         Debug.assert(false);
     }
 
@@ -1015,7 +1036,7 @@ class GraphicsDevice extends EventHandler {
                 textures.forEach((texture, index) => {
                     const textureSize  = texture.gpuSize;
                     textureTotal += textureSize;
-                    Debug.log(`${index}. ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
+                    Debug.log(`${index}. Id: ${texture.id} ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
                 });
                 Debug.log(`Total: ${(textureTotal / 1024 / 1024).toFixed(2)}MB`);
             }

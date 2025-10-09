@@ -1,4 +1,5 @@
 import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { Debug } from '../../core/debug.js';
 
 /**
  * @import { GraphNode } from '../graph-node.js'
@@ -43,6 +44,14 @@ class GSplatPlacement {
     lodIndex = 0;
 
     /**
+     * LOD distance thresholds for octree-based gsplat. Only used when the
+     * resource is an octree resource; otherwise ignored and kept null.
+     *
+     * @type {number[]|null}
+     */
+    _lodDistances = null;
+
+    /**
      * The axis-aligned bounding box for this placement, in local space.
      *
      * @type {BoundingBox}
@@ -68,6 +77,38 @@ class GSplatPlacement {
 
     get aabb() {
         return this._aabb;
+    }
+
+    /**
+     * Sets LOD distance thresholds. Only applicable for octree resources. The provided array is
+     * copied. If the resource has an octree with N LOD levels, the array should contain N-1
+     * elements. For non-octree resources, the value is ignored and kept null.
+     *
+     * @type {number[]|null}
+     */
+    set lodDistances(distances) {
+        const isOctree = !!(this.resource && /** @type {any} */ (this.resource).octree);
+        if (isOctree) {
+            if (distances) {
+                const lodLevels = /** @type {any} */ (this.resource).octree?.lodLevels ?? 1;
+                Debug.assert(Array.isArray(distances), 'lodDistances must be an array');
+                Debug.assert(distances.length >= lodLevels, 'lodDistances must have at least octree LOD levels - 1 entries, privided:',
+                    distances.length, 'expected:', lodLevels);
+
+                this._lodDistances = distances.slice();
+            } else {
+                this._lodDistances = null;
+            }
+        }
+    }
+
+    /**
+     * Gets a copy of LOD distance thresholds, or null when not set.
+     *
+     * @type {number[]|null}
+     */
+    get lodDistances() {
+        return this._lodDistances ? this._lodDistances.slice() : null;
     }
 }
 

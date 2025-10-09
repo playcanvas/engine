@@ -92,8 +92,7 @@ class GSplatResourceBase {
         this.device = device;
         this.gsplatData = gsplatData;
 
-        this.centers = new Float32Array(gsplatData.numSplats * 3);
-        gsplatData.getCenters(this.centers);
+        this.centers = gsplatData.getCenters();
 
         this.aabb = new BoundingBox();
         gsplatData.calcAabb(this.aabb);
@@ -119,15 +118,13 @@ class GSplatResourceBase {
      * Get or create a QuadRender for rendering to work buffer.
      *
      * @param {boolean} useIntervals - Whether to use intervals.
-     * @param {boolean} colorizeLod - Whether to colorize the LOD.
      * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
      */
-    getWorkBufferRenderInfo(useIntervals, colorizeLod) {
+    getWorkBufferRenderInfo(useIntervals) {
 
         // configure defines to fetch cached data
         this.configureMaterialDefines(tempMap);
         if (useIntervals) tempMap.set('GSPLAT_LOD', '');
-        if (colorizeLod) tempMap.set('GSPLAT_COLORIZE', '');
         const key = Array.from(tempMap.entries()).map(([k, v]) => `${k}=${v}`).join(';');
 
         // get or create quad render

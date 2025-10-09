@@ -1,12 +1,14 @@
 import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
 import { ArcShape } from './shape/arc-shape.js';
 import { TransformGizmo } from './transform-gizmo.js';
 import { MeshLine } from './mesh-line.js';
+import { SphereShape } from './shape/sphere-shape.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -16,18 +18,19 @@ import { MeshLine } from './mesh-line.js';
  */
 
 // temporary variables
+const screen = new Vec2();
 const point = new Vec3();
 const v1 = new Vec3();
 const v2 = new Vec3();
 const v3 = new Vec3();
-const v4 = new Vec3();
 const q1 = new Quat();
 const q2 = new Quat();
 const color = new Color();
 
 // constants
-const ROTATE_FACING_EPSILON = 0.1;
 const RING_FACING_EPSILON = 1e-4;
+const UPDATE_EPSILON = 1e-6;
+const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
  * The RotateGizmo provides interactive 3D manipulation handles for rotating/reorienting
@@ -99,6 +102,14 @@ class RotateGizmo extends TransformGizmo {
             hoverColor: this._theme.shapeHover.f,
             disabledColor: this._theme.disabled,
             ringRadius: 0.55
+        }),
+        xyz: new SphereShape(this._device, {
+            axis: 'xyz',
+            layers: [this._layer.id],
+            defaultColor: this._theme.shapeBase.xyz,
+            hoverColor: this._theme.shapeHover.xyz,
+            disabledColor: this._theme.disabled,
+            radius: 0.5
         })
     };
 
@@ -135,6 +146,22 @@ class RotateGizmo extends TransformGizmo {
     _nodeOffsets = new Map();
 
     /**
+     * Internal vector for storing the mouse position in screen space.
+     *
+     * @type {Vec2}
+     * @private
+     */
+    _screenPos = new Vec2();
+
+    /**
+     * Internal vector for storing the mouse start position in screen space.
+     *
+     * @type {Vec2}
+     * @private
+     */
+    _screenStartPos = new Vec2();
+
+    /**
      * Internal vector for the start point of the guide line angle.
      *
      * @type {Vec3}
@@ -159,16 +186,29 @@ class RotateGizmo extends TransformGizmo {
     _guideAngleLines;
 
     /**
+     * Internal copy of facing direction to avoid unnecessary updates.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    _facingDir = new Vec3();
+
+    /**
      * @override
      */
     snapIncrement = 5;
 
     /**
-     * This forces the rotation to always be calculated based on the mouse position around the gizmo.
+     * The rotation mode of the gizmo. This can be either:
      *
-     * @type {boolean}
+     * - 'absolute': The rotation is calculated based on the mouse displacement relative to the
+     * initial click point.
+     * - 'orbit': The rotation is calculated based on the gizmos position around the center of
+     * rotation.
+     *
+     * @type {'absolute' | 'orbit'}
      */
-    orbitRotation = false;
+    rotationMode = 'absolute';
 
     /**
      * Creates a new RotateGizmo object. Use {@link Gizmo.createLayer} to create the layer
@@ -182,6 +222,15 @@ class RotateGizmo extends TransformGizmo {
     constructor(camera, layer) {
         super(camera, layer, 'gizmo:rotate');
 
+        this.setTheme({
+            shapeBase: {
+                xyz: new Color(0, 0, 0, 0)
+            },
+            shapeHover: {
+                xyz: new Color(1, 1, 1, 0.2)
+            }
+        });
+
         this._createTransform();
 
         this._guideAngleLines = [
@@ -193,9 +242,13 @@ class RotateGizmo extends TransformGizmo {
             line.entity.enabled = false;
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMSTART, (_point, x, y) => {
+            // store start screen point
+            this._screenPos.set(x, y);
+            this._screenStartPos.set(x, y);
+
             // store start angle
-            this._selectionStartAngle = this._calculateArcAngle(point, x, y);
+            this._selectionStartAngle = this._calculateArcAngle(x, y);
 
             // store initial node rotations
             this._storeNodeRotations();
@@ -216,18 +269,29 @@ class RotateGizmo extends TransformGizmo {
                 return;
             }
 
-            // calculate angle axis and delta and update node rotations
-            let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
-            if (this.snap) {
-                angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
+            // update screen point
+            this._screenPos.set(x, y);
+
+            if (axis === 'xyz') {
+                // calculate angle axis and delta and update node rotations
+                const facingDir = v1.copy(this.facingDir);
+                const delta = v2.copy(point).sub(this._selectionStartPoint);
+                const angleAxis = v1.cross(facingDir, delta).normalize();
+                const angleDelta = this._screenPos.distance(this._screenStartPos);
+                this._setNodeRotations(axis, angleAxis, angleDelta);
+            } else {
+                // calculate angle axis and delta and update node rotations
+                let angleDelta = this._calculateArcAngle(x, y) - this._selectionStartAngle;
+                if (this.snap) {
+                    angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
+                }
+                const angleAxis = this._dirFromAxis(axis, v1);
+                this._setNodeRotations(axis, angleAxis, angleDelta);
+
+                // update guide points and show angle guide
+                this._updateGuidePoints(angleDelta);
+                this._angleGuide(true);
             }
-            const angleAxis = this._dirFromAxis(axis, v1);
-            this._setNodeRotations(axis, angleAxis, angleDelta);
-
-            // update guide points and show angle guide
-            this._updateGuidePoints(angleDelta);
-            this._angleGuide(true);
-
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
@@ -319,6 +383,24 @@ class RotateGizmo extends TransformGizmo {
     }
 
     /**
+     * Sets the center radius.
+     *
+     * @type {number}
+     */
+    set centerRadius(value) {
+        this._shapes.xyz.radius = value;
+    }
+
+    /**
+     * Gets the center radius.
+     *
+     * @type {number}
+     */
+    get centerRadius() {
+        return this._shapes.xyz.radius;
+    }
+
+    /**
      * Sets the ring tolerance.
      *
      * @type {number}
@@ -354,6 +436,24 @@ class RotateGizmo extends TransformGizmo {
      */
     get angleGuideThickness() {
         return this._guideAngleLines[0].thickness;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link RotationGizmo#rotationMode} instead.
+     * @ignore
+     */
+    set orbitRotation(value) {
+        this.rotationMode = value ? 'orbit' : 'absolute';
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link RotationGizmo#rotationMode} instead.
+     * @ignore
+     */
+    get orbitRotation() {
+        return this.rotationMode === 'orbit';
     }
 
     /**
@@ -398,6 +498,8 @@ class RotateGizmo extends TransformGizmo {
         }
         q1.setFromAxisAngle(v1, angleDelta);
         q1.transformVector(this._guideAngleStart, this._guideAngleEnd);
+
+        this._renderUpdate = true;
     }
 
     /**
@@ -409,7 +511,7 @@ class RotateGizmo extends TransformGizmo {
 
         if (state && this.dragMode !== 'show' && axis !== 'xyz') {
             const gizmoPos = this.root.getLocalPosition();
-            const baseColor = this._theme.guideBase[axis];
+            const baseColor = this._theme.shapeHover[axis];
             const startColor = color.copy(baseColor);
             startColor.a *= 0.3;
             this._guideAngleLines[0].draw(gizmoPos, v1.copy(this._guideAngleStart).add(gizmoPos),
@@ -461,8 +563,11 @@ class RotateGizmo extends TransformGizmo {
             dot = facingDir.dot(this.root.forward);
             sector = 1 - Math.abs(dot) > RING_FACING_EPSILON;
             this._shapes.z.show(sector ? 'sector' : 'ring');
+        }
 
-            this.fire(TransformGizmo.EVENT_RENDERUPDATE);
+        if (!facingDir.equalsApprox(this._facingDir, UPDATE_EPSILON)) {
+            this._facingDir.copy(facingDir);
+            this._renderUpdate = true;
         }
     }
 
@@ -490,7 +595,8 @@ class RotateGizmo extends TransformGizmo {
                 }
             }
         }
-        this.fire(TransformGizmo.EVENT_RENDERUPDATE);
+
+        this._renderUpdate = true;
     }
 
     /**
@@ -540,9 +646,7 @@ class RotateGizmo extends TransformGizmo {
                 v1.copy(offset);
                 q1.transformVector(v1, v1);
                 q2.copy(q1).mul(rot);
-
-                // FIXME: Rotation via quaternion when scale inverted causes scale warping?
-                node.setEulerAngles(q2.getEulerAngles());
+                node.setRotation(q2);
                 node.setPosition(v1.add(gizmoPos));
             }
         }
@@ -564,22 +668,22 @@ class RotateGizmo extends TransformGizmo {
         const axis = this._selectedAxis;
 
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, axis === 'f', false);
+        const plane = this._createPlane(axis, axis === 'f' || axis === 'xyz', false);
         if (!plane.intersectsRay(ray, point)) {
-            return point;
+            // use gizmo position if ray does not intersect to position angle guide correctly
+            return point.copy(this.root.getLocalPosition());
         }
 
         return point;
     }
 
     /**
-     * @param {Vec3} point - The point.
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
      * @returns {number} The angle.
      * @protected
      */
-    _calculateArcAngle(point, x, y) {
+    _calculateArcAngle(x, y) {
         const gizmoPos = this.root.getLocalPosition();
 
         const axis = this._selectedAxis;
@@ -589,54 +693,68 @@ class RotateGizmo extends TransformGizmo {
         let angle = 0;
 
         // arc angle
-        const facingDir = v2.copy(this.facingDir);
+        const facingDir = this.facingDir;
         const facingDot = plane.normal.dot(facingDir);
-        if (this.orbitRotation || (1 - Math.abs(facingDot)) < ROTATE_FACING_EPSILON) {
-            // plane facing camera so based on mouse position around gizmo
-            v1.sub2(point, gizmoPos);
 
-            switch (axis) {
-                case 'x': {
-                    // convert to local space
-                    q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
-                    angle = Math.atan2(v1.z, v1.y) * math.RAD_TO_DEG;
-                    break;
+        switch (this.rotationMode) {
+            case 'absolute': {
+                this._camera.worldToScreen(gizmoPos, v2);
+                if (axis === 'f' || facingDot > 1 - RING_FACING_EPSILON) {
+                    // determine which size of the ring the mouse is on to flip rotation direction
+                    v1.set(
+                        this._screenStartPos.y >= v2.y ? 1 : -1,
+                        this._screenStartPos.x >= v2.x ? -1 : 1,
+                        0
+                    ).normalize();
+                } else {
+                    // calculate projection vector in world space for rotation axis
+                    const projDir = v1.cross(plane.normal, facingDir).normalize();
+
+                    // convert to screen space
+                    this._camera.worldToScreen(projDir.add(gizmoPos), v3);
+                    v1.sub2(v3, v2).normalize();
                 }
-                case 'y': {
-                    // convert to local space
-                    q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
-                    angle = Math.atan2(v1.x, v1.z) * math.RAD_TO_DEG;
-                    break;
+
+                // angle is dot product with mouse position
+                v2.set(x, y, 0);
+                angle = v1.dot(v2);
+                break;
+            }
+            case 'orbit': {
+                // convert gizmo position to screen space§
+                const screenPos = this._camera.worldToScreen(gizmoPos, v1);
+
+                // calculate angle based on mouse position around gizmo
+                const dir = screen.set(x - screenPos.x, y - screenPos.y).normalize();
+                angle = Math.sign(facingDot) * Math.atan2(-dir.y, dir.x) * math.RAD_TO_DEG;
+                break;
+            }
+        }
+        return angle;
+    }
+
+    /**
+     * @param {Vec3} pos - The position.
+     * @param {Quat} rot - The rotation.
+     * @param {GizmoAxis} activeAxis - The active axis.
+     * @param {boolean} activeIsPlane - Whether the active axis is a plane.
+     * @override
+     */
+    _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
+        for (const axis of AXES) {
+            if (activeAxis === 'xyz') {
+                continue;
+            }
+            if (activeIsPlane) {
+                if (axis !== activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
                 }
-                case 'z': {
-                    // convert to local space
-                    q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
-                    angle = Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
-                    break;
-                }
-                case 'f': {
-                    // convert to camera space
-                    q1.copy(this._camera.entity.getRotation()).invert().transformVector(v1, v1);
-                    angle = Math.sign(facingDot) * Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
-                    break;
+            } else {
+                if (axis === activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
                 }
             }
-        } else {
-            // convert rotation axis to screen space
-            v1.copy(gizmoPos);
-            v2.cross(plane.normal, facingDir).normalize().add(gizmoPos);
-
-            // convert world space vectors to screen space
-            this._camera.worldToScreen(v1, v3);
-            this._camera.worldToScreen(v2, v4);
-
-            // angle is dot product with mouse position
-            v1.sub2(v4, v3).normalize();
-            v2.set(x, y, 0);
-            angle = v1.dot(v2);
         }
-
-        return angle;
     }
 
     /**
@@ -650,6 +768,15 @@ class RotateGizmo extends TransformGizmo {
         }
 
         this._shapesLookAtCamera();
+    }
+
+    /**
+     * @override
+     */
+    destroy() {
+        this._guideAngleLines.forEach(line => line.destroy());
+
+        super.destroy();
     }
 }
 

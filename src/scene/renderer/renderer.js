@@ -1,6 +1,7 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { BlueNoise } from '../../core/math/blue-noise.js';
+import { FloatPacking } from '../../core/math/float-packing.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
@@ -13,7 +14,10 @@ import {
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    BINDGROUP_MESH_UB
+    BINDGROUP_MESH_UB,
+    PIXELFORMAT_R16F,
+    FILTER_LINEAR,
+    ADDRESS_CLAMP_TO_EDGE
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -28,6 +32,7 @@ import {
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
+import { Texture } from '../../platform/graphics/texture.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
@@ -98,6 +103,30 @@ const _tempSet = new Set();
 
 const _tempMeshInstances = [];
 const _tempMeshInstancesSkinned = [];
+
+// construct the exponent lookup table used in gaussian splat rendering
+const createExpTableTexture = (device) => {
+    const expTableSize = 32;
+    const expTable = new Uint16Array(expTableSize);
+    for (let i = 0; i < expTableSize; ++i) {
+        const value = Math.exp(-4.0 * i / (expTableSize - 1));
+        const nvalue = (value - Math.exp(-4.0)) / (1.0 - Math.exp(-4.0));
+        expTable[i] = FloatPacking.float2Half(nvalue);
+    }
+
+    return new Texture(device, {
+        name: 'internal-expTable',
+        width: expTableSize,
+        height: 1,
+        format: PIXELFORMAT_R16F,
+        mipmaps: false,
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE,
+        levels: [expTable]
+    });
+};
 
 /**
  * The base renderer functionality to allow implementation of specialized renderers.
@@ -214,6 +243,7 @@ class Renderer {
         this._numDrawCallsCulled = 0;
         this._camerasRendered = 0;
         this._lightClusters = 0;
+        this._gsplatCount = 0;
 
         // Uniforms
         const scope = graphicsDevice.scope;
@@ -243,6 +273,7 @@ class Renderer {
         this.blueNoiseJitterData = new Float32Array(4);
         this.blueNoiseJitterId = scope.resolve('blueNoiseJitter');
         this.blueNoiseTextureId = scope.resolve('blueNoiseTex32');
+        this.expTableTextureId = scope.resolve('expTable');
 
         this.alphaTestId = scope.resolve('alpha_ref');
         this.opacityMapId = scope.resolve('texture_opacityMap');
@@ -258,6 +289,8 @@ class Renderer {
         // a single instance of light cube
         this.lightCube = new LightCube();
         this.constantLightCube = scope.resolve('lightCube[0]');
+
+        this.expTableTexture = createExpTableTexture(this.device);
     }
 
     destroy() {
@@ -273,6 +306,12 @@ class Renderer {
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
+
+        this.gsplatDirector?.destroy();
+        this.gsplatDirector = null;
+
+        this.expTableTexture?.destroy();
+        this.expTableTexture = null;
     }
 
     /**
@@ -1193,6 +1232,7 @@ class Renderer {
     updateFrameUniforms() {
         // blue noise texture
         this.blueNoiseTextureId.setValue(getBlueNoiseTexture(this.device));
+        this.expTableTextureId.setValue(this.expTableTexture);
     }
 
     /**

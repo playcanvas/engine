@@ -1,4 +1,5 @@
 import { math } from '../../core/math/math.js';
+import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Ray } from '../../core/shape/ray.js';
@@ -21,8 +22,8 @@ import { Layer } from '../../scene/layer.js';
 // temporary variables
 const v = new Vec3();
 const position = new Vec3();
-const angles = new Vec3();
 const dir = new Vec3();
+const rotation = new Quat();
 const m1 = new Mat4();
 const m2 = new Mat4();
 const ray = new Ray();
@@ -213,6 +214,14 @@ class Gizmo extends EventHandler {
     _layer;
 
     /**
+     * Internal flag to track if a render update is required.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _renderUpdate = false;
+
+    /**
      * The graph nodes attached to the gizmo.
      *
      * @type {GraphNode[]}
@@ -302,7 +311,7 @@ class Gizmo extends EventHandler {
         const enabled = state ? this.nodes.length > 0 && cameraDist > DIST_EPSILON : false;
         if (enabled !== this.root.enabled) {
             this.root.enabled = enabled;
-            this.fire(Gizmo.EVENT_RENDERUPDATE);
+            this._renderUpdate = true;
         }
     }
 
@@ -494,31 +503,33 @@ class Gizmo extends EventHandler {
         }
         position.mulScalar(1.0 / (this.nodes.length || 1));
 
-        if (position.distance(this.root.getLocalPosition()) < UPDATE_EPSILON) {
+        if (position.equalsApprox(this.root.getLocalPosition(), UPDATE_EPSILON)) {
             return;
         }
 
         this.root.setLocalPosition(position);
         this.fire(Gizmo.EVENT_POSITIONUPDATE, position);
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
+
+        this._renderUpdate = true;
     }
 
     /**
      * @protected
      */
     _updateRotation() {
-        angles.set(0, 0, 0);
+        rotation.set(0, 0, 0, 1);
         if (this._coordSpace === 'local' && this.nodes.length !== 0) {
-            angles.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
+            rotation.copy(this.nodes[this.nodes.length - 1].getRotation());
         }
 
-        if (angles.distance(this.root.getLocalEulerAngles()) < UPDATE_EPSILON) {
+        if (rotation.equalsApprox(this.root.getRotation(), UPDATE_EPSILON)) {
             return;
         }
 
-        this.root.setLocalEulerAngles(angles);
-        this.fire(Gizmo.EVENT_ROTATIONUPDATE, angles);
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
+        this.root.setRotation(rotation);
+        this.fire(Gizmo.EVENT_ROTATIONUPDATE, rotation.getEulerAngles());
+
+        this._renderUpdate = true;
     }
 
     /**
@@ -541,7 +552,8 @@ class Gizmo extends EventHandler {
 
         this.root.setLocalScale(this._scale, this._scale, this._scale);
         this.fire(Gizmo.EVENT_SCALEUPDATE, this._scale);
-        this.fire(Gizmo.EVENT_RENDERUPDATE);
+
+        this._renderUpdate = true;
     }
 
     /**
@@ -662,6 +674,15 @@ class Gizmo extends EventHandler {
      * gizmo.update();
      */
     update() {
+        if (this._renderUpdate) {
+            this._renderUpdate = false;
+            this.fire(Gizmo.EVENT_RENDERUPDATE);
+        }
+
+        if (!this.enabled) {
+            return;
+        }
+
         this._updatePosition();
         this._updateRotation();
         this._updateScale();

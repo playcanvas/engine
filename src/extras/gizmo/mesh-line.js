@@ -47,7 +47,8 @@ class MeshLine {
         this._thickness = args.thickness ?? this._thickness;
 
         this._material.blendState = BlendState.ALPHABLEND;
-        this._material.setDefine('DEPTH_WRITE', '0');
+        this._material.setDefine('DEPTH_WRITE', '1');
+        this._material.setParameter('uDepth', 0);
         this._material.update();
 
         const mesh = Mesh.fromGeometry(app.graphicsDevice, new CylinderGeometry());
@@ -92,6 +93,11 @@ class MeshLine {
         const length = from.distance(to) * scale;
         this.entity.setLocalPosition(dir.mulScalar(0.5 * length).add(from));
         this.entity.setLocalScale(this._thickness * scale, length, this._thickness * scale);
+    }
+
+    destroy() {
+        this._material.destroy();
+        this.entity.destroy();
     }
 }
 

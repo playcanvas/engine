@@ -9,6 +9,7 @@ import { Mat4 } from '../core/math/mat4.js';
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 import { BAKE_COLORDIR, LAYERID_IMMEDIATE } from './constants.js';
 import { LightingParams } from './lighting/lighting-params.js';
+import { GSplatParams } from './gsplat-unified/gsplat-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
@@ -337,6 +338,9 @@ class Scene extends EventHandler {
             this.updateShaders = true;
         });
 
+        // gsplat params
+        this._gsplatParams = new GSplatParams();
+
         // skybox
         this._sky = new Sky(this);
 
@@ -518,6 +522,15 @@ class Scene extends EventHandler {
      */
     get lighting() {
         return this._lightingParams;
+    }
+
+    /**
+     * Gets the GSplat parameters.
+     *
+     * @type {GSplatParams}
+     */
+    get gsplat() {
+        return this._gsplatParams;
     }
 
     /**

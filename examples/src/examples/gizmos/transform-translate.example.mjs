@@ -88,15 +88,15 @@ const cc = /** @type {CameraControls} */ (camera.script.create(CameraControls));
 Object.assign(cc, {
     focusPoint: pc.Vec3.ZERO,
     sceneSize: 5,
-    rotateDamping: 0.97,
-    moveDamping: 0.97,
-    zoomDamping: 0.97,
-    pitchRange: new pc.Vec2(-89.99, 89.99),
+    rotateDamping: 0.95,
+    moveDamping: 0.95,
+    zoomDamping: 0.95,
+    pitchRange: new pc.Vec2(-89.999, 89.999),
     zoomRange: new pc.Vec2(2, 10),
     enableFly: false
 });
 app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
-    cc.skipUpdate = hasPointer;
+    cc.enabled = !hasPointer;
 });
 
 // create light entity
@@ -119,7 +119,6 @@ data.set('gizmo', {
     size: gizmo.size,
     snap: gizmo.snap,
     snapIncrement: gizmo.snapIncrement,
-    flipAxes: gizmo.flipAxes,
     flipPlanes: gizmo.flipPlanes,
     dragMode: gizmo.dragMode,
     theme: {
@@ -140,15 +139,13 @@ data.set('gizmo', {
         guideBase: {
             x: gizmo.theme.guideBase.x.toArray(),
             y: gizmo.theme.guideBase.y.toArray(),
-            z: gizmo.theme.guideBase.z.toArray(),
-            f: gizmo.theme.guideBase.f.toArray()
+            z: gizmo.theme.guideBase.z.toArray()
         },
         guideOcclusion: gizmo.theme.guideOcclusion,
         disabled: gizmo.theme.disabled.toArray()
     },
     coordSpace: gizmo.coordSpace,
     axisLineTolerance: gizmo.axisLineTolerance,
-    axisCenterTolerance: gizmo.axisCenterTolerance,
     axisGap: gizmo.axisGap,
     axisLineThickness: gizmo.axisLineThickness,
     axisLineLength: gizmo.axisLineLength,

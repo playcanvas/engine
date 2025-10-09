@@ -114,6 +114,17 @@ const screenToWorld = (camera, dx, dy, dz, out = new Vec3()) => {
     return out;
 };
 
+/**
+ * @enum {string}
+ */
+// eslint-disable-next-line no-unused-vars
+const MobileInputLayout = {
+    JOYSTICK_JOYSTICK: 'joystick-joystick',
+    JOYSTICK_TOUCH: 'joystick-touch',
+    TOUCH_JOYSTICK: 'touch-joystick',
+    TOUCH_TOUCH: 'touch-touch'
+};
+
 class CameraControls extends Script {
     static scriptName = 'cameraControls';
 
@@ -235,153 +246,23 @@ class CameraControls extends Script {
     };
 
     /**
-     * Whether to skip the update.
+     * Enable fly camera controls.
      *
      * @attribute
-     * @title Skip Update
+     * @title Enable Fly
      * @type {boolean}
+     * @default true
      */
-    skipUpdate = false;
+    set enableFly(enable) {
+        this._enableFly = enable;
 
-    /**
-     * Enable panning.
-     *
-     * @attribute
-     * @title Enable Panning
-     * @type {boolean}
-     */
-    enablePan = true;
-
-    /**
-     * The scene size. The zoom, pan and fly speeds are relative to this size.
-     *
-     * @attribute
-     * @title Scene Size
-     * @type {number}
-     */
-    sceneSize = 100;
-
-    /**
-     * The rotation speed.
-     *
-     * @attribute
-     * @title Rotate Speed
-     * @type {number}
-     */
-    rotateSpeed = 0.2;
-
-    /**
-     * The rotation joystick sensitivity.
-     *
-     * @attribute
-     * @title Rotate Joystick Sensitivity
-     * @type {number}
-     */
-    rotateJoystickSens = 2;
-
-    /**
-     * The fly move speed relative to the scene size.
-     *
-     * @attribute
-     * @title Move Speed
-     * @type {number}
-     */
-    moveSpeed = 2;
-
-    /**
-     * The fast fly move speed relative to the scene size.
-     *
-     * @attribute
-     * @title Move Fast Speed
-     * @type {number}
-     */
-    moveFastSpeed = 4;
-
-    /**
-     * The slow fly move speed relative to the scene size.
-     *
-     * @attribute
-     * @title Move Slow Speed
-     * @type {number}
-     */
-    moveSlowSpeed = 1;
-
-    /**
-     * The zoom speed relative to the scene size.
-     *
-     * @attribute
-     * @title Zoom Speed
-     * @type {number}
-     */
-    zoomSpeed = 0.001;
-
-    /**
-     * The touch zoom pinch sensitivity.
-     *
-     * @attribute
-     * @title Zoom
-     * @type {number}
-     */
-    zoomPinchSens = 5;
-
-    /**
-     * The gamepad dead zone.
-     *
-     * @attribute
-     * @title Gamepad Dead Zone
-     * @type {Vec2}
-     */
-    gamepadDeadZone = new Vec2(0.3, 0.6);
-
-    /**
-     * The joystick event name for the UI position for the base and stick elements.
-     * The event name is appended with the side: 'left' or 'right'.
-     *
-     * @attribute
-     * @title Joystick Base Event Name
-     * @type {string}
-     */
-    joystickEventName = 'joystick';
-
-    constructor({ app, entity, ...args }) {
-        super({ app, entity, ...args });
-        if (!this.entity.camera) {
-            console.error('CameraControls: camera component not found');
-            return;
+        if (!this._enableFly && this._mode === 'fly') {
+            this._setMode('orbit');
         }
-        this._camera = this.entity.camera;
+    }
 
-        // set orbit controller defaults
-        this._orbitController.zoomRange = new Vec2(0.01, Infinity);
-
-        // attach input
-        this._desktopInput.attach(this.app.graphicsDevice.canvas);
-        this._orbitMobileInput.attach(this.app.graphicsDevice.canvas);
-        this._flyMobileInput.attach(this.app.graphicsDevice.canvas);
-        this._gamepadInput.attach(this.app.graphicsDevice.canvas);
-
-        // expose ui events
-        this._flyMobileInput.on('joystick:position:left', ([bx, by, sx, sy]) => {
-            if (this._mode !== 'fly') {
-                return;
-            }
-            this.app.fire(`${this.joystickEventName}:left`, bx, by, sx, sy);
-        });
-        this._flyMobileInput.on('joystick:position:right', ([bx, by, sx, sy]) => {
-            if (this._mode !== 'fly') {
-                return;
-            }
-            this.app.fire(`${this.joystickEventName}:right`, bx, by, sx, sy);
-        });
-
-        // pose
-        this._pose.look(this._camera.entity.getPosition(), Vec3.ZERO);
-
-        // mode
-        this._setMode('orbit');
-
-        // destroy
-        this.on('destroy', this._destroy, this);
+    get enableFly() {
+        return this._enableFly;
     }
 
     /**
@@ -405,23 +286,29 @@ class CameraControls extends Script {
     }
 
     /**
-     * Enable fly camera controls.
+     * Enable panning.
      *
      * @attribute
-     * @title Enable Fly
+     * @title Enable Panning
      * @type {boolean}
-     * @default true
      */
-    set enableFly(enable) {
-        this._enableFly = enable;
+    enablePan = true;
 
-        if (!this._enableFly && this._mode === 'fly') {
-            this._setMode('orbit');
-        }
+    /**
+     * The focus damping. A higher value means more damping. A value of 0 means no damping.
+     * The damping is applied to the orbit mode.
+     *
+     * @attribute
+     * @title Focus Damping
+     * @type {number}
+     * @default 0.98
+     */
+    set focusDamping(damping) {
+        this._focusController.focusDamping = damping;
     }
 
-    get enableFly() {
-        return this._enableFly;
+    get focusDamping() {
+        return this._focusController.focusDamping;
     }
 
     /**
@@ -443,21 +330,48 @@ class CameraControls extends Script {
     }
 
     /**
-     * The focus damping. A higher value means more damping. A value of 0 means no damping.
-     * The damping is applied to the orbit mode.
+     * The move damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
+     * damping. The damping is applied to the fly mode and the orbit mode when panning.
      *
      * @attribute
-     * @title Rotate Damping
+     * @title Move Damping
      * @type {number}
      * @default 0.98
      */
-    set focusDamping(damping) {
-        this._focusController.focusDamping = damping;
+    set moveDamping(damping) {
+        this._flyController.moveDamping = damping;
     }
 
-    get focusDamping() {
-        return this._focusController.focusDamping;
+    get moveDamping() {
+        return this._flyController.moveDamping;
     }
+
+    /**
+     * The fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Speed
+     * @type {number}
+     */
+    moveSpeed = 10;
+
+    /**
+     * The fast fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Fast Speed
+     * @type {number}
+     */
+    moveFastSpeed = 20;
+
+    /**
+     * The slow fly move speed relative to the scene size.
+     *
+     * @attribute
+     * @title Move Slow Speed
+     * @type {number}
+     */
+    moveSlowSpeed = 5;
 
     /**
      * The rotate damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
@@ -478,21 +392,22 @@ class CameraControls extends Script {
     }
 
     /**
-     * The move damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
-     * damping. The damping is applied to the fly mode and the orbit mode when panning.
+     * The rotation speed.
      *
      * @attribute
-     * @title Move Damping
+     * @title Rotate Speed
      * @type {number}
-     * @default 0.98
      */
-    set moveDamping(damping) {
-        this._flyController.moveDamping = damping;
-    }
+    rotateSpeed = 0.2;
 
-    get moveDamping() {
-        return this._flyController.moveDamping;
-    }
+    /**
+     * The rotation joystick sensitivity.
+     *
+     * @attribute
+     * @title Rotate Joystick Sensitivity
+     * @type {number}
+     */
+    rotateJoystickSens = 2;
 
     /**
      * The zoom damping. In the range 0 to 1, where a value of 0 means no damping and 1 means full
@@ -510,6 +425,42 @@ class CameraControls extends Script {
     get zoomDamping() {
         return this._orbitController.zoomDamping;
     }
+
+    /**
+     * The touch zoom pinch sensitivity.
+     *
+     * @attribute
+     * @title Zoom
+     * @type {number}
+     */
+    zoomPinchSens = 5;
+
+    /**
+     * The zoom range.
+     *
+     * @attribute
+     * @title Zoom Range
+     * @type {Vec2}
+     * @default [0.01, 0]
+     */
+    set zoomRange(range) {
+        this._zoomRange.x = range.x;
+        this._zoomRange.y = range.y <= range.x ? Infinity : range.y;
+        this._orbitController.zoomRange = this._zoomRange;
+    }
+
+    get zoomRange() {
+        return this._zoomRange;
+    }
+
+    /**
+     * The zoom speed relative to the scene size.
+     *
+     * @attribute
+     * @title Zoom Speed
+     * @type {number}
+     */
+    zoomSpeed = 0.001;
 
     /**
      * The pitch range. In the range -360 to 360 degrees. The pitch range is applied to the fly mode
@@ -552,22 +503,14 @@ class CameraControls extends Script {
     }
 
     /**
-     * The zoom range.
+     * The joystick event name for the UI position for the base and stick elements.
+     * The event name is appended with the side: 'left' or 'right'.
      *
      * @attribute
-     * @title Zoom Range
-     * @type {Vec2}
-     * @default [0.01, 0]
+     * @title Joystick Base Event Name
+     * @type {string}
      */
-    set zoomRange(range) {
-        this._zoomRange.x = range.x;
-        this._zoomRange.y = range.y <= range.x ? Infinity : range.y;
-        this._orbitController.zoomRange = this._zoomRange;
-    }
-
-    get zoomRange() {
-        return this._zoomRange;
-    }
+    joystickEventName = 'joystick';
 
     /**
      * The layout of the mobile input. The layout can be one of the following:
@@ -581,8 +524,8 @@ class CameraControls extends Script {
      *
      * @attribute
      * @title Use Virtual Gamepad
-     * @type {string}
-     * @default 'joystick-touch'
+     * @type {MobileInputLayout}
+     * @default joystick-touch
      */
     set mobileInputLayout(layout) {
         if (!/(?:joystick|touch)-(?:joystick|touch)/.test(layout)) {
@@ -594,6 +537,65 @@ class CameraControls extends Script {
 
     get mobileInputLayout() {
         return this._flyMobileInput.layout;
+    }
+
+    /**
+     * The gamepad dead zone.
+     *
+     * @attribute
+     * @title Gamepad Dead Zone
+     * @type {Vec2}
+     */
+    gamepadDeadZone = new Vec2(0.3, 0.6);
+
+    constructor({ app, entity, ...args }) {
+        super({ app, entity, ...args });
+        if (!this.entity.camera) {
+            console.error('CameraControls: camera component not found');
+            return;
+        }
+        this._camera = this.entity.camera;
+
+        // set orbit controller defaults
+        this._orbitController.zoomRange = new Vec2(0.01, Infinity);
+
+        // attach input
+        this._desktopInput.attach(this.app.graphicsDevice.canvas);
+        this._orbitMobileInput.attach(this.app.graphicsDevice.canvas);
+        this._flyMobileInput.attach(this.app.graphicsDevice.canvas);
+        this._gamepadInput.attach(this.app.graphicsDevice.canvas);
+
+        // expose ui events
+        this._flyMobileInput.on('joystick:position:left', ([bx, by, sx, sy]) => {
+            if (this._mode !== 'fly') {
+                return;
+            }
+            this.app.fire(`${this.joystickEventName}:left`, bx, by, sx, sy);
+        });
+        this._flyMobileInput.on('joystick:position:right', ([bx, by, sx, sy]) => {
+            if (this._mode !== 'fly') {
+                return;
+            }
+            this.app.fire(`${this.joystickEventName}:right`, bx, by, sx, sy);
+        });
+
+        // pose
+        this._pose.look(this._camera.entity.getPosition(), Vec3.ZERO);
+
+        // mode
+        this._setMode('orbit');
+
+        // state
+        this.on('state', () => {
+            // discard inputs
+            this._desktopInput.read();
+            this._orbitMobileInput.read();
+            this._flyMobileInput.read();
+            this._gamepadInput.read();
+        });
+
+        // destroy
+        this.on('destroy', this._destroy, this);
     }
 
     /**
@@ -742,7 +744,7 @@ class CameraControls extends Script {
 
         // multipliers
         const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
-            this.moveSlowSpeed : this.moveSpeed) * this.sceneSize * dt;
+            this.moveSlowSpeed : this.moveSpeed) * dt;
         const zoomMult = this.zoomSpeed * 60 * dt;
         const zoomTouchMult = zoomMult * this.zoomPinchSens;
         const rotateMult = this.rotateSpeed * 60 * dt;
@@ -756,48 +758,48 @@ class CameraControls extends Script {
         v.add(keyMove.mulScalar(fly * moveMult));
         const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._pose.distance);
         v.add(panMove.mulScalar(orbit * pan));
-        const wheelMove = new Vec3(0, 0, wheel[0]);
+        const wheelMove = tmpV2.set(0, 0, wheel[0]);
         v.add(wheelMove.mulScalar(orbit * zoomMult));
         deltas.move.append([v.x, v.y, v.z]);
 
         // desktop rotate
         v.set(0, 0, 0);
-        const mouseRotate = new Vec3(mouse[0], mouse[1], 0);
+        const mouseRotate = tmpV2.set(mouse[0], mouse[1], 0);
         v.add(mouseRotate.mulScalar((1 - pan) * rotateMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // mobile move
         v.set(0, 0, 0);
-        const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]);
+        const flyMove = tmpV2.set(leftInput[0], 0, -leftInput[1]);
         v.add(flyMove.mulScalar(fly * moveMult));
         const orbitMove = screenToWorld(this._camera, touch[0], touch[1], this._pose.distance);
         v.add(orbitMove.mulScalar(orbit * double));
-        const pinchMove = new Vec3(0, 0, pinch[0]);
+        const pinchMove = tmpV2.set(0, 0, pinch[0]);
         v.add(pinchMove.mulScalar(orbit * double * zoomTouchMult));
         deltas.move.append([v.x, v.y, v.z]);
 
         // mobile rotate
         v.set(0, 0, 0);
-        const orbitRotate = new Vec3(touch[0], touch[1], 0);
+        const orbitRotate = tmpV2.set(touch[0], touch[1], 0);
         v.add(orbitRotate.mulScalar(orbit * (1 - double) * rotateMult));
-        const flyRotate = new Vec3(rightInput[0], rightInput[1], 0);
+        const flyRotate = tmpV2.set(rightInput[0], rightInput[1], 0);
         v.add(flyRotate.mulScalar(fly * (mobileJoystick ? rotateJoystickMult : rotateMult)));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // gamepad move
         v.set(0, 0, 0);
-        const stickMove = new Vec3(leftStick[0], 0, -leftStick[1]);
+        const stickMove = tmpV2.set(leftStick[0], 0, -leftStick[1]);
         v.add(stickMove.mulScalar(fly * moveMult));
         deltas.move.append([v.x, v.y, v.z]);
 
         // gamepad rotate
         v.set(0, 0, 0);
-        const stickRotate = new Vec3(rightStick[0], rightStick[1], 0);
+        const stickRotate = tmpV2.set(rightStick[0], rightStick[1], 0);
         v.add(stickRotate.mulScalar(fly * rotateJoystickMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
-        // check for frame discard (entity disabled, xr active or skipUpdate)
-        if (this.app.xr?.active || !this.entity.enabled || this.skipUpdate) {
+        // check if XR is active for frame discard
+        if (this.app.xr?.active) {
             frame.read();
             return;
         }
