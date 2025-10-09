@@ -1,6 +1,6 @@
 export default /* wgsl */`
 var packedTexture: texture_2d<u32>;
-var chunkTexture: texture_2d<f32>;
+var chunkTexture: texture_2d<uff>;
 
 // work values
 var<private> chunkDataA: vec4f;    // x: min_x, y: min_y, z: min_z, w: max_x
