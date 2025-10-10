@@ -23,7 +23,7 @@ const EXP4      = exp(-4.0);
 const INV_EXP4  = 1.0 / (1.0 - EXP4);
 
 fn normExp(x: f32) -> f32 {
-    return (exp(-x * 4.0) - EXP4) * INV_EXP4;
+    return (exp(x * -4.0) - EXP4) * INV_EXP4;
 }
 
 varying gaussianUV: vec2f;

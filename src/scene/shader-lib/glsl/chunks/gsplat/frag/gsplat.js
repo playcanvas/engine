@@ -26,7 +26,7 @@ varying mediump vec4 gaussianColor;
 #define INV_EXP4    1.018657360363774       // 1 / (1 - exp(-4))
 
 float normExp(float x) {
-    return (exp(-x * 4.0) - EXP4) * INV_EXP4;
+    return (exp(x * -4.0) - EXP4) * INV_EXP4;
 }
 
 void main(void) {
