@@ -1,7 +1,6 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { BlueNoise } from '../../core/math/blue-noise.js';
-import { FloatPacking } from '../../core/math/float-packing.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
@@ -14,10 +13,7 @@ import {
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    BINDGROUP_MESH_UB,
-    PIXELFORMAT_R16F,
-    FILTER_LINEAR,
-    ADDRESS_CLAMP_TO_EDGE
+    BINDGROUP_MESH_UB
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -32,7 +28,6 @@ import {
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
-import { Texture } from '../../platform/graphics/texture.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
