@@ -22,8 +22,8 @@ export default /* glsl */`
 varying mediump vec2 gaussianUV;
 varying mediump vec4 gaussianColor;
 
-#define EXP4        0.018315638888734       // exp(-4)
-#define INV_EXP4    1.018657360363774       // 1 / (1 - exp(-4))
+const float EXP4 = exp(-4.0);
+const float INV_EXP4 = 1.0 / (1.0 - EXP4);
 
 float normExp(float x) {
     return (exp(x * -4.0) - EXP4) * INV_EXP4;
