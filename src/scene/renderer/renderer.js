@@ -104,30 +104,6 @@ const _tempSet = new Set();
 const _tempMeshInstances = [];
 const _tempMeshInstancesSkinned = [];
 
-// construct the exponent lookup table used in gaussian splat rendering
-const createExpTableTexture = (device) => {
-    const expTableSize = 32;
-    const expTable = new Uint16Array(expTableSize);
-    for (let i = 0; i < expTableSize; ++i) {
-        const value = Math.exp(-4.0 * i / (expTableSize - 1));
-        const nvalue = (value - Math.exp(-4.0)) / (1.0 - Math.exp(-4.0));
-        expTable[i] = FloatPacking.float2Half(nvalue);
-    }
-
-    return new Texture(device, {
-        name: 'internal-expTable',
-        width: expTableSize,
-        height: 1,
-        format: PIXELFORMAT_R16F,
-        mipmaps: false,
-        minFilter: FILTER_LINEAR,
-        magFilter: FILTER_LINEAR,
-        addressU: ADDRESS_CLAMP_TO_EDGE,
-        addressV: ADDRESS_CLAMP_TO_EDGE,
-        levels: [expTable]
-    });
-};
-
 /**
  * The base renderer functionality to allow implementation of specialized renderers.
  *
@@ -273,7 +249,6 @@ class Renderer {
         this.blueNoiseJitterData = new Float32Array(4);
         this.blueNoiseJitterId = scope.resolve('blueNoiseJitter');
         this.blueNoiseTextureId = scope.resolve('blueNoiseTex32');
-        this.expTableTextureId = scope.resolve('expTable');
 
         this.alphaTestId = scope.resolve('alpha_ref');
         this.opacityMapId = scope.resolve('texture_opacityMap');
@@ -289,8 +264,6 @@ class Renderer {
         // a single instance of light cube
         this.lightCube = new LightCube();
         this.constantLightCube = scope.resolve('lightCube[0]');
-
-        this.expTableTexture = createExpTableTexture(this.device);
     }
 
     destroy() {
@@ -309,9 +282,6 @@ class Renderer {
 
         this.gsplatDirector?.destroy();
         this.gsplatDirector = null;
-
-        this.expTableTexture?.destroy();
-        this.expTableTexture = null;
     }
 
     /**
@@ -1232,7 +1202,6 @@ class Renderer {
     updateFrameUniforms() {
         // blue noise texture
         this.blueNoiseTextureId.setValue(getBlueNoiseTexture(this.device));
-        this.expTableTextureId.setValue(this.expTableTexture);
     }
 
     /**

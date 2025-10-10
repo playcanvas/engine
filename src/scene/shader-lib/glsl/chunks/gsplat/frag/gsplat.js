@@ -22,7 +22,12 @@ export default /* glsl */`
 varying mediump vec2 gaussianUV;
 varying mediump vec4 gaussianColor;
 
-uniform sampler2D expTable;
+#define EXP4        0.018315638888734       // exp(-4)
+#define INV_EXP4    1.018657360363774       // 1 / (1 - exp(-4))
+
+float normExp(float x) {
+    return (exp(-x * 4.0) - EXP4) * INV_EXP4;
+}
 
 void main(void) {
     mediump float A = dot(gaussianUV, gaussianUV);
@@ -30,7 +35,7 @@ void main(void) {
         discard;
     }
 
-    mediump float alpha = texture2DLod(expTable, vec2(A, 0.5), 0.0).r * gaussianColor.a;
+    mediump float alpha = normExp(A) * gaussianColor.a;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < alphaClip) {

@@ -19,11 +19,15 @@ export default /* wgsl */`
     #include "floatAsUintPS"
 #endif
 
+const EXP4      = exp(-4.0);
+const INV_EXP4  = 1.0 / (1.0 - EXP4);
+
+fn normExp(x: f32) -> f32 {
+    return (exp(-x * 4.0) - EXP4) * INV_EXP4;
+}
+
 varying gaussianUV: vec2f;
 varying gaussianColor: vec4f;
-
-var expTable: texture_2d<f32>;
-var expTableSampler: sampler;
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
@@ -36,7 +40,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     }
 
     // evaluate alpha
-    var alpha = textureSampleLevel(expTable, expTableSampler, vec2f(A, 0.5), 0).r * gaussianColor.a;
+    var alpha = normExp(A) * gaussianColor.a;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < uniform.alphaClip) {
