@@ -8,9 +8,35 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="./playcanvas-logo.png" />
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
     <div id='app'></div>
+    
+    <!-- World Clocks Section -->
+    <div id="world-clocks" class="fixed bottom-4 right-4 bg-gray-900 bg-opacity-90 rounded-lg shadow-2xl p-6 backdrop-blur-sm border border-gray-700">
+        <h2 class="text-2xl font-bold text-white mb-4 text-center border-b border-gray-700 pb-2">World Clocks</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="clock-item bg-gray-800 rounded-lg p-4 text-center hover:bg-gray-700 transition-colors">
+                <div class="text-sm text-gray-400 mb-1">New York</div>
+                <div id="clock-newyork" class="text-xl font-mono text-blue-400">--:--:--</div>
+            </div>
+            <div class="clock-item bg-gray-800 rounded-lg p-4 text-center hover:bg-gray-700 transition-colors">
+                <div class="text-sm text-gray-400 mb-1">London</div>
+                <div id="clock-london" class="text-xl font-mono text-green-400">--:--:--</div>
+            </div>
+            <div class="clock-item bg-gray-800 rounded-lg p-4 text-center hover:bg-gray-700 transition-colors">
+                <div class="text-sm text-gray-400 mb-1">Tokyo</div>
+                <div id="clock-tokyo" class="text-xl font-mono text-purple-400">--:--:--</div>
+            </div>
+            <div class="clock-item bg-gray-800 rounded-lg p-4 text-center hover:bg-gray-700 transition-colors">
+                <div class="text-sm text-gray-400 mb-1">Local Time</div>
+                <div id="clock-local" class="text-xl font-mono text-orange-400">--:--:--</div>
+            </div>
+        </div>
+    </div>
+    
 	<script src="index.js"></script>
+    <script src="scripts/main.js"></script>
 </body>
 </html>
