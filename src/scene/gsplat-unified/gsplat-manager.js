@@ -393,6 +393,12 @@ class GSplatManager {
             cameraMovedOrRotated = this.testCameraMoved();
         }
 
+        Debug.call(() => {
+            for (const [, inst] of this.octreeInstances) {
+                inst.debugRender(this.scene);
+            }
+        });
+
         // if parameters are dirty, rebuild world state
         if (this.scene.gsplat.dirty) {
             this.layerPlacementsDirty = true;

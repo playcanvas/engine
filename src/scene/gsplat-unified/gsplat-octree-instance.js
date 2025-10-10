@@ -599,7 +599,14 @@ class GSplatOctreeInstance {
         // watch prefetched loads for completion to allow promotion
         this.pollPrefetchCompletions();
 
-        // debug render world space bounds for octree nodes based on current LOD selection
+        // check if any placements need LOD update
+        const dirty = this.dirtyModifiedPlacements;
+        this.dirtyModifiedPlacements = false;
+        return dirty;
+    }
+
+    // debug render world space bounds for octree nodes based on current LOD selection
+    debugRender(scene) {
         Debug.call(() => {
             if (scene.gsplat.debugNodeAabbs) {
                 const modelMat = this.placement.node.getWorldTransform();
@@ -614,11 +621,6 @@ class GSplatOctreeInstance {
                 }
             }
         });
-
-        // check if any placements need LOD update
-        const dirty = this.dirtyModifiedPlacements;
-        this.dirtyModifiedPlacements = false;
-        return dirty;
     }
 
     /**
