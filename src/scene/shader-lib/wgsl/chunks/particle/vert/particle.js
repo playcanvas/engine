@@ -15,15 +15,19 @@ struct TexLerpUnpackResult {
     unpacked: vec3f
 }
 
-fn tex1Dlod_lerp_simple(tex: texture_2d<f32>, texSampler: sampler, tc: vec2f) -> vec4f {
+fn tex1Dlod_lerp_simple(tex: texture_2d<f32>, textureSize: vec2u, tc: vec2f) -> vec4f {
     let tc_next = tc + vec2f(uniform.graphSampleSize);
-    return mix( textureSample(tex, texSampler, tc), textureSample(tex, texSampler, tc_next), fract(tc.x * uniform.graphNumSamples) );
+    let texelA: vec2i = vec2i(tc * vec2f(textureSize));
+    let texelB: vec2i = vec2i(tc_next * vec2f(textureSize));
+    return mix( textureLoad(tex, texelA, 0), textureLoad(tex, texelB, 0), fract(tc.x * uniform.graphNumSamples) );
 }
 
-fn tex1Dlod_lerp_unpack(tex: texture_2d<f32>, texSampler: sampler, tc: vec2f) -> TexLerpUnpackResult {
+fn tex1Dlod_lerp_unpack(tex: texture_2d<f32>, textureSize: vec2u, tc: vec2f) -> TexLerpUnpackResult {
     let tc_next = tc + vec2f(uniform.graphSampleSize);
-    let a = textureSampleLevel(tex, texSampler, tc, 0.0);
-    let b = textureSampleLevel(tex, texSampler, tc_next, 0.0);
+    let texelA: vec2i = vec2i(tc * vec2f(textureSize));
+    let texelB: vec2i = vec2i(tc_next * vec2f(textureSize));
+    let a = textureLoad(tex, texelA, 0);
+    let b = textureLoad(tex, texelB, 0);
     let c = fract(tc.x * uniform.graphNumSamples);
     let unpackedA = unpack3NFloats(a.w);
     let unpackedB = unpack3NFloats(b.w);
@@ -92,7 +96,8 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     let quadXY = meshLocalPos.xy;
     let nlife = clamp(inLife / particleLifetime, 0.0, 1.0);
 
-    let lerp_result = tex1Dlod_lerp_unpack(internalTex2, internalTex2Sampler, vec2f(nlife, 0.0));
+    let internalTexSize = textureDimensions(internalTex2, 0);
+    let lerp_result = tex1Dlod_lerp_unpack(internalTex2, internalTexSize, vec2f(nlife, 0.0));
     let params = lerp_result.result;
     let paramDiv = lerp_result.unpacked;
 
