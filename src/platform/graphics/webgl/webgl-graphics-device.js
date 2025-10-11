@@ -2014,12 +2014,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         return new Promise((resolve, reject) => {
 
-            signal?.addEventListener('abort', () => {
-                gl?.deleteSync(sync);
+            function handleAbort() {
                 clearTimeout(timeoutId);
                 timeoutId = undefined;
+                gl?.deleteSync(sync);
+                signal?.removeEventListener('abort', handleAbort);
                 reject(new Error('Aborted by signal', { cause: signal.reason }));
-            });
+            }
 
             function test() {
                 const res = gl.clientWaitSync(sync, flags, 0);
@@ -2035,6 +2036,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                 }
             }
+
+            signal?.addEventListener('abort', handleAbort);
             test();
         });
     }
