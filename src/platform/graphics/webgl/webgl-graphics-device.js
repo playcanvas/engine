@@ -2004,17 +2004,28 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     }
 
-    clientWaitAsync(flags, interval_ms) {
+    clientWaitAsync(flags, interval_ms, signal) {
+
         const gl = this.gl;
         const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
         this.submit();
 
+        let timeoutId;
+
         return new Promise((resolve, reject) => {
+
+            signal?.addEventListener("abort", () => {
+                gl?.deleteSync(sync);
+                clearTimeout(timeoutId);
+                timeoutId = undefined;
+                reject(new Error('Aborted by signal', { cause: signal.reason }));
+            });
+
             function test() {
                 const res = gl.clientWaitSync(sync, flags, 0);
                 if (res === gl.TIMEOUT_EXPIRED) {
                     // check again in a while
-                    setTimeout(test, interval_ms);
+                    timeoutId = setTimeout(test, interval_ms);
                 } else {
                     gl.deleteSync(sync);
                     if (res === gl.WAIT_FAILED) {
@@ -2037,36 +2048,43 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} w - The width of the rectangle, in pixels.
      * @param {number} h - The height of the rectangle, in pixels.
      * @param {ArrayBufferView} pixels - The ArrayBufferView object that holds the returned pixel
+     * @param {AbortSignal} [signal] - The operation early interrupt signal
      * data.
      * @ignore
      */
-    async readPixelsAsync(x, y, w, h, pixels) {
+    async readPixelsAsync(x, y, w, h, pixels, signal) {
+
         const gl = this.gl;
-
-        const impl = this.renderTarget.colorBuffer?.impl;
-        const format = impl?._glFormat ?? gl.RGBA;
-        const pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
-
-        // create temporary (gpu-side) buffer and copy data into it
         const buf = gl.createBuffer();
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
-        gl.bufferData(gl.PIXEL_PACK_BUFFER, pixels.byteLength, gl.STREAM_READ);
-        gl.readPixels(x, y, w, h, format, pixelType, 0);
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
 
-        // async wait for previous read to finish
-        await this.clientWaitAsync(0, 16);
+        try {
+            const impl = this.renderTarget.colorBuffer?.impl;
+            const format = impl?._glFormat ?? gl.RGBA;
+            const pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
 
-        // copy the resulting data once it's arrived
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
-        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels);
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-        gl.deleteBuffer(buf);
+            // create temporary (gpu-side) buffer and copy data into it
+            
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
+            gl.bufferData(gl.PIXEL_PACK_BUFFER, pixels.byteLength, gl.STREAM_READ);
+            gl.readPixels(x, y, w, h, format, pixelType, 0);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
 
-        return pixels;
+            // async wait for previous read to finish
+            await this.clientWaitAsync(0, 16, signal);
+
+            // copy the resulting data once it's arrived
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
+            gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+
+            return pixels;
+        }
+        finally {
+            gl.deleteBuffer(buf);
+        }
     }
 
-    readTextureAsync(texture, x, y, width, height, options) {
+    readTextureAsync(texture, x, y, width, height, options, signal) {
 
         const face = options.face ?? 0;
 
@@ -2085,7 +2103,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initRenderTarget(renderTarget);
 
         return new Promise((resolve, reject) => {
-            this.readPixelsAsync(x, y, width, height, data).then((data) => {
+            this.readPixelsAsync(x, y, width, height, data, signal).then((data) => {
 
                 // return if the device was destroyed
                 if (this._destroyed) return;
@@ -2112,6 +2130,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.bindTexture(gl.TEXTURE_2D, impl._glTexture);
         gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, width, height, format, pixelType, 0);
         gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+        gl.deleteBuffer(buf);
 
         texture._needsUpload = false;
         texture._mipmapsUploaded = false;
