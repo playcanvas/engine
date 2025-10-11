@@ -2014,7 +2014,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         return new Promise((resolve, reject) => {
 
-            signal?.addEventListener("abort", () => {
+            signal?.addEventListener('abort', () => {
                 gl?.deleteSync(sync);
                 clearTimeout(timeoutId);
                 timeoutId = undefined;
@@ -2055,15 +2055,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
     async readPixelsAsync(x, y, w, h, pixels, signal) {
 
         const gl = this.gl;
-        const buf = gl.createBuffer();
+        const buf = gl.createBuffer(); // create temporary (gpu-side) buffer
 
         try {
             const impl = this.renderTarget.colorBuffer?.impl;
             const format = impl?._glFormat ?? gl.RGBA;
             const pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
 
-            // create temporary (gpu-side) buffer and copy data into it
-            
+            // copy data into temporary (gpu-side) buffer
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
             gl.bufferData(gl.PIXEL_PACK_BUFFER, pixels.byteLength, gl.STREAM_READ);
             gl.readPixels(x, y, w, h, format, pixelType, 0);
@@ -2078,8 +2077,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
 
             return pixels;
-        }
-        finally {
+
+        } finally {
             gl.deleteBuffer(buf);
         }
     }
@@ -2094,15 +2093,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
             depth: false,
             face: face
         });
+
         Debug.assert(renderTarget.colorBuffer === texture);
 
-        const buffer = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, 1, texture._format));
-        const data = options.data ?? new (getPixelFormatArrayType(texture._format))(buffer);
+        let data = options.data;
+
+        if (!data) {
+            const buffer = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, 1, texture._format));
+            data = new (getPixelFormatArrayType(texture._format))(buffer);
+        }
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
 
         return new Promise((resolve, reject) => {
+
             this.readPixelsAsync(x, y, width, height, data, signal).then((data) => {
 
                 // return if the device was destroyed
@@ -2112,8 +2117,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 if (!options.renderTarget) {
                     renderTarget.destroy();
                 }
+
                 resolve(data);
-            }).catch(reject);
+            })
+            .catch(reject);
         });
     }
 
