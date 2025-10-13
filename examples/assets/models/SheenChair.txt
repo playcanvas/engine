@@ -1,8 +1,0 @@
-Model Information:
-* title:	Sheen Chair
-* source:	https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/SheenChair
-* author:	Wayfair LLC
-
-Model License:
-* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
-* requirements:	Author must be credited. Commercial use is allowed.

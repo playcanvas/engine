@@ -1,4 +1,0 @@
-The low poly fps tdm game map model has been obtained from this address:
-https://sketchfab.com/3d-models/de-dust-2-with-real-light-4ce74cd95c584ce9b12b5ed9dc418db5
-It's distributed under CC license:
-https://creativecommons.org/licenses/by/4.0/

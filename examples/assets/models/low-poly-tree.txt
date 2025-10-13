@@ -1,4 +1,0 @@
-The low-poly-tree model has been obtained from this address:
-https://sketchfab.com/3d-models/low-poly-tree-with-twisting-branches-4e2589134f2442bcbdab51c1f306cd58
-It's distributed under CC license:
-https://creativecommons.org/licenses/by/4.0/

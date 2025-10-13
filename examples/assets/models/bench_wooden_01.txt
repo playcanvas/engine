@@ -1,5 +1,0 @@
-The bench_wooden_01 model has been obtained from this address:
-https://sketchfab.com/3d-models/bench-wooden-01-1400c9340d5049589deb43601462ac55
-
-It's distributed under CC license:
-https://creativecommons.org/licenses/by/4.0/

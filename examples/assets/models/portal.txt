@@ -1,7 +1,0 @@
-The portal model has been obtained from this address:
-https://sketchfab.com/3d-models/portal-frame-da34b37a224e4e49b307c0b17a50af2c
-It's distributed under CC license:
-https://creativecommons.org/licenses/by/4.0/
-
-Modifications done to it:
-- texture resized and compressed to minimize the size

@@ -1,8 +1,0 @@
-Model Information:
-* title:	Real-time Refraction Demo: Mosquito in Amber
-* source:	https://sketchfab.com/3d-models/real-time-refraction-demo-mosquito-in-amber-37233d6ed84844fea1ebe88069ea58d1
-* author:	Sketchfab 
-
-Model License:
-* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
-* requirements:	Author must be credited. Commercial use is allowed.

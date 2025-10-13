@@ -1,2 +1,0 @@
-The hatch-X.jpg textures are from https://github.com/spite/cross-hatching
-released under MIT license

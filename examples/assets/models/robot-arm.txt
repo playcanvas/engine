@@ -1,6 +1,0 @@
-The robot-arm model has been obtained from this address: 
-https://sketchfab.com/3d-models/black-honey-robotic-arm-c50671f2a8e74de2a2e687103fdc93ab
-
-It's distributed under CC license:
-https://creativecommons.org/licenses/by/4.0/
-
