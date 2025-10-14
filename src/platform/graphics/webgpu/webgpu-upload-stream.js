@@ -14,14 +14,16 @@ class WebgpuUploadStream {
     /**
      * Available staging buffers ready for immediate use.
      *
-     * @type {Array<GPUBuffer>}
+     * @type {GPUBuffer[]}
+     * @private
      */
     availableStagingBuffers = [];
 
     /**
      * Staging buffers currently in use by the GPU.
      *
-     * @type {Array<GPUBuffer>}
+     * @type {GPUBuffer[]}
+     * @private
      */
     pendingStagingBuffers = [];
 
