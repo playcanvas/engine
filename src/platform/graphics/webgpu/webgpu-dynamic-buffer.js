@@ -3,7 +3,7 @@ import { DynamicBuffer } from '../dynamic-buffer.js';
 
 class WebgpuDynamicBuffer extends DynamicBuffer {
     /**
-     * @type {GPUBuffer}
+     * type {GPUBuffer}
      * @private
      */
     buffer = null;
