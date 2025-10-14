@@ -312,11 +312,14 @@ class GSplatManager {
                 }
 
                 // number of splats to render
-                this.renderer.setNumSplats(count);
+                this.renderer.update(count, textureSize);
             }
 
             // update order texture
             this.workBuffer.setOrderData(orderData);
+
+            // update renderer with new order data
+            this.renderer.frameUpdate();
         }
     }
 

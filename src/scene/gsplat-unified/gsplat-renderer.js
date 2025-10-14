@@ -59,6 +59,7 @@ class GSplatRenderer {
 
         // input format
         this._material.setDefine('GSPLAT_WORKBUFFER_DATA', true);
+        this._material.setDefine('STORAGE_ORDER', device.isWebGPU);
 
         // input textures (work buffer textures)
         this._material.setParameter('splatColor', workBuffer.colorTexture);
@@ -70,7 +71,12 @@ class GSplatRenderer {
         // set instance properties
         const dither = false;
         this._material.setParameter('numSplats', 0);
-        this._material.setParameter('splatOrder', workBuffer.orderTexture);
+
+        // Set order data - texture for WebGL only at init time, it does not need to be updated
+        if (workBuffer.orderTexture) {
+            this._material.setParameter('splatOrder', workBuffer.orderTexture);
+        }
+
         this._material.setParameter('alphaClip', 0.3);
         this._material.setDefine(`DITHER_${dither ? 'BLUENOISE' : 'NONE'}`, '');
         this._material.cull = CULLFACE_NONE;
@@ -88,16 +94,27 @@ class GSplatRenderer {
         this.meshInstance.destroy();
     }
 
-    setNumSplats(count) {
+    update(count, textureSize) {
 
         // limit splat render count to exclude those behind the camera
         this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
 
         // update splat count on the material
         this._material.setParameter('numSplats', count);
+        this._material.setParameter('splatTextureSize', textureSize);
 
         // disable rendering if no splats to render
         this.meshInstance.visible = count > 0;
+    }
+
+    frameUpdate() {
+
+        // Set the appropriate order data resource based on device type
+        if (this.device.isWebGPU) {
+            this._material.setParameter('splatOrder', this.workBuffer.orderBuffer);
+        } else {
+            this._material.setParameter('splatOrder', this.workBuffer.orderTexture);
+        }
     }
 
     setMaxNumSplats(numSplats) {
@@ -114,6 +131,9 @@ class GSplatRenderer {
             // create new instance indices
             this.instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, numSplats);
             this.meshInstance.setInstancing(this.instanceIndices, true);
+
+            // update texture size uniform
+            this._material.setParameter('splatTextureSize', this.workBuffer.textureSize);
         }
     }
 
