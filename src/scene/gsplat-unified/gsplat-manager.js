@@ -271,14 +271,16 @@ class GSplatManager {
 
     onSorted(count, version, orderData) {
 
-        this.sortedVersion = version;
-
-        // remove old state
-        const oldState = this.worldStates.get(version - 1);
-        if (oldState) {
-            this.worldStates.delete(version - 1);
-            oldState.destroy();
+        // remove all old states between last sorted version and current version
+        for (let v = this.sortedVersion + 1; v < version; v++) {
+            const oldState = this.worldStates.get(v);
+            if (oldState) {
+                this.worldStates.delete(v);
+                oldState.destroy();
+            }
         }
+
+        this.sortedVersion = version;
 
         // find the world state that has been sorted
         const worldState = this.worldStates.get(version);
@@ -302,6 +304,11 @@ class GSplatManager {
                 const colorize = this.scene.gsplat.colorizeLod;
                 this.workBuffer.render(worldState.splats, this.cameraNode, colorize ? _lodColorsRaw : undefined);
 
+                // update all splats to sync their transforms (prevents redundant re-render later)
+                worldState.splats.forEach((splat) => {
+                    splat.update();
+                });
+
                 // apply pending file-release requests
                 if (worldState.pendingReleases && worldState.pendingReleases.length) {
                     for (const [octree, fileIndex] of worldState.pendingReleases) {
@@ -312,11 +319,14 @@ class GSplatManager {
                 }
 
                 // number of splats to render
-                this.renderer.setNumSplats(count);
+                this.renderer.update(count, textureSize);
             }
 
             // update order texture
             this.workBuffer.setOrderData(orderData);
+
+            // update renderer with new order data
+            this.renderer.frameUpdate();
         }
     }
 
@@ -355,6 +365,9 @@ class GSplatManager {
     }
 
     update() {
+
+        // apply any pending sorted results
+        this.sorter.applyPendingSorted();
 
         let fullUpdate = false;
         this.framesTillFullUpdate--;
