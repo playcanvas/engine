@@ -534,6 +534,14 @@ class GSplatSogsData {
             }
         });
 
+        // patch codebooks starting with a null entry
+        ['scales', 'sh0', 'shN'].forEach((name) => {
+            const codebook = this.meta[name]?.codebook;
+            if (codebook?.[0] === null) {
+                codebook[0] = codebook[1] + (codebook[1] - codebook[255]) / 255;
+            }
+        });
+
         if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
         await this.generateCenters();
 
