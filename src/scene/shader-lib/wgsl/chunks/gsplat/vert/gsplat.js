@@ -25,6 +25,10 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
+    #ifdef GSPLAT_WORKBUFFER_DATA
+        loadSplatTextures(&source);
+    #endif
+
     let modelCenter: vec3f = readCenter(&source);
 
     var center: SplatCenter;

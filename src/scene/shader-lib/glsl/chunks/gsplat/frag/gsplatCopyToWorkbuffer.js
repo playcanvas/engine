@@ -34,9 +34,8 @@ void main(void) {
 
         // Out of bounds: write zeros
         pcFragColor0 = vec4(0.0);
-        pcFragColor1 = vec4(0.0);
-        pcFragColor2 = vec4(0.0);
-        pcFragColor3 = vec4(0.0);
+        pcFragColor1 = uvec4(0u);
+        pcFragColor2 = uvec2(0u);
 
     } else {
 
@@ -102,9 +101,8 @@ void main(void) {
 
         // write out results
         pcFragColor0 = color;
-        pcFragColor1 = vec4(modelCenter, 1.0);
-        pcFragColor2 = vec4(covA, 1.0);
-        pcFragColor3 = vec4(covB, 1.0);
+        pcFragColor1 = uvec4(floatBitsToUint(modelCenter.x), floatBitsToUint(modelCenter.y), floatBitsToUint(modelCenter.z), packHalf2x16(vec2(covA.z, covB.z)));
+        pcFragColor2 = uvec2(packHalf2x16(covA.xy), packHalf2x16(covB.xy));
     }
 }
 `;

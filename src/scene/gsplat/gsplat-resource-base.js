@@ -46,7 +46,8 @@ class WorkBufferRenderInfo {
             fragmentDefines: clonedDefines,
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatCopyToWorkBufferPS,
-            fragmentWGSL: wgslGsplatCopyToWorkBufferPS
+            fragmentWGSL: wgslGsplatCopyToWorkBufferPS,
+            fragmentOutputTypes: ['vec4', 'uvec4', 'uvec2']
         });
 
         this.quadRender = new QuadRender(shader);

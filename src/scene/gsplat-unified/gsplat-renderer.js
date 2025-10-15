@@ -63,9 +63,8 @@ class GSplatRenderer {
 
         // input textures (work buffer textures)
         this._material.setParameter('splatColor', workBuffer.colorTexture);
-        this._material.setParameter('covA', workBuffer.covATexture);
-        this._material.setParameter('covB', workBuffer.covBTexture);
-        this._material.setParameter('center', workBuffer.centerTexture);
+        this._material.setParameter('splatTexture0', workBuffer.splatTexture0);
+        this._material.setParameter('splatTexture1', workBuffer.splatTexture1);
         this._material.setDefine('SH_BANDS', '0');
 
         // set instance properties
