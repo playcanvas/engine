@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, BUFFERUSAGE_COPY_DST } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U, BUFFERUSAGE_COPY_DST } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -28,13 +28,10 @@ class GSplatWorkBuffer {
     colorTexture;
 
     /** @type {Texture} */
-    covATexture;
+    splatTexture0;
 
     /** @type {Texture} */
-    covBTexture;
-
-    /** @type {Texture} */
-    centerTexture;
+    splatTexture1;
 
     /** @type {RenderTarget} */
     renderTarget;
@@ -58,13 +55,12 @@ class GSplatWorkBuffer {
         this.device = device;
 
         this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA16F, 1, 1);
-        this.covATexture = this.createTexture('covA', PIXELFORMAT_RGBA16F, 1, 1);
-        this.covBTexture = this.createTexture('covB', PIXELFORMAT_RGBA16F, 1, 1);
-        this.centerTexture = this.createTexture('center', PIXELFORMAT_RGBA16F, 1, 1);
+        this.splatTexture0 = this.createTexture('splatTexture0', PIXELFORMAT_RGBA32U, 1, 1);
+        this.splatTexture1 = this.createTexture('splatTexture1', PIXELFORMAT_RG32U, 1, 1);
 
         this.renderTarget = new RenderTarget({
             name: `GsplatWorkBuffer-MRT-${this.id}`,
-            colorBuffers: [this.colorTexture, this.centerTexture, this.covATexture, this.covBTexture],
+            colorBuffers: [this.colorTexture, this.splatTexture0, this.splatTexture1],
             depth: false,
             flipY: true
         });
@@ -87,9 +83,8 @@ class GSplatWorkBuffer {
     destroy() {
         this.renderPass?.destroy();
         this.colorTexture?.destroy();
-        this.covATexture?.destroy();
-        this.covBTexture?.destroy();
-        this.centerTexture?.destroy();
+        this.splatTexture0?.destroy();
+        this.splatTexture1?.destroy();
         this.orderTexture?.destroy();
         this.orderBuffer?.destroy();
         this.renderTarget?.destroy();
