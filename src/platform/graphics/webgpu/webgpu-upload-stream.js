@@ -1,8 +1,10 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
  * @import { UploadStream } from '../upload-stream.js'
  */
+
+let id = 0;
 
 /**
  * WebGPU implementation of UploadStream.
@@ -136,11 +138,13 @@ class WebgpuUploadStream {
         // Get or create a staging buffer (guaranteed to be large enough after recycling)
         const buffer = this.availableStagingBuffers.pop() ?? (() => {
             // @ts-ignore - wgpu is available on WebgpuGraphicsDevice
-            return this.uploadStream.device.wgpu.createBuffer({
+            const newBuffer = this.uploadStream.device.wgpu.createBuffer({
                 size: byteSize,
                 usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
                 mappedAtCreation: true
             });
+            DebugHelper.setLabel(newBuffer, `UploadStream-Staging-${id++}`);
+            return newBuffer;
         })();
 
         // Write to mapped range (non-blocking)
@@ -154,6 +158,13 @@ class WebgpuUploadStream {
             buffer, 0,
             target.impl.buffer, byteOffset,
             byteSize
+        );
+
+        // Detect multiple uploads per frame (indicates command buffer hasn't been submitted yet)
+        Debug.assert(
+            this.pendingStagingBuffers.length === 0,
+            'Multiple WebGPU staging buffer uploads detected in the same frame before command buffer submission. ' +
+            'This can cause "buffer used while mapped" errors. Ensure only one upload occurs per frame.'
         );
 
         // Track for recycling

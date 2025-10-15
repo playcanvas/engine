@@ -15,6 +15,14 @@ class GSplatUnifiedSorter extends EventHandler {
     // true if we have new version to process
     hasNewVersion = false;
 
+    /**
+     * Pending sorted result to be applied next frame. If multiple sorted results are received from
+     * the worker, the latest result is stored here.
+     *
+     * @type {{ count: number, version: number, orderData: Uint32Array }|null}
+     */
+    pendingSorted = null;
+
     /** @type {Set<number>} */
     centersSet = new Set();
 
@@ -51,9 +59,31 @@ class GSplatUnifiedSorter extends EventHandler {
         // decrement jobs in flight counter
         this.jobsInFlight--;
 
-        this.fire('sorted', msgData.count, msgData.version, orderData);
+        // if there's already a pending result, return its orderData to the pool
+        if (this.pendingSorted) {
+            this.releaseOrderData(this.pendingSorted.orderData);
+        }
 
-        // reuse order data
+        // store the result to be available
+        this.pendingSorted = {
+            count: msgData.count,
+            version: msgData.version,
+            orderData: orderData
+        };
+    }
+
+    applyPendingSorted() {
+        if (this.pendingSorted) {
+            const { count, version, orderData } = this.pendingSorted;
+            this.pendingSorted = null;
+            this.fire('sorted', count, version, orderData);
+
+            // reuse order data
+            this.releaseOrderData(orderData);
+        }
+    }
+
+    releaseOrderData(orderData) {
         if (orderData.length === this.bufferLength) {
             this.availableOrderData.push(orderData);
         }
@@ -61,6 +91,7 @@ class GSplatUnifiedSorter extends EventHandler {
 
     destroy() {
         this._destroyed = true;
+        this.pendingSorted = null;
         this.worker.terminate();
         this.worker = null;
     }
