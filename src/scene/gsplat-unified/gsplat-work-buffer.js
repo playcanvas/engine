@@ -1,7 +1,9 @@
 import { Debug } from '../../core/debug.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U, BUFFERUSAGE_COPY_DST } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { UploadStream } from '../../platform/graphics/upload-stream.js';
 import { GSplatWorkBufferRenderPass } from './gsplat-work-buffer-render-pass.js';
 
 let id = 0;
@@ -26,19 +28,25 @@ class GSplatWorkBuffer {
     colorTexture;
 
     /** @type {Texture} */
-    covATexture;
+    splatTexture0;
 
     /** @type {Texture} */
-    covBTexture;
-
-    /** @type {Texture} */
-    centerTexture;
+    splatTexture1;
 
     /** @type {RenderTarget} */
     renderTarget;
 
     /** @type {Texture} */
     orderTexture;
+
+    /** @type {StorageBuffer} */
+    orderBuffer;
+
+    /** @type {number} */
+    _textureSize = 1;
+
+    /** @type {UploadStream} */
+    uploadStream;
 
     /** @type {GSplatWorkBufferRenderPass} */
     renderPass;
@@ -47,18 +55,25 @@ class GSplatWorkBuffer {
         this.device = device;
 
         this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA16F, 1, 1);
-        this.covATexture = this.createTexture('covA', PIXELFORMAT_RGBA16F, 1, 1);
-        this.covBTexture = this.createTexture('covB', PIXELFORMAT_RGBA16F, 1, 1);
-        this.centerTexture = this.createTexture('center', PIXELFORMAT_RGBA16F, 1, 1);
+        this.splatTexture0 = this.createTexture('splatTexture0', PIXELFORMAT_RGBA32U, 1, 1);
+        this.splatTexture1 = this.createTexture('splatTexture1', PIXELFORMAT_RG32U, 1, 1);
 
         this.renderTarget = new RenderTarget({
             name: `GsplatWorkBuffer-MRT-${this.id}`,
-            colorBuffers: [this.colorTexture, this.centerTexture, this.covATexture, this.covBTexture],
+            colorBuffers: [this.colorTexture, this.splatTexture0, this.splatTexture1],
             depth: false,
             flipY: true
         });
 
-        this.orderTexture = this.createTexture('SplatGlobalOrder', PIXELFORMAT_R32U, 1, 1);
+        // Create upload stream for non-blocking uploads
+        this.uploadStream = new UploadStream(device);
+
+        // Use storage buffer on WebGPU, texture on WebGL
+        if (device.isWebGPU) {
+            this.orderBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST);
+        } else {
+            this.orderTexture = this.createTexture('SplatGlobalOrder', PIXELFORMAT_R32U, 1, 1);
+        }
 
         // Create the optimized render pass for batched splat rendering
         this.renderPass = new GSplatWorkBufferRenderPass(device);
@@ -68,27 +83,26 @@ class GSplatWorkBuffer {
     destroy() {
         this.renderPass?.destroy();
         this.colorTexture?.destroy();
-        this.covATexture?.destroy();
-        this.covBTexture?.destroy();
-        this.centerTexture?.destroy();
+        this.splatTexture0?.destroy();
+        this.splatTexture1?.destroy();
         this.orderTexture?.destroy();
+        this.orderBuffer?.destroy();
         this.renderTarget?.destroy();
+        this.uploadStream.destroy();
     }
 
     get textureSize() {
-        return this.orderTexture.width;
+        return this._textureSize;
     }
 
     setOrderData(data) {
-
-        const len = this.orderTexture.width * this.orderTexture.height;
-        if (len !== data.length) {
-            Debug.error('setOrderData: data length mismatch, got:', data.length, 'expected:', len, `(${this.orderTexture.width}x${this.orderTexture.height})`);
+        if (this.device.isWebGPU) {
+            Debug.assert(data.length <= this._textureSize * this._textureSize);
+            this.uploadStream.upload(data, this.orderBuffer, 0, data.length);
+        } else {
+            Debug.assert(data.length === this._textureSize * this._textureSize);
+            this.uploadStream.upload(data, this.orderTexture, 0, data.length);
         }
-
-        // upload data to texture
-        this.orderTexture._levels[0] = data;
-        this.orderTexture.upload();
     }
 
     createTexture(name, format, w, h) {
@@ -112,7 +126,17 @@ class GSplatWorkBuffer {
     resize(textureSize) {
         Debug.assert(textureSize);
         this.renderTarget.resize(textureSize, textureSize);
-        this.orderTexture.resize(textureSize, textureSize);
+        this._textureSize = textureSize;
+
+        if (this.device.isWebGPU) {
+            const newByteSize = textureSize * textureSize * 4;
+            if (this.orderBuffer.byteSize < newByteSize) {
+                this.orderBuffer.destroy();
+                this.orderBuffer = new StorageBuffer(this.device, newByteSize, BUFFERUSAGE_COPY_DST);
+            }
+        } else {
+            this.orderTexture.resize(textureSize, textureSize);
+        }
     }
 
     /**

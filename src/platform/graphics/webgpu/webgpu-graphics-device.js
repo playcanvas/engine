@@ -32,6 +32,7 @@ import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
 import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
+import { WebgpuUploadStream } from './webgpu-upload-stream.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
@@ -514,6 +515,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     createRenderTargetImpl(renderTarget) {
         return new WebgpuRenderTarget(renderTarget);
+    }
+
+    createUploadStreamImpl(uploadStream) {
+        return new WebgpuUploadStream(uploadStream);
     }
 
     createBindGroupFormatImpl(bindGroupFormat) {

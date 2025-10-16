@@ -31,6 +31,7 @@ import { ShaderChunks } from '../shader-lib/shader-chunks.js';
  * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
  * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
  * @import { ShaderChunkMap } from '../shader-lib/shader-chunk-map.js';
+ * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
  */
 
 // blend mode mapping to op, srcBlend and dstBlend
@@ -773,7 +774,7 @@ class Material {
      * Sets a shader parameter on a material.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|Texture} data - The value for the specified parameter.
+     * @param {number|number[]|ArrayBufferView|Texture|StorageBuffer} data - The value for the specified parameter.
      */
     setParameter(name, data) {
 

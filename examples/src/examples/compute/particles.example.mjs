@@ -214,6 +214,9 @@ assetListLoader.load(() => {
         fragmentWGSL: files['shader-shared.wgsl'] + files['shader-rendering.fragment.wgsl']
     });
 
+    // rendering shader needs the particle storage buffer to read the particle data
+    material.setParameter('particles', particleStorageBuffer);
+
     // index buffer - two triangles (6 indices) per particle using 4 vertices
     const indices = new Uint32Array(numParticles * 6);
     for (let i = 0; i < numParticles; ++i) {
