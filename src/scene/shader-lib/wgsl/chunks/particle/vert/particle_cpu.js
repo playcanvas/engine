@@ -26,18 +26,20 @@ uniform numParticles: f32;
 uniform lifetime: f32;
 uniform stretch: f32;
 uniform seed: f32;
-uniform wrapBounds: vec3f;
 uniform emitterScale: vec3f;
 uniform faceTangent: vec3f;
 uniform faceBinorm: vec3f;
 
 #ifdef PARTICLE_GPU
-    var internalTex0: texture_2d<f32>;
-    var internalTex0Sampler: sampler;
-    var internalTex1: texture_2d<f32>;
-    var internalTex1Sampler: sampler;
-    var internalTex2: texture_2d<f32>;
-    var internalTex2Sampler: sampler;
+    #ifdef WRAP
+        uniform wrapBounds: vec3f;
+    #endif
+#endif
+
+#ifdef PARTICLE_GPU
+    var internalTex0: texture_2d<uff>;
+    var internalTex1: texture_2d<uff>;
+    var internalTex2: texture_2d<uff>;
 #endif
 uniform emitterPos: vec3f;
 
@@ -51,7 +53,7 @@ struct RotateResult {
 fn rotateWithMatrix(quadXY: vec2f, pRotation: f32) -> RotateResult {
     let c = cos(pRotation);
     let s = sin(pRotation);
-    let m = mat2x2f(vec2f(c, s), vec2f(-s, c));
+    let m = mat2x2f(vec2f(c, -s), vec2f(s, c));
     return RotateResult(m * quadXY, m);
 }
 

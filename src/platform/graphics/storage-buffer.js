@@ -27,13 +27,16 @@ class StorageBuffer {
      * of {@link BUFFERUSAGE_READ}, {@link BUFFERUSAGE_WRITE}, {@link BUFFERUSAGE_COPY_SRC} and
      * {@link BUFFERUSAGE_COPY_DST} flags. This parameter can be omitted if no special usage is
      * required.
+     * @param {boolean} [addStorageUsage] - If true, automatically adds BUFFERUSAGE_STORAGE flag.
+     * Set to false for staging buffers that use BUFFERUSAGE_WRITE. Defaults to true.
      */
-    constructor(graphicsDevice, byteSize, bufferUsage = 0) {
+    constructor(graphicsDevice, byteSize, bufferUsage = 0, addStorageUsage = true) {
         this.device = graphicsDevice;
         this.byteSize = byteSize;
         this.bufferUsage = bufferUsage;
 
-        this.impl = graphicsDevice.createBufferImpl(BUFFERUSAGE_STORAGE | bufferUsage);
+        const usage = addStorageUsage ? (BUFFERUSAGE_STORAGE | bufferUsage) : bufferUsage;
+        this.impl = graphicsDevice.createBufferImpl(usage);
         this.impl.allocate(graphicsDevice, byteSize);
         this.device.buffers.push(this);
 
@@ -105,6 +108,23 @@ class StorageBuffer {
      */
     clear(offset = 0, size = this.byteSize) {
         this.impl.clear(this.device, offset, size);
+    }
+
+    /**
+     * Copy data from another storage buffer into this storage buffer.
+     *
+     * @param {StorageBuffer} srcBuffer - The source storage buffer to copy from.
+     * @param {number} [srcOffset] - The byte offset in the source buffer. Defaults to 0.
+     * @param {number} [dstOffset] - The byte offset in this buffer. Defaults to 0.
+     * @param {number} [size] - The byte size of data to copy. Defaults to the full size of the
+     * source buffer minus the source offset.
+     */
+    copy(srcBuffer, srcOffset = 0, dstOffset = 0, size = srcBuffer.byteSize - srcOffset) {
+        Debug.assert(srcOffset + size <= srcBuffer.byteSize, 'Source copy range exceeds buffer size');
+        Debug.assert(dstOffset + size <= this.byteSize, 'Destination copy range exceeds buffer size');
+
+        const commandEncoder = this.device.getCommandEncoder();
+        commandEncoder.copyBufferToBuffer(srcBuffer.impl.buffer, srcOffset, this.impl.buffer, dstOffset, size);
     }
 }
 

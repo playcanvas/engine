@@ -1,4 +1,5 @@
 import { InputSource } from '../input.js';
+import { movementState } from '../utils.js';
 
 const PASSIVE = /** @type {AddEventListenerOptions & EventListenerOptions} */ ({ passive: false });
 const KEY_CODES = /** @type {const} */ ({
@@ -65,6 +66,12 @@ const array = Array(KEY_COUNT).fill(0);
  */
 class KeyboardMouseSource extends InputSource {
     /**
+     * @type {ReturnType<typeof movementState>}
+     * @private
+     */
+    _movementState = movementState();
+
+    /**
      * The key codes for the keyboard keys.
      *
      * @readonly
@@ -75,7 +82,7 @@ class KeyboardMouseSource extends InputSource {
      * @type {number}
      * @private
      */
-    _pointerId = 0;
+    _pointerId = -1;
 
     /**
      * @type {boolean}
@@ -170,6 +177,8 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _onPointerDown(event) {
+        this._movementState.down(event);
+
         if (event.pointerType !== 'mouse') {
             return;
         }
@@ -185,7 +194,7 @@ class KeyboardMouseSource extends InputSource {
         this._button[event.button] = 1;
         this.deltas.button.append(this._button);
 
-        if (this._pointerId) {
+        if (this._pointerId !== -1) {
             return;
         }
         this._pointerId = event.pointerId;
@@ -196,6 +205,8 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _onPointerMove(event) {
+        const [movementX, movementY] = this._movementState.move(event);
+
         if (event.pointerType !== 'mouse') {
             return;
         }
@@ -211,7 +222,8 @@ class KeyboardMouseSource extends InputSource {
                 return;
             }
         }
-        this.deltas.mouse.append([event.movementX, event.movementY]);
+
+        this.deltas.mouse.append([movementX, movementY]);
     }
 
     /**
@@ -219,6 +231,8 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _onPointerUp(event) {
+        this._movementState.up(event);
+
         if (event.pointerType !== 'mouse') {
             return;
         }
@@ -232,7 +246,7 @@ class KeyboardMouseSource extends InputSource {
         if (this._pointerId !== event.pointerId) {
             return;
         }
-        this._pointerId = 0;
+        this._pointerId = -1;
     }
 
     /**
@@ -301,6 +315,7 @@ class KeyboardMouseSource extends InputSource {
         this._element.addEventListener('pointermove', this._onPointerMove);
         this._element.addEventListener('pointerup', this._onPointerUp);
         this._element.addEventListener('pointercancel', this._onPointerUp);
+        this._element.addEventListener('pointerleave', this._onPointerUp);
         this._element.addEventListener('contextmenu', this._onContextMenu);
 
         window.addEventListener('keydown', this._onKeyDown, false);
@@ -316,6 +331,7 @@ class KeyboardMouseSource extends InputSource {
         this._element.removeEventListener('pointermove', this._onPointerMove);
         this._element.removeEventListener('pointerup', this._onPointerUp);
         this._element.removeEventListener('pointercancel', this._onPointerUp);
+        this._element.removeEventListener('pointerleave', this._onPointerUp);
         this._element.removeEventListener('contextmenu', this._onContextMenu);
 
         window.removeEventListener('keydown', this._onKeyDown, false);

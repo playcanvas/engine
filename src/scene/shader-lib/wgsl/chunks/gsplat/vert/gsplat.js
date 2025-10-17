@@ -25,6 +25,10 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
+    #ifdef GSPLAT_WORKBUFFER_DATA
+        loadSplatTextures(&source);
+    #endif
+
     let modelCenter: vec3f = readCenter(&source);
 
     var center: SplatCenter;
@@ -52,7 +56,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #if SH_BANDS > 0
         // calculate the model-space view direction
         let modelView3x3 = mat3x3f(center.modelView[0].xyz, center.modelView[1].xyz, center.modelView[2].xyz);
-        let dir = normalize(modelView3x3 * center.view);
+        let dir = normalize(center.view * modelView3x3);
 
         // read sh coefficients
         var sh: array<vec3f, SH_COEFFS>;

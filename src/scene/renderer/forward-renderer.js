@@ -7,7 +7,8 @@ import {
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
-    LAYERID_DEPTH
+    LAYERID_DEPTH,
+    PROJECTION_ORTHOGRAPHIC
 } from '../constants.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { Renderer } from './renderer.js';
@@ -75,9 +76,10 @@ class ForwardRenderer extends Renderer {
      * Create a new ForwardRenderer instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {Scene} scene - The scene.
      */
-    constructor(graphicsDevice) {
-        super(graphicsDevice);
+    constructor(graphicsDevice, scene) {
+        super(graphicsDevice, scene);
 
         const device = this.device;
 
@@ -259,6 +261,13 @@ class ForwardRenderer extends Renderer {
             }
 
             if (directional.castShadows) {
+
+                // ortho projection does not support cascades
+                Debug.call(() => {
+                    if (camera.projection === PROJECTION_ORTHOGRAPHIC && directional.numCascades !== 1) {
+                        Debug.errorOnce(`Camera [${camera.node.name}] with orthographic projection cannot use cascaded shadows, expect incorrect rendering.`);
+                    }
+                });
 
                 const lightRenderData = directional.getRenderData(camera, 0);
                 const biases = directional._getUniformBiasValues(lightRenderData);
@@ -578,6 +587,7 @@ class ForwardRenderer extends Renderer {
         const preparedCallsCount = preparedCalls.drawCalls.length;
         for (let i = 0; i < preparedCallsCount; i++) {
 
+            /** @type {MeshInstance} */
             const drawCall = preparedCalls.drawCalls[i];
 
             // We have a mesh instance
@@ -646,7 +656,7 @@ class ForwardRenderer extends Renderer {
 
             drawCallback?.(drawCall, i);
 
-            const indirectSlot = drawCall.indirectData?.get(camera);
+            const indirectData = drawCall.getDrawCommands(camera);
 
             if (viewList) {
                 for (let v = 0; v < viewList.length; v++) {
@@ -666,7 +676,7 @@ class ForwardRenderer extends Renderer {
 
                     const first = v === 0;
                     const last = v === viewList.length - 1;
-                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectSlot, first, last);
+                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, first, last);
 
                     this._forwardDrawCalls++;
                     if (drawCall.instancingData) {
@@ -674,7 +684,7 @@ class ForwardRenderer extends Renderer {
                     }
                 }
             } else {
-                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectSlot);
+                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData);
 
                 this._forwardDrawCalls++;
                 if (drawCall.instancingData) {
@@ -1006,7 +1016,7 @@ class ForwardRenderer extends Renderer {
         this.setSceneConstants();
 
         // update gsplat director
-        this.gsplatDirector.update(comp);
+        this.gsplatDirector?.update(comp);
 
         // visibility culling of lights, meshInstances, shadows casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible

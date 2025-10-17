@@ -1,20 +1,18 @@
-<div align="center">
+# PlayCanvas Engine
 
-<img width="200" src="https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/platform/images/logo/playcanvas-logo-medium.png"/>
+[![NPM Version](https://img.shields.io/npm/v/playcanvas)](https://www.npmjs.com/package/playcanvas)
+[![NPM Downloads](https://img.shields.io/npm/dw/playcanvas)](https://npmtrends.com/playcanvas)
+[![Minzipped size](https://img.shields.io/bundlephobia/minzip/playcanvas)](https://bundlephobia.com/result?p=playcanvas)
+[![License](https://img.shields.io/npm/l/playcanvas)](https://github.com/playcanvas/engine/blob/main/LICENSE)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=flat&logo=discord&logoColor=white&color=black)](https://discord.gg/RSaMRzg)
+[![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
+[![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-# PlayCanvas WebGL Game Engine
-
-[API Reference](https://api.playcanvas.com/modules/Engine.html) | [User Manual](https://developer.playcanvas.com) | [Examples](https://playcanvas.github.io) | [Forum](https://forum.playcanvas.com) | [Blog](https://blog.playcanvas.com)
+| [사용자 매뉴얼](https://developer.playcanvas.com/user-manual/engine/) | [API 레퍼런스](https://api.playcanvas.com/engine/) | [예제](https://playcanvas.github.io) | [블로그](https://blog.playcanvas.com) | [포럼](https://forum.playcanvas.com) |
 
 PlayCanvas는 오픈소스 게임 엔진입니다.
 
 HTML5와 WebGL을 사용하여 게임과 인터랙티브한 3D 콘텐츠를 모바일이나 데스크톱 브라우저에서 실행할 수 있습니다.
-
-[![NPM version][npm-badge]][npm-url]
-[![Minzipped size][minzip-badge]][minzip-url]
-[![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
-[![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
-[![Twitter][twitter-badge]][twitter-url]
 
 [English](https://github.com/playcanvas/engine/blob/master/README.md)
 [中文](https://github.com/playcanvas/engine/blob/master/README-zh.md)
@@ -27,12 +25,10 @@ PlayCanvas 엔진을 사용하여 [많은 게임과 앱](https://github.com/play
 )이 공개되어 있습니다. 다음은 그 일부를 소개하겠습니다.
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
-[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![dev Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
+[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![dev Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Gaussian Splat Statues](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/1224723/266D9C-image-25.jpg)](https://playcanv.as/p/cLkf99ZV/)  
 [![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Global Illumination](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/)
   
 다른 게임은 [Play Canvas 웹사이트](https://playcanvas.com/explore)에서 볼 수 있습니다.
-
-</div>
 
 ## Users
 
@@ -44,7 +40,7 @@ PlayCanvas는 비디오 게임, 광고, 시각화 분야에서 대기업에 채�
 
 PlayCanvas는 완전한 기능의 게임 엔진입니다.
 
-* 🧊 **그래픽** - WebGL 1.0&2.0으로 구축된 고도의 2D+3D 그래픽 엔진.
+* 🧊 **그래픽** - WebGL 1.0&2.0으로 구축된 고도의 2D+3D 그래픽 엔진
 * 🏃 **애니메이션** - 캐릭터나 장면에 대한 강력한 스테이트 기반 애니메이션
 * ⚛️ **물리** - 3D 리지드 바디 물리 엔진 [ammo.js](https://github.com/kripken/ammo.js)
 * 🎮 **입력** - 마우스, 키보드, 터치, 게임패드, VR 컨트롤러의 API
@@ -115,7 +111,7 @@ npm install
 | 명령어           | 설명                                      | 출력 위치  |
 | --------------- | ----------------------------------------- | ---------- |
 | `npm run build` | 모든 엔진 빌드 대상과 타입 선언을 빌드합니다 | `build`    |
-| `npm run docs`  | 엔진 [API 참조 문서][docs]를 빌드합니다     | `docs`     |
+| `npm run docs`  | 엔진 [API 참조 문서](https://api.playcanvas.com/engine/)를 빌드합니다     | `docs`     |
 
 ## PlayCanvas 에디터
 
@@ -124,14 +120,3 @@ PlayCanvas 엔진은 HTML5 앱 및 게임을 만들기 위한 오픈 소스 엔�
 [![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
 에디터 관련 버그나 문제는 [Editor's repo](https://github.com/playcanvas/editor)를 참조하십시오.
-
-[npm-badge]: https://img.shields.io/npm/v/playcanvas
-[npm-url]: https://www.npmjs.com/package/playcanvas
-[minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
-[minzip-url]: https://bundlephobia.com/result?p=playcanvas
-[resolution-badge]: https://isitmaintained.com/badge/resolution/playcanvas/engine.svg
-[open-issues-badge]: https://isitmaintained.com/badge/open/playcanvas/engine.svg
-[isitmaintained-url]: https://isitmaintained.com/project/playcanvas/engine
-[twitter-badge]: https://img.shields.io/twitter/follow/playcanvas.svg?style=social&label=Follow
-[twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
-[docs]: https://api.playcanvas.com/modules/Engine.html

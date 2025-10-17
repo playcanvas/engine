@@ -524,8 +524,7 @@ class AppBase extends EventHandler {
         // Placeholder texture for area light LUTs
         AreaLightLuts.createPlaceholder(graphicsDevice);
 
-        this.renderer = new ForwardRenderer(graphicsDevice);
-        this.renderer.scene = this.scene;
+        this.renderer = new ForwardRenderer(graphicsDevice, this.scene);
 
         if (lightmapper) {
             this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);
@@ -1107,6 +1106,8 @@ class AppBase extends EventHandler {
         // total draw call
         this.stats.drawCalls.total = this.graphicsDevice._drawCallsPerFrame;
         this.graphicsDevice._drawCallsPerFrame = 0;
+
+        stats.gsplats = this.renderer._gsplatCount;
     }
 
     /** @private */
@@ -1748,9 +1749,9 @@ class AppBase extends EventHandler {
      * Draws a texture at [x, y] position on screen, with size [width, height]. The origin of the
      * screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
      *
-     * @param {number} x - The x coordinate on the screen of the top left corner of the texture.
+     * @param {number} x - The x coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
-     * @param {number} y - The y coordinate on the screen of the top left corner of the texture.
+     * @param {number} y - The y coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
      * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
      * range [0, 2].
@@ -1791,9 +1792,9 @@ class AppBase extends EventHandler {
      * Draws a depth texture at [x, y] position on screen, with size [width, height]. The origin of
      * the screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
      *
-     * @param {number} x - The x coordinate on the screen of the top left corner of the texture.
+     * @param {number} x - The x coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
-     * @param {number} y - The y coordinate on the screen of the top left corner of the texture.
+     * @param {number} y - The y coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
      * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
      * range [0, 2].

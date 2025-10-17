@@ -623,10 +623,7 @@ class Asset extends EventHandler {
 
         // destroy resources
         for (let i = 0; i < old.length; ++i) {
-            const resource = old[i];
-            if (resource && resource.destroy) {
-                resource.destroy();
-            }
+            old[i]?.destroy?.();
         }
     }
 
@@ -653,7 +650,8 @@ class Asset extends EventHandler {
                 cache: true,
                 responseType: 'arraybuffer',
                 retry: maxRetries > 0,
-                maxRetries: maxRetries
+                maxRetries: maxRetries,
+                progress: asset
             }, callback);
         }
     }

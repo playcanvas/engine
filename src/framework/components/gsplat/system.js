@@ -1,9 +1,11 @@
 import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
+import { GSplatDirector } from '../../../scene/gsplat-unified/gsplat-director.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
 import { GSplatComponentData } from './data.js';
+import { GSplatAssetLoader } from './gsplat-asset-loader.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -45,6 +47,10 @@ class GSplatComponentSystem extends ComponentSystem {
 
         this.schema = _schema;
 
+        // loader for splat LOD assets, as asset system is not available on the scene level
+        const gsplatAssetLoader = new GSplatAssetLoader(app.assets);
+        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, gsplatAssetLoader);
+
         this.on('beforeremove', this.onRemove, this);
     }
 
@@ -75,7 +81,10 @@ class GSplatComponentSystem extends ComponentSystem {
         const data = {};
         _properties.forEach((prop) => {
             if (prop === 'material') {
-                data[prop] = gSplatComponent[prop].clone();
+                const srcMaterial = gSplatComponent[prop];
+                if (srcMaterial) {
+                    data[prop] = srcMaterial.clone();
+                }
             } else {
                 data[prop] = gSplatComponent[prop];
             }

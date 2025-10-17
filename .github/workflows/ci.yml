@@ -21,10 +21,10 @@ jobs:
     timeout-minutes: 10
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup Node.js 22.x
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: 22.x
         cache: 'npm'
@@ -44,10 +44,10 @@ jobs:
     timeout-minutes: 10
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
-    - name: Setup Node.js 18.x
-      uses: actions/setup-node@v4
+    - name: Setup Node.js 22.x
+      uses: actions/setup-node@v6
       with:
         node-version: 22.x
         cache: 'npm'
@@ -64,10 +64,10 @@ jobs:
     timeout-minutes: 10
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
-    - name: Setup Node.js 18.x
-      uses: actions/setup-node@v4
+    - name: Setup Node.js 22.x
+      uses: actions/setup-node@v6
       with:
         node-version: 22.x
         cache: 'npm'
@@ -90,10 +90,10 @@ jobs:
     timeout-minutes: 10
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
-    - name: Setup Node.js 18.x
-      uses: actions/setup-node@v4
+    - name: Setup Node.js 22.x
+      uses: actions/setup-node@v6
       with:
         node-version: 22.x
         cache: 'npm'
@@ -113,10 +113,10 @@ jobs:
     timeout-minutes: 10
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
-    - name: Setup Node.js 18.x
-      uses: actions/setup-node@v4
+    - name: Setup Node.js 22.x
+      uses: actions/setup-node@v6
       with:
         node-version: 22.x
         cache: 'npm'
@@ -133,10 +133,10 @@ jobs:
     timeout-minutes: 10
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
-    - name: Setup Node.js 18.x
-      uses: actions/setup-node@v4
+    - name: Setup Node.js 22.x
+      uses: actions/setup-node@v6
       with:
         node-version: 22.x
         cache: 'npm'

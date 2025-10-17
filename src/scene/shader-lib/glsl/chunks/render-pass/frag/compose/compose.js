@@ -15,7 +15,12 @@ export default /* glsl */`
     #include "composeCasPS"
     #include "composeColorLutPS"
 
+    #include "composeDeclarationsPS"
+
     void main() {
+
+        #include "composeMainStartPS"
+
         vec2 uv = uv0;
 
         // TAA pass renders upside-down on WebGPU, flip it here
@@ -70,6 +75,8 @@ export default /* glsl */`
         #ifdef VIGNETTE
             result = applyVignette(result, uv);
         #endif
+
+        #include "composeMainEndPS"
 
         // Debug output handling in one centralized location
         #ifdef DEBUG_COMPOSE

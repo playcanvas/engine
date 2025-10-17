@@ -1,6 +1,6 @@
 export default /* wgsl */`
 var transformA: texture_2d<u32>;
-var transformB: texture_2d<f32>;
+var transformB: texture_2d<uff>;
 
 // work values
 var<private> tAw: u32;

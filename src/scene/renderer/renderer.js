@@ -36,7 +36,6 @@ import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
-import { GSplatDirector } from '../gsplat/unified/gsplat-director.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -47,6 +46,7 @@ import { GSplatDirector } from '../gsplat/unified/gsplat-director.js';
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Scene } from '../scene.js'
+ * @import { GSplatDirector } from '../gsplat-unified/gsplat-director.js'
  */
 
 let _skinUpdateIndex = 0;
@@ -108,6 +108,9 @@ class Renderer {
     /** @type {boolean} */
     clustersDebugRendered = false;
 
+    /** @type {Scene} */
+    scene;
+
     /**
      * A set of visible mesh instances which need further processing before being rendered, e.g.
      * skinning or morphing. Extracted during culling.
@@ -159,22 +162,19 @@ class Renderer {
     /**
      * A gsplat director for unified splat rendering.
      *
-     * @type {GSplatDirector}
+     * @type {GSplatDirector|null}
      */
-    gsplatDirector;
+    gsplatDirector = null;
 
     /**
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {Scene} scene - The scene.
      */
-    constructor(graphicsDevice) {
+    constructor(graphicsDevice, scene) {
         this.device = graphicsDevice;
-
-        /** @type {Scene|null} */
-        this.scene = null;
-
-        this.gsplatDirector = new GSplatDirector(graphicsDevice);
+        this.scene = scene;
 
         // TODO: allocate only when the scene has clustered lighting enabled
         this.worldClustersAllocator = new WorldClustersAllocator(graphicsDevice);
@@ -189,8 +189,10 @@ class Renderer {
         this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
 
         // clustered passes
-        this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
-            this._shadowRendererLocal, this.lightTextureAtlas);
+        if (this.scene.clusteredLightingEnabled) {
+            this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
+                this._shadowRendererLocal, this.lightTextureAtlas);
+        }
 
         // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
@@ -212,6 +214,7 @@ class Renderer {
         this._numDrawCallsCulled = 0;
         this._camerasRendered = 0;
         this._lightClusters = 0;
+        this._gsplatCount = 0;
 
         // Uniforms
         const scope = graphicsDevice.scope;
@@ -266,11 +269,14 @@ class Renderer {
         this.shadowMapCache.destroy();
         this.shadowMapCache = null;
 
-        this._renderPassUpdateClustered.destroy();
+        this._renderPassUpdateClustered?.destroy();
         this._renderPassUpdateClustered = null;
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
+
+        this.gsplatDirector?.destroy();
+        this.gsplatDirector = null;
     }
 
     /**

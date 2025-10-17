@@ -463,6 +463,14 @@ export const INDEXFORMAT_UINT16 = 1;
  */
 export const INDEXFORMAT_UINT32 = 2;
 
+/**
+ * Byte size of index formats.
+ *
+ * @category Graphics
+ * @ignore
+ */
+export const indexFormatByteSize = [1, 2, 4];
+
 export const PIXELFORMAT_A8 = 0;
 export const PIXELFORMAT_L8 = 1;
 export const PIXELFORMAT_LA8 = 2;

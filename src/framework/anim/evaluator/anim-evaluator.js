@@ -263,7 +263,7 @@ class AnimEvaluator {
             if (targets.hasOwnProperty(path)) {
                 const target = targets[path];
                 // if this evaluator is associated with an anim component then we should blend the result of this evaluator with all other anim layer's evaluators
-                if (binder.animComponent && target.target.isTransform) {
+                if (binder.animComponent && target.target.usesLayerBlending) {
                     const animTarget = binder.animComponent.targets[path];
                     if (animTarget.counter === animTarget.layerCounter) {
                         animTarget.counter = 0;

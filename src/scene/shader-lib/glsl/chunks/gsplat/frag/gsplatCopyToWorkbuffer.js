@@ -19,6 +19,8 @@ uniform int uViewportWidth;  // Width of the destination viewport in pixels
     uniform usampler2D uIntervalsTexture;
 #endif
 
+uniform vec3 uColorMultiply;
+
 // number of splats
 uniform int uActiveSplats;
 
@@ -32,9 +34,8 @@ void main(void) {
 
         // Out of bounds: write zeros
         pcFragColor0 = vec4(0.0);
-        pcFragColor1 = vec4(0.0);
-        pcFragColor2 = vec4(0.0);
-        pcFragColor3 = vec4(0.0);
+        pcFragColor1 = uvec4(0u);
+        pcFragColor2 = uvec2(0u);
 
     } else {
 
@@ -96,11 +97,12 @@ void main(void) {
             color.xyz += evalSH(sh, dir) * scale;
         #endif
 
+        color.xyz *= uColorMultiply;
+
         // write out results
         pcFragColor0 = color;
-        pcFragColor1 = vec4(modelCenter, 1.0);
-        pcFragColor2 = vec4(covA, 1.0);
-        pcFragColor3 = vec4(covB, 1.0);
+        pcFragColor1 = uvec4(floatBitsToUint(modelCenter.x), floatBitsToUint(modelCenter.y), floatBitsToUint(modelCenter.z), packHalf2x16(vec2(covA.z, covB.z)));
+        pcFragColor2 = uvec2(packHalf2x16(covA.xy), packHalf2x16(covB.xy));
     }
 }
 `;

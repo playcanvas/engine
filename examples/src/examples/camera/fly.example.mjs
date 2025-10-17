@@ -106,11 +106,14 @@ camera.addComponent('script');
 camera.setPosition(start);
 app.root.addChild(camera);
 const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+const sceneSize = bbox.halfExtents.length();
 Object.assign(cc, {
-    sceneSize: bbox.halfExtents.length(),
     focusPoint: bbox.center,
     enableOrbit: false,
-    enablePan: false
+    enablePan: false,
+    moveSpeed: 2 * sceneSize,
+    moveFastSpeed: 4 * sceneSize,
+    moveSlowSpeed: sceneSize
 });
 
 /**

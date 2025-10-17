@@ -33,8 +33,10 @@ import { DebugGraphics } from '../debug-graphics.js';
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
+import { WebglDrawCommands } from './webgl-draw-commands.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
+import { WebglUploadStream } from './webgl-upload-stream.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
@@ -672,12 +674,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return new WebglShader(shader);
     }
 
+    createDrawCommandImpl(drawCommands) {
+        return new WebglDrawCommands(drawCommands.indexSizeBytes);
+    }
+
     createTextureImpl(texture) {
         return new WebglTexture(texture);
     }
 
     createRenderTargetImpl(renderTarget) {
         return new WebglRenderTarget();
+    }
+
+    createUploadStreamImpl(uploadStream) {
+        return new WebglUploadStream(uploadStream);
     }
 
     // #if _DEBUG
@@ -787,6 +797,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extFloatBlend = this.getExtension('EXT_float_blend');
         this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
+
+        this.extMultiDraw = this.getExtension('WEBGL_multi_draw');
+        this.supportsMultiDraw = !!this.extMultiDraw;
 
         // compressed textures
         this.extCompressedTextureETC1 = this.getExtension('WEBGL_compressed_texture_etc1');
@@ -1675,7 +1688,39 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
     }
 
-    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
+    _multiDrawLoopFallback(mode, primitive, indexBuffer, numInstances, drawCommands) {
+
+        const gl = this.gl;
+
+        if (primitive.indexed) {
+            const format = indexBuffer.impl.glFormat;
+            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
+
+            if (numInstances > 0) {
+                for (let i = 0; i < count; i++) {
+                    gl.drawElementsInstanced(mode, glCounts[i], format, glOffsetsBytes[i], glInstanceCounts[i]);
+                }
+            } else {
+                for (let i = 0; i < count; i++) {
+                    gl.drawElements(mode, glCounts[i], format, glOffsetsBytes[i]);
+                }
+            }
+        } else {
+            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
+
+            if (numInstances > 0) {
+                for (let i = 0; i < count; i++) {
+                    gl.drawArraysInstanced(mode, glOffsetsBytes[i], glCounts[i], glInstanceCounts[i]);
+                }
+            } else {
+                for (let i = 0; i < count; i++) {
+                    gl.drawArrays(mode, glOffsetsBytes[i], glCounts[i]);
+                }
+            }
+        }
+    }
+
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
 
         const shader = this.shader;
         if (shader) {
@@ -1786,24 +1831,50 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 const mode = this.glPrimitive[primitive.type];
                 const count = primitive.count;
 
-                if (primitive.indexed) {
-                    Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
+                if (drawCommands) { // multi-draw path
 
-                    const format = indexBuffer.impl.glFormat;
-                    const offset = primitive.base * indexBuffer.bytesPerIndex;
+                    // multi-draw extension is supported
+                    if (this.extMultiDraw) {
+                        const impl = drawCommands.impl;
+                        if (primitive.indexed) {
+                            const format = indexBuffer.impl.glFormat;
 
-                    if (numInstances > 0) {
-                        gl.drawElementsInstanced(mode, count, format, offset, numInstances);
+                            if (numInstances > 0) {
+                                this.extMultiDraw.multiDrawElementsInstancedWEBGL(mode, impl.glCounts, 0, format, impl.glOffsetsBytes, 0, impl.glInstanceCounts, 0, drawCommands.count);
+                            } else {
+                                this.extMultiDraw.multiDrawElementsWEBGL(mode, impl.glCounts, 0, format, impl.glOffsetsBytes, 0, drawCommands.count);
+                            }
+                        } else {
+                            if (numInstances > 0) {
+                                this.extMultiDraw.multiDrawArraysInstancedWEBGL(mode, impl.glOffsetsBytes, 0, impl.glCounts, 0, impl.glInstanceCounts, 0, drawCommands.count);
+                            } else {
+                                this.extMultiDraw.multiDrawArraysWEBGL(mode, impl.glOffsetsBytes, 0, impl.glCounts, 0, drawCommands.count);
+                            }
+                        }
                     } else {
-                        gl.drawElements(mode, count, format, offset);
+                        // multi-draw extension is not supported, use fallback loop
+                        this._multiDrawLoopFallback(mode, primitive, indexBuffer, numInstances, drawCommands);
                     }
                 } else {
-                    const first = primitive.base;
+                    if (primitive.indexed) {
+                        Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
 
-                    if (numInstances > 0) {
-                        gl.drawArraysInstanced(mode, first, count, numInstances);
+                        const format = indexBuffer.impl.glFormat;
+                        const offset = primitive.base * indexBuffer.bytesPerIndex;
+
+                        if (numInstances > 0) {
+                            gl.drawElementsInstanced(mode, count, format, offset, numInstances);
+                        } else {
+                            gl.drawElements(mode, count, format, offset);
+                        }
                     } else {
-                        gl.drawArrays(mode, first, count);
+                        const first = primitive.base;
+
+                        if (numInstances > 0) {
+                            gl.drawArraysInstanced(mode, first, count, numInstances);
+                        } else {
+                            gl.drawArrays(mode, first, count);
+                        }
                     }
                 }
 
@@ -2020,6 +2091,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         return new Promise((resolve, reject) => {
             this.readPixelsAsync(x, y, width, height, data).then((data) => {
+
+                // return if the device was destroyed
+                if (this._destroyed) return;
 
                 // destroy RT if we created it
                 if (!options.renderTarget) {

@@ -19,6 +19,8 @@ uniform uViewportWidth: i32;  // Width of the destination viewport in pixels
     var uIntervalsTexture: texture_2d<u32>;
 #endif
 
+uniform uColorMultiply: vec3f;
+
 // number of splats
 uniform uActiveSplats: i32;
 
@@ -36,9 +38,8 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         // Out of bounds: write zeros
         output.color = vec4f(0.0);
-        output.color1 = vec4f(0.0);
-        output.color2 = vec4f(0.0);
-        output.color3 = vec4f(0.0);
+        output.color1 = vec4u(0u);
+        output.color2 = vec2u(0u);
 
     } else {
 
@@ -102,11 +103,12 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             color = vec4f(color.xyz + evalSH(&sh, dir) * scale, color.w);
         #endif
 
+        color = vec4f(color.xyz * uniform.uColorMultiply, color.w);
+
         // write out results
         output.color = color;
-        output.color1 = vec4f(modelCenter, 1.0);
-        output.color2 = vec4f(covA, 1.0);
-        output.color3 = vec4f(covB, 1.0);
+        output.color1 = vec4u(bitcast<u32>(modelCenter.x), bitcast<u32>(modelCenter.y), bitcast<u32>(modelCenter.z), pack2x16float(vec2f(covA.z, covB.z)));
+        output.color2 = vec2u(pack2x16float(covA.xy), pack2x16float(covB.xy));
     }
     
     return output;

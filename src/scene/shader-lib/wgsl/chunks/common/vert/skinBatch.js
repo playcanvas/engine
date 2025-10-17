@@ -1,7 +1,7 @@
 export default /* wgsl */`
 attribute vertex_boneIndices: f32;
 
-var texture_poseMap: texture_2d<f32>;
+var texture_poseMap: texture_2d<uff>;
 
 fn getBoneMatrix(indexFloat: f32) -> mat4x4f {
 

@@ -52,10 +52,11 @@ class ShaderDefinitionUtils {
      * @param {object} [options.attributes] - Attributes. Will be extracted from the vertexCode if
      * not provided.
      * @param {string} options.vertexCode - The vertex shader code.
-     * @param {string} [options.vertexExtensions] - The vertex shader extensions code.
      * @param {string} [options.fragmentCode] - The fragment shader code.
-     * @param {string} [options.fragmentExtensions] - The fragment shader extensions code.
      * @param {string} [options.fragmentPreamble] - The preamble string for the fragment shader.
+     * @param {string[]} [options.feedbackVaryings] - A list of shader output variable
+     * names that will be captured when using transform feedback. This setting is only effective
+     * if the useTransformFeedback property is enabled.
      * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults
      * to false.
      * @param {Map<string, string>} [options.vertexIncludes] - A map containing key-value pairs of
@@ -192,6 +193,7 @@ class ShaderDefinitionUtils {
             vincludes: options.vertexIncludes,
             fincludes: options.fragmentIncludes,
             fshader: fragCode,
+            feedbackVaryings: options.feedbackVaryings,
             useTransformFeedback: options.useTransformFeedback,
             meshUniformBufferFormat: options.meshUniformBufferFormat,
             meshBindGroupFormat: options.meshBindGroupFormat

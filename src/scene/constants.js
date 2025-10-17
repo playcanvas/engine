@@ -358,8 +358,8 @@ export const SHADOW_PCF1 = 5;  // alias for SHADOW_PCF1_32F for backwards compat
 /**
  * A shadow sampling technique using a 32-bit shadow map that adjusts filter size based on blocker
  * distance, producing realistic, soft shadow edges that vary with the light's occlusion. Note that
- * this technique requires either {@link GraphicsDevice#textureFloatRenderable} or
- * {@link GraphicsDevice#textureHalfFloatRenderable} to be true, and falls back to
+ * this technique requires both {@link GraphicsDevice#textureFloatRenderable} and
+ * {@link GraphicsDevice#textureFloatFilterable} to be true, and falls back to
  * {@link SHADOW_PCF3_32F} otherwise.
  *
  * @category Graphics

@@ -64,7 +64,14 @@ void main(void) {
     // evaluate spherical harmonics
     #if SH_BANDS > 0
         vec3 dir = normalize(center.view * mat3(center.modelView));
-        clr.xyz += evalSH(state, dir);
+
+        // read sh coefficients
+        vec3 sh[SH_COEFFS];
+        float scale;
+        readSHData(source, sh, scale);
+
+        // evaluate
+        clr.xyz += evalSH(sh, dir);
     #endif
 
     clr = animateColor(centerPos.y, clr);

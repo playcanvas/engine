@@ -1,4 +1,5 @@
 import { Asset } from '../../framework/asset/asset.js';
+import { Debug } from '../../core/debug.js';
 import { http, Http } from '../../platform/net/http.js';
 import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
@@ -39,6 +40,42 @@ const combineProgress = (target, assets) => {
     });
 };
 
+// given a v1 meta.json, upgrade it to the v2 shape
+const upgradeMeta = (meta) => {
+    const result = {
+        version: 1,
+        count: meta.means.shape[0],
+        means: {
+            mins: meta.means.mins,
+            maxs: meta.means.maxs,
+            files: meta.means.files
+        },
+        scales: {
+            mins: meta.scales.mins,
+            maxs: meta.scales.maxs,
+            files: meta.scales.files
+        },
+        quats: {
+            files: meta.quats.files
+        },
+        sh0: {
+            mins: meta.sh0.mins,
+            maxs: meta.sh0.maxs,
+            files: meta.sh0.files
+        }
+    };
+
+    if (meta.shN) {
+        result.shN = {
+            mins: meta.shN.mins,
+            maxs: meta.shN.maxs,
+            files: meta.shN.files
+        };
+    }
+
+    return result;
+};
+
 /**
  * @import { AppBase } from '../app-base.js'
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
@@ -61,6 +98,12 @@ class SogsParser {
     }
 
     async loadTextures(url, callback, asset, meta) {
+        // transform meta to latest shape
+        if (meta.version !== 2) {
+            Debug.deprecated('Loading SOG v1 data which is deprecated. Please recompress your scene with latest tools.');
+            meta = upgradeMeta(meta);
+        }
+
         const { assets } = this.app;
 
         const subs = ['means', 'quats', 'scales', 'sh0', 'shN'];
@@ -92,6 +135,17 @@ class SogsParser {
 
         const textureAssets = subs.map(sub => textures[sub]).flat();
 
+        // When the parent gsplat asset unloads, remove and unload child texture assets
+        asset.once('unload', () => {
+            textureAssets.forEach((t) => {
+                // remove from registry
+                assets.remove(t);
+
+                // destroys resource
+                t.unload();
+            });
+        });
+
         combineProgress(asset, textureAssets);
 
         textureAssets.forEach(t => assets.load(t));
@@ -102,7 +156,7 @@ class SogsParser {
         // construct the gsplat resource
         const data = new GSplatSogsData();
         data.meta = meta;
-        data.numSplats = meta.means.shape[0];
+        data.numSplats = meta.count;
         data.means_l = textures.means[0].resource;
         data.means_u = textures.means[1].resource;
         data.quats = textures.quats[0].resource;
@@ -114,9 +168,13 @@ class SogsParser {
         const decompress = asset.data?.decompress;
 
         if (!decompress) {
+            if (!this.app?.graphicsDevice || this.app?.graphicsDevice?._destroyed) return;
+
             // no need to prepare gpu data if decompressing
             await data.prepareGpuData();
         }
+
+        if (!this.app?.graphicsDevice || this.app?.graphicsDevice?._destroyed) return;
 
         const resource = decompress ?
             new GSplatResource(this.app.graphicsDevice, await data.decompress()) :
