@@ -685,7 +685,7 @@ class WebgpuShaderProcessorWGSL {
             if (format.hasSampler) {
                 // A slot should have been left empty for the sampler at format.slot+1
                 const samplerName = format.sampleType === SAMPLETYPE_DEPTH ? 'sampler_comparison' : 'sampler';
-                code += `@group(${bindGroup}) @binding(${format.slot+1}) var ${format.samplerName}: ${samplerName};\n`;
+                code += `@group(${bindGroup}) @binding(${format.slot + 1}) var ${format.samplerName}: ${samplerName};\n`;
             }
         });
 
