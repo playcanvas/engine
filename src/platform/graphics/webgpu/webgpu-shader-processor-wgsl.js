@@ -676,26 +676,23 @@ class WebgpuShaderProcessorWGSL {
      */
     static getTextureShaderDeclaration(format, bindGroup, startBindIndex) {
         let code = '';
-        let bindIndex = startBindIndex;
 
         format.textureFormats.forEach((format) => {
 
             const textureTypeName = getTextureDeclarationType(format.textureDimension, format.sampleType);
-            code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.name}: ${textureTypeName};\n`;
-            bindIndex++;
+            code += `@group(${bindGroup}) @binding(${format.slot}) var ${format.name}: ${textureTypeName};\n`;
 
             if (format.hasSampler) {
+                // A slot should have been left empty for the sampler at format.slot+1
                 const samplerName = format.sampleType === SAMPLETYPE_DEPTH ? 'sampler_comparison' : 'sampler';
-                code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.samplerName}: ${samplerName};\n`;
-                bindIndex++;
+                code += `@group(${bindGroup}) @binding(${format.slot + 1}) var ${format.samplerName}: ${samplerName};\n`;
             }
         });
 
         format.storageBufferFormats.forEach((format) => {
 
             const access = format.readOnly ? 'read' : 'read_write';
-            code += `@group(${bindGroup}) @binding(${bindIndex}) var<storage, ${access}> ${format.name} : ${format.format};\n`;
-            bindIndex++;
+            code += `@group(${bindGroup}) @binding(${format.slot}) var<storage, ${access}> ${format.name} : ${format.format};\n`;
 
         });
 
