@@ -1,11 +1,5 @@
 export default /* wgsl */`
 
-#ifdef GSPLAT_OVERDRAW
-    uniform colorRampIntensity: f32;
-    var colorRamp: texture_2d<f32>;
-    var colorRampSampler: sampler;
-#endif
-
 #include "gsplatCommonVS"
 
 varying gaussianUV: vec2f;
@@ -19,6 +13,12 @@ const discardVec: vec4f = vec4f(0.0, 0.0, 2.0, 1.0);
 
 #ifdef PREPASS_PASS
     varying vLinearDepth: f32;
+#endif
+
+#ifdef GSPLAT_OVERDRAW
+    uniform colorRampIntensity: f32;
+    var colorRamp: texture_2d<f32>;
+    var colorRampSampler: sampler;
 #endif
 
 @vertex
