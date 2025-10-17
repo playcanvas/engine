@@ -18,6 +18,7 @@ const _schema = [
 // order matters here
 const _properties = [
     'unified',
+    'lodDistances',
     'castShadows',
     'material',
     'highQualitySH',

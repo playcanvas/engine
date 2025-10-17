@@ -78,7 +78,7 @@ class GSplatComponent extends Component {
      * @type {number[]|null}
      * @private
      */
-    _lodDistances = [5, 10, 15, 20, 25, 30, 35, 40];
+    _lodDistances = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 
     /**
      * @type {BoundingBox|null}
