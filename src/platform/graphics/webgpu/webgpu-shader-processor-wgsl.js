@@ -602,12 +602,12 @@ class WebgpuShaderProcessorWGSL {
         let code = '';
         processingOptions.bindGroupFormats.forEach((format, bindGroupIndex) => {
             if (format) {
-                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, bindGroupIndex, 1);
+                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, bindGroupIndex);
             }
         });
 
         // and also for generated mesh format
-        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH, 0);
+        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH);
 
         return {
             code,
@@ -671,10 +671,9 @@ class WebgpuShaderProcessorWGSL {
      * ```
      * @param {BindGroupFormat} format - The format of the bind group.
      * @param {number} bindGroup - The bind group index.
-     * @param {number} startBindIndex - The starting bind index.
      * @returns {string} - The shader code for the bind group.
      */
-    static getTextureShaderDeclaration(format, bindGroup, startBindIndex) {
+    static getTextureShaderDeclaration(format, bindGroup) {
         let code = '';
 
         format.textureFormats.forEach((format) => {

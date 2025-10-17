@@ -326,7 +326,7 @@ class GSplatManager {
             this.workBuffer.setOrderData(orderData);
 
             // update renderer with new order data
-            this.renderer.frameUpdate();
+            this.renderer.frameUpdate(this.scene.gsplat);
         }
     }
 
@@ -415,6 +415,7 @@ class GSplatManager {
         // if parameters are dirty, rebuild world state
         if (this.scene.gsplat.dirty) {
             this.layerPlacementsDirty = true;
+            this.renderer.updateOverdrawMode(this.scene.gsplat);
         }
 
         // when camera or octree need LOD evaluated, or params are dirty, or resources completed
