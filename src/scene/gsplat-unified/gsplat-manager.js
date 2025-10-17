@@ -230,10 +230,8 @@ class GSplatManager {
                 });
             }
 
-            // add resource centers to sorter
-            splats.forEach((splat) => {
-                this.sorter.setCenters(splat.resource.id, splat.resource.centers);
-            });
+            // update sorter with current splats (adds new centers, removes unused ones)
+            this.sorter.updateCentersForSplats(splats);
 
             const newState = new GSplatWorldState(this.device, this.lastWorldStateVersion, splats);
 
@@ -272,7 +270,7 @@ class GSplatManager {
     onSorted(count, version, orderData) {
 
         // remove all old states between last sorted version and current version
-        for (let v = this.sortedVersion + 1; v < version; v++) {
+        for (let v = this.sortedVersion; v < version; v++) {
             const oldState = this.worldStates.get(v);
             if (oldState) {
                 this.worldStates.delete(v);
