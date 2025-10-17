@@ -14,6 +14,11 @@ mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
     varying float vLinearDepth;
 #endif
 
+#ifdef GSPLAT_OVERDRAW
+    uniform sampler2D colorRamp;
+    uniform float colorRampIntensity;
+#endif
+
 void main(void) {
     // read gaussian details
     SplatSource source;
@@ -68,7 +73,16 @@ void main(void) {
     // write output
     gl_Position = center.proj + vec4(corner.offset, 0, 0);
     gaussianUV = corner.uv;
-    gaussianColor = vec4(prepareOutputFromGamma(max(clr.xyz, 0.0)), clr.w);
+
+    #ifdef GSPLAT_OVERDRAW
+        // Overdraw visualization mode: color by elevation
+        float t = clamp(modelCenter.y / 20.0, 0.0, 1.0);
+        vec3 rampColor = textureLod(colorRamp, vec2(t, 0.5), 0.0).rgb;
+        clr.a *= (1.0 / 32.0) * colorRampIntensity;
+        gaussianColor = vec4(rampColor, clr.a);
+    #else
+        gaussianColor = vec4(prepareOutputFromGamma(max(clr.xyz, 0.0)), clr.w);
+    #endif
 
     #ifndef DITHER_NONE
         id = float(source.id);

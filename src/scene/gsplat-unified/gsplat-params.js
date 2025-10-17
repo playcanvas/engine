@@ -196,6 +196,45 @@ class GSplatParams {
     get lodUnderfillLimit() {
         return this._lodUnderfillLimit;
     }
+
+    /**
+     * @type {import('../../platform/graphics/texture.js').Texture|null}
+     * @private
+     */
+    _colorRamp = null;
+
+    /**
+     * Gradient texture for elevation-based coloring in overdraw visualization mode.
+     * When set, enables overdraw mode with additive blending. When null, uses normal rendering.
+     * Texture should be (width x 1) size. World Y coordinate (0-20 range) maps to texture U coordinate.
+     * Defaults to null.
+     *
+     * @type {import('../../platform/graphics/texture.js').Texture|null}
+     */
+    set colorRamp(value) {
+        if (this._colorRamp !== value) {
+            this._colorRamp = value;
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets the color ramp texture for overdraw visualization.
+     *
+     * @type {import('../../platform/graphics/texture.js').Texture|null}
+     */
+    get colorRamp() {
+        return this._colorRamp;
+    }
+
+    /**
+     * Intensity multiplier for overdraw visualization mode. Value of 1 uses alpha of 1/32,
+     * allowing approximately 32 overdraws to reach full brightness with additive blending.
+     * Higher values increase brightness per splat. Defaults to 1.
+     *
+     * @type {number}
+     */
+    colorRampIntensity = 1;
 }
 
 export { GSplatParams };
