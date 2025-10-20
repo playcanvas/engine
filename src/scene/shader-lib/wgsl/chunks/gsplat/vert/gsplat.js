@@ -1,5 +1,7 @@
 export default /* wgsl */`
 
+#include "gsplatHelpersVS"
+#include "gsplatCustomizeVS"
 #include "gsplatCommonVS"
 
 varying gaussianUV: vec2f;
@@ -21,8 +23,6 @@ const discardVec: vec4f = vec4f(0.0, 0.0, 2.0, 1.0);
     var colorRampSampler: sampler;
 #endif
 
-#include "gsplatCustomizeVS"
-
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
@@ -38,11 +38,15 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         loadSplatTextures(&source);
     #endif
 
-    let modelCenter: vec3f = readCenter(&source);
-    let modifiedCenter = modifyPosition(modelCenter);
+    var modelCenter: vec3f = readCenter(&source);
 
     var center: SplatCenter;
-    if (!initCenter(modifiedCenter, &center)) {
+    center.modelCenterOriginal = modelCenter;
+    
+    modifyCenter(&modelCenter);
+    center.modelCenterModified = modelCenter;
+
+    if (!initCenter(modelCenter, &center)) {
         output.position = discardVec;
         return output;
     }
@@ -77,7 +81,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         clr = vec4f(clr.xyz + evalSH(&sh, dir) * scale, clr.a);
     #endif
 
-    clr = modifyColor(modifiedCenter, clr);
+    modifyColor(modelCenter, &clr);
 
     clipCorner(&corner, clr.w);
 
@@ -87,7 +91,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 
     #ifdef GSPLAT_OVERDRAW
         // Overdraw visualization mode: color by elevation
-        let t: f32 = clamp(modelCenter.y / 20.0, 0.0, 1.0);
+        let t: f32 = clamp(originalCenter.y / 20.0, 0.0, 1.0);
         let rampColor: vec3f = textureSampleLevel(colorRamp, colorRampSampler, vec2f(t, 0.5), 0.0).rgb;
         clr.a = clr.a * (1.0 / 32.0) * uniform.colorRampIntensity;
         output.gaussianColor = vec4f(rampColor, clr.a);

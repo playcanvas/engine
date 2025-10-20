@@ -1,16 +1,20 @@
 uniform float fade;
 
-// animate position based on the fade value
-vec3 modifyPosition(vec3 pos) {
+// animate center position based on the fade value
+void modifyCenter(inout vec3 pos) {
     // Use a sine wave to create a smooth scale down and back up animation
     float angle = fade * 3.14159265;
     float shrinkFactor = sin(angle) * 0.3;
     float scale = 1.0 - shrinkFactor;
-    return pos * scale;
+    pos *= scale;
+}
+
+void modifyCovariance(vec3 originalCenter, vec3 modifiedCenter, inout vec3 covA, inout vec3 covB) {
+    // no modification
 }
 
 // animate color based on the fade value
-vec4 modifyColor(vec3 center, vec4 clr) {
+void modifyColor(vec3 center, inout vec4 clr) {
 
     // Check if the color is approximately grayscale
     float r = clr.r;
@@ -29,7 +33,5 @@ vec4 modifyColor(vec3 center, vec4 clr) {
         // cross fade blue to original orange color based on fade value
         clr.rgb = mix(clr.bgr * 0.5, clr.rgb, fade);
     }
-
-    return clr;
 }
 
