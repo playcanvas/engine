@@ -1,4 +1,6 @@
 export default /* glsl */`
+#include "gsplatHelpersVS"
+#include "gsplatCustomizeVS"
 #include "gsplatCommonVS"
 
 varying mediump vec2 gaussianUV;
@@ -19,8 +21,6 @@ mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
     uniform float colorRampIntensity;
 #endif
 
-#include "gsplatCustomizeVS"
-
 void main(void) {
     // read gaussian details
     SplatSource source;
@@ -34,9 +34,13 @@ void main(void) {
     #endif
 
     vec3 modelCenter = readCenter(source);
-    modelCenter = modifyPosition(modelCenter);
 
     SplatCenter center;
+    center.modelCenterOriginal = modelCenter;
+    
+    modifyCenter(modelCenter);
+    center.modelCenterModified = modelCenter;
+
     if (!initCenter(modelCenter, center)) {
         gl_Position = discardVec;
         return;
@@ -71,7 +75,7 @@ void main(void) {
         clr.xyz += evalSH(sh, dir) * scale;
     #endif
 
-    clr = modifyColor(modelCenter, clr);
+    modifyColor(modelCenter, clr);
 
     clipCorner(corner, clr.w);
 
