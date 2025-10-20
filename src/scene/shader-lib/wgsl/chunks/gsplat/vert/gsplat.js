@@ -21,6 +21,8 @@ const discardVec: vec4f = vec4f(0.0, 0.0, 2.0, 1.0);
     var colorRampSampler: sampler;
 #endif
 
+#include "gsplatCustomizeVS"
+
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
@@ -37,9 +39,10 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #endif
 
     let modelCenter: vec3f = readCenter(&source);
+    let modifiedCenter = modifyPosition(modelCenter);
 
     var center: SplatCenter;
-    if (!initCenter(modelCenter, &center)) {
+    if (!initCenter(modifiedCenter, &center)) {
         output.position = discardVec;
         return output;
     }
@@ -73,6 +76,8 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         // evaluate
         clr = vec4f(clr.xyz + evalSH(&sh, dir) * scale, clr.a);
     #endif
+
+    clr = modifyColor(modifiedCenter, clr);
 
     clipCorner(&corner, clr.w);
 

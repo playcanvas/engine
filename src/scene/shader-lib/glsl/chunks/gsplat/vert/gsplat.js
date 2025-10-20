@@ -19,6 +19,8 @@ mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
     uniform float colorRampIntensity;
 #endif
 
+#include "gsplatCustomizeVS"
+
 void main(void) {
     // read gaussian details
     SplatSource source;
@@ -32,6 +34,7 @@ void main(void) {
     #endif
 
     vec3 modelCenter = readCenter(source);
+    modelCenter = modifyPosition(modelCenter);
 
     SplatCenter center;
     if (!initCenter(modelCenter, center)) {
@@ -67,6 +70,8 @@ void main(void) {
         // evaluate
         clr.xyz += evalSH(sh, dir) * scale;
     #endif
+
+    clr = modifyColor(modelCenter, clr);
 
     clipCorner(corner, clr.w);
 
