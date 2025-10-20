@@ -12,4 +12,3 @@ fn gsplatApplyUniformScale(covA: ptr<function, vec3f>, covB: ptr<function, vec3f
     *covB = *covB * s2;
 }
 `;
-

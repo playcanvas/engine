@@ -12,4 +12,3 @@ void gsplatApplyUniformScale(inout vec3 covA, inout vec3 covB, float scale) {
     covB *= s2;
 }
 `;
-
