@@ -13,6 +13,13 @@ fn modifyCovariance(originalCenter: vec3f, modifiedCenter: vec3f, covA: ptr<func
     // let size = gsplatExtractSize(*covA, *covB);
     // let newSize = clamp(size, 0.01, 0.5);
     // gsplatApplyUniformScale(covA, covB, newSize / size);
+    //
+    // Example to make splats round/spherical:
+    // let size = gsplatExtractSize(*covA, *covB);
+    // gsplatMakeRound(covA, covB, size * 0.5);
+    //
+    // To hide a splat:
+    // gsplatMakeRound(covA, covB, 0.0);
 }
 
 fn modifyColor(center: vec3f, color: ptr<function, vec4f>) {

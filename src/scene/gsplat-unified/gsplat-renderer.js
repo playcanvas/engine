@@ -60,6 +60,25 @@ class GSplatRenderer {
             }
         });
 
+        this.configureMaterial();
+
+        this.meshInstance = this.createMeshInstance();
+        layer.addMeshInstances([this.meshInstance]);
+    }
+
+    destroy() {
+        this.layer.removeMeshInstances([this.meshInstance]);
+        this._material.destroy();
+        this.meshInstance.destroy();
+    }
+
+    get material() {
+        return this._material;
+    }
+
+    configureMaterial() {
+        const { device, workBuffer } = this;
+
         // input format
         this._material.setDefine('GSPLAT_WORKBUFFER_DATA', true);
         this._material.setDefine('STORAGE_ORDER', device.isWebGPU);
@@ -85,15 +104,6 @@ class GSplatRenderer {
         this._material.blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
         this._material.depthWrite = !!dither;
         this._material.update();
-
-        this.meshInstance = this.createMeshInstance();
-        layer.addMeshInstances([this.meshInstance]);
-    }
-
-    destroy() {
-        this.layer.removeMeshInstances([this.meshInstance]);
-        this._material.destroy();
-        this.meshInstance.destroy();
     }
 
     update(count, textureSize) {
