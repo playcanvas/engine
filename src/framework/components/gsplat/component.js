@@ -244,7 +244,7 @@ class GSplatComponent extends Component {
      *
      * **Note:** This getter returns `null` when `unified is true`. In unified mode, materials are
      * organized per camera/layer combination rather than per component. To access materials in
-     * unified mode, use `app.systems.gsplat.getGSplatMaterial(camera, layer)`.
+     * unified mode, use {@link GsplatComponentSystem#getGSplatMaterial}.
      *
      * @type {ShaderMaterial|null}
      */
