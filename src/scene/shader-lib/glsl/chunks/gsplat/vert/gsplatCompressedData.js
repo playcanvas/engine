@@ -27,7 +27,7 @@ vec4 unpack8888(uint bits) {
     );
 }
 
-const float norm = 1.0 / (sqrt(2.0) * 0.5);
+const float norm = sqrt(2.0);
 
 vec4 unpackRotation(uint bits) {
     float a = (float((bits >> 20u) & 0x3ffu) / 1023.0 - 0.5) * norm;

@@ -122,6 +122,13 @@ class GSplatManager {
      */
     octreeInstancesToDestroy = [];
 
+    /**
+     * Flag set when new octree instances are added, to trigger immediate LOD evaluation.
+     *
+     * @type {boolean}
+     */
+    hasNewOctreeInstances = false;
+
     constructor(device, director, layer, cameraNode) {
         this.device = device;
         this.scene = director.scene;
@@ -137,6 +144,10 @@ class GSplatManager {
         this.workBuffer.destroy();
         this.renderer.destroy();
         this.sorter.destroy();
+    }
+
+    get material() {
+        return this.renderer.material;
     }
 
     createSorter() {
@@ -163,6 +174,9 @@ class GSplatManager {
                 // make sure octree instance exists for placement
                 if (!this.octreeInstances.has(p)) {
                     this.octreeInstances.set(p, new GSplatOctreeInstance(p.resource.octree, p, this.director.assetLoader));
+
+                    // mark that we have new instances that need initial LOD evaluation
+                    this.hasNewOctreeInstances = true;
                 }
                 tempOctreePlacements.add(p);
             } else {
@@ -230,10 +244,8 @@ class GSplatManager {
                 });
             }
 
-            // add resource centers to sorter
-            splats.forEach((splat) => {
-                this.sorter.setCenters(splat.resource.id, splat.resource.centers);
-            });
+            // update sorter with current splats (adds new centers, removes unused ones)
+            this.sorter.updateCentersForSplats(splats);
 
             const newState = new GSplatWorldState(this.device, this.lastWorldStateVersion, splats);
 
@@ -272,7 +284,7 @@ class GSplatManager {
     onSorted(count, version, orderData) {
 
         // remove all old states between last sorted version and current version
-        for (let v = this.sortedVersion + 1; v < version; v++) {
+        for (let v = this.sortedVersion; v < version; v++) {
             const oldState = this.worldStates.get(v);
             if (oldState) {
                 this.worldStates.delete(v);
@@ -326,7 +338,7 @@ class GSplatManager {
             this.workBuffer.setOrderData(orderData);
 
             // update renderer with new order data
-            this.renderer.frameUpdate();
+            this.renderer.frameUpdate(this.scene.gsplat);
         }
     }
 
@@ -380,6 +392,10 @@ class GSplatManager {
             }
         }
 
+        // when new octree instances are added, we need to evaluate their LOD immediately
+        const hasNewInstances = this.hasNewOctreeInstances && this.sorter.jobsInFlight < 3;
+        if (hasNewInstances) this.hasNewOctreeInstances = false;
+
         let anyInstanceNeedsLodUpdate = false;
         let anyOctreeMoved = false;
         let cameraMovedOrRotated = false;
@@ -415,10 +431,11 @@ class GSplatManager {
         // if parameters are dirty, rebuild world state
         if (this.scene.gsplat.dirty) {
             this.layerPlacementsDirty = true;
+            this.renderer.updateOverdrawMode(this.scene.gsplat);
         }
 
-        // when camera or octree need LOD evaluated, or params are dirty, or resources completed
-        if (cameraMovedOrRotated || anyOctreeMoved || this.scene.gsplat.dirty || anyInstanceNeedsLodUpdate) {
+        // when camera or octree need LOD evaluated, or params are dirty, or resources completed, or new instances added
+        if (cameraMovedOrRotated || anyOctreeMoved || this.scene.gsplat.dirty || anyInstanceNeedsLodUpdate || hasNewInstances) {
 
             // update the previous position where LOD was evaluated for octree instances
             for (const [, inst] of this.octreeInstances) {

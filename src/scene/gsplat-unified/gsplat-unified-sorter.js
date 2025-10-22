@@ -2,6 +2,13 @@ import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { UnifiedSortWorker } from './gsplat-unified-sort-worker.js';
 
+/**
+ * @import { GSplatInfo } from './gsplat-info.js'
+ */
+
+/** @type {Set<number>} */
+const _neededIds = new Set();
+
 class GSplatUnifiedSorter extends EventHandler {
     worker;
 
@@ -132,6 +139,35 @@ class GSplatUnifiedSorter extends EventHandler {
                 });
             }
         }
+    }
+
+    /**
+     * Updates centers in the worker based on current splats.
+     * Adds new centers and removes centers no longer needed.
+     *
+     * @param {GSplatInfo[]} splats - Array of active splat infos.
+     */
+    updateCentersForSplats(splats) {
+
+        // collect resource IDs from current splats
+        for (const splat of splats) {
+            const id = splat.resource.id;
+            _neededIds.add(id);
+
+            // add centers if not already present
+            if (!this.centersSet.has(id)) {
+                this.setCenters(id, splat.resource.centers);
+            }
+        }
+
+        // remove centers no longer needed
+        for (const id of this.centersSet) {
+            if (!_neededIds.has(id)) {
+                this.setCenters(id, null);
+            }
+        }
+
+        _neededIds.clear();
     }
 
     /**

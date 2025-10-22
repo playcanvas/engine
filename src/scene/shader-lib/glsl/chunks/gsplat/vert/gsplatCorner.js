@@ -74,6 +74,7 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
 bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) {
     vec3 covA, covB;
     readCovariance(source, covA, covB);
+    modifyCovariance(center.modelCenterOriginal, center.modelCenterModified, covA, covB);
     return initCornerCov(source, center, corner, covA, covB);
 }
 `;
