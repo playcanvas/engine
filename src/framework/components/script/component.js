@@ -5,7 +5,7 @@ import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 import {
     SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE, SCRIPT_UPDATE,
-    SCRIPT_POST_UPDATE, SCRIPT_SWAP
+    SCRIPT_FIXED_UPDATE, SCRIPT_POST_UPDATE, SCRIPT_SWAP
 } from '../../script/constants.js';
 import { ScriptType } from '../../script/script-type.js';
 import { getScriptName } from '../../script/script.js';
@@ -196,6 +196,8 @@ class ScriptComponent extends Component {
          * @private
          */
         this._scripts = [];
+        // holds all script instances with an fixedUpdate method
+        this._fixedUpdateList = new SortedLoopArray({ sortBy: '__executionOrder' });
         // holds all script instances with an update method
         this._updateList = new SortedLoopArray({ sortBy: '__executionOrder' });
         // holds all script instances with a postUpdate method
@@ -499,6 +501,22 @@ class ScriptComponent extends Component {
         this.onPostStateChange();
     }
 
+    _onFixedUpdate(dt) {
+        const list = this._fixedUpdateList;
+        if (!list.length) return;
+
+        const wasLooping = this._beginLooping();
+
+        for (list.loopIndex = 0; list.loopIndex < list.length; list.loopIndex++) {
+            const script = list.items[list.loopIndex];
+            if (script.enabled) {
+                this._scriptMethod(script, SCRIPT_FIXED_UPDATE, dt);
+            }
+        }
+
+        this._endLooping(wasLooping);
+    }
+
     _onUpdate(dt) {
         const list = this._updateList;
         if (!list.length) return;
@@ -547,6 +565,11 @@ class ScriptComponent extends Component {
             this._scripts.push(scriptInstance);
             scriptInstance.__executionOrder = scriptsLength;
 
+            // append script to the fixedUpdate list if it has an update method
+            if (scriptInstance.fixedUpdate) {
+                this._fixedUpdateList.append(scriptInstance);
+            }
+
             // append script to the update list if it has an update method
             if (scriptInstance.update) {
                 this._updateList.append(scriptInstance);
@@ -564,6 +587,12 @@ class ScriptComponent extends Component {
             // now we also need to update the execution order of all
             // the script instances that come after this script
             this._resetExecutionOrder(index + 1, scriptsLength + 1);
+
+            // insert script to the fixedUpdate list if it has an update method
+            // in the right order
+            if (scriptInstance.fixedUpdate) {
+                this._fixedUpdateList.insert(scriptInstance);
+            }
 
             // insert script to the update list if it has an update method
             // in the right order
@@ -584,6 +613,10 @@ class ScriptComponent extends Component {
         if (idx === -1) return idx;
 
         this._scripts.splice(idx, 1);
+
+        if (scriptInstance.fixedUpdate) {
+            this._fixedUpdateList.remove(scriptInstance);
+        }
 
         if (scriptInstance.update) {
             this._updateList.remove(scriptInstance);
@@ -913,6 +946,9 @@ class ScriptComponent extends Component {
         // set execution order and make sure we update
         // our update and postUpdate lists
         scriptInstance.__executionOrder = ind;
+        if (scriptInstanceOld.fixedUpdate) {
+            this._fixedUpdateList.remove(scriptInstanceOld);
+        }
         if (scriptInstanceOld.update) {
             this._updateList.remove(scriptInstanceOld);
         }
@@ -920,6 +956,9 @@ class ScriptComponent extends Component {
             this._postUpdateList.remove(scriptInstanceOld);
         }
 
+        if (scriptInstance.fixedUpdate) {
+            this._fixedUpdateList.insert(scriptInstance);
+        }
         if (scriptInstance.update) {
             this._updateList.insert(scriptInstance);
         }
@@ -1085,6 +1124,7 @@ class ScriptComponent extends Component {
 
         // reset execution order for scripts and re-sort update and postUpdate lists
         this._resetExecutionOrder(0, len);
+        this._fixedUpdateList.sort();
         this._updateList.sort();
         this._postUpdateList.sort();
 
