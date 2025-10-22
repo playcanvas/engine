@@ -143,6 +143,7 @@ class MiniStats {
         this.graphs.forEach(graph => graph.destroy());
         this.wordAtlas.destroy();
         this.texture.destroy();
+        this.div.remove();
     }
 
     /**
