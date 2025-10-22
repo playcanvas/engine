@@ -15,5 +15,4 @@ fn clipCorner(corner: ptr<function, SplatCorner>, alpha: f32) {
     corner.offset = corner.offset * clip;
     corner.uv = corner.uv * clip;
 }
-
 `;
