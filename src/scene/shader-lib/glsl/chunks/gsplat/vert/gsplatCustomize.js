@@ -13,6 +13,13 @@ void modifyCovariance(vec3 originalCenter, vec3 modifiedCenter, inout vec3 covA,
     // float size = gsplatExtractSize(covA, covB);
     // float newSize = clamp(size, 0.01, 0.5);
     // gsplatApplyUniformScale(covA, covB, newSize / size);
+    //
+    // Example to make splats round/spherical:
+    // float size = gsplatExtractSize(covA, covB);
+    // gsplatMakeRound(covA, covB, size * 0.5);
+    //
+    // To hide a splat:
+    // gsplatMakeRound(covA, covB, 0.0);
 }
 
 void modifyColor(vec3 center, inout vec4 color) {
