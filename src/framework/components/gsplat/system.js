@@ -134,15 +134,15 @@ class GSplatComponentSystem extends ComponentSystem {
      * during the first frame update when the GSplat is rendered. To be notified immediately when
      * materials are created, listen to the 'material:created' event on GSplatComponentSystem:
      *
+     * @param {Camera} camera - The camera instance.
+     * @param {Layer} layer - The layer instance.
+     * @returns {ShaderMaterial|null} The material, or null if not created yet.
+     *
      * @example
      * app.systems.gsplat.on('material:created', (material, camera, layer) => {
      *     // Material is now available
      *     material.setParameter('myParam', value);
      * });
-     *
-     * @param {Camera} camera - The camera instance.
-     * @param {Layer} layer - The layer instance.
-     * @returns {ShaderMaterial|null} The material, or null if not created yet.
      */
     getGSplatMaterial(camera, layer) {
         const director = this.app.renderer.gsplatDirector;
