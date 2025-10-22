@@ -24,7 +24,7 @@ fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
-const norm: f32 = 2.0 / sqrt(2.0);
+const norm: f32 = sqrt(2.0);
 
 // sample covariance vectors
 fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {

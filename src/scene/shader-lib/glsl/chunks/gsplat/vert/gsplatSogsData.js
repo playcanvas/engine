@@ -25,7 +25,7 @@ vec3 readCenter(SplatSource source) {
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
-const float norm = 2.0 / sqrt(2.0);
+const float norm = sqrt(2.0);
 
 // sample covariance vectors
 void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
