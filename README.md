@@ -116,3 +116,4 @@ The PlayCanvas Engine is an open-source engine that you can use to create HTML5 
 [![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
 For Editor-related bugs and issues, please refer to the [Editor's repo](https://github.com/playcanvas/editor).
+Welcome to Web3 PlayCanvas! PlayCanvas's WebGL engine is perfect for blockchain games. New contributors, start your first NFT asset with the Scene tutorial. Tip: Use Web3.js for wallet!
