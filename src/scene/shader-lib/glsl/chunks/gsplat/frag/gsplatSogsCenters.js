@@ -17,7 +17,7 @@ void main(void) {
 
     vec3 l = texelFetch(means_l, uv, 0).xyz;
     vec3 u = texelFetch(means_u, uv, 0).xyz;
-    vec3 n = (l * 255.0 + u * 255.0 * 256.0) / 65535.0;
+    vec3 n = (l + u * 256.0) / 257.0;
     vec3 v = mix(means_mins, means_maxs, n);
     vec3 center = sign(v) * (exp(abs(v)) - 1.0);
 
