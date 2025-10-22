@@ -221,9 +221,9 @@ class GSplatComponent extends Component {
     /**
      * Sets the material used to render the gsplat.
      *
-     * **Note:** This setter is only supported when `unified is false`. When it's true, multiple
-     * gsplat components share a single material per camera/layer combination.To access materials in
-     * unified mode, use `app.systems.gsplat.getGSplatMaterial(camera, layer)`.
+     * **Note:** This setter is only supported when {@link unified} is `false`. When it's true, multiple
+     * gsplat components share a single material per camera/layer combination. To access materials in
+     * unified mode, use {@link GsplatComponentSystem#getGSplatMaterial}.
      *
      * @param {ShaderMaterial} value - The material instance.
      */
