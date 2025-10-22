@@ -242,7 +242,7 @@ class GSplatComponent extends Component {
     /**
      * Gets the material used to render the gsplat.
      *
-     * **Note:** This getter returns `null` when `unified is true`. In unified mode, materials are
+     * **Note:** This getter returns `null` when {@link unified} is `true`. In unified mode, materials are
      * organized per camera/layer combination rather than per component. To access materials in
      * unified mode, use {@link GsplatComponentSystem#getGSplatMaterial}.
      *
