@@ -103,7 +103,7 @@
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-visualizer": "6.0.4",
     "serve": "14.2.5",
-    "sinon": "19.0.5",
+    "sinon": "21.0.0",
     "typedoc": "0.28.13",
     "typedoc-plugin-mdn-links": "5.0.9",
     "typedoc-plugin-missing-exports": "4.1.0",
