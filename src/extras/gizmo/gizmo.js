@@ -539,7 +539,7 @@ class Gizmo extends EventHandler {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             const gizmoPos = this.root.getLocalPosition();
             const cameraPos = this._camera.entity.getPosition();
-            const dist = gizmoPos.distance(cameraPos);
+            const dist = v.sub2(gizmoPos, cameraPos).dot(this._camera.entity.forward);
             this._scale = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD) * dist * PERS_SCALE_RATIO;
         } else {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
