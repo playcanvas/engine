@@ -11,4 +11,12 @@ fn gsplatApplyUniformScale(covA: ptr<function, vec3f>, covB: ptr<function, vec3f
     *covA = *covA * s2;
     *covB = *covB * s2;
 }
+
+// Helper function to make splat spherical/round with given size
+// Use size = 0.0 to hide the splat
+fn gsplatMakeRound(covA: ptr<function, vec3f>, covB: ptr<function, vec3f>, size: f32) {
+    let s2 = size * size;
+    *covA = vec3f(s2, 0.0, 0.0);
+    *covB = vec3f(s2, 0.0, s2);
+}
 `;

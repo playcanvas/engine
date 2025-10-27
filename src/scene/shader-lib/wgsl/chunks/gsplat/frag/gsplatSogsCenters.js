@@ -19,7 +19,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     let l: vec3f = textureLoad(means_l, uv, 0).xyz;
     let u: vec3f = textureLoad(means_u, uv, 0).xyz;
-    let n: vec3f = (l * 255.0 + u * 255.0 * 256.0) / 65535.0;
+    let n: vec3f = (l + u * 256.0) / 257.0;
     let v: vec3f = mix(uniform.means_mins, uniform.means_maxs, n);
     let center: vec3f = sign(v) * (exp(abs(v)) - 1.0);
 

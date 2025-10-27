@@ -221,12 +221,17 @@ class GSplatComponent extends Component {
     /**
      * Sets the material used to render the gsplat.
      *
+     * **Note:** This setter is only supported when {@link unified} is `false`. When it's true, multiple
+     * gsplat components share a single material per camera/layer combination. To access materials in
+     * unified mode, use {@link GsplatComponentSystem#getGSplatMaterial}.
+     *
      * @param {ShaderMaterial} value - The material instance.
      */
     set material(value) {
-
-        Debug.assert(!this.unified);
-
+        if (this.unified) {
+            Debug.warn('GSplatComponent#material setter is not supported when unified true. Use app.systems.gsplat.getGSplatMaterial(camera, layer) to access materials.');
+            return;
+        }
         if (this._instance) {
             this._instance.material = value;
         } else {
@@ -237,9 +242,17 @@ class GSplatComponent extends Component {
     /**
      * Gets the material used to render the gsplat.
      *
+     * **Note:** This getter returns `null` when {@link unified} is `true`. In unified mode, materials are
+     * organized per camera/layer combination rather than per component. To access materials in
+     * unified mode, use {@link GsplatComponentSystem#getGSplatMaterial}.
+     *
      * @type {ShaderMaterial|null}
      */
     get material() {
+        if (this.unified) {
+            Debug.warnOnce('GSplatComponent#material getter returns null when unified=true. Use app.systems.gsplat.getGSplatMaterial(camera, layer) instead.');
+            return null;
+        }
         return this._instance?.material ?? this._materialTmp ?? null;
     }
 

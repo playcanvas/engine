@@ -54,7 +54,7 @@ class GSplatSogsIterator {
         const sh_labels_data = sh && data.sh_labels._levels[0];
         const sh_centroids_data = sh && data.sh_centroids._levels[0];
 
-        const norm = 2.0 / Math.sqrt(2.0);
+        const norm = Math.SQRT2;
 
         const coeffs = { 1: 3, 2: 8, 3: 15 }[shBands] ?? 0;
 
