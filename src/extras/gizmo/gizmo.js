@@ -510,11 +510,15 @@ class Gizmo extends EventHandler {
      */
     _updatePosition() {
         position.set(0, 0, 0);
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            position.add(node.getPosition());
+        if (this._coordSpace === 'local') {
+            position.copy(this.nodes[this.nodes.length - 1].getPosition());
+        } else {
+            for (let i = 0; i < this.nodes.length; i++) {
+                const node = this.nodes[i];
+                position.add(node.getPosition());
+            }
+            position.mulScalar(1.0 / (this.nodes.length || 1));
         }
-        position.mulScalar(1.0 / (this.nodes.length || 1));
 
         if (position.equalsApprox(this.root.getLocalPosition(), UPDATE_EPSILON)) {
             return;
