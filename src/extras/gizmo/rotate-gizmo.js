@@ -282,14 +282,6 @@ class RotateGizmo extends TransformGizmo {
                 // calculate angle axis and delta and update node rotations
                 let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
 
-                // intersection point can be behind camera, so need to check to flip angle delta
-                const cameraPos = this._camera.entity.getPosition();
-                const dir = v1.sub2(point, cameraPos).normalize();
-                const dot = dir.dot(this._camera.entity.forward);
-                if (dot < 0) {
-                    angleDelta += 180;
-                }
-
                 if (this.snap) {
                     angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
                 }
@@ -767,6 +759,14 @@ class RotateGizmo extends TransformGizmo {
                         break;
                     }
                 }
+
+                // intersection point can be behind camera, so need to check to flip angle delta
+                const dir = v1.sub2(point, this._camera.entity.getPosition()).normalize();
+                const dot = dir.dot(this._camera.entity.forward);
+                if (dot < 0) {
+                    angle += 180;
+                }
+
                 break;
             }
         }
