@@ -243,6 +243,13 @@ class Gizmo extends EventHandler {
     intersectShapes = [];
 
     /**
+     * Flag to indicate whether to call `preventDefault` on pointer events.
+     *
+     * @type {boolean}
+     */
+    preventDefault = true;
+
+    /**
      * Creates a new gizmo layer and adds it to the scene.
      *
      * @param {AppBase} app - The app.
@@ -445,7 +452,9 @@ class Gizmo extends EventHandler {
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
-            e.preventDefault();
+            if (this.preventDefault) {
+                e.preventDefault();
+            }
             e.stopPropagation();
         }
 
@@ -466,7 +475,9 @@ class Gizmo extends EventHandler {
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
-            e.preventDefault();
+            if (this.preventDefault) {
+                e.preventDefault();
+            }
             e.stopPropagation();
         }
         this.fire(Gizmo.EVENT_POINTERMOVE, e.offsetX, e.offsetY, selection[0]);
@@ -482,7 +493,9 @@ class Gizmo extends EventHandler {
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
-            e.preventDefault();
+            if (this.preventDefault) {
+                e.preventDefault();
+            }
             e.stopPropagation();
         }
 
