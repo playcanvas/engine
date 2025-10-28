@@ -18,7 +18,6 @@ import { SphereShape } from './shape/sphere-shape.js';
  */
 
 // temporary variables
-const screen = new Vec2();
 const point = new Vec3();
 const v1 = new Vec3();
 const v2 = new Vec3();
@@ -242,13 +241,13 @@ class RotateGizmo extends TransformGizmo {
             line.entity.enabled = false;
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMSTART, (_point, x, y) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
             // store start screen point
             this._screenPos.set(x, y);
             this._screenStartPos.set(x, y);
 
             // store start angle
-            this._selectionStartAngle = this._calculateArcAngle(x, y);
+            this._selectionStartAngle = this._calculateArcAngle(point, x, y);
 
             // store initial node rotations
             this._storeNodeRotations();
@@ -281,12 +280,21 @@ class RotateGizmo extends TransformGizmo {
                 this._setNodeRotations(axis, angleAxis, angleDelta);
             } else {
                 // calculate angle axis and delta and update node rotations
-                let angleDelta = this._calculateArcAngle(x, y) - this._selectionStartAngle;
+                let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
                 if (this.snap) {
                     angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
                 }
                 const angleAxis = this._dirFromAxis(axis, v1);
                 this._setNodeRotations(axis, angleAxis, angleDelta);
+
+                // intersection point can be behind camera, so need to check to flip angle delta for
+                // angle guide
+                const cameraPos = this._camera.entity.getPosition();
+                const dir = v1.sub2(point, cameraPos).normalize();
+                const dot = dir.dot(this._camera.entity.forward);
+                if (dot < 0) {
+                    angleDelta += 180;
+                }
 
                 // update guide points and show angle guide
                 this._updateGuidePoints(angleDelta);
@@ -669,21 +677,30 @@ class RotateGizmo extends TransformGizmo {
 
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, axis === 'f' || axis === 'xyz', false);
+
         if (!plane.intersectsRay(ray, point)) {
-            // use gizmo position if ray does not intersect to position angle guide correctly
-            return point.copy(this.root.getLocalPosition());
+            // if no intersection, try inverting the ray direction
+            ray.direction.mulScalar(-1);
+            const intersection = plane.intersectsRay(ray, point);
+            ray.direction.mulScalar(-1);
+
+            if (!intersection) {
+                // use gizmo position if ray does not intersect to position angle guide correctly
+                return point.copy(this.root.getLocalPosition());
+            }
         }
 
         return point;
     }
 
     /**
+     * @param {Vec3} point - The point.
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
      * @returns {number} The angle.
      * @protected
      */
-    _calculateArcAngle(x, y) {
+    _calculateArcAngle(point, x, y) {
         const gizmoPos = this.root.getLocalPosition();
 
         const axis = this._selectedAxis;
@@ -721,12 +738,35 @@ class RotateGizmo extends TransformGizmo {
                 break;
             }
             case 'orbit': {
-                // convert gizmo position to screen space§
-                const screenPos = this._camera.worldToScreen(gizmoPos, v1);
+                // plane facing camera so based on mouse position around gizmo
+                v1.sub2(point, gizmoPos);
 
-                // calculate angle based on mouse position around gizmo
-                const dir = screen.set(x - screenPos.x, y - screenPos.y).normalize();
-                angle = Math.sign(facingDot) * Math.atan2(-dir.y, dir.x) * math.RAD_TO_DEG;
+                switch (axis) {
+                    case 'x': {
+                        // convert to local space
+                        q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
+                        angle = Math.atan2(v1.z, v1.y) * math.RAD_TO_DEG;
+                        break;
+                    }
+                    case 'y': {
+                        // convert to local space
+                        q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
+                        angle = Math.atan2(v1.x, v1.z) * math.RAD_TO_DEG;
+                        break;
+                    }
+                    case 'z': {
+                        // convert to local space
+                        q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
+                        angle = Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
+                        break;
+                    }
+                    case 'f': {
+                        // convert to camera space
+                        q1.copy(this._camera.entity.getRotation()).invert().transformVector(v1, v1);
+                        angle = Math.sign(facingDot) * Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
+                        break;
+                    }
+                }
                 break;
             }
         }
