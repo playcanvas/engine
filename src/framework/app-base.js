@@ -1421,7 +1421,7 @@ class AppBase extends EventHandler {
      * - {@link SHADOW_PCF3_16F}
      * - {@link SHADOW_PCF5_16F}
      *
-     * @param {Vec3} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
+     * @param {number[]} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
      * is subdivided into.
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
