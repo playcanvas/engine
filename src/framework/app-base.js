@@ -1391,12 +1391,23 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.skyboxMip] - The mip level of the skybox to be displayed. Defaults to 0.
      * Only valid for prefiltered cubemap skyboxes.
      * @param {number[]} [settings.render.skyboxRotation] - Rotation of skybox. Defaults to [0, 0, 0].
+     *
+     * @param {string} [settings.render.skyType] - The type of the sky. One of the SKYMESH_* constants. Defaults to {@link SKYTYPE_INFINITE}.
+     * @param {number[]} [settings.render.skyMeshPosition] - The position of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 0, 0].
+     * @param {number[]} [settings.render.skyMeshRotation] - The rotation of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 0, 0].
+     * @param {number[]} [settings.render.skyMeshScale] - The scale of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [1, 1, 1].
+     * @param {number[]} [settings.render.skyCenter] - The center of the sky. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 1, 0].
+     *
      * @param {number} settings.render.lightmapSizeMultiplier - The lightmap resolution multiplier.
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
      * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
      *
      * - {@link BAKE_COLOR}: single color lightmap
      * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
+     *
+     * @param {boolean} [settings.render.lightmapFilterEnabled] - Enables bilateral filter on runtime baked color lightmaps. Defaults to false.
+     * @param {number} [settings.render.lightmapFilterRange] - Sets the range parameter of the bilateral filter. Defaults to 10.
+     * @param {number} [settings.render.lightmapFilterSmoothness] - Sets the spatial parameter of the bilateral filter. Defaults to 0.2.
      *
      * @param {boolean} [settings.render.ambientBake] - Enable baking ambient light into lightmaps. Defaults to false.
      * @param {number} [settings.render.ambientBakeNumSamples] - Number of samples to use when baking ambient light. Defaults to 1.
