@@ -218,6 +218,14 @@ class ComponentSystemRegistry extends EventHandler {
     zone;
 
     /**
+     * Gets an array of all {@link ComponentSystem}s in the registry.
+     *
+     * @type {ComponentSystem[]}
+     * @readonly
+     */
+    list;
+
+    /**
      * Create a new ComponentSystemRegistry instance.
      */
     constructor() {
