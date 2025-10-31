@@ -79,9 +79,10 @@ class GSplatResourceBase {
      * Get or create a QuadRender for rendering to work buffer.
      *
      * @param {boolean} useIntervals - Whether to use intervals.
+     * @param {number} colorTextureFormat - The format of the color texture (RGBA16F or RGBA16U).
      * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
      */
-    getWorkBufferRenderInfo(useIntervals) {
+    getWorkBufferRenderInfo(useIntervals, colorTextureFormat) {
 
         // configure defines to fetch cached data
         this.configureMaterialDefines(tempMap);
@@ -99,7 +100,7 @@ class GSplatResourceBase {
             tempMap.forEach((v, k) => material.setDefine(k, v));
 
             // create new cache entry
-            info = new WorkBufferRenderInfo(this.device, key, material);
+            info = new WorkBufferRenderInfo(this.device, key, material, colorTextureFormat);
             this.workBufferRenderInfos.set(key, info);
         }
 

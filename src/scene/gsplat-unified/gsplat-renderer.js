@@ -1,4 +1,4 @@
-import { SEMANTIC_POSITION, SEMANTIC_ATTR13, CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { SEMANTIC_POSITION, SEMANTIC_ATTR13, CULLFACE_NONE, PIXELFORMAT_RGBA16U } from '../../platform/graphics/constants.js';
 import { BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
@@ -82,6 +82,10 @@ class GSplatRenderer {
         // input format
         this._material.setDefine('GSPLAT_WORKBUFFER_DATA', true);
         this._material.setDefine('STORAGE_ORDER', device.isWebGPU);
+
+        // Check if using RGBA16U format (fallback for when RGBA16F not supported)
+        const isColorUint = workBuffer.colorTextureFormat === PIXELFORMAT_RGBA16U;
+        this._material.setDefine('GSPLAT_COLOR_UINT', isColorUint);
 
         // input textures (work buffer textures)
         this._material.setParameter('splatColor', workBuffer.colorTexture);

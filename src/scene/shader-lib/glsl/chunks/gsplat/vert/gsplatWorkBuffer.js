@@ -1,7 +1,12 @@
 export default /* glsl */`
 uniform highp usampler2D splatTexture0;
 uniform highp usampler2D splatTexture1;
-uniform mediump sampler2D splatColor;
+
+#ifdef GSPLAT_COLOR_UINT
+    uniform highp usampler2D splatColor;
+#else
+    uniform mediump sampler2D splatColor;
+#endif
 
 // cached texture fetches
 uvec4 cachedSplatTexture0Data;
@@ -28,6 +33,14 @@ void readCovariance(in SplatSource source, out vec3 cov_A, out vec3 cov_B) {
 }
 
 vec4 readColor(in SplatSource source) {
-    return texelFetch(splatColor, source.uv, 0);
+    #ifdef GSPLAT_COLOR_UINT
+        // Unpack RGBA from 4x half-float (16-bit) values stored in RGBA16U format
+        uvec4 packed = texelFetch(splatColor, source.uv, 0);
+        uint packed_rg = packed.r | (packed.g << 16u);
+        uint packed_ba = packed.b | (packed.a << 16u);
+        return vec4(unpackHalf2x16(packed_rg), unpackHalf2x16(packed_ba));
+    #else
+        return texelFetch(splatColor, source.uv, 0);
+    #endif
 }
 `;
