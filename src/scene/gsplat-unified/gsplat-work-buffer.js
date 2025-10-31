@@ -1,9 +1,13 @@
 import { Debug } from '../../core/debug.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U, BUFFERUSAGE_COPY_DST } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U, BUFFERUSAGE_COPY_DST, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { UploadStream } from '../../platform/graphics/upload-stream.js';
+import { QuadRender } from '../graphics/quad-render.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import glslGsplatCopyToWorkBufferPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
+import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
 import { GSplatWorkBufferRenderPass } from './gsplat-work-buffer-render-pass.js';
 
 let id = 0;
@@ -12,7 +16,45 @@ let id = 0;
  * @import { GSplatInfo } from "./gsplat-info.js"
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GraphNode } from '../graph-node.js';
+ * @import { ShaderMaterial } from '../materials/shader-material.js'
  */
+
+/**
+ * A helper class to cache quad renders for work buffer rendering.
+ *
+ * @ignore
+ */
+class WorkBufferRenderInfo {
+    /** @type {ShaderMaterial} */
+    material;
+
+    /** @type {QuadRender} */
+    quadRender;
+
+    constructor(device, key, material) {
+        this.device = device;
+        this.material = material;
+
+        const clonedDefines = new Map(material.defines);
+        const shader = ShaderUtils.createShader(this.device, {
+            uniqueName: `SplatCopyToWorkBuffer:${key}`,
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexDefines: clonedDefines,
+            fragmentDefines: clonedDefines,
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentGLSL: glslGsplatCopyToWorkBufferPS,
+            fragmentWGSL: wgslGsplatCopyToWorkBufferPS,
+            fragmentOutputTypes: ['vec4', 'uvec4', 'uvec2']
+        });
+
+        this.quadRender = new QuadRender(shader);
+    }
+
+    destroy() {
+        this.material?.destroy();
+        this.quadRender?.destroy();
+    }
+}
 
 /**
  * @ignore
@@ -155,4 +197,4 @@ class GSplatWorkBuffer {
     }
 }
 
-export { GSplatWorkBuffer };
+export { GSplatWorkBuffer, WorkBufferRenderInfo };
