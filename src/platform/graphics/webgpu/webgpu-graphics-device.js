@@ -921,6 +921,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         DebugHelper.setLabel(computePassDesc, `ComputePass-${name}`);
         const commandEncoder = this.getCommandEncoder();
         this.passEncoder = commandEncoder.beginComputePass(computePassDesc);
+        DebugHelper.setLabel(this.passEncoder, `ComputePass-${name}`);
 
         Debug.assert(!this.insideRenderPass, 'ComputePass cannot be started while inside another pass.');
         this.insideRenderPass = true;
