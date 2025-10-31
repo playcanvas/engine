@@ -1,9 +1,9 @@
-// @config HIDDEN
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+const { GsplatRevealRadial } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/reveal-radial.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -58,79 +58,43 @@ app.on('destroy', () => {
     window.removeEventListener('resize', applyAndResize);
 });
 
-// Configuration: Uncomment one block below (or add your own) and comment out others
-// const config = {
-//     name: 'iceland-church',
-//     url: `${rootPath}/static/assets/splats/iceland-church/lod-meta.json`,
-//     lodPresetDesktop: 'great',
-//     lodPresetMobile: 'low',
-//     lodDistances: [50, 100, 150, 250, 300],
-//     cameraPosition: [1.3, 2.6, 8.2],
-//     eulerAngles: [-90, 0, 0],
-//     moveSpeed: 4,
-//     moveFastSpeed: 15
-// };
-
-// const config = {
-//     name: 'colt-tower',
-//     url: `${rootPath}/static/assets/splats/colt-tower/lod-meta.json`,
-//     lodPresetDesktop: 'normal',
-//     lodPresetMobile: 'low',
-//     lodDistances: [0.5, 1, 2, 8, 10],
-//     cameraPosition: [10.3, 2, 8.2],
-//     eulerAngles: [-90, 0, 0],
-//     moveSpeed: 4,
-//     moveFastSpeed: 15
-// };
-
-
+// Roman-Parish configuration
+// original dataset: https://www.youtube.com/watch?v=3RtY_cLK13k
 const config = {
-    name: 'skatepark',
-    url: 'https://code.playcanvas.com/examples_data/skatepark/lod-meta.json',
-    lodPresetDesktop: 'great',
-    lodPresetMobile: 'low',
-    lodDistances: [15, 30, 80, 250, 300],
-    cameraPosition: [10.3, 2, 8.2],
+    name: 'Roman-Parish',
+    url: 'https://code.playcanvas.com/examples_data/example_roman_parish_01/lod-meta.json',
+    environment: 'https://code.playcanvas.com/examples_data/example_roman_parish_01/environment.sog',
+    lodUpdateDistance: 0.5,
+    lodUnderfillLimit: 5,
+    cameraPosition: [10.3, 2, -10],
     eulerAngles: [-90, 0, 0],
     moveSpeed: 4,
-    moveFastSpeed: 15
+    moveFastSpeed: 15,
+    enableOrbit: false,
+    enablePan: false,
+    focusPoint: [12, 3, 0]
 };
 
-// const config = {
-//     name: 'cityblock',
-//     url: `${rootPath}/static/assets/splats/cityblock/lod-meta.json`,
-//     lodPresetDesktop: 'normal',
-//     lodPresetMobile: 'low',
-//     lodDistances: [50, 100, 150, 250, 300],
-//     cameraPosition: [1.3, 200, 8.2],
-//     moveSpeed: 40,
-//     moveFastSpeed: 150
-// };
-
-// const config = {
-//     name: 'skatepark-decimated',
-//     url: `${rootPath}/static/assets/splats/skatepark-decimated/lod-meta.json`,
-//     lodPresetDesktop: 'great',
-//     lodPresetMobile: 'low',
-//     lodDistances: [15, 30, 80, 250, 300],
-//     cameraPosition: [10.3, 2, 8.2],
-//     eulerAngles: [-90, 0, 0],
-//     moveSpeed: 4,
-//     moveFastSpeed: 15
-// };
-
-// const config = {
-//     name: 'grid',
-//     url: `${rootPath}/static/assets/splats/grid/lod-meta.json`,
-//     lodPresetDesktop: 'great',
-//     lodPresetMobile: 'low',
-//     lodDistances: [15, 30, 80, 250, 300],
-//     cameraPosition: [10.3, 2, 8.2],
-//     eulerAngles: [0, 0, 0],
-//     moveSpeed: 4,
-//     moveFastSpeed: 15
-// };
-
+// LOD preset definitions with customizable distances
+/** @type {Record<string, { range: number[], lodDistances: number[] }>} */
+const LOD_PRESETS = {
+    'desktop-max': {
+        range: [0, 5],
+        lodDistances: [10, 20, 40, 80, 120, 150, 200]
+    },
+    'desktop': {
+        range: [1, 5],
+        lodDistances: [5, 10, 25, 50, 65, 90, 150]
+    },
+    'mobile-max': {
+        range: [2, 5],
+        lodDistances: [5, 7, 12, 25, 75, 120, 200]
+    },
+    'mobile': {
+        range: [3, 5],
+        lodDistances: [2, 4, 6, 10, 75, 120, 200]
+    }
+};
 
 const assets = {
     church: new pc.Asset('gsplat', 'gsplat', { url: config.url }),
@@ -143,12 +107,16 @@ const assets = {
     )
 };
 
+// Add environment asset if specified in config
+if (config.environment) {
+    assets.environment = new pc.Asset('gsplat-environment', 'gsplat', { url: config.environment });
+}
+
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
 
     // setup skydome
-    app.scene.envAtlas = assets.envatlas.resource;
     app.scene.skyboxMip = 1;
     app.scene.exposure = 1.5;
 
@@ -166,50 +134,19 @@ assetListLoader.load(() => {
 
     // enable rotation-based LOD updates and behind-camera penalty
     app.scene.gsplat.lodUpdateAngle = 90;
-    app.scene.gsplat.lodBehindPenalty = 4;
-    app.scene.gsplat.lodUpdateDistance = 3;
-    app.scene.gsplat.lodUnderfillLimit = 10;
+    app.scene.gsplat.lodBehindPenalty = 5;
+    app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
+    app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
-    // initialize UI settings and wire to scene flags
-    data.set('debugAabbs', false);
+    // initialize UI settings
     data.set('debugLod', false);
-    data.set('lodPreset', pc.platform.mobile ? config.lodPresetMobile : config.lodPresetDesktop);
+    data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
 
-    app.scene.gsplat.debugAabbs = !!data.get('debugAabbs');
     app.scene.gsplat.colorizeLod = !!data.get('debugLod');
 
-    data.on('debugAabbs:set', () => {
-        app.scene.gsplat.debugAabbs = !!data.get('debugAabbs');
-    });
     data.on('debugLod:set', () => {
         app.scene.gsplat.colorizeLod = !!data.get('debugLod');
     });
-
-    // LOD preset definitions: map preset key to [min, max]
-    /** @type {Record<string, number[]>} */
-    const LOD_PRESETS = {
-        normal: [0, 3],
-        great: [0, 1],
-        high: [1, 2],
-        low: [1, 3],
-        zero: [0, 0],
-        one: [1, 1],
-        two: [2, 2],
-        three: [3, 3]
-    };
-
-    const applyPreset = () => {
-        const preset = data.get('lodPreset');
-        const range = LOD_PRESETS[preset] || LOD_PRESETS.normal;
-        app.scene.gsplat.lodRangeMin = range[0];
-        app.scene.gsplat.lodRangeMax = range[1];
-    };
-
-    applyPreset();
-    data.on('lodPreset:set', applyPreset);
-
-    // const lodDistances = [10, 15, 20, 25, 30];
-    const lodDistances = config.lodDistances;
 
     const entity = new pc.Entity(config.name || 'gsplat');
     entity.addComponent('gsplat', {
@@ -222,7 +159,30 @@ assetListLoader.load(() => {
     entity.setLocalScale(1, 1, 1);
     app.root.addChild(entity);
     const gs = /** @type {any} */ (entity.gsplat);
-    gs.lodDistances = lodDistances;
+
+    const applyPreset = () => {
+        const preset = data.get('lodPreset');
+        const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
+        app.scene.gsplat.lodRangeMin = presetData.range[0];
+        app.scene.gsplat.lodRangeMax = presetData.range[1];
+        gs.lodDistances = presetData.lodDistances;
+    };
+
+    applyPreset();
+    data.on('lodPreset:set', applyPreset);
+
+    // Add environment gsplat if specified
+    if (assets.environment) {
+        const envEntity = new pc.Entity('gsplat-environment');
+        envEntity.addComponent('gsplat', {
+            asset: assets.environment,
+            unified: true
+        });
+        envEntity.setLocalPosition(0, 0, 0);
+        envEntity.setLocalEulerAngles(rotX, rotY, rotZ);
+        envEntity.setLocalScale(1, 1, 1);
+        app.root.addChild(envEntity);
+    }
 
     // Create a camera with fly controls
     const camera = new pc.Entity('camera');
@@ -232,10 +192,26 @@ assetListLoader.load(() => {
         toneMapping: pc.TONEMAP_ACES
     });
 
-    //    camera.setLocalPosition(1.3, 2.6, 8.2);
+    // Set camera position
     const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
+    const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint || [0, 0.6, 0]);
+    const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
+
     camera.setLocalPosition(camX, camY, camZ);
+
     app.root.addChild(camera);
+
+    // Add the GsplatRevealRadial script to the gsplat entity
+    entity.addComponent('script');
+    const revealScript = entity.script?.create(GsplatRevealRadial);
+    if (revealScript) {
+        revealScript.center.set(focusX, focusY, focusZ);
+        revealScript.speed = 5;
+        revealScript.acceleration = 0;
+        revealScript.delay = 3;
+        revealScript.oscillationIntensity = 0.2;
+        revealScript.endRadius = 25;
+    }
 
     camera.addComponent('script');
     const cc = /** @type { CameraControls} */ ((/** @type {any} */ (camera.script)).create(CameraControls));
@@ -243,9 +219,9 @@ assetListLoader.load(() => {
         sceneSize: 500,
         moveSpeed: /** @type {number} */ (config.moveSpeed),
         moveFastSpeed: /** @type {number} */ (config.moveFastSpeed),
-        enableOrbit: false,
-        enablePan: false,
-        focusPoint: new pc.Vec3(0, 0.6, 0)
+        enableOrbit: config.enableOrbit ?? false,
+        enablePan: config.enablePan ?? false,
+        focusPoint: focusPoint
     });
 
     // update HUD stats every frame

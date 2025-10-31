@@ -7,7 +7,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     return fragment(
         jsx(
             Panel,
-            { headerText: 'Debug' },
+            { headerText: 'Settings' },
             jsx(
                 LabelGroup,
                 { text: 'High Res' },
@@ -16,16 +16,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'highRes' },
                     value: observer.get('highRes') || false
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'AABBs' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'debugAabbs' },
-                    value: observer.get('debugAabbs')
                 })
             ),
             jsx(
@@ -45,16 +35,12 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     type: 'string',
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'lodPreset' },
-                    value: observer.get('lodPreset') || 'normal',
+                    value: observer.get('lodPreset') || 'desktop',
                     options: [
-                        { v: 'normal', t: 'Normal (0–3)' },
-                        { v: 'great', t: 'Great (0–1)' },
-                        { v: 'high', t: 'High (1–2)' },
-                        { v: 'low', t: 'Low (2–3)' },
-                        { v: 'zero', t: 'Zero (0–0)' },
-                        { v: 'one', t: 'One (1–1)' },
-                        { v: 'two', t: 'Two (2–2)' },
-                        { v: 'three', t: 'Three (3–3)' }
+                        { v: 'desktop-max', t: 'Desktop Max (0-5)' },
+                        { v: 'desktop', t: 'Desktop (1-5)' },
+                        { v: 'mobile-max', t: 'Mobile Max (2-5)' },
+                        { v: 'mobile', t: 'Mobile (3-5)' }
                     ]
                 })
             )
