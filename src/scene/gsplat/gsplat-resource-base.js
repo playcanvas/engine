@@ -1,16 +1,13 @@
 import { Debug } from '../../core/debug.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { ADDRESS_CLAMP_TO_EDGE, BUFFER_STATIC, FILTER_NEAREST, SEMANTIC_ATTR13, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, BUFFER_STATIC, FILTER_NEAREST, SEMANTIC_ATTR13, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { Mesh } from '../mesh.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
-import { QuadRender } from '../graphics/quad-render.js';
-import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import glslGsplatCopyToWorkBufferPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
-import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
+import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -21,43 +18,6 @@ import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/
 
 let id = 0;
 const tempMap = new Map();
-
-/**
- * A helper class to cache quad renders for work buffer rendering.
- *
- * @ignore
- */
-class WorkBufferRenderInfo {
-    /** @type {ShaderMaterial} */
-    material;
-
-    /** @type {QuadRender} */
-    quadRender;
-
-    constructor(device, key, material) {
-        this.device = device;
-        this.material = material;
-
-        const clonedDefines = new Map(material.defines);
-        const shader = ShaderUtils.createShader(this.device, {
-            uniqueName: `SplatCopyToWorkBuffer:${key}`,
-            attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexDefines: clonedDefines,
-            fragmentDefines: clonedDefines,
-            vertexChunk: 'fullscreenQuadVS',
-            fragmentGLSL: glslGsplatCopyToWorkBufferPS,
-            fragmentWGSL: wgslGsplatCopyToWorkBufferPS,
-            fragmentOutputTypes: ['vec4', 'uvec4', 'uvec2']
-        });
-
-        this.quadRender = new QuadRender(shader);
-    }
-
-    destroy() {
-        this.material?.destroy();
-        this.quadRender?.destroy();
-    }
-}
 
 /**
  * Base class for a GSplat resource and defines common properties.
