@@ -10,6 +10,7 @@ import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
  * @import { GSplatInfo } from './gsplat-info.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
  */
 
 const _viewMat = new Mat4();
@@ -38,6 +39,14 @@ class GSplatWorkBufferRenderPass extends RenderPass {
      * @type {GraphNode}
      */
     cameraNode = /** @type {any} */ (null);
+
+    /** @type {GSplatWorkBuffer} */
+    workBuffer;
+
+    constructor(device, workBuffer) {
+        super(device);
+        this.workBuffer = workBuffer;
+    }
 
     /**
      * Initialize the render pass with the specified render target.
@@ -111,7 +120,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const { intervals, activeSplats, lineStart, viewport, intervalTexture } = splatInfo;
 
         // quad renderer and material are cached in the resource
-        const workBufferRenderInfo = resource.getWorkBufferRenderInfo(intervals.length > 0);
+        const workBufferRenderInfo = resource.getWorkBufferRenderInfo(intervals.length > 0, this.workBuffer.colorTextureFormat);
 
         // Assign material properties to scope
         workBufferRenderInfo.material.setParameters(device);

@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U, BUFFERUSAGE_COPY_DST, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U, BUFFERUSAGE_COPY_DST, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -31,11 +31,18 @@ class WorkBufferRenderInfo {
     /** @type {QuadRender} */
     quadRender;
 
-    constructor(device, key, material) {
+    constructor(device, key, material, colorTextureFormat) {
         this.device = device;
         this.material = material;
 
         const clonedDefines = new Map(material.defines);
+
+        // when using fallback RGBA16U format
+        const isColorUint = colorTextureFormat === PIXELFORMAT_RGBA16U;
+        if (isColorUint) {
+            clonedDefines.set('GSPLAT_COLOR_UINT', '');
+        }
+
         const shader = ShaderUtils.createShader(this.device, {
             uniqueName: `SplatCopyToWorkBuffer:${key}`,
             attributes: { vertex_position: SEMANTIC_POSITION },
@@ -44,7 +51,7 @@ class WorkBufferRenderInfo {
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatCopyToWorkBufferPS,
             fragmentWGSL: wgslGsplatCopyToWorkBufferPS,
-            fragmentOutputTypes: ['vec4', 'uvec4', 'uvec2']
+            fragmentOutputTypes: [isColorUint ? 'uvec4' : 'vec4', 'uvec4', 'uvec2']
         });
 
         this.quadRender = new QuadRender(shader);
@@ -65,6 +72,9 @@ class GSplatWorkBuffer {
 
     /** @type {number} */
     id = id++;
+
+    /** @type {number} */
+    colorTextureFormat;
 
     /** @type {Texture} */
     colorTexture;
@@ -96,7 +106,10 @@ class GSplatWorkBuffer {
     constructor(device) {
         this.device = device;
 
-        this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA16F, 1, 1);
+        // Detect compatible HDR format for color texture, fallback to RGBA16U if RGBA16F not supported
+        this.colorTextureFormat = device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F]) || PIXELFORMAT_RGBA16U;
+
+        this.colorTexture = this.createTexture('splatColor', this.colorTextureFormat, 1, 1);
         this.splatTexture0 = this.createTexture('splatTexture0', PIXELFORMAT_RGBA32U, 1, 1);
         this.splatTexture1 = this.createTexture('splatTexture1', PIXELFORMAT_RG32U, 1, 1);
 
@@ -118,7 +131,7 @@ class GSplatWorkBuffer {
         }
 
         // Create the optimized render pass for batched splat rendering
-        this.renderPass = new GSplatWorkBufferRenderPass(device);
+        this.renderPass = new GSplatWorkBufferRenderPass(device, this);
         this.renderPass.init(this.renderTarget);
     }
 
