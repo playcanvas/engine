@@ -368,21 +368,24 @@ class Texture {
      */
     resize(width, height, depth = 1) {
 
-        // destroy texture impl
-        const device = this.device;
-        this.adjustVramSizeTracking(device._vram, -this._gpuSize);
-        this._gpuSize = 0;
-        this.impl.destroy(device);
-        this._clearLevels();
+        if (this.width !== width || this.height !== height || this.depth !== depth) {
 
-        this._width = Math.floor(width);
-        this._height = Math.floor(height);
-        this._depth = Math.floor(depth);
-        this._updateNumLevel();
+            // destroy texture impl
+            const device = this.device;
+            this.adjustVramSizeTracking(device._vram, -this._gpuSize);
+            this._gpuSize = 0;
+            this.impl.destroy(device);
+            this._clearLevels();
 
-        // re-create the implementation
-        this.impl = device.createTextureImpl(this);
-        this.dirtyAll();
+            this._width = Math.floor(width);
+            this._height = Math.floor(height);
+            this._depth = Math.floor(depth);
+            this._updateNumLevel();
+
+            // re-create the implementation
+            this.impl = device.createTextureImpl(this);
+            this.dirtyAll();
+        }
     }
 
     /**

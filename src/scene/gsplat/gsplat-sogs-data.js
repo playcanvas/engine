@@ -25,6 +25,13 @@ import wgslSogsCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsC
 const SH_C0 = 0.28209479177387814;
 
 const readImageDataAsync = (texture) => {
+
+    if (texture.device.isNull) {
+        return new Promise((resolve) => {
+            resolve(new Uint8Array(texture.width * texture.height * 4));
+        });
+    }
+
     return texture.read(0, 0, texture.width, texture.height, {
         mipLevel: 0,
         face: 0,
