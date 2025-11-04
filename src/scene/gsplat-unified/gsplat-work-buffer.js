@@ -1,9 +1,13 @@
 import { Debug } from '../../core/debug.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U, BUFFERUSAGE_COPY_DST } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U, BUFFERUSAGE_COPY_DST, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { UploadStream } from '../../platform/graphics/upload-stream.js';
+import { QuadRender } from '../graphics/quad-render.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import glslGsplatCopyToWorkBufferPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
+import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
 import { GSplatWorkBufferRenderPass } from './gsplat-work-buffer-render-pass.js';
 
 let id = 0;
@@ -12,7 +16,60 @@ let id = 0;
  * @import { GSplatInfo } from "./gsplat-info.js"
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GraphNode } from '../graph-node.js';
+ * @import { ShaderMaterial } from '../materials/shader-material.js'
  */
+
+/**
+ * A helper class to cache quad renders for work buffer rendering.
+ *
+ * @ignore
+ */
+class WorkBufferRenderInfo {
+    /** @type {ShaderMaterial} */
+    material;
+
+    /** @type {QuadRender} */
+    quadRender;
+
+    constructor(device, key, material, colorTextureFormat, colorOnly) {
+        this.device = device;
+        this.material = material;
+
+        const clonedDefines = new Map(material.defines);
+
+        // when using fallback RGBA16U format
+        const isColorUint = colorTextureFormat === PIXELFORMAT_RGBA16U;
+        const colorOutputType = isColorUint ? 'uvec4' : 'vec4';
+        if (isColorUint) {
+            clonedDefines.set('GSPLAT_COLOR_UINT', '');
+        }
+
+        // when rendering only color (not full MRT)
+        if (colorOnly) {
+            clonedDefines.set('GSPLAT_COLOR_ONLY', '');
+        }
+
+        const shader = ShaderUtils.createShader(this.device, {
+            uniqueName: `SplatCopyToWorkBuffer:${key}`,
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexDefines: clonedDefines,
+            fragmentDefines: clonedDefines,
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentGLSL: glslGsplatCopyToWorkBufferPS,
+            fragmentWGSL: wgslGsplatCopyToWorkBufferPS,
+            fragmentOutputTypes: colorOnly ?
+                [colorOutputType] :
+                [colorOutputType, 'uvec4', 'uvec2']
+        });
+
+        this.quadRender = new QuadRender(shader);
+    }
+
+    destroy() {
+        this.material?.destroy();
+        this.quadRender?.destroy();
+    }
+}
 
 /**
  * @ignore
@@ -23,6 +80,9 @@ class GSplatWorkBuffer {
 
     /** @type {number} */
     id = id++;
+
+    /** @type {number} */
+    colorTextureFormat;
 
     /** @type {Texture} */
     colorTexture;
@@ -35,6 +95,9 @@ class GSplatWorkBuffer {
 
     /** @type {RenderTarget} */
     renderTarget;
+
+    /** @type {RenderTarget} */
+    colorRenderTarget;
 
     /** @type {Texture} */
     orderTexture;
@@ -51,16 +114,29 @@ class GSplatWorkBuffer {
     /** @type {GSplatWorkBufferRenderPass} */
     renderPass;
 
+    /** @type {GSplatWorkBufferRenderPass} */
+    colorRenderPass;
+
     constructor(device) {
         this.device = device;
 
-        this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA16F, 1, 1);
+        // Detect compatible HDR format for color texture, fallback to RGBA16U if RGBA16F not supported
+        this.colorTextureFormat = device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F]) || PIXELFORMAT_RGBA16U;
+
+        this.colorTexture = this.createTexture('splatColor', this.colorTextureFormat, 1, 1);
         this.splatTexture0 = this.createTexture('splatTexture0', PIXELFORMAT_RGBA32U, 1, 1);
         this.splatTexture1 = this.createTexture('splatTexture1', PIXELFORMAT_RG32U, 1, 1);
 
         this.renderTarget = new RenderTarget({
             name: `GsplatWorkBuffer-MRT-${this.id}`,
             colorBuffers: [this.colorTexture, this.splatTexture0, this.splatTexture1],
+            depth: false,
+            flipY: true
+        });
+
+        this.colorRenderTarget = new RenderTarget({
+            name: `GsplatWorkBuffer-Color-${this.id}`,
+            colorBuffer: this.colorTexture,
             depth: false,
             flipY: true
         });
@@ -76,18 +152,24 @@ class GSplatWorkBuffer {
         }
 
         // Create the optimized render pass for batched splat rendering
-        this.renderPass = new GSplatWorkBufferRenderPass(device);
+        this.renderPass = new GSplatWorkBufferRenderPass(device, this);
         this.renderPass.init(this.renderTarget);
+
+        // Create the color-only render pass for updating just the color texture
+        this.colorRenderPass = new GSplatWorkBufferRenderPass(device, this, true);
+        this.colorRenderPass.init(this.colorRenderTarget);
     }
 
     destroy() {
         this.renderPass?.destroy();
+        this.colorRenderPass?.destroy();
         this.colorTexture?.destroy();
         this.splatTexture0?.destroy();
         this.splatTexture1?.destroy();
         this.orderTexture?.destroy();
         this.orderBuffer?.destroy();
         this.renderTarget?.destroy();
+        this.colorRenderTarget?.destroy();
         this.uploadStream.destroy();
     }
 
@@ -126,6 +208,7 @@ class GSplatWorkBuffer {
     resize(textureSize) {
         Debug.assert(textureSize);
         this.renderTarget.resize(textureSize, textureSize);
+        this.colorRenderTarget.resize(textureSize, textureSize);
         this._textureSize = textureSize;
 
         if (this.device.isWebGPU) {
@@ -153,6 +236,21 @@ class GSplatWorkBuffer {
             this.renderPass.render();
         }
     }
+
+    /**
+     * Render only the color data to the work buffer (not geometry/covariance).
+     *
+     * @param {GSplatInfo[]} splats - The splats to render.
+     * @param {GraphNode} cameraNode - The camera node.
+     * @param {number[][]|undefined} colorsByLod - Array of RGB colors per LOD. Index by lodIndex; if a
+     * shorter array is provided, index 0 will be reused as fallback.
+     */
+    renderColor(splats, cameraNode, colorsByLod) {
+        // render only color using color-only render pass
+        if (this.colorRenderPass.update(splats, cameraNode, colorsByLod)) {
+            this.colorRenderPass.render();
+        }
+    }
 }
 
-export { GSplatWorkBuffer };
+export { GSplatWorkBuffer, WorkBufferRenderInfo };

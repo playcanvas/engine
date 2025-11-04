@@ -3,7 +3,7 @@ import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { GsplatRevealRadial } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/reveal-radial.mjs`);
+const { GsplatRevealGridEruption } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/reveal-grid-eruption.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -39,40 +39,27 @@ app.init(createOptions);
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// High Res toggle (false by default): when false, use half native DPR; when true, use min(DPR, 2)
-data.set('highRes', !!data.get('highRes'));
-const applyResolution = () => {
-    const dpr = window.devicePixelRatio || 1;
-    // auto: treat DPR >= 2 as high-DPI (drops to half); High Res forces native capped at 2
-    device.maxPixelRatio = data.get('highRes') ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
-};
-applyResolution();
-const applyAndResize = () => {
-    applyResolution(); app.resizeCanvas();
-};
-data.on('highRes:set', applyAndResize);
-
-// Ensure DPR and canvas are updated when window changes size
-window.addEventListener('resize', applyAndResize);
+// Ensure canvas is updated when window changes size
+const onResize = () => app.resizeCanvas();
+window.addEventListener('resize', onResize);
 app.on('destroy', () => {
-    window.removeEventListener('resize', applyAndResize);
+    window.removeEventListener('resize', onResize);
 });
 
-// Roman-Parish configuration
-// original dataset: https://www.youtube.com/watch?v=3RtY_cLK13k
+// Skatepark configuration
 const config = {
-    name: 'Roman-Parish',
-    url: 'https://code.playcanvas.com/examples_data/example_roman_parish_01/lod-meta.json',
-    environment: 'https://code.playcanvas.com/examples_data/example_roman_parish_01/environment.sog',
-    lodUpdateDistance: 0.5,
-    lodUnderfillLimit: 5,
-    cameraPosition: [10.3, 2, -10],
+    name: 'Skatepark',
+    url: 'https://code.playcanvas.com/examples_data/example_skatepark_01/lod-meta.json',
+    environment: 'https://code.playcanvas.com/examples_data/example_skatepark_01/environment.sog',
+    lodUpdateDistance: 1,
+    lodUnderfillLimit: 10,
+    cameraPosition: [32, 2, 2],
     eulerAngles: [-90, 0, 0],
     moveSpeed: 4,
     moveFastSpeed: 15,
     enableOrbit: false,
     enablePan: false,
-    focusPoint: [12, 3, 0]
+    focusPoint: [0, 0.6, 0]
 };
 
 // LOD preset definitions with customizable distances
@@ -80,19 +67,19 @@ const config = {
 const LOD_PRESETS = {
     'desktop-max': {
         range: [0, 5],
-        lodDistances: [10, 20, 40, 80, 120, 150, 200]
+        lodDistances: [15, 30, 80, 250, 300]
     },
     'desktop': {
-        range: [1, 5],
-        lodDistances: [5, 10, 25, 50, 65, 90, 150]
+        range: [0, 2],
+        lodDistances: [15, 30, 80, 250, 300]
     },
     'mobile-max': {
-        range: [2, 5],
-        lodDistances: [5, 7, 12, 25, 75, 120, 200]
+        range: [1, 2],
+        lodDistances: [15, 30, 80, 250, 300]
     },
     'mobile': {
-        range: [3, 5],
-        lodDistances: [2, 4, 6, 10, 75, 120, 200]
+        range: [2, 5],
+        lodDistances: [15, 30, 80, 250, 300]
     }
 };
 
@@ -120,32 +107,33 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 1;
     app.scene.exposure = 1.5;
 
-    // Mini-Stats: add VRAM on top of default stats
-    const msOptions = pc.MiniStats.getDefaultOptions();
-    msOptions.stats.push({
-        name: 'VRAM',
-        stats: ['vram.tex'],
-        decimalPlaces: 1,
-        multiplier: 1 / (1024 * 1024),
-        unitsName: 'MB',
-        watermark: 1024
-    });
-    const miniStats = new pc.MiniStats(app, msOptions); // eslint-disable-line no-unused-vars
-
     // enable rotation-based LOD updates and behind-camera penalty
     app.scene.gsplat.lodUpdateAngle = 90;
-    app.scene.gsplat.lodBehindPenalty = 5;
+    app.scene.gsplat.lodBehindPenalty = 2;
+    app.scene.gsplat.radialSorting = true;
     app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
+    // set up SH update parameters
+    app.scene.gsplat.colorUpdateDistance = 1;
+    app.scene.gsplat.colorUpdateAngle = 4;
+    app.scene.gsplat.colorUpdateDistanceLodScale = 2;
+    app.scene.gsplat.colorUpdateAngleLodScale = 2;
+
     // initialize UI settings
     data.set('debugLod', false);
+    data.set('colorizeSH', false);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
 
     app.scene.gsplat.colorizeLod = !!data.get('debugLod');
+    app.scene.gsplat.colorizeColorUpdate = !!data.get('colorizeSH');
 
     data.on('debugLod:set', () => {
         app.scene.gsplat.colorizeLod = !!data.get('debugLod');
+    });
+
+    data.on('colorizeSH:set', () => {
+        app.scene.gsplat.colorizeColorUpdate = !!data.get('colorizeSH');
     });
 
     const entity = new pc.Entity(config.name || 'gsplat');
@@ -201,16 +189,17 @@ assetListLoader.load(() => {
 
     app.root.addChild(camera);
 
-    // Add the GsplatRevealRadial script to the gsplat entity
+    // Add the GsplatRevealGridEruption script to the gsplat entity
     entity.addComponent('script');
-    const revealScript = entity.script?.create(GsplatRevealRadial);
+    const revealScript = entity.script?.create(GsplatRevealGridEruption);
     if (revealScript) {
         revealScript.center.set(focusX, focusY, focusZ);
-        revealScript.speed = 5;
-        revealScript.acceleration = 0;
-        revealScript.delay = 3;
-        revealScript.oscillationIntensity = 0.2;
-        revealScript.endRadius = 25;
+        revealScript.blockCount = 6;
+        revealScript.blockSize = 4;
+        revealScript.delay = 0.2;
+        revealScript.duration = 0.7;
+        revealScript.dotSize = 0.01;
+        revealScript.endRadius = 35;
     }
 
     camera.addComponent('script');
@@ -227,8 +216,6 @@ assetListLoader.load(() => {
     // update HUD stats every frame
     app.on('update', () => {
         data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
-        const bb = app.graphicsDevice.backBufferSize;
-        data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
     });
 });
 

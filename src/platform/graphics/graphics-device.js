@@ -112,6 +112,14 @@ class GraphicsDevice extends EventHandler {
     isWebGL2 = false;
 
     /**
+     * True if the deviceType is Null
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isNull = false;
+
+    /**
      * True if the back-buffer is using HDR format, which means that the browser will display the
      * rendered images in high dynamic range mode. This is true if the options.displayFormat is set
      * to {@link DISPLAYFORMAT_HDR} when creating the graphics device using

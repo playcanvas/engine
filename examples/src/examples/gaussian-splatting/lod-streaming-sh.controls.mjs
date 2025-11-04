@@ -10,22 +10,22 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'Settings' },
             jsx(
                 LabelGroup,
-                { text: 'High Res' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'highRes' },
-                    value: observer.get('highRes') || false
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'Colorize LOD' },
                 jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'debugLod' },
                     value: observer.get('debugLod')
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Colorize SH' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'colorizeSH' },
+                    value: observer.get('colorizeSH') || false
                 })
             ),
             jsx(
@@ -38,9 +38,9 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     value: observer.get('lodPreset') || 'desktop',
                     options: [
                         { v: 'desktop-max', t: 'Desktop Max (0-5)' },
-                        { v: 'desktop', t: 'Desktop (1-5)' },
-                        { v: 'mobile-max', t: 'Mobile Max (2-5)' },
-                        { v: 'mobile', t: 'Mobile (3-5)' }
+                        { v: 'desktop', t: 'Desktop (0-2)' },
+                        { v: 'mobile-max', t: 'Mobile Max (1-2)' },
+                        { v: 'mobile', t: 'Mobile (2-5)' }
                     ]
                 })
             )
@@ -48,15 +48,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
         jsx(
             Panel,
             { headerText: 'Stats' },
-            jsx(
-                LabelGroup,
-                { text: 'Resolution' },
-                jsx(Label, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.stats.resolution' },
-                    value: observer.get('data.stats.resolution')
-                })
-            ),
             jsx(
                 LabelGroup,
                 { text: 'GSplat Count' },

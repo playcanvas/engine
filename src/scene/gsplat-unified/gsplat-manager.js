@@ -1,3 +1,4 @@
+import { math } from '../../core/math/math.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { GraphNode } from '../graph-node.js';
@@ -25,6 +26,8 @@ const invModelMat = new Mat4();
 const tempNonOctreePlacements = new Set();
 const tempOctreePlacements = new Set();
 const _updatedSplats = [];
+const _splatsNeedingColorUpdate = [];
+const _cameraDeltas = { rotationDelta: 0, translationDelta: 0 };
 const tempOctreesTicked = new Set();
 
 const _lodColorsRaw = [
@@ -43,6 +46,8 @@ const _lodColors = [
     new Color(1, 1, 0),
     new Color(1, 0, 1)
 ];
+
+let _randomColorRaw = null;
 
 /**
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
@@ -94,6 +99,12 @@ class GSplatManager {
 
     /** @type {Vec3} */
     lastCameraFwd = new Vec3(Infinity, Infinity, Infinity);
+
+    /** @type {Vec3} */
+    lastColorUpdateCameraPos = new Vec3(Infinity, Infinity, Infinity);
+
+    /** @type {Vec3} */
+    lastColorUpdateCameraFwd = new Vec3(Infinity, Infinity, Infinity);
 
     /** @type {GraphNode} */
     cameraNode;
@@ -229,9 +240,13 @@ class GSplatManager {
             this.lastWorldStateVersion++;
             const splats = [];
 
+            // color update thresholds
+            const { colorUpdateAngle, colorUpdateDistance } = this.scene.gsplat;
+
             // add standalone splats
             for (const p of this.layerPlacements) {
                 const splatInfo = new GSplatInfo(this.device, p.resource, p);
+                splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                 splats.push(splatInfo);
             }
 
@@ -239,7 +254,9 @@ class GSplatManager {
             for (const [, inst] of this.octreeInstances) {
                 inst.activePlacements.forEach((p) => {
                     if (p.resource) {
-                        splats.push(new GSplatInfo(this.device, p.resource, p));
+                        const splatInfo = new GSplatInfo(this.device, p.resource, p);
+                        splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
+                        splats.push(splatInfo);
                     }
                 });
             }
@@ -312,14 +329,19 @@ class GSplatManager {
                     this.renderer.setMaxNumSplats(textureSize * textureSize);
                 }
 
-                // render all splats to work buffer with LOD color palette
-                const colorize = this.scene.gsplat.colorizeLod;
-                this.workBuffer.render(worldState.splats, this.cameraNode, colorize ? _lodColorsRaw : undefined);
+                // render all splats to work buffer
+                this.workBuffer.render(worldState.splats, this.cameraNode, this.getDebugColors());
 
-                // update all splats to sync their transforms (prevents redundant re-render later)
+                // update all splats to sync their transforms and reset color accumulators
+                // (prevents redundant re-render later)
+                const { colorUpdateAngle, colorUpdateDistance } = this.scene.gsplat;
                 worldState.splats.forEach((splat) => {
                     splat.update();
+                    splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                 });
+
+                // update camera tracking for color updates
+                this.updateColorCameraTracking();
 
                 // apply pending file-release requests
                 if (worldState.pendingReleases && worldState.pendingReleases.length) {
@@ -374,6 +396,67 @@ class GSplatManager {
         }
 
         return cameraMoved || cameraRotated;
+    }
+
+    /**
+     * Updates the camera tracking state for color accumulation calculations.
+     * Called after any render that updates colors (full or color-only).
+     */
+    updateColorCameraTracking() {
+        this.lastColorUpdateCameraPos.copy(this.cameraNode.getPosition());
+        this.lastColorUpdateCameraFwd.copy(this.cameraNode.forward);
+    }
+
+    /**
+     * Determines the colorization mode for rendering based on debug flags.
+     *
+     * @returns {Array<number[]>|undefined} Color array for debug visualization, or undefined for normal rendering
+     */
+    getDebugColors() {
+        if (this.scene.gsplat.colorizeColorUpdate) {
+            _randomColorRaw ??= [];
+            // Random color for this update pass - use same color for all LOD levels
+            const r = Math.random();
+            const g = Math.random();
+            const b = Math.random();
+            for (let i = 0; i < _lodColorsRaw.length; i++) {
+                _randomColorRaw[i] ??= [0, 0, 0];
+                _randomColorRaw[i][0] = r;
+                _randomColorRaw[i][1] = g;
+                _randomColorRaw[i][2] = b;
+            }
+            return _randomColorRaw;
+        } else if (this.scene.gsplat.colorizeLod) {
+            // LOD colors
+            return _lodColorsRaw;
+        }
+        return undefined;
+    }
+
+    /**
+     * Calculates camera movement deltas since last color update.
+     * Updates and returns the shared _cameraDeltas object.
+     *
+     * @returns {{ rotationDelta: number, translationDelta: number }} Shared camera movement deltas object
+     */
+    calculateColorCameraDeltas() {
+        _cameraDeltas.rotationDelta = 0;
+        _cameraDeltas.translationDelta = 0;
+
+        // Skip delta calculation on first frame (camera position not yet initialized)
+        if (isFinite(this.lastColorUpdateCameraPos.x)) {
+            // Calculate rotation delta in degrees using dot product
+            const currentCameraFwd = this.cameraNode.forward;
+            const dot = Math.min(1, Math.max(-1,
+                this.lastColorUpdateCameraFwd.dot(currentCameraFwd)));
+            _cameraDeltas.rotationDelta = Math.acos(dot) * math.RAD_TO_DEG;
+
+            // Calculate translation delta in world units
+            const currentCameraPos = this.cameraNode.getPosition();
+            _cameraDeltas.translationDelta = this.lastColorUpdateCameraPos.distance(currentCameraPos);
+        }
+
+        return _cameraDeltas;
     }
 
     update() {
@@ -486,19 +569,56 @@ class GSplatManager {
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (sortedState) {
 
-            // Collect splats that have been updated
+            // color update thresholds
+            const { colorUpdateAngle, colorUpdateDistance, colorUpdateDistanceLodScale, colorUpdateAngleLodScale } = this.scene.gsplat;
+
+            // Calculate camera movement deltas for color updates
+            const { rotationDelta, translationDelta } = this.calculateColorCameraDeltas();
+
+            // check each splat for full or color update
             sortedState.splats.forEach((splat) => {
+                // Check if splat's transform changed (needs full update)
                 if (splat.update()) {
+
                     _updatedSplats.push(splat);
+                    // Reset accumulators for fully updated splats
+                    splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
+
+                } else if (splat.hasSphericalHarmonics) {
+
+                    // Otherwise, check if color needs updating (accumulator-based)
+                    // Add this frame's camera movement to accumulators
+                    splat.colorAccumulatedRotation += rotationDelta;
+                    splat.colorAccumulatedTranslation += translationDelta;
+
+                    // Apply LOD-based scaling to thresholds
+                    const lodIndex = splat.lodIndex ?? 0;
+                    const distThreshold = colorUpdateDistance * Math.pow(colorUpdateDistanceLodScale, lodIndex);
+                    const angleThreshold = colorUpdateAngle * Math.pow(colorUpdateAngleLodScale, lodIndex);
+
+                    // Trigger update if either threshold exceeded
+                    if (splat.colorAccumulatedRotation >= angleThreshold ||
+                        splat.colorAccumulatedTranslation >= distThreshold) {
+                        _splatsNeedingColorUpdate.push(splat);
+                        splat.resetColorAccumulators(angleThreshold, distThreshold);
+                    }
                 }
             });
 
             // Batch render all updated splats in a single render pass
             if (_updatedSplats.length > 0) {
-                const colorize = this.scene.gsplat.colorizeLod;
-                this.workBuffer.render(_updatedSplats, this.cameraNode, colorize ? _lodColorsRaw : undefined);
+                this.workBuffer.render(_updatedSplats, this.cameraNode, this.getDebugColors());
                 _updatedSplats.length = 0;
             }
+
+            // Batch render color updates for all splats that exceeded thresholds
+            if (_splatsNeedingColorUpdate.length > 0) {
+                this.workBuffer.renderColor(_splatsNeedingColorUpdate, this.cameraNode, this.getDebugColors());
+                _splatsNeedingColorUpdate.length = 0;
+            }
+
+            // Update camera tracking once at the end of the frame
+            this.updateColorCameraTracking();
         }
 
         // tick cooldowns once per frame per unique octree
