@@ -114,22 +114,11 @@ assetListLoader.load(() => {
     app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
-
-
-
-
-
-
-
-
-    app.scene.gsplat.colorUpdateDistance = 10;
-    app.scene.gsplat.colorUpdateAngle = 2;
-
-
-
-
-
-
+    // set up SH update parameters
+    app.scene.gsplat.colorUpdateDistance = 1;
+    app.scene.gsplat.colorUpdateAngle = 4;
+    app.scene.gsplat.colorUpdateDistanceLodScale = 2;
+    app.scene.gsplat.colorUpdateAngleLodScale = 2;
 
     // initialize UI settings
     data.set('debugLod', false);
@@ -200,18 +189,18 @@ assetListLoader.load(() => {
 
     app.root.addChild(camera);
 
-    // // Add the GsplatRevealGridEruption script to the gsplat entity
-    // entity.addComponent('script');
-    // const revealScript = entity.script?.create(GsplatRevealGridEruption);
-    // if (revealScript) {
-    //     revealScript.center.set(focusX, focusY, focusZ);
-    //     revealScript.blockCount = 10;
-    //     revealScript.blockSize = 2;
-    //     revealScript.delay = 0.2;
-    //     revealScript.duration = 0.5;
-    //     revealScript.dotSize = 0.01;
-    //     revealScript.endRadius = 35;
-    // }
+    // Add the GsplatRevealGridEruption script to the gsplat entity
+    entity.addComponent('script');
+    const revealScript = entity.script?.create(GsplatRevealGridEruption);
+    if (revealScript) {
+        revealScript.center.set(focusX, focusY, focusZ);
+        revealScript.blockCount = 6;
+        revealScript.blockSize = 4;
+        revealScript.delay = 0.2;
+        revealScript.duration = 0.7;
+        revealScript.dotSize = 0.01;
+        revealScript.endRadius = 35;
+    }
 
     camera.addComponent('script');
     const cc = /** @type { CameraControls} */ ((/** @type {any} */ (camera.script)).create(CameraControls));
