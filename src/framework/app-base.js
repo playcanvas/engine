@@ -1392,7 +1392,7 @@ class AppBase extends EventHandler {
      * Only valid for prefiltered cubemap skyboxes.
      * @param {number[]} [settings.render.skyboxRotation] - Rotation of skybox. Defaults to [0, 0, 0].
      *
-     * @param {string} [settings.render.skyType] - The type of the sky. One of the SKYMESH_* constants. Defaults to {@link SKYTYPE_INFINITE}.
+     * @param {string} [settings.render.skyType] - The type of the sky. One of the SKYTYPE_* constants. Defaults to {@link SKYTYPE_INFINITE}.
      * @param {number[]} [settings.render.skyMeshPosition] - The position of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 0, 0].
      * @param {number[]} [settings.render.skyMeshRotation] - The rotation of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 0, 0].
      * @param {number[]} [settings.render.skyMeshScale] - The scale of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [1, 1, 1].
