@@ -95,10 +95,19 @@ class GSplatManager {
     framesTillFullUpdate = 0;
 
     /** @type {Vec3} */
-    lastCameraPos = new Vec3(Infinity, Infinity, Infinity);
+    lastLodCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
     /** @type {Vec3} */
-    lastCameraFwd = new Vec3(Infinity, Infinity, Infinity);
+    lastLodCameraFwd = new Vec3(Infinity, Infinity, Infinity);
+
+    /** @type {Vec3} */
+    lastSortCameraPos = new Vec3(Infinity, Infinity, Infinity);
+
+    /** @type {Vec3} */
+    lastSortCameraFwd = new Vec3(Infinity, Infinity, Infinity);
+
+    /** @type {boolean} */
+    sortNeeded = true;
 
     /** @type {Vec3} */
     lastColorUpdateCameraPos = new Vec3(Infinity, Infinity, Infinity);
@@ -295,6 +304,9 @@ class GSplatManager {
             this.worldStates.set(this.lastWorldStateVersion, newState);
 
             this.layerPlacementsDirty = false;
+
+            // New world state requires sorting
+            this.sortNeeded = true;
         }
     }
 
@@ -369,12 +381,12 @@ class GSplatManager {
      *
      * @returns {boolean} True if camera moved/rotated over thresholds, otherwise false.
      */
-    testCameraMoved() {
+    testCameraMovedForLod() {
 
         // distance-based movement check
         const distanceThreshold = this.scene.gsplat.lodUpdateDistance;
         const currentCameraPos = this.cameraNode.getPosition();
-        const cameraMoved = this.lastCameraPos.distance(currentCameraPos) > distanceThreshold;
+        const cameraMoved = this.lastLodCameraPos.distance(currentCameraPos) > distanceThreshold;
         if (cameraMoved) {
             return true;
         }
@@ -383,9 +395,9 @@ class GSplatManager {
         let cameraRotated = false;
         const lodUpdateAngleDeg = this.scene.gsplat.lodUpdateAngle;
         if (lodUpdateAngleDeg > 0) {
-            if (Number.isFinite(this.lastCameraFwd.x)) {
+            if (Number.isFinite(this.lastLodCameraFwd.x)) {
                 const currentCameraFwd = this.cameraNode.forward;
-                const dot = Math.min(1, Math.max(-1, this.lastCameraFwd.dot(currentCameraFwd)));
+                const dot = Math.min(1, Math.max(-1, this.lastLodCameraFwd.dot(currentCameraFwd)));
                 const angle = Math.acos(dot);
                 const rotThreshold = lodUpdateAngleDeg * Math.PI / 180;
                 cameraRotated = angle > rotThreshold;
@@ -396,6 +408,35 @@ class GSplatManager {
         }
 
         return cameraMoved || cameraRotated;
+    }
+
+    /**
+     * Tests if the camera has moved enough to require re-sorting.
+     * - For radial sorting: only position matters (rotation doesn't affect sort order)
+     * - For directional sorting: only forward direction matters (position doesn't affect sort order)
+     *
+     * @returns {boolean} True if camera moved enough to require re-sorting, otherwise false.
+     */
+    testCameraMovedForSort() {
+        const epsilon = 0.001;
+
+        if (this.scene.gsplat.radialSorting) {
+            // For radial sorting, only position changes matter
+            const currentCameraPos = this.cameraNode.getPosition();
+            const distance = this.lastSortCameraPos.distance(currentCameraPos);
+            return distance > epsilon;
+        }
+
+        // For directional sorting, only forward direction changes matter
+        if (Number.isFinite(this.lastSortCameraFwd.x)) {
+            const currentCameraFwd = this.cameraNode.forward;
+            const dot = Math.min(1, Math.max(-1, this.lastSortCameraFwd.dot(currentCameraFwd)));
+            const angle = Math.acos(dot);
+            return angle > epsilon;
+        }
+
+        // first run, force update to initialize last orientation
+        return true;
     }
 
     /**
@@ -481,7 +522,7 @@ class GSplatManager {
 
         let anyInstanceNeedsLodUpdate = false;
         let anyOctreeMoved = false;
-        let cameraMovedOrRotated = false;
+        let cameraMovedOrRotatedForLod = false;
         if (fullUpdate) {
 
             // process any pending / prefetch resource completions and collect LOD updates
@@ -502,7 +543,12 @@ class GSplatManager {
             }
 
             // check if camera has moved/rotated enough to require LOD update
-            cameraMovedOrRotated = this.testCameraMoved();
+            cameraMovedOrRotatedForLod = this.testCameraMovedForLod();
+        }
+
+        // check if camera has moved enough to require re-sorting
+        if (this.testCameraMovedForSort()) {
+            this.sortNeeded = true;
         }
 
         Debug.call(() => {
@@ -518,7 +564,7 @@ class GSplatManager {
         }
 
         // when camera or octree need LOD evaluated, or params are dirty, or resources completed, or new instances added
-        if (cameraMovedOrRotated || anyOctreeMoved || this.scene.gsplat.dirty || anyInstanceNeedsLodUpdate || hasNewInstances) {
+        if (cameraMovedOrRotatedForLod || anyOctreeMoved || this.scene.gsplat.dirty || anyInstanceNeedsLodUpdate || hasNewInstances) {
 
             // update the previous position where LOD was evaluated for octree instances
             for (const [, inst] of this.octreeInstances) {
@@ -526,8 +572,8 @@ class GSplatManager {
             }
 
             // update last camera data when LOD was evaluated
-            this.lastCameraPos.copy(this.cameraNode.getPosition());
-            this.lastCameraFwd.copy(this.cameraNode.forward);
+            this.lastLodCameraPos.copy(this.cameraNode.getPosition());
+            this.lastLodCameraFwd.copy(this.cameraNode.forward);
 
             // update LOD for all octree instances
             for (const [, inst] of this.octreeInstances) {
@@ -561,8 +607,15 @@ class GSplatManager {
                 }
             });
 
-            // kick off sorting
-            this.sort(lastState);
+            // kick off sorting only if needed
+            if (this.sortNeeded) {
+                this.sort(lastState);
+                this.sortNeeded = false;
+
+                // Update camera tracking for next sort check
+                this.lastSortCameraPos.copy(this.cameraNode.getPosition());
+                this.lastSortCameraFwd.copy(this.cameraNode.forward);
+            }
         }
 
         // re-render splats that have changed their transform this frame, using last sorted state
@@ -583,6 +636,9 @@ class GSplatManager {
                     _updatedSplats.push(splat);
                     // Reset accumulators for fully updated splats
                     splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
+
+                    // Splat moved, need to re-sort
+                    this.sortNeeded = true;
 
                 } else if (splat.hasSphericalHarmonics) {
 
