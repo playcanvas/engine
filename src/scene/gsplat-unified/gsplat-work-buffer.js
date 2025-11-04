@@ -31,7 +31,7 @@ class WorkBufferRenderInfo {
     /** @type {QuadRender} */
     quadRender;
 
-    constructor(device, key, material, colorTextureFormat) {
+    constructor(device, key, material, colorTextureFormat, colorOnly) {
         this.device = device;
         this.material = material;
 
@@ -39,8 +39,14 @@ class WorkBufferRenderInfo {
 
         // when using fallback RGBA16U format
         const isColorUint = colorTextureFormat === PIXELFORMAT_RGBA16U;
+        const colorOutputType = isColorUint ? 'uvec4' : 'vec4';
         if (isColorUint) {
             clonedDefines.set('GSPLAT_COLOR_UINT', '');
+        }
+
+        // when rendering only color (not full MRT)
+        if (colorOnly) {
+            clonedDefines.set('GSPLAT_COLOR_ONLY', '');
         }
 
         const shader = ShaderUtils.createShader(this.device, {
@@ -51,7 +57,9 @@ class WorkBufferRenderInfo {
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatCopyToWorkBufferPS,
             fragmentWGSL: wgslGsplatCopyToWorkBufferPS,
-            fragmentOutputTypes: [isColorUint ? 'uvec4' : 'vec4', 'uvec4', 'uvec2']
+            fragmentOutputTypes: colorOnly ?
+                [colorOutputType] :
+                [colorOutputType, 'uvec4', 'uvec2']
         });
 
         this.quadRender = new QuadRender(shader);
@@ -88,6 +96,9 @@ class GSplatWorkBuffer {
     /** @type {RenderTarget} */
     renderTarget;
 
+    /** @type {RenderTarget} */
+    colorRenderTarget;
+
     /** @type {Texture} */
     orderTexture;
 
@@ -102,6 +113,9 @@ class GSplatWorkBuffer {
 
     /** @type {GSplatWorkBufferRenderPass} */
     renderPass;
+
+    /** @type {GSplatWorkBufferRenderPass} */
+    colorRenderPass;
 
     constructor(device) {
         this.device = device;
@@ -120,6 +134,13 @@ class GSplatWorkBuffer {
             flipY: true
         });
 
+        this.colorRenderTarget = new RenderTarget({
+            name: `GsplatWorkBuffer-Color-${this.id}`,
+            colorBuffer: this.colorTexture,
+            depth: false,
+            flipY: true
+        });
+
         // Create upload stream for non-blocking uploads
         this.uploadStream = new UploadStream(device);
 
@@ -133,16 +154,22 @@ class GSplatWorkBuffer {
         // Create the optimized render pass for batched splat rendering
         this.renderPass = new GSplatWorkBufferRenderPass(device, this);
         this.renderPass.init(this.renderTarget);
+
+        // Create the color-only render pass for updating just the color texture
+        this.colorRenderPass = new GSplatWorkBufferRenderPass(device, this, true);
+        this.colorRenderPass.init(this.colorRenderTarget);
     }
 
     destroy() {
         this.renderPass?.destroy();
+        this.colorRenderPass?.destroy();
         this.colorTexture?.destroy();
         this.splatTexture0?.destroy();
         this.splatTexture1?.destroy();
         this.orderTexture?.destroy();
         this.orderBuffer?.destroy();
         this.renderTarget?.destroy();
+        this.colorRenderTarget?.destroy();
         this.uploadStream.destroy();
     }
 
@@ -181,6 +208,7 @@ class GSplatWorkBuffer {
     resize(textureSize) {
         Debug.assert(textureSize);
         this.renderTarget.resize(textureSize, textureSize);
+        this.colorRenderTarget.resize(textureSize, textureSize);
         this._textureSize = textureSize;
 
         if (this.device.isWebGPU) {
@@ -206,6 +234,21 @@ class GSplatWorkBuffer {
         // render splats using render pass
         if (this.renderPass.update(splats, cameraNode, colorsByLod)) {
             this.renderPass.render();
+        }
+    }
+
+    /**
+     * Render only the color data to the work buffer (not geometry/covariance).
+     *
+     * @param {GSplatInfo[]} splats - The splats to render.
+     * @param {GraphNode} cameraNode - The camera node.
+     * @param {number[][]|undefined} colorsByLod - Array of RGB colors per LOD. Index by lodIndex; if a
+     * shorter array is provided, index 0 will be reused as fallback.
+     */
+    renderColor(splats, cameraNode, colorsByLod) {
+        // render only color using color-only render pass
+        if (this.colorRenderPass.update(splats, cameraNode, colorsByLod)) {
+            this.colorRenderPass.render();
         }
     }
 }

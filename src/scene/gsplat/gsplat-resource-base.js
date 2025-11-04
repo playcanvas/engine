@@ -80,13 +80,15 @@ class GSplatResourceBase {
      *
      * @param {boolean} useIntervals - Whether to use intervals.
      * @param {number} colorTextureFormat - The format of the color texture (RGBA16F or RGBA16U).
+     * @param {boolean} colorOnly - Whether to render only color (not full MRT).
      * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
      */
-    getWorkBufferRenderInfo(useIntervals, colorTextureFormat) {
+    getWorkBufferRenderInfo(useIntervals, colorTextureFormat, colorOnly = false) {
 
         // configure defines to fetch cached data
         this.configureMaterialDefines(tempMap);
         if (useIntervals) tempMap.set('GSPLAT_LOD', '');
+        if (colorOnly) tempMap.set('GSPLAT_COLOR_ONLY', '');
         const key = Array.from(tempMap.entries()).map(([k, v]) => `${k}=${v}`).join(';');
 
         // get or create quad render
@@ -100,7 +102,7 @@ class GSplatResourceBase {
             tempMap.forEach((v, k) => material.setDefine(k, v));
 
             // create new cache entry
-            info = new WorkBufferRenderInfo(this.device, key, material, colorTextureFormat);
+            info = new WorkBufferRenderInfo(this.device, key, material, colorTextureFormat, colorOnly);
             this.workBufferRenderInfos.set(key, info);
         }
 
