@@ -235,6 +235,55 @@ class GSplatParams {
      * @type {number}
      */
     colorRampIntensity = 1;
+
+    /**
+     * Enables debug colorization to visualize when spherical harmonics are evaluated.
+     * When true, each update pass renders with a random color to visualize the behavior
+     * of colorUpdateDistance and colorUpdateAngle thresholds. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    colorizeColorUpdate = false;
+
+    /**
+     * Distance threshold in world units for triggering spherical harmonics color updates.
+     * Used to control how often SH evaluation occurs based on camera translation.
+     * Only affects resources with spherical harmonics data. Set to 0 to update on
+     * every frame where camera moves. Defaults to 0.2.
+     *
+     * @type {number}
+     */
+    colorUpdateDistance = 0.2;
+
+    /**
+     * Angle threshold in degrees for triggering spherical harmonics color updates.
+     * Used to control how often SH evaluation occurs based on camera rotation.
+     * Only affects resources with spherical harmonics data. Set to 0 to update on
+     * every frame where camera rotates. Defaults to 2.
+     *
+     * @type {number}
+     */
+    colorUpdateAngle = 2;
+
+    /**
+     * Scale factor applied to colorUpdateDistance for each LOD level.
+     * Each LOD level multiplies the threshold by this value raised to the power of lodIndex.
+     * For example, with scale=2: LOD 0 uses 1x threshold, LOD 1 uses 2x, LOD 2 uses 4x.
+     * Higher values relax thresholds more aggressively for distant geometry. Defaults to 2.
+     *
+     * @type {number}
+     */
+    colorUpdateDistanceLodScale = 2;
+
+    /**
+     * Scale factor applied to colorUpdateAngle for each LOD level.
+     * Each LOD level multiplies the threshold by this value raised to the power of lodIndex.
+     * For example, with scale=2: LOD 0 uses 1x threshold, LOD 1 uses 2x, LOD 2 uses 4x.
+     * Higher values relax thresholds more aggressively for distant geometry. Defaults to 2.
+     *
+     * @type {number}
+     */
+    colorUpdateAngleLodScale = 2;
 }
 
 export { GSplatParams };

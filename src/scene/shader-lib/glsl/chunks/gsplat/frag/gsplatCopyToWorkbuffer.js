@@ -38,8 +38,10 @@ void main(void) {
         #else
             pcFragColor0 = vec4(0.0);
         #endif
-        pcFragColor1 = uvec4(0u);
-        pcFragColor2 = uvec2(0u);
+        #ifndef GSPLAT_COLOR_ONLY
+            pcFragColor1 = uvec4(0u);
+            pcFragColor2 = uvec2(0u);
+        #endif
 
     } else {
 
@@ -117,8 +119,10 @@ void main(void) {
         #else
             pcFragColor0 = color;
         #endif
-        pcFragColor1 = uvec4(floatBitsToUint(modelCenter.x), floatBitsToUint(modelCenter.y), floatBitsToUint(modelCenter.z), packHalf2x16(vec2(covA.z, covB.z)));
-        pcFragColor2 = uvec2(packHalf2x16(covA.xy), packHalf2x16(covB.xy));
+        #ifndef GSPLAT_COLOR_ONLY
+            pcFragColor1 = uvec4(floatBitsToUint(modelCenter.x), floatBitsToUint(modelCenter.y), floatBitsToUint(modelCenter.z), packHalf2x16(vec2(covA.z, covB.z)));
+            pcFragColor2 = uvec2(packHalf2x16(covA.xy), packHalf2x16(covB.xy));
+        #endif
     }
 }
 `;

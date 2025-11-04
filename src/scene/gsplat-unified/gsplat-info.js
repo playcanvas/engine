@@ -70,6 +70,12 @@ class GSplatInfo {
      */
     intervalTexture = null;
 
+    /** @type {number} */
+    colorAccumulatedRotation = 0;
+
+    /** @type {number} */
+    colorAccumulatedTranslation = 0;
+
     /**
      * Create a new GSplatInfo.
      *
@@ -181,6 +187,18 @@ class GSplatInfo {
         }
 
         return worldMatrixChanged;
+    }
+
+    resetColorAccumulators(colorUpdateAngle, colorUpdateDistance) {
+        // Use a single random factor (0 to 1) for both accumulators to keep them synchronized
+        // This ensures rotation and translation thresholds trigger at similar rates
+        const randomFactor = Math.random();
+        this.colorAccumulatedRotation = randomFactor * colorUpdateAngle;
+        this.colorAccumulatedTranslation = randomFactor * colorUpdateDistance;
+    }
+
+    get hasSphericalHarmonics() {
+        return this.resource.gsplatData?.shBands > 0;
     }
 }
 

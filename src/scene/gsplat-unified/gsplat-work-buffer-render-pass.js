@@ -43,9 +43,13 @@ class GSplatWorkBufferRenderPass extends RenderPass {
     /** @type {GSplatWorkBuffer} */
     workBuffer;
 
-    constructor(device, workBuffer) {
+    /** @type {boolean} */
+    colorOnly;
+
+    constructor(device, workBuffer, colorOnly = false) {
         super(device);
         this.workBuffer = workBuffer;
+        this.colorOnly = colorOnly;
     }
 
     /**
@@ -120,7 +124,11 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const { intervals, activeSplats, lineStart, viewport, intervalTexture } = splatInfo;
 
         // quad renderer and material are cached in the resource
-        const workBufferRenderInfo = resource.getWorkBufferRenderInfo(intervals.length > 0, this.workBuffer.colorTextureFormat);
+        const workBufferRenderInfo = resource.getWorkBufferRenderInfo(
+            intervals.length > 0,
+            this.workBuffer.colorTextureFormat,
+            this.colorOnly
+        );
 
         // Assign material properties to scope
         workBufferRenderInfo.material.setParameters(device);
@@ -137,8 +145,8 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         scope.resolve('uStartLine').setValue(lineStart);
         scope.resolve('uViewportWidth').setValue(viewport.z);
 
-        // Colorize by LOD using provided colors; otherwise, use white
-        const color = this.colorsByLod?.[splatInfo.lodIndex] ?? _whiteColor;
+        // Colorize by LOD using provided colors; use index 0 as fallback for non-LOD splats
+        const color = this.colorsByLod?.[splatInfo.lodIndex] ?? this.colorsByLod?.[0] ?? _whiteColor;
         scope.resolve('uColorMultiply').setValue(color);
 
         // SH related
