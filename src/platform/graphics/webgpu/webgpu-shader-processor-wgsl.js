@@ -38,7 +38,7 @@ const KEYWORD_RESOURCE = /^[ \t]*var\s*(?:(<storage,[^>]*>)\s*([\w\d_]+)\s*:\s*(
 
 // match varying name from string like: '@interpolate(perspective, centroid) smoothColor : vec3f;'
 // eslint-disable-next-line
-const VARYING = /(?:@interpolate\([^)]*\)\s*)?([\w]+)\s*:/;
+const VARYING = /(?:@interpolate\([^)]*\)\s*)?([\w]+)\s*:\s*([\w<>]+)/;
 
 // marker for a place in the source code to be replaced by code
 const MARKER = '@@@';
@@ -711,6 +711,7 @@ class WebgpuShaderProcessorWGSL {
 
             if (match) {
                 const name = match[1];
+                const type = match[2];
 
                 if (isVertex) {
                     // store it in the map
@@ -727,7 +728,7 @@ class WebgpuShaderProcessorWGSL {
                 if (!isVertex) {
 
                     // private global variable for fragment varying
-                    blockPrivates += `    var<private> ${line};\n`;
+                    blockPrivates += `    var<private> ${name}: ${type};\n`;
 
                     // copy input variable to the private variable
                     blockCopy += `    ${name} = input.${name};\n`;
