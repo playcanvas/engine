@@ -135,6 +135,7 @@ assetListLoader.load(() => {
     // enable rotation-based LOD updates and behind-camera penalty
     app.scene.gsplat.lodUpdateAngle = 90;
     app.scene.gsplat.lodBehindPenalty = 5;
+    app.scene.gsplat.radialSorting = true;
     app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
