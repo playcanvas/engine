@@ -1,5 +1,5 @@
 import { Vec3, Color } from 'playcanvas';
-import { GsplatRevealBase } from './reveal-base.mjs';
+import { GsplatShaderEffect } from './gsplat-shader-effect.mjs';
 
 const shaderGLSL = /* glsl */`
 uniform float uTime;
@@ -267,7 +267,7 @@ fn modifyColor(center: vec3f, color: ptr<function, vec4f>) {
  * gridScript.center.set(0, 0, 0);
  * gridScript.blockCount = 10;
  */
-class GsplatRevealGridEruption extends GsplatRevealBase {
+class GsplatRevealGridEruption extends GsplatShaderEffect {
     static scriptName = 'gsplatRevealGridEruption';
 
     // Reusable arrays for uniform updates
@@ -359,50 +359,39 @@ class GsplatRevealGridEruption extends GsplatRevealBase {
         return shaderWGSL;
     }
 
-    getUniforms() {
-        return {
-            uCenter: [0, 0, 0],
-            uBlockCount: 10,
-            uBlockSize: 2,
-            uDelay: 0.2,
-            uDuration: 1.0,
-            uDotSize: 0.01,
-            uMoveTint: [1, 0, 1],
-            uMoveTintIntensity: 0.2,
-            uLandTint: [2, 2, 0],
-            uLandDuration: 0.6,
-            uEndRadius: 25
-        };
-    }
+    updateEffect(effectTime, dt) {
+        // Check if effect is complete and disable if so
+        if (this.isEffectComplete()) {
+            this.enabled = false;
+            return;
+        }
 
-    updateUniforms(dt) {
-        const { uniforms } = this;
-        if (!uniforms) return;
+        this.setUniform('uTime', effectTime);
 
         this._centerArray[0] = this.center.x;
         this._centerArray[1] = this.center.y;
         this._centerArray[2] = this.center.z;
-        uniforms.uCenter.setValue(this._centerArray);
+        this.setUniform('uCenter', this._centerArray);
 
-        uniforms.uBlockCount.setValue(this.blockCount);
-        uniforms.uBlockSize.setValue(this.blockSize);
-        uniforms.uDelay.setValue(this.delay);
-        uniforms.uDuration.setValue(this.duration);
-        uniforms.uDotSize.setValue(this.dotSize);
+        this.setUniform('uBlockCount', this.blockCount);
+        this.setUniform('uBlockSize', this.blockSize);
+        this.setUniform('uDelay', this.delay);
+        this.setUniform('uDuration', this.duration);
+        this.setUniform('uDotSize', this.dotSize);
 
         this._moveTintArray[0] = this.moveTint.r;
         this._moveTintArray[1] = this.moveTint.g;
         this._moveTintArray[2] = this.moveTint.b;
-        uniforms.uMoveTint.setValue(this._moveTintArray);
-        uniforms.uMoveTintIntensity.setValue(this.moveTintIntensity);
+        this.setUniform('uMoveTint', this._moveTintArray);
+        this.setUniform('uMoveTintIntensity', this.moveTintIntensity);
 
         this._landTintArray[0] = this.landTint.r;
         this._landTintArray[1] = this.landTint.g;
         this._landTintArray[2] = this.landTint.b;
-        uniforms.uLandTint.setValue(this._landTintArray);
+        this.setUniform('uLandTint', this._landTintArray);
 
-        uniforms.uLandDuration.setValue(this.landDuration);
-        uniforms.uEndRadius.setValue(this.endRadius);
+        this.setUniform('uLandDuration', this.landDuration);
+        this.setUniform('uEndRadius', this.endRadius);
     }
 
     /**
@@ -411,14 +400,12 @@ class GsplatRevealGridEruption extends GsplatRevealBase {
      * @returns {boolean} True if effect is complete
      */
     isEffectComplete() {
-        if (!this.currentTime) return false;
-
         // Calculate time for furthest block within endRadius
         const maxTStart = this.endRadius * this.delay;
         const maxTEnd = maxTStart + this.duration;
         const maxCompletionTime = maxTEnd + Math.max(0.3, this.landDuration);
 
-        return this.currentTime >= maxCompletionTime;
+        return this.effectTime >= maxCompletionTime;
     }
 }
 

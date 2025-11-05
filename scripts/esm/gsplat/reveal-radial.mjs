@@ -1,5 +1,5 @@
 import { Vec3, Color } from 'playcanvas';
-import { GsplatRevealBase } from './reveal-base.mjs';
+import { GsplatShaderEffect } from './gsplat-shader-effect.mjs';
 
 const shaderGLSL = /* glsl */`
 uniform float uTime;
@@ -275,7 +275,7 @@ fn modifyColor(center: vec3f, color: ptr<function, vec4f>) {
  *     }
  * });
  */
-class GsplatRevealRadial extends GsplatRevealBase {
+class GsplatRevealRadial extends GsplatShaderEffect {
     static scriptName = 'gsplatRevealRadial';
 
     // Reusable arrays for uniform updates
@@ -346,45 +346,37 @@ class GsplatRevealRadial extends GsplatRevealBase {
         return shaderWGSL;
     }
 
-    getUniforms() {
-        return {
-            uCenter: [0, 0, 0],
-            uSpeed: 1,
-            uAcceleration: 0,
-            uDelay: 2,
-            uDotTint: [1, 1, 1],
-            uWaveTint: [1, 1, 1],
-            uOscillationIntensity: 0.1,
-            uEndRadius: 25
-        };
-    }
+    updateEffect(effectTime, dt) {
+        // Check if effect is complete and disable if so
+        if (this.isEffectComplete()) {
+            this.enabled = false;
+            return;
+        }
 
-    updateUniforms(dt) {
         // Update uniforms from attributes
-        const { uniforms } = this;
-        if (!uniforms) return;
+        this.setUniform('uTime', effectTime);
 
         this._centerArray[0] = this.center.x;
         this._centerArray[1] = this.center.y;
         this._centerArray[2] = this.center.z;
-        uniforms.uCenter.setValue(this._centerArray);
+        this.setUniform('uCenter', this._centerArray);
 
-        uniforms.uSpeed.setValue(this.speed);
-        uniforms.uAcceleration.setValue(this.acceleration);
-        uniforms.uDelay.setValue(this.delay);
+        this.setUniform('uSpeed', this.speed);
+        this.setUniform('uAcceleration', this.acceleration);
+        this.setUniform('uDelay', this.delay);
 
         this._dotTintArray[0] = this.dotTint.r;
         this._dotTintArray[1] = this.dotTint.g;
         this._dotTintArray[2] = this.dotTint.b;
-        uniforms.uDotTint.setValue(this._dotTintArray);
+        this.setUniform('uDotTint', this._dotTintArray);
 
         this._waveTintArray[0] = this.waveTint.r;
         this._waveTintArray[1] = this.waveTint.g;
         this._waveTintArray[2] = this.waveTint.b;
-        uniforms.uWaveTint.setValue(this._waveTintArray);
+        this.setUniform('uWaveTint', this._waveTintArray);
 
-        uniforms.uOscillationIntensity.setValue(this.oscillationIntensity);
-        uniforms.uEndRadius.setValue(this.endRadius);
+        this.setUniform('uOscillationIntensity', this.oscillationIntensity);
+        this.setUniform('uEndRadius', this.endRadius);
     }
 
     /**
@@ -418,7 +410,7 @@ class GsplatRevealRadial extends GsplatRevealBase {
      * @returns {boolean} True if effect is complete
      */
     isEffectComplete() {
-        return this.currentTime >= this.getCompletionTime();
+        return this.effectTime >= this.getCompletionTime();
     }
 }
 

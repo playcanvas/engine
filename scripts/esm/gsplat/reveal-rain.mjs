@@ -1,5 +1,5 @@
 import { Vec3, Color } from 'playcanvas';
-import { GsplatRevealBase } from './reveal-base.mjs';
+import { GsplatShaderEffect } from './gsplat-shader-effect.mjs';
 
 const shaderGLSL = /* glsl */`
 uniform float uTime;
@@ -306,7 +306,7 @@ fn modifyColor(center: vec3f, color: ptr<function, vec4f>) {
  * rainScript.distance = 5;
  * rainScript.speed = 3;
  */
-class GsplatRevealRain extends GsplatRevealBase {
+class GsplatRevealRain extends GsplatShaderEffect {
     static scriptName = 'gsplatRevealRain';
 
     // Reusable arrays for uniform updates
@@ -405,52 +405,40 @@ class GsplatRevealRain extends GsplatRevealBase {
         return shaderWGSL;
     }
 
-    getUniforms() {
-        return {
-            uCenter: [0, 0, 0],
-            uDistance: 30,
-            uSpeed: 2,
-            uAcceleration: 0,
-            uFlightTime: 2,
-            uRainSize: 0.015,
-            uRotation: 0.9,
-            uFallTint: [0, 1, 1],
-            uFallTintIntensity: 0.2,
-            uHitTint: [2, 0, 0],
-            uHitDuration: 0.5,
-            uEndRadius: 25
-        };
-    }
+    updateEffect(effectTime, dt) {
+        // Check if effect is complete and disable if so
+        if (this.isEffectComplete()) {
+            this.enabled = false;
+            return;
+        }
 
-    updateUniforms(dt) {
-        const { uniforms } = this;
-        if (!uniforms) return;
+        this.setUniform('uTime', effectTime);
 
         this._centerArray[0] = this.center.x;
         this._centerArray[1] = this.center.y;
         this._centerArray[2] = this.center.z;
-        uniforms.uCenter.setValue(this._centerArray);
+        this.setUniform('uCenter', this._centerArray);
 
-        uniforms.uDistance.setValue(this.distance);
-        uniforms.uSpeed.setValue(this.speed);
-        uniforms.uAcceleration.setValue(this.acceleration);
-        uniforms.uFlightTime.setValue(this.flightTime);
-        uniforms.uRainSize.setValue(this.rainSize);
-        uniforms.uRotation.setValue(this.rotation);
+        this.setUniform('uDistance', this.distance);
+        this.setUniform('uSpeed', this.speed);
+        this.setUniform('uAcceleration', this.acceleration);
+        this.setUniform('uFlightTime', this.flightTime);
+        this.setUniform('uRainSize', this.rainSize);
+        this.setUniform('uRotation', this.rotation);
 
         this._fallTintArray[0] = this.fallTint.r;
         this._fallTintArray[1] = this.fallTint.g;
         this._fallTintArray[2] = this.fallTint.b;
-        uniforms.uFallTint.setValue(this._fallTintArray);
-        uniforms.uFallTintIntensity.setValue(this.fallTintIntensity);
+        this.setUniform('uFallTint', this._fallTintArray);
+        this.setUniform('uFallTintIntensity', this.fallTintIntensity);
 
         this._hitTintArray[0] = this.hitTint.r;
         this._hitTintArray[1] = this.hitTint.g;
         this._hitTintArray[2] = this.hitTint.b;
-        uniforms.uHitTint.setValue(this._hitTintArray);
+        this.setUniform('uHitTint', this._hitTintArray);
 
-        uniforms.uHitDuration.setValue(this.hitDuration);
-        uniforms.uEndRadius.setValue(this.endRadius);
+        this.setUniform('uHitDuration', this.hitDuration);
+        this.setUniform('uEndRadius', this.endRadius);
     }
 
     /**
@@ -459,8 +447,6 @@ class GsplatRevealRain extends GsplatRevealBase {
      * @returns {boolean} True if effect is complete
      */
     isEffectComplete() {
-        if (!this.currentTime) return false;
-
         // Calculate time for furthest splat within endRadius
         let maxTStart;
         if (this.acceleration === 0) {
@@ -474,7 +460,7 @@ class GsplatRevealRain extends GsplatRevealBase {
         const maxTLand = maxTStart + this.flightTime;
         const maxCompletionTime = maxTLand + Math.max(0.5, this.hitDuration);
 
-        return this.currentTime >= maxCompletionTime;
+        return this.effectTime >= maxCompletionTime;
     }
 }
 
