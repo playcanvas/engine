@@ -3,12 +3,17 @@ attribute vertex_position: vec3f;         // xy: cornerUV, z: render order offse
 attribute vertex_id_attrib: u32;          // render order base
 
 uniform numSplats: u32;                   // total number of splats
-var splatOrder: texture_2d<u32>;          // per-splat index to source gaussian
+uniform splatTextureSize: u32;            // texture size for splat data
+
+#ifdef STORAGE_ORDER
+    var<storage, read> splatOrder: array<u32>;
+#else
+    // support texture for non-unified gsplat rendering
+    var splatOrder: texture_2d<u32>;
+#endif
 
 // initialize the splat source structure
 fn initSource(source: ptr<function, SplatSource>) -> bool {
-    let w: u32 = textureDimensions(splatOrder, 0).x;
-
     // calculate splat order
     source.order = vertex_id_attrib + u32(vertex_position.z);
 
@@ -17,13 +22,16 @@ fn initSource(source: ptr<function, SplatSource>) -> bool {
         return false;
     }
 
-    let orderUV = vec2i(vec2u(source.order % w, source.order / w));
-
     // read splat id
-    source.id = textureLoad(splatOrder, orderUV, 0).r;
+    #ifdef STORAGE_ORDER
+        source.id = splatOrder[source.order];
+    #else
+        let uv = vec2u(source.order % uniform.splatTextureSize, source.order / uniform.splatTextureSize);
+        source.id = textureLoad(splatOrder, vec2i(uv), 0).r;
+    #endif
 
     // map id to uv
-    source.uv = vec2i(vec2u(source.id % w, source.id / w));
+    source.uv = vec2i(vec2u(source.id % uniform.splatTextureSize, source.id / uniform.splatTextureSize));
 
     // get the corner
     source.cornerUV = vertex_position.xy;

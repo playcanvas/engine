@@ -75,7 +75,7 @@ class GSplatInstance {
             this._material = options.material;
 
             // patch splat order
-            this._material.setParameter('splatOrder', this.orderTexture);
+            this.setMaterialOrderTexture(this._material);
         } else {
             // construct the material
             this._material = new ShaderMaterial({
@@ -132,6 +132,16 @@ class GSplatInstance {
     }
 
     /**
+     * Set order data parameters on the material.
+     *
+     * @param {ShaderMaterial} material - The material to configure.
+     */
+    setMaterialOrderTexture(material) {
+        material.setParameter('splatOrder', this.orderTexture);
+        material.setParameter('splatTextureSize', this.orderTexture.width);
+    }
+
+    /**
      * @param {ShaderMaterial} value - The material instance.
      */
     set material(value) {
@@ -140,7 +150,7 @@ class GSplatInstance {
             this._material = value;
 
             // patch order texture
-            this._material.setParameter('splatOrder', this.orderTexture);
+            this.setMaterialOrderTexture(this._material);
 
             if (this.meshInstance) {
                 this.meshInstance.material = value;
@@ -165,7 +175,7 @@ class GSplatInstance {
 
         // set instance properties
         material.setParameter('numSplats', 0);
-        material.setParameter('splatOrder', this.orderTexture);
+        this.setMaterialOrderTexture(material);
         material.setParameter('alphaClip', 0.3);
         material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
         material.cull = CULLFACE_NONE;

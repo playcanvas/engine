@@ -291,7 +291,7 @@ class GSplatOctreeInstance {
 
         // calculate max LOD once for all nodes
         const maxLod = this.octree.lodLevels - 1;
-        const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25];
+        const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 
         // parameters
         const { lodBehindPenalty, lodRangeMin, lodRangeMax, lodUnderfillLimit = 0 } = params;
@@ -599,7 +599,14 @@ class GSplatOctreeInstance {
         // watch prefetched loads for completion to allow promotion
         this.pollPrefetchCompletions();
 
-        // debug render world space bounds for octree nodes based on current LOD selection
+        // check if any placements need LOD update
+        const dirty = this.dirtyModifiedPlacements;
+        this.dirtyModifiedPlacements = false;
+        return dirty;
+    }
+
+    // debug render world space bounds for octree nodes based on current LOD selection
+    debugRender(scene) {
         Debug.call(() => {
             if (scene.gsplat.debugNodeAabbs) {
                 const modelMat = this.placement.node.getWorldTransform();
@@ -614,11 +621,6 @@ class GSplatOctreeInstance {
                 }
             }
         });
-
-        // check if any placements need LOD update
-        const dirty = this.dirtyModifiedPlacements;
-        this.dirtyModifiedPlacements = false;
-        return dirty;
     }
 
     /**

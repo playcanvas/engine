@@ -18,13 +18,13 @@ fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
 
     let l = unpack8888(packedSample.x).xyz;
     let u = unpack8888(packedSample.y).xyz;
-    let n = (l * 255.0 + u * 255.0 * 256.0) / 65535.0;
+    let n = (l + u * 256.0) / 257.0;
     let v = mix(uniform.means_mins, uniform.means_maxs, n);
 
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
-const norm: f32 = 2.0 / sqrt(2.0);
+const norm: f32 = sqrt(2.0);
 
 // sample covariance vectors
 fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
