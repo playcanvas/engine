@@ -167,6 +167,15 @@ assetListLoader.load(() => {
         createEffect(currentEffect);
     });
 
+    // Prev button - cycle to previous effect in the list
+    data.on('prev', () => {
+        const currentEffect = data.get('effect');
+        const currentIndex = effects.indexOf(currentEffect);
+        const prevIndex = (currentIndex - 1 + effects.length) % effects.length;
+        const prevEffect = effects[prevIndex];
+        data.set('effect', prevEffect);
+    });
+
     // Next button - cycle to next effect in the list
     data.on('next', () => {
         const currentEffect = data.get('effect');

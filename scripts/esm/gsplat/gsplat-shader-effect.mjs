@@ -1,7 +1,7 @@
 import { Script } from 'playcanvas';
 
 /**
- * Base class for gsplat reveal effects.
+ * Base class for gsplat shader effects.
  * Handles common functionality like material management, shader application,
  * time tracking, and uniform updates.
  *
@@ -18,39 +18,68 @@ import { Script } from 'playcanvas';
  * during the first frame render. The script listens to the 'material:created' event for immediate
  * notification and retries each frame as fallback to ensure materials are applied.
  *
- * **Effect Completion:**
- * When the effect completes (determined by `isEffectComplete()`), the custom shader is removed
- * and materials revert to default rendering for better performance. Subclasses should override
- * `isEffectComplete()` to define when their effect is done.
+ * **Enable/Disable:**
+ * When enabled, the shader effect is applied and effectTime starts tracking from 0.
+ * When disabled, the custom shader is removed and materials revert to default rendering.
  *
  * Subclasses must implement:
  * - getShaderGLSL(): Return GLSL shader string
  * - getShaderWGSL(): Return WGSL shader string
- * - getUniforms(): Return object with uniform names and default values
- * - updateUniforms(dt): Update uniform values each frame
- *
- * Subclasses should override:
- * - isEffectComplete(): Return true when effect should revert to default rendering
+ * - updateEffect(effectTime, dt): Update effect each frame
  *
  * @abstract
  */
-class GsplatRevealBase extends Script {
-    static scriptName = 'gsplatRevealBase';
+class GsplatShaderEffect extends Script {
+    static scriptName = 'gsplatShaderEffect';
 
     /**
      * Optional camera entity to target in unified mode. If not set, applies to all cameras.
      *
      * @attribute
-     * @type {Entity}
+     * @type {import('playcanvas').Entity | null}
      */
-    camera;
+    camera = null;
+
+    /**
+     * Time since effect was enabled
+     * @type {number}
+     */
+    effectTime = 0;
+
+    /**
+     * Set of materials with applied shader
+     * @type {Set<import('playcanvas').Material>}
+     */
+    materialsApplied = new Set();
 
     initialize() {
         this.initialized = false;
-        this.currentTime = 0;
-        this.uTime = null;
-        this.uniforms = {};
-        this.materialsApplied = new Set();
+        this.effectTime = 0;
+        this.materialsApplied.clear();
+        this.shadersNeedApplication = false;
+
+        // Listen to enable/disable events
+        this.on('enable', () => {
+            // Reset effect time when enabling
+            this.effectTime = 0;
+
+            // Ensure we're initialized
+            if (!this.initialized && this.entity.gsplat) {
+                this.initialized = true;
+            }
+
+            // Apply shaders if initialized, otherwise flag for application
+            if (this.initialized) {
+                this.applyShaders();
+            } else {
+                this.shadersNeedApplication = true;
+            }
+        });
+
+        this.on('disable', () => {
+            // Remove shaders when disabling
+            this.removeShaders();
+        });
 
         // Register event listener immediately for unified mode to catch materials created on first frame
         // This is safe to call even if the gsplat component doesn't exist yet
@@ -61,29 +90,52 @@ class GsplatRevealBase extends Script {
             return;
         }
 
-        this.completeInitialization();
+        this.initialized = true;
+
+        // Apply shaders immediately since we're enabled by default
+        if (this.enabled) {
+            this.applyShaders();
+        }
     }
 
-    completeInitialization() {
-        if (this.entity.gsplat.unified) {
+    applyShaders() {
+        if (this.entity.gsplat?.unified) {
             // Unified mode: Apply to specified camera (or all cameras if not specified)
             this.applyToUnifiedMaterials();
         } else {
             // Non-unified mode: Apply to component's material
             this.applyToComponentMaterial();
         }
+    }
 
-        this.initialized = true;
+    removeShaders() {
+        if (this.materialsApplied.size === 0) return;
+
+        const device = this.app.graphicsDevice;
+        const shaderLanguage = device?.isWebGPU ? 'wgsl' : 'glsl';
+
+        // Remove custom shader chunk from all materials
+        this.materialsApplied.forEach((material) => {
+            material.getShaderChunks(shaderLanguage).delete('gsplatCustomizeVS');
+            material.update();
+        });
+
+        // Clear the set and stop tracking
+        this.materialsApplied.clear();
     }
 
     setupUnifiedEventListener() {
         // Only set up once
         if (this._materialCreatedHandler) return;
 
+        // @ts-ignore - gsplat system exists at runtime
         const gsplatSystem = this.app.systems.gsplat;
 
         // Set up event listener
         this._materialCreatedHandler = (material, camera, layer) => {
+            // Only apply if enabled
+            if (!this.enabled) return;
+
             // Apply shader immediately when material is created
             // The gsplat component may not be fully initialized yet, so we can't check it here
             if (!this.materialsApplied.has(material)) {
@@ -116,11 +168,11 @@ class GsplatRevealBase extends Script {
             this.applyShaderToMaterial(material);
         };
 
-        if (this.entity.gsplat.material) {
+        if (this.entity.gsplat?.material) {
             applyShader();
         } else {
             // Listen for when the gsplat component is ready
-            this.entity.gsplat.once('load', applyShader);
+            this.entity.gsplat?.once('load', applyShader);
         }
     }
 
@@ -135,12 +187,14 @@ class GsplatRevealBase extends Script {
     }
 
     updateUnifiedMaterials() {
+        // @ts-ignore - gsplat system exists at runtime
         const gsplatSystem = this.app.systems.gsplat;
         const scene = this.app.scene;
         const composition = scene.layers;
 
         // Get all layers this component is on
-        const componentLayers = this.entity.gsplat.layers;
+        const componentLayers = this.entity.gsplat?.layers;
+        if (!componentLayers) return;
 
         // Determine which cameras to target
         let targetCameras;
@@ -183,39 +237,26 @@ class GsplatRevealBase extends Script {
 
         material.getShaderChunks(shaderLanguage).set('gsplatCustomizeVS', customShader);
         material.update();
-
-        // Resolve uniforms on first material application
-        if (!this.uTime) {
-            this.uTime = device.scope.resolve('uTime');
-            const uniformDefs = this.getUniforms();
-            for (const name of Object.keys(uniformDefs)) {
-                this.uniforms[name] = device.scope.resolve(name);
-            }
-
-            // Initialize uniforms with default values
-            this.uTime.setValue(0);
-            for (const [name, defaultValue] of Object.entries(uniformDefs)) {
-                this.uniforms[name].setValue(defaultValue);
-            }
-
-            // Apply initial attribute values
-            this.updateUniforms(0);
-        }
     }
 
     update(dt) {
         // If not initialized, try to complete initialization
         if (!this.initialized) {
             if (this.entity.gsplat) {
-                this.completeInitialization();
+                this.initialized = true;
+                // Apply shaders now if we're enabled and they're needed
+                if (this.enabled && this.shadersNeedApplication) {
+                    this.applyShaders();
+                    this.shadersNeedApplication = false;
+                }
             }
             return; // Don't proceed with updates until initialized
         }
 
-        // Check if effect is complete
-        if (this.isEffectComplete() && this.materialsApplied.size > 0) {
-            this.revertMaterials();
-            return; // Stop updating after reverting
+        // Apply shaders if they're needed (can happen if enabled after initialization)
+        if (this.shadersNeedApplication) {
+            this.applyShaders();
+            this.shadersNeedApplication = false;
         }
 
         // Retry applying to unified materials if needed
@@ -223,47 +264,22 @@ class GsplatRevealBase extends Script {
             this.updateUnifiedMaterials();
         }
 
-        if (!this.uTime) return;
-
-        // Update time
-        this.currentTime += dt;
-        this.uTime.setValue(this.currentTime);
-
-        // Let subclass update its uniforms
-        this.updateUniforms(dt);
-    }
-
-    /**
-     * Removes the shader customization from all materials, reverting to default rendering.
-     * This should be called when the effect is complete.
-     */
-    revertMaterials() {
         if (this.materialsApplied.size === 0) return;
 
-        const device = this.app.graphicsDevice;
-        const shaderLanguage = device?.isWebGPU ? 'wgsl' : 'glsl';
+        // Update time
+        this.effectTime += dt;
 
-        // Remove custom shader chunk from all materials
-        this.materialsApplied.forEach((material) => {
-            material.getShaderChunks(shaderLanguage).delete('gsplatCustomizeVS');
-            material.update();
-        });
-
-        // Clear the set and stop tracking
-        this.materialsApplied.clear();
-    }
-
-    /**
-     * Override in subclass to determine when effect is complete.
-     * @returns {boolean} True if effect should be disabled
-     */
-    isEffectComplete() {
-        return false; // Subclasses should override
+        // Let subclass update the effect
+        this.updateEffect(this.effectTime, dt);
     }
 
     destroy() {
+        // Remove shaders if they're still applied
+        this.removeShaders();
+
         // Clean up event listener
         if (this._materialCreatedHandler) {
+            // @ts-ignore - gsplat system exists at runtime
             this.app.systems.gsplat.off('material:created', this._materialCreatedHandler);
             this._materialCreatedHandler = null;
         }
@@ -290,24 +306,26 @@ class GsplatRevealBase extends Script {
     }
 
     /**
-     * Get uniform definitions.
-     * Must be implemented by subclasses.
-     * @returns {Object<string, any>} Map of uniform names to default values
-     * @abstract
+     * Set a uniform value on all applied materials.
+     * @param {string} name - The uniform name
+     * @param {*} value - The uniform value
      */
-    getUniforms() {
-        return {};
+    setUniform(name, value) {
+        this.materialsApplied.forEach((material) => {
+            material.setParameter(name, value);
+        });
     }
 
     /**
-     * Update uniform values each frame.
-     * Must be implemented by subclasses if they have uniforms to update.
+     * Update effect each frame.
+     * Must be implemented by subclasses if they need to update uniforms or check completion.
+     * @param {number} effectTime - Time since effect was enabled in seconds
      * @param {number} dt - Delta time in seconds
      * @abstract
      */
-    updateUniforms(dt) {
+    updateEffect(effectTime, dt) {
         // Optional to override
     }
 }
 
-export { GsplatRevealBase };
+export { GsplatShaderEffect };
