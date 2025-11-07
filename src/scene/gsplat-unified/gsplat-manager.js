@@ -399,7 +399,7 @@ class GSplatManager {
                 const currentCameraFwd = this.cameraNode.forward;
                 const dot = Math.min(1, Math.max(-1, this.lastLodCameraFwd.dot(currentCameraFwd)));
                 const angle = Math.acos(dot);
-                const rotThreshold = lodUpdateAngleDeg * Math.PI / 180;
+                const rotThreshold = lodUpdateAngleDeg * math.DEG_TO_RAD;
                 cameraRotated = angle > rotThreshold;
             } else {
                 // first run, force update to initialize last orientation

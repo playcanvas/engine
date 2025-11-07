@@ -254,7 +254,7 @@ class Light {
 
         this._position = new Vec3(0, 0, 0);
         this._direction = new Vec3(0, 0, 0);
-        this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
+        this._innerConeAngleCos = Math.cos(this._innerConeAngle * math.DEG_TO_RAD);
         this._updateOuterAngle(this._outerConeAngle);
 
         this._usePhysicalUnits = undefined;
@@ -630,7 +630,7 @@ class Light {
         }
 
         this._innerConeAngle = value;
-        this._innerConeAngleCos = Math.cos(value * Math.PI / 180);
+        this._innerConeAngleCos = Math.cos(value * math.DEG_TO_RAD);
         this.updateClusterData(false, true);
 
         if (this._usePhysicalUnits) {
@@ -677,7 +677,7 @@ class Light {
     }
 
     _updateOuterAngle(angle) {
-        const radAngle = angle * Math.PI / 180;
+        const radAngle = angle * math.DEG_TO_RAD;
         this._outerConeAngleCos = Math.cos(radAngle);
         this._outerConeAngleSin = Math.sin(radAngle);
         this.updateClusterData(false, true);
@@ -1205,13 +1205,13 @@ class Light {
 
             // Shrink angles slightly (~1%) to prevent light leaking outside shadow boundaries
             const angleShrinkFactor = 0.99;
-            let innerCos = Math.cos(this._innerConeAngle * angleShrinkFactor * Math.PI / 180);
+            let innerCos = Math.cos(this._innerConeAngle * angleShrinkFactor * math.DEG_TO_RAD);
             if (innerCos > cosThreshold) {
                 innerCos = 1.0 - innerCos;
                 flags |= 1; // Use bit 0 for inner angle: 1 = versine, 0 = cosine
             }
 
-            let outerCos = Math.cos(this._outerConeAngle * angleShrinkFactor * Math.PI / 180);
+            let outerCos = Math.cos(this._outerConeAngle * angleShrinkFactor * math.DEG_TO_RAD);
             if (outerCos > cosThreshold) {
                 outerCos = 1.0 - outerCos;
                 flags |= 2; // Use bit 1 for outer angle: 1 = versine, 0 = cosine
