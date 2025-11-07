@@ -1203,13 +1203,15 @@ class Light {
             const cosThreshold = 0.5;
             let flags = 0;
 
-            let innerCos = this._innerConeAngleCos;
+            // Shrink angles slightly (~1%) to prevent light leaking outside shadow boundaries
+            const angleShrinkFactor = 0.99;
+            let innerCos = Math.cos(this._innerConeAngle * angleShrinkFactor * Math.PI / 180);
             if (innerCos > cosThreshold) {
                 innerCos = 1.0 - innerCos;
                 flags |= 1; // Use bit 0 for inner angle: 1 = versine, 0 = cosine
             }
 
-            let outerCos = this._outerConeAngleCos;
+            let outerCos = Math.cos(this._outerConeAngle * angleShrinkFactor * Math.PI / 180);
             if (outerCos > cosThreshold) {
                 outerCos = 1.0 - outerCos;
                 flags |= 2; // Use bit 1 for outer angle: 1 = versine, 0 = cosine
