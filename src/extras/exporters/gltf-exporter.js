@@ -325,7 +325,7 @@ class GltfExporter extends CoreExporter {
 
                     camera.type = 'perspective';
                     camera.perspective = {
-                        yfov: fov * Math.PI / 180,
+                        yfov: fov * math.DEG_TO_RAD,
                         znear: nearClip,
                         zfar: farClip
                     };

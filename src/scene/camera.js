@@ -685,7 +685,7 @@ class Camera {
      */
     getFrustumCorners(near = this.nearClip, far = this.farClip) {
 
-        const fov = this.fov * Math.PI / 180.0;
+        const fov = this.fov * math.DEG_TO_RAD;
         let x, y;
 
         if (this.projection === PROJECTION_PERSPECTIVE) {

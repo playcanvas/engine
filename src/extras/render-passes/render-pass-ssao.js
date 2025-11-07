@@ -1,5 +1,6 @@
 import { BlueNoise } from '../../core/math/blue-noise.js';
 import { Color } from '../../core/math/color.js';
+import { math } from '../../core/math/math.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL
@@ -197,7 +198,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
         scope.resolve('uSampleCount').setValue([sampleCount, 1.0 / sampleCount]);
 
-        const minAngleSin = Math.sin(minAngle * Math.PI / 180.0);
+        const minAngleSin = Math.sin(minAngle * math.DEG_TO_RAD);
         scope.resolve('uMinHorizonAngleSineSquared').setValue(minAngleSin * minAngleSin);
 
         const spiralTurns = 10.0;
