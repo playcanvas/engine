@@ -62,8 +62,7 @@ app.on('destroy', () => {
 // original dataset: https://www.youtube.com/watch?v=3RtY_cLK13k
 const config = {
     name: 'Roman-Parish',
-    url: 'https://code.playcanvas.com/examples_data/example_roman_parish_01/lod-meta.json',
-    environment: 'https://code.playcanvas.com/examples_data/example_roman_parish_01/environment.sog',
+    url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json',
     lodUpdateDistance: 0.5,
     lodUnderfillLimit: 5,
     cameraPosition: [10.3, 2, -10],
@@ -106,11 +105,6 @@ const assets = {
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
-
-// Add environment asset if specified in config
-if (config.environment) {
-    assets.environment = new pc.Asset('gsplat-environment', 'gsplat', { url: config.environment });
-}
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
@@ -171,19 +165,6 @@ assetListLoader.load(() => {
 
     applyPreset();
     data.on('lodPreset:set', applyPreset);
-
-    // Add environment gsplat if specified
-    if (assets.environment) {
-        const envEntity = new pc.Entity('gsplat-environment');
-        envEntity.addComponent('gsplat', {
-            asset: assets.environment,
-            unified: true
-        });
-        envEntity.setLocalPosition(0, 0, 0);
-        envEntity.setLocalEulerAngles(rotX, rotY, rotZ);
-        envEntity.setLocalScale(1, 1, 1);
-        app.root.addChild(envEntity);
-    }
 
     // Create a camera with fly controls
     const camera = new pc.Entity('camera');
