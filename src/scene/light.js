@@ -1196,8 +1196,31 @@ class Light {
         }
 
         if (updateAngles) {
-            clusteredData16[4] = float2Half(this._innerConeAngleCos);
-            clusteredData16[5] = float2Half(this._outerConeAngleCos);
+            // To store cone angles with full precision in half-floats, we use a hybrid encoding.
+            // For small angles, cos(angle) is close to 1.0, where half-float precision is low.
+            // For these, we store 1.0 - cos(angle) (versine), which is close to 0.0 and has high precision.
+            // For larger angles, we store cos(angle) directly. Two flag bits indicate the format.
+            const cosThreshold = 0.5;
+            let flags = 0;
+
+            let innerCos = this._innerConeAngleCos;
+            if (innerCos > cosThreshold) {
+                innerCos = 1.0 - innerCos;
+                flags |= 1; // Use bit 0 for inner angle: 1 = versine, 0 = cosine
+            }
+
+            let outerCos = this._outerConeAngleCos;
+            if (outerCos > cosThreshold) {
+                outerCos = 1.0 - outerCos;
+                flags |= 2; // Use bit 1 for outer angle: 1 = versine, 0 = cosine
+            }
+
+            // Store flags as integer bits
+            clusteredData16[3] = flags;
+
+            // Store encoded inner and outer values
+            clusteredData16[4] = float2Half(innerCos);
+            clusteredData16[5] = float2Half(outerCos);
         }
     }
 }
