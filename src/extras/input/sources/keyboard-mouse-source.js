@@ -206,9 +206,9 @@ class KeyboardMouseSource extends InputSource {
      */
     _onPointerMove(event) {
         // Use native movementX/Y when pointer lock is active, otherwise use custom calculation
-        const [movementX, movementY] = this._pointerLock && document.pointerLockElement === this._element
-            ? [event.movementX, event.movementY]
-            : this._movementState.move(event);
+        const [movementX, movementY] = this._pointerLock && document.pointerLockElement === this._element ?
+            [event.movementX, event.movementY] :
+            this._movementState.move(event);
 
         if (event.pointerType !== 'mouse') {
             return;
