@@ -198,9 +198,10 @@ class GsplatShaderEffect extends Script {
 
         // Determine which cameras to target
         let targetCameras;
-        if (this.camera && this.camera.camera && this.camera.camera.camera) {
+        const cam = this.camera?.camera?.camera;
+        if (cam) {
             // Specific camera specified via attribute
-            targetCameras = [this.camera.camera.camera];
+            targetCameras = [cam];
         } else {
             // All cameras in the composition
             targetCameras = composition.cameras.map(cameraComponent => cameraComponent.camera);
