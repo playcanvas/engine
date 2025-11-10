@@ -6,9 +6,16 @@ import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
 import { GSplatComponentData } from './data.js';
 import { GSplatAssetLoader } from './gsplat-asset-loader.js';
+import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsplat-chunks-glsl.js';
+import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
+import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
+import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Camera } from '../../../scene/camera.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
  */
 
 const _schema = [
@@ -18,6 +25,7 @@ const _schema = [
 // order matters here
 const _properties = [
     'unified',
+    'lodDistances',
     'castShadows',
     'material',
     'highQualitySH',
@@ -31,6 +39,24 @@ const _properties = [
  * @category Graphics
  */
 class GSplatComponentSystem extends ComponentSystem {
+    /**
+     * Fired when a GSplat material is created for a camera and layer combination. In unified
+     * mode, materials are created during the first frame update when the GSplat is rendered.
+     * The handler is passed the {@link ShaderMaterial}, the {@link Camera}, and the {@link Layer}.
+     *
+     * This event is useful for setting up custom material chunks and parameters before the
+     * first render.
+     *
+     * @event
+     * @example
+     * app.systems.gsplat.on('material:created', (material, camera, layer) => {
+     *     console.log(`Material created for camera ${camera.entity.name} on layer ${layer.name}`);
+     *     // Set custom material parameters before first render
+     *     material.setParameter('myParam', value);
+     * });
+     */
+    static EVENT_MATERIALCREATED = 'material:created';
+
     /**
      * Create a new GSplatComponentSystem.
      *
@@ -49,7 +75,11 @@ class GSplatComponentSystem extends ComponentSystem {
 
         // loader for splat LOD assets, as asset system is not available on the scene level
         const gsplatAssetLoader = new GSplatAssetLoader(app.assets);
-        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, gsplatAssetLoader);
+        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, gsplatAssetLoader, this);
+
+        // register gsplat shader chunks
+        ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).add(gsplatChunksGLSL);
+        ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_WGSL).add(gsplatChunksWGSL);
 
         this.on('beforeremove', this.onRemove, this);
     }
@@ -81,9 +111,11 @@ class GSplatComponentSystem extends ComponentSystem {
         const data = {};
         _properties.forEach((prop) => {
             if (prop === 'material') {
-                const srcMaterial = gSplatComponent[prop];
-                if (srcMaterial) {
-                    data[prop] = srcMaterial.clone();
+                if (!gSplatComponent.unified) { // unified gsplat does not use material
+                    const srcMaterial = gSplatComponent[prop];
+                    if (srcMaterial) {
+                        data[prop] = srcMaterial.clone();
+                    }
                 }
             } else {
                 data[prop] = gSplatComponent[prop];
@@ -103,6 +135,33 @@ class GSplatComponentSystem extends ComponentSystem {
 
     onRemove(entity, component) {
         component.onRemove();
+    }
+
+    /**
+     * Gets the GSplat material used by unified GSplat rendering for the given camera and layer.
+     *
+     * Returns null if the material hasn't been created yet. In unified mode, materials are created
+     * during the first frame update when the GSplat is rendered. To be notified immediately when
+     * materials are created, listen to the 'material:created' event on GSplatComponentSystem:
+     *
+     * @param {Camera} camera - The camera instance.
+     * @param {Layer} layer - The layer instance.
+     * @returns {ShaderMaterial|null} The material, or null if not created yet.
+     * @example
+     * app.systems.gsplat.on('material:created', (material, camera, layer) => {
+     *     // Material is now available
+     *     material.setParameter('myParam', value);
+     * });
+     */
+    getGSplatMaterial(camera, layer) {
+        const director = this.app.renderer.gsplatDirector;
+        if (!director) return null;
+
+        const cameraData = director.camerasMap.get(camera);
+        if (!cameraData) return null;
+
+        const layerData = cameraData.layersMap.get(layer);
+        return layerData?.gsplatManager?.material ?? null;
     }
 }
 

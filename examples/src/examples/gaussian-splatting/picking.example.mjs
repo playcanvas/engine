@@ -8,15 +8,14 @@ window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
-
     // disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+const shaderLanguage = device.isWebGPU ? 'wgsl' : 'glsl';
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -80,7 +79,8 @@ assetListLoader.load(() => {
         app.root.addChild(splat);
 
         // specify custom vertex shader
-        splat.gsplat.material.getShaderChunks('glsl').set('gsplatVS', files['shader.vert']);
+        const customShaderFile = shaderLanguage === 'wgsl' ? 'shader.wgsl.vert' : 'shader.glsl.vert';
+        splat.gsplat.material.getShaderChunks(shaderLanguage).set('gsplatCustomizeVS', files[customShaderFile]);
 
         // set alpha clip value, used picking
         splat.gsplat.material.setParameter('alphaClip', 0.4);

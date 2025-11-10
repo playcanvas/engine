@@ -32,6 +32,7 @@ import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
 import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
+import { WebgpuUploadStream } from './webgpu-upload-stream.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
@@ -516,6 +517,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return new WebgpuRenderTarget(renderTarget);
     }
 
+    createUploadStreamImpl(uploadStream) {
+        return new WebgpuUploadStream(uploadStream);
+    }
+
     createBindGroupFormatImpl(bindGroupFormat) {
         return new WebgpuBindGroupFormat(bindGroupFormat);
     }
@@ -913,6 +918,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const computePassDesc = this.setupTimeStampWrites(undefined, name);
 
         // start the pass
+        DebugHelper.setLabel(computePassDesc, `ComputePass-${name}`);
         const commandEncoder = this.getCommandEncoder();
         this.passEncoder = commandEncoder.beginComputePass(computePassDesc);
         DebugHelper.setLabel(this.passEncoder, `ComputePass-${name}`);

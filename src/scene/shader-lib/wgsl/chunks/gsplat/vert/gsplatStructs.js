@@ -13,7 +13,9 @@ struct SplatCenter {
     view: vec3f,          // center in view space
     proj: vec4f,          // center in clip space
     modelView: mat4x4f,   // model-view matrix
-    projMat00: f32,       // elememt [0][0] of the projection matrix
+    projMat00: f32,       // element [0][0] of the projection matrix
+    modelCenterOriginal: vec3f,   // original model center before modification
+    modelCenterModified: vec3f,   // model center after modification
 }
 
 // stores the offset from center for the current gaussian

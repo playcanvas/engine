@@ -19,13 +19,13 @@ vec3 readCenter(SplatSource source) {
 
     vec3 l = unpack8888(packedSample.x).xyz;
     vec3 u = unpack8888(packedSample.y).xyz;
-    vec3 n = (l * 255.0 + u * 255.0 * 256.0) / 65535.0;
+    vec3 n = (l + u * 256.0) / 257.0;
     vec3 v = mix(means_mins, means_maxs, n);
 
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
-const float norm = 2.0 / sqrt(2.0);
+const float norm = sqrt(2.0);
 
 // sample covariance vectors
 void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {

@@ -1,3 +1,4 @@
+import { math } from '../../core/math/math.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { GraphNode } from '../graph-node.js';
@@ -25,6 +26,8 @@ const invModelMat = new Mat4();
 const tempNonOctreePlacements = new Set();
 const tempOctreePlacements = new Set();
 const _updatedSplats = [];
+const _splatsNeedingColorUpdate = [];
+const _cameraDeltas = { rotationDelta: 0, translationDelta: 0 };
 const tempOctreesTicked = new Set();
 
 const _lodColorsRaw = [
@@ -43,6 +46,8 @@ const _lodColors = [
     new Color(1, 1, 0),
     new Color(1, 0, 1)
 ];
+
+let _randomColorRaw = null;
 
 /**
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
@@ -90,10 +95,25 @@ class GSplatManager {
     framesTillFullUpdate = 0;
 
     /** @type {Vec3} */
-    lastCameraPos = new Vec3(Infinity, Infinity, Infinity);
+    lastLodCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
     /** @type {Vec3} */
-    lastCameraFwd = new Vec3(Infinity, Infinity, Infinity);
+    lastLodCameraFwd = new Vec3(Infinity, Infinity, Infinity);
+
+    /** @type {Vec3} */
+    lastSortCameraPos = new Vec3(Infinity, Infinity, Infinity);
+
+    /** @type {Vec3} */
+    lastSortCameraFwd = new Vec3(Infinity, Infinity, Infinity);
+
+    /** @type {boolean} */
+    sortNeeded = true;
+
+    /** @type {Vec3} */
+    lastColorUpdateCameraPos = new Vec3(Infinity, Infinity, Infinity);
+
+    /** @type {Vec3} */
+    lastColorUpdateCameraFwd = new Vec3(Infinity, Infinity, Infinity);
 
     /** @type {GraphNode} */
     cameraNode;
@@ -122,6 +142,13 @@ class GSplatManager {
      */
     octreeInstancesToDestroy = [];
 
+    /**
+     * Flag set when new octree instances are added, to trigger immediate LOD evaluation.
+     *
+     * @type {boolean}
+     */
+    hasNewOctreeInstances = false;
+
     constructor(device, director, layer, cameraNode) {
         this.device = device;
         this.scene = director.scene;
@@ -137,6 +164,10 @@ class GSplatManager {
         this.workBuffer.destroy();
         this.renderer.destroy();
         this.sorter.destroy();
+    }
+
+    get material() {
+        return this.renderer.material;
     }
 
     createSorter() {
@@ -163,6 +194,9 @@ class GSplatManager {
                 // make sure octree instance exists for placement
                 if (!this.octreeInstances.has(p)) {
                     this.octreeInstances.set(p, new GSplatOctreeInstance(p.resource.octree, p, this.director.assetLoader));
+
+                    // mark that we have new instances that need initial LOD evaluation
+                    this.hasNewOctreeInstances = true;
                 }
                 tempOctreePlacements.add(p);
             } else {
@@ -215,9 +249,13 @@ class GSplatManager {
             this.lastWorldStateVersion++;
             const splats = [];
 
+            // color update thresholds
+            const { colorUpdateAngle, colorUpdateDistance } = this.scene.gsplat;
+
             // add standalone splats
             for (const p of this.layerPlacements) {
                 const splatInfo = new GSplatInfo(this.device, p.resource, p);
+                splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                 splats.push(splatInfo);
             }
 
@@ -225,15 +263,15 @@ class GSplatManager {
             for (const [, inst] of this.octreeInstances) {
                 inst.activePlacements.forEach((p) => {
                     if (p.resource) {
-                        splats.push(new GSplatInfo(this.device, p.resource, p));
+                        const splatInfo = new GSplatInfo(this.device, p.resource, p);
+                        splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
+                        splats.push(splatInfo);
                     }
                 });
             }
 
-            // add resource centers to sorter
-            splats.forEach((splat) => {
-                this.sorter.setCenters(splat.resource.id, splat.resource.centers);
-            });
+            // update sorter with current splats (adds new centers, removes unused ones)
+            this.sorter.updateCentersForSplats(splats);
 
             const newState = new GSplatWorldState(this.device, this.lastWorldStateVersion, splats);
 
@@ -266,19 +304,24 @@ class GSplatManager {
             this.worldStates.set(this.lastWorldStateVersion, newState);
 
             this.layerPlacementsDirty = false;
+
+            // New world state requires sorting
+            this.sortNeeded = true;
         }
     }
 
     onSorted(count, version, orderData) {
 
-        this.sortedVersion = version;
-
-        // remove old state
-        const oldState = this.worldStates.get(version - 1);
-        if (oldState) {
-            this.worldStates.delete(version - 1);
-            oldState.destroy();
+        // remove all old states between last sorted version and current version
+        for (let v = this.sortedVersion; v < version; v++) {
+            const oldState = this.worldStates.get(v);
+            if (oldState) {
+                this.worldStates.delete(v);
+                oldState.destroy();
+            }
         }
+
+        this.sortedVersion = version;
 
         // find the world state that has been sorted
         const worldState = this.worldStates.get(version);
@@ -298,9 +341,19 @@ class GSplatManager {
                     this.renderer.setMaxNumSplats(textureSize * textureSize);
                 }
 
-                // render all splats to work buffer with LOD color palette
-                const colorize = this.scene.gsplat.colorizeLod;
-                this.workBuffer.render(worldState.splats, this.cameraNode, colorize ? _lodColorsRaw : undefined);
+                // render all splats to work buffer
+                this.workBuffer.render(worldState.splats, this.cameraNode, this.getDebugColors());
+
+                // update all splats to sync their transforms and reset color accumulators
+                // (prevents redundant re-render later)
+                const { colorUpdateAngle, colorUpdateDistance } = this.scene.gsplat;
+                worldState.splats.forEach((splat) => {
+                    splat.update();
+                    splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
+                });
+
+                // update camera tracking for color updates
+                this.updateColorCameraTracking();
 
                 // apply pending file-release requests
                 if (worldState.pendingReleases && worldState.pendingReleases.length) {
@@ -312,11 +365,14 @@ class GSplatManager {
                 }
 
                 // number of splats to render
-                this.renderer.setNumSplats(count);
+                this.renderer.update(count, textureSize);
             }
 
             // update order texture
             this.workBuffer.setOrderData(orderData);
+
+            // update renderer with new order data
+            this.renderer.frameUpdate(this.scene.gsplat);
         }
     }
 
@@ -325,12 +381,12 @@ class GSplatManager {
      *
      * @returns {boolean} True if camera moved/rotated over thresholds, otherwise false.
      */
-    testCameraMoved() {
+    testCameraMovedForLod() {
 
         // distance-based movement check
         const distanceThreshold = this.scene.gsplat.lodUpdateDistance;
         const currentCameraPos = this.cameraNode.getPosition();
-        const cameraMoved = this.lastCameraPos.distance(currentCameraPos) > distanceThreshold;
+        const cameraMoved = this.lastLodCameraPos.distance(currentCameraPos) > distanceThreshold;
         if (cameraMoved) {
             return true;
         }
@@ -339,11 +395,11 @@ class GSplatManager {
         let cameraRotated = false;
         const lodUpdateAngleDeg = this.scene.gsplat.lodUpdateAngle;
         if (lodUpdateAngleDeg > 0) {
-            if (Number.isFinite(this.lastCameraFwd.x)) {
+            if (Number.isFinite(this.lastLodCameraFwd.x)) {
                 const currentCameraFwd = this.cameraNode.forward;
-                const dot = Math.min(1, Math.max(-1, this.lastCameraFwd.dot(currentCameraFwd)));
+                const dot = Math.min(1, Math.max(-1, this.lastLodCameraFwd.dot(currentCameraFwd)));
                 const angle = Math.acos(dot);
-                const rotThreshold = lodUpdateAngleDeg * Math.PI / 180;
+                const rotThreshold = lodUpdateAngleDeg * math.DEG_TO_RAD;
                 cameraRotated = angle > rotThreshold;
             } else {
                 // first run, force update to initialize last orientation
@@ -354,7 +410,100 @@ class GSplatManager {
         return cameraMoved || cameraRotated;
     }
 
+    /**
+     * Tests if the camera has moved enough to require re-sorting.
+     * - For radial sorting: only position matters (rotation doesn't affect sort order)
+     * - For directional sorting: only forward direction matters (position doesn't affect sort order)
+     *
+     * @returns {boolean} True if camera moved enough to require re-sorting, otherwise false.
+     */
+    testCameraMovedForSort() {
+        const epsilon = 0.001;
+
+        if (this.scene.gsplat.radialSorting) {
+            // For radial sorting, only position changes matter
+            const currentCameraPos = this.cameraNode.getPosition();
+            const distance = this.lastSortCameraPos.distance(currentCameraPos);
+            return distance > epsilon;
+        }
+
+        // For directional sorting, only forward direction changes matter
+        if (Number.isFinite(this.lastSortCameraFwd.x)) {
+            const currentCameraFwd = this.cameraNode.forward;
+            const dot = Math.min(1, Math.max(-1, this.lastSortCameraFwd.dot(currentCameraFwd)));
+            const angle = Math.acos(dot);
+            return angle > epsilon;
+        }
+
+        // first run, force update to initialize last orientation
+        return true;
+    }
+
+    /**
+     * Updates the camera tracking state for color accumulation calculations.
+     * Called after any render that updates colors (full or color-only).
+     */
+    updateColorCameraTracking() {
+        this.lastColorUpdateCameraPos.copy(this.cameraNode.getPosition());
+        this.lastColorUpdateCameraFwd.copy(this.cameraNode.forward);
+    }
+
+    /**
+     * Determines the colorization mode for rendering based on debug flags.
+     *
+     * @returns {Array<number[]>|undefined} Color array for debug visualization, or undefined for normal rendering
+     */
+    getDebugColors() {
+        if (this.scene.gsplat.colorizeColorUpdate) {
+            _randomColorRaw ??= [];
+            // Random color for this update pass - use same color for all LOD levels
+            const r = Math.random();
+            const g = Math.random();
+            const b = Math.random();
+            for (let i = 0; i < _lodColorsRaw.length; i++) {
+                _randomColorRaw[i] ??= [0, 0, 0];
+                _randomColorRaw[i][0] = r;
+                _randomColorRaw[i][1] = g;
+                _randomColorRaw[i][2] = b;
+            }
+            return _randomColorRaw;
+        } else if (this.scene.gsplat.colorizeLod) {
+            // LOD colors
+            return _lodColorsRaw;
+        }
+        return undefined;
+    }
+
+    /**
+     * Calculates camera movement deltas since last color update.
+     * Updates and returns the shared _cameraDeltas object.
+     *
+     * @returns {{ rotationDelta: number, translationDelta: number }} Shared camera movement deltas object
+     */
+    calculateColorCameraDeltas() {
+        _cameraDeltas.rotationDelta = 0;
+        _cameraDeltas.translationDelta = 0;
+
+        // Skip delta calculation on first frame (camera position not yet initialized)
+        if (isFinite(this.lastColorUpdateCameraPos.x)) {
+            // Calculate rotation delta in degrees using dot product
+            const currentCameraFwd = this.cameraNode.forward;
+            const dot = Math.min(1, Math.max(-1,
+                this.lastColorUpdateCameraFwd.dot(currentCameraFwd)));
+            _cameraDeltas.rotationDelta = Math.acos(dot) * math.RAD_TO_DEG;
+
+            // Calculate translation delta in world units
+            const currentCameraPos = this.cameraNode.getPosition();
+            _cameraDeltas.translationDelta = this.lastColorUpdateCameraPos.distance(currentCameraPos);
+        }
+
+        return _cameraDeltas;
+    }
+
     update() {
+
+        // apply any pending sorted results
+        this.sorter.applyPendingSorted();
 
         let fullUpdate = false;
         this.framesTillFullUpdate--;
@@ -367,9 +516,13 @@ class GSplatManager {
             }
         }
 
+        // when new octree instances are added, we need to evaluate their LOD immediately
+        const hasNewInstances = this.hasNewOctreeInstances && this.sorter.jobsInFlight < 3;
+        if (hasNewInstances) this.hasNewOctreeInstances = false;
+
         let anyInstanceNeedsLodUpdate = false;
         let anyOctreeMoved = false;
-        let cameraMovedOrRotated = false;
+        let cameraMovedOrRotatedForLod = false;
         if (fullUpdate) {
 
             // process any pending / prefetch resource completions and collect LOD updates
@@ -390,16 +543,28 @@ class GSplatManager {
             }
 
             // check if camera has moved/rotated enough to require LOD update
-            cameraMovedOrRotated = this.testCameraMoved();
+            cameraMovedOrRotatedForLod = this.testCameraMovedForLod();
         }
+
+        // check if camera has moved enough to require re-sorting
+        if (this.testCameraMovedForSort()) {
+            this.sortNeeded = true;
+        }
+
+        Debug.call(() => {
+            for (const [, inst] of this.octreeInstances) {
+                inst.debugRender(this.scene);
+            }
+        });
 
         // if parameters are dirty, rebuild world state
         if (this.scene.gsplat.dirty) {
             this.layerPlacementsDirty = true;
+            this.renderer.updateOverdrawMode(this.scene.gsplat);
         }
 
-        // when camera or octree need LOD evaluated, or params are dirty, or resources completed
-        if (cameraMovedOrRotated || anyOctreeMoved || this.scene.gsplat.dirty || anyInstanceNeedsLodUpdate) {
+        // when camera or octree need LOD evaluated, or params are dirty, or resources completed, or new instances added
+        if (cameraMovedOrRotatedForLod || anyOctreeMoved || this.scene.gsplat.dirty || anyInstanceNeedsLodUpdate || hasNewInstances) {
 
             // update the previous position where LOD was evaluated for octree instances
             for (const [, inst] of this.octreeInstances) {
@@ -407,8 +572,8 @@ class GSplatManager {
             }
 
             // update last camera data when LOD was evaluated
-            this.lastCameraPos.copy(this.cameraNode.getPosition());
-            this.lastCameraFwd.copy(this.cameraNode.forward);
+            this.lastLodCameraPos.copy(this.cameraNode.getPosition());
+            this.lastLodCameraFwd.copy(this.cameraNode.forward);
 
             // update LOD for all octree instances
             for (const [, inst] of this.octreeInstances) {
@@ -442,27 +607,74 @@ class GSplatManager {
                 }
             });
 
-            // kick off sorting
-            this.sort(lastState);
+            // kick off sorting only if needed
+            if (this.sortNeeded) {
+                this.sort(lastState);
+                this.sortNeeded = false;
+
+                // Update camera tracking for next sort check
+                this.lastSortCameraPos.copy(this.cameraNode.getPosition());
+                this.lastSortCameraFwd.copy(this.cameraNode.forward);
+            }
         }
 
         // re-render splats that have changed their transform this frame, using last sorted state
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (sortedState) {
 
-            // Collect splats that have been updated
+            // color update thresholds
+            const { colorUpdateAngle, colorUpdateDistance, colorUpdateDistanceLodScale, colorUpdateAngleLodScale } = this.scene.gsplat;
+
+            // Calculate camera movement deltas for color updates
+            const { rotationDelta, translationDelta } = this.calculateColorCameraDeltas();
+
+            // check each splat for full or color update
             sortedState.splats.forEach((splat) => {
+                // Check if splat's transform changed (needs full update)
                 if (splat.update()) {
+
                     _updatedSplats.push(splat);
+                    // Reset accumulators for fully updated splats
+                    splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
+
+                    // Splat moved, need to re-sort
+                    this.sortNeeded = true;
+
+                } else if (splat.hasSphericalHarmonics) {
+
+                    // Otherwise, check if color needs updating (accumulator-based)
+                    // Add this frame's camera movement to accumulators
+                    splat.colorAccumulatedRotation += rotationDelta;
+                    splat.colorAccumulatedTranslation += translationDelta;
+
+                    // Apply LOD-based scaling to thresholds
+                    const lodIndex = splat.lodIndex ?? 0;
+                    const distThreshold = colorUpdateDistance * Math.pow(colorUpdateDistanceLodScale, lodIndex);
+                    const angleThreshold = colorUpdateAngle * Math.pow(colorUpdateAngleLodScale, lodIndex);
+
+                    // Trigger update if either threshold exceeded
+                    if (splat.colorAccumulatedRotation >= angleThreshold ||
+                        splat.colorAccumulatedTranslation >= distThreshold) {
+                        _splatsNeedingColorUpdate.push(splat);
+                        splat.resetColorAccumulators(angleThreshold, distThreshold);
+                    }
                 }
             });
 
             // Batch render all updated splats in a single render pass
             if (_updatedSplats.length > 0) {
-                const colorize = this.scene.gsplat.colorizeLod;
-                this.workBuffer.render(_updatedSplats, this.cameraNode, colorize ? _lodColorsRaw : undefined);
+                this.workBuffer.render(_updatedSplats, this.cameraNode, this.getDebugColors());
                 _updatedSplats.length = 0;
             }
+
+            // Batch render color updates for all splats that exceeded thresholds
+            if (_splatsNeedingColorUpdate.length > 0) {
+                this.workBuffer.renderColor(_splatsNeedingColorUpdate, this.cameraNode, this.getDebugColors());
+                _splatsNeedingColorUpdate.length = 0;
+            }
+
+            // Update camera tracking once at the end of the frame
+            this.updateColorCameraTracking();
         }
 
         // tick cooldowns once per frame per unique octree

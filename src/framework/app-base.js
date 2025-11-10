@@ -1386,11 +1386,18 @@ class AppBase extends EventHandler {
      * of the scene.
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be
      * used as the scene's skybox. Defaults to null.
-     * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
-     * @param {number} settings.render.skyboxLuminance - Lux (lm/m^2) value for skybox intensity when physical light units are enabled.
-     * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed.
+     * @param {number} [settings.render.skyboxIntensity] - Multiplier for skybox intensity. Defaults to 1.
+     * @param {number} [settings.render.skyboxLuminance] - Lux (lm/m^2) value for skybox intensity when physical light units are enabled. Defaults to 20000.
+     * @param {number} [settings.render.skyboxMip] - The mip level of the skybox to be displayed. Defaults to 0.
      * Only valid for prefiltered cubemap skyboxes.
-     * @param {number[]} settings.render.skyboxRotation - Rotation of skybox.
+     * @param {number[]} [settings.render.skyboxRotation] - Rotation of skybox. Defaults to [0, 0, 0].
+     *
+     * @param {string} [settings.render.skyType] - The type of the sky. One of the SKYTYPE_* constants. Defaults to {@link SKYTYPE_INFINITE}.
+     * @param {number[]} [settings.render.skyMeshPosition] - The position of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 0, 0].
+     * @param {number[]} [settings.render.skyMeshRotation] - The rotation of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 0, 0].
+     * @param {number[]} [settings.render.skyMeshScale] - The scale of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [1, 1, 1].
+     * @param {number[]} [settings.render.skyCenter] - The center of the sky. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 1, 0].
+     *
      * @param {number} settings.render.lightmapSizeMultiplier - The lightmap resolution multiplier.
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
      * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
@@ -1398,21 +1405,25 @@ class AppBase extends EventHandler {
      * - {@link BAKE_COLOR}: single color lightmap
      * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
-     * @param {boolean} settings.render.ambientBake - Enable baking ambient light into lightmaps.
-     * @param {number} settings.render.ambientBakeNumSamples - Number of samples to use when baking ambient light.
-     * @param {number} settings.render.ambientBakeSpherePart - How much of the sphere to include when baking ambient light.
-     * @param {number} settings.render.ambientBakeOcclusionBrightness - Brightness of the baked ambient occlusion.
-     * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
+     * @param {boolean} [settings.render.lightmapFilterEnabled] - Enables bilateral filter on runtime baked color lightmaps. Defaults to false.
+     * @param {number} [settings.render.lightmapFilterRange] - Sets the range parameter of the bilateral filter. Defaults to 10.
+     * @param {number} [settings.render.lightmapFilterSmoothness] - Sets the spatial parameter of the bilateral filter. Defaults to 0.2.
+     *
+     * @param {boolean} [settings.render.ambientBake] - Enable baking ambient light into lightmaps. Defaults to false.
+     * @param {number} [settings.render.ambientBakeNumSamples] - Number of samples to use when baking ambient light. Defaults to 1.
+     * @param {number} [settings.render.ambientBakeSpherePart] - How much of the sphere to include when baking ambient light. Defaults to 0.4.
+     * @param {number} [settings.render.ambientBakeOcclusionBrightness] - Brightness of the baked ambient occlusion. Defaults to 0.
+     * @param {number} [settings.render.ambientBakeOcclusionContrast] - Contrast of the baked ambient occlusion. Defaults to 0.
      * @param {number} settings.render.ambientLuminance - Lux (lm/m^2) value for ambient light intensity.
      *
-     * @param {boolean} settings.render.clusteredLightingEnabled - Enable clustered lighting.
-     * @param {boolean} settings.render.lightingShadowsEnabled - If set to true, the clustered lighting will support shadows.
-     * @param {boolean} settings.render.lightingCookiesEnabled - If set to true, the clustered lighting will support cookie textures.
-     * @param {boolean} settings.render.lightingAreaLightsEnabled - If set to true, the clustered lighting will support area lights.
-     * @param {number} settings.render.lightingShadowAtlasResolution - Resolution of the atlas texture storing all non-directional shadow textures.
-     * @param {number} settings.render.lightingCookieAtlasResolution - Resolution of the atlas texture storing all non-directional cookie textures.
-     * @param {number} settings.render.lightingMaxLightsPerCell - Maximum number of lights a cell can store.
-     * @param {number} settings.render.lightingShadowType - The type of shadow filtering used by all shadows. Can be:
+     * @param {boolean} [settings.render.clusteredLightingEnabled] - Enable clustered lighting. Defaults to false.
+     * @param {boolean} [settings.render.lightingShadowsEnabled] - If set to true, the clustered lighting will support shadows. Defaults to true.
+     * @param {boolean} [settings.render.lightingCookiesEnabled] - If set to true, the clustered lighting will support cookie textures. Defaults to false.
+     * @param {boolean} [settings.render.lightingAreaLightsEnabled] - If set to true, the clustered lighting will support area lights. Defaults to false.
+     * @param {number} [settings.render.lightingShadowAtlasResolution] - Resolution of the atlas texture storing all non-directional shadow textures. Defaults to 2048.
+     * @param {number} [settings.render.lightingCookieAtlasResolution] - Resolution of the atlas texture storing all non-directional cookie textures. Defaults to 2048.
+     * @param {number} [settings.render.lightingMaxLightsPerCell] - Maximum number of lights a cell can store. Defaults to 255.
+     * @param {number} [settings.render.lightingShadowType] - The type of shadow filtering used by all shadows. Can be:
      *
      * - {@link SHADOW_PCF1_32F}
      * - {@link SHADOW_PCF3_32F}
@@ -1421,8 +1432,9 @@ class AppBase extends EventHandler {
      * - {@link SHADOW_PCF3_16F}
      * - {@link SHADOW_PCF5_16F}
      *
-     * @param {Vec3} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
-     * is subdivided into.
+     * Defaults to {@link SHADOW_PCF3_32F}.
+     * @param {number[]} [settings.render.lightingCells] - Number of cells along each world space axis the space containing lights
+     * is subdivided into. Defaults to [10, 3, 10].
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example

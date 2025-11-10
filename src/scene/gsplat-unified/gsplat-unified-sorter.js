@@ -2,6 +2,13 @@ import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { UnifiedSortWorker } from './gsplat-unified-sort-worker.js';
 
+/**
+ * @import { GSplatInfo } from './gsplat-info.js'
+ */
+
+/** @type {Set<number>} */
+const _neededIds = new Set();
+
 class GSplatUnifiedSorter extends EventHandler {
     worker;
 
@@ -14,6 +21,14 @@ class GSplatUnifiedSorter extends EventHandler {
 
     // true if we have new version to process
     hasNewVersion = false;
+
+    /**
+     * Pending sorted result to be applied next frame. If multiple sorted results are received from
+     * the worker, the latest result is stored here.
+     *
+     * @type {{ count: number, version: number, orderData: Uint32Array }|null}
+     */
+    pendingSorted = null;
 
     /** @type {Set<number>} */
     centersSet = new Set();
@@ -51,9 +66,31 @@ class GSplatUnifiedSorter extends EventHandler {
         // decrement jobs in flight counter
         this.jobsInFlight--;
 
-        this.fire('sorted', msgData.count, msgData.version, orderData);
+        // if there's already a pending result, return its orderData to the pool
+        if (this.pendingSorted) {
+            this.releaseOrderData(this.pendingSorted.orderData);
+        }
 
-        // reuse order data
+        // store the result to be available
+        this.pendingSorted = {
+            count: msgData.count,
+            version: msgData.version,
+            orderData: orderData
+        };
+    }
+
+    applyPendingSorted() {
+        if (this.pendingSorted) {
+            const { count, version, orderData } = this.pendingSorted;
+            this.pendingSorted = null;
+            this.fire('sorted', count, version, orderData);
+
+            // reuse order data
+            this.releaseOrderData(orderData);
+        }
+    }
+
+    releaseOrderData(orderData) {
         if (orderData.length === this.bufferLength) {
             this.availableOrderData.push(orderData);
         }
@@ -61,6 +98,7 @@ class GSplatUnifiedSorter extends EventHandler {
 
     destroy() {
         this._destroyed = true;
+        this.pendingSorted = null;
         this.worker.terminate();
         this.worker = null;
     }
@@ -101,6 +139,35 @@ class GSplatUnifiedSorter extends EventHandler {
                 });
             }
         }
+    }
+
+    /**
+     * Updates centers in the worker based on current splats.
+     * Adds new centers and removes centers no longer needed.
+     *
+     * @param {GSplatInfo[]} splats - Array of active splat infos.
+     */
+    updateCentersForSplats(splats) {
+
+        // collect resource IDs from current splats
+        for (const splat of splats) {
+            const id = splat.resource.id;
+            _neededIds.add(id);
+
+            // add centers if not already present
+            if (!this.centersSet.has(id)) {
+                this.setCenters(id, splat.resource.centers);
+            }
+        }
+
+        // remove centers no longer needed
+        for (const id of this.centersSet) {
+            if (!_neededIds.has(id)) {
+                this.setCenters(id, null);
+            }
+        }
+
+        _neededIds.clear();
     }
 
     /**

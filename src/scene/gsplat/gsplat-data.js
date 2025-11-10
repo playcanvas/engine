@@ -130,9 +130,7 @@ class GSplatData {
 
     // access a named property
     getProp(name, elementName = 'vertex') {
-        const el = this.getElement(elementName);
-        const storage = el && el.properties.find(p => p.name === name)?.storage;
-        return /** @type {Float32Array} */ (storage ?? new Float32Array(0));
+        return this.getElement(elementName)?.properties.find(p => p.name === name)?.storage;
     }
 
     // access the named element

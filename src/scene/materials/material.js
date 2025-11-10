@@ -31,6 +31,7 @@ import { ShaderChunks } from '../shader-lib/shader-chunks.js';
  * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
  * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
  * @import { ShaderChunkMap } from '../shader-lib/shader-chunk-map.js';
+ * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
  */
 
 // blend mode mapping to op, srcBlend and dstBlend
@@ -695,7 +696,22 @@ class Material {
     }
 
     /**
-     * Applies any changes made to the material's properties.
+     * Applies any changes made to the material's properties. This method should be called after
+     * modifying material properties to ensure the changes take effect.
+     *
+     * The method will clear cached shader variants and trigger recompilation if:
+     * - Modified material properties require a different shader variant (e.g., enabling/disabling
+     *   textures or other properties that affect shader generation)
+     * - Material-specific shader chunks (from {@link Material#getShaderChunks}) have been modified
+     * - Global shader chunks (from {@link ShaderChunks.get}) have been modified
+     * - Material defines have been changed
+     *
+     * Note: Shaders are not compiled immediately. Instead, existing shader variants are cleared
+     * and new variants will be compiled on-demand as they are needed for different render passes
+     * (e.g., {@link SHADER_FORWARD}, {@link SHADER_SHADOW}).
+     *
+     * When global shader chunks are modified, `update()` must be called on each material that
+     * should reflect those changes.
      */
     update() {
 
@@ -773,7 +789,7 @@ class Material {
      * Sets a shader parameter on a material.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|Texture} data - The value for the specified parameter.
+     * @param {number|number[]|ArrayBufferView|Texture|StorageBuffer} data - The value for the specified parameter.
      */
     setParameter(name, data) {
 

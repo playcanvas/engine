@@ -60,6 +60,27 @@ class GSplatOctree {
     cooldowns = new Map();
 
     /**
+     * Optional environment asset URL.
+     *
+     * @type {string|null}
+     */
+    environmentUrl = null;
+
+    /**
+     * Loaded environment resource.
+     *
+     * @type {GSplatResource|null}
+     */
+    environmentResource = null;
+
+    /**
+     * Reference count for environment usage.
+     *
+     * @type {number}
+     */
+    environmentRefCount = 0;
+
+    /**
      * @param {string} assetFileUrl - The file URL of the container asset.
      * @param {Object} data - The parsed JSON data containing info, filenames and tree.
      */
@@ -77,6 +98,13 @@ class GSplatOctree {
 
         // initialize per-file ref counts
         this.fileRefCounts = new Int32Array(this.files.length);
+
+        // parse optional environment field and resolve path
+        if (data.environment) {
+            this.environmentUrl = path.isRelativePath(data.environment) ?
+                path.join(baseDir, data.environment) :
+                data.environment;
+        }
 
         // Extract leaf nodes from hierarchical tree structure
         const leafNodes = [];
@@ -279,6 +307,73 @@ class GSplatOctree {
 
         // Start/continue loading (asset loader handles duplicates internally)
         assetLoader.load(fullUrl);
+    }
+
+    /**
+     * Increments reference count for environment.
+     */
+    incEnvironmentRefCount() {
+        this.environmentRefCount++;
+    }
+
+    /**
+     * Decrements reference count for environment. When it reaches zero, immediately unload.
+     *
+     * @param {GSplatAssetLoaderBase} assetLoader - Asset loader used to unload the resource.
+     */
+    decEnvironmentRefCount(assetLoader) {
+        this.environmentRefCount--;
+        Debug.assert(this.environmentRefCount >= 0);
+
+        // unload immediately when reaching zero
+        if (this.environmentRefCount === 0) {
+            this.unloadEnvironmentResource(assetLoader);
+        }
+    }
+
+    /**
+     * Ensures environment resource is loaded and available.
+     *
+     * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
+     */
+    ensureEnvironmentResource(assetLoader) {
+        // no environment configured
+        if (!this.environmentUrl) {
+            return;
+        }
+
+        // resource already loaded
+        if (this.environmentResource) {
+            return;
+        }
+
+        // Check if the resource is now available from the asset loader
+        const res = assetLoader.getResource(this.environmentUrl);
+        if (res) {
+            this.environmentResource = res;
+
+            // if loaded but not needed, immediately unload
+            if (this.environmentRefCount === 0) {
+                this.unloadEnvironmentResource(assetLoader);
+            }
+
+            return;
+        }
+
+        // Start/continue loading (asset loader handles duplicates internally)
+        assetLoader.load(this.environmentUrl);
+    }
+
+    /**
+     * Unloads environment resource if currently loaded.
+     *
+     * @param {GSplatAssetLoaderBase} assetLoader - Asset loader used to unload the resource.
+     */
+    unloadEnvironmentResource(assetLoader) {
+        if (this.environmentResource && this.environmentUrl) {
+            assetLoader.unload(this.environmentUrl);
+            this.environmentResource = null;
+        }
     }
 }
 

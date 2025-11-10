@@ -113,6 +113,12 @@ class GSplatOctreeInstance {
     pendingVisibleAdds = new Map();
 
     /**
+     * Environment placement.
+     * @type {GSplatPlacement|null}
+     */
+    environmentPlacement = null;
+
+    /**
      * @param {GSplatOctree} octree - The octree.
      * @param {GSplatPlacement} placement - The placement.
      * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
@@ -129,6 +135,12 @@ class GSplatOctreeInstance {
         // Initialize file placements array
         const numFiles = octree.files.length;
         this.filePlacements = new Array(numFiles).fill(null);
+
+        // Handle environment if configured
+        if (octree.environmentUrl) {
+            octree.incEnvironmentRefCount();
+            octree.ensureEnvironmentResource(assetLoader);
+        }
     }
 
     /**
@@ -138,6 +150,13 @@ class GSplatOctreeInstance {
         this.pending.clear();
         this.pendingDecrements.clear();
         this.filePlacements.length = 0;
+
+        // Clean up environment if present
+        if (this.environmentPlacement) {
+            this.activePlacements.delete(this.environmentPlacement);
+            this.octree.decEnvironmentRefCount(this.assetLoader);
+            this.environmentPlacement = null;
+        }
     }
 
     /**
@@ -291,7 +310,7 @@ class GSplatOctreeInstance {
 
         // calculate max LOD once for all nodes
         const maxLod = this.octree.lodLevels - 1;
-        const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25];
+        const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 
         // parameters
         const { lodBehindPenalty, lodRangeMin, lodRangeMax, lodUnderfillLimit = 0 } = params;
@@ -599,7 +618,29 @@ class GSplatOctreeInstance {
         // watch prefetched loads for completion to allow promotion
         this.pollPrefetchCompletions();
 
-        // debug render world space bounds for octree nodes based on current LOD selection
+        // handle environment loading
+        if (this.octree.environmentUrl && !this.environmentPlacement) {
+            // poll for environment resource completion
+            this.octree.ensureEnvironmentResource(this.assetLoader);
+            const envResource = this.octree.environmentResource;
+
+            if (envResource) {
+                // create environment placement with the loaded resource
+                this.environmentPlacement = new GSplatPlacement(envResource, this.placement.node, 0);
+                this.environmentPlacement.aabb.copy(envResource.aabb);
+                this.activePlacements.add(this.environmentPlacement);
+                this.dirtyModifiedPlacements = true;
+            }
+        }
+
+        // check if any placements need LOD update
+        const dirty = this.dirtyModifiedPlacements;
+        this.dirtyModifiedPlacements = false;
+        return dirty;
+    }
+
+    // debug render world space bounds for octree nodes based on current LOD selection
+    debugRender(scene) {
         Debug.call(() => {
             if (scene.gsplat.debugNodeAabbs) {
                 const modelMat = this.placement.node.getWorldTransform();
@@ -614,11 +655,6 @@ class GSplatOctreeInstance {
                 }
             }
         });
-
-        // check if any placements need LOD update
-        const dirty = this.dirtyModifiedPlacements;
-        this.dirtyModifiedPlacements = false;
-        return dirty;
     }
 
     /**

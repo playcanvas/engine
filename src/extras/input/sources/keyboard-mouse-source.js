@@ -1,4 +1,5 @@
 import { InputSource } from '../input.js';
+import { movementState } from '../utils.js';
 
 const PASSIVE = /** @type {AddEventListenerOptions & EventListenerOptions} */ ({ passive: false });
 const KEY_CODES = /** @type {const} */ ({
@@ -64,6 +65,12 @@ const array = Array(KEY_COUNT).fill(0);
  * @augments {InputSource<KeyboardMouseSourceDeltas>}
  */
 class KeyboardMouseSource extends InputSource {
+    /**
+     * @type {ReturnType<typeof movementState>}
+     * @private
+     */
+    _movementState = movementState();
+
     /**
      * The key codes for the keyboard keys.
      *
@@ -170,6 +177,8 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _onPointerDown(event) {
+        this._movementState.down(event);
+
         if (event.pointerType !== 'mouse') {
             return;
         }
@@ -196,6 +205,11 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _onPointerMove(event) {
+        // Use native movementX/Y when pointer lock is active, otherwise use custom calculation
+        const [movementX, movementY] = this._pointerLock && document.pointerLockElement === this._element ?
+            [event.movementX, event.movementY] :
+            this._movementState.move(event);
+
         if (event.pointerType !== 'mouse') {
             return;
         }
@@ -211,7 +225,8 @@ class KeyboardMouseSource extends InputSource {
                 return;
             }
         }
-        this.deltas.mouse.append([event.movementX, event.movementY]);
+
+        this.deltas.mouse.append([movementX, movementY]);
     }
 
     /**
@@ -219,6 +234,8 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _onPointerUp(event) {
+        this._movementState.up(event);
+
         if (event.pointerType !== 'mouse') {
             return;
         }
