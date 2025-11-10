@@ -6,6 +6,10 @@ import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
 import { GSplatComponentData } from './data.js';
 import { GSplatAssetLoader } from './gsplat-asset-loader.js';
+import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsplat-chunks-glsl.js';
+import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
+import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
+import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -72,6 +76,10 @@ class GSplatComponentSystem extends ComponentSystem {
         // loader for splat LOD assets, as asset system is not available on the scene level
         const gsplatAssetLoader = new GSplatAssetLoader(app.assets);
         app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, gsplatAssetLoader, this);
+
+        // register gsplat shader chunks
+        ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).add(gsplatChunksGLSL);
+        ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_WGSL).add(gsplatChunksWGSL);
 
         this.on('beforeremove', this.onRemove, this);
     }
