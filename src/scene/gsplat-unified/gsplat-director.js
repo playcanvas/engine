@@ -9,6 +9,7 @@ import { GSplatManager } from './gsplat-manager.js';
  * @import { GSplatAssetLoaderBase } from './gsplat-asset-loader-base.js'
  * @import { Scene } from '../scene.js'
  * @import { Renderer } from '../renderer/renderer.js'
+ * @import { EventHandler } from '../../core/event-handler.js'
  */
 
 /**
@@ -66,6 +67,12 @@ class GSplatCameraData {
         if (!layerData) {
             layerData = new GSplatLayerData(device, director, layer, cameraNode);
             this.layersMap.set(layer, layerData);
+
+            // Fire event that material was created
+            const material = layerData.gsplatManager.material;
+            if (material && director.eventHandler) {
+                director.eventHandler.fire('material:created', material, cameraNode.camera, layer);
+            }
         }
         return layerData;
     }
@@ -100,16 +107,23 @@ class GSplatDirector {
     scene;
 
     /**
+     * @type {EventHandler}
+     */
+    eventHandler;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Renderer} renderer - The renderer.
      * @param {Scene} scene - The scene.
      * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
+     * @param {EventHandler} eventHandler - Event handler for firing events.
      */
-    constructor(device, renderer, scene, assetLoader) {
+    constructor(device, renderer, scene, assetLoader, eventHandler) {
         this.device = device;
         this.renderer = renderer;
         this.assetLoader = assetLoader;
         this.scene = scene;
+        this.eventHandler = eventHandler;
     }
 
     destroy() {

@@ -1,5 +1,6 @@
 import { Vec2 } from '../../../core/math/vec2.js';
 import { InputSource } from '../input.js';
+import { movementState } from '../utils.js';
 
 const tmpVa = new Vec2();
 
@@ -16,6 +17,12 @@ const tmpVa = new Vec2();
  * @augments {InputSource<MultiTouchSourceDeltas>}
  */
 class MultiTouchSource extends InputSource {
+    /**
+     * @type {ReturnType<typeof movementState>}
+     * @private
+     */
+    _movementState = movementState();
+
     /**
      * @type {Map<number, PointerEvent>}
      * @private
@@ -53,6 +60,7 @@ class MultiTouchSource extends InputSource {
      */
     _onPointerDown(event) {
         const { pointerId, pointerType } = event;
+        this._movementState.down(event);
 
         if (pointerType !== 'touch') {
             return;
@@ -76,7 +84,8 @@ class MultiTouchSource extends InputSource {
      * @private
      */
     _onPointerMove(event) {
-        const { pointerType, target, pointerId, movementX, movementY } = event;
+        const { pointerType, target, pointerId } = event;
+        const [movementX, movementY] = this._movementState.move(event);
 
         if (pointerType !== 'touch') {
             return;
@@ -112,6 +121,7 @@ class MultiTouchSource extends InputSource {
      */
     _onPointerUp(event) {
         const { pointerType, pointerId } = event;
+        this._movementState.up(event);
 
         if (pointerType !== 'touch') {
             return;

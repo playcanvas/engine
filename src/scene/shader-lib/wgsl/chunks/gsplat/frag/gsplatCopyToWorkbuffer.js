@@ -38,9 +38,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         // Out of bounds: write zeros
         output.color = vec4f(0.0);
-        output.color1 = vec4f(0.0);
-        output.color2 = vec4f(0.0);
-        output.color3 = vec4f(0.0);
+        #ifndef GSPLAT_COLOR_ONLY
+            output.color1 = vec4u(0u);
+            output.color2 = vec2u(0u);
+        #endif
 
     } else {
 
@@ -108,9 +109,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         // write out results
         output.color = color;
-        output.color1 = vec4f(modelCenter, 1.0);
-        output.color2 = vec4f(covA, 1.0);
-        output.color3 = vec4f(covB, 1.0);
+        #ifndef GSPLAT_COLOR_ONLY
+            output.color1 = vec4u(bitcast<u32>(modelCenter.x), bitcast<u32>(modelCenter.y), bitcast<u32>(modelCenter.z), pack2x16float(vec2f(covA.z, covB.z)));
+            output.color2 = vec2u(pack2x16float(covA.xy), pack2x16float(covB.xy));
+        #endif
     }
     
     return output;

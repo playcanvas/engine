@@ -38,7 +38,7 @@ const KEYWORD_RESOURCE = /^[ \t]*var\s*(?:(<storage,[^>]*>)\s*([\w\d_]+)\s*:\s*(
 
 // match varying name from string like: '@interpolate(perspective, centroid) smoothColor : vec3f;'
 // eslint-disable-next-line
-const VARYING = /(?:@interpolate\([^)]*\)\s*)?([\w]+)\s*:/;
+const VARYING = /(?:@interpolate\([^)]*\)\s*)?([\w]+)\s*:\s*([\w<>]+)/;
 
 // marker for a place in the source code to be replaced by code
 const MARKER = '@@@';
@@ -602,12 +602,12 @@ class WebgpuShaderProcessorWGSL {
         let code = '';
         processingOptions.bindGroupFormats.forEach((format, bindGroupIndex) => {
             if (format) {
-                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, bindGroupIndex, 1);
+                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, bindGroupIndex);
             }
         });
 
         // and also for generated mesh format
-        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH, 0);
+        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH);
 
         return {
             code,
@@ -671,31 +671,27 @@ class WebgpuShaderProcessorWGSL {
      * ```
      * @param {BindGroupFormat} format - The format of the bind group.
      * @param {number} bindGroup - The bind group index.
-     * @param {number} startBindIndex - The starting bind index.
      * @returns {string} - The shader code for the bind group.
      */
-    static getTextureShaderDeclaration(format, bindGroup, startBindIndex) {
+    static getTextureShaderDeclaration(format, bindGroup) {
         let code = '';
-        let bindIndex = startBindIndex;
 
         format.textureFormats.forEach((format) => {
 
             const textureTypeName = getTextureDeclarationType(format.textureDimension, format.sampleType);
-            code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.name}: ${textureTypeName};\n`;
-            bindIndex++;
+            code += `@group(${bindGroup}) @binding(${format.slot}) var ${format.name}: ${textureTypeName};\n`;
 
             if (format.hasSampler) {
+                // A slot should have been left empty for the sampler at format.slot+1
                 const samplerName = format.sampleType === SAMPLETYPE_DEPTH ? 'sampler_comparison' : 'sampler';
-                code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.samplerName}: ${samplerName};\n`;
-                bindIndex++;
+                code += `@group(${bindGroup}) @binding(${format.slot + 1}) var ${format.samplerName}: ${samplerName};\n`;
             }
         });
 
         format.storageBufferFormats.forEach((format) => {
 
             const access = format.readOnly ? 'read' : 'read_write';
-            code += `@group(${bindGroup}) @binding(${bindIndex}) var<storage, ${access}> ${format.name} : ${format.format};\n`;
-            bindIndex++;
+            code += `@group(${bindGroup}) @binding(${format.slot}) var<storage, ${access}> ${format.name} : ${format.format};\n`;
 
         });
 
@@ -715,6 +711,7 @@ class WebgpuShaderProcessorWGSL {
 
             if (match) {
                 const name = match[1];
+                const type = match[2];
 
                 if (isVertex) {
                     // store it in the map
@@ -731,7 +728,7 @@ class WebgpuShaderProcessorWGSL {
                 if (!isVertex) {
 
                     // private global variable for fragment varying
-                    blockPrivates += `    var<private> ${line};\n`;
+                    blockPrivates += `    var<private> ${name}: ${type};\n`;
 
                     // copy input variable to the private variable
                     blockCopy += `    ${name} = input.${name};\n`;

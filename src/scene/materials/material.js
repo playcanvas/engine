@@ -696,7 +696,22 @@ class Material {
     }
 
     /**
-     * Applies any changes made to the material's properties.
+     * Applies any changes made to the material's properties. This method should be called after
+     * modifying material properties to ensure the changes take effect.
+     *
+     * The method will clear cached shader variants and trigger recompilation if:
+     * - Modified material properties require a different shader variant (e.g., enabling/disabling
+     *   textures or other properties that affect shader generation)
+     * - Material-specific shader chunks (from {@link Material#getShaderChunks}) have been modified
+     * - Global shader chunks (from {@link ShaderChunks.get}) have been modified
+     * - Material defines have been changed
+     *
+     * Note: Shaders are not compiled immediately. Instead, existing shader variants are cleared
+     * and new variants will be compiled on-demand as they are needed for different render passes
+     * (e.g., {@link SHADER_FORWARD}, {@link SHADER_SHADOW}).
+     *
+     * When global shader chunks are modified, `update()` must be called on each material that
+     * should reflect those changes.
      */
     update() {
 

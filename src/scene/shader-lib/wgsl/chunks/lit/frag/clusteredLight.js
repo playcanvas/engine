@@ -88,6 +88,9 @@ struct ClusterLightData {
     // compressed biases, two haf-floats stored in a float
     biasesData: f32,
 
+    // blue color component and angle flags (as uint for efficient bit operations)
+    colorBFlagsData: u32,
+
     // shadow bias values
     shadowBias: f32,
     shadowNormalBias: f32,
@@ -130,11 +133,12 @@ fn decodeClusterLightCore(clusterLightData: ptr<function, ClusterLightData>, lig
     // store floats we decode later as needed
     clusterLightData.anglesData = halfData.z;
     clusterLightData.biasesData = halfData.w;
+    clusterLightData.colorBFlagsData = bitcast<u32>(halfData.y);
 
     // decompress color half-floats
     let colorRG: vec2f = unpack2x16float(bitcast<u32>(halfData.x));
-    let colorB_: vec2f = unpack2x16float(bitcast<u32>(halfData.y));
-    clusterLightData.color = vec3f(colorRG, colorB_.x) * {LIGHT_COLOR_DIVIDER};
+    let colorB_flags: vec2f = unpack2x16float(clusterLightData.colorBFlagsData);
+    clusterLightData.color = vec3f(colorRG, colorB_flags.x) * {LIGHT_COLOR_DIVIDER};
 
     // position and range, full floats
     let lightPosRange: vec4f = sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_POSITION_RANGE});
@@ -160,10 +164,18 @@ fn decodeClusterLightCore(clusterLightData: ptr<function, ClusterLightData>, lig
 }
 
 fn decodeClusterLightSpot(clusterLightData: ptr<function, ClusterLightData>) {
-    // spot light cos angles
-    let angles: vec2f = unpack2x16float(bitcast<u32>(clusterLightData.anglesData));
-    clusterLightData.innerConeAngleCos = angles.x;
-    clusterLightData.outerConeAngleCos = angles.y;
+    // decompress spot light angles
+    let angleFlags: u32 = (clusterLightData.colorBFlagsData >> 16u) & 0xFFFFu;  // Extract upper 16 bits as integer
+
+    let angleValues: vec2f = unpack2x16float(bitcast<u32>(clusterLightData.anglesData));
+    let innerVal: f32 = angleValues.x;
+    let outerVal: f32 = angleValues.y;
+
+    // decode based on flags (branch-free)
+    let innerIsVersine: bool = (angleFlags & 1u) != 0u;      // bit 0: inner angle format
+    let outerIsVersine: bool = ((angleFlags >> 1u) & 1u) != 0u;  // bit 1: outer angle format
+    clusterLightData.innerConeAngleCos = select(innerVal, 1.0 - innerVal, innerIsVersine);
+    clusterLightData.outerConeAngleCos = select(outerVal, 1.0 - outerVal, outerIsVersine);
 }
 
 fn decodeClusterLightOmniAtlasViewport(clusterLightData: ptr<function, ClusterLightData>) {
