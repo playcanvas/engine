@@ -8,6 +8,7 @@ export default /* wgsl */`
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
 #include "gsplatSourceFormatVS"
+#include "packHalfPS"
 
 uniform uTransform: mat4x4f;
 
@@ -110,8 +111,8 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         // write out results
         output.color = color;
         #ifndef GSPLAT_COLOR_ONLY
-            output.color1 = vec4u(bitcast<u32>(modelCenter.x), bitcast<u32>(modelCenter.y), bitcast<u32>(modelCenter.z), pack2x16float(vec2f(covA.z, covB.z)));
-            output.color2 = vec2u(pack2x16float(covA.xy), pack2x16float(covB.xy));
+            output.color1 = vec4u(bitcast<u32>(modelCenter.x), bitcast<u32>(modelCenter.y), bitcast<u32>(modelCenter.z), pack2x16floatSafe(vec2f(covA.z, covB.z)));
+            output.color2 = vec2u(pack2x16floatSafe(covA.xy), pack2x16floatSafe(covB.xy));
         #endif
     }
     

@@ -8,6 +8,7 @@ export default /* glsl */`
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
 #include "gsplatSourceFormatVS"
+#include "packHalfPS"
 
 uniform mat4 uTransform;
 
@@ -120,8 +121,8 @@ void main(void) {
             pcFragColor0 = color;
         #endif
         #ifndef GSPLAT_COLOR_ONLY
-            pcFragColor1 = uvec4(floatBitsToUint(modelCenter.x), floatBitsToUint(modelCenter.y), floatBitsToUint(modelCenter.z), packHalf2x16(vec2(covA.z, covB.z)));
-            pcFragColor2 = uvec2(packHalf2x16(covA.xy), packHalf2x16(covB.xy));
+            pcFragColor1 = uvec4(floatBitsToUint(modelCenter.x), floatBitsToUint(modelCenter.y), floatBitsToUint(modelCenter.z), packHalf2x16Safe(vec2(covA.z, covB.z)));
+            pcFragColor2 = uvec2(packHalf2x16Safe(covA.xy), packHalf2x16Safe(covB.xy));
         #endif
     }
 }
