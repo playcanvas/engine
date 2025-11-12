@@ -1194,6 +1194,7 @@ function _defineMaterialProps() {
     _defineFlag('opacityDither', DITHER_NONE);
     _defineFlag('opacityShadowDither', DITHER_NONE);
     _defineFlag('shadowCatcher', false);
+    _defineFlag('vertexColorGamma', true);
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');

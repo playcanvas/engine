@@ -10,7 +10,11 @@ void getEmission() {
     #endif
 
     #ifdef STD_EMISSIVE_VERTEX
-    dEmission *= gammaCorrectInput(saturate(vVertexColor.{STD_EMISSIVE_VERTEX_CHANNEL}));
+        #ifdef STD_VERTEX_COLOR_GAMMA
+            dEmission *= gammaCorrectInput(saturate(vVertexColor.{STD_EMISSIVE_VERTEX_CHANNEL}));
+        #else
+            dEmission *= saturate(vVertexColor.{STD_EMISSIVE_VERTEX_CHANNEL});
+        #endif
     #endif
 }
 `;

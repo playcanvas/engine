@@ -243,6 +243,7 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatGloss = !!stdMat.clearCoatGloss;
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
         options.iorTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
+        options.vertexColorGamma = stdMat.vertexColorGamma;
 
         // hack, see Scene.forcePassThroughSpecular description
         if (scene.forcePassThroughSpecular) {

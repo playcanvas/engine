@@ -305,6 +305,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         fDefineSet(options.useSpecularColor, 'STD_SPECULAR_COLOR', '');
         fDefineSet(options.aoMap || options.aoVertexColor || options.useAO, 'STD_AO', '');
         fDefineSet(true, 'STD_OPACITY_DITHER', ditherNames[shaderPassInfo.isForward ? options.litOptions.opacityDither : options.litOptions.opacityShadowDither]);
+        fDefineSet(options.vertexColorGamma && (options.diffuseVertexColor || options.emissiveVertexColor), 'STD_VERTEX_COLOR_GAMMA', '');
     }
 
     /**
