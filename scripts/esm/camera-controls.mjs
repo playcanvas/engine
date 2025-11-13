@@ -738,8 +738,7 @@ class CameraControls extends Script {
         const orbit = +(this._mode === 'orbit');
         const fly = +(this._mode === 'fly');
         const double = +(this._state.touches > 1);
-        const pan = +(this.enablePan &&
-            ((orbit && this._state.shift) || this._state.mouse[1] || +(button[1] === -1)));
+        const desktopPan = +(this._state.shift || this._state.mouse[1]);
         const mobileJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
 
         // multipliers
@@ -757,7 +756,7 @@ class CameraControls extends Script {
         const keyMove = this._state.axis.clone().normalize();
         v.add(keyMove.mulScalar(fly * moveMult));
         const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._pose.distance);
-        v.add(panMove.mulScalar(orbit * pan));
+        v.add(panMove.mulScalar(orbit * desktopPan * +this.enablePan));
         const wheelMove = tmpV2.set(0, 0, wheel[0]);
         v.add(wheelMove.mulScalar(orbit * zoomMult));
         deltas.move.append([v.x, v.y, v.z]);
@@ -765,7 +764,7 @@ class CameraControls extends Script {
         // desktop rotate
         v.set(0, 0, 0);
         const mouseRotate = tmpV2.set(mouse[0], mouse[1], 0);
-        v.add(mouseRotate.mulScalar((1 - pan) * rotateMult));
+        v.add(mouseRotate.mulScalar((1 - desktopPan) * rotateMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // mobile move
@@ -773,7 +772,7 @@ class CameraControls extends Script {
         const flyMove = tmpV2.set(leftInput[0], 0, -leftInput[1]);
         v.add(flyMove.mulScalar(fly * moveMult));
         const orbitMove = screenToWorld(this._camera, touch[0], touch[1], this._pose.distance);
-        v.add(orbitMove.mulScalar(orbit * double));
+        v.add(orbitMove.mulScalar(orbit * double * +this.enablePan));
         const pinchMove = tmpV2.set(0, 0, pinch[0]);
         v.add(pinchMove.mulScalar(orbit * double * zoomTouchMult));
         deltas.move.append([v.x, v.y, v.z]);
