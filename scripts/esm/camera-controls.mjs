@@ -738,8 +738,8 @@ class CameraControls extends Script {
         const orbit = +(this._mode === 'orbit');
         const fly = +(this._mode === 'fly');
         const double = +(this._state.touches > 1);
-        const pan = +this.enablePan &&
-            ((orbit && this._state.shift) || this._state.mouse[1] || +(button[1] === -1));
+        const pan = +(this.enablePan &&
+            ((orbit && this._state.shift) || this._state.mouse[1] || +(button[1] === -1)));
         const mobileJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
 
         // multipliers
