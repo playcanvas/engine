@@ -59,8 +59,8 @@ function removeRedundantSpaces(code) {
         return code;
     }
     const n = Math.min(...lines);
-    const removeSpacesRegExp = new RegExp(' '.repeat(n), 'g');
-    const prettyCode = `${code.replace(removeSpacesRegExp, '').trim()}\n`;
+    const lowerCode = code.toLowerCase();
+    const results = examples.filter(example => example.name.toLowerCase().includes(lowerCode) || example.path.toLowerCase().includes(lowerCode));
     return prettyCode;
 }
 
