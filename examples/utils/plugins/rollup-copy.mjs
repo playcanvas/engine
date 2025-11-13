@@ -1,63 +1,53 @@
-import fs from 'fs';
 import path from 'path';
+import { copyFile, mkdir } from 'fs/promises';
 
-const GREEN_OUT = '\x1b[32m';
-const BOLD_OUT = '\x1b[1m';
-const REGULAR_OUT = '\x1b[22m';
+const copy = (options) => {
+    const {
+        // an array of files to copy
+        files = [],
+        // a directory to copy to
+        dest = '',
+        // whether to log the copied files
+        verbose = false
+    } = options;
 
-/** @import { Plugin, PluginContext } from 'rollup' */
-
-/**
- * @param {PluginContext} context - The Rollup plugin context.
- * @param {string} src - File or path to watch.
- */
-const addWatch = (context, src) => {
-    const srcStats = fs.statSync(src);
-    if (srcStats.isFile()) {
-        context.addWatchFile(path.resolve('.', src));
-        return;
-    }
-    const filesToWatch = fs.readdirSync(src);
-    for (const file of filesToWatch) {
-        const fullPath = path.join(src, file);
-        const stats = fs.statSync(fullPath);
-        if (stats.isFile()) {
-            context.addWatchFile(path.resolve('.', fullPath));
-        } else if (stats.isDirectory()) {
-            addWatch(context, fullPath);
-        }
-    }
-};
-
-/**
- * This plugin copies static files from source to destination.
- *
- * @param {object[]} targets - Array of source and destination objects.
- * @param {string} targets.src - File or entire dir.
- * @param {string} targets.dest - File or entire dir, usually into `dist/`.
- * @param {boolean} watch - Watch the files.
- * @returns {Plugin} The plugin.
- */
-export function copy(targets, watch = false) {
     return {
         name: 'copy',
-        load() {
-            return '';
-        },
-        buildStart() {
-            if (watch) {
-                for (let i = 0; i < targets.length; i++) {
-                    const target = targets[i];
-                    addWatch(this, target.src);
-                }
+        async generateBundle(outputOptions, bundle) {
+            const projectRoot = process.cwd();
+            const destDir = path.resolve(projectRoot, dest);
+
+            // security: ensure the destination directory is within the project root
+            if (path.relative(projectRoot, destDir).startsWith('..')) {
+                this.error(`rollup-copy: Destination directory ${destDir} is outside of the project root ${projectRoot}.`);
+                return;
             }
-        },
-        buildEnd() {
-            for (let i = 0; i < targets.length; i++) {
-                const target = targets[i];
-                fs.cpSync(target.src, target.dest, { recursive: true });
-                console.log(`${GREEN_OUT}copied ${BOLD_OUT}${target.src}${REGULAR_OUT} → ${BOLD_OUT}${target.dest}${REGULAR_OUT}`);
+
+            for (const file of files) {
+                const fileName = path.basename(file);
+                const destFile = path.join(destDir, fileName);
+
+                // security: ensure the final file path is within the destination directory
+                if (path.relative(destDir, destFile).startsWith('..')) {
+                    this.error(`rollup-copy: Invalid file name, results in path traversal: ${fileName}`);
+                    continue;
+                }
+
+                if (verbose) {
+                    // log the relative path for cleaner output
+                    console.log(`copy: ${file} -> ${path.relative(projectRoot, destFile)}`);
+                }
+                try {
+                    await mkdir(path.dirname(destFile), { recursive: true });
+                    await copyFile(file, destFile);
+                } catch (e) {
+                    console.error(`copy: failed to copy ${file}: ${e}`);
+                }
             }
         }
     };
-}
+};
+
+export {
+    copy
+};
