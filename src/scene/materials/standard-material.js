@@ -523,6 +523,10 @@ const _tempColor = new Color();
  * backfaces.
  * @property {boolean} shadowCatcher When enabled, the material will output accumulated directional
  * shadow value in linear space as the color.
+ * @property {boolean} vertexColorGamma If true, shader will convert vertex colors to gamma space.
+ * True by default, e.g. for procedural or FBX models. gLTF stores vertex colors in linear space,
+ * so the parser will set this flag to false for imported GLB models. If you use vertex colors to
+ * store other data, set this to false to avoid unwanted color space conversions.
  *
  * @category Graphics
  */

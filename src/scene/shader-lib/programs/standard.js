@@ -88,11 +88,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         return expression;
     }
 
-    _validateMapChunk(propName, chunkName, chunks) {
+    _validateMapChunk(code, propName, chunkName, chunks) {
         Debug.call(() => {
-            // strip comments from the chunk
-            const code = chunks.get(chunkName).replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
-
             const requiredChangeStrings = [];
 
             // Helper function to add a formatted change string if the old syntax is found
@@ -170,7 +167,16 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         // log errors if the chunk format is deprecated (format changed in engine 2.7)
         Debug.call(() => {
             if (chunkCode) {
-                this._validateMapChunk(propNameCaps, chunkName, chunks);
+                // strip comments from the chunk
+                const code = chunks.get(chunkName).replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+
+                this._validateMapChunk(code, propNameCaps, chunkName, chunks);
+
+                if (vertexColorOption && !options.vertexColorGamma) {
+                    if (code.includes('gammaCorrectInput')) {
+                        Debug.errorOnce(`Shader chunk ${chunkName} contains gamma correction code which is incompatible with vertexColorGamma=false. Please remove gamma correction calls from the chunk.`, { code: code });
+                    }
+                }
             }
         });
 
@@ -305,7 +311,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         fDefineSet(options.useSpecularColor, 'STD_SPECULAR_COLOR', '');
         fDefineSet(options.aoMap || options.aoVertexColor || options.useAO, 'STD_AO', '');
         fDefineSet(true, 'STD_OPACITY_DITHER', ditherNames[shaderPassInfo.isForward ? options.litOptions.opacityDither : options.litOptions.opacityShadowDither]);
-        fDefineSet(options.vertexColorGamma && (options.diffuseVertexColor || options.emissiveVertexColor), 'STD_VERTEX_COLOR_GAMMA', '');
     }
 
     /**

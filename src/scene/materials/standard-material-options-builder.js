@@ -243,7 +243,6 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatGloss = !!stdMat.clearCoatGloss;
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
         options.iorTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
-        options.vertexColorGamma = stdMat.vertexColorGamma;
 
         // hack, see Scene.forcePassThroughSpecular description
         if (scene.forcePassThroughSpecular) {
@@ -290,6 +289,8 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useDynamicRefraction = stdMat.useDynamicRefraction;
         options.litOptions.dispersion = stdMat.dispersion > 0;
         options.litOptions.shadowCatcher = stdMat.shadowCatcher;
+
+        options.litOptions.useVertexColorGamma = stdMat.vertexColorGamma;
     }
 
     _updateEnvOptions(options, stdMat, scene, cameraShaderParams) {

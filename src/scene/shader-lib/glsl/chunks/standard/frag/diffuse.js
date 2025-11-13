@@ -20,11 +20,7 @@ void getAlbedo() {
     #endif
 
     #ifdef STD_DIFFUSE_VERTEX
-        #ifdef STD_VERTEX_COLOR_GAMMA
-            dAlbedo *= gammaCorrectInput(saturate(vVertexColor.{STD_DIFFUSE_VERTEX_CHANNEL}));
-        #else
-            dAlbedo *= saturate(vVertexColor.{STD_DIFFUSE_VERTEX_CHANNEL});
-        #endif
+        dAlbedo *= saturate(vVertexColor.{STD_DIFFUSE_VERTEX_CHANNEL});
     #endif
 }
 `;

@@ -83,6 +83,8 @@ class LitShaderOptions {
 
     vertexColors = false;
 
+    useVertexColorGamma = true;
+
     lightMapEnabled = false;
 
     dirLightMapEnabled = false;
