@@ -113,6 +113,15 @@ class GSplatOctreeInstance {
     pendingVisibleAdds = new Map();
 
     /**
+     * Returns true if this instance has resources pending load or prefetch.
+     *
+     * @type {boolean}
+     */
+    get hasPendingLoads() {
+        return this.pending.size > 0 || this.prefetchPending.size > 0;
+    }
+
+    /**
      * Environment placement.
      * @type {GSplatPlacement|null}
      */

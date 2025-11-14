@@ -42,7 +42,8 @@ class GSplatComponentSystem extends ComponentSystem {
     /**
      * Fired when a GSplat material is created for a camera and layer combination. In unified
      * mode, materials are created during the first frame update when the GSplat is rendered.
-     * The handler is passed the {@link ShaderMaterial}, the {@link Camera}, and the {@link Layer}.
+     * The handler is passed the {@link ShaderMaterial}, the {@link CameraComponent}, and
+     * the {@link Layer}.
      *
      * This event is useful for setting up custom material chunks and parameters before the
      * first render.
@@ -56,6 +57,30 @@ class GSplatComponentSystem extends ComponentSystem {
      * });
      */
     static EVENT_MATERIALCREATED = 'material:created';
+
+    /**
+     * Fired every frame for each camera and layer combination rendering GSplats in unified mode.
+     * The handler is passed the {@link CameraComponent}, the {@link Layer}, a boolean indicating
+     * if the current frame has up-to-date sorting, and a boolean indicating if resources are loading.
+     *
+     * The `ready` parameter indicates whether the current frame reflects all recent changes (camera
+     * movement, splat transforms, lod updates, etc.) with the latest sorting applied. The `loading`
+     * parameter indicates if octree LOD resources are still being loaded.
+     *
+     * This event is useful for video capture or other workflows that need to wait for frames
+     * to be fully ready. Only capture frames and move camera to next position when both
+     * `ready === true` and `loading === false`.
+     *
+     * @event
+     * @example
+     * app.systems.gsplat.on('frame:ready', (camera, layer, ready, loading) => {
+     *     if (ready && !loading) {
+     *         console.log(`Frame ready to capture for camera ${camera.entity.name}`);
+     *         // Capture frame here
+     *     }
+     * });
+     */
+    static EVENT_FRAMEREADY = 'frame:ready';
 
     /**
      * Create a new GSplatComponentSystem.
