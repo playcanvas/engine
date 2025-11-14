@@ -81,6 +81,10 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
         this._registry = registry;
     }
 
+    get isLoading() {
+        return this._currentlyLoading.size > 0 || this._loadQueue.length > 0;
+    }
+
     /**
      * Initiates loading of a gsplat asset. This is a fire-and-forget operation that starts
      * the loading process. Use getResource() later to check if the asset has finished loading.
