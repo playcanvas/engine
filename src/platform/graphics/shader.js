@@ -15,6 +15,40 @@ import { ShaderDefinitionUtils } from './shader-definition-utils.js';
 let id = 0;
 
 /**
+ * @typedef {object} ShaderDefinition
+ * @property {string} [name] - The name of the shader.
+ * @property {Object<string, string>} [attributes] - Object detailing the mapping of
+ * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
+ * vertex buffer data as inputs to the shader. When not specified, rendering without vertex
+ * buffer is assumed.
+ * @property {string[]} [feedbackVaryings] - A list of shader output variable
+ * names that will be captured when using transform feedback. This setting is only effective
+ * if the useTransformFeedback property is enabled.
+ * @property {string} [vshader] - Vertex shader source (GLSL code). Optional when
+ * compute shader is specified.
+ * @property {string} [fshader] - Fragment shader source (GLSL code). Optional when
+ * useTransformFeedback or compute shader is specified.
+ * @property {string} [cshader] - Compute shader source (WGSL code). Only supported on
+ * WebGPU platform.
+ * @property {Map<string, string>} [vincludes] - A map containing key-value pairs of
+ * include names and their content. These are used for resolving #include directives in the
+ * vertex shader source.
+ * @property {Map<string, string>} [fincludes] - A map containing key-value pairs
+ * of include names and their content. These are used for resolving #include directives in the
+ * fragment shader source.
+ * @property {Map<string, string>} [cincludes] - A map containing key-value pairs
+ * of include names and their content. These are used for resolving #include directives in the
+ * compute shader source.
+ * @property {boolean} [useTransformFeedback] - Specifies that this shader outputs
+ * post-VS data to a buffer.
+ * @property {string | string[]} [fragmentOutputTypes] - Fragment shader output types,
+ * which default to vec4. Passing a string will set the output type for all color attachments.
+ * Passing an array will set the output type for each color attachment.
+ * @property {string} [shaderLanguage] - Specifies the shader language of vertex and
+ * fragment shaders. Defaults to {@link SHADERLANGUAGE_GLSL}.
+ */
+
+/**
  * A shader is a program that is responsible for rendering graphical primitives on a device's
  * graphics processor. The shader is generated from a shader definition. This shader definition
  * specifies the code for processing vertices and fragments processed by the GPU. The language of
@@ -51,43 +85,21 @@ class Shader {
     attributes = new Map();
 
     /**
+     * The shader definition from which the shader was built.
+     *
+     * @type {ShaderDefinition}
+     * @readonly
+     */
+    definition;
+
+    /**
      * Creates a new Shader instance.
      *
      * Consider {@link ShaderUtils#createShader} as a simpler and more powerful way to create
      * a shader.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
-     * @param {object} definition - The shader definition from which to build the shader.
-     * @param {string} [definition.name] - The name of the shader.
-     * @param {Object<string, string>} [definition.attributes] - Object detailing the mapping of
-     * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
-     * vertex buffer data as inputs to the shader. When not specified, rendering without vertex
-     * buffer is assumed.
-     * @param {string[]} [definition.feedbackVaryings] - A list of shader output variable
-     * names that will be captured when using transform feedback. This setting is only effective
-     * if the useTransformFeedback property is enabled.
-     * @param {string} [definition.vshader] - Vertex shader source (GLSL code). Optional when
-     * compute shader is specified.
-     * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
-     * useTransformFeedback or compute shader is specified.
-     * @param {string} [definition.cshader] - Compute shader source (WGSL code). Only supported on
-     * WebGPU platform.
-     * @param {Map<string, string>} [definition.vincludes] - A map containing key-value pairs of
-     * include names and their content. These are used for resolving #include directives in the
-     * vertex shader source.
-     * @param {Map<string, string>} [definition.fincludes] - A map containing key-value pairs
-     * of include names and their content. These are used for resolving #include directives in the
-     * fragment shader source.
-     * @param {Map<string, string>} [definition.cincludes] - A map containing key-value pairs
-     * of include names and their content. These are used for resolving #include directives in the
-     * compute shader source.
-     * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
-     * post-VS data to a buffer.
-     * @param {string | string[]} [definition.fragmentOutputTypes] - Fragment shader output types,
-     * which default to vec4. Passing a string will set the output type for all color attachments.
-     * Passing an array will set the output type for each color attachment.
-     * @param {string} [definition.shaderLanguage] - Specifies the shader language of vertex and
-     * fragment shaders. Defaults to {@link SHADERLANGUAGE_GLSL}.
+     * @param {ShaderDefinition} definition - The shader definition from which to build the shader.
      * @example
      * // Create a shader that renders primitives with a solid red color
      *
