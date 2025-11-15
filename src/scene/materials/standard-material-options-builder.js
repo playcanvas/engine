@@ -289,6 +289,8 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useDynamicRefraction = stdMat.useDynamicRefraction;
         options.litOptions.dispersion = stdMat.dispersion > 0;
         options.litOptions.shadowCatcher = stdMat.shadowCatcher;
+
+        options.litOptions.useVertexColorGamma = stdMat.vertexColorGamma;
     }
 
     _updateEnvOptions(options, stdMat, scene, cameraShaderParams) {
