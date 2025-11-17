@@ -290,12 +290,12 @@ class BoundingBox {
      * @returns {boolean} True if the point is inside the AABB and false otherwise.
      */
     containsPoint(point) {
-        const min = this.getMin();
-        const max = this.getMax();
+        const c = this.center;
+        const h = this.halfExtents;
 
-        if (point.x < min.x || point.x > max.x ||
-            point.y < min.y || point.y > max.y ||
-            point.z < min.z || point.z > max.z) {
+        if (point.x < c.x - h.x || point.x > c.x + h.x ||
+            point.y < c.y - h.y || point.y > c.y + h.y ||
+            point.z < c.z - h.z || point.z > c.z + h.z) {
             return false;
         }
 
