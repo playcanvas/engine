@@ -125,4 +125,3 @@ describe('BoundingBox', function () {
     });
 
 });
-
