@@ -133,9 +133,6 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         // Assign material properties to scope
         workBufferRenderInfo.material.setParameters(device);
 
-        // Matrix to transform splats to the world space
-        scope.resolve('uTransform').setValue(splatInfo.node.getWorldTransform().data);
-
         if (intervalTexture) {
             // Set LOD intervals texture for remapping of indices
             scope.resolve('uIntervalsTexture').setValue(intervalTexture.texture);
