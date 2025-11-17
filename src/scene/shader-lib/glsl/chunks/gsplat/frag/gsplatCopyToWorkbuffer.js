@@ -10,8 +10,6 @@ export default /* glsl */`
 #include "gsplatSourceFormatVS"
 #include "packHalfPS"
 
-uniform mat4 uTransform;
-
 uniform int uStartLine;      // Start row in destination texture
 uniform int uViewportWidth;  // Width of the destination viewport in pixels
 
@@ -67,9 +65,11 @@ void main(void) {
         source.id = uint(originalIndex);
         source.uv = ivec2(source.id % srcSize, source.id / srcSize);
 
-        // read and transform center
+        // read center in local space
         vec3 modelCenter = readCenter(source);
-        modelCenter = (uTransform * vec4(modelCenter, 1.0)).xyz;
+
+        // compute world-space center for storage
+        vec3 worldCenter = (matrix_model * vec4(modelCenter, 1.0)).xyz;
         SplatCenter center;
         initCenter(modelCenter, center);
 
@@ -82,7 +82,7 @@ void main(void) {
             covA.y, covB.x, covB.y,
             covA.z, covB.y, covB.z
         );
-        mat3 linear = mat3(uTransform);
+        mat3 linear = mat3(matrix_model);
         mat3 Ct = linear * C * transpose(linear);
         covA = Ct[0];
         covB = vec3(Ct[1][1], Ct[1][2], Ct[2][2]);
@@ -121,7 +121,7 @@ void main(void) {
             pcFragColor0 = color;
         #endif
         #ifndef GSPLAT_COLOR_ONLY
-            pcFragColor1 = uvec4(floatBitsToUint(modelCenter.x), floatBitsToUint(modelCenter.y), floatBitsToUint(modelCenter.z), packHalf2x16Safe(vec2(covA.z, covB.z)));
+            pcFragColor1 = uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16Safe(vec2(covA.z, covB.z)));
             pcFragColor2 = uvec2(packHalf2x16Safe(covA.xy), packHalf2x16Safe(covB.xy));
         #endif
     }
