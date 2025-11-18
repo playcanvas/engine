@@ -124,4 +124,178 @@ describe('BoundingBox', function () {
 
     });
 
+    describe('#closestPoint', function () {
+
+        it('returns the point itself when inside the box', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(0.5, 0.5, 0.5);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(0.5);
+            expect(closest.y).to.equal(0.5);
+            expect(closest.z).to.equal(0.5);
+        });
+
+        it('returns the point itself when at center', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(0, 0, 0);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(0);
+            expect(closest.y).to.equal(0);
+            expect(closest.z).to.equal(0);
+        });
+
+        it('returns point on positive X face', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(5, 0, 0);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(1);
+            expect(closest.y).to.equal(0);
+            expect(closest.z).to.equal(0);
+        });
+
+        it('returns point on negative X face', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(-5, 0, 0);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(-1);
+            expect(closest.y).to.equal(0);
+            expect(closest.z).to.equal(0);
+        });
+
+        it('returns point on positive Y face', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(0, 5, 0);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(0);
+            expect(closest.y).to.equal(1);
+            expect(closest.z).to.equal(0);
+        });
+
+        it('returns point on negative Y face', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(0, -5, 0);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(0);
+            expect(closest.y).to.equal(-1);
+            expect(closest.z).to.equal(0);
+        });
+
+        it('returns point on positive Z face', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(0, 0, 5);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(0);
+            expect(closest.y).to.equal(0);
+            expect(closest.z).to.equal(1);
+        });
+
+        it('returns point on negative Z face', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(0, 0, -5);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(0);
+            expect(closest.y).to.equal(0);
+            expect(closest.z).to.equal(-1);
+        });
+
+        it('returns corner point when outside diagonally', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(5, 5, 5);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(1);
+            expect(closest.y).to.equal(1);
+            expect(closest.z).to.equal(1);
+        });
+
+        it('returns opposite corner when outside negative diagonal', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(-5, -5, -5);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(-1);
+            expect(closest.y).to.equal(-1);
+            expect(closest.z).to.equal(-1);
+        });
+
+        it('clamps to edge when outside on one axis', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(2, 0.5, 0.5);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(1);
+            expect(closest.y).to.equal(0.5);
+            expect(closest.z).to.equal(0.5);
+        });
+
+        it('clamps to edge when outside on two axes', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(2, 2, 0.5);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(1);
+            expect(closest.y).to.equal(1);
+            expect(closest.z).to.equal(0.5);
+        });
+
+        it('works with non-centered box', function () {
+            const box = new BoundingBox(new Vec3(5, 10, 15), new Vec3(2, 3, 4));
+            const point = new Vec3(10, 10, 15);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(7); // max X is 5+2=7
+            expect(closest.y).to.equal(10);
+            expect(closest.z).to.equal(15);
+        });
+
+        it('works with asymmetric box', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 5, 10));
+            const point = new Vec3(2, 7, -15);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(1);
+            expect(closest.y).to.equal(5);
+            expect(closest.z).to.equal(-10);
+        });
+
+        it('returns point on boundary when exactly on boundary', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(1, 0, 0);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(1);
+            expect(closest.y).to.equal(0);
+            expect(closest.z).to.equal(0);
+        });
+
+        it('clamps point just slightly outside', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(1.1, 0, 0);
+            const closest = box.closestPoint(point);
+            expect(closest.x).to.equal(1);
+            expect(closest.y).to.equal(0);
+            expect(closest.z).to.equal(0);
+        });
+
+        it('uses provided result vector', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const point = new Vec3(2, 0, 0);
+            const result = new Vec3();
+            const returned = box.closestPoint(point, result);
+            expect(returned).to.equal(result); // Should return the same object
+            expect(result.x).to.equal(1);
+            expect(result.y).to.equal(0);
+            expect(result.z).to.equal(0);
+        });
+
+        it('reuses result vector on multiple calls', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const result = new Vec3();
+
+            box.closestPoint(new Vec3(2, 0, 0), result);
+            expect(result.x).to.equal(1);
+            expect(result.y).to.equal(0);
+            expect(result.z).to.equal(0);
+
+            box.closestPoint(new Vec3(0, 2, 0), result);
+            expect(result.x).to.equal(0);
+            expect(result.y).to.equal(1);
+            expect(result.z).to.equal(0);
+        });
+
+    });
+
 });
