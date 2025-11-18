@@ -161,6 +161,15 @@ class GSplatManager {
     }
 
     destroy() {
+        // Clean up all world states and decrement refs
+        for (const [, worldState] of this.worldStates) {
+            for (const splat of worldState.splats) {
+                splat.resource.decRefCount();
+            }
+            worldState.destroy();
+        }
+        this.worldStates.clear();
+
         this.workBuffer.destroy();
         this.renderer.destroy();
         this.sorter.destroy();
@@ -275,6 +284,11 @@ class GSplatManager {
 
             const newState = new GSplatWorldState(this.device, this.lastWorldStateVersion, splats);
 
+            // increment ref count for all resources in new state
+            for (const splat of newState.splats) {
+                splat.resource.incRefCount();
+            }
+
             // collect file-release requests from octree instances.
             for (const [, inst] of this.octreeInstances) {
                 if (inst.removedCandidates && inst.removedCandidates.size) {
@@ -316,6 +330,10 @@ class GSplatManager {
         for (let v = this.sortedVersion; v < version; v++) {
             const oldState = this.worldStates.get(v);
             if (oldState) {
+                // decrement ref count for all resources in old state
+                for (const splat of oldState.splats) {
+                    splat.resource.decRefCount();
+                }
                 this.worldStates.delete(v);
                 oldState.destroy();
             }
