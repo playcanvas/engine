@@ -1,7 +1,4 @@
 export default /* wgsl */`
-
-#include "gsplatHelpersVS"
-#include "gsplatCustomizeVS"
 #include "gsplatCommonVS"
 
 varying gaussianUV: vec2f;

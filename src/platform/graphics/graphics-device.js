@@ -545,6 +545,12 @@ class GraphicsDevice extends EventHandler {
         if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
         if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
         if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
+
+        // Platform defines
+        if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
+        if (platform.mobile) capsDefines.set('PLATFORM_MOBILE', '');
+        if (platform.android) capsDefines.set('PLATFORM_ANDROID', '');
+        if (platform.ios) capsDefines.set('PLATFORM_IOS', '');
     }
 
     /**

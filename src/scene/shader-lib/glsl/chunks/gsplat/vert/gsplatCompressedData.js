@@ -1,4 +1,6 @@
 export default /* glsl */`
+#include "gsplatPackingPS"
+
 uniform highp usampler2D packedTexture;
 uniform highp sampler2D chunkTexture;
 
@@ -15,15 +17,6 @@ vec3 unpack111011(uint bits) {
         float(bits >> 21u) / 2047.0,
         float((bits >> 11u) & 0x3ffu) / 1023.0,
         float(bits & 0x7ffu) / 2047.0
-    );
-}
-
-vec4 unpack8888(uint bits) {
-    return vec4(
-        float(bits >> 24u) / 255.0,
-        float((bits >> 16u) & 0xffu) / 255.0,
-        float((bits >> 8u) & 0xffu) / 255.0,
-        float(bits & 0xffu) / 255.0
     );
 }
 
