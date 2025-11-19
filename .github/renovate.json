@@ -20,6 +20,16 @@
     {
       "matchDepTypes": ["dependencies"],
       "rangeStrategy": "widen"
+    },
+    {
+      "matchPackageNames": ["sinon"],
+      "matchPaths": ["package.json"],
+      "enabled": false
+    },
+    {
+      "matchPackageNames": ["monaco"],
+      "matchPaths": ["examples/package.json"],
+      "enabled": false
     }
   ],
   "ignorePaths": [".nvmrc"]
