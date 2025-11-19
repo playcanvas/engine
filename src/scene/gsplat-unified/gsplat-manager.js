@@ -540,6 +540,9 @@ class GSplatManager {
         // apply any pending sorted results
         this.sorter.applyPendingSorted();
 
+        // update viewport for renderer
+        this.renderer.updateViewport(this.cameraNode);
+
         let fullUpdate = false;
         this.framesTillFullUpdate--;
         if (this.framesTillFullUpdate <= 0) {
@@ -781,7 +784,6 @@ class GSplatManager {
         });
 
         this.sorter.setSortParams(sorterRequest, this.scene.gsplat.radialSorting);
-        this.renderer.updateViewport(cameraNode);
     }
 
     /**
