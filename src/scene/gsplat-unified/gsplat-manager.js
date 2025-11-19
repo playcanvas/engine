@@ -500,10 +500,30 @@ class GSplatManager {
         return _cameraDeltas;
     }
 
+    /**
+     * Fires the frame:ready event with current sorting and loading state.
+     */
+    fireFrameReadyEvent() {
+        const ready = this.sortedVersion === this.lastWorldStateVersion;
+
+        // Check loader queue and octree instances' pending loads
+        let loading = this.director.assetLoader.isLoading;
+        if (!loading) {
+            for (const [, inst] of this.octreeInstances) {
+                loading ||= inst.hasPendingLoads;
+            }
+        }
+
+        this.director.eventHandler.fire('frame:ready', this.cameraNode.camera, this.renderer.layer, ready, loading);
+    }
+
     update() {
 
         // apply any pending sorted results
         this.sorter.applyPendingSorted();
+
+        // update viewport for renderer
+        this.renderer.updateViewport(this.cameraNode);
 
         let fullUpdate = false;
         this.framesTillFullUpdate--;
@@ -689,6 +709,9 @@ class GSplatManager {
             tempOctreesTicked.clear();
         }
 
+        // fire frame:ready event
+        this.fireFrameReadyEvent();
+
         // return the number of visible splats for stats
         const { textureSize } = this.workBuffer;
         return textureSize * textureSize;
@@ -743,7 +766,6 @@ class GSplatManager {
         });
 
         this.sorter.setSortParams(sorterRequest, this.scene.gsplat.radialSorting);
-        this.renderer.updateViewport(cameraNode);
     }
 
     /**

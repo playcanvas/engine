@@ -123,6 +123,10 @@ class GSplatWorkBuffer {
         // Detect compatible HDR format for color texture, fallback to RGBA16U if RGBA16F not supported
         this.colorTextureFormat = device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F]) || PIXELFORMAT_RGBA16U;
 
+        // Work buffer textures format:
+        // - colorTexture (RGBA16F/RGBA16U): RGBA color with alpha
+        // - splatTexture0 (RGBA32U): modelCenter.xyz (3×32-bit floats as uint) + 2×16-bit covariance halfs (covA.z, covB.z)
+        // - splatTexture1 (RG32U): 4×16-bit covariance halfs packed as (covA.xy, covB.xy)
         this.colorTexture = this.createTexture('splatColor', this.colorTextureFormat, 1, 1);
         this.splatTexture0 = this.createTexture('splatTexture0', PIXELFORMAT_RGBA32U, 1, 1);
         this.splatTexture1 = this.createTexture('splatTexture1', PIXELFORMAT_RG32U, 1, 1);
