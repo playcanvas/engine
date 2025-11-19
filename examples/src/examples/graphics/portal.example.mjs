@@ -204,7 +204,7 @@ assetListLoader.load(() => {
     portalEntity.setLocalScale(0.02, 0.02, 0.02);
     group.addChild(portalEntity);
 
-    // Create a statue entity, whic is visible inside the portal only
+    // Create a statue entity, which is visible inside the portal only
     const statue = assets.statue.resource.instantiateRenderEntity();
     statue.addComponent('script');
     statue.script.create('portalGeometry', {
@@ -216,7 +216,7 @@ assetListLoader.load(() => {
     statue.setLocalScale(0.25, 0.25, 0.25);
     group.addChild(statue);
 
-    // Create a bitmoji entity, whic is visible outside the portal only
+    // Create a bitmoji entity, which is visible outside the portal only
     const bitmoji = assets.bitmoji.resource.instantiateRenderEntity();
     bitmoji.addComponent('script');
     bitmoji.script.create('portalGeometry', {

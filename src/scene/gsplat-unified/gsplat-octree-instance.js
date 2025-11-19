@@ -113,6 +113,15 @@ class GSplatOctreeInstance {
     pendingVisibleAdds = new Map();
 
     /**
+     * Returns true if this instance has resources pending load or prefetch.
+     *
+     * @type {boolean}
+     */
+    get hasPendingLoads() {
+        return this.pending.size > 0 || this.prefetchPending.size > 0;
+    }
+
+    /**
      * Environment placement.
      * @type {GSplatPlacement|null}
      */
@@ -188,8 +197,11 @@ class GSplatOctreeInstance {
     calculateNodeLod(localCameraPosition, localCameraForward, nodeIndex, maxLod, lodDistances, lodBehindPenalty) {
         const node = this.octree.nodes[nodeIndex];
 
-        // Calculate distance in local space
-        _dirToNode.copy(node.bounds.center).sub(localCameraPosition);
+        // Calculate the nearest point on the bounding box to the camera for accurate distance
+        node.bounds.closestPoint(localCameraPosition, _dirToNode);
+
+        // Calculate direction from camera to nearest point on box
+        _dirToNode.sub(localCameraPosition);
         let distance = _dirToNode.length();
 
         // Apply angular-based multiplier for nodes behind the camera when enabled

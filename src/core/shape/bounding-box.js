@@ -290,16 +290,44 @@ class BoundingBox {
      * @returns {boolean} True if the point is inside the AABB and false otherwise.
      */
     containsPoint(point) {
-        const min = this.getMin();
-        const max = this.getMax();
+        const c = this.center;
+        const h = this.halfExtents;
 
-        if (point.x < min.x || point.x > max.x ||
-            point.y < min.y || point.y > max.y ||
-            point.z < min.z || point.z > max.z) {
+        if (point.x < c.x - h.x || point.x > c.x + h.x ||
+            point.y < c.y - h.y || point.y > c.y + h.y ||
+            point.z < c.z - h.z || point.z > c.z + h.z) {
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Return the point on the AABB closest to a given point. If the point is inside the AABB, the
+     * point itself is returned.
+     *
+     * @param {Vec3} point - Point to find the closest point to.
+     * @param {Vec3} [result] - The vector to store the result in. If not provided, a new Vec3 is
+     * created and returned.
+     * @returns {Vec3} The closest point on the AABB.
+     * @example
+     * const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+     * const point = new Vec3(2, 0, 0);
+     * const closest = box.closestPoint(point); // Returns Vec3(1, 0, 0)
+     * @example
+     * // Reuse a result vector to avoid allocations in hot paths
+     * const result = new Vec3();
+     * box.closestPoint(point, result);
+     */
+    closestPoint(point, result = new Vec3()) {
+        const c = this.center;
+        const h = this.halfExtents;
+
+        return result.set(
+            Math.max(c.x - h.x, Math.min(point.x, c.x + h.x)),
+            Math.max(c.y - h.y, Math.min(point.y, c.y + h.y)),
+            Math.max(c.z - h.z, Math.min(point.z, c.z + h.z))
+        );
     }
 
     /**
