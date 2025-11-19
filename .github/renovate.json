@@ -27,7 +27,7 @@
       "enabled": false
     },
     {
-      "matchPackageNames": ["monaco"],
+      "matchPackageNames": ["monaco-editor"],
       "matchPaths": ["examples/package.json"],
       "enabled": false
     }
