@@ -47,7 +47,7 @@ class StandardMaterialOptions {
 
     lightMapEncoding = 'linear';
 
-    vertexColorGamma = true;
+    vertexColorGamma = false;
 
     /**
      * If normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.

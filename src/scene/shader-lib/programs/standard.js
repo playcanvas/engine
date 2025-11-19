@@ -172,9 +172,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
                 this._validateMapChunk(code, propNameCaps, chunkName, chunks);
 
-                if (vertexColorOption && !options.vertexColorGamma) {
-                    if (code.includes('gammaCorrectInput')) {
-                        Debug.errorOnce(`Shader chunk ${chunkName} contains gamma correction code which is incompatible with vertexColorGamma=false. Please remove gamma correction calls from the chunk.`, { code: code });
+                if (vertexColorOption && options.vertexColorGamma) {
+                    if (code.includes('gammaCorrectInputVec3(saturate3(vVertexColor.') || code.includes('gammaCorrectInput(saturate(vVertexColor.')) {
+                        Debug.errorOnce(`Shader chunk ${chunkName} contains gamma correction code which is incompatible with vertexColorGamma=true. Please remove gamma correction calls from the chunk.`, { code: code });
                     }
                 }
             }

@@ -1140,9 +1140,6 @@ const createMaterial = (gltfMaterial, textures) => {
     // glTF doesn't define how to occlude specular
     material.occludeSpecular = SPECOCC_AO;
 
-    // gLTF stores vertex colors in linear space
-    material.vertexColorGamma = false;
-
     material.diffuseVertexColor = true;
     material.specularTint = true;
     material.specularVertexColor = true;
