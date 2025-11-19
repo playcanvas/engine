@@ -14,23 +14,37 @@
       ]
     },
     {
-      "matchDepTypes": ["devDependencies"],
+      "matchDepTypes": [
+        "devDependencies"
+      ],
       "rangeStrategy": "pin"
     },
     {
-      "matchDepTypes": ["dependencies"],
+      "matchDepTypes": [
+        "dependencies"
+      ],
       "rangeStrategy": "widen"
     },
     {
-      "matchPackageNames": ["sinon"],
-      "matchPaths": ["package.json"],
+      "matchPackageNames": [
+        "sinon"
+      ],
+      "matchFileNames": [
+        "package.json"
+      ],
       "enabled": false
     },
     {
-      "matchPackageNames": ["monaco-editor"],
-      "matchPaths": ["examples/package.json"],
+      "matchPackageNames": [
+        "monaco-editor"
+      ],
+      "matchFileNames": [
+        "examples/package.json"
+      ],
       "enabled": false
     }
   ],
-  "ignorePaths": [".nvmrc"]
+  "ignorePaths": [
+    ".nvmrc"
+  ]
 }
