@@ -153,6 +153,8 @@ class WebglUploadStream {
         // Ensure texture is created and bound
         // @ts-ignore - setTexture is available on WebglGraphicsDevice
         device.setTexture(target, 0);
+        device.activeTexture(0);
+        device.bindTexture(target);
 
         // Rebind PBO for texSubImage2D
         gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pboInfo.pbo);
@@ -160,7 +162,9 @@ class WebglUploadStream {
         // Set pixel-store parameters (use device methods for cached state)
         device.setUnpackFlipY(false);
         device.setUnpackPremultiplyAlpha(false);
-        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+
+        // Use alignment matching the data's byte size (1, 2, 4, or 8)
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, data.BYTES_PER_ELEMENT);
         gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
         gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
         gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
