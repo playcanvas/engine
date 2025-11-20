@@ -6,7 +6,9 @@ import { Layer } from '../../scene/layer.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassPicker } from './render-pass-picker.js';
 import { math } from '../../core/math/math.js';
+import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
+import { Mat4 } from '../../core/math/mat4.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -17,25 +19,125 @@ import { Vec4 } from '../../core/math/vec4.js';
 
 const tempSet = new Set();
 const _rect = new Vec4();
+const _floatView = new Float32Array(1);
+const _int32View = new Int32Array(_floatView.buffer);
 
 /**
- * Picker object used to select mesh instances from screen coordinates.
+ * Picker object used to select mesh instances from screen coordinates. It can also optionally
+ * capture depth information to determine world positions of picked points.
  *
- * @property {number} width Width of the pick buffer in pixels (read-only).
- * @property {number} height Height of the pick buffer in pixels (read-only).
- * @property {RenderTarget} renderTarget The render target used by the picker internally
- * (read-only).
+ * The picker works by rendering mesh instances to an offscreen render target with unique IDs
+ * encoded as colors. When queried, it reads back the pixel data to identify which mesh instance
+ * was at the specified screen coordinates. If depth picking is enabled, it also captures depth
+ * values to compute world positions.
+ *
+ * **Main API methods:**
+ * - {@link Picker#prepare} - Renders the pick buffer (call once per frame before picking)
+ * - {@link Picker#getSelectionAsync} - Get mesh instances in a screen area
+ * - {@link Picker#getWorldPointAsync} - Get world position at screen coordinates (requires depth)
+ *
+ * **Performance considerations:**
+ * The picker resolution can be set lower than the screen resolution for better performance,
+ * though this reduces picking precision and may miss small objects.
+ *
+ * @example
+ * // Create a picker with depth picking enabled at quarter resolution
+ * const picker = new pc.Picker(app, canvas.width * 0.25, canvas.height * 0.25, true);
+ *
+ * // In your update loop, prepare the picker
+ * picker.resize(canvas.width * 0.25, canvas.height * 0.25);
+ * picker.prepare(camera, scene);
+ *
+ * // Pick mesh instances in an area
+ * picker.getSelectionAsync(x, y, width, height).then((meshInstances) => {
+ *     meshInstances.forEach((meshInstance) => {
+ *         console.log('Picked:', meshInstance.node.name);
+ *     });
+ * });
+ *
+ * // Pick world position (requires depth enabled)
+ * picker.getWorldPointAsync(x, y).then((worldPoint) => {
+ *     if (worldPoint) {
+ *         console.log(worldPoint);
+ *     }
+ * });
+ *
+ * @see {@link http://playcanvas.github.io/#/graphics/area-picker|Area Picker Example}
+ * @see {@link https://playcanvas.github.io/#gaussian-splatting/picking|Gaussian Splatting Picking Example}
  *
  * @category Graphics
  */
 class Picker {
-    // internal render target
+    /**
+     * @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice}
+     * @private
+     */
+    device;
+
+    /**
+     * @type {RenderPassPicker}
+     * @private
+     */
+    renderPass;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    depth;
+
+    /** @type {number} */
+    width;
+
+    /** @type {number} */
+    height;
+
+    /**
+     * Internal render target.
+     *
+     * @type {RenderTarget|null}
+     * @private
+     */
     renderTarget = null;
 
-    // mapping table from ids to meshInstances
+    /**
+     * Color buffer texture for pick IDs.
+     *
+     * @type {Texture|null}
+     * @private
+     */
+    colorBuffer = null;
+
+    /**
+     * Optional depth buffer texture for depth picking.
+     *
+     * @type {Texture|null}
+     * @private
+     */
+    depthBuffer = null;
+
+    /**
+     * Internal render target for reading the depth buffer.
+     *
+     * @type {RenderTarget|null}
+     * @private
+     */
+    renderTargetDepth = null;
+
+    /**
+     * Mapping table from ids to meshInstances.
+     *
+     * @type {Map<number, MeshInstance>}
+     * @private
+     */
     mapping = new Map();
 
-    // when the device is destroyed, this allows us to ignore async results
+    /**
+     * When the device is destroyed, this allows us to ignore async results.
+     *
+     * @type {boolean}
+     * @private
+     */
     deviceValid = true;
 
     /**
@@ -44,25 +146,35 @@ class Picker {
      * @param {AppBase} app - The application managing this picker instance.
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.
+     * @param {boolean} [depth] - Whether to enable depth picking. When enabled, depth
+     * information is captured alongside mesh IDs using MRT. Defaults to false.
      */
-    constructor(app, width, height) {
-        Debug.assert(app);
-
+    constructor(app, width, height, depth = false) {
         // Note: The only reason this class needs the app is to access the renderer. Ideally we remove this dependency and move
         // the Picker from framework to the scene level, or even the extras.
-        this.renderer = app.renderer;
+        Debug.assert(app);
         this.device = app.graphicsDevice;
 
         this.renderPass = new RenderPassPicker(this.device, app.renderer);
 
+        this.depth = depth;
         this.width = 0;
         this.height = 0;
         this.resize(width, height);
+        this.allocateRenderTarget();
 
         // handle the device getting destroyed
         this.device.on('destroy', () => {
             this.deviceValid = false;
         });
+    }
+
+    /**
+     * Frees resources associated with this picker.
+     */
+    destroy() {
+        this.releaseRenderTarget();
+        this.renderPass?.destroy();
     }
 
     /**
@@ -128,21 +240,116 @@ class Picker {
      * });
      */
     getSelectionAsync(x, y, width = 1, height = 1) {
-
-        if (this.device?.isWebGL2) {
-            y = this.renderTarget.height - (y + height);
+        if (!this.renderTarget || !this.renderTarget.colorBuffer) {
+            return Promise.resolve([]);
         }
-        const rect = this.sanitizeRect(x, y, width, height);
-
-        return this.renderTarget.colorBuffer.read(rect.x, rect.y, rect.z, rect.w, {
-            renderTarget: this.renderTarget,
-            immediate: true
-        }).then((pixels) => {
+        return this._readTexture(this.renderTarget.colorBuffer, x, y, width, height, this.renderTarget).then((pixels) => {
             return this.decodePixels(pixels, this.mapping);
         });
     }
 
-    // sanitize the rectangle to make sure it;s inside the texture and does not use fractions
+    /**
+     * Helper method to read pixels from a texture asynchronously.
+     *
+     * @param {Texture} texture - The texture to read from.
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @param {number} width - The width of the rectangle.
+     * @param {number} height - The height of the rectangle.
+     * @param {RenderTarget} renderTarget - The render target to use for reading.
+     * @returns {Promise<Uint8Array>} Promise resolving to the pixel data.
+     * @private
+     */
+    _readTexture(texture, x, y, width, height, renderTarget) {
+        if (this.device?.isWebGL2) {
+            y = renderTarget.height - (y + height);
+        }
+        const rect = this.sanitizeRect(x, y, width, height);
+
+        // @ts-ignore
+        return texture.read(rect.x, rect.y, rect.z, rect.w, {
+            immediate: true,
+            renderTarget: renderTarget
+        });
+    }
+
+    /**
+     * Return the world position of the mesh instance picked at the specified screen coordinates.
+     *
+     * @param {number} x - The x coordinate of the pixel to pick.
+     * @param {number} y - The y coordinate of the pixel to pick.
+     * @returns {Promise<Vec3|null>} Promise that resolves with the world position of the picked point,
+     * or null if no depth is available or nothing was picked.
+     * @example
+     * // Get the world position at screen coordinates (100, 50)
+     * picker.getWorldPointAsync(100, 50).then((worldPoint) => {
+     *     if (worldPoint) {
+     *         console.log('World position:', worldPoint);
+     *         // Use the world position
+     *     } else {
+     *         console.log('No object at this position');
+     *     }
+     * });
+     */
+    async getWorldPointAsync(x, y) {
+        // get the camera from the render pass
+        const camera = this.renderPass.camera;
+        if (!camera) {
+            return null;
+        }
+
+        // capture the inverse view-projection matrix synchronously before awaiting
+        const viewProjMat = new Mat4().mul2(camera.camera.projectionMatrix, camera.camera.viewMatrix);
+        const invViewProj = viewProjMat.invert();
+
+        const depth = await this.getPointDepthAsync(x, y);
+        if (depth === null) {
+            return null;
+        }
+
+        // unproject to world space using the captured matrix
+        const deviceCoord = new Vec4(
+            (x / this.width) * 2 - 1,
+            (1 - y / this.height) * 2 - 1,
+            depth * 2 - 1,
+            1.0
+        );
+        invViewProj.transformVec4(deviceCoord, deviceCoord);
+        deviceCoord.mulScalar(1.0 / deviceCoord.w);
+
+        return new Vec3(deviceCoord.x, deviceCoord.y, deviceCoord.z);
+    }
+
+    /**
+     * Return the depth value of the mesh instance picked at the specified screen coordinates.
+     *
+     * @param {number} x - The x coordinate of the pixel to pick.
+     * @param {number} y - The y coordinate of the pixel to pick.
+     * @returns {Promise<number|null>} Promise that resolves with the depth value of the picked point
+     * (in 0..1 range), or null if depth picking is not enabled or no object was picked.
+     * @ignore
+     */
+    async getPointDepthAsync(x, y) {
+        if (!this.depthBuffer) {
+            return null;
+        }
+
+        const pixels = await this._readTexture(this.depthBuffer, x, y, 1, 1, this.renderTargetDepth);
+
+        // reconstruct uint bits from RGBA8
+        const intBits = (pixels[0] << 24) | (pixels[1] << 16) | (pixels[2] << 8) | pixels[3];
+
+        // check for white (cleared) depth
+        if (intBits === 0xFFFFFFFF) {
+            return null;
+        }
+
+        // reinterpret bits as float
+        _int32View[0] = intBits;
+        return _floatView[0];
+    }
+
+    // sanitize the rectangle to make sure it's inside the texture and does not use fractions
     sanitizeRect(x, y, width, height) {
         const maxWidth = this.renderTarget.width;
         const maxHeight = this.renderTarget.height;
@@ -188,11 +395,8 @@ class Picker {
         return selection;
     }
 
-    allocateRenderTarget() {
-
-        // TODO: Ideally we'd use a UINT32 texture format and avoid RGBA8 conversion, but WebGL2 does not
-        // support clearing render targets of this format, so we'd need a quad based clear solution.
-        const colorBuffer = new Texture(this.device, {
+    createTexture(name) {
+        return new Texture(this.device, {
             format: PIXELFORMAT_RGBA8,
             width: this.width,
             height: this.height,
@@ -201,21 +405,45 @@ class Picker {
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
-            name: 'pick'
+            name: name
         });
+    }
+
+    allocateRenderTarget() {
+
+        // TODO: Ideally we'd use a UINT32 texture format and avoid RGBA8 conversion, but WebGL2 does not
+        // support clearing render targets of this format, so we'd need a quad based clear solution.
+        this.colorBuffer = this.createTexture('pick');
+        const colorBuffers = [this.colorBuffer];
+
+        if (this.depth) {
+            // create depth buffer for MRT
+            this.depthBuffer = this.createTexture('pick-depth');
+            colorBuffers.push(this.depthBuffer);
+
+            // create a render target for reading the depth buffer
+            this.renderTargetDepth = new RenderTarget({
+                colorBuffer: this.depthBuffer,
+                depth: false
+            });
+        }
 
         this.renderTarget = new RenderTarget({
-            colorBuffer: colorBuffer,
+            colorBuffers: colorBuffers,
             depth: true
         });
     }
 
     releaseRenderTarget() {
-        if (this.renderTarget) {
-            this.renderTarget.destroyTextureBuffers();
-            this.renderTarget.destroy();
-            this.renderTarget = null;
-        }
+        this.renderTarget?.destroyTextureBuffers();
+        this.renderTarget?.destroy();
+        this.renderTarget = null;
+
+        this.renderTargetDepth?.destroy();
+        this.renderTargetDepth = null;
+
+        this.colorBuffer = null;
+        this.depthBuffer = null;
     }
 
     /**
@@ -236,10 +464,8 @@ class Picker {
         }
 
         // make the render target the right size
-        if (!this.renderTarget || (this.width !== this.renderTarget.width || this.height !== this.renderTarget.height)) {
-            this.releaseRenderTarget();
-            this.allocateRenderTarget();
-        }
+        this.renderTarget?.resize(this.width, this.height);
+        this.renderTargetDepth?.resize(this.width, this.height);
 
         // clear registered meshes mapping
         this.mapping.clear();
@@ -247,13 +473,12 @@ class Picker {
         const renderPass = this.renderPass;
         renderPass.init(this.renderTarget);
 
-        // set up clears
-        renderPass.colorOps.clearValue = Color.WHITE;
-        renderPass.colorOps.clear = true;
+        // set up clears - setClearColor handles MRT and clears all color buffers
+        renderPass.setClearColor(Color.WHITE);
         renderPass.depthStencilOps.clearDepth = true;
 
         // render the pass to update the render target
-        renderPass.update(camera, scene, layers, this.mapping);
+        renderPass.update(camera, scene, layers, this.mapping, this.depth);
         renderPass.render();
     }
 

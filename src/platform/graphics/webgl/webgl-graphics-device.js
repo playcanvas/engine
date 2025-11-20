@@ -2088,6 +2088,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
+        this.setFramebuffer(renderTarget.impl._glFrameBuffer);
 
         return new Promise((resolve, reject) => {
             this.readPixelsAsync(x, y, width, height, data).then((data) => {

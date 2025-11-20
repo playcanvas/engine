@@ -52,6 +52,9 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     #ifdef PICK_PASS
 
         output.color = getPickOutput();
+        #ifdef DEPTH_PICK_PASS
+            output.color1 = getPickDepth();
+        #endif
 
     #elif SHADOW_PASS
 
