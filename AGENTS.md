@@ -293,6 +293,20 @@ class Resource {
 - Include descriptive comments
 - Keep examples simple and focused on one feature
 
+### 22. When Writing PR Descriptions
+
+- **Format as a single code block**: Always deliver PR descriptions wrapped in triple backticks for easy copy/paste
+- **Structure**:
+  - Brief title and overview
+  - Bullet points for functionality changes
+  - Technical details section (if relevant)
+  - **Clearly list all public API changes** with before/after code examples
+  - List updated examples (if applicable)
+  - Performance considerations (if relevant)
+- **Focus on user-facing changes**: What developers using the engine will see/use
+- **Be concise but complete**: Include all breaking changes and new APIs
+- **Avoid excessive detail**: Group related changes together, don't list every tiny implementation detail or internal refactoring
+
 ## Resources
 
 - **API Reference**: https://api.playcanvas.com/engine/
