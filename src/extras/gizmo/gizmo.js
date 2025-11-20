@@ -198,6 +198,14 @@ class Gizmo extends EventHandler {
     _handles = [];
 
     /**
+     * Internal array of mouse buttons that can interact with the gizmo.
+     *
+     * @type {[boolean, boolean, boolean]}
+     * @protected
+     */
+    _mouseButtons = [true, true, true];
+
+    /**
      * Internal reference to camera component to view the gizmo.
      *
      * @type {CameraComponent}
@@ -332,6 +340,22 @@ class Gizmo extends EventHandler {
     }
 
     /**
+     * Array of mouse buttons that can interact with the gizmo. The button indices are defined as:
+     *
+     *  - 0: Left button
+     *  - 1: Middle button
+     *  - 2: Right button
+     *
+     * The full list of button indices can be found here:
+     * {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button}
+     *
+     * @type {[boolean, boolean, boolean]}
+     */
+    get mouseButtons() {
+        return this._mouseButtons;
+    }
+
+    /**
      * Sets the gizmo render layer.
      *
      * @param {Layer} layer - The layer to render the gizmo.
@@ -450,6 +474,9 @@ class Gizmo extends EventHandler {
         if (!this.enabled || document.pointerLockElement) {
             return;
         }
+        if (!this.mouseButtons[e.button]) {
+            return;
+        }
         const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
             if (this.preventDefault) {
@@ -489,6 +516,9 @@ class Gizmo extends EventHandler {
      */
     _onPointerUp(e) {
         if (!this.enabled || document.pointerLockElement) {
+            return;
+        }
+        if (!this.mouseButtons[e.button]) {
             return;
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
