@@ -340,7 +340,7 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * Array of mouse buttons that can interact with the gizmo. The buttons indices are defined as:
+     * Array of mouse buttons that can interact with the gizmo. The button indices are defined as:
      *
      *  - 0: Left button
      *  - 1: Middle button
