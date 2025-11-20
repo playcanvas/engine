@@ -197,7 +197,7 @@ class TransformGizmo extends Gizmo {
     _selectionStartPoint = new Vec3();
 
     /**
-     * Snapping state. Defaults to false.
+     * Whether snapping is enabled. Defaults to false.
      *
      * @type {boolean}
      */
