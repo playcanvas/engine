@@ -764,7 +764,7 @@ class CameraControls extends Script {
         // desktop rotate
         v.set(0, 0, 0);
         const mouseRotate = tmpV2.set(mouse[0], mouse[1], 0);
-        v.add(mouseRotate.mulScalar((1 - desktopPan) * rotateMult));
+        v.add(mouseRotate.mulScalar((1 - (orbit * desktopPan)) * rotateMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // mobile move
