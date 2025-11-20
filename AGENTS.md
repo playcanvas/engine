@@ -306,6 +306,7 @@ class Resource {
 - **Focus on user-facing changes**: What developers using the engine will see/use
 - **Be concise but complete**: Include all breaking changes and new APIs
 - **Avoid excessive detail**: Group related changes together, don't list every tiny implementation detail or internal refactoring
+- **Only document public APIs**: Do not list functionality tagged with `@ignore`, `@protected`, or `@private` as these are internal implementation details
 
 ## Resources
 
