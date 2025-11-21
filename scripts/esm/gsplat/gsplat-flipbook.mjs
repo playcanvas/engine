@@ -27,7 +27,9 @@ class AssetCache {
         }
 
         // Create new asset
-        const asset = new Asset(url, 'gsplat', { url });
+        // disable reorder to avoid reordering of splats for rendering performance due to high reordering cost
+        // for our purpose (applied to ply files only, ignored for other formats)
+        const asset = new Asset(url, 'gsplat', { url }, { reorder: false });
         app.assets.add(asset);
         app.assets.load(asset);
 
