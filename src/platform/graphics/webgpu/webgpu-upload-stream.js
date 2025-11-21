@@ -39,6 +39,16 @@ class WebgpuUploadStream {
         this.useSingleBuffer = uploadStream.useSingleBuffer;
     }
 
+    /**
+     * Handles device lost event.
+     * TODO: Implement proper WebGPU device lost handling if needed.
+     *
+     * @protected
+     */
+    _onDeviceLost() {
+        // WebGPU device lost handling not yet implemented
+    }
+
     destroy() {
         this._destroyed = true;
         this.availableStagingBuffers.forEach(buffer => buffer.destroy());
