@@ -45,6 +45,17 @@ class WebglUploadStream {
     }
 
     /**
+     * Handles device lost event by clearing all PBO and sync object arrays.
+     *
+     * @protected
+     */
+    _onDeviceLost() {
+        // Clear arrays without trying to delete objects (context is already lost)
+        this.availablePBOs.length = 0;
+        this.pendingPBOs.length = 0;
+    }
+
+    /**
      * Update PBOs: poll completed ones and remove undersized buffers.
      *
      * @param {number} minByteSize - Minimum size for buffers to keep. Smaller buffers are destroyed.
