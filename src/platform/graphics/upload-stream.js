@@ -2,6 +2,7 @@
  * @import { GraphicsDevice } from './graphics-device.js'
  * @import { StorageBuffer } from './storage-buffer.js'
  * @import { Texture } from './texture.js'
+ * @import { EventHandle } from '../../core/event-handle.js'
  */
 
 /**
@@ -16,6 +17,14 @@
  */
 class UploadStream {
     /**
+     * Event handle for device lost event.
+     *
+     * @type {EventHandle|null}
+     * @protected
+     */
+    _deviceLostEvent = null;
+
+    /**
      * Create a new UploadStream instance.
      *
      * @param {GraphicsDevice} device - The graphics device.
@@ -29,6 +38,21 @@ class UploadStream {
 
         // Create platform-specific implementation
         this.impl = device.createUploadStreamImpl(this);
+
+        // Register device lost handler
+        this._deviceLostEvent = this.device.on('devicelost', this._onDeviceLost, this);
+    }
+
+    /**
+     * Destroy the upload stream and clean up all pooled resources.
+     */
+    destroy() {
+        // Remove event listener
+        this._deviceLostEvent?.off();
+        this._deviceLostEvent = null;
+
+        this.impl?.destroy();
+        this.impl = null;
     }
 
     /**
@@ -53,11 +77,12 @@ class UploadStream {
     }
 
     /**
-     * Destroy the upload stream and clean up all pooled resources.
+     * Handles device lost event. Override in platform implementations.
+     *
+     * @private
      */
-    destroy() {
-        this.impl?.destroy();
-        this.impl = null;
+    _onDeviceLost() {
+        this.impl?._onDeviceLost?.();
     }
 }
 
