@@ -661,6 +661,11 @@ class GSplatComponent extends Component {
             if (asset) {
                 this._placement = new GSplatPlacement(asset.resource, this.entity);
                 this._placement.lodDistances = this._lodDistances;
+
+                // add placement to layers if component is enabled
+                if (this.enabled && this.entity.enabled) {
+                    this.addToLayers();
+                }
             }
 
         } else {
