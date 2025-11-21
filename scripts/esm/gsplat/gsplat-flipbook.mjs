@@ -86,7 +86,8 @@ const PlayMode = {
  *
  * Plays a sequence of gsplat files as a flipbook animation with automatic asset loading,
  * unloading, and reference-counted caching. Multiple script instances share a common cache
- * to minimize memory usage when using the same assets.
+ * to minimize memory usage when using the same assets. Preloads multiple frames ahead for
+ * smooth playback even with variable loading times.
  *
  * ## Requirements
  *
@@ -113,6 +114,7 @@ const PlayMode = {
  * flipbook.endFrame = 100;
  * flipbook.playMode = 'loop';
  * flipbook.playing = true;
+ * flipbook.preloadCount = 10; // Preload 10 frames ahead (default)
  *
  * // Add to scene
  * app.root.addChild(entity);
@@ -129,6 +131,11 @@ const PlayMode = {
  * // Zero-padded: 'wave_{frame:04}.sog' -> wave_0001.sog, wave_0002.sog
  * // Two digits:  'anim{frame:02}.sog'  -> anim01.sog, anim02.sog
  * // No padding:  'file_{frame}.sog'    -> file_1.sog, file_2.sog
+ *
+ * @example
+ * // Adjust preload buffer for different scenarios
+ * flipbook.preloadCount = 20; // Larger buffer for slower connections
+ * flipbook.preloadCount = 5;  // Smaller buffer to save memory
  */
 class GsplatFlipbook extends Script {
     static scriptName = 'gsplatFlipbook';
@@ -183,15 +190,24 @@ class GsplatFlipbook extends Script {
      */
     playing = true;
 
+    /**
+     * Number of frames to preload ahead for smooth playback (default: 10).
+     * Higher values provide smoother playback but use more memory.
+     * Preloaded assets are shared across all script instances via AssetCache.
+     * @attribute
+     * @type {number}
+     */
+    preloadCount = 10;
+
     initialize() {
         // Internal state
         this.currentFrame = this.startFrame;
         this.frameTime = 0;
         this.direction = 1; // 1 for forward, -1 for reverse (used in bounce mode)
         this.currentAsset = null;
-        this.nextAsset = null;
         this.currentAssetUrl = null;
-        this.nextAssetUrl = null;
+        // Array of preloaded frame entries: [{ frameNum, url, asset }, ...]
+        this.preloadedFrames = [];
 
         // Verify gsplat component exists (should be added before this script)
         if (!this.entity.gsplat) {
@@ -213,7 +229,7 @@ class GsplatFlipbook extends Script {
             this.frameTime = 0;
 
             // Check if next asset is ready
-            if (this.nextAsset && this.nextAsset.loaded) {
+            if (this.preloadedFrames.length > 0 && this.preloadedFrames[0].asset.loaded) {
                 this.switchToNextFrame();
             }
         }
@@ -227,6 +243,10 @@ class GsplatFlipbook extends Script {
      * @private
      */
     switchToNextFrame() {
+        // Get first preloaded frame
+        const nextFrame = this.preloadedFrames.shift();
+        if (!nextFrame) return;
+
         // Release old asset
         if (this.currentAssetUrl) {
             AssetCache.releaseAsset(this.currentAssetUrl, this.app);
@@ -234,25 +254,18 @@ class GsplatFlipbook extends Script {
 
         // Set new asset on component
         if (this.entity.gsplat) {
-            this.entity.gsplat.asset = this.nextAsset;
+            this.entity.gsplat.asset = nextFrame.asset;
         }
 
         // Update current references
-        this.currentAsset = this.nextAsset;
-        this.currentAssetUrl = this.nextAssetUrl;
+        this.currentAsset = nextFrame.asset;
+        this.currentAssetUrl = nextFrame.url;
 
         // Advance frame
         this.advanceFrame();
 
-        // Preload next frame
-        const nextFrameNum = this.getNextFrameNumber();
-        if (nextFrameNum !== null) {
-            this.preloadFrame(nextFrameNum);
-        } else {
-            // Animation finished (playMode === 'once')
-            this.nextAsset = null;
-            this.nextAssetUrl = null;
-        }
+        // Maintain preload buffer
+        this.maintainPreloadBuffer();
     }
 
     /**
@@ -303,6 +316,71 @@ class GsplatFlipbook extends Script {
     }
 
     /**
+     * Get the next frame number from the last preloaded frame
+     * @private
+     * @returns {number|null} Next frame number or null if animation is done
+     */
+    getNextFrameNumberFromLast() {
+        // If no frames preloaded, use current frame as base
+        if (this.preloadedFrames.length === 0) {
+            return this.getNextFrameNumber();
+        }
+
+        // Get last preloaded frame
+        const lastFrame = this.preloadedFrames[this.preloadedFrames.length - 1].frameNum;
+
+        if (this.playMode === 'bounce') {
+            // Simulate direction changes from current to last frame
+            let checkFrame = this.currentFrame;
+            let checkDir = this.direction;
+
+            while (checkFrame !== lastFrame) {
+                checkFrame += checkDir;
+                if (checkFrame >= this.endFrame) {
+                    checkFrame = this.endFrame;
+                    checkDir = -1;
+                } else if (checkFrame <= this.startFrame) {
+                    checkFrame = this.startFrame;
+                    checkDir = 1;
+                }
+            }
+
+            // Now calculate next from last frame
+            const next = lastFrame + checkDir;
+            if (next >= this.startFrame && next <= this.endFrame) {
+                return next;
+            }
+            // If at boundary, reverse direction
+            if (next > this.endFrame) return this.endFrame;
+            if (next < this.startFrame) return this.startFrame;
+            return next;
+        } else if (this.playMode === 'loop') {
+            const next = lastFrame + 1;
+            return next > this.endFrame ? this.startFrame : next;
+        } else if (this.playMode === 'once') {
+            const next = lastFrame + 1;
+            return next <= this.endFrame ? next : null;
+        }
+        return null;
+    }
+
+    /**
+     * Maintain the preload buffer by filling it up to preloadCount frames ahead
+     * @private
+     */
+    maintainPreloadBuffer() {
+        // Fill buffer up to preloadCount frames ahead
+        while (this.preloadedFrames.length < this.preloadCount) {
+            const nextFrameNum = this.getNextFrameNumberFromLast();
+            if (nextFrameNum === null) break; // End of sequence
+
+            const url = this.getFramePath(nextFrameNum);
+            const asset = AssetCache.getAsset(url, this.app);
+            this.preloadedFrames.push({ frameNum: nextFrameNum, url, asset });
+        }
+    }
+
+    /**
      * Load and set a specific frame
      * @param {number} frameNum - Frame number to load
      * @private
@@ -319,34 +397,17 @@ class GsplatFlipbook extends Script {
             if (this.entity.gsplat) {
                 this.entity.gsplat.asset = asset;
             }
-            // Preload next frame
-            const nextFrameNum = this.getNextFrameNumber();
-            if (nextFrameNum !== null) {
-                this.preloadFrame(nextFrameNum);
-            }
+            // Fill preload buffer
+            this.maintainPreloadBuffer();
         } else {
             asset.once('load', () => {
                 if (this.entity.gsplat) {
                     this.entity.gsplat.asset = asset;
                 }
-                // Preload next frame
-                const nextFrameNum = this.getNextFrameNumber();
-                if (nextFrameNum !== null) {
-                    this.preloadFrame(nextFrameNum);
-                }
+                // Fill preload buffer
+                this.maintainPreloadBuffer();
             });
         }
-    }
-
-    /**
-     * Preload a frame for smooth playback
-     * @param {number} frameNum - Frame number to preload
-     * @private
-     */
-    preloadFrame(frameNum) {
-        const url = this.getFramePath(frameNum);
-        this.nextAssetUrl = url;
-        this.nextAsset = AssetCache.getAsset(url, this.app);
     }
 
     /**
@@ -415,13 +476,15 @@ class GsplatFlipbook extends Script {
     }
 
     onDestroy() {
-        // Release all cached assets used by this instance
+        // Release current asset
         if (this.currentAssetUrl) {
             AssetCache.releaseAsset(this.currentAssetUrl, this.app);
         }
-        if (this.nextAssetUrl) {
-            AssetCache.releaseAsset(this.nextAssetUrl, this.app);
+        // Release all preloaded assets
+        for (const frame of this.preloadedFrames) {
+            AssetCache.releaseAsset(frame.url, this.app);
         }
+        this.preloadedFrames = [];
     }
 }
 
