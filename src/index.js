@@ -101,6 +101,8 @@ export { OrientedBox } from './core/shape/oriented-box.js';
 export { Plane } from './core/shape/plane.js';
 export { Tri } from './core/shape/tri.js';
 export { Ray } from './core/shape/ray.js';
+export { Rectangle } from '../src/core/shape/rectangle.js';
+
 
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
