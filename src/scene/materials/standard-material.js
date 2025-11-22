@@ -524,6 +524,16 @@ const _tempColor = new Color();
  * @property {boolean} shadowCatcher When enabled, the material will output accumulated directional
  * shadow value in linear space as the color.
  *
+ * @property {Texture|null} msdfMap The multi-channel signed distance field (MSDF) font texture,
+ * for text rendering (default is null).
+ * @property {number} msdfMapUv MSDF map UV channel.
+ * @property {Vec2} msdfMapTiling Controls the 2D tiling of the MSDF map.
+ * @property {Vec2} msdfMapOffset Controls the 2D offset of the MSDF map. Each component is
+ * between 0 and 1.
+ * @property {number} msdfMapRotation Controls the 2D rotation (in degrees) of the MSDF map.
+ * @property {boolean} msdfTextAttribute Use vertex attributes to control text rendering, if
+ * MSDF map is set.
+ *
  * @category Graphics
  */
 class StandardMaterial extends Material {
