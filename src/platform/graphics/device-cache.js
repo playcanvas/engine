@@ -26,7 +26,7 @@ class DeviceCache {
     get(device, onCreate) {
         const cacheId = device?.canvas.id
         // Check if the device has a canvas, and if the canvas has a non null id
-        Debug.assert(cacheId, 'Canvas element should have a unique id')
+        Debug.assert(cacheId  || device.isNull, 'Canvas element should have a unique id')
 
         if (!this._cache.has(cacheId)) {
             Debug.assert(onCreate, 'No cached device has been found and create callback is invalid ')
