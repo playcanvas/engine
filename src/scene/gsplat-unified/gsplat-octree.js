@@ -81,6 +81,13 @@ class GSplatOctree {
     environmentRefCount = 0;
 
     /**
+     * Asset loader used for loading/unloading resources.
+     *
+     * @type {GSplatAssetLoaderBase|null}
+     */
+    assetLoader = null;
+
+    /**
      * @param {string} assetFileUrl - The file URL of the container asset.
      * @param {Object} data - The parsed JSON data containing info, filenames and tree.
      */
@@ -206,10 +213,12 @@ class GSplatOctree {
     }
 
     /**
-     * Decrements reference count for a file by index. When it reaches zero, start cooldown.
+     * Decrements reference count for a file by index. When it reaches zero, either unload
+     * immediately (if cooldownTicks is 0) or schedule for cooldown.
      *
      * @param {number} fileIndex - Index of the file in `files` array.
-     * @param {number} cooldownTicks - Number of update ticks before unloading when unused.
+     * @param {number} cooldownTicks - Number of update ticks before unloading when unused. If 0,
+     * unload immediately.
      */
     decRefCount(fileIndex, cooldownTicks) {
         Debug.assert(fileIndex >= 0 && fileIndex < this.files.length);
@@ -218,9 +227,15 @@ class GSplatOctree {
         this.fileRefCounts[fileIndex] = count;
         Debug.assert(count >= 0);
 
-        // unload cooldown
+        // When ref count reaches zero
         if (count === 0) {
-            this.cooldowns.set(fileIndex, cooldownTicks);
+            if (cooldownTicks === 0) {
+                // Unload immediately (e.g., during device loss)
+                this.unloadResource(fileIndex);
+            } else {
+                // Schedule for cooldown
+                this.cooldowns.set(fileIndex, cooldownTicks);
+            }
         }
     }
 
@@ -228,15 +243,15 @@ class GSplatOctree {
      * Unloads a resource for a file index if currently loaded.
      *
      * @param {number} fileIndex - Index of the file in `files` array.
-     * @param {GSplatAssetLoaderBase} assetLoader - Asset loader used to unload the resource.
      */
-    unloadResource(fileIndex, assetLoader) {
+    unloadResource(fileIndex) {
         Debug.assert(fileIndex >= 0 && fileIndex < this.files.length);
+        Debug.assert(this.assetLoader);
 
         if (this.fileResources.has(fileIndex)) {
 
             const fullUrl = this.files[fileIndex].url;
-            assetLoader.unload(fullUrl);
+            this.assetLoader?.unload(fullUrl);
             this.fileResources.delete(fileIndex);
 
             // trace updated LOD counts after change
@@ -246,17 +261,15 @@ class GSplatOctree {
 
     /**
      * Advances cooldowns for zero-ref files and unloads those whose timers expired.
-     *
-     * @param {GSplatAssetLoaderBase} assetLoader - Asset loader used to unload expired resources.
      */
-    updateCooldownTick(assetLoader) {
+    updateCooldownTick() {
         if (this.cooldowns.size > 0) {
             this.cooldowns.forEach((remaining, fileIndex) => {
                 if (remaining <= 1) {
 
                     // just a safety to avoid unloading a file that was re-referenced
                     if (this.fileRefCounts[fileIndex] === 0) {
-                        this.unloadResource(fileIndex, assetLoader);
+                        this.unloadResource(fileIndex);
                     }
                     _toDelete.push(fileIndex);
                 } else {
@@ -278,10 +291,10 @@ class GSplatOctree {
      * - Checks if loading completed and stores the resource if available
      *
      * @param {number} fileIndex - The index of the file in the `files` array.
-     * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
      */
-    ensureFileResource(fileIndex, assetLoader) {
+    ensureFileResource(fileIndex) {
         Debug.assert(fileIndex >= 0 && fileIndex < this.files.length);
+        Debug.assert(this.assetLoader);
 
         // resource already loaded
         if (this.fileResources.has(fileIndex)) {
@@ -290,13 +303,13 @@ class GSplatOctree {
 
         // Check if the resource is now available from the asset loader
         const fullUrl = this.files[fileIndex].url;
-        const res = assetLoader.getResource(fullUrl);
+        const res = this.assetLoader?.getResource(fullUrl);
         if (res) {
             this.fileResources.set(fileIndex, res);
 
             // if the file finished loading and is no longer needed, schedule a cooldown
             if (this.fileRefCounts[fileIndex] === 0) {
-                this.cooldowns.set(fileIndex, assetLoader.cooldownTicks);
+                this.cooldowns.set(fileIndex, this.assetLoader?.cooldownTicks ?? 0);
             }
 
             // trace updated LOD counts after change
@@ -306,7 +319,7 @@ class GSplatOctree {
         }
 
         // Start/continue loading (asset loader handles duplicates internally)
-        assetLoader.load(fullUrl);
+        this.assetLoader?.load(fullUrl);
     }
 
     /**
@@ -318,25 +331,21 @@ class GSplatOctree {
 
     /**
      * Decrements reference count for environment. When it reaches zero, immediately unload.
-     *
-     * @param {GSplatAssetLoaderBase} assetLoader - Asset loader used to unload the resource.
      */
-    decEnvironmentRefCount(assetLoader) {
+    decEnvironmentRefCount() {
         this.environmentRefCount--;
         Debug.assert(this.environmentRefCount >= 0);
 
         // unload immediately when reaching zero
         if (this.environmentRefCount === 0) {
-            this.unloadEnvironmentResource(assetLoader);
+            this.unloadEnvironmentResource();
         }
     }
 
     /**
      * Ensures environment resource is loaded and available.
-     *
-     * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
      */
-    ensureEnvironmentResource(assetLoader) {
+    ensureEnvironmentResource() {
         // no environment configured
         if (!this.environmentUrl) {
             return;
@@ -347,31 +356,33 @@ class GSplatOctree {
             return;
         }
 
+        Debug.assert(this.assetLoader);
+
         // Check if the resource is now available from the asset loader
-        const res = assetLoader.getResource(this.environmentUrl);
+        const res = this.assetLoader?.getResource(this.environmentUrl);
         if (res) {
             this.environmentResource = res;
 
             // if loaded but not needed, immediately unload
             if (this.environmentRefCount === 0) {
-                this.unloadEnvironmentResource(assetLoader);
+                this.unloadEnvironmentResource();
             }
 
             return;
         }
 
         // Start/continue loading (asset loader handles duplicates internally)
-        assetLoader.load(this.environmentUrl);
+        this.assetLoader?.load(this.environmentUrl);
     }
 
     /**
      * Unloads environment resource if currently loaded.
-     *
-     * @param {GSplatAssetLoaderBase} assetLoader - Asset loader used to unload the resource.
      */
-    unloadEnvironmentResource(assetLoader) {
+    unloadEnvironmentResource() {
+        Debug.assert(this.assetLoader);
+
         if (this.environmentResource && this.environmentUrl) {
-            assetLoader.unload(this.environmentUrl);
+            this.assetLoader?.unload(this.environmentUrl);
             this.environmentResource = null;
         }
     }

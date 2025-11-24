@@ -133,7 +133,8 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
 
             if (!asset) {
                 // Create a new gsplat asset
-                asset = new Asset(url, 'gsplat', { url });
+                // @ts-ignore - minimalMemory is a custom option for gsplat assets
+                asset = new Asset(url, 'gsplat', { url }, {}, { minimalMemory: true });
                 this._registry.add(asset);
             }
 
