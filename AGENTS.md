@@ -256,6 +256,14 @@ class Resource {
 }
 ```
 
+### 17. Root Cause Analysis
+
+Always address the root cause of issues rather than implementing workarounds that hide or suppress problems:
+
+- **Identify the root cause**: When you encounter an error or unexpected behavior, investigate why it's happening
+- **Don't mask symptoms**: Avoid solutions that simply hide errors or suppress warnings without fixing the underlying issue
+- **Fix at the source**: When you identify the root cause, fix it where the problem originates, not where it manifests
+
 ## Things to Avoid
 
 ### 18. Anti-Patterns

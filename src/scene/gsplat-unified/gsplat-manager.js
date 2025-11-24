@@ -193,7 +193,7 @@ class GSplatManager {
 
                 // make sure octree instance exists for placement
                 if (!this.octreeInstances.has(p)) {
-                    this.octreeInstances.set(p, new GSplatOctreeInstance(p.resource.octree, p, this.director.assetLoader));
+                    this.octreeInstances.set(p, new GSplatOctreeInstance(this.device, p.resource.octree, p, this.director.assetLoader));
 
                     // mark that we have new instances that need initial LOD evaluation
                     this.hasNewOctreeInstances = true;
@@ -703,7 +703,7 @@ class GSplatManager {
                 const octree = inst.octree;
                 if (!tempOctreesTicked.has(octree)) {
                     tempOctreesTicked.add(octree);
-                    octree.updateCooldownTick(this.director.assetLoader);
+                    octree.updateCooldownTick();
                 }
             }
             tempOctreesTicked.clear();
