@@ -14,9 +14,7 @@ const assets = {
 // Even though we're using WGSL, we still need to provide glslang
 // and twgsl to compile shaders used internally by the engine.
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

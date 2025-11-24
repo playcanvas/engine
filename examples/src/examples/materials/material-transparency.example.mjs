@@ -10,8 +10,6 @@ const assets = {
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // disable anti-aliasing to make dithering more pronounced
     antialias: false,
