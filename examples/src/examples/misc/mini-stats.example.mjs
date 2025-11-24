@@ -1,7 +1,7 @@
 // @config ENGINE performance
 // @config NO_MINISTATS
 // @config WEBGPU_DISABLED
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
