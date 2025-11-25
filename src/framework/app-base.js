@@ -42,6 +42,7 @@ import {
     RESOLUTION_AUTO, RESOLUTION_FIXED
 } from './constants.js';
 import { Asset } from './asset/asset.js';
+import { AssetListLoader } from './asset/asset-list-loader.js';
 import { AssetRegistry } from './asset/asset-registry.js';
 import { BundleRegistry } from './bundle/bundle-registry.js';
 import { ComponentSystemRegistry } from './components/registry.js';
@@ -707,9 +708,7 @@ class AppBase extends EventHandler {
         this.fire('preload:start');
 
         // get list of assets to preload
-        const assets = this.assets.list({
-            preload: true
-        });
+        const assets = this.assets.filter(asset => asset.preload === true && asset.loaded === false)
 
         if (assets.length === 0) {
             this.fire('preload:end');
@@ -719,25 +718,18 @@ class AppBase extends EventHandler {
 
         let loadedCount = 0;
 
-        const onAssetLoadOrError = () => {
+        const onAssetLoad = () => {
             loadedCount++;
             this.fire('preload:progress', loadedCount / assets.length);
-
-            if (loadedCount === assets.length) {
-                this.fire('preload:end');
-                callback();
-            }
         };
 
-        // for each asset
-        assets.forEach((asset) => {
-            if (!asset.loaded) {
-                asset.once('load', onAssetLoadOrError);
-                asset.once('error', onAssetLoadOrError);
-                this.assets.load(asset);
-            } else {
-                onAssetLoadOrError();
-            }
+        const assetListLoader = new AssetListLoader(assets, this.assets);
+
+        assetListLoader.on('progress', onAssetLoad);
+
+        assetListLoader.load(() => {
+            this.fire('preload:end');
+            callback();
         });
     }
 
