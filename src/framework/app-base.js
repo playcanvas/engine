@@ -708,7 +708,7 @@ class AppBase extends EventHandler {
         this.fire('preload:start');
 
         // get list of assets to preload
-        const assets = this.assets.filter(asset => asset.preload === true && asset.loaded === false)
+        const assets = this.assets.filter(asset => asset.preload === true && asset.loaded === false);
 
         if (assets.length === 0) {
             this.fire('preload:end');
