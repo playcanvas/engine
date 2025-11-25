@@ -43,17 +43,6 @@ class GSplatAssetLoaderBase {
     getResource(url) {
         Debug.error('GSplatAssetLoaderBase#getResource: Not implemented');
     }
-
-    /**
-     * Returns true if any resources are currently loading or queued to load.
-     *
-     * @type {boolean}
-     * @abstract
-     */
-    get isLoading() {
-        Debug.error('GSplatAssetLoaderBase#isLoading: Not implemented');
-        return false;
-    }
 }
 
 export { GSplatAssetLoaderBase };

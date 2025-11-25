@@ -118,12 +118,19 @@ class GSplatOctreeInstance {
     pendingVisibleAdds = new Map();
 
     /**
-     * Returns true if this instance has resources pending load or prefetch.
+     * Returns the count of resources pending load or prefetch, including environment if loading.
      *
-     * @type {boolean}
+     * @type {number}
      */
-    get hasPendingLoads() {
-        return this.pending.size > 0 || this.prefetchPending.size > 0;
+    get pendingLoadCount() {
+        let count = this.pending.size + this.prefetchPending.size;
+
+        // Add environment if it's configured but not yet loaded
+        if (this.octree.environmentUrl && !this.environmentPlacement) {
+            count++;
+        }
+
+        return count;
     }
 
     /**
