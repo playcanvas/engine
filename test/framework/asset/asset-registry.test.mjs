@@ -56,6 +56,17 @@ describe('AssetRegistry', function () {
             expect(assets[0].name).to.equal(asset.name);
         });
 
+        it('should not load an asset with preload set to true', function () {
+            const asset = new Asset('Test Asset', 'text', {
+                url: 'fake/url/file.txt'
+            });
+            asset.preload = true;
+            app.assets.add(asset);
+
+            expect(asset.loading).to.equal(false);
+            expect(asset.loaded).to.equal(false);
+        });
+
     });
 
     describe('#find', function () {
