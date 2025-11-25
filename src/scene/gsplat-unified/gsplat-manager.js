@@ -506,15 +506,13 @@ class GSplatManager {
     fireFrameReadyEvent() {
         const ready = this.sortedVersion === this.lastWorldStateVersion;
 
-        // Check loader queue and octree instances' pending loads
-        let loading = this.director.assetLoader.isLoading;
-        if (!loading) {
-            for (const [, inst] of this.octreeInstances) {
-                loading ||= inst.hasPendingLoads;
-            }
+        // Count total pending loads from octree instances (including environment)
+        let loadingCount = 0;
+        for (const [, inst] of this.octreeInstances) {
+            loadingCount += inst.pendingLoadCount;
         }
 
-        this.director.eventHandler.fire('frame:ready', this.cameraNode.camera, this.renderer.layer, ready, loading);
+        this.director.eventHandler.fire('frame:ready', this.cameraNode.camera, this.renderer.layer, ready, loadingCount);
     }
 
     update() {
