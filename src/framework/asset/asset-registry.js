@@ -276,10 +276,6 @@ class AssetRegistry extends EventHandler {
         if (asset.file?.url) {
             this.fire(`add:url:${asset.file.url}`, asset);
         }
-
-        if (asset.preload) {
-            this.load(asset);
-        }
     }
 
     /**
