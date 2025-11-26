@@ -1906,15 +1906,6 @@ class AppBase extends EventHandler {
             this.scene.layers.destroy();
         }
 
-        // destroy all texture resources
-        const assets = this.assets.list();
-        for (let i = 0; i < assets.length; i++) {
-            assets[i].unload();
-            assets[i].off();
-        }
-        this.assets.off();
-
-
         // destroy bundle registry
         this.bundles.destroy();
         this.bundles = null;
@@ -1927,9 +1918,6 @@ class AppBase extends EventHandler {
 
         this.loader.destroy();
         this.loader = null;
-
-        this.scene.destroy();
-        this.scene = null;
 
         this.systems = null;
         this.context = null;
@@ -1961,6 +1949,18 @@ class AppBase extends EventHandler {
 
         this.renderer.destroy();
         this.renderer = null;
+
+        // destroy all resources. Do this after managers have been destroyed
+        const assets = this.assets.list();
+        for (let i = 0; i < assets.length; i++) {
+            assets[i].unload();
+            assets[i].off();
+        }
+        this.assets.off();
+
+        // destroy scene after assets are unloaded (components need scene.layers during asset cleanup)
+        this.scene.destroy();
+        this.scene = null;
 
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
