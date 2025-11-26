@@ -1,5 +1,4 @@
 // @config DESCRIPTION This example demonstrates gsplat flipbook animation using dynamically loaded splat sequences at different playback speeds.
-// @config HIDDEN
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
