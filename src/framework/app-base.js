@@ -977,7 +977,20 @@ class AppBase extends EventHandler {
         this.systems.fire('postPostInitialize', this.root);
         this.fire('postinitialize');
 
-        this.tick();
+        this._requestAnimationFrame();
+    }
+
+    /**
+     * Request the next animation frame tick.
+     *
+     * @private
+     */
+    _requestAnimationFrame() {
+        if (this.xr?.session) {
+            this.frameRequestId = this.xr.session.requestAnimationFrame(this.tick);
+        } else {
+            this.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(this.tick) : null;
+        }
     }
 
     /**
@@ -1972,7 +1985,7 @@ class AppBase extends EventHandler {
 
     static cancelTick(app) {
         if (app.frameRequestId) {
-            window.cancelAnimationFrame(app.frameRequestId);
+            cancelAnimationFrame(app.frameRequestId);
             app.frameRequestId = undefined;
         }
     }
@@ -2038,11 +2051,7 @@ const makeTick = function (_app) {
         application._time = currentTime;
 
         // Submit a request to queue up a new animation frame immediately
-        if (application.xr?.session) {
-            application.frameRequestId = application.xr.session.requestAnimationFrame(application.tick);
-        } else {
-            application.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(application.tick) : null;
-        }
+        application._requestAnimationFrame();
 
         if (application.graphicsDevice.contextLost) {
             return;
