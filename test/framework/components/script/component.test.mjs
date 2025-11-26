@@ -1668,6 +1668,8 @@ describe('ScriptComponent', function () {
 
             app.start();
 
+            app.update();
+
             expect(window.initializeCalls.length).to.equal(8);
             let idx = 0;
             checkInitCall(e, idx++, 'initialize destroyer');
