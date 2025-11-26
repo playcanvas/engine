@@ -65,7 +65,7 @@ assetListLoader.load(() => {
 
     // setup skydome
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 0.2;
+    //app.scene.exposure = 0.2;
     app.scene.envAtlas = assets.helipad.resource;
 
     // Mini-Stats: add VRAM on top of default stats
@@ -128,14 +128,14 @@ assetListLoader.load(() => {
     // Create monkey flipbook at origin (camera focus)
     const monkey = createFlipbookEntity(
         'Monkey',
-        30,
-        `${rootPath}/static/assets/splats/flipbook`,
-        'monkey_{frame:04}.sog',
+        60,
+        'https://code.playcanvas.com/examples_data/basketball_345gw39sfj',
+        '{frame:03}.sog',
         1,
-        50,
+        300,
         [0, 0, 0],
         [180, 90, 0],
-        0.7
+        1
     );
 
     // Create first wave entity at 60 fps
