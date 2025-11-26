@@ -977,15 +977,15 @@ class AppBase extends EventHandler {
         this.systems.fire('postPostInitialize', this.root);
         this.fire('postinitialize');
 
-        this._requestAnimationFrame();
+        this.requestAnimationFrame();
     }
 
     /**
      * Request the next animation frame tick.
      *
-     * @private
+     * @ignore
      */
-    _requestAnimationFrame() {
+    requestAnimationFrame() {
         if (this.xr?.session) {
             this.frameRequestId = this.xr.session.requestAnimationFrame(this.tick);
         } else {
@@ -2051,7 +2051,7 @@ const makeTick = function (_app) {
         application._time = currentTime;
 
         // Submit a request to queue up a new animation frame immediately
-        application._requestAnimationFrame();
+        application.requestAnimationFrame();
 
         if (application.graphicsDevice.contextLost) {
             return;
