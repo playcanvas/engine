@@ -126,6 +126,28 @@ let app = null;
  */
 class AppBase extends EventHandler {
     /**
+     * Fired after the app is initialized.
+     *
+     * @event
+     * @example
+     * app.on('init', () => {
+     *     console.log(`App initialized`);
+     * });
+     */
+    static EVENT_INIT = 'init';
+
+    /**
+     * Fired after the app is configured.
+     *
+     * @event
+     * @example
+     * app.on('configure', () => {
+     *     console.log(`App configured`);
+     * });
+     */
+    static EVENT_CONFIGURE = 'configure';
+
+    /**
      * The application's batch manager.
      *
      * @type {BatchManager|null}
