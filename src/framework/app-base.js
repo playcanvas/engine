@@ -137,15 +137,15 @@ class AppBase extends EventHandler {
     static EVENT_INIT = 'init';
 
     /**
-     * Fired after the app is configured.
+     * Fired after an app configuration file was loaded.
      *
      * @event
      * @example
-     * app.on('configure', () => {
-     *     console.log(`App configured`);
+     * app.on('config:loaded', () => {
+     *     console.log(`App config loaded`);
      * });
      */
-    static EVENT_CONFIGURE = 'configure';
+    static EVENT_CONFIGURE = 'config:loaded';
 
     /**
      * The application's batch manager.
@@ -714,7 +714,7 @@ class AppBase extends EventHandler {
                 this._parseScenes(scenes);
                 this._parseAssets(assets);
                 if (!err) {
-                    this.fire('configure');
+                    this.fire('config:loaded');
                     callback(null);
                 } else {
                     callback(err);
