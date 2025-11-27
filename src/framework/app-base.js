@@ -588,6 +588,8 @@ class AppBase extends EventHandler {
         // bind tick function to current scope
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
+
+        this.fire('init');
     }
 
     static _applications = {};
@@ -690,6 +692,7 @@ class AppBase extends EventHandler {
                 this._parseScenes(scenes);
                 this._parseAssets(assets);
                 if (!err) {
+                    this.fire('configure');
                     callback(null);
                 } else {
                     callback(err);
