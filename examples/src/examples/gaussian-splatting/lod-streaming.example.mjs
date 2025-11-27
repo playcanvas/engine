@@ -114,7 +114,7 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 1;
     app.scene.exposure = 1.5;
 
-    // Mini-Stats: add VRAM on top of default stats
+    // Mini-Stats: add VRAM and gsplats on top of default stats
     const msOptions = pc.MiniStats.getDefaultOptions();
     msOptions.stats.push({
         name: 'VRAM',
@@ -123,6 +123,14 @@ assetListLoader.load(() => {
         multiplier: 1 / (1024 * 1024),
         unitsName: 'MB',
         watermark: 1024
+    });
+    msOptions.stats.push({
+        name: 'GSplats',
+        stats: ['frame.gsplats'],
+        decimalPlaces: 3,
+        multiplier: 1 / 1000000,
+        unitsName: 'M',
+        watermark: 10
     });
     const miniStats = new pc.MiniStats(app, msOptions); // eslint-disable-line no-unused-vars
 

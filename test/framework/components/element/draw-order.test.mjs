@@ -299,4 +299,94 @@ describe('ElementComponent Draw Order', function () {
         expect(beforeResult.m3Unmask).to.equal(afterResult.m3Unmask);
     });
 
+    it('screen priority in valid range (0-127)', function () {
+        const screen = new Entity('screen');
+        screen.addComponent('screen');
+
+        // Test valid range boundaries
+        screen.screen.priority = 0;
+        expect(screen.screen.priority).to.equal(0);
+
+        screen.screen.priority = 127;
+        expect(screen.screen.priority).to.equal(127);
+
+        screen.screen.priority = 64;
+        expect(screen.screen.priority).to.equal(64);
+    });
+
+    it('screen priority clamping (values > 127)', function () {
+        const screen = new Entity('screen');
+        screen.addComponent('screen');
+
+        // Test that values > 127 are clamped
+        screen.screen.priority = 128;
+        expect(screen.screen.priority).to.equal(127);
+
+        screen.screen.priority = 255;
+        expect(screen.screen.priority).to.equal(127);
+
+        screen.screen.priority = 1000;
+        expect(screen.screen.priority).to.equal(127);
+    });
+
+    it('screen priority clamping (negative values)', function () {
+        const screen = new Entity('screen');
+        screen.addComponent('screen');
+
+        // Test that negative values are clamped to 0
+        screen.screen.priority = -1;
+        expect(screen.screen.priority).to.equal(0);
+
+        screen.screen.priority = -100;
+        expect(screen.screen.priority).to.equal(0);
+    });
+
+    it('multiple screens with different priorities sort correctly', function () {
+        const screen1 = new Entity('screen1');
+        screen1.addComponent('screen', { priority: 0 });
+
+        const screen2 = new Entity('screen2');
+        screen2.addComponent('screen', { priority: 63 });
+
+        const screen3 = new Entity('screen3');
+        screen3.addComponent('screen', { priority: 127 });
+
+        const elem1 = new Entity('elem1');
+        elem1.addComponent('element');
+
+        const elem2 = new Entity('elem2');
+        elem2.addComponent('element');
+
+        const elem3 = new Entity('elem3');
+        elem3.addComponent('element');
+
+        screen1.addChild(elem1);
+        screen2.addChild(elem2);
+        screen3.addChild(elem3);
+
+        app.root.addChild(screen1);
+        app.root.addChild(screen2);
+        app.root.addChild(screen3);
+
+        // update forces draw order sync
+        app.tick();
+
+        // Elements should have drawOrder with priority in top 8 bits
+        // Priority 0: 0x00000001
+        // Priority 63: 0x3F000001
+        // Priority 127: 0x7F000001
+        expect(elem1.element.drawOrder).to.equal(0x00000001);
+        expect(elem2.element.drawOrder).to.equal(0x3F000001);
+        expect(elem3.element.drawOrder).to.equal(0x7F000001);
+
+        // Verify sorting: higher priority should have higher drawOrder
+        expect(elem3.element.drawOrder).to.be.greaterThan(elem2.element.drawOrder);
+        expect(elem2.element.drawOrder).to.be.greaterThan(elem1.element.drawOrder);
+
+        // Verify all drawOrder values are positive (no sign bit overflow)
+        expect(elem1.element.drawOrder).to.be.greaterThan(0);
+        expect(elem2.element.drawOrder).to.be.greaterThan(0);
+        expect(elem3.element.drawOrder).to.be.greaterThan(0);
+    });
+
 });

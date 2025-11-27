@@ -132,6 +132,7 @@ class LitShader {
             userChunkMap.forEach((chunk, chunkName) => {
 
                 // extract attribute names from the used chunk
+                Debug.assert(chunk);
                 for (const a in builtinAttributes) {
                     if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
                         this.attributes[a] = builtinAttributes[a];
