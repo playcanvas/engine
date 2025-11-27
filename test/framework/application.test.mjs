@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
-import { Asset } from '../../src/framework/asset/asset.js';
 import { AssetRegistry } from '../../src/framework/asset/asset-registry.js';
+import { Asset } from '../../src/framework/asset/asset.js';
 import { ComponentSystemRegistry } from '../../src/framework/components/registry.js';
 import { FILLMODE_KEEP_ASPECT, RESOLUTION_FIXED } from '../../src/framework/constants.js';
 import { Entity } from '../../src/framework/entity.js';
