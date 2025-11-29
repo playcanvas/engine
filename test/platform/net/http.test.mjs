@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { restore, spy, useFakeXMLHttpRequest } from 'sinon';
+import { restore, spy } from 'sinon';
+import nise from 'nise';
 
 import { http, Http } from '../../../src/platform/net/http.js';
 
@@ -65,7 +66,7 @@ describe('Http', function () {
             spy(http, 'request');
 
             let requests = 0;
-            const xhr = useFakeXMLHttpRequest();
+            const xhr = nise.fakeXhr.useFakeXMLHttpRequest();
 
             // Store original XMLHttpRequest
             const originalXHR = global.XMLHttpRequest;
@@ -103,7 +104,7 @@ describe('Http', function () {
         });
 
         it('status 0 returns "Network error"', function (done) {
-            const xhr = useFakeXMLHttpRequest();
+            const xhr = nise.fakeXhr.useFakeXMLHttpRequest();
             let isDone = false;
 
             // Store original XMLHttpRequest
