@@ -582,7 +582,7 @@ export class Annotation extends Script {
      */
     _calculateScreenSpaceScale() {
         const cameraPos = Annotation.camera.getPosition();
-        const toAnnotation = this.entity.getPosition().sub(cameraPos);
+        const toAnnotation = this.entity.getPosition().clone().sub(cameraPos);
         const distance = toAnnotation.length();
 
         // Use the canvas's CSS/client height instead of graphics device height
