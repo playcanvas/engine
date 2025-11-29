@@ -596,4 +596,3 @@ export class Annotation extends Script {
         return worldSize;
     }
 }
-
