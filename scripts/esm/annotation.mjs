@@ -372,7 +372,7 @@ export class Annotation extends Script {
         // Create texture
         this.texture = Annotation._createHotspotTexture(this.app, this.label);
 
-        // Create material the base and overlay material
+        // Create the base and overlay material
         this.materials = [
             Annotation._createHotspotMaterial(this.texture, {
                 opacity: 1,
