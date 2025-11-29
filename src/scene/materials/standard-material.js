@@ -523,6 +523,11 @@ const _tempColor = new Color();
  * backfaces.
  * @property {boolean} shadowCatcher When enabled, the material will output accumulated directional
  * shadow value in linear space as the color.
+ * @property {boolean} vertexColorGamma When set to true, the vertex shader converts vertex colors
+ * from gamma to linear space to ensure correct interpolation in the fragment shader. This flag is
+ * provided for backwards compatibility, allowing users to mark their materials to handle vertex
+ * colors in gamma space. Defaults to false, which indicates that vertex colors are stored in
+ * linear space.
  *
  * @category Graphics
  */
@@ -1194,6 +1199,7 @@ function _defineMaterialProps() {
     _defineFlag('opacityDither', DITHER_NONE);
     _defineFlag('opacityShadowDither', DITHER_NONE);
     _defineFlag('shadowCatcher', false);
+    _defineFlag('vertexColorGamma', false);
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');
