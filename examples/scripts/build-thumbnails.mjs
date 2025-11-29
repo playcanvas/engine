@@ -224,7 +224,9 @@ const main = async () => {
     console.log('Spawn server on', PORT);
     const isWin = process.platform === 'win32';
     const cmd = isWin ? 'npx.cmd' : 'npx';
-    const server = spawn(cmd, ['serve', 'dist', '-l', PORT, '--no-request-logging', '--config', '../serve.json']);
+    const server = spawn(cmd, ['serve', 'dist', '-l', PORT, '--no-request-logging', '--config', '../serve.json'], {
+        shell: true
+    });
     await sleep(1000); // give a second to spawn server
     console.log('Starting puppeteer screenshot process');
     try {
