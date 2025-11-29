@@ -2,7 +2,7 @@ import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
 import { DeviceSelector } from './DeviceSelector.mjs';
@@ -407,7 +407,14 @@ class Example extends TypedComponent {
     }
 }
 
-// @ts-ignore
-const ExampleWithRouter = withRouter(Example);
+/**
+ * Wrapper component to provide router params to the class component.
+ * @returns {JSX.Element} The Example component with router params.
+ */
+function ExampleWithRouter() {
+    const params = useParams();
+    // @ts-ignore
+    return jsx(Example, { match: { params } });
+}
 
 export { ExampleWithRouter as Example };
