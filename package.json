@@ -79,7 +79,7 @@
   ],
   "dependencies": {
     "@types/webxr": "^0.5.24",
-    "@webgpu/types": "^0.1.65"
+    "@webgpu/types": "^0.1.66"
   },
   "devDependencies": {
     "@playcanvas/eslint-config": "2.1.0",
