@@ -86,7 +86,7 @@ assetListLoader.load(() => {
     });
 
     applyHdri(assets.shanghai.resource);
-    
+
     // Setup sky dome
     app.scene.sky.type = pc.SKYTYPE_DOME;
     app.scene.sky.node.setLocalScale(new pc.Vec3(50, 50, 50));
@@ -132,7 +132,7 @@ assetListLoader.load(() => {
     jetFighter.setPosition(-2, 1.6, 0);
     jetFighter.setEulerAngles(0, 0, 3);
     app.root.addChild(jetFighter);
-    
+
     // Instantiate the model as a child of the wrapper
     const jetModel = assets.jetFighter.resource.instantiateRenderEntity({
         castShadows: true
