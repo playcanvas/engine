@@ -126,6 +126,28 @@ let app = null;
  */
 class AppBase extends EventHandler {
     /**
+     * Fired after the app is initialized.
+     *
+     * @event
+     * @example
+     * app.on('init', () => {
+     *     console.log(`App initialized`);
+     * });
+     */
+    static EVENT_INIT = 'init';
+
+    /**
+     * Fired after an app configuration file was loaded.
+     *
+     * @event
+     * @example
+     * app.on('config:loaded', () => {
+     *     console.log(`App config loaded`);
+     * });
+     */
+    static EVENT_CONFIGURE = 'config:loaded';
+
+    /**
      * The application's batch manager.
      *
      * @type {BatchManager|null}
@@ -588,6 +610,8 @@ class AppBase extends EventHandler {
         // bind tick function to current scope
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
+
+        this.fire('init');
     }
 
     static _applications = {};
@@ -690,6 +714,7 @@ class AppBase extends EventHandler {
                 this._parseScenes(scenes);
                 this._parseAssets(assets);
                 if (!err) {
+                    this.fire('config:loaded');
                     callback(null);
                 } else {
                     callback(err);
