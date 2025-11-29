@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { restore, spy } from 'sinon';
 import nise from 'nise';
+import { restore, spy } from 'sinon';
 
 import { http, Http } from '../../../src/platform/net/http.js';
 
