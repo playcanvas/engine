@@ -439,21 +439,8 @@ export class Annotation extends Script {
 
         Annotation.parentDom.appendChild(this.hotspotDom);
 
-        // Clean up on entity destruction
-        this.on('destroy', () => {
-            this.hotspotDom.remove();
-            if (Annotation.activeAnnotation === this) {
-                this.hideTooltip();
-            }
-
-            this.materials.forEach(mat => mat.destroy());
-            this.materials = [];
-
-            this.texture.destroy();
-            this.texture = null;
-        });
-
-        this.app.on('prerender', () => {
+        // Store prerender handler for cleanup
+        const prerenderHandler = () => {
             if (!Annotation.camera) return;
 
             const position = this.entity.getPosition();
@@ -475,6 +462,24 @@ export class Annotation extends Script {
             this.materials[1].opacity = 0.25 * Annotation.opacity;
             this.materials[0].setParameter('material_opacity', Annotation.opacity);
             this.materials[1].setParameter('material_opacity', 0.25 * Annotation.opacity);
+        };
+        this.app.on('prerender', prerenderHandler);
+
+        // Clean up on entity destruction
+        this.on('destroy', () => {
+            this.hotspotDom.remove();
+            if (Annotation.activeAnnotation === this) {
+                this.hideTooltip();
+            }
+
+            this.materials.forEach(mat => mat.destroy());
+            this.materials = [];
+
+            this.texture.destroy();
+            this.texture = null;
+
+            // Remove prerender event listener
+            this.app.off('prerender', prerenderHandler);
         });
     }
 
