@@ -534,13 +534,20 @@ class GamePad {
         const previousAxes = this._previousAxes;
         const axes = this._axes;
 
+        // resizing array if size changed
+        axes.length = gamepad.axes.length;
+        previousAxes.length = gamepad.axes.length;
+
+
         // Store previous values for axes for dual buttons.
-        previousAxes.length = 0;
-        previousAxes.push(...axes);
+        for(let i = 0; i<axes.length; i++) {
+            previousAxes[i] = axes[i];
+        }
 
         // Update axes
-        axes.length = 0;
-        axes.push(...gamepad.axes);
+        for(let i = 0; i<gamepad.axes.length; i++) {
+            axes[i] = gamepad.axes[i];
+        }
 
         // Update buttons
         const buttons = this._buttons;
@@ -877,7 +884,7 @@ class GamePads extends EventHandler {
             }
 
             for (let j = 0, m = buttons.length; j < m; j++) {
-                const button = buttons[i];
+                const button = buttons[j];
                 this.previous[i][j] = button ? !button.wasPressed && button.pressed || button.wasReleased : false;
             }
         }
