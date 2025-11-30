@@ -15,9 +15,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -86,7 +84,7 @@ assetListLoader.load(() => {
 
     // Create an instance of the picker class
     // Lets use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
-    const picker = new pc.Picker(app, canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
+    const picker = new pc.Picker(app, canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale, true);
 
     /**
      * Helper function to create a primitive with shape type, position, scale.
@@ -178,6 +176,30 @@ assetListLoader.load(() => {
     const worldLayer = app.scene.layers.getLayerByName('World');
     const pickerLayers = [worldLayer];
 
+    // marker sphere to show the picked world point
+    const marker = createPrimitive('sphere', pc.Vec3.ZERO, new pc.Vec3(0.2, 0.2, 0.2));
+    const markerMaterial = new pc.StandardMaterial();
+    markerMaterial.emissive = new pc.Color(0, 1, 0);
+    markerMaterial.emissiveIntensity = 100;
+    marker.render.material = markerMaterial;
+    marker.render.meshInstances[0].pick = false;
+    marker.enabled = false;
+    app.root.addChild(marker);
+
+    // store pending pick request
+    /** @type {{ x: number, y: number } | null} */
+    let pendingPickRequest = null;
+
+    // handle mouse click to pick world point
+    const mouse = new pc.Mouse(document.body);
+    mouse.on('mousedown', (event) => {
+        // store the pick request to be processed after picker.prepare
+        pendingPickRequest = {
+            x: event.x * pickerScale,
+            y: event.y * pickerScale
+        };
+    });
+
     // update each frame
     let time = 0;
     app.on('update', (/** @type {number} */ dt) => {
@@ -268,6 +290,33 @@ assetListLoader.load(() => {
                 }
             }
         });
+
+        // process pending pick request after picker.prepare has been called
+        if (pendingPickRequest && picker) {
+            const { x, y } = pendingPickRequest;
+            pendingPickRequest = null;
+
+            picker.getWorldPointAsync(x, y).then((worldPoint) => {
+                if (worldPoint) {
+                    marker.enabled = true;
+                    marker.setPosition(worldPoint);
+                } else {
+                    marker.enabled = false;
+                }
+            });
+        }
+
+        // display the picker's buffers side by side in the bottom right corner
+        // color buffer (left) and depth buffer (right), with equal margins from edges
+        if (picker.colorBuffer) {
+            // @ts-ignore engine-tsd
+            app.drawTexture(0.55, -0.77, 0.2, 0.2, picker.colorBuffer);
+        }
+
+        if (picker.depthBuffer) {
+            // @ts-ignore engine-tsd
+            app.drawTexture(0.77, -0.77, 0.2, 0.2, picker.depthBuffer);
+        }
     });
 });
 

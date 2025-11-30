@@ -75,6 +75,7 @@ fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCen
     var covA: vec3f;
     var covB: vec3f;
     readCovariance(source, &covA, &covB);
+    modifyCovariance(center.modelCenterOriginal, center.modelCenterModified, &covA, &covB);
     return initCornerCov(source, center, corner, covA, covB);
 }
 `;

@@ -8,9 +8,7 @@ const assets = {
     outline: new pc.Asset('outline', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-outline.js` })
 };
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);

@@ -86,6 +86,9 @@ struct ClusterLightData {
     // compressed biases, two haf-floats stored in a float
     float biasesData;
 
+    // blue color component and angle flags (as uint for efficient bit operations)
+    uint colorBFlagsData;
+
     // shadow bias values
     float shadowBias;
     float shadowNormalBias;
@@ -128,11 +131,12 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
     // store floats we decode later as needed
     clusterLightData.anglesData = halfData.z;
     clusterLightData.biasesData = halfData.w;
+    clusterLightData.colorBFlagsData = floatBitsToUint(halfData.y);
 
     // decompress color half-floats
     vec2 colorRG = unpackHalf2x16(floatBitsToUint(halfData.x));
-    vec2 colorB_ = unpackHalf2x16(floatBitsToUint(halfData.y));
-    clusterLightData.color = vec3(colorRG, colorB_.x) * {LIGHT_COLOR_DIVIDER};
+    vec2 colorB_flags = unpackHalf2x16(clusterLightData.colorBFlagsData);
+    clusterLightData.color = vec3(colorRG, colorB_flags.x) * {LIGHT_COLOR_DIVIDER};
 
     // position and range, full floats
     vec4 lightPosRange = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_POSITION_RANGE});
@@ -157,11 +161,18 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
 }
 
 void decodeClusterLightSpot(inout ClusterLightData clusterLightData) {
+    // decompress spot light angles
+    uint angleFlags = (clusterLightData.colorBFlagsData >> 16u) & 0xFFFFu;  // Extract upper 16 bits as integer
 
-    // spot light cos angles
-    vec2 angles = unpackHalf2x16(floatBitsToUint(clusterLightData.anglesData));
-    clusterLightData.innerConeAngleCos = angles.x;
-    clusterLightData.outerConeAngleCos = angles.y;
+    vec2 angleValues = unpackHalf2x16(floatBitsToUint(clusterLightData.anglesData));
+    float innerVal = angleValues.x;
+    float outerVal = angleValues.y;
+
+    // decode based on flags (branch-free)
+    float innerIsVersine = float(angleFlags & 1u);          // bit 0: inner angle format
+    float outerIsVersine = float((angleFlags >> 1u) & 1u);  // bit 1: outer angle format
+    clusterLightData.innerConeAngleCos = mix(innerVal, 1.0 - innerVal, innerIsVersine);
+    clusterLightData.outerConeAngleCos = mix(outerVal, 1.0 - outerVal, outerIsVersine);
 }
 
 void decodeClusterLightOmniAtlasViewport(inout ClusterLightData clusterLightData) {

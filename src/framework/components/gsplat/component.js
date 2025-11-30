@@ -17,7 +17,8 @@ import { GSplatPlacement } from '../../../scene/gsplat-unified/gsplat-placement.
 /**
  * The GSplatComponent enables an {@link Entity} to render 3D Gaussian Splats. Splats are always
  * loaded from {@link Asset}s rather than being created programmatically. The asset type is
- * `gsplat` which are in the `.ply` file format.
+ * `gsplat` which supports multiple file formats including `.ply`, `.sog`, `.meta.json` (SOGS
+ * format), and `.lod-meta.json` (streaming LOD format).
  *
  * You should never need to use the GSplatComponent constructor directly. To add an
  * GSplatComponent to an {@link Entity}, use {@link Entity#addComponent}:
@@ -38,11 +39,37 @@ import { GSplatPlacement } from '../../../scene/gsplat-unified/gsplat-placement.
  * console.log(entity.gsplat.customAabb);
  * ```
  *
+ * ## Unified Rendering
+ *
+ * The {@link GSplatComponent#unified} property enables unified rendering mode, which provides
+ * advanced features for Gaussian Splats:
+ *
+ * - **Global Sorting**: Multiple splat components are sorted together in a single unified sort,
+ *   eliminating visibility artifacts and popping effects when splat components overlap.
+ * - **LOD Streaming**: Dynamically loads and renders appropriate levels of detail based on camera
+ *   distance, enabling efficient rendering of massive splat scenes.
+ *
+ * ```javascript
+ * // Enable unified rendering for advanced features
+ * entity.gsplat.unified = true;
+ * ```
+ *
+ * Note: The `unified` property can only be changed when the component is disabled.
+ *
  * Relevant Engine API examples:
  *
- * - [Loading a Splat](https://playcanvas.github.io/#/gaussian-splatting/simple)
- * - [Custom Splat Shaders](https://playcanvas.github.io/#/gaussian-splatting/multi-splat)
- * - [Splat picking](https://playcanvas.github.io/#/gaussian-splatting/picking)
+ * - [Simple Splat Loading](https://playcanvas.github.io/#/gaussian-splatting/simple)
+ * - [Global Sorting](https://playcanvas.github.io/#/gaussian-splatting/global-sorting)
+ * - [LOD](https://playcanvas.github.io/#/gaussian-splatting/lod)
+ * - [LOD Instances](https://playcanvas.github.io/#/gaussian-splatting/lod-instances)
+ * - [LOD Streaming](https://playcanvas.github.io/#/gaussian-splatting/lod-streaming)
+ * - [LOD Streaming with Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/lod-streaming-sh)
+ * - [Multi-Splat](https://playcanvas.github.io/#/gaussian-splatting/multi-splat)
+ * - [Multi-View](https://playcanvas.github.io/#/gaussian-splatting/multi-view)
+ * - [Picking](https://playcanvas.github.io/#/gaussian-splatting/picking)
+ * - [Reveal Effect](https://playcanvas.github.io/#/gaussian-splatting/reveal)
+ * - [Shader Effects](https://playcanvas.github.io/#/gaussian-splatting/shader-effects)
+ * - [Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/spherical-harmonics)
  *
  * @hideconstructor
  * @category Graphics
@@ -78,7 +105,7 @@ class GSplatComponent extends Component {
      * @type {number[]|null}
      * @private
      */
-    _lodDistances = [5, 10, 15, 20, 25];
+    _lodDistances = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 
     /**
      * @type {BoundingBox|null}
@@ -221,12 +248,17 @@ class GSplatComponent extends Component {
     /**
      * Sets the material used to render the gsplat.
      *
+     * **Note:** This setter is only supported when {@link unified} is `false`. When it's true, multiple
+     * gsplat components share a single material per camera/layer combination. To access materials in
+     * unified mode, use {@link GsplatComponentSystem#getGSplatMaterial}.
+     *
      * @param {ShaderMaterial} value - The material instance.
      */
     set material(value) {
-
-        Debug.assert(!this.unified);
-
+        if (this.unified) {
+            Debug.warn('GSplatComponent#material setter is not supported when unified true. Use app.systems.gsplat.getGSplatMaterial(camera, layer) to access materials.');
+            return;
+        }
         if (this._instance) {
             this._instance.material = value;
         } else {
@@ -237,9 +269,17 @@ class GSplatComponent extends Component {
     /**
      * Gets the material used to render the gsplat.
      *
+     * **Note:** This getter returns `null` when {@link unified} is `true`. In unified mode, materials are
+     * organized per camera/layer combination rather than per component. To access materials in
+     * unified mode, use {@link GsplatComponentSystem#getGSplatMaterial}.
+     *
      * @type {ShaderMaterial|null}
      */
     get material() {
+        if (this.unified) {
+            Debug.warnOnce('GSplatComponent#material getter returns null when unified=true. Use app.systems.gsplat.getGSplatMaterial(camera, layer) instead.');
+            return null;
+        }
         return this._instance?.material ?? this._materialTmp ?? null;
     }
 
@@ -621,6 +661,11 @@ class GSplatComponent extends Component {
             if (asset) {
                 this._placement = new GSplatPlacement(asset.resource, this.entity);
                 this._placement.lodDistances = this._lodDistances;
+
+                // add placement to layers if component is enabled
+                if (this.enabled && this.entity.enabled) {
+                    this.addToLayers();
+                }
             }
 
         } else {

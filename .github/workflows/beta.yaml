@@ -24,7 +24,7 @@ jobs:
           private-key: ${{ secrets.APP_KEY }}
 
       - name: Check out code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}

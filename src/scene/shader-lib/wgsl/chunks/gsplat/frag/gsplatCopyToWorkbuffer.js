@@ -8,8 +8,7 @@ export default /* wgsl */`
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
 #include "gsplatSourceFormatVS"
-
-uniform uTransform: mat4x4f;
+#include "packHalfPS"
 
 uniform uStartLine: i32;      // Start row in destination texture
 uniform uViewportWidth: i32;  // Width of the destination viewport in pixels
@@ -38,9 +37,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         // Out of bounds: write zeros
         output.color = vec4f(0.0);
-        output.color1 = vec4f(0.0);
-        output.color2 = vec4f(0.0);
-        output.color3 = vec4f(0.0);
+        #ifndef GSPLAT_COLOR_ONLY
+            output.color1 = vec4u(0u);
+            output.color2 = vec2u(0u);
+        #endif
 
     } else {
 
@@ -66,9 +66,11 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         source.id = u32(originalIndex);
         source.uv = vec2i(i32(source.id % srcSize), i32(source.id / srcSize));
 
-        // read and transform center
+        // read center in local space
         var modelCenter = readCenter(&source);
-        modelCenter = (uniform.uTransform * vec4f(modelCenter, 1.0)).xyz;
+
+        // compute world-space center for storage
+        let worldCenter = (uniform.matrix_model * vec4f(modelCenter, 1.0)).xyz;
         var center: SplatCenter;
         initCenter(modelCenter, &center);
 
@@ -82,7 +84,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             vec3f(covA.y, covB.x, covB.y),
             vec3f(covA.z, covB.y, covB.z)
         );
-        let linear = mat3x3f(uniform.uTransform[0].xyz, uniform.uTransform[1].xyz, uniform.uTransform[2].xyz);
+        let linear = mat3x3f(uniform.matrix_model[0].xyz, uniform.matrix_model[1].xyz, uniform.matrix_model[2].xyz);
         let Ct = linear * C * transpose(linear);
         covA = Ct[0];
         covB = vec3f(Ct[1][1], Ct[1][2], Ct[2][2]);
@@ -108,9 +110,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         // write out results
         output.color = color;
-        output.color1 = vec4f(modelCenter, 1.0);
-        output.color2 = vec4f(covA, 1.0);
-        output.color3 = vec4f(covB, 1.0);
+        #ifndef GSPLAT_COLOR_ONLY
+            output.color1 = vec4u(bitcast<u32>(worldCenter.x), bitcast<u32>(worldCenter.y), bitcast<u32>(worldCenter.z), pack2x16floatSafe(vec2f(covA.z, covB.z)));
+            output.color2 = vec2u(pack2x16floatSafe(covA.xy), pack2x16floatSafe(covB.xy));
+        #endif
     }
     
     return output;

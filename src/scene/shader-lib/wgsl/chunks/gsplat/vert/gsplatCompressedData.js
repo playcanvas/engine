@@ -1,4 +1,6 @@
 export default /* wgsl */`
+#include "gsplatPackingPS"
+
 var packedTexture: texture_2d<u32>;
 var chunkTexture: texture_2d<uff>;
 
@@ -14,16 +16,7 @@ fn unpack111011(bits: u32) -> vec3f {
     return (vec3f((vec3<u32>(bits) >> vec3<u32>(21u, 11u, 0u)) & vec3<u32>(0x7ffu, 0x3ffu, 0x7ffu))) / vec3f(2047.0, 1023.0, 2047.0);
 }
 
-fn unpack8888(bits: u32) -> vec4f {
-    return vec4f(
-        f32((bits >> 24u) & 0xffu),
-        f32((bits >> 16u) & 0xffu),
-        f32((bits >> 8u)  & 0xffu),
-        f32(bits         & 0xffu)
-    ) / 255.0;
-}
-
-const norm_const: f32 = 1.0 / (sqrt(2.0) * 0.5);
+const norm_const: f32 = sqrt(2.0);
 
 fn unpackRotation(bits: u32) -> vec4f {
     let a = (f32((bits >> 20u) & 0x3ffu) / 1023.0 - 0.5) * norm_const;

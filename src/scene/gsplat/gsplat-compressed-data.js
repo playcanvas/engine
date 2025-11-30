@@ -32,7 +32,7 @@ class SplatCompressedIterator {
 
         // unpack quaternion with 2,10,10,10 format (largest element, 3x10bit element)
         const unpackRot = (result, value) => {
-            const norm = 1.0 / (Math.sqrt(2) * 0.5);
+            const norm = Math.SQRT2;
             const a = (unpackUnorm(value >>> 20, 10) - 0.5) * norm;
             const b = (unpackUnorm(value >>> 10, 10) - 0.5) * norm;
             const c = (unpackUnorm(value, 10) - 0.5) * norm;

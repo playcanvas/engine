@@ -323,6 +323,16 @@ class ScriptAttributes {
      * });
      */
     add(name, args) {
+        if (!args) {
+            Debug.error(`Cannot add attribute '${name}' to script type '${this.scriptType.name}': args parameter is required`);
+            return;
+        }
+
+        if (!args.type) {
+            Debug.error(`Cannot add attribute '${name}' to script type '${this.scriptType.name}': args.type is required`);
+            return;
+        }
+
         if (this.index[name]) {
             Debug.warn(`attribute '${name}' is already defined for script type '${this.scriptType.name}'`);
             return;

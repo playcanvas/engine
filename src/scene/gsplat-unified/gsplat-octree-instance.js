@@ -7,10 +7,12 @@ import { Color } from '../../core/math/color.js';
 import { GSplatPlacement } from './gsplat-placement.js';
 
 /**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { GSplatOctree } from './gsplat-octree.js'
  * @import { GSplatAssetLoaderBase } from './gsplat-asset-loader-base.js'
  * @import { Scene } from '../scene.js'
+ * @import { EventHandle } from '../../core/event-handle.js'
  */
 
 const _invWorldMat = new Mat4();
@@ -45,6 +47,9 @@ class GSplatOctreeInstance {
 
     /** @type {GSplatAssetLoaderBase} */
     assetLoader;
+
+    /** @type {GraphicsDevice} */
+    device;
 
     /**
      * Array of current LOD index per node. Index is nodeIndex, value is lodIndex.
@@ -113,14 +118,51 @@ class GSplatOctreeInstance {
     pendingVisibleAdds = new Map();
 
     /**
+     * Returns the count of resources pending load or prefetch, including environment if loading.
+     *
+     * @type {number}
+     */
+    get pendingLoadCount() {
+        let count = this.pending.size + this.prefetchPending.size;
+
+        // Add environment if it's configured but not yet loaded
+        if (this.octree.environmentUrl && !this.environmentPlacement) {
+            count++;
+        }
+
+        return count;
+    }
+
+    /**
+     * Environment placement.
+     * @type {GSplatPlacement|null}
+     */
+    environmentPlacement = null;
+
+    /**
+     * Event handle for device lost event.
+     *
+     * @type {EventHandle|null}
+     * @private
+     */
+    _deviceLostEvent = null;
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatOctree} octree - The octree.
      * @param {GSplatPlacement} placement - The placement.
      * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
      */
-    constructor(octree, placement, assetLoader) {
+    constructor(device, octree, placement, assetLoader) {
+        this.device = device;
         this.octree = octree;
         this.placement = placement;
         this.assetLoader = assetLoader;
+
+        // Set octree's assetLoader if not already set (first instance)
+        if (!octree.assetLoader) {
+            octree.assetLoader = assetLoader;
+        }
 
         // Initialize nodeLods array with all nodes set to -1 (not visible)
         this.nodeLods = new Int32Array(octree.nodes.length);
@@ -129,6 +171,15 @@ class GSplatOctreeInstance {
         // Initialize file placements array
         const numFiles = octree.files.length;
         this.filePlacements = new Array(numFiles).fill(null);
+
+        // Handle environment if configured
+        if (octree.environmentUrl) {
+            octree.incEnvironmentRefCount();
+            octree.ensureEnvironmentResource();
+        }
+
+        // Register device lost handler
+        this._deviceLostEvent = device.on('devicelost', this._onDeviceLost, this);
     }
 
     /**
@@ -138,6 +189,55 @@ class GSplatOctreeInstance {
         this.pending.clear();
         this.pendingDecrements.clear();
         this.filePlacements.length = 0;
+
+        // Clean up environment if present
+        if (this.environmentPlacement) {
+            this.activePlacements.delete(this.environmentPlacement);
+            this.octree.decEnvironmentRefCount();
+            this.environmentPlacement = null;
+        }
+
+        // Remove device event listener
+        this._deviceLostEvent?.off();
+        this._deviceLostEvent = null;
+    }
+
+    /**
+     * Handles device lost event by releasing all loaded resources.
+     *
+     * @private
+     */
+    _onDeviceLost() {
+        // Decrement ref counts for all currently loaded file resources
+        for (let i = 0; i < this.filePlacements.length; i++) {
+            if (this.filePlacements[i]) {
+                // zero cooldown, immediate unload
+                this.octree.decRefCount(i, 0);
+            }
+        }
+
+        // Clear all internal state
+        this.filePlacements.fill(null);
+        this.activePlacements.clear();
+        this.pending.clear();
+        this.pendingDecrements.clear();
+        this.removedCandidates.clear();
+        this.prefetchPending.clear();
+        this.pendingVisibleAdds.clear();
+
+        // Reset all nodes to invisible
+        this.nodeLods.fill(-1);
+
+        // Clean up environment if present
+        if (this.environmentPlacement) {
+            this.activePlacements.delete(this.environmentPlacement);
+            this.environmentPlacement = null;
+            this.octree.unloadEnvironmentResource();
+        }
+
+        // Mark that LOD needs to be re-evaluated after context restore
+        this.dirtyModifiedPlacements = true;
+        this.needsLodUpdate = true;
     }
 
     /**
@@ -169,8 +269,11 @@ class GSplatOctreeInstance {
     calculateNodeLod(localCameraPosition, localCameraForward, nodeIndex, maxLod, lodDistances, lodBehindPenalty) {
         const node = this.octree.nodes[nodeIndex];
 
-        // Calculate distance in local space
-        _dirToNode.copy(node.bounds.center).sub(localCameraPosition);
+        // Calculate the nearest point on the bounding box to the camera for accurate distance
+        node.bounds.closestPoint(localCameraPosition, _dirToNode);
+
+        // Calculate direction from camera to nearest point on box
+        _dirToNode.sub(localCameraPosition);
         let distance = _dirToNode.length();
 
         // Apply angular-based multiplier for nodes behind the camera when enabled
@@ -250,7 +353,7 @@ class GSplatOctreeInstance {
         if (desiredLodIndex === optimalLodIndex) {
             const fi = node.lods[optimalLodIndex].fileIndex;
             if (fi !== -1) {
-                this.octree.ensureFileResource(fi, this.assetLoader);
+                this.octree.ensureFileResource(fi);
                 if (!this.octree.getFileResource(fi)) {
                     this.prefetchPending.add(fi);
                 }
@@ -264,7 +367,7 @@ class GSplatOctreeInstance {
         for (let lod = targetLod; lod >= optimalLodIndex; lod--) {
             const fi = node.lods[lod].fileIndex;
             if (fi !== -1) {
-                this.octree.ensureFileResource(fi, this.assetLoader);
+                this.octree.ensureFileResource(fi);
                 if (!this.octree.getFileResource(fi)) {
                     this.prefetchPending.add(fi);
                 }
@@ -291,7 +394,7 @@ class GSplatOctreeInstance {
 
         // calculate max LOD once for all nodes
         const maxLod = this.octree.lodLevels - 1;
-        const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25];
+        const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 
         // parameters
         const { lodBehindPenalty, lodRangeMin, lodRangeMax, lodUnderfillLimit = 0 } = params;
@@ -443,7 +546,7 @@ class GSplatOctreeInstance {
             if (!this.addFilePlacement(fileIndex)) {
 
                 // resource not loaded yet, kick off load and add to pending
-                this.octree.ensureFileResource(fileIndex, this.assetLoader);
+                this.octree.ensureFileResource(fileIndex);
                 this.pending.add(fileIndex);
             }
         }
@@ -555,7 +658,7 @@ class GSplatOctreeInstance {
             for (const fileIndex of this.pending) {
 
                 // check if the asset has finished loading and store it if so
-                this.octree.ensureFileResource(fileIndex, this.assetLoader);
+                this.octree.ensureFileResource(fileIndex);
 
                 // if resource became available, update placement and execute any pending decrements
                 if (this.addFilePlacement(fileIndex)) {
@@ -598,6 +701,21 @@ class GSplatOctreeInstance {
 
         // watch prefetched loads for completion to allow promotion
         this.pollPrefetchCompletions();
+
+        // handle environment loading
+        if (this.octree.environmentUrl && !this.environmentPlacement) {
+            // poll for environment resource completion
+            this.octree.ensureEnvironmentResource();
+            const envResource = this.octree.environmentResource;
+
+            if (envResource) {
+                // create environment placement with the loaded resource
+                this.environmentPlacement = new GSplatPlacement(envResource, this.placement.node, 0);
+                this.environmentPlacement.aabb.copy(envResource.aabb);
+                this.activePlacements.add(this.environmentPlacement);
+                this.dirtyModifiedPlacements = true;
+            }
+        }
 
         // check if any placements need LOD update
         const dirty = this.dirtyModifiedPlacements;
@@ -642,7 +760,7 @@ class GSplatOctreeInstance {
 
             // poll loader and store resource in octree if ready
             for (const fileIndex of this.prefetchPending) {
-                this.octree.ensureFileResource(fileIndex, this.assetLoader);
+                this.octree.ensureFileResource(fileIndex);
                 if (this.octree.getFileResource(fileIndex)) {
                     _tempCompletedUrls.push(fileIndex);
                 }

@@ -198,6 +198,14 @@ class Gizmo extends EventHandler {
     _handles = [];
 
     /**
+     * Internal array of mouse buttons that can interact with the gizmo.
+     *
+     * @type {[boolean, boolean, boolean]}
+     * @protected
+     */
+    _mouseButtons = [true, true, true];
+
+    /**
      * Internal reference to camera component to view the gizmo.
      *
      * @type {CameraComponent}
@@ -241,6 +249,13 @@ class Gizmo extends EventHandler {
      * @type {Shape[]}
      */
     intersectShapes = [];
+
+    /**
+     * Flag to indicate whether to call `preventDefault` on pointer events.
+     *
+     * @type {boolean}
+     */
+    preventDefault = true;
 
     /**
      * Creates a new gizmo layer and adds it to the scene.
@@ -322,6 +337,22 @@ class Gizmo extends EventHandler {
      */
     get enabled() {
         return this.root.enabled;
+    }
+
+    /**
+     * Array of mouse buttons that can interact with the gizmo. The button indices are defined as:
+     *
+     *  - 0: Left button
+     *  - 1: Middle button
+     *  - 2: Right button
+     *
+     * The full list of button indices can be found here:
+     * {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button}
+     *
+     * @type {[boolean, boolean, boolean]}
+     */
+    get mouseButtons() {
+        return this._mouseButtons;
     }
 
     /**
@@ -443,9 +474,14 @@ class Gizmo extends EventHandler {
         if (!this.enabled || document.pointerLockElement) {
             return;
         }
+        if (!this.mouseButtons[e.button]) {
+            return;
+        }
         const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
-            e.preventDefault();
+            if (this.preventDefault) {
+                e.preventDefault();
+            }
             e.stopPropagation();
         }
 
@@ -466,7 +502,9 @@ class Gizmo extends EventHandler {
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
-            e.preventDefault();
+            if (this.preventDefault) {
+                e.preventDefault();
+            }
             e.stopPropagation();
         }
         this.fire(Gizmo.EVENT_POINTERMOVE, e.offsetX, e.offsetY, selection[0]);
@@ -480,9 +518,14 @@ class Gizmo extends EventHandler {
         if (!this.enabled || document.pointerLockElement) {
             return;
         }
+        if (!this.mouseButtons[e.button]) {
+            return;
+        }
         const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
-            e.preventDefault();
+            if (this.preventDefault) {
+                e.preventDefault();
+            }
             e.stopPropagation();
         }
 
@@ -497,11 +540,15 @@ class Gizmo extends EventHandler {
      */
     _updatePosition() {
         position.set(0, 0, 0);
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            position.add(node.getPosition());
+        if (this._coordSpace === 'local') {
+            position.copy(this.nodes[this.nodes.length - 1].getPosition());
+        } else {
+            for (let i = 0; i < this.nodes.length; i++) {
+                const node = this.nodes[i];
+                position.add(node.getPosition());
+            }
+            position.mulScalar(1.0 / (this.nodes.length || 1));
         }
-        position.mulScalar(1.0 / (this.nodes.length || 1));
 
         if (position.equalsApprox(this.root.getLocalPosition(), UPDATE_EPSILON)) {
             return;
@@ -539,7 +586,7 @@ class Gizmo extends EventHandler {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             const gizmoPos = this.root.getLocalPosition();
             const cameraPos = this._camera.entity.getPosition();
-            const dist = gizmoPos.distance(cameraPos);
+            const dist = v.sub2(gizmoPos, cameraPos).dot(this._camera.entity.forward);
             this._scale = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD) * dist * PERS_SCALE_RATIO;
         } else {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;

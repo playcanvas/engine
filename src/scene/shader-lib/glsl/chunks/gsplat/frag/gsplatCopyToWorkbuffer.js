@@ -8,8 +8,7 @@ export default /* glsl */`
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
 #include "gsplatSourceFormatVS"
-
-uniform mat4 uTransform;
+#include "packHalfPS"
 
 uniform int uStartLine;      // Start row in destination texture
 uniform int uViewportWidth;  // Width of the destination viewport in pixels
@@ -33,10 +32,15 @@ void main(void) {
     if (targetIndex >= uActiveSplats) {
 
         // Out of bounds: write zeros
-        pcFragColor0 = vec4(0.0);
-        pcFragColor1 = vec4(0.0);
-        pcFragColor2 = vec4(0.0);
-        pcFragColor3 = vec4(0.0);
+        #ifdef GSPLAT_COLOR_UINT
+            pcFragColor0 = uvec4(0u);
+        #else
+            pcFragColor0 = vec4(0.0);
+        #endif
+        #ifndef GSPLAT_COLOR_ONLY
+            pcFragColor1 = uvec4(0u);
+            pcFragColor2 = uvec2(0u);
+        #endif
 
     } else {
 
@@ -61,9 +65,11 @@ void main(void) {
         source.id = uint(originalIndex);
         source.uv = ivec2(source.id % srcSize, source.id / srcSize);
 
-        // read and transform center
+        // read center in local space
         vec3 modelCenter = readCenter(source);
-        modelCenter = (uTransform * vec4(modelCenter, 1.0)).xyz;
+
+        // compute world-space center for storage
+        vec3 worldCenter = (matrix_model * vec4(modelCenter, 1.0)).xyz;
         SplatCenter center;
         initCenter(modelCenter, center);
 
@@ -76,7 +82,7 @@ void main(void) {
             covA.y, covB.x, covB.y,
             covA.z, covB.y, covB.z
         );
-        mat3 linear = mat3(uTransform);
+        mat3 linear = mat3(matrix_model);
         mat3 Ct = linear * C * transpose(linear);
         covA = Ct[0];
         covB = vec3(Ct[1][1], Ct[1][2], Ct[2][2]);
@@ -101,10 +107,23 @@ void main(void) {
         color.xyz *= uColorMultiply;
 
         // write out results
-        pcFragColor0 = color;
-        pcFragColor1 = vec4(modelCenter, 1.0);
-        pcFragColor2 = vec4(covA, 1.0);
-        pcFragColor3 = vec4(covB, 1.0);
+        #ifdef GSPLAT_COLOR_UINT
+            // Pack RGBA as 4x half-float (16-bit) values for RGBA16U format
+            uint packed_rg = packHalf2x16(color.rg);
+            uint packed_ba = packHalf2x16(color.ba);
+            pcFragColor0 = uvec4(
+                packed_rg & 0xFFFFu,    // R as half
+                packed_rg >> 16u,       // G as half
+                packed_ba & 0xFFFFu,    // B as half
+                packed_ba >> 16u        // A as half
+            );
+        #else
+            pcFragColor0 = color;
+        #endif
+        #ifndef GSPLAT_COLOR_ONLY
+            pcFragColor1 = uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16Safe(vec2(covA.z, covB.z)));
+            pcFragColor2 = uvec2(packHalf2x16Safe(covA.xy), packHalf2x16Safe(covB.xy));
+        #endif
     }
 }
 `;

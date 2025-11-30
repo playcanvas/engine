@@ -254,7 +254,7 @@ class Light {
 
         this._position = new Vec3(0, 0, 0);
         this._direction = new Vec3(0, 0, 0);
-        this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
+        this._innerConeAngleCos = Math.cos(this._innerConeAngle * math.DEG_TO_RAD);
         this._updateOuterAngle(this._outerConeAngle);
 
         this._usePhysicalUnits = undefined;
@@ -630,7 +630,7 @@ class Light {
         }
 
         this._innerConeAngle = value;
-        this._innerConeAngleCos = Math.cos(value * Math.PI / 180);
+        this._innerConeAngleCos = Math.cos(value * math.DEG_TO_RAD);
         this.updateClusterData(false, true);
 
         if (this._usePhysicalUnits) {
@@ -677,7 +677,7 @@ class Light {
     }
 
     _updateOuterAngle(angle) {
-        const radAngle = angle * Math.PI / 180;
+        const radAngle = angle * math.DEG_TO_RAD;
         this._outerConeAngleCos = Math.cos(radAngle);
         this._outerConeAngleSin = Math.sin(radAngle);
         this.updateClusterData(false, true);
@@ -1196,8 +1196,33 @@ class Light {
         }
 
         if (updateAngles) {
-            clusteredData16[4] = float2Half(this._innerConeAngleCos);
-            clusteredData16[5] = float2Half(this._outerConeAngleCos);
+            // To store cone angles with full precision in half-floats, we use a hybrid encoding.
+            // For small angles, cos(angle) is close to 1.0, where half-float precision is low.
+            // For these, we store 1.0 - cos(angle) (versine), which is close to 0.0 and has high precision.
+            // For larger angles, we store cos(angle) directly. Two flag bits indicate the format.
+            const cosThreshold = 0.5;
+            let flags = 0;
+
+            // Shrink angles slightly (~1%) to prevent light leaking outside shadow boundaries
+            const angleShrinkFactor = 0.99;
+            let innerCos = Math.cos(this._innerConeAngle * angleShrinkFactor * math.DEG_TO_RAD);
+            if (innerCos > cosThreshold) {
+                innerCos = 1.0 - innerCos;
+                flags |= 1; // Use bit 0 for inner angle: 1 = versine, 0 = cosine
+            }
+
+            let outerCos = Math.cos(this._outerConeAngle * angleShrinkFactor * math.DEG_TO_RAD);
+            if (outerCos > cosThreshold) {
+                outerCos = 1.0 - outerCos;
+                flags |= 2; // Use bit 1 for outer angle: 1 = versine, 0 = cosine
+            }
+
+            // Store flags as integer bits
+            clusteredData16[3] = flags;
+
+            // Store encoded inner and outer values
+            clusteredData16[4] = float2Half(innerCos);
+            clusteredData16[5] = float2Half(outerCos);
         }
     }
 }

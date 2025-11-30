@@ -197,12 +197,11 @@ class TransformGizmo extends Gizmo {
     _selectionStartPoint = new Vec3();
 
     /**
-     * Internal state for if snapping is enabled. Defaults to false.
+     * Whether snapping is enabled. Defaults to false.
      *
      * @type {boolean}
-     * @private
      */
-    _snap = false;
+    snap = false;
 
     /**
      * Snapping increment. Defaults to 1.
@@ -293,30 +292,11 @@ class TransformGizmo extends Gizmo {
         });
 
         this.on(Gizmo.EVENT_NODESDETACH, () => {
-            this.snap = false;
             this._hoverAxis = '';
             this._hoverIsPlane = false;
             this._hover();
             this.fire(Gizmo.EVENT_POINTERUP);
         });
-    }
-
-    /**
-     * Sets whether snapping is enabled. Defaults to false.
-     *
-     * @type {boolean}
-     */
-    set snap(value) {
-        this._snap = this.enabled && value;
-    }
-
-    /**
-     * Gets whether snapping is enabled. Defaults to false.
-     *
-     * @type {boolean}
-     */
-    get snap() {
-        return this._snap;
     }
 
     /**

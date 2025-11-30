@@ -14,9 +14,7 @@ const { GizmoHandler } = await localImport('gizmo-handler.mjs');
 const { Selector } = await localImport('selector.mjs');
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

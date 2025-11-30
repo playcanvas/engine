@@ -45,7 +45,10 @@ void main(void) {
 
     #ifdef PICK_PASS
 
-        gl_FragColor = getPickOutput();
+        pcFragColor0 = getPickOutput();
+        #ifdef DEPTH_PICK_PASS
+            pcFragColor1 = getPickDepth();
+        #endif
 
     #elif SHADOW_PASS
 

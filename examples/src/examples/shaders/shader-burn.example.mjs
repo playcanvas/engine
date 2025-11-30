@@ -12,8 +12,6 @@ const assets = {
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // Enable HDR rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR

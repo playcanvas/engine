@@ -236,7 +236,7 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * Add an asset to the registry.
+     * Add an asset to the registry. If {@link Asset#preload} is `true`, it will also get loaded.
      *
      * @param {Asset} asset - The asset to add.
      * @example

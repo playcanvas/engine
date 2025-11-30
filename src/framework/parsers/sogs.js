@@ -166,6 +166,10 @@ class SogsParser {
         data.sh_labels = textures.shN?.[1]?.resource;
 
         const decompress = asset.data?.decompress;
+        const minimalMemory = asset.options?.minimalMemory ?? false;
+
+        // Pass minimalMemory to data
+        data.minimalMemory = minimalMemory;
 
         if (!decompress) {
             if (!this.app?.graphicsDevice || this.app?.graphicsDevice?._destroyed) return;

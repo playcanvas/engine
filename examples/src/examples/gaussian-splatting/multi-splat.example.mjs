@@ -8,15 +8,14 @@ window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
-
     // disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+const shaderLanguage = device.isWebGPU ? 'wgsl' : 'glsl';
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -75,7 +74,8 @@ assetListLoader.load(() => {
     guitar.addComponent('gsplat', {
         asset: assets.guitar
     });
-    guitar.gsplat.material.getShaderChunks('glsl').set('gsplatVS', files['shader.vert']);
+    const customShaderFile = shaderLanguage === 'wgsl' ? 'shader.wgsl.vert' : 'shader.glsl.vert';
+    guitar.gsplat.material.getShaderChunks(shaderLanguage).set('gsplatCustomizeVS', files[customShaderFile]);
     guitar.setLocalPosition(0, 0.8, 0);
     guitar.setLocalEulerAngles(0, 0, 180);
     guitar.setLocalScale(0.4, 0.4, 0.4);
@@ -120,21 +120,22 @@ assetListLoader.load(() => {
     data.on('shader:set', () => {
         // Apply custom or default material options to the splats when the button is clicked. Note
         // that this uses non-public API, which is subject to change when a proper API is added.
-        const vs = files['shader.vert'];
+        const customShaderFile = shaderLanguage === 'wgsl' ? 'shader.wgsl.vert' : 'shader.glsl.vert';
+        const vs = files[customShaderFile];
 
         const mat1 = biker.gsplat.material;
         if (useCustomShader) {
-            mat1.getShaderChunks('glsl').set('gsplatVS', vs);
+            mat1.getShaderChunks(shaderLanguage).set('gsplatCustomizeVS', vs);
         } else {
-            mat1.getShaderChunks('glsl').delete('gsplatVS');
+            mat1.getShaderChunks(shaderLanguage).delete('gsplatCustomizeVS');
         }
         mat1.update();
 
         const mat2 = skull.gsplat.material;
         if (useCustomShader) {
-            mat2.getShaderChunks('glsl').set('gsplatVS', vs);
+            mat2.getShaderChunks(shaderLanguage).set('gsplatCustomizeVS', vs);
         } else {
-            mat2.getShaderChunks('glsl').delete('gsplatVS');
+            mat2.getShaderChunks(shaderLanguage).delete('gsplatCustomizeVS');
         }
         mat2.setDefine('CUTOUT', true);
         mat2.update();

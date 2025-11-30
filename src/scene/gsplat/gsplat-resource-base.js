@@ -1,16 +1,13 @@
 import { Debug } from '../../core/debug.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { ADDRESS_CLAMP_TO_EDGE, BUFFER_STATIC, FILTER_NEAREST, SEMANTIC_ATTR13, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, BUFFER_STATIC, FILTER_NEAREST, SEMANTIC_ATTR13, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { Mesh } from '../mesh.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
-import { QuadRender } from '../graphics/quad-render.js';
-import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import glslGsplatCopyToWorkBufferPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
-import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
+import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -21,42 +18,6 @@ import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/
 
 let id = 0;
 const tempMap = new Map();
-
-/**
- * A helper class to cache quad renders for work buffer rendering.
- *
- * @ignore
- */
-class WorkBufferRenderInfo {
-    /** @type {ShaderMaterial} */
-    material;
-
-    /** @type {QuadRender} */
-    quadRender;
-
-    constructor(device, key, material) {
-        this.device = device;
-        this.material = material;
-
-        const clonedDefines = new Map(material.defines);
-        const shader = ShaderUtils.createShader(this.device, {
-            uniqueName: `SplatCopyToWorkBuffer:${key}`,
-            attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexDefines: clonedDefines,
-            fragmentDefines: clonedDefines,
-            vertexChunk: 'fullscreenQuadVS',
-            fragmentGLSL: glslGsplatCopyToWorkBufferPS,
-            fragmentWGSL: wgslGsplatCopyToWorkBufferPS
-        });
-
-        this.quadRender = new QuadRender(shader);
-    }
-
-    destroy() {
-        this.material?.destroy();
-        this.quadRender?.destroy();
-    }
-}
 
 /**
  * Base class for a GSplat resource and defines common properties.
@@ -88,6 +49,12 @@ class GSplatResourceBase {
     /** @type {Map<string, WorkBufferRenderInfo>} */
     workBufferRenderInfos = new Map();
 
+    /**
+     * @type {number}
+     * @private
+     */
+    _refCount = 0;
+
     constructor(device, gsplatData) {
         this.device = device;
         this.gsplatData = gsplatData;
@@ -108,6 +75,8 @@ class GSplatResourceBase {
     }
 
     destroy() {
+        Debug.assert(this.refCount === 0,
+            `GSplatResourceBase destroyed with non-zero refCount: ${this.refCount}. This indicates the resource is still in use by GSplatManager.`);
         this.mesh?.destroy();
         this.instanceIndices?.destroy();
         this.workBufferRenderInfos.forEach(info => info.destroy());
@@ -115,16 +84,52 @@ class GSplatResourceBase {
     }
 
     /**
+     * Increments the reference count.
+     *
+     * @ignore
+     */
+    incRefCount() {
+        this._refCount++;
+    }
+
+    /**
+     * Decrements the reference count.
+     *
+     * @ignore
+     */
+    decRefCount() {
+        this._refCount--;
+    }
+
+    /**
+     * Gets the current reference count. This represents how many times this resource is currently
+     * being used internally by the engine. For {@link GSplatComponent#asset|assets} assigned to
+     * {@link GSplatComponent#unified|unified} gsplat components, this tracks active usage during
+     * rendering and sorting operations.
+     *
+     * Resources should not be unloaded while the reference count is non-zero, as they are still
+     * in use by the rendering pipeline.
+     *
+     * @type {number}
+     */
+    get refCount() {
+        return this._refCount;
+    }
+
+    /**
      * Get or create a QuadRender for rendering to work buffer.
      *
      * @param {boolean} useIntervals - Whether to use intervals.
+     * @param {number} colorTextureFormat - The format of the color texture (RGBA16F or RGBA16U).
+     * @param {boolean} colorOnly - Whether to render only color (not full MRT).
      * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
      */
-    getWorkBufferRenderInfo(useIntervals) {
+    getWorkBufferRenderInfo(useIntervals, colorTextureFormat, colorOnly = false) {
 
         // configure defines to fetch cached data
         this.configureMaterialDefines(tempMap);
         if (useIntervals) tempMap.set('GSPLAT_LOD', '');
+        if (colorOnly) tempMap.set('GSPLAT_COLOR_ONLY', '');
         const key = Array.from(tempMap.entries()).map(([k, v]) => `${k}=${v}`).join(';');
 
         // get or create quad render
@@ -138,7 +143,7 @@ class GSplatResourceBase {
             tempMap.forEach((v, k) => material.setDefine(k, v));
 
             // create new cache entry
-            info = new WorkBufferRenderInfo(this.device, key, material);
+            info = new WorkBufferRenderInfo(this.device, key, material, colorTextureFormat, colorOnly);
             this.workBufferRenderInfos.set(key, info);
         }
 

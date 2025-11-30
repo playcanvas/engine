@@ -10,6 +10,7 @@ import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
  * @import { GSplatInfo } from './gsplat-info.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
  */
 
 const _viewMat = new Mat4();
@@ -38,6 +39,18 @@ class GSplatWorkBufferRenderPass extends RenderPass {
      * @type {GraphNode}
      */
     cameraNode = /** @type {any} */ (null);
+
+    /** @type {GSplatWorkBuffer} */
+    workBuffer;
+
+    /** @type {boolean} */
+    colorOnly;
+
+    constructor(device, workBuffer, colorOnly = false) {
+        super(device);
+        this.workBuffer = workBuffer;
+        this.colorOnly = colorOnly;
+    }
 
     /**
      * Initialize the render pass with the specified render target.
@@ -111,13 +124,14 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const { intervals, activeSplats, lineStart, viewport, intervalTexture } = splatInfo;
 
         // quad renderer and material are cached in the resource
-        const workBufferRenderInfo = resource.getWorkBufferRenderInfo(intervals.length > 0);
+        const workBufferRenderInfo = resource.getWorkBufferRenderInfo(
+            intervals.length > 0,
+            this.workBuffer.colorTextureFormat,
+            this.colorOnly
+        );
 
         // Assign material properties to scope
         workBufferRenderInfo.material.setParameters(device);
-
-        // Matrix to transform splats to the world space
-        scope.resolve('uTransform').setValue(splatInfo.node.getWorldTransform().data);
 
         if (intervalTexture) {
             // Set LOD intervals texture for remapping of indices
@@ -128,8 +142,8 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         scope.resolve('uStartLine').setValue(lineStart);
         scope.resolve('uViewportWidth').setValue(viewport.z);
 
-        // Colorize by LOD using provided colors; otherwise, use white
-        const color = this.colorsByLod?.[splatInfo.lodIndex] ?? _whiteColor;
+        // Colorize by LOD using provided colors; use index 0 as fallback for non-LOD splats
+        const color = this.colorsByLod?.[splatInfo.lodIndex] ?? this.colorsByLod?.[0] ?? _whiteColor;
         scope.resolve('uColorMultiply').setValue(color);
 
         // SH related

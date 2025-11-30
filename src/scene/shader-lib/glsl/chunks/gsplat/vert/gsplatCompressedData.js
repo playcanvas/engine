@@ -1,4 +1,6 @@
 export default /* glsl */`
+#include "gsplatPackingPS"
+
 uniform highp usampler2D packedTexture;
 uniform highp sampler2D chunkTexture;
 
@@ -18,16 +20,7 @@ vec3 unpack111011(uint bits) {
     );
 }
 
-vec4 unpack8888(uint bits) {
-    return vec4(
-        float(bits >> 24u) / 255.0,
-        float((bits >> 16u) & 0xffu) / 255.0,
-        float((bits >> 8u) & 0xffu) / 255.0,
-        float(bits & 0xffu) / 255.0
-    );
-}
-
-const float norm = 1.0 / (sqrt(2.0) * 0.5);
+const float norm = sqrt(2.0);
 
 vec4 unpackRotation(uint bits) {
     float a = (float((bits >> 20u) & 0x3ffu) / 1023.0 - 0.5) * norm;
