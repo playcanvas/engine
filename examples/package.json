@@ -40,7 +40,6 @@
     "puppeteer": "24.31.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "react-es6": "1.0.2",
     "react-router-dom": "7.9.6",
     "rollup": "4.53.3",
     "serve": "14.2.5",
