@@ -2019,12 +2019,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         return new Promise((resolve, reject) => {
 
-            function handleAbort() {
-                clearTimeout(timeoutId);
-                timeoutId = undefined;
-                gl?.deleteSync(sync);
+            function dispose() {
                 signal?.removeEventListener('abort', handleAbort);
-                reject(new Error('Aborted by signal', { cause: signal.reason }));
+                gl?.deleteSync(sync);
+            }
+
+            function handleAbort() {
+
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = undefined;
+                }
+
+                dispose();
+                reject(new Error('aborted by signal', { cause: signal.reason }));
             }
 
             function test() {
@@ -2033,7 +2041,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     // check again in a while
                     timeoutId = setTimeout(test, interval_ms);
                 } else {
-                    gl.deleteSync(sync);
+                    dispose();
                     if (res === gl.WAIT_FAILED) {
                         reject(new Error('webgl clientWaitSync sync failed'));
                     } else {
@@ -2056,8 +2064,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} w - The width of the rectangle, in pixels.
      * @param {number} h - The height of the rectangle, in pixels.
      * @param {ArrayBufferView} pixels - The ArrayBufferView object that holds the returned pixel
-     * @param {AbortSignal} [signal] - The operation early interrupt signal
      * data.
+     * @param {AbortSignal} [signal] - The operation early interrupt signal.
      * @ignore
      */
     async readPixelsAsync(x, y, w, h, pixels, signal) {
