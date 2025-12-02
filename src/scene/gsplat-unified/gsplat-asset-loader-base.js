@@ -8,11 +8,6 @@ import { Debug } from '../../core/debug.js';
  */
 class GSplatAssetLoaderBase {
     /**
-     * Number of ticks to wait before unloading a zero-ref file.
-     */
-    cooldownTicks = 100;
-
-    /**
      * Initiates loading of a gsplat asset. This is a fire-and-forget operation that starts
      * the loading process.
      *
@@ -42,6 +37,15 @@ class GSplatAssetLoaderBase {
      */
     getResource(url) {
         Debug.error('GSplatAssetLoaderBase#getResource: Not implemented');
+    }
+
+    /**
+     * Destroys the loader and cleans up any resources it holds.
+     *
+     * @abstract
+     */
+    destroy() {
+        // Base implementation does nothing - subclasses should override if cleanup is needed
     }
 }
 

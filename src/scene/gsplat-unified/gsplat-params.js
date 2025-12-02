@@ -284,6 +284,16 @@ class GSplatParams {
      * @type {number}
      */
     colorUpdateAngleLodScale = 2;
+
+    /**
+     * Number of update ticks before unloading unused streamed resources. When a streamed resource's
+     * reference count reaches zero, it enters a cooldown period before being unloaded. This allows
+     * recently used data to remain in memory for quick reuse if needed again soon. Set to 0 to
+     * unload immediately when unused. Defaults to 100.
+     *
+     * @type {number}
+     */
+    cooldownTicks = 100;
 }
 
 export { GSplatParams };

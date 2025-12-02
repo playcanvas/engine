@@ -185,6 +185,13 @@ class GSplatSogsData {
     packedShN;
 
     /**
+     * URL of the asset, used for debugging texture names.
+     *
+     * @type {string}
+     */
+    url = '';
+
+    /**
      * Whether to use minimal memory mode (releases source textures after packing).
      *
      * @type {boolean}
@@ -529,11 +536,16 @@ class GSplatSogsData {
     }
 
     async prepareGpuData() {
-        const { device, height, width } = this.means_l;
+        let device = this.means_l.device;
+        const { height, width } = this.means_l;
 
-        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
+        if (this.destroyed || !device || device._destroyed) return;
+
+        // Include URL in texture name for debugging
+        const urlSuffix = this.url ? `_${this.url}` : '';
+
         this.packedTexture = new Texture(device, {
-            name: 'sogsPackedTexture',
+            name: `sogsPackedTexture${urlSuffix}`,
             width,
             height,
             format: PIXELFORMAT_RGBA32U,
@@ -541,7 +553,7 @@ class GSplatSogsData {
         });
 
         this.packedSh0 = new Texture(device, {
-            name: 'sogsPackedSh0',
+            name: `sogsPackedSh0${urlSuffix}`,
             width,
             height,
             format: PIXELFORMAT_RGBA8,
@@ -549,7 +561,7 @@ class GSplatSogsData {
         });
 
         this.packedShN = this.sh_centroids && new Texture(device, {
-            name: 'sogsPackedShN',
+            name: `sogsPackedShN${urlSuffix}`,
             width: this.sh_centroids.width,
             height: this.sh_centroids.height,
             format: PIXELFORMAT_RGBA8,
@@ -575,13 +587,16 @@ class GSplatSogsData {
             }
         });
 
-        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
+        device = this.means_l?.device;
+        if (this.destroyed || !device || device._destroyed) return;
         await this.generateCenters();
 
-        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
+        device = this.means_l?.device;
+        if (this.destroyed || !device || device._destroyed) return;
         this.packGpuMemory();
         if (this.packedShN) {
-            if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
+            device = this.means_l?.device;
+            if (this.destroyed || !device || device._destroyed) return;
             this.packShMemory();
         }
 

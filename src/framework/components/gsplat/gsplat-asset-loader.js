@@ -72,6 +72,14 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
     _retryCount = new Map();
 
     /**
+     * Whether this asset loader has been destroyed.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _destroyed = false;
+
+    /**
      * Create a new GSplatAssetLoader.
      *
      * @param {AssetRegistry} registry - The asset registry to use for loading assets.
@@ -79,6 +87,33 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
     constructor(registry) {
         super();
         this._registry = registry;
+    }
+
+
+    /**
+     * Destroys the asset loader and force-unloads all tracked assets, ignoring ref counts.
+     * This is used when the octree resource itself is being destroyed.
+     */
+    destroy() {
+        this._destroyed = true;
+
+        // Force-unload all tracked assets
+        for (const asset of this._urlToAsset.values()) {
+            // Fire 'unload' event to trigger cleanup in parsers (like sogs.js)
+            asset.fire('unload', asset);
+
+            // Remove event listeners
+            asset.off('load');
+            asset.off('error');
+
+            this._registry.remove(asset);
+            asset.unload();
+        }
+
+        this._urlToAsset.clear();
+        this._loadQueue.length = 0;
+        this._currentlyLoading.clear();
+        this._retryCount.clear();
     }
 
     /**
@@ -124,15 +159,17 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
         let asset = this._urlToAsset.get(url);
 
         if (!asset) {
-            // Check if the asset registry already has this asset
-            asset = this._registry.getByUrl(url);
+            // Create a new gsplat asset
+            // @ts-ignore - minimalMemory is a custom option for gsplat assets
+            asset = new Asset(url, 'gsplat', { url }, {}, { minimalMemory: true });
 
-            if (!asset) {
-                // Create a new gsplat asset
-                // @ts-ignore - minimalMemory is a custom option for gsplat assets
-                asset = new Asset(url, 'gsplat', { url }, {}, { minimalMemory: true });
-                this._registry.add(asset);
-            }
+            // Assert that registry doesn't already have an asset for this URL
+            // If it does, there's a code ownership issue - GSplatAssetLoader should be the only
+            // creator of gsplat assets with these URLs
+            Debug.assert(!this._registry.getByUrl(url),
+                `Asset with URL ${url} already exists in registry but not tracked by GSplatAssetLoader`);
+
+            this._registry.add(asset);
 
             // Track this asset in our map
             this._urlToAsset.set(url, asset);
@@ -156,6 +193,11 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
      * @private
      */
     _onAssetLoadSuccess(url, asset) {
+        // Don't process if destroyed or already unloaded
+        if (this._destroyed || !this._urlToAsset.has(url)) {
+            return;
+        }
+
         // Remove from currently loading
         this._currentlyLoading.delete(url);
 
@@ -175,6 +217,11 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
      * @private
      */
     _onAssetLoadError(url, asset, err) {
+        // Don't process if destroyed or already unloaded
+        if (this._destroyed || !this._urlToAsset.has(url)) {
+            return;
+        }
+
         const retryCount = this._retryCount.get(url) || 0;
 
         if (retryCount < this.maxRetries) {
@@ -209,6 +256,11 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
      * @private
      */
     _processQueue() {
+        // Don't process queue if destroyed
+        if (this._destroyed) {
+            return;
+        }
+
         while (this._currentlyLoading.size < this.maxConcurrentLoads && this._loadQueue.length > 0) {
             const url = this._loadQueue.shift();
             if (url) {
@@ -239,6 +291,12 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
         // Unload the asset
         const asset = this._urlToAsset.get(url);
         if (asset) {
+            // IMPORTANT: Fire 'unload' event explicitly before calling asset.unload()
+            // This ensures parsers with async loading (like sogs.js) can clean up
+            // even if the asset hasn't finished loading yet
+            // NOTE: Must fire BEFORE removing event listeners
+            asset.fire('unload', asset);
+
             // Remove event listeners
             asset.off('load');
             asset.off('error');

@@ -10,7 +10,6 @@ import { GSplatPlacement } from './gsplat-placement.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { GSplatOctree } from './gsplat-octree.js'
- * @import { GSplatAssetLoaderBase } from './gsplat-asset-loader-base.js'
  * @import { Scene } from '../scene.js'
  * @import { EventHandle } from '../../core/event-handle.js'
  */
@@ -44,9 +43,6 @@ class GSplatOctreeInstance {
 
     /** @type {boolean} */
     dirtyModifiedPlacements = false;
-
-    /** @type {GSplatAssetLoaderBase} */
-    assetLoader;
 
     /** @type {GraphicsDevice} */
     device;
@@ -151,18 +147,11 @@ class GSplatOctreeInstance {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatOctree} octree - The octree.
      * @param {GSplatPlacement} placement - The placement.
-     * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
      */
-    constructor(device, octree, placement, assetLoader) {
+    constructor(device, octree, placement) {
         this.device = device;
         this.octree = octree;
         this.placement = placement;
-        this.assetLoader = assetLoader;
-
-        // Set octree's assetLoader if not already set (first instance)
-        if (!octree.assetLoader) {
-            octree.assetLoader = assetLoader;
-        }
 
         // Initialize nodeLods array with all nodes set to -1 (not visible)
         this.nodeLods = new Int32Array(octree.nodes.length);
@@ -186,14 +175,43 @@ class GSplatOctreeInstance {
      * Destroys this octree instance and clears internal references.
      */
     destroy() {
+        // Only decrement refs if octree is still alive
+        // Skip ref counting if octree was force-destroyed (e.g., asset unloaded)
+        if (this.octree && !this.octree.destroyed) {
+            // Decrement ref counts for all files currently in use (loaded files)
+            const filesToDecRef = this.getFileDecrements();
+            for (const fileIndex of filesToDecRef) {
+                this.octree.decRefCount(fileIndex, 0);
+            }
+
+            // Also unload files that are pending (requested but not loaded yet)
+            for (const fileIndex of this.pending) {
+                // Skip if already in filePlacements (already handled above)
+                if (!this.filePlacements[fileIndex]) {
+                    this.octree.unloadResource(fileIndex);
+                }
+            }
+
+            // Same for prefetch pending
+            for (const fileIndex of this.prefetchPending) {
+                if (!this.filePlacements[fileIndex]) {
+                    this.octree.unloadResource(fileIndex);
+                }
+            }
+
+            // Clean up environment if present
+            if (this.environmentPlacement) {
+                this.octree.decEnvironmentRefCount();
+            }
+        }
+
         this.pending.clear();
         this.pendingDecrements.clear();
         this.filePlacements.length = 0;
 
-        // Clean up environment if present
+        // Clean up environment placement
         if (this.environmentPlacement) {
             this.activePlacements.delete(this.environmentPlacement);
-            this.octree.decEnvironmentRefCount();
             this.environmentPlacement = null;
         }
 

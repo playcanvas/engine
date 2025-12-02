@@ -62,9 +62,6 @@ class GSplatManager {
     /** @type {GraphNode} */
     node = new GraphNode('GSplatManager');
 
-    /** @type {number} */
-    cooldownTicks;
-
     /** @type {GSplatWorkBuffer} */
     workBuffer;
 
@@ -157,10 +154,11 @@ class GSplatManager {
         this.workBuffer = new GSplatWorkBuffer(device);
         this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
         this.sorter = this.createSorter();
-        this.cooldownTicks = this.director.assetLoader.cooldownTicks;
     }
 
     destroy() {
+        this._destroyed = true;
+
         // Clean up all world states and decrement refs
         for (const [, worldState] of this.worldStates) {
             for (const splat of worldState.splats) {
@@ -169,6 +167,18 @@ class GSplatManager {
             worldState.destroy();
         }
         this.worldStates.clear();
+
+        // Destroy all octree instances (they handle their own ref count cleanup)
+        for (const [, instance] of this.octreeInstances) {
+            instance.destroy();
+        }
+        this.octreeInstances.clear();
+
+        // Also destroy any queued instances
+        for (const instance of this.octreeInstancesToDestroy) {
+            instance.destroy();
+        }
+        this.octreeInstancesToDestroy.length = 0;
 
         this.workBuffer.destroy();
         this.renderer.destroy();
@@ -202,7 +212,8 @@ class GSplatManager {
 
                 // make sure octree instance exists for placement
                 if (!this.octreeInstances.has(p)) {
-                    this.octreeInstances.set(p, new GSplatOctreeInstance(this.device, p.resource.octree, p, this.director.assetLoader));
+                    // @ts-ignore - p.resource is GSplatOctreeResource so octree cannot be null
+                    this.octreeInstances.set(p, new GSplatOctreeInstance(this.device, p.resource.octree, p));
 
                     // mark that we have new instances that need initial LOD evaluation
                     this.hasNewOctreeInstances = true;
@@ -375,9 +386,10 @@ class GSplatManager {
 
                 // apply pending file-release requests
                 if (worldState.pendingReleases && worldState.pendingReleases.length) {
+                    const cooldownTicks = this.scene.gsplat.cooldownTicks;
                     for (const [octree, fileIndex] of worldState.pendingReleases) {
                         // decrement once for each staged release; refcount system guards against premature unload
-                        octree.decRefCount(fileIndex, this.cooldownTicks);
+                        octree.decRefCount(fileIndex, cooldownTicks);
                     }
                     worldState.pendingReleases.length = 0;
                 }
@@ -571,6 +583,22 @@ class GSplatManager {
                 anyInstanceNeedsLodUpdate ||= instNeeds;
             }
 
+            // Validate that resources in use haven't been unexpectedly destroyed
+            Debug.call(() => {
+                const sortedState = this.worldStates.get(this.sortedVersion);
+                if (sortedState) {
+                    for (const splat of sortedState.splats) {
+                        // Check if resource reference is null or undefined
+                        if (!splat.resource) {
+                            Debug.warn(
+                                `GSplatManager: Resource reference is null but still ` +
+                                `referenced in world state ${sortedState.version}`
+                            );
+                        }
+                    }
+                }
+            });
+
             // check if any octree instances have moved enough to require LOD update
             const threshold = this.scene.gsplat.lodUpdateDistance;
             for (const [, inst] of this.octreeInstances) {
@@ -715,11 +743,12 @@ class GSplatManager {
 
         // tick cooldowns once per frame per unique octree
         if (this.octreeInstances.size) {
+            const cooldownTicks = this.scene.gsplat.cooldownTicks;
             for (const [, inst] of this.octreeInstances) {
                 const octree = inst.octree;
                 if (!tempOctreesTicked.has(octree)) {
                     tempOctreesTicked.add(octree);
-                    octree.updateCooldownTick();
+                    octree.updateCooldownTick(cooldownTicks);
                 }
             }
             tempOctreesTicked.clear();
