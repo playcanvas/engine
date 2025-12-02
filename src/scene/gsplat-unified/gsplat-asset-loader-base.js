@@ -5,6 +5,7 @@ import { Debug } from '../../core/debug.js';
  * GSplat asset loaders must implement.
  *
  * @category Asset
+ * @ignore
  */
 class GSplatAssetLoaderBase {
     /**

@@ -223,6 +223,16 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
+     * The ResourceLoader used to load asset files.
+     *
+     * @type {ResourceLoader}
+     * @ignore
+     */
+    get loader() {
+        return this._loader;
+    }
+
+    /**
      * Create a filtered list of assets from the registry.
      *
      * @param {object} [filters] - Filter options.

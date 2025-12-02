@@ -117,6 +117,17 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
     }
 
     /**
+     * Checks if the loader can start new loads. Returns false if the 'gsplat' handler
+     * has been removed from the registry (e.g., during app destruction).
+     *
+     * @returns {boolean} True if loading is possible, false otherwise.
+     * @private
+     */
+    _canLoad() {
+        return !!this._registry.loader?.getHandler('gsplat');
+    }
+
+    /**
      * Initiates loading of a gsplat asset. This is a fire-and-forget operation that starts
      * the loading process. Use getResource() later to check if the asset has finished loading.
      *
@@ -217,8 +228,8 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
      * @private
      */
     _onAssetLoadError(url, asset, err) {
-        // Don't process if destroyed or already unloaded
-        if (this._destroyed || !this._urlToAsset.has(url)) {
+        // Don't process if destroyed, handler removed, or already unloaded
+        if (this._destroyed || !this._canLoad() || !this._urlToAsset.has(url)) {
             return;
         }
 
@@ -256,8 +267,8 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
      * @private
      */
     _processQueue() {
-        // Don't process queue if destroyed
-        if (this._destroyed) {
+        // Don't process queue if destroyed or handler removed
+        if (this._destroyed || !this._canLoad()) {
             return;
         }
 
