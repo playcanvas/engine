@@ -1,5 +1,7 @@
 import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
+import { Tracing } from '../../core/tracing.js';
+import { TRACEID_ASSETS } from '../../core/constants.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { TagsCache } from '../../core/tags-cache.js';
 import { standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
@@ -773,6 +775,48 @@ class AssetRegistry extends EventHandler {
         const results = Array.from(items);
         if (!type) return results;
         return results.filter(asset => asset.type === type);
+    }
+
+    /**
+     * Logs all assets in the registry to the console. Used for debugging with TRACEID_ASSETS.
+     *
+     * @ignore
+     */
+    log() {
+        // #if _DEBUG
+        if (!Tracing.get(TRACEID_ASSETS)) return;
+
+        const assets = this.list();
+        Debug.trace(TRACEID_ASSETS, `Assets: ${assets.length}`);
+
+        // Count by type and status
+        const byType = {};
+        let loadedCount = 0;
+        let loadingCount = 0;
+
+        assets.forEach((asset, index) => {
+            // Count by type
+            byType[asset.type] = (byType[asset.type] || 0) + 1;
+
+            // Count by status
+            if (asset.loaded) loadedCount++;
+            else if (asset.loading) loadingCount++;
+
+            // Determine status string
+            const status = asset.loaded ? 'loaded' : (asset.loading ? 'loading' : 'pending');
+
+            // Get URL (skip if same as name to avoid duplication)
+            const url = asset.file?.url;
+            const urlPart = (url && url !== asset.name) ? ` ${url}` : '';
+
+            Debug.trace(TRACEID_ASSETS, `${index}. ID:${asset.id} [${asset.type}] "${asset.name}" ${status}${urlPart}`);
+        });
+
+        // Log summary
+        const pendingCount = assets.length - loadedCount - loadingCount;
+        Debug.trace(TRACEID_ASSETS, `Status: ${loadedCount} loaded, ${loadingCount} loading, ${pendingCount} pending`);
+        Debug.trace(TRACEID_ASSETS, `Types: ${Object.entries(byType).map(([type, count]) => `${type}:${count}`).join(', ')}`);
+        // #endif
     }
 }
 
