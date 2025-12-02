@@ -14,3 +14,6 @@ stats.html
 .npmrc
 examples/.npmrc
 .prettierrc
+# Added by Snap Cursor Rules extension
+.cursor/rules/cursor-rules-debug.log
+.cursor/rules/remote
