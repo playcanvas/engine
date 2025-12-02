@@ -2159,7 +2159,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         texture._needsUpload = false;
         texture._mipmapsUploaded = false;
 
-        // async wait for previous read to finish
+        // async wait for previous write to finish
         await this.clientWaitAsync(0, 16);
     }
 
