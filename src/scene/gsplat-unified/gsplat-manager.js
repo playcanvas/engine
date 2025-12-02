@@ -590,10 +590,7 @@ class GSplatManager {
                     for (const splat of sortedState.splats) {
                         // Check if resource reference is null or undefined
                         if (!splat.resource) {
-                            Debug.warn(
-                                `GSplatManager: Resource reference is null but still ` +
-                                `referenced in world state ${sortedState.version}`
-                            );
+                            Debug.warn(`GSplatManager: Resource reference is null but still referenced in world state ${sortedState.version}`);
                         }
                     }
                 }
