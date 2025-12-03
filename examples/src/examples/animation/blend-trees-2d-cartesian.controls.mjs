@@ -50,6 +50,9 @@ export const controls = ({ observer, React, jsx, fragment }) => {
 
         drawPosition() {
             const { canvas, width, height } = this;
+            if (!canvas) {
+                return;
+            }
             const animPoints = observer.get('data.animPoints') || [];
             const pos = observer.get('data.pos') || { x: 0, y: 0 };
 
@@ -97,28 +100,20 @@ export const controls = ({ observer, React, jsx, fragment }) => {
             ctx.stroke();
         }
 
-        onAppStart() {
+        componentDidMount() {
             const { canvas } = this;
+            canvas.addEventListener('mousemove', this.mouseEvent.bind(this));
+            canvas.addEventListener('mousedown', this.mouseEvent.bind(this));
+            canvas.addEventListener('touchmove', this.mouseEvent.bind(this));
+            canvas.addEventListener('touchstart', this.mouseEvent.bind(this));
+
             // @ts-ignore engine-tsd
             const dim = `${window.top.controlPanel.offsetWidth}px`;
             canvas.setAttribute('style', `width: ${dim}; height: ${dim};`);
             canvas.setAttribute('width', dim);
             canvas.setAttribute('height', dim);
-            this.drawPosition();
-        }
 
-        componentDidMount() {
-            const { canvas, app } = this;
-            canvas.addEventListener('mousemove', this.mouseEvent.bind(this));
-            canvas.addEventListener('mousedown', this.mouseEvent.bind(this));
-            canvas.addEventListener('touchmove', this.mouseEvent.bind(this));
-            canvas.addEventListener('touchstart', this.mouseEvent.bind(this));
-            if (!app) {
-                console.warn('no app');
-                return;
-            }
-            observer.on('*:set', () => this.drawPosition());
-            this.onAppStart();
+            observer.on('*:set', this.drawPosition.bind(this));
         }
 
         render() {
