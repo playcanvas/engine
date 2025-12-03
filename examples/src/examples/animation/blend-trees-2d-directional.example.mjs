@@ -194,7 +194,7 @@ assetListLoader.load(() => {
 
     // Helper to update animation points for visualization
     const updateAnimPoints = () => {
-        const points = locomotionLayer._controller._states.Travel.animations.map((animNode) => ({
+        const points = locomotionLayer._controller._states.Travel.animations.map(animNode => ({
             x: animNode.point?.x ?? 0,
             y: animNode.point?.y ?? 0,
             weight: animNode.weight ?? 0
