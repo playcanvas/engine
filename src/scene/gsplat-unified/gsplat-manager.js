@@ -35,7 +35,10 @@ const _lodColorsRaw = [
     [0, 1, 0],  // green
     [0, 0, 1],  // blue
     [1, 1, 0],  // yellow
-    [1, 0, 1]   // magenta
+    [1, 0, 1],  // magenta
+    [0, 1, 1],  // cyan
+    [1, 0.5, 0],  // orange
+    [0.5, 0, 1]   // purple
 ];
 
 // Color instances used by debug wireframe rendering
@@ -44,7 +47,10 @@ const _lodColors = [
     new Color(0, 1, 0),
     new Color(0, 0, 1),
     new Color(1, 1, 0),
-    new Color(1, 0, 1)
+    new Color(1, 0, 1),
+    new Color(0, 1, 1),
+    new Color(1, 0.5, 0),
+    new Color(0.5, 0, 1)
 ];
 
 let _randomColorRaw = null;

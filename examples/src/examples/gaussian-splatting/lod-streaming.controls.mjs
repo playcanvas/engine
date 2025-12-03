@@ -43,6 +43,24 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: 'mobile', t: 'Mobile (3-5)' }
                     ]
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Splat Budget' },
+                jsx(SelectInput, {
+                    type: 'string',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'splatBudget' },
+                    value: observer.get('splatBudget') || '4M',
+                    options: [
+                        { v: 'none', t: 'No limit' },
+                        { v: '1M', t: '1M' },
+                        { v: '2M', t: '2M' },
+                        { v: '3M', t: '3M' },
+                        { v: '4M', t: '4M' },
+                        { v: '6M', t: '6M' }
+                    ]
+                })
             )
         ),
         jsx(
