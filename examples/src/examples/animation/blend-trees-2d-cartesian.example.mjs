@@ -1,3 +1,4 @@
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -170,6 +171,33 @@ assetListLoader.load(() => {
     characterStateLayer.assignAnimation('Emote.Eager', assets.eagerAnim.resource.animations[0].resource);
     characterStateLayer.assignAnimation('Emote.Dance', assets.danceAnim.resource.animations[0].resource);
     characterStateLayer.assignAnimation('Emote.Walk', assets.walkAnim.resource.animations[0].resource);
+
+    // Initialize observer data
+    data.set('data', {
+        pos: { x: -0.5, y: 0.5 },
+        animPoints: []
+    });
+
+    // Helper to update animation points for visualization
+    const updateAnimPoints = () => {
+        const points = characterStateLayer._controller._states.Emote.animations.map((/** @type {any} */ animNode) => ({
+            x: animNode.point?.x ?? 0,
+            y: animNode.point?.y ?? 0,
+            weight: animNode.weight ?? 0
+        }));
+        data.set('data.animPoints', points);
+    };
+
+    // Set initial animation points
+    updateAnimPoints();
+
+    // Listen for position changes from controls
+    data.on('data.pos:set', (value) => {
+        modelEntity.anim.setFloat('posX', value.x);
+        modelEntity.anim.setFloat('posY', value.y);
+        // Update animation points when position changes (weights recalculate)
+        updateAnimPoints();
+    });
 
     app.root.addChild(modelEntity);
 

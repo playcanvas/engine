@@ -1,3 +1,4 @@
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -173,8 +174,34 @@ assetListLoader.load(() => {
     locomotionLayer.assignAnimation('Travel.WalkBackwards', assets.walkAnim.resource.animations[0].resource);
     locomotionLayer.assignAnimation('Travel.Jog', assets.jogAnim.resource.animations[0].resource);
 
-    app.root.addChild(modelEntity);
+    // Initialize observer data
+    data.set('data', {
+        pos: { x: 0, y: 0 },
+        animPoints: []
+    });
 
+    // Helper to update animation points for visualization
+    const updateAnimPoints = () => {
+        const points = locomotionLayer._controller._states.Travel.animations.map(animNode => ({
+            x: animNode.point?.x ?? 0,
+            y: animNode.point?.y ?? 0,
+            weight: animNode.weight ?? 0
+        }));
+        data.set('data.animPoints', points);
+    };
+
+    // Set initial animation points
+    updateAnimPoints();
+
+    // Listen for position changes from controls
+    data.on('data.pos:set', (value) => {
+        modelEntity.anim.setFloat('posX', value.x);
+        modelEntity.anim.setFloat('posY', value.y);
+        // Update animation points when position changes (weights recalculate)
+        updateAnimPoints();
+    });
+
+    app.root.addChild(modelEntity);
     app.start();
 });
 
