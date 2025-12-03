@@ -261,6 +261,17 @@ const APP_TARGETS = [{
         format: 'umd'
     },
     treeshake: 'smallest',
+    onwarn(warning, warn) {
+        // Suppress "use client" directive warnings from react-router v7+.
+        // These directives are for React Server Components which we don't use.
+        // The directive is safely ignored and has no effect on client-only builds.
+        // This can be removed if Rollup adds native support for "use client" directives,
+        // or if we switch to a bundler that supports them (e.g., Vite, webpack 5+).
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE' && warning.message.includes('"use client"')) {
+            return;
+        }
+        warn(warning);
+    },
     plugins: [
         commonjs(),
         treeshakeIgnore([/@playcanvas\/pcui/g]), // ignore PCUI treeshake
