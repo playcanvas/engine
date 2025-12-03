@@ -238,6 +238,7 @@ export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
 export { GSplatSogsResource } from './scene/gsplat/gsplat-sogs-resource.js';
+export { GSplatProcedural } from './scene/gsplat/gsplat-procedural.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
