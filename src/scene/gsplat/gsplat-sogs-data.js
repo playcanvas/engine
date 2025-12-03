@@ -216,6 +216,14 @@ class GSplatSogsData {
     // Marked when resource is destroyed, to abort any in-flight async preparation
     destroyed = false;
 
+    /**
+     * Cached number of spherical harmonics bands.
+     *
+     * @type {number}
+     * @private
+     */
+    _shBands = 0;
+
     _destroyGpuResources() {
         this.means_l?.destroy();
         this.means_u?.destroy();
@@ -286,13 +294,7 @@ class GSplatSogsData {
     }
 
     get shBands() {
-        // sh palette has 64 sh entries per row. use width to calculate number of bands
-        const widths = {
-            192: 1,     // 64 * 3
-            512: 2,     // 64 * 8
-            960: 3      // 64 * 15
-        };
-        return widths[this.sh_centroids?.width] ?? 0;
+        return this._shBands;
     }
 
     async decompress() {
@@ -540,6 +542,11 @@ class GSplatSogsData {
         const { height, width } = this.means_l;
 
         if (this.destroyed || !device || device._destroyed) return;
+
+        // Cache shBands from sh_centroids texture width before source textures may be destroyed
+        // sh palette has 64 sh entries per row: 192 = 1 band (64*3), 512 = 2 bands (64*8), 960 = 3 bands (64*15)
+        const shBandsWidths = { 192: 1, 512: 2, 960: 3 };
+        this._shBands = shBandsWidths[this.sh_centroids?.width] ?? 0;
 
         // Include URL in texture name for debugging
         const urlSuffix = this.url ? `_${this.url}` : '';
