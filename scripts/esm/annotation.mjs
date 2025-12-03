@@ -31,6 +31,15 @@ const depthClamp = `
     }
 `;
 
+const depthClampWGSL = `
+    let f: f32 = output.position.z / output.position.w;
+    if (f > 1.0) {
+        output.position.z = output.position.w;
+    } else if (f < -1.0) {
+        output.position.z = -output.position.w;
+    }
+`;
+
 const vec = new Vec3();
 
 /**
@@ -359,6 +368,10 @@ export class Annotation extends Script {
 
         material.shaderChunks.glsl.add({
             'litUserMainEndVS': depthClamp
+        });
+
+        material.shaderChunks.wgsl.add({
+            'litUserMainEndVS': depthClampWGSL
         });
 
         material.update();
