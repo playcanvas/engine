@@ -100,6 +100,8 @@ class RenderPassPicker extends RenderPass {
 
                         renderer.setCameraUniforms(camera.camera, renderTarget);
                         if (device.supportsUniformBuffers) {
+                            // Initialize view bind group format if not already done
+                            renderer.initViewBindGroupFormat(clusteredLightingEnabled);
                             renderer.setupViewUniformBuffers(this.viewBindGroups, renderer.viewUniformFormat, renderer.viewBindGroupFormat, null);
                         }
 
