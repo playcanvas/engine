@@ -416,6 +416,30 @@ class RigidBodyComponentSystem extends ComponentSystem {
     _compounds = [];
 
     /**
+     * @type {number}
+     * @private
+     */
+    _dynamicTime = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _fixedTime = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lastFixedTimeStep = 0;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _usePostFixedUpdate = false;
+
+    /**
      * Create a new RigidBodyComponentSystem.
      *
      * @param {AppBase} app - The Application.
@@ -473,9 +497,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
 
             this.app.systems.on('update', this.onUpdate, this);
+            this.app.systems.on('postFixedUpdate', this.onPostFixedUpdate, this);
         } else {
             // Unbind the update function if we haven't loaded Ammo by now
             this.app.systems.off('update', this.onUpdate, this);
+            this.app.systems.off('postFixedUpdate', this.onPostFixedUpdate, this);
         }
     }
 
@@ -1050,12 +1076,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.singleContactResultPool.freeAll();
     }
 
-    onUpdate(dt) {
-        let i, len;
+    /**
+     * A list of tasks that the system needs to perform after the physics step.
+     * @param {number} dt - The amount of simulation time processed in the last simulation tick.
+     */
+    _beforeStepSimulation(dt) {
 
-        // #if _PROFILER
-        this._stats.physicsStart = now();
-        // #endif
+        let i, len;
 
         // downcast gravity to float32 so we can accurately compare with existing
         // gravity set in ammo.
@@ -1087,9 +1114,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
         for (i = 0, len = kinematic.length; i < len; i++) {
             kinematic[i]._updateKinematic();
         }
+    }
 
-        // Step the physics simulation
-        this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
+    /**
+     * A list of tasks that the system needs to perform after the physics step.
+     * @param {number} dt - The amount of simulation time processed in the last simulation tick.
+     */
+    _afterStepSimulation(dt) {
+
+        let i, len;
 
         // Update the transforms of all entities referencing a dynamic body
         const dynamic = this._dynamic;
@@ -1100,15 +1133,90 @@ class RigidBodyComponentSystem extends ComponentSystem {
         if (!this.dynamicsWorld.setInternalTickCallback) {
             this._checkForCollisions(Ammo.getPointer(this.dynamicsWorld), dt);
         }
+    }
 
-        // #if _PROFILER
-        this._stats.physicsTime = now() - this._stats.physicsStart;
-        // #endif
+    /**
+     * Resets the time counters and switch usePostFixedUpdate flag if a change in the physical mode is detected.
+     */
+    _resetTimeCountersAndFlagOnChange() {
+
+        if (this._usePostFixedUpdate !== this.app.usePostFixedUpdateForPhysicsSim) {
+            this._usePostFixedUpdate = this.app.usePostFixedUpdateForPhysicsSim;
+            this._fixedTime = 0;
+            this._dynamicTime = 0;
+            this._lastFixedTimeStep = 0;
+            this._fixedTimeDebt = 0;
+        }
+    }
+
+    onPostFixedUpdate(dt) {
+
+        this._resetTimeCountersAndFlagOnChange();
+
+        if (this._usePostFixedUpdate) {
+
+            // #if _PROFILER
+            this._stats.physicsStart = now();
+            // #endif
+
+            this._fixedTime += dt;
+            this._lastFixedTimeStep = dt;
+
+            this._beforeStepSimulation(dt);
+
+            // Performs one physics step without applying interpolation
+            this.dynamicsWorld.stepSimulation(dt, 0);
+
+            this._afterStepSimulation(dt);
+
+            // ???
+            // #if _PROFILER
+            this._stats.physicsTime = now() - this._stats.physicsStart;
+            // #endif
+        }
+    }
+
+    onUpdate(dt) {
+
+        this._resetTimeCountersAndFlagOnChange();
+
+        if (this._usePostFixedUpdate) {
+
+            this._dynamicTime += dt;
+
+            // Apply transform interpolation to all entities referencing the dynamic body.
+            // subtract lastFixedTimeStep to synchronize the transformation
+            // between the last fixedUpdate and postFixedUpdate
+            const extrapolationTime = this._dynamicTime - this._fixedTime - this._lastFixedTimeStep * 2;
+
+            const dynamic = this._dynamic;
+            for (let i = 0, len = dynamic.length; i < len; i++) {
+                dynamic[i]._applyInterpolation(extrapolationTime);
+            }
+
+        } else {
+
+            // #if _PROFILER
+            this._stats.physicsStart = now();
+            // #endif
+
+            this._beforeStepSimulation(dt);
+
+            // Step the physics simulation
+            this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
+
+            this._afterStepSimulation(dt);
+
+            // #if _PROFILER
+            this._stats.physicsTime = now() - this._stats.physicsStart;
+            // #endif
+        }
     }
 
     destroy() {
         super.destroy();
 
+        this.app.systems.off('postFixedUpdate', this.onPostFixedUpdate, this);
         this.app.systems.off('update', this.onUpdate, this);
 
         if (typeof Ammo !== 'undefined') {

@@ -122,6 +122,13 @@ class AppOptions {
      * @type {typeof ResourceHandler[]}
      */
     resourceHandlers = [];
+
+    /**
+     * Use event postFixedUpdate for physics simulation
+     *
+     * @type {boolean}
+     */
+    usePostFixedUpdateForPhysicsSim = false;
 }
 
 export { AppOptions };

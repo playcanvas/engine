@@ -189,6 +189,9 @@ class AppBase extends EventHandler {
     /** @ignore */
     _time = 0;
 
+    /** @ignore */
+    _fixedTimeDebt = 0;
+
     /**
      * Set this to false if you want to run without using bundles. We set it to true only if
      * TextDecoder is available because we currently rely on it for untarring.
@@ -214,6 +217,24 @@ class AppBase extends EventHandler {
      * this.app.timeScale = 0.5;
      */
     timeScale = 1;
+
+    /**
+     * A frame rate independent interval that dictates when fixedUpdate, postFixedUpdate events are performed. Defaults to 0.02.
+     *
+     * @type {number}
+     * @example
+     * this.app.fixedTimeStep = 0.02; // (1 / 50) fixedUpdate calls 50 times per second
+     */
+    fixedTimeStep = 1 / 50;
+
+    /**
+     * Use event postFixedUpdate for physics simulation. Defaults to false.
+     *
+     * @type {boolean}
+     * @example
+     * this.app.usePostFixedUpdateForPhysicsSim = true;
+     */
+    usePostFixedUpdateForPhysicsSim = false;
 
     /**
      * Clamps per-frame delta time to an upper bound. Useful since returning from a tab
@@ -481,8 +502,10 @@ class AppBase extends EventHandler {
     init(appOptions) {
         const {
             assetPrefix, batchManager, componentSystems, elementInput, gamepads, graphicsDevice, keyboard,
-            lightmapper, mouse, resourceHandlers, scriptsOrder, scriptPrefix, soundManager, touch, xr
+            lightmapper, mouse, resourceHandlers, scriptsOrder, scriptPrefix, soundManager, touch, xr, usePostFixedUpdateForPhysicsSim
         } = appOptions;
+
+        this.usePostFixedUpdateForPhysicsSim = !!usePostFixedUpdateForPhysicsSim;
 
         Debug.assert(graphicsDevice, 'The application cannot be created without a valid GraphicsDevice');
         this.graphicsDevice = graphicsDevice;
@@ -1023,6 +1046,7 @@ class AppBase extends EventHandler {
      * @param {number} dt - The time delta in seconds since the last frame.
      */
     update(dt) {
+
         this.frame++;
 
         Debug.call(() => {
@@ -1033,6 +1057,27 @@ class AppBase extends EventHandler {
 
         // #if _PROFILER
         this.stats.frame.updateStart = now();
+        // #endif
+
+        this._fixedTimeDebt += dt;
+
+        let fixedStepsCounter = 0;
+
+        while (this._fixedTimeDebt >= this.fixedTimeStep) {
+
+            // we will save the value, because at the time of processing, it can be changed from the outside
+            const fixedTimeStep = this.fixedTimeStep;
+
+            this.systems.fire(this._inTools ? 'toolsFixedUpdate' : 'fixedUpdate', fixedTimeStep, fixedStepsCounter);
+            this.systems.fire(this._inTools ? 'toolsPostFixedUpdate' : 'postFixedUpdate', fixedTimeStep, fixedStepsCounter);
+            this.fire('fixedUpdate', fixedTimeStep);
+            this._fixedTimeDebt -= fixedTimeStep;
+
+            fixedStepsCounter++;
+        }
+
+        // #if _PROFILER
+        this.stats.frame.fixedUpdateCount = fixedStepsCounter;
         // #endif
 
         this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
