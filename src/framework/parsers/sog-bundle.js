@@ -253,6 +253,7 @@ class SogBundleParser {
             const minimalMemory = asset.options?.minimalMemory ?? false;
 
             const data = new GSplatSogsData();
+            data.url = url.original;
             data.minimalMemory = minimalMemory;
             data.meta = meta;
             data.numSplats = meta.count;

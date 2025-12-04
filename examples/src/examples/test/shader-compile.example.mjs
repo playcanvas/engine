@@ -22,7 +22,9 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType]
+    deviceTypes: [deviceType],
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

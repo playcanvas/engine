@@ -1,3 +1,4 @@
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -19,8 +20,7 @@ const assets = {
         'texture',
         { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
-    ),
-    bloom: new pc.Asset('bloom', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-bloom.js` })
+    )
 };
 
 const gfxOptions = {
@@ -40,13 +40,11 @@ createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
     pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
     pc.AnimComponentSystem
 ];
 createOptions.resourceHandlers = [
     pc.TextureHandler,
     pc.ContainerHandler,
-    pc.ScriptHandler,
     pc.AnimClipHandler,
     pc.AnimStateGraphHandler
 ];
@@ -78,15 +76,6 @@ assetListLoader.load(() => {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
     cameraEntity.translate(0, 0.75, 3);
-    // add bloom postprocessing (this is ignored by the picker)
-    cameraEntity.addComponent('script');
-    cameraEntity.script.create('bloom', {
-        attributes: {
-            bloomIntensity: 1,
-            bloomThreshold: 0.7,
-            blurAmount: 4
-        }
-    });
     app.root.addChild(cameraEntity);
 
     // Create an entity with a light component
@@ -182,6 +171,33 @@ assetListLoader.load(() => {
     characterStateLayer.assignAnimation('Emote.Eager', assets.eagerAnim.resource.animations[0].resource);
     characterStateLayer.assignAnimation('Emote.Dance', assets.danceAnim.resource.animations[0].resource);
     characterStateLayer.assignAnimation('Emote.Walk', assets.walkAnim.resource.animations[0].resource);
+
+    // Initialize observer data
+    data.set('data', {
+        pos: { x: -0.5, y: 0.5 },
+        animPoints: []
+    });
+
+    // Helper to update animation points for visualization
+    const updateAnimPoints = () => {
+        const points = characterStateLayer._controller._states.Emote.animations.map((/** @type {any} */ animNode) => ({
+            x: animNode.point?.x ?? 0,
+            y: animNode.point?.y ?? 0,
+            weight: animNode.weight ?? 0
+        }));
+        data.set('data.animPoints', points);
+    };
+
+    // Set initial animation points
+    updateAnimPoints();
+
+    // Listen for position changes from controls
+    data.on('data.pos:set', (value) => {
+        modelEntity.anim.setFloat('posX', value.x);
+        modelEntity.anim.setFloat('posY', value.y);
+        // Update animation points when position changes (weights recalculate)
+        updateAnimPoints();
+    });
 
     app.root.addChild(modelEntity);
 

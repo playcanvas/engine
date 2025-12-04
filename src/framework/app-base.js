@@ -1025,6 +1025,10 @@ class AppBase extends EventHandler {
     update(dt) {
         this.frame++;
 
+        Debug.call(() => {
+            this.assets.log();
+        });
+
         this.graphicsDevice.update();
 
         // #if _PROFILER

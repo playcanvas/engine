@@ -1,18 +1,15 @@
-import * as pc from 'playcanvas';
-
 /**
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export const controls = ({ React, jsx, fragment }) => {
+export const controls = ({ observer, React, jsx, fragment }) => {
     const { useEffect, useRef } = React;
     /** @type {React.MutableRefObject<HTMLCanvasElement>} */
     const canvasRef = useRef(null);
     useEffect(() => {
         const canvas = canvasRef.current;
-        // @ts-ignore engine-tsd
-        /** @type {pc.Entity} */
-        const modelEntity = pc.app.root.findByName('model');
+        if (!canvas) return;
+
         const width = window.top.controlPanel.offsetWidth;
         const height = width;
         const halfWidth = Math.floor(width / 2);
@@ -21,8 +18,11 @@ export const controls = ({ React, jsx, fragment }) => {
         canvas.setAttribute('width', width);
         canvas.setAttribute('height', height);
         const ctx = canvas.getContext('2d');
-        let position = new pc.Vec2();
-        const drawPosition = (ctx) => {
+
+        const drawPosition = () => {
+            const animPoints = observer.get('data.animPoints') || [];
+            const pos = observer.get('data.pos') || { x: 0, y: 0 };
+
             ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = 'rgba(128, 128, 128, 0.5)';
             ctx.fillRect(0, 0, width, height);
@@ -30,34 +30,33 @@ export const controls = ({ React, jsx, fragment }) => {
             ctx.fillRect(halfWidth, 0, 1, height);
             ctx.fillRect(0, halfHeight, width, 1);
             ctx.fillStyle = '#232e30';
-            // @ts-ignore engine-tsd
-            modelEntity.anim?.baseLayer._controller._states.Travel.animations.forEach((animNode) => {
-                if (animNode.point) {
-                    const posX = (animNode.point.x + 1) * halfWidth;
-                    const posY = (animNode.point.y * -1 + 1) * halfHeight;
-                    const width = 8;
-                    const height = 8;
 
-                    ctx.fillStyle = '#ffffff80';
-                    ctx.beginPath();
-                    ctx.arc(posX, posY, halfWidth * 0.5 * animNode.weight, 0, 2 * Math.PI);
-                    ctx.fill();
+            animPoints.forEach((animNode) => {
+                const pointX = (animNode.x + 1) * halfWidth;
+                const pointY = (animNode.y * -1 + 1) * halfHeight;
+                const dotWidth = 8;
+                const dotHeight = 8;
 
-                    ctx.fillStyle = '#283538';
-                    ctx.beginPath();
-                    ctx.moveTo(posX, posY - height / 2);
-                    ctx.lineTo(posX - width / 2, posY);
-                    ctx.lineTo(posX, posY + height / 2);
-                    ctx.lineTo(posX + width / 2, posY);
-                    ctx.closePath();
-                    ctx.fill();
-                }
+                ctx.fillStyle = '#ffffff80';
+                ctx.beginPath();
+                ctx.arc(pointX, pointY, halfWidth * 0.5 * animNode.weight, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.fillStyle = '#283538';
+                ctx.beginPath();
+                ctx.moveTo(pointX, pointY - dotHeight / 2);
+                ctx.lineTo(pointX - dotWidth / 2, pointY);
+                ctx.lineTo(pointX, pointY + dotHeight / 2);
+                ctx.lineTo(pointX + dotWidth / 2, pointY);
+                ctx.closePath();
+                ctx.fill();
             });
+
             ctx.fillStyle = '#F60';
             ctx.beginPath();
             ctx.arc(
-                (modelEntity.anim.getFloat('posX') + 1) * halfWidth,
-                (modelEntity.anim.getFloat('posY') * -1 + 1) * halfHeight,
+                (pos.x + 1) * halfWidth,
+                (pos.y * -1 + 1) * halfHeight,
                 5,
                 0,
                 2 * Math.PI
@@ -66,18 +65,30 @@ export const controls = ({ React, jsx, fragment }) => {
             ctx.fillStyle = '#283538';
             ctx.stroke();
         };
-        drawPosition(ctx);
+
+
+        // Initial draw
+        drawPosition();
+
+        observer.on('*:set', drawPosition);
+
         const mouseEvent = (e) => {
             if (e.buttons) {
-                position = new pc.Vec2(e.offsetX, e.offsetY).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
-                position.y *= -1.0;
-                modelEntity.anim.setFloat('posX', position.x);
-                modelEntity.anim.setFloat('posY', position.y);
-                drawPosition(ctx);
+                const rect = canvas.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / (width / 2)) - 1;
+                const y = -(((e.clientY - rect.top) / (height / 2)) - 1);
+                observer.set('data.pos', { x, y });
             }
         };
+
         canvas.addEventListener('mousemove', mouseEvent);
         canvas.addEventListener('mousedown', mouseEvent);
-    });
+
+        return () => {
+            canvas.removeEventListener('mousemove', mouseEvent);
+            canvas.removeEventListener('mousedown', mouseEvent);
+        };
+    }, [observer]);
+
     return fragment(jsx('canvas', { ref: canvasRef }));
 };
