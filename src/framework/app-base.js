@@ -977,7 +977,20 @@ class AppBase extends EventHandler {
         this.systems.fire('postPostInitialize', this.root);
         this.fire('postinitialize');
 
-        this.tick();
+        this.requestAnimationFrame();
+    }
+
+    /**
+     * Request the next animation frame tick.
+     *
+     * @ignore
+     */
+    requestAnimationFrame() {
+        if (this.xr?.session) {
+            this.frameRequestId = this.xr.session.requestAnimationFrame(this.tick);
+        } else {
+            this.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(this.tick) : null;
+        }
     }
 
     /**
@@ -1011,6 +1024,10 @@ class AppBase extends EventHandler {
      */
     update(dt) {
         this.frame++;
+
+        Debug.call(() => {
+            this.assets.log();
+        });
 
         this.graphicsDevice.update();
 
@@ -1893,15 +1910,6 @@ class AppBase extends EventHandler {
             this.scene.layers.destroy();
         }
 
-        // destroy all texture resources
-        const assets = this.assets.list();
-        for (let i = 0; i < assets.length; i++) {
-            assets[i].unload();
-            assets[i].off();
-        }
-        this.assets.off();
-
-
         // destroy bundle registry
         this.bundles.destroy();
         this.bundles = null;
@@ -1914,9 +1922,6 @@ class AppBase extends EventHandler {
 
         this.loader.destroy();
         this.loader = null;
-
-        this.scene.destroy();
-        this.scene = null;
 
         this.systems = null;
         this.context = null;
@@ -1949,6 +1954,18 @@ class AppBase extends EventHandler {
         this.renderer.destroy();
         this.renderer = null;
 
+        // destroy all resources. Do this after managers have been destroyed
+        const assets = this.assets.list();
+        for (let i = 0; i < assets.length; i++) {
+            assets[i].unload();
+            assets[i].off();
+        }
+        this.assets.off();
+
+        // destroy scene after assets are unloaded (components need scene.layers during asset cleanup)
+        this.scene.destroy();
+        this.scene = null;
+
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
 
@@ -1972,7 +1989,7 @@ class AppBase extends EventHandler {
 
     static cancelTick(app) {
         if (app.frameRequestId) {
-            window.cancelAnimationFrame(app.frameRequestId);
+            cancelAnimationFrame(app.frameRequestId);
             app.frameRequestId = undefined;
         }
     }
@@ -2038,11 +2055,7 @@ const makeTick = function (_app) {
         application._time = currentTime;
 
         // Submit a request to queue up a new animation frame immediately
-        if (application.xr?.session) {
-            application.frameRequestId = application.xr.session.requestAnimationFrame(application.tick);
-        } else {
-            application.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(application.tick) : null;
-        }
+        application.requestAnimationFrame();
 
         if (application.graphicsDevice.contextLost) {
             return;

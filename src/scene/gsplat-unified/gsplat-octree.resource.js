@@ -6,16 +6,26 @@ class GSplatOctreeResource {
     /** @type {BoundingBox} */
     aabb = new BoundingBox();
 
-    /** @type {GSplatOctree} */
+    /** @type {GSplatOctree|null} */
     octree;
 
     /**
      * @param {string} assetFileUrl - The file URL of the container asset.
      * @param {object} data - Parsed JSON data.
+     * @param {object} assetLoader - Asset loader instance (framework-level object).
      */
-    constructor(assetFileUrl, data) {
+    constructor(assetFileUrl, data, assetLoader) {
         this.octree = new GSplatOctree(assetFileUrl, data);
+        this.octree.assetLoader = assetLoader;
         this.aabb.setMinMax(new Vec3(data.tree.bound.min), new Vec3(data.tree.bound.max));
+    }
+
+    /**
+     * Destroys the octree resource and cleans up all associated resources.
+     */
+    destroy() {
+        this.octree?.destroy();
+        this.octree = null;
     }
 }
 

@@ -35,7 +35,10 @@ const _lodColorsRaw = [
     [0, 1, 0],  // green
     [0, 0, 1],  // blue
     [1, 1, 0],  // yellow
-    [1, 0, 1]   // magenta
+    [1, 0, 1],  // magenta
+    [0, 1, 1],  // cyan
+    [1, 0.5, 0],  // orange
+    [0.5, 0, 1]   // purple
 ];
 
 // Color instances used by debug wireframe rendering
@@ -44,7 +47,10 @@ const _lodColors = [
     new Color(0, 1, 0),
     new Color(0, 0, 1),
     new Color(1, 1, 0),
-    new Color(1, 0, 1)
+    new Color(1, 0, 1),
+    new Color(0, 1, 1),
+    new Color(1, 0.5, 0),
+    new Color(0.5, 0, 1)
 ];
 
 let _randomColorRaw = null;
@@ -61,9 +67,6 @@ class GSplatManager {
 
     /** @type {GraphNode} */
     node = new GraphNode('GSplatManager');
-
-    /** @type {number} */
-    cooldownTicks;
 
     /** @type {GSplatWorkBuffer} */
     workBuffer;
@@ -157,10 +160,32 @@ class GSplatManager {
         this.workBuffer = new GSplatWorkBuffer(device);
         this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
         this.sorter = this.createSorter();
-        this.cooldownTicks = this.director.assetLoader.cooldownTicks;
     }
 
     destroy() {
+        this._destroyed = true;
+
+        // Clean up all world states and decrement refs
+        for (const [, worldState] of this.worldStates) {
+            for (const splat of worldState.splats) {
+                splat.resource.decRefCount();
+            }
+            worldState.destroy();
+        }
+        this.worldStates.clear();
+
+        // Destroy all octree instances (they handle their own ref count cleanup)
+        for (const [, instance] of this.octreeInstances) {
+            instance.destroy();
+        }
+        this.octreeInstances.clear();
+
+        // Also destroy any queued instances
+        for (const instance of this.octreeInstancesToDestroy) {
+            instance.destroy();
+        }
+        this.octreeInstancesToDestroy.length = 0;
+
         this.workBuffer.destroy();
         this.renderer.destroy();
         this.sorter.destroy();
@@ -193,7 +218,8 @@ class GSplatManager {
 
                 // make sure octree instance exists for placement
                 if (!this.octreeInstances.has(p)) {
-                    this.octreeInstances.set(p, new GSplatOctreeInstance(p.resource.octree, p, this.director.assetLoader));
+                    // @ts-ignore - p.resource is GSplatOctreeResource so octree cannot be null
+                    this.octreeInstances.set(p, new GSplatOctreeInstance(this.device, p.resource.octree, p));
 
                     // mark that we have new instances that need initial LOD evaluation
                     this.hasNewOctreeInstances = true;
@@ -275,6 +301,11 @@ class GSplatManager {
 
             const newState = new GSplatWorldState(this.device, this.lastWorldStateVersion, splats);
 
+            // increment ref count for all resources in new state
+            for (const splat of newState.splats) {
+                splat.resource.incRefCount();
+            }
+
             // collect file-release requests from octree instances.
             for (const [, inst] of this.octreeInstances) {
                 if (inst.removedCandidates && inst.removedCandidates.size) {
@@ -316,6 +347,10 @@ class GSplatManager {
         for (let v = this.sortedVersion; v < version; v++) {
             const oldState = this.worldStates.get(v);
             if (oldState) {
+                // decrement ref count for all resources in old state
+                for (const splat of oldState.splats) {
+                    splat.resource.decRefCount();
+                }
                 this.worldStates.delete(v);
                 oldState.destroy();
             }
@@ -357,9 +392,10 @@ class GSplatManager {
 
                 // apply pending file-release requests
                 if (worldState.pendingReleases && worldState.pendingReleases.length) {
+                    const cooldownTicks = this.scene.gsplat.cooldownTicks;
                     for (const [octree, fileIndex] of worldState.pendingReleases) {
                         // decrement once for each staged release; refcount system guards against premature unload
-                        octree.decRefCount(fileIndex, this.cooldownTicks);
+                        octree.decRefCount(fileIndex, cooldownTicks);
                     }
                     worldState.pendingReleases.length = 0;
                 }
@@ -506,15 +542,13 @@ class GSplatManager {
     fireFrameReadyEvent() {
         const ready = this.sortedVersion === this.lastWorldStateVersion;
 
-        // Check loader queue and octree instances' pending loads
-        let loading = this.director.assetLoader.isLoading;
-        if (!loading) {
-            for (const [, inst] of this.octreeInstances) {
-                loading ||= inst.hasPendingLoads;
-            }
+        // Count total pending loads from octree instances (including environment)
+        let loadingCount = 0;
+        for (const [, inst] of this.octreeInstances) {
+            loadingCount += inst.pendingLoadCount;
         }
 
-        this.director.eventHandler.fire('frame:ready', this.cameraNode.camera, this.renderer.layer, ready, loading);
+        this.director.eventHandler.fire('frame:ready', this.cameraNode.camera, this.renderer.layer, ready, loadingCount);
     }
 
     update() {
@@ -554,6 +588,19 @@ class GSplatManager {
                 const instNeeds = inst.consumeNeedsLodUpdate();
                 anyInstanceNeedsLodUpdate ||= instNeeds;
             }
+
+            // Validate that resources in use haven't been unexpectedly destroyed
+            Debug.call(() => {
+                const sortedState = this.worldStates.get(this.sortedVersion);
+                if (sortedState) {
+                    for (const splat of sortedState.splats) {
+                        // Check if resource reference is null or undefined
+                        if (!splat.resource) {
+                            Debug.warn(`GSplatManager: Resource reference is null but still referenced in world state ${sortedState.version}`);
+                        }
+                    }
+                }
+            });
 
             // check if any octree instances have moved enough to require LOD update
             const threshold = this.scene.gsplat.lodUpdateDistance;
@@ -699,11 +746,12 @@ class GSplatManager {
 
         // tick cooldowns once per frame per unique octree
         if (this.octreeInstances.size) {
+            const cooldownTicks = this.scene.gsplat.cooldownTicks;
             for (const [, inst] of this.octreeInstances) {
                 const octree = inst.octree;
                 if (!tempOctreesTicked.has(octree)) {
                     tempOctreesTicked.add(octree);
-                    octree.updateCooldownTick(this.director.assetLoader);
+                    octree.updateCooldownTick(cooldownTicks);
                 }
             }
             tempOctreesTicked.clear();

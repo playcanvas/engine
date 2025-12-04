@@ -49,6 +49,12 @@ class GSplatResourceBase {
     /** @type {Map<string, WorkBufferRenderInfo>} */
     workBufferRenderInfos = new Map();
 
+    /**
+     * @type {number}
+     * @private
+     */
+    _refCount = 0;
+
     constructor(device, gsplatData) {
         this.device = device;
         this.gsplatData = gsplatData;
@@ -73,6 +79,39 @@ class GSplatResourceBase {
         this.instanceIndices?.destroy();
         this.workBufferRenderInfos.forEach(info => info.destroy());
         this.workBufferRenderInfos.clear();
+    }
+
+    /**
+     * Increments the reference count.
+     *
+     * @ignore
+     */
+    incRefCount() {
+        this._refCount++;
+    }
+
+    /**
+     * Decrements the reference count.
+     *
+     * @ignore
+     */
+    decRefCount() {
+        this._refCount--;
+    }
+
+    /**
+     * Gets the current reference count. This represents how many times this resource is currently
+     * being used internally by the engine. For {@link GSplatComponent#asset|assets} assigned to
+     * {@link GSplatComponent#unified|unified} gsplat components, this tracks active usage during
+     * rendering and sorting operations.
+     *
+     * Resources should not be unloaded while the reference count is non-zero, as they are still
+     * in use by the rendering pipeline.
+     *
+     * @type {number}
+     */
+    get refCount() {
+        return this._refCount;
     }
 
     /**

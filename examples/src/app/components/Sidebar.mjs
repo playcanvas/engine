@@ -1,7 +1,7 @@
 import { Observer } from '@playcanvas/observer';
 import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
 import { Component } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import { exampleMetaData } from '../../../cache/metadata.mjs';
 import { MIN_DESKTOP_WIDTH, VERSION } from '../constants.mjs';
@@ -10,16 +10,15 @@ import { jsx } from '../jsx.mjs';
 import { thumbnailPath } from '../paths.mjs';
 import { getOrientation } from '../utils.mjs';
 
-// eslint-disable-next-line jsdoc/require-property
 /**
  * @typedef {object} Props
+ * @property {{ pathname: string, hash: string }} location - The router location.
  */
 
 /**
  * @typedef {object} State
  * @property {Record<string, Record<string, object>>} defaultCategories - The default categories.
  * @property {Record<string, Record<string, object>>|null} filteredCategories - The filtered categories.
- * @property {string} hash - The hash.
  * @property {Observer} observer - The observer.
  * @property {boolean} collapsed - Collapsed or not.
  * @property {string} orientation - Current orientation.
@@ -52,7 +51,6 @@ class SideBar extends TypedComponent {
     state = {
         defaultCategories: getDefaultExampleFiles(),
         filteredCategories: null,
-        hash: location.hash,
         observer: new Observer({ largeThumbnails: false }),
         // @ts-ignore
         collapsed: localStorage.getItem('sideBarCollapsed') === 'true' || window.top.innerWidth < MIN_DESKTOP_WIDTH,
@@ -99,9 +97,6 @@ class SideBar extends TypedComponent {
         if (!sideBar) {
             return;
         }
-        window.addEventListener('hashchange', () => {
-            this.mergeState({ hash: location.hash });
-        });
         this.state.observer.on('largeThumbnails:set', () => {
             let minTopNavItemDistance = Number.MAX_VALUE;
 
@@ -207,7 +202,7 @@ class SideBar extends TypedComponent {
         if (Object.keys(categories).length === 0) {
             return jsx(Label, { text: 'No results' });
         }
-        const { hash } = this.state;
+        const { pathname } = this.props.location;
         return Object.keys(categories)
         .sort((a, b) => (a > b ? 1 : -1))
         .map((category) => {
@@ -229,7 +224,7 @@ class SideBar extends TypedComponent {
                     .sort((a, b) => (a > b ? 1 : -1))
                     .map((example) => {
                         const path = `/${category}/${example}`;
-                        const isSelected = new RegExp(`${path}$`).test(hash);
+                        const isSelected = pathname === path;
                         const className = `nav-item ${isSelected ? 'selected' : null}`;
                         return jsx(
                             Link,
@@ -303,4 +298,13 @@ class SideBar extends TypedComponent {
     }
 }
 
-export { SideBar };
+/**
+ * Wrapper component to provide router location to the class component.
+ * @returns {JSX.Element} The SideBar component with router location.
+ */
+function SideBarWithRouter() {
+    const location = useLocation();
+    return jsx(SideBar, { location });
+}
+
+export { SideBarWithRouter as SideBar };

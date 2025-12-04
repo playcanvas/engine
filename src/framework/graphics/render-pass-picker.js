@@ -1,7 +1,7 @@
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { SHADER_PICK } from '../../scene/constants.js';
+import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
 
 /**
  * @import { BindGroup } from '../../platform/graphics/bind-group.js'
@@ -32,11 +32,12 @@ class RenderPassPicker extends RenderPass {
         this.viewBindGroups.length = 0;
     }
 
-    update(camera, scene, layers, mapping) {
+    update(camera, scene, layers, mapping, depth) {
         this.camera = camera;
         this.scene = scene;
         this.layers = layers;
         this.mapping = mapping;
+        this.depth = depth;
 
         if (scene.clusteredLightingEnabled) {
             this.emptyWorldClusters = this.renderer.worldClustersAllocator.empty;
@@ -99,10 +100,13 @@ class RenderPassPicker extends RenderPass {
 
                         renderer.setCameraUniforms(camera.camera, renderTarget);
                         if (device.supportsUniformBuffers) {
+                            // Initialize view bind group format if not already done
+                            renderer.initViewBindGroupFormat(clusteredLightingEnabled);
                             renderer.setupViewUniformBuffers(this.viewBindGroups, renderer.viewUniformFormat, renderer.viewBindGroupFormat, null);
                         }
 
-                        renderer.renderForward(camera.camera, renderTarget, tempMeshInstances, lights, SHADER_PICK, (meshInstance) => {
+                        const shaderPass = this.depth ? SHADER_DEPTH_PICK : SHADER_PICK;
+                        renderer.renderForward(camera.camera, renderTarget, tempMeshInstances, lights, shaderPass, (meshInstance) => {
                             device.setBlendState(BlendState.NOBLEND);
                         });
 

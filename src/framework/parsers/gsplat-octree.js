@@ -1,5 +1,6 @@
 import { http, Http } from '../../platform/net/http.js';
 import { GSplatOctreeResource } from '../../scene/gsplat-unified/gsplat-octree.resource.js';
+import { GSplatAssetLoader } from '../components/gsplat/gsplat-asset-loader.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -49,7 +50,8 @@ class GSplatOctreeParser {
         http.get(url.load, options, (err, data) => {
             if (!err) {
                 // create a resource with the parsed data, passing the asset's file URL
-                const resource = new GSplatOctreeResource(asset.file.url, data);
+                const assetLoader = new GSplatAssetLoader(this.app.assets);
+                const resource = new GSplatOctreeResource(asset.file.url, data, assetLoader);
                 callback(null, resource);
             } else {
                 callback(`Error loading gsplat octree: ${url.original} [${err}]`);

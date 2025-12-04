@@ -114,7 +114,7 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 1;
     app.scene.exposure = 1.5;
 
-    // Mini-Stats: add VRAM on top of default stats
+    // Mini-Stats: add VRAM and gsplats on top of default stats
     const msOptions = pc.MiniStats.getDefaultOptions();
     msOptions.stats.push({
         name: 'VRAM',
@@ -123,6 +123,14 @@ assetListLoader.load(() => {
         multiplier: 1 / (1024 * 1024),
         unitsName: 'MB',
         watermark: 1024
+    });
+    msOptions.stats.push({
+        name: 'GSplats',
+        stats: ['frame.gsplats'],
+        decimalPlaces: 3,
+        multiplier: 1 / 1000000,
+        unitsName: 'M',
+        watermark: 10
     });
     const miniStats = new pc.MiniStats(app, msOptions); // eslint-disable-line no-unused-vars
 
@@ -136,6 +144,7 @@ assetListLoader.load(() => {
     // initialize UI settings
     data.set('debugLod', false);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
+    data.set('splatBudget', pc.platform.mobile ? '1M' : '4M');
 
     app.scene.gsplat.colorizeLod = !!data.get('debugLod');
 
@@ -165,6 +174,22 @@ assetListLoader.load(() => {
 
     applyPreset();
     data.on('lodPreset:set', applyPreset);
+
+    const applySplatBudget = () => {
+        const preset = data.get('splatBudget');
+        const budgetMap = {
+            'none': 0,
+            '1M': 1000000,
+            '2M': 2000000,
+            '3M': 3000000,
+            '4M': 4000000,
+            '6M': 6000000
+        };
+        app.scene.gsplat.splatBudget = budgetMap[preset] || 0;
+    };
+
+    applySplatBudget();
+    data.on('splatBudget:set', applySplatBudget);
 
     // Create a camera with fly controls
     const camera = new pc.Entity('camera');

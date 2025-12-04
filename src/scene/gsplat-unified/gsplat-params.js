@@ -198,6 +198,38 @@ class GSplatParams {
     }
 
     /**
+     * @type {number}
+     * @private
+     */
+    _splatBudget = 0;
+
+    /**
+     * Soft limit on the total number of splats to render. When the optimal LOD selections would
+     * exceed this budget, the system will adjust LOD levels to stay within the limit while
+     * prioritizing quality for closer/more important geometry.
+     *
+     * Set to 0 to disable the budget (default). When disabled, optimal LOD is determined purely
+     * by distance and configured LOD parameters.
+     *
+     * @type {number}
+     */
+    set splatBudget(value) {
+        if (this._splatBudget !== value) {
+            this._splatBudget = value;
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets the splat budget limit.
+     *
+     * @type {number}
+     */
+    get splatBudget() {
+        return this._splatBudget;
+    }
+
+    /**
      * @type {import('../../platform/graphics/texture.js').Texture|null}
      * @private
      */
@@ -284,6 +316,16 @@ class GSplatParams {
      * @type {number}
      */
     colorUpdateAngleLodScale = 2;
+
+    /**
+     * Number of update ticks before unloading unused streamed resources. When a streamed resource's
+     * reference count reaches zero, it enters a cooldown period before being unloaded. This allows
+     * recently used data to remain in memory for quick reuse if needed again soon. Set to 0 to
+     * unload immediately when unused. Defaults to 100.
+     *
+     * @type {number}
+     */
+    cooldownTicks = 100;
 }
 
 export { GSplatParams };

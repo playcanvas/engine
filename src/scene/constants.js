@@ -812,6 +812,9 @@ export const SHADER_SHADOW = 2;
 // shader pass used by the Picker class to render mesh ID
 export const SHADER_PICK = 3;
 
+// shader pass used by the Picker class to render mesh ID and depth
+export const SHADER_DEPTH_PICK = 4;
+
 /**
  * Shader that performs forward rendering.
  *

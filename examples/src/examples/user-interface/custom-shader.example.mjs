@@ -10,9 +10,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -72,8 +70,10 @@ assetListLoader.load(() => {
     // Create a new material with the new shader and additive alpha blending
     const material = new pc.ShaderMaterial({
         uniqueName: 'myUIShader',
-        vertexGLSL: files['shader.vert'],
-        fragmentGLSL: files['shader.frag'],
+        vertexGLSL: files['shader.glsl.vert'],
+        fragmentGLSL: files['shader.glsl.frag'],
+        vertexWGSL: files['shader.wgsl.vert'],
+        fragmentWGSL: files['shader.wgsl.frag'],
         attributes: {
             vertex_position: pc.SEMANTIC_POSITION,
             vertex_texCoord0: pc.SEMANTIC_TEXCOORD0

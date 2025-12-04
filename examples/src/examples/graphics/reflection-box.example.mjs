@@ -12,9 +12,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -289,7 +287,7 @@ assetListLoader.load(() => {
         farClip: 500
     });
 
-    // Add a cubemap renderer script, which renders to a cubemap of size 128 with mipmaps, which is directly useable
+    // Add a cubemap renderer script, which renders to a cubemap of size 128 with mipmaps, which is directly usable
     // as a lighting source for envAtlas generation
     // Position it in the center of the room.
     probe.script.create('cubemapRenderer', {

@@ -7,4 +7,12 @@ vec4 getPickOutput() {
     uvec4 col = (uvec4(meshInstanceId) >> shifts) & uvec4(0xff);
     return vec4(col) * inv;
 }
+
+#ifdef DEPTH_PICK_PASS
+    #include "floatAsUintPS"
+
+    vec4 getPickDepth() {
+        return float2uint(gl_FragCoord.z);
+    }
+#endif
 `;

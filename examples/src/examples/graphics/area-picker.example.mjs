@@ -1,3 +1,4 @@
+// @config DESCRIPTION Click on objects to detect world space intersection. Objects within the colored rectangles are highlighted.
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -5,7 +6,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    bloom: new pc.Asset('bloom', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-bloom.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
@@ -15,9 +15,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -28,8 +26,8 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
 createOptions.touch = new pc.TouchDevice(document.body);
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.ScriptComponentSystem];
-createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler];
+createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
+createOptions.resourceHandlers = [pc.TextureHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -86,7 +84,7 @@ assetListLoader.load(() => {
 
     // Create an instance of the picker class
     // Lets use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
-    const picker = new pc.Picker(app, canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
+    const picker = new pc.Picker(app, canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale, true);
 
     /**
      * Helper function to create a primitive with shape type, position, scale.
@@ -124,17 +122,13 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
-
-    // add bloom postprocessing (this is ignored by the picker)
-    camera.addComponent('script');
-    camera.script.create('bloom', {
-        attributes: {
-            bloomIntensity: 1,
-            bloomThreshold: 0.7,
-            blurAmount: 4
-        }
-    });
     app.root.addChild(camera);
+
+    // ------ Custom render passes with bloom ------
+    const cameraFrame = new pc.CameraFrame(app, camera.camera);
+    cameraFrame.bloom.intensity = 0.01;
+    cameraFrame.bloom.blurLevel = 4;
+    cameraFrame.update();
 
     /**
      * Function to draw a 2D rectangle in the screen space coordinates.
@@ -167,6 +161,7 @@ assetListLoader.load(() => {
      */
     function highlightMaterial(material, color) {
         material.emissive = color;
+        material.emissiveIntensity = 30;
         material.update();
     }
 
@@ -177,6 +172,30 @@ assetListLoader.load(() => {
     // the layers picker renders
     const worldLayer = app.scene.layers.getLayerByName('World');
     const pickerLayers = [worldLayer];
+
+    // marker sphere to show the picked world point
+    const marker = createPrimitive('sphere', pc.Vec3.ZERO, new pc.Vec3(0.2, 0.2, 0.2));
+    const markerMaterial = new pc.StandardMaterial();
+    markerMaterial.emissive = new pc.Color(0, 1, 0);
+    markerMaterial.emissiveIntensity = 100;
+    marker.render.material = markerMaterial;
+    marker.render.meshInstances[0].pick = false;
+    marker.enabled = false;
+    app.root.addChild(marker);
+
+    // store pending pick request
+    /** @type {{ x: number, y: number } | null} */
+    let pendingPickRequest = null;
+
+    // handle mouse click to pick world point
+    const mouse = new pc.Mouse(document.body);
+    mouse.on('mousedown', (event) => {
+        // store the pick request to be processed after picker.prepare
+        pendingPickRequest = {
+            x: event.x * pickerScale,
+            y: event.y * pickerScale
+        };
+    });
 
     // update each frame
     let time = 0;
@@ -251,6 +270,8 @@ assetListLoader.load(() => {
             // turn off previously highlighted meshes
             for (let h = 0; h < highlights.length; h++) {
                 highlightMaterial(highlights[h], pc.Color.BLACK);
+                // Reset emissive intensity when turning off
+                highlights[h].emissiveIntensity = 0;
             }
             highlights.length = 0;
 
@@ -268,6 +289,33 @@ assetListLoader.load(() => {
                 }
             }
         });
+
+        // process pending pick request after picker.prepare has been called
+        if (pendingPickRequest && picker) {
+            const { x, y } = pendingPickRequest;
+            pendingPickRequest = null;
+
+            picker.getWorldPointAsync(x, y).then((worldPoint) => {
+                if (worldPoint) {
+                    marker.enabled = true;
+                    marker.setPosition(worldPoint);
+                } else {
+                    marker.enabled = false;
+                }
+            });
+        }
+
+        // display the picker's buffers side by side in the bottom right corner
+        // color buffer (left) and depth buffer (right), with equal margins from edges
+        if (picker.colorBuffer) {
+            // @ts-ignore engine-tsd
+            app.drawTexture(0.55, -0.77, 0.2, 0.2, picker.colorBuffer);
+        }
+
+        if (picker.depthBuffer) {
+            // @ts-ignore engine-tsd
+            app.drawTexture(0.77, -0.77, 0.2, 0.2, picker.depthBuffer);
+        }
     });
 });
 

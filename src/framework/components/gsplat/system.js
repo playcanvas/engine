@@ -5,7 +5,6 @@ import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
 import { GSplatComponentData } from './data.js';
-import { GSplatAssetLoader } from './gsplat-asset-loader.js';
 import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsplat-chunks-glsl.js';
 import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
@@ -61,23 +60,34 @@ class GSplatComponentSystem extends ComponentSystem {
     /**
      * Fired every frame for each camera and layer combination rendering GSplats in unified mode.
      * The handler is passed the {@link CameraComponent}, the {@link Layer}, a boolean indicating
-     * if the current frame has up-to-date sorting, and a boolean indicating if resources are loading.
+     * if the current frame has up-to-date sorting, and a number indicating how many resources are
+     * loading.
      *
      * The `ready` parameter indicates whether the current frame reflects all recent changes (camera
-     * movement, splat transforms, lod updates, etc.) with the latest sorting applied. The `loading`
-     * parameter indicates if octree LOD resources are still being loaded.
+     * movement, splat transforms, lod updates, etc.) with the latest sorting applied. The `loadingCount`
+     * parameter reports the total number of octree LOD resources currently loading or queued to load.
      *
      * This event is useful for video capture or other workflows that need to wait for frames
      * to be fully ready. Only capture frames and move camera to next position when both
-     * `ready === true` and `loading === false`.
+     * `ready === true` and `loadingCount === 0`. Note that `loadingCount` can be used as a boolean
+     * in conditionals (0 is falsy, non-zero is truthy) for backward compatibility.
      *
      * @event
      * @example
-     * app.systems.gsplat.on('frame:ready', (camera, layer, ready, loading) => {
-     *     if (ready && !loading) {
+     * // Wait for frame to be ready before capturing
+     * app.systems.gsplat.on('frame:ready', (camera, layer, ready, loadingCount) => {
+     *     if (ready && !loadingCount) {
      *         console.log(`Frame ready to capture for camera ${camera.entity.name}`);
      *         // Capture frame here
      *     }
+     * });
+     * @example
+     * // Track loading progress (0..1)
+     * let maxLoadingCount = 0;
+     * app.systems.gsplat.on('frame:ready', (camera, layer, ready, loadingCount) => {
+     *     maxLoadingCount = Math.max(maxLoadingCount, loadingCount);
+     *     const progress = maxLoadingCount > 0 ? (maxLoadingCount - loadingCount) / maxLoadingCount : 1;
+     *     console.log(`Loading progress: ${(progress * 100).toFixed(1)}%`);
      * });
      */
     static EVENT_FRAMEREADY = 'frame:ready';
@@ -98,9 +108,7 @@ class GSplatComponentSystem extends ComponentSystem {
 
         this.schema = _schema;
 
-        // loader for splat LOD assets, as asset system is not available on the scene level
-        const gsplatAssetLoader = new GSplatAssetLoader(app.assets);
-        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, gsplatAssetLoader, this);
+        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this);
 
         // register gsplat shader chunks
         ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).add(gsplatChunksGLSL);

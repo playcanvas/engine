@@ -25,9 +25,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);

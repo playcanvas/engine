@@ -170,7 +170,8 @@ class ExampleLoader {
         }
 
         if (this._app) {
-            if (this._app.frame) {
+            // Check if app has already started (frame is a number, including 0)
+            if (this._app.frame !== undefined) {
                 this._appStart();
             } else {
                 this._app.once('start', () => this._appStart());

@@ -6,11 +6,12 @@ import { GSplatManager } from './gsplat-manager.js';
  * @import { Layer } from '../layer.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GraphNode } from '../graph-node.js'
- * @import { GSplatAssetLoaderBase } from './gsplat-asset-loader-base.js'
  * @import { Scene } from '../scene.js'
  * @import { Renderer } from '../renderer/renderer.js'
  * @import { EventHandler } from '../../core/event-handler.js'
  */
+
+const tempLayersToRemove = [];
 
 /**
  * Per layer data the director keeps track of.
@@ -97,11 +98,6 @@ class GSplatDirector {
     camerasMap = new Map();
 
     /**
-     * @type {GSplatAssetLoaderBase}
-     */
-    assetLoader;
-
-    /**
      * @type {Scene}
      */
     scene;
@@ -115,13 +111,11 @@ class GSplatDirector {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Renderer} renderer - The renderer.
      * @param {Scene} scene - The scene.
-     * @param {GSplatAssetLoaderBase} assetLoader - The asset loader.
      * @param {EventHandler} eventHandler - Event handler for firing events.
      */
-    constructor(device, renderer, scene, assetLoader, eventHandler) {
+    constructor(device, renderer, scene, eventHandler) {
         this.device = device;
         this.renderer = renderer;
-        this.assetLoader = assetLoader;
         this.scene = scene;
         this.eventHandler = eventHandler;
     }
@@ -160,12 +154,25 @@ class GSplatDirector {
             } else { // camera still exists
 
                 // remove all layerdata for removed / disabled layers of this camera
+                // Collect layers to remove (don't modify map during iteration)
                 cameraData.layersMap.forEach((layerData, layer) => {
                     if (!camera.layersSet.has(layer.id) || !layer.enabled) {
+                        tempLayersToRemove.push(layer);
+                    }
+                });
+
+                // Now safely remove them
+                for (let i = 0; i < tempLayersToRemove.length; i++) {
+                    const layer = tempLayersToRemove[i];
+                    const layerData = cameraData.layersMap.get(layer);
+                    if (layerData) {
                         layerData.destroy();
                         cameraData.layersMap.delete(layer);
                     }
-                });
+                }
+
+                // Clear to avoid dangling references
+                tempLayersToRemove.length = 0;
             }
         });
 

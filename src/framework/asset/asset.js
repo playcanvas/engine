@@ -424,7 +424,7 @@ class Asset extends EventHandler {
 
     /**
      * Sets whether to preload an asset. If true, the asset will be loaded during the preload phase
-     * of application set up.
+     * of application initialization or when calling {@link AssetRegistry#add}.
      *
      * @type {boolean}
      */
