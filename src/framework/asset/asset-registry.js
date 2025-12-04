@@ -466,7 +466,11 @@ class AssetRegistry extends EventHandler {
                         // remove old element
                         document.head.removeChild(handler._cache[asset.id]);
                     }
-                    handler._cache[asset.id] = extra;
+                    // prevents setting a null value in cache for esm scripts
+                    const isEsmScript = asset.file.filename.endsWith('.mjs');
+                    if(!isEsmScript && extra) {
+                        handler._cache[asset.id] = extra;
+                    }
                 }
 
                 _opened(resource);
