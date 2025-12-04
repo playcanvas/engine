@@ -293,6 +293,9 @@ class LitShader {
             attributes.vertex_color = SEMANTIC_COLOR;
             vDefines.set('VERTEX_COLOR', true);
             varyings.set('vVertexColor', 'vec4');
+            if (options.useVertexColorGamma) {
+                vDefines.set('STD_VERTEX_COLOR_GAMMA', '');
+            }
         }
 
         if (options.useMsdf && options.msdfTextAttribute) {
