@@ -1,6 +1,5 @@
 export default /* wgsl */`
-uniform viewport: vec2f;                  // viewport dimensions
-uniform camera_params: vec4f;             // 1 / far, far, near, isOrtho
+uniform viewport_size: vec4f;             // viewport width, height, 1/width, 1/height
 
 // calculate the clip-space offset from the center for this gaussian
 fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, SplatCenter>, corner: ptr<function, SplatCorner>, covA: vec3f, covB: vec3f) -> bool {
@@ -11,7 +10,7 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
         vec3f(covA.z, covB.y, covB.z)
     );
 
-    let focal = uniform.viewport.x * center.projMat00;
+    let focal = uniform.viewport_size.x * center.projMat00;
 
     let v = select(center.view.xyz, vec3f(0.0, 0.0, 1.0), uniform.camera_params.w == 1.0);
     let J1 = focal / v.z;
@@ -43,7 +42,7 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
     let lambda2 = max(mid - radius, 0.1);
 
     // Use the smaller viewport dimension to limit the kernel size relative to the screen resolution.
-    let vmin = min(1024.0, min(uniform.viewport.x, uniform.viewport.y));
+    let vmin = min(1024.0, min(uniform.viewport_size.x, uniform.viewport_size.y));
 
     let l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     let l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
@@ -53,7 +52,7 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
         return false;
     }
 
-    let c = center.proj.ww / uniform.viewport;
+    let c = center.proj.ww * uniform.viewport_size.zw;
 
     // cull against frustum x/y axes
     if (any((abs(center.proj.xy) - vec2f(max(l1, l2)) * c) > center.proj.ww)) {

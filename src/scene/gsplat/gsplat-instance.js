@@ -18,8 +18,6 @@ import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
 const mat = new Mat4();
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
-const viewport = [0, 0];
-
 /** @ignore */
 class GSplatInstance {
     /** @type {GSplatResourceBase} */
@@ -183,23 +181,6 @@ class GSplatInstance {
         material.depthWrite = !!options.dither;
     }
 
-    updateViewport(cameraNode) {
-        const camera = cameraNode?.camera;
-        const renderTarget = camera?.renderTarget;
-        const { width, height } = renderTarget ?? this.resource.device;
-
-        viewport[0] = width;
-        viewport[1] = height;
-
-        // adjust viewport for stereoscopic VR sessions
-        const xr = camera?.camera?.xr;
-        if (xr?.active && xr.views.list.length === 2) {
-            viewport[0] *= 0.5;
-        }
-
-        this.material.setParameter('viewport', viewport);
-    }
-
     /**
      * Sorts the GS vertices based on the given camera.
      * @param {GraphNode} cameraNode - The camera node used for sorting.
@@ -222,8 +203,6 @@ class GSplatInstance {
                 this.sorter.setCamera(cameraPosition, cameraDirection);
             }
         }
-
-        this.updateViewport(cameraNode);
     }
 
     update() {
