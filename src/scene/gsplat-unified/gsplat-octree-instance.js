@@ -148,6 +148,12 @@ class GSplatOctreeInstance {
     pendingVisibleAdds = new Map();
 
     /**
+     * Cached splat budget value.
+     * @type {number}
+     */
+    splatBudget = 0;
+
+    /**
      * Reusable array of node indices for budget enforcement sorting.
      * Lazy-allocated on first budget enforcement, then reused.
      * @type {Uint32Array|null}
@@ -460,9 +466,8 @@ class GSplatOctreeInstance {
         const totalOptimalSplats = this.evaluateNodeLods(cameraNode, maxLod, lodDistances, rangeMin, rangeMax, params);
 
         // Enforce splat budget if enabled (bidirectional: degrade or upgrade)
-        const { splatBudget } = params;
-        if (splatBudget > 0) {
-            this.enforceSplatBudget(totalOptimalSplats, splatBudget, rangeMin, rangeMax);
+        if (this.splatBudget > 0) {
+            this.enforceSplatBudget(totalOptimalSplats, this.splatBudget, rangeMin, rangeMax);
         }
 
         // Pass 2: Calculate desired LOD (underfill) and apply changes
@@ -919,6 +924,13 @@ class GSplatOctreeInstance {
      * @returns {boolean} True if octree instance is dirty, false otherwise.
      */
     update(scene) {
+
+        // Sync splat budget from placement and detect changes
+        const currentBudget = this.placement.splatBudget;
+        if (currentBudget !== this.splatBudget) {
+            this.splatBudget = currentBudget;
+            this.needsLodUpdate = true;
+        }
 
         // handle pending loads
         if (this.pending.size) {

@@ -52,6 +52,13 @@ class GSplatPlacement {
     _lodDistances = null;
 
     /**
+     * Target number of splats to render for this placement. Set to 0 to disable (default).
+     *
+     * @type {number}
+     */
+    splatBudget = 0;
+
+    /**
      * The axis-aligned bounding box for this placement, in local space.
      *
      * @type {BoundingBox}
