@@ -204,9 +204,13 @@ class GSplatParams {
     _splatBudget = 0;
 
     /**
-     * Soft limit on the total number of splats to render. When the optimal LOD selections would
-     * exceed this budget, the system will adjust LOD levels to stay within the limit while
-     * prioritizing quality for closer/more important geometry.
+     * Target number of splats to render. The system will adjust LOD levels bidirectionally to
+     * reach this budget:
+     * - When over budget: degrades quality for less important geometry
+     * - When under budget: upgrades quality for more important geometry
+     *
+     * This ensures optimal use of available rendering budget while prioritizing quality for
+     * closer/more important geometry.
      *
      * Set to 0 to disable the budget (default). When disabled, optimal LOD is determined purely
      * by distance and configured LOD parameters.
