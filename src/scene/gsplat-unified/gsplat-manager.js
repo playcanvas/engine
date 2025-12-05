@@ -17,6 +17,8 @@ import { Color } from '../../core/math/color.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatPlacement } from './gsplat-placement.js'
  * @import { Scene } from '../scene.js'
+ * @import { Layer } from '../layer.js'
+ * @import { GSplatDirector } from './gsplat-director.js'
  */
 
 const cameraPosition = new Vec3();
@@ -152,6 +154,19 @@ class GSplatManager {
      */
     hasNewOctreeInstances = false;
 
+    /**
+     * Bitmask flags controlling which render passes this manager participates in.
+     *
+     * @type {number|undefined}
+     */
+    renderMode;
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatDirector} director - The director.
+     * @param {Layer} layer - The layer.
+     * @param {GraphNode} cameraNode - The camera node.
+     */
     constructor(device, director, layer, cameraNode) {
         this.device = device;
         this.scene = director.scene;
@@ -160,6 +175,17 @@ class GSplatManager {
         this.workBuffer = new GSplatWorkBuffer(device);
         this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
         this.sorter = this.createSorter();
+    }
+
+    /**
+     * Sets the render mode for this manager and its renderer.
+     *
+     * @param {number} renderMode - Bitmask flags controlling render passes (GSPLAT_FORWARD, GSPLAT_SHADOW, or both).
+     * @ignore
+     */
+    setRenderMode(renderMode) {
+        this.renderMode = renderMode;
+        this.renderer.setRenderMode(renderMode);
     }
 
     destroy() {
@@ -555,9 +581,6 @@ class GSplatManager {
 
         // apply any pending sorted results
         this.sorter.applyPendingSorted();
-
-        // update viewport for renderer
-        this.renderer.updateViewport(this.cameraNode);
 
         let fullUpdate = false;
         this.framesTillFullUpdate--;

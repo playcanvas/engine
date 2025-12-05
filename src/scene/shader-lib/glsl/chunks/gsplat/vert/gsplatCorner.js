@@ -1,6 +1,5 @@
 export default /* glsl */`
-uniform vec2 viewport;                  // viewport dimensions
-uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
+uniform vec4 viewport_size;             // viewport width, height, 1/width, 1/height
 
 // calculate the clip-space offset from the center for this gaussian
 bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corner, vec3 covA, vec3 covB) {
@@ -11,7 +10,7 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
         covA.z, covB.y, covB.z
     );
 
-    float focal = viewport.x * center.projMat00;
+    float focal = viewport_size.x * center.projMat00;
 
     vec3 v = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : center.view.xyz;
     float J1 = focal / v.z;
@@ -43,7 +42,7 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
     float lambda2 = max(mid - radius, 0.1);
 
     // Use the smaller viewport dimension to limit the kernel size relative to the screen resolution.
-    float vmin = min(1024.0, min(viewport.x, viewport.y));
+    float vmin = min(1024.0, min(viewport_size.x, viewport_size.y));
 
     float l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     float l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
@@ -53,7 +52,7 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
         return false;
     }
 
-    vec2 c = center.proj.ww / viewport;
+    vec2 c = center.proj.ww * viewport_size.zw;
 
     // cull against frustum x/y axes
     if (any(greaterThan(abs(center.proj.xy) - vec2(max(l1, l2)) * c, center.proj.ww))) {
