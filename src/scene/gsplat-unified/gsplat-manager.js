@@ -434,7 +434,7 @@ class GSplatManager {
             this.workBuffer.setOrderData(orderData);
 
             // update renderer with new order data
-            this.renderer.frameUpdate(this.scene.gsplat);
+            this.renderer.setOrderData();
         }
     }
 
@@ -762,6 +762,9 @@ class GSplatManager {
                 this.workBuffer.renderColor(_splatsNeedingColorUpdate, this.cameraNode, this.getDebugColors());
                 _splatsNeedingColorUpdate.length = 0;
             }
+
+            // update renderer with new order data
+            this.renderer.frameUpdate(this.scene.gsplat);
 
             // Update camera tracking once at the end of the frame
             this.updateColorCameraTracking();
