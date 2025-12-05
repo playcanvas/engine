@@ -14,9 +14,8 @@ import { Script } from 'playcanvas';
  * `entity.gsplat.material` and applies shader customizations immediately or when the asset loads.
  *
  * **Unified Mode (`unified=true`):**
- * Multiple gsplat components share materials per camera/layer combination. Materials are created
- * during the first frame render. The script listens to the 'material:created' event for immediate
- * notification and retries each frame as fallback to ensure materials are applied.
+ * Multiple gsplat components share a template material accessible via `app.scene.gsplat.material`.
+ * The script applies shader customizations to this template material.
  *
  * **Enable/Disable:**
  * When enabled, the shader effect is applied and effectTime starts tracking from 0.
@@ -33,29 +32,21 @@ class GsplatShaderEffect extends Script {
     static scriptName = 'gsplatShaderEffect';
 
     /**
-     * Optional camera entity to target in unified mode. If not set, applies to all cameras.
-     *
-     * @attribute
-     * @type {import('playcanvas').Entity | null}
-     */
-    camera = null;
-
-    /**
      * Time since effect was enabled
      * @type {number}
      */
     effectTime = 0;
 
     /**
-     * Set of materials with applied shader
-     * @type {Set<import('playcanvas').Material>}
+     * The material this effect is applied to
+     * @type {import('playcanvas').Material | null}
      */
-    materialsApplied = new Set();
+    material = null;
 
     initialize() {
         this.initialized = false;
         this.effectTime = 0;
-        this.materialsApplied.clear();
+        this.material = null;
         this.shadersNeedApplication = false;
 
         // Listen to enable/disable events
@@ -81,10 +72,6 @@ class GsplatShaderEffect extends Script {
             this.removeShaders();
         });
 
-        // Register event listener immediately for unified mode to catch materials created on first frame
-        // This is safe to call even if the gsplat component doesn't exist yet
-        this.setupUnifiedEventListener();
-
         if (!this.entity.gsplat) {
             // gsplat component not yet available, will retry each frame
             return;
@@ -100,7 +87,7 @@ class GsplatShaderEffect extends Script {
 
     applyShaders() {
         if (this.entity.gsplat?.unified) {
-            // Unified mode: Apply to specified camera (or all cameras if not specified)
+            // Unified mode: Apply to template material
             this.applyToUnifiedMaterials();
         } else {
             // Non-unified mode: Apply to component's material
@@ -109,63 +96,24 @@ class GsplatShaderEffect extends Script {
     }
 
     removeShaders() {
-        if (this.materialsApplied.size === 0) return;
+        if (!this.material) return;
 
         const device = this.app.graphicsDevice;
         const shaderLanguage = device?.isWebGPU ? 'wgsl' : 'glsl';
 
-        // Remove custom shader chunk from all materials
-        this.materialsApplied.forEach((material) => {
-            material.getShaderChunks(shaderLanguage).delete('gsplatCustomizeVS');
-            material.update();
-        });
-
-        // Clear the set and stop tracking
-        this.materialsApplied.clear();
-    }
-
-    setupUnifiedEventListener() {
-        // Only set up once
-        if (this._materialCreatedHandler) return;
-
-        // @ts-ignore - gsplat system exists at runtime
-        const gsplatSystem = this.app.systems.gsplat;
-
-        // Set up event listener
-        this._materialCreatedHandler = (material, camera, layer) => {
-            // Only apply if enabled
-            if (!this.enabled) return;
-
-            // Apply shader immediately when material is created
-            // The gsplat component may not be fully initialized yet, so we can't check it here
-            if (!this.materialsApplied.has(material)) {
-                // Check camera filter if specified
-                if (this.camera && this.camera.camera && this.camera.camera.camera !== camera) {
-                    return;
-                }
-
-                this.applyShaderToMaterial(material);
-                this.materialsApplied.add(material);
-
-                // Store layer info for potential validation later
-                if (!this._materialLayers) {
-                    this._materialLayers = new Map();
-                }
-                this._materialLayers.set(material, layer.id);
-            }
-        };
-
-        gsplatSystem.on('material:created', this._materialCreatedHandler);
+        this.material.getShaderChunks(shaderLanguage).delete('gsplatCustomizeVS');
+        this.material.update();
+        this.material = null;
     }
 
     applyToComponentMaterial() {
         const applyShader = () => {
-            const material = this.entity.gsplat?.material;
-            if (!material) {
+            this.material = this.entity.gsplat?.material ?? null;
+            if (!this.material) {
                 console.error(`${this.constructor.name}: gsplat material not available.`);
                 return;
             }
-            this.applyShaderToMaterial(material);
+            this.applyShaderToMaterial(this.material);
         };
 
         if (this.entity.gsplat?.material) {
@@ -177,58 +125,13 @@ class GsplatShaderEffect extends Script {
     }
 
     applyToUnifiedMaterials() {
-        // Try to apply immediately to any existing materials
-        this.updateUnifiedMaterials();
-
-        // If no materials yet, set retry flag (event listener is already set up)
-        if (this.materialsApplied.size === 0) {
-            this.needsRetry = true;
-        }
-    }
-
-    updateUnifiedMaterials() {
-        // @ts-ignore - gsplat system exists at runtime
-        const gsplatSystem = this.app.systems.gsplat;
-        const scene = this.app.scene;
-        const composition = scene.layers;
-
-        // Get all layers this component is on
-        const componentLayers = this.entity.gsplat?.layers;
-        if (!componentLayers) return;
-
-        // Determine which cameras to target
-        let targetCameras;
-        const cam = this.camera?.camera?.camera;
-        if (cam) {
-            // Specific camera specified via attribute
-            targetCameras = [cam];
-        } else {
-            // All cameras in the composition
-            targetCameras = composition.cameras.map(cameraComponent => cameraComponent.camera);
+        this.material = this.app.scene.gsplat?.material ?? null;
+        if (!this.material) {
+            console.warn(`${this.constructor.name}: gsplat template material not available.`);
+            return;
         }
 
-        // Iterate through target cameras (already Camera objects, not CameraComponents)
-        targetCameras.forEach((camera) => {
-            // For each layer this component is on
-            componentLayers.forEach((layerId) => {
-                // Check if this camera renders this layer
-                if (camera.layers.indexOf(layerId) >= 0) {
-                    const layer = composition.getLayerById(layerId);
-                    if (layer) {
-                        const material = gsplatSystem.getGSplatMaterial(camera, layer);
-                        if (material && !this.materialsApplied.has(material)) {
-                            this.applyShaderToMaterial(material);
-                            this.materialsApplied.add(material);
-                        }
-                    }
-                }
-            });
-        });
-
-        if (this.materialsApplied.size > 0) {
-            this.needsRetry = false;
-            // Keep event listener active to catch any new materials created later
-        }
+        this.applyShaderToMaterial(this.material);
     }
 
     applyShaderToMaterial(material) {
@@ -260,30 +163,24 @@ class GsplatShaderEffect extends Script {
             this.shadersNeedApplication = false;
         }
 
-        // Retry applying to unified materials if needed
-        if (this.entity.gsplat?.unified && this.needsRetry) {
-            this.updateUnifiedMaterials();
-        }
-
-        if (this.materialsApplied.size === 0) return;
+        if (!this.material) return;
 
         // Update time
         this.effectTime += dt;
 
         // Let subclass update the effect
         this.updateEffect(this.effectTime, dt);
+
+        // Update material after all parameters have been set (if still valid)
+        // Note: material may be set to null by removeShaders() if effect disables itself
+        if (this.material) {
+            this.material.update();
+        }
     }
 
     destroy() {
         // Remove shaders if they're still applied
         this.removeShaders();
-
-        // Clean up event listener
-        if (this._materialCreatedHandler) {
-            // @ts-ignore - gsplat system exists at runtime
-            this.app.systems.gsplat.off('material:created', this._materialCreatedHandler);
-            this._materialCreatedHandler = null;
-        }
     }
 
     /**
@@ -307,14 +204,12 @@ class GsplatShaderEffect extends Script {
     }
 
     /**
-     * Set a uniform value on all applied materials.
+     * Set a uniform value on the material.
      * @param {string} name - The uniform name
      * @param {*} value - The uniform value
      */
     setUniform(name, value) {
-        this.materialsApplied.forEach((material) => {
-            material.setParameter(name, value);
-        });
+        this.material?.setParameter(name, value);
     }
 
     /**

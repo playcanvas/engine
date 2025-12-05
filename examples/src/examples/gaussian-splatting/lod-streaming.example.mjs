@@ -196,7 +196,7 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
         fov: 75,
-        toneMapping: pc.TONEMAP_ACES
+        toneMapping: pc.TONEMAP_LINEAR
     });
 
     // Set camera position

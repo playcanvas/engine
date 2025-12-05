@@ -192,19 +192,22 @@ class GSplatRenderer {
         this.meshInstance.visible = count > 0;
     }
 
-    frameUpdate(params) {
-
+    setOrderData() {
         // Set the appropriate order data resource based on device type
         if (this.device.isWebGPU) {
             this._material.setParameter('splatOrder', this.workBuffer.orderBuffer);
         } else {
             this._material.setParameter('splatOrder', this.workBuffer.orderTexture);
         }
+    }
+
+    frameUpdate(params) {
 
         // Update colorRampIntensity parameter every frame when overdraw is enabled
         if (params.colorRamp) {
             this._material.setParameter('colorRampIntensity', params.colorRampIntensity);
         }
+
         // Copy material settings from params.material if dirty or on first update
         if (this.forceCopyMaterial || params.material.dirty) {
             this.copyMaterialSettings(params.material);
