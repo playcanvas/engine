@@ -113,11 +113,11 @@ assetListLoader.load(() => {
         const enabled = data.get('data.skydome');
         if (enabled) {
             const hdriTexture = assets.hdri.resource;
-            
+
             // Generate high resolution cubemap for skybox
             const skybox = pc.EnvLighting.generateSkyboxCubemap(hdriTexture);
             app.scene.skybox = skybox;
-            
+
             // Generate env-atlas for lighting
             const lighting = pc.EnvLighting.generateLightingSource(hdriTexture);
             const envAtlas = pc.EnvLighting.generateAtlas(lighting);
@@ -146,12 +146,12 @@ assetListLoader.load(() => {
     // Apply settings function
     const applySettings = () => {
         cameraFrame.rendering.toneMapping = data.get('data.tonemapping');
-        
+
         // Convert exposure EV (F-stops) to brightness multiplier
         // Each stop doubles or halves brightness: multiplier = 2^(EV)
         const exposureEV = data.get('data.grading.exposure');
         cameraFrame.grading.brightness = Math.pow(2, exposureEV);
-        
+
         cameraFrame.grading.contrast = data.get('data.grading.contrast');
         cameraFrame.update();
     };
@@ -197,7 +197,7 @@ assetListLoader.load(() => {
         // Create blob URL and load asset using loadFromUrlAndFilename
         // This method is specifically for blob assets where the URL doesn't identify the format
         const blobUrl = URL.createObjectURL(file);
-        
+
         const asset = await new Promise((resolve, reject) => {
             app.assets.loadFromUrlAndFilename(blobUrl, file.name, 'gsplat', (err, loadedAsset) => {
                 if (err) {
@@ -216,12 +216,14 @@ assetListLoader.load(() => {
         });
         entity.setLocalEulerAngles(180, 0, 0);
         app.root.addChild(entity);
-        
+
         // Store reference for orientation updates
         splatEntity = entity;
 
         // Wait a frame for customAabb to be available
-        await new Promise(resolve => requestAnimationFrame(resolve));
+        await new Promise((resolve) => {
+            requestAnimationFrame(resolve);
+        });
 
         // Get bounds for framing
         const aabb = entity.gsplat.customAabb;
@@ -258,4 +260,3 @@ assetListLoader.load(() => {
 });
 
 export { app };
-
