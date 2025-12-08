@@ -106,6 +106,7 @@ assetListLoader.load(() => {
         pc.PIXELFORMAT_RGBA32F,
         pc.PIXELFORMAT_111110F
     ];
+    cameraFrame.rendering.samples = 1;
     cameraFrame.grading.enabled = true;
 
     // Setup skydome toggle function
