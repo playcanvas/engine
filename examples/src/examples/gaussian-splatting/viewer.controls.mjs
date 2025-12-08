@@ -61,8 +61,8 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.grading.exposure' },
-                    min: -5,
-                    max: 5,
+                    min: -10,
+                    max: 10,
                     precision: 2
                 })
             ),
@@ -75,6 +75,26 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     min: 0.5,
                     max: 1.5,
                     precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Bloom' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.bloom.enabled' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Bloom Intensity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.bloom.intensity' },
+                    min: 0,
+                    max: 0.2,
+                    precision: 3
                 })
             )
         )
