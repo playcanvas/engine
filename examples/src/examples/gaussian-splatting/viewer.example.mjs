@@ -92,7 +92,7 @@ assetListLoader.load(() => {
     // Create camera at startup so skydome is visible before dropping files
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
+        clearColor: new pc.Color(0, 0, 0),
         fov: 60,
         farClip: 1000
     });
@@ -106,6 +106,7 @@ assetListLoader.load(() => {
         pc.PIXELFORMAT_RGBA32F,
         pc.PIXELFORMAT_111110F
     ];
+    cameraFrame.rendering.samples = 1;
     cameraFrame.grading.enabled = true;
 
     // Setup skydome toggle function
@@ -137,6 +138,10 @@ assetListLoader.load(() => {
         grading: {
             exposure: 0,  // 0 EV = no change
             contrast: 1
+        },
+        bloom: {
+            enabled: false,
+            intensity: 0.03
         }
     });
 
@@ -153,6 +158,15 @@ assetListLoader.load(() => {
         cameraFrame.grading.brightness = Math.pow(2, exposureEV);
 
         cameraFrame.grading.contrast = data.get('data.grading.contrast');
+
+        // Bloom - only enabled if toggle is on
+        const bloomEnabled = data.get('data.bloom.enabled');
+        const bloomIntensity = data.get('data.bloom.intensity');
+        cameraFrame.bloom.intensity = bloomEnabled ? bloomIntensity : 0;
+        if (bloomEnabled) {
+            cameraFrame.bloom.blurLevel = 7;
+        }
+
         cameraFrame.update();
     };
 
