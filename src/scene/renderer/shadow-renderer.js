@@ -16,6 +16,7 @@ import {
     EVENT_PRECULL,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
+    SHADOWCAMERA_NAME,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     shadowTypeInfo
 } from '../constants.js';
@@ -114,7 +115,7 @@ class ShadowRenderer {
     // creates shadow camera for a light and sets up its constant properties
     static createShadowCamera(shadowType, type, face) {
 
-        const shadowCam = LightCamera.create('ShadowCamera', type, face);
+        const shadowCam = LightCamera.create(SHADOWCAMERA_NAME, type, face);
 
         const shadowInfo = shadowTypeInfo.get(shadowType);
         Debug.assert(shadowInfo);

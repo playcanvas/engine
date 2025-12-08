@@ -185,6 +185,13 @@ class GSplatSogsData {
     packedShN;
 
     /**
+     * URL of the asset, used for debugging texture names.
+     *
+     * @type {string}
+     */
+    url = '';
+
+    /**
      * Whether to use minimal memory mode (releases source textures after packing).
      *
      * @type {boolean}
@@ -208,6 +215,14 @@ class GSplatSogsData {
 
     // Marked when resource is destroyed, to abort any in-flight async preparation
     destroyed = false;
+
+    /**
+     * Cached number of spherical harmonics bands.
+     *
+     * @type {number}
+     * @private
+     */
+    _shBands = 0;
 
     _destroyGpuResources() {
         this.means_l?.destroy();
@@ -279,13 +294,7 @@ class GSplatSogsData {
     }
 
     get shBands() {
-        // sh palette has 64 sh entries per row. use width to calculate number of bands
-        const widths = {
-            192: 1,     // 64 * 3
-            512: 2,     // 64 * 8
-            960: 3      // 64 * 15
-        };
-        return widths[this.sh_centroids?.width] ?? 0;
+        return this._shBands;
     }
 
     async decompress() {
@@ -529,11 +538,21 @@ class GSplatSogsData {
     }
 
     async prepareGpuData() {
-        const { device, height, width } = this.means_l;
+        let device = this.means_l.device;
+        const { height, width } = this.means_l;
 
-        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
+        if (this.destroyed || !device || device._destroyed) return;
+
+        // Cache shBands from sh_centroids texture width before source textures may be destroyed
+        // sh palette has 64 sh entries per row: 192 = 1 band (64*3), 512 = 2 bands (64*8), 960 = 3 bands (64*15)
+        const shBandsWidths = { 192: 1, 512: 2, 960: 3 };
+        this._shBands = shBandsWidths[this.sh_centroids?.width] ?? 0;
+
+        // Include URL in texture name for debugging
+        const urlSuffix = this.url ? `_${this.url}` : '';
+
         this.packedTexture = new Texture(device, {
-            name: 'sogsPackedTexture',
+            name: `sogsPackedTexture${urlSuffix}`,
             width,
             height,
             format: PIXELFORMAT_RGBA32U,
@@ -541,7 +560,7 @@ class GSplatSogsData {
         });
 
         this.packedSh0 = new Texture(device, {
-            name: 'sogsPackedSh0',
+            name: `sogsPackedSh0${urlSuffix}`,
             width,
             height,
             format: PIXELFORMAT_RGBA8,
@@ -549,7 +568,7 @@ class GSplatSogsData {
         });
 
         this.packedShN = this.sh_centroids && new Texture(device, {
-            name: 'sogsPackedShN',
+            name: `sogsPackedShN${urlSuffix}`,
             width: this.sh_centroids.width,
             height: this.sh_centroids.height,
             format: PIXELFORMAT_RGBA8,
@@ -575,13 +594,16 @@ class GSplatSogsData {
             }
         });
 
-        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
+        device = this.means_l?.device;
+        if (this.destroyed || !device || device._destroyed) return;
         await this.generateCenters();
 
-        if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
+        device = this.means_l?.device;
+        if (this.destroyed || !device || device._destroyed) return;
         this.packGpuMemory();
         if (this.packedShN) {
-            if (this.destroyed || device._destroyed) return; // skip the rest if the resource was destroyed
+            device = this.means_l?.device;
+            if (this.destroyed || !device || device._destroyed) return;
             this.packShMemory();
         }
 

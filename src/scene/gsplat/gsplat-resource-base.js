@@ -75,8 +75,6 @@ class GSplatResourceBase {
     }
 
     destroy() {
-        Debug.assert(this.refCount === 0,
-            `GSplatResourceBase destroyed with non-zero refCount: ${this.refCount}. This indicates the resource is still in use by GSplatManager.`);
         this.mesh?.destroy();
         this.instanceIndices?.destroy();
         this.workBufferRenderInfos.forEach(info => info.destroy());

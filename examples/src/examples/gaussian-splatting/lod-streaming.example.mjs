@@ -144,6 +144,7 @@ assetListLoader.load(() => {
     // initialize UI settings
     data.set('debugLod', false);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
+    data.set('splatBudget', pc.platform.mobile ? '1M' : '4M');
 
     app.scene.gsplat.colorizeLod = !!data.get('debugLod');
 
@@ -174,12 +175,28 @@ assetListLoader.load(() => {
     applyPreset();
     data.on('lodPreset:set', applyPreset);
 
+    const applySplatBudget = () => {
+        const preset = data.get('splatBudget');
+        const budgetMap = {
+            'none': 0,
+            '1M': 1000000,
+            '2M': 2000000,
+            '3M': 3000000,
+            '4M': 4000000,
+            '6M': 6000000
+        };
+        gs.splatBudget = budgetMap[preset] || 0;
+    };
+
+    applySplatBudget();
+    data.on('splatBudget:set', applySplatBudget);
+
     // Create a camera with fly controls
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
         fov: 75,
-        toneMapping: pc.TONEMAP_ACES
+        toneMapping: pc.TONEMAP_LINEAR
     });
 
     // Set camera position

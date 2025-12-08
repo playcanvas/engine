@@ -309,7 +309,9 @@ class Example extends TypedComponent {
 
     renderPortrait() {
         const { collapsed, show, files, description } = this.state;
-        return fragment(
+        return jsx(
+            'div',
+            { style: { display: 'contents' } },
             jsx(
                 Panel,
                 {
@@ -370,7 +372,9 @@ class Example extends TypedComponent {
 
     renderLandscape() {
         const { collapsed } = this.state;
-        return fragment(
+        return jsx(
+            'div',
+            { style: { display: 'contents' } },
             jsx(
                 Panel,
                 {

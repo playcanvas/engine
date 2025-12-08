@@ -1,5 +1,8 @@
 import { SEMANTIC_POSITION, SEMANTIC_ATTR13, CULLFACE_NONE, PIXELFORMAT_RGBA16U } from '../../platform/graphics/constants.js';
-import { BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE } from '../constants.js';
+import {
+    BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, GSPLAT_FORWARD, GSPLAT_SHADOW,
+    SHADOWCAMERA_NAME
+} from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { MeshInstance } from '../mesh-instance.js';
@@ -9,6 +12,8 @@ import { math } from '../../core/math/math.js';
  * @import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js'
  * @import { Layer } from '../layer.js'
  * @import { GraphNode } from '../graph-node.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
  */
 
 /**
@@ -35,11 +40,25 @@ class GSplatRenderer {
     /** @type {GraphNode} */
     cameraNode;
 
-    viewportParams = [0, 0];
-
     /** @type {number} */
     originalBlendType = BLEND_ADDITIVE;
 
+    /** @type {number|undefined} */
+    renderMode;
+
+    /** @type {Set<string>} */
+    _internalDefines = new Set();
+
+    /** @type {boolean} */
+    forceCopyMaterial = true;
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GraphNode} node - The graph node.
+     * @param {GraphNode} cameraNode - The camera node.
+     * @param {Layer} layer - The layer to add mesh instances to.
+     * @param {GSplatWorkBuffer} workBuffer - The work buffer containing splat data.
+     */
     constructor(device, node, cameraNode, layer, workBuffer) {
         this.device = device;
         this.node = node;
@@ -62,12 +81,62 @@ class GSplatRenderer {
 
         this.configureMaterial();
 
+        // Capture internal define names to protect them from being cleared
+        this._material.defines.forEach((value, key) => {
+            this._internalDefines.add(key);
+        });
+
         this.meshInstance = this.createMeshInstance();
-        layer.addMeshInstances([this.meshInstance]);
+    }
+
+    /**
+     * Sets the render mode for this renderer, managing layer array membership.
+     *
+     * @param {number} renderMode - Bitmask flags controlling render passes (GSPLAT_FORWARD, GSPLAT_SHADOW, or both).
+     */
+    setRenderMode(renderMode) {
+        const oldRenderMode = this.renderMode ?? 0;
+
+        // Calculate what changed
+        const wasForward = (oldRenderMode & GSPLAT_FORWARD) !== 0;
+        const wasShadow = (oldRenderMode & GSPLAT_SHADOW) !== 0;
+        const isForward = (renderMode & GSPLAT_FORWARD) !== 0;
+        const isShadow = (renderMode & GSPLAT_SHADOW) !== 0;
+
+        // Update mesh instance castShadow state FIRST, before adding to arrays
+        this.meshInstance.castShadow = isShadow;
+
+        // Remove from old arrays if needed
+        if (wasForward && !isForward) {
+            this.layer.removeMeshInstances([this.meshInstance], true);
+        }
+        if (wasShadow && !isShadow) {
+            this.layer.removeShadowCasters([this.meshInstance]);
+        }
+
+        // Add to new arrays if needed
+        if (!wasForward && isForward) {
+            this.layer.addMeshInstances([this.meshInstance], true);
+        }
+        if (!wasShadow && isShadow) {
+            this.layer.addShadowCasters([this.meshInstance]);
+        }
+
+        // Update state
+        this.renderMode = renderMode;
     }
 
     destroy() {
-        this.layer.removeMeshInstances([this.meshInstance]);
+        // Remove mesh instance from appropriate layer arrays based on render mode
+        if (this.renderMode) {
+            if (this.renderMode & GSPLAT_FORWARD) {
+                this.layer.removeMeshInstances([this.meshInstance], true);
+            }
+            if (this.renderMode & GSPLAT_SHADOW) {
+                this.layer.removeShadowCasters([this.meshInstance]);
+            }
+        }
+
         this._material.destroy();
         this.meshInstance.destroy();
     }
@@ -123,19 +192,65 @@ class GSplatRenderer {
         this.meshInstance.visible = count > 0;
     }
 
-    frameUpdate(params) {
-
+    setOrderData() {
         // Set the appropriate order data resource based on device type
         if (this.device.isWebGPU) {
             this._material.setParameter('splatOrder', this.workBuffer.orderBuffer);
         } else {
             this._material.setParameter('splatOrder', this.workBuffer.orderTexture);
         }
+    }
+
+    frameUpdate(params) {
 
         // Update colorRampIntensity parameter every frame when overdraw is enabled
         if (params.colorRamp) {
             this._material.setParameter('colorRampIntensity', params.colorRampIntensity);
         }
+
+        // Copy material settings from params.material if dirty or on first update
+        if (this.forceCopyMaterial || params.material.dirty) {
+            this.copyMaterialSettings(params.material);
+            this.forceCopyMaterial = false;
+        }
+    }
+
+    /**
+     * Copies material settings from a source material to the internal material.
+     * Preserves internal defines while copying user defines, parameters, and shader chunks.
+     *
+     * @param {ShaderMaterial} sourceMaterial - The source material to copy settings from.
+     * @private
+     */
+    copyMaterialSettings(sourceMaterial) {
+        // Clear user defines (preserve internal defines)
+        const keysToDelete = [];
+        this._material.defines.forEach((value, key) => {
+            if (!this._internalDefines.has(key)) {
+                keysToDelete.push(key);
+            }
+        });
+        keysToDelete.forEach(key => this._material.defines.delete(key));
+
+        // Copy defines from source material
+        sourceMaterial.defines.forEach((value, key) => {
+            this._material.defines.set(key, value);
+        });
+
+        // Copy parameters
+        const srcParams = sourceMaterial.parameters;
+        for (const paramName in srcParams) {
+            if (srcParams.hasOwnProperty(paramName)) {
+                this._material.setParameter(paramName, srcParams[paramName].data);
+            }
+        }
+
+        // Copy shader chunks if they exist
+        if (sourceMaterial.hasShaderChunks) {
+            this._material.shaderChunks.copy(sourceMaterial.shaderChunks);
+        }
+
+        this._material.update();
     }
 
     updateOverdrawMode(params) {
@@ -201,30 +316,22 @@ class GSplatRenderer {
         // TODO: consider using aabb as well to avoid rendering off-screen splats
         const thisCamera = this.cameraNode.camera;
         meshInstance.isVisibleFunc = (camera) => {
-            const vis = thisCamera.camera === camera;
-            return vis;
+            const renderMode = this.renderMode ?? 0;
+
+            // visible for main camera in forward rendering mode
+            if (thisCamera.camera === camera && (renderMode & GSPLAT_FORWARD)) {
+                return true;
+            }
+
+            // visible for shadow cameras in shadow rendering mode
+            if (renderMode & GSPLAT_SHADOW) {
+                return camera.node?.name === SHADOWCAMERA_NAME;
+            }
+
+            return false;
         };
 
         return meshInstance;
-    }
-
-    updateViewport(cameraNode) {
-        const camera = cameraNode.camera;
-        const cameraRect = camera.rect;
-        const renderTarget = camera?.renderTarget;
-        const { width, height } = renderTarget ?? this.device;
-
-        const viewport = this.viewportParams;
-        viewport[0] = width * cameraRect.z;
-        viewport[1] = height * cameraRect.w;
-
-        // adjust viewport for stereoscopic VR sessions
-        const xr = camera?.camera?.xr;
-        if (xr?.active && xr.views.list.length === 2) {
-            viewport[0] *= 0.5;
-        }
-
-        this._material.setParameter('viewport', viewport);
     }
 }
 

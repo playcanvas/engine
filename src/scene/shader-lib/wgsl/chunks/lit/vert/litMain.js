@@ -66,6 +66,15 @@ var<private> dModelMatrix: mat4x4f;
 
 #include  "litUserCodeVS"
 
+#ifdef VERTEX_COLOR
+    fn decodeGamma3(raw: vec3f) -> vec3f {
+        return pow(raw, vec3f(2.2));
+    }
+    fn gammaCorrectInputVec4(color: vec4f) -> vec4f {
+        return vec4f(decodeGamma3(color.xyz), color.w);
+    }
+#endif
+
 @vertex
 fn vertexMain(input : VertexInput) -> VertexOutput {
 
@@ -104,7 +113,11 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
     #include "uvTransformVS, UV_TRANSFORMS_COUNT"
 
     #ifdef VERTEX_COLOR
-        output.vVertexColor = vertex_color;
+        #ifdef STD_VERTEX_COLOR_GAMMA
+            output.vVertexColor = gammaCorrectInputVec4(vertex_color);
+        #else
+            output.vVertexColor = vertex_color;
+        #endif
     #endif
 
     #ifdef LINEAR_DEPTH

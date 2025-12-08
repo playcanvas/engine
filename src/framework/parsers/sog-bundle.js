@@ -210,6 +210,8 @@ class SogBundleParser {
                         contents: file.data
                     }, {
                         mipmaps: false
+                    }, {
+                        crossOrigin: 'anonymous'
                     });
                 } else {
                     // file doesn't exist in bundle, treat it as a url
@@ -219,6 +221,8 @@ class SogBundleParser {
                         filename
                     }, {
                         mipmaps: false
+                    }, {
+                        crossOrigin: 'anonymous'
                     });
                 }
 
@@ -253,6 +257,7 @@ class SogBundleParser {
             const minimalMemory = asset.options?.minimalMemory ?? false;
 
             const data = new GSplatSogsData();
+            data.url = url.original;
             data.minimalMemory = minimalMemory;
             data.meta = meta;
             data.numSplats = meta.count;

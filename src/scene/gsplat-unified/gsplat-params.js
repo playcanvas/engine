@@ -1,9 +1,22 @@
+import { Debug } from '../../core/debug.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
+
+/**
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
+
 /**
  * Parameters for GSplat unified system.
  *
  * @category Graphics
  */
 class GSplatParams {
+    /**
+     * @type {ShaderMaterial}
+     * @private
+     */
+    _material = new ShaderMaterial();
+
     /**
      * Enables debug rendering of AABBs for GSplat objects. Defaults to false.
      *
@@ -197,6 +210,15 @@ class GSplatParams {
         return this._lodUnderfillLimit;
     }
 
+    set splatBudget(value) {
+        Debug.removed('GSplatParams.splatBudget is deprecated. Use GSplatComponent.splatBudget instead to set per-component budgets.');
+    }
+
+    get splatBudget() {
+        Debug.removed('GSplatParams.splatBudget is deprecated. Use GSplatComponent.splatBudget instead to set per-component budgets.');
+        return 0;
+    }
+
     /**
      * @type {import('../../platform/graphics/texture.js').Texture|null}
      * @private
@@ -209,7 +231,7 @@ class GSplatParams {
      * Texture should be (width x 1) size. World Y coordinate (0-20 range) maps to texture U coordinate.
      * Defaults to null.
      *
-     * @type {import('../../platform/graphics/texture.js').Texture|null}
+     * @type {Texture|null}
      */
     set colorRamp(value) {
         if (this._colorRamp !== value) {
@@ -284,6 +306,42 @@ class GSplatParams {
      * @type {number}
      */
     colorUpdateAngleLodScale = 2;
+
+    /**
+     * Number of update ticks before unloading unused streamed resources. When a streamed resource's
+     * reference count reaches zero, it enters a cooldown period before being unloaded. This allows
+     * recently used data to remain in memory for quick reuse if needed again soon. Set to 0 to
+     * unload immediately when unused. Defaults to 100.
+     *
+     * @type {number}
+     */
+    cooldownTicks = 100;
+
+    /**
+     * A material template that can be customized by the user. Any defines, parameters, or shader
+     * chunks set on this material will be automatically applied to all GSplat components rendered
+     * in unified mode. After making changes, call {@link Material#update} to for the changes to be applied
+     * on the next frame.
+     *
+     * @type {ShaderMaterial}
+     * @example
+     * // Set a custom parameter on all GSplat materials
+     * app.scene.gsplat.material.setParameter('alphaClip', 0.4);
+     * app.scene.gsplat.material.update();
+     */
+    get material() {
+        return this._material;
+    }
+
+    /**
+     * Called at the end of the frame to clear dirty flags.
+     *
+     * @ignore
+     */
+    frameEnd() {
+        this._material.dirty = false;
+        this.dirty = false;
+    }
 }
 
 export { GSplatParams };

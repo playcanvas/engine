@@ -1,3 +1,4 @@
+// @config DESCRIPTION Click on objects to detect world space intersection. Objects within the colored rectangles are highlighted.
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -5,7 +6,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    bloom: new pc.Asset('bloom', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-bloom.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
@@ -26,8 +26,8 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
 createOptions.touch = new pc.TouchDevice(document.body);
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.ScriptComponentSystem];
-createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler];
+createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
+createOptions.resourceHandlers = [pc.TextureHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -122,17 +122,13 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
-
-    // add bloom postprocessing (this is ignored by the picker)
-    camera.addComponent('script');
-    camera.script.create('bloom', {
-        attributes: {
-            bloomIntensity: 1,
-            bloomThreshold: 0.7,
-            blurAmount: 4
-        }
-    });
     app.root.addChild(camera);
+
+    // ------ Custom render passes with bloom ------
+    const cameraFrame = new pc.CameraFrame(app, camera.camera);
+    cameraFrame.bloom.intensity = 0.01;
+    cameraFrame.bloom.blurLevel = 4;
+    cameraFrame.update();
 
     /**
      * Function to draw a 2D rectangle in the screen space coordinates.
@@ -165,6 +161,7 @@ assetListLoader.load(() => {
      */
     function highlightMaterial(material, color) {
         material.emissive = color;
+        material.emissiveIntensity = 30;
         material.update();
     }
 
@@ -273,6 +270,8 @@ assetListLoader.load(() => {
             // turn off previously highlighted meshes
             for (let h = 0; h < highlights.length; h++) {
                 highlightMaterial(highlights[h], pc.Color.BLACK);
+                // Reset emissive intensity when turning off
+                highlights[h].emissiveIntensity = 0;
             }
             highlights.length = 0;
 

@@ -97,6 +97,20 @@ class SogsParser {
         this.maxRetries = maxRetries;
     }
 
+    /**
+     * Checks if loading should be aborted due to asset unload or invalid device.
+     *
+     * @param {Asset} asset - The asset being loaded.
+     * @param {boolean} unloaded - Whether the asset was unloaded during async loading.
+     * @returns {boolean} True if loading should be aborted.
+     * @private
+     */
+    _shouldAbort(asset, unloaded) {
+        if (unloaded || !this.app.assets.get(asset.id)) return true;
+        if (!this.app?.graphicsDevice || this.app.graphicsDevice._destroyed) return true;
+        return false;
+    }
+
     async loadTextures(url, callback, asset, meta) {
         // transform meta to latest shape
         if (meta.version !== 2) {
@@ -119,6 +133,8 @@ class SogsParser {
                     filename
                 }, {
                     mipmaps: false
+                }, {
+                    crossOrigin: 'anonymous'
                 });
 
                 const promise = new Promise((resolve, reject) => {
@@ -135,8 +151,13 @@ class SogsParser {
 
         const textureAssets = subs.map(sub => textures[sub]).flat();
 
+        // Track if asset was unloaded during async loading
+        let unloaded = false;
+
         // When the parent gsplat asset unloads, remove and unload child texture assets
         asset.once('unload', () => {
+            unloaded = true;
+
             textureAssets.forEach((t) => {
                 // remove from registry
                 assets.remove(t);
@@ -153,8 +174,19 @@ class SogsParser {
         // wait for all textures to complete loading
         await Promise.allSettled(promises);
 
+        if (this._shouldAbort(asset, unloaded)) {
+            // Clean up texture assets that were created during the async load
+            textureAssets.forEach((t) => {
+                assets.remove(t);
+                t.unload();
+            });
+            callback(null, null);
+            return;
+        }
+
         // construct the gsplat resource
         const data = new GSplatSogsData();
+        data.url = url.original;
         data.meta = meta;
         data.numSplats = meta.count;
         data.means_l = textures.means[0].resource;
@@ -172,17 +204,31 @@ class SogsParser {
         data.minimalMemory = minimalMemory;
 
         if (!decompress) {
-            if (!this.app?.graphicsDevice || this.app?.graphicsDevice?._destroyed) return;
+            if (this._shouldAbort(asset, unloaded)) {
+                data.destroy();
+                callback(null, null);
+                return;
+            }
 
             // no need to prepare gpu data if decompressing
             await data.prepareGpuData();
         }
 
-        if (!this.app?.graphicsDevice || this.app?.graphicsDevice?._destroyed) return;
+        if (this._shouldAbort(asset, unloaded)) {
+            data.destroy();
+            callback(null, null);
+            return;
+        }
 
         const resource = decompress ?
             new GSplatResource(this.app.graphicsDevice, await data.decompress()) :
             new GSplatSogsResource(this.app.graphicsDevice, data);
+
+        if (this._shouldAbort(asset, unloaded)) {
+            resource.destroy();
+            callback(null, null);
+            return;
+        }
 
         callback(null, resource);
     }
@@ -216,6 +262,11 @@ class SogsParser {
             };
 
             http.get(url.load, options, (err, meta) => {
+                if (this._shouldAbort(asset, false)) {
+                    callback(null, null);
+                    return;
+                }
+
                 if (!err) {
                     this.loadTextures(url, callback, asset, meta);
                 } else {

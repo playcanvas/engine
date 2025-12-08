@@ -7,7 +7,7 @@ import { Example } from './Example.mjs';
 import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
 import { iframe } from '../iframe.mjs';
-import { jsx, fragment } from '../jsx.mjs';
+import { jsx } from '../jsx.mjs';
 import { getOrientation } from '../utils.mjs';
 
 // eslint-disable-next-line jsdoc/require-property
@@ -75,7 +75,9 @@ class MainLayout extends TypedComponent {
                     }),
                     jsx(Route, {
                         path: '/:category/:example',
-                        element: fragment(
+                        element: jsx(
+                            'div',
+                            { id: 'appInner-router', style: { display: 'contents' } },
                             jsx(SideBar, null),
                             jsx(
                                 Container,

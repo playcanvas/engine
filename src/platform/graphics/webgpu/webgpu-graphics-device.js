@@ -1256,6 +1256,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return true;
     }
 
+    get hasTranspilers() {
+        return this.glslang && this.twgsl;
+    }
+
     // #if _DEBUG
     pushMarker(name) {
         this.passEncoder?.pushDebugGroup(name);

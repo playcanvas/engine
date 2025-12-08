@@ -108,6 +108,15 @@ class GSplatComponent extends Component {
     _lodDistances = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 
     /**
+     * Target number of splats to render for this component. The system will adjust LOD levels
+     * bidirectionally to reach this budget. Set to 0 to disable (default).
+     *
+     * @type {number}
+     * @private
+     */
+    _splatBudget = 0;
+
+    /**
      * @type {BoundingBox|null}
      * @private
      */
@@ -321,18 +330,34 @@ class GSplatComponent extends Component {
     set castShadows(value) {
 
         if (this._castShadows !== value) {
+            const layers = this.layers;
+            const scene = this.system.app.scene;
 
+            // Handle unified mode placement
+            if (this._placement) {
+                if (value) {
+                    // Add to shadow casters
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(layers[i]);
+                        layer?.addGSplatShadowCaster(this._placement);
+                    }
+                } else {
+                    // Remove from shadow casters
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(layers[i]);
+                        layer?.removeGSplatShadowCaster(this._placement);
+                    }
+                }
+            }
+
+            // Handle non-unified mode mesh instance
             const mi = this.instance?.meshInstance;
 
             if (mi) {
-                const layers = this.layers;
-                const scene = this.system.app.scene;
                 if (this._castShadows && !value) {
                     for (let i = 0; i < layers.length; i++) {
                         const layer = scene.layers.getLayerById(this.layers[i]);
-                        if (layer) {
-                            layer.removeShadowCasters([mi]);
-                        }
+                        layer?.removeShadowCasters([mi]);
                     }
                 }
 
@@ -341,9 +366,7 @@ class GSplatComponent extends Component {
                 if (!this._castShadows && value) {
                     for (let i = 0; i < layers.length; i++) {
                         const layer = scene.layers.getLayerById(layers[i]);
-                        if (layer) {
-                            layer.addShadowCasters([mi]);
-                        }
+                        layer?.addShadowCasters([mi]);
                     }
                 }
             }
@@ -381,6 +404,38 @@ class GSplatComponent extends Component {
      */
     get lodDistances() {
         return this._lodDistances ? this._lodDistances.slice() : null;
+    }
+
+    /**
+     * Sets the target number of splats to render for this component. The system will adjust LOD
+     * levels bidirectionally to reach this budget:
+     * - When over budget: degrades quality for less important geometry
+     * - When under budget: upgrades quality for more important geometry
+     *
+     * This ensures optimal use of available rendering budget while prioritizing quality for
+     * closer/more important geometry.
+     *
+     * Set to 0 to disable the budget (default). When disabled, optimal LOD is determined purely
+     * by distance and configured LOD parameters.
+     *
+     * Only applies to octree-based gsplat rendering in unified mode.
+     *
+     * @type {number}
+     */
+    set splatBudget(value) {
+        this._splatBudget = value;
+        if (this._placement) {
+            this._placement.splatBudget = this._splatBudget;
+        }
+    }
+
+    /**
+     * Gets the splat budget limit for this component.
+     *
+     * @type {number}
+     */
+    get splatBudget() {
+        return this._splatBudget;
     }
 
     /**
@@ -497,7 +552,13 @@ class GSplatComponent extends Component {
         if (this._placement) {
             const layers = this.system.app.scene.layers;
             for (let i = 0; i < this._layers.length; i++) {
-                layers.getLayerById(this._layers[i])?.addGSplatPlacement(this._placement);
+                const layer = layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.addGSplatPlacement(this._placement);
+                    if (this._castShadows) {
+                        layer.addGSplatShadowCaster(this._placement);
+                    }
+                }
             }
             return;
         }
@@ -516,7 +577,11 @@ class GSplatComponent extends Component {
         if (this._placement) {
             const layers = this.system.app.scene.layers;
             for (let i = 0; i < this._layers.length; i++) {
-                layers.getLayerById(this._layers[i])?.removeGSplatPlacement(this._placement);
+                const layer = layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.removeGSplatPlacement(this._placement);
+                    layer.removeGSplatShadowCaster(this._placement);
+                }
             }
             return;
         }
@@ -661,6 +726,7 @@ class GSplatComponent extends Component {
             if (asset) {
                 this._placement = new GSplatPlacement(asset.resource, this.entity);
                 this._placement.lodDistances = this._lodDistances;
+                this._placement.splatBudget = this._splatBudget;
 
                 // add placement to layers if component is enabled
                 if (this.enabled && this.entity.enabled) {
