@@ -7,7 +7,7 @@ uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
 #endif
 
 // project the model space gaussian center to view and clip space
-bool initCenter(vec3 modelCenter, out SplatCenter center) {
+bool initCenter(vec3 modelCenter, inout SplatCenter center) {
     mat4 modelView = matrix_view * matrix_model;
     vec4 centerView = modelView * vec4(modelCenter, 1.0);
 
