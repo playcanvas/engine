@@ -137,7 +137,7 @@ class StreamedGsplat extends Script {
                 this.entity.addComponent('gsplat', {
                     unified: true,
                     lodDistances: this._getCurrentLodDistances(),
-                    asset: a,
+                    asset: a
                 });
 
                 // Restore entity enabled state
@@ -170,7 +170,7 @@ class StreamedGsplat extends Script {
                 child.addComponent('gsplat', {
                     unified: true,
                     lodDistances: this._getCurrentLodDistances(),
-                    asset: a,
+                    asset: a
                 });
 
                 // Enable the child entity
@@ -267,7 +267,7 @@ class StreamedGsplat extends Script {
     _setPreset(presetName) {
         this._currentPreset = presetName;
         this._applyPreset();
-        
+
         // Notify UI of preset change
         this.app.fire('ui:setPreset', presetName);
     }
@@ -282,7 +282,7 @@ class StreamedGsplat extends Script {
     _toggleColorize() {
         this._colorize = !this._colorize;
         this.app.scene.gsplat.colorizeLod = this._colorize;
-        
+
         const statusEl = document.getElementById('colorize-status');
         if (statusEl) {
             statusEl.textContent = this._colorize ? 'On' : 'Off';
