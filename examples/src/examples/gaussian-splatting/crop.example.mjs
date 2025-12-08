@@ -205,8 +205,9 @@ assetListLoader.load(() => {
             elapsedTime += dt;
             const t = (Math.sin(elapsedTime * Math.PI * 2 / period) + 1) / 2; // 0 to 1, soft bounce
             const size = minSize + t * (maxSize - minSize);
-            cropScript.aabbMin.set(-size, -size, -size);
-            cropScript.aabbMax.set(size, size, size);
+            const sizeXZ = size * 1.5; // 50% wider in X and Z directions
+            cropScript.aabbMin.set(-sizeXZ, -size, -sizeXZ);
+            cropScript.aabbMax.set(sizeXZ, size, sizeXZ);
         }
     });
 });
