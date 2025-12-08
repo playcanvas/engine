@@ -108,6 +108,15 @@ class GSplatComponent extends Component {
     _lodDistances = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 
     /**
+     * Target number of splats to render for this component. The system will adjust LOD levels
+     * bidirectionally to reach this budget. Set to 0 to disable (default).
+     *
+     * @type {number}
+     * @private
+     */
+    _splatBudget = 0;
+
+    /**
      * @type {BoundingBox|null}
      * @private
      */
@@ -398,6 +407,38 @@ class GSplatComponent extends Component {
     }
 
     /**
+     * Sets the target number of splats to render for this component. The system will adjust LOD
+     * levels bidirectionally to reach this budget:
+     * - When over budget: degrades quality for less important geometry
+     * - When under budget: upgrades quality for more important geometry
+     *
+     * This ensures optimal use of available rendering budget while prioritizing quality for
+     * closer/more important geometry.
+     *
+     * Set to 0 to disable the budget (default). When disabled, optimal LOD is determined purely
+     * by distance and configured LOD parameters.
+     *
+     * Only applies to octree-based gsplat rendering in unified mode.
+     *
+     * @type {number}
+     */
+    set splatBudget(value) {
+        this._splatBudget = value;
+        if (this._placement) {
+            this._placement.splatBudget = this._splatBudget;
+        }
+    }
+
+    /**
+     * Gets the splat budget limit for this component.
+     *
+     * @type {number}
+     */
+    get splatBudget() {
+        return this._splatBudget;
+    }
+
+    /**
      * Sets whether to use the unified gsplat rendering. Can be changed only when the component is
      * not enabled. Default is false.
      *
@@ -685,6 +726,7 @@ class GSplatComponent extends Component {
             if (asset) {
                 this._placement = new GSplatPlacement(asset.resource, this.entity);
                 this._placement.lodDistances = this._lodDistances;
+                this._placement.splatBudget = this._splatBudget;
 
                 // add placement to layers if component is enabled
                 if (this.enabled && this.entity.enabled) {
