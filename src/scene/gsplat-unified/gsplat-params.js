@@ -1,3 +1,9 @@
+import { Debug } from '../../core/debug.js';
+
+/**
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
+
 /**
  * Parameters for GSplat unified system.
  *
@@ -197,40 +203,13 @@ class GSplatParams {
         return this._lodUnderfillLimit;
     }
 
-    /**
-     * @type {number}
-     * @private
-     */
-    _splatBudget = 0;
-
-    /**
-     * Target number of splats to render. The system will adjust LOD levels bidirectionally to
-     * reach this budget:
-     * - When over budget: degrades quality for less important geometry
-     * - When under budget: upgrades quality for more important geometry
-     *
-     * This ensures optimal use of available rendering budget while prioritizing quality for
-     * closer/more important geometry.
-     *
-     * Set to 0 to disable the budget (default). When disabled, optimal LOD is determined purely
-     * by distance and configured LOD parameters.
-     *
-     * @type {number}
-     */
     set splatBudget(value) {
-        if (this._splatBudget !== value) {
-            this._splatBudget = value;
-            this.dirty = true;
-        }
+        Debug.removed('GSplatParams.splatBudget is deprecated. Use GSplatComponent.splatBudget instead to set per-component budgets.');
     }
 
-    /**
-     * Gets the splat budget limit.
-     *
-     * @type {number}
-     */
     get splatBudget() {
-        return this._splatBudget;
+        Debug.removed('GSplatParams.splatBudget is deprecated. Use GSplatComponent.splatBudget instead to set per-component budgets.');
+        return 0;
     }
 
     /**
@@ -245,7 +224,7 @@ class GSplatParams {
      * Texture should be (width x 1) size. World Y coordinate (0-20 range) maps to texture U coordinate.
      * Defaults to null.
      *
-     * @type {import('../../platform/graphics/texture.js').Texture|null}
+     * @type {Texture|null}
      */
     set colorRamp(value) {
         if (this._colorRamp !== value) {
