@@ -110,11 +110,11 @@ fn modifyColor(center: vec3f, color: ptr<function, vec4f>) {
 /**
  * Crop shader effect for gaussian splats.
  * Drops all splats outside the specified AABB by scaling them to 0.
- * 
+ *
  * When GSPLAT_PRECISE_CROP is defined on the material, also scales down splats near the edges
  * based on their covariance matrix so they don't extend beyond the boundary.
  * Uses a conservative estimate based on the trace of the covariance matrix (3 standard deviations).
- * 
+ *
  * The edgeScaleFactor attribute controls how aggressively edge splats are scaled down:
  * - 1.0 = minimal scaling (just enough to touch the edge)
  * - 0.5 = more aggressive scaling (default, reduces size by additional 50%)
@@ -127,7 +127,7 @@ fn modifyColor(center: vec3f, color: ptr<function, vec4f>) {
  * cropScript.aabbMin.set(-1, -1, -1);
  * cropScript.aabbMax.set(1, 1, 1);
  * cropScript.edgeScaleFactor = 0.5; // Default value
- * 
+ *
  * // Enable precise cropping
  * material.setDefine('GSPLAT_PRECISE_CROP', '');
  * material.update();
@@ -184,4 +184,3 @@ class GsplatCropShaderEffect extends GsplatShaderEffect {
 }
 
 export { GsplatCropShaderEffect };
-
