@@ -210,6 +210,8 @@ class SogBundleParser {
                         contents: file.data
                     }, {
                         mipmaps: false
+                    }, {
+                        crossOrigin: 'anonymous'
                     });
                 } else {
                     // file doesn't exist in bundle, treat it as a url
@@ -219,6 +221,8 @@ class SogBundleParser {
                         filename
                     }, {
                         mipmaps: false
+                    }, {
+                        crossOrigin: 'anonymous'
                     });
                 }
 

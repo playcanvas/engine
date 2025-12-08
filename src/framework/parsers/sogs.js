@@ -133,6 +133,8 @@ class SogsParser {
                     filename
                 }, {
                     mipmaps: false
+                }, {
+                    crossOrigin: 'anonymous'
                 });
 
                 const promise = new Promise((resolve, reject) => {
