@@ -148,6 +148,12 @@ class GSplatOctreeInstance {
     pendingVisibleAdds = new Map();
 
     /**
+     * Cached splat budget value.
+     * @type {number}
+     */
+    splatBudget = 0;
+
+    /**
      * Reusable array of node indices for budget enforcement sorting.
      * Lazy-allocated on first budget enforcement, then reused.
      * @type {Uint32Array|null}
@@ -459,10 +465,9 @@ class GSplatOctreeInstance {
         // Pass 1: Evaluate optimal LOD for each node (distance-based)
         const totalOptimalSplats = this.evaluateNodeLods(cameraNode, maxLod, lodDistances, rangeMin, rangeMax, params);
 
-        // Enforce splat budget if enabled and over budget
-        const { splatBudget } = params;
-        if (splatBudget > 0 && totalOptimalSplats > splatBudget) {
-            this.enforceSplatBudget(totalOptimalSplats, splatBudget, rangeMax);
+        // Enforce splat budget if enabled (bidirectional: degrade or upgrade)
+        if (this.splatBudget > 0) {
+            this.enforceSplatBudget(totalOptimalSplats, this.splatBudget, rangeMin, rangeMax);
         }
 
         // Pass 2: Calculate desired LOD (underfill) and apply changes
@@ -559,16 +564,19 @@ class GSplatOctreeInstance {
     }
 
     /**
-     * Adjusts optimal LOD indices to fit within the splat budget by degrading quality
-     * for lower-importance nodes first. Uses multiple passes, degrading by one level per pass,
-     * until within budget or all nodes are at maximum coarseness (rangeMax).
+     * Adjusts optimal LOD indices to fit within the splat budget bidirectionally.
+     * When over budget: degrades quality for lower-importance nodes first.
+     * When under budget: upgrades quality for higher-importance nodes first.
+     * Uses multiple passes, adjusting by one level per pass, until budget is reached
+     * or all nodes hit their respective limits (rangeMin or rangeMax).
      *
      * @param {number} totalSplats - Current total splat count with optimal LODs.
-     * @param {number} splatBudget - Maximum allowed splat count.
+     * @param {number} splatBudget - Target splat count to reach.
+     * @param {number} rangeMin - Minimum allowed LOD index.
      * @param {number} rangeMax - Maximum allowed LOD index.
      * @private
      */
-    enforceSplatBudget(totalSplats, splatBudget, rangeMax) {
+    enforceSplatBudget(totalSplats, splatBudget, rangeMin, rangeMax) {
         const nodes = this.octree.nodes;
         const nodeInfos = this.nodeInfos;
 
@@ -586,36 +594,76 @@ class GSplatOctreeInstance {
 
         let currentSplats = totalSplats;
 
-        // Multiple passes: degrade by one level per pass until within budget
-        while (currentSplats > splatBudget) {
-            let degradedAnyNode = false;
+        // Skip if already at budget
+        if (currentSplats === splatBudget) {
+            return;
+        }
 
-            // Try degrading each node by one level (starting from lowest importance)
-            for (let i = 0; i < nodeIndices.length; i++) {
-                if (currentSplats <= splatBudget) {
-                    break; // Within budget
+        // Determine direction and set iteration parameters
+        const isOverBudget = currentSplats > splatBudget;
+        const lodDelta = isOverBudget ? 1 : -1;
+
+        // Multiple passes: adjust by one LOD level per pass until budget is reached
+        while (isOverBudget ? currentSplats > splatBudget : currentSplats < splatBudget) {
+            let modified = false;
+
+            if (isOverBudget) {
+
+                // DEGRADE: process from lowest to highest importance
+                for (let i = 0; i < nodeIndices.length; i++) {
+                    const nodeIndex = nodeIndices[i];
+                    const nodeInfo = nodeInfos[nodeIndex];
+                    const node = nodes[nodeIndex];
+                    const currentOptimalLod = nodeInfo.optimalLod;
+
+                    // Try degrading to next coarser LOD (respect rangeMax constraint)
+                    if (currentOptimalLod < rangeMax) {
+                        const currentLod = node.lods[currentOptimalLod];
+                        const nextLod = node.lods[currentOptimalLod + 1];
+                        const splatsSaved = currentLod.count - nextLod.count;
+
+                        // Degrade to coarser LOD
+                        nodeInfo.optimalLod += lodDelta;
+                        currentSplats -= splatsSaved;
+                        modified = true;
+
+                        if (currentSplats <= splatBudget) {
+                            break; // Within budget
+                        }
+                    }
                 }
+            } else {
 
-                const nodeIndex = nodeIndices[i];
-                const nodeInfo = nodeInfos[nodeIndex];
-                const node = nodes[nodeIndex];
-                const currentOptimalLod = nodeInfo.optimalLod;
+                // UPGRADE: process from highest to lowest importance
+                for (let i = nodeIndices.length - 1; i >= 0; i--) {
+                    const nodeIndex = nodeIndices[i];
+                    const nodeInfo = nodeInfos[nodeIndex];
+                    const node = nodes[nodeIndex];
+                    const currentOptimalLod = nodeInfo.optimalLod;
 
-                // Try degrading to next coarser LOD (respect rangeMax constraint)
-                if (currentOptimalLod < rangeMax) {
-                    const currentLod = node.lods[currentOptimalLod];
-                    const nextLod = node.lods[currentOptimalLod + 1];
-                    const splatsSaved = currentLod.count - nextLod.count;
+                    // Try upgrading to next finer LOD (respect rangeMin constraint)
+                    if (currentOptimalLod > rangeMin) {
+                        const currentLod = node.lods[currentOptimalLod];
+                        const nextLod = node.lods[currentOptimalLod - 1];
+                        const splatsAdded = nextLod.count - currentLod.count;
 
-                    // Degrade to coarser LOD
-                    nodeInfo.optimalLod = currentOptimalLod + 1;
-                    currentSplats -= splatsSaved;
-                    degradedAnyNode = true;
+                        // Only upgrade if we won't exceed budget
+                        if (currentSplats + splatsAdded <= splatBudget) {
+                            // Upgrade to finer LOD
+                            nodeInfo.optimalLod += lodDelta;
+                            currentSplats += splatsAdded;
+                            modified = true;
+
+                            if (currentSplats >= splatBudget) {
+                                break; // At budget
+                            }
+                        }
+                    }
                 }
             }
 
-            // If no nodes could be degraded, all are at rangeMax - can't reduce further
-            if (!degradedAnyNode) {
+            // If no nodes were modified, we can't adjust further
+            if (!modified) {
                 break;
             }
         }
@@ -876,6 +924,13 @@ class GSplatOctreeInstance {
      * @returns {boolean} True if octree instance is dirty, false otherwise.
      */
     update(scene) {
+
+        // Sync splat budget from placement and detect changes
+        const currentBudget = this.placement.splatBudget;
+        if (currentBudget !== this.splatBudget) {
+            this.splatBudget = currentBudget;
+            this.needsLodUpdate = true;
+        }
 
         // handle pending loads
         if (this.pending.size) {
