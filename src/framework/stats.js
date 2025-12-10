@@ -77,6 +77,7 @@ class ApplicationStats {
 
         this.shaders = device._shaderStats;
         this.vram = device._vram;
+        this.gpu = device.gpuProfiler?.passTimings ?? new Map();
 
         Object.defineProperty(this.vram, 'totalUsed', {
             get: function () {

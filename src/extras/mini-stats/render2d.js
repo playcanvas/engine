@@ -66,11 +66,11 @@ const fragmentShaderGLSL = /* glsl */ `
 
         vec4 graph;
         if (uv0.w < graphSample.r)
-            graph = vec4(0.7, 0.2, 0.2, 1.0);
+            graph = vec4(1.0, 0.412, 0.380, 1.0);      // Pastel Red
         else if (uv0.w < graphSample.g)
-            graph = vec4(0.2, 0.7, 0.2, 1.0);
+            graph = vec4(0.467, 0.867, 0.467, 1.0);    // Pastel Green
         else if (uv0.w < graphSample.b)
-            graph = vec4(0.2, 0.2, 0.7, 1.0);
+            graph = vec4(0.424, 0.627, 0.863, 1.0);    // Little Boy Blue
         else
             graph = vec4(0.0, 0.0, 0.0, 1.0 - 0.25 * sin(uv0.w * 3.14159));
 
@@ -98,11 +98,11 @@ const fragmentShaderWGSL = /* wgsl */ `
 
         var graph: vec4f;
         if (uv0.w < graphSample.r) {
-            graph = vec4f(0.7, 0.2, 0.2, 1.0);
+            graph = vec4f(1.0, 0.412, 0.380, 1.0);      // Pastel Red
         } else if (uv0.w < graphSample.g) {
-            graph = vec4f(0.2, 0.7, 0.2, 1.0);
+            graph = vec4f(0.467, 0.867, 0.467, 1.0);    // Pastel Green
         } else if (uv0.w < graphSample.b) {
-            graph = vec4f(0.2, 0.2, 0.7, 1.0);
+            graph = vec4f(0.424, 0.627, 0.863, 1.0);    // Little Boy Blue
         } else {
             graph = vec4f(0.0, 0.0, 0.0, 1.0 - 0.25 * sin(uv0.w * 3.14159));
         }

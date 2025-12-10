@@ -12,7 +12,9 @@ class Graph {
         this.avgTotal = 0;
         this.avgTimer = 0;
         this.avgCount = 0;
+        this.maxValue = 0;
         this.timingText = '';
+        this.maxText = '';
 
         this.texture = null;
         this.yOffset = 0;
@@ -43,16 +45,19 @@ class Graph {
         // calculate stacked total
         const total = timings.reduce((a, v) => a + v, 0);
 
-        // update averages
+        // update averages and max
         this.avgTotal += total;
         this.avgTimer += ms;
         this.avgCount++;
+        this.maxValue = Math.max(this.maxValue, total);
 
         if (this.avgTimer > this.textRefreshRate) {
             this.timingText = (this.avgTotal / this.avgCount).toFixed(this.timer.decimalPlaces);
+            this.maxText = this.maxValue.toFixed(this.timer.decimalPlaces);
             this.avgTimer = 0;
             this.avgTotal = 0;
             this.avgCount = 0;
+            this.maxValue = 0;
         }
 
         if (this.enabled) {

@@ -56,8 +56,8 @@ class WordAtlas {
 
         // render words
         placements.forEach((m, word) => {
-            // digits and '.' are white, the rest grey
-            context.fillStyle = isNumber(word) ? 'rgb(255, 255, 255)' : 'rgb(170, 170, 170)';
+            // digits and '.' are yellow, the rest pastel cyan
+            context.fillStyle = isNumber(word) ? 'rgb(255, 240, 100)' : 'rgb(150, 220, 230)';
 
             // render the word
             context.fillText(word, m.x - m.l, m.y + m.a);
@@ -65,13 +65,13 @@ class WordAtlas {
 
         this.placements = placements;
 
-        // convert from black and white data to white texture with alpha
+        // preserve RGB color data and use max channel for alpha
         const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
         for (let i = 0; i < data.length; i += 4) {
-            data[i + 3] = data[i + 0];
-            data[i + 0] = 255;
-            data[i + 1] = 255;
-            data[i + 2] = 255;
+            // use max of RGB channels for alpha, multiply by 2 for bolder text
+            const maxChannel = Math.max(data[i + 0], data[i + 1], data[i + 2]);
+            data[i + 3] = Math.min(maxChannel * 2, 255);
+            // keep RGB as-is to preserve colors
         }
 
         this.texture = new Texture(device, {
@@ -105,7 +105,34 @@ class WordAtlas {
                 1);
             return p.w;
         }
-        return 0;
+
+        // if word not found, try rendering character by character
+        let totalWidth = 0;
+        for (let i = 0; i < word.length; i++) {
+            const char = word[i];
+            
+            // handle spaces specially - they don't render but need width
+            if (char === ' ') {
+                totalWidth += 5;  // fixed width for space
+                continue;
+            }
+            
+            const charPlacement = this.placements.get(char);
+            if (charPlacement) {
+                const padding = 1;
+                render2d.quad(x + totalWidth + charPlacement.l - padding,
+                    y - charPlacement.d + padding,
+                    charPlacement.w + padding * 2,
+                    charPlacement.h + padding * 2,
+                    charPlacement.x - padding,
+                    this.texture.height - charPlacement.y - charPlacement.h - padding,
+                    undefined, undefined,
+                    this.texture,
+                    1);
+                totalWidth += charPlacement.w;
+            }
+        }
+        return totalWidth;
     }
 }
 
