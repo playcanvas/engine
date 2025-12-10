@@ -110,13 +110,13 @@ class WordAtlas {
         let totalWidth = 0;
         for (let i = 0; i < word.length; i++) {
             const char = word[i];
-            
+
             // handle spaces specially - they don't render but need width
             if (char === ' ') {
                 totalWidth += 5;  // fixed width for space
                 continue;
             }
-            
+
             const charPlacement = this.placements.get(char);
             if (charPlacement) {
                 const padding = 1;
