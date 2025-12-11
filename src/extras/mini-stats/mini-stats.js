@@ -14,6 +14,21 @@ import { Render2d } from './render2d.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
+// CPU stat name mappings: full property name -> shortened display name
+const cpuStatDisplayNames = {
+    animUpdate: 'anim',
+    physicsTime: 'physics',
+    renderTime: 'render',
+    gsplatSort: 'gsplatSort'
+};
+
+// CPU stats with delayed creation (only shown once non-zero, but never removed)
+const delayedStartStats = new Set([
+    'physicsTime',
+    'animUpdate',
+    'gsplatSort'
+]);
+
 /**
  * @typedef {object} MiniStatsSizeOptions
  * @property {number} width - Width of the graph area.
@@ -49,8 +64,10 @@ import { Render2d } from './render2d.js';
  * @property {MiniStatsProcessorOptions} gpu - GPU graph options.
  * @property {MiniStatsGraphOptions[]} stats - Array of options to render additional graphs based
  * on stats collected into Application.stats.
- * @property {boolean} [showGpuPasses] - Enable dynamic GPU pass tracking and display of individual
- * render pass timings. Defaults to true.
+ * @property {number} [gpuTimingMinSize] - Minimum size index at which to show GPU pass timing
+ * graphs. Defaults to 1.
+ * @property {number} [cpuTimingMinSize] - Minimum size index at which to show CPU sub-timing
+ * graphs (script, anim, physics, render). Defaults to 1.
  */
 
 /**
@@ -70,6 +87,14 @@ class MiniStats {
      */
     constructor(app, options = MiniStats.getDefaultOptions()) {
         const device = app.graphicsDevice;
+
+        // Persistent texture row allocation (must be initialized before initGraphs)
+        this.graphRows = new Map();  // Map<Graph, rowIndex>
+        this.freeRows = [];          // Available rows for reuse
+        this.nextRowIndex = 0;       // Next new row to allocate
+
+        // sizes must be set before initGraphs (needed by ensureTextureHeight)
+        this.sizes = options.sizes;
 
         // create graphs
         this.initGraphs(app, device, options);
@@ -91,11 +116,12 @@ class MiniStats {
         }
 
         this.wordAtlas = new WordAtlas(device, words);
-        this.sizes = options.sizes;
         this._activeSizeIndex = options.startSizeIndex;
 
-        // if GPU pass tracking is enabled, use the last width for medium/large sizes
-        if (options.showGpuPasses) {
+        // if GPU pass tracking or CPU timing is enabled, use the last width for medium/large sizes
+        const gpuTimingMinSize = options.gpuTimingMinSize ?? 1;
+        const cpuTimingMinSize = options.cpuTimingMinSize ?? 1;
+        if (gpuTimingMinSize < this.sizes.length || cpuTimingMinSize < this.sizes.length) {
             const lastWidth = this.sizes[this.sizes.length - 1].width;
             for (let i = 1; i < this.sizes.length - 1; i++) {
                 this.sizes[i].width = lastWidth;
@@ -144,8 +170,13 @@ class MiniStats {
         this._enabled = true;
 
         // GPU pass tracking
-        this.showGpuPasses = options.showGpuPasses;
+        this.gpuTimingMinSize = gpuTimingMinSize;
         this.gpuPassGraphs = new Map(); // Map<passName, { graph, lastNonZeroFrame }>
+
+        // CPU sub-timing tracking
+        this.cpuTimingMinSize = cpuTimingMinSize;
+        this.cpuGraphs = new Map(); // Map<statName, { graph, lastNonZeroFrame }>
+
         this.frameIndex = 0;
         this.textRefreshRate = options.textRefreshRate;
 
@@ -239,8 +270,11 @@ class MiniStats {
                 }
             ],
 
-            // enable GPU pass tracking
-            showGpuPasses: true
+            // minimum size index to show GPU pass timing graphs
+            gpuTimingMinSize: 1,
+
+            // minimum size index to show CPU sub-timing graphs
+            cpuTimingMinSize: 1
         };
     }
 
@@ -254,30 +288,44 @@ class MiniStats {
     set activeSizeIndex(value) {
         this._activeSizeIndex = value;
         this.gspacing = this.sizes[value].spacing;
+
         this.resize(this.sizes[value].width, this.sizes[value].height, this.sizes[value].graphs);
 
         // update opacity based on size (larger sizes have higher default opacity)
         this.opacity = value > 0 ? 0.85 : 0.7;
 
-        // delete GPU pass graphs when switching to smallest size, they'll be recreated when switching back
-        if (this.gpuPassGraphs && value === 0) {
+        // delete GPU pass graphs when switching below threshold
+        if (value < this.gpuTimingMinSize && this.gpuPassGraphs) {
             for (const passData of this.gpuPassGraphs.values()) {
-                // remove from graphs array
                 const index = this.graphs.indexOf(passData.graph);
                 if (index !== -1) {
                     this.graphs.splice(index, 1);
                 }
+                this.freeRow(passData.graph);
                 passData.graph.destroy();
             }
             this.gpuPassGraphs.clear();
 
-            // update yOffset for remaining graphs
-            this.graphs.forEach((graph, i) => {
-                graph.yOffset = i;
-            });
+            // reset main GPU graph to default background color
+            const gpuGraph = this.graphs.find(g => g.name === 'GPU');
+            if (gpuGraph) gpuGraph.graphType = 0.0;
+        }
 
-            // resize texture if needed
-            this.resizeTexture();
+        // delete CPU sub-timing graphs when switching below threshold
+        if (value < this.cpuTimingMinSize && this.cpuGraphs) {
+            for (const statData of this.cpuGraphs.values()) {
+                const index = this.graphs.indexOf(statData.graph);
+                if (index !== -1) {
+                    this.graphs.splice(index, 1);
+                }
+                this.freeRow(statData.graph);
+                statData.graph.destroy();
+            }
+            this.cpuGraphs.clear();
+
+            // reset main CPU graph to default background color
+            const cpuGraph = this.graphs.find(g => g.name === 'CPU');
+            if (cpuGraph) cpuGraph.graphType = 0.0;
         }
     }
 
@@ -347,6 +395,7 @@ class MiniStats {
         return this._enabled;
     }
 
+
     /**
      * Create the graphs requested by the user and add them to the MiniStats instance.
      *
@@ -389,9 +438,9 @@ class MiniStats {
             addressV: ADDRESS_REPEAT
         });
 
-        this.graphs.forEach((graph, i) => {
+        this.graphs.forEach((graph) => {
             graph.texture = this.texture;
-            graph.yOffset = i;
+            this.allocateRow(graph);
         });
     }
 
@@ -497,86 +546,98 @@ class MiniStats {
     }
 
     /**
-     * Update GPU pass graphs dynamically based on timing data.
-     *
+     * Update sub-stat graphs (GPU passes or CPU timings).
+     * @param {Map} subGraphs - Map to store graph data (gpuPassGraphs or cpuGraphs)
+     * @param {string} mainGraphName - Name of main graph ('GPU' or 'CPU')
+     * @param {Map<string,number>|Object} stats - Stats data (Map for GPU, object for CPU)
+     * @param {string} statPathPrefix - Prefix for stat path ('gpu' for GPU, 'frame' for CPU)
+     * @param {number} removeAfterFrames - Frames of zero before removal
      * @private
      */
-    updateGpuPassGraphs() {
-        if (!this.showGpuPasses) {
-            return;
-        }
-
-        // don't create GPU pass graphs on smallest size
-        if (this._activeSizeIndex === 0) {
-            return;
-        }
-
-        const gpuStats = this.app.stats.gpu;
-        if (!gpuStats) {
-            return;
-        }
-
-        const removeAfterFrames = 240;  // frames with 0 timing before removing pass
+    updateSubStats(subGraphs, mainGraphName, stats, statPathPrefix, removeAfterFrames) {
         const passesToRemove = [];
-        const initialGraphCount = this.graphs.length;
 
-        // check existing GPU passes for removal
-        for (const [passName, passData] of this.gpuPassGraphs) {
-            const timing = gpuStats.get(passName) || 0;
+        // check existing sub-stats for removal
+        for (const [statName, statData] of subGraphs) {
+            const timing = (stats instanceof Map) ? (stats.get(statName) || 0) : (stats[statName] || 0);
 
             if (timing > 0) {
                 // update last non-zero frame
-                passData.lastNonZeroFrame = this.frameIndex;
+                statData.lastNonZeroFrame = this.frameIndex;
             } else if (removeAfterFrames > 0) {
-                // check if we should remove this pass
-                if (this.frameIndex - passData.lastNonZeroFrame > removeAfterFrames) {
-                    passesToRemove.push(passName);
+                // Only GPU passes auto-hide; CPU stats are never removed
+                const shouldAutoHide = statPathPrefix === 'gpu';
+                if (shouldAutoHide && this.frameIndex - statData.lastNonZeroFrame > removeAfterFrames) {
+                    passesToRemove.push(statName);
                 }
             }
         }
 
-        // remove passes that have been zero for too long
-        for (const passName of passesToRemove) {
-            const passData = this.gpuPassGraphs.get(passName);
-            if (passData) {
+        // remove stats that have been zero for too long
+        for (const statName of passesToRemove) {
+            const statData = subGraphs.get(statName);
+            if (statData) {
                 // remove from graphs array
-                const index = this.graphs.indexOf(passData.graph);
+                const index = this.graphs.indexOf(statData.graph);
                 if (index !== -1) {
                     this.graphs.splice(index, 1);
                 }
-                passData.graph.destroy();
-                this.gpuPassGraphs.delete(passName);
+                this.freeRow(statData.graph);
+                statData.graph.destroy();
+                subGraphs.delete(statName);
             }
         }
 
-        // scan for new GPU passes
-        for (const [passName, timing] of gpuStats) {
-            if (!this.gpuPassGraphs.has(passName)) {
-                // create new graph for this pass
-                const graphName = `  ${passName}`;  // indent with 2 spaces
+        // scan for new sub-stats
+        const statsEntries = (stats instanceof Map) ? stats : Object.entries(stats);
+        for (const [statName, timing] of statsEntries) {
+            if (!subGraphs.has(statName)) {
+                // Skip creating graph for auto-hide stats with zero timing
+                // Skip creating graph for GPU passes or delayed-start CPU stats with zero timing
+                const isDelayedStart = statPathPrefix === 'gpu' || delayedStartStats.has(statName);
+                if (isDelayedStart && timing === 0) {
+                    continue;
+                }
 
-                // initial watermark (will be synced to main GPU graph)
+                // create new graph for this stat
+                // shorten display name for CPU stats
+                let displayName = statName;
+                if (statPathPrefix === 'frame') {
+                    displayName = cpuStatDisplayNames[statName] || statName;
+                }
+                const graphName = `  ${displayName}`;  // indent with 2 spaces
+
+                // initial watermark (will be synced to main graph)
                 const watermark = 10.0;
 
-                const timer = new StatsTimer(this.app, [`gpu.${passName}`], 1, 'ms', 1);
+                const statPath = `${statPathPrefix}.${statName}`;
+                const timer = new StatsTimer(this.app, [statPath], 1, 'ms', 1);
                 const graph = new Graph(graphName, this.app, watermark, this.textRefreshRate, timer);
 
-                graph.texture = this.texture;
+                // Set graph type for background tinting
+                if (statPathPrefix === 'gpu') {
+                    graph.graphType = 0.33;  // GPU sub-graphs
+                } else if (statPathPrefix === 'frame') {
+                    graph.graphType = 0.66;  // CPU sub-graphs
+                }
 
-                // match the current display mode (graphs enabled/disabled)
+                graph.texture = this.texture;
+                this.allocateRow(graph);
+
+                // match the current display mode
                 const currentSize = this.sizes[this._activeSizeIndex];
                 graph.enabled = currentSize.graphs;
 
-                // find the GPU graph index and insert before it (graphs render bottom to top)
-                let gpuGraphIndex = this.graphs.findIndex(g => g.name === 'GPU');
-                if (gpuGraphIndex === -1) {
-                    gpuGraphIndex = 0;  // fallback to start if GPU graph not found
+                // find the main graph index and insert before it (graphs render bottom to top)
+                let mainGraphIndex = this.graphs.findIndex(g => g.name === mainGraphName);
+                if (mainGraphIndex === -1) {
+                    mainGraphIndex = 0;  // fallback to start if main graph not found
                 }
 
-                // find where to insert - right before the GPU graph, after any existing GPU pass graphs
-                let insertIndex = gpuGraphIndex;
-                for (let i = gpuGraphIndex - 1; i >= 0; i--) {
-                    // check if this is an indented GPU pass (starts with spaces after trim would show content)
+                // find where to insert - right before the main graph, after any existing sub-stats
+                let insertIndex = mainGraphIndex;
+                for (let i = mainGraphIndex - 1; i >= 0; i--) {
+                    // check if this is an indented sub-stat (starts with spaces)
                     if (this.graphs[i].name.startsWith(' ')) {
                         insertIndex = i;
                     } else {
@@ -587,43 +648,84 @@ class MiniStats {
                 // insert the new graph at the correct position
                 this.graphs.splice(insertIndex, 0, graph);
 
-                this.gpuPassGraphs.set(passName, {
+                subGraphs.set(statName, {
                     graph: graph,
                     lastNonZeroFrame: timing > 0 ? this.frameIndex : this.frameIndex - removeAfterFrames - 1
                 });
             }
         }
 
-        // update yOffset and resize texture if any graphs were added or removed
-        if (this.graphs.length !== initialGraphCount) {
-            this.graphs.forEach((graph, i) => {
-                graph.yOffset = i;
-            });
-            this.resizeTexture();
-        }
+        // sync all sub-stat watermarks to match main graph
+        const mainGraph = this.graphs.find(g => g.name === mainGraphName);
+        if (mainGraph) {
+            for (const statData of subGraphs.values()) {
+                statData.graph.watermark = mainGraph.watermark;
+            }
 
-        // sync all GPU pass watermarks to match main GPU graph
-        const mainGpuGraph = this.graphs.find(g => g.name === 'GPU');
-        if (mainGpuGraph) {
-            for (const passData of this.gpuPassGraphs.values()) {
-                passData.graph.watermark = mainGpuGraph.watermark;
+            // set main graph background color to match sub-graphs when they exist
+            if (subGraphs.size > 0) {
+                if (statPathPrefix === 'gpu') {
+                    mainGraph.graphType = 0.33;  // Match GPU sub-graphs
+                } else if (statPathPrefix === 'frame') {
+                    mainGraph.graphType = 0.66;  // Match CPU sub-graphs
+                }
+            } else {
+                // reset to default background when no sub-graphs
+                mainGraph.graphType = 0.0;
             }
         }
-
-        this.frameIndex++;
     }
 
     /**
-     * Resize the texture to accommodate the current number of graphs.
+     * Allocates a texture row for a graph. Reuses free rows when available.
      *
+     * @param {Graph} graph - The graph to allocate a row for.
+     * @returns {number} The allocated row index.
      * @private
      */
-    resizeTexture() {
+    allocateRow(graph) {
+        let row;
+        if (this.freeRows.length > 0) {
+            row = this.freeRows.pop();
+        } else {
+            row = this.nextRowIndex++;
+            this.ensureTextureHeight(this.nextRowIndex);
+        }
+        this.graphRows.set(graph, row);
+        graph.yOffset = row;
+        graph.needsClear = true;  // Will clear on first update()
+        return row;
+    }
+
+    /**
+     * Frees a texture row when a graph is destroyed.
+     *
+     * @param {Graph} graph - The graph whose row to free.
+     * @private
+     */
+    freeRow(graph) {
+        const row = this.graphRows.get(graph);
+        if (row !== undefined) {
+            this.freeRows.push(row);
+            this.graphRows.delete(graph);
+        }
+    }
+
+    /**
+     * Ensures the texture has enough rows. Only grows, never shrinks.
+     *
+     * @param {number} requiredRows - The minimum number of rows needed.
+     * @private
+     */
+    ensureTextureHeight(requiredRows) {
         const maxWidth = this.sizes[this.sizes.length - 1].width;
         const requiredWidth = math.nextPowerOfTwo(maxWidth);
-        const requiredHeight = math.nextPowerOfTwo(this.graphs.length);
+        const requiredHeight = math.nextPowerOfTwo(requiredRows);
 
-        this.texture.resize(requiredWidth, requiredHeight);
+        // Only grow, never shrink
+        if (requiredHeight > this.texture.height) {
+            this.texture.resize(requiredWidth, requiredHeight);
+        }
     }
 
     /**
@@ -633,9 +735,31 @@ class MiniStats {
      */
     postRender() {
         if (this._enabled) {
-            this.updateGpuPassGraphs();
             this.render();
+
+            // Update GPU pass graphs when size index meets threshold
+            if (this._activeSizeIndex >= this.gpuTimingMinSize) {
+                const gpuStats = this.app.stats.gpu;
+                if (gpuStats) {
+                    this.updateSubStats(this.gpuPassGraphs, 'GPU', gpuStats, 'gpu', 240);
+                }
+            }
+
+            // Update CPU sub-timing graphs when size index meets threshold
+            if (this._activeSizeIndex >= this.cpuTimingMinSize) {
+                const cpuStats = {
+                    scriptUpdate: this.app.stats.frame.scriptUpdate,
+                    scriptPostUpdate: this.app.stats.frame.scriptPostUpdate,
+                    animUpdate: this.app.stats.frame.animUpdate,
+                    physicsTime: this.app.stats.frame.physicsTime,
+                    renderTime: this.app.stats.frame.renderTime,
+                    gsplatSort: this.app.stats.frame.gsplatSort
+                };
+                this.updateSubStats(this.cpuGraphs, 'CPU', cpuStats, 'frame', 240);
+            }
         }
+
+        this.frameIndex++;
     }
 }
 

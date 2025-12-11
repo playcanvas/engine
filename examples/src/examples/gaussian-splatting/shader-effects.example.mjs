@@ -278,16 +278,6 @@ assetListLoader.load(() => {
     camera.script?.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
-    // Setup bloom post-processing
-    if (camera.camera) {
-        const cameraFrame = new pc.CameraFrame(app, camera.camera);
-        cameraFrame.rendering.samples = 4;
-        cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
-        cameraFrame.bloom.intensity = 0.03;
-        cameraFrame.bloom.blurLevel = 6;
-        cameraFrame.update();
-    }
-
     // Auto-rotate camera when idle
     let autoRotateEnabled = true;
     let lastInteractionTime = 0;

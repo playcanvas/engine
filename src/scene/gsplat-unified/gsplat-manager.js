@@ -223,7 +223,7 @@ class GSplatManager {
 
     createSorter() {
         // create sorter
-        const sorter = new GSplatUnifiedSorter();
+        const sorter = new GSplatUnifiedSorter(this.scene);
         sorter.on('sorted', (count, version, orderData) => {
             this.onSorted(count, version, orderData);
         });
