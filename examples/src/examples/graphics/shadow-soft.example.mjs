@@ -150,7 +150,7 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
 
     // Create a directional light casting soft shadows
-    const dirLight = new pc.Entity('Cascaded Light');
+    const dirLight = new pc.Entity('MainLight');
     dirLight.addComponent('light', {
         ...{
             type: 'directional',
