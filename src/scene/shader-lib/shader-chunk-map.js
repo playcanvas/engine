@@ -33,6 +33,7 @@ class ShaderChunkMap extends Map {
      * Create a new ShaderChunkMap instance.
      *
      * @param {Map<string, ChunkValidation>} [validations] - Optional map of chunk validations.
+     * @ignore
      */
     constructor(validations) {
         super();
