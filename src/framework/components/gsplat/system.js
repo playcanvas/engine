@@ -14,7 +14,7 @@ import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 // Register deprecation warning for old customization chunk
 Debug.call(() => {
     ShaderChunks.registerValidation('gsplatCustomizeVS', {
-        message: 'Shader chunk gsplatCustomizeVS is deprecated. Use gsplatModifySplatVS for better performance.',
+        message: 'Shader chunk gsplatCustomizeVS is deprecated. Use gsplatModifyVS for better performance.',
         defaultCodeGLSL: gsplatChunksGLSL.gsplatCustomizeVS,
         defaultCodeWGSL: gsplatChunksWGSL.gsplatCustomizeVS
     });

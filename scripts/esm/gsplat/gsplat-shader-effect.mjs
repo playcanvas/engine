@@ -101,7 +101,7 @@ class GsplatShaderEffect extends Script {
         const device = this.app.graphicsDevice;
         const shaderLanguage = device?.isWebGPU ? 'wgsl' : 'glsl';
 
-        this.material.getShaderChunks(shaderLanguage).delete('gsplatModifySplatVS');
+        this.material.getShaderChunks(shaderLanguage).delete('gsplatModifyVS');
         this.material.update();
         this.material = null;
     }
@@ -139,7 +139,7 @@ class GsplatShaderEffect extends Script {
         const shaderLanguage = device?.isWebGPU ? 'wgsl' : 'glsl';
         const customShader = shaderLanguage === 'wgsl' ? this.getShaderWGSL() : this.getShaderGLSL();
 
-        material.getShaderChunks(shaderLanguage).set('gsplatModifySplatVS', customShader);
+        material.getShaderChunks(shaderLanguage).set('gsplatModifyVS', customShader);
         material.update();
     }
 
