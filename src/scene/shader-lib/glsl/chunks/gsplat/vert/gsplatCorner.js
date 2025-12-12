@@ -1,6 +1,22 @@
 export default /* glsl */`
 uniform vec4 viewport_size;             // viewport width, height, 1/width, 1/height
 
+// compute 3d covariance from rotation and scale
+void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
+    mat3 rot = quatToMat3(getRotation());
+    vec3 scale = getScale();
+
+    // M = S * R
+    mat3 M = transpose(mat3(
+        scale.x * rot[0],
+        scale.y * rot[1],
+        scale.z * rot[2]
+    ));
+
+    covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
+    covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
+}
+
 // calculate the clip-space offset from the center for this gaussian
 bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corner, vec3 covA, vec3 covB) {
 

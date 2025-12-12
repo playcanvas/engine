@@ -1,6 +1,22 @@
 export default /* wgsl */`
 uniform viewport_size: vec4f;             // viewport width, height, 1/width, 1/height
 
+// compute 3d covariance from rotation and scale
+fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
+    let rot = quatToMat3(getRotation());
+    let scale = getScale();
+
+    // M = S * R
+    let M = transpose(mat3x3f(
+        scale.x * rot[0],
+        scale.y * rot[1],
+        scale.z * rot[2]
+    ));
+
+    *covA_ptr = vec3f(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
+    *covB_ptr = vec3f(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
+}
+
 // calculate the clip-space offset from the center for this gaussian
 fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, SplatCenter>, corner: ptr<function, SplatCorner>, covA: vec3f, covB: vec3f) -> bool {
 

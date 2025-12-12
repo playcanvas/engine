@@ -27,10 +27,6 @@ void main(void) {
         return;
     }
 
-    #ifdef GSPLAT_WORKBUFFER_DATA
-        loadSplatTextures(source);
-    #endif
-
     vec3 modelCenter = readCenter(source);
 
     SplatCenter center;

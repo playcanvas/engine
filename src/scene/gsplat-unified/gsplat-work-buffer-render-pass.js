@@ -1,5 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
@@ -14,6 +16,8 @@ import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
  */
 
 const _viewMat = new Mat4();
+const _modelScale = new Vec3();
+const _modelRotation = new Quat();
 
 const _whiteColor = [1, 1, 1];
 
@@ -45,6 +49,12 @@ class GSplatWorkBufferRenderPass extends RenderPass {
 
     /** @type {boolean} */
     colorOnly;
+
+    /** @type {Float32Array} */
+    _modelScaleData = new Float32Array(3);
+
+    /** @type {Float32Array} */
+    _modelRotationData = new Float32Array(4);
 
     constructor(device, workBuffer, colorOnly = false) {
         super(device);
@@ -146,8 +156,28 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const color = this.colorsByLod?.[splatInfo.lodIndex] ?? this.colorsByLod?.[0] ?? _whiteColor;
         scope.resolve('uColorMultiply').setValue(color);
 
-        // SH related
-        scope.resolve('matrix_model').setValue(splatInfo.node.getWorldTransform().data);
+        // Decompose model matrix into scale and rotation
+        const worldTransform = splatInfo.node.getWorldTransform();
+        worldTransform.getScale(_modelScale);
+        _modelRotation.setFromMat4(worldTransform);
+
+        // Ensure w positive for sqrt reconstruction
+        if (_modelRotation.w < 0) {
+            _modelRotation.mulScalar(-1);
+        }
+
+        // set as uniforms
+        this._modelScaleData[0] = _modelScale.x;
+        this._modelScaleData[1] = _modelScale.y;
+        this._modelScaleData[2] = _modelScale.z;
+        this._modelRotationData[0] = _modelRotation.x;
+        this._modelRotationData[1] = _modelRotation.y;
+        this._modelRotationData[2] = _modelRotation.z;
+        this._modelRotationData[3] = _modelRotation.w;
+
+        scope.resolve('matrix_model').setValue(worldTransform.data);
+        scope.resolve('model_scale').setValue(this._modelScaleData);
+        scope.resolve('model_rotation').setValue(this._modelRotationData);
 
         // Render the quad - QuadRender handles all the complex setup internally
         workBufferRenderInfo.quadRender.render(viewport);

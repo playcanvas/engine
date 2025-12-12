@@ -7,24 +7,24 @@ var splatColor: texture_2d<uff>;
 var<private> cachedSplatTexture0Data: vec4u;
 var<private> cachedSplatTexture1Data: vec2u;
 
-// load splat textures into globals to avoid redundant fetches
-fn loadSplatTextures(source: ptr<function, SplatSource>) {
-    cachedSplatTexture0Data = textureLoad(splatTexture0, source.uv, 0);
-    cachedSplatTexture1Data = textureLoad(splatTexture1, source.uv, 0).xy;
-}
-
 // read the model-space center of the gaussian
 fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
+    cachedSplatTexture0Data = textureLoad(splatTexture0, source.uv, 0);
+    cachedSplatTexture1Data = textureLoad(splatTexture1, source.uv, 0).xy;
     return vec3f(bitcast<f32>(cachedSplatTexture0Data.r), bitcast<f32>(cachedSplatTexture0Data.g), bitcast<f32>(cachedSplatTexture0Data.b));
 }
 
-// sample covariance vectors
-fn readCovariance(source: ptr<function, SplatSource>, cov_A: ptr<function, vec3f>, cov_B: ptr<function, vec3f>) {
-    let covAxy = unpack2x16float(cachedSplatTexture1Data.x);
-    let covBxy = unpack2x16float(cachedSplatTexture1Data.y);
-    let covAzBz = unpack2x16float(cachedSplatTexture0Data.a);
-    *cov_A = vec3f(covAxy, covAzBz.x);
-    *cov_B = vec3f(covBxy, covAzBz.y);
+fn getRotation() -> vec4f {
+    let rotXY = unpack2x16float(cachedSplatTexture0Data.a);
+    let rotZscaleX = unpack2x16float(cachedSplatTexture1Data.x);
+    let rotXYZ = vec3f(rotXY, rotZscaleX.x);
+    return vec4f(rotXYZ, sqrt(max(0.0, 1.0 - dot(rotXYZ, rotXYZ)))).wxyz;
+}
+
+fn getScale() -> vec3f {
+    let rotZscaleX = unpack2x16float(cachedSplatTexture1Data.x);
+    let scaleYZ = unpack2x16float(cachedSplatTexture1Data.y);
+    return vec3f(rotZscaleX.y, scaleYZ);
 }
 
 fn readColor(source: ptr<function, SplatSource>) -> vec4f {

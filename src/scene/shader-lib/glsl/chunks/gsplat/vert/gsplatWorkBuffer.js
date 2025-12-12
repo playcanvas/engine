@@ -12,24 +12,24 @@ uniform highp usampler2D splatTexture1;
 uvec4 cachedSplatTexture0Data;
 uvec2 cachedSplatTexture1Data;
 
-// load splat textures into globals to avoid redundant fetches
-void loadSplatTextures(SplatSource source) {
-    cachedSplatTexture0Data = texelFetch(splatTexture0, source.uv, 0);
-    cachedSplatTexture1Data = texelFetch(splatTexture1, source.uv, 0).xy;
-}
-
 // read the model-space center of the gaussian
 vec3 readCenter(SplatSource source) {
+    cachedSplatTexture0Data = texelFetch(splatTexture0, source.uv, 0);
+    cachedSplatTexture1Data = texelFetch(splatTexture1, source.uv, 0).xy;
     return vec3(uintBitsToFloat(cachedSplatTexture0Data.r), uintBitsToFloat(cachedSplatTexture0Data.g), uintBitsToFloat(cachedSplatTexture0Data.b));
 }
 
-// sample covariance vectors
-void readCovariance(in SplatSource source, out vec3 cov_A, out vec3 cov_B) {
-    vec2 covAxy = unpackHalf2x16(cachedSplatTexture1Data.x);
-    vec2 covBxy = unpackHalf2x16(cachedSplatTexture1Data.y);
-    vec2 covAzBz = unpackHalf2x16(cachedSplatTexture0Data.a);
-    cov_A = vec3(covAxy, covAzBz.x);
-    cov_B = vec3(covBxy, covAzBz.y);
+vec4 getRotation() {
+    vec2 rotXY = unpackHalf2x16(cachedSplatTexture0Data.a);
+    vec2 rotZscaleX = unpackHalf2x16(cachedSplatTexture1Data.x);
+    vec3 rotXYZ = vec3(rotXY, rotZscaleX.x);
+    return vec4(rotXYZ, sqrt(max(0.0, 1.0 - dot(rotXYZ, rotXYZ)))).wxyz;
+}
+
+vec3 getScale() {
+    vec2 rotZscaleX = unpackHalf2x16(cachedSplatTexture1Data.x);
+    vec2 scaleYZ = unpackHalf2x16(cachedSplatTexture1Data.y);
+    return vec3(rotZscaleX.y, scaleYZ);
 }
 
 vec4 readColor(in SplatSource source) {

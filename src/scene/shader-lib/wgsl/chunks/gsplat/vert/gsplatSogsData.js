@@ -26,11 +26,8 @@ fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
 
 const norm: f32 = sqrt(2.0);
 
-// sample covariance vectors
-fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
+fn getRotation() -> vec4f {
     let qdata = unpack8888(packedSample.z).xyz;
-    let sdata = unpack101010(packedSample.w >> 2u);
-
     let qmode = packedSample.w & 0x3u;
     let abc = (qdata - 0.5) * norm;
     let d = sqrt(max(0.0, 1.0 - dot(abc, abc)));
@@ -45,18 +42,11 @@ fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, ve
     } else {
         quat = vec4f(abc.x, abc.y, abc.z, d);
     }
+    return quat;
+}
 
-    let rot = quatToMat3(quat);
-    let scale = exp(mix(vec3f(uniform.scales_mins), vec3f(uniform.scales_maxs), sdata));
-
-    // M = S * R
-    let M = transpose(mat3x3f(
-        scale.x * rot[0],
-        scale.y * rot[1],
-        scale.z * rot[2]
-    ));
-
-    *covA_ptr = vec3f(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
-    *covB_ptr = vec3f(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
+fn getScale() -> vec3f {
+    let sdata = unpack101010(packedSample.w >> 2u);
+    return exp(mix(vec3f(uniform.scales_mins), vec3f(uniform.scales_maxs), sdata));
 }
 `;
