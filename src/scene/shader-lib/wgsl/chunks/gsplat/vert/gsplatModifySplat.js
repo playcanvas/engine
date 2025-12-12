@@ -32,4 +32,3 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
     // Example: *color.rgb *= 0.5; // darken all splats
 }
 `;
-
