@@ -37,6 +37,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     center.modelCenterOriginal = modelCenter;
     
     modifyCenter(&modelCenter);
+    modifySplatCenter(&modelCenter);
     center.modelCenterModified = modelCenter;
 
     if (!initCenter(modelCenter, &center)) {
@@ -75,6 +76,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #endif
 
     modifyColor(modelCenter, &clr);
+    modifySplatColor(modelCenter, &clr);
 
     clipCorner(&corner, clr.w);
 

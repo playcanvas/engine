@@ -42,7 +42,7 @@ void initShared(vec3 center) {
     g_tLand = g_tStart + uFlightTime;
 }
 
-void modifyCenter(inout vec3 center) {
+void modifySplatCenter(inout vec3 center) {
     vec3 originalCenter = center;
     initShared(center);
     
@@ -76,48 +76,48 @@ void modifyCenter(inout vec3 center) {
     // If landed: stay at original position (no change needed)
 }
 
-void modifyCovariance(vec3 originalCenter, vec3 modifiedCenter, inout vec3 covA, inout vec3 covB) {
+void modifySplatRotationScale(vec3 originalCenter, vec3 modifiedCenter, inout vec4 rotation, inout vec3 scale) {
     // Check if animation is complete (after landing transition)
     float timeSinceLanding = uTime - g_tLand;
     if (timeSinceLanding >= 0.5) return; // Effect complete, no modifications
     
     // Early exit for distant splats during animation
     if (g_dist3D > uEndRadius) {
-        gsplatMakeRound(covA, covB, 0.0);
+        scale = vec3(0.0);
         return;
     }
     
     // Before 2D wave reaches: invisible
     if (uTime < g_tStart) {
-        gsplatMakeRound(covA, covB, 0.0);
+        scale = vec3(0.0);
         return;
     }
+    
+    // Store original scale for shape preservation
+    vec3 origScale = scale;
+    float origSize = gsplatGetSizeFromScale(scale);
     
     // During fall and transition after landing
     if (timeSinceLanding < 0.5) {
         // Still falling or transitioning
-        float originalSize = gsplatExtractSize(covA, covB);
-        
         if (timeSinceLanding < 0.0) {
-            // Falling: small round dots
-            gsplatMakeRound(covA, covB, min(uRainSize, originalSize));
+            // Falling: small spherical dots
+            float targetSize = min(uRainSize, origSize);
+            gsplatMakeSpherical(scale, targetSize);
         } else {
             // Landing transition: lerp from dots to original over 0.5s
             float t = timeSinceLanding * 2.0; // normalize [0, 0.5] to [0, 1]
-            float size = mix(uRainSize, originalSize, t);
+            float size = mix(uRainSize, origSize, t);
             
-            // Lerp between round and original shape
-            vec3 origCovA = covA;
-            vec3 origCovB = covB;
-            gsplatMakeRound(covA, covB, size);
-            covA = mix(covA, origCovA, t);
-            covB = mix(covB, origCovB, t);
+            // Lerp between spherical (uniform) and original scale
+            vec3 sphericalScale = vec3(size);
+            scale = mix(sphericalScale, origScale, t);
         }
     }
     // After transition: original shape/size (no-op)
 }
 
-void modifyColor(vec3 center, inout vec4 color) {
+void modifySplatColor(vec3 center, inout vec4 color) {
     // Check if animation is complete
     float timeSinceLanding = uTime - g_tLand;
     if (timeSinceLanding >= uHitDuration) return; // Effect complete, no modifications
@@ -181,7 +181,7 @@ fn initShared(center: vec3f) {
     g_tLand = g_tStart + uniform.uFlightTime;
 }
 
-fn modifyCenter(center: ptr<function, vec3f>) {
+fn modifySplatCenter(center: ptr<function, vec3f>) {
     let originalCenter = *center;
     initShared(*center);
     
@@ -221,7 +221,7 @@ fn modifyCenter(center: ptr<function, vec3f>) {
     // If landed: stay at original position (no change needed)
 }
 
-fn modifyCovariance(originalCenter: vec3f, modifiedCenter: vec3f, covA: ptr<function, vec3f>, covB: ptr<function, vec3f>) {
+fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {
     // Check if animation is complete (after landing transition)
     let timeSinceLanding = uniform.uTime - g_tLand;
     if (timeSinceLanding >= 0.5) {
@@ -230,41 +230,41 @@ fn modifyCovariance(originalCenter: vec3f, modifiedCenter: vec3f, covA: ptr<func
     
     // Early exit for distant splats during animation
     if (g_dist3D > uniform.uEndRadius) {
-        gsplatMakeRound(covA, covB, 0.0);
+        *scale = vec3f(0.0);
         return;
     }
     
     // Before 2D wave reaches: invisible
     if (uniform.uTime < g_tStart) {
-        gsplatMakeRound(covA, covB, 0.0);
+        *scale = vec3f(0.0);
         return;
     }
+    
+    // Store original scale for shape preservation
+    let origScale = *scale;
+    let origSize = gsplatGetSizeFromScale(*scale);
     
     // During fall and transition after landing
     if (timeSinceLanding < 0.5) {
         // Still falling or transitioning
-        let originalSize = gsplatExtractSize(*covA, *covB);
-        
         if (timeSinceLanding < 0.0) {
-            // Falling: small round dots
-            gsplatMakeRound(covA, covB, min(uniform.uRainSize, originalSize));
+            // Falling: small spherical dots
+            let targetSize = min(uniform.uRainSize, origSize);
+            gsplatMakeSpherical(scale, targetSize);
         } else {
             // Landing transition: lerp from dots to original over 0.5s
             let t = timeSinceLanding * 2.0; // normalize [0, 0.5] to [0, 1]
-            let size = mix(uniform.uRainSize, originalSize, t);
+            let size = mix(uniform.uRainSize, origSize, t);
             
-            // Lerp between round and original shape
-            let origCovA = *covA;
-            let origCovB = *covB;
-            gsplatMakeRound(covA, covB, size);
-            *covA = mix(*covA, origCovA, t);
-            *covB = mix(*covB, origCovB, t);
+            // Lerp between spherical (uniform) and original scale
+            let sphericalScale = vec3f(size);
+            *scale = mix(sphericalScale, origScale, t);
         }
     }
     // After transition: original shape/size (no-op)
 }
 
-fn modifyColor(center: vec3f, color: ptr<function, vec4f>) {
+fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
     // Check if animation is complete
     let timeSinceLanding = uniform.uTime - g_tLand;
     if (timeSinceLanding >= uniform.uHitDuration) {

@@ -1,16 +1,16 @@
 uniform uTime: f32;
 
-fn modifyCenter(center: ptr<function, vec3f>) {
+fn modifySplatCenter(center: ptr<function, vec3f>) {
     // modify center
     let heightIntensity = (*center).y * 0.2;
     (*center).x += sin(uniform.uTime * 5.0 + (*center).y) * 0.3 * heightIntensity;
 }
 
-fn modifyCovariance(originalCenter: vec3f, modifiedCenter: vec3f, covA: ptr<function, vec3f>, covB: ptr<function, vec3f>) {
+fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {
     // no modification
 }
 
-fn modifyColor(center: vec3f, clr: ptr<function, vec4f>) {
+fn modifySplatColor(center: vec3f, clr: ptr<function, vec4f>) {
     let sineValue = abs(sin(uniform.uTime * 5.0 + center.y));
 
     #ifdef CUTOUT
@@ -25,4 +25,3 @@ fn modifyColor(center: vec3f, clr: ptr<function, vec4f>) {
         (*clr) = vec4f(mix((*clr).xyz, gold, blend), (*clr).a);
     #endif
 }
-
