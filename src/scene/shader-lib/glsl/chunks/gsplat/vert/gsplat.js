@@ -33,6 +33,7 @@ void main(void) {
     center.modelCenterOriginal = modelCenter;
     
     modifyCenter(modelCenter);
+    modifySplatCenter(modelCenter);
     center.modelCenterModified = modelCenter;
 
     if (!initCenter(modelCenter, center)) {
@@ -70,6 +71,7 @@ void main(void) {
     #endif
 
     modifyColor(modelCenter, clr);
+    modifySplatColor(modelCenter, clr);
 
     clipCorner(corner, clr.w);
 

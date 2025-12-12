@@ -1,9 +1,11 @@
+import { Debug } from '../../core/debug.js';
 import { SHADERLANGUAGE_GLSL } from '../../platform/graphics/constants.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { ShaderChunkMap } from './shader-chunk-map.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { ChunkValidation } from './shader-chunk-map.js'
  */
 
 const _chunksCache = new DeviceCache();
@@ -15,12 +17,20 @@ const _chunksCache = new DeviceCache();
  */
 class ShaderChunks {
     /**
+     * Static map of chunk validations shared by all instances.
+     *
+     * @type {Map<string, ChunkValidation>}
+     * @private
+     */
+    static _validations = new Map();
+
+    /**
      * A map of shader chunks for GLSL.
      *
      * @type {ShaderChunkMap}
      * @ignore
      */
-    glsl = new ShaderChunkMap();
+    glsl = new ShaderChunkMap(ShaderChunks._validations);
 
     /**
      * A map of shader chunks for WGSL.
@@ -28,7 +38,7 @@ class ShaderChunks {
      * @type {ShaderChunkMap}
      * @ignore
      */
-    wgsl = new ShaderChunkMap();
+    wgsl = new ShaderChunkMap(ShaderChunks._validations);
 
     /**
      * Returns a shader chunks map for the given device and shader language.
@@ -42,6 +52,43 @@ class ShaderChunks {
             return new ShaderChunks();
         });
         return shaderLanguage === SHADERLANGUAGE_GLSL ? cache.glsl : cache.wgsl;
+    }
+
+    /**
+     * Register a validation for a shader chunk. When the chunk is set, the validation will be
+     * executed. This is useful for deprecation warnings or content validation.
+     *
+     * @param {string} name - The name of the shader chunk.
+     * @param {ChunkValidation} options - Validation options.
+     * @example
+     * // Deprecate an existing chunk - only warn when overridden with non-default code
+     * import { myChunksGLSL } from './glsl/collections/my-chunks-glsl.js';
+     * import { myChunksWGSL } from './wgsl/collections/my-chunks-wgsl.js';
+     *
+     * ShaderChunks.registerValidation('myChunkVS', {
+     *     message: 'myChunkVS is deprecated. Use newChunkVS instead.',
+     *     defaultCodeGLSL: myChunksGLSL.myChunkVS,
+     *     defaultCodeWGSL: myChunksWGSL.myChunkVS
+     * });
+     * @example
+     * // Warn for a removed chunk - any attempt to use it triggers warning
+     * ShaderChunks.registerValidation('removedChunkVS', {
+     *     message: 'removedChunkVS has been removed. Use replacementChunkVS instead.'
+     * });
+     * @example
+     * // Use callback for custom validation logic
+     * ShaderChunks.registerValidation('myChunkVS', {
+     *     callback: (name, code) => {
+     *         if (code.includes('gl_FragColor')) {
+     *             Debug.error(`Chunk ${name} uses deprecated gl_FragColor. Use pcFragColor instead.`);
+     *         }
+     *     }
+     * });
+     */
+    static registerValidation(name, options) {
+        Debug.call(() => {
+            ShaderChunks._validations.set(name, options);
+        });
     }
 
     /**

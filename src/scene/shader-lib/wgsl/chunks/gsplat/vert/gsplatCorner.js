@@ -1,10 +1,9 @@
 export default /* wgsl */`
 uniform viewport_size: vec4f;             // viewport width, height, 1/width, 1/height
 
-// compute 3d covariance from rotation and scale
-fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
-    let rot = quatToMat3(getRotation());
-    let scale = getScale();
+// compute 3d covariance from rotation (w,x,y,z format) and scale
+fn computeCovariance(rotation: vec4f, scale: vec3f, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
+    let rot = quatToMat3(rotation);
 
     // M = S * R
     let M = transpose(mat3x3f(
@@ -87,10 +86,21 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
 
 // calculate the clip-space offset from the center for this gaussian
 fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCenter>, corner: ptr<function, SplatCorner>) -> bool {
+    // Get rotation and scale
+    var rotation: vec4f = getRotation().yzwx;  // Convert (w,x,y,z) to (x,y,z,w)
+    var scale: vec3f = getScale();
+
+    // Hook: modify rotation and scale
+    modifySplatRotationScale(center.modelCenterOriginal, center.modelCenterModified, &rotation, &scale);
+
+    // Compute covariance from (possibly modified) rotation and scale
     var covA: vec3f;
     var covB: vec3f;
-    readCovariance(source, &covA, &covB);
+    computeCovariance(rotation.wxyz, scale, &covA, &covB);  // Convert back to (w,x,y,z)
+
+    // Existing hook: modify covariance
     modifyCovariance(center.modelCenterOriginal, center.modelCenterModified, &covA, &covB);
+
     return initCornerCov(source, center, corner, covA, covB);
 }
 `;

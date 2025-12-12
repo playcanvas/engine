@@ -6,31 +6,24 @@ uniform vec3 uAabbMin;
 uniform vec3 uAabbMax;
 uniform float uEdgeScaleFactor;
 
-void modifyCenter(inout vec3 center) {
+void modifySplatCenter(inout vec3 center) {
     // No modifications needed
 }
 
-void modifyCovariance(vec3 originalCenter, vec3 modifiedCenter, inout vec3 covA, inout vec3 covB) {
+void modifySplatRotationScale(vec3 originalCenter, vec3 modifiedCenter, inout vec4 rotation, inout vec3 scale) {
     // Check if splat is inside AABB
     bool insideAABB = all(greaterThanEqual(modifiedCenter, uAabbMin)) && all(lessThanEqual(modifiedCenter, uAabbMax));
     
     // If outside AABB, make invisible by scaling to 0
     if (!insideAABB) {
-        gsplatMakeRound(covA, covB, 0.0);
+        scale = vec3(0.0);
         return;
     }
     
     #ifdef GSPLAT_PRECISE_CROP
-    // covA and covB represent a 3x3 covariance matrix:
-    // [covA.x  covA.y  covA.z]
-    // [covA.y  covB.x  covB.y]
-    // [covA.z  covB.y  covB.z]
-    
-    // Conservative bound: use sqrt(trace) * 3.0 (3 sigma)
-    // trace = sum of diagonal = covA.x + covB.x + covB.z
-    // This gives the maximum possible extent (max_eigenvalue <= trace)
-    float trace = covA.x + covB.x + covB.z;
-    float maxRadius = sqrt(max(trace, 0.001)) * 3.0;
+    // Conservative bound: use length(scale) * 3.0 (3 sigma)
+    // This gives the maximum possible extent
+    float maxRadius = length(scale) * 3.0;
     
     // Find minimum distance to any AABB face
     vec3 distToMin = modifiedCenter - uAabbMin;
@@ -42,14 +35,13 @@ void modifyCovariance(vec3 originalCenter, vec3 modifiedCenter, inout vec3 covA,
     
     // Scale if splat would exceed boundary
     if (maxRadius > minDist) {
-        float scale = (minDist / maxRadius) * uEdgeScaleFactor;
-        covA *= scale;
-        covB *= scale;
+        float s = (minDist / maxRadius) * uEdgeScaleFactor;
+        scale *= s;
     }
     #endif
 }
 
-void modifyColor(vec3 center, inout vec4 color) {
+void modifySplatColor(vec3 center, inout vec4 color) {
     // No color modification needed
 }
 `;
@@ -59,31 +51,24 @@ uniform uAabbMin: vec3f;
 uniform uAabbMax: vec3f;
 uniform uEdgeScaleFactor: f32;
 
-fn modifyCenter(center: ptr<function, vec3f>) {
+fn modifySplatCenter(center: ptr<function, vec3f>) {
     // No modifications needed
 }
 
-fn modifyCovariance(originalCenter: vec3f, modifiedCenter: vec3f, covA: ptr<function, vec3f>, covB: ptr<function, vec3f>) {
+fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {
     // Check if splat is inside AABB
     let insideAABB = all(modifiedCenter >= uniform.uAabbMin) && all(modifiedCenter <= uniform.uAabbMax);
     
     // If outside AABB, make invisible by scaling to 0
     if (!insideAABB) {
-        gsplatMakeRound(covA, covB, 0.0);
+        *scale = vec3f(0.0);
         return;
     }
     
     #if GSPLAT_PRECISE_CROP
-    // covA and covB represent a 3x3 covariance matrix:
-    // [covA.x  covA.y  covA.z]
-    // [covA.y  covB.x  covB.y]
-    // [covA.z  covB.y  covB.z]
-    
-    // Conservative bound: use sqrt(trace) * 3.0 (3 sigma)
-    // trace = sum of diagonal = covA.x + covB.x + covB.z
-    // This gives the maximum possible extent (max_eigenvalue <= trace)
-    let trace = (*covA).x + (*covB).x + (*covB).z;
-    let maxRadius = sqrt(max(trace, 0.001)) * 3.0;
+    // Conservative bound: use length(scale) * 3.0 (3 sigma)
+    // This gives the maximum possible extent
+    let maxRadius = length(*scale) * 3.0;
     
     // Find minimum distance to any AABB face
     let distToMin = modifiedCenter - uniform.uAabbMin;
@@ -95,14 +80,13 @@ fn modifyCovariance(originalCenter: vec3f, modifiedCenter: vec3f, covA: ptr<func
     
     // Scale if splat would exceed boundary
     if (maxRadius > minDist) {
-        let scale = (minDist / maxRadius) * uniform.uEdgeScaleFactor;
-        (*covA) = (*covA) * scale;
-        (*covB) = (*covB) * scale;
+        let s = (minDist / maxRadius) * uniform.uEdgeScaleFactor;
+        *scale = (*scale) * s;
     }
     #endif
 }
 
-fn modifyColor(center: vec3f, color: ptr<function, vec4f>) {
+fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
     // No color modification needed
 }
 `;
@@ -112,8 +96,8 @@ fn modifyColor(center: vec3f, color: ptr<function, vec4f>) {
  * Drops all splats outside the specified AABB by scaling them to 0.
  *
  * When GSPLAT_PRECISE_CROP is defined on the material, also scales down splats near the edges
- * based on their covariance matrix so they don't extend beyond the boundary.
- * Uses a conservative estimate based on the trace of the covariance matrix (3 standard deviations).
+ * based on their scale so they don't extend beyond the boundary.
+ * Uses a conservative estimate based on the length of the scale vector (3 standard deviations).
  *
  * The edgeScaleFactor attribute controls how aggressively edge splats are scaled down:
  * - 1.0 = minimal scaling (just enough to touch the edge)
