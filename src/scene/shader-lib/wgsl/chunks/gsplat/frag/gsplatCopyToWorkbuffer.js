@@ -8,7 +8,6 @@ export default /* wgsl */`
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
 #include "gsplatSourceFormatVS"
-#include "packHalfPS"
 
 uniform uStartLine: i32;      // Start row in destination texture
 uniform uViewportWidth: i32;  // Width of the destination viewport in pixels
@@ -115,8 +114,8 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         output.color = color;
         #ifndef GSPLAT_COLOR_ONLY
             // Store rotation (xyz, w derived) and scale as 6 half-floats
-            output.color1 = vec4u(bitcast<u32>(worldCenter.x), bitcast<u32>(worldCenter.y), bitcast<u32>(worldCenter.z), pack2x16floatSafe(worldRotation.xy));
-            output.color2 = vec2u(pack2x16floatSafe(vec2f(worldRotation.z, worldScale.x)), pack2x16floatSafe(worldScale.yz));
+            output.color1 = vec4u(bitcast<u32>(worldCenter.x), bitcast<u32>(worldCenter.y), bitcast<u32>(worldCenter.z), pack2x16float(worldRotation.xy));
+            output.color2 = vec2u(pack2x16float(vec2f(worldRotation.z, worldScale.x)), pack2x16float(worldScale.yz));
         #endif
     }
     

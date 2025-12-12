@@ -8,7 +8,6 @@ export default /* glsl */`
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
 #include "gsplatSourceFormatVS"
-#include "packHalfPS"
 
 uniform int uStartLine;      // Start row in destination texture
 uniform int uViewportWidth;  // Width of the destination viewport in pixels
@@ -126,8 +125,8 @@ void main(void) {
         #endif
         #ifndef GSPLAT_COLOR_ONLY
             // Store rotation (xyz, w derived) and scale as 6 half-floats
-            pcFragColor1 = uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16Safe(worldRotation.xy));
-            pcFragColor2 = uvec2(packHalf2x16Safe(vec2(worldRotation.z, worldScale.x)), packHalf2x16Safe(worldScale.yz));
+            pcFragColor1 = uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16(worldRotation.xy));
+            pcFragColor2 = uvec2(packHalf2x16(vec2(worldRotation.z, worldScale.x)), packHalf2x16(worldScale.yz));
         #endif
     }
 }

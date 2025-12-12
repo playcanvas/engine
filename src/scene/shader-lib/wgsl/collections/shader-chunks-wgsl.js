@@ -89,7 +89,6 @@ import opacityPS from '../chunks/standard/frag/opacity.js';
 import opacityDitherPS from '../chunks/standard/frag/opacity-dither.js';
 import outputPS from '../chunks/lit/frag/output.js';
 import outputAlphaPS from '../chunks/lit/frag/outputAlpha.js';
-import packHalfPS from '../chunks/internal/frag/packHalf.js';
 import outputTex2DPS from '../chunks/common/frag/outputTex2D.js';
 import sheenPS from '../chunks/standard/frag/sheen.js';
 import sheenGlossPS from '../chunks/standard/frag/sheenGloss.js';
@@ -259,7 +258,6 @@ const shaderChunksWGSL = {
     opacityDitherPS,
     outputPS,
     outputAlphaPS,
-    packHalfPS,
     outputTex2DPS,
     sheenPS,
     sheenGlossPS,
