@@ -84,6 +84,7 @@ class ShaderChunks {
      *         }
      *     }
      * });
+     * @ignore
      */
     static registerValidation(name, options) {
         Debug.call(() => {
