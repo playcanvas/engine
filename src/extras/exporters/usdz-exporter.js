@@ -438,8 +438,14 @@ class UsdzExporter extends CoreExporter {
         addTexture('normalMap', null, 'normal3f', 'normal', 'normal');
         addTexture('emissiveMap', material.emissive, 'color3f', 'emissiveColor', 'emissive', false, true);
         addTexture('aoMap', null, 'float', 'occlusion', 'occlusion');
-        addTexture('metalnessMap', material.metalness, 'float', 'metallic', 'metallic');
-        addTexture('glossMap', material.gloss, 'float', 'roughness', 'roughness');
+
+        // only export metalness for metalness workflow materials
+        const metalness = material.useMetalness ? material.metalness : 0;
+        addTexture('metalnessMap', metalness, 'float', 'metallic', 'metallic');
+
+        // convert gloss to roughness (they are inverse of each other)
+        const roughness = material.glossInvert ? material.gloss : 1 - material.gloss;
+        addTexture('glossMap', roughness, 'float', 'roughness', 'roughness');
 
         // main material object
         const materialObject = `
