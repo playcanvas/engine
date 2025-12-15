@@ -2,7 +2,7 @@ import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { math } from '../../../core/math/math.js';
 import {
-    pixelFormatInfo, isCompressedPixelFormat,
+    pixelFormatInfo, isCompressedPixelFormat, getPixelFormatArrayType,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_DEPTHSTENCIL,
     SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH,
@@ -567,16 +567,20 @@ class WebgpuTexture {
         // async read data from the staging buffer to a temporary array
         return device.readBuffer(stagingBuffer, size, null, immediate).then((temp) => {
 
+            // determine target buffer - use user's data buffer or allocate new
+            const ArrayType = getPixelFormatArrayType(texture.format);
+            const targetBuffer = data?.buffer ?? new ArrayBuffer(height * bytesPerRow);
+            const target = new Uint8Array(targetBuffer, data?.byteOffset ?? 0, height * bytesPerRow);
+
             // remove the 256 alignment padding from the end of each row
-            const target = (data?.constructor === Uint8Array) ? data : new Uint8Array(data?.buffer ?? height * bytesPerRow);
             for (let i = 0; i < height; i++) {
                 const srcOffset = i * paddedBytesPerRow;
                 const dstOffset = i * bytesPerRow;
-                const sub = temp.subarray(srcOffset, srcOffset + bytesPerRow);
-                target.set(sub, dstOffset);
+                target.set(temp.subarray(srcOffset, srcOffset + bytesPerRow), dstOffset);
             }
 
-            return data ?? target;
+            // return user's data or create correctly-typed array view
+            return data ?? new ArrayType(targetBuffer);
         });
     }
 }
