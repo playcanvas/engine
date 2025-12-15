@@ -1074,6 +1074,7 @@ export const requiresManualGamma = (format) => {
 export const getPixelFormatArrayType = (format) => {
     switch (format) {
         case PIXELFORMAT_R32F:
+        case PIXELFORMAT_RG32F:
         case PIXELFORMAT_RGB32F:
         case PIXELFORMAT_RGBA32F:
             return Float32Array;
