@@ -270,13 +270,13 @@ async function verifyResults(sortedIndices) {
     });
 
     // Extract sorted indices (stored in linear order)
-    const sortedIndices = [];
+    const sortedIndicesArray = [];
     for (let i = 0; i < capturedNumElements; i++) {
-        sortedIndices.push(indicesResult[i]);
+        sortedIndicesArray.push(indicesResult[i]);
     }
 
     // Get sorted values by looking up original values (using captured copy)
-    const sortedValues = sortedIndices.map(idx => capturedOriginalValues[idx]);
+    const sortedValues = sortedIndicesArray.map(idx => capturedOriginalValues[idx]);
 
     // Verify sorting - only log on failure
     let errorCount = 0;
