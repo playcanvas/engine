@@ -22,6 +22,7 @@ class WebgpuMipmapRenderer {
      * Cache of render pipelines keyed by texture format.
      *
      * @type {Map<string, GPURenderPipeline>}
+     * @private
      */
     pipelineCache = new Map();
 
