@@ -1,5 +1,4 @@
 // @config DESCRIPTION Test example for RenderPassRadixSort - GPU radix sort using mipmap binary search
-// @config HIDDEN
 import files from 'examples/files';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
@@ -38,7 +37,7 @@ app.on('destroy', () => {
 
 // State
 /** @type {number} */
-let currentNumElements = 1000 * 1000; // 1M default
+let currentNumElements = 1000 * 100; // 1M default
 /** @type {number} */
 let currentNumBits = 16;
 /** @type {pc.Texture|null} */
