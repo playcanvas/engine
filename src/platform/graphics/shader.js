@@ -72,6 +72,8 @@ class Shader {
      * useTransformFeedback or compute shader is specified.
      * @param {string} [definition.cshader] - Compute shader source (WGSL code). Only supported on
      * WebGPU platform.
+     * @param {string} [definition.computeEntryPoint] - The entry point function name for the compute
+     * shader. Defaults to 'main'.
      * @param {Map<string, string>} [definition.vincludes] - A map containing key-value pairs of
      * include names and their content. These are used for resolving #include directives in the
      * vertex shader source.
