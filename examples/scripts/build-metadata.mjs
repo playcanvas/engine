@@ -5,6 +5,16 @@ import { toKebabCase } from '../src/app/strings.mjs';
 import { parseConfig } from '../utils/utils.mjs';
 
 /**
+ * Sanitizes a file or directory name to prevent path traversal attacks
+ * @param {string} name - The file or directory name to sanitize
+ * @returns {string} - The sanitized name
+ */
+const sanitizeName = (name) => {
+    // Remove any path traversal sequences and null bytes
+    return name.replace(/\.\./g, '').replace(/\0/g, '').replace(/[/\\]/g, '');
+};
+
+/**
  * @type {{
  *      path: string,
  *      categoryKebab: string,
@@ -42,7 +52,8 @@ const main = () => {
     const categories = getDirFiles(rootPath);
 
     categories.forEach((category) => {
-        const categoryPath = path.resolve(`${rootPath}/${category}`);
+        const sanitizedCategory = sanitizeName(category);
+        const categoryPath = path.resolve(rootPath, sanitizedCategory);
         const examplesFiles = getDirFiles(categoryPath);
         const categoryKebab = toKebabCase(category);
 
@@ -50,7 +61,8 @@ const main = () => {
             if (!/example.mjs$/.test(exampleFile)) {
                 return;
             }
-            const examplePath = path.resolve(`${categoryPath}/${exampleFile}`);
+            const sanitizedExampleFile = sanitizeName(exampleFile);
+            const examplePath = path.resolve(categoryPath, sanitizedExampleFile);
             const exampleName = exampleFile.split('.').shift() ?? '';
             const exampleNameKebab = toKebabCase(exampleName);
 
