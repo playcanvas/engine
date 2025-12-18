@@ -154,13 +154,86 @@ WbDataScrumb.prototype.scrubAndNotify = function (data, eventName) {
 };
 
 /**
+ * Deeply clones a value, preserving common JS types and handling circular references.
+ * This avoids the limitations of JSON.parse(JSON.stringify()).
+ * @param {*} value - The value to clone
+ * @param {WeakMap<object, *>} [seen] - Internal map for circular reference tracking
+ * @returns {*} A deep clone of the input value
+ */
+function deepClone(value, seen) {
+    // Primitives and functions are returned as-is
+    if (value === null || typeof value !== 'object') {
+        return value;
+    }
+
+    // Initialize seen map for circular reference handling
+    if (!seen) {
+        seen = new WeakMap();
+    } else if (seen.has(value)) {
+        return seen.get(value);
+    }
+
+    var cloned;
+
+    // Handle Date
+    if (value instanceof Date) {
+        cloned = new Date(value.getTime());
+        return cloned;
+    }
+
+    // Handle RegExp
+    if (value instanceof RegExp) {
+        cloned = new RegExp(value.source, value.flags);
+        return cloned;
+    }
+
+    // Handle Array
+    if (Array.isArray(value)) {
+        cloned = [];
+        seen.set(value, cloned);
+        for (var i = 0; i < value.length; i++) {
+            cloned[i] = deepClone(value[i], seen);
+        }
+        return cloned;
+    }
+
+    // Handle Map
+    if (typeof Map !== 'undefined' && value instanceof Map) {
+        cloned = new Map();
+        seen.set(value, cloned);
+        value.forEach(function (v, k) {
+            cloned.set(deepClone(k, seen), deepClone(v, seen));
+        });
+        return cloned;
+    }
+
+    // Handle Set
+    if (typeof Set !== 'undefined' && value instanceof Set) {
+        cloned = new Set();
+        seen.set(value, cloned);
+        value.forEach(function (v) {
+            cloned.add(deepClone(v, seen));
+        });
+        return cloned;
+    }
+
+    // Fallback: plain object
+    cloned = {};
+    seen.set(value, cloned);
+    Object.keys(value).forEach(function (key) {
+        cloned[key] = deepClone(value[key], seen);
+    });
+    return cloned;
+}
+
+/**
  * Creates a copy of the data before scrubbing (non-destructive)
  * @param {*} data - The data to scrub
  * @returns {*} A scrubbed copy of the data
  */
 WbDataScrumb.prototype.scrubCopy = function (data) {
-    // Deep clone the data first
-    var copy = JSON.parse(JSON.stringify(data));
+    // Deep clone the data first using a robust cloning helper
+    var copy = deepClone(data);
     return this.scrubData(copy);
 };
 
