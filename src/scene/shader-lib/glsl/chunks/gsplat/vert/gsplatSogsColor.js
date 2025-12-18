@@ -1,13 +1,14 @@
 export default /* glsl */`
-uniform mediump sampler2D sh0;
+uniform highp sampler2D packedSh0;
 
-uniform vec4 sh0_mins;
-uniform vec4 sh0_maxs;
+uniform float sh0_mins;
+uniform float sh0_maxs;
 
-float SH_C0 = 0.28209479177387814;
+const float SH_C0 = 0.28209479177387814;
 
 vec4 readColor(in SplatSource source) {
-    vec4 clr = mix(sh0_mins, sh0_maxs, texelFetch(sh0, source.uv, 0));
-    return vec4(vec3(0.5) + clr.xyz * SH_C0, 1.0 / (1.0 + exp(-clr.w)));
+    vec3 clr = mix(vec3(sh0_mins), vec3(sh0_maxs), unpack111110(pack8888(texelFetch(packedSh0, source.uv, 0))));
+    float alpha = float(packedSample.z & 0xffu) / 255.0;
+    return vec4(vec3(0.5) + clr.xyz * SH_C0, alpha);
 }
 `;

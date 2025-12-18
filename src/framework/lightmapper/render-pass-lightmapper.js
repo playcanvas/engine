@@ -36,6 +36,11 @@ class RenderPassLightmapper extends RenderPass {
 
         const { renderer, camera, receivers, renderTarget, worldClusters, lightArray } = this;
 
+        // Initialize view bind group format if not already done
+        if (device.supportsUniformBuffers && !renderer.viewUniformFormat) {
+            renderer.initViewBindGroupFormat(renderer.scene.clusteredLightingEnabled);
+        }
+
         renderer.renderForwardLayer(camera, renderTarget, null, undefined, SHADER_FORWARD, this.viewBindGroups, {
             meshInstances: receivers,
             splitLights: lightArray,

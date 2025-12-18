@@ -1,4 +1,4 @@
-// @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div></div>
+// @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div><div>Snap (Hold Shift), Non-Uniform (Hold Ctrl)</div></div>
 import { data } from 'examples/observer';
 import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
@@ -14,9 +14,7 @@ const { GizmoHandler } = await localImport('gizmo-handler.mjs');
 const { Selector } = await localImport('selector.mjs');
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -120,7 +118,7 @@ camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1),
     farClip: 1000
 });
-const cameraOffset = 4 * camera.camera?.aspectRatio;
+const cameraOffset = 4 * camera.camera.aspectRatio;
 camera.setPosition(cameraOffset, cameraOffset, cameraOffset);
 app.root.addChild(camera);
 
@@ -133,7 +131,7 @@ Object.assign(cc, {
     moveDamping: 0
 });
 app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
-    cc.skipUpdate = hasPointer;
+    cc.enabled = !hasPointer;
 });
 
 // outline renderer
@@ -174,9 +172,6 @@ const setGizmoControls = () => {
         type: gizmoHandler.type,
         size: gizmoHandler.gizmo.size,
         snapIncrement: gizmoHandler.gizmo.snapIncrement,
-        xAxisColor: Object.values(gizmoHandler.gizmo.xAxisColor),
-        yAxisColor: Object.values(gizmoHandler.gizmo.yAxisColor),
-        zAxisColor: Object.values(gizmoHandler.gizmo.zAxisColor),
         colorAlpha: gizmoHandler.gizmo.colorAlpha,
         coordSpace: gizmoHandler.gizmo.coordSpace
     });
@@ -198,12 +193,14 @@ data.set('viewCube', {
     lineLength: viewCube.lineLength
 });
 const tmpV1 = new pc.Vec3();
+let aligned = false;
 viewCube.on(pc.ViewCube.EVENT_CAMERAALIGN, (/** @type {pc.Vec3} */ dir) => {
     const cameraPos = camera.getPosition();
     const focusPoint = cc.focusPoint;
     const cameraDist = focusPoint.distance(cameraPos);
     const cameraStart = tmpV1.copy(dir).mulScalar(cameraDist).add(focusPoint);
     cc.reset(focusPoint, cameraStart);
+    aligned = true;
 });
 app.on('prerender', () => {
     viewCube.update(camera.getWorldTransform());
@@ -220,6 +217,11 @@ selector.on('select', (/** @type {pc.Entity} */ node, /** @type {boolean} */ cle
     outlineRenderer.addEntity(node, pc.Color.WHITE);
 });
 selector.on('deselect', () => {
+    // do not deselect when view cube has just aligned the camera
+    if (aligned) {
+        aligned = false;
+        return;
+    }
     gizmoHandler.clear();
     outlineRenderer.removeAllEntities();
 });

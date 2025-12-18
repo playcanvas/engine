@@ -586,6 +586,16 @@ class Quat {
         let m21 = d[9];
         let m22 = d[10];
 
+        // if negative the space is inverted so flip X axis to restore right-handedness
+        const det = m00 * (m11 * m22 - m12 * m21) -
+                    m01 * (m10 * m22 - m12 * m20) +
+                    m02 * (m10 * m21 - m11 * m20);
+        if (det < 0) {
+            m00 = -m00;
+            m01 = -m01;
+            m02 = -m02;
+        }
+
         let l;
 
         // remove scaling from axis vectors

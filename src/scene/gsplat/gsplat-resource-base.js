@@ -6,14 +6,18 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { Mesh } from '../mesh.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
+import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatData } from './gsplat-data.js'
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
  * @import { GSplatSogsData } from './gsplat-sogs-data.js'
- * @import { GSplatLodBlocks } from './unified/gsplat-lod-blocks.js'
  */
+
+let id = 0;
+const tempMap = new Map();
 
 /**
  * Base class for a GSplat resource and defines common properties.
@@ -27,9 +31,6 @@ class GSplatResourceBase {
     /** @type {GSplatData | GSplatCompressedData | GSplatSogsData} */
     gsplatData;
 
-    /** @type {GSplatLodBlocks|null} */
-    lodBlocks = null;
-
     /** @type {Float32Array} */
     centers;
 
@@ -42,15 +43,23 @@ class GSplatResourceBase {
     /** @type {VertexBuffer} */
     instanceIndices;
 
-    /** @type {boolean} */
-    hasLod = false;
+    /** @type {number} */
+    id = id++;
+
+    /** @type {Map<string, WorkBufferRenderInfo>} */
+    workBufferRenderInfos = new Map();
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _refCount = 0;
 
     constructor(device, gsplatData) {
         this.device = device;
         this.gsplatData = gsplatData;
 
-        this.centers = new Float32Array(gsplatData.numSplats * 3);
-        gsplatData.getCenters(this.centers);
+        this.centers = gsplatData.getCenters();
 
         this.aabb = new BoundingBox();
         gsplatData.calcAabb(this.aabb);
@@ -68,6 +77,76 @@ class GSplatResourceBase {
     destroy() {
         this.mesh?.destroy();
         this.instanceIndices?.destroy();
+        this.workBufferRenderInfos.forEach(info => info.destroy());
+        this.workBufferRenderInfos.clear();
+    }
+
+    /**
+     * Increments the reference count.
+     *
+     * @ignore
+     */
+    incRefCount() {
+        this._refCount++;
+    }
+
+    /**
+     * Decrements the reference count.
+     *
+     * @ignore
+     */
+    decRefCount() {
+        this._refCount--;
+    }
+
+    /**
+     * Gets the current reference count. This represents how many times this resource is currently
+     * being used internally by the engine. For {@link GSplatComponent#asset|assets} assigned to
+     * {@link GSplatComponent#unified|unified} gsplat components, this tracks active usage during
+     * rendering and sorting operations.
+     *
+     * Resources should not be unloaded while the reference count is non-zero, as they are still
+     * in use by the rendering pipeline.
+     *
+     * @type {number}
+     */
+    get refCount() {
+        return this._refCount;
+    }
+
+    /**
+     * Get or create a QuadRender for rendering to work buffer.
+     *
+     * @param {boolean} useIntervals - Whether to use intervals.
+     * @param {number} colorTextureFormat - The format of the color texture (RGBA16F or RGBA16U).
+     * @param {boolean} colorOnly - Whether to render only color (not full MRT).
+     * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
+     */
+    getWorkBufferRenderInfo(useIntervals, colorTextureFormat, colorOnly = false) {
+
+        // configure defines to fetch cached data
+        this.configureMaterialDefines(tempMap);
+        if (useIntervals) tempMap.set('GSPLAT_LOD', '');
+        if (colorOnly) tempMap.set('GSPLAT_COLOR_ONLY', '');
+        const key = Array.from(tempMap.entries()).map(([k, v]) => `${k}=${v}`).join(';');
+
+        // get or create quad render
+        let info = this.workBufferRenderInfos.get(key);
+        if (!info) {
+
+            const material = new ShaderMaterial();
+            this.configureMaterial(material);
+
+            // copy tempMap to material defines
+            tempMap.forEach((v, k) => material.setDefine(k, v));
+
+            // create new cache entry
+            info = new WorkBufferRenderInfo(this.device, key, material, colorTextureFormat, colorOnly);
+            this.workBufferRenderInfos.set(key, info);
+        }
+
+        tempMap.clear();
+        return info;
     }
 
     static createMesh(device) {
@@ -133,6 +212,9 @@ class GSplatResourceBase {
     configureMaterial(material) {
     }
 
+    configureMaterialDefines(defines) {
+    }
+
     /**
      * Evaluates the size of the texture based on the number of splats.
      *
@@ -166,46 +248,6 @@ class GSplatResourceBase {
             addressV: ADDRESS_CLAMP_TO_EDGE,
             ...(data ? { levels: [data] } : { })
         });
-    }
-
-    /**
-     * Calculate block centers by averaging splat centers within each block
-     *
-     * @param {number} numSplats - Total number of splats
-     * @param {number} blockSize - Size of each block
-     * @param {number} numBlocks - Number of blocks (avoids recalculation)
-     * @param {Float32Array} blocksCenter - Output array for block centers (3 floats per block)
-     * @protected
-     */
-    calculateBlockCenters(numSplats, blockSize, numBlocks, blocksCenter) {
-        for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
-            const startIdx = blockIdx * blockSize;
-            const endIdx = Math.min(startIdx + blockSize, numSplats);
-            const blockSplatCount = endIdx - startIdx;
-
-            // Calculate block center by averaging all splat centers in this block
-            let centerX = 0, centerY = 0, centerZ = 0;
-            for (let i = startIdx; i < endIdx; i++) {
-                const centerBase = i * 3;
-                centerX += this.centers[centerBase];
-                centerY += this.centers[centerBase + 1];
-                centerZ += this.centers[centerBase + 2];
-            }
-
-            // Store average center in blocksCenter
-            const blockCenterBase = blockIdx * 3;
-            blocksCenter[blockCenterBase] = centerX / blockSplatCount;
-            blocksCenter[blockCenterBase + 1] = centerY / blockSplatCount;
-            blocksCenter[blockCenterBase + 2] = centerZ / blockSplatCount;
-        }
-    }
-
-    /**
-     * Generate LODs if supported. To be implemented by derived classes.
-     *
-     * @protected
-     */
-    generateLods() {
     }
 
     instantiate() {

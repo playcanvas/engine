@@ -1,7 +1,6 @@
 export default /* wgsl */`
 
-var uSceneDepthMap: texture_2d<f32>;
-var uSceneDepthMapSampler: sampler;
+var uSceneDepthMap: texture_2d<uff>;
 
 #ifndef SCREENSIZE
     #define SCREENSIZE
@@ -40,23 +39,13 @@ fn delinearizeDepth(linearDepth: f32) -> f32 {
 
 // Retrieves rendered linear camera depth by UV
 fn getLinearScreenDepth(uv: vec2f) -> f32 {
+    let textureSize = textureDimensions(uSceneDepthMap, 0);
+    let texel: vec2i = vec2i(uv * vec2f(textureSize));
+
     #ifdef SCENE_DEPTHMAP_LINEAR
-        #ifdef SCENE_DEPTHMAP_FLOAT
-            return textureSample(uSceneDepthMap, uSceneDepthMapSampler, uv).r;
-        #else
-
-            let textureSize = textureDimensions(uSceneDepthMap, 0);
-            let texel: vec2i = vec2i(uv * vec2f(textureSize));
-            let data: vec4f = textureLoad(uSceneDepthMap, texel, 0);
-
-            let data_u32: vec4u = vec4u(data * 255.0);
-            let intBits: u32 = (data_u32.r << 24u) | (data_u32.g << 16u) | (data_u32.b << 8u) | data_u32.a;
-
-            return bitcast<f32>(intBits);
-
-        #endif
+        return textureLoad(uSceneDepthMap, texel, 0).r;
     #else
-        return linearizeDepth(textureSample(uSceneDepthMap, uSceneDepthMapSampler, uv).r);
+        return linearizeDepth(textureLoad(uSceneDepthMap, texel, 0).r);
     #endif
 }
 

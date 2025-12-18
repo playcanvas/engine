@@ -109,6 +109,7 @@ export { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat, BindStorag
 export { BlendState } from './platform/graphics/blend-state.js';
 export { Compute } from './platform/graphics/compute.js';
 export { DepthState } from './platform/graphics/depth-state.js';
+export { DrawCommands } from './platform/graphics/draw-commands.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { RenderTarget } from './platform/graphics/render-target.js';
@@ -195,6 +196,7 @@ export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
 export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js';
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
+export { RenderPassRadixSort } from './scene/graphics/render-pass-radix-sort.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
 // SCENE / MATERIALS

@@ -740,7 +740,7 @@ class XrManager extends EventHandler {
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
             if (this.app.systems) {
-                this.app.tick();
+                this.app.requestAnimationFrame();
             }
         };
 
@@ -773,7 +773,7 @@ class XrManager extends EventHandler {
 
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
-            this.app.tick();
+            this.app.requestAnimationFrame();
 
             if (callback) callback(null);
             this.fire('start');

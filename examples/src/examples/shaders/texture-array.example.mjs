@@ -54,9 +54,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -124,7 +122,6 @@ assetListLoader.load(() => {
     };
 
     const textureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
-    textureArray.upload();
 
     // generate mipmaps for visualization
     const mipmaps = generateMipmaps(textureArrayOptions.width, textureArrayOptions.height);

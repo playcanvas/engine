@@ -10,7 +10,7 @@ import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
+    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
     BINDGROUP_MESH_UB
@@ -36,7 +36,6 @@ import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
-import { GSplatDirector } from '../gsplat/unified/gsplat-director.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -47,6 +46,7 @@ import { GSplatDirector } from '../gsplat/unified/gsplat-director.js';
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Scene } from '../scene.js'
+ * @import { GSplatDirector } from '../gsplat-unified/gsplat-director.js'
  */
 
 let _skinUpdateIndex = 0;
@@ -108,6 +108,9 @@ class Renderer {
     /** @type {boolean} */
     clustersDebugRendered = false;
 
+    /** @type {Scene} */
+    scene;
+
     /**
      * A set of visible mesh instances which need further processing before being rendered, e.g.
      * skinning or morphing. Extracted during culling.
@@ -159,22 +162,19 @@ class Renderer {
     /**
      * A gsplat director for unified splat rendering.
      *
-     * @type {GSplatDirector}
+     * @type {GSplatDirector|null}
      */
-    gsplatDirector;
+    gsplatDirector = null;
 
     /**
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {Scene} scene - The scene.
      */
-    constructor(graphicsDevice) {
+    constructor(graphicsDevice, scene) {
         this.device = graphicsDevice;
-
-        /** @type {Scene|null} */
-        this.scene = null;
-
-        this.gsplatDirector = new GSplatDirector(graphicsDevice);
+        this.scene = scene;
 
         // TODO: allocate only when the scene has clustered lighting enabled
         this.worldClustersAllocator = new WorldClustersAllocator(graphicsDevice);
@@ -189,8 +189,10 @@ class Renderer {
         this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
 
         // clustered passes
-        this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
-            this._shadowRendererLocal, this.lightTextureAtlas);
+        if (this.scene.clusteredLightingEnabled) {
+            this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
+                this._shadowRendererLocal, this.lightTextureAtlas);
+        }
 
         // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
@@ -212,6 +214,7 @@ class Renderer {
         this._numDrawCallsCulled = 0;
         this._camerasRendered = 0;
         this._lightClusters = 0;
+        this._gsplatCount = 0;
 
         // Uniforms
         const scope = graphicsDevice.scope;
@@ -233,6 +236,8 @@ class Renderer {
         this.farClipId = scope.resolve('camera_far');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
+        this.viewportSize = new Float32Array(4);
+        this.viewportSizeId = scope.resolve('viewport_size');
         this.viewIndexId = scope.resolve('view_index');
         this.viewIndexId.setValue(0);
 
@@ -266,11 +271,14 @@ class Renderer {
         this.shadowMapCache.destroy();
         this.shadowMapCache = null;
 
-        this._renderPassUpdateClustered.destroy();
+        this._renderPassUpdateClustered?.destroy();
         this._renderPassUpdateClustered = null;
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
+
+        this.gsplatDirector?.destroy();
+        this.gsplatDirector = null;
     }
 
     /**
@@ -428,6 +436,23 @@ class Renderer {
         this.cameraParams[2] = n;
         this.cameraParams[3] = camera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
         this.cameraParamsId.setValue(this.cameraParams);
+
+        // viewport size
+        let viewportWidth = target ? target.width : this.device.width;
+        let viewportHeight = target ? target.height : this.device.height;
+        viewportWidth *= camera.rect.z;
+        viewportHeight *= camera.rect.w;
+
+        // adjust viewport for stereoscopic VR sessions
+        if (camera.xr?.active && camera.xr.views.list.length === 2) {
+            viewportWidth *= 0.5;
+        }
+
+        this.viewportSize[0] = viewportWidth;
+        this.viewportSize[1] = viewportHeight;
+        this.viewportSize[2] = 1 / viewportWidth;
+        this.viewportSize[3] = 1 / viewportHeight;
+        this.viewportSizeId.setValue(this.viewportSize);
 
         // exposure
         this.exposureId.setValue(this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure);
@@ -731,6 +756,7 @@ class Renderer {
                 new UniformFormat('matrix_view3', UNIFORMTYPE_MAT3),
                 new UniformFormat('cubeMapRotationMatrix', UNIFORMTYPE_MAT3),
                 new UniformFormat('view_position', UNIFORMTYPE_VEC3),
+                new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
                 new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),

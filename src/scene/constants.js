@@ -358,8 +358,8 @@ export const SHADOW_PCF1 = 5;  // alias for SHADOW_PCF1_32F for backwards compat
 /**
  * A shadow sampling technique using a 32-bit shadow map that adjusts filter size based on blocker
  * distance, producing realistic, soft shadow edges that vary with the light's occlusion. Note that
- * this technique requires either {@link GraphicsDevice#textureFloatRenderable} or
- * {@link GraphicsDevice#textureHalfFloatRenderable} to be true, and falls back to
+ * this technique requires both {@link GraphicsDevice#textureFloatRenderable} and
+ * {@link GraphicsDevice#textureFloatFilterable} to be true, and falls back to
  * {@link SHADOW_PCF3_32F} otherwise.
  *
  * @category Graphics
@@ -812,6 +812,9 @@ export const SHADER_SHADOW = 2;
 // shader pass used by the Picker class to render mesh ID
 export const SHADER_PICK = 3;
 
+// shader pass used by the Picker class to render mesh ID and depth
+export const SHADER_DEPTH_PICK = 4;
+
 /**
  * Shader that performs forward rendering.
  *
@@ -1135,3 +1138,18 @@ export const EVENT_POSTCULL = 'postcull';
  * @ignore
  */
 export const EVENT_CULL_END = 'cull:end';
+
+/**
+ * @ignore
+ */
+export const GSPLAT_FORWARD = 1;
+
+/**
+ * @ignore
+ */
+export const GSPLAT_SHADOW = 2;
+
+/**
+ * @ignore
+ */
+export const SHADOWCAMERA_NAME = 'pcShadowCamera';

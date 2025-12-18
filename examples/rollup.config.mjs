@@ -11,6 +11,7 @@ import { copy } from './utils/plugins/rollup-copy.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
 import { buildJSOptions, buildTypesOption } from '../utils/rollup-build-target.mjs';
+import { version } from '../utils/rollup-version-revision.mjs';
 import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
 import { buildShare } from './utils/plugins/rollup-build-share.mjs';
 import { removePc } from './utils/plugins/rollup-remove-pc.mjs';
@@ -260,13 +261,25 @@ const APP_TARGETS = [{
         format: 'umd'
     },
     treeshake: 'smallest',
+    onwarn(warning, warn) {
+        // Suppress "use client" directive warnings from react-router v7+.
+        // These directives are for React Server Components which we don't use.
+        // The directive is safely ignored and has no effect on client-only builds.
+        // This can be removed if Rollup adds native support for "use client" directives,
+        // or if we switch to a bundler that supports them (e.g., Vite, webpack 5+).
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE' && warning.message.includes('"use client"')) {
+            return;
+        }
+        warn(warning);
+    },
     plugins: [
         commonjs(),
         treeshakeIgnore([/@playcanvas\/pcui/g]), // ignore PCUI treeshake
         resolve(),
         replace({
             values: {
-                'process.env.NODE_ENV': JSON.stringify(NODE_ENV) // for REACT bundling
+                'process.env.NODE_ENV': JSON.stringify(NODE_ENV), // for REACT bundling
+                'process.env.VERSION': JSON.stringify(version) // for VERSION in constants.mjs
             },
             preventAssignment: true
         }),

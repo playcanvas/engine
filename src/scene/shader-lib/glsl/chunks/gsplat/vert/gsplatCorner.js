@@ -1,6 +1,20 @@
 export default /* glsl */`
-uniform vec2 viewport;                  // viewport dimensions
-uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
+uniform vec4 viewport_size;             // viewport width, height, 1/width, 1/height
+
+// compute 3d covariance from rotation (w,x,y,z format) and scale
+void computeCovariance(vec4 rotation, vec3 scale, out vec3 covA, out vec3 covB) {
+    mat3 rot = quatToMat3(rotation);
+
+    // M = S * R
+    mat3 M = transpose(mat3(
+        scale.x * rot[0],
+        scale.y * rot[1],
+        scale.z * rot[2]
+    ));
+
+    covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
+    covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
+}
 
 // calculate the clip-space offset from the center for this gaussian
 bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corner, vec3 covA, vec3 covB) {
@@ -11,7 +25,7 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
         covA.z, covB.y, covB.z
     );
 
-    float focal = viewport.x * center.projMat00;
+    float focal = viewport_size.x * center.projMat00;
 
     vec3 v = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : center.view.xyz;
     float J1 = focal / v.z;
@@ -43,7 +57,7 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
     float lambda2 = max(mid - radius, 0.1);
 
     // Use the smaller viewport dimension to limit the kernel size relative to the screen resolution.
-    float vmin = min(1024.0, min(viewport.x, viewport.y));
+    float vmin = min(1024.0, min(viewport_size.x, viewport_size.y));
 
     float l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     float l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
@@ -53,7 +67,7 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
         return false;
     }
 
-    vec2 c = center.proj.ww / viewport;
+    vec2 c = center.proj.ww * viewport_size.zw;
 
     // cull against frustum x/y axes
     if (any(greaterThan(abs(center.proj.xy) - vec2(max(l1, l2)) * c, center.proj.ww))) {
@@ -72,8 +86,20 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
 
 // calculate the clip-space offset from the center for this gaussian
 bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) {
+    // Get rotation and scale
+    vec4 rotation = getRotation().yzwx;  // Convert (w,x,y,z) to (x,y,z,w)
+    vec3 scale = getScale();
+
+    // Hook: modify rotation and scale
+    modifySplatRotationScale(center.modelCenterOriginal, center.modelCenterModified, rotation, scale);
+
+    // Compute covariance from (possibly modified) rotation and scale
     vec3 covA, covB;
-    readCovariance(source, covA, covB);
+    computeCovariance(rotation.wxyz, scale, covA, covB);  // Convert back to (w,x,y,z)
+
+    // Existing hook: modify covariance
+    modifyCovariance(center.modelCenterOriginal, center.modelCenterModified, covA, covB);
+
     return initCornerCov(source, center, corner, covA, covB);
 }
 `;

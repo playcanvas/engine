@@ -1053,9 +1053,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     onUpdate(dt) {
         let i, len;
 
-        // #if _PROFILER
         this._stats.physicsStart = now();
-        // #endif
 
         // downcast gravity to float32 so we can accurately compare with existing
         // gravity set in ammo.
@@ -1101,9 +1099,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this._checkForCollisions(Ammo.getPointer(this.dynamicsWorld), dt);
         }
 
-        // #if _PROFILER
         this._stats.physicsTime = now() - this._stats.physicsStart;
-        // #endif
     }
 
     destroy() {

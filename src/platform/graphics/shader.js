@@ -63,12 +63,17 @@ class Shader {
      * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
      * vertex buffer data as inputs to the shader. When not specified, rendering without vertex
      * buffer is assumed.
+     * @param {string[]} [definition.feedbackVaryings] - A list of shader output variable
+     * names that will be captured when using transform feedback. This setting is only effective
+     * if the useTransformFeedback property is enabled.
      * @param {string} [definition.vshader] - Vertex shader source (GLSL code). Optional when
      * compute shader is specified.
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
      * useTransformFeedback or compute shader is specified.
      * @param {string} [definition.cshader] - Compute shader source (WGSL code). Only supported on
      * WebGPU platform.
+     * @param {string} [definition.computeEntryPoint] - The entry point function name for the compute
+     * shader. Defaults to 'main'.
      * @param {Map<string, string>} [definition.vincludes] - A map containing key-value pairs of
      * include names and their content. These are used for resolving #include directives in the
      * vertex shader source.

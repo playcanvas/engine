@@ -25,6 +25,12 @@ class ApplicationStats {
             renderTime: 0,
             physicsStart: 0,
             physicsTime: 0,
+            scriptUpdateStart: 0,
+            scriptUpdate: 0,
+            scriptPostUpdateStart: 0,
+            scriptPostUpdate: 0,
+            animUpdateStart: 0,
+            animUpdate: 0,
             cullTime: 0,
             sortTime: 0,
             skinTime: 0,
@@ -32,6 +38,8 @@ class ApplicationStats {
             instancingTime: 0, // deprecated
 
             triangles: 0,
+            gsplats: 0,
+            gsplatSort: 0,
             otherPrimitives: 0,
             shaders: 0,
             materials: 0,
@@ -76,6 +84,7 @@ class ApplicationStats {
 
         this.shaders = device._shaderStats;
         this.vram = device._vram;
+        this.gpu = device.gpuProfiler?.passTimings ?? new Map();
 
         Object.defineProperty(this.vram, 'totalUsed', {
             get: function () {
@@ -101,6 +110,15 @@ class ApplicationStats {
     get batcher() {
         const batcher = getApplication()._batcher;
         return batcher ? batcher._stats : null;
+    }
+
+    /**
+     * Called at the end of each frame to reset per-frame statistics.
+     *
+     * @ignore
+     */
+    frameEnd() {
+        this.frame.gsplatSort = 0;
     }
 }
 
