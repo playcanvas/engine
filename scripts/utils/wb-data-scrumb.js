@@ -166,24 +166,47 @@ WbDataScrumb.prototype.scrubCopy = function (data) {
 
 /**
  * Validates that data meets basic cleanliness requirements
+ * (recursively checks nested objects and arrays).
  * @param {*} data - The data to validate
  * @returns {boolean} True if data passes validation
  */
-WbDataScrumb.prototype.validate = function (data) {
+WbDataScrumb.prototype._validateValue = function (value) {
     // Check for null/undefined if they should be removed
-    if (this.removeNullValues && (data === null || data === undefined)) {
+    if (this.removeNullValues && (value === null || value === undefined)) {
         return false;
     }
 
     // Check for empty strings if they should be removed
-    if (this.removeEmptyStrings && data === '') {
+    if (this.removeEmptyStrings && value === '') {
         return false;
     }
 
     // Check for empty arrays if they should be removed
-    if (this.removeEmptyArrays && Array.isArray(data) && data.length === 0) {
+    if (this.removeEmptyArrays && Array.isArray(value) && value.length === 0) {
         return false;
     }
 
+    // Recursively validate contents of arrays
+    if (Array.isArray(value)) {
+        for (var i = 0; i < value.length; i++) {
+            if (!this._validateValue(value[i])) {
+                return false;
+            }
+        }
+    } else if (value && typeof value === 'object') {
+        // Recursively validate own enumerable properties of objects
+        for (var key in value) {
+            if (Object.prototype.hasOwnProperty.call(value, key)) {
+                if (!this._validateValue(value[key])) {
+                    return false;
+                }
+            }
+        }
+    }
+
     return true;
+};
+
+WbDataScrumb.prototype.validate = function (data) {
+    return this._validateValue(data);
 };
