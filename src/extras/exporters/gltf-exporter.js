@@ -123,6 +123,8 @@ const textureSemantics = [
     'colorMap',
     'diffuseMap',
     'emissiveMap',
+    'iridescenceMap',
+    'iridescenceThicknessMap',
     'metalnessMap',
     'normalMap',
     'refractionMap',
@@ -480,6 +482,34 @@ class GltfExporter extends CoreExporter {
             this.addExtension(json, output, 'KHR_materials_ior', {
                 ior: 1.0 / mat.refractionIndex
             });
+        }
+
+        // KHR_materials_iridescence
+        if (mat.useIridescence) {
+            const iridescenceExt = {};
+
+            if (mat.iridescence !== 0) {
+                iridescenceExt.iridescenceFactor = mat.iridescence;
+            }
+
+            if (mat.iridescenceRefractionIndex !== 1.3) {
+                iridescenceExt.iridescenceIor = mat.iridescenceRefractionIndex;
+            }
+
+            if (mat.iridescenceThicknessMin !== 100) {
+                iridescenceExt.iridescenceThicknessMinimum = mat.iridescenceThicknessMin;
+            }
+
+            if (mat.iridescenceThicknessMax !== 400) {
+                iridescenceExt.iridescenceThicknessMaximum = mat.iridescenceThicknessMax;
+            }
+
+            this.attachTexture(resources, mat, iridescenceExt, 'iridescenceTexture', 'iridescenceMap', json);
+            this.attachTexture(resources, mat, iridescenceExt, 'iridescenceThicknessTexture', 'iridescenceThicknessMap', json);
+
+            if (Object.keys(iridescenceExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_iridescence', iridescenceExt);
+            }
         }
 
         // KHR_materials_sheen
