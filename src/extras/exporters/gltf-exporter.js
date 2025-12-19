@@ -126,6 +126,8 @@ const textureSemantics = [
     'metalnessMap',
     'normalMap',
     'refractionMap',
+    'sheenGlossMap',
+    'sheenMap',
     'specularityFactorMap',
     'specularMap',
     'thicknessMap'
@@ -478,6 +480,27 @@ class GltfExporter extends CoreExporter {
             this.addExtension(json, output, 'KHR_materials_ior', {
                 ior: 1.0 / mat.refractionIndex
             });
+        }
+
+        // KHR_materials_sheen
+        if (mat.useSheen) {
+            const sheenExt = {};
+
+            if (!mat.sheen.equals(Color.BLACK)) {
+                const { r, g, b } = mat.sheen.clone().linear();
+                sheenExt.sheenColorFactor = [r, g, b];
+            }
+
+            if (mat.sheenGloss !== 0) {
+                sheenExt.sheenRoughnessFactor = mat.sheenGloss;
+            }
+
+            this.attachTexture(resources, mat, sheenExt, 'sheenColorTexture', 'sheenMap', json);
+            this.attachTexture(resources, mat, sheenExt, 'sheenRoughnessTexture', 'sheenGlossMap', json);
+
+            if (Object.keys(sheenExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_sheen', sheenExt);
+            }
         }
 
         // KHR_materials_specular
