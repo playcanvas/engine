@@ -117,6 +117,7 @@ function isCanvasTransparent(canvas) {
 
 // supported texture semantics on a material
 const textureSemantics = [
+    'anisotropyMap',
     'clearCoatGlossMap',
     'clearCoatMap',
     'clearCoatNormalMap',
@@ -435,6 +436,25 @@ class GltfExporter extends CoreExporter {
         }
 
         // === Material Extensions ===
+
+        // KHR_materials_anisotropy
+        if (mat.enableGGXSpecular && (mat.anisotropyIntensity !== 0 || mat.anisotropyRotation !== 0 || mat.anisotropyMap)) {
+            const anisotropyExt = {};
+
+            if (mat.anisotropyIntensity !== 0) {
+                anisotropyExt.anisotropyStrength = mat.anisotropyIntensity;
+            }
+
+            if (mat.anisotropyRotation !== 0) {
+                anisotropyExt.anisotropyRotation = mat.anisotropyRotation * math.DEG_TO_RAD;
+            }
+
+            this.attachTexture(resources, mat, anisotropyExt, 'anisotropyTexture', 'anisotropyMap', json);
+
+            if (Object.keys(anisotropyExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_anisotropy', anisotropyExt);
+            }
+        }
 
         // KHR_materials_clearcoat
         if (mat.clearCoat > 0) {
