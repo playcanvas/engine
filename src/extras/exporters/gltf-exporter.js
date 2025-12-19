@@ -510,7 +510,9 @@ class GltfExporter extends CoreExporter {
 
             this.attachTexture(resources, mat, transmissionExt, 'transmissionTexture', 'refractionMap', json);
 
-            this.addExtension(json, output, 'KHR_materials_transmission', transmissionExt);
+            if (Object.keys(transmissionExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_transmission', transmissionExt);
+            }
         }
 
         // KHR_materials_unlit
