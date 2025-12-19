@@ -83,6 +83,8 @@ class Shader {
      * @param {Map<string, string>} [definition.cincludes] - A map containing key-value pairs
      * of include names and their content. These are used for resolving #include directives in the
      * compute shader source.
+     * @param {Map<string, string>} [definition.cdefines] - A map containing key-value pairs of
+     * define names and their values. These are used for resolving defines in the compute shader.
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
      * post-VS data to a buffer.
      * @param {string | string[]} [definition.fragmentOutputTypes] - Fragment shader output types,
@@ -132,8 +134,17 @@ class Shader {
             Debug.assert(graphicsDevice.supportsCompute, 'Compute shaders are not supported on this device.');
             Debug.assert(!definition.vshader && !definition.fshader, 'Vertex and fragment shaders are not supported when creating a compute shader.');
 
+            // keep reference to unmodified shader in debug mode
+            Debug.call(() => {
+                this.cUnmodified = definition.cshader;
+            });
+
+            // Prepend defines to compute shader source
+            const definesCode = ShaderDefinitionUtils.getDefinesCode(graphicsDevice, definition.cdefines);
+            const cshader = definesCode + definition.cshader;
+
             // pre-process compute shader source
-            definition.cshader = Preprocessor.run(definition.cshader, definition.cincludes, {
+            definition.cshader = Preprocessor.run(cshader, definition.cincludes, {
                 sourceName: `compute shader for ${this.label}`,
                 stripDefines: true
             });
