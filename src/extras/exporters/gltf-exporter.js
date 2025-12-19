@@ -121,7 +121,9 @@ const textureSemantics = [
     'colorMap',
     'normalMap',
     'metalnessMap',
-    'emissiveMap'
+    'emissiveMap',
+    'specularMap',
+    'specularityFactorMap'
 ];
 
 /**
@@ -416,6 +418,32 @@ class GltfExporter extends CoreExporter {
             json.extensionsUsed = json.extensionsUsed ?? [];
             if (!json.extensionsUsed.includes('KHR_materials_emissive_strength')) {
                 json.extensionsUsed.push('KHR_materials_emissive_strength');
+            }
+        }
+
+        if (mat.useMetalnessSpecularColor) {
+            const specularExt = {};
+
+            if (!mat.specular.equals(Color.WHITE)) {
+                const { r, g, b } = mat.specular.clone().linear();
+                specularExt.specularColorFactor = [r, g, b];
+            }
+
+            if (mat.specularityFactor !== 1) {
+                specularExt.specularFactor = mat.specularityFactor;
+            }
+
+            this.attachTexture(resources, mat, specularExt, 'specularColorTexture', 'specularMap', json);
+            this.attachTexture(resources, mat, specularExt, 'specularTexture', 'specularityFactorMap', json);
+
+            if (Object.keys(specularExt).length > 0) {
+                output.extensions = output.extensions || {};
+                output.extensions.KHR_materials_specular = specularExt;
+
+                json.extensionsUsed = json.extensionsUsed ?? [];
+                if (!json.extensionsUsed.includes('KHR_materials_specular')) {
+                    json.extensionsUsed.push('KHR_materials_specular');
+                }
             }
         }
     }
