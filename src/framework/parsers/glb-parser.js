@@ -870,8 +870,7 @@ const extensionPbrSpecGlossiness = (data, material, textures) => {
     let color, texture;
     if (data.hasOwnProperty('diffuseFactor')) {
         color = data.diffuseFactor;
-        // Convert from linear space to sRGB space
-        material.diffuse.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        material.diffuse.set(color[0], color[1], color[2]).gamma();
         material.opacity = color[3];
     } else {
         material.diffuse.set(1, 1, 1);
@@ -891,8 +890,7 @@ const extensionPbrSpecGlossiness = (data, material, textures) => {
     material.useMetalness = false;
     if (data.hasOwnProperty('specularFactor')) {
         color = data.specularFactor;
-        // Convert from linear space to sRGB space
-        material.specular.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        material.specular.set(color[0], color[1], color[2]).gamma();
     } else {
         material.specular.set(1, 1, 1);
     }
@@ -987,7 +985,7 @@ const extensionSpecular = (data, material, textures) => {
 
     if (data.hasOwnProperty('specularColorFactor')) {
         const color = data.specularColorFactor;
-        material.specular.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        material.specular.set(color[0], color[1], color[2]).gamma();
     } else {
         material.specular.set(1, 1, 1);
     }
@@ -1035,7 +1033,7 @@ const extensionSheen = (data, material, textures) => {
     material.useSheen = true;
     if (data.hasOwnProperty('sheenColorFactor')) {
         const color = data.sheenColorFactor;
-        material.sheen.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        material.sheen.set(color[0], color[1], color[2]).gamma();
     } else {
         material.sheen.set(1, 1, 1);
     }
@@ -1071,7 +1069,7 @@ const extensionVolume = (data, material, textures) => {
     }
     if (data.hasOwnProperty('attenuationColor')) {
         const color = data.attenuationColor;
-        material.attenuation.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        material.attenuation.set(color[0], color[1], color[2]).gamma();
     }
 };
 
@@ -1156,8 +1154,7 @@ const createMaterial = (gltfMaterial, textures) => {
 
         if (pbrData.hasOwnProperty('baseColorFactor')) {
             color = pbrData.baseColorFactor;
-            // Convert from linear space to sRGB space
-            material.diffuse.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+            material.diffuse.set(color[0], color[1], color[2]).gamma();
             material.opacity = color[3];
         }
         if (pbrData.hasOwnProperty('baseColorTexture')) {
@@ -1209,8 +1206,7 @@ const createMaterial = (gltfMaterial, textures) => {
 
     if (gltfMaterial.hasOwnProperty('emissiveFactor')) {
         color = gltfMaterial.emissiveFactor;
-        // Convert from linear space to sRGB space
-        material.emissive.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        material.emissive.set(color[0], color[1], color[2]).gamma();
     }
 
     if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
