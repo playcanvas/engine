@@ -14,8 +14,15 @@ currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+If you believe you have found a security vulnerability in this project, please report it to us via email at **security@project-domain.com**.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Please include the following details in your report whenever possible:
+
+- A description of the issue and its potential impact
+- Steps to reproduce the vulnerability
+- Any relevant logs, proof-of-concept code, or screenshots
+- The version(s) of the project you tested against
+
+**Do not** open a public issue for security vulnerabilities, as this may expose other users to risk before a fix is available.
+
+We aim to acknowledge new reports within **3 business days** and to provide updates at least every **7 days** while we investigate. Once the issue is confirmed, we will work to develop and release a fix, and we will coordinate public disclosure with you whenever possible.
