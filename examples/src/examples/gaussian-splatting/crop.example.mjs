@@ -180,6 +180,17 @@ assetListLoader.load(() => {
         app.touch.on('touchstart', onUserInteraction);
     }
 
+    // Clean up event listeners on destroy
+    app.on('destroy', () => {
+        if (app.mouse) {
+            app.mouse.off('mousedown', onUserInteraction);
+            app.mouse.off('mousewheel', onUserInteraction);
+        }
+        if (app.touch) {
+            app.touch.off('touchstart', onUserInteraction);
+        }
+    });
+
     // Animate AABB size with soft bounce
     const period = 9.0; // seconds for one cycle
     const minSize = 0.4;
