@@ -387,8 +387,12 @@ class GltfExporter extends CoreExporter {
         const { diffuse, emissive, opacity, metalness, gloss, glossInvert } = mat;
         const pbr = output.pbrMetallicRoughness;
 
-        if (!diffuse.equals(Color.WHITE) || opacity !== 1) {
-            const { r, g, b } = diffuse.clone().linear();
+        // For unlit materials, the parser copies baseColor to emissive and sets diffuse to white.
+        // So we need to use emissive as the source for baseColorFactor.
+        const baseColor = mat.useLighting ? diffuse : emissive;
+
+        if (!baseColor.equals(Color.WHITE) || opacity !== 1) {
+            const { r, g, b } = baseColor.clone().linear();
             pbr.baseColorFactor = [r, g, b, opacity];
         }
 
@@ -401,15 +405,17 @@ class GltfExporter extends CoreExporter {
             pbr.roughnessFactor = roughness;
         }
 
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'diffuseMap', json);
+        // For unlit, use emissiveMap as baseColorTexture source (parser copies diffuseMap to emissiveMap)
+        this.attachTexture(resources, mat, pbr, 'baseColorTexture', mat.useLighting ? 'diffuseMap' : 'emissiveMap', json);
         this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap', json);
 
-        if (!emissive.equals(Color.BLACK)) {
+        // Skip emissive for unlit materials (emissive holds the baseColor)
+        if (mat.useLighting && !emissive.equals(Color.BLACK)) {
             const { r, g, b } = emissive.clone().linear();
             output.emissiveFactor = [r, g, b];
         }
 
-        if (mat.emissiveIntensity !== 1) {
+        if (mat.useLighting && mat.emissiveIntensity !== 1) {
             output.extensions = output.extensions || {};
             output.extensions.KHR_materials_emissive_strength = {
                 emissiveStrength: mat.emissiveIntensity
@@ -444,6 +450,16 @@ class GltfExporter extends CoreExporter {
                 if (!json.extensionsUsed.includes('KHR_materials_specular')) {
                     json.extensionsUsed.push('KHR_materials_specular');
                 }
+            }
+        }
+
+        if (!mat.useLighting) {
+            output.extensions = output.extensions || {};
+            output.extensions.KHR_materials_unlit = {};
+
+            json.extensionsUsed = json.extensionsUsed ?? [];
+            if (!json.extensionsUsed.includes('KHR_materials_unlit')) {
+                json.extensionsUsed.push('KHR_materials_unlit');
             }
         }
     }
