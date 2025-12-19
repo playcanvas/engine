@@ -204,7 +204,7 @@ class ShaderDefinitionUtils {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Map<string, string>} [defines] - A map containing key-value pairs.
      * @returns {string} The shader code for the defines.
-     * @private
+     * @ignore
      */
     static getDefinesCode(device, defines) {
         let code = '';
