@@ -416,8 +416,14 @@ class GltfExporter extends CoreExporter {
             pbr.baseColorFactor = [r, g, b, opacity];
         }
 
-        if (metalness !== 1) {
-            pbr.metallicFactor = metalness;
+        // For spec-gloss materials (useMetalness=false), always export as dielectric (metallicFactor=0)
+        // For metallic-roughness materials, export the actual metalness value
+        if (mat.useMetalness) {
+            if (metalness !== 1) {
+                pbr.metallicFactor = metalness;
+            }
+        } else {
+            pbr.metallicFactor = 0;
         }
 
         const roughness = glossInvert ? gloss : 1 - gloss;
@@ -554,7 +560,10 @@ class GltfExporter extends CoreExporter {
         }
 
         // KHR_materials_specular
-        if (mat.useMetalnessSpecularColor) {
+        // Export when:
+        // 1. useMetalnessSpecularColor is true (metallic workflow with specular color tint)
+        // 2. useMetalness is false (spec-gloss material) - preserve the specular color as F0
+        if (mat.useMetalnessSpecularColor || !mat.useMetalness) {
             const specularExt = {};
 
             if (!mat.specular.equals(Color.WHITE)) {
