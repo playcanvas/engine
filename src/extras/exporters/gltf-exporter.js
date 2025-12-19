@@ -127,7 +127,8 @@ const textureSemantics = [
     'normalMap',
     'refractionMap',
     'specularityFactorMap',
-    'specularMap'
+    'specularMap',
+    'thicknessMap'
 ];
 
 /**
@@ -518,6 +519,30 @@ class GltfExporter extends CoreExporter {
         // KHR_materials_unlit
         if (!mat.useLighting) {
             this.addExtension(json, output, 'KHR_materials_unlit');
+        }
+
+        // KHR_materials_volume
+        if (mat.useDynamicRefraction && (mat.thickness !== 0 || mat.attenuationDistance !== 0 || !mat.attenuation.equals(Color.WHITE) || mat.thicknessMap)) {
+            const volumeExt = {};
+
+            if (mat.thickness !== 0) {
+                volumeExt.thicknessFactor = mat.thickness;
+            }
+
+            if (mat.attenuationDistance !== 0) {
+                volumeExt.attenuationDistance = mat.attenuationDistance;
+            }
+
+            if (!mat.attenuation.equals(Color.WHITE)) {
+                const { r, g, b } = mat.attenuation.clone().linear();
+                volumeExt.attenuationColor = [r, g, b];
+            }
+
+            this.attachTexture(resources, mat, volumeExt, 'thicknessTexture', 'thicknessMap', json);
+
+            if (Object.keys(volumeExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_volume', volumeExt);
+            }
         }
     }
 
