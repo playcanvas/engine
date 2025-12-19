@@ -12,7 +12,7 @@ Older releases are not actively maintained for security issues.
 
 ## Reporting a Vulnerability
 
-If you believe you have found a security vulnerability in this project, please report it to us via email at **security@project-domain.com**.
+If you believe you have found a security vulnerability in this project, please report it to us via email at **security@example.com**.
 
 If you believe you have found a security vulnerability in this project, please report it to us via email at **security@project-domain.com**.
 Please include the following details in your report whenever possible:
