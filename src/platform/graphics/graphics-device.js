@@ -477,7 +477,7 @@ class GraphicsDevice extends EventHandler {
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
         this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
 
-        this.buffers = [];
+        this.buffers = new Set();
 
         this._vram = {
             // #if _PROFILER
