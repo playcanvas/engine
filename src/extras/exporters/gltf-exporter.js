@@ -117,16 +117,16 @@ function isCanvasTransparent(canvas) {
 
 // supported texture semantics on a material
 const textureSemantics = [
-    'diffuseMap',
-    'colorMap',
-    'normalMap',
-    'metalnessMap',
-    'emissiveMap',
-    'specularMap',
-    'specularityFactorMap',
-    'clearCoatMap',
     'clearCoatGlossMap',
-    'clearCoatNormalMap'
+    'clearCoatMap',
+    'clearCoatNormalMap',
+    'colorMap',
+    'diffuseMap',
+    'emissiveMap',
+    'metalnessMap',
+    'normalMap',
+    'specularityFactorMap',
+    'specularMap'
 ];
 
 /**
