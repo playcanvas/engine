@@ -268,6 +268,7 @@ class SogBundleParser {
             data.sh0 = textures[meta.sh0.files[0]].resource;
             data.sh_centroids = textures[meta.shN?.files[0]]?.resource;
             data.sh_labels = textures[meta.shN?.files[1]]?.resource;
+            data.shBands = GSplatSogsData.calcBands(data.sh_centroids?.width);
 
             if (!decompress) {
                 // no need to prepare gpu data if decompressing
