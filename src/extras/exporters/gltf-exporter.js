@@ -436,7 +436,7 @@ class GltfExporter extends CoreExporter {
 
         // KHR_materials_ior
         const defaultRefractionIndex = 1.0 / 1.5;
-        if (mat.refractionIndex !== defaultRefractionIndex) {
+        if (mat.refractionIndex !== defaultRefractionIndex && mat.refractionIndex > 0) {
             this.addExtension(json, output, 'KHR_materials_ior', {
                 ior: 1.0 / mat.refractionIndex
             });
