@@ -1,4 +1,5 @@
-// @config DESCRIPTION Test example for RenderPassRadixSort - GPU radix sort using mipmap binary search
+// @config DESCRIPTION Test example for ComputeRadixSort - GPU radix sort using 4-bit compute shaders
+// @config WEBGL_DISABLED
 // @config HIDDEN
 import files from 'examples/files';
 import { data } from 'examples/observer';
@@ -57,14 +58,14 @@ document.body.appendChild(errorOverlay);
 // Track sort failure count and verification state
 let sortFailureCount = 0;
 let verificationPending = false;
-/** @type {{sortedIndices: pc.Texture, originalValues: number[], numElements: number}|null} */
+/** @type {{sortedIndices: pc.StorageBuffer, originalValues: number[], numElements: number}|null} */
 let pendingVerification = null;
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler];
+createOptions.resourceHandlers = [];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -84,53 +85,55 @@ app.on('destroy', () => {
 let currentNumElements = 0;
 /** @type {number} */
 let currentNumBits = 0;
-/** @type {pc.Texture|null} */
-let keysTexture = null;
-/** @type {pc.RenderPassRadixSort|null} */
+/** @type {pc.StorageBuffer|null} */
+let keysBuffer = null;
+/** @type {pc.ComputeRadixSort|null} */
 let radixSort = null;
+/** @type {pc.StorageBuffer|null} */
+let sortedIndicesBuffer = null;
 /** @type {number[]} */
 let originalValues = [];
 /** @type {boolean} */
 let needsRegen = true;
+/** @type {boolean} */
+const enableRendering = true;
 
-// Create render pass instance once
+// Create compute radix sort instance
 // eslint-disable-next-line import/namespace
-radixSort = new pc.RenderPassRadixSort(device);
+radixSort = new pc.ComputeRadixSort(device);
 
 // ==================== MATERIALS ====================
 
-// Create unsorted visualization material
+// Create unsorted visualization material (WGSL only for WebGPU)
 const unsortedMaterial = new pc.ShaderMaterial({
-    uniqueName: 'UnsortedVizMaterial',
-    vertexGLSL: files['vert.glsl'],
-    fragmentGLSL: files['unsorted.glsl.frag'],
+    uniqueName: 'UnsortedVizMaterialCompute',
     vertexWGSL: files['vert.wgsl'],
-    fragmentWGSL: files['unsorted.wgsl.frag'],
+    fragmentWGSL: files['wgsl.frag'],
     attributes: {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0
     }
 });
 
-// Create sorted visualization material
+// Create sorted visualization material (WGSL only for WebGPU)
+// Uses same shader as unsorted but with SORTED define
 const sortedMaterial = new pc.ShaderMaterial({
-    uniqueName: 'SortedVizMaterial',
-    vertexGLSL: files['vert.glsl'],
-    fragmentGLSL: files['sorted.glsl.frag'],
+    uniqueName: 'SortedVizMaterialCompute',
     vertexWGSL: files['vert.wgsl'],
-    fragmentWGSL: files['sorted.wgsl.frag'],
+    fragmentWGSL: files['wgsl.frag'],
     attributes: {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0
     }
 });
+sortedMaterial.setDefine('SORTED', true);
 
 // ==================== SCENE SETUP ====================
 
 // Create camera entity
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1),
+    clearColor: new pc.Color(0.1, 0.1, 0.15),
     projection: pc.PROJECTION_ORTHOGRAPHIC,
     orthoHeight: 1
 });
@@ -195,49 +198,33 @@ function calcTextureSize(numElements) {
 }
 
 /**
- * Recreates the keys texture and generates random data.
+ * Recreates the keys buffer and generates random data.
  */
 function regenerateData() {
     const numElements = currentNumElements;
     const numBits = currentNumBits;
-    const maxValue = (1 << numBits) - 1;
+    const maxValue = numBits >= 32 ? 0xFFFFFFFF : (1 << numBits) - 1;
 
-    // Calculate non-POT texture size
-    const { width, height } = calcTextureSize(numElements);
-
-    // Destroy old texture
-    if (keysTexture) {
-        keysTexture.destroy();
+    // Destroy old buffer
+    if (keysBuffer) {
+        keysBuffer.destroy();
     }
 
-    // Create new source keys texture
-    keysTexture = new pc.Texture(device, {
-        name: 'SourceKeys',
-        width: width,
-        height: height,
-        format: pc.PIXELFORMAT_R32U,
-        mipmaps: false,
-        minFilter: pc.FILTER_NEAREST,
-        magFilter: pc.FILTER_NEAREST,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE
-    });
+    // Create storage buffer for keys
+    keysBuffer = new pc.StorageBuffer(device, numElements * 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
 
-    // Generate random test data directly into texture (linear layout)
-    const texData = keysTexture.lock();
-
-    // also keep original values for verification
+    // Generate random test data
+    const keysData = new Uint32Array(numElements);
     originalValues = [];
 
     for (let i = 0; i < numElements; i++) {
         const value = Math.floor(Math.random() * maxValue);
-        texData[i] = value;
+        keysData[i] = value;
         originalValues.push(value);
     }
 
-    // Note: No need to initialize padding - the shader ignores elements past elementCount
-
-    keysTexture.unlock();
+    // Upload to GPU
+    keysBuffer.write(0, keysData);
 
     needsRegen = false;
 }
@@ -248,53 +235,51 @@ function regenerateData() {
  * @param {boolean} [verify] - Whether to verify results.
  */
 function runSort(verify = false) {
-    if (!keysTexture || !radixSort) return;
+    if (!keysBuffer || !radixSort) return;
 
-    // Execute the GPU sort and get the sorted indices texture
-    const sortedIndices = radixSort.sort(keysTexture, currentNumElements, currentNumBits);
+    // Execute the GPU sort and get the sorted indices buffer
+    sortedIndicesBuffer = radixSort.sort(keysBuffer, currentNumElements, currentNumBits);
 
-    // Update materials with the sorted texture
-    updateMaterialParameters(sortedIndices);
+    // Update visualization materials
+    updateMaterialParameters();
 
     // Verify results if requested
     if (verify) {
-        verifyResults(sortedIndices);
+        verifyResults(sortedIndicesBuffer);
     }
 }
 
 /**
- * Updates material parameters after sort completes or data changes.
- *
- * @param {pc.Texture} sortedIndices - The sorted indices texture.
+ * Updates material parameters for visualization.
  */
-function updateMaterialParameters(sortedIndices) {
-    if (!keysTexture || !sortedIndices) {
+function updateMaterialParameters() {
+    if (!keysBuffer || !sortedIndicesBuffer) {
         return;
     }
 
+    const maxValue = currentNumBits >= 32 ? 0xFFFFFFFF : (1 << currentNumBits) - 1;
+    const { width, height } = calcTextureSize(currentNumElements);
+
     // Update unsorted material
-    unsortedMaterial.setParameter('keysTexture', keysTexture);
-    unsortedMaterial.setParameter('maxValue', (1 << currentNumBits) - 1);
+    unsortedMaterial.setParameter('keysBuffer', keysBuffer);
+    unsortedMaterial.setParameter('maxValue', maxValue);
     unsortedMaterial.setParameter('elementCount', currentNumElements);
-    unsortedMaterial.setParameter('textureSize', [keysTexture.width, keysTexture.height]);
-    unsortedMaterial.setParameter('debugMode', 0.0);
+    unsortedMaterial.setParameter('textureSize', [width, height]);
     unsortedMaterial.update();
 
     // Update sorted material
-    sortedMaterial.setParameter('sortedIndices', sortedIndices);
-    sortedMaterial.setParameter('keysTexture', keysTexture);
+    sortedMaterial.setParameter('keysBuffer', keysBuffer);
+    sortedMaterial.setParameter('sortedIndices', sortedIndicesBuffer);
+    sortedMaterial.setParameter('maxValue', maxValue);
     sortedMaterial.setParameter('elementCount', currentNumElements);
-    sortedMaterial.setParameter('textureWidth', sortedIndices.width);
-    sortedMaterial.setParameter('maxValue', (1 << currentNumBits) - 1);
-    sortedMaterial.setParameter('sourceTextureSize', [keysTexture.width, keysTexture.height]);
-    sortedMaterial.setParameter('debugMode', 0.0);
+    sortedMaterial.setParameter('textureSize', [width, height]);
     sortedMaterial.update();
 }
 
 /**
  * Downloads and verifies the sorted results against CPU-sorted reference.
  *
- * @param {pc.Texture} sortedIndices - The sorted indices texture to verify.
+ * @param {pc.StorageBuffer} sortedIndices - The sorted indices buffer to verify.
  */
 function verifyResults(sortedIndices) {
     // If verification already in progress, queue this one (replacing any previously queued)
@@ -333,32 +318,26 @@ function processNextVerification() {
 /**
  * Performs the actual verification with pre-captured data.
  *
- * @param {pc.Texture} sortedIndices - The sorted indices texture.
+ * @param {pc.StorageBuffer} sortedIndices - The sorted indices buffer.
  * @param {number[]} capturedOriginalValues - Copy of original values at sort time.
  * @param {number} capturedNumElements - Number of elements at sort time.
  */
 async function doVerification(sortedIndices, capturedOriginalValues, capturedNumElements) {
     if (!sortedIndices) {
-        console.error('No sorted indices texture available');
+        console.error('No sorted indices buffer available');
         errorOverlay.style.display = 'block';
         return;
     }
 
-    const width = sortedIndices.width;
+    // Read the sorted indices buffer
+    const indicesData = new Uint32Array(capturedNumElements);
+    await sortedIndices.read(0, capturedNumElements * 4, indicesData, true);
 
-    // Read the sorted indices texture (R32U)
-    const indicesResult = await sortedIndices.read(0, 0, width, width, {
-        immediate: true
-    });
-
-    // Extract sorted indices (stored in linear order)
-    const sortedIndicesArray = [];
+    // Get sorted values by looking up original values
+    const sortedValues = [];
     for (let i = 0; i < capturedNumElements; i++) {
-        sortedIndicesArray.push(indicesResult[i]);
+        sortedValues.push(capturedOriginalValues[indicesData[i]]);
     }
-
-    // Get sorted values by looking up original values (using captured copy)
-    const sortedValues = sortedIndicesArray.map(idx => capturedOriginalValues[idx]);
 
     // CPU sort a copy of original values for reference
     const cpuSorted = capturedOriginalValues.slice().sort((a, b) => a - b);
@@ -368,7 +347,7 @@ async function doVerification(sortedIndices, capturedOriginalValues, capturedNum
     for (let i = 0; i < capturedNumElements; i++) {
         if (sortedValues[i] !== cpuSorted[i]) {
             if (errorCount < 5) {
-                console.error(`Mismatch at index ${i}: GPU=${sortedValues[i]}, expected=${cpuSorted[i]}, gpuIndex=${sortedIndicesArray[i]}`);
+                console.error(`Mismatch at index ${i}: GPU=${sortedValues[i]}, expected=${cpuSorted[i]}`);
             }
             errorCount++;
         }
@@ -394,8 +373,12 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             needsRegen = true;
         }
     } else if (path === 'options.bits') {
-        if (value !== currentNumBits) {
-            currentNumBits = value;
+        // Round to nearest valid value (must be multiple of 4)
+        const validBits = [4, 8, 12, 16, 20, 24, 28, 32];
+        const nearest = validBits.reduce((prev, curr) => (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev)
+        );
+        if (nearest !== currentNumBits) {
+            currentNumBits = nearest;
             needsRegen = true;
         }
     }
@@ -428,7 +411,7 @@ app.on('update', (/** @type {number} */ dt) => {
     runSort(verify);
 
     // Enable visualization after first sort
-    if (!unsortedPlane.enabled) {
+    if (enableRendering && !unsortedPlane.enabled) {
         unsortedPlane.enabled = true;
         sortedPlane.enabled = true;
     }

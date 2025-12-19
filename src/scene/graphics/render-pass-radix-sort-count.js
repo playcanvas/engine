@@ -3,7 +3,9 @@ import { RenderPassShaderQuad } from './render-pass-shader-quad.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 import glslRadixSortCountPS from '../shader-lib/glsl/chunks/radix-sort/radix-sort-count.js';
+import glslRadixSortCountQuad from '../shader-lib/glsl/chunks/radix-sort/radix-sort-count-quad.js';
 import wgslRadixSortCountPS from '../shader-lib/wgsl/chunks/radix-sort/radix-sort-count.js';
+import wgslRadixSortCountQuad from '../shader-lib/wgsl/chunks/radix-sort/radix-sort-count-quad.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -73,9 +75,11 @@ class RenderPassRadixSortCount extends RenderPassShaderQuad {
         this.groupSize = groupSize;
         this.currentBit = currentBit;
 
-        // Register shader chunks
+        // Register shader chunks (main shader + quad include chunk)
         ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('radixSortCountPS', glslRadixSortCountPS);
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('radixSortCountQuad', glslRadixSortCountQuad);
         ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('radixSortCountPS', wgslRadixSortCountPS);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('radixSortCountQuad', wgslRadixSortCountQuad);
 
         const defines = new Map();
         if (sourceLinear) {
