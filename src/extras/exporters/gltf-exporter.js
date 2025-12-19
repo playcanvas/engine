@@ -385,7 +385,6 @@ class GltfExporter extends CoreExporter {
         const { diffuse, emissive, opacity, metalness, gloss, glossInvert } = mat;
         const pbr = output.pbrMetallicRoughness;
 
-        // Convert diffuse color from gamma (sRGB) to linear space for glTF
         if (!diffuse.equals(Color.WHITE) || opacity !== 1) {
             const linear = new Color().linear(diffuse);
             pbr.baseColorFactor = [linear.r, linear.g, linear.b, opacity];
@@ -403,7 +402,6 @@ class GltfExporter extends CoreExporter {
         this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'diffuseMap', json);
         this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap', json);
 
-        // Convert emissive color from gamma (sRGB) to linear space for glTF
         if (!emissive.equals(Color.BLACK)) {
             const linear = new Color().linear(emissive);
             output.emissiveFactor = [linear.r, linear.g, linear.b];
