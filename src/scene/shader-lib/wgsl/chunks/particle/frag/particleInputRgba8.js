@@ -40,7 +40,7 @@ fn readInput(uv: f32) {
     inShow = tex2.a > 0.5;
 
     let life_decoded = decodeFloatRGBA(tex3);
-    let maxNegLife = max(uniform.lifetime, (uniform.numParticles - 1.0) * (uniform.rate + uniform.rateDiv));
+    let maxNegLife = max(uniform.lifetime, uniform.numParticles * (uniform.rate + uniform.rateDiv));
     let maxPosLife = uniform.lifetime + 1.0;
     inLife = life_decoded * (maxNegLife + maxPosLife) - maxNegLife;
 }`;
