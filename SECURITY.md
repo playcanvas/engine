@@ -2,20 +2,19 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+This project provides security updates only for the latest released version.
+Older releases are not actively maintained for security issues.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version         | Supported          |
+| --------------- | ------------------ |
+| Latest release  | :white_check_mark: |
+| Earlier releases| :x:                |
 
 ## Reporting a Vulnerability
 
 If you believe you have found a security vulnerability in this project, please report it to us via email at **security@project-domain.com**.
 
+If you believe you have found a security vulnerability in this project, please report it to us via email at **security@project-domain.com**.
 Please include the following details in your report whenever possible:
 
 - A description of the issue and its potential impact
