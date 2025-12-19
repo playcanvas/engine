@@ -9,8 +9,6 @@ export default /* wgsl */`
 #include "gsplatQuatToMat3VS"
 #include "gsplatSourceFormatVS"
 
-uniform uTransform: mat4x4f;
-
 uniform uStartLine: i32;      // Start row in destination texture
 uniform uViewportWidth: i32;  // Width of the destination viewport in pixels
 
@@ -23,6 +21,10 @@ uniform uColorMultiply: vec3f;
 
 // number of splats
 uniform uActiveSplats: i32;
+
+// pre-computed model matrix decomposition
+uniform model_scale: vec3f;
+uniform model_rotation: vec4f;  // (x,y,z,w) format
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
@@ -38,9 +40,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         // Out of bounds: write zeros
         output.color = vec4f(0.0);
-        output.color1 = vec4f(0.0);
-        output.color2 = vec4f(0.0);
-        output.color3 = vec4f(0.0);
+        #ifndef GSPLAT_COLOR_ONLY
+            output.color1 = vec4u(0u);
+            output.color2 = vec2u(0u);
+        #endif
 
     } else {
 
@@ -66,26 +69,27 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         source.id = u32(originalIndex);
         source.uv = vec2i(i32(source.id % srcSize), i32(source.id / srcSize));
 
-        // read and transform center
+        // read center in local space
         var modelCenter = readCenter(&source);
-        modelCenter = (uniform.uTransform * vec4f(modelCenter, 1.0)).xyz;
+
+        // compute world-space center for storage
+        let worldCenter = (uniform.matrix_model * vec4f(modelCenter, 1.0)).xyz;
         var center: SplatCenter;
         initCenter(modelCenter, &center);
 
-        // read and transform covariance
-        var covA: vec3f;
-        var covB: vec3f;
-        readCovariance(&source, &covA, &covB);
+        // Get source rotation and scale
+        // getRotation() returns (w,x,y,z) format, convert to (x,y,z,w) for quatMul
+        let srcRotation = getRotation().yzwx;
+        let srcScale = getScale();
 
-        let C = mat3x3f(
-            vec3f(covA.x, covA.y, covA.z),
-            vec3f(covA.y, covB.x, covB.y),
-            vec3f(covA.z, covB.y, covB.z)
-        );
-        let linear = mat3x3f(uniform.uTransform[0].xyz, uniform.uTransform[1].xyz, uniform.uTransform[2].xyz);
-        let Ct = linear * C * transpose(linear);
-        covA = Ct[0];
-        covB = vec3f(Ct[1][1], Ct[1][2], Ct[2][2]);
+        // Combine: world = model * source (both in x,y,z,w format)
+        var worldRotation = quatMul(uniform.model_rotation, srcRotation);
+        // Ensure w is positive so sqrt() reconstruction works correctly
+        // (quaternions q and -q represent the same rotation)
+        if (worldRotation.w < 0.0) {
+            worldRotation = -worldRotation;
+        }
+        let worldScale = uniform.model_scale * srcScale;
 
         // read color
         var color = readColor(&source);
@@ -108,9 +112,11 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         // write out results
         output.color = color;
-        output.color1 = vec4f(modelCenter, 1.0);
-        output.color2 = vec4f(covA, 1.0);
-        output.color3 = vec4f(covB, 1.0);
+        #ifndef GSPLAT_COLOR_ONLY
+            // Store rotation (xyz, w derived) and scale as 6 half-floats
+            output.color1 = vec4u(bitcast<u32>(worldCenter.x), bitcast<u32>(worldCenter.y), bitcast<u32>(worldCenter.z), pack2x16float(worldRotation.xy));
+            output.color2 = vec2u(pack2x16float(vec2f(worldRotation.z, worldScale.x)), pack2x16float(worldScale.yz));
+        #endif
     }
     
     return output;

@@ -14,6 +14,12 @@ const discardVec: vec4f = vec4f(0.0, 0.0, 2.0, 1.0);
     varying vLinearDepth: f32;
 #endif
 
+#ifdef GSPLAT_OVERDRAW
+    uniform colorRampIntensity: f32;
+    var colorRamp: texture_2d<f32>;
+    var colorRampSampler: sampler;
+#endif
+
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
@@ -25,9 +31,15 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
-    let modelCenter: vec3f = readCenter(&source);
+    var modelCenter: vec3f = readCenter(&source);
 
     var center: SplatCenter;
+    center.modelCenterOriginal = modelCenter;
+    
+    modifyCenter(&modelCenter);
+    modifySplatCenter(&modelCenter);
+    center.modelCenterModified = modelCenter;
+
     if (!initCenter(modelCenter, &center)) {
         output.position = discardVec;
         return output;
@@ -63,12 +75,24 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         clr = vec4f(clr.xyz + evalSH(&sh, dir) * scale, clr.a);
     #endif
 
+    modifyColor(modelCenter, &clr);
+    modifySplatColor(modelCenter, &clr);
+
     clipCorner(&corner, clr.w);
 
     // write output
     output.position = center.proj + vec4f(corner.offset, 0.0, 0.0);
     output.gaussianUV = corner.uv;
-    output.gaussianColor = vec4f(prepareOutputFromGamma(max(clr.xyz, vec3f(0.0))), clr.w);
+
+    #ifdef GSPLAT_OVERDRAW
+        // Overdraw visualization mode: color by elevation
+        let t: f32 = clamp(originalCenter.y / 20.0, 0.0, 1.0);
+        let rampColor: vec3f = textureSampleLevel(colorRamp, colorRampSampler, vec2f(t, 0.5), 0.0).rgb;
+        clr.a = clr.a * (1.0 / 32.0) * uniform.colorRampIntensity;
+        output.gaussianColor = vec4f(rampColor, clr.a);
+    #else
+        output.gaussianColor = vec4f(prepareOutputFromGamma(max(clr.xyz, vec3f(0.0))), clr.w);
+    #endif
 
     #ifndef DITHER_NONE
         output.id = f32(source.id);

@@ -36,7 +36,7 @@ const random = {
      */
     circlePointDeterministic(point, index, numPoints) {
         const theta = index * _goldenAngle;
-        const r = Math.sqrt(index) / Math.sqrt(numPoints);
+        const r = Math.sqrt(index / numPoints);
 
         point.x = r * Math.cos(theta);
         point.y = r * Math.sin(theta);

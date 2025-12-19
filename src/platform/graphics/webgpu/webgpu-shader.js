@@ -69,6 +69,9 @@ class WebgpuShader {
                 this._computeCode = definition.cshader ?? null;
                 this.computeUniformBufferFormats = definition.computeUniformBufferFormats;
                 this.computeBindGroupFormat = definition.computeBindGroupFormat;
+                if (definition.computeEntryPoint) {
+                    this.computeEntryPoint = definition.computeEntryPoint;
+                }
 
             } else {
 

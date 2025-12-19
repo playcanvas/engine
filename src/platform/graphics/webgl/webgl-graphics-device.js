@@ -36,6 +36,7 @@ import { WebglShader } from './webgl-shader.js';
 import { WebglDrawCommands } from './webgl-draw-commands.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
+import { WebglUploadStream } from './webgl-upload-stream.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
@@ -683,6 +684,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     createRenderTargetImpl(renderTarget) {
         return new WebglRenderTarget();
+    }
+
+    createUploadStreamImpl(uploadStream) {
+        return new WebglUploadStream(uploadStream);
     }
 
     // #if _DEBUG
@@ -1882,7 +1887,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 this._drawCallsPerFrame++;
 
                 // #if _PROFILER
-                this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                if (drawCommands) {
+                    // use pre-calculated primitive count from drawCommands
+                    this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+                } else {
+                    // single draw
+                    this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                }
                 // #endif
             }
         }
@@ -2083,6 +2094,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
+        this.setFramebuffer(renderTarget.impl._glFrameBuffer);
 
         return new Promise((resolve, reject) => {
             this.readPixelsAsync(x, y, width, height, data).then((data) => {

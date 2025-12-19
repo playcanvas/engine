@@ -101,6 +101,10 @@ class NullGraphicsDevice extends GraphicsDevice {
         return new NullDrawCommands();
     }
 
+    createUploadStreamImpl(uploadStream) {
+        return null;
+    }
+
     draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
     }
 

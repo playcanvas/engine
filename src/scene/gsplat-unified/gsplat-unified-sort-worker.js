@@ -279,6 +279,7 @@ function UnifiedSortWorker() {
     };
 
     const sort = (sortParams, order, centersData) => {
+        const sortStartTime = performance.now();
 
         // distance bounds from AABB projections per splat
         const { minDist, maxDist } = _radialSort ?
@@ -330,11 +331,13 @@ function UnifiedSortWorker() {
         const count = numVertices;
 
         // send results
+        const sortTime = performance.now() - sortStartTime;
         const transferList = [order.buffer];
         const response = {
             order: order.buffer,
             count,
-            version: centersData.version
+            version: centersData.version,
+            sortTime: sortTime
         };
 
         myself.postMessage(response, transferList);

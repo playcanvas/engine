@@ -10,11 +10,19 @@ class GSplatSorter extends EventHandler {
 
     centers;
 
-    constructor() {
+    scene;
+
+    constructor(scene) {
         super();
+        this.scene = scene ?? null;
 
         const messageHandler = (message) => {
             const msgData = message.data ?? message;
+
+            // Fire sortTime event on scene
+            if (this.scene && msgData.sortTime !== undefined) {
+                this.scene.fire('gsplat:sorted', msgData.sortTime);
+            }
 
             const newOrder = msgData.order;
             const oldOrder = this.orderTexture._levels[0].buffer;

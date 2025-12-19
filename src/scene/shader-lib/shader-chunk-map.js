@@ -1,4 +1,13 @@
+import { Debug } from '../../core/debug.js';
 import { hashCode } from '../../core/hash.js';
+
+/**
+ * @typedef {object} ChunkValidation
+ * @property {string} [message] - Deprecation message to display.
+ * @property {function(string, string):void} [callback] - Validation callback receiving chunk name and code.
+ * @property {string} [defaultCodeGLSL] - Default GLSL code. If matches, no warning.
+ * @property {string} [defaultCodeWGSL] - Default WGSL code. If matches, no warning.
+ */
 
 /**
  * A collection of shader chunks, used by {@link ShaderChunks}. This is a map of shader chunk names
@@ -8,9 +17,28 @@ import { hashCode } from '../../core/hash.js';
  * @category Graphics
  */
 class ShaderChunkMap extends Map {
+    /**
+     * Reference to chunk validations map.
+     *
+     * @type {Map<string, ChunkValidation>|undefined}
+     * @private
+     */
+    _validations;
+
     _keyDirty = false;
 
     _key = '';
+
+    /**
+     * Create a new ShaderChunkMap instance.
+     *
+     * @param {Map<string, ChunkValidation>} [validations] - Optional map of chunk validations.
+     * @ignore
+     */
+    constructor(validations) {
+        super();
+        this._validations = validations;
+    }
 
     /**
      * Adds a new shader chunk with a specified name and shader source code to the Map. If an
@@ -21,6 +49,22 @@ class ShaderChunkMap extends Map {
      * @returns {this} The ShaderChunkMap instance.
      */
     set(name, code) {
+        // Run validation if registered for this chunk
+        Debug.call(() => {
+            const validation = this._validations?.get(name);
+            if (validation) {
+                const isDefault = code === validation.defaultCodeGLSL || code === validation.defaultCodeWGSL;
+                if (!isDefault) {
+                    if (validation.message) {
+                        Debug.deprecated(validation.message);
+                    }
+                    if (validation.callback) {
+                        validation.callback(name, code);
+                    }
+                }
+            }
+        });
+
         if (!this.has(name) || this.get(name) !== code) {
             this.markDirty();
         }

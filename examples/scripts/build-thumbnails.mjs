@@ -4,7 +4,7 @@
 import fs from 'fs';
 import { spawn, execSync } from 'node:child_process';
 
-import puppeteer from 'puppeteer';
+import { launch } from 'puppeteer';
 import sharp from 'sharp';
 
 import { exampleMetaData } from '../cache/metadata.mjs';
@@ -60,12 +60,12 @@ class PuppeteerPool {
     }
 
     /**
-     * @param {import("puppeteer").PuppeteerLaunchOptions} options - Launch options.
+     * @param {Parameters<typeof launch>[0]} options - Launch options.
      */
     async launch(options = {}) {
         const promises = [];
         for (let i = 0; i < this._size; i++) {
-            promises.push(puppeteer.launch(options));
+            promises.push(launch(options));
         }
         const browsers = await Promise.all(promises);
 
@@ -224,7 +224,9 @@ const main = async () => {
     console.log('Spawn server on', PORT);
     const isWin = process.platform === 'win32';
     const cmd = isWin ? 'npx.cmd' : 'npx';
-    const server = spawn(cmd, ['serve', 'dist', '-l', PORT, '--no-request-logging', '--config', '../serve.json']);
+    const server = spawn(cmd, ['serve', 'dist', '-l', PORT, '--no-request-logging', '--config', '../serve.json'], {
+        shell: true
+    });
     await sleep(1000); // give a second to spawn server
     console.log('Starting puppeteer screenshot process');
     try {

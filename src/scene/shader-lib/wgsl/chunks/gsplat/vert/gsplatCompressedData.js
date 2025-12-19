@@ -1,4 +1,6 @@
 export default /* wgsl */`
+#include "gsplatPackingPS"
+
 var packedTexture: texture_2d<u32>;
 var chunkTexture: texture_2d<uff>;
 
@@ -14,16 +16,7 @@ fn unpack111011(bits: u32) -> vec3f {
     return (vec3f((vec3<u32>(bits) >> vec3<u32>(21u, 11u, 0u)) & vec3<u32>(0x7ffu, 0x3ffu, 0x7ffu))) / vec3f(2047.0, 1023.0, 2047.0);
 }
 
-fn unpack8888(bits: u32) -> vec4f {
-    return vec4f(
-        f32((bits >> 24u) & 0xffu),
-        f32((bits >> 16u) & 0xffu),
-        f32((bits >> 8u)  & 0xffu),
-        f32(bits         & 0xffu)
-    ) / 255.0;
-}
-
-const norm_const: f32 = 1.0 / (sqrt(2.0) * 0.5);
+const norm_const: f32 = sqrt(2.0);
 
 fn unpackRotation(bits: u32) -> vec4f {
     let a = (f32((bits >> 20u) & 0x3ffu) / 1023.0 - 0.5) * norm_const;
@@ -67,21 +60,5 @@ fn getRotation() -> vec4f {
 
 fn getScale() -> vec3f {
     return exp(mix(vec3f(chunkDataB.zw, chunkDataC.x), chunkDataC.yzw, unpack111011(packedData.z)));
-}
-
-// given a rotation matrix and scale vector, compute 3d covariance A and B
-fn readCovariance(source: ptr<function, SplatSource>, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
-    let rot = quatToMat3(getRotation());
-    let scale = getScale();
-
-    // M = S * R
-    let M = transpose(mat3x3f(
-        scale.x * rot[0],
-        scale.y * rot[1],
-        scale.z * rot[2]
-    ));
-
-    *covA_ptr = vec3f(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
-    *covB_ptr = vec3f(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
 }
 `;

@@ -1,4 +1,6 @@
 export default /* glsl */`
+#include "gsplatPackingPS"
+
 uniform highp usampler2D packedTexture;
 uniform highp sampler2D chunkTexture;
 
@@ -18,16 +20,7 @@ vec3 unpack111011(uint bits) {
     );
 }
 
-vec4 unpack8888(uint bits) {
-    return vec4(
-        float(bits >> 24u) / 255.0,
-        float((bits >> 16u) & 0xffu) / 255.0,
-        float((bits >> 8u) & 0xffu) / 255.0,
-        float(bits & 0xffu) / 255.0
-    );
-}
-
-const float norm = 1.0 / (sqrt(2.0) * 0.5);
+const float norm = sqrt(2.0);
 
 vec4 unpackRotation(uint bits) {
     float a = (float((bits >> 20u) & 0x3ffu) / 1023.0 - 0.5) * norm;
@@ -71,21 +64,5 @@ vec4 getRotation() {
 
 vec3 getScale() {
     return exp(mix(vec3(chunkDataB.zw, chunkDataC.x), chunkDataC.yzw, unpack111011(packedData.z)));
-}
-
-// given a rotation matrix and scale vector, compute 3d covariance A and B
-void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
-    mat3 rot = quatToMat3(getRotation());
-    vec3 scale = getScale();
-
-    // M = S * R
-    mat3 M = transpose(mat3(
-        scale.x * rot[0],
-        scale.y * rot[1],
-        scale.z * rot[2]
-    ));
-
-    covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
-    covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
 }
 `;

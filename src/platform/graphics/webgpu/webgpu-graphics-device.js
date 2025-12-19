@@ -32,6 +32,7 @@ import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
 import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
+import { WebgpuUploadStream } from './webgpu-upload-stream.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
@@ -516,6 +517,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return new WebgpuRenderTarget(renderTarget);
     }
 
+    createUploadStreamImpl(uploadStream) {
+        return new WebgpuUploadStream(uploadStream);
+    }
+
     createBindGroupFormatImpl(bindGroupFormat) {
         return new WebgpuBindGroupFormat(bindGroupFormat);
     }
@@ -687,6 +692,21 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                     passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
                 }
             }
+
+            // track draw calls - always count as 1 (one material setup, one API call)
+            this._drawCallsPerFrame++;
+
+            // #if _PROFILER
+            // track primitive count
+            if (drawCommands) {
+                // use pre-calculated primitive count from drawCommands
+                this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+            } else {
+                // single draw
+                const primCount = primitive.count * (numInstances > 1 ? numInstances : 1);
+                this._primsPerFrame[primitive.type] += primCount;
+            }
+            // #endif
 
             WebgpuDebug.end(this, 'Drawing', {
                 vb0,
@@ -913,6 +933,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const computePassDesc = this.setupTimeStampWrites(undefined, name);
 
         // start the pass
+        DebugHelper.setLabel(computePassDesc, `ComputePass-${name}`);
         const commandEncoder = this.getCommandEncoder();
         this.passEncoder = commandEncoder.beginComputePass(computePassDesc);
         DebugHelper.setLabel(this.passEncoder, `ComputePass-${name}`);
@@ -1248,6 +1269,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         DebugGraphics.popGpuMarker(this);
 
         return true;
+    }
+
+    get hasTranspilers() {
+        return this.glslang && this.twgsl;
     }
 
     // #if _DEBUG

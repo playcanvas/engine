@@ -18,9 +18,7 @@ await new Promise((resolve) => {
 });
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const assets = {

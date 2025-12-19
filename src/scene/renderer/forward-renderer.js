@@ -1,5 +1,6 @@
 import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
+import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Color } from '../../core/math/color.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
@@ -425,7 +426,7 @@ class ForwardRenderer extends Renderer {
             this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
 
             const pixelsPerMeter = spot.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
-            const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
+            const fov = lightRenderData.shadowCamera._fov * math.DEG_TO_RAD;
             const fovRatio = 1.0 / Math.tan(fov / 2.0);
             this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * fovRatio);
 

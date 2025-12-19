@@ -112,6 +112,14 @@ class GraphicsDevice extends EventHandler {
     isWebGL2 = false;
 
     /**
+     * True if the deviceType is Null
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isNull = false;
+
+    /**
      * True if the back-buffer is using HDR format, which means that the browser will display the
      * rendered images in high dynamic range mode. This is true if the options.displayFormat is set
      * to {@link DISPLAYFORMAT_HDR} when creating the graphics device using
@@ -537,6 +545,12 @@ class GraphicsDevice extends EventHandler {
         if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
         if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
         if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
+
+        // Platform defines
+        if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
+        if (platform.mobile) capsDefines.set('PLATFORM_MOBILE', '');
+        if (platform.android) capsDefines.set('PLATFORM_ANDROID', '');
+        if (platform.ios) capsDefines.set('PLATFORM_IOS', '');
     }
 
     /**

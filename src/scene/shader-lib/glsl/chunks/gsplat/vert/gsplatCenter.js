@@ -1,19 +1,21 @@
 export default /* glsl */`
 uniform mat4 matrix_model;
 uniform mat4 matrix_view;
+uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
 #ifndef GSPLAT_CENTER_NOPROJ
     uniform mat4 matrix_projection;
 #endif
 
 // project the model space gaussian center to view and clip space
-bool initCenter(vec3 modelCenter, out SplatCenter center) {
+bool initCenter(vec3 modelCenter, inout SplatCenter center) {
     mat4 modelView = matrix_view * matrix_model;
     vec4 centerView = modelView * vec4(modelCenter, 1.0);
 
     #ifndef GSPLAT_CENTER_NOPROJ
 
-        // early out if splat is behind the camera
-        if (centerView.z > 0.0) {
+        // early out if splat is behind the camera (perspective only)
+        // orthographic projections don't need this check as frustum culling handles it
+        if (camera_params.w != 1.0 && centerView.z > 0.0) {
             return false;
         }
 

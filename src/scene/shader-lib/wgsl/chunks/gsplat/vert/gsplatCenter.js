@@ -1,6 +1,7 @@
 export default /* wgsl */`
 uniform matrix_model: mat4x4f;
 uniform matrix_view: mat4x4f;
+uniform camera_params: vec4f;             // 1 / far, far, near, isOrtho
 #ifndef GSPLAT_CENTER_NOPROJ
     uniform matrix_projection: mat4x4f;
 #endif
@@ -12,8 +13,9 @@ fn initCenter(modelCenter: vec3f, center: ptr<function, SplatCenter>) -> bool {
 
     #ifndef GSPLAT_CENTER_NOPROJ
 
-        // early out if splat is behind the camera
-        if (centerView.z > 0.0) {
+        // early out if splat is behind the camera (perspective only)
+        // orthographic projections don't need this check as frustum culling handles it
+        if (uniform.camera_params.w != 1.0 && centerView.z > 0.0) {
             return false;
         }
 

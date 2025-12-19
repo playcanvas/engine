@@ -210,6 +210,8 @@ class SogBundleParser {
                         contents: file.data
                     }, {
                         mipmaps: false
+                    }, {
+                        crossOrigin: 'anonymous'
                     });
                 } else {
                     // file doesn't exist in bundle, treat it as a url
@@ -219,6 +221,8 @@ class SogBundleParser {
                         filename
                     }, {
                         mipmaps: false
+                    }, {
+                        crossOrigin: 'anonymous'
                     });
                 }
 
@@ -249,7 +253,12 @@ class SogBundleParser {
             });
 
             // construct the gsplat resource
+            const decompress = asset.data?.decompress;
+            const minimalMemory = asset.options?.minimalMemory ?? false;
+
             const data = new GSplatSogsData();
+            data.url = url.original;
+            data.minimalMemory = minimalMemory;
             data.meta = meta;
             data.numSplats = meta.count;
             data.means_l = textures[meta.means.files[0]].resource;
@@ -259,8 +268,6 @@ class SogBundleParser {
             data.sh0 = textures[meta.sh0.files[0]].resource;
             data.sh_centroids = textures[meta.shN?.files[0]]?.resource;
             data.sh_labels = textures[meta.shN?.files[1]]?.resource;
-
-            const decompress = asset.data?.decompress;
 
             if (!decompress) {
                 // no need to prepare gpu data if decompressing
