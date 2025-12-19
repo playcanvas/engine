@@ -406,6 +406,18 @@ class GltfExporter extends CoreExporter {
             const { r, g, b } = emissive.clone().linear();
             output.emissiveFactor = [r, g, b];
         }
+
+        if (mat.emissiveIntensity !== 1) {
+            output.extensions = output.extensions || {};
+            output.extensions.KHR_materials_emissive_strength = {
+                emissiveStrength: mat.emissiveIntensity
+            };
+
+            json.extensionsUsed = json.extensionsUsed ?? [];
+            if (!json.extensionsUsed.includes('KHR_materials_emissive_strength')) {
+                json.extensionsUsed.push('KHR_materials_emissive_strength');
+            }
+        }
     }
 
     writeMaterials(resources, json) {
