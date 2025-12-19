@@ -356,12 +356,12 @@ class GltfExporter extends CoreExporter {
                 };
 
                 json.extensionsUsed = json.extensionsUsed ?? [];
-                if (json.extensionsUsed.indexOf('KHR_texture_transform') < 0) {
+                if (!json.extensionsUsed.includes('KHR_texture_transform')) {
                     json.extensionsUsed.push('KHR_texture_transform');
                 }
 
                 json.extensionsRequired = json.extensionsRequired ?? [];
-                if (json.extensionsRequired.indexOf('KHR_texture_transform') < 0) {
+                if (!json.extensionsRequired.includes('KHR_texture_transform')) {
                     json.extensionsRequired.push('KHR_texture_transform');
                 }
 
