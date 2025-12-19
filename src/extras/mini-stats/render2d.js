@@ -9,6 +9,7 @@ import {
     SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32
 } from '../../platform/graphics/constants.js';
+import { Debug } from '../../core/debug.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -150,7 +151,7 @@ const fragmentShaderWGSL = /* wgsl */ `
 
 // render 2d textured quads
 class Render2d {
-    constructor(device, maxQuads = 512) {
+    constructor(device, maxQuads = 2048) {
         const format = new VertexFormat(device, [
             { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
             { semantic: SEMANTIC_TEXCOORD0, components: 4, type: TYPE_FLOAT32 }
@@ -168,6 +169,7 @@ class Render2d {
         }
 
         this.device = device;
+        this.maxQuads = maxQuads;
         this.buffer = new VertexBuffer(device, format, maxQuads * 4, {
             usage: BUFFER_STREAM
         });
@@ -218,6 +220,12 @@ class Render2d {
     }
 
     quad(x, y, w, h, u, v, uw, uh, texture, wordFlag = 0) {
+        // bounds check to prevent buffer overflow
+        if (this.quads >= this.maxQuads) {
+            Debug.warnOnce('MiniStats: maximum number of quads exceeded, some elements may not render.');
+            return;
+        }
+
         const rw = this.targetSize.width;
         const rh = this.targetSize.height;
         const x0 = x / rw;
