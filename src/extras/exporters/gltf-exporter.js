@@ -386,7 +386,8 @@ class GltfExporter extends CoreExporter {
         const pbr = output.pbrMetallicRoughness;
 
         if (!diffuse.equals(Color.WHITE) || opacity !== 1) {
-            pbr.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
+            const { r, g, b } = diffuse.clone().linear();
+            pbr.baseColorFactor = [r, g, b, opacity];
         }
 
         if (metalness !== 1) {
@@ -402,7 +403,8 @@ class GltfExporter extends CoreExporter {
         this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap', json);
 
         if (!emissive.equals(Color.BLACK)) {
-            output.emissiveFactor = [emissive.r, emissive.g, emissive.b];
+            const { r, g, b } = emissive.clone().linear();
+            output.emissiveFactor = [r, g, b];
         }
     }
 

@@ -867,12 +867,11 @@ const extractTextureTransform = (source, material, maps) => {
 };
 
 const extensionPbrSpecGlossiness = (data, material, textures) => {
-    let color, texture;
+    let texture;
     if (data.hasOwnProperty('diffuseFactor')) {
-        color = data.diffuseFactor;
-        // Convert from linear space to sRGB space
-        material.diffuse.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
-        material.opacity = color[3];
+        const [r, g, b, a] = data.diffuseFactor;
+        material.diffuse.set(r, g, b).gamma();
+        material.opacity = a;
     } else {
         material.diffuse.set(1, 1, 1);
         material.opacity = 1;
@@ -890,9 +889,8 @@ const extensionPbrSpecGlossiness = (data, material, textures) => {
     }
     material.useMetalness = false;
     if (data.hasOwnProperty('specularFactor')) {
-        color = data.specularFactor;
-        // Convert from linear space to sRGB space
-        material.specular.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        const [r, g, b] = data.specularFactor;
+        material.specular.set(r, g, b).gamma();
     } else {
         material.specular.set(1, 1, 1);
     }
@@ -986,8 +984,8 @@ const extensionSpecular = (data, material, textures) => {
     }
 
     if (data.hasOwnProperty('specularColorFactor')) {
-        const color = data.specularColorFactor;
-        material.specular.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        const [r, g, b] = data.specularColorFactor;
+        material.specular.set(r, g, b).gamma();
     } else {
         material.specular.set(1, 1, 1);
     }
@@ -1034,8 +1032,8 @@ const extensionTransmission = (data, material, textures) => {
 const extensionSheen = (data, material, textures) => {
     material.useSheen = true;
     if (data.hasOwnProperty('sheenColorFactor')) {
-        const color = data.sheenColorFactor;
-        material.sheen.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        const [r, g, b] = data.sheenColorFactor;
+        material.sheen.set(r, g, b).gamma();
     } else {
         material.sheen.set(1, 1, 1);
     }
@@ -1070,8 +1068,8 @@ const extensionVolume = (data, material, textures) => {
         material.attenuationDistance = data.attenuationDistance;
     }
     if (data.hasOwnProperty('attenuationColor')) {
-        const color = data.attenuationColor;
-        material.attenuation.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        const [r, g, b] = data.attenuationColor;
+        material.attenuation.set(r, g, b).gamma();
     }
 };
 
@@ -1150,15 +1148,14 @@ const createMaterial = (gltfMaterial, textures) => {
     material.glossInvert = true;
     material.useMetalness = true;
 
-    let color, texture;
+    let texture;
     if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
         const pbrData = gltfMaterial.pbrMetallicRoughness;
 
         if (pbrData.hasOwnProperty('baseColorFactor')) {
-            color = pbrData.baseColorFactor;
-            // Convert from linear space to sRGB space
-            material.diffuse.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
-            material.opacity = color[3];
+            const [r, g, b, a] = pbrData.baseColorFactor;
+            material.diffuse.set(r, g, b).gamma();
+            material.opacity = a;
         }
         if (pbrData.hasOwnProperty('baseColorTexture')) {
             const baseColorTexture = pbrData.baseColorTexture;
@@ -1208,9 +1205,8 @@ const createMaterial = (gltfMaterial, textures) => {
     }
 
     if (gltfMaterial.hasOwnProperty('emissiveFactor')) {
-        color = gltfMaterial.emissiveFactor;
-        // Convert from linear space to sRGB space
-        material.emissive.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        const [r, g, b] = gltfMaterial.emissiveFactor;
+        material.emissive.set(r, g, b).gamma();
     }
 
     if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
