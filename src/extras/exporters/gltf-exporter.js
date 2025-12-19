@@ -125,6 +125,7 @@ const textureSemantics = [
     'emissiveMap',
     'metalnessMap',
     'normalMap',
+    'refractionMap',
     'specularityFactorMap',
     'specularMap'
 ];
@@ -497,6 +498,19 @@ class GltfExporter extends CoreExporter {
             if (Object.keys(specularExt).length > 0) {
                 this.addExtension(json, output, 'KHR_materials_specular', specularExt);
             }
+        }
+
+        // KHR_materials_transmission
+        if (mat.useDynamicRefraction && (mat.refraction !== 0 || mat.refractionMap)) {
+            const transmissionExt = {};
+
+            if (mat.refraction !== 0) {
+                transmissionExt.transmissionFactor = mat.refraction;
+            }
+
+            this.attachTexture(resources, mat, transmissionExt, 'transmissionTexture', 'refractionMap', json);
+
+            this.addExtension(json, output, 'KHR_materials_transmission', transmissionExt);
         }
 
         // KHR_materials_unlit
