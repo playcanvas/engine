@@ -50,4 +50,3 @@ export default /* glsl */`
     count += m4.x + m4.y + m4.z + m4.w;
 }
 `;
-

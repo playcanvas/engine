@@ -116,4 +116,3 @@ fn add_block_sums(
 `;
 
 export default prefixSumSource;
-
