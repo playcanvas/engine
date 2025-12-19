@@ -867,11 +867,11 @@ const extractTextureTransform = (source, material, maps) => {
 };
 
 const extensionPbrSpecGlossiness = (data, material, textures) => {
-    let color, texture;
+    let texture;
     if (data.hasOwnProperty('diffuseFactor')) {
-        color = data.diffuseFactor;
-        material.diffuse.set(color[0], color[1], color[2]).gamma();
-        material.opacity = color[3];
+        const [r, g, b, a] = data.diffuseFactor;
+        material.diffuse.set(r, g, b).gamma();
+        material.opacity = a;
     } else {
         material.diffuse.set(1, 1, 1);
         material.opacity = 1;
@@ -889,8 +889,8 @@ const extensionPbrSpecGlossiness = (data, material, textures) => {
     }
     material.useMetalness = false;
     if (data.hasOwnProperty('specularFactor')) {
-        color = data.specularFactor;
-        material.specular.set(color[0], color[1], color[2]).gamma();
+        const [r, g, b] = data.specularFactor;
+        material.specular.set(r, g, b).gamma();
     } else {
         material.specular.set(1, 1, 1);
     }
@@ -984,8 +984,8 @@ const extensionSpecular = (data, material, textures) => {
     }
 
     if (data.hasOwnProperty('specularColorFactor')) {
-        const color = data.specularColorFactor;
-        material.specular.set(color[0], color[1], color[2]).gamma();
+        const [r, g, b] = data.specularColorFactor;
+        material.specular.set(r, g, b).gamma();
     } else {
         material.specular.set(1, 1, 1);
     }
@@ -1032,8 +1032,8 @@ const extensionTransmission = (data, material, textures) => {
 const extensionSheen = (data, material, textures) => {
     material.useSheen = true;
     if (data.hasOwnProperty('sheenColorFactor')) {
-        const color = data.sheenColorFactor;
-        material.sheen.set(color[0], color[1], color[2]).gamma();
+        const [r, g, b] = data.sheenColorFactor;
+        material.sheen.set(r, g, b).gamma();
     } else {
         material.sheen.set(1, 1, 1);
     }
@@ -1068,8 +1068,8 @@ const extensionVolume = (data, material, textures) => {
         material.attenuationDistance = data.attenuationDistance;
     }
     if (data.hasOwnProperty('attenuationColor')) {
-        const color = data.attenuationColor;
-        material.attenuation.set(color[0], color[1], color[2]).gamma();
+        const [r, g, b] = data.attenuationColor;
+        material.attenuation.set(r, g, b).gamma();
     }
 };
 
@@ -1148,14 +1148,14 @@ const createMaterial = (gltfMaterial, textures) => {
     material.glossInvert = true;
     material.useMetalness = true;
 
-    let color, texture;
+    let texture;
     if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
         const pbrData = gltfMaterial.pbrMetallicRoughness;
 
         if (pbrData.hasOwnProperty('baseColorFactor')) {
-            color = pbrData.baseColorFactor;
-            material.diffuse.set(color[0], color[1], color[2]).gamma();
-            material.opacity = color[3];
+            const [r, g, b, a] = pbrData.baseColorFactor;
+            material.diffuse.set(r, g, b).gamma();
+            material.opacity = a;
         }
         if (pbrData.hasOwnProperty('baseColorTexture')) {
             const baseColorTexture = pbrData.baseColorTexture;
@@ -1205,8 +1205,8 @@ const createMaterial = (gltfMaterial, textures) => {
     }
 
     if (gltfMaterial.hasOwnProperty('emissiveFactor')) {
-        color = gltfMaterial.emissiveFactor;
-        material.emissive.set(color[0], color[1], color[2]).gamma();
+        const [r, g, b] = gltfMaterial.emissiveFactor;
+        material.emissive.set(r, g, b).gamma();
     }
 
     if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
