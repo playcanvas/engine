@@ -117,13 +117,16 @@ function isCanvasTransparent(canvas) {
 
 // supported texture semantics on a material
 const textureSemantics = [
-    'diffuseMap',
+    'clearCoatGlossMap',
+    'clearCoatMap',
+    'clearCoatNormalMap',
     'colorMap',
-    'normalMap',
-    'metalnessMap',
+    'diffuseMap',
     'emissiveMap',
-    'specularMap',
-    'specularityFactorMap'
+    'metalnessMap',
+    'normalMap',
+    'specularityFactorMap',
+    'specularMap'
 ];
 
 /**
@@ -426,6 +429,32 @@ class GltfExporter extends CoreExporter {
         }
 
         // === Material Extensions ===
+
+        // KHR_materials_clearcoat
+        if (mat.clearCoat > 0) {
+            const clearcoatExt = {
+                // Parser multiplies by 0.25, so we divide by 0.25 (multiply by 4) to reverse
+                clearcoatFactor: Math.min(mat.clearCoat * 4, 1)
+            };
+
+            // clearcoatRoughnessFactor: parser sets clearCoatGlossInvert=true, so gloss is roughness
+            if (mat.clearCoatGloss !== 0) {
+                clearcoatExt.clearcoatRoughnessFactor = mat.clearCoatGloss;
+            }
+
+            this.attachTexture(resources, mat, clearcoatExt, 'clearcoatTexture', 'clearCoatMap', json);
+            this.attachTexture(resources, mat, clearcoatExt, 'clearcoatRoughnessTexture', 'clearCoatGlossMap', json);
+
+            // clearcoatNormalTexture with scale
+            if (mat.clearCoatNormalMap) {
+                this.attachTexture(resources, mat, clearcoatExt, 'clearcoatNormalTexture', 'clearCoatNormalMap', json);
+                if (mat.clearCoatBumpiness !== 1) {
+                    clearcoatExt.clearcoatNormalTexture.scale = mat.clearCoatBumpiness;
+                }
+            }
+
+            this.addExtension(json, output, 'KHR_materials_clearcoat', clearcoatExt);
+        }
 
         // KHR_materials_dispersion
         if (mat.dispersion !== 0) {
