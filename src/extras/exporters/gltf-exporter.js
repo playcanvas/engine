@@ -427,6 +427,13 @@ class GltfExporter extends CoreExporter {
 
         // === Material Extensions ===
 
+        // KHR_materials_dispersion
+        if (mat.dispersion !== 0) {
+            this.addExtension(json, output, 'KHR_materials_dispersion', {
+                dispersion: mat.dispersion
+            });
+        }
+
         // KHR_materials_emissive_strength
         if (mat.useLighting && mat.emissiveIntensity !== 1) {
             this.addExtension(json, output, 'KHR_materials_emissive_strength', {
