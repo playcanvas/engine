@@ -1,4 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { StringIds } from '../../../core/string-ids.js';
 import { SHADERLANGUAGE_WGSL } from '../constants.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { ShaderProcessorGLSL } from '../shader-processor-glsl.js';
@@ -9,6 +10,9 @@ import { WebgpuShaderProcessorWGSL } from './webgpu-shader-processor-wgsl.js';
  * @import { GraphicsDevice } from '../graphics-device.js'
  * @import { Shader } from '../shader.js'
  */
+
+// Shared StringIds instance for content-based compute shader keys
+const computeShaderIds = new StringIds();
 
 /**
  * A WebGPU implementation of the Shader.
@@ -36,6 +40,14 @@ class WebgpuShader {
      * @type {string|null}
      */
     _computeCode = null;
+
+    /**
+     * Cached content-based key for compute shader.
+     *
+     * @type {number|undefined}
+     * @private
+     */
+    _computeKey;
 
     /**
      * Name of the vertex entry point function.
@@ -223,6 +235,21 @@ class WebgpuShader {
     get fragmentCode() {
         Debug.assert(this._fragmentCode);
         return this._fragmentCode;
+    }
+
+    /**
+     * Content-based key for compute shader caching. Returns the same key for identical
+     * shader code and entry point combinations, regardless of how many Shader instances exist.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get computeKey() {
+        if (this._computeKey === undefined) {
+            const keyString = `${this._computeCode}|${this.computeEntryPoint}`;
+            this._computeKey = computeShaderIds.get(keyString);
+        }
+        return this._computeKey;
     }
 
     /**
