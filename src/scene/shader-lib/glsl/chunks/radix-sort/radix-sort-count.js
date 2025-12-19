@@ -51,59 +51,42 @@ void main() {
     uint groupsLog2 = elementsLog2 - uint(groupSize);
     uint digitIndex = morton >> groupsLog2;
     uint keyIndex = (morton - (digitIndex << groupsLog2)) << uint(groupSize);
+    uint elemCount = uint(elementCount);
     
-    // Out of bounds check
-    if (keyIndex >= uint(elementCount)) {
+    // Out of bounds check - this group starts past valid data
+    if (keyIndex >= elemCount) {
         pcFragColor0 = 0.0;
         return;
     }
     
-    // Count how many elements in this group have the target digit
-    // Vectorized: process 4 elements at a time using uvec4/bvec4
+    // Setup variables for quad processing
     uint count = 0u;
     uint mask = (1u << uint(bitsPerStep)) - 1u;
     uint cBit = uint(currentBit);
     uvec4 digitIdx4 = uvec4(digitIndex);
     uvec4 mask4 = uvec4(mask);
+    uvec4 elemCount4 = uvec4(elemCount);
     const uvec4 QUAD_OFFSETS = uvec4(0u, 1u, 2u, 3u);
     
+    // Check if this is a partial group (last group that extends past elementCount)
+    bool isPartialGroup = (keyIndex + 16u) > elemCount;
+    
     #ifdef SOURCE_LINEAR
-        uint sw = uint(textureSize(keysTexture, 0).x);
-        #define COUNT_QUAD(base) { \
-            uvec4 mi4 = (keyIndex + base) + QUAD_OFFSETS; \
-            uvec4 y4 = mi4 / sw; \
-            uvec4 x4 = mi4 - y4 * sw; \
-            uvec4 keys = uvec4( \
-                texelFetch(keysTexture, ivec2(x4.x, y4.x), 0).r, \
-                texelFetch(keysTexture, ivec2(x4.y, y4.y), 0).r, \
-                texelFetch(keysTexture, ivec2(x4.z, y4.z), 0).r, \
-                texelFetch(keysTexture, ivec2(x4.w, y4.w), 0).r \
-            ); \
-            uvec4 digits = (keys >> cBit) & mask4; \
-            uvec4 m4 = uvec4(equal(digits, digitIdx4)); \
-            count += m4.x + m4.y + m4.z + m4.w; \
-        }
-    #else
-        #define COUNT_QUAD(base) { \
-            uvec4 mi4 = (keyIndex + base) + QUAD_OFFSETS; \
-            uvec4 keys = uvec4( \
-                texelFetch(keysTexture, indexToUV(mi4.x), 0).r, \
-                texelFetch(keysTexture, indexToUV(mi4.y), 0).r, \
-                texelFetch(keysTexture, indexToUV(mi4.z), 0).r, \
-                texelFetch(keysTexture, indexToUV(mi4.w), 0).r \
-            ); \
-            uvec4 digits = (keys >> cBit) & mask4; \
-            uvec4 m4 = uvec4(equal(digits, digitIdx4)); \
-            count += m4.x + m4.y + m4.z + m4.w; \
-        }
+        int sw = int(textureSize(keysTexture, 0).x);
     #endif
     
-    COUNT_QUAD(0u)
-    COUNT_QUAD(4u)
-    COUNT_QUAD(8u)
-    COUNT_QUAD(12u)
-    
-    #undef COUNT_QUAD
+    // Process all 4 quads (16 elements total per group)
+    // Use define/undef to control bounds checking at compile time
+    #define QUAD_COUNT 4
+    if (isPartialGroup) {
+        // Partial group: include bounds checking
+        #define BOUNDS_CHECK
+        #include "radixSortCountQuad, QUAD_COUNT"
+        #undef BOUNDS_CHECK
+    } else {
+        // Full group: no bounds checking needed (fast path)
+        #include "radixSortCountQuad, QUAD_COUNT"
+    }
     
     // Output the count as raw float (R32F format)
     pcFragColor0 = float(count);

@@ -190,6 +190,12 @@ class RenderPassRadixSort extends RenderPass {
         super(device);
     }
 
+    destroy() {
+        this._destroyPasses();
+        this._destroyInternalTextures();
+        super.destroy();
+    }
+
     /**
      * Gets the sorted indices texture (R32U, linear layout). Use `.width` for texture dimensions.
      * Access with: `texelFetch(texture, ivec2(index % width, index / width), 0).r`
@@ -479,12 +485,6 @@ class RenderPassRadixSort extends RenderPass {
             pass.render();
         }
         return this.sortedIndices;
-    }
-
-    destroy() {
-        this._destroyPasses();
-        this._destroyInternalTextures();
-        super.destroy();
     }
 }
 

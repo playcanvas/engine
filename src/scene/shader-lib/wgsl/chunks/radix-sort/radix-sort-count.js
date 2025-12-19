@@ -55,129 +55,42 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     let groupsLog2 = elementsLog2 - u32(uniform.groupSize);
     let digitIndex = morton >> groupsLog2;
     let keyIndex = (morton - (digitIndex << groupsLog2)) << u32(uniform.groupSize);
+    let elemCount = u32(uniform.elementCount);
     
-    // Out of bounds check
-    if (keyIndex >= u32(uniform.elementCount)) {
+    // Out of bounds check - this group starts past valid data
+    if (keyIndex >= elemCount) {
         output.color = 0.0;
         return output;
     }
     
-    // Count how many elements in this group have the target digit
-    // Vectorized: process 4 elements at a time using vec4u
+    // Setup variables for quad processing
     var count: u32 = 0u;
     let mask = (1u << u32(uniform.bitsPerStep)) - 1u;
     let cBit = u32(uniform.currentBit);
     let digitIdx4 = vec4u(digitIndex);
     let mask4 = vec4u(mask);
+    let elemCount4 = vec4u(elemCount);
     let QUAD_OFFSETS = vec4u(0u, 1u, 2u, 3u);
+    
+    // Check if this is a partial group (last group that extends past elementCount)
+    let isPartialGroup = (keyIndex + 16u) > elemCount;
     
     #ifdef SOURCE_LINEAR
         let sw = i32(textureDimensions(keysTexture, 0).x);
-        
-        // Quad 0-3
-        var mi4 = keyIndex + QUAD_OFFSETS;
-        var y4 = vec4i(mi4) / sw;
-        var x4 = vec4i(mi4) - y4 * sw;
-        var keys = vec4u(
-            textureLoad(keysTexture, vec2i(x4.x, y4.x), 0).r,
-            textureLoad(keysTexture, vec2i(x4.y, y4.y), 0).r,
-            textureLoad(keysTexture, vec2i(x4.z, y4.z), 0).r,
-            textureLoad(keysTexture, vec2i(x4.w, y4.w), 0).r
-        );
-        var digits = (keys >> vec4u(cBit)) & mask4;
-        var m4 = select(vec4u(0u), vec4u(1u), digits == digitIdx4);
-        count += m4.x + m4.y + m4.z + m4.w;
-
-        // Quad 4-7
-        mi4 = (keyIndex + 4u) + QUAD_OFFSETS;
-        y4 = vec4i(mi4) / sw;
-        x4 = vec4i(mi4) - y4 * sw;
-        keys = vec4u(
-            textureLoad(keysTexture, vec2i(x4.x, y4.x), 0).r,
-            textureLoad(keysTexture, vec2i(x4.y, y4.y), 0).r,
-            textureLoad(keysTexture, vec2i(x4.z, y4.z), 0).r,
-            textureLoad(keysTexture, vec2i(x4.w, y4.w), 0).r
-        );
-        digits = (keys >> vec4u(cBit)) & mask4;
-        m4 = select(vec4u(0u), vec4u(1u), digits == digitIdx4);
-        count += m4.x + m4.y + m4.z + m4.w;
-
-        // Quad 8-11
-        mi4 = (keyIndex + 8u) + QUAD_OFFSETS;
-        y4 = vec4i(mi4) / sw;
-        x4 = vec4i(mi4) - y4 * sw;
-        keys = vec4u(
-            textureLoad(keysTexture, vec2i(x4.x, y4.x), 0).r,
-            textureLoad(keysTexture, vec2i(x4.y, y4.y), 0).r,
-            textureLoad(keysTexture, vec2i(x4.z, y4.z), 0).r,
-            textureLoad(keysTexture, vec2i(x4.w, y4.w), 0).r
-        );
-        digits = (keys >> vec4u(cBit)) & mask4;
-        m4 = select(vec4u(0u), vec4u(1u), digits == digitIdx4);
-        count += m4.x + m4.y + m4.z + m4.w;
-
-        // Quad 12-15
-        mi4 = (keyIndex + 12u) + QUAD_OFFSETS;
-        y4 = vec4i(mi4) / sw;
-        x4 = vec4i(mi4) - y4 * sw;
-        keys = vec4u(
-            textureLoad(keysTexture, vec2i(x4.x, y4.x), 0).r,
-            textureLoad(keysTexture, vec2i(x4.y, y4.y), 0).r,
-            textureLoad(keysTexture, vec2i(x4.z, y4.z), 0).r,
-            textureLoad(keysTexture, vec2i(x4.w, y4.w), 0).r
-        );
-        digits = (keys >> vec4u(cBit)) & mask4;
-        m4 = select(vec4u(0u), vec4u(1u), digits == digitIdx4);
-        count += m4.x + m4.y + m4.z + m4.w;
-    #else
-        // Quad 0-3
-        var mi4 = keyIndex + QUAD_OFFSETS;
-        var keys = vec4u(
-            textureLoad(keysTexture, indexToUV(mi4.x), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.y), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.z), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.w), 0).r
-        );
-        var digits = (keys >> vec4u(cBit)) & mask4;
-        var m4 = select(vec4u(0u), vec4u(1u), digits == digitIdx4);
-        count += m4.x + m4.y + m4.z + m4.w;
-
-        // Quad 4-7
-        mi4 = (keyIndex + 4u) + QUAD_OFFSETS;
-        keys = vec4u(
-            textureLoad(keysTexture, indexToUV(mi4.x), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.y), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.z), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.w), 0).r
-        );
-        digits = (keys >> vec4u(cBit)) & mask4;
-        m4 = select(vec4u(0u), vec4u(1u), digits == digitIdx4);
-        count += m4.x + m4.y + m4.z + m4.w;
-
-        // Quad 8-11
-        mi4 = (keyIndex + 8u) + QUAD_OFFSETS;
-        keys = vec4u(
-            textureLoad(keysTexture, indexToUV(mi4.x), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.y), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.z), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.w), 0).r
-        );
-        digits = (keys >> vec4u(cBit)) & mask4;
-        m4 = select(vec4u(0u), vec4u(1u), digits == digitIdx4);
-        count += m4.x + m4.y + m4.z + m4.w;
-
-        // Quad 12-15
-        mi4 = (keyIndex + 12u) + QUAD_OFFSETS;
-        keys = vec4u(
-            textureLoad(keysTexture, indexToUV(mi4.x), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.y), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.z), 0).r,
-            textureLoad(keysTexture, indexToUV(mi4.w), 0).r
-        );
-        digits = (keys >> vec4u(cBit)) & mask4;
-        m4 = select(vec4u(0u), vec4u(1u), digits == digitIdx4);
-        count += m4.x + m4.y + m4.z + m4.w;
     #endif
+    
+    // Process all 4 quads (16 elements total per group)
+    // Use define/undef to control bounds checking at compile time
+    #define QUAD_COUNT 4
+    if (isPartialGroup) {
+        // Partial group: include bounds checking
+        #define BOUNDS_CHECK
+        #include "radixSortCountQuad, QUAD_COUNT"
+        #undef BOUNDS_CHECK
+    } else {
+        // Full group: no bounds checking needed (fast path)
+        #include "radixSortCountQuad, QUAD_COUNT"
+    }
     
     // Output the count as raw float (R32F format)
     output.color = f32(count);

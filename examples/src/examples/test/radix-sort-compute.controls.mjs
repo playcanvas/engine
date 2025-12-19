@@ -8,7 +8,7 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
     return fragment(
         jsx(
             Panel,
-            { headerText: 'Radix Sort' },
+            { headerText: 'Compute Radix Sort' },
             jsx(
                 LabelGroup,
                 { text: 'Elements (K)' },
@@ -32,7 +32,9 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
                         { v: 12, t: '12 bits (3 passes)' },
                         { v: 16, t: '16 bits (4 passes)' },
                         { v: 20, t: '20 bits (5 passes)' },
-                        { v: 24, t: '24 bits (6 passes)' }
+                        { v: 24, t: '24 bits (6 passes)' },
+                        { v: 28, t: '28 bits (7 passes)' },
+                        { v: 32, t: '32 bits (8 passes)' }
                     ]
                 })
             )
