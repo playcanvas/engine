@@ -419,18 +419,30 @@ class GltfExporter extends CoreExporter {
         this.attachTexture(resources, mat, pbr, 'baseColorTexture', mat.useLighting ? 'diffuseMap' : 'emissiveMap', json);
         this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap', json);
 
-        // Skip emissive for unlit materials (emissive holds the baseColor)
+        // Emissive (skip for unlit - emissive holds the baseColor)
         if (mat.useLighting && !emissive.equals(Color.BLACK)) {
             const { r, g, b } = emissive.clone().linear();
             output.emissiveFactor = [r, g, b];
         }
 
+        // === Material Extensions ===
+
+        // KHR_materials_emissive_strength
         if (mat.useLighting && mat.emissiveIntensity !== 1) {
             this.addExtension(json, output, 'KHR_materials_emissive_strength', {
                 emissiveStrength: mat.emissiveIntensity
             });
         }
 
+        // KHR_materials_ior
+        const defaultRefractionIndex = 1.0 / 1.5;
+        if (mat.refractionIndex !== defaultRefractionIndex) {
+            this.addExtension(json, output, 'KHR_materials_ior', {
+                ior: 1.0 / mat.refractionIndex
+            });
+        }
+
+        // KHR_materials_specular
         if (mat.useMetalnessSpecularColor) {
             const specularExt = {};
 
@@ -451,6 +463,7 @@ class GltfExporter extends CoreExporter {
             }
         }
 
+        // KHR_materials_unlit
         if (!mat.useLighting) {
             this.addExtension(json, output, 'KHR_materials_unlit');
         }
