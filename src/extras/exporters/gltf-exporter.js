@@ -382,6 +382,16 @@ class GltfExporter extends CoreExporter {
         }
     }
 
+    addExtension(json, output, name, data = {}) {
+        output.extensions = output.extensions || {};
+        output.extensions[name] = data;
+
+        json.extensionsUsed = json.extensionsUsed ?? [];
+        if (!json.extensionsUsed.includes(name)) {
+            json.extensionsUsed.push(name);
+        }
+    }
+
     writeStandardMaterial(resources, mat, output, json) {
 
         const { diffuse, emissive, opacity, metalness, gloss, glossInvert } = mat;
@@ -416,15 +426,9 @@ class GltfExporter extends CoreExporter {
         }
 
         if (mat.useLighting && mat.emissiveIntensity !== 1) {
-            output.extensions = output.extensions || {};
-            output.extensions.KHR_materials_emissive_strength = {
+            this.addExtension(json, output, 'KHR_materials_emissive_strength', {
                 emissiveStrength: mat.emissiveIntensity
-            };
-
-            json.extensionsUsed = json.extensionsUsed ?? [];
-            if (!json.extensionsUsed.includes('KHR_materials_emissive_strength')) {
-                json.extensionsUsed.push('KHR_materials_emissive_strength');
-            }
+            });
         }
 
         if (mat.useMetalnessSpecularColor) {
@@ -443,24 +447,12 @@ class GltfExporter extends CoreExporter {
             this.attachTexture(resources, mat, specularExt, 'specularTexture', 'specularityFactorMap', json);
 
             if (Object.keys(specularExt).length > 0) {
-                output.extensions = output.extensions || {};
-                output.extensions.KHR_materials_specular = specularExt;
-
-                json.extensionsUsed = json.extensionsUsed ?? [];
-                if (!json.extensionsUsed.includes('KHR_materials_specular')) {
-                    json.extensionsUsed.push('KHR_materials_specular');
-                }
+                this.addExtension(json, output, 'KHR_materials_specular', specularExt);
             }
         }
 
         if (!mat.useLighting) {
-            output.extensions = output.extensions || {};
-            output.extensions.KHR_materials_unlit = {};
-
-            json.extensionsUsed = json.extensionsUsed ?? [];
-            if (!json.extensionsUsed.includes('KHR_materials_unlit')) {
-                json.extensionsUsed.push('KHR_materials_unlit');
-            }
+            this.addExtension(json, output, 'KHR_materials_unlit');
         }
     }
 
