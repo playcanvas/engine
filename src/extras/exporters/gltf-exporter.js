@@ -421,7 +421,7 @@ class GltfExporter extends CoreExporter {
             }
         }
 
-        if (mat.useMetalnessSpecularColor || mat.specularMap || mat.specularityFactorMap) {
+        if (mat.useMetalnessSpecularColor) {
             const specularExt = {};
 
             if (!mat.specular.equals(Color.WHITE)) {
