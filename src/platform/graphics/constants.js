@@ -471,8 +471,25 @@ export const INDEXFORMAT_UINT32 = 2;
  */
 export const indexFormatByteSize = [1, 2, 4];
 
+/**
+ * 8-bit alpha.
+ *
+ * @category Graphics
+ */
 export const PIXELFORMAT_A8 = 0;
+
+/**
+ * 8-bit luminance (grayscale).
+ *
+ * @category Graphics
+ */
 export const PIXELFORMAT_L8 = 1;
+
+/**
+ * 8-bit luminance with 8-bit alpha.
+ *
+ * @category Graphics
+ */
 export const PIXELFORMAT_LA8 = 2;
 
 /**
