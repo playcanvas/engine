@@ -293,7 +293,7 @@ export class Script extends EventHandler {
     /**
      * Name of a Script Type.
      *
-     * @type {string}
+     * @type {string|null}
      * @private
      */
     static __name = null; // Will be assigned when calling createScript or registerScript.
@@ -306,7 +306,16 @@ export class Script extends EventHandler {
     static __getScriptName = getScriptName;
 
     /**
-     * Name of a Script Type.
+     * Sets the name of a Script Type.
+     *
+     * @type {string|null}
+     */
+    static set scriptName(value) {
+        this.__name = value;
+    }
+
+    /**
+     * Gets the name of a Script Type.
      *
      * @type {string|null}
      */
