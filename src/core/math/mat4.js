@@ -1171,8 +1171,10 @@ class Mat4 {
     }
 
     /**
-     * Sets the specified matrix to a rotation matrix defined by Euler angles. The Euler angles are
-     * specified in XYZ order and in degrees.
+     * Sets the specified matrix to a rotation matrix defined by Euler angles. The rotation is
+     * applied using an **intrinsic XYZ** order: first around the X-axis, then around the newly
+     * transformed Y-axis, and finally around the resulting Z-axis. Angles are specified in
+     * degrees.
      *
      * @param {number} ex - Angle to rotate around X axis in degrees.
      * @param {number} ey - Angle to rotate around Y axis in degrees.
@@ -1226,7 +1228,7 @@ class Mat4 {
 
     /**
      * Extracts the Euler angles equivalent to the rotational portion of the specified matrix. The
-     * returned Euler angles are in XYZ order an in degrees.
+     * returned Euler angles are in **intrinsic XYZ** order and in degrees.
      *
      * @param {Vec3} [eulers] - A 3-d vector to receive the Euler angles.
      * @returns {Vec3} A 3-d vector containing the Euler angles.
