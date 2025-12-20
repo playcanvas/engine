@@ -1887,7 +1887,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 this._drawCallsPerFrame++;
 
                 // #if _PROFILER
-                this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                if (drawCommands) {
+                    // use pre-calculated primitive count from drawCommands
+                    this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+                } else {
+                    // single draw
+                    this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                }
                 // #endif
             }
         }

@@ -12,13 +12,17 @@ class Graph {
         this.avgTotal = 0;
         this.avgTimer = 0;
         this.avgCount = 0;
+        this.maxValue = 0;
         this.timingText = '';
+        this.maxText = '';
 
         this.texture = null;
         this.yOffset = 0;
+        this.graphType = 0.0;
         this.cursor = 0;
         this.sample = new Uint8ClampedArray(4);
         this.sample.set([0, 0, 0, 255]);
+        this.needsClear = false;
 
         this.counter = 0;
 
@@ -43,16 +47,19 @@ class Graph {
         // calculate stacked total
         const total = timings.reduce((a, v) => a + v, 0);
 
-        // update averages
+        // update averages and max
         this.avgTotal += total;
         this.avgTimer += ms;
         this.avgCount++;
+        this.maxValue = Math.max(this.maxValue, total);
 
         if (this.avgTimer > this.textRefreshRate) {
             this.timingText = (this.avgTotal / this.avgCount).toFixed(this.timer.decimalPlaces);
+            this.maxText = this.maxValue.toFixed(this.timer.decimalPlaces);
             this.avgTimer = 0;
             this.avgTotal = 0;
             this.avgCount = 0;
+            this.maxValue = 0;
         }
 
         if (this.enabled) {
@@ -68,8 +75,21 @@ class Graph {
             // .a store watermark
             this.sample[3] = this.watermark / range * 255;
 
+            // bounds check - skip if texture is too small
+            if (this.yOffset >= this.texture.height) {
+                return;
+            }
+
             // write latest sample
             const data = this.texture.lock();
+
+            // clear entire row if needed (when row is newly allocated)
+            if (this.needsClear) {
+                const rowOffset = this.yOffset * this.texture.width * 4;
+                data.fill(0, rowOffset, rowOffset + this.texture.width * 4);
+                this.needsClear = false;
+            }
+
             data.set(this.sample, (this.cursor + this.yOffset * this.texture.width) * 4);
             this.texture.unlock();
 
@@ -87,7 +107,7 @@ class Graph {
             this.enabled ? 0.5 + this.yOffset : this.texture.height - 1,
             -w, 0,
             this.texture,
-            0);
+            this.graphType);
     }
 }
 

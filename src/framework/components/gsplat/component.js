@@ -740,7 +740,8 @@ class GSplatComponent extends Component {
             if (asset) {
                 this.instance = new GSplatInstance(asset.resource, {
                     material: this._materialTmp,
-                    highQualitySH: this._highQualitySH
+                    highQualitySH: this._highQualitySH,
+                    scene: this.system.app.scene
                 });
                 this._materialTmp = null;
             }

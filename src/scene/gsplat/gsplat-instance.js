@@ -57,6 +57,7 @@ class GSplatInstance {
      * @param {object} [options] - Options for the instance.
      * @param {ShaderMaterial|null} [options.material] - The material instance.
      * @param {boolean} [options.highQualitySH] - Whether to use the high quality or the approximate spherical harmonic calculation. Only applies to SOGS data.
+     * @param {import('../scene.js').Scene} [options.scene] - The scene to fire sort timing events on.
      */
     constructor(resource, options = {}) {
         this.resource = resource;
@@ -107,7 +108,7 @@ class GSplatInstance {
         const chunks = resource.chunks?.slice();
 
         // create sorter
-        this.sorter = new GSplatSorter();
+        this.sorter = new GSplatSorter(options.scene);
         this.sorter.init(this.orderTexture, centers, chunks);
         this.sorter.on('updated', (count) => {
             // limit splat render count to exclude those behind the camera

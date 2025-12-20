@@ -75,7 +75,7 @@ assetListLoader.load(() => {
         asset: assets.guitar
     });
     const customShaderFile = shaderLanguage === 'wgsl' ? 'shader.wgsl.vert' : 'shader.glsl.vert';
-    guitar.gsplat.material.getShaderChunks(shaderLanguage).set('gsplatCustomizeVS', files[customShaderFile]);
+    guitar.gsplat.material.getShaderChunks(shaderLanguage).set('gsplatModifyVS', files[customShaderFile]);
     guitar.setLocalPosition(0, 0.8, 0);
     guitar.setLocalEulerAngles(0, 0, 180);
     guitar.setLocalScale(0.4, 0.4, 0.4);
@@ -125,17 +125,17 @@ assetListLoader.load(() => {
 
         const mat1 = biker.gsplat.material;
         if (useCustomShader) {
-            mat1.getShaderChunks(shaderLanguage).set('gsplatCustomizeVS', vs);
+            mat1.getShaderChunks(shaderLanguage).set('gsplatModifyVS', vs);
         } else {
-            mat1.getShaderChunks(shaderLanguage).delete('gsplatCustomizeVS');
+            mat1.getShaderChunks(shaderLanguage).delete('gsplatModifyVS');
         }
         mat1.update();
 
         const mat2 = skull.gsplat.material;
         if (useCustomShader) {
-            mat2.getShaderChunks(shaderLanguage).set('gsplatCustomizeVS', vs);
+            mat2.getShaderChunks(shaderLanguage).set('gsplatModifyVS', vs);
         } else {
-            mat2.getShaderChunks(shaderLanguage).delete('gsplatCustomizeVS');
+            mat2.getShaderChunks(shaderLanguage).delete('gsplatModifyVS');
         }
         mat2.setDefine('CUTOUT', true);
         mat2.update();

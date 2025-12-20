@@ -117,11 +117,23 @@ function isCanvasTransparent(canvas) {
 
 // supported texture semantics on a material
 const textureSemantics = [
-    'diffuseMap',
+    'anisotropyMap',
+    'clearCoatGlossMap',
+    'clearCoatMap',
+    'clearCoatNormalMap',
     'colorMap',
-    'normalMap',
+    'diffuseMap',
+    'emissiveMap',
+    'iridescenceMap',
+    'iridescenceThicknessMap',
     'metalnessMap',
-    'emissiveMap'
+    'normalMap',
+    'refractionMap',
+    'sheenGlossMap',
+    'sheenMap',
+    'specularityFactorMap',
+    'specularMap',
+    'thicknessMap'
 ];
 
 /**
@@ -356,12 +368,12 @@ class GltfExporter extends CoreExporter {
                 };
 
                 json.extensionsUsed = json.extensionsUsed ?? [];
-                if (json.extensionsUsed.indexOf('KHR_texture_transform') < 0) {
+                if (!json.extensionsUsed.includes('KHR_texture_transform')) {
                     json.extensionsUsed.push('KHR_texture_transform');
                 }
 
                 json.extensionsRequired = json.extensionsRequired ?? [];
-                if (json.extensionsRequired.indexOf('KHR_texture_transform') < 0) {
+                if (!json.extensionsRequired.includes('KHR_texture_transform')) {
                     json.extensionsRequired.push('KHR_texture_transform');
                 }
 
@@ -380,17 +392,38 @@ class GltfExporter extends CoreExporter {
         }
     }
 
+    addExtension(json, output, name, data = {}) {
+        output.extensions = output.extensions || {};
+        output.extensions[name] = data;
+
+        json.extensionsUsed = json.extensionsUsed ?? [];
+        if (!json.extensionsUsed.includes(name)) {
+            json.extensionsUsed.push(name);
+        }
+    }
+
     writeStandardMaterial(resources, mat, output, json) {
 
         const { diffuse, emissive, opacity, metalness, gloss, glossInvert } = mat;
         const pbr = output.pbrMetallicRoughness;
 
-        if (!diffuse.equals(Color.WHITE) || opacity !== 1) {
-            pbr.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
+        // For unlit materials, the parser copies baseColor to emissive and sets diffuse to white.
+        // So we need to use emissive as the source for baseColorFactor.
+        const baseColor = mat.useLighting ? diffuse : emissive;
+
+        if (!baseColor.equals(Color.WHITE) || opacity !== 1) {
+            const { r, g, b } = baseColor.clone().linear();
+            pbr.baseColorFactor = [r, g, b, opacity];
         }
 
-        if (metalness !== 1) {
-            pbr.metallicFactor = metalness;
+        // For spec-gloss materials (useMetalness=false), always export as dielectric (metallicFactor=0)
+        // For metallic-roughness materials, export the actual metalness value
+        if (mat.useMetalness) {
+            if (metalness !== 1) {
+                pbr.metallicFactor = metalness;
+            }
+        } else {
+            pbr.metallicFactor = 0;
         }
 
         const roughness = glossInvert ? gloss : 1 - gloss;
@@ -398,11 +431,200 @@ class GltfExporter extends CoreExporter {
             pbr.roughnessFactor = roughness;
         }
 
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'diffuseMap', json);
+        // For unlit, use emissiveMap as baseColorTexture source (parser copies diffuseMap to emissiveMap)
+        this.attachTexture(resources, mat, pbr, 'baseColorTexture', mat.useLighting ? 'diffuseMap' : 'emissiveMap', json);
         this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap', json);
 
-        if (!emissive.equals(Color.BLACK)) {
-            output.emissiveFactor = [emissive.r, emissive.g, emissive.b];
+        // Emissive (skip for unlit - emissive holds the baseColor)
+        if (mat.useLighting && !emissive.equals(Color.BLACK)) {
+            const { r, g, b } = emissive.clone().linear();
+            output.emissiveFactor = [r, g, b];
+        }
+
+        // === Material Extensions ===
+
+        // KHR_materials_anisotropy
+        if (mat.enableGGXSpecular && (mat.anisotropyIntensity !== 0 || mat.anisotropyRotation !== 0 || mat.anisotropyMap)) {
+            const anisotropyExt = {};
+
+            if (mat.anisotropyIntensity !== 0) {
+                anisotropyExt.anisotropyStrength = mat.anisotropyIntensity;
+            }
+
+            if (mat.anisotropyRotation !== 0) {
+                anisotropyExt.anisotropyRotation = mat.anisotropyRotation * math.DEG_TO_RAD;
+            }
+
+            this.attachTexture(resources, mat, anisotropyExt, 'anisotropyTexture', 'anisotropyMap', json);
+
+            if (Object.keys(anisotropyExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_anisotropy', anisotropyExt);
+            }
+        }
+
+        // KHR_materials_clearcoat
+        if (mat.clearCoat > 0) {
+            const clearcoatExt = {
+                // Parser multiplies by 0.25, so we divide by 0.25 (multiply by 4) to reverse
+                clearcoatFactor: Math.min(mat.clearCoat * 4, 1)
+            };
+
+            // clearcoatRoughnessFactor: parser sets clearCoatGlossInvert=true, so gloss is roughness
+            if (mat.clearCoatGloss !== 0) {
+                clearcoatExt.clearcoatRoughnessFactor = mat.clearCoatGloss;
+            }
+
+            this.attachTexture(resources, mat, clearcoatExt, 'clearcoatTexture', 'clearCoatMap', json);
+            this.attachTexture(resources, mat, clearcoatExt, 'clearcoatRoughnessTexture', 'clearCoatGlossMap', json);
+
+            // clearcoatNormalTexture with scale
+            if (mat.clearCoatNormalMap) {
+                this.attachTexture(resources, mat, clearcoatExt, 'clearcoatNormalTexture', 'clearCoatNormalMap', json);
+                if (mat.clearCoatBumpiness !== 1) {
+                    clearcoatExt.clearcoatNormalTexture.scale = mat.clearCoatBumpiness;
+                }
+            }
+
+            this.addExtension(json, output, 'KHR_materials_clearcoat', clearcoatExt);
+        }
+
+        // KHR_materials_dispersion
+        if (mat.dispersion !== 0) {
+            this.addExtension(json, output, 'KHR_materials_dispersion', {
+                dispersion: mat.dispersion
+            });
+        }
+
+        // KHR_materials_emissive_strength
+        if (mat.useLighting && mat.emissiveIntensity !== 1) {
+            this.addExtension(json, output, 'KHR_materials_emissive_strength', {
+                emissiveStrength: mat.emissiveIntensity
+            });
+        }
+
+        // KHR_materials_ior
+        const defaultRefractionIndex = 1.0 / 1.5;
+        if (mat.refractionIndex !== defaultRefractionIndex && mat.refractionIndex > 0) {
+            this.addExtension(json, output, 'KHR_materials_ior', {
+                ior: 1.0 / mat.refractionIndex
+            });
+        }
+
+        // KHR_materials_iridescence
+        if (mat.useIridescence) {
+            const iridescenceExt = {};
+
+            if (mat.iridescence !== 0) {
+                iridescenceExt.iridescenceFactor = mat.iridescence;
+            }
+
+            if (mat.iridescenceRefractionIndex !== 1.3) {
+                iridescenceExt.iridescenceIor = mat.iridescenceRefractionIndex;
+            }
+
+            if (mat.iridescenceThicknessMin !== 100) {
+                iridescenceExt.iridescenceThicknessMinimum = mat.iridescenceThicknessMin;
+            }
+
+            if (mat.iridescenceThicknessMax !== 400) {
+                iridescenceExt.iridescenceThicknessMaximum = mat.iridescenceThicknessMax;
+            }
+
+            this.attachTexture(resources, mat, iridescenceExt, 'iridescenceTexture', 'iridescenceMap', json);
+            this.attachTexture(resources, mat, iridescenceExt, 'iridescenceThicknessTexture', 'iridescenceThicknessMap', json);
+
+            if (Object.keys(iridescenceExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_iridescence', iridescenceExt);
+            }
+        }
+
+        // KHR_materials_sheen
+        if (mat.useSheen) {
+            const sheenExt = {};
+
+            if (!mat.sheen.equals(Color.BLACK)) {
+                const { r, g, b } = mat.sheen.clone().linear();
+                sheenExt.sheenColorFactor = [r, g, b];
+            }
+
+            if (mat.sheenGloss !== 0) {
+                sheenExt.sheenRoughnessFactor = mat.sheenGloss;
+            }
+
+            this.attachTexture(resources, mat, sheenExt, 'sheenColorTexture', 'sheenMap', json);
+            this.attachTexture(resources, mat, sheenExt, 'sheenRoughnessTexture', 'sheenGlossMap', json);
+
+            if (Object.keys(sheenExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_sheen', sheenExt);
+            }
+        }
+
+        // KHR_materials_specular
+        // Export when:
+        // 1. useMetalnessSpecularColor is true (metallic workflow with specular color tint)
+        // 2. useMetalness is false (spec-gloss material) - preserve the specular color as F0
+        if (mat.useMetalnessSpecularColor || !mat.useMetalness) {
+            const specularExt = {};
+
+            if (!mat.specular.equals(Color.WHITE)) {
+                const { r, g, b } = mat.specular.clone().linear();
+                specularExt.specularColorFactor = [r, g, b];
+            }
+
+            if (mat.specularityFactor !== 1) {
+                specularExt.specularFactor = mat.specularityFactor;
+            }
+
+            this.attachTexture(resources, mat, specularExt, 'specularColorTexture', 'specularMap', json);
+            this.attachTexture(resources, mat, specularExt, 'specularTexture', 'specularityFactorMap', json);
+
+            if (Object.keys(specularExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_specular', specularExt);
+            }
+        }
+
+        // KHR_materials_transmission
+        if (mat.useDynamicRefraction && (mat.refraction !== 0 || mat.refractionMap)) {
+            const transmissionExt = {};
+
+            if (mat.refraction !== 0) {
+                transmissionExt.transmissionFactor = mat.refraction;
+            }
+
+            this.attachTexture(resources, mat, transmissionExt, 'transmissionTexture', 'refractionMap', json);
+
+            if (Object.keys(transmissionExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_transmission', transmissionExt);
+            }
+        }
+
+        // KHR_materials_unlit
+        if (!mat.useLighting) {
+            this.addExtension(json, output, 'KHR_materials_unlit');
+        }
+
+        // KHR_materials_volume
+        if (mat.useDynamicRefraction && (mat.thickness !== 0 || mat.attenuationDistance !== 0 || !mat.attenuation.equals(Color.WHITE) || mat.thicknessMap)) {
+            const volumeExt = {};
+
+            if (mat.thickness !== 0) {
+                volumeExt.thicknessFactor = mat.thickness;
+            }
+
+            if (mat.attenuationDistance !== 0) {
+                volumeExt.attenuationDistance = mat.attenuationDistance;
+            }
+
+            if (!mat.attenuation.equals(Color.WHITE)) {
+                const { r, g, b } = mat.attenuation.clone().linear();
+                volumeExt.attenuationColor = [r, g, b];
+            }
+
+            this.attachTexture(resources, mat, volumeExt, 'thicknessTexture', 'thicknessMap', json);
+
+            if (Object.keys(volumeExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_volume', volumeExt);
+            }
         }
     }
 

@@ -192,9 +192,11 @@ export { Animation, AnimationKey, AnimationNode } from './scene/animation/animat
 export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
+export { ComputeRadixSort } from './scene/graphics/compute-radix-sort.js';
 export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
 export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js';
+export { RenderPassRadixSort } from './scene/graphics/render-pass-radix-sort.js';
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 

@@ -4,6 +4,7 @@ import { UnifiedSortWorker } from './gsplat-unified-sort-worker.js';
 
 /**
  * @import { GSplatInfo } from './gsplat-info.js'
+ * @import { Scene } from '../scene.js'
  */
 
 /** @type {Set<number>} */
@@ -36,8 +37,15 @@ class GSplatUnifiedSorter extends EventHandler {
     /** @type {boolean} */
     _destroyed = false;
 
-    constructor() {
+    /** @type {Scene|null} */
+    scene = null;
+
+    /**
+     * @param {Scene} [scene] - The scene to fire sort timing events on.
+     */
+    constructor(scene) {
         super();
+        this.scene = scene ?? null;
 
         const workerSource = `(${UnifiedSortWorker.toString()})()`;
 
@@ -61,6 +69,12 @@ class GSplatUnifiedSorter extends EventHandler {
         }
 
         const msgData = message.data ?? message;
+
+        // Fire sortTime event directly on scene (before result might be dropped)
+        if (this.scene && msgData.sortTime !== undefined) {
+            this.scene.fire('gsplat:sorted', msgData.sortTime);
+        }
+
         const orderData = new Uint32Array(msgData.order);
 
         // decrement jobs in flight counter

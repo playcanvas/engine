@@ -9,6 +9,7 @@ import {
     SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32
 } from '../../platform/graphics/constants.js';
+import { Debug } from '../../core/debug.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -18,6 +19,16 @@ import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
+
+// Graph colors for MiniStats
+const graphColorRed = '1.0, 0.412, 0.380';      // Pastel Red
+const graphColorGreen = '0.467, 0.867, 0.467';  // Pastel Green
+const graphColorBlue = '0.424, 0.627, 0.863';   // Little Boy Blue
+
+// Background colors for MiniStats graphs
+const mainBackgroundColor = '0.0, 0.0, 0.0';
+const gpuBackgroundColor = '0.15, 0.15, 0.0';
+const cpuBackgroundColor = '0.15, 0.0, 0.1';
 
 const vertexShaderGLSL = /* glsl */ `
     attribute vec3 vertex_position;         // unnormalized xy, word flag
@@ -66,17 +77,29 @@ const fragmentShaderGLSL = /* glsl */ `
 
         vec4 graph;
         if (uv0.w < graphSample.r)
-            graph = vec4(0.7, 0.2, 0.2, 1.0);
+            graph = vec4(${graphColorRed}, 1.0);
         else if (uv0.w < graphSample.g)
-            graph = vec4(0.2, 0.7, 0.2, 1.0);
+            graph = vec4(${graphColorGreen}, 1.0);
         else if (uv0.w < graphSample.b)
-            graph = vec4(0.2, 0.2, 0.7, 1.0);
-        else
-            graph = vec4(0.0, 0.0, 0.0, 1.0 - 0.25 * sin(uv0.w * 3.14159));
+            graph = vec4(${graphColorBlue}, 1.0);
+        else {
+            vec3 bgColor = vec3(${mainBackgroundColor});
+            if (wordFlag > 0.5) {
+                bgColor = vec3(${cpuBackgroundColor});  // CPU: red tint
+            } else if (wordFlag > 0.2) {
+                bgColor = vec3(${gpuBackgroundColor});  // GPU: blue tint
+            }
+            graph = vec4(bgColor, 1.0);
+        }
 
         vec4 words = texture2D(wordsTex, vec2(uv0.x, 1.0 - uv0.y));
 
-        gl_FragColor = mix(graph, words, wordFlag) * clr;
+        // Binary blend: either graph or text, no partial mixing
+        if (wordFlag > 0.99) {
+            gl_FragColor = words * clr;
+        } else {
+            gl_FragColor = graph * clr;
+        }
     }
 `;
 
@@ -98,26 +121,37 @@ const fragmentShaderWGSL = /* wgsl */ `
 
         var graph: vec4f;
         if (uv0.w < graphSample.r) {
-            graph = vec4f(0.7, 0.2, 0.2, 1.0);
+            graph = vec4f(${graphColorRed}, 1.0);
         } else if (uv0.w < graphSample.g) {
-            graph = vec4f(0.2, 0.7, 0.2, 1.0);
+            graph = vec4f(${graphColorGreen}, 1.0);
         } else if (uv0.w < graphSample.b) {
-            graph = vec4f(0.2, 0.2, 0.7, 1.0);
+            graph = vec4f(${graphColorBlue}, 1.0);
         } else {
-            graph = vec4f(0.0, 0.0, 0.0, 1.0 - 0.25 * sin(uv0.w * 3.14159));
+            var bgColor: vec3f = vec3f(${mainBackgroundColor});
+            if (input.wordFlag > 0.5) {
+                bgColor = vec3f(${cpuBackgroundColor});  // CPU: red tint
+            } else if (input.wordFlag > 0.2) {
+                bgColor = vec3f(${gpuBackgroundColor});  // GPU: blue tint
+            }
+            graph = vec4f(bgColor, 1.0);
         }
 
         var words: vec4f = textureSample(wordsTex, wordsTex_sampler, vec2f(uv0.x, 1.0 - uv0.y));
 
         var output: FragmentOutput;
-        output.color = mix(graph, words, input.wordFlag) * uniform.clr;
+        // Binary blend: either graph or text, no partial mixing
+        if (input.wordFlag > 0.99) {
+            output.color = words * uniform.clr;
+        } else {
+            output.color = graph * uniform.clr;
+        }
         return output;
     }
 `;
 
 // render 2d textured quads
 class Render2d {
-    constructor(device, maxQuads = 512) {
+    constructor(device, maxQuads = 2048) {
         const format = new VertexFormat(device, [
             { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
             { semantic: SEMANTIC_TEXCOORD0, components: 4, type: TYPE_FLOAT32 }
@@ -135,6 +169,7 @@ class Render2d {
         }
 
         this.device = device;
+        this.maxQuads = maxQuads;
         this.buffer = new VertexBuffer(device, format, maxQuads * 4, {
             usage: BUFFER_STREAM
         });
@@ -185,6 +220,12 @@ class Render2d {
     }
 
     quad(x, y, w, h, u, v, uw, uh, texture, wordFlag = 0) {
+        // bounds check to prevent buffer overflow
+        if (this.quads >= this.maxQuads) {
+            Debug.warnOnce('MiniStats: maximum number of quads exceeded, some elements may not render.');
+            return;
+        }
+
         const rw = this.targetSize.width;
         const rh = this.targetSize.height;
         const x0 = x / rw;
