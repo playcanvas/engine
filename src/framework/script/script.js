@@ -291,8 +291,6 @@ export class Script extends EventHandler {
     }
 
     /**
-     * Name of a Script Type.
-     *
      * @type {string|null}
      * @private
      */
@@ -306,7 +304,7 @@ export class Script extends EventHandler {
     static __getScriptName = getScriptName;
 
     /**
-     * Sets the name of a Script Type.
+     * Sets the unique name of the script.
      *
      * @type {string|null}
      */
@@ -315,7 +313,7 @@ export class Script extends EventHandler {
     }
 
     /**
-     * Gets the name of a Script Type.
+     * Gets the unique name of the script.
      *
      * @type {string|null}
      */
