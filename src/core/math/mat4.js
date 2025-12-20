@@ -1228,7 +1228,7 @@ class Mat4 {
 
     /**
      * Extracts the Euler angles equivalent to the rotational portion of the specified matrix. The
-     * returned Euler angles are in intrinsic XYZ order and in degrees.
+     * returned Euler angles are in **intrinsic XYZ** order and in degrees.
      *
      * @param {Vec3} [eulers] - A 3-d vector to receive the Euler angles.
      * @returns {Vec3} A 3-d vector containing the Euler angles.
