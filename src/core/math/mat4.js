@@ -1172,7 +1172,7 @@ class Mat4 {
 
     /**
      * Sets the specified matrix to a rotation matrix defined by Euler angles. The rotation is
-     * applied using an intrinsic XYZ order: first around the X-axis, then around the newly
+     * applied using an **intrinsic XYZ** order: first around the X-axis, then around the newly
      * transformed Y-axis, and finally around the resulting Z-axis. Angles are specified in
      * degrees.
      *
