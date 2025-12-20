@@ -733,8 +733,8 @@ class ElementInput {
         // currently hovered element is whatever's being pointed by mouse (which may be null)
         this._hoveredElement = element;
 
-        // if there was a pressed element, it takes full priority of 'move' and 'up' events
-        if ((eventType === 'mousemove' || eventType === 'mouseup') && this._pressedElement) {
+        // if there was a pressed element, it takes full priority of 'up' events
+        if (eventType === 'mouseup' && this._pressedElement) {
             this._fireEvent(eventType, new ElementMouseEvent(event, this._pressedElement, camera, targetX, targetY, this._lastX, this._lastY));
         } else if (element) {
             // otherwise, fire it to the currently hovered event
