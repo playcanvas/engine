@@ -1,7 +1,7 @@
 export default /* wgsl */`
 // Isotropic GGX (glTF 2.0 compliant)
 fn calcLightSpecular(gloss: f32, worldNormal: vec3f, viewDir: vec3f, h: vec3f, lightDirNorm: vec3f) -> f32 {
-    let PI: f32 = 3.141592653589793;
+    const PI: f32 = 3.141592653589793;
     let roughness: f32 = max((1.0 - gloss) * (1.0 - gloss), 0.001);
     let alpha: f32 = roughness * roughness;
 
