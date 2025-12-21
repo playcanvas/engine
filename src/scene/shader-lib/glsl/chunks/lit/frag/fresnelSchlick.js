@@ -1,5 +1,6 @@
 export default /* glsl */`
-// Schlick's approximation
+// Schlick's approximation (glTF 2.0 compliant)
+// F = F0 + (F90 - F0) * (1 - V·H)^5, where F90 = 1.0
 vec3 getFresnel(
         float cosTheta, 
         float gloss, 
@@ -10,11 +11,7 @@ vec3 getFresnel(
 #endif
     ) {
     float fresnel = pow(1.0 - saturate(cosTheta), 5.0);
-    float glossSq = gloss * gloss;
-
-    // Scale gloss contribution by specularity intensity to ensure F90 approaches 0 when F0 is 0
-    float specIntensity = max(specularity.r, max(specularity.g, specularity.b));
-    vec3 ret = specularity + (max(vec3(glossSq * specIntensity), specularity) - specularity) * fresnel;
+    vec3 ret = specularity + (vec3(1.0) - specularity) * fresnel;
 
 #if defined(LIT_IRIDESCENCE)
     return mix(ret, iridescenceFresnel, iridescenceIntensity);
