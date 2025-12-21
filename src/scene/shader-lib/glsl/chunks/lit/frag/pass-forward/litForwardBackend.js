@@ -23,11 +23,7 @@ void evaluateBackend() {
             float f0 = 1.0 / litArgs_ior;
             f0 = (f0 - 1.0) / (f0 + 1.0);
             f0 *= f0;
-            #ifdef LIT_SPECULARITY_FACTOR
-                litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0, litArgs_specularityFactor);
-            #else
-                litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0, 1.0);
-            #endif
+            litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0);
             litArgs_albedo = getAlbedoModulate(litArgs_albedo, litArgs_metalness);
         #endif
 
@@ -123,6 +119,10 @@ void evaluateBackend() {
 
             #endif
 
+            #ifdef LIT_SPECULARITY_FACTOR
+                dReflection.rgb *= litArgs_specularityFactor;
+            #endif
+
         #endif
 
         #ifdef AREA_LIGHTS
@@ -195,6 +195,10 @@ void evaluateBackend() {
         #if LIT_OCCLUDE_SPECULAR != NONE
             occludeSpecular(litArgs_gloss, litArgs_ao, litArgs_worldNormal, dViewDirW);
         #endif
+    #endif
+
+    #ifdef LIT_SPECULARITY_FACTOR
+        dSpecularLight *= litArgs_specularityFactor;
     #endif
 
     #if !defined(LIT_OPACITY_FADES_SPECULAR)
