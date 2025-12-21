@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 
 fn getSpecularModulate(specularity: vec3f, albedo: vec3f, metalness: f32, f0: f32, specularityFactor: f32) -> vec3f {
     // Apply specularityFactor to dielectric F0 only. For metals (metalness=1), F0 is the albedo
