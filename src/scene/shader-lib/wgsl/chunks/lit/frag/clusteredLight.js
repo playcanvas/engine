@@ -592,7 +592,9 @@ fn addClusteredLights(
         let cellIndex: f32 = dot(uniform.clusterCellsDot, cellCoords);
 
         // convert cell index to uv coordinates
-        let clusterV: f32 = floor(cellIndex * uniform.clusterTextureSize.y);
+        // add small epsilon before floor to handle precision issues at row boundaries
+        // where cellIndex/width should be an exact integer but computes slightly less
+        let clusterV: f32 = floor(cellIndex * uniform.clusterTextureSize.y + 0.0005);
         let clusterU: f32 = cellIndex - (clusterV * uniform.clusterTextureSize.x);
 
         // loop over maximum number of light cells

@@ -580,7 +580,9 @@ void addClusteredLights(
         float cellIndex = dot(clusterCellsDot, cellCoords);
 
         // convert cell index to uv coordinates
-        float clusterV = floor(cellIndex * clusterTextureSize.y);
+        // add small epsilon before floor to handle precision issues at row boundaries
+        // where cellIndex/width should be an exact integer but computes slightly less
+        float clusterV = floor(cellIndex * clusterTextureSize.y + 0.0005);
         float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
 
         // loop over maximum number of light cells
