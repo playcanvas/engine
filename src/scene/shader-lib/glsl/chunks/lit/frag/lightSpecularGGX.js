@@ -1,7 +1,7 @@
 export default /* glsl */`
 // Isotropic GGX (glTF 2.0 compliant)
 float calcLightSpecular(float gloss, vec3 worldNormal, vec3 viewDir, vec3 h, vec3 lightDirNorm) {
-    float PI = 3.141592653589793;
+    const float PI = 3.141592653589793;
     float roughness = max((1.0 - gloss) * (1.0 - gloss), 0.001);
     float alpha = roughness * roughness;
 
