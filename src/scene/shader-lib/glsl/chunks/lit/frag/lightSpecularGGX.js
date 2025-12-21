@@ -27,4 +27,3 @@ float getLightSpecular(vec3 h, vec3 reflDir, vec3 worldNormal, vec3 viewDir, vec
     return calcLightSpecular(gloss, worldNormal, viewDir, h, lightDirNorm);
 }
 `;
-

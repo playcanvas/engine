@@ -27,4 +27,3 @@ fn getLightSpecular(h: vec3f, reflDir: vec3f, worldNormal: vec3f, viewDir: vec3f
     return calcLightSpecular(gloss, worldNormal, viewDir, h, lightDirNorm);
 }
 `;
-
