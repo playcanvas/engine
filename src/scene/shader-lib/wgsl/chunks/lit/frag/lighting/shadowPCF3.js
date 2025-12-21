@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 // ----- Directional/Spot Sampling -----
 fn _getShadowPCF3x3(shadowMap: texture_depth_2d, shadowMapSampler: sampler_comparison, shadowCoord: vec3f, shadowParams: vec3f) -> f32 {
     let z: f32 = shadowCoord.z;

@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* wgsl */`
 
 fn addReflectionSheen(worldNormal: vec3f, viewDir: vec3f, gloss: f32) {
     let NoV: f32 = dot(worldNormal, viewDir);
