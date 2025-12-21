@@ -67,7 +67,11 @@ uniform vec3 material_ambient;
 #ifdef LIT_SPECULAR
     #ifdef LIT_LIGHTING
         #ifdef LIT_GGX_SPECULAR
-            #include "lightSpecularAnisoGGXPS"
+            #ifdef LIT_ANISOTROPY
+                #include "lightSpecularAnisoGGXPS"
+            #else
+                #include "lightSpecularGGXPS"
+            #endif
         #else
             #include "lightSpecularBlinnPS"
         #endif
@@ -91,7 +95,7 @@ uniform vec3 material_ambient;
 #ifdef LIT_NEEDS_NORMAL
     #include "viewDirPS"
     #ifdef LIT_SPECULAR
-        #ifdef LIT_GGX_SPECULAR
+        #ifdef LIT_ANISOTROPY
             #include "reflDirAnisoPS"
         #else
             #include "reflDirPS"

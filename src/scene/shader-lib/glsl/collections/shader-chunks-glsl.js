@@ -62,6 +62,7 @@ import lightingPS from '../chunks/lit/frag/lighting/lighting.js';
 import lightmapAddPS from '../chunks/lit/frag/lightmapAdd.js';
 import lightmapPS from '../chunks/standard/frag/lightmap.js';
 import lightSpecularAnisoGGXPS from '../chunks/lit/frag/lightSpecularAnisoGGX.js';
+import lightSpecularGGXPS from '../chunks/lit/frag/lightSpecularGGX.js';
 import lightSpecularBlinnPS from '../chunks/lit/frag/lightSpecularBlinn.js';
 import lightSheenPS from '../chunks/lit/frag/lightSheen.js';
 import linearizeDepthPS from '../chunks/common/frag/linearizeDepth.js';
@@ -224,6 +225,7 @@ const shaderChunksGLSL = {
     lightmapAddPS,
     lightmapPS,
     lightSpecularAnisoGGXPS,
+    lightSpecularGGXPS,
     lightSpecularBlinnPS,
     lightSheenPS,
     linearizeDepthPS,
