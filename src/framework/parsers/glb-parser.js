@@ -1624,10 +1624,11 @@ const createLight = (gltfLight, node) => {
     }
 
     // glTF stores light intensity in energy/area, convert to luminance
+    // getLightUnitConversion expects angles in radians, use original glTF values
     if (gltfLight.hasOwnProperty('intensity')) {
-        const outerConeAngle = lightProps.outerConeAngle ?? 0;
-        const innerConeAngle = lightProps.innerConeAngle ?? 0;
-        lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(lightTypes[lightProps.type], outerConeAngle, innerConeAngle);
+        const outerAngleRad = gltfLight.spot?.outerConeAngle ?? (Math.PI / 4);
+        const innerAngleRad = gltfLight.spot?.innerConeAngle ?? 0;
+        lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(lightTypes[lightProps.type], outerAngleRad, innerAngleRad);
     }
 
     // Rotate to match light orientation in glTF specification
