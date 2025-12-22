@@ -18,34 +18,44 @@ const stringIds = new StringIds();
  */
 class TextureView {
     /**
+     * The texture this view references.
+     *
      * @type {Texture}
-     * @private
+     * @readonly
      */
-    _texture;
+    texture;
 
     /**
+     * The first mip level accessible to the view.
+     *
      * @type {number}
-     * @private
+     * @readonly
      */
-    _baseMipLevel;
+    baseMipLevel;
 
     /**
+     * The number of mip levels accessible to the view.
+     *
      * @type {number}
-     * @private
+     * @readonly
      */
-    _mipLevelCount;
+    mipLevelCount;
 
     /**
+     * The first array layer accessible to the view.
+     *
      * @type {number}
-     * @private
+     * @readonly
      */
-    _baseArrayLayer;
+    baseArrayLayer;
 
     /**
+     * The number of array layers accessible to the view.
+     *
      * @type {number}
-     * @private
+     * @readonly
      */
-    _arrayLayerCount;
+    arrayLayerCount;
 
     /**
      * A unique numeric key for this view configuration, used for caching.
@@ -70,64 +80,14 @@ class TextureView {
      * @ignore
      */
     constructor(texture, baseMipLevel = 0, mipLevelCount = 1, baseArrayLayer = 0, arrayLayerCount = 1) {
-        this._texture = texture;
-        this._baseMipLevel = baseMipLevel;
-        this._mipLevelCount = mipLevelCount;
-        this._baseArrayLayer = baseArrayLayer;
-        this._arrayLayerCount = arrayLayerCount;
+        this.texture = texture;
+        this.baseMipLevel = baseMipLevel;
+        this.mipLevelCount = mipLevelCount;
+        this.baseArrayLayer = baseArrayLayer;
+        this.arrayLayerCount = arrayLayerCount;
 
         // Generate a unique numeric key for caching
         this.key = stringIds.get(`${baseMipLevel}:${mipLevelCount}:${baseArrayLayer}:${arrayLayerCount}`);
-    }
-
-    /**
-     * The texture this view references.
-     *
-     * @type {Texture}
-     * @readonly
-     */
-    get texture() {
-        return this._texture;
-    }
-
-    /**
-     * The first mip level accessible to the view.
-     *
-     * @type {number}
-     * @readonly
-     */
-    get baseMipLevel() {
-        return this._baseMipLevel;
-    }
-
-    /**
-     * The number of mip levels accessible to the view.
-     *
-     * @type {number}
-     * @readonly
-     */
-    get mipLevelCount() {
-        return this._mipLevelCount;
-    }
-
-    /**
-     * The first array layer accessible to the view.
-     *
-     * @type {number}
-     * @readonly
-     */
-    get baseArrayLayer() {
-        return this._baseArrayLayer;
-    }
-
-    /**
-     * The number of array layers accessible to the view.
-     *
-     * @type {number}
-     * @readonly
-     */
-    get arrayLayerCount() {
-        return this._arrayLayerCount;
     }
 }
 

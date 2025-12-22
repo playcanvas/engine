@@ -169,6 +169,7 @@ class WebgpuTexture {
      * @param {WebgpuGraphicsDevice} device - The graphics device.
      * @param {TextureView} [textureView] - Optional TextureView specifying view parameters.
      * @returns {GPUTextureView} - Returns the view.
+     * @private
      */
     getView(device, textureView) {
 
