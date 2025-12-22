@@ -1159,8 +1159,6 @@ class Texture {
     /**
      * Download the textures data from the graphics memory to the local memory.
      *
-     * Note a public API yet, as not all options are implemented on all platforms.
-     *
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
      * @param {number} width - The width of the rectangle.
@@ -1180,7 +1178,6 @@ class Texture {
      * to false.
      * @returns {Promise<Uint8Array|Uint16Array|Uint32Array|Float32Array>} A promise that resolves
      * with the pixel data of the texture.
-     * @ignore
      */
     read(x, y, width, height, options = {}) {
         return this.impl.read?.(x, y, width, height, options);
