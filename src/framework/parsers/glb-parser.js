@@ -1564,13 +1564,12 @@ const createNode = (gltfNode, nodeIndex, nodeInstancingMap) => {
 
 // creates a camera component on the supplied node, and returns it
 const createCamera = (gltfCamera, node) => {
-
-    const projection = gltfCamera.type === 'orthographic' ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
-    const gltfProperties = projection === PROJECTION_ORTHOGRAPHIC ? gltfCamera.orthographic : gltfCamera.perspective;
+    const isOrthographic = gltfCamera.type === 'orthographic';
+    const gltfProperties = isOrthographic ? gltfCamera.orthographic : gltfCamera.perspective;
 
     const componentData = {
         enabled: false,
-        projection: projection,
+        projection: isOrthographic ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE,
         nearClip: gltfProperties.znear,
         aspectRatioMode: ASPECT_AUTO
     };
@@ -1579,14 +1578,17 @@ const createCamera = (gltfCamera, node) => {
         componentData.farClip = gltfProperties.zfar;
     }
 
-    if (projection === PROJECTION_ORTHOGRAPHIC) {
-        componentData.orthoHeight = 0.5 * gltfProperties.ymag;
-        if (gltfProperties.ymag) {
+    if (isOrthographic) {
+        // glTF ymag defines the half-height of the orthographic view volume
+        componentData.orthoHeight = gltfProperties.ymag;
+
+        if (gltfProperties.xmag && gltfProperties.ymag) {
             componentData.aspectRatioMode = ASPECT_MANUAL;
             componentData.aspectRatio = gltfProperties.xmag / gltfProperties.ymag;
         }
     } else {
         componentData.fov = gltfProperties.yfov * math.RAD_TO_DEG;
+
         if (gltfProperties.aspectRatio) {
             componentData.aspectRatioMode = ASPECT_MANUAL;
             componentData.aspectRatio = gltfProperties.aspectRatio;
