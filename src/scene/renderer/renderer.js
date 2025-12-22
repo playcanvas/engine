@@ -10,7 +10,7 @@ import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
+    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
     BINDGROUP_MESH_UB
@@ -766,14 +766,14 @@ class Renderer {
             if (isClustered) {
                 uniforms.push(...[
                     new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterTextureSize', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
+                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3),
                     new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
                     new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
-                    new UniformFormat('clusterSkip', UNIFORMTYPE_FLOAT)
+                    new UniformFormat('numClusteredLights', UNIFORMTYPE_INT),
+                    new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT)
                 ]);
             }
 
