@@ -294,9 +294,6 @@ class Texture {
 
         this.recreateImpl(upload);
 
-        // track the texture
-        graphicsDevice.textures.push(this);
-
         Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [${pixelFormatInfo.get(this.format)?.name}]` +
             `${this.cubemap ? '[Cubemap]' : ''}` +
             `${this.volume ? '[Volume]' : ''}` +
@@ -313,14 +310,7 @@ class Texture {
 
         const device = this.device;
         if (device) {
-            // stop tracking the texture
-            const idx = device.textures.indexOf(this);
-            if (idx !== -1) {
-                device.textures.splice(idx, 1);
-            }
-
-            // Remove texture from any uniforms
-            device.scope.removeValue(this);
+            device.onTextureDestroyed(this);
 
             // destroy implementation
             this.impl.destroy(device);
@@ -680,7 +670,10 @@ class Texture {
                 this._mipmaps = v;
             }
 
-            if (v) this._needsMipmapsUpload = true;
+            if (v) {
+                this._needsMipmapsUpload = true;
+                this.device?.texturesToUpload?.add(this);
+            }
         }
     }
 
@@ -903,7 +896,7 @@ class Texture {
     set flipY(flipY) {
         if (this._flipY !== flipY) {
             this._flipY = flipY;
-            this._needsUpload = true;
+            this.markForUpload();
         }
     }
 
@@ -919,7 +912,7 @@ class Texture {
     set premultiplyAlpha(premultiplyAlpha) {
         if (this._premultiplyAlpha !== premultiplyAlpha) {
             this._premultiplyAlpha = premultiplyAlpha;
-            this._needsUpload = true;
+            this.markForUpload();
         }
     }
 
@@ -955,7 +948,7 @@ class Texture {
     dirtyAll() {
         this._levelsUpdated = this._cubemap ? [[true, true, true, true, true, true]] : [true];
 
-        this._needsUpload = true;
+        this.markForUpload();
         this._needsMipmapsUpload = this._mipmaps;
         this._mipmapsUploaded = false;
 
@@ -1144,6 +1137,16 @@ class Texture {
     }
 
     /**
+     * Mark this texture as needing upload to the GPU.
+     *
+     * @ignore
+     */
+    markForUpload() {
+        this._needsUpload = true;
+        this.device?.texturesToUpload?.add(this);
+    }
+
+    /**
      * Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
      * is called by internally by {@link setSource} and {@link unlock}. However, it still needs to
      * be called explicitly in the case where an HTMLVideoElement is set as the source of the
@@ -1151,7 +1154,7 @@ class Texture {
      * rendered.
      */
     upload() {
-        this._needsUpload = true;
+        this.markForUpload();
         this._needsMipmapsUpload = this._mipmaps;
         this.impl.uploadImmediate?.(this.device, this);
     }

@@ -679,6 +679,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     createTextureImpl(texture) {
+        this.textures.add(texture);
         return new WebglTexture(texture);
     }
 
