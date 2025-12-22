@@ -5,6 +5,7 @@
  * @import { Shader } from './shader.js'
  * @import { StorageBuffer } from './storage-buffer.js'
  * @import { Texture } from './texture.js'
+ * @import { TextureView } from './texture-view.js'
  * @import { VertexBuffer } from './vertex-buffer.js'
  */
 
@@ -87,7 +88,7 @@ class Compute {
      * Sets a shader parameter on a compute instance.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|Texture|StorageBuffer|VertexBuffer|IndexBuffer} value -
+     * @param {number|number[]|Float32Array|Texture|StorageBuffer|VertexBuffer|IndexBuffer|TextureView} value -
      * The value for the specified parameter.
      */
     setParameter(name, value) {

@@ -19,6 +19,7 @@ import {
     requiresManualGamma, pixelFormatInfo, isSrgbPixelFormat, pixelFormatLinearToGamma, pixelFormatGammaToLinear
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
+import { TextureView } from './texture-view.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -1197,6 +1198,31 @@ class Texture {
      */
     write(x, y, width, height, data) {
         return this.impl.write?.(x, y, width, height, data);
+    }
+
+    /**
+     * Creates a TextureView for this texture, specifying a subset of mip levels and array layers.
+     * TextureViews can be used with compute shaders to access specific portions of a texture.
+     *
+     * Note: TextureView is only supported on WebGPU. On WebGL, the full texture is always bound.
+     *
+     * @param {number} [baseMipLevel] - The first mip level accessible to the view. Defaults to 0.
+     * @param {number} [mipLevelCount] - The number of mip levels accessible to the view. Defaults
+     * to 1.
+     * @param {number} [baseArrayLayer] - The first array layer accessible to the view. Defaults to
+     * 0.
+     * @param {number} [arrayLayerCount] - The number of array layers accessible to the view.
+     * Defaults to 1.
+     * @returns {TextureView} A new TextureView for this texture.
+     * @example
+     * // Create a view for mip level 1
+     * const mip1View = texture.getView(1);
+     *
+     * // Use with compute shader
+     * compute.setParameter('outputTexture', mip1View);
+     */
+    getView(baseMipLevel = 0, mipLevelCount = 1, baseArrayLayer = 0, arrayLayerCount = 1) {
+        return new TextureView(this, baseMipLevel, mipLevelCount, baseArrayLayer, arrayLayerCount);
     }
 }
 
