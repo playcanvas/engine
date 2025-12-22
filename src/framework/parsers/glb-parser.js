@@ -1602,33 +1602,32 @@ const createCamera = (gltfCamera, node) => {
 
 // creates light component, adds it to the node and returns the created light component
 const createLight = (gltfLight, node) => {
-
     const lightProps = {
         enabled: false,
         type: gltfLight.type === 'point' ? 'omni' : gltfLight.type,
         color: gltfLight.hasOwnProperty('color') ? new Color(gltfLight.color) : Color.WHITE,
-
-        // when range is not defined, infinity should be used - but that is causing infinity in bounds calculations
+        // when range is not defined, infinity should be used - but that causes infinity in bounds calculations
         range: gltfLight.hasOwnProperty('range') ? gltfLight.range : 9999,
-
         falloffMode: LIGHTFALLOFF_INVERSESQUARED,
-
         // TODO: (engine issue #3252) Set intensity to match glTF specification, which uses physically based values:
         // - Omni and spot lights use luminous intensity in candela (lm/sr)
         // - Directional lights use illuminance in lux (lm/m2).
-        // Current implementation: clapms specified intensity to 0..2 range
+        // Current implementation: clamps specified intensity to 0..2 range
         intensity: gltfLight.hasOwnProperty('intensity') ? math.clamp(gltfLight.intensity, 0, 2) : 1
     };
 
+    // glTF spot light cone angles are in radians, PlayCanvas expects degrees
+    // Defaults per glTF spec: innerConeAngle = 0, outerConeAngle = PI/4 (45 degrees)
     if (gltfLight.hasOwnProperty('spot')) {
         lightProps.innerConeAngle = gltfLight.spot.hasOwnProperty('innerConeAngle') ? gltfLight.spot.innerConeAngle * math.RAD_TO_DEG : 0;
-        lightProps.outerConeAngle = gltfLight.spot.hasOwnProperty('outerConeAngle') ? gltfLight.spot.outerConeAngle * math.RAD_TO_DEG : Math.PI / 4;
+        lightProps.outerConeAngle = gltfLight.spot.hasOwnProperty('outerConeAngle') ? gltfLight.spot.outerConeAngle * math.RAD_TO_DEG : 45;
     }
 
-    // glTF stores light already in energy/area, but we need to provide the light with only the energy parameter,
-    // so we need the intensities in candela back to lumen
+    // glTF stores light intensity in energy/area, convert to luminance
     if (gltfLight.hasOwnProperty('intensity')) {
-        lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(lightTypes[lightProps.type], lightProps.outerConeAngle, lightProps.innerConeAngle);
+        const outerConeAngle = lightProps.outerConeAngle ?? 0;
+        const innerConeAngle = lightProps.innerConeAngle ?? 0;
+        lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(lightTypes[lightProps.type], outerConeAngle, innerConeAngle);
     }
 
     // Rotate to match light orientation in glTF specification
@@ -1636,7 +1635,6 @@ const createLight = (gltfLight, node) => {
     const lightEntity = new Entity(node.name);
     lightEntity.rotateLocal(90, 0, 0);
 
-    // add component
     lightEntity.addComponent('light', lightProps);
     return lightEntity;
 };
