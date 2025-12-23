@@ -22,6 +22,7 @@ function UnifiedSortWorker() {
     const binDivider = new Float32Array(numBins + 1);
 
     // Shared bin weights utility (class is injected via stringification from main thread)
+    // eslint-disable-next-line no-undef
     const binWeightsUtil = new GSplatSortBinWeights();
 
     /**
@@ -278,6 +279,7 @@ function UnifiedSortWorker() {
         const range = maxDist - minDist;
 
         // Set up camera-relative bin weighting for near-camera precision (using shared utility)
+        // eslint-disable-next-line no-undef
         const cameraBin = GSplatSortBinWeights.computeCameraBin(_radialSort, minDist, range);
 
         // Compute bin weights locally using shared utility
