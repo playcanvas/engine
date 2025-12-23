@@ -1126,7 +1126,10 @@ function _defineMaterialProps() {
     _defineFloat('reflectivity', 1);
     _defineFloat('occludeSpecularIntensity', 1);
     _defineFloat('refraction', 0);
-    _defineFloat('refractionIndex', 1.0 / 1.5); // approx. (air ior / glass ior)
+    // approx. (air ior / glass ior), clamped to avoid division by zero in shader
+    _defineFloat('refractionIndex', 1.0 / 1.5, (material, device, scene) => {
+        return Math.max(0.001, material.refractionIndex);
+    });
     _defineFloat('dispersion', 0);
     _defineFloat('thickness', 0);
     _defineFloat('attenuationDistance', 0);
