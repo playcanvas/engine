@@ -31,7 +31,7 @@ dropBox.style.cssText = `
     font-size: 24px;
     color: white;
 `;
-dropBox.textContent = 'Drop .ply or .sog file to view';
+dropBox.textContent = 'Drop .ply, .sog, or .glb file to view';
 dropOverlay.appendChild(dropBox);
 document.body.appendChild(dropOverlay);
 
@@ -89,6 +89,24 @@ assetListLoader.load(() => {
 
     let splatEntity = null;
 
+    /**
+     * Calculate the bounding box of an entity.
+     *
+     * @param {pc.BoundingBox} bbox - The bounding box.
+     * @param {pc.Entity} entity - The entity.
+     * @returns {pc.BoundingBox} The bounding box.
+     */
+    const calcEntityAABB = (bbox, entity) => {
+        bbox.center.set(0, 0, 0);
+        bbox.halfExtents.set(0, 0, 0);
+        entity.findComponents('render').forEach((render) => {
+            render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
+                bbox.add(mi.aabb);
+            });
+        });
+        return bbox;
+    };
+
     // Create camera at startup so skydome is visible before dropping files
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
@@ -98,6 +116,20 @@ assetListLoader.load(() => {
     });
     camera.setLocalPosition(0, 2, 5);
     app.root.addChild(camera);
+
+    // Create directional light for GLB model illumination
+    const light = new pc.Entity('light');
+    light.addComponent('light', {
+        type: 'directional',
+        color: new pc.Color(1, 1, 1),
+        intensity: 1,
+        castShadows: true,
+        shadowBias: 0.2,
+        normalOffsetBias: 0.05,
+        shadowResolution: 2048
+    });
+    light.setLocalEulerAngles(45, 30, 0);
+    app.root.addChild(light);
 
     // Setup CameraFrame
     const cameraFrame = new pc.CameraFrame(app, camera.camera);
@@ -200,8 +232,11 @@ assetListLoader.load(() => {
         if (!file) return;
 
         const fileName = file.name.toLowerCase();
-        if (!fileName.endsWith('.ply') && !fileName.endsWith('.sog')) {
-            console.warn('Please drop a .ply or .sog file');
+        const isGsplat = fileName.endsWith('.ply') || fileName.endsWith('.sog');
+        const isGlb = fileName.endsWith('.glb');
+
+        if (!isGsplat && !isGlb) {
+            console.warn('Please drop a .ply, .sog, or .glb file');
             return;
         }
 
@@ -212,45 +247,79 @@ assetListLoader.load(() => {
         // This method is specifically for blob assets where the URL doesn't identify the format
         const blobUrl = URL.createObjectURL(file);
 
-        const asset = await new Promise((resolve, reject) => {
-            app.assets.loadFromUrlAndFilename(blobUrl, file.name, 'gsplat', (err, loadedAsset) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(loadedAsset);
-                }
+        let entity;
+        let aabb;
+
+        if (isGsplat) {
+            // Load gaussian splat asset
+            const asset = await new Promise((resolve, reject) => {
+                app.assets.loadFromUrlAndFilename(blobUrl, file.name, 'gsplat', (err, loadedAsset) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(loadedAsset);
+                    }
+                });
             });
-        });
 
-        // Create gsplat entity
-        const entity = new pc.Entity(file.name);
-        entity.addComponent('gsplat', {
-            asset: asset,
-            unified: true
-        });
-        entity.setLocalEulerAngles(180, 0, 0);
-        app.root.addChild(entity);
+            // Create gsplat entity
+            entity = new pc.Entity(file.name);
+            entity.addComponent('gsplat', {
+                asset: asset,
+                unified: true
+            });
+            entity.setLocalEulerAngles(180, 0, 0);
+            app.root.addChild(entity);
 
-        // Store reference for orientation updates
-        splatEntity = entity;
+            // Store reference for orientation updates
+            splatEntity = entity;
 
-        // Wait a frame for customAabb to be available
-        await new Promise((resolve) => {
-            requestAnimationFrame(resolve);
-        });
+            // Wait a frame for customAabb to be available
+            await new Promise((resolve) => {
+                requestAnimationFrame(resolve);
+            });
 
-        // Get bounds for framing
-        const aabb = entity.gsplat.customAabb;
-        if (!aabb) {
-            console.warn('customAabb not available');
-            return;
+            // Get bounds for framing
+            aabb = entity.gsplat.customAabb;
+            if (!aabb) {
+                console.warn('customAabb not available');
+                return;
+            }
+        } else {
+            // Load GLB container asset
+            let asset;
+            try {
+                asset = await new Promise((resolve, reject) => {
+                    app.assets.loadFromUrlAndFilename(blobUrl, file.name, 'container', (err, loadedAsset) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(loadedAsset);
+                        }
+                    });
+                });
+            } catch (err) {
+                console.error('Failed to load GLB:', err);
+                // Show error in overlay (Draco/Basis compressed files are not supported)
+                dropBox.textContent = 'Failed to load GLB (compressed formats not supported)';
+                dropBox.style.background = 'rgba(180, 50, 50, 0.7)';
+                dropOverlay.style.display = 'flex';
+                return;
+            }
+
+            // Instantiate GLB entity
+            entity = asset.resource.instantiateRenderEntity();
+            app.root.addChild(entity);
+
+            // Calculate bounds from mesh instances
+            aabb = calcEntityAABB(new pc.BoundingBox(), entity);
         }
 
         const center = aabb.center;
         const size = aabb.halfExtents.length() * 2;
         const cameraDistance = size * 2.5;
 
-        // Update camera for the loaded splat
+        // Update camera for the loaded asset
         camera.camera.farClip = size * 10;
         camera.setLocalPosition(
             center.x,
