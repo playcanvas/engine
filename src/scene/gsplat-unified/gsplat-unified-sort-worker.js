@@ -11,60 +11,31 @@ function UnifiedSortWorker() {
     // Sorting mode: false = forward vector (directional), true = radial distance (for cubemaps)
     let _radialSort = false;
 
-    // camera-relative bin-based precision optimization
+    // Camera-relative bin-based precision optimization.
+    // Arrays are size 33 (numBins + 1) to include a safety entry at index 32.
+    // This handles the edge case where floating point calculation (d >>> 0) produces
+    // bin index 32 instead of 31. The GPU compute shader avoids this by clamping,
+    // but the CPU path uses truncation which can overflow. The safety entry at [32]
+    // ensures valid array access without bounds checking in the hot loop.
     const numBins = 32;
-    const binBase = new Array(numBins).fill(0);
-    const binDivider = new Array(numBins).fill(0);
+    const binBase = new Float32Array(numBins + 1);
+    const binDivider = new Float32Array(numBins + 1);
 
-    // Weight tiers for camera-relative precision (distance from camera bin -> weight multiplier)
-    const weightTiers = [
-        { maxDistance: 0, weight: 40.0 },   // Camera bin
-        { maxDistance: 2, weight: 20.0 },   // Adjacent bins
-        { maxDistance: 5, weight: 8.0 },    // Nearby bins
-        { maxDistance: 10, weight: 3.0 },   // Medium distance
-        { maxDistance: Infinity, weight: 1.0 }  // Far bins
-    ];
+    // Shared bin weights utility (class is injected via stringification from main thread)
+    const binWeightsUtil = new GSplatSortBinWeights();
 
-    // Pre-calculate weight lookup table by distance from camera (constant)
-    const weightByDistance = new Array(numBins);
-    for (let dist = 0; dist < numBins; ++dist) {
-        let weight = 1.0;
-        for (let j = 0; j < weightTiers.length; ++j) {
-            if (dist <= weightTiers[j].maxDistance) {
-                weight = weightTiers[j].weight;
-                break;
-            }
+    /**
+     * Unpacks interleaved bin weights received from main thread into separate arrays.
+     * Called once per sort request (not per-splat).
+     *
+     * @param {Float32Array} binWeights - Interleaved [base0, div0, base1, div1, ...]
+     */
+    const unpackBinWeights = (binWeights) => {
+        for (let i = 0; i < numBins; i++) {
+            binBase[i] = binWeights[i * 2];
+            binDivider[i] = binWeights[i * 2 + 1];
         }
-        weightByDistance[dist] = weight;
-    }
-
-    const setupCameraRelativeBins = (cameraBin, bucketCount) => {
-        const totalBudget = bucketCount;
-        const bitsPerBin = [];
-
-        // Assign weights to bins based on pre-calculated distance lookup
-        for (let i = 0; i < numBins; ++i) {
-            const distFromCamera = Math.abs(i - cameraBin);
-            bitsPerBin[i] = weightByDistance[distFromCamera];
-        }
-
-        // Normalize to fit within budget
-        const totalWeight = bitsPerBin.reduce((a, b) => a + b, 0);
-        let accumulated = 0;
-
-        for (let i = 0; i < numBins; ++i) {
-            binDivider[i] = Math.max(1, Math.floor((bitsPerBin[i] / totalWeight) * totalBudget));
-            binBase[i] = accumulated;
-            accumulated += binDivider[i];
-        }
-
-        // Adjust last bin to fit exactly
-        if (accumulated > bucketCount) {
-            const excess = accumulated - bucketCount;
-            binDivider[numBins - 1] = Math.max(1, binDivider[numBins - 1] - excess);
-        }
-
-        // Add safety entry for edge case where bin >= numBins due to floating point
+        // Safety entry for edge case where bin >= numBins due to floating point
         binBase[numBins] = binBase[numBins - 1] + binDivider[numBins - 1];
         binDivider[numBins] = 0;
     };
@@ -306,19 +277,12 @@ function UnifiedSortWorker() {
 
         const range = maxDist - minDist;
 
-        // Set up camera-relative bin weighting for near-camera precision
-        let cameraBin;
-        if (_radialSort) {
-            // For radial sort with inverted distances, camera (dist=0) maps to the last bin
-            cameraBin = numBins - 1;
-        } else {
-            // For linear sort, calculate where camera falls in the projected distance range
-            const cameraOffsetFromRangeStart = 0 - minDist;
-            const cameraBinFloat = (cameraOffsetFromRangeStart / range) * numBins;
-            cameraBin = Math.max(0, Math.min(numBins - 1, Math.floor(cameraBinFloat)));
-        }
+        // Set up camera-relative bin weighting for near-camera precision (using shared utility)
+        const cameraBin = GSplatSortBinWeights.computeCameraBin(_radialSort, minDist, range);
 
-        setupCameraRelativeBins(cameraBin, bucketCount);
+        // Compute bin weights locally using shared utility
+        const binWeights = binWeightsUtil.compute(cameraBin, bucketCount);
+        unpackBinWeights(binWeights);
 
         if (_radialSort) {
             evaluateSortKeysRadial(sortParams, minDist, range, distances, countBuffer, centersData);

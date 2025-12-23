@@ -1,8 +1,8 @@
 export default /* wgsl */`
 uniform matrix_model: mat4x4f;
 uniform matrix_view: mat4x4f;
-uniform camera_params: vec4f;             // 1 / far, far, near, isOrtho
 #ifndef GSPLAT_CENTER_NOPROJ
+    uniform camera_params: vec4f;             // 1 / far, far, near, isOrtho
     uniform matrix_projection: mat4x4f;
 #endif
 

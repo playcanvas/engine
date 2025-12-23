@@ -1,8 +1,8 @@
 export default /* glsl */`
 uniform mat4 matrix_model;
 uniform mat4 matrix_view;
-uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
 #ifndef GSPLAT_CENTER_NOPROJ
+    uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
     uniform mat4 matrix_projection;
 #endif
 

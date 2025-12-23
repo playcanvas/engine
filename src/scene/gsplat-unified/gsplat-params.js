@@ -36,6 +36,15 @@ class GSplatParams {
     radialSorting = false;
 
     /**
+     * Enables GPU-based sorting using compute shaders. WebGPU only.
+     * Must be set before gsplat components are created.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    gpuSorting = false;
+
+    /**
      * Enables debug rendering of AABBs for GSplat octree nodes. Defaults to false.
      *
      * @type {boolean}

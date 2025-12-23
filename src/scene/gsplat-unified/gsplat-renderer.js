@@ -10,6 +10,7 @@ import { math } from '../../core/math/math.js';
 
 /**
  * @import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js'
+ * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
  * @import { Layer } from '../layer.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -199,6 +200,16 @@ class GSplatRenderer {
         } else {
             this._material.setParameter('splatOrder', this.workBuffer.orderTexture);
         }
+    }
+
+    /**
+     * Sets a storage buffer containing sorted indices directly as the order data.
+     * Used by GPU sorting to bypass CPU upload.
+     *
+     * @param {StorageBuffer} buffer - The storage buffer containing sorted indices (u32 values).
+     */
+    setOrderBuffer(buffer) {
+        this._material.setParameter('splatOrder', buffer);
     }
 
     frameUpdate(params) {
