@@ -264,12 +264,20 @@ class GraphicsDevice extends EventHandler {
     shaders = [];
 
     /**
-     * An array of currently created textures.
+     * A set of currently created textures.
      *
-     * @type {Texture[]}
+     * @type {Set<Texture>}
      * @ignore
      */
-    textures = [];
+    textures = new Set();
+
+    /**
+     * A set of textures that need to be uploaded to the GPU.
+     *
+     * @type {Set<Texture>}
+     * @ignore
+     */
+    texturesToUpload = new Set();
 
     /**
      * A set of currently created render targets.
@@ -591,6 +599,18 @@ class GraphicsDevice extends EventHandler {
         if (idx !== -1) {
             this.shaders.splice(idx, 1);
         }
+    }
+
+    /**
+     * Called when a texture is destroyed to remove it from internal tracking structures.
+     *
+     * @param {Texture} texture - The texture being destroyed.
+     * @ignore
+     */
+    onTextureDestroyed(texture) {
+        this.textures.delete(texture);
+        this.texturesToUpload.delete(texture);
+        this.scope.removeValue(texture);
     }
 
     // executes after the extended classes have executed their destroy function
@@ -1054,7 +1074,7 @@ class GraphicsDevice extends EventHandler {
 
             // log out all loaded textures, sorted by gpu memory size
             if (Tracing.get(TRACEID_TEXTURES)) {
-                const textures = this.textures.slice();
+                const textures = [...this.textures];
                 textures.sort((a, b) => b.gpuSize - a.gpuSize);
                 Debug.log(`Textures: ${textures.length}`);
                 let textureTotal = 0;

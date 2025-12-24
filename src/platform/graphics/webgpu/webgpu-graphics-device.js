@@ -513,6 +513,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     createTextureImpl(texture) {
+        this.textures.add(texture);
         return new WebgpuTexture(texture);
     }
 
@@ -794,12 +795,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     _uploadDirtyTextures() {
-
-        this.textures.forEach((texture) => {
-            if (texture._needsUpload || texture._needsMipmaps) {
+        this.texturesToUpload.forEach((texture) => {
+            if (texture._needsUpload || texture._needsMipmapsUpload) {
                 texture.upload();
             }
         });
+        this.texturesToUpload.clear();
     }
 
     setupTimeStampWrites(passDesc, name) {
@@ -925,6 +926,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     startComputePass(name) {
+
+        // upload textures that need it, to avoid them being uploaded during the pass
+        this._uploadDirtyTextures();
 
         WebgpuDebug.internal(this);
         WebgpuDebug.validate(this);
