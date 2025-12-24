@@ -8,7 +8,6 @@ import {
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import glslSampleCatmullRomPS from '../../scene/shader-lib/glsl/chunks/render-pass/frag/sampleCatmullRom.js';
 import wgslSampleCatmullRomPS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/sampleCatmullRom.js';
@@ -133,11 +132,7 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.viewProjInvId.setValue(camera._viewProjInverse.data);
         this.jittersId.setValue(camera._jitters);
 
-        const f = camera._farClip;
-        this.cameraParams[0] = 1 / f;
-        this.cameraParams[1] = f;
-        this.cameraParams[2] = camera._nearClip;
-        this.cameraParams[3] = camera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+        camera.fillShaderParams(this.cameraParams);
         this.cameraParamsId.setValue(this.cameraParams);
     }
 

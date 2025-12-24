@@ -21,8 +21,7 @@ import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindGroupFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import {
-    VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
-    LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
+    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     EVENT_PRECULL, EVENT_POSTCULL, EVENT_CULL_END
 } from '../constants.js';
@@ -232,8 +231,6 @@ class Renderer {
         this.viewProjId = scope.resolve('matrix_viewProjection');
         this.flipYId = scope.resolve('projectionFlipY');
         this.tbnBasis = scope.resolve('tbnBasis');
-        this.nearClipId = scope.resolve('camera_near');
-        this.farClipId = scope.resolve('camera_far');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
         this.viewportSize = new Float32Array(4);
@@ -424,17 +421,8 @@ class Renderer {
 
         this.tbnBasis.setValue(flipY ? -1 : 1);
 
-        // Near and far clip values
-        const n = camera._nearClip;
-        const f = camera._farClip;
-        this.nearClipId.setValue(n);
-        this.farClipId.setValue(f);
-
         // camera params
-        this.cameraParams[0] = 1 / f;
-        this.cameraParams[1] = f;
-        this.cameraParams[2] = n;
-        this.cameraParams[3] = camera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+        camera.fillShaderParams(this.cameraParams);
         this.cameraParamsId.setValue(this.cameraParams);
 
         // viewport size

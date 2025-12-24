@@ -1,5 +1,4 @@
 import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
-import { PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import glslCocPS from '../../scene/shader-lib/glsl/chunks/render-pass/frag/coc.js';
@@ -57,11 +56,7 @@ class RenderPassCoC extends RenderPassShaderQuad {
         this.paramsId.setValue(paramsValue);
 
         const camera = this.cameraComponent.camera;
-        const f = camera._farClip;
-        this.cameraParams[0] = 1 / f;
-        this.cameraParams[1] = f;
-        this.cameraParams[2] = camera._nearClip;
-        this.cameraParams[3] = camera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+        camera.fillShaderParams(this.cameraParams);
         this.cameraParamsId.setValue(this.cameraParams);
 
         super.execute();
