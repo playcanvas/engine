@@ -261,6 +261,10 @@ assetListLoader.load(() => {
         cameraFrame.vignette.outer = data.get('data.vignette.outer');
         cameraFrame.vignette.curvature = data.get('data.vignette.curvature');
         cameraFrame.vignette.intensity = data.get('data.vignette.enabled') ? data.get('data.vignette.intensity') : 0;
+        const vignetteColor = data.get('data.vignette.color');
+        if (vignetteColor) {
+            cameraFrame.vignette.color.set(vignetteColor[0], vignetteColor[1], vignetteColor[2]);
+        }
 
         // fringing
         cameraFrame.fringing.intensity = data.get('data.fringing.enabled') ? data.get('data.fringing.intensity') : 0;
@@ -308,7 +312,8 @@ assetListLoader.load(() => {
             inner: 0.5,
             outer: 1.0,
             curvature: 0.5,
-            intensity: 0.3
+            intensity: 0.3,
+            color: [0, 0, 0]
         },
         fringing: {
             enabled: false,
