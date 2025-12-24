@@ -8,13 +8,13 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
 /**
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 /**
+ * @typedef {Object} Rendering
  * Properties related to scene rendering, encompassing settings that control the rendering resolution,
  * pixel format, multi-sampling for anti-aliasing, tone-mapping and similar.
- *
- * @typedef {Object} Rendering
  * @property {number[]} renderFormats - The preferred render formats of the frame buffer, in order of
  * preference. First format from this list that is supported by the hardware is used. When none of
  * the formats are supported, {@link PIXELFORMAT_RGBA8} is used, but this automatically disables
@@ -52,12 +52,11 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 
 /**
+ * @typedef {Object} Ssao
  * Properties related to the Screen Space Ambient Occlusion (SSAO) effect, a postprocessing technique
  * that approximates ambient occlusion by calculating how exposed each point in the screen space is
  * to ambient light, enhancing depth perception and adding subtle shadowing in crevices and between
  * objects.
- *
- * @typedef {Object} Ssao
  * @property {string} type - The type of the SSAO determines how it is applied in the rendering
  * process. Defaults to {@link SSAOTYPE_NONE}. Can be:
  *
@@ -77,11 +76,10 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 
 /**
+ * @typedef {Object} Bloom
  * Properties related to the HDR bloom effect, a postprocessing technique that simulates the natural
  * glow of bright light sources by spreading their intensity beyond their boundaries, creating a soft
  * and realistic blooming effect.
- *
- * @typedef {Object} Bloom
  * @property {number} intensity - The intensity of the bloom effect, 0-0.1 range. Defaults to 0,
  * making it disabled.
  * @property {number} blurLevel - The number of iterations for blurring the bloom effect, with each
@@ -90,11 +88,10 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 
 /**
+ * @typedef {Object} Grading
  * Properties related to the color grading effect, a postprocessing technique used to adjust and the
  * visual tone of an image. This effect modifies brightness, contrast, saturation, and overall color
  * balance to achieve a specific aesthetic or mood.
- *
- * @typedef {Object} Grading
  * @property {boolean} enabled - Whether grading is enabled. Defaults to false.
  * @property {number} brightness - The brightness of the grading effect, 0-3 range. Defaults to 1.
  * @property {number} contrast - The contrast of the grading effect, 0.5-1.5 range. Defaults to 1.
@@ -103,12 +100,19 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 
 /**
+ * @typedef {Object} ColorLUT
+ * Properties related to the color lookup table (LUT) effect, a postprocessing technique used to
+ * apply a color transformation to the image.
+ * @property {Texture|null} texture - The texture of the color LUT effect. Defaults to null.
+ * @property {number} intensity - The intensity of the color LUT effect. Defaults to 1.
+ */
+
+/**
+ * @typedef {Object} Vignette
  * Properties related to the vignette effect, a postprocessing technique that darkens the image
  * edges, creating a gradual falloff in brightness from the center outward. The effect can be also
  * reversed, making the center of the image darker than the edges, by specifying the outer distance
  * smaller than the inner distance.
- *
- * @typedef {Object} Vignette
  * @property {number} intensity - The intensity of the vignette effect, 0-1 range. Defaults to 0,
  * making it disabled.
  * @property {number} inner - The inner distance of the vignette effect measured from the center of
@@ -123,22 +127,21 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * is rendered using a rectangle with rounded corners, and this parameter controls the curvature of
  * the corners. Value of 1 represents a circle. Smaller values make the corners more square, while
  * larger values make them more rounded. Defaults to 0.5.
+ * @property {Color} color - The color of the vignette effect. Defaults to black.
  */
 
 /**
+ * @typedef {Object} Fringing
  * Properties related to the fringing effect, a chromatic aberration phenomenon where the red, green,
  * and blue color channels diverge increasingly with greater distance from the center of the screen.
- *
- * @typedef {Object} Fringing
  * @property {number} intensity - The intensity of the fringing effect, 0-100 range. Defaults to 0,
  * making it disabled.
  */
 
 /**
+ * @typedef {Object} Taa
  * Properties related to temporal anti-aliasing (TAA), which is a technique used to reduce aliasing
  * in the rendered image by blending multiple frames together over time.
- *
- * @typedef {Object} Taa
  * @property {boolean} enabled - Whether TAA is enabled. Defaults to false.
  * @property {number} jitter - The intensity of the camera jitter, 0-1 range. The larger the value,
  * the more jitter is applied to the camera, making the anti-aliasing effect more pronounced. This
@@ -147,11 +150,10 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 
 /**
+ * @typedef {Object} Dof
  * Properties related to Depth of Field (DOF), a technique used to simulate the optical effect where
  * objects at certain distances appear sharp while others are blurred, enhancing the perception of
  * focus and depth in the rendered scene.
- *
- * @typedef {Object} Dof
  * @property {boolean} enabled - Whether DoF is enabled. Defaults to false.
  * @property {boolean} nearBlur - Whether the near blur is enabled. Defaults to false.
  * @property {number} focusDistance - The distance at which the focus is set. Defaults to 100.
@@ -169,6 +171,26 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
 /**
  * Implementation of a simple to use camera rendering pass, which supports SSAO, Bloom and
  * other rendering effects.
+ *
+ * Overriding compose shader chunks:
+ * The final compose pass registers its shader chunks in a way that does not override any chunks
+ * that were already provided. To customize the compose pass output, set your shader chunks on the
+ * {@link ShaderChunks} map before creating the `CameraFrame`. Those chunks will be picked up by
+ * the compose pass and preserved.
+ *
+ * Example (GLSL):
+ *
+ * @example
+ * // Provide custom compose chunk(s) before constructing CameraFrame
+ * ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).set('composeVignettePS', `
+ *     #ifdef VIGNETTE
+ *         vec3 applyVignette(vec3 color, vec2 uv) {
+ *             return color * uv.u;
+ *         }
+ *     #endif
+ * `);
+ *
+ * // For WebGPU, use SHADERLANGUAGE_WGSL instead.
  *
  * @category Graphics
  */
@@ -233,6 +255,16 @@ class CameraFrame {
     };
 
     /**
+     * Color LUT settings.
+     *
+     * @type {ColorLUT}
+     */
+    colorLUT = {
+        texture: null,
+        intensity: 1
+    };
+
+    /**
      * Vignette settings.
      *
      * @type {Vignette}
@@ -241,7 +273,8 @@ class CameraFrame {
         intensity: 0,
         inner: 0.5,
         outer: 1,
-        curvature: 0.5
+        curvature: 0.5,
+        color: new Color(0, 0, 0)
     };
 
     /**
@@ -307,6 +340,11 @@ class CameraFrame {
 
         this.updateOptions();
         this.enable();
+
+        // handle layer changes on the camera - render passes need to be update to reflect the changes
+        this.cameraLayersChanged = cameraComponent.on('set:layers', () => {
+            if (this.renderPassCamera) this.renderPassCamera.layersDirty = true;
+        });
     }
 
     /**
@@ -314,18 +352,16 @@ class CameraFrame {
      */
     destroy() {
         this.disable();
+
+        this.cameraLayersChanged.off();
     }
 
     enable() {
-        Debug.assert(!this.renderPassCamera);
-
         this.renderPassCamera = this.createRenderPass();
         this.cameraComponent.renderPasses = [this.renderPassCamera];
     }
 
     disable() {
-        Debug.assert(this.renderPassCamera);
-
         const cameraComponent = this.cameraComponent;
         cameraComponent.renderPasses?.forEach((renderPass) => {
             renderPass.destroy();
@@ -348,7 +384,7 @@ class CameraFrame {
      * @returns {RenderPassCameraFrame} - The render pass.
      */
     createRenderPass() {
-        return new RenderPassCameraFrame(this.app, this.cameraComponent, this.options);
+        return new RenderPassCameraFrame(this.app, this, this.cameraComponent, this.options);
     }
 
     /**
@@ -445,12 +481,16 @@ class CameraFrame {
             composePass.gradingTint = grading.tint;
         }
 
+        composePass.colorLUT = this.colorLUT.texture;
+        composePass.colorLUTIntensity = this.colorLUT.intensity;
+
         composePass.vignetteEnabled = vignette.intensity > 0;
         if (composePass.vignetteEnabled) {
             composePass.vignetteInner = vignette.inner;
             composePass.vignetteOuter = vignette.outer;
             composePass.vignetteCurvature = vignette.curvature;
             composePass.vignetteIntensity = vignette.intensity;
+            composePass.vignetteColor.copy(vignette.color);
         }
 
         composePass.fringingEnabled = fringing.intensity > 0;

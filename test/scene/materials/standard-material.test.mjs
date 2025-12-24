@@ -5,6 +5,7 @@ import { Vec2 } from '../../../src/core/math/vec2.js';
 import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../../../src/scene/constants.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
+import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
 
 describe('StandardMaterial', function () {
 
@@ -16,8 +17,16 @@ describe('StandardMaterial', function () {
         expect(material.ambient.r).to.equal(1);
         expect(material.ambient.g).to.equal(1);
         expect(material.ambient.b).to.equal(1);
-        expect(material.anisotropy).to.equal(0);
-
+        expect(material.anisotropyIntensity).to.equal(0);
+        expect(material.anisotropyMap).to.be.null;
+        expect(material.anisotropyMapOffset).to.be.an.instanceof(Vec2);
+        expect(material.anisotropyMapOffset.x).to.equal(0);
+        expect(material.anisotropyMapOffset.y).to.equal(0);
+        expect(material.anisotropyMapRotation).to.equal(0);
+        expect(material.anisotropyMapTiling).to.be.an.instanceof(Vec2);
+        expect(material.anisotropyMapTiling.x).to.equal(1);
+        expect(material.anisotropyMapTiling.y).to.equal(1);
+        expect(material.anisotropyRotation).to.equal(0);
         expect(material.aoDetailMap).to.be.null;
         expect(material.aoDetailMapChannel).to.equal('g');
         expect(material.aoDetailMapOffset).to.be.an.instanceof(Vec2);
@@ -43,7 +52,8 @@ describe('StandardMaterial', function () {
         expect(material.aoVertexColorChannel).to.equal('g');
 
         expect(material.bumpiness).to.equal(1);
-        expect(material.chunks).to.be.empty;
+        expect(material._shaderChunks).to.be.null;
+        expect(material.shaderChunks).to.be.an.instanceof(ShaderChunks);
 
         expect(material.clearCoat).to.equal(0);
         expect(material.clearCoatBumpiness).to.equal(1);
@@ -281,6 +291,7 @@ describe('StandardMaterial', function () {
         expect(material.useMetalness).to.equal(false);
         expect(material.useMetalnessSpecularColor).to.equal(false);
         expect(material.useSkybox).to.equal(true);
+        expect(material.vertexColorGamma).to.equal(false);
     }
 
     describe('#constructor()', function () {

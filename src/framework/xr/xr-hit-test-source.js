@@ -25,10 +25,10 @@ const poolQuat = [];
  * // start a hit test from a viewer origin forward
  * app.xr.hitTest.start({
  *     spaceType: pc.XRSPACE_VIEWER,
- *     callback: function (err, hitTestSource) {
+ *     callback: (err, hitTestSource) => {
  *         if (err) return;
  *         // subscribe to hit test results
- *         hitTestSource.on('result', function (position, rotation, inputSource, hitTestResult) {
+ *         hitTestSource.on('result', (position, rotation, inputSource, hitTestResult) => {
  *             // position and rotation of hit test result
  *         });
  *     }

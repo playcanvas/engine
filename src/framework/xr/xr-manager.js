@@ -22,21 +22,28 @@ import { XrViews } from './xr-views.js';
  */
 
 /**
- * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
- *
  * @callback XrErrorCallback
+ * Callback used by {@link XrManager#start} and {@link XrManager#end}.
  * @param {Error|null} err - The Error object or null if operation was successful.
+ * @returns {void}
  */
 
 /**
- * Callback used by manual room capturing.
- *
  * @callback XrRoomCaptureCallback
+ * Callback used by {@link XrManager#initiateRoomCapture}.
  * @param {Error|null} err - The Error object or null if manual room capture was successful.
+ * @returns {void}
  */
 
 /**
- * Manage and update XR session and its states.
+ * XrManager provides a comprehensive interface for WebXR integration in PlayCanvas applications.
+ * It manages the full lifecycle of XR sessions (VR/AR), handles device capabilities, and provides
+ * access to various XR features through specialized subsystems.
+ *
+ * In order for XR to be available, ensure that your application is served over HTTPS or localhost.
+ *
+ * The {@link AppBase} class automatically creates an instance of this class and makes it available
+ * as {@link AppBase#xr}.
  *
  * @category XR
  */
@@ -229,7 +236,7 @@ class XrManager extends EventHandler {
     anchors;
 
     /**
-     * @type {CameraComponent}
+     * @type {CameraComponent|null}
      * @private
      */
     _camera = null;
@@ -337,6 +344,9 @@ class XrManager extends EventHandler {
      * callback when session is created or failed to create. Integrated XR APIs need to be enabled
      * by providing relevant options.
      *
+     * Note that the start method needs to be called in response to user action, such as a button
+     * click. It will not work if called in response to a timer or other event.
+     *
      * @param {CameraComponent} camera - It will be used to render XR session and manipulated based
      * on pose tracking.
      * @param {string} type - Session type. Can be one of the following:
@@ -443,7 +453,12 @@ class XrManager extends EventHandler {
             optionalFeatures: []
         };
 
-        const webgl = this.app.graphicsDevice?.isWebGL2;
+        const device = this.app.graphicsDevice;
+        if (device?.isWebGPU) {
+            opts.requiredFeatures.push('webgpu');
+        }
+
+        const webgl = device?.isWebGL2;
 
         if (type === XRTYPE_AR) {
             opts.optionalFeatures.push('light-estimation');
@@ -725,7 +740,7 @@ class XrManager extends EventHandler {
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
             if (this.app.systems) {
-                this.app.tick();
+                this.app.requestAnimationFrame();
             }
         };
 
@@ -758,7 +773,7 @@ class XrManager extends EventHandler {
 
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
-            this.app.tick();
+            this.app.requestAnimationFrame();
 
             if (callback) callback(null);
             this.fire('start');
@@ -992,7 +1007,7 @@ class XrManager extends EventHandler {
     /**
      * Provides access to XRSession of WebXR.
      *
-     * @type {object|null}
+     * @type {XRSession|null}
      */
     get session() {
         return this._session;

@@ -14,7 +14,9 @@ import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
 
 import {
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE
+    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
 } from '../platform/graphics/constants.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { http } from '../platform/net/http.js';
@@ -52,6 +54,9 @@ import { SceneRegistry } from './scene-registry.js';
 import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
 import { getApplication, setApplication } from './globals.js';
+import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
+import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
+import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 /**
  * @import { AppOptions } from './app-options.js'
@@ -72,26 +77,23 @@ import { getApplication, setApplication } from './globals.js';
  */
 
 /**
+ * @callback ConfigureAppCallback
  * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or an
  * error occurs).
- *
- * @callback ConfigureAppCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  * @returns {void}
  */
 
 /**
- * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
- *
  * @callback PreloadAppCallback
+ * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
  * @returns {void}
  */
 
 /**
+ * @callback MakeTickCallback
  * Callback used by {@link AppBase#start} and itself to request the rendering of a new animation
  * frame.
- *
- * @callback MakeTickCallback
  * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
  * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
  * @returns {void}
@@ -483,8 +485,12 @@ class AppBase extends EventHandler {
         } = appOptions;
 
         Debug.assert(graphicsDevice, 'The application cannot be created without a valid GraphicsDevice');
-
         this.graphicsDevice = graphicsDevice;
+
+        // register shader chunks
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).add(shaderChunksGLSL);
+        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
+
         this._initDefaultMaterial();
         this._initProgramLibrary();
         this.stats = new ApplicationStats(graphicsDevice);
@@ -518,8 +524,7 @@ class AppBase extends EventHandler {
         // Placeholder texture for area light LUTs
         AreaLightLuts.createPlaceholder(graphicsDevice);
 
-        this.renderer = new ForwardRenderer(graphicsDevice);
-        this.renderer.scene = this.scene;
+        this.renderer = new ForwardRenderer(graphicsDevice, this.scene);
 
         if (lightmapper) {
             this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);
@@ -972,7 +977,20 @@ class AppBase extends EventHandler {
         this.systems.fire('postPostInitialize', this.root);
         this.fire('postinitialize');
 
-        this.tick();
+        this.requestAnimationFrame();
+    }
+
+    /**
+     * Request the next animation frame tick.
+     *
+     * @ignore
+     */
+    requestAnimationFrame() {
+        if (this.xr?.session) {
+            this.frameRequestId = this.xr.session.requestAnimationFrame(this.tick);
+        } else {
+            this.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(this.tick) : null;
+        }
     }
 
     /**
@@ -1007,15 +1025,30 @@ class AppBase extends EventHandler {
     update(dt) {
         this.frame++;
 
-        this.graphicsDevice.updateClientRect();
+        Debug.call(() => {
+            this.assets.log();
+        });
+
+        this.graphicsDevice.update();
 
         // #if _PROFILER
         this.stats.frame.updateStart = now();
         // #endif
 
+        // script update
+        this.stats.frame.scriptUpdateStart = now();
         this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
+        this.stats.frame.scriptUpdate = now() - this.stats.frame.scriptUpdateStart;
+
+        // animation update
+        this.stats.frame.animUpdateStart = now();
         this.systems.fire('animationUpdate', dt);
+        this.stats.frame.animUpdate = now() - this.stats.frame.animUpdateStart;
+
+        // post update
+        this.stats.frame.scriptPostUpdateStart = now();
         this.systems.fire('postUpdate', dt);
+        this.stats.frame.scriptPostUpdate = now() - this.stats.frame.scriptPostUpdateStart;
 
         // fire update event
         this.fire('update', dt);
@@ -1028,14 +1061,6 @@ class AppBase extends EventHandler {
         // #endif
     }
 
-    frameStart() {
-        this.graphicsDevice.frameStart();
-    }
-
-    frameEnd() {
-        this.graphicsDevice.frameEnd();
-    }
-
     /**
      * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
      * rendered. This function is called internally in the application's main loop and does not
@@ -1044,6 +1069,10 @@ class AppBase extends EventHandler {
      * @ignore
      */
     render() {
+        this.updateCanvasSize();
+
+        this.graphicsDevice.frameStart();
+
         // #if _PROFILER
         this.stats.frame.renderStart = now();
         // #endif
@@ -1064,9 +1093,9 @@ class AppBase extends EventHandler {
 
         this.fire('postrender');
 
-        // #if _PROFILER
         this.stats.frame.renderTime = now() - this.stats.frame.renderStart;
-        // #endif
+
+        this.graphicsDevice.frameEnd();
     }
 
     // render a layer composition
@@ -1103,6 +1132,8 @@ class AppBase extends EventHandler {
         // total draw call
         this.stats.drawCalls.total = this.graphicsDevice._drawCallsPerFrame;
         this.graphicsDevice._drawCallsPerFrame = 0;
+
+        stats.gsplats = this.renderer._gsplatCount;
     }
 
     /** @private */
@@ -1381,11 +1412,18 @@ class AppBase extends EventHandler {
      * of the scene.
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be
      * used as the scene's skybox. Defaults to null.
-     * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
-     * @param {number} settings.render.skyboxLuminance - Lux (lm/m^2) value for skybox intensity when physical light units are enabled.
-     * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed.
+     * @param {number} [settings.render.skyboxIntensity] - Multiplier for skybox intensity. Defaults to 1.
+     * @param {number} [settings.render.skyboxLuminance] - Lux (lm/m^2) value for skybox intensity when physical light units are enabled. Defaults to 20000.
+     * @param {number} [settings.render.skyboxMip] - The mip level of the skybox to be displayed. Defaults to 0.
      * Only valid for prefiltered cubemap skyboxes.
-     * @param {number[]} settings.render.skyboxRotation - Rotation of skybox.
+     * @param {number[]} [settings.render.skyboxRotation] - Rotation of skybox. Defaults to [0, 0, 0].
+     *
+     * @param {string} [settings.render.skyType] - The type of the sky. One of the SKYTYPE_* constants. Defaults to {@link SKYTYPE_INFINITE}.
+     * @param {number[]} [settings.render.skyMeshPosition] - The position of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 0, 0].
+     * @param {number[]} [settings.render.skyMeshRotation] - The rotation of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 0, 0].
+     * @param {number[]} [settings.render.skyMeshScale] - The scale of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [1, 1, 1].
+     * @param {number[]} [settings.render.skyCenter] - The center of the sky. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 1, 0].
+     *
      * @param {number} settings.render.lightmapSizeMultiplier - The lightmap resolution multiplier.
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
      * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
@@ -1393,21 +1431,25 @@ class AppBase extends EventHandler {
      * - {@link BAKE_COLOR}: single color lightmap
      * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
-     * @param {boolean} settings.render.ambientBake - Enable baking ambient light into lightmaps.
-     * @param {number} settings.render.ambientBakeNumSamples - Number of samples to use when baking ambient light.
-     * @param {number} settings.render.ambientBakeSpherePart - How much of the sphere to include when baking ambient light.
-     * @param {number} settings.render.ambientBakeOcclusionBrightness - Brightness of the baked ambient occlusion.
-     * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
+     * @param {boolean} [settings.render.lightmapFilterEnabled] - Enables bilateral filter on runtime baked color lightmaps. Defaults to false.
+     * @param {number} [settings.render.lightmapFilterRange] - Sets the range parameter of the bilateral filter. Defaults to 10.
+     * @param {number} [settings.render.lightmapFilterSmoothness] - Sets the spatial parameter of the bilateral filter. Defaults to 0.2.
+     *
+     * @param {boolean} [settings.render.ambientBake] - Enable baking ambient light into lightmaps. Defaults to false.
+     * @param {number} [settings.render.ambientBakeNumSamples] - Number of samples to use when baking ambient light. Defaults to 1.
+     * @param {number} [settings.render.ambientBakeSpherePart] - How much of the sphere to include when baking ambient light. Defaults to 0.4.
+     * @param {number} [settings.render.ambientBakeOcclusionBrightness] - Brightness of the baked ambient occlusion. Defaults to 0.
+     * @param {number} [settings.render.ambientBakeOcclusionContrast] - Contrast of the baked ambient occlusion. Defaults to 0.
      * @param {number} settings.render.ambientLuminance - Lux (lm/m^2) value for ambient light intensity.
      *
-     * @param {boolean} settings.render.clusteredLightingEnabled - Enable clustered lighting.
-     * @param {boolean} settings.render.lightingShadowsEnabled - If set to true, the clustered lighting will support shadows.
-     * @param {boolean} settings.render.lightingCookiesEnabled - If set to true, the clustered lighting will support cookie textures.
-     * @param {boolean} settings.render.lightingAreaLightsEnabled - If set to true, the clustered lighting will support area lights.
-     * @param {number} settings.render.lightingShadowAtlasResolution - Resolution of the atlas texture storing all non-directional shadow textures.
-     * @param {number} settings.render.lightingCookieAtlasResolution - Resolution of the atlas texture storing all non-directional cookie textures.
-     * @param {number} settings.render.lightingMaxLightsPerCell - Maximum number of lights a cell can store.
-     * @param {number} settings.render.lightingShadowType - The type of shadow filtering used by all shadows. Can be:
+     * @param {boolean} [settings.render.clusteredLightingEnabled] - Enable clustered lighting. Defaults to false.
+     * @param {boolean} [settings.render.lightingShadowsEnabled] - If set to true, the clustered lighting will support shadows. Defaults to true.
+     * @param {boolean} [settings.render.lightingCookiesEnabled] - If set to true, the clustered lighting will support cookie textures. Defaults to false.
+     * @param {boolean} [settings.render.lightingAreaLightsEnabled] - If set to true, the clustered lighting will support area lights. Defaults to false.
+     * @param {number} [settings.render.lightingShadowAtlasResolution] - Resolution of the atlas texture storing all non-directional shadow textures. Defaults to 2048.
+     * @param {number} [settings.render.lightingCookieAtlasResolution] - Resolution of the atlas texture storing all non-directional cookie textures. Defaults to 2048.
+     * @param {number} [settings.render.lightingMaxLightsPerCell] - Maximum number of lights a cell can store. Defaults to 255.
+     * @param {number} [settings.render.lightingShadowType] - The type of shadow filtering used by all shadows. Can be:
      *
      * - {@link SHADOW_PCF1_32F}
      * - {@link SHADOW_PCF3_32F}
@@ -1416,8 +1458,9 @@ class AppBase extends EventHandler {
      * - {@link SHADOW_PCF3_16F}
      * - {@link SHADOW_PCF5_16F}
      *
-     * @param {Vec3} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
-     * is subdivided into.
+     * Defaults to {@link SHADOW_PCF3_32F}.
+     * @param {number[]} [settings.render.lightingCells] - Number of cells along each world space axis the space containing lights
+     * is subdivided into. Defaults to [10, 3, 10].
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
@@ -1744,9 +1787,9 @@ class AppBase extends EventHandler {
      * Draws a texture at [x, y] position on screen, with size [width, height]. The origin of the
      * screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
      *
-     * @param {number} x - The x coordinate on the screen of the top left corner of the texture.
+     * @param {number} x - The x coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
-     * @param {number} y - The y coordinate on the screen of the top left corner of the texture.
+     * @param {number} y - The y coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
      * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
      * range [0, 2].
@@ -1787,9 +1830,9 @@ class AppBase extends EventHandler {
      * Draws a depth texture at [x, y] position on screen, with size [width, height]. The origin of
      * the screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
      *
-     * @param {number} x - The x coordinate on the screen of the top left corner of the texture.
+     * @param {number} x - The x coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
-     * @param {number} y - The y coordinate on the screen of the top left corner of the texture.
+     * @param {number} y - The y coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
      * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
      * range [0, 2].
@@ -1825,6 +1868,10 @@ class AppBase extends EventHandler {
 
         this.fire('destroy', this); // fire destroy event
         this.off('librariesloaded');
+
+        // Clean up gsplat sort timing event listener
+        this._gsplatSortedEvt?.off();
+        this._gsplatSortedEvt = null;
 
         if (typeof document !== 'undefined') {
             document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
@@ -1876,15 +1923,6 @@ class AppBase extends EventHandler {
             this.scene.layers.destroy();
         }
 
-        // destroy all texture resources
-        const assets = this.assets.list();
-        for (let i = 0; i < assets.length; i++) {
-            assets[i].unload();
-            assets[i].off();
-        }
-        this.assets.off();
-
-
         // destroy bundle registry
         this.bundles.destroy();
         this.bundles = null;
@@ -1897,9 +1935,6 @@ class AppBase extends EventHandler {
 
         this.loader.destroy();
         this.loader = null;
-
-        this.scene.destroy();
-        this.scene = null;
 
         this.systems = null;
         this.context = null;
@@ -1932,6 +1967,18 @@ class AppBase extends EventHandler {
         this.renderer.destroy();
         this.renderer = null;
 
+        // destroy all resources. Do this after managers have been destroyed
+        const assets = this.assets.list();
+        for (let i = 0; i < assets.length; i++) {
+            assets[i].unload();
+            assets[i].off();
+        }
+        this.assets.off();
+
+        // destroy scene after assets are unloaded (components need scene.layers during asset cleanup)
+        this.scene.destroy();
+        this.scene = null;
+
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
 
@@ -1955,7 +2002,7 @@ class AppBase extends EventHandler {
 
     static cancelTick(app) {
         if (app.frameRequestId) {
-            window.cancelAnimationFrame(app.frameRequestId);
+            cancelAnimationFrame(app.frameRequestId);
             app.frameRequestId = undefined;
         }
     }
@@ -1977,11 +2024,13 @@ class AppBase extends EventHandler {
      */
     _registerSceneImmediate(scene) {
         this.on('postrender', scene.immediate.onPostRender, scene.immediate);
+
+        // Listen for gsplat sort timing events and accumulate
+        this._gsplatSortedEvt = scene.on('gsplat:sorted', (sortTime) => {
+            this.stats.frame.gsplatSort += sortTime;
+        });
     }
 }
-
-// static data
-const _frameEndData = {};
 
 /**
  * Create tick function to be wrapped in closure.
@@ -1994,9 +2043,9 @@ const makeTick = function (_app) {
     const application = _app;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [xrFrame] - XRFrame from requestAnimationFrame callback.
      */
-    return function (timestamp, frame) {
+    return function (timestamp, xrFrame) {
         if (!application.graphicsDevice) {
             return;
         }
@@ -2024,11 +2073,7 @@ const makeTick = function (_app) {
         application._time = currentTime;
 
         // Submit a request to queue up a new animation frame immediately
-        if (application.xr?.session) {
-            application.frameRequestId = application.xr.session.requestAnimationFrame(application.tick);
-        } else {
-            application.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(application.tick) : null;
-        }
+        application.requestAnimationFrame();
 
         if (application.graphicsDevice.contextLost) {
             return;
@@ -2042,16 +2087,16 @@ const makeTick = function (_app) {
 
         application.fire('frameupdate', ms);
 
-        let shouldRenderFrame = true;
+        let skipUpdate = false;
 
-        if (frame) {
-            shouldRenderFrame = application.xr?.update(frame);
-            application.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
+        if (xrFrame) {
+            skipUpdate = !application.xr?.update(xrFrame);
+            application.graphicsDevice.defaultFramebuffer = xrFrame.session.renderState.baseLayer.framebuffer;
         } else {
             application.graphicsDevice.defaultFramebuffer = null;
         }
 
-        if (shouldRenderFrame) {
+        if (!skipUpdate) {
 
             Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${application.frame}`);
             Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
@@ -2060,25 +2105,18 @@ const makeTick = function (_app) {
 
             application.fire('framerender');
 
-
             if (application.autoRender || application.renderNextFrame) {
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
 
-                application.updateCanvasSize();
-                application.frameStart();
                 application.render();
-                application.frameEnd();
                 application.renderNextFrame = false;
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
             }
 
-            // set event data
-            _frameEndData.timestamp = now();
-            _frameEndData.target = application;
-
-            application.fire('frameend', _frameEndData);
+            application.fire('frameend');
+            application.stats.frameEnd();
         }
 
         application._inFrameUpdate = false;

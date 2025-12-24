@@ -27,7 +27,11 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  * Below is a simple example of a script that rotates an entity every frame.
  * @example
  * ```javascript
- * class EntityRotator extends Script {
+ * import { Script } from 'playcanvas';
+ *
+ * export class Rotator extends Script {
+ *     static scriptName = 'rotator';
+ *
  *     update(dt) {
  *         this.entity.rotateLocal(0, 1, 0);
  *     }
@@ -48,6 +52,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('enable', () => {
      *             // Script Instance is now enabled
@@ -63,6 +68,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('disable', () => {
      *             // Script Instance is now disabled
@@ -79,6 +85,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('state', (enabled) => {
      *             console.log(`Script Instance is now ${enabled ? 'enabled' : 'disabled'}`);
@@ -94,6 +101,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('destroy', () => {
      *             // no longer part of the entity
@@ -117,6 +125,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('attr', (name, newValue, oldValue) => {
      *             console.log(`Attribute '${name}' changed from '${oldValue}' to '${newValue}'`);
@@ -125,6 +134,7 @@ export class Script extends EventHandler {
      * };
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('attr:speed', (newValue, oldValue) => {
      *             console.log(`Attribute 'speed' changed from '${oldValue}' to '${newValue}'`);
@@ -142,6 +152,7 @@ export class Script extends EventHandler {
      * @event
      * @example
      * export class PlayerController extends Script {
+     *     static scriptName = 'playerController';
      *     initialize() {
      *         this.on('error', (err, method) => {
      *             // caught an exception
@@ -280,9 +291,7 @@ export class Script extends EventHandler {
     }
 
     /**
-     * Name of a Script Type.
-     *
-     * @type {string}
+     * @type {string|null}
      * @private
      */
     static __name = null; // Will be assigned when calling createScript or registerScript.
@@ -295,7 +304,16 @@ export class Script extends EventHandler {
     static __getScriptName = getScriptName;
 
     /**
-     * Name of a Script Type.
+     * Sets the unique name of the script.
+     *
+     * @type {string|null}
+     */
+    static set scriptName(value) {
+        this.__name = value;
+    }
+
+    /**
+     * Gets the unique name of the script.
      *
      * @type {string|null}
      */
@@ -347,6 +365,7 @@ const funcNameRegex = /^\s*function(?:\s|\s*\/\*.*\*\/\s*)+([^(\s\/]*)\s*/;
  */
 export function getScriptName(constructorFn) {
     if (typeof constructorFn !== 'function') return undefined;
+    if (constructorFn.scriptName) return constructorFn.scriptName;
     if ('name' in Function.prototype) return constructorFn.name;
     if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
     const match = (`${constructorFn}`).match(funcNameRegex);

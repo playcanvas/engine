@@ -76,6 +76,22 @@ describe('Quat', function () {
 
     });
 
+    describe('#dot()', function () {
+
+        it('returns 1 for the identity quaternion', function () {
+            const q = new Quat();
+            expect(q.dot(q)).to.equal(1);
+        });
+
+        it('returns the dot product of two quaternions', function () {
+            const q1 = new Quat(1, 2, 3, 4);
+            const q2 = new Quat(5, 6, 7, 8);
+            const dot = q1.dot(q2);
+            expect(dot).to.equal(70);
+        });
+
+    });
+
     describe('#equals()', function () {
 
         it('checks for equality of the same quaternion', function () {
@@ -288,6 +304,50 @@ describe('Quat', function () {
             const q = new Quat(1, 2, 3, 4);
             expect(q.lengthSq()).to.equal(30);
         });
+
+    });
+
+    describe('#lerp()', function () {
+
+        it('linearly interpolates between two vectors with alpha of 0', function () {
+            const q1 = new Quat();
+            q1.setFromEulerAngles(10, 20, 30);
+            const q2 = new Quat();
+            q2.setFromEulerAngles(40, 50, 60);
+            const q = new Quat();
+            q.lerp(q1, q2, 0);
+            const eulers = q.getEulerAngles();
+            expect(eulers.x).to.be.closeTo(10, 0.00001);
+            expect(eulers.y).to.be.closeTo(20, 0.00001);
+            expect(eulers.z).to.be.closeTo(30, 0.00001);
+        });
+
+        it('linearly interpolates between two vectors with alpha of 0.5', function () {
+            const q1 = new Quat();
+            q1.setFromEulerAngles(10, 20, 30);
+            const q2 = new Quat();
+            q2.setFromEulerAngles(40, 50, 60);
+            const q = new Quat();
+            q.lerp(q1, q2, 0.5);
+            const eulers = q.getEulerAngles();
+            expect(eulers.x).to.be.closeTo(21.123283358418572, 0.00001);
+            expect(eulers.y).to.be.closeTo(36.50540428432963, 0.00001);
+            expect(eulers.z).to.be.closeTo(41.12328335841857, 0.00001);
+        });
+
+        it('linearly interpolates between two vectors with alpha of 1', function () {
+            const q1 = new Quat();
+            q1.setFromEulerAngles(10, 20, 30);
+            const q2 = new Quat();
+            q2.setFromEulerAngles(40, 50, 60);
+            const q = new Quat();
+            q.lerp(q1, q2, 1);
+            const eulers = q.getEulerAngles();
+            expect(eulers.x).to.be.closeTo(40, 0.00001);
+            expect(eulers.y).to.be.closeTo(50, 0.00001);
+            expect(eulers.z).to.be.closeTo(60, 0.00001);
+        });
+
 
     });
 
@@ -783,6 +843,53 @@ describe('Quat', function () {
             expect(v.x).to.be.closeTo(0, 0.00001);
             expect(v.y).to.be.closeTo(1, 0.00001);
             expect(v.z).to.be.closeTo(0, 0.00001);
+        });
+
+    });
+
+    describe('#fromArray', function () {
+
+        it('sets a quaternion from an array', function () {
+            const v = new Quat();
+            v.fromArray([1, 2, 3, 4]);
+            expect(v.x).to.equal(1);
+            expect(v.y).to.equal(2);
+            expect(v.z).to.equal(3);
+            expect(v.w).to.equal(4);
+        });
+
+        it('sets a quaternion from an array with an offset', function () {
+            const v = new Quat();
+            v.fromArray([0, 0, 1, 2, 3, 4], 2);
+            expect(v.x).to.equal(1);
+            expect(v.y).to.equal(2);
+            expect(v.z).to.equal(3);
+            expect(v.w).to.equal(4);
+        });
+
+    });
+
+    describe('#toString', function () {
+
+        it('returns a string representation of a quaternion', function () {
+            const v = new Quat(1, 2, 3, 4);
+            expect(v.toString()).to.equal('[1, 2, 3, 4]');
+        });
+
+    });
+
+    describe('#toArray', function () {
+
+        it('returns an array representation of a quaternion', function () {
+            const v = new Quat(1, 2, 3, 4);
+            expect(v.toArray()).to.eql([1, 2, 3, 4]);
+        });
+
+        it('returns an array representation of a quaternion with an offset and target array', function () {
+            const v = new Quat(1, 2, 3, 4);
+            const array = [0, 0, 0, 0, 0, 0, 0, 0];
+            v.toArray(array, 2);
+            expect(array).to.eql([0, 0, 1, 2, 3, 4, 0, 0]);
         });
 
     });

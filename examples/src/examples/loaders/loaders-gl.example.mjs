@@ -46,7 +46,6 @@ app.on('destroy', () => {
  * @param {string} url - The url to load.
  */
 async function loadModel(url) {
-    console.log('loader.gl example url', url);
     // load the url using the draco format loader
     // @ts-ignore: cannot find CORE and DRACO
     const modelData = await CORE.load(url, DRACO.DracoLoader);
@@ -72,8 +71,8 @@ async function loadModel(url) {
     // create material using the shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'MyShader',
-        vertexCode: files['shader.vert'],
-        fragmentCode: files['shader.frag'],
+        vertexGLSL: files['shader.vert'],
+        fragmentGLSL: files['shader.frag'],
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aColor: pc.SEMANTIC_COLOR

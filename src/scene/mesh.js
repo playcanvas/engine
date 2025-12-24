@@ -201,15 +201,17 @@ class Mesh extends RefCountedObject {
      *   - {@link PRIMITIVE_TRIFAN}
      *
      * - `base` is the offset of the first index or vertex to dispatch in the draw call.
+     * - `baseVertex` is the number added to each index value before indexing into the vertex buffers. (supported only in WebGPU, ignored in WebGL2)
      * - `count` is the number of indices or vertices to dispatch in the draw call.
      * - `indexed` specifies whether to interpret the primitive as indexed, thereby using the
      * currently set index buffer.
      *
-     * @type {{type: number, base: number, count: number, indexed?: boolean}[]}
+     * @type {{type: number, base: number, baseVertex: number, count: number, indexed?: boolean}[]}
      */
     primitive = [{
         type: 0,
         base: 0,
+        baseVertex: 0,
         count: 0
     }];
 
@@ -1044,6 +1046,7 @@ class Mesh extends RefCountedObject {
             this.primitive[RENDERSTYLE_POINTS] = {
                 type: PRIMITIVE_POINTS,
                 base: 0,
+                baseVertex: 0,
                 count: this.vertexBuffer ? this.vertexBuffer.numVertices : 0,
                 indexed: false
             };
@@ -1069,45 +1072,66 @@ class Mesh extends RefCountedObject {
 
         const numVertices = this.vertexBuffer.numVertices;
 
-        const lines = [];
+        let lines;
         let format;
+
         if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {
             const offsets = [[0, 1], [1, 2], [2, 0]];
 
             const base = this.primitive[RENDERSTYLE_SOLID].base;
             const count = this.primitive[RENDERSTYLE_SOLID].count;
+            const baseVertex = this.primitive[RENDERSTYLE_SOLID].baseVertex || 0;
             const indexBuffer = this.indexBuffer[RENDERSTYLE_SOLID];
-            const srcIndices = new typedArrayIndexFormats[indexBuffer.format](indexBuffer.storage);
-
+            const indicesArrayType = typedArrayIndexFormats[indexBuffer.format];
+            const srcIndices = new indicesArrayType(indexBuffer.storage);
+            const tmpIndices = new indicesArrayType(count * 2);
             const seen = new Set();
+
+            let len = 0;
 
             for (let j = base; j < base + count; j += 3) {
                 for (let k = 0; k < 3; k++) {
-                    const i1 = srcIndices[j + offsets[k][0]];
-                    const i2 = srcIndices[j + offsets[k][1]];
+                    const i1 = srcIndices[j + offsets[k][0]] + baseVertex;
+                    const i2 = srcIndices[j + offsets[k][1]] + baseVertex;
                     const hash = (i1 > i2) ? ((i2 * numVertices) + i1) : ((i1 * numVertices) + i2);
                     if (!seen.has(hash)) {
                         seen.add(hash);
-                        lines.push(i1, i2);
+                        tmpIndices[len++] = i1;
+                        tmpIndices[len++] = i2;
                     }
                 }
             }
+
+            seen.clear();
+
             format = indexBuffer.format;
+            lines = tmpIndices.slice(0, len);
+
         } else {
-            for (let i = 0; i < numVertices; i += 3) {
-                lines.push(i, i + 1, i + 1, i + 2, i + 2, i);
+            const safeNumVertices = numVertices - (numVertices % 3);
+            const count = (safeNumVertices / 3) * 6;
+
+            format = count > 65535 ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
+            lines = count > 65535 ? new Uint32Array(count) : new Uint16Array(count);
+
+            let idx = 0;
+
+            for (let i = 0; i < safeNumVertices; i += 3) {
+                lines[idx++] = i;
+                lines[idx++] = i + 1;
+                lines[idx++] = i + 1;
+                lines[idx++] = i + 2;
+                lines[idx++] = i + 2;
+                lines[idx++] = i;
             }
-            format = lines.length > 65535 ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
         }
 
-        const wireBuffer = new IndexBuffer(this.vertexBuffer.device, format, lines.length);
-        const dstIndices = new typedArrayIndexFormats[wireBuffer.format](wireBuffer.storage);
-        dstIndices.set(lines);
-        wireBuffer.unlock();
+        const wireBuffer = new IndexBuffer(this.vertexBuffer.device, format, lines.length, BUFFER_STATIC, lines.buffer);
 
         this.primitive[RENDERSTYLE_WIREFRAME] = {
             type: PRIMITIVE_LINES,
             base: 0,
+            baseVertex: 0,
             count: lines.length,
             indexed: true
         };

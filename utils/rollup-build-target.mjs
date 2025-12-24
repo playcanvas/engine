@@ -4,6 +4,7 @@ import strip from '@rollup/plugin-strip';
 import swcPlugin from '@rollup/plugin-swc';
 
 // unofficial package plugins
+import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
 
@@ -13,6 +14,8 @@ import { engineLayerImportValidation } from './plugins/rollup-import-validation.
 import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 import { dynamicImportLegacyBrowserSupport, dynamicImportBundlerSuppress } from './plugins/rollup-dynamic.mjs';
 import { treeshakeIgnore } from './plugins/rollup-treeshake-ignore.mjs';
+import { runTsc } from './plugins/rollup-run-tsc.mjs';
+import { typesFixup } from './plugins/rollup-types-fixup.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
@@ -21,16 +24,13 @@ import { swcOptions } from './rollup-swc-options.mjs';
 import { dirname, resolve as pathResolve } from 'path';
 import { fileURLToPath } from 'url';
 
+/** @import { RollupOptions, OutputOptions } from 'rollup' */
+
 // Find path to the repo root
 // @ts-ignore import.meta not allowed by tsconfig module:es6, but it works
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = pathResolve(__dirname, '..');
-
-/** @typedef {import('rollup').RollupOptions} RollupOptions */
-/** @typedef {import('rollup').OutputOptions} OutputOptions */
-/** @typedef {import('rollup').ModuleFormat} ModuleFormat */
-/** @typedef {import('@rollup/plugin-strip').RollupStripOptions} RollupStripOptions */
 
 const TREESHAKE_IGNORE_REGEXES = [
     /polyfill/
@@ -121,15 +121,15 @@ function getJSCCOptions(buildType, isUMD) {
 }
 
 /**
+ * @param {string} type - The type of the output (e.g., 'umd', 'es').
  * @returns {OutputOptions['plugins']} - The output plugins.
  */
-function getOutPlugins() {
-    const plugins = [
-    ];
+function getOutPlugins(type) {
+    const plugins = [];
 
     if (process.env.treemap) {
         plugins.push(visualizer({
-            filename: 'treemap.html',
+            filename: `treemap.${type}.html`,
             brotliSize: true,
             gzipSize: true
         }));
@@ -137,15 +137,22 @@ function getOutPlugins() {
 
     if (process.env.treenet) {
         plugins.push(visualizer({
-            filename: 'treenet.html',
+            filename: `treenet.${type}.html`,
             template: 'network'
         }));
     }
 
     if (process.env.treesun) {
         plugins.push(visualizer({
-            filename: 'treesun.html',
+            filename: `treesun.${type}.html`,
             template: 'sunburst'
+        }));
+    }
+
+    if (process.env.treeflame) {
+        plugins.push(visualizer({
+            filename: `treeflame.${type}.html`,
+            template: 'flamegraph'
         }));
     }
 
@@ -153,7 +160,11 @@ function getOutPlugins() {
 }
 
 /**
- * Build a target that Rollup is supposed to build (bundled and unbundled).
+ * Build rollup options for JS (bundled and unbundled).
+ *
+ * For faster subsequent builds, the unbundled and release builds are cached in the HISTORY map to
+ * be used for bundled and minified builds. They are stored in the HISTORY map with the key:
+ * `<debug|release|profiler>-<umd|esm>-<bundled>`.
  *
  * @param {object} options - The build target options.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
@@ -163,11 +174,20 @@ function getOutPlugins() {
  * @param {string} [options.dir] - Only used for examples to change the output location.
  * @returns {RollupOptions[]} Rollup targets.
  */
-function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.js', dir = 'build' }) {
+function buildJSOptions({
+    moduleFormat,
+    buildType,
+    bundleState,
+    input = 'src/index.js',
+    dir = 'build'
+}) {
     const isUMD = moduleFormat === 'umd';
     const isDebug = buildType === 'debug';
     const isMin = buildType === 'min';
     const bundled = isUMD || isMin || bundleState === 'bundled';
+
+    const prefix = `${OUT_PREFIX[buildType]}`;
+    const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
 
     const targets = [];
 
@@ -187,7 +207,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
                 sourcemap: isDebug && 'inline',
                 name: 'pc',
                 preserveModules: false,
-                file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
+                file: `${dir}/${prefix}.mjs`
             }
         };
 
@@ -210,8 +230,8 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
                 swcPlugin({ swc: swcOptions(isDebug, isUMD, isMin) })
             ],
             output: {
-                plugins: getOutPlugins(),
-                file: `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}`
+                banner: isUMD ? getBanner(BANNER[buildType]) : undefined,
+                file: `${dir}/${file}`
             },
             context: isUMD ? 'this' : undefined
         };
@@ -229,15 +249,15 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
         input,
         output: {
             banner: bundled ? getBanner(BANNER[buildType]) : undefined,
-            plugins: isMin ? getOutPlugins() : undefined,
+            plugins: buildType === 'release' ? getOutPlugins(isUMD ? 'umd' : 'es') : undefined,
             format: isUMD ? 'umd' : 'es',
             indent: '\t',
             sourcemap: bundled && isDebug && 'inline',
             name: 'pc',
             preserveModules: !bundled,
             preserveModulesRoot: !bundled ? rootDir : undefined,
-            file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}` : undefined,
-            dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined,
+            file: bundled ? `${dir}/${file}` : undefined,
+            dir: !bundled ? `${dir}/${prefix}` : undefined,
             entryFileNames: chunkInfo => `${chunkInfo.name.replace(/node_modules/g, 'modules')}.js`
         },
         plugins: [
@@ -260,4 +280,34 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
     return targets;
 }
 
-export { buildTarget };
+/**
+ * Build rollup options for TypeScript definitions.
+ *
+ * @param {object} options - The build target options.
+ * @param {string} [options.root] - The root directory for finding the TypeScript definitions.
+ * @param {string} [options.dir] - The output directory for the TypeScript definitions.
+ * @returns {RollupOptions} Rollup targets.
+ */
+function buildTypesOption({
+    root = '.',
+    dir = 'build'
+} = {}) {
+    return {
+        input: `${root}/build/playcanvas/src/index.d.ts`,
+        output: [{
+            file: `${dir}/playcanvas.d.ts`,
+            footer: 'export as namespace pc;\nexport as namespace pcx;',
+            format: 'es'
+        }],
+        watch: {
+            include: `${root}/src/**`
+        },
+        plugins: [
+            runTsc(`${root}/tsconfig.build.json`),
+            typesFixup(root),
+            dts()
+        ]
+    };
+}
+
+export { buildJSOptions, buildTypesOption };

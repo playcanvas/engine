@@ -867,12 +867,11 @@ const extractTextureTransform = (source, material, maps) => {
 };
 
 const extensionPbrSpecGlossiness = (data, material, textures) => {
-    let color, texture;
+    let texture;
     if (data.hasOwnProperty('diffuseFactor')) {
-        color = data.diffuseFactor;
-        // Convert from linear space to sRGB space
-        material.diffuse.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
-        material.opacity = color[3];
+        const [r, g, b, a] = data.diffuseFactor;
+        material.diffuse.set(r, g, b).gamma();
+        material.opacity = a;
     } else {
         material.diffuse.set(1, 1, 1);
         material.opacity = 1;
@@ -890,9 +889,8 @@ const extensionPbrSpecGlossiness = (data, material, textures) => {
     }
     material.useMetalness = false;
     if (data.hasOwnProperty('specularFactor')) {
-        color = data.specularFactor;
-        // Convert from linear space to sRGB space
-        material.specular.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        const [r, g, b] = data.specularFactor;
+        material.specular.set(r, g, b).gamma();
     } else {
         material.specular.set(1, 1, 1);
     }
@@ -903,7 +901,6 @@ const extensionPbrSpecGlossiness = (data, material, textures) => {
     }
     if (data.hasOwnProperty('specularGlossinessTexture')) {
         const specularGlossinessTexture = data.specularGlossinessTexture;
-        material.specularEncoding = 'srgb';
         material.specularMap = material.glossMap = textures[specularGlossinessTexture.index];
         material.specularMapChannel = 'rgb';
         material.glossMapChannel = 'a';
@@ -981,15 +978,14 @@ const extensionSpecular = (data, material, textures) => {
     material.useMetalnessSpecularColor = true;
 
     if (data.hasOwnProperty('specularColorTexture')) {
-        material.specularEncoding = 'srgb';
         material.specularMap = textures[data.specularColorTexture.index];
         material.specularMapChannel = 'rgb';
         extractTextureTransform(data.specularColorTexture, material, ['specular']);
     }
 
     if (data.hasOwnProperty('specularColorFactor')) {
-        const color = data.specularColorFactor;
-        material.specular.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        const [r, g, b] = data.specularColorFactor;
+        material.specular.set(r, g, b).gamma();
     } else {
         material.specular.set(1, 1, 1);
     }
@@ -1036,14 +1032,13 @@ const extensionTransmission = (data, material, textures) => {
 const extensionSheen = (data, material, textures) => {
     material.useSheen = true;
     if (data.hasOwnProperty('sheenColorFactor')) {
-        const color = data.sheenColorFactor;
-        material.sheen.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        const [r, g, b] = data.sheenColorFactor;
+        material.sheen.set(r, g, b).gamma();
     } else {
         material.sheen.set(1, 1, 1);
     }
     if (data.hasOwnProperty('sheenColorTexture')) {
         material.sheenMap = textures[data.sheenColorTexture.index];
-        material.sheenEncoding = 'srgb';
         extractTextureTransform(data.sheenColorTexture, material, ['sheen']);
     }
 
@@ -1073,8 +1068,8 @@ const extensionVolume = (data, material, textures) => {
         material.attenuationDistance = data.attenuationDistance;
     }
     if (data.hasOwnProperty('attenuationColor')) {
-        const color = data.attenuationColor;
-        material.attenuation.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        const [r, g, b] = data.attenuationColor;
+        material.attenuation.set(r, g, b).gamma();
     }
 };
 
@@ -1111,6 +1106,28 @@ const extensionIridescence = (data, material, textures) => {
     }
 };
 
+const extensionAnisotropy = (data, material, textures) => {
+
+    material.enableGGXSpecular = true;
+
+    if (data.hasOwnProperty('anisotropyStrength')) {
+        material.anisotropyIntensity = data.anisotropyStrength;
+    } else {
+        material.anisotropyIntensity = 0;
+    }
+    if (data.hasOwnProperty('anisotropyTexture')) {
+        const anisotropyTexture = data.anisotropyTexture;
+        material.anisotropyMap = textures[anisotropyTexture.index];
+
+        extractTextureTransform(anisotropyTexture, material, ['anisotropy']);
+    }
+    if (data.hasOwnProperty('anisotropyRotation')) {
+        material.anisotropyRotation = data.anisotropyRotation * math.RAD_TO_DEG;
+    } else {
+        material.anisotropyRotation = 0;
+    }
+};
+
 const createMaterial = (gltfMaterial, textures) => {
     const material = new StandardMaterial();
 
@@ -1131,15 +1148,14 @@ const createMaterial = (gltfMaterial, textures) => {
     material.glossInvert = true;
     material.useMetalness = true;
 
-    let color, texture;
+    let texture;
     if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
         const pbrData = gltfMaterial.pbrMetallicRoughness;
 
         if (pbrData.hasOwnProperty('baseColorFactor')) {
-            color = pbrData.baseColorFactor;
-            // Convert from linear space to sRGB space
-            material.diffuse.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
-            material.opacity = color[3];
+            const [r, g, b, a] = pbrData.baseColorFactor;
+            material.diffuse.set(r, g, b).gamma();
+            material.opacity = a;
         }
         if (pbrData.hasOwnProperty('baseColorTexture')) {
             const baseColorTexture = pbrData.baseColorTexture;
@@ -1189,9 +1205,8 @@ const createMaterial = (gltfMaterial, textures) => {
     }
 
     if (gltfMaterial.hasOwnProperty('emissiveFactor')) {
-        color = gltfMaterial.emissiveFactor;
-        // Convert from linear space to sRGB space
-        material.emissive.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        const [r, g, b] = gltfMaterial.emissiveFactor;
+        material.emissive.set(r, g, b).gamma();
     }
 
     if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
@@ -1246,7 +1261,8 @@ const createMaterial = (gltfMaterial, textures) => {
         'KHR_materials_specular': extensionSpecular,
         'KHR_materials_transmission': extensionTransmission,
         'KHR_materials_unlit': extensionUnlit,
-        'KHR_materials_volume': extensionVolume
+        'KHR_materials_volume': extensionVolume,
+        'KHR_materials_anisotropy': extensionAnisotropy
     };
 
     // Handle extensions
@@ -1548,13 +1564,12 @@ const createNode = (gltfNode, nodeIndex, nodeInstancingMap) => {
 
 // creates a camera component on the supplied node, and returns it
 const createCamera = (gltfCamera, node) => {
-
-    const projection = gltfCamera.type === 'orthographic' ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
-    const gltfProperties = projection === PROJECTION_ORTHOGRAPHIC ? gltfCamera.orthographic : gltfCamera.perspective;
+    const isOrthographic = gltfCamera.type === 'orthographic';
+    const gltfProperties = isOrthographic ? gltfCamera.orthographic : gltfCamera.perspective;
 
     const componentData = {
         enabled: false,
-        projection: projection,
+        projection: isOrthographic ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE,
         nearClip: gltfProperties.znear,
         aspectRatioMode: ASPECT_AUTO
     };
@@ -1563,14 +1578,17 @@ const createCamera = (gltfCamera, node) => {
         componentData.farClip = gltfProperties.zfar;
     }
 
-    if (projection === PROJECTION_ORTHOGRAPHIC) {
-        componentData.orthoHeight = 0.5 * gltfProperties.ymag;
-        if (gltfProperties.ymag) {
+    if (isOrthographic) {
+        // glTF ymag defines the half-height of the orthographic view volume
+        componentData.orthoHeight = gltfProperties.ymag;
+
+        if (gltfProperties.xmag && gltfProperties.ymag) {
             componentData.aspectRatioMode = ASPECT_MANUAL;
             componentData.aspectRatio = gltfProperties.xmag / gltfProperties.ymag;
         }
     } else {
         componentData.fov = gltfProperties.yfov * math.RAD_TO_DEG;
+
         if (gltfProperties.aspectRatio) {
             componentData.aspectRatioMode = ASPECT_MANUAL;
             componentData.aspectRatio = gltfProperties.aspectRatio;
@@ -1584,33 +1602,33 @@ const createCamera = (gltfCamera, node) => {
 
 // creates light component, adds it to the node and returns the created light component
 const createLight = (gltfLight, node) => {
-
     const lightProps = {
         enabled: false,
         type: gltfLight.type === 'point' ? 'omni' : gltfLight.type,
         color: gltfLight.hasOwnProperty('color') ? new Color(gltfLight.color) : Color.WHITE,
-
-        // when range is not defined, infinity should be used - but that is causing infinity in bounds calculations
+        // when range is not defined, infinity should be used - but that causes infinity in bounds calculations
         range: gltfLight.hasOwnProperty('range') ? gltfLight.range : 9999,
-
         falloffMode: LIGHTFALLOFF_INVERSESQUARED,
-
         // TODO: (engine issue #3252) Set intensity to match glTF specification, which uses physically based values:
         // - Omni and spot lights use luminous intensity in candela (lm/sr)
         // - Directional lights use illuminance in lux (lm/m2).
-        // Current implementation: clapms specified intensity to 0..2 range
+        // Current implementation: clamps specified intensity to 0..2 range
         intensity: gltfLight.hasOwnProperty('intensity') ? math.clamp(gltfLight.intensity, 0, 2) : 1
     };
 
+    // glTF spot light cone angles are in radians, PlayCanvas expects degrees
+    // Defaults per glTF spec: innerConeAngle = 0, outerConeAngle = PI/4 (45 degrees)
     if (gltfLight.hasOwnProperty('spot')) {
         lightProps.innerConeAngle = gltfLight.spot.hasOwnProperty('innerConeAngle') ? gltfLight.spot.innerConeAngle * math.RAD_TO_DEG : 0;
-        lightProps.outerConeAngle = gltfLight.spot.hasOwnProperty('outerConeAngle') ? gltfLight.spot.outerConeAngle * math.RAD_TO_DEG : Math.PI / 4;
+        lightProps.outerConeAngle = gltfLight.spot.hasOwnProperty('outerConeAngle') ? gltfLight.spot.outerConeAngle * math.RAD_TO_DEG : 45;
     }
 
-    // glTF stores light already in energy/area, but we need to provide the light with only the energy parameter,
-    // so we need the intensities in candela back to lumen
+    // glTF stores light intensity in energy/area, convert to luminance
+    // getLightUnitConversion expects angles in radians, use original glTF values
     if (gltfLight.hasOwnProperty('intensity')) {
-        lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(lightTypes[lightProps.type], lightProps.outerConeAngle, lightProps.innerConeAngle);
+        const outerAngleRad = gltfLight.spot?.outerConeAngle ?? (Math.PI / 4);
+        const innerAngleRad = gltfLight.spot?.innerConeAngle ?? 0;
+        lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(lightTypes[lightProps.type], outerAngleRad, innerAngleRad);
     }
 
     // Rotate to match light orientation in glTF specification
@@ -1618,7 +1636,6 @@ const createLight = (gltfLight, node) => {
     const lightEntity = new Entity(node.name);
     lightEntity.rotateLocal(90, 0, 0);
 
-    // add component
     lightEntity.addComponent('light', lightProps);
     return lightEntity;
 };
@@ -2085,6 +2102,36 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
                     const gltfTexture = gltf.textures[gltfMaterial.emissiveTexture.index];
                     set.add(getTextureSource(gltfTexture));
+                }
+
+                if (gltfMaterial.hasOwnProperty('extensions')) {
+
+                    // sheen
+                    const sheen = gltfMaterial.extensions.KHR_materials_sheen;
+                    if (sheen) {
+                        if (sheen.hasOwnProperty('sheenColorTexture')) {
+                            const gltfTexture = gltf.textures[sheen.sheenColorTexture.index];
+                            set.add(getTextureSource(gltfTexture));
+                        }
+                    }
+
+                    // specular glossiness
+                    const specularGlossiness = gltfMaterial.extensions.KHR_materials_pbrSpecularGlossiness;
+                    if (specularGlossiness) {
+                        if (specularGlossiness.hasOwnProperty('specularGlossinessTexture')) {
+                            const gltfTexture = gltf.textures[specularGlossiness.specularGlossinessTexture.index];
+                            set.add(getTextureSource(gltfTexture));
+                        }
+                    }
+
+                    // specular
+                    const specular = gltfMaterial.extensions.KHR_materials_specular;
+                    if (specular) {
+                        if (specular.hasOwnProperty('specularColorTexture')) {
+                            const gltfTexture = gltf.textures[specular.specularColorTexture.index];
+                            set.add(getTextureSource(gltfTexture));
+                        }
+                    }
                 }
             });
         }

@@ -7,9 +7,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -121,8 +119,8 @@ assetListLoader.load(() => {
         // Create the material from the vertex and fragment shaders which is used to render point sprites
         const material = new pc.ShaderMaterial({
             uniqueName: 'TransformFeerback',
-            vertexCode: files['shaderCloud.vert'],
-            fragmentCode: files['shaderCloud.frag'],
+            vertexGLSL: files['shaderCloud.vert'],
+            fragmentGLSL: files['shaderCloud.frag'],
             attributes: { aPosition: pc.SEMANTIC_POSITION }
         });
 
@@ -145,7 +143,8 @@ assetListLoader.load(() => {
         shader = pc.TransformFeedback.createShader(
             app.graphicsDevice,
             files['shaderFeedback.vert'],
-            'transformShaderExample'
+            'transformShaderExample',
+            ['updated_vertex_position']
         );
     }
 

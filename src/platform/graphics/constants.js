@@ -463,6 +463,14 @@ export const INDEXFORMAT_UINT16 = 1;
  */
 export const INDEXFORMAT_UINT32 = 2;
 
+/**
+ * Byte size of index formats.
+ *
+ * @category Graphics
+ * @ignore
+ */
+export const indexFormatByteSize = [1, 2, 4];
+
 export const PIXELFORMAT_A8 = 0;
 export const PIXELFORMAT_L8 = 1;
 export const PIXELFORMAT_LA8 = 2;
@@ -2134,6 +2142,27 @@ export const typedArrayToType = {
 export const typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
 export const typedArrayIndexFormatsByteSize = [1, 2, 4];
 
+// map of primitive GLSL types to their corresponding WGSL types
+export const primitiveGlslToWgslTypeMap = new Map([
+    // floating-point
+    ['float',  'f32'],
+    ['vec2',   'vec2f'],
+    ['vec3',   'vec3f'],
+    ['vec4',   'vec4f'],
+
+    // signed integer
+    ['int',    'i32'],
+    ['ivec2',  'vec2i'],
+    ['ivec3',  'vec3i'],
+    ['ivec4',  'vec4i'],
+
+    // unsigned integer
+    ['uint',   'u32'],
+    ['uvec2',  'vec2u'],
+    ['uvec3',  'vec3u'],
+    ['uvec4',  'vec4u']
+]);
+
 /**
  * Map of engine semantics into location on device in range 0..15 (note - semantics mapping to the
  * same location cannot be used at the same time) organized in a way that ATTR0-ATTR7 do not
@@ -2176,23 +2205,3 @@ semanticToLocation[SEMANTIC_ATTR12] = 12;
 semanticToLocation[SEMANTIC_ATTR13] = 13;
 semanticToLocation[SEMANTIC_ATTR14] = 14;
 semanticToLocation[SEMANTIC_ATTR15] = 15;
-
-/**
- * Chunk API versions
- *
- * @category Graphics
- */
-export const CHUNKAPI_1_51 = '1.51';
-export const CHUNKAPI_1_55 = '1.55';
-export const CHUNKAPI_1_56 = '1.56';
-export const CHUNKAPI_1_57 = '1.57';
-export const CHUNKAPI_1_58 = '1.58';
-export const CHUNKAPI_1_60 = '1.60';
-export const CHUNKAPI_1_62 = '1.62';
-export const CHUNKAPI_1_65 = '1.65';
-export const CHUNKAPI_1_70 = '1.70';
-export const CHUNKAPI_2_1 = '2.1';
-export const CHUNKAPI_2_3 = '2.3';
-export const CHUNKAPI_2_5 = '2.5';
-export const CHUNKAPI_2_6 = '2.6';
-export const CHUNKAPI_2_7 = '2.7';

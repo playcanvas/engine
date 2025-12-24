@@ -42,13 +42,31 @@ class Quat {
     w;
 
     /**
-     * Create a new Quat instance.
+     * Creates a new Quat instance.
      *
-     * @param {number|number[]} [x] - The quaternion's x component. Defaults to 0. If x is an array
-     * of length 4, the array will be used to populate all components.
-     * @param {number} [y] - The quaternion's y component. Defaults to 0.
-     * @param {number} [z] - The quaternion's z component. Defaults to 0.
-     * @param {number} [w] - The quaternion's w component. Defaults to 1.
+     * @overload
+     * @param {number} [x] - The x value. Defaults to 0.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @param {number} [z] - The z value. Defaults to 0.
+     * @param {number} [w] - The w value. Defaults to 1.
+     * @example
+     * const q1 = new pc.Quat(); // defaults to 0, 0, 0, 1
+     * const q2 = new pc.Quat(1, 2, 3, 4);
+     */
+    /**
+     * Creates a new Quat instance.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the vector values from.
+     * @example
+     * const q = new pc.Quat([1, 2, 3, 4]);
+     */
+    /**
+     * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 4, the
+     * array will be used to populate all components.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @param {number} [z] - The z value. Defaults to 0.
+     * @param {number} [w] - The w value. Defaults to 1.
      */
     constructor(x = 0, y = 0, z = 0, w = 1) {
         if (x.length === 4) {
@@ -118,6 +136,20 @@ class Quat {
         this.w = rhs.w;
 
         return this;
+    }
+
+    /**
+     * Calculates the dot product of two quaternions.
+     *
+     * @param {Quat} other - The quaternion to calculate the dot product with.
+     * @returns {number} The dot product of the two quaternions.
+     * @example
+     * const a = new pc.Quat(1, 0, 0, 0);
+     * const b = new pc.Quat(0, 1, 0, 0);
+     * console.log("Dot product: " + a.dot(b)); // Outputs 0
+     */
+    dot(other) {
+        return this.x * other.x + this.y * other.y + this.z * other.z + this.w * other.w;
     }
 
     /**
@@ -281,6 +313,35 @@ class Quat {
      */
     lengthSq() {
         return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+    }
+
+
+    /**
+     * Performs a linear interpolation between two quaternions. The result of the interpolation
+     * is written to the quaternion calling the function.
+     *
+     * @param {Quat} lhs - The quaternion to interpolate from.
+     * @param {Quat} rhs - The quaternion to interpolate to.
+     * @param {number} alpha - The value controlling the interpolation in relation to the two input
+     * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
+     * in between generating a linear interpolation between the two.
+     * @returns {Quat} Self for chaining.
+     * @example
+     * const q1 = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
+     * const q2 = new pc.Quat(-0.21, -0.21, -0.67, 0.68);
+     *
+     * const result = new pc.Quat();
+     * result.lerp(q1, q2, 0);   // Return q1
+     * result.lerp(q1, q2, 0.5); // Return the midpoint interpolant
+     * result.lerp(q1, q2, 1);   // Return q2
+     */
+    lerp(lhs, rhs, alpha) {
+        const omt = (1 - alpha) * (lhs.dot(rhs) < 0 ? -1 : 1);
+        this.x = lhs.x * omt + rhs.x * alpha;
+        this.y = lhs.y * omt + rhs.y * alpha;
+        this.z = lhs.z * omt + rhs.z * alpha;
+        this.w = lhs.w * omt + rhs.w * alpha;
+        return this.normalize();
     }
 
     /**
@@ -525,6 +586,16 @@ class Quat {
         let m21 = d[9];
         let m22 = d[10];
 
+        // if negative the space is inverted so flip X axis to restore right-handedness
+        const det = m00 * (m11 * m22 - m12 * m21) -
+                    m01 * (m10 * m22 - m12 * m20) +
+                    m02 * (m10 * m21 - m11 * m20);
+        if (det < 0) {
+            m00 = -m00;
+            m01 = -m01;
+            m02 = -m02;
+        }
+
         let l;
 
         // remove scaling from axis vectors
@@ -722,16 +793,75 @@ class Quat {
     }
 
     /**
+     * Set the values of the quaternion from an array.
+     *
+     * @param {number[]|ArrayBufferView} arr - The array to set the quaternion values from.
+     * @param {number} [offset] - The zero-based index at which to start copying elements from the
+     * array. Default is 0.
+     * @returns {Quat} Self for chaining.
+     * @example
+     * const q = new pc.Quat();
+     * q.fromArray([20, 10, 5, 0]);
+     * // q is set to [20, 10, 5, 0]
+     */
+    fromArray(arr, offset = 0) {
+        this.x = arr[offset] ?? this.x;
+        this.y = arr[offset + 1] ?? this.y;
+        this.z = arr[offset + 2] ?? this.z;
+        this.w = arr[offset + 3] ?? this.w;
+
+        return this;
+    }
+
+    /**
      * Converts the quaternion to string form.
      *
      * @returns {string} The quaternion in string form.
      * @example
-     * const v = new pc.Quat(0, 0, 0, 1);
+     * const q = new pc.Quat(0, 0, 0, 1);
      * // Outputs [0, 0, 0, 1]
-     * console.log(v.toString());
+     * console.log(q.toString());
      */
     toString() {
         return `[${this.x}, ${this.y}, ${this.z}, ${this.w}]`;
+    }
+
+    /**
+     * @overload
+     * @param {number[]} [arr] - The array to populate with the quaternion's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]} The quaternion as an array.
+     */
+    /**
+     * @overload
+     * @param {ArrayBufferView} arr - The array to populate with the quaternion's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {ArrayBufferView} The quaternion as an array.
+     */
+    /**
+     * Converts the quaternion to an array.
+     *
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the quaternion's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]|ArrayBufferView} The quaternion as an array.
+     * @example
+     * const q = new pc.Quat(20, 10, 5, 1);
+     * // Outputs [20, 10, 5, 1]
+     * console.log(q.toArray());
+     */
+    toArray(arr = [], offset = 0) {
+        arr[offset] = this.x;
+        arr[offset + 1] = this.y;
+        arr[offset + 2] = this.z;
+        arr[offset + 3] = this.w;
+
+        return arr;
     }
 
     /**

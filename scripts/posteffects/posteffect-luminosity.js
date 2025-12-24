@@ -23,8 +23,11 @@ function LuminosityEffect(graphicsDevice) {
         '}'
     ].join('\n');
 
-    this.shader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fshader, 'LuminosityShader', {
-        aPosition: pc.SEMANTIC_POSITION
+    this.shader = pc.ShaderUtils.createShader(graphicsDevice, {
+        uniqueName: 'LuminosityShader',
+        attributes: { aPosition: pc.SEMANTIC_POSITION },
+        vertexGLSL: pc.PostEffect.quadVertexShader,
+        fragmentGLSL: fshader
     });
 }
 

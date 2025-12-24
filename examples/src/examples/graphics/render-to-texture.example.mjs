@@ -25,9 +25,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -174,7 +172,6 @@ assetListLoader.load(() => {
     // make the texture tiles and use anisotropic filtering to prevent blurring
     planeMaterial.diffuseMap = assets.checkerboard.resource;
     planeMaterial.diffuseMapTiling.set(10, 10);
-    planeMaterial.anisotropy = 16;
 
     createPrimitive('sphere', new pc.Vec3(-2, 1, 0), new pc.Vec3(2, 2, 2), pc.Color.RED, [worldLayer.id]);
     createPrimitive('cone', new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), pc.Color.CYAN, [worldLayer.id]);

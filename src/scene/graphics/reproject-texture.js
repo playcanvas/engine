@@ -4,21 +4,20 @@ import { Vec3 } from '../../core/math/vec3.js';
 import {
     FILTER_NEAREST,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE,
+    SEMANTIC_POSITION,
     SHADERLANGUAGE_WGSL,
-    SHADERLANGUAGE_GLSL,
-    SEMANTIC_POSITION
+    SHADERLANGUAGE_GLSL
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
-import { createShaderFromCode } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
-import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
  * @import { Vec4 } from '../../core/math/vec4.js'
@@ -425,46 +424,37 @@ function reprojectTexture(source, target, options = {}) {
     const numSamples = options.hasOwnProperty('numSamples') ? options.numSamples : 1024;
 
     // generate unique shader key
-    const shaderKey = `${processFunc}_${decodeFunc}_${encodeFunc}_${sourceFunc}_${targetFunc}_${numSamples}`;
+    const shaderKey = `ReprojectShader:${processFunc}_${decodeFunc}_${encodeFunc}_${sourceFunc}_${targetFunc}_${numSamples}`;
 
     const device = source.device;
 
     let shader = getProgramLibrary(device).getCachedShader(shaderKey);
     if (!shader) {
-        const defines = `
-            ${prefilterSamples ? '#define USE_SAMPLES_TEX' : ''}
-            ${source.cubemap ? '#define CUBEMAP_SOURCE' : ''}
-            #define {PROCESS_FUNC} ${processFunc}
-            #define {DECODE_FUNC} ${decodeFunc}
-            #define {ENCODE_FUNC} ${encodeFunc}
-            #define {SOURCE_FUNC} ${sourceFunc}
-            #define {TARGET_FUNC} ${targetFunc}
-            #define {NUM_SAMPLES} ${numSamples}
-            #define {NUM_SAMPLES_SQRT} ${Math.round(Math.sqrt(numSamples)).toFixed(1)}
-        `;
+        const defines = new Map();
+        if (prefilterSamples) defines.set('USE_SAMPLES_TEX', '');
+        if (source.cubemap) defines.set('CUBEMAP_SOURCE', '');
+        defines.set('{PROCESS_FUNC}', processFunc);
+        defines.set('{DECODE_FUNC}', decodeFunc);
+        defines.set('{ENCODE_FUNC}', encodeFunc);
+        defines.set('{SOURCE_FUNC}', sourceFunc);
+        defines.set('{TARGET_FUNC}', targetFunc);
+        defines.set('{NUM_SAMPLES}', numSamples);
+        defines.set('{NUM_SAMPLES_SQRT}', Math.round(Math.sqrt(numSamples)).toFixed(1));
 
         const wgsl = device.isWebGPU;
-        const chunks = wgsl ? shaderChunksWGSL : shaderChunks;
+        const chunks = ShaderChunks.get(device, wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
         const includes = new Map();
-        includes.set('decodePS', chunks.decodePS);
-        includes.set('encodePS', chunks.encodePS);
+        includes.set('decodePS', chunks.get('decodePS'));
+        includes.set('encodePS', chunks.get('encodePS'));
 
-        const vert = chunks.reprojectVS;
-        const frag = chunks.reprojectPS;
-        shader = createShaderFromCode(
-            device,
-            vert,
-            `
-                ${defines}
-                ${frag}
-            `,
-            shaderKey, {
-                vertex_position: SEMANTIC_POSITION
-            }, {
-                fragmentIncludes: includes,
-                shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL
-            }
-        );
+        shader = ShaderUtils.createShader(device, {
+            uniqueName: shaderKey,
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexChunk: 'reprojectVS',
+            fragmentChunk: 'reprojectPS',
+            fragmentIncludes: includes,
+            fragmentDefines: defines
+        });
     }
 
     DebugGraphics.pushGpuMarker(device, 'ReprojectTexture');

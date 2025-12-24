@@ -5,7 +5,7 @@ import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRISTRIP }
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
-import { processShader } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 
 /**
  * @import { Shader } from '../../platform/graphics/shader.js'
@@ -14,6 +14,7 @@ import { processShader } from '../shader-lib/utils.js';
 const _quadPrimitive = {
     type: PRIMITIVE_TRISTRIP,
     base: 0,
+    baseVertex: 0,
     count: 4,
     indexed: false
 };
@@ -28,7 +29,12 @@ const _dynamicBindGroup = new DynamicBindGroup();
  * Example:
  *
  * ```javascript
- * const shader = pc.createShaderFromCode(app.graphicsDevice, vertexShader, fragmentShader, `MyShader`);
+ * const shader = pc.ShaderUtils.createShader(app.graphicsDevice, {
+ *     uniqueName: 'MyShader',
+ *     attributes: { aPosition: SEMANTIC_POSITION },
+ *     vertexGLSL: '// vertex shader code',
+ *     fragmentGLSL: '// fragment shader code'
+ * });
  * const quad = new QuadRender(shader);
  * quad.render();
  * quad.destroy();
@@ -64,7 +70,7 @@ class QuadRender {
 
             // add uniform buffer support to shader
             const processingOptions = new ShaderProcessorOptions();
-            this.shader = processShader(shader, processingOptions);
+            this.shader = ShaderUtils.processShader(shader, processingOptions);
 
             // uniform buffer
             const ubFormat = this.shader.meshUniformBufferFormat;
@@ -118,7 +124,7 @@ class QuadRender {
             device.setScissor(scissor.x, scissor.y, scissor.z, scissor.w);
         }
 
-        device.setVertexBuffer(device.quadVertexBuffer, 0);
+        device.setVertexBuffer(device.quadVertexBuffer);
 
         const shader = this.shader;
         device.setShader(shader);

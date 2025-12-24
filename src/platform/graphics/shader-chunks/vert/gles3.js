@@ -1,4 +1,8 @@
 export default /* glsl */`
+
+// WEBGL_multi_draw
+#extension GL_ANGLE_multi_draw : enable
+
 #define attribute in
 #define varying out
 #define texture2D texture

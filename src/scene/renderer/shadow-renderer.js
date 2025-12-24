@@ -4,19 +4,24 @@ import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-import { SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from '../../platform/graphics/constants.js';
+import {
+    SEMANTIC_POSITION, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX,
+    UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME
+} from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 import {
     BLUR_GAUSSIAN,
+    EVENT_POSTCULL,
+    EVENT_PRECULL,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
+    SHADOWCAMERA_NAME,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     shadowTypeInfo
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
-import { createShaderFromCode } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
@@ -88,7 +93,6 @@ class ShadowRenderer {
         this.sourceId = scope.resolve('source');
         this.pixelOffsetId = scope.resolve('pixelOffset');
         this.weightId = scope.resolve('weight[0]');
-        this.blurVsmShaderCode = [shaderChunks.blurVSMPS, `#define GAUSS\n${shaderChunks.blurVSMPS}`];
 
         // cache for vsm blur shaders
         this.blurVsmShader = [{}, {}];
@@ -111,7 +115,7 @@ class ShadowRenderer {
     // creates shadow camera for a light and sets up its constant properties
     static createShadowCamera(shadowType, type, face) {
 
-        const shadowCam = LightCamera.create('ShadowCamera', type, face);
+        const shadowCam = LightCamera.create(SHADOWCAMERA_NAME, type, face);
 
         const shadowInfo = shadowTypeInfo.get(shadowType);
         Debug.assert(shadowInfo);
@@ -162,6 +166,9 @@ class ShadowRenderer {
      */
     cullShadowCasters(comp, light, visible, camera, casters) {
 
+        // event before the camera is culling
+        this.renderer.scene?.fire(EVENT_PRECULL, camera);
+
         visible.length = 0;
 
         // if the casters are supplied, use them
@@ -192,6 +199,9 @@ class ShadowRenderer {
 
         // this sorts the shadow casters by the shader id
         visible.sort(this.sortCompareShader);
+
+        // event after the camera is done with culling
+        this.renderer.scene?.fire(EVENT_POSTCULL, camera);
     }
 
     sortCompareShader(drawCallA, drawCallB) {
@@ -299,6 +309,12 @@ class ShadowRenderer {
             const meshInstance = visibleCasters[i];
             const mesh = meshInstance.mesh;
 
+            // skip instanced rendering with 0 instances
+            const instancingData = meshInstance.instancingData;
+            if (instancingData && instancingData.count <= 0) {
+                continue;
+            }
+
             meshInstance.ensureMaterial(device);
             const material = meshInstance.material;
 
@@ -325,6 +341,8 @@ class ShadowRenderer {
             const shadowShader = shaderInstance.shader;
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
+            if (shadowShader.failed) continue;
+
             // sort shadow casters by shader
             meshInstance._sortKeyShadow = shadowShader.id;
 
@@ -334,14 +352,24 @@ class ShadowRenderer {
             renderer.setVertexBuffers(device, mesh);
             renderer.setMorphing(device, meshInstance.morphInstance);
 
-            this.renderer.setupMeshUniformBuffers(shaderInstance, meshInstance);
+            if (instancingData) {
+                device.setVertexBuffer(instancingData.vertexBuffer);
+            }
 
-            const style = meshInstance.renderStyle;
-            device.setIndexBuffer(mesh.indexBuffer[style]);
+            // mesh / mesh normal matrix
+            renderer.setMeshInstanceMatrices(meshInstance);
+
+            renderer.setupMeshUniformBuffers(shaderInstance);
 
             // draw
-            renderer.drawInstance(device, meshInstance, mesh, style);
+            const style = meshInstance.renderStyle;
+            const indirectData = meshInstance.getDrawCommands(camera);
+            device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectData);
+
             renderer._shadowDrawCalls++;
+            if (instancingData) {
+                renderer._instancedDrawCalls++;
+            }
 
             DebugGraphics.popGpuMarker(device);
         }
@@ -424,7 +452,7 @@ class ShadowRenderer {
         const renderer = this.renderer;
         renderer.setCameraUniforms(shadowCam, rt);
         if (device.supportsUniformBuffers) {
-            renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, 1);
+            renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, null);
         }
 
         if (insideRenderPass) {
@@ -488,11 +516,18 @@ class ShadowRenderer {
         if (!blurShader) {
             this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
 
-            const blurVS = shaderChunks.fullscreenQuadVS;
-            let blurFS = `#define SAMPLES ${filterSize}\n`;
-            blurFS += this.blurVsmShaderCode[blurMode];
-            const blurShaderName = `blurVsm${blurMode}${filterSize}`;
-            blurShader = createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
+            const defines = new Map();
+            defines.set('{SAMPLES}', filterSize);
+            if (blurMode === 1) defines.set('GAUSS', '');
+
+            blurShader = ShaderUtils.createShader(this.device, {
+                uniqueName: `blurVsm${blurMode}${filterSize}`,
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexChunk: 'fullscreenQuadVS',
+                fragmentChunk: 'blurVSMPS',
+                fragmentDefines: defines
+            });
+
             cache[blurMode][filterSize] = blurShader;
         }
 

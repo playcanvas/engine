@@ -1,14 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { math } from '../../core/math/math.js';
-import { Channel } from '../audio/channel.js';
-import { Channel3d } from '../audio/channel3d.js';
 import { Listener } from './listener.js';
-
-/**
- * @import { Sound } from './sound.js'
- * @import { Vec3 } from '../../core/math/vec3.js'
- */
 
 const CONTEXT_STATE_RUNNING = 'running';
 
@@ -35,7 +28,7 @@ class SoundManager extends EventHandler {
         /**
          * The underlying AudioContext, lazy loaded in the 'context' property.
          *
-         * @type {AudioContext}
+         * @type {AudioContext|null}
          * @private
          */
         this._context = null;
@@ -127,66 +120,6 @@ class SoundManager extends EventHandler {
             this._context?.close();
             this._context = null;
         }
-    }
-
-    /**
-     * Create a new {@link Channel} and begin playback of the sound.
-     *
-     * @param {Sound} sound - The Sound object to play.
-     * @param {object} [options] - Optional options object.
-     * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
-     * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
-     * @returns {Channel} The channel playing the sound.
-     * @private
-     */
-    playSound(sound, options = {}) {
-        let channel = null;
-        if (Channel) {
-            channel = new Channel(this, sound, options);
-            channel.play();
-        }
-        return channel;
-    }
-
-    /**
-     * Create a new {@link Channel3d} and begin playback of the sound at the position specified.
-     *
-     * @param {Sound} sound - The Sound object to play.
-     * @param {Vec3} position - The position of the sound in 3D space.
-     * @param {object} options - Optional options object.
-     * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
-     * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
-     * @returns {Channel3d} The 3D channel playing the sound.
-     * @private
-     */
-    playSound3d(sound, position, options = {}) {
-        let channel = null;
-        if (Channel3d) {
-            channel = new Channel3d(this, sound, options);
-            channel.setPosition(position);
-            if (options.volume) {
-                channel.setVolume(options.volume);
-            }
-            if (options.loop) {
-                channel.setLoop(options.loop);
-            }
-            if (options.maxDistance) {
-                channel.setMaxDistance(options.maxDistance);
-            }
-            if (options.minDistance) {
-                channel.setMinDistance(options.minDistance);
-            }
-            if (options.rollOffFactor) {
-                channel.setRollOffFactor(options.rollOffFactor);
-            }
-            if (options.distanceModel) {
-                channel.setDistanceModel(options.distanceModel);
-            }
-
-            channel.play();
-        }
-
-        return channel;
     }
 
     // resume the sound context

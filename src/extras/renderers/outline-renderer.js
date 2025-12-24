@@ -4,7 +4,8 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_SRC_ALPHA,
     CULLFACE_NONE,
-    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8,
+    SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -13,8 +14,7 @@ import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
 import { StandardMaterialOptions } from '../../scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
@@ -55,6 +55,46 @@ const shaderOutlineExtendPS = /* glsl */ `
         diff = max(diff, length(firstTexel.rgb - pixel.rgb));
 
        gl_FragColor = vec4(texel.rgb, min(diff, 1.0));
+    }
+`;
+
+// WGSL version of the outline extend shader
+const shaderOutlineExtendWGSL = /* wgsl */ `
+
+    varying vUv0: vec2f;
+
+    uniform uOffset: vec2f;
+    uniform uSrcMultiplier: f32;
+    var source: texture_2d<f32>;
+    var sourceSampler: sampler;
+
+    @fragment
+    fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+        var output: FragmentOutput;
+        
+        var pixel: vec4f;
+        var texel = textureSample(source, sourceSampler, input.vUv0);
+        let firstTexel = texel;
+        var diff = texel.a * uniform.uSrcMultiplier;
+
+        pixel = textureSample(source, sourceSampler, input.vUv0 + uniform.uOffset * -2.0);
+        texel = max(texel, pixel);
+        diff = max(diff, length(firstTexel.rgb - pixel.rgb));
+
+        pixel = textureSample(source, sourceSampler, input.vUv0 + uniform.uOffset * -1.0);
+        texel = max(texel, pixel);
+        diff = max(diff, length(firstTexel.rgb - pixel.rgb));
+
+        pixel = textureSample(source, sourceSampler, input.vUv0 + uniform.uOffset * 1.0);
+        texel = max(texel, pixel);
+        diff = max(diff, length(firstTexel.rgb - pixel.rgb));
+
+        pixel = textureSample(source, sourceSampler, input.vUv0 + uniform.uOffset * 2.0);
+        texel = max(texel, pixel);
+        diff = max(diff, length(firstTexel.rgb - pixel.rgb));
+
+        output.color = vec4f(texel.rgb, min(diff, 1.0));
+        return output;
     }
 `;
 
@@ -113,8 +153,21 @@ class OutlineRenderer {
         this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA);
 
         const device = this.app.graphicsDevice;
-        this.shaderExtend = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderOutlineExtendPS, 'OutlineExtendShader');
-        this.shaderBlend = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.outputTex2DPS, 'OutlineBlendShader');
+
+        this.shaderExtend = ShaderUtils.createShader(device, {
+            uniqueName: 'OutlineExtendShader',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentGLSL: shaderOutlineExtendPS,
+            fragmentWGSL: shaderOutlineExtendWGSL
+        });
+
+        this.shaderBlend = ShaderUtils.createShader(device, {
+            uniqueName: 'OutlineBlendShader',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentChunk: 'outputTex2DPS'
+        });
 
         this.quadRenderer = new QuadRender(this.shaderBlend);
 
@@ -158,19 +211,21 @@ class OutlineRenderer {
     getMeshInstances(entity, recursive) {
         const meshInstances = [];
 
-        const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
-        renders.forEach((render) => {
-            if (render.meshInstances) {
-                meshInstances.push(...render.meshInstances);
-            }
-        });
+        if (entity) {
+            const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
+            renders.forEach((render) => {
+                if (render.meshInstances) {
+                    meshInstances.push(...render.meshInstances);
+                }
+            });
 
-        const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
-        models.forEach((model) => {
-            if (model.meshInstances) {
-                meshInstances.push(...model.meshInstances);
-            }
-        });
+            const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
+            models.forEach((model) => {
+                if (model.meshInstances) {
+                    meshInstances.push(...model.meshInstances);
+                }
+            });
+        }
 
         return meshInstances;
     }
@@ -212,6 +267,7 @@ class OutlineRenderer {
                         opts.litOptions.useMorphPosition = options.litOptions.useMorphPosition;
                         opts.litOptions.useMorphNormal = options.litOptions.useMorphNormal;
                         opts.litOptions.useMorphTextureBasedInt = options.litOptions.useMorphTextureBasedInt;
+                        opts.litOptions.opacityFadesSpecular = options.litOptions.opacityFadesSpecular;
                         return opts;
                     }
 

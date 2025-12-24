@@ -1,7 +1,7 @@
 import { Label } from '@playcanvas/pcui/react';
 import { Component } from 'react';
 
-import { fragment, jsx } from '../jsx.mjs';
+import { jsx } from '../jsx.mjs';
 
 
 /**
@@ -83,12 +83,10 @@ class ErrorBoundary extends TypedComponent {
 
     render() {
         if (this.state.hasError) {
-            return fragment(
-                jsx(Label, {
-                    id: 'errorLabel',
-                    text: 'RENDER FAILED'
-                })
-            );
+            return jsx(Label, {
+                id: 'errorLabel',
+                text: 'RENDER FAILED'
+            });
         }
         return this.props.children;
     }

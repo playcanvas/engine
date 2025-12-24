@@ -17,9 +17,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -210,10 +208,12 @@ assetListLoader.load(() => {
     // material to render the particles using WGSL shader as GLSL does not have access to storage buffers
     const material = new pc.ShaderMaterial({
         uniqueName: 'ParticleRenderShader',
-        vertexCode: files['shader-shared.wgsl'] + files['shader-rendering.vertex.wgsl'],
-        fragmentCode: files['shader-shared.wgsl'] + files['shader-rendering.fragment.wgsl'],
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL
+        vertexWGSL: files['shader-shared.wgsl'] + files['shader-rendering.vertex.wgsl'],
+        fragmentWGSL: files['shader-shared.wgsl'] + files['shader-rendering.fragment.wgsl']
     });
+
+    // rendering shader needs the particle storage buffer to read the particle data
+    material.setParameter('particles', particleStorageBuffer);
 
     // index buffer - two triangles (6 indices) per particle using 4 vertices
     const indices = new Uint32Array(numParticles * 6);

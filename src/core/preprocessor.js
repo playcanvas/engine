@@ -30,6 +30,12 @@ const IDENTIFIER = /\{?[\w-]+\}?/;
 // [!]defined(EXPRESSION)
 const DEFINED = /(!|\s)?defined\(([\w-]+)\)/;
 
+// Matches all defined(...) patterns for parentheses check
+const DEFINED_PARENS = /!?defined\s*\([^)]*\)/g;
+
+// Matches defined or !defined at the end of a string (for parentheses detection)
+const DEFINED_BEFORE_PAREN = /!?defined\s*$/;
+
 // Matches comparison operators like ==, !=, <, <=, >, >=
 const COMPARISON = /([a-z_]\w*)\s*(==|!=|<|<=|>|>=)\s*([\w"']+)/i;
 
@@ -37,7 +43,8 @@ const COMPARISON = /([a-z_]\w*)\s*(==|!=|<|<=|>|>=)\s*([\w"']+)/i;
 const INVALID = /[+\-]/g;
 
 // #include "identifier" or optional second identifier #include "identifier1, identifier2"
-const INCLUDE = /include[ \t]+"([\w-]+)(?:\s*,\s*([\w-]+))?"\r?(?:\n|$)/g;
+// Matches only up to the closing quote of the include directive
+const INCLUDE = /include[ \t]+"([\w-]+)(?:\s*,\s*([\w-]+))?"/g;
 
 // loop index to replace, in the format {i}
 const LOOP_INDEX = /\{i\}/g;
@@ -84,6 +91,7 @@ class Preprocessor {
 
         // preprocess defines / ifdefs ..
         source = this._preprocess(source, defines, injectDefines, includes, options.stripDefines);
+        if (source === null) return null;
 
         // extract defines that evaluate to an integer number
         const intDefines = new Map();
@@ -214,7 +222,7 @@ class Preprocessor {
      * @param {Map<string, string>} [includes] - An object containing key-value pairs of include names and their
      * content.
      * @param {boolean} [stripDefines] - If true, strips all defines from the source.
-     * @returns {string} Returns preprocessed source code.
+     * @returns {string|null} Returns preprocessed source code, or null if failed.
      */
     static _preprocess(source, defines = new Map(), injectDefines, includes, stripDefines) {
 
@@ -427,7 +435,11 @@ class Preprocessor {
                     INCLUDE.lastIndex = match.index;
                     const include = INCLUDE.exec(source);
                     error ||= include === null;
-                    Debug.assert(include, `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`);
+                    if (!include) {
+                        Debug.assert(include, `Invalid [${keyword}] while preprocessing ${Preprocessor.sourceName}:\n${source.substring(match.index, match.index + 100)}...`);
+                        error = true;
+                        continue;
+                    }
                     const identifier = include[1].trim();
                     const countIdentifier = include[2]?.trim();
 
@@ -456,7 +468,7 @@ class Preprocessor {
                                     includeSource = result;
 
                                 } else {
-                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
+                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { originalSource: originalSource, source: source });
                                     error = true;
                                 }
                             }
@@ -467,7 +479,7 @@ class Preprocessor {
                             // process the just included test
                             KEYWORD.lastIndex = include.index - 1;
                         } else {
-                            console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`, { source: originalSource });
+                            console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`, { originalSource: originalSource, source: source });
                             error = true;
                             continue;
                         }
@@ -486,7 +498,7 @@ class Preprocessor {
 
         if (error) {
             console.error('Failed to preprocess shader: ', { source: originalSource });
-            return originalSource;
+            return null;
         }
 
         return source;
@@ -517,6 +529,14 @@ class Preprocessor {
         let error = false;
         expr = expr.trim();
         let invert = false;
+
+        // Handle boolean literals
+        if (expr === 'true') {
+            return { result: true, error };
+        }
+        if (expr === 'false') {
+            return { result: false, error };
+        }
 
         // Handle defined(expr) and !defined(expr)
         const definedMatch = DEFINED.exec(expr);
@@ -554,8 +574,95 @@ class Preprocessor {
     }
 
     /**
+     * Processes parentheses in an expression by recursively evaluating subexpressions.
+     * Ignores parentheses that are part of defined() calls.
+     *
+     * @param {string} expression - The expression to process.
+     * @param {Map<string, string>} defines - A map containing key-value pairs of defines.
+     * @returns {object} Returns an object containing the processed expression and an error flag.
+     */
+    static processParentheses(expression, defines) {
+        let error = false;
+        let processed = expression.trim();
+
+        // Remove outer parentheses that wrap the entire expression
+        while (processed.startsWith('(') && processed.endsWith(')')) {
+            let depth = 0;
+            let wrapsEntire = true;
+            for (let i = 0; i < processed.length - 1; i++) {
+                if (processed[i] === '(') depth++;
+                else if (processed[i] === ')') {
+                    depth--;
+                    if (depth === 0) {
+                        wrapsEntire = false;
+                        break;
+                    }
+                }
+            }
+            if (wrapsEntire) {
+                processed = processed.slice(1, -1).trim();
+            } else {
+                break;
+            }
+        }
+
+        // Keep processing until no more precedence parentheses exist
+        while (true) {
+            let foundParen = false;
+            let depth = 0;
+            let maxDepth = 0;
+            let deepestStart = -1;
+            let deepestEnd = -1;
+
+            // Find the deepest nested parentheses that aren't part of defined()
+            let inDefinedParen = 0;
+            for (let i = 0; i < processed.length; i++) {
+                if (processed[i] === '(') {
+                    // Check if this is part of defined() - look back for "defined" or "!defined"
+                    const beforeParen = processed.substring(0, i);
+                    if (DEFINED_BEFORE_PAREN.test(beforeParen)) {
+                        inDefinedParen++;
+                    } else if (inDefinedParen === 0) {
+                        depth++;
+                        if (depth > maxDepth) {
+                            maxDepth = depth;
+                            deepestStart = i;
+                        }
+                        foundParen = true;
+                    }
+                } else if (processed[i] === ')') {
+                    if (inDefinedParen > 0) {
+                        inDefinedParen--;
+                    } else if (depth > 0) {
+                        if (depth === maxDepth && deepestStart !== -1) {
+                            deepestEnd = i;
+                        }
+                        depth--;
+                    }
+                }
+            }
+
+            if (!foundParen || deepestStart === -1 || deepestEnd === -1) {
+                break;
+            }
+
+            // Extract and evaluate the subexpression
+            const subExpr = processed.substring(deepestStart + 1, deepestEnd);
+            const { result, error: subError } = Preprocessor.evaluate(subExpr, defines);
+            error = error || subError;
+
+            // Replace the parentheses expression with its result
+            processed = processed.substring(0, deepestStart) +
+                       (result ? 'true' : 'false') +
+                       processed.substring(deepestEnd + 1);
+        }
+
+        return { expression: processed, error };
+    }
+
+    /**
      * Evaluates a complex expression with support for `defined`, `!defined`, comparisons, `&&`,
-     * and `||`. It does not currently handle ( and ).
+     * `||`, and parentheses for precedence.
      *
      * @param {string} expression - The expression to evaluate.
      * @param {Map<string, string>} defines - A map containing key-value pairs of defines.
@@ -565,8 +672,26 @@ class Preprocessor {
         const correct = INVALID.exec(expression) === null;
         Debug.assert(correct, `Resolving expression like this is not supported: ${expression}`);
 
+        // Process parentheses first (skip if no parentheses exist or only defined() parentheses)
+        let processedExpr = expression;
+        let parenError = false;
+
+        // Quick check: remove all defined(...) patterns and see if any parentheses remain
+        // If they do, process them recursively to handle nested parentheses
+        const withoutDefined = expression.replace(DEFINED_PARENS, '');
+        if (withoutDefined.indexOf('(') !== -1) {
+            const processed = Preprocessor.processParentheses(expression, defines);
+            processedExpr = processed.expression;
+            parenError = processed.error;
+        }
+
+        if (parenError) {
+            Debug.log(`Parenthesis parsing error in expression: "${expression}"`);
+            return { result: false, error: true };
+        }
+
         // Step 1: Split by "||" to handle OR conditions
-        const orSegments = expression.split('||');
+        const orSegments = processedExpr.split('||');
         for (const orSegment of orSegments) {
 
             // Step 2: Split each OR segment by "&&" to handle AND conditions

@@ -457,7 +457,7 @@ class WebglTexture {
 
         const requiredMipLevels = texture.numLevels;
 
-        if (texture.array) {
+        if (texture.array && !this._glCreated) {
             // for texture arrays we reserve the space in advance
             gl.texStorage3D(gl.TEXTURE_2D_ARRAY,
                 requiredMipLevels,
@@ -793,6 +793,22 @@ class WebglTexture {
         this._glCreated = true;
     }
 
+    /**
+     * @param {WebglGraphicsDevice} device - The graphics device.
+     * @param {Texture} texture - The texture.
+     */
+    uploadImmediate(device, texture) {
+
+        if (texture._needsUpload || texture._needsMipmapsUpload) {
+
+            // this uploads the texture as well
+            device.setTexture(texture, 0);
+
+            texture._needsUpload = false;
+            texture._needsMipmapsUpload = false;
+        }
+    }
+
     read(x, y, width, height, options) {
 
         const texture = this.texture;
@@ -800,6 +816,14 @@ class WebglTexture {
         /** @type {WebglGraphicsDevice} */
         const device = texture.device;
         return device.readTextureAsync(texture, x, y, width, height, options);
+    }
+
+    write(x, y, width, height, data) {
+        const { texture } = this;
+        const { device } = texture;
+        // ensure texture is created and bound
+        device.setTexture(texture, 0);
+        return device.writeTextureAsync(texture, x, y, width, height, data);
     }
 }
 

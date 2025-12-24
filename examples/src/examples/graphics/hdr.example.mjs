@@ -15,13 +15,12 @@ const assets = {
         'texture',
         { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
-    )
+    ),
+    colorLut: new pc.Asset('colorLut', 'texture', { url: `${rootPath}/static/assets/cube-luts/lut-blue.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
     // to avoid the additional cost. This is only used for the UI which renders on top of the
@@ -163,6 +162,11 @@ assetListLoader.load(() => {
     cameraFrame.vignette.outer = 1;
     cameraFrame.vignette.curvature = 0.5;
     cameraFrame.vignette.intensity = 0.5;
+
+    // Apply Color LUT
+    cameraFrame.colorLUT.texture = assets.colorLut.resource;
+    cameraFrame.colorLUT.intensity = 1.0;
+
     cameraFrame.update();
 
     // apply UI changes
@@ -178,12 +182,18 @@ assetListLoader.load(() => {
             cameraFrame.rendering.toneMapping = value;
             cameraFrame.update();
         }
+
+        if (path === 'data.colorLutIntensity') {
+            cameraFrame.colorLUT.intensity = value;
+            cameraFrame.update();
+        }
     });
 
     // set initial values
     data.set('data', {
         hdr: true,
-        sceneTonemapping: pc.TONEMAP_ACES
+        sceneTonemapping: pc.TONEMAP_ACES,
+        colorLutIntensity: 1.0
     });
 });
 

@@ -49,7 +49,8 @@ const _vec3 = new Vec3();
  * });
  * ```
  *
- * Once the RigidBodyComponent is added to the entity, you can access it via the `rigidbody` property:
+ * Once the RigidBodyComponent is added to the entity, you can access it via the
+ * {@link Entity#rigidbody} property:
  *
  * ```javascript
  * entity.rigidbody.mass = 10;
@@ -169,7 +170,10 @@ class RigidBodyComponent extends Component {
     /** @private */
     _simulationEnabled = false;
 
-    /** @private */
+    /**
+     * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
+     * @private
+     */
     _type = BODYTYPE_STATIC;
 
     /** @ignore */
@@ -545,7 +549,7 @@ class RigidBodyComponent extends Component {
      *
      * Defaults to {@link BODYTYPE_STATIC}.
      *
-     * @type {string}
+     * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
      */
     set type(type) {
         if (this._type !== type) {
@@ -578,7 +582,7 @@ class RigidBodyComponent extends Component {
     /**
      * Gets the rigid body type determines how the body is simulated.
      *
-     * @type {string}
+     * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
      */
     get type() {
         return this._type;
@@ -741,35 +745,43 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Apply an force to the body at a point. By default, the force is applied at the origin of the
+     * Apply a force to the body at a point. By default, the force is applied at the origin of the
      * body. However, the force can be applied at an offset this point by specifying a world space
-     * vector from the body's origin to the point of application. This function has two valid
-     * signatures. You can either specify the force (and optional relative point) via 3D-vector or
-     * numbers.
+     * vector from the body's origin to the point of application.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector representing the force in world space or
-     * the x-component of the force in world space.
-     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point
-     * at which to apply the impulse in world space or the y-component of the force in world space.
-     * @param {number} [z] - The z-component of the force in world space.
-     * @param {number} [px] - The x-component of a world space offset from the body's position
-     * where the force is applied.
-     * @param {number} [py] - The y-component of a world space offset from the body's position
-     * where the force is applied.
-     * @param {number} [pz] - The z-component of a world space offset from the body's position
-     * where the force is applied.
+     * @overload
+     * @param {number} x - X-component of the force in world space.
+     * @param {number} y - Y-component of the force in world space.
+     * @param {number} z - Z-component of the force in world space.
+     * @param {number} [px] - X-component of the relative point at which to apply the force in
+     * world space.
+     * @param {number} [py] - Y-component of the relative point at which to apply the force in
+     * world space.
+     * @param {number} [pz] - Z-component of the relative point at which to apply the force in
+     * world space.
+     * @returns {void}
      * @example
      * // Apply an approximation of gravity at the body's center
      * this.entity.rigidbody.applyForce(0, -10, 0);
      * @example
      * // Apply an approximation of gravity at 1 unit down the world Z from the center of the body
      * this.entity.rigidbody.applyForce(0, -10, 0, 0, 0, 1);
+     */
+    /**
+     * Apply a force to the body at a point. By default, the force is applied at the origin of the
+     * body. However, the force can be applied at an offset this point by specifying a world space
+     * vector from the body's origin to the point of application.
+     *
+     * @overload
+     * @param {Vec3} force - Vector representing the force in world space.
+     * @param {Vec3} [relativePoint] - Optional vector representing the relative point at which to
+     * apply the force in world space.
+     * @returns {void}
      * @example
-     * // Apply a force at the body's center
      * // Calculate a force vector pointing in the world space direction of the entity
      * const force = this.entity.forward.clone().mulScalar(100);
      *
-     * // Apply the force
+     * // Apply the force at the body's center
      * this.entity.rigidbody.applyForce(force);
      * @example
      * // Apply a force at some relative offset from the body's center
@@ -777,12 +789,25 @@ class RigidBodyComponent extends Component {
      * const force = this.entity.forward.clone().mulScalar(100);
      *
      * // Calculate the world space relative offset
-     * const relativePos = new pc.Vec3();
+     * const relativePoint = new pc.Vec3();
      * const childEntity = this.entity.findByName('Engine');
-     * relativePos.sub2(childEntity.getPosition(), this.entity.getPosition());
+     * relativePoint.sub2(childEntity.getPosition(), this.entity.getPosition());
      *
      * // Apply the force
-     * this.entity.rigidbody.applyForce(force, relativePos);
+     * this.entity.rigidbody.applyForce(force, relativePoint);
+     */
+    /**
+     * @param {number|Vec3} x - X-component of the force in world space or a vector representing
+     * the force in world space.
+     * @param {number|Vec3} [y] - Y-component of the force in world space or a vector representing
+     * the force in world space.
+     * @param {number} [z] - Z-component of the force in world space.
+     * @param {number} [px] - X-component of the relative point at which to apply the force in
+     * world space.
+     * @param {number} [py] - Y-component of the relative point at which to apply the force in
+     * world space.
+     * @param {number} [pz] - Z-component of the relative point at which to apply the force in
+     * world space.
      */
     applyForce(x, y, z, px, py, pz) {
         const body = this._body;
@@ -808,20 +833,31 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Apply torque (rotational force) to the body. This function has two valid signatures. You can
-     * either specify the torque force with a 3D-vector or with 3 numbers.
+     * Apply torque (rotational force) to the body.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector representing the torque force in world space
-     * or the x-component of the torque force in world space.
-     * @param {number} [y] - The y-component of the torque force in world space.
-     * @param {number} [z] - The z-component of the torque force in world space.
+     * @overload
+     * @param {number} x - The x-component of the torque force in world space.
+     * @param {number} y - The y-component of the torque force in world space.
+     * @param {number} z - The z-component of the torque force in world space.
+     * @returns {void}
      * @example
-     * // Apply via vector
+     * entity.rigidbody.applyTorque(0, 10, 0);
+     */
+    /**
+     * Apply torque (rotational force) to the body.
+     *
+     * @overload
+     * @param {Vec3} torque - Vector representing the torque force in world space.
+     * @returns {void}
+     * @example
      * const torque = new pc.Vec3(0, 10, 0);
      * entity.rigidbody.applyTorque(torque);
-     * @example
-     * // Apply via numbers
-     * entity.rigidbody.applyTorque(0, 10, 0);
+     */
+    /**
+     * @param {number|Vec3} x - X-component of the torque force in world space or a vector
+     * representing the torque force in world space.
+     * @param {number} [y] - Y-component of the torque force in world space.
+     * @param {number} [z] - Z-component of the torque force in world space.
      */
     applyTorque(x, y, z) {
         const body = this._body;
@@ -838,22 +874,35 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Apply an impulse (instantaneous change of velocity) to the body at a point. This function
-     * has two valid signatures. You can either specify the impulse (and optional relative point)
-     * via 3D-vector or numbers.
+     * Apply an impulse (instantaneous change of velocity) to the body at a point.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector representing the impulse in world space or
-     * the x-component of the impulse in world space.
-     * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point
-     * at which to apply the impulse in the local space of the entity or the y-component of the
-     * impulse to apply in world space.
-     * @param {number} [z] - The z-component of the impulse to apply in world space.
-     * @param {number} [px] - The x-component of the point at which to apply the impulse in the
-     * local space of the entity.
-     * @param {number} [py] - The y-component of the point at which to apply the impulse in the
-     * local space of the entity.
-     * @param {number} [pz] - The z-component of the point at which to apply the impulse in the
-     * local space of the entity.
+     * @overload
+     * @param {number} x - X-component of the impulse in world space.
+     * @param {number} y - Y-component of the impulse in world space.
+     * @param {number} z - Z-component of the impulse in world space.
+     * @param {number} [px] - X-component of the point at which to apply the impulse in the local
+     * space of the entity.
+     * @param {number} [py] - Y-component of the point at which to apply the impulse in the local
+     * space of the entity.
+     * @param {number} [pz] - Z-component of the point at which to apply the impulse in the local
+     * space of the entity.
+     * @returns {void}
+     * @example
+     * // Apply an impulse along the world space positive y-axis at the entity's position.
+     * entity.rigidbody.applyImpulse(0, 10, 0);
+     * @example
+     * // Apply an impulse along the world space positive y-axis at 1 unit down the positive
+     * // z-axis of the entity's local space.
+     * entity.rigidbody.applyImpulse(0, 10, 0, 0, 0, 1);
+     */
+    /**
+     * Apply an impulse (instantaneous change of velocity) to the body at a point.
+     *
+     * @overload
+     * @param {Vec3} impulse - Vector representing the impulse in world space.
+     * @param {Vec3} [relativePoint] - Optional vector representing the relative point at which to
+     * apply the impulse in the local space of the entity.
+     * @returns {void}
      * @example
      * // Apply an impulse along the world space positive y-axis at the entity's position.
      * const impulse = new pc.Vec3(0, 10, 0);
@@ -864,13 +913,19 @@ class RigidBodyComponent extends Component {
      * const impulse = new pc.Vec3(0, 10, 0);
      * const relativePoint = new pc.Vec3(0, 0, 1);
      * entity.rigidbody.applyImpulse(impulse, relativePoint);
-     * @example
-     * // Apply an impulse along the world space positive y-axis at the entity's position.
-     * entity.rigidbody.applyImpulse(0, 10, 0);
-     * @example
-     * // Apply an impulse along the world space positive y-axis at 1 unit down the positive
-     * // z-axis of the entity's local space.
-     * entity.rigidbody.applyImpulse(0, 10, 0, 0, 0, 1);
+     */
+    /**
+     * @param {number|Vec3} x - X-component of the impulse in world space or a vector representing
+     * the impulse in world space.
+     * @param {number|Vec3} [y] - Y-component of the impulse in world space or a vector representing
+     * the relative point at which to apply the impulse in the local space of the entity.
+     * @param {number} [z] - Z-component of the impulse in world space.
+     * @param {number} [px] - X-component of the point at which to apply the impulse in the local
+     * space of the entity.
+     * @param {number} [py] - Y-component of the point at which to apply the impulse in the local
+     * space of the entity.
+     * @param {number} [pz] - Z-component of the point at which to apply the impulse in the local
+     * space of the entity.
      */
     applyImpulse(x, y, z, px, py, pz) {
         const body = this._body;
@@ -896,21 +951,31 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Apply a torque impulse (rotational force applied instantaneously) to the body. This function
-     * has two valid signatures. You can either specify the torque force with a 3D-vector or with 3
-     * numbers.
+     * Apply a torque impulse (rotational force applied instantaneously) to the body.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector representing the torque impulse in
-     * world space or the x-component of the torque impulse in world space.
-     * @param {number} [y] - The y-component of the torque impulse in world space.
-     * @param {number} [z] - The z-component of the torque impulse in world space.
+     * @overload
+     * @param {number} x - X-component of the torque impulse in world space.
+     * @param {number} y - Y-component of the torque impulse in world space.
+     * @param {number} z - Z-component of the torque impulse in world space.
+     * @returns {void}
      * @example
-     * // Apply via vector
+     * entity.rigidbody.applyTorqueImpulse(0, 10, 0);
+     */
+    /**
+     * Apply a torque impulse (rotational force applied instantaneously) to the body.
+     *
+     * @overload
+     * @param {Vec3} torque - Vector representing the torque impulse in world space.
+     * @returns {void}
+     * @example
      * const torque = new pc.Vec3(0, 10, 0);
      * entity.rigidbody.applyTorqueImpulse(torque);
-     * @example
-     * // Apply via numbers
-     * entity.rigidbody.applyTorqueImpulse(0, 10, 0);
+     */
+    /**
+     * @param {number|Vec3} x - X-component of the torque impulse in world space or a vector
+     * representing the torque impulse in world space.
+     * @param {number} [y] - Y-component of the torque impulse in world space.
+     * @param {number} [z] - Z-component of the torque impulse in world space.
      */
     applyTorqueImpulse(x, y, z) {
         const body = this._body;
@@ -1065,33 +1130,65 @@ class RigidBodyComponent extends Component {
 
     /**
      * Teleport an entity to a new world space position, optionally setting orientation. This
-     * function should only be called for rigid bodies that are dynamic. This function has three
-     * valid signatures. The first takes a 3-dimensional vector for the position and an optional
-     * 3-dimensional vector for Euler rotation. The second takes a 3-dimensional vector for the
-     * position and an optional quaternion for rotation. The third takes 3 numbers for the position
-     * and an optional 3 numbers for Euler rotation.
+     * function should only be called for rigid bodies that are dynamic.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector holding the new position or the new position
-     * x-coordinate.
-     * @param {Quat|Vec3|number} [y] - A 3-dimensional vector or quaternion holding the new
-     * rotation or the new position y-coordinate.
-     * @param {number} [z] - The new position z-coordinate.
-     * @param {number} [rx] - The new Euler x-angle value.
-     * @param {number} [ry] - The new Euler y-angle value.
-     * @param {number} [rz] - The new Euler z-angle value.
-     * @example
-     * // Teleport the entity to the origin
-     * entity.rigidbody.teleport(pc.Vec3.ZERO);
+     * @overload
+     * @param {number} x - X-coordinate of the new world space position.
+     * @param {number} y - Y-coordinate of the new world space position.
+     * @param {number} z - Z-coordinate of the new world space position.
+     * @param {number} [rx] - X-rotation of the world space Euler angles in degrees.
+     * @param {number} [ry] - Y-rotation of the world space Euler angles in degrees.
+     * @param {number} [rz] - Z-rotation of the world space Euler angles in degrees.
+     * @returns {void}
      * @example
      * // Teleport the entity to the origin
      * entity.rigidbody.teleport(0, 0, 0);
      * @example
      * // Teleport the entity to world space coordinate [1, 2, 3] and reset orientation
-     * const position = new pc.Vec3(1, 2, 3);
-     * entity.rigidbody.teleport(position, pc.Vec3.ZERO);
+     * entity.rigidbody.teleport(1, 2, 3, 0, 0, 0);
+     */
+    /**
+     * Teleport an entity to a new world space position, optionally setting orientation. This
+     * function should only be called for rigid bodies that are dynamic.
+     *
+     * @overload
+     * @param {Vec3} position - Vector holding the new world space position.
+     * @param {Vec3} [angles] - Vector holding the new world space Euler angles in degrees.
+     * @returns {void}
+     * @example
+     * // Teleport the entity to the origin
+     * entity.rigidbody.teleport(pc.Vec3.ZERO);
      * @example
      * // Teleport the entity to world space coordinate [1, 2, 3] and reset orientation
-     * entity.rigidbody.teleport(1, 2, 3, 0, 0, 0);
+     * const position = new pc.Vec3(1, 2, 3);
+     * entity.rigidbody.teleport(position, pc.Vec3.ZERO);
+     */
+    /**
+     * Teleport an entity to a new world space position, optionally setting orientation. This
+     * function should only be called for rigid bodies that are dynamic.
+     *
+     * @overload
+     * @param {Vec3} position - Vector holding the new world space position.
+     * @param {Quat} [rotation] - Quaternion holding the new world space rotation.
+     * @returns {void}
+     * @example
+     * // Teleport the entity to the origin
+     * entity.rigidbody.teleport(pc.Vec3.ZERO);
+     * @example
+     * // Teleport the entity to world space coordinate [1, 2, 3] and reset orientation
+     * const position = new pc.Vec3(1, 2, 3);
+     * entity.rigidbody.teleport(position, pc.Quat.IDENTITY);
+     */
+    /**
+     * @param {number|Vec3} x - X-coordinate of the new world space position or a vector holding
+     * the new world space position.
+     * @param {number|Quat|Vec3} [y] - Y-coordinate of the new world space position or a
+     * quaternion holding the new world space rotation or a vector holding the new world space
+     * Euler angles in degrees.
+     * @param {number} [z] - Z-coordinate of the new world space position.
+     * @param {number} [rx] - X-rotation of the new world space Euler angles in degrees.
+     * @param {number} [ry] - Y-rotation of the new world space Euler angles in degrees.
+     * @param {number} [rz] - Z-rotation of the new world space Euler angles in degrees.
      */
     teleport(x, y, z, rx, ry, rz) {
         if (x instanceof Vec3) {

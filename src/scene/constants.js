@@ -358,8 +358,8 @@ export const SHADOW_PCF1 = 5;  // alias for SHADOW_PCF1_32F for backwards compat
 /**
  * A shadow sampling technique using a 32-bit shadow map that adjusts filter size based on blocker
  * distance, producing realistic, soft shadow edges that vary with the light's occlusion. Note that
- * this technique requires either {@link GraphicsDevice#textureFloatRenderable} or
- * {@link GraphicsDevice#textureHalfFloatRenderable} to be true, and falls back to
+ * this technique requires both {@link GraphicsDevice#textureFloatRenderable} and
+ * {@link GraphicsDevice#textureFloatFilterable} to be true, and falls back to
  * {@link SHADOW_PCF3_32F} otherwise.
  *
  * @category Graphics
@@ -407,6 +407,41 @@ export const shadowTypeInfo = new Map([
     [SHADOW_VSM_32F,     { name: 'VSM_32F', kind: 'VSM', format: PIXELFORMAT_RGBA32F, vsm: true }],
     [SHADOW_PCSS_32F,    { name: 'PCSS_32F', kind: 'PCSS', format: PIXELFORMAT_R32F, pcss: true }]
 ]);
+
+/**
+ * The flag that controls shadow rendering for the 0 cascade
+ *
+ * @category Graphics
+ */
+export const SHADOW_CASCADE_0 = 1;
+
+/**
+ * The flag that controls shadow rendering for the 1 cascade
+ *
+ * @category Graphics
+ */
+export const SHADOW_CASCADE_1 = 2;
+
+/**
+ * The flag that controls shadow rendering for the 2 cascade
+ *
+ * @category Graphics
+ */
+export const SHADOW_CASCADE_2 = 4;
+
+/**
+ * The flag that controls shadow rendering for the 3 cascade
+ *
+ * @category Graphics
+ */
+export const SHADOW_CASCADE_3 = 8;
+
+/**
+ * The flag that controls shadow rendering for the all cascades
+ *
+ * @category Graphics
+ */
+export const SHADOW_CASCADE_ALL = 255;
 
 /**
  * Box filter.
@@ -771,18 +806,14 @@ export const SHADER_FORWARD = 0;
 
 export const SHADER_PREPASS = 1;
 
-/**
- * Render RGBA-encoded depth value.
- *
- * @category Graphics
- */
-export const SHADER_DEPTH = 2;
+// shadow pass used by the shadow rendering code
+export const SHADER_SHADOW = 2;
 
 // shader pass used by the Picker class to render mesh ID
 export const SHADER_PICK = 3;
 
-// shadow pass used by the shadow rendering code
-export const SHADER_SHADOW = 4;
+// shader pass used by the Picker class to render mesh ID and depth
+export const SHADER_DEPTH_PICK = 4;
 
 /**
  * Shader that performs forward rendering.
@@ -1088,15 +1119,37 @@ export const EVENT_PRERENDER_LAYER = 'prerender:layer';
 export const EVENT_POSTRENDER_LAYER = 'postrender:layer';
 
 /**
- * Name of event fired before visibility culling is performed for the camera
+ * Name of event fired before visibility culling is performed for the camera.
  *
  * @ignore
  */
 export const EVENT_PRECULL = 'precull';
 
 /**
- * Name of event after before visibility culling is performed for the camera
+ * Name of event after visibility culling is performed for the camera.
  *
  * @ignore
  */
 export const EVENT_POSTCULL = 'postcull';
+
+/**
+ * Name of event after the engine has finished culling all cameras.
+ *
+ * @ignore
+ */
+export const EVENT_CULL_END = 'cull:end';
+
+/**
+ * @ignore
+ */
+export const GSPLAT_FORWARD = 1;
+
+/**
+ * @ignore
+ */
+export const GSPLAT_SHADOW = 2;
+
+/**
+ * @ignore
+ */
+export const SHADOWCAMERA_NAME = 'pcShadowCamera';

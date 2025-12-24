@@ -42,14 +42,10 @@ class MorphTarget {
 
         // store delta positions, used by aabb evaluation
         this.deltaPositions = options.deltaPositions;
-    }
 
-    destroy() {
-        this.texturePositions?.destroy();
-        this.texturePositions = null;
-
-        this.textureNormals?.destroy();
-        this.textureNormals = null;
+        // true if the streams are available
+        this.morphPositions = !!options.deltaPositions;
+        this.morphNormals = !!options.deltaNormals;
     }
 
     /**
@@ -83,14 +79,6 @@ class MorphTarget {
         return this._aabb;
     }
 
-    get morphPositions() {
-        return !!this.texturePositions;
-    }
-
-    get morphNormals() {
-        return !!this.textureNormals;
-    }
-
     /**
      * Returns an identical copy of the specified morph target. This can only be used if the morph target
      * was created with options.preserveData set to true.
@@ -111,10 +99,6 @@ class MorphTarget {
 
         // mark it as used
         this.used = true;
-    }
-
-    _setTexture(name, texture) {
-        this[name] = texture;
     }
 }
 

@@ -19,8 +19,6 @@ const assets = {
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // enable HDR rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR
@@ -54,6 +52,12 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
+
+    // Depth layer is where prepass finishes rendering. Move the depth layer to take place after
+    // World and Skydome layers, to capture both of them in depth buffer, to be used by Depth of Field
+    const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+    app.scene.layers.remove(depthLayer);
+    app.scene.layers.insertOpaque(depthLayer, 2);
 
     // add an instance of the statue
     const statueEntity = assets.statue.resource.instantiateRenderEntity({
@@ -106,12 +110,20 @@ assetListLoader.load(() => {
         app.scene.envAtlas = envAtlas;
     };
 
+    // when device is lost, we need to regenerate the skybox textures from HDRI
+    device.on('devicerestored', () => {
+        applyHdri(assets.hdri_street.resource);
+    });
+
     applyHdri(assets.hdri_street.resource);
+    app.scene.exposure = 0.4;
     app.scene.sky.type = pc.SKYTYPE_DOME;
     app.scene.sky.node.setLocalScale(new pc.Vec3(200, 200, 200));
     app.scene.sky.node.setLocalPosition(pc.Vec3.ZERO);
     app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
-    app.scene.exposure = 0.4;
+
+    // enable depth writing for the sky, for DOF to work on it
+    app.scene.sky.depthWrite = true;
 
     // create two directional lights which cast shadows
     const light1 = new pc.Entity('Light1');
@@ -123,7 +135,7 @@ assetListLoader.load(() => {
         normalOffsetBias: 0.3,
         shadowDistance: 50,
         shadowResolution: 1024,
-        shadowIntensity: 0.2,
+        shadowIntensity: 0.4,
         shadowType: pc.SHADOW_PCSS_32F,
         penumbraSize: 10,
         penumbraFalloff: 4,
@@ -142,7 +154,7 @@ assetListLoader.load(() => {
         normalOffsetBias: 0.3,
         shadowDistance: 50,
         shadowResolution: 1024,
-        shadowIntensity: 0.3
+        shadowIntensity: 0.5
     });
     light2.setLocalEulerAngles(45, -30, 0);
     app.root.addChild(light2);
@@ -155,16 +167,47 @@ assetListLoader.load(() => {
             scale: new pc.Vec3(50, 50, 50)
         }
     });
+
+    // offset it slightly above the ground (skydome) - this is needed when DOF is enabled and the skydome
+    // writes depth to the depth buffer, to avoid depth conflicts with the shadow catcher plane
+    shadowCatcher.setLocalPosition(0, 0.01, 0);
+
     app.root.addChild(shadowCatcher);
 
     // set initial values
     data.set('data', {
         affectScene: false,
         catcher: true,
-        rotate: false
+        rotate: false,
+        dof: true
     });
 
+    // set up CameraFrame rendering, to give us access to Depth of Field
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+    cameraFrame.dof.enabled = true;
+    cameraFrame.dof.nearBlur = true;
+    cameraFrame.dof.focusDistance = 30;
+    cameraFrame.dof.focusRange = 10;
+    cameraFrame.dof.blurRadius = 7;
+    cameraFrame.dof.blurRings = 5;
+    cameraFrame.dof.blurRingPoints = 5;
+    cameraFrame.dof.highQuality = true;
+    cameraFrame.update();
+
     app.on('update', (dt) => {
+
+        // toggle DOF
+        cameraFrame.dof.enabled = data.get('data.dof');
+
+        // DOF distance - distance between the camera and the entity
+        const distance = cameraEntity.position.distance(statueEntity.position);
+        cameraFrame.dof.focusDistance = distance;
+        cameraFrame.update();
+
+        // adjust shadow distance to never clip them
+        light1.light.shadowDistance = distance + 15;
+        light2.light.shadowDistance = distance + 15;
 
         // enable the shadow catcher
         shadowCatcher.enabled = data.get('data.catcher');

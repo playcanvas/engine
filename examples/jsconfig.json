@@ -4,13 +4,13 @@
         "allowSyntheticDefaultImports" : true,
         "checkJs": true,
         "esModuleInterop" : true,
-        "module": "Node16",
-        "moduleResolution": "Node16",
+        "module": "esnext",
+        "moduleResolution": "node",
         "noImplicitAny": true,
         "outDir": "dist",
         "strictNullChecks": true,
-        "target": "ESNext",
+        "target": "esnext",
     },
-    "include": ["src", "scripts", "iframe", "templates", "utils", "rollup.config.js"],
+    "include": ["src", "scripts", "iframe", "templates", "utils", "rollup.config.mjs"],
     "exclude": ["node_modules", "src/lib"]
 }

@@ -23,11 +23,12 @@ import { PostEffectQueue } from './post-effect-queue.js';
  */
 
 /**
- * Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
- *
  * @callback CalculateMatrixCallback
+ * Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
  * @param {Mat4} transformMatrix - Output of the function.
- * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
+ * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or
+ * {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
+ * @returns {void}
  */
 
 /**
@@ -50,7 +51,8 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * });
  * ```
  *
- * Once the CameraComponent is added to the entity, you can access it via the `camera` property:
+ * Once the CameraComponent is added to the entity, you can access it via the {@link Entity#camera}
+ * property:
  *
  * ```javascript
  * entity.camera.nearClip = 2; // Set the near clip of the camera
@@ -299,7 +301,8 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the camera aperture in f-stops. Default is 16. Higher value means less exposure.
+     * Sets the camera aperture in f-stops. Default is 16. Higher value means less exposure. Used
+     * if {@link Scene#physicalUnits} is true.
      *
      * @type {number}
      */
@@ -317,9 +320,9 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the aspect ratio (width divided by height) of the camera. If `aspectRatioMode` is
+     * Sets the aspect ratio (width divided by height) of the camera. If {@link aspectRatioMode} is
      * {@link ASPECT_AUTO}, then this value will be automatically calculated every frame, and you
-     * can only read it. If it's ASPECT_MANUAL, you can set the value.
+     * can only read it. If it's {@link ASPECT_MANUAL}, you can set the value.
      *
      * @type {number}
      */
@@ -458,6 +461,24 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Sets the depth value to clear the depth buffer to. Defaults to 1.
+     *
+     * @type {number}
+     */
+    set clearDepth(value) {
+        this._camera.clearDepth = value;
+    }
+
+    /**
+     * Gets the depth value to clear the depth buffer to.
+     *
+     * @type {number}
+     */
+    get clearDepth() {
+        return this._camera.clearDepth;
+    }
+
+    /**
      * Sets whether the camera will automatically clear the depth buffer before rendering. Defaults to true.
      *
      * @type {boolean}
@@ -497,8 +518,8 @@ class CameraComponent extends Component {
 
     /**
      * Sets whether the camera will cull triangle faces. If true, the camera will take
-     * `material.cull` into account. Otherwise both front and back faces will be rendered. Defaults
-     * to true.
+     * {@link Material#cull} into account. Otherwise both front and back faces will be rendered.
+     * Defaults to true.
      *
      * @type {boolean}
      */
@@ -577,9 +598,9 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the field of view of the camera in degrees. Usually this is the Y-axis field of view,
-     * see {@link CameraComponent#horizontalFov}. Used for {@link PROJECTION_PERSPECTIVE} cameras
-     * only. Defaults to 45.
+     * Sets the field of view of the camera in degrees. Usually this is the Y-axis field of view
+     * (see {@link horizontalFov}). Used for {@link PROJECTION_PERSPECTIVE} cameras only. Defaults to
+     * 45.
      *
      * @type {number}
      */
@@ -606,10 +627,10 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets whether frustum culling is enabled. This controls the culling of mesh instances against
-     * the camera frustum, i.e. if objects outside of the camera's frustum should be omitted from
-     * rendering. If false, all mesh instances in the scene are rendered by the camera, regardless
-     * of visibility. Defaults to false.
+     * Sets whether frustum culling is enabled. This controls the culling of {@link MeshInstance}s
+     * against the camera frustum, i.e. if objects outside of the camera's frustum should be
+     * omitted from rendering. If false, all mesh instances in the scene are rendered by the
+     * camera, regardless of visibility. Defaults to false.
      *
      * @type {boolean}
      */
@@ -627,7 +648,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets whether the camera's field of view (`fov`) is horizontal or vertical. Defaults to
+     * Sets whether the camera's field of view ({@link fov}) is horizontal or vertical. Defaults to
      * false (meaning it is vertical by default).
      *
      * @type {boolean}
@@ -637,7 +658,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Gets whether the camera's field of view (`fov`) is horizontal or vertical.
+     * Gets whether the camera's field of view ({@link fov}) is horizontal or vertical.
      *
      * @type {boolean}
      */
@@ -647,8 +668,9 @@ class CameraComponent extends Component {
 
     /**
      * Sets the array of layer IDs ({@link Layer#id}) to which this camera should belong. Don't
-     * push, pop, splice or modify this array, if you want to change it, set a new one instead.
-     * Defaults to `[LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE]`.
+     * push, pop, splice or modify this array. If you want to change it, set a new one instead.
+     * Defaults to [{@link LAYERID_WORLD}, {@link LAYERID_DEPTH}, {@link LAYERID_SKYBOX},
+     * {@link LAYERID_UI}, {@link LAYERID_IMMEDIATE}].
      *
      * @type {number[]}
      */
@@ -671,6 +693,8 @@ class CameraComponent extends Component {
                 layer?.addCamera(this);
             });
         }
+
+        this.fire('set:layers');
     }
 
     /**
@@ -907,7 +931,8 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the camera sensitivity in ISO. Defaults to 1000. Higher value means more exposure.
+     * Sets the camera sensitivity in ISO. Defaults to 1000. Higher value means more exposure. Used
+     * if {@link Scene#physicalUnits} is true.
      *
      * @type {number}
      */
@@ -925,7 +950,8 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the camera shutter speed in seconds. Defaults to 1/1000s. Longer shutter means more exposure.
+     * Sets the camera shutter speed in seconds. Defaults to 1/1000s. Longer shutter means more
+     * exposure. Used if {@link Scene#physicalUnits} is true.
      *
      * @type {number}
      */
@@ -1257,7 +1283,7 @@ class CameraComponent extends Component {
      * @example
      * // On an entity with a camera component
      * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
-     *     callback: function (err) {
+     *     callback: (err) => {
      *         if (err) {
      *             // failed to start XR session
      *         } else {
@@ -1277,7 +1303,7 @@ class CameraComponent extends Component {
      * ended. The callback has one argument Error - it is null if successfully ended XR session.
      * @example
      * // On an entity with a camera component
-     * this.entity.camera.endXr(function (err) {
+     * this.entity.camera.endXr((err) => {
      *     // not anymore in XR
      * });
      */

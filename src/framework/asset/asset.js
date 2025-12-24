@@ -26,10 +26,10 @@ const VARIANT_SUPPORT = {
 const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
 /**
- * Callback used by {@link Asset#ready} and called when an asset is ready.
- *
  * @callback AssetReadyCallback
+ * Callback used by {@link Asset#ready} and called when an asset is ready.
  * @param {Asset} asset - The ready asset.
+ * @returns {void}
  */
 
 /**
@@ -219,7 +219,7 @@ class Asset extends EventHandler {
     /**
      * The type of the asset.
      *
-     * @type {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"}
+     * @type {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"gsplat"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"}
      */
     type;
 
@@ -237,7 +237,7 @@ class Asset extends EventHandler {
      *
      * @param {string} name - A non-unique but human-readable name which can be later used to
      * retrieve the asset.
-     * @param {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"} type - Type of asset.
+     * @param {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"gsplat"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"} type - Type of asset.
      * @param {object} [file] - Details about the file the asset is made from. At the least must
      * contain the 'url' field. For assets that don't contain file data use null.
      * @param {string} [file.url] - The URL of the resource file that contains the asset data.
@@ -268,8 +268,8 @@ class Asset extends EventHandler {
 
         this._name = name || '';
         this.type = type;
-        this._data = data;
-        this.options = options;
+        this._data = data || {};
+        this.options = options || {};
 
         if (file) this.file = file;
     }
@@ -424,7 +424,7 @@ class Asset extends EventHandler {
 
     /**
      * Sets whether to preload an asset. If true, the asset will be loaded during the preload phase
-     * of application set up.
+     * of application initialization or when calling {@link AssetRegistry#add}.
      *
      * @type {boolean}
      */
@@ -564,8 +564,8 @@ class Asset extends EventHandler {
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
      * const asset = app.assets.find("My Asset");
-     * asset.ready(function (asset) {
-     *   // asset loaded
+     * asset.ready((asset) => {
+     *     // asset loaded
      * });
      * app.assets.load(asset);
      */
@@ -623,10 +623,7 @@ class Asset extends EventHandler {
 
         // destroy resources
         for (let i = 0; i < old.length; ++i) {
-            const resource = old[i];
-            if (resource && resource.destroy) {
-                resource.destroy();
-            }
+            old[i]?.destroy?.();
         }
     }
 
@@ -653,7 +650,8 @@ class Asset extends EventHandler {
                 cache: true,
                 responseType: 'arraybuffer',
                 retry: maxRetries > 0,
-                maxRetries: maxRetries
+                maxRetries: maxRetries,
+                progress: asset
             }, callback);
         }
     }

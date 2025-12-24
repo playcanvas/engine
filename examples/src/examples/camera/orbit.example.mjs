@@ -1,9 +1,11 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>LMB</b>) Orbit</div><div>(<b>Hold Shift / MMB / RMB </b>) Pan</div><div>(<b>Scroll Wheel</b>) Zoom</div><div>(<b>F</b>) Focus (<b>R</b>) Reset</div></div>
+// @config DESCRIPTION <div style='text-align:center'><div>(<b>LMB / RMB </b>) Orbit</div><div>(<b>Hold Shift / MMB </b>) Pan</div><div>(<b>Wheel / Pinch</b>) Zoom</div><div>(<b>F</b>) Focus (<b>R</b>) Reset</div></div>
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+
+const tmpVa = new pc.Vec2();
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -12,9 +14,7 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const assets = {
@@ -59,79 +59,6 @@ await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-/**
- * Calculate the bounding box of an entity.
- *
- * @param {pc.BoundingBox} bbox - The bounding box.
- * @param {pc.Entity} entity - The entity.
- * @returns {pc.BoundingBox} The bounding box.
- */
-const calcEntityAABB = (bbox, entity) => {
-    bbox.center.set(0, 0, 0);
-    bbox.halfExtents.set(0, 0, 0);
-    entity.findComponents('render').forEach((render) => {
-        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
-            bbox.add(mi.aabb);
-        });
-    });
-    return bbox;
-};
-
-/**
- * @param {pc.Entity} focus - The entity to focus the camera on.
- * @returns {CameraControls} The camera-controls script.
- */
-const createOrbitCamera = (focus) => {
-    const start = new pc.Vec3(0, 20, 30);
-
-    const camera = new pc.Entity();
-    camera.addComponent('camera');
-    camera.addComponent('script');
-    camera.setPosition(start);
-    app.root.addChild(camera);
-
-    const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
-    const cameraDist = start.distance(bbox.center);
-
-    /** @type {CameraControls} */
-    const script = camera.script.create(CameraControls, {
-        properties: {
-            enableFly: false,
-            focusPoint: bbox.center,
-            sceneSize: bbox.halfExtents.length()
-        }
-    });
-
-    // focus on entity when 'f' key is pressed
-    const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
-        switch (e.key) {
-            case 'f': {
-                script.refocus(
-                    bbox.center,
-                    null,
-                    data.get('example.zoomReset') ? cameraDist : null,
-                    data.get('example.smoothedFocus')
-                );
-                break;
-            }
-            case 'r': {
-                script.refocus(
-                    bbox.center,
-                    start,
-                    data.get('example.zoomReset') ? cameraDist : null,
-                    data.get('example.smoothedFocus')
-                );
-            }
-        }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    app.on('destroy', () => {
-        window.removeEventListener('keydown', onKeyDown);
-    });
-
-    return script;
-};
-
 app.start();
 
 app.scene.ambientLight.set(0.4, 0.4, 0.4);
@@ -150,39 +77,90 @@ const statue = assets.statue.resource.instantiateRenderEntity();
 statue.setLocalPosition(0, -0.5, 0);
 app.root.addChild(statue);
 
-const multiCameraScript = createOrbitCamera(statue);
+/**
+ * Calculate the bounding box of an entity.
+ *
+ * @param {pc.BoundingBox} bbox - The bounding box.
+ * @param {pc.Entity} entity - The entity.
+ * @returns {pc.BoundingBox} The bounding box.
+ */
+const calcEntityAABB = (bbox, entity) => {
+    bbox.center.set(0, 0, 0);
+    bbox.halfExtents.set(0, 0, 0);
+    entity.findComponents('render').forEach((render) => {
+        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
+            bbox.add(mi.aabb);
+        });
+    });
+    return bbox;
+};
 
-// Bind controls to camera attributes
-data.set('example', {
-    zoomReset: true,
-    smoothedFocus: true
+const start = new pc.Vec3(0, 20, 30);
+const bbox = calcEntityAABB(new pc.BoundingBox(), statue);
+
+const camera = new pc.Entity();
+camera.addComponent('camera');
+camera.addComponent('script');
+camera.setPosition(start);
+app.root.addChild(camera);
+const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+const sceneSize = bbox.halfExtents.length();
+Object.assign(cc, {
+    focusPoint: bbox.center,
+    enableFly: false,
+    moveSpeed: 2 * sceneSize,
+    moveFastSpeed: 4 * sceneSize,
+    moveSlowSpeed: sceneSize
 });
 
+// focus on entity when 'f' key is pressed
+const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
+    switch (e.key) {
+        case 'f': {
+            cc.focus(bbox.center, true);
+            break;
+        }
+        case 'l': {
+            cc.look(bbox.center);
+            break;
+        }
+        case 'r': {
+            cc.reset(bbox.center, start);
+            break;
+        }
+    }
+};
+window.addEventListener('keydown', onKeyDown);
+app.on('destroy', () => {
+    window.removeEventListener('keydown', onKeyDown);
+});
+
+// Bind controls to camera attributes
 data.set('attr', [
-    'enablePan',
-    'focusDamping',
-    'pitchRange',
     'rotateSpeed',
-    'rotateDamping',
+    'moveSpeed',
     'zoomSpeed',
     'zoomPinchSens',
+    'focusDamping',
+    'rotateDamping',
+    'moveDamping',
     'zoomDamping',
-    'zoomMin',
-    'zoomMax',
+    'pitchRange',
+    'yawRange',
+    'zoomRange',
     'zoomScaleMin'
 ].reduce((/** @type {Record<string, any>} */ obj, key) => {
-    const value = multiCameraScript[key];
+    const value = cc[key];
 
     if (value instanceof pc.Vec2) {
         obj[key] = [value.x, value.y];
         return obj;
     }
 
-    obj[key] = multiCameraScript[key];
+    obj[key] = cc[key];
     return obj;
 }, {}));
 
-const tmpVa = new pc.Vec2();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key, index] = path.split('.');
     if (category !== 'attr') {
@@ -190,15 +168,16 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     }
 
     if (Array.isArray(value)) {
-        multiCameraScript[key] = tmpVa.set(value[0], value[1]);
+        cc[key] = tmpVa.set(value[0], value[1]);
         return;
     }
     if (index !== undefined) {
         const arr = data.get(`${category}.${key}`);
-        multiCameraScript[key] = tmpVa.set(arr[0], arr[1]);
+        cc[key] = tmpVa.set(arr[0], arr[1]);
         return;
     }
-    multiCameraScript[key] = value;
+
+    cc[key] = value;
 });
 
 export { app };

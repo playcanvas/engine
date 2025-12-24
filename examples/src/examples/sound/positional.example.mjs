@@ -5,9 +5,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -106,7 +104,9 @@ assetListLoader.load(() => {
     const entity = new pc.Entity();
 
     // add sound component
-    entity.addComponent('sound');
+    entity.addComponent('sound', {
+        maxDistance: 9
+    });
 
     // add footsteps slot
     entity.sound.addSlot('footsteps', {

@@ -1,4 +1,5 @@
-import * as fs from 'node:fs';
+import fs from 'fs';
+import path from 'path';
 
 const GREEN_OUT = '\x1b[32m';
 const BOLD_OUT = '\x1b[1m';
@@ -10,6 +11,13 @@ const STANDARD_MAT_PROPS = [
     ['alphaFade', 'boolean'],
     ['ambient', 'Color'],
     ['anisotropy', 'number'],
+    ['anisotropyIntensity', 'number'],
+    ['anisotropyRotation', 'number'],
+    ['anisotropyMap', 'Texture|null'],
+    ['anisotropyMapOffset', 'Vec2'],
+    ['anisotropyMapRotation', 'number'],
+    ['anisotropyMapTiling', 'Vec2'],
+    ['anisotropyMapUv', 'number'],
     ['aoIntensity', 'number'],
     ['aoMap', 'Texture|null'],
     ['aoMapChannel', 'string'],
@@ -253,20 +261,20 @@ import { Texture } from '../../platform/graphics/texture.js';
     }
 }];
 
-export function typesFixup() {
+export function typesFixup(root = '.') {
     return {
         name: 'types-fixup',
         buildStart() {
             REPLACEMENTS.forEach((item) => {
                 const { from, to, footer, transformer } = item.replacement;
-                let contents = fs.readFileSync(item.path, 'utf-8');
+                let contents = fs.readFileSync(path.resolve(root, item.path), 'utf-8');
                 if (transformer) {
                     contents = transformer(contents);
                 } else {
                     contents = contents.replace(from, to);
                 }
                 contents += footer ?? '';
-                fs.writeFileSync(item.path, contents, 'utf-8');
+                fs.writeFileSync(path.resolve(root, item.path), contents, 'utf-8');
                 console.log(`${GREEN_OUT}type fixed ${BOLD_OUT}${item.path}${REGULAR_OUT}`);
             });
         }

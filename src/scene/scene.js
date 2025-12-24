@@ -9,6 +9,7 @@ import { Mat4 } from '../core/math/mat4.js';
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 import { BAKE_COLORDIR, LAYERID_IMMEDIATE } from './constants.js';
 import { LightingParams } from './lighting/lighting-params.js';
+import { GSplatParams } from './gsplat-unified/gsplat-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
@@ -273,6 +274,17 @@ class Scene extends EventHandler {
     _fogParams = new FogParams();
 
     /**
+     * Internal flag to indicate that the specular (and sheen) maps of standard materials should be
+     * assumed to be in a linear space, instead of sRGB. This is used by the editor using engine v2
+     * internally to render in a style of engine v1, where spec those textures were specified as
+     * linear, while engine 2 assumes they are in sRGB space. This should be removed when the editor
+     * no longer supports engine v1 projects.
+     *
+     * @ignore
+     */
+    forcePassThroughSpecular = false;
+
+    /**
      * Create a new Scene instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this scene.
@@ -325,6 +337,9 @@ class Scene extends EventHandler {
         this._lightingParams = new LightingParams(this.device.supportsAreaLights, this.device.maxTextureSize, () => {
             this.updateShaders = true;
         });
+
+        // gsplat params
+        this._gsplatParams = new GSplatParams();
 
         // skybox
         this._sky = new Sky(this);
@@ -507,6 +522,15 @@ class Scene extends EventHandler {
      */
     get lighting() {
         return this._lightingParams;
+    }
+
+    /**
+     * Gets the GSplat parameters.
+     *
+     * @type {GSplatParams}
+     */
+    get gsplat() {
+        return this._gsplatParams;
     }
 
     /**

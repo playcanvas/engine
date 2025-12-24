@@ -10,7 +10,7 @@ import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
+    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
     BINDGROUP_MESH_UB
@@ -21,11 +21,9 @@ import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindGroupFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import {
-    VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
-    LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
+    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
-    EVENT_PRECULL,
-    EVENT_POSTCULL
+    EVENT_PRECULL, EVENT_POSTCULL, EVENT_CULL_END
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
@@ -47,6 +45,7 @@ import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Scene } from '../scene.js'
+ * @import { GSplatDirector } from '../gsplat-unified/gsplat-director.js'
  */
 
 let _skinUpdateIndex = 0;
@@ -108,12 +107,15 @@ class Renderer {
     /** @type {boolean} */
     clustersDebugRendered = false;
 
+    /** @type {Scene} */
+    scene;
+
     /**
      * A set of visible mesh instances which need further processing before being rendered, e.g.
      * skinning or morphing. Extracted during culling.
      *
      * @type {Set<MeshInstance>}
-     * @private
+     * @protected
      */
     processingMeshInstances = new Set();
 
@@ -157,15 +159,21 @@ class Renderer {
     blueNoise = new BlueNoise(123);
 
     /**
+     * A gsplat director for unified splat rendering.
+     *
+     * @type {GSplatDirector|null}
+     */
+    gsplatDirector = null;
+
+    /**
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {Scene} scene - The scene.
      */
-    constructor(graphicsDevice) {
+    constructor(graphicsDevice, scene) {
         this.device = graphicsDevice;
-
-        /** @type {Scene|null} */
-        this.scene = null;
+        this.scene = scene;
 
         // TODO: allocate only when the scene has clustered lighting enabled
         this.worldClustersAllocator = new WorldClustersAllocator(graphicsDevice);
@@ -180,8 +188,10 @@ class Renderer {
         this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
 
         // clustered passes
-        this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
-            this._shadowRendererLocal, this.lightTextureAtlas);
+        if (this.scene.clusteredLightingEnabled) {
+            this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
+                this._shadowRendererLocal, this.lightTextureAtlas);
+        }
 
         // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
@@ -203,6 +213,7 @@ class Renderer {
         this._numDrawCallsCulled = 0;
         this._camerasRendered = 0;
         this._lightClusters = 0;
+        this._gsplatCount = 0;
 
         // Uniforms
         const scope = graphicsDevice.scope;
@@ -220,11 +231,12 @@ class Renderer {
         this.viewProjId = scope.resolve('matrix_viewProjection');
         this.flipYId = scope.resolve('projectionFlipY');
         this.tbnBasis = scope.resolve('tbnBasis');
-        this.nearClipId = scope.resolve('camera_near');
-        this.farClipId = scope.resolve('camera_far');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
+        this.viewportSize = new Float32Array(4);
+        this.viewportSizeId = scope.resolve('viewport_size');
         this.viewIndexId = scope.resolve('view_index');
+        this.viewIndexId.setValue(0);
 
         this.blueNoiseJitterVersion = 0;
         this.blueNoiseJitterVec = new Vec4();
@@ -256,11 +268,14 @@ class Renderer {
         this.shadowMapCache.destroy();
         this.shadowMapCache = null;
 
-        this._renderPassUpdateClustered.destroy();
+        this._renderPassUpdateClustered?.destroy();
         this._renderPassUpdateClustered = null;
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
+
+        this.gsplatDirector?.destroy();
+        this.gsplatDirector = null;
     }
 
     /**
@@ -298,13 +313,13 @@ class Renderer {
         // flipping proj matrix
         const flipY = target?.flipY;
 
-        let viewCount = 1;
+        let viewList = null;
         if (camera.xr && camera.xr.session) {
             const transform = camera._node?.parent?.getWorldTransform() || null;
             const views = camera.xr.views;
-            viewCount = views.list.length;
-            for (let v = 0; v < viewCount; v++) {
-                const view = views.list[v];
+            viewList = views.list;
+            for (let v = 0; v < viewList.length; v++) {
+                const view = viewList[v];
                 view.updateTransforms(transform);
                 camera.frustum.setFromMat4(view.projViewOffMat);
             }
@@ -406,23 +421,30 @@ class Renderer {
 
         this.tbnBasis.setValue(flipY ? -1 : 1);
 
-        // Near and far clip values
-        const n = camera._nearClip;
-        const f = camera._farClip;
-        this.nearClipId.setValue(n);
-        this.farClipId.setValue(f);
-
         // camera params
-        this.cameraParams[0] = 1 / f;
-        this.cameraParams[1] = f;
-        this.cameraParams[2] = n;
-        this.cameraParams[3] = camera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
-        this.cameraParamsId.setValue(this.cameraParams);
+        this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
+
+        // viewport size
+        let viewportWidth = target ? target.width : this.device.width;
+        let viewportHeight = target ? target.height : this.device.height;
+        viewportWidth *= camera.rect.z;
+        viewportHeight *= camera.rect.w;
+
+        // adjust viewport for stereoscopic VR sessions
+        if (camera.xr?.active && camera.xr.views.list.length === 2) {
+            viewportWidth *= 0.5;
+        }
+
+        this.viewportSize[0] = viewportWidth;
+        this.viewportSize[1] = viewportHeight;
+        this.viewportSize[2] = 1 / viewportWidth;
+        this.viewportSize[3] = 1 / viewportHeight;
+        this.viewportSizeId.setValue(this.viewportSize);
 
         // exposure
         this.exposureId.setValue(this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure);
 
-        return viewCount;
+        return viewList;
     }
 
     /**
@@ -713,25 +735,32 @@ class Renderer {
 
             // format of the view uniform buffer
             const uniforms = [
+                new UniformFormat('matrix_view', UNIFORMTYPE_MAT4),
+                new UniformFormat('matrix_viewInverse', UNIFORMTYPE_MAT4),
+                new UniformFormat('matrix_projection', UNIFORMTYPE_MAT4),
+                new UniformFormat('matrix_projectionSkybox', UNIFORMTYPE_MAT4),
                 new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4),
+                new UniformFormat('matrix_view3', UNIFORMTYPE_MAT3),
                 new UniformFormat('cubeMapRotationMatrix', UNIFORMTYPE_MAT3),
                 new UniformFormat('view_position', UNIFORMTYPE_VEC3),
+                new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
-                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT)
+                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
+                new UniformFormat('view_index', UNIFORMTYPE_FLOAT)
             ];
 
             if (isClustered) {
                 uniforms.push(...[
                     new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterTextureSize', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
+                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3),
                     new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
                     new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
-                    new UniformFormat('clusterSkip', UNIFORMTYPE_FLOAT)
+                    new UniformFormat('numClusteredLights', UNIFORMTYPE_INT),
+                    new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT)
                 ]);
             }
 
@@ -765,13 +794,29 @@ class Renderer {
         }
     }
 
-    setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewCount) {
+    /**
+     * Set up uniforms for an XR view.
+     */
+    setupViewUniforms(view, index) {
+
+        // any view uniforms need to be part of the view uniform buffer, see initViewBindGroupFormat
+        this.projId.setValue(view.projMat.data);
+        this.projSkyboxId.setValue(view.projMat.data);
+        this.viewId.setValue(view.viewOffMat.data);
+        this.viewInvId.setValue(view.viewInvOffMat.data);
+        this.viewId3.setValue(view.viewMat3.data);
+        this.viewProjId.setValue(view.projViewOffMat.data);
+        this.viewPosId.setValue(view.positionData);
+        this.viewIndexId.setValue(index);
+    }
+
+    setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewList) {
 
         Debug.assert(Array.isArray(viewBindGroups), 'viewBindGroups must be an array');
+        const { device } = this;
 
-        const device = this.device;
-        Debug.assert(viewCount === 1, 'This code does not handle the viewCount yet');
-
+        // make sure we have bind group for each view
+        const viewCount = viewList?.length ?? 1;
         while (viewBindGroups.length < viewCount) {
             const ub = new UniformBuffer(device, viewUniformFormat, false);
             const bg = new BindGroup(device, viewBindGroupFormat, ub);
@@ -779,24 +824,36 @@ class Renderer {
             viewBindGroups.push(bg);
         }
 
-        // update view bind group / uniforms
-        const viewBindGroup = viewBindGroups[0];
-        viewBindGroup.defaultUniformBuffer.update();
-        viewBindGroup.update();
+        if (viewList) {
 
-        // TODO; this needs to be moved to drawInstance functions to handle XR
-        device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
+            for (let i = 0; i < viewCount; i++) {
+
+                // set up view uniforms
+                const view = viewList[i];
+                this.setupViewUniforms(view, i);
+
+                // update view bind group / uniforms
+                const viewBindGroup = viewBindGroups[i];
+                viewBindGroup.defaultUniformBuffer.update();
+                viewBindGroup.update();
+            }
+        } else {
+
+            const viewBindGroup = viewBindGroups[0];
+            viewBindGroup.defaultUniformBuffer.update();
+            viewBindGroup.update();
+        }
+
+        // bind it when a single view is used, otherwise this is handled per view inside rendering loop
+        if (!viewList) {
+            device.setBindGroup(BINDGROUP_VIEW, viewBindGroups[0]);
+        }
     }
 
-    setupMeshUniformBuffers(shaderInstance, meshInstance) {
+    setupMeshUniformBuffers(shaderInstance) {
 
         const device = this.device;
         if (device.supportsUniformBuffers) {
-
-            // TODO: model matrix setup is part of the drawInstance call, but with uniform buffer it's needed
-            // earlier here. This needs to be refactored for multi-view anyways.
-            this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
-            this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
 
             // update mesh bind group / uniform buffer
             const meshBindGroup = shaderInstance.getBindGroup(device);
@@ -809,44 +866,11 @@ class Renderer {
         }
     }
 
-    drawInstance(device, meshInstance, mesh, style, normal) {
-
+    setMeshInstanceMatrices(meshInstance, setNormalMatrix = false) {
         const modelMatrix = meshInstance.node.worldTransform;
         this.modelMatrixId.setValue(modelMatrix.data);
-        if (normal) {
+        if (setNormalMatrix) {
             this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
-        }
-
-        const instancingData = meshInstance.instancingData;
-        if (instancingData) {
-            if (instancingData.count > 0) {
-                this._instancedDrawCalls++;
-                device.setVertexBuffer(instancingData.vertexBuffer);
-                device.draw(mesh.primitive[style], instancingData.count);
-            } else {
-                device.clearVertexBuffer();
-                device.clearIndexBuffer();
-            }
-        } else {
-            device.draw(mesh.primitive[style]);
-        }
-    }
-
-    // used for stereo
-    drawInstance2(device, meshInstance, mesh, style) {
-
-        const instancingData = meshInstance.instancingData;
-        if (instancingData) {
-            if (instancingData.count > 0) {
-                this._instancedDrawCalls++;
-                device.draw(mesh.primitive[style], instancingData.count, true);
-            } else {
-                device.clearVertexBuffer();
-                device.clearIndexBuffer();
-            }
-        } else {
-            // matrices are already set
-            device.draw(mesh.primitive[style], undefined, true);
         }
     }
 
@@ -1134,6 +1158,9 @@ class Renderer {
 
         // cull shadow casters for all lights
         this.cullShadowmaps(comp);
+
+        // event after the engine has finished culling all cameras
+        scene?.fire(EVENT_CULL_END);
 
         // #if _PROFILER
         this._cullTime += now() - cullTime;

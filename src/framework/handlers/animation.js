@@ -2,7 +2,7 @@ import { path } from '../../core/path.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { http, Http } from '../../platform/net/http.js';
-import { Animation, Key, Node } from '../../scene/animation/animation.js';
+import { Animation, AnimationKey, AnimationNode } from '../../scene/animation/animation.js';
 import { AnimEvents } from '../anim/evaluator/anim-events.js';
 import { GlbParser } from '../parsers/glb-parser.js';
 import { ResourceHandler } from './handler.js';
@@ -89,7 +89,7 @@ class AnimationHandler extends ResourceHandler {
         anim.duration = animData.duration;
 
         for (let i = 0; i < animData.nodes.length; i++) {
-            const node = new Node();
+            const node = new AnimationNode();
 
             const n = animData.nodes[i];
             node._name = n.name;
@@ -105,7 +105,7 @@ class AnimationHandler extends ResourceHandler {
                 const rot = new Quat().setFromEulerAngles(r[0], r[1], r[2]);
                 const scl = new Vec3(s[0], s[1], s[2]);
 
-                const key = new Key(t, pos, rot, scl);
+                const key = new AnimationKey(t, pos, rot, scl);
 
                 node._keys.push(key);
             }
@@ -124,7 +124,7 @@ class AnimationHandler extends ResourceHandler {
         anim.duration = animData.duration;
 
         for (let i = 0; i < animData.nodes.length; i++) {
-            const node = new Node();
+            const node = new AnimationNode();
 
             const n = animData.nodes[i];
             node._name = n.name;
@@ -144,7 +144,7 @@ class AnimationHandler extends ResourceHandler {
                 const rot = new Quat().setFromEulerAngles(r[0], r[1], r[2]);
                 const scl = new Vec3(s[0], s[1], s[2]);
 
-                const key = new Key(t, pos, rot, scl);
+                const key = new AnimationKey(t, pos, rot, scl);
 
                 node._keys.push(key);
             }

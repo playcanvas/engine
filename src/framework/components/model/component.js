@@ -39,7 +39,8 @@ import { Component } from '../component.js';
  * });
  * ```
  *
- * Once the ModelComponent is added to the entity, you can access it via the `model` property:
+ * Once the ModelComponent is added to the entity, you can access it via the {@link Entity#model}
+ * property:
  *
  * ```javascript
  * entity.model.type = 'capsule';  // Set the model component's type
@@ -373,7 +374,7 @@ class ModelComponent extends Component {
     /**
      * Sets the model owned by this component.
      *
-     * @type {Model}
+     * @type {Model|null}
      */
     set model(value) {
         if (this._model === value) {
@@ -447,7 +448,7 @@ class ModelComponent extends Component {
      * Gets the model owned by this component. In this case a model is not set or loaded, this will
      * return null.
      *
-     * @type {Model}
+     * @type {Model|null}
      */
     get model() {
         return this._model;

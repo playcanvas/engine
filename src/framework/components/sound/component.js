@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { DISTANCE_LINEAR } from '../../../platform/audio/constants.js';
+import { DISTANCE_LINEAR } from '../../../platform/sound/constants.js';
 import { Component } from '../component.js';
 import { SoundSlot } from './slot.js';
 
@@ -30,7 +30,8 @@ import { SoundSlot } from './slot.js';
  * });
  * ```
  *
- * Once the SoundComponent is added to the entity, you can access it via the `sound` property:
+ * Once the SoundComponent is added to the entity, you can access it via the {@link Entity#sound}
+ * property:
  *
  * ```javascript
  * entity.sound.volume = 0.9;  // Set the volume for all sounds

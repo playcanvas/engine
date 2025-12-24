@@ -30,6 +30,8 @@ import {
  * app.root.addChild(shadowCatcher);
  */
 class ShadowCatcher extends Script {
+    static scriptName = 'shadowCatcher';
+
     /**
      * The scale of the shadow catcher.
      * @type {Vec3}
@@ -83,7 +85,8 @@ class ShadowCatcher extends Script {
         this.geometry?.render?.meshInstances.forEach((mi) => {
 
             // set up the geometry to render very early during the transparent pass, before other transparent objects
-            mi.drawOrder = -1;
+            // use drawBucket for coarse sorting - higher bucket renders first in back-to-front mode
+            mi.drawBucket = 250;
 
             // if geometry was provided, set the material
             if (!this._geometryCreated) {

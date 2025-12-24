@@ -10,7 +10,7 @@ window.focus();
 const assets = {
     script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     terrain: new pc.Asset('terrain', 'container', { url: `${rootPath}/static/assets/models/terrain.glb` }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.ply` }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
@@ -20,9 +20,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -113,7 +111,8 @@ assetListLoader.load(() => {
     material.hasMetalness = true;
     material.occludeSpecular = pc.SPECOCC_AO;
 
-    const argumentsChunk = `
+    material.shaderChunkGLSL = `
+        #include "litShaderCorePS"
         void evaluateFrontend() {
             litArgs_emission = vec3(0.7, 0.4, 0);
             litArgs_metalness = 0.5;
@@ -124,7 +123,18 @@ assetListLoader.load(() => {
             litArgs_ao = 0.0;
             litArgs_opacity = 1.0;
         }`;
-    material.shaderChunk = argumentsChunk;
+    material.shaderChunkWGSL = `
+        #include "litShaderCorePS"
+        fn evaluateFrontend() {
+            litArgs_emission = vec3f(0.7, 0.4, 0);
+            litArgs_metalness = 0.5;
+            litArgs_specularity = vec3f(0.5, 0.5, 0.5);
+            litArgs_specularityFactor = 1.0;
+            litArgs_gloss = 0.5;
+            litArgs_ior = 0.1;
+            litArgs_ao = 0.0;
+            litArgs_opacity = 1.0;
+        }`;
     material.update();
 
     // create primitive

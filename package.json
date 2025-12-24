@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "2.7.0-dev",
+  "version": "2.15.0-beta.0",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -30,8 +30,22 @@
   "exports": {
     ".": {
       "types": "./build/playcanvas.d.ts",
-      "import": "./build/playcanvas/src/index.js",
-      "require": "./build/playcanvas.js"
+      "development": {
+        "import": "./build/playcanvas.dbg/src/index.js",
+        "require": "./build/playcanvas.dbg.js"
+      },
+      "profiler": {
+        "import": "./build/playcanvas.prf/src/index.js",
+        "require": "./build/playcanvas.prf.js"
+      },
+      "production": {
+        "import": "./build/playcanvas/src/index.js",
+        "require": "./build/playcanvas.js"
+      },
+      "default": {
+        "import": "./build/playcanvas/src/index.js",
+        "require": "./build/playcanvas.js"
+      }
     },
     "./debug": {
       "types": "./build/playcanvas.d.ts",
@@ -64,39 +78,40 @@
     "README*.md"
   ],
   "dependencies": {
-    "@types/webxr": "^0.5.16",
-    "@webgpu/types": "^0.1.52"
+    "@types/webxr": "^0.5.24",
+    "@webgpu/types": "^0.1.66"
   },
   "devDependencies": {
-    "@playcanvas/eslint-config": "2.0.9",
-    "@rollup/plugin-node-resolve": "16.0.0",
+    "@playcanvas/eslint-config": "2.1.0",
+    "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-strip": "3.0.4",
     "@rollup/plugin-swc": "0.4.0",
     "@rollup/plugin-terser": "0.4.4",
-    "@rollup/pluginutils": "5.1.4",
-    "@swc/core": "1.11.8",
-    "@types/node": "22.13.10",
+    "@rollup/pluginutils": "5.3.0",
+    "@swc/core": "1.15.3",
+    "@types/node": "24.10.1",
     "c8": "10.1.3",
-    "chai": "5.2.0",
-    "eslint": "9.22.0",
+    "chai": "6.2.1",
+    "eslint": "9.39.1",
     "fflate": "0.8.2",
-    "globals": "15.15.0",
-    "jsdom": "26.0.0",
-    "mocha": "11.1.0",
-    "publint": "0.3.9",
-    "rollup": "4.35.0",
-    "rollup-plugin-dts": "6.1.1",
+    "globals": "16.5.0",
+    "jsdom": "27.2.0",
+    "mocha": "11.7.5",
+    "nise": "6.1.1",
+    "publint": "0.3.15",
+    "rollup": "4.53.3",
+    "rollup-plugin-dts": "6.3.0",
     "rollup-plugin-jscc": "2.0.0",
-    "rollup-plugin-visualizer": "5.14.0",
-    "serve": "14.2.4",
-    "sinon": "19.0.2",
-    "typedoc": "^0.28.1",
-    "typedoc-plugin-mdn-links": "^5.0.1",
-    "typedoc-plugin-missing-exports": "^4.0.0",
-    "typescript": "5.8.2"
+    "rollup-plugin-visualizer": "6.0.5",
+    "serve": "14.2.5",
+    "sinon": "21.0.0",
+    "typedoc": "0.28.15",
+    "typedoc-plugin-mdn-links": "5.0.10",
+    "typedoc-plugin-missing-exports": "4.1.2",
+    "typescript": "5.9.3"
   },
   "optionalDependencies": {
-    "canvas": "3.1.0"
+    "canvas": "3.2.0"
   },
   "scripts": {
     "build": "node build.mjs",
@@ -108,9 +123,10 @@
     "build:esm": "npm run build target:esm",
     "build:esm:release": "npm run build target:esm:release",
     "build:esm:debug": "npm run build target:esm:debug",
-    "build:treemap": "npm run build target:umd treemap",
-    "build:treenet": "npm run build target:umd treenet",
-    "build:treesun": "npm run build target:umd treesun",
+    "build:treemap": "npm run build target:release treemap",
+    "build:treenet": "npm run build target:release treenet",
+    "build:treesun": "npm run build target:release treesun",
+    "build:treeflame": "npm run build target:release treeflame",
     "build:sourcemaps": "npm run build -- -m",
     "watch": "npm run build -- -w",
     "watch:release": "npm run build target:release -- -w",

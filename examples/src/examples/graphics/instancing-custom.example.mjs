@@ -1,4 +1,5 @@
 // @config DESCRIPTION This example demonstrates how to customize the shader handling the instancing of a StandardMaterial.
+import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -15,9 +16,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -97,34 +96,9 @@ assetListLoader.load(() => {
     material.setAttribute('aInstScale', pc.SEMANTIC_ATTR13);
 
     // and a custom instancing shader chunk, which will be used in case the mesh instance has instancing enabled
-    material.chunks.transformInstancingVS = `
-
-        // instancing attributes
-        attribute vec3 aInstPosition;
-        attribute float aInstScale;
-
-        // uniforms
-        uniform float uTime;
-        uniform vec3 uCenter;
-
-        // all instancing chunk needs to do is to implement getModelMatrix function, which returns a world matrix for the instance
-        mat4 getModelMatrix() {
-
-            // we have world position in aInstPosition, but modify it based on distance from uCenter for some displacement effect
-            vec3 direction = aInstPosition - uCenter;
-            float distanceFromCenter = length(direction);
-            float displacementIntensity = exp(-distanceFromCenter * 0.2) ; //* (1.9 + abs(sin(uTime * 1.5)));
-            vec3 worldPos = aInstPosition - direction * displacementIntensity;
-
-            // create matrix based on the modified poition, and scale
-            return mat4(
-                vec4(aInstScale, 0.0, 0.0, 0.0),
-                vec4(0.0, aInstScale, 0.0, 0.0),
-                vec4(0.0, 0.0, aInstScale, 0.0),
-                vec4(worldPos, 1.0)
-            );
-        }
-    `;
+    material.shaderChunksVersion = '2.8';
+    material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('transformInstancingVS', files['transform-instancing.glsl.vert']);
+    material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('transformInstancingVS', files['transform-instancing.wgsl.vert']);
 
     material.update();
 

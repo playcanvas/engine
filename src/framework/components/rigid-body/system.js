@@ -10,7 +10,9 @@ import { RigidBodyComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { CollisionComponent } from '../collision/component.js'
  * @import { Entity } from '../../entity.js'
+ * @import { Trigger } from '../collision/trigger.js'
  */
 
 let ammoRayStart, ammoRayEnd;
@@ -402,13 +404,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
     _kinematic = [];
 
     /**
-     * @type {RigidBodyComponent[]}
+     * @type {Trigger[]}
      * @private
      */
     _triggers = [];
 
     /**
-     * @type {RigidBodyComponent[]}
+     * @type {CollisionComponent[]}
      * @private
      */
     _compounds = [];
@@ -1051,9 +1053,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     onUpdate(dt) {
         let i, len;
 
-        // #if _PROFILER
         this._stats.physicsStart = now();
-        // #endif
 
         // downcast gravity to float32 so we can accurately compare with existing
         // gravity set in ammo.
@@ -1099,9 +1099,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this._checkForCollisions(Ammo.getPointer(this.dynamicsWorld), dt);
         }
 
-        // #if _PROFILER
         this._stats.physicsTime = now() - this._stats.physicsStart;
-        // #endif
     }
 
     destroy() {

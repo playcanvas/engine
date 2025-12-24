@@ -14,7 +14,7 @@ class ScrollbarComponentData {
     /** @type {number} */
     handleSize = 0;
 
-    /** @type {Entity} */
+    /** @type {Entity|null} */
     handleEntity = null;
 }
 

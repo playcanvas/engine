@@ -18,6 +18,10 @@ import { RenderPassDownsample } from './render-pass-downsample.js';
 import { Color } from '../../core/math/color.js';
 
 /**
+ * @import { CameraFrame } from './camera-frame.js'
+ */
+
+/**
  * Options used to configure the RenderPassCameraFrame. To modify these options, you must create
  * a new instance of the RenderPassCameraFrame with the desired settings.
  *
@@ -94,16 +98,32 @@ class RenderPassCameraFrame extends RenderPass {
     _renderTargetScale = 1;
 
     /**
+     * True if the render pass needs to be re-created because layers have been added or removed.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    layersDirty = false;
+
+    /**
+     * The camera frame that this render pass belongs to.
+     *
+     * @type {CameraFrame}
+     */
+    cameraFrame;
+
+    /**
      * @type {RenderTarget|null}
      * @private
      */
     rt = null;
 
-    constructor(app, cameraComponent, options = {}) {
+    constructor(app, cameraFrame, cameraComponent, options = {}) {
         Debug.assert(app);
         super(app.graphicsDevice);
         this.app = app;
         this.cameraComponent = cameraComponent;
+        this.cameraFrame = cameraFrame;
 
         this.options = this.sanitizeOptions(options);
         this.setupRenderPasses(this.options);
@@ -199,7 +219,8 @@ class RenderPassCameraFrame extends RenderPass {
         options = this.sanitizeOptions(options);
 
         // destroy existing passes if they need to be re-created
-        if (this.needsReset(options)) {
+        if (this.needsReset(options) || this.layersDirty) {
+            this.layersDirty = false;
             this.reset();
         }
 
@@ -392,7 +413,8 @@ class RenderPassCameraFrame extends RenderPass {
 
         if (this._sceneHalfEnabled) {
             this.scenePassHalf = new RenderPassDownsample(this.device, this.sceneTexture, {
-                boxFilter: true
+                boxFilter: true,
+                removeInvalid: true // remove invalid pixels to avoid bloom / dof artifacts
             });
             this.scenePassHalf.name = 'RenderPassSceneHalf';
             this.scenePassHalf.init(this.rtHalf, {
@@ -463,6 +485,11 @@ class RenderPassCameraFrame extends RenderPass {
     }
 
     frameUpdate() {
+
+        // trigger update if layers were added or removed
+        if (this.layersDirty) {
+            this.cameraFrame.update();
+        }
 
         super.frameUpdate();
 

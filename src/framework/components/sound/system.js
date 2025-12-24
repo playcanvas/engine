@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { hasAudioContext } from '../../../platform/audio/capabilities.js';
+import { hasAudioContext } from '../../../platform/sound/capabilities.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { SoundComponent } from './component.js';
@@ -49,7 +49,7 @@ class SoundComponentSystem extends ComponentSystem {
 
     /**
      * Sets the volume for the entire Sound system. All sounds will have their volume multiplied by
-     * this value. Valid between [0, 1].
+     * this value. Valid range is between 0 and 1. Defaults to 1.
      *
      * @type {number}
      */

@@ -1,8 +1,13 @@
 import { EventHandler } from './event-handler.js';
 
 /**
- * Set of tag names. Tags are automatically available on {@link Entity} and {@link Asset} as `tags`
- * field.
+ * Tags is a powerful tag management system for categorizing and filtering objects in PlayCanvas
+ * applications. It provides an efficient way to attach string identifiers to objects and query them
+ * using logical operations.
+ *
+ * Tags are automatically available on {@link Asset}s and {@link Entity}s (see {@link Asset#tags}
+ * and {@link GraphNode#tags}). You can search for specific assets via {@link AssetRegistry#findByTag}
+ * and specific entities via {@link GraphNode#findByTag}.
  */
 class Tags extends EventHandler {
     /**

@@ -2,7 +2,7 @@ import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { math } from '../../../core/math/math.js';
 import {
-    pixelFormatInfo, isCompressedPixelFormat,
+    pixelFormatInfo, isCompressedPixelFormat, getPixelFormatArrayType,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_DEPTHSTENCIL,
     SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH,
@@ -17,6 +17,7 @@ import { gpuTextureFormats } from './constants.js';
 
 /**
  * @import { Texture } from '../texture.js'
+ * @import { TextureView } from '../texture-view.js'
  * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
  */
 
@@ -80,6 +81,14 @@ class WebgpuTexture {
      */
     format;
 
+    /**
+     * A cache of texture views keyed by TextureView.key, used for storage texture bindings.
+     *
+     * @type {Map<number, GPUTextureView>}
+     * @private
+     */
+    viewCache = new Map();
+
     constructor(texture) {
         /** @type {Texture} */
         this.texture = texture;
@@ -140,6 +149,9 @@ class WebgpuTexture {
         }
 
         this.view = this.createView(viewDescr);
+
+        // Clear any cached views since the GPU texture was recreated
+        this.viewCache.clear();
     }
 
     destroy(device) {
@@ -151,12 +163,33 @@ class WebgpuTexture {
     }
 
     /**
-     * @param {any} device - The Graphics Device.
-     * @returns {any} - Returns the view.
+     * Returns a texture view. If a TextureView is provided, returns a cached view for those
+     * specific parameters (creating it if needed). Otherwise returns the default view.
+     *
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
+     * @param {TextureView} [textureView] - Optional TextureView specifying view parameters.
+     * @returns {GPUTextureView} - Returns the view.
+     * @private
      */
-    getView(device) {
+    getView(device, textureView) {
 
         this.uploadImmediate(device, this.texture);
+
+        if (textureView) {
+            // Check cache for this view configuration
+            let view = this.viewCache.get(textureView.key);
+            if (!view) {
+                // Create and cache the view
+                view = this.createView({
+                    baseMipLevel: textureView.baseMipLevel,
+                    mipLevelCount: textureView.mipLevelCount,
+                    baseArrayLayer: textureView.baseArrayLayer,
+                    arrayLayerCount: textureView.arrayLayerCount
+                });
+                this.viewCache.set(textureView.key, view);
+            }
+            return view;
+        }
 
         Debug.assert(this.view);
         return this.view;
@@ -297,6 +330,19 @@ class WebgpuTexture {
     uploadData(device) {
 
         const texture = this.texture;
+
+        // If texture dimensions have changed, recreate the GPU texture (for example loading external texture
+        // with different dimensions)
+        if (this.desc && (this.desc.size.width !== texture.width || this.desc.size.height !== texture.height)) {
+            Debug.warnOnce(`Texture '${texture.name}' is being recreated due to dimension change from ${this.desc.size.width}x${this.desc.size.height} to ${texture.width}x${texture.height}. Consider creating the texture with correct dimensions to avoid recreation.`);
+
+            this.gpuTexture.destroy();
+            this.create(device);
+
+            // Notify bind groups that this texture has changed and needs rebinding
+            texture.renderVersionDirty = device.renderVersion;
+        }
+
         if (texture._levels) {
 
             // upload texture data if any
@@ -401,10 +447,10 @@ class WebgpuTexture {
 
     // image types supported by copyExternalImageToTexture
     isExternalImage(image) {
-        return (image instanceof ImageBitmap) ||
-            (image instanceof HTMLVideoElement) ||
-            (image instanceof HTMLCanvasElement) ||
-            (image instanceof OffscreenCanvas);
+        return (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap) ||
+            (typeof HTMLVideoElement !== 'undefined' && image instanceof HTMLVideoElement) ||
+            (typeof HTMLCanvasElement !== 'undefined' && image instanceof HTMLCanvasElement) ||
+            (typeof OffscreenCanvas !== 'undefined' && image instanceof OffscreenCanvas);
     }
 
     uploadExternalImage(device, image, mipLevel, index) {
@@ -421,7 +467,8 @@ class WebgpuTexture {
             texture: this.gpuTexture,
             mipLevel: mipLevel,
             origin: [0, 0, index],
-            aspect: 'all'  // can be: "all", "stencil-only", "depth-only"
+            aspect: 'all',  // can be: "all", "stencil-only", "depth-only"
+            premultipliedAlpha: this.texture._premultiplyAlpha
         };
 
         const copySize = {
@@ -553,16 +600,20 @@ class WebgpuTexture {
         // async read data from the staging buffer to a temporary array
         return device.readBuffer(stagingBuffer, size, null, immediate).then((temp) => {
 
+            // determine target buffer - use user's data buffer or allocate new
+            const ArrayType = getPixelFormatArrayType(texture.format);
+            const targetBuffer = data?.buffer ?? new ArrayBuffer(height * bytesPerRow);
+            const target = new Uint8Array(targetBuffer, data?.byteOffset ?? 0, height * bytesPerRow);
+
             // remove the 256 alignment padding from the end of each row
-            const target = (data?.constructor === Uint8Array) ? data : new Uint8Array(data?.buffer ?? height * bytesPerRow);
             for (let i = 0; i < height; i++) {
                 const srcOffset = i * paddedBytesPerRow;
                 const dstOffset = i * bytesPerRow;
-                const sub = temp.subarray(srcOffset, srcOffset + bytesPerRow);
-                target.set(sub, dstOffset);
+                target.set(temp.subarray(srcOffset, srcOffset + bytesPerRow), dstOffset);
             }
 
-            return data ?? target;
+            // return user's data or create correctly-typed array view
+            return data ?? new ArrayType(targetBuffer);
         });
     }
 }

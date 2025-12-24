@@ -1,5 +1,6 @@
 import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
+import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Color } from '../../core/math/color.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
@@ -7,13 +8,15 @@ import {
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
-    LAYERID_DEPTH
+    LAYERID_DEPTH,
+    PROJECTION_ORTHOGRAPHIC
 } from '../constants.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassForward } from './render-pass-forward.js';
 import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
+import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
 
 /**
  * @import { BindGroup } from '../../platform/graphics/bind-group.js'
@@ -74,9 +77,10 @@ class ForwardRenderer extends Renderer {
      * Create a new ForwardRenderer instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {Scene} scene - The scene.
      */
-    constructor(graphicsDevice) {
-        super(graphicsDevice);
+    constructor(graphicsDevice, scene) {
+        super(graphicsDevice, scene);
 
         const device = this.device;
 
@@ -259,6 +263,13 @@ class ForwardRenderer extends Renderer {
 
             if (directional.castShadows) {
 
+                // ortho projection does not support cascades
+                Debug.call(() => {
+                    if (camera.projection === PROJECTION_ORTHOGRAPHIC && directional.numCascades !== 1) {
+                        Debug.errorOnce(`Camera [${camera.node.name}] with orthographic projection cannot use cascaded shadows, expect incorrect rendering.`);
+                    }
+                });
+
                 const lightRenderData = directional.getRenderData(camera, 0);
                 const biases = directional._getUniformBiasValues(lightRenderData);
 
@@ -415,7 +426,7 @@ class ForwardRenderer extends Renderer {
             this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
 
             const pixelsPerMeter = spot.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
-            const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
+            const fov = lightRenderData.shadowCamera._fov * math.DEG_TO_RAD;
             const fovRatio = 1.0 / Math.tan(fov / 2.0);
             this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * fovRatio);
 
@@ -523,6 +534,12 @@ class ForwardRenderer extends Renderer {
             }
             // #endif
 
+            // skip instanced rendering with 0 instances
+            const instancingData = drawCall.instancingData;
+            if (instancingData && instancingData.count <= 0) {
+                continue;
+            }
+
             drawCall.ensureMaterial(device);
             const material = drawCall.material;
 
@@ -557,17 +574,21 @@ class ForwardRenderer extends Renderer {
         return _drawCallList;
     }
 
-    renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
+    renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces, viewBindGroups) {
         const device = this.device;
         const scene = this.scene;
         const passFlag = 1 << pass;
         const flipFactor = flipFaces ? -1 : 1;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
+        // multiview xr rendering
+        const viewList = camera.xr?.session && camera.xr.views.list.length ? camera.xr.views.list : null;
+
         // Render the scene
         const preparedCallsCount = preparedCalls.drawCalls.length;
         for (let i = 0; i < preparedCallsCount; i++) {
 
+            /** @type {MeshInstance} */
             const drawCall = preparedCalls.drawCalls[i];
 
             // We have a mesh instance
@@ -576,6 +597,8 @@ class ForwardRenderer extends Renderer {
             const shaderInstance = preparedCalls.shaderInstances[i];
             const material = drawCall.material;
             const lightMask = drawCall.mask;
+
+            if (shaderInstance.shader.failed) continue;
 
             if (newMaterial) {
 
@@ -619,41 +642,55 @@ class ForwardRenderer extends Renderer {
             this.setMorphing(device, drawCall.morphInstance);
             this.setSkinning(device, drawCall);
 
-            this.setupMeshUniformBuffers(shaderInstance, drawCall);
+            const instancingData = drawCall.instancingData;
+            if (instancingData) {
+                device.setVertexBuffer(instancingData.vertexBuffer);
+            }
+
+            // mesh / mesh normal matrix
+            this.setMeshInstanceMatrices(drawCall, true);
+
+            this.setupMeshUniformBuffers(shaderInstance);
 
             const style = drawCall.renderStyle;
-            device.setIndexBuffer(mesh.indexBuffer[style]);
+            const indexBuffer = mesh.indexBuffer[style];
 
             drawCallback?.(drawCall, i);
 
-            if (camera.xr && camera.xr.session && camera.xr.views.list.length) {
-                const views = camera.xr.views;
+            const indirectData = drawCall.getDrawCommands(camera);
 
-                for (let v = 0; v < views.list.length; v++) {
-                    const view = views.list[v];
+            if (viewList) {
+                for (let v = 0; v < viewList.length; v++) {
+                    const view = viewList[v];
 
                     device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
 
-                    this.projId.setValue(view.projMat.data);
-                    this.projSkyboxId.setValue(view.projMat.data);
-                    this.viewId.setValue(view.viewOffMat.data);
-                    this.viewInvId.setValue(view.viewInvOffMat.data);
-                    this.viewId3.setValue(view.viewMat3.data);
-                    this.viewProjId.setValue(view.projViewOffMat.data);
-                    this.viewPosId.setValue(view.positionData);
-                    this.viewIndexId.setValue(v);
+                    if (device.supportsUniformBuffers) {
 
-                    if (v === 0) {
-                        this.drawInstance(device, drawCall, mesh, style, true);
+                        const viewBindGroup = viewBindGroups[v];
+                        device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
+
                     } else {
-                        this.drawInstance2(device, drawCall, mesh, style);
+
+                        this.setupViewUniforms(view, v);
                     }
 
+                    const first = v === 0;
+                    const last = v === viewList.length - 1;
+                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, first, last);
+
                     this._forwardDrawCalls++;
+                    if (drawCall.instancingData) {
+                        this._instancedDrawCalls++;
+                    }
                 }
             } else {
-                this.drawInstance(device, drawCall, mesh, style, true);
+                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData);
+
                 this._forwardDrawCalls++;
+                if (drawCall.instancingData) {
+                    this._instancedDrawCalls++;
+                }
             }
 
             // Unset meshInstance overrides back to material values if next draw call will use the same material
@@ -665,7 +702,7 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderForward(camera, renderTarget, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces) {
+    renderForward(camera, renderTarget, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces, viewBindGroups) {
 
         // #if _PROFILER
         const forwardStartTime = now();
@@ -675,7 +712,7 @@ class ForwardRenderer extends Renderer {
         const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, sortedLights, layer, pass);
 
         // render mesh instances
-        this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
+        this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces, viewBindGroups);
 
         _drawCallList.clear();
 
@@ -766,9 +803,9 @@ class ForwardRenderer extends Renderer {
         const fogParams = camera.fogParams ?? this.scene.fog;
         this.setFogConstants(fogParams);
 
-        const viewCount = this.setCameraUniforms(camera, renderTarget);
+        const viewList = this.setCameraUniforms(camera, renderTarget);
         if (device.supportsUniformBuffers) {
-            this.setupViewUniformBuffers(viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewCount);
+            this.setupViewUniformBuffers(viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewList);
         }
 
         // clearing - do it after the view bind groups are set up, to avoid overriding those
@@ -790,7 +827,8 @@ class ForwardRenderer extends Renderer {
             shaderPass,
             null,
             layer,
-            flipFaces);
+            flipFaces,
+            viewBindGroups);
 
         if (layer) {
             layer._forwardDrawCalls += this._forwardDrawCalls - forwardDrawCalls;
@@ -977,6 +1015,9 @@ class ForwardRenderer extends Renderer {
         // Single per-frame calculations
         this.beginFrame(comp);
         this.setSceneConstants();
+
+        // update gsplat director
+        this.gsplatDirector?.update(comp);
 
         // visibility culling of lights, meshInstances, shadows casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible

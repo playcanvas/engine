@@ -30,7 +30,7 @@ class ContainerResource {
      * contains a hierarchy based on {@link GraphNode}.
      * @example
      * // load a glb file and instantiate an entity with a model component based on it
-     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     * app.assets.loadFromUrl("statue.glb", "container", (err, asset) => {
      *     const entity = asset.resource.instantiateModelEntity({
      *         castShadows: true
      *     });
@@ -50,7 +50,7 @@ class ContainerResource {
      * renderable geometry.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
-     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     * app.assets.loadFromUrl("statue.glb", "container", (err, asset) => {
      *     const entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
      *     });
@@ -58,8 +58,8 @@ class ContainerResource {
      *
      *     // find all render components containing mesh instances, and change blend mode on their materials
      *     const renders = entity.findComponents("render");
-     *     renders.forEach(function (render) {
-     *         render.meshInstances.forEach(function (meshInstance) {
+     *     renders.forEach((render) => {
+     *         render.meshInstances.forEach((meshInstance) => {
      *             meshInstance.material.blendType = pc.BLEND_MULTIPLICATIVE;
      *             meshInstance.material.update();
      *         });
@@ -87,13 +87,14 @@ class ContainerResource {
      * null the variant will be reset to the default.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
-     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     * app.assets.loadFromUrl("statue.glb", "container", (err, asset) => {
      *     const entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
      *     const materialVariants = asset.resource.getMaterialVariants();
      *     asset.resource.applyMaterialVariant(entity, materialVariants[0]);
+     * });
      */
     applyMaterialVariant(entity, name) {}
 
@@ -107,7 +108,7 @@ class ContainerResource {
      * the variant will be reset to the default.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
-     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     * app.assets.loadFromUrl("statue.glb", "container", (err, asset) => {
      *     const entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
      *     });
@@ -118,6 +119,7 @@ class ContainerResource {
      *         const renderComponent = renders[i];
      *         asset.resource.applyMaterialVariantInstances(renderComponent.meshInstances, materialVariants[0]);
      *     }
+     * });
      */
     applyMaterialVariantInstances(instances, name) {}
 }

@@ -4,8 +4,7 @@ import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
     BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
     PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8, DISPLAYFORMAT_HDR,
-    PIXELFORMAT_RGBA16F,
-    UNUSED_UNIFORM_NAME
+    PIXELFORMAT_RGBA16F, UNUSED_UNIFORM_NAME, BUFFERUSAGE_INDIRECT
 } from '../constants.js';
 import { BindGroupFormat } from '../bind-group-format.js';
 import { BindGroup } from '../bind-group.js';
@@ -31,14 +30,18 @@ import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
+import { StorageBuffer } from '../storage-buffer.js';
+import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
+import { WebgpuUploadStream } from './webgpu-upload-stream.js';
 
 /**
- * @import { BindGroup } from '../bind-group.js'
  * @import { RenderPass } from '../render-pass.js'
- * @import { WebgpuBuffer } from './webgpu-buffer.js'
  */
 
 const _uniqueLocations = new Map();
+
+// size of indirect draw entry in bytes, 5 x 32bit
+const _indirectEntryByteSize = 5 * 4;
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -50,6 +53,30 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * Object responsible for caching and creation of compute pipelines.
      */
     computePipeline = new WebgpuComputePipeline(this);
+
+    /**
+     * Buffer used to store arguments for indirect draw calls.
+     *
+     * @type {StorageBuffer|null}
+     * @private
+     */
+    _indirectDrawBuffer = null;
+
+    /**
+     * Number of indirect draw slots allocated.
+     *
+     * @type {number}
+     * @private
+     */
+    _indirectDrawBufferCount = 0;
+
+    /**
+     * Next unused index in indirectDrawBuffer.
+     *
+     * @type {number}
+     * @private
+     */
+    _indirectDrawNextIndex = 0;
 
     /**
      * Object responsible for clearing the rendering surface by rendering a quad.
@@ -68,10 +95,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Render pipeline currently set on the device.
      *
-     * @type {GPURenderPipeline}
+     * @type {GPURenderPipeline|null}
      * @private
      */
-    pipeline;
+    pipeline = null;
 
     /**
      * An array of bind group formats, based on currently assigned bind groups
@@ -109,6 +136,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @private
      */
     limits;
+
+    /** GLSL to SPIR-V transpiler */
+    glslang = null;
+
+    /** SPIR-V to WGSL transpiler */
+    twgsl = null;
 
     constructor(canvas, options = {}) {
         super(canvas, options);
@@ -170,7 +203,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.samples = this.backBufferAntialias ? 4 : 1;
 
         // WGSL features
-        const wgslFeatures = navigator.gpu.wgslLanguageFeatures;
+        const wgslFeatures = window.navigator.gpu.wgslLanguageFeatures;
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
 
         this.initCapsDefines();
@@ -185,18 +218,22 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporary message to confirm Webgpu is being used
         Debug.log('WebgpuGraphicsDevice initialization ..');
 
-        // build a full URL from a relative or absolute path
-        const buildUrl = (srcPath) => {
-            return new URL(srcPath, window.location.href).toString();
-        };
+        // Import shader transpilers only if both URLs are provided
+        if (glslangUrl && twgslUrl) {
 
-        const results = await Promise.all([
-            import(`${buildUrl(twgslUrl)}`).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
-            import(`${buildUrl(glslangUrl)}`).then(module => module.default())
-        ]);
+            // build a full URL from a relative or absolute path
+            const buildUrl = (srcPath) => {
+                return new URL(srcPath, window.location.href).toString();
+            };
 
-        this.twgsl = results[0];
-        this.glslang = results[1];
+            const results = await Promise.all([
+                import(`${buildUrl(twgslUrl)}`).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
+                import(`${buildUrl(glslangUrl)}`).then(module => module.default())
+            ]);
+
+            this.twgsl = results[0];
+            this.glslang = results[1];
+        }
 
         // create the device
         return this.createDevice();
@@ -206,7 +243,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         /** @type {GPURequestAdapterOptions} */
         const adapterOptions = {
-            powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined
+            powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined,
+            xrCompatible: this.initOptions.xrCompatible
         };
 
         /**
@@ -227,8 +265,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.textureFloatFilterable = requireFeature('float32-filterable');
         this.textureFloatBlendable = requireFeature('float32-blendable');
         this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
+        this.extCompressedTextureS3TCSliced3D = requireFeature('texture-compression-bc-sliced-3d');
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
+        this.extCompressedTextureASTCSliced3D = requireFeature('texture-compression-astc-sliced-3d');
         this.supportsTimestampQuery = requireFeature('timestamp-query');
         this.supportsDepthClip = requireFeature('depth-clip-control');
         this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
@@ -237,6 +277,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         this.supportsClipDistances = requireFeature('clip-distances');
+        this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
+        this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
+        this.supportsPrimitiveIndex = requireFeature('primitive-index');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
         // copy all adapter limits to the requiredLimits object - to created a device with the best feature sets available
@@ -281,7 +324,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         let canvasToneMapping = 'standard';
 
         // pixel format of the framebuffer that is the most efficient one on the system
-        let preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
+        let preferredCanvasFormat = window.navigator.gpu.getPreferredCanvasFormat();
 
         // display format the user asked for
         const displayFormat = this.initOptions.displayFormat;
@@ -336,7 +379,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // (this allows us to view the preferred format as srgb)
             viewFormats: displayFormat === DISPLAYFORMAT_LDR_SRGB ? [this.backBufferViewFormat] : []
         };
-        this.gpuContext.configure(this.canvasConfig);
+        this.gpuContext?.configure(this.canvasConfig);
 
         this.createBackbuffer();
 
@@ -401,8 +444,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.memory(this);
         WebgpuDebug.validate(this);
 
-        // current frame color output buffer
-        const outColorBuffer = this.gpuContext.getCurrentTexture();
+        // current frame color output buffer (fallback to external backbuffer if not available)
+        const outColorBuffer = this.gpuContext?.getCurrentTexture?.() ?? this.externalBackbuffer?.impl.gpuTexture;
         DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
         // reallocate framebuffer if dimensions change, to match the output texture
@@ -441,6 +484,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (!this.contextLost) {
             this.gpuProfiler.request();
         }
+
+        this._indirectDrawNextIndex = 0;
     }
 
     createBufferImpl(usageFlags) {
@@ -463,12 +508,21 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return new WebgpuShader(shader);
     }
 
+    createDrawCommandImpl(drawCommands) {
+        return new WebgpuDrawCommands(this);
+    }
+
     createTextureImpl(texture) {
+        this.textures.add(texture);
         return new WebgpuTexture(texture);
     }
 
     createRenderTargetImpl(renderTarget) {
         return new WebgpuRenderTarget(renderTarget);
+    }
+
+    createUploadStreamImpl(uploadStream) {
+        return new WebgpuUploadStream(uploadStream);
     }
 
     createBindGroupFormatImpl(bindGroupFormat) {
@@ -481,6 +535,39 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     createComputeImpl(compute) {
         return new WebgpuCompute(compute);
+    }
+
+    get indirectDrawBuffer() {
+        this.allocateIndirectDrawBuffer();
+        return this._indirectDrawBuffer;
+    }
+
+    allocateIndirectDrawBuffer() {
+
+        // handle reallocation
+        if (this._indirectDrawNextIndex === 0 && this._indirectDrawBufferCount < this.maxIndirectDrawCount) {
+            this._indirectDrawBuffer?.destroy();
+            this._indirectDrawBuffer = null;
+        }
+
+        // allocate buffer
+        if (this._indirectDrawBuffer === null) {
+            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * _indirectEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDrawBufferCount = this.maxIndirectDrawCount;
+        }
+    }
+
+    getIndirectDrawSlot(count = 1) {
+
+        // make sure the buffer is allocated
+        this.allocateIndirectDrawBuffer();
+
+        // allocate consecutive slots
+        const slot = this._indirectDrawNextIndex;
+        const nextIndex = this._indirectDrawNextIndex + count;
+        Debug.assert(nextIndex <= this.maxIndirectDrawCount, `Insufficient indirect draw slots per frame (requested ${count}, currently ${nextIndex}), please adjust GraphicsDevice#maxIndirectDrawCount`);
+        this._indirectDrawNextIndex = nextIndex;
+        return slot;
     }
 
     /**
@@ -542,7 +629,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         _uniqueLocations.clear();
     }
 
-    draw(primitive, numInstances = 1, keepBuffers) {
+    draw(primitive, indexBuffer, numInstances = 1, drawCommands, first = true, last = true) {
 
         if (this.shader.ready && !this.shader.failed) {
 
@@ -551,53 +638,95 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             const passEncoder = this.passEncoder;
             Debug.assert(passEncoder);
 
+            let pipeline = this.pipeline;
+
             // vertex buffers
             const vb0 = this.vertexBuffers[0];
             const vb1 = this.vertexBuffers[1];
 
-            if (vb0) {
-                const vbSlot = this.submitVertexBuffer(vb0, 0);
-                if (vb1) {
-                    Debug.call(() => this.validateVBLocations(vb0, vb1));
-                    this.submitVertexBuffer(vb1, vbSlot);
+            if (first) {
+
+                if (vb0) {
+                    const vbSlot = this.submitVertexBuffer(vb0, 0);
+                    if (vb1) {
+                        Debug.call(() => this.validateVBLocations(vb0, vb1));
+                        this.submitVertexBuffer(vb1, vbSlot);
+                    }
+                }
+
+                Debug.call(() => this.validateAttributes(this.shader, vb0?.format, vb1?.format));
+
+                // render pipeline
+                pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
+                    this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                    this.stencilEnabled, this.stencilFront, this.stencilBack);
+                Debug.assert(pipeline);
+
+                if (this.pipeline !== pipeline) {
+                    this.pipeline = pipeline;
+                    passEncoder.setPipeline(pipeline);
                 }
             }
 
-            Debug.call(() => this.validateAttributes(this.shader, vb0?.format, vb1?.format));
-
-            const ib = this.indexBuffer;
-
-            // render pipeline
-            const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, ib?.format, this.shader, this.renderTarget,
-                this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                this.stencilEnabled, this.stencilFront, this.stencilBack);
-            Debug.assert(pipeline);
-
-            if (this.pipeline !== pipeline) {
-                this.pipeline = pipeline;
-                passEncoder.setPipeline(pipeline);
+            if (indexBuffer) {
+                passEncoder.setIndexBuffer(indexBuffer.impl.buffer, indexBuffer.impl.format);
             }
 
             // draw
-            if (ib) {
-                passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
-                passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, 0, 0);
-            } else {
-                passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
+            if (drawCommands) { // indirect draw path
+
+                const storage = drawCommands.impl?.storage ?? this.indirectDrawBuffer;
+                const indirectBuffer = storage.impl.buffer;
+                const drawsCount = drawCommands.count;
+
+                // TODO: when multiDrawIndirect is supported, we can use it here instead of a loop
+                for (let d = 0; d < drawsCount; d++) {
+                    const indirectOffset = (drawCommands.slotIndex + d) * _indirectEntryByteSize;
+                    if (indexBuffer) {
+                        passEncoder.drawIndexedIndirect(indirectBuffer, indirectOffset);
+                    } else {
+                        passEncoder.drawIndirect(indirectBuffer, indirectOffset);
+                    }
+                }
+            } else { // single draw path
+
+                if (indexBuffer) {
+                    passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex ?? 0, 0);
+                } else {
+                    passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
+                }
             }
+
+            // track draw calls - always count as 1 (one material setup, one API call)
+            this._drawCallsPerFrame++;
+
+            // #if _PROFILER
+            // track primitive count
+            if (drawCommands) {
+                // use pre-calculated primitive count from drawCommands
+                this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+            } else {
+                // single draw
+                const primCount = primitive.count * (numInstances > 1 ? numInstances : 1);
+                this._primsPerFrame[primitive.type] += primCount;
+            }
+            // #endif
 
             WebgpuDebug.end(this, 'Drawing', {
                 vb0,
                 vb1,
-                ib,
+                indexBuffer,
                 primitive,
                 numInstances,
                 pipeline
             });
         }
 
-        this.vertexBuffers.length = 0;
-        this.indexBuffer = null;
+        if (last) {
+            // empty array of vertex buffers
+            this.clearVertexBuffer();
+            this.pipeline = null;
+        }
     }
 
     setShader(shader, asyncCompile = false) {
@@ -666,25 +795,28 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     _uploadDirtyTextures() {
-
-        this.textures.forEach((texture) => {
-            if (texture._needsUpload || texture._needsMipmaps) {
+        this.texturesToUpload.forEach((texture) => {
+            if (texture._needsUpload || texture._needsMipmapsUpload) {
                 texture.upload();
             }
         });
+        this.texturesToUpload.clear();
     }
 
     setupTimeStampWrites(passDesc, name) {
         if (this.gpuProfiler._enabled) {
             if (this.gpuProfiler.timestampQueriesSet) {
                 const slot = this.gpuProfiler.getSlot(name);
-
-                passDesc = passDesc ?? {};
-                passDesc.timestampWrites = {
-                    querySet: this.gpuProfiler.timestampQueriesSet.querySet,
-                    beginningOfPassWriteIndex: slot * 2,
-                    endOfPassWriteIndex: slot * 2 + 1
-                };
+                if (slot === -1) {
+                    Debug.warnOnce('Too many GPU profiler slots allocated during the frame, ignoring timestamp writes');
+                } else {
+                    passDesc = passDesc ?? {};
+                    passDesc.timestampWrites = {
+                        querySet: this.gpuProfiler.timestampQueriesSet.querySet,
+                        beginningOfPassWriteIndex: slot * 2,
+                        endOfPassWriteIndex: slot * 2 + 1
+                    };
+                }
             }
         }
         return passDesc;
@@ -795,6 +927,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     startComputePass(name) {
 
+        // upload textures that need it, to avoid them being uploaded during the pass
+        this._uploadDirtyTextures();
+
         WebgpuDebug.internal(this);
         WebgpuDebug.validate(this);
 
@@ -805,6 +940,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const computePassDesc = this.setupTimeStampWrites(undefined, name);
 
         // start the pass
+        DebugHelper.setLabel(computePassDesc, `ComputePass-${name}`);
         const commandEncoder = this.getCommandEncoder();
         this.passEncoder = commandEncoder.beginComputePass(computePassDesc);
         DebugHelper.setLabel(this.passEncoder, `ComputePass-${name}`);
@@ -863,6 +999,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     endCommandEncoder() {
 
+        Debug.assert(!this.insideRenderPass, 'Attempted to finish GPUCommandEncoder while inside a pass. This will invalidate the current pass encoder and cause "Parent encoder is already finished" validation errors.');
+
         const { commandEncoder } = this;
         if (commandEncoder) {
 
@@ -883,6 +1021,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     submit() {
+
+        Debug.assert(!this.insideRenderPass, 'Attempted to submit command buffers while inside a pass. This finishes the parent command encoder and invalidates the active pass ("Parent encoder is already finished") .');
 
         // end the current encoder
         this.endCommandEncoder();
@@ -1136,6 +1276,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         DebugGraphics.popGpuMarker(this);
 
         return true;
+    }
+
+    get hasTranspilers() {
+        return this.glslang && this.twgsl;
     }
 
     // #if _DEBUG

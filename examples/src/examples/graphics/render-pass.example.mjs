@@ -11,17 +11,37 @@ class RenderPassTint extends pc.RenderPassShaderQuad {
         this.sourceTexture = sourceTexture;
         this.tint = pc.Color.WHITE.clone();
 
-        this.shader = this.createQuadShader(
-            'TintShader',
-            `
+        this.shader = pc.ShaderUtils.createShader(device, {
+            uniqueName: 'TintShader',
+            attributes: { aPosition: pc.SEMANTIC_POSITION },
+            vertexChunk: 'quadVS',
+
+            fragmentGLSL: /* glsl */ `
                 uniform sampler2D sourceTexture;
                 uniform vec3 tint;
                 varying vec2 uv0;
+
                 void main() {
                     vec4 color = texture2D(sourceTexture, uv0);
                     gl_FragColor = vec4(color.rgb * tint, color.a);
-                }`
-        );
+                }
+            `,
+
+            fragmentWGSL: /* wgsl */ `
+
+                var sourceTexture: texture_2d<f32>;
+                var sourceTextureSampler: sampler;
+                uniform tint: vec3f;
+                varying uv0: vec2f;
+                
+                @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+                    var output: FragmentOutput;
+                    let color: vec4f = textureSample(sourceTexture, sourceTextureSampler, uv0);
+                    output.color = vec4f(color.rgb * uniform.tint, color.a);
+                    return output;
+                }
+            `
+        });
     }
 
     execute() {
@@ -49,9 +69,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

@@ -9,11 +9,11 @@ import { Debug } from '../../core/debug.js';
  */
 
 /**
- * Callback used by {@link ResourceLoader#load} when a resource is loaded (or an error occurs).
- *
  * @callback ResourceLoaderCallback
+ * Callback used by {@link ResourceLoader#load} when a resource is loaded (or an error occurs).
  * @param {string|null} err - The error message in the case where the load fails.
  * @param {any} [resource] - The resource that has been successfully loaded.
+ * @returns {void}
  */
 
 /**
@@ -107,8 +107,8 @@ class ResourceLoader {
      * from a bundle. Defaults to false.
      * @param {BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
      * when loading an asset that is contained in any of the bundles. It provides an array of
-     * bundles and will ensure asset is loaded from bundle returned from a callback. By default
-     * smallest filesize bundle is choosen.
+     * bundles and will ensure asset is loaded from bundle returned from a callback. By default,
+     * the smallest filesize bundle is chosen.
      * @example
      * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
      *     // use texture here

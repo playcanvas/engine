@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { TRACE_ID_ELEMENT } from '../../../core/constants.js';
+import { TRACEID_ELEMENT } from '../../../core/constants.js';
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
@@ -200,7 +200,7 @@ class ImageRenderable {
             } else {
                 this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + this._element.getMaskOffset();
             }
-            Debug.trace(TRACE_ID_ELEMENT, 'setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
+            Debug.trace(TRACEID_ELEMENT, 'setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
         }
     }
 
@@ -209,7 +209,7 @@ class ImageRenderable {
             return;
         }
 
-        Debug.trace(TRACE_ID_ELEMENT, 'setDrawOrder: ', this.meshInstance.name, drawOrder);
+        Debug.trace(TRACEID_ELEMENT, 'setDrawOrder: ', this.meshInstance.name, drawOrder);
 
         this.meshInstance.drawOrder = drawOrder;
     }
@@ -337,6 +337,12 @@ class ImageElement {
         this._element.on('set:screen', this._onScreenChange, this);
         this._element.on('set:draworder', this._onDrawOrderChange, this);
         this._element.on('screen:set:resolution', this._onResolutionChange, this);
+
+        // If not being initialized (i.e., type changed after component was already enabled),
+        // we need to call onEnable to add the model to layers
+        if (!element._beingInitialized && element.enabled && element.entity.enabled) {
+            this.onEnable();
+        }
     }
 
     destroy() {

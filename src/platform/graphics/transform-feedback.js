@@ -3,7 +3,7 @@ import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { Shader } from './shader.js';
-import { ShaderUtils } from './shader-utils.js';
+import { ShaderDefinitionUtils } from './shader-definition-utils.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -82,6 +82,8 @@ class TransformFeedback {
      * Create a new TransformFeedback instance.
      *
      * @param {VertexBuffer} inputBuffer - The input vertex buffer.
+     * @param {VertexBuffer} [outputBuffer] - The optional output buffer.
+     * If not specified, a buffer with parameters matching the input buffer will be created.
      * @param {number} [usage] - The optional usage type of the output vertex buffer. Can be:
      *
      * - {@link BUFFER_STATIC}
@@ -91,21 +93,35 @@ class TransformFeedback {
      *
      * Defaults to {@link BUFFER_GPUDYNAMIC} (which is recommended for continuous update).
      */
-    constructor(inputBuffer, usage = BUFFER_GPUDYNAMIC) {
-        this.device = inputBuffer.device;
-        const gl = this.device.gl;
+    constructor(inputBuffer, outputBuffer, usage = BUFFER_GPUDYNAMIC) {
 
-        Debug.assert(inputBuffer.format.interleaved || inputBuffer.format.elements.length <= 1,
-            'Vertex buffer used by TransformFeedback needs to be interleaved.');
+        if (outputBuffer !== undefined && !(outputBuffer instanceof VertexBuffer)) {
 
-        this._inputBuffer = inputBuffer;
-        if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
-            // have to recreate input buffer with other usage
-            gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.impl.bufferId);
-            gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
+            Debug.deprecated('Such a constructor that takes the second parameter usage is deprecated.');
+
+            usage = outputBuffer;
+            outputBuffer = undefined;
         }
 
-        this._outputBuffer = new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, {
+        this.device = inputBuffer.device;
+
+        const gl = this.device.gl;
+        const outVB = outputBuffer ?? inputBuffer;
+
+        Debug.assert(outVB.format.interleaved || outVB.format.elements.length <= 1, outputBuffer ?
+            'Output vertex buffer used by TransformFeedback needs to be interleaved.' :
+            'Input vertex buffer used by TransformFeedback needs to be interleaved.'
+        );
+
+        if (usage === BUFFER_GPUDYNAMIC && outVB.usage !== usage) {
+            // have to recreate input buffer with other usage
+            gl.bindBuffer(gl.ARRAY_BUFFER, outVB.impl.bufferId);
+            gl.bufferData(gl.ARRAY_BUFFER, outVB.storage, gl.DYNAMIC_COPY);
+        }
+
+        this._inputBuffer = inputBuffer;
+        this._destroyOutputBuffer = !outputBuffer;
+        this._outputBuffer = outputBuffer ?? new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, {
             usage: usage,
             data: inputBuffer.storage
         });
@@ -115,15 +131,18 @@ class TransformFeedback {
      * Creates a transform feedback ready vertex shader from code.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
-     * @param {string} vertexCode - Vertex shader code. Should contain output variables starting with "out_".
+     * @param {string} vertexCode - Vertex shader code. Should contain output variables starting with "out_" or feedbackVaryings.
      * @param {string} name - Unique name for caching the shader.
+     * @param {string[]} [feedbackVaryings] - A list of shader output variable names that will be captured.
      * @returns {Shader} A shader to use in the process() function.
      */
-    static createShader(graphicsDevice, vertexCode, name) {
-        return new Shader(graphicsDevice, ShaderUtils.createDefinition(graphicsDevice, {
+    static createShader(graphicsDevice, vertexCode, name, feedbackVaryings) {
+        return new Shader(graphicsDevice, ShaderDefinitionUtils.createDefinition(graphicsDevice, {
             name,
             vertexCode,
-            useTransformFeedback: true
+            feedbackVaryings,
+            useTransformFeedback: true,
+            fragmentCode: 'void main(void) {gl_FragColor = vec4(0.0);}'
         }));
     }
 
@@ -131,7 +150,9 @@ class TransformFeedback {
      * Destroys the transform feedback helper object.
      */
     destroy() {
-        this._outputBuffer.destroy();
+        if (this._destroyOutputBuffer) {
+            this._outputBuffer.destroy();
+        }
     }
 
     /**
@@ -151,13 +172,14 @@ class TransformFeedback {
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);
         device.updateBegin();
-        device.setVertexBuffer(this._inputBuffer, 0);
+        device.setVertexBuffer(this._inputBuffer);
         device.setRaster(false);
         device.setTransformFeedbackBuffer(this._outputBuffer);
         device.setShader(shader);
         device.draw({
             type: PRIMITIVE_POINTS,
             base: 0,
+            baseVertex: 0,
             count: this._inputBuffer.numVertices,
             indexed: false
         });
@@ -170,6 +192,13 @@ class TransformFeedback {
 
         // swap buffers
         if (swap) {
+
+            Debug.call(() => {
+                if (this._inputBuffer.format !== this._outputBuffer.format) {
+                    Debug.warnOnce('Trying to swap buffers with different formats.');
+                }
+            });
+
             let tmp = this._inputBuffer.impl.bufferId;
             this._inputBuffer.impl.bufferId = this._outputBuffer.impl.bufferId;
             this._outputBuffer.impl.bufferId = tmp;

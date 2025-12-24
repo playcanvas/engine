@@ -3,9 +3,10 @@ import { math } from './math.js';
 /**
  * An RGBA color.
  *
- * Each color component is a floating point value in the range 0 to 1. The `r` (red), `g` (green)
- * and `b` (blue) components define a color in RGB color space. The `a` (alpha) component defines
- * transparency. An alpha of 1 is fully opaque. An alpha of 0 is fully transparent.
+ * Each color component is a floating point value in the range 0 to 1. The {@link r} (red),
+ * {@link g} (green) and {@link b} (blue) components define a color in RGB color space. The
+ * {@link a} (alpha) component defines transparency. An alpha of 1 is fully opaque. An alpha of
+ * 0 is fully transparent.
  *
  * @category Math
  */
@@ -39,13 +40,31 @@ class Color {
     a;
 
     /**
-     * Create a new Color object.
+     * Creates a new Color instance.
      *
-     * @param {number|number[]} [r] - The value of the red component (0-1). Defaults to 0. If r is
-     * an array of length 3 or 4, the array will be used to populate all components.
-     * @param {number} [g] - The value of the green component (0-1). Defaults to 0.
-     * @param {number} [b] - The value of the blue component (0-1). Defaults to 0.
-     * @param {number} [a] - The value of the alpha component (0-1). Defaults to 1.
+     * @overload
+     * @param {number} [r] - The r value. Defaults to 0.
+     * @param {number} [g] - The g value. Defaults to 0.
+     * @param {number} [b] - The b value. Defaults to 0.
+     * @param {number} [a] - The a value. Defaults to 1.
+     * @example
+     * const c1 = new pc.Color(); // defaults to 0, 0, 0, 1
+     * const c2 = new pc.Color(0.1, 0.2, 0.3, 0.4);
+     */
+    /**
+     * Creates a new Color instance.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the color values from.
+     * @example
+     * const c = new pc.Color([0.1, 0.2, 0.3, 0.4]);
+     */
+    /**
+     * @param {number|number[]} [r] - The r value. Defaults to 0. If r is an array of length 3 or
+     * 4, the array will be used to populate all components.
+     * @param {number} [g] - The g value. Defaults to 0.
+     * @param {number} [b] - The b value. Defaults to 0.
+     * @param {number} [a] - The a value. Defaults to 1.
      */
     constructor(r = 0, g = 0, b = 0, a = 1) {
         const length = r.length;
@@ -276,14 +295,30 @@ class Color {
     }
 
     /**
-     * Converts the color to an array of numbers.
+     * @overload
+     * @param {number[]} [arr] - The array to populate with the color's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]} The color as an array.
+     */
+    /**
+     * @overload
+     * @param {ArrayBufferView} arr - The array to populate with the color's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {ArrayBufferView} The color as an array.
+     */
+    /**
+     * Converts the color to an array.
      *
-     * @param {number[]} [arr] - The array to populate with the color components. If not specified,
-     * a new array is created. Default is true.
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the color's number
+     * components. If not specified, a new array is created.
      * @param {number} [offset] - The zero-based index at which to start copying elements to the
      * array. Default is 0.
      * @param {boolean} [alpha] - If true, the output array will include the alpha value.
-     * @returns {number[]} The color as an array of numbers.
+     * @returns {number[]|ArrayBufferView} The color as an array.
      * @example
      * const c = new pc.Color(1, 1, 1);
      * // Outputs [1, 1, 1, 1]

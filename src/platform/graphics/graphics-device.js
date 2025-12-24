@@ -31,6 +31,8 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
+ * @import { StorageBuffer } from './storage-buffer.js';
+ * @import { DrawCommands } from './draw-commands.js';
  */
 
 const _tempSet = new Set();
@@ -110,6 +112,14 @@ class GraphicsDevice extends EventHandler {
     isWebGL2 = false;
 
     /**
+     * True if the deviceType is Null
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isNull = false;
+
+    /**
      * True if the back-buffer is using HDR format, which means that the browser will display the
      * rendered images in high dynamic range mode. This is true if the options.displayFormat is set
      * to {@link DISPLAYFORMAT_HDR} when creating the graphics device using
@@ -124,6 +134,15 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     scope;
+
+    /**
+     * The maximum number of indirect draw calls that can be used within a single frame. Used on
+     * WebGPU only. This needs to be adjusted based on the maximum number of draw calls that can
+     * be used within a single frame. Defaults to 1024.
+     *
+     * @type {number}
+     */
+    maxIndirectDrawCount = 1024;
 
     /**
      * The maximum supported texture anisotropy setting.
@@ -199,6 +218,14 @@ class GraphicsDevice extends EventHandler {
     supportsStencil;
 
     /**
+     * True if the device supports multi-draw. This is always supported on WebGPU, and support on
+     * WebGL2 is optional, but pretty common.
+     *
+     * @type {boolean}
+     */
+    supportsMultiDraw = true;
+
+    /**
      * True if the device supports compute shaders.
      *
      * @readonly
@@ -237,12 +264,20 @@ class GraphicsDevice extends EventHandler {
     shaders = [];
 
     /**
-     * An array of currently created textures.
+     * A set of currently created textures.
      *
-     * @type {Texture[]}
+     * @type {Set<Texture>}
      * @ignore
      */
-    textures = [];
+    textures = new Set();
+
+    /**
+     * A set of textures that need to be uploaded to the GPU.
+     *
+     * @type {Set<Texture>}
+     * @ignore
+     */
+    texturesToUpload = new Set();
 
     /**
      * A set of currently created render targets.
@@ -287,6 +322,16 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     supportsClipDistances = false;
+
+    /**
+     * True if the device supports primitive index in fragment shaders (WebGPU only). When
+     * supported, fragment shaders can access the `pcPrimitiveIndex` built-in variable which
+     * uniquely identifies the current primitive being processed.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsPrimitiveIndex = false;
 
     /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
@@ -379,6 +424,12 @@ class GraphicsDevice extends EventHandler {
      */
     gpuProfiler;
 
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    _destroyed = false;
+
     defaultClearOptions = {
         color: [0, 0, 0, 1],
         depth: 1,
@@ -413,6 +464,14 @@ class GraphicsDevice extends EventHandler {
      */
     capsDefines = new Map();
 
+    /**
+     * A set of maps to clear at the end of the frame.
+     *
+     * @type {Set<Map>}
+     * @ignore
+     */
+    mapsToClear = new Set();
+
     static EVENT_RESIZE = 'resizecanvas';
 
     constructor(canvas, options) {
@@ -436,7 +495,7 @@ class GraphicsDevice extends EventHandler {
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
         this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
 
-        this.buffers = [];
+        this.buffers = new Set();
 
         this._vram = {
             // #if _PROFILER
@@ -503,6 +562,14 @@ class GraphicsDevice extends EventHandler {
         capsDefines.clear();
         if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
         if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
+        if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
+        if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
+
+        // Platform defines
+        if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
+        if (platform.mobile) capsDefines.set('PLATFORM_MOBILE', '');
+        if (platform.android) capsDefines.set('PLATFORM_ANDROID', '');
+        if (platform.ios) capsDefines.set('PLATFORM_IOS', '');
     }
 
     /**
@@ -521,6 +588,8 @@ class GraphicsDevice extends EventHandler {
 
         this.gpuProfiler?.destroy();
         this.gpuProfiler = null;
+
+        this._destroyed = true;
     }
 
     onDestroyShader(shader) {
@@ -530,6 +599,18 @@ class GraphicsDevice extends EventHandler {
         if (idx !== -1) {
             this.shaders.splice(idx, 1);
         }
+    }
+
+    /**
+     * Called when a texture is destroyed to remove it from internal tracking structures.
+     *
+     * @param {Texture} texture - The texture being destroyed.
+     * @ignore
+     */
+    onTextureDestroyed(texture) {
+        this.textures.delete(texture);
+        this.texturesToUpload.delete(texture);
+        this.scope.removeValue(texture);
     }
 
     // executes after the extended classes have executed their destroy function
@@ -596,7 +677,6 @@ class GraphicsDevice extends EventHandler {
     }
 
     initializeContextCaches() {
-        this.indexBuffer = null;
         this.vertexBuffers = [];
         this.shader = null;
         this.shaderValid = undefined;
@@ -693,21 +773,11 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Sets the current index buffer on the graphics device. For subsequent draw calls, the
-     * specified index buffer will be used to provide index data for any indexed primitives.
-     *
-     * @param {IndexBuffer|null} indexBuffer - The index buffer to assign to the device.
-     */
-    setIndexBuffer(indexBuffer) {
-        // Store the index buffer
-        this.indexBuffer = indexBuffer;
-    }
-
-    /**
      * Sets the current vertex buffer on the graphics device. For subsequent draw calls, the
      * specified vertex buffer(s) will be used to provide vertex data for any primitives.
      *
      * @param {VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
+     * @ignore
      */
     setVertexBuffer(vertexBuffer) {
 
@@ -726,12 +796,31 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Clears the index buffer set on the graphics device. This is called automatically by the
-     * renderer.
-     * @ignore
+     * Retrieves the first available slot in the {@link indirectDrawBuffer} used for indirect
+     * rendering, which can be utilized by a {@link Compute} shader to generate indirect draw
+     * parameters and by {@link MeshInstance#setIndirect} to configure indirect draw calls.
+     *
+     * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
+     * @returns {number} - The first reserved slot index used for indirect rendering.
      */
-    clearIndexBuffer() {
-        this.indexBuffer = null;
+    getIndirectDrawSlot(count = 1) {
+        return 0;
+    }
+
+    /**
+     * Returns the buffer used to store arguments for indirect draw calls. The size of the buffer is
+     * controlled by the {@link maxIndirectDrawCount} property. This buffer can be passed to a
+     * {@link Compute} shader along with a slot obtained by calling {@link getIndirectDrawSlot}, in
+     * order to prepare indirect draw parameters. Also see {@link MeshInstance#setIndirect}.
+     *
+     * Only available on WebGPU, returns null on other platforms.
+     *
+     * @type {StorageBuffer|null}
+     */
+    get indirectDrawBuffer() {
+        return null;
     }
 
     /**
@@ -770,6 +859,50 @@ class GraphicsDevice extends EventHandler {
         // #if _PROFILER
         this._renderTargetCreationTime += now() - startTime;
         // #endif
+    }
+
+    /**
+     * Submits a graphical primitive to the hardware for immediate rendering.
+     *
+     * @param {object} primitive - Primitive object describing how to submit current vertex/index
+     * buffers.
+     * @param {number} primitive.type - The type of primitive to render. Can be:
+     *
+     * - {@link PRIMITIVE_POINTS}
+     * - {@link PRIMITIVE_LINES}
+     * - {@link PRIMITIVE_LINELOOP}
+     * - {@link PRIMITIVE_LINESTRIP}
+     * - {@link PRIMITIVE_TRIANGLES}
+     * - {@link PRIMITIVE_TRISTRIP}
+     * - {@link PRIMITIVE_TRIFAN}
+     *
+     * @param {number} primitive.base - The offset of the first index or vertex to dispatch in the
+     * draw call.
+     * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw
+     * call.
+     * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby
+     * using the currently set index buffer and false otherwise.
+     * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
+     * @param {number} [numInstances] - The number of instances to render when using instancing.
+     * Defaults to 1.
+     * @param {DrawCommands} [drawCommands] - The draw commands to use for the draw call.
+     * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
+     * When set to true, vertex and index buffers related state is set up. Defaults to true.
+     * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
+     * When set to true, vertex and index buffers related state is cleared. Defaults to true.
+     * @example
+     * // Render a single, unindexed triangle
+     * device.draw({
+     *     type: pc.PRIMITIVE_TRIANGLES,
+     *     base: 0,
+     *     count: 3,
+     *     indexed: false
+     * });
+     *
+     * @ignore
+     */
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
+        Debug.assert(false);
     }
 
     /**
@@ -830,6 +963,10 @@ class GraphicsDevice extends EventHandler {
         this.canvas.width = width;
         this.canvas.height = height;
         this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
+    }
+
+    update() {
+        this.updateClientRect();
     }
 
     updateClientRect() {
@@ -937,14 +1074,14 @@ class GraphicsDevice extends EventHandler {
 
             // log out all loaded textures, sorted by gpu memory size
             if (Tracing.get(TRACEID_TEXTURES)) {
-                const textures = this.textures.slice();
+                const textures = [...this.textures];
                 textures.sort((a, b) => b.gpuSize - a.gpuSize);
                 Debug.log(`Textures: ${textures.length}`);
                 let textureTotal = 0;
                 textures.forEach((texture, index) => {
                     const textureSize  = texture.gpuSize;
                     textureTotal += textureSize;
-                    Debug.log(`${index}. ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
+                    Debug.log(`${index}. Id: ${texture.id} ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
                 });
                 Debug.log(`Total: ${(textureTotal / 1024 / 1024).toFixed(2)}MB`);
             }
@@ -958,6 +1095,9 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
+        // clear all maps scheduled for end of frame clearing
+        this.mapsToClear.forEach(map => map.clear());
+        this.mapsToClear.clear();
     }
 
     /**

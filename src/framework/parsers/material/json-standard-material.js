@@ -44,7 +44,10 @@ class JsonStandardMaterialParser {
         }
 
         if (data.chunks) {
-            material.chunks = { ...data.chunks };
+            if (data.chunks && Object.keys(data.chunks).length > 0) {
+                const dstMap = material.shaderChunks.glsl;
+                Object.entries(data.chunks).forEach(([key, value]) => dstMap.set(key, value));
+            }
         }
 
         // initialize material values from the input data

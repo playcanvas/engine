@@ -1,22 +1,25 @@
 import {
-    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
+    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR11, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL,
+    primitiveGlslToWgslTypeMap
 } from '../../../platform/graphics/constants.js';
 import {
     LIGHTSHAPE_PUNCTUAL,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADER_DEPTH, SHADER_PICK,
+    SHADER_PICK,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames, lightFalloffNames,
     cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
     REFLECTIONSRC_NONE
 } from '../../constants.js';
-import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { ShaderPass } from '../../shader-pass.js';
-import { validateUserChunks } from '../chunks/chunk-validation.js';
+import { validateUserChunks } from '../glsl/chunks/chunk-validation.js';
 import { Debug } from '../../../core/debug.js';
+import { ShaderChunks } from '../shader-chunks.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -32,13 +35,6 @@ const builtinAttributes = {
     vertex_boneWeights: SEMANTIC_BLENDWEIGHT,
     vertex_boneIndices: SEMANTIC_BLENDINDICES
 };
-
-export const varyingsWGSLTypes = new Map([
-    ['vec4', 'vec4f'],
-    ['vec3', 'vec3f'],
-    ['vec2', 'vec2f'],
-    ['float', 'f32']
-]);
 
 class LitShader {
     /**
@@ -63,12 +59,60 @@ class LitShader {
     options;
 
     /**
+     * The shader language, {@link SHADERLANGUAGE_GLSL} or {@link SHADERLANGUAGE_WGSL}.
+     *
+     * @type {string}
+     */
+    shaderLanguage;
+
+    /**
+     * The vertex shader defines needed for the shader compilation.
+     *
+     * @type {Map<string, string>}
+     */
+    vDefines = new Map();
+
+    /**
+     * The fragment shader defines needed for the shader compilation.
+     *
+     * @type {Map<string, string>}
+     */
+    fDefines = new Map();
+
+    /**
+     * The vertex and fragment shader includes needed for the shader compilation.
+     *
+     * @type {Map<string, string>}
+     */
+    includes = new Map();
+
+    /**
+     * The shader chunks to use for the shader generation.
+     *
+     * @type {Map<string, string>}
+     */
+    chunks = null;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {LitShaderOptions} options - The lit options.
+     * @param {boolean} [allowWGSL] - Whether to allow WGSL shader language.
      */
-    constructor(device, options) {
+    constructor(device, options, allowWGSL = true) {
         this.device = device;
         this.options = options;
+
+        // shader language
+        const userChunks = options.shaderChunks;
+        this.shaderLanguage = (device.isWebGPU && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+
+        if (device.isWebGPU && this.shaderLanguage === SHADERLANGUAGE_GLSL) {
+            if (!device.hasTranspilers) {
+                Debug.errorOnce('Cannot use GLSL shader on WebGPU without transpilers', {
+                    litShader: this
+                });
+            }
+        }
 
         // resolve custom chunk attributes
         this.attributes = {
@@ -81,27 +125,31 @@ class LitShader {
             }
         }
 
-        if (options.chunks) {
-            const userChunks = options.chunks;
+        // start with the default engine chunks
+        const engineChunks = ShaderChunks.get(device, this.shaderLanguage);
+        this.chunks = new Map(engineChunks);
 
-            // #if _DEBUG
-            validateUserChunks(userChunks);
-            // #endif
+        // optionally add user chunks
+        if (userChunks) {
+            const userChunkMap = this.shaderLanguage === SHADERLANGUAGE_GLSL ? userChunks.glsl : userChunks.wgsl;
 
-            this.chunks = Object.create(shaderChunks);
-            for (const chunkName in shaderChunks) {
-                if (userChunks.hasOwnProperty(chunkName)) {
-                    const chunk = userChunks[chunkName];
-                    for (const a in builtinAttributes) {
-                        if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
-                            this.attributes[a] = builtinAttributes[a];
-                        }
+            Debug.call(() => {
+                validateUserChunks(userChunkMap, userChunks.version);
+            });
+
+            userChunkMap.forEach((chunk, chunkName) => {
+
+                // extract attribute names from the used chunk
+                Debug.assert(chunk);
+                for (const a in builtinAttributes) {
+                    if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
+                        this.attributes[a] = builtinAttributes[a];
                     }
-                    this.chunks[chunkName] = chunk;
                 }
-            }
-        } else {
-            this.chunks = shaderChunks;
+
+                // add user chunk
+                this.chunks.set(chunkName, chunk);
+            });
         }
 
         this.shaderPassInfo = ShaderPass.get(this.device).getByIndex(options.pass);
@@ -125,10 +173,6 @@ class LitShader {
 
         // generated by vshader
         this.vshader = null;
-
-        // defines set by the shader generation
-        this.vDefines = new Map();
-        this.fDefines = new Map();
 
         // generated by fshader
         this.fshader = null;
@@ -158,7 +202,7 @@ class LitShader {
      */
     generateVertexShader(useUv, useUnmodifiedUv, mapTransforms) {
 
-        const { options, vDefines, attributes, chunks } = this;
+        const { options, vDefines, attributes } = this;
 
         // varyings
         const varyings = new Map();
@@ -179,9 +223,10 @@ class LitShader {
 
             // only attach these if the default instancing chunk is used, otherwise it is expected
             // for the user to provide required attributes using material.setAttribute
-            if (this.chunks.transformInstancingVS === shaderChunks.transformInstancingVS) {
-                attributes.instance_line1 = SEMANTIC_ATTR12;
-                attributes.instance_line2 = SEMANTIC_ATTR13;
+            const languageChunks = ShaderChunks.get(this.device, this.shaderLanguage);
+            if (this.chunks.get('transformInstancingVS') === languageChunks.get('transformInstancingVS')) {
+                attributes.instance_line1 = SEMANTIC_ATTR11;
+                attributes.instance_line2 = SEMANTIC_ATTR12;
                 attributes.instance_line3 = SEMANTIC_ATTR14;
                 attributes.instance_line4 = SEMANTIC_ATTR15;
             }
@@ -248,6 +293,9 @@ class LitShader {
             attributes.vertex_color = SEMANTIC_COLOR;
             vDefines.set('VERTEX_COLOR', true);
             varyings.set('vVertexColor', 'vec4');
+            if (options.useVertexColorGamma) {
+                vDefines.set('STD_VERTEX_COLOR_GAMMA', '');
+            }
         }
 
         if (options.useMsdf && options.msdfTextAttribute) {
@@ -286,14 +334,19 @@ class LitShader {
 
         // generate varyings code
         varyings.forEach((type, name) => {
-            vDefines.set(`VARYING_${name.toUpperCase()}`, true);
-            const generateWgsl = false; // when we switch generation to WGSL on WebGPU
-            this.varyingsCode += generateWgsl ?
-                `varying ${name}: ${varyingsWGSLTypes.get(type)};\n` :
+            this.varyingsCode += `#define VARYING_${name.toUpperCase()}\n`;
+            this.varyingsCode += this.shaderLanguage === SHADERLANGUAGE_WGSL ?
+                `varying ${name}: ${primitiveGlslToWgslTypeMap.get(type)};\n` :
                 `varying ${type} ${name};\n`;
         });
 
-        this.vshader = this.varyingsCode + chunks.litMainVS;
+        // varyings code exposed as an include
+        this.includes.set('varyingsVS', this.varyingsCode);
+        this.includes.set('varyingsPS', this.varyingsCode);
+
+        this.vshader = `
+            #include "litMainVS"
+        `;
     }
 
     /**
@@ -412,6 +465,7 @@ class LitShader {
         this.fDefineSet(this.lighting, 'LIT_LIGHTING');
         this.fDefineSet(options.useMetalness, 'LIT_METALNESS');
         this.fDefineSet(options.enableGGXSpecular, 'LIT_GGX_SPECULAR');
+        this.fDefineSet(options.useAnisotropy, 'LIT_ANISOTROPY');
         this.fDefineSet(options.useSpecularityFactor, 'LIT_SPECULARITY_FACTOR');
         this.fDefineSet(options.useCubeMapRotation, 'CUBEMAP_ROTATION');
         this.fDefineSet(options.occludeSpecularFloat, 'LIT_OCCLUDE_SPECULAR_FLOAT');
@@ -490,50 +544,21 @@ class LitShader {
     generateFragmentShader(frontendDecl, frontendCode, lightingUv) {
         const options = this.options;
 
-        if (options.pass === SHADER_PICK || options.pass === SHADER_DEPTH || options.pass === SHADER_PREPASS) {
+        // generated code is exposed as an include
+        this.includes.set('frontendDeclPS', frontendDecl ?? '');
+        this.includes.set('frontendCodePS', frontendCode ?? '');
 
-            this.fshader = `
-
-                ${this.varyingsCode}
-                ${frontendDecl}
-                ${frontendCode}
-                #include "litOtherMainPS"
-            `;
-
-        } else if (this.shadowPass) { // SHADOW PASS
-
+        if (options.pass === SHADER_PICK || options.pass === SHADER_PREPASS) {
+            // nothing to prepare currently
+        } else if (this.shadowPass) {
             this.prepareShadowPass();
-            this.fshader = `
-                ${this.varyingsCode}
-                ${frontendDecl}
-                ${frontendCode}
-                #include "litShadowMainPS"
-            `;
-
-        } else if (options.customFragmentShader) {   // CUSTOM FRAGMENT SHADER
-
-            this.fshader = `
-                ${options.customFragmentShader}
-            `;
-
-        } else { // FORWARD PASS
-
+        } else {
             this.prepareForwardPass(lightingUv);
-            this.fshader = `
-                ${this.varyingsCode}
-                ${frontendDecl}
-                #include "litForwardDeclarationPS"
-                #include "litForwardPreCodePS"
-                ${frontendCode}
-                #include "litForwardPostCodePS"
-                #include "litForwardBackendPS"
-                #include "litForwardMainPS"
-            `;
         }
 
-        Debug.assert(!this.fshader.includes('litShaderArgs.'), 'Automatic compatibility with shaders using litShaderArgs has been removed. Please update the shader to use the new system.', {
-            fshader: this.fshader
-        });
+        this.fshader = `
+            #include "litMainPS"
+        `;
     }
 }
 

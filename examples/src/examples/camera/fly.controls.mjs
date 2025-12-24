@@ -2,22 +2,13 @@
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, Panel, SliderInput, VectorInput } = ReactPCUI;
+export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
+    const { BindingTwoWay, LabelGroup, Panel, SliderInput, VectorInput, TextInput } = ReactPCUI;
 
     return fragment(
         jsx(
             Panel,
             { headerText: 'Attributes' },
-            jsx(
-                LabelGroup,
-                { text: 'Pitch range' },
-                jsx(VectorInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.pitchRange' },
-                    dimensions: 2
-                })
-            ),
             jsx(
                 LabelGroup,
                 { text: 'Rotate speed' },
@@ -31,14 +22,14 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Rotate damping' },
+                { text: 'Rotate joystick sensitivity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.rotateDamping' },
+                    link: { observer, path: 'attr.rotateJoystickSens' },
                     min: 0,
-                    max: 0.999,
-                    step: 0.001,
-                    precision: 3
+                    max: 10,
+                    step: 0.01,
+                    precision: 2
                 })
             ),
             jsx(
@@ -73,6 +64,18 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Rotate damping' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.rotateDamping' },
+                    min: 0,
+                    max: 0.999,
+                    step: 0.001,
+                    precision: 3
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Move damping' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -81,6 +84,41 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
                     max: 0.999,
                     step: 0.001,
                     precision: 3
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Pitch range' },
+                jsx(VectorInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.pitchRange' },
+                    dimensions: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Yaw range' },
+                jsx(VectorInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.yawRange' },
+                    dimensions: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Gamepad deadzone' },
+                jsx(VectorInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.gamepadDeadZone' },
+                    dimensions: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Mobile input layout' },
+                jsx(TextInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.mobileInputLayout' }
                 })
             )
         )

@@ -99,11 +99,20 @@ class GSplatData {
     numSplats;
 
     /**
-     * @param {PlyElement[]} elements - The elements.
+     * File header comments.
+     *
+     * @type { string[] }
      */
-    constructor(elements) {
+    comments;
+
+    /**
+     * @param {PlyElement[]} elements - The elements.
+     * @param {string[]} comments - File header comments.
+     */
+    constructor(elements, comments = []) {
         this.elements = elements;
         this.numSplats = this.getElement('vertex').count;
+        this.comments = comments;
     }
 
     /**
@@ -176,11 +185,16 @@ class GSplatData {
                 continue;
             }
 
-            const scaleVal = 2.0 * Math.exp(Math.max(sx[i], sy[i], sz[i]));
-
             const px = x[i];
             const py = y[i];
             const pz = z[i];
+            const scale = Math.max(sx[i], sy[i], sz[i]);
+
+            if (!isFinite(px) || !isFinite(py) || !isFinite(pz) || !isFinite(scale)) {
+                continue;
+            }
+
+            const scaleVal = 2.0 * Math.exp(scale);
 
             if (first) {
                 first = false;
@@ -245,18 +259,21 @@ class GSplatData {
     }
 
     /**
-     * @param {Float32Array} result - Array containing the centers.
+     * Returns a new Float32Array of centers (x, y, z per splat).
+     * @returns {Float32Array} Centers buffer
      */
-    getCenters(result) {
+    getCenters() {
         const x = this.getProp('x');
         const y = this.getProp('y');
         const z = this.getProp('z');
 
+        const result = new Float32Array(this.numSplats * 3);
         for (let i = 0; i < this.numSplats; ++i) {
             result[i * 3 + 0] = x[i];
             result[i * 3 + 1] = y[i];
             result[i * 3 + 2] = z[i];
         }
+        return result;
     }
 
     /**
@@ -281,10 +298,18 @@ class GSplatData {
                 continue;
             }
 
+            const px = x[i];
+            const py = y[i];
+            const pz = z[i];
+
+            if (!isFinite(px) || !isFinite(py) || !isFinite(pz)) {
+                continue;
+            }
+
             const weight = 1.0 / (1.0 + Math.exp(Math.max(sx[i], sy[i], sz[i])));
-            result.x += x[i] * weight;
-            result.y += y[i] * weight;
-            result.z += z[i] * weight;
+            result.x += px * weight;
+            result.y += py * weight;
+            result.z += pz * weight;
             sum += weight;
         }
         result.mulScalar(1 / sum);
@@ -379,9 +404,9 @@ class GSplatData {
 
         const codes = new Map();
         for (let i = 0; i < this.numSplats; i++) {
-            const ix = Math.floor((x[i] - minX) * sizeX);
-            const iy = Math.floor((y[i] - minY) * sizeY);
-            const iz = Math.floor((z[i] - minZ) * sizeZ);
+            const ix = Math.min(1023, Math.floor((x[i] - minX) * sizeX));
+            const iy = Math.min(1023, Math.floor((y[i] - minY) * sizeY));
+            const iz = Math.min(1023, Math.floor((z[i] - minZ) * sizeZ));
             const code = encodeMorton3(ix, iy, iz);
 
             const val = codes.get(code);

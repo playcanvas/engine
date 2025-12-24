@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
-    SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS
+    SHADER_FORWARD, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS, SHADER_DEPTH_PICK
 } from './constants.js';
 
 /**
@@ -25,7 +25,7 @@ class ShaderPassInfo {
     /** @type {string} */
     name;
 
-    /** @type {Map<string, string} */
+    /** @type {Map<string, string>} */
     defines = new Map();
 
     /**
@@ -58,10 +58,12 @@ class ShaderPassInfo {
             keyword = 'SHADOW';
         } else if (this.isForward) {
             keyword = 'FORWARD';
-        } else if (this.index === SHADER_DEPTH) {
-            keyword = 'DEPTH';
         } else if (this.index === SHADER_PICK) {
             keyword = 'PICK';
+        } else if (this.index === SHADER_DEPTH_PICK) {
+            // depth pick generates both PICK_PASS and DEPTH_PICK_PASS defines
+            keyword = 'PICK';
+            this.defines.set('DEPTH_PICK_PASS', '');
         }
 
         this.defines.set(`${keyword}_PASS`, '');
@@ -102,9 +104,9 @@ class ShaderPass {
         // add default passes in the required order, to match the constants
         add('forward', SHADER_FORWARD, { isForward: true });
         add('prepass', SHADER_PREPASS);
-        add('depth', SHADER_DEPTH);
-        add('pick', SHADER_PICK);
         add('shadow', SHADER_SHADOW);
+        add('pick', SHADER_PICK);
+        add('depth_pick', SHADER_DEPTH_PICK);
     }
 
     /**

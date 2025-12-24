@@ -5,7 +5,7 @@ import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 import { Frustum } from '../core/shape/frustum.js';
 import {
-    ASPECT_AUTO, PROJECTION_PERSPECTIVE,
+    ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
 import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
@@ -531,7 +531,7 @@ class Camera {
     }
 
     /**
-     * Convert a point from 3D world space to 2D canvas pixel space.
+     * Convert a point from 3D world space to 2D canvas pixel space based on the camera's rect.
      *
      * @param {Vec3} worldCoord - The world space coordinate to transform.
      * @param {number} cw - The width of PlayCanvas' canvas element.
@@ -550,14 +550,20 @@ class Camera {
                 worldCoord.z * vpm[11] +
                            1 * vpm[15];
 
-        screenCoord.x = (screenCoord.x / w + 1) * 0.5 * cw;
-        screenCoord.y = (1 - screenCoord.y / w) * 0.5 * ch;
+        // convert normalized clip space to screen space [0, 1]
+        screenCoord.x = (screenCoord.x / w + 1) * 0.5;
+        screenCoord.y = (1 - screenCoord.y / w) * 0.5;
+
+        // convert screen space [0, 1] to pixel space based on camera rect
+        const { x: rx, y: ry, z: rw, w: rh } = this._rect;
+        screenCoord.x = screenCoord.x * rw * cw + rx * cw;
+        screenCoord.y = screenCoord.y * rh * ch + (1 - ry - rh) * ch;
 
         return screenCoord;
     }
 
     /**
-     * Convert a point from 2D canvas pixel space to 3D world space.
+     * Convert a point from 2D canvas pixel space to 3D world space based on the camera's rect.
      *
      * @param {number} x - X coordinate on PlayCanvas' canvas element.
      * @param {number} y - Y coordinate on PlayCanvas' canvas element.
@@ -568,10 +574,14 @@ class Camera {
      * @returns {Vec3} The world space coordinate.
      */
     screenToWorld(x, y, z, cw, ch, worldCoord = new Vec3()) {
-
         // Calculate the screen click as a point on the far plane of the normalized device coordinate 'box' (z=1)
+        const { x: rx, y: ry, z: rw, w: rh } = this._rect;
         const range = this.farClip - this.nearClip;
-        _deviceCoord.set(x / cw, (ch - y) / ch, z / range);
+        _deviceCoord.set(
+            (x - rx * cw) / (rw * cw),
+            1 - (y - (1 - ry - rh) * ch) / (rh * ch),
+            z / range
+        );
         _deviceCoord.mulScalar(2);
         _deviceCoord.sub(Vec3.ONE);
 
@@ -675,7 +685,7 @@ class Camera {
      */
     getFrustumCorners(near = this.nearClip, far = this.farClip) {
 
-        const fov = this.fov * Math.PI / 180.0;
+        const fov = this.fov * math.DEG_TO_RAD;
         let x, y;
 
         if (this.projection === PROJECTION_PERSPECTIVE) {
@@ -743,6 +753,23 @@ class Camera {
     setXrProperties(properties) {
         Object.assign(this._xrProperties, properties);
         this._projMatDirty = true;
+    }
+
+    /**
+     * Fills the provided array with camera parameters for use in shaders.
+     * The array format is: [1/far, far, near, isOrtho].
+     *
+     * @param {Float32Array} output - Array to fill with camera parameters.
+     * @returns {Float32Array} The output array.
+     * @ignore
+     */
+    fillShaderParams(output) {
+        const f = this._farClip;
+        output[0] = 1 / f;
+        output[1] = f;
+        output[2] = this._nearClip;
+        output[3] = this._projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+        return output;
     }
 }
 

@@ -1,4 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { StringIds } from '../../../core/string-ids.js';
 import { SHADERLANGUAGE_WGSL } from '../constants.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { ShaderProcessorGLSL } from '../shader-processor-glsl.js';
@@ -9,6 +10,9 @@ import { WebgpuShaderProcessorWGSL } from './webgpu-shader-processor-wgsl.js';
  * @import { GraphicsDevice } from '../graphics-device.js'
  * @import { Shader } from '../shader.js'
  */
+
+// Shared StringIds instance for content-based compute shader keys
+const computeShaderIds = new StringIds();
 
 /**
  * A WebGPU implementation of the Shader.
@@ -36,6 +40,14 @@ class WebgpuShader {
      * @type {string|null}
      */
     _computeCode = null;
+
+    /**
+     * Cached content-based key for compute shader.
+     *
+     * @type {number|undefined}
+     * @private
+     */
+    _computeKey;
 
     /**
      * Name of the vertex entry point function.
@@ -69,6 +81,9 @@ class WebgpuShader {
                 this._computeCode = definition.cshader ?? null;
                 this.computeUniformBufferFormats = definition.computeUniformBufferFormats;
                 this.computeBindGroupFormat = definition.computeBindGroupFormat;
+                if (definition.computeEntryPoint) {
+                    this.computeEntryPoint = definition.computeEntryPoint;
+                }
 
             } else {
 
@@ -186,9 +201,20 @@ class WebgpuShader {
     }
 
     transpile(src, shaderType, originalSrc) {
+
+        // make sure shader transpilers are available
+        const device = this.shader.device;
+        if (!device.glslang || !device.twgsl) {
+            console.error(`Cannot transpile shader [${this.shader.label}] - shader transpilers (glslang/twgsl) are not available. Make sure to provide glslangUrl and twgslUrl when creating the device.`, {
+                shader: this.shader
+            });
+            return null;
+        }
+
+        // transpile
         try {
-            const spirv = this.shader.device.glslang.compileGLSL(src, shaderType);
-            const wgsl = this.shader.device.twgsl.convertSpirV2WGSL(spirv);
+            const spirv = device.glslang.compileGLSL(src, shaderType);
+            const wgsl = device.twgsl.convertSpirV2WGSL(spirv);
             return wgsl;
         } catch (err) {
             console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU while rendering ${DebugGraphics.toString()}, error:\n [${err.stack}]`, {
@@ -209,6 +235,21 @@ class WebgpuShader {
     get fragmentCode() {
         Debug.assert(this._fragmentCode);
         return this._fragmentCode;
+    }
+
+    /**
+     * Content-based key for compute shader caching. Returns the same key for identical
+     * shader code and entry point combinations, regardless of how many Shader instances exist.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get computeKey() {
+        if (this._computeKey === undefined) {
+            const keyString = `${this._computeCode}|${this.computeEntryPoint}`;
+            this._computeKey = computeShaderIds.get(keyString);
+        }
+        return this._computeKey;
     }
 
     /**
