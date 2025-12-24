@@ -189,4 +189,3 @@ assetListLoader.load(() => {
 });
 
 export { app };
-
