@@ -277,6 +277,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         this.supportsClipDistances = requireFeature('clip-distances');
+        this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
+        this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
+        this.supportsPrimitiveIndex = requireFeature('primitive-index');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
         // copy all adapter limits to the requiredLimits object - to created a device with the best feature sets available

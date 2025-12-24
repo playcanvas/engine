@@ -335,10 +335,10 @@ class WebgpuShaderProcessorWGSL {
         const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions, shader);
 
         // VS - convert a list of varyings to a shader block
-        const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true);
+        const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true, device);
 
         // FS - convert a list of varyings to a shader block
-        const fragmentVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(fragmentExtracted.varyings, varyingMap, false);
+        const fragmentVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(fragmentExtracted.varyings, varyingMap, false, device);
 
         // uniforms - merge vertex and fragment uniforms, and create shared uniform buffers
         // Note that as both vertex and fragment can declare the same uniform, we need to remove duplicates
@@ -701,7 +701,7 @@ class WebgpuShaderProcessorWGSL {
         return code;
     }
 
-    static processVaryings(varyingLines, varyingMap, isVertex) {
+    static processVaryings(varyingLines, varyingMap, isVertex, device) {
         let block = '';
         let blockPrivates = '';
         let blockCopy = '';
@@ -742,14 +742,26 @@ class WebgpuShaderProcessorWGSL {
         } else {
             block += '    @builtin(position) position : vec4f,\n';          // interpolated fragment position
             block += '    @builtin(front_facing) frontFacing : bool,\n';    // front-facing
-            block += '    @builtin(sample_index) sampleIndex : u32\n';      // sample index for MSAA
+            block += '    @builtin(sample_index) sampleIndex : u32,\n';     // sample index for MSAA
+            if (device.supportsPrimitiveIndex) {
+                block += '    @builtin(primitive_index) primitiveIndex : u32,\n';  // primitive index
+            }
         }
+
+        // primitive index support
+        const primitiveIndexGlobals = device.supportsPrimitiveIndex ? `
+            var<private> pcPrimitiveIndex: u32;
+        ` : '';
+        const primitiveIndexCopy = device.supportsPrimitiveIndex ? `
+                pcPrimitiveIndex = input.primitiveIndex;
+        ` : '';
 
         // global variables for build-in input into fragment shader
         const fragmentGlobals = isVertex ? '' : `
             var<private> pcPosition: vec4f;
             var<private> pcFrontFacing: bool;
             var<private> pcSampleIndex: u32;
+            ${primitiveIndexGlobals}
             ${blockPrivates}
             
             // function to copy inputs (varyings) to private global variables
@@ -758,6 +770,7 @@ class WebgpuShaderProcessorWGSL {
                 pcPosition = input.position;
                 pcFrontFacing = input.frontFacing;
                 pcSampleIndex = input.sampleIndex;
+                ${primitiveIndexCopy}
             }
         `;
 
