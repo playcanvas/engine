@@ -61,6 +61,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     vignetteIntensity = 0.3;
 
+    vignetteColor = new Color(0, 0, 0);
+
     _fringingEnabled = false;
 
     fringingIntensity = 10;
@@ -106,6 +108,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.bcsId = scope.resolve('brightnessContrastSaturation');
         this.tintId = scope.resolve('tint');
         this.vignetterParamsId = scope.resolve('vignetterParams');
+        this.vignetteColorId = scope.resolve('vignetteColor');
         this.fringingIntensityId = scope.resolve('fringingIntensity');
         this.sceneTextureInvResId = scope.resolve('sceneTextureInvRes');
         this.sceneTextureInvResValue = new Float32Array(2);
@@ -368,6 +371,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         if (this._vignetteEnabled) {
             this.vignetterParamsId.setValue([this.vignetteInner, this.vignetteOuter, this.vignetteCurvature, this.vignetteIntensity]);
+            this.vignetteColorId.setValue([this.vignetteColor.r, this.vignetteColor.g, this.vignetteColor.b]);
         }
 
         if (this._fringingEnabled) {

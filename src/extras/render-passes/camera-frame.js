@@ -127,6 +127,7 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * is rendered using a rectangle with rounded corners, and this parameter controls the curvature of
  * the corners. Value of 1 represents a circle. Smaller values make the corners more square, while
  * larger values make them more rounded. Defaults to 0.5.
+ * @property {Color} color - The color of the vignette effect. Defaults to black.
  */
 
 /**
@@ -272,7 +273,8 @@ class CameraFrame {
         intensity: 0,
         inner: 0.5,
         outer: 1,
-        curvature: 0.5
+        curvature: 0.5,
+        color: new Color(0, 0, 0)
     };
 
     /**
@@ -488,6 +490,7 @@ class CameraFrame {
             composePass.vignetteOuter = vignette.outer;
             composePass.vignetteCurvature = vignette.curvature;
             composePass.vignetteIntensity = vignette.intensity;
+            composePass.vignetteColor.copy(vignette.color);
         }
 
         composePass.fringingEnabled = fringing.intensity > 0;
