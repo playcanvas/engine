@@ -5,7 +5,7 @@ import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 import { Frustum } from '../core/shape/frustum.js';
 import {
-    ASPECT_AUTO, PROJECTION_PERSPECTIVE,
+    ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
 import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
@@ -753,6 +753,23 @@ class Camera {
     setXrProperties(properties) {
         Object.assign(this._xrProperties, properties);
         this._projMatDirty = true;
+    }
+
+    /**
+     * Fills the provided array with camera parameters for use in shaders.
+     * The array format is: [1/far, far, near, isOrtho].
+     *
+     * @param {Float32Array} output - Array to fill with camera parameters.
+     * @returns {Float32Array} The output array.
+     * @ignore
+     */
+    fillShaderParams(output) {
+        const f = this._farClip;
+        output[0] = 1 / f;
+        output[1] = f;
+        output[2] = this._nearClip;
+        output[3] = this._projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+        return output;
     }
 }
 
