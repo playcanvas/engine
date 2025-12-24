@@ -316,6 +316,16 @@ class GraphicsDevice extends EventHandler {
     supportsClipDistances = false;
 
     /**
+     * True if the device supports primitive index in fragment shaders (WebGPU only). When
+     * supported, fragment shaders can access the `pcPrimitiveIndex` built-in variable which
+     * uniquely identifies the current primitive being processed.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsPrimitiveIndex = false;
+
+    /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
      *
      * @type {boolean}
@@ -545,6 +555,7 @@ class GraphicsDevice extends EventHandler {
         if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
         if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
         if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
+        if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
 
         // Platform defines
         if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
