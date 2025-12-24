@@ -95,6 +95,9 @@ export class Annotation extends Script {
     /** @type {number} */
     static opacity = 1.0;
 
+    /** @type {number} */
+    static behindOpacity = 0.25;
+
     /**
      * @type {string}
      * @attribute
@@ -393,7 +396,7 @@ export class Annotation extends Script {
                 depthWrite: true
             }),
             Annotation._createHotspotMaterial(this.texture, {
-                opacity: 0.25,
+                opacity: Annotation.behindOpacity,
                 depthTest: false,
                 depthWrite: false
             })
@@ -472,9 +475,9 @@ export class Annotation extends Script {
             // update material opacity and also directly on the uniform so we
             // can avoid a full material update
             this.materials[0].opacity = Annotation.opacity;
-            this.materials[1].opacity = 0.25 * Annotation.opacity;
+            this.materials[1].opacity = Annotation.behindOpacity * Annotation.opacity;
             this.materials[0].setParameter('material_opacity', Annotation.opacity);
-            this.materials[1].setParameter('material_opacity', 0.25 * Annotation.opacity);
+            this.materials[1].setParameter('material_opacity', Annotation.behindOpacity * Annotation.opacity);
         };
         this.app.on('prerender', prerenderHandler);
 
