@@ -927,6 +927,48 @@ export const PIXELFORMAT_BC7_SRGBA = 68;
 export const PIXELFORMAT_DEPTH16 = 69;
 
 /**
+ * 32-bit floating point RG (32-bit float for each red and green channels). WebGPU only.
+ *
+ * @category Graphics
+ */
+export const PIXELFORMAT_RG32F = 70;
+
+/**
+ * 32-bit RGB format with shared 5-bit exponent (9 bits each for RGB mantissa). HDR format.
+ *
+ * @category Graphics
+ */
+export const PIXELFORMAT_RGB9E5 = 71;
+
+/**
+ * 8-bit per-channel signed normalized (RG) format.
+ *
+ * @category Graphics
+ */
+export const PIXELFORMAT_RG8S = 72;
+
+/**
+ * 8-bit per-channel signed normalized (RGBA) format.
+ *
+ * @category Graphics
+ */
+export const PIXELFORMAT_RGBA8S = 73;
+
+/**
+ * 10-bit RGB with 2-bit alpha unsigned normalized format.
+ *
+ * @category Graphics
+ */
+export const PIXELFORMAT_RGB10A2 = 74;
+
+/**
+ * 10-bit RGB with 2-bit alpha unsigned integer format.
+ *
+ * @category Graphics
+ */
+export const PIXELFORMAT_RGB10A2U = 75;
+
+/**
  * Information about pixel formats.
  *
  * ldr: whether the format is low dynamic range (LDR), which typically means it's not HDR, and uses
@@ -956,6 +998,12 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_RGB32F,        { name: 'RGB32F', size: 16 }],
     [PIXELFORMAT_RGBA32F,       { name: 'RGBA32F', size: 16 }],
     [PIXELFORMAT_R32F,          { name: 'R32F', size: 4 }],
+    [PIXELFORMAT_RG32F,         { name: 'RG32F', size: 8 }],
+    [PIXELFORMAT_RGB9E5,        { name: 'RGB9E5', size: 4 }],
+    [PIXELFORMAT_RG8S,          { name: 'RG8S', size: 2 }],
+    [PIXELFORMAT_RGBA8S,        { name: 'RGBA8S', size: 4 }],
+    [PIXELFORMAT_RGB10A2,       { name: 'RGB10A2', size: 4 }],
+    [PIXELFORMAT_RGB10A2U,      { name: 'RGB10A2U', size: 4, isInt: true }],
     [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4 }],
     [PIXELFORMAT_DEPTH16,       { name: 'DEPTH16', size: 2 }],
     [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4 }],
@@ -1074,6 +1122,7 @@ export const requiresManualGamma = (format) => {
 export const getPixelFormatArrayType = (format) => {
     switch (format) {
         case PIXELFORMAT_R32F:
+        case PIXELFORMAT_RG32F:
         case PIXELFORMAT_RGB32F:
         case PIXELFORMAT_RGBA32F:
             return Float32Array;
@@ -1084,6 +1133,9 @@ export const getPixelFormatArrayType = (format) => {
         case PIXELFORMAT_R32U:
         case PIXELFORMAT_RG32U:
         case PIXELFORMAT_RGBA32U:
+        case PIXELFORMAT_RGB9E5:
+        case PIXELFORMAT_RGB10A2:
+        case PIXELFORMAT_RGB10A2U:
             return Uint32Array;
         case PIXELFORMAT_R16I:
         case PIXELFORMAT_RG16I:
@@ -1104,6 +1156,8 @@ export const getPixelFormatArrayType = (format) => {
         case PIXELFORMAT_R8I:
         case PIXELFORMAT_RG8I:
         case PIXELFORMAT_RGBA8I:
+        case PIXELFORMAT_RG8S:
+        case PIXELFORMAT_RGBA8S:
             return Int8Array;
         default:
             return Uint8Array;

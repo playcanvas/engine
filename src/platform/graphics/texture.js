@@ -46,6 +46,8 @@ let id = 0;
  * sampling.
  *     - float formats are supported on WebGL2 and WebGPU with linear sampling only if
  * {@link GraphicsDevice#textureFloatFilterable} is true.
+ *     - {@link PIXELFORMAT_RGB9E5} is a compact HDR format with shared exponent, supported for
+ * sampling on both WebGL2 and WebGPU, but cannot be used as a render target.
  *
  * 2. **As renderable textures** that can be used as color buffers in a {@link RenderTarget}:
  *     - on WebGPU, rendering to float and half-float formats is always supported.
@@ -58,6 +60,9 @@ let id = 0;
  * is supported. This is the case of many mobile iOS devices.
  *     - you can determine available renderable HDR format using
  * {@link GraphicsDevice#getRenderableHdrFormat}.
+ *     - {@link PIXELFORMAT_RGB10A2} provides 10 bits per RGB channel with 2-bit alpha, offering
+ * higher precision than {@link PIXELFORMAT_RGBA8} at the same memory cost. It is renderable on
+ * both WebGL2 and WebGPU. {@link PIXELFORMAT_RGB10A2U} is the unsigned integer variant.
  * @category Graphics
  */
 class Texture {
