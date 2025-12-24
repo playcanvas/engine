@@ -760,6 +760,7 @@ class Camera {
      * The array format is: [1/far, far, near, isOrtho].
      *
      * @param {Float32Array} output - Array to fill with camera parameters.
+     * @returns {Float32Array} The output array.
      * @ignore
      */
     fillShaderParams(output) {
@@ -768,6 +769,7 @@ class Camera {
         output[1] = f;
         output[2] = this._nearClip;
         output[3] = this._projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+        return output;
     }
 }
 

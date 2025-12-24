@@ -56,8 +56,7 @@ class RenderPassCoC extends RenderPassShaderQuad {
         this.paramsId.setValue(paramsValue);
 
         const camera = this.cameraComponent.camera;
-        camera.fillShaderParams(this.cameraParams);
-        this.cameraParamsId.setValue(this.cameraParams);
+        this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
 
         super.execute();
     }

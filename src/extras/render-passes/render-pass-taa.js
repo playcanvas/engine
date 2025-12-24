@@ -132,8 +132,7 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.viewProjInvId.setValue(camera._viewProjInverse.data);
         this.jittersId.setValue(camera._jitters);
 
-        camera.fillShaderParams(this.cameraParams);
-        this.cameraParamsId.setValue(this.cameraParams);
+        this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
     }
 
     // called when the parent render pass gets added to the frame graph

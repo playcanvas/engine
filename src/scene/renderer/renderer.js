@@ -422,8 +422,7 @@ class Renderer {
         this.tbnBasis.setValue(flipY ? -1 : 1);
 
         // camera params
-        camera.fillShaderParams(this.cameraParams);
-        this.cameraParamsId.setValue(this.cameraParams);
+        this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
 
         // viewport size
         let viewportWidth = target ? target.width : this.device.width;
