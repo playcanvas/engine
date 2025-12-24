@@ -17,6 +17,7 @@ import { gpuTextureFormats } from './constants.js';
 
 /**
  * @import { Texture } from '../texture.js'
+ * @import { TextureView } from '../texture-view.js'
  * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
  */
 
@@ -80,6 +81,14 @@ class WebgpuTexture {
      */
     format;
 
+    /**
+     * A cache of texture views keyed by TextureView.key, used for storage texture bindings.
+     *
+     * @type {Map<number, GPUTextureView>}
+     * @private
+     */
+    viewCache = new Map();
+
     constructor(texture) {
         /** @type {Texture} */
         this.texture = texture;
@@ -140,6 +149,9 @@ class WebgpuTexture {
         }
 
         this.view = this.createView(viewDescr);
+
+        // Clear any cached views since the GPU texture was recreated
+        this.viewCache.clear();
     }
 
     destroy(device) {
@@ -151,12 +163,33 @@ class WebgpuTexture {
     }
 
     /**
-     * @param {any} device - The Graphics Device.
-     * @returns {any} - Returns the view.
+     * Returns a texture view. If a TextureView is provided, returns a cached view for those
+     * specific parameters (creating it if needed). Otherwise returns the default view.
+     *
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
+     * @param {TextureView} [textureView] - Optional TextureView specifying view parameters.
+     * @returns {GPUTextureView} - Returns the view.
+     * @private
      */
-    getView(device) {
+    getView(device, textureView) {
 
         this.uploadImmediate(device, this.texture);
+
+        if (textureView) {
+            // Check cache for this view configuration
+            let view = this.viewCache.get(textureView.key);
+            if (!view) {
+                // Create and cache the view
+                view = this.createView({
+                    baseMipLevel: textureView.baseMipLevel,
+                    mipLevelCount: textureView.mipLevelCount,
+                    baseArrayLayer: textureView.baseArrayLayer,
+                    arrayLayerCount: textureView.arrayLayerCount
+                });
+                this.viewCache.set(textureView.key, view);
+            }
+            return view;
+        }
 
         Debug.assert(this.view);
         return this.view;

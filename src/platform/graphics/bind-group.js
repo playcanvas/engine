@@ -3,6 +3,7 @@ import { TRACEID_BINDGROUP_ALLOC } from '../../core/constants.js';
 import { UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { getBuiltInTexture } from './built-in-textures.js';
+import { TextureView } from './texture-view.js';
 
 /**
  * @import { BindGroupFormat } from './bind-group-format.js'
@@ -67,7 +68,9 @@ class BindGroup {
         this.dirty = true;
         this.impl = graphicsDevice.createBindGroupImpl(this);
 
+        /** @type {(Texture|TextureView)[]} */
         this.textures = [];
+        /** @type {(Texture|TextureView)[]} */
         this.storageTextures = [];
         this.storageBuffers = [];
         this.uniformBuffers = [];
@@ -125,13 +128,17 @@ class BindGroup {
      * Assign a texture to a named slot.
      *
      * @param {string} name - The name of the texture slot.
-     * @param {Texture} texture - Texture to assign to the slot.
+     * @param {Texture|TextureView} value - Texture or TextureView to assign to the slot.
      */
-    setTexture(name, texture) {
+    setTexture(name, value) {
         const index = this.format.textureFormatsMap.get(name);
         Debug.assert(index !== undefined, `Setting a texture [${name}] on a bind group with id: ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`, this);
-        if (this.textures[index] !== texture) {
-            this.textures[index] = texture;
+
+        // Get the actual texture for version checking
+        const texture = value instanceof TextureView ? value.texture : value;
+
+        if (this.textures[index] !== value) {
+            this.textures[index] = value;
             this.dirty = true;
         } else if (this.renderVersionUpdated < texture.renderVersionDirty) {
             // if the texture properties have changed
@@ -143,13 +150,17 @@ class BindGroup {
      * Assign a storage texture to a named slot.
      *
      * @param {string} name - The name of the texture slot.
-     * @param {Texture} texture - Texture to assign to the slot.
+     * @param {Texture|TextureView} value - Texture or TextureView to assign to the slot.
      */
-    setStorageTexture(name, texture) {
+    setStorageTexture(name, value) {
         const index = this.format.storageTextureFormatsMap.get(name);
         Debug.assert(index !== undefined, `Setting a storage texture [${name}] on a bind group with id: ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`, this);
-        if (this.storageTextures[index] !== texture) {
-            this.storageTextures[index] = texture;
+
+        // Get the actual texture for version checking
+        const texture = value instanceof TextureView ? value.texture : value;
+
+        if (this.storageTextures[index] !== value) {
+            this.storageTextures[index] = value;
             this.dirty = true;
         } else if (this.renderVersionUpdated < texture.renderVersionDirty) {
             // if the texture properties have changed
