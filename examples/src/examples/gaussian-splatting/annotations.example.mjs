@@ -153,28 +153,16 @@ assetListLoader.load(() => {
         return entity;
     };
 
-    // Create 20 random annotations spread around the scene
+    // Create annotations at specific locations
     const annotationData = [
-        { pos: new pc.Vec3(0.5, 0, -1.5), title: 'Hotel Entrance', text: 'Main entrance area of the hotel sculpture.' },
-        { pos: new pc.Vec3(-0.8, 0.5, -0.5), title: 'Upper Level', text: 'Upper decorative elements of the structure.' },
-        { pos: new pc.Vec3(1.2, -0.3, 0.8), title: 'Side Detail', text: 'Intricate side details visible from this angle.' },
-        { pos: new pc.Vec3(-1.0, 0.2, 1.5), title: 'Rear Section', text: 'Back portion of the hotel sculpture.' },
-        { pos: new pc.Vec3(0.3, -1.0, -2.2), title: 'Biker Front', text: 'Front view of the first biker splat.' },
-        { pos: new pc.Vec3(-0.5, -1.2, -2.5), title: 'Biker Wheel', text: 'Wheel detail on the biker model.' },
-        { pos: new pc.Vec3(0.8, -1.5, -1.8), title: 'Biker Seat', text: 'Seat area of the motorcycle.' },
-        { pos: new pc.Vec3(-0.3, -1.0, 2.3), title: 'Second Biker', text: 'The cloned biker instance.' },
-        { pos: new pc.Vec3(0.5, -1.3, 1.8), title: 'Biker 2 Detail', text: 'Details on the second biker.' },
-        { pos: new pc.Vec3(2.2, -1.2, -0.8), title: 'Guitar Body', text: 'Main body of the guitar splat.' },
-        { pos: new pc.Vec3(2.5, -0.8, -0.3), title: 'Guitar Neck', text: 'Neck portion of the guitar.' },
-        { pos: new pc.Vec3(1.8, -1.5, 0.0), title: 'Guitar Base', text: 'Base of the guitar model.' },
-        { pos: new pc.Vec3(-1.5, 0.8, -1.0), title: 'Floating Point 1', text: 'Test annotation in mid-air.' },
-        { pos: new pc.Vec3(1.8, 1.0, 1.2), title: 'Floating Point 2', text: 'Another floating test point.' },
-        { pos: new pc.Vec3(-2.0, -0.5, 0.0), title: 'Left Side', text: 'Left side of the scene.' },
-        { pos: new pc.Vec3(2.8, 0.0, -1.5), title: 'Right Corner', text: 'Right corner area.' },
-        { pos: new pc.Vec3(0.0, 1.5, 0.0), title: 'Top Center', text: 'Central point above the scene.' },
-        { pos: new pc.Vec3(-1.2, -1.8, -0.8), title: 'Ground Level', text: 'Near ground level annotation.' },
-        { pos: new pc.Vec3(1.0, 0.3, -0.5), title: 'Mid Scene', text: 'Middle of the scene area.' },
-        { pos: new pc.Vec3(-0.5, -0.2, 2.8), title: 'Back Area', text: 'Rear portion of the viewing area.' }
+        { pos: new pc.Vec3(0.6, -0.6, 1.7), title: 'Helmet 1', text: 'First helmet display.' },
+        { pos: new pc.Vec3(-0.5, -0.2, -1.5), title: 'Helmet 2', text: 'Second helmet display.' },
+        { pos: new pc.Vec3(2.0, 0, 0), title: 'Guitar', text: 'Guitar on display.' },
+        { pos: new pc.Vec3(-2.2, 2.0, -4.8), title: 'Black Light Projector', text: 'Black light projector equipment.' },
+        { pos: new pc.Vec3(2.0, 2.0, 0.2), title: 'White Light Projector', text: 'White light projector equipment.' },
+        { pos: new pc.Vec3(3.7, 0, -3.6), title: 'Stairs', text: 'Staircase area.' },
+        { pos: new pc.Vec3(-0.2, -0.5, -5.5), title: 'Basement', text: 'Basement level.' },
+        { pos: new pc.Vec3(-0.1, -1.5, -0.3), title: 'Statue', text: 'Statue display.' }
     ];
 
     annotationData.forEach((data, index) => {
