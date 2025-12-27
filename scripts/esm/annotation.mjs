@@ -19,7 +19,7 @@ import {
     BLENDMODE_SRC_ALPHA
 } from 'playcanvas';
 
-/** @import { Application, CameraComponent, Quat } from 'playcanvas' */
+/** @import { Application, Quat } from 'playcanvas' */
 
 // clamp the vertices of the hotspot so it is never clipped by the near or far plane
 const depthClamp = `
@@ -100,27 +100,87 @@ export class Annotation extends Script {
 
     /**
      * @type {string}
-     * @attribute
+     * @private
      */
-    label;
+    _label = '';
 
     /**
      * @type {string}
-     * @attribute
+     * @private
      */
-    title;
+    _title = '';
 
     /**
      * @type {string}
+     * @private
+     */
+    _text = '';
+
+    /**
+     * The short text displayed on the hotspot circle (e.g. "1", "A").
+     * @type {string}
+     * @title Label
      * @attribute
      */
-    text;
+    get label() {
+        return this._label;
+    }
+
+    set label(value) {
+        this._label = value;
+        // Only update texture if already initialized
+        if (this.texture) {
+            this._updateLabel(value);
+        }
+    }
+
+    /**
+     * The title shown in the tooltip when the hotspot is clicked.
+     * @type {string}
+     * @title Title
+     * @attribute
+     */
+    get title() {
+        return this._title;
+    }
+
+    set title(value) {
+        this._title = value;
+        this._updateTitle(value);
+    }
+
+    /**
+     * The description text shown in the tooltip when the hotspot is clicked.
+     * @type {string}
+     * @title Text
+     * @attribute
+     */
+    get text() {
+        return this._text;
+    }
+
+    set text(value) {
+        this._text = value;
+        this._updateText(value);
+    }
 
     /**
      * @type {HTMLDivElement | null}
      * @private
      */
     hotspotDom = null;
+
+    /**
+     * @type {Entity | null}
+     * @private
+     */
+    baseEntity = null;
+
+    /**
+     * @type {Entity | null}
+     * @private
+     */
+    overlayEntity = null;
 
     /**
      * @type {Texture | null}
@@ -402,33 +462,37 @@ export class Annotation extends Script {
             })
         ];
 
-        const base = new Entity('base');
+        this.baseEntity = new Entity('base');
         const baseMi = new MeshInstance(Annotation.mesh, this.materials[0]);
         baseMi.cull = false;
-        base.addComponent('render', {
+        this.baseEntity.addComponent('render', {
             layers: [Annotation.layers[0].id],
             meshInstances: [baseMi]
         });
 
-        const overlay = new Entity('overlay');
+        this.overlayEntity = new Entity('overlay');
         const overlayMi = new MeshInstance(Annotation.mesh, this.materials[1]);
         overlayMi.cull = false;
-        overlay.addComponent('render', {
+        this.overlayEntity.addComponent('render', {
             layers: [Annotation.layers[1].id],
             meshInstances: [overlayMi]
         });
 
-        this.entity.addChild(base);
-        this.entity.addChild(overlay);
+        this.entity.addChild(this.baseEntity);
+        this.entity.addChild(this.overlayEntity);
 
         // Create hotspot dom
         this.hotspotDom = document.createElement('div');
         this.hotspotDom.className = 'pc-annotation-hotspot';
 
-        // Add click handlers
-        this.hotspotDom.addEventListener('click', (e) => {
+        // Add click handlers (use pointerdown to match document handler)
+        this.hotspotDom.addEventListener('pointerdown', (e) => {
             e.stopPropagation();
-            this.showTooltip();
+            if (Annotation.activeAnnotation === this) {
+                this.hideTooltip();
+            } else {
+                this.showTooltip();
+            }
         });
 
         const leave = () => {
@@ -449,15 +513,22 @@ export class Annotation extends Script {
         this.hotspotDom.addEventListener('pointerenter', enter);
         this.hotspotDom.addEventListener('pointerleave', leave);
 
-        document.addEventListener('click', () => {
-            this.hideTooltip();
+        // Pass wheel events through to the canvas so other scripts can handle the event
+        this.hotspotDom.addEventListener('wheel', (e) => {
+            const canvas = this.app.graphicsDevice.canvas;
+            canvas.dispatchEvent(new WheelEvent(e.type, e));
         });
+
+        const documentClickHandler = () => {
+            this.hideTooltip();
+        };
+        document.addEventListener('pointerdown', documentClickHandler);
 
         Annotation.parentDom.appendChild(this.hotspotDom);
 
         // Store prerender handler for cleanup
         const prerenderHandler = () => {
-            if (!Annotation.camera) return;
+            if (!this.enabled || !Annotation.camera) return;
 
             const position = this.entity.getPosition();
             const screenPos = Annotation.camera.camera.worldToScreen(position);
@@ -481,22 +552,79 @@ export class Annotation extends Script {
         };
         this.app.on('prerender', prerenderHandler);
 
+        // Listen for enable/disable events
+        this.on('enable', this.onEnable);
+        this.on('disable', this.onDisable);
+
         // Clean up on entity destruction
-        this.on('destroy', () => {
+        this.once('destroy', () => {
+            // Remove DOM elements
             this.hotspotDom.remove();
+            document.removeEventListener('pointerdown', documentClickHandler);
+
+            // Clear active/hover state if this annotation is referenced
             if (Annotation.activeAnnotation === this) {
                 this.hideTooltip();
             }
+            if (Annotation.hoverAnnotation === this) {
+                Annotation.hoverAnnotation = null;
+            }
 
+            // Destroy materials
             this.materials.forEach(mat => mat.destroy());
             this.materials = [];
 
-            this.texture.destroy();
-            this.texture = null;
+            // Destroy texture
+            if (this.texture) {
+                this.texture.destroy();
+                this.texture = null;
+            }
 
             // Remove prerender event listener
             this.app.off('prerender', prerenderHandler);
+
+            // Remove all event listeners on this script
+            this.off();
         });
+    }
+
+    /**
+     * Called when the script is enabled.
+     */
+    onEnable() {
+        if (this.baseEntity) {
+            this.baseEntity.enabled = true;
+        }
+        if (this.overlayEntity) {
+            this.overlayEntity.enabled = true;
+        }
+        if (this.hotspotDom) {
+            this.hotspotDom.style.display = '';
+        }
+    }
+
+    /**
+     * Called when the script is disabled.
+     */
+    onDisable() {
+        if (this.baseEntity) {
+            this.baseEntity.enabled = false;
+        }
+        if (this.overlayEntity) {
+            this.overlayEntity.enabled = false;
+        }
+        if (this.hotspotDom) {
+            this.hotspotDom.style.display = 'none';
+        }
+        // Hide tooltip if this annotation is active
+        if (Annotation.activeAnnotation === this) {
+            this.hideTooltip();
+        }
+        // Clear hover state if this annotation is hovered
+        if (Annotation.hoverAnnotation === this) {
+            Annotation.hoverAnnotation = null;
+            this.setHover(false);
+        }
     }
 
     /**
@@ -603,8 +731,7 @@ export class Annotation extends Script {
      */
     _calculateScreenSpaceScale() {
         const cameraPos = Annotation.camera.getPosition();
-        const toAnnotation = this.entity.getPosition().clone().sub(cameraPos);
-        const distance = toAnnotation.length();
+        const distance = this.entity.getPosition().distance(cameraPos);
 
         // Use the canvas's CSS/client height instead of graphics device height
         const canvas = this.app.graphicsDevice.canvas;
@@ -615,5 +742,54 @@ export class Annotation extends Script {
         const worldSize = (Annotation.hotspotSize / screenHeight) * (2 * distance / projMatrix.data[5]);
 
         return worldSize;
+    }
+
+    /**
+     * Update the hotspot texture with a new label.
+     * Called automatically when the label attribute changes.
+     * @param {string} newLabel - The new label text
+     * @private
+     */
+    _updateLabel(newLabel) {
+        // Destroy old texture
+        if (this.texture) {
+            this.texture.destroy();
+        }
+
+        // Create new texture with updated label
+        this.texture = Annotation._createHotspotTexture(this.app, newLabel);
+
+        // Update materials with new texture
+        this.materials.forEach((material) => {
+            material.emissiveMap = this.texture;
+            material.opacityMap = this.texture;
+            material.update();
+        });
+    }
+
+    /**
+     * Update the tooltip content when title changes.
+     * Called automatically when the title attribute changes.
+     * @param {string} newTitle - The new title text
+     * @private
+     */
+    _updateTitle(newTitle) {
+        // Update tooltip if this annotation is currently active
+        if (Annotation.activeAnnotation === this) {
+            Annotation.titleDom.textContent = newTitle;
+        }
+    }
+
+    /**
+     * Update the tooltip content when text changes.
+     * Called automatically when the text attribute changes.
+     * @param {string} newText - The new text content
+     * @private
+     */
+    _updateText(newText) {
+        // Update tooltip if this annotation is currently active
+        if (Annotation.activeAnnotation === this) {
+            Annotation.textDom.textContent = newText;
+        }
     }
 }
