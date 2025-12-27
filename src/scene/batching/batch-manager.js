@@ -234,7 +234,7 @@ class BatchManager {
 
     insert(type, groupId, node) {
         const group = this._batchGroups[groupId];
-        Debug.assert(group, `Invalid batch ${groupId} insertion`);
+        Debug.assert(group, `Invalid batch ${groupId} insertion with node: "${node.name}"`);
 
         if (group) {
             if (group._obj[type].indexOf(node) < 0) {
@@ -246,7 +246,7 @@ class BatchManager {
 
     remove(type, groupId, node) {
         const group = this._batchGroups[groupId];
-        Debug.assert(group, `Invalid batch ${groupId} insertion`);
+        Debug.assert(group, `Invalid batch ${groupId} removal with node: "${node.name}"`);
 
         if (group) {
             const idx = group._obj[type].indexOf(node);
