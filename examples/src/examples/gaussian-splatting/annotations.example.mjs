@@ -45,8 +45,6 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-app.start();
-
 // Create an Entity with a camera component
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera', {
@@ -84,6 +82,8 @@ const assets = {
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
+    app.start();
+
     // instantiate bicycle gsplat
     const bicycle = new pc.Entity('Bicycle');
     bicycle.addComponent('gsplat', {
