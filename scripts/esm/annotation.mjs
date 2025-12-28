@@ -733,14 +733,6 @@ export class AnnotationManager extends Script {
         };
         hotspotDom.addEventListener('wheel', onWheel);
 
-        // Document click to dismiss tooltip
-        const onDocumentPointerDown = () => {
-            if (this._activeAnnotation === annotation) {
-                this._hideTooltip(annotation);
-            }
-        };
-        document.addEventListener('pointerdown', onDocumentPointerDown);
-
         this._parentDom.appendChild(hotspotDom);
 
         // Listen for annotation attribute changes
@@ -756,7 +748,6 @@ export class AnnotationManager extends Script {
             hotspotDom.removeEventListener('pointerenter', onPointerEnter);
             hotspotDom.removeEventListener('pointerleave', onPointerLeave);
             hotspotDom.removeEventListener('wheel', onWheel);
-            document.removeEventListener('pointerdown', onDocumentPointerDown);
         };
 
         // Store resources
@@ -878,6 +869,14 @@ export class AnnotationManager extends Script {
 
         this._parentDom.appendChild(this._tooltipDom);
 
+        // Single document-level listener to dismiss active tooltip
+        const onDocumentPointerDown = () => {
+            if (this._activeAnnotation) {
+                this._hideTooltip(this._activeAnnotation);
+            }
+        };
+        document.addEventListener('pointerdown', onDocumentPointerDown);
+
         // Listen for annotation add/remove events on the app
         const onAnnotationAdd = annotation => this._registerAnnotation(annotation);
         const onAnnotationRemove = annotation => this._unregisterAnnotation(annotation);
@@ -925,6 +924,7 @@ export class AnnotationManager extends Script {
             this.app.off('annotation:add', onAnnotationAdd);
             this.app.off('annotation:remove', onAnnotationRemove);
             this.app.off('prerender', prerenderHandler);
+            document.removeEventListener('pointerdown', onDocumentPointerDown);
 
             // Remove DOM elements
             if (this._tooltipDom) {
