@@ -497,7 +497,7 @@ export class AnnotationManager extends Script {
 
         // Wait for fade out before hiding
         setTimeout(() => {
-            if (this._tooltipDom && this._tooltipDom.style.opacity === '0') {
+            if (this._tooltipDom && this._activeAnnotation === null) {
                 this._tooltipDom.style.visibility = 'hidden';
             }
             annotation.fire('hide');
