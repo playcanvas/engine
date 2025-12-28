@@ -1046,7 +1046,6 @@ export class Annotation extends Script {
         // Clean up on destroy
         this.once('destroy', () => {
             this.app.fire('annotation:remove', this);
-            this.off();
         });
     }
 }
