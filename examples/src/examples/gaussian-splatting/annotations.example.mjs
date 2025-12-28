@@ -3,7 +3,7 @@ import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { Annotation } = await fileImport(`${rootPath}/static/scripts/esm/annotation.mjs`);
+const { Annotation, AnnotationManager } = await fileImport(`${rootPath}/static/scripts/esm/annotation.mjs`);
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 const { CameraFrame } = await fileImport(`${rootPath}/static/scripts/esm/camera-frame.mjs`);
 
@@ -56,30 +56,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    // Set default values for controls
-    data.set('data', {
-        opacity: 1.0,
-        behindOpacity: 0.25
-    });
-
-    // Handle control changes
-    data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
-        if (path === 'data.opacity') {
-            Annotation.opacity = value;
-        } else if (path === 'data.behindOpacity') {
-            Annotation.behindOpacity = value;
-        }
-    });
-
-    // instantiate hotel gsplat
-    const bicycle = new pc.Entity('Bicycle');
-    bicycle.addComponent('gsplat', {
-        asset: assets.bicycle,
-        unified: true
-    });
-    bicycle.setLocalEulerAngles(0, 0, 180);
-    app.root.addChild(bicycle);
-
     // Create an Entity with a camera component
     const camera = new pc.Entity('Camera');
     camera.addComponent('camera', {
@@ -108,7 +84,37 @@ assetListLoader.load(() => {
     });
     app.root.addChild(camera);
 
+    // instantiate bicycle gsplat
+    const bicycle = new pc.Entity('Bicycle');
+    bicycle.addComponent('gsplat', {
+        asset: assets.bicycle,
+        unified: true
+    });
+    bicycle.setLocalEulerAngles(0, 0, 180);
+    app.root.addChild(bicycle);
+
+    // Add annotation manager to the bicycle entity - handles global settings and shared resources
+    // The manager listens for 'annotation:add' events on the app to automatically register annotations
+    bicycle.addComponent('script');
+    const manager = bicycle.script.create(AnnotationManager);
+
+    // Set default values for controls
+    data.set('data', {
+        opacity: 1.0,
+        behindOpacity: 0.25
+    });
+
+    // Handle control changes - update the manager directly
+    data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
+        if (path === 'data.opacity') {
+            manager.opacity = value;
+        } else if (path === 'data.behindOpacity') {
+            manager.behindOpacity = value;
+        }
+    });
+
     // Create annotations at specific locations
+    // Annotations fire 'annotation:add' on the app, which the manager listens for
     const annotationData = [
         {
             pos: new pc.Vec3(0, 0.6, -0.86),
@@ -173,17 +179,17 @@ assetListLoader.load(() => {
     ];
 
     annotationData.forEach(({pos, title, text}, index) => {
-        const entity = new pc.Entity(title);
-        entity.setLocalPosition(pos);
-        entity.addComponent('script');
-        entity.script.create(Annotation, {
+        const annotation = new pc.Entity(title);
+        annotation.setLocalPosition(pos);
+        annotation.addComponent('script');
+        annotation.script.create(Annotation, {
             properties: {
                 label: String(index + 1),
                 title: title,
                 text: text
             }
         });
-        app.root.addChild(entity);
+        bicycle.addChild(annotation);
     });
 });
 
