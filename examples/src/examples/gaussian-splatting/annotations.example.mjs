@@ -84,7 +84,7 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    // instantiate bicycle gsplat
+    // Create the bicycle gsplat
     const bicycle = new pc.Entity('Bicycle');
     bicycle.addComponent('gsplat', {
         asset: assets.bicycle
@@ -92,8 +92,7 @@ assetListLoader.load(() => {
     bicycle.setLocalEulerAngles(0, 0, 180);
     app.root.addChild(bicycle);
 
-    // Add annotation manager to the bicycle entity - handles global settings and shared resources
-    // The manager listens for 'annotation:add' events on the app to automatically register annotations
+    // Add annotation manager to the bicycle entity
     bicycle.addComponent('script');
     const manager = bicycle.script.create(AnnotationManager);
 
@@ -121,7 +120,6 @@ assetListLoader.load(() => {
     });
 
     // Create annotations at specific locations (positions are local to the bicycle entity)
-    // Annotations fire 'annotation:add' on the app, which the manager listens for
     const annotations = [
         {
             pos: [0, -0.6, -0.86],
