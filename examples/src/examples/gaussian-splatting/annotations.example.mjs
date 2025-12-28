@@ -4,6 +4,8 @@ import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const { Annotation } = await fileImport(`${rootPath}/static/scripts/esm/annotation.mjs`);
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+const { CameraFrame } = await fileImport(`${rootPath}/static/scripts/esm/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -47,10 +49,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    hotel: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/hotel-culpture.compressed.ply` }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
-    guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    bicycle: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/bicycle.sog` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -73,106 +72,118 @@ assetListLoader.load(() => {
     });
 
     // instantiate hotel gsplat
-    const hotel = new pc.Entity('hotel');
-    hotel.addComponent('gsplat', {
-        asset: assets.hotel,
+    const bicycle = new pc.Entity('Bicycle');
+    bicycle.addComponent('gsplat', {
+        asset: assets.bicycle,
         unified: true
     });
-    hotel.setLocalEulerAngles(180, 0, 0);
-    app.root.addChild(hotel);
-
-    // create biker1
-    const biker1 = new pc.Entity('biker1');
-    biker1.addComponent('gsplat', {
-        asset: assets.biker,
-        unified: true
-    });
-    biker1.setLocalPosition(0, -1.8, -2);
-    biker1.setLocalEulerAngles(180, 90, 0);
-    app.root.addChild(biker1);
-
-    // clone the biker and add the clone to the scene
-    const biker2 = biker1.clone();
-    biker2.setLocalPosition(0, -1.8, 2);
-    biker2.rotate(0, 150, 0);
-    app.root.addChild(biker2);
-
-    // create guitar
-    const guitar = new pc.Entity('guitar');
-    guitar.addComponent('gsplat', {
-        asset: assets.guitar,
-        unified: true
-    });
-    guitar.setLocalPosition(2, -1.8, -0.5);
-    guitar.setLocalEulerAngles(0, 0, 180);
-    guitar.setLocalScale(0.7, 0.7, 0.7);
-    app.root.addChild(guitar);
+    bicycle.setLocalEulerAngles(0, 0, 180);
+    app.root.addChild(bicycle);
 
     // Create an Entity with a camera component
-    const camera = new pc.Entity();
+    const camera = new pc.Entity('Camera');
     camera.addComponent('camera', {
-        clearColor: pc.Color.BLACK,
-        fov: 80,
-        toneMapping: pc.TONEMAP_ACES
+        fov: 30
     });
-    camera.setLocalPosition(3, 1, 0.5);
+    camera.setLocalPosition(-2, 1.2, -2.5);
 
     // add orbit camera script with a mouse and a touch support
     camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: guitar,
-            distanceMax: 3.2,
-            frameOnStart: false
+    camera.script.create(CameraControls, {
+        properties: {
+            focusPoint: new pc.Vec3(0, 0.575, 0)
         }
     });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
+    camera.script.create(CameraFrame, {
+        properties: {
+            vignette: {
+                enabled: true,
+                color: pc.Color.BLACK,
+                intensity: 0.5,
+                inner: 0.5,
+                outer: 1,
+                curvature: 0.5
+            }
+        }
+    });
     app.root.addChild(camera);
 
-    /**
-     * Create an annotation entity
-     * @param {pc.Vec3} position - Position in the scene
-     * @param {string} label - Label number
-     * @param {string} title - Annotation title
-     * @param {string} text - Annotation description
-     * @returns {pc.Entity} The annotation entity
-     */
-    const createAnnotation = (position, label, title, text) => {
-        const entity = new pc.Entity(`annotation${label}`);
-        entity.setLocalPosition(position);
+    // Create annotations at specific locations
+    const annotationData = [
+        {
+            pos: new pc.Vec3(0, 0.6, -0.86),
+            title: 'Smooth-Rolling Tires',
+            text: 'Wide, durable tires absorb road vibrations while rolling smoothly, offering a perfect balance of comfort, grip, and efficiency.'
+        },
+        {
+            pos: new pc.Vec3(0, 0.88, -0.49),
+            title: 'Front Lighting System',
+            text: 'The built-in front light improves visibility in low-light conditions, helping you see and be seen for safer rides day or night.'
+        },
+        {
+            pos: new pc.Vec3(0.0, 1.13, -0.31),
+            title: 'Upright Handlebar Position',
+            text: 'Balanced frame geometry delivers a smooth, stable ride, giving you confidence on city streets and casual pathRaised handlebars promote an upright riding position, reducing strain on your back, shoulders, and wrists for longer, more enjoyable rides.'
+        },
+        {
+            pos: new pc.Vec3(0.0, 1.2, 0.9),
+            title: 'Upright Handlebars',
+            text: 'Raised handlebars encourage an upright riding position, reducing strain on your back, shoulders, and wrists.'
+        },
+        {
+            pos: new pc.Vec3(0.0, 1.1, -0.4),
+            title: 'Ergonomic Saddle',
+            text: 'A wide, cushioned saddle provides excellent support, keeping every ride comfortable and relaxed.'
+        },
+        {
+            pos: new pc.Vec3(0.0, 0.9, 1.6),
+            title: 'Front Light',
+            text: 'Built-in front lighting improves visibility and safety, helping you see and be seen in low-light conditions.'
+        },
+        {
+            pos: new pc.Vec3(0.0, 0.3, 1.3),
+            title: 'Full Fenders',
+            text: 'Full front and rear fenders keep you clean and dry by deflecting water, mud, and road debris.'
+        },
+        {
+            pos: new pc.Vec3(0.0, 1.0, -1.3),
+            title: 'Rear Cargo Rack',
+            text: 'A sturdy rear rack makes it easy to carry bags, groceries, or accessories—perfect for daily errands.'
+        },
+        {
+            pos: new pc.Vec3(0.5, 0.3, 0.8),
+            title: 'Braking System',
+            text: 'High-quality brakes deliver reliable stopping power, giving you peace of mind in traffic and changing weather.'
+        },
+        {
+            pos: new pc.Vec3(-0.4, 0.4, 0.2),
+            title: 'Chain Guard',
+            text: 'An enclosed chain guard protects your clothing and reduces upkeep, so you can focus on riding.'
+        },
+        {
+            pos: new pc.Vec3(0.0, 0.6, -0.9),
+            title: 'Adjustable Seat Height',
+            text: 'Easily adjust the seat height to dial in the perfect riding position for comfort and control.'
+        },
+        {
+            pos: new pc.Vec3(0.0, 1.0, 0.0),
+            title: 'Urban Design',
+            text: 'A timeless urban design blends style and function—this bike looks as good as it rides.'
+        }
+    ];
+
+    annotationData.forEach(({pos, title, text}, index) => {
+        const entity = new pc.Entity(title);
+        entity.setLocalPosition(pos);
         entity.addComponent('script');
         entity.script.create(Annotation, {
             properties: {
-                label: label,
+                label: String(index + 1),
                 title: title,
                 text: text
             }
         });
-        return entity;
-    };
-
-    // Create annotations at specific locations
-    const annotationData = [
-        { pos: new pc.Vec3(0.6, -0.6, 1.7), title: 'Helmet 1', text: 'First helmet display.' },
-        { pos: new pc.Vec3(-0.5, -0.2, -1.5), title: 'Helmet 2', text: 'Second helmet display.' },
-        { pos: new pc.Vec3(2.0, 0, 0), title: 'Guitar', text: 'Guitar on display.' },
-        { pos: new pc.Vec3(-2.2, 2.0, -4.8), title: 'Black Light Projector', text: 'Black light projector equipment.' },
-        { pos: new pc.Vec3(2.0, 2.0, 0.2), title: 'White Light Projector', text: 'White light projector equipment.' },
-        { pos: new pc.Vec3(3.7, 0, -3.6), title: 'Stairs', text: 'Staircase area.' },
-        { pos: new pc.Vec3(-0.2, -0.5, -5.5), title: 'Basement', text: 'Basement level.' },
-        { pos: new pc.Vec3(-0.1, -1.5, -0.3), title: 'Statue', text: 'Statue display.' }
-    ];
-
-    annotationData.forEach((data, index) => {
-        const annotation = createAnnotation(
-            data.pos,
-            String(index + 1),
-            data.title,
-            data.text
-        );
-        app.root.addChild(annotation);
+        app.root.addChild(entity);
     });
 });
 
