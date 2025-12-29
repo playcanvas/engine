@@ -3,11 +3,37 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, Panel, SliderInput } = ReactPCUI;
+    const { BindingTwoWay, ColorPicker, LabelGroup, Panel, SliderInput } = ReactPCUI;
     return fragment(
         jsx(
             Panel,
             { headerText: 'Annotations' },
+            jsx(
+                LabelGroup,
+                { text: 'Hotspot Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.hotspotSize' },
+                    min: 10,
+                    max: 50
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Hotspot Color' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.hotspotColor' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Hover Color' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.hoverColor' }
+                })
+            ),
             jsx(
                 LabelGroup,
                 { text: 'Opacity' },
