@@ -1,0 +1,86 @@
+using UnityEngine;
+
+public class SimpleGTALike : MonoBehaviour
+{
+    [Header("Cài đặt nhân vật")]
+    public float walkSpeed = 5f;
+    public float mouseSensitivity = 2f;
+    
+    [Header("Cài đặt xe")]
+    public float carSpeed = 20f;
+    public float turnSpeed = 50f;
+
+    private bool inVehicle = false; // Đang ở trong xe hay ngoài xe
+    public GameObject vehicleObject; // Gán chiếc xe vào đây
+    private float rotationX = 0;
+
+    void Update()
+    {
+        if (!inVehicle) 
+        {
+            HandlePlayerMovement();
+            CheckEnterVehicle();
+        }
+        else 
+        {
+            HandleVehicleMovement();
+            CheckExitVehicle();
+        }
+    }
+
+    // 1. ĐIỀU KHIỂN NGƯỜI
+    void HandlePlayerMovement()
+    {
+        // Di chuyển WASD
+        float moveForward = Input.GetAxis("Vertical") * walkSpeed * Time.deltaTime;
+        float moveSide = Input.GetAxis("Horizontal") * walkSpeed * Time.deltaTime;
+        transform.Translate(moveSide, 0, moveForward);
+
+        // Xoay chuột
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        transform.Rotate(0, mouseX, 0);
+    }
+
+    // 2. LÁI XE
+    void HandleVehicleMovement()
+    {
+        // Tiến lùi
+        float move = Input.GetAxis("Vertical") * carSpeed * Time.deltaTime;
+        // Xoay xe (Quẹo trái phải)
+        float turn = Input.GetAxis("Horizontal") * turnSpeed * Time.deltaTime;
+
+        vehicleObject.transform.Translate(0, 0, move);
+        vehicleObject.transform.Rotate(0, turn, 0);
+
+        // Giữ Camera đi theo xe
+        transform.position = vehicleObject.transform.position + new Vector3(0, 2, -5);
+        transform.LookAt(vehicleObject.transform);
+    }
+
+    // 3. VÀO XE (Nhấn phím F)
+    void CheckEnterVehicle()
+    {
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            float distance = Vector3.Distance(transform.position, vehicleObject.transform.position);
+            if (distance < 3f) // Nếu đứng gần xe dưới 3 mét
+            {
+                inVehicle = true;
+                this.GetComponent<MeshRenderer>().enabled = false; // Làm nhân vật tàng hình (coi như đã vào xe)
+                Debug.Log("Đã vào xe!");
+            }
+        }
+    }
+
+    // 4. THOÁT XE (Nhấn phím F)
+    void CheckExitVehicle()
+    {
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            inVehicle = false;
+            this.GetComponent<MeshRenderer>().enabled = true; // Hiện lại nhân vật
+            transform.position = vehicleObject.transform.position + Vector3.left * 2; // Nhảy ra bên cạnh xe
+            Debug.Log("Đã xuống xe!");
+        }
+    }
+}
