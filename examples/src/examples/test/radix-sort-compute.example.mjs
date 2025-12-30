@@ -76,8 +76,10 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
+    window.removeEventListener('orientationchange', resize);
 });
 
 // State - initialized from observer via data.set() below

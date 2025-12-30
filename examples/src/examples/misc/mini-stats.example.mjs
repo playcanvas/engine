@@ -35,8 +35,10 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
+    window.removeEventListener('orientationchange', resize);
 });
 
 // set up options for mini-stats, start with the default options
