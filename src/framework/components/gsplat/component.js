@@ -54,8 +54,6 @@ import { GSplatPlacement } from '../../../scene/gsplat-unified/gsplat-placement.
  * entity.gsplat.unified = true;
  * ```
  *
- * Note: The `unified` property can only be changed when the component is disabled.
- *
  * Relevant Engine API examples:
  *
  * - [Simple Splat Loading](https://playcanvas.github.io/#/gaussian-splatting/simple)
@@ -439,21 +437,19 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets whether to use the unified gsplat rendering. Can be changed only when the component is
-     * not enabled. Default is false.
+     * Sets whether to use the unified gsplat rendering. Default is false.
+     *
+     * Note: Material handling differs between modes. When unified is false, use
+     * {@link GSplatComponent#material}. When unified is true, materials are shared per
+     * camera/layer - use {@link GSplatComponentSystem#getGSplatMaterial} instead.
      *
      * @type {boolean}
-     * @alpha
      */
     set unified(value) {
-
-        if (this.enabled && this.entity.enabled) {
-            Debug.warn('GSplatComponent#unified can be changed only when the component is not enabled. Ignoring change.');
-            return;
+        if (this._unified !== value) {
+            this._unified = value;
+            this._onGSplatAssetAdded();
         }
-
-        this._unified = value;
-        this._onGSplatAssetAdded();
     }
 
     /**
