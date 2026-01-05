@@ -785,7 +785,7 @@ export class AnnotationManager extends Script {
         }
 
         // Unbind event handles
-        resources.eventHandles.forEach(handle => handle.unbind());
+        resources.eventHandles.forEach(handle => handle.off());
         resources.eventHandles.length = 0;
 
         // Remove DOM listeners
