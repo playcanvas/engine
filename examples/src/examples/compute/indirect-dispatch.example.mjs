@@ -1,7 +1,7 @@
 // @config DESCRIPTION This example demonstrates indirect compute dispatch. A scan shader classifies tiles by detecting depth discontinuities (edges/silhouettes), then indirectly dispatches effect shaders to colorize edge (red) and smooth (blue) regions.
 // @config WEBGL_DISABLED
-import { data } from 'examples/observer';
 import files from 'examples/files';
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
