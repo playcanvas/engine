@@ -40,6 +40,7 @@ import { LightmapFilters } from './lightmap-filters.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPassLightmapper } from './render-pass-lightmapper.js';
+import { RenderPassShadowLocalClustered } from '../../scene/renderer/render-pass-shadow-local-clustered.js';
 
 /**
  * @import { AssetRegistry } from '../asset/asset-registry.js'
@@ -190,6 +191,13 @@ class Lightmapper {
 
             this.worldClusters = new WorldClusters(device);
             this.worldClusters.name = 'ClusterLightmapper';
+
+            // render pass for clustered local light shadows
+            this.shadowLocalClusteredPass = new RenderPassShadowLocalClustered(
+                device,
+                this.renderer.shadowRenderer,
+                this.renderer._shadowRendererLocal
+            );
         }
     }
 
@@ -848,17 +856,19 @@ class Lightmapper {
 
             } else {
 
-                // TODO: lightmapper on WebGPU does not yet support spot and omni shadows
-                if (this.device.isWebGPU) {
-                    Debug.warnOnce('Lightmapper on WebGPU does not yet support spot and omni shadows.');
-                    return true;
-                }
-
                 this.renderer._shadowRendererLocal.cull(light, comp, casters);
 
-                // TODO: this needs to use render passes to work on WebGPU
-                const insideRenderPass = false;
-                this.renderer.shadowRenderer.render(light, this.camera, insideRenderPass);
+                if (isClustered) {
+                    // Clustered mode: use a single render pass for all faces to the shadow atlas
+                    this.shadowLocalClusteredPass.update([light]);
+                    if (this.shadowLocalClusteredPass.enabled) {
+                        this.shadowLocalClusteredPass.render();
+                    }
+                } else {
+                    // Non-clustered mode
+                    const insideRenderPass = false;
+                    this.renderer.shadowRenderer.render(light, this.camera, insideRenderPass);
+                }
             }
         }
 
