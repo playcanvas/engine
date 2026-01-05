@@ -171,7 +171,7 @@ class BoxGeometry extends Geometry {
         this.positions = positions;
         this.normals = normals;
         this.uvs = uvs;
-        this.uvs1 = uvs;    // UV1 = UV0 for sphere
+        this.uvs1 = uvs1;
         this.indices = indices;
 
         if (opts.calculateTangents) {
