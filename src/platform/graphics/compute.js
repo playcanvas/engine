@@ -66,6 +66,31 @@ class Compute {
     countZ;
 
     /**
+     * Slot index in the indirect dispatch buffer, or -1 for direct dispatch.
+     *
+     * @type {number}
+     * @ignore
+     */
+    indirectSlotIndex = -1;
+
+    /**
+     * Custom buffer for indirect dispatch, or null to use device's built-in buffer.
+     *
+     * @type {StorageBuffer|null}
+     * @ignore
+     */
+    indirectBuffer = null;
+
+    /**
+     * Frame stamp (device.renderVersion) when indirect slot was set. Used for validation
+     * when using the built-in buffer.
+     *
+     * @type {number}
+     * @ignore
+     */
+    indirectFrameStamp = 0;
+
+    /**
      * Create a compute instance. Note that this is supported on WebGPU only and is a no-op on
      * other platforms.
      *
@@ -143,6 +168,42 @@ class Compute {
         this.countX = x;
         this.countY = y;
         this.countZ = z;
+
+        // reset indirect dispatch state
+        this.indirectSlotIndex = -1;
+        this.indirectBuffer = null;
+    }
+
+    /**
+     * Prepare the compute work dispatch to use indirect parameters from a buffer. The dispatch
+     * parameters (x, y, z workgroup counts) are read from the buffer at the specified slot index.
+     *
+     * When using the device's built-in buffer (buffer parameter is null), this method must be
+     * called each frame as slots are only valid for the current frame.
+     *
+     * @param {number} slotIndex - Slot index in the indirect dispatch buffer. When using the
+     * device's built-in buffer, obtain this by calling {@link GraphicsDevice#getIndirectDispatchSlot}.
+     * @param {StorageBuffer|null} [buffer] - Optional custom storage buffer containing dispatch
+     * parameters. If not provided, uses the device's built-in {@link GraphicsDevice#indirectDispatchBuffer}.
+     * When providing a custom buffer, the user is responsible for its lifetime and contents.
+     * @example
+     * // Reserve a slot in the indirect dispatch buffer
+     * const slot = device.getIndirectDispatchSlot();
+     *
+     * // First compute shader writes dispatch parameters to the buffer
+     * prepareCompute.setParameter('indirectBuffer', device.indirectDispatchBuffer);
+     * prepareCompute.setParameter('slot', slot);
+     * prepareCompute.setupDispatch(1, 1, 1);
+     * device.computeDispatch([prepareCompute]);
+     *
+     * // Second compute shader uses indirect dispatch
+     * processCompute.setupIndirectDispatch(slot);
+     * device.computeDispatch([processCompute]);
+     */
+    setupIndirectDispatch(slotIndex, buffer = null) {
+        this.indirectSlotIndex = slotIndex;
+        this.indirectBuffer = buffer;
+        this.indirectFrameStamp = this.device.renderVersion;
     }
 }
 
