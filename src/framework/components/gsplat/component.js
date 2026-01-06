@@ -257,13 +257,13 @@ class GSplatComponent extends Component {
      *
      * **Note:** This setter is only supported when {@link unified} is `false`. When it's true, multiple
      * gsplat components share a single material per camera/layer combination. To access materials in
-     * unified mode, use {@link GsplatComponentSystem#getGSplatMaterial}.
+     * unified mode, use {@link GSplatComponentSystem#getMaterial}.
      *
      * @param {ShaderMaterial} value - The material instance.
      */
     set material(value) {
         if (this.unified) {
-            Debug.warn('GSplatComponent#material setter is not supported when unified true. Use app.systems.gsplat.getGSplatMaterial(camera, layer) to access materials.');
+            Debug.warn('GSplatComponent#material setter is not supported when unified true. Use app.systems.gsplat.getMaterial(camera, layer) to access materials.');
             return;
         }
         if (this._instance) {
@@ -278,13 +278,13 @@ class GSplatComponent extends Component {
      *
      * **Note:** This getter returns `null` when {@link unified} is `true`. In unified mode, materials are
      * organized per camera/layer combination rather than per component. To access materials in
-     * unified mode, use {@link GsplatComponentSystem#getGSplatMaterial}.
+     * unified mode, use {@link GSplatComponentSystem#getMaterial}.
      *
      * @type {ShaderMaterial|null}
      */
     get material() {
         if (this.unified) {
-            Debug.warnOnce('GSplatComponent#material getter returns null when unified=true. Use app.systems.gsplat.getGSplatMaterial(camera, layer) instead.');
+            Debug.warnOnce('GSplatComponent#material getter returns null when unified=true. Use app.systems.gsplat.getMaterial(camera, layer) instead.');
             return null;
         }
         return this._instance?.material ?? this._materialTmp ?? null;
@@ -441,7 +441,7 @@ class GSplatComponent extends Component {
      *
      * Note: Material handling differs between modes. When unified is false, use
      * {@link GSplatComponent#material}. When unified is true, materials are shared per
-     * camera/layer - use {@link GSplatComponentSystem#getGSplatMaterial} instead.
+     * camera/layer - use {@link GSplatComponentSystem#getMaterial} instead.
      *
      * @type {boolean}
      */
