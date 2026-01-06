@@ -19,6 +19,9 @@ class RenderPassPicker extends RenderPass {
     /** @type {BindGroup[]} */
     viewBindGroups = [];
 
+    /** @type {BlendState} */
+    blendState = BlendState.NOBLEND;
+
     constructor(device, renderer) {
         super(device);
         this.renderer = renderer;
@@ -107,7 +110,7 @@ class RenderPassPicker extends RenderPass {
 
                         const shaderPass = this.depth ? SHADER_DEPTH_PICK : SHADER_PICK;
                         renderer.renderForward(camera.camera, renderTarget, tempMeshInstances, lights, shaderPass, (meshInstance) => {
-                            device.setBlendState(BlendState.NOBLEND);
+                            device.setBlendState(this.blendState);
                         });
 
                         tempMeshInstances.length = 0;
