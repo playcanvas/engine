@@ -6,10 +6,6 @@ export default /* glsl */`
     varying float id;
 #endif
 
-#ifdef PICK_PASS
-    #include "pickPS"
-#endif
-
 #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
     uniform float alphaClip;
 #endif
@@ -21,6 +17,10 @@ export default /* glsl */`
 
 varying mediump vec2 gaussianUV;
 varying mediump vec4 gaussianColor;
+
+#ifdef PICK_PASS
+    #include "pickPS"
+#endif
 
 const float EXP4 = exp(-4.0);
 const float INV_EXP4 = 1.0 / (1.0 - EXP4);
