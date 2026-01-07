@@ -4,23 +4,24 @@ export default /* glsl */`
 // shadow casting functionality
 #ifdef LIGHT{i}CASTSHADOW
 
-    // generate shadow coordinates function, based on per light defines:
-    // - _SHADOW_SAMPLE_NORMAL_OFFSET
-    // - _SHADOW_SAMPLE_ORTHO
-    // - _SHADOW_SAMPLE_POINT
-    // - _SHADOW_SAMPLE_SOURCE_ZBUFFER
-    vec3 getShadowSampleCoord{i}(mat4 shadowTransform, vec4 shadowParams, vec3 worldPosition, vec3 lightPos, inout vec3 lightDir, vec3 lightDirNorm, vec3 normal) {
-
-        vec3 surfacePosition = worldPosition;
-
-        #ifdef LIGHT{i}_SHADOW_SAMPLE_POINT
+    // Omni shadow coordinate function - uses light direction for cubemap sampling
+    #ifdef LIGHT{i}_SHADOW_SAMPLE_POINT
+        vec3 getShadowSampleCoordOmni{i}(vec4 shadowParams, vec3 worldPosition, vec3 lightPos, inout vec3 lightDir, vec3 lightDirNorm, vec3 normal) {
             #ifdef LIGHT{i}_SHADOW_SAMPLE_NORMAL_OFFSET
                 float distScale = length(lightDir);
-                surfacePosition = surfacePosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
+                vec3 surfacePosition = worldPosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
                 lightDir = surfacePosition - lightPos;
-                return lightDir;
             #endif
-        #else
+            return lightDir;
+        }
+    #endif
+
+    // Directional/Spot shadow coordinate function - uses shadow matrix transformation
+    #ifndef LIGHT{i}_SHADOW_SAMPLE_POINT
+        vec3 getShadowSampleCoord{i}(mat4 shadowTransform, vec4 shadowParams, vec3 worldPosition, vec3 lightPos, inout vec3 lightDir, vec3 lightDirNorm, vec3 normal) {
+
+            vec3 surfacePosition = worldPosition;
+
             #ifdef LIGHT{i}_SHADOW_SAMPLE_SOURCE_ZBUFFER
                 #ifdef LIGHT{i}_SHADOW_SAMPLE_NORMAL_OFFSET
                     surfacePosition = surfacePosition + normal * shadowParams.y;
@@ -48,42 +49,38 @@ export default /* glsl */`
                 #endif
             #endif
 
-            // this is currently unused
-            #ifdef SHADOW_SAMPLE_Z_BIAS
-                // positionInShadowSpace.z += getShadowBias(shadowParams.x, shadowParams.z);
-            #endif
-            surfacePosition = positionInShadowSpace.xyz;
-        #endif
-
-        return surfacePosition;
-    }
+            return positionInShadowSpace.xyz;
+        }
+    #endif
 
     // shadow evaluation function
     float getShadow{i}(vec3 lightDirW) {
 
         // directional shadow cascades
-        #ifdef LIGHT{i}_SHADOW_CASCADES
+        #if LIGHT{i}TYPE == OMNI
 
-            // select shadow cascade matrix
-            int cascadeIndex = getShadowCascadeIndex(light{i}_shadowCascadeDistances, light{i}_shadowCascadeCount);
+            // omni shadows use cubemap and sample by direction
+            vec3 shadowCoord = getShadowSampleCoordOmni{i}(light{i}_shadowParams, vPositionW, light{i}_position, lightDirW, dLightDirNormW, dVertexNormalW);
 
-            #ifdef LIGHT{i}_SHADOW_CASCADE_BLEND
-                cascadeIndex = ditherShadowCascadeIndex(cascadeIndex, light{i}_shadowCascadeDistances, light{i}_shadowCascadeCount, light{i}_shadowCascadeBlend);
+        #else
+
+            // directional and spot shadows use shadow matrix transformation
+            #ifdef LIGHT{i}_SHADOW_CASCADES
+                int cascadeIndex = getShadowCascadeIndex(light{i}_shadowCascadeDistances, light{i}_shadowCascadeCount);
+                #ifdef LIGHT{i}_SHADOW_CASCADE_BLEND
+                    cascadeIndex = ditherShadowCascadeIndex(cascadeIndex, light{i}_shadowCascadeDistances, light{i}_shadowCascadeCount, light{i}_shadowCascadeBlend);
+                #endif
+                mat4 shadowMatrix = light{i}_shadowMatrixPalette[cascadeIndex];
+            #else
+                mat4 shadowMatrix = light{i}_shadowMatrix;
             #endif
 
-            mat4 shadowMatrix = light{i}_shadowMatrixPalette[cascadeIndex];
+            #if LIGHT{i}TYPE == DIRECTIONAL
+                vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, vec3(0.0), lightDirW, dLightDirNormW, dVertexNormalW);
+            #else
+                vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, light{i}_position, lightDirW, dLightDirNormW, dVertexNormalW);
+            #endif
 
-        #else
-
-            mat4 shadowMatrix = light{i}_shadowMatrix;
-
-        #endif
-
-        #if LIGHT{i}TYPE == DIRECTIONAL
-            // directional light does not have a position
-            vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, vec3(0.0), lightDirW, dLightDirNormW, dVertexNormalW);
-        #else
-            vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, light{i}_position, lightDirW, dLightDirNormW, dVertexNormalW);
         #endif
 
         // Fade directional shadow at the far distance
