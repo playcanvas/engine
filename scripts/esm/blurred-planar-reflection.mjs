@@ -521,9 +521,6 @@ class BlurredPlanarReflection extends Script {
         });
     }
 
-    /**
-     * @private
-     */
     _createReflectionMaterial() {
         const material = new ShaderMaterial({
             uniqueName: 'BlurredPlanarReflectionMaterial',
@@ -542,9 +539,6 @@ class BlurredPlanarReflection extends Script {
         this._reflectionMaterial = material;
     }
 
-    /**
-     * @private
-     */
     _applyMaterialToEntity() {
         const render = this.entity.render;
         if (!render) {
@@ -562,9 +556,6 @@ class BlurredPlanarReflection extends Script {
         }
     }
 
-    /**
-     * @private
-     */
     _destroyRenderTarget(camera) {
         if (camera?.renderTarget) {
             camera.renderTarget.destroyTextureBuffers();
@@ -573,9 +564,6 @@ class BlurredPlanarReflection extends Script {
         }
     }
 
-    /**
-     * @private
-     */
     _createRenderTarget(name, width, height, mipmaps) {
         const device = this.app.graphicsDevice;
 
@@ -599,9 +587,6 @@ class BlurredPlanarReflection extends Script {
         return renderTarget;
     }
 
-    /**
-     * @private
-     */
     _updateRenderTargets() {
         const device = this.app.graphicsDevice;
 
@@ -644,9 +629,6 @@ class BlurredPlanarReflection extends Script {
         }
     }
 
-    /**
-     * @private
-     */
     _updateReflectionCamera(cameraEntity, reflectedPos, reflectedTarget) {
         cameraEntity.setPosition(reflectedPos);
         cameraEntity.lookAt(reflectedTarget);
@@ -669,7 +651,7 @@ class BlurredPlanarReflection extends Script {
             // and the skybox layer (we clear to the fade color instead)
             const excludeLayers = this.entity.render?.layers || [];
             const skyboxLayer = this.app.scene.layers.getLayerByName('Skybox');
-            const filteredLayers = mainCamera.layers.filter(layerId => {
+            const filteredLayers = mainCamera.layers.filter((layerId) => {
                 if (excludeLayers.includes(layerId)) return false;
                 if (skyboxLayer && layerId === skyboxLayer.id) return false;
                 return true;
@@ -742,9 +724,6 @@ class BlurredPlanarReflection extends Script {
         ]);
     }
 
-    /**
-     * @private
-     */
     _cleanup() {
         // Restore original materials
         const render = this.entity?.render;
