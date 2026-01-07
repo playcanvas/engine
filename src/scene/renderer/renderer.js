@@ -479,49 +479,6 @@ class Renderer {
         }
     }
 
-    // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-    // TODO: this function is only used from outside of forward renderer, and should be deprecated
-    // when the functionality moves to the render passes. Note that Editor uses it as well.
-    setCamera(camera, target, clear, renderAction = null) {
-
-        this.setCameraUniforms(camera, target);
-        this.clearView(camera, target, clear, false);
-    }
-
-    // TODO: this is currently used by the lightmapper and the Editor,
-    // and will be removed when those call are removed.
-    clearView(camera, target, clear, forceWrite) {
-
-        const device = this.device;
-        DebugGraphics.pushGpuMarker(device, 'CLEAR-VIEW');
-
-        device.setRenderTarget(target);
-        device.updateBegin();
-
-        if (forceWrite) {
-            device.setColorWrite(true, true, true, true);
-            device.setDepthWrite(true);
-        }
-
-        this.setupViewport(camera, target);
-
-        if (clear) {
-
-            // use camera clear options if any
-            const options = camera._clearOptions;
-            device.clear(options ? options : {
-                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-                depth: camera._clearDepth,
-                flags: (camera._clearColorBuffer ? CLEARFLAG_COLOR : 0) |
-                       (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
-                       (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
-                stencil: camera._clearStencil
-            });
-        }
-
-        DebugGraphics.popGpuMarker(device);
-    }
-
     setupCullMode(cullFaces, flipFactor, drawCall) {
         const material = drawCall.material;
         let mode = CULLFACE_NONE;
