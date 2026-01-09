@@ -410,7 +410,7 @@ class BlurredPlanarReflection extends Script {
      *
      * @attribute
      */
-    heightRange = 10.0;
+    heightRange = 1;
 
     /**
      * Background color to fade reflections into.
