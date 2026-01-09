@@ -351,7 +351,7 @@ class GSplatManager {
 
             // add standalone splats
             for (const p of this.layerPlacements) {
-                const splatInfo = new GSplatInfo(this.device, p.resource, p);
+                const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p));
                 splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                 splats.push(splatInfo);
             }
@@ -360,7 +360,7 @@ class GSplatManager {
             for (const [, inst] of this.octreeInstances) {
                 inst.activePlacements.forEach((p) => {
                     if (p.resource) {
-                        const splatInfo = new GSplatInfo(this.device, p.resource, p);
+                        const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p));
                         splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                         splats.push(splatInfo);
                     }

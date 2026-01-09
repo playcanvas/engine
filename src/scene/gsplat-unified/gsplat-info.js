@@ -9,6 +9,7 @@ import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
  * @import { GSplatResourceBase } from "../gsplat/gsplat-resource-base.js"
  * @import { GSplatPlacement } from "./gsplat-placement.js"
  * @import { GraphNode } from '../graph-node.js';
+ * @import { ScopeId } from '../../platform/graphics/scope-id.js';
  * @import { Vec2 } from '../../core/math/vec2.js';
  */
 
@@ -77,13 +78,29 @@ class GSplatInfo {
     colorAccumulatedTranslation = 0;
 
     /**
+     * Per-instance shader parameters. Reference to the component's parameters Map.
+     *
+     * @type {Map<string, {scopeId: ScopeId, data: *}>|null}
+     */
+    parameters = null;
+
+    /**
+     * Callback to consume render dirty flag from the source placement.
+     *
+     * @type {Function|null}
+     * @private
+     */
+    _consumeRenderDirty = null;
+
+    /**
      * Create a new GSplatInfo.
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatResourceBase} resource - The splat resource.
      * @param {GSplatPlacement} placement - The placement of the splat.
+     * @param {Function|null} [consumeRenderDirty] - Callback to consume render dirty flag.
      */
-    constructor(device, resource, placement) {
+    constructor(device, resource, placement, consumeRenderDirty = null) {
         Debug.assert(resource);
         Debug.assert(placement);
 
@@ -93,6 +110,8 @@ class GSplatInfo {
         this.lodIndex = placement.lodIndex;
         this.numSplats = resource.numSplats;
         this.aabb.copy(placement.aabb);
+        this.parameters = placement.parameters;
+        this._consumeRenderDirty = consumeRenderDirty;
 
         this.updateIntervals(placement.intervals);
     }
@@ -178,15 +197,15 @@ class GSplatInfo {
     }
 
     update() {
-
-        // if the object's matrix has changed, store the update version to know when it happened
         const worldMatrix = this.node.getWorldTransform();
         const worldMatrixChanged = !this.previousWorldTransform.equals(worldMatrix);
         if (worldMatrixChanged) {
             this.previousWorldTransform.copy(worldMatrix);
         }
 
-        return worldMatrixChanged;
+        const renderDirty = this._consumeRenderDirty ? this._consumeRenderDirty() : false;
+
+        return worldMatrixChanged || renderDirty;
     }
 
     resetColorAccumulators(colorUpdateAngle, colorUpdateDistance) {

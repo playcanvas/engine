@@ -39,6 +39,7 @@ const _properties = [
     'material',
     'highQualitySH',
     'asset',
+    'resource',
     'layers'
 ];
 

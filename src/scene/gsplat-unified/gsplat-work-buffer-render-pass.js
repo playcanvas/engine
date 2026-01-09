@@ -179,6 +179,13 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         scope.resolve('model_scale').setValue(this._modelScaleData);
         scope.resolve('model_rotation').setValue(this._modelRotationData);
 
+        // Apply per-instance shader parameters
+        if (splatInfo.parameters) {
+            for (const param of splatInfo.parameters.values()) {
+                param.scopeId.setValue(param.data);
+            }
+        }
+
         // Render the quad - QuadRender handles all the complex setup internally
         workBufferRenderInfo.quadRender.render(viewport);
     }
