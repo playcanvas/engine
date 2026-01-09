@@ -1,7 +1,7 @@
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { Annotation } = await fileImport(`${rootPath}/static/scripts/esm/annotation.mjs`);
+const { Annotation } = await fileImport(`${rootPath}/static/scripts/esm/annotations.mjs`);
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 const { ShadowCatcher } = await fileImport(`${rootPath}/static/scripts/esm/shadow-catcher.mjs`);
 
