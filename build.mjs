@@ -110,7 +110,10 @@ const BUILD_TARGETS = [
 ];
 
 /**
- * Check if a target should be included based on the envTarget filter
+ * Check if a target should be included based on the envTarget filter.
+ *
+ * @param {object} targetDef - The build target definition.
+ * @returns {boolean} True if the target should be included.
  */
 function shouldIncludeTarget(targetDef) {
     if (envTarget === null) return true;
@@ -126,10 +129,12 @@ function shouldIncludeTarget(targetDef) {
 }
 
 /**
- * Run a single rollup build
- * @param {object} targetDef - Target definition
- * @param {string[]} extraEnvArgs - Extra environment arguments
- * @param {boolean} quiet - If true, capture output; if false, show in terminal
+ * Run a single rollup build.
+ *
+ * @param {object} targetDef - Target definition.
+ * @param {string[]} extraEnvArgs - Extra environment arguments.
+ * @param {boolean} quiet - If true, capture output; if false, show in terminal.
+ * @returns {Promise<{id: string, output: string}>} Build result.
  */
 function runBuild(targetDef, extraEnvArgs = [], quiet = true) {
     return new Promise((resolve, reject) => {
@@ -144,8 +149,8 @@ function runBuild(targetDef, extraEnvArgs = [], quiet = true) {
         });
 
         if (quiet) {
-            child.stdout.on('data', (data) => output.push(data.toString()));
-            child.stderr.on('data', (data) => output.push(data.toString()));
+            child.stdout.on('data', data => output.push(data.toString()));
+            child.stderr.on('data', data => output.push(data.toString()));
         }
 
         child.on('close', (code) => {
@@ -156,12 +161,14 @@ function runBuild(targetDef, extraEnvArgs = [], quiet = true) {
             }
         });
 
-        child.on('error', (err) => reject(err));
+        child.on('error', err => reject(err));
     });
 }
 
 /**
- * Run watch mode - passes through to rollup directly
+ * Run watch mode - passes through to rollup directly.
+ *
+ * @param {string[]} extraEnvArgs - Extra environment arguments.
  */
 function runWatchMode(extraEnvArgs = []) {
     const allEnvArgs = envArgs.concat(extraEnvArgs);
@@ -341,7 +348,10 @@ class CIDisplay {
 }
 
 /**
- * Dynamic task pool scheduler with clean status display
+ * Dynamic task pool scheduler with clean status display.
+ *
+ * @param {object[]} targets - Array of build target definitions.
+ * @param {string[]} extraEnvArgs - Extra environment arguments.
  */
 async function buildParallel(targets, extraEnvArgs = []) {
     const maxConcurrency = Math.max(1, os.cpus().length - 1);
@@ -354,14 +364,14 @@ async function buildParallel(targets, extraEnvArgs = []) {
     const startTime = performance.now();
     let failed = null;
 
-    const canStart = (targetDef) => targetDef.dependsOn.every(dep => completed.has(dep));
+    const canStart = targetDef => targetDef.dependsOn.every(dep => completed.has(dep));
 
     const startBuild = (targetDef) => {
         display.start(targetDef.id);
 
         const promise = runBuild(targetDef, extraEnvArgs, true)
-            .then(result => ({ id: targetDef.id, success: true, output: result.output }))
-            .catch(err => ({ id: targetDef.id, success: false, error: err.message }));
+        .then(result => ({ id: targetDef.id, success: true, output: result.output }))
+        .catch(err => ({ id: targetDef.id, success: false, error: err.message }));
 
         active.set(targetDef.id, promise);
         pending.delete(targetDef.id);
@@ -369,7 +379,7 @@ async function buildParallel(targets, extraEnvArgs = []) {
 
     const fillPool = () => {
         if (failed) return;
-        for (const [id, targetDef] of pending) {
+        for (const [, targetDef] of pending) {
             if (active.size >= maxConcurrency) break;
             if (canStart(targetDef)) {
                 startBuild(targetDef);
@@ -381,12 +391,13 @@ async function buildParallel(targets, extraEnvArgs = []) {
     display.render();
     fillPool();
 
+    // eslint-disable-next-line no-await-in-loop -- intentional: dynamic task pool waits for next completed task
     while (active.size > 0 || pending.size > 0) {
         if (active.size === 0 && pending.size > 0) {
             throw new Error('Circular dependency detected');
         }
 
-        const result = await Promise.race(active.values());
+        const result = await Promise.race(active.values()); // eslint-disable-line no-await-in-loop
         active.delete(result.id);
 
         if (result.success) {
@@ -398,7 +409,7 @@ async function buildParallel(targets, extraEnvArgs = []) {
             display.fail(result.id, result.error);
 
             if (active.size > 0) {
-                await Promise.allSettled(active.values());
+                await Promise.allSettled(active.values()); // eslint-disable-line no-await-in-loop
             }
 
             display.printErrors();
@@ -411,14 +422,17 @@ async function buildParallel(targets, extraEnvArgs = []) {
 }
 
 /**
- * Build targets sequentially with full output
+ * Build targets sequentially with full output.
+ *
+ * @param {object[]} targets - Array of build target definitions.
+ * @param {string[]} extraEnvArgs - Extra environment arguments.
  */
 async function buildSequential(targets, extraEnvArgs = []) {
     const startTime = performance.now();
 
     for (const targetDef of targets) {
         console.log(`${YELLOW}Building ${targetDef.label}...${RESET}`);
-        await runBuild(targetDef, extraEnvArgs, false);
+        await runBuild(targetDef, extraEnvArgs, false); // eslint-disable-line no-await-in-loop
         console.log(`${GREEN}✓ ${targetDef.label}${RESET}\n`);
     }
 
@@ -427,7 +441,10 @@ async function buildSequential(targets, extraEnvArgs = []) {
 }
 
 /**
- * Topological sort for dependency ordering
+ * Topological sort for dependency ordering.
+ *
+ * @param {object[]} targets - Array of build target definitions.
+ * @returns {object[]} Sorted array of targets.
  */
 function topologicalSort(targets) {
     const sorted = [];
