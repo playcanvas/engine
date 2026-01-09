@@ -70,7 +70,7 @@ class Frustum {
      * @param {Mat4} matrix - The matrix describing the shape of the frustum.
      * @example
      * // Create a perspective projection matrix
-     * const projection = pc.Mat4();
+     * const projection = new pc.Mat4();
      * projection.setPerspective(45, 16 / 9, 1, 1000);
      *
      * // Create a frustum shape that is represented by the matrix
