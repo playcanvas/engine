@@ -94,7 +94,6 @@ let originalValues = [];
 let needsRegen = true;
 
 // Create render pass instance once
-
 radixSort = new pc.RenderPassRadixSort(device);
 
 // ==================== MATERIALS ====================

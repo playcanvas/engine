@@ -99,7 +99,6 @@ let needsRegen = true;
 const enableRendering = true;
 
 // Create compute radix sort instance
-
 radixSort = new pc.ComputeRadixSort(device);
 
 // ==================== MATERIALS ====================
