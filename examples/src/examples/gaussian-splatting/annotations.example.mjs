@@ -3,7 +3,7 @@ import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { Annotation, AnnotationManager } = await fileImport(`${rootPath}/static/scripts/esm/annotation.mjs`);
+const { Annotation, AnnotationManager } = await fileImport(`${rootPath}/static/scripts/esm/annotations.mjs`);
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 const { CameraFrame } = await fileImport(`${rootPath}/static/scripts/esm/camera-frame.mjs`);
 
