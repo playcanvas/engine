@@ -44,22 +44,6 @@
  * @module Engine
  */
 
-// #if _IS_UMD
-// POLYFILLS
-import './polyfill/array-fill.js';
-import './polyfill/array-find.js';
-import './polyfill/array-find-index.js';
-import './polyfill/math-log2.js';
-import './polyfill/math-sign.js';
-import './polyfill/number-isfinite.js';
-import './polyfill/object-assign.js';
-import './polyfill/object-entries.js';
-import './polyfill/object-values.js';
-import './polyfill/pointer-lock.js';
-import './polyfill/string.js';
-import './polyfill/typedarray-fill.js';
-// #endif
-
 // CORE
 export * from './core/constants.js';
 export { extend, revision, version } from './core/core.js';
