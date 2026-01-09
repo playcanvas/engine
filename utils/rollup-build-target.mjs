@@ -75,8 +75,6 @@ const OUT_PREFIX = {
     min: 'playcanvas.min'
 };
 
-const HISTORY = new Map();
-
 /**
  * @param {'debug'|'release'|'profiler'} buildType - The build type.
  * @returns {object} - The JSCC options.
@@ -152,11 +150,37 @@ function getOutPlugins(type) {
 }
 
 /**
+ * Get the output path for a given build configuration.
+ * This allows parallel builds to reference each other's outputs by computed paths
+ * rather than relying on a shared HISTORY map.
+ *
+ * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
+ * @param {'umd'|'esm'} moduleFormat - The module format.
+ * @param {boolean} bundled - Whether bundled.
+ * @param {string} dir - The output directory.
+ * @returns {{ file?: string, dir?: string }} The output paths.
+ */
+function getOutputPaths(buildType, moduleFormat, bundled, dir = 'build') {
+    const isUMD = moduleFormat === 'umd';
+    const prefix = OUT_PREFIX[buildType];
+
+    if (bundled || isUMD) {
+        return {
+            file: `${dir}/${prefix}${isUMD ? '.js' : '.mjs'}`
+        };
+    }
+    return {
+        dir: `${dir}/${prefix}`
+    };
+}
+
+/**
  * Build rollup options for JS (bundled and unbundled).
  *
- * For faster subsequent builds, the unbundled and release builds are cached in the HISTORY map to
- * be used for bundled and minified builds. They are stored in the HISTORY map with the key:
- * `<debug|release|profiler>-<umd|esm>-<bundled>`.
+ * The build system supports parallel execution by computing input paths directly
+ * rather than relying on a shared state map. Dependencies between builds are:
+ * - ESM bundled depends on ESM unbundled (uses unbundled output as input)
+ * - Minified depends on release bundled (uses release output as input)
  *
  * @param {object} options - The build target options.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
@@ -178,20 +202,19 @@ function buildJSOptions({
     const isMin = buildType === 'min';
     const bundled = isUMD || isMin || bundleState === 'bundled';
 
-    const prefix = `${OUT_PREFIX[buildType]}`;
+    const prefix = OUT_PREFIX[buildType];
     const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
 
     const targets = [];
 
-    // bundle from unbundled
-    if (bundled && HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
-        const unbundled = HISTORY.get(`${buildType}-${moduleFormat}-false`);
+    // ESM bundled: bundle from unbundled output
+    if (!isUMD && !isMin && bundleState === 'bundled') {
+        // Compute the unbundled output path directly
+        const unbundledDir = getOutputPaths(buildType, moduleFormat, false, dir).dir;
 
-        /**
-         * @type {RollupOptions}
-         */
+        /** @type {RollupOptions} */
         const target = {
-            input: `${unbundled.output.dir}/src/index.js`,
+            input: `${unbundledDir}/src/index.js`,
             output: {
                 banner: getBanner(BANNER[buildType]),
                 format: 'es',
@@ -203,23 +226,20 @@ function buildJSOptions({
             }
         };
 
-        HISTORY.set(`${buildType}-${moduleFormat}-true`, target);
         targets.push(target);
-
         return targets;
     }
 
-    // minify from release build
-    if (isMin && HISTORY.has(`release-${moduleFormat}-true`)) {
-        const release = HISTORY.get(`release-${moduleFormat}-true`);
+    // Minified: minify from release build
+    if (isMin) {
+        // Compute the release output path directly
+        const releaseOutput = getOutputPaths('release', moduleFormat, true, dir);
 
-        /**
-         * @type {RollupOptions}
-         */
+        /** @type {RollupOptions} */
         const target = {
-            input: release.output.file,
+            input: releaseOutput.file,
             plugins: [
-                swcPlugin({ swc: swcOptions(isDebug, isMin) })
+                swcPlugin({ swc: swcOptions(false, true) })
             ],
             output: {
                 banner: isUMD ? getBanner(BANNER[buildType]) : undefined,
@@ -228,15 +248,12 @@ function buildJSOptions({
             context: isUMD ? 'this' : undefined
         };
 
-        HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
         targets.push(target);
-
         return targets;
     }
 
-    /**
-     * @type {RollupOptions}
-     */
+    // Primary build from source
+    /** @type {RollupOptions} */
     const target = {
         input,
         output: {
@@ -259,15 +276,13 @@ function buildJSOptions({
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
             !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-            swcPlugin({ swc: swcOptions(isDebug, isMin) }),
+            swcPlugin({ swc: swcOptions(isDebug, false) }),
             !isUMD ? dynamicImportBundlerSuppress() : undefined,
             !isDebug ? spacesToTabs() : undefined
         ]
     };
 
-    HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
     targets.push(target);
-
     return targets;
 }
 
@@ -301,4 +316,4 @@ function buildTypesOption({
     };
 }
 
-export { buildJSOptions, buildTypesOption };
+export { buildJSOptions, buildTypesOption, getOutputPaths };
