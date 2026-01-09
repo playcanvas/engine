@@ -391,7 +391,6 @@ async function buildParallel(targets, extraEnvArgs = []) {
     display.render();
     fillPool();
 
-    // eslint-disable-next-line no-await-in-loop -- intentional: dynamic task pool waits for next completed task
     while (active.size > 0 || pending.size > 0) {
         if (active.size === 0 && pending.size > 0) {
             throw new Error('Circular dependency detected');
