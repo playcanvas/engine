@@ -9,7 +9,7 @@ import terser from '@rollup/plugin-terser';
 import { exampleMetaData } from './cache/metadata.mjs';
 import { copy } from './utils/plugins/rollup-copy.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
-import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
+import { treeshakeIgnore } from './utils/plugins/rollup-treeshake-ignore.mjs';
 import { buildJSOptions, buildTypesOption } from '../utils/rollup-build-target.mjs';
 import { version } from '../utils/rollup-version-revision.mjs';
 import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
