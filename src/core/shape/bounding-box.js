@@ -13,7 +13,8 @@ const tmpVecD = new Vec3();
 const tmpVecE = new Vec3();
 
 /**
- * Axis-Aligned Bounding Box.
+ * Axis-Aligned Bounding Box. An AABB is commonly used for fast overlap tests in collision
+ * detection, spatial indexing and frustum culling.
  *
  * @category Math
  */
