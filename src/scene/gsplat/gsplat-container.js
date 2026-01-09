@@ -27,6 +27,7 @@ class GSplatContainer extends GSplatResourceBase {
      * Map of texture names to Texture instances.
      *
      * @type {Map<string, Texture>}
+     * @ignore
      */
     textures = new Map();
 
@@ -84,7 +85,6 @@ class GSplatContainer extends GSplatResourceBase {
      * Number of splats in this container.
      *
      * @type {number}
-     * @readonly
      */
     get numSplats() {
         return this._numSplats;
