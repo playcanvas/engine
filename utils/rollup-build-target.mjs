@@ -207,14 +207,16 @@ function buildJSOptions({
 
     const targets = [];
 
-    // ESM bundled: bundle from unbundled output
+    // ESM bundled: bundle from unbundled output (unless input is explicitly provided)
     if (!isUMD && !isMin && bundleState === 'bundled') {
-        // Compute the unbundled output path directly
+        // If input is default 'src/index.js', use unbundled output; otherwise use provided input
+        const useUnbundledInput = input === 'src/index.js';
         const unbundledDir = getOutputPaths(buildType, moduleFormat, false, dir).dir;
+        const bundleInput = useUnbundledInput ? `${unbundledDir}/src/index.js` : input;
 
         /** @type {RollupOptions} */
         const target = {
-            input: `${unbundledDir}/src/index.js`,
+            input: bundleInput,
             output: {
                 banner: getBanner(BANNER[buildType]),
                 format: 'es',
