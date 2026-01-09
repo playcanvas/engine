@@ -14,8 +14,7 @@
  * treesun - Enable treesun build visualization (release only).
  * treeflame - Enable treeflame build visualization (release only).
  *
- * --sequential - Disable parallel builds (for debugging)
- * --verbose    - Show full rollup output (default: quiet mode)
+ * --sequential - Run builds sequentially (shows full rollup output)
  *
  * Watch mode (-w or --watch):
  * - Pass -w flag to enable watch mode
@@ -29,6 +28,9 @@ import os from 'os';
 import { version, revision } from './utils/rollup-version-revision.mjs';
 
 const args = process.argv.slice(2);
+
+// Auto-detect environment: interactive terminal vs CI/piped output
+const isInteractive = process.stdout.isTTY && !process.env.CI;
 
 // ANSI codes
 const BLUE = '\x1b[34m';
@@ -53,15 +55,10 @@ const ENV_START_MATCHES = ['target', 'treemap', 'treenet', 'treesun', 'treeflame
 const envArgs = [];
 const rollupArgs = [];
 let sequential = false;
-let verbose = false;
 
 for (let i = 0; i < args.length; i++) {
     if (args[i] === '--sequential') {
         sequential = true;
-        continue;
-    }
-    if (args[i] === '--verbose' || args[i] === '-v') {
-        verbose = true;
         continue;
     }
     if (ENV_START_MATCHES.some(match => args[i].startsWith(match)) && args[i - 1] !== '--environment') {
@@ -82,8 +79,12 @@ if (isWatchMode) mode = 'watch';
 if (hasVisualization) mode = 'sequential';
 
 // Print banner
-console.log(`${BLUE}${BOLD}PlayCanvas Engine Build${RESET}`);
-console.log(`${GRAY}v${version} · ${revision} · ${mode} mode${RESET}\n`);
+if (isInteractive) {
+    console.log(`${BLUE}${BOLD}PlayCanvas Engine Build${RESET}`);
+    console.log(`${GRAY}v${version} · ${revision} · ${mode} mode${RESET}\n`);
+} else {
+    console.log(`PlayCanvas Engine Build v${version} (${revision}) [${mode} mode]`);
+}
 
 // Clean build directory for full builds (not in watch mode)
 if (envTarget === null && !isWatchMode && fs.existsSync('build')) {
@@ -125,9 +126,12 @@ function shouldIncludeTarget(targetDef) {
 }
 
 /**
- * Run a single rollup build with captured output
+ * Run a single rollup build
+ * @param {object} targetDef - Target definition
+ * @param {string[]} extraEnvArgs - Extra environment arguments
+ * @param {boolean} quiet - If true, capture output; if false, show in terminal
  */
-function runBuild(targetDef, extraEnvArgs = [], captureOutput = true) {
+function runBuild(targetDef, extraEnvArgs = [], quiet = true) {
     return new Promise((resolve, reject) => {
         const allEnvArgs = [`target:${targetDef.target}`, ...extraEnvArgs];
         const envString = allEnvArgs.map(e => `--environment ${e}`).join(' ');
@@ -136,10 +140,10 @@ function runBuild(targetDef, extraEnvArgs = [], captureOutput = true) {
         const output = [];
         const child = spawn(cmd, {
             shell: true,
-            stdio: captureOutput ? ['pipe', 'pipe', 'pipe'] : 'inherit'
+            stdio: quiet ? ['pipe', 'pipe', 'pipe'] : 'inherit'
         });
 
-        if (captureOutput) {
+        if (quiet) {
             child.stdout.on('data', (data) => output.push(data.toString()));
             child.stderr.on('data', (data) => output.push(data.toString()));
         }
@@ -282,11 +286,66 @@ class StatusDisplay {
 }
 
 /**
+ * CI-friendly linear output display (no cursor manipulation)
+ */
+class CIDisplay {
+    constructor(targets) {
+        this.targets = targets;
+        this.total = targets.length;
+        this.started = 0;
+        this.completed = 0;
+        this.startTimes = new Map();
+        this.errors = new Map();
+    }
+
+    start(id) {
+        this.started++;
+        this.startTimes.set(id, performance.now());
+        const target = this.targets.find(t => t.id === id);
+        console.log(`[${this.started}/${this.total}] Building ${target?.label ?? id}...`);
+    }
+
+    complete(id) {
+        this.completed++;
+        const elapsed = ((performance.now() - this.startTimes.get(id)) / 1000).toFixed(1);
+        const target = this.targets.find(t => t.id === id);
+        console.log(`         ${SYM_DONE} ${target?.label ?? id} (${elapsed}s)`);
+    }
+
+    fail(id, error) {
+        this.completed++;
+        const elapsed = ((performance.now() - this.startTimes.get(id)) / 1000).toFixed(1);
+        const target = this.targets.find(t => t.id === id);
+        console.log(`         ${SYM_FAIL} ${target?.label ?? id} FAILED (${elapsed}s)`);
+        this.errors.set(id, error);
+    }
+
+    render() {
+        // No-op for CI - we print on events instead
+    }
+
+    printErrors() {
+        if (this.errors.size > 0) {
+            console.log('\n=== Build Errors ===');
+            for (const [id, error] of this.errors) {
+                const target = this.targets.find(t => t.id === id);
+                console.log(`\n${target?.label ?? id}:`);
+                console.log(error);
+            }
+        }
+    }
+
+    printSummary(totalTime) {
+        console.log(`\nBuild complete in ${totalTime}s`);
+    }
+}
+
+/**
  * Dynamic task pool scheduler with clean status display
  */
 async function buildParallel(targets, extraEnvArgs = []) {
     const maxConcurrency = Math.max(1, os.cpus().length - 1);
-    const display = new StatusDisplay(targets);
+    const display = isInteractive ? new StatusDisplay(targets) : new CIDisplay(targets);
 
     const completed = new Set();
     const pending = new Map(targets.map(t => [t.id, t]));
@@ -300,7 +359,7 @@ async function buildParallel(targets, extraEnvArgs = []) {
     const startBuild = (targetDef) => {
         display.start(targetDef.id);
 
-        const promise = runBuild(targetDef, extraEnvArgs, !verbose)
+        const promise = runBuild(targetDef, extraEnvArgs, true)
             .then(result => ({ id: targetDef.id, success: true, output: result.output }))
             .catch(err => ({ id: targetDef.id, success: false, error: err.message }));
 
@@ -404,34 +463,40 @@ function topologicalSort(targets) {
         const targetIds = new Set(filteredTargets.map(t => t.id));
         const withDependencies = filteredTargets.slice();
 
-        for (const target of filteredTargets) {
+        // Recursively add all dependencies (transitive)
+        const addDependencies = (target) => {
             for (const dep of target.dependsOn) {
                 if (!targetIds.has(dep)) {
                     const depTarget = BUILD_TARGETS.find(t => t.id === dep);
                     if (depTarget) {
-                        withDependencies.unshift(depTarget);
                         targetIds.add(dep);
+                        withDependencies.unshift(depTarget);
+                        addDependencies(depTarget);
                     }
                 }
             }
+        };
+
+        for (const target of filteredTargets) {
+            addDependencies(target);
         }
 
         const sorted = topologicalSort(withDependencies);
 
         if (sorted.length === 0) {
-            console.error(`${RED}${BOLD}No targets found${RESET}`);
+            console.error(isInteractive ? `${RED}${BOLD}No targets found${RESET}` : 'ERROR: No targets found');
             process.exit(1);
         }
 
         const vizArgs = envArgs.filter(arg => ['treemap', 'treenet', 'treesun', 'treeflame'].includes(arg));
 
-        if (mode === 'sequential' || verbose) {
+        if (mode === 'sequential') {
             await buildSequential(sorted, vizArgs);
         } else {
             await buildParallel(sorted, vizArgs);
         }
     } catch (err) {
-        console.error(`\n${RED}${BOLD}Build failed:${RESET} ${err.message}`);
+        console.error(isInteractive ? `\n${RED}${BOLD}Build failed:${RESET} ${err.message}` : `\nBuild failed: ${err.message}`);
         process.exit(1);
     }
 })();
