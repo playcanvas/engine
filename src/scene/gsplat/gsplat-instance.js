@@ -12,7 +12,9 @@ import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
 /**
  * @import { Camera } from '../camera.js'
  * @import { GraphNode } from '../graph-node.js'
+ * @import { Mesh } from '../mesh.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
+ * @import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js'
  */
 
 const mat = new Mat4();
@@ -96,8 +98,9 @@ class GSplatInstance {
             this._material.update();
         }
 
-        this.meshInstance = new MeshInstance(resource.mesh, this._material);
-        this.meshInstance.setInstancing(resource.instanceIndices, true);
+        resource.ensureMesh();
+        this.meshInstance = new MeshInstance(/** @type {Mesh} */ (resource.mesh), this._material);
+        this.meshInstance.setInstancing(/** @type {VertexBuffer} */ (resource.instanceIndices), true);
         this.meshInstance.gsplatInstance = this;
 
         // only start rendering the splat after we've received the splat order data
@@ -123,6 +126,7 @@ class GSplatInstance {
     }
 
     destroy() {
+        this.resource?.releaseMesh();
         this.orderTexture?.destroy();
         this.resolveSH?.destroy();
         this.material?.destroy();

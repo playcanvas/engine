@@ -120,13 +120,9 @@ assetListLoader.load(() => {
     // toggle unified rendering for all gsplats via controls
     data.on('unified:set', () => {
         const unified = !!data.get('unified');
-        const comps = /** @type {any[]} */ (app.root.findComponents('gsplat'));
-        comps.forEach((comp /** @type {import('playcanvas').GSplatComponent} */) => {
-            comp.enabled = false;
-            comp.entity.enabled = false;
+        const comps = /** @type {pc.GSplatComponent[]} */ (app.root.findComponents('gsplat'));
+        comps.forEach((comp) => {
             comp.unified = unified;
-            comp.enabled = true;
-            comp.entity.enabled = true;
         });
     });
 });

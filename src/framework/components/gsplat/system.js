@@ -196,7 +196,7 @@ class GSplatComponentSystem extends ComponentSystem {
      *     material.setParameter('myParam', value);
      * });
      */
-    getGSplatMaterial(camera, layer) {
+    getMaterial(camera, layer) {
         const director = this.app.renderer.gsplatDirector;
         if (!director) return null;
 
@@ -205,6 +205,11 @@ class GSplatComponentSystem extends ComponentSystem {
 
         const layerData = cameraData.layersMap.get(layer);
         return layerData?.gsplatManager?.material ?? null;
+    }
+
+    getGSplatMaterial(camera, layer) {
+        Debug.deprecated('GSplatComponentSystem#getGSplatMaterial is deprecated. Use GSplatComponentSystem#getMaterial instead.');
+        return this.getMaterial(camera, layer);
     }
 }
 

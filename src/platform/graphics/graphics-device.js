@@ -145,6 +145,14 @@ class GraphicsDevice extends EventHandler {
     maxIndirectDrawCount = 1024;
 
     /**
+     * The maximum number of indirect compute dispatches that can be used within a single frame.
+     * Used on WebGPU only. Defaults to 256.
+     *
+     * @type {number}
+     */
+    maxIndirectDispatchCount = 256;
+
+    /**
      * The maximum supported texture anisotropy setting.
      *
      * @type {number}
@@ -820,6 +828,34 @@ class GraphicsDevice extends EventHandler {
      * @type {StorageBuffer|null}
      */
     get indirectDrawBuffer() {
+        return null;
+    }
+
+    /**
+     * Retrieves the first available slot in the {@link indirectDispatchBuffer} used for indirect
+     * compute dispatch, which can be utilized by a {@link Compute} shader to generate indirect
+     * dispatch parameters for another compute shader.
+     *
+     * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
+     * @returns {number} - The first reserved slot index used for indirect dispatch.
+     */
+    getIndirectDispatchSlot(count = 1) {
+        return 0;
+    }
+
+    /**
+     * Returns the buffer used to store arguments for indirect compute dispatch calls. The size of
+     * the buffer is controlled by the {@link maxIndirectDispatchCount} property. This buffer can
+     * be passed to a {@link Compute} shader along with a slot obtained by calling
+     * {@link getIndirectDispatchSlot}, in order to prepare indirect dispatch parameters.
+     *
+     * Only available on WebGPU, returns null on other platforms.
+     *
+     * @type {StorageBuffer|null}
+     */
+    get indirectDispatchBuffer() {
         return null;
     }
 
