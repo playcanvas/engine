@@ -409,6 +409,7 @@ class BlurredPlanarReflection extends Script {
      * Height range for distance-based blur calculation.
      *
      * @attribute
+     * @range [0]
      */
     heightRange = 1;
 
