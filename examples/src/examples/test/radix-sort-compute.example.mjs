@@ -99,7 +99,7 @@ let needsRegen = true;
 const enableRendering = true;
 
 // Create compute radix sort instance
-// eslint-disable-next-line import/namespace
+
 radixSort = new pc.ComputeRadixSort(device);
 
 // ==================== MATERIALS ====================
