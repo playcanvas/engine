@@ -219,7 +219,10 @@ class GSplatComponent extends Component {
      */
     set instance(value) {
 
-        Debug.assert(!this.unified);
+        if (this.unified) {
+            Debug.errorOnce('GSplatComponent#instance setter is not supported when unified is true.');
+            return;
+        }
 
         // destroy existing instance
         this.destroyInstance();
@@ -626,21 +629,27 @@ class GSplatComponent extends Component {
     onLayerAdded(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
+        if (this.unified) {
+            Debug.errorOnce('GSplatComponent#onLayerAdded is not supported when unified is true.');
+            return;
+        }
+
         if (this._instance) {
             layer.addMeshInstances(this._instance.meshInstance);
         }
-
-        Debug.assert(!this.unified);
     }
 
     onLayerRemoved(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
+        if (this.unified) {
+            Debug.errorOnce('GSplatComponent#onLayerRemoved is not supported when unified is true.');
+            return;
+        }
+
         if (this._instance) {
             layer.removeMeshInstances(this._instance.meshInstance);
         }
-
-        Debug.assert(!this.unified);
     }
 
     onEnable() {
