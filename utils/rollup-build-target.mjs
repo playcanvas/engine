@@ -13,7 +13,6 @@ import { shaderChunks } from './plugins/rollup-shader-chunks.mjs';
 import { engineLayerImportValidation } from './plugins/rollup-import-validation.mjs';
 import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 import { dynamicImportLegacyBrowserSupport, dynamicImportBundlerSuppress } from './plugins/rollup-dynamic.mjs';
-import { treeshakeIgnore } from './plugins/rollup-treeshake-ignore.mjs';
 import { runTsc } from './plugins/rollup-run-tsc.mjs';
 import { typesFixup } from './plugins/rollup-types-fixup.mjs';
 
@@ -32,9 +31,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = pathResolve(__dirname, '..');
 
-const TREESHAKE_IGNORE_REGEXES = [
-    /polyfill/
-];
 
 const STRIP_FUNCTIONS = [
     'Debug.assert',
@@ -83,16 +79,14 @@ const HISTORY = new Map();
 
 /**
  * @param {'debug'|'release'|'profiler'} buildType - The build type.
- * @param {boolean} isUMD - Whether the build is for UMD.
  * @returns {object} - The JSCC options.
  */
-function getJSCCOptions(buildType, isUMD) {
+function getJSCCOptions(buildType) {
     const options = {
         debug: {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision,
-                _IS_UMD: +isUMD,
                 _DEBUG: 1,
                 _PROFILER: 1
             },
@@ -102,8 +96,7 @@ function getJSCCOptions(buildType, isUMD) {
         release: {
             values: {
                 _CURRENT_SDK_VERSION: version,
-                _CURRENT_SDK_REVISION: revision,
-                _IS_UMD: +isUMD
+                _CURRENT_SDK_REVISION: revision
             },
             asloader: false
         },
@@ -111,7 +104,6 @@ function getJSCCOptions(buildType, isUMD) {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision,
-                _IS_UMD: +isUMD,
                 _PROFILER: 1
             },
             asloader: false
@@ -262,8 +254,7 @@ function buildJSOptions({
         },
         plugins: [
             resolve(),
-            jscc(getJSCCOptions(isMin ? 'release' : buildType, isUMD)),
-            isUMD ? treeshakeIgnore(TREESHAKE_IGNORE_REGEXES) : undefined,
+            jscc(getJSCCOptions(isMin ? 'release' : buildType)),
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
