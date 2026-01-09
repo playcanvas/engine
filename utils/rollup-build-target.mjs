@@ -219,7 +219,7 @@ function buildJSOptions({
         const target = {
             input: release.output.file,
             plugins: [
-                swcPlugin({ swc: swcOptions(isDebug, isUMD, isMin) })
+                swcPlugin({ swc: swcOptions(isDebug, isMin) })
             ],
             output: {
                 banner: isUMD ? getBanner(BANNER[buildType]) : undefined,
@@ -259,7 +259,7 @@ function buildJSOptions({
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
             !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-            swcPlugin({ swc: swcOptions(isDebug, isUMD, isMin) }),
+            swcPlugin({ swc: swcOptions(isDebug, isMin) }),
             !isUMD ? dynamicImportBundlerSuppress() : undefined,
             !isDebug ? spacesToTabs() : undefined
         ]
