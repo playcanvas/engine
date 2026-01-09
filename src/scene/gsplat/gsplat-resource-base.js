@@ -37,11 +37,11 @@ class GSplatResourceBase {
     /** @type {BoundingBox} */
     aabb;
 
-    /** @type {Mesh} */
-    mesh;
+    /** @type {Mesh|null} */
+    mesh = null;
 
-    /** @type {VertexBuffer} */
-    instanceIndices;
+    /** @type {VertexBuffer|null} */
+    instanceIndices = null;
 
     /** @type {number} */
     id = id++;
@@ -55,6 +55,12 @@ class GSplatResourceBase {
      */
     _refCount = 0;
 
+    /**
+     * @type {number}
+     * @private
+     */
+    _meshRefCount = 0;
+
     constructor(device, gsplatData) {
         this.device = device;
         this.gsplatData = gsplatData;
@@ -63,15 +69,6 @@ class GSplatResourceBase {
 
         this.aabb = new BoundingBox();
         gsplatData.calcAabb(this.aabb);
-
-        // construct the mesh
-        this.mesh = GSplatResourceBase.createMesh(device);
-        this.instanceIndices = GSplatResourceBase.createInstanceIndices(device, gsplatData.numSplats);
-
-        // keep extra reference since mesh is shared between instances
-        this.mesh.incRefCount();
-
-        this.mesh.aabb.copy(this.aabb);
     }
 
     destroy() {
@@ -112,6 +109,36 @@ class GSplatResourceBase {
      */
     get refCount() {
         return this._refCount;
+    }
+
+    /**
+     * Ensures mesh and instanceIndices exist. Creates them lazily on first call. Must be paired
+     * with a call to releaseMesh() when done.
+     *
+     * @ignore
+     */
+    ensureMesh() {
+        if (!this.mesh) {
+            this.mesh = GSplatResourceBase.createMesh(this.device);
+            this.mesh.aabb.copy(this.aabb);
+            this.instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, this.gsplatData.numSplats);
+        }
+        this._meshRefCount++;
+    }
+
+    /**
+     * Releases reference to mesh. When all references are released, cleans up instanceIndices.
+     * The mesh itself is destroyed by MeshInstance when its internal refCount reaches zero.
+     *
+     * @ignore
+     */
+    releaseMesh() {
+        this._meshRefCount--;
+        if (this._meshRefCount < 1) {
+            this.mesh = null; // mesh instances destroy mesh when their refCount reaches zero
+            this.instanceIndices?.destroy();
+            this.instanceIndices = null;
+        }
     }
 
     /**

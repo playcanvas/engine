@@ -1517,6 +1517,7 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
 
 const tempMat = new Mat4();
 const tempVec = new Vec3();
+const tempQuat = new Quat();
 
 const createNode = (gltfNode, nodeIndex, nodeInstancingMap) => {
     const entity = new GraphNode();
@@ -1532,9 +1533,14 @@ const createNode = (gltfNode, nodeIndex, nodeInstancingMap) => {
         tempMat.data.set(gltfNode.matrix);
         tempMat.getTranslation(tempVec);
         entity.setLocalPosition(tempVec);
-        tempMat.getEulerAngles(tempVec);
-        entity.setLocalEulerAngles(tempVec);
+        // Use Quat.setFromMat4 which properly handles negative determinant (mirrored matrices)
+        // by normalizing the rotation before extraction
+        tempQuat.setFromMat4(tempMat);
+        entity.setLocalRotation(tempQuat);
         tempMat.getScale(tempVec);
+        // Apply negative sign to X scale if the matrix is mirrored (negative determinant).
+        // This matches the convention used in Quat.setFromMat4 which flips the X axis.
+        tempVec.x *= tempMat.scaleSign;
         entity.setLocalScale(tempVec);
     }
 

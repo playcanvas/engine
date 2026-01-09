@@ -23,8 +23,7 @@ import {
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
     MASK_BAKE, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC,
-    SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
-    SHADER_FORWARD
+    SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
 } from '../../scene/constants.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { LightingParams } from '../../scene/lighting/lighting-params.js';
@@ -40,6 +39,8 @@ import { LightmapFilters } from './lightmap-filters.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPassLightmapper } from './render-pass-lightmapper.js';
+import { RenderPassShadowLocalClustered } from '../../scene/renderer/render-pass-shadow-local-clustered.js';
+import { RenderPassShadowLocalNonClustered } from '../../scene/renderer/render-pass-shadow-local-non-clustered.js';
 
 /**
  * @import { AssetRegistry } from '../asset/asset-registry.js'
@@ -190,6 +191,13 @@ class Lightmapper {
 
             this.worldClusters = new WorldClusters(device);
             this.worldClusters.name = 'ClusterLightmapper';
+
+            // render pass for clustered local light shadows
+            this.shadowLocalClusteredPass = new RenderPassShadowLocalClustered(
+                device,
+                this.renderer.shadowRenderer,
+                this.renderer._shadowRendererLocal
+            );
         }
     }
 
@@ -848,17 +856,29 @@ class Lightmapper {
 
             } else {
 
-                // TODO: lightmapper on WebGPU does not yet support spot and omni shadows
-                if (this.device.isWebGPU) {
-                    Debug.warnOnce('Lightmapper on WebGPU does not yet support spot and omni shadows.');
-                    return true;
-                }
-
                 this.renderer._shadowRendererLocal.cull(light, comp, casters);
 
-                // TODO: this needs to use render passes to work on WebGPU
-                const insideRenderPass = false;
-                this.renderer.shadowRenderer.render(light, this.camera, insideRenderPass);
+                if (isClustered) {
+                    // Clustered mode: use a single render pass for all faces to the shadow atlas
+                    this.shadowLocalClusteredPass.update([light]);
+                    if (this.shadowLocalClusteredPass.enabled) {
+                        this.shadowLocalClusteredPass.render();
+                    }
+                } else {
+                    // Non-clustered mode: use render passes for each face
+                    const faceCount = light.numShadowFaces;
+                    const applyVsm = light._type === LIGHTTYPE_SPOT;
+                    for (let face = 0; face < faceCount; face++) {
+                        const renderPass = new RenderPassShadowLocalNonClustered(
+                            this.device,
+                            this.renderer.shadowRenderer,
+                            light,
+                            face,
+                            applyVsm
+                        );
+                        renderPass.render();
+                    }
+                }
             }
         }
 
@@ -1085,37 +1105,14 @@ class Lightmapper {
                             this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
                         }
 
-                        if (device.isWebGPU) {
-
-                            // TODO: On WebGPU we use a render pass, but this has some issue it seems,
-                            // and needs to be investigated and fixed. In the LightsBaked example, edges of
-                            // some geometry are not lit correctly, especially visible on boxes. Most likely
-                            // some global per frame / per camera constants are not set up or similar, that
-                            // renderForward sets up.
-                            const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera,
-                                clusteredLightingEnabled ? this.worldClusters : null,
-                                rcv, lightArray);
-                            renderPass.init(tempRT);
-                            renderPass.render();
-                            renderPass.destroy();
-
-                        } else {    // use the old path for WebGL till the render pass way above is fixed
-
-                            // ping-ponging output
-                            this.renderer.setCamera(this.camera, tempRT, true);
-
-                            // prepare clustered lighting
-                            if (clusteredLightingEnabled) {
-                                this.worldClusters.activate();
-                            }
-
-                            this.renderer._forwardTime = 0;
-                            this.renderer._shadowMapTime = 0;
-
-                            this.renderer.renderForward(this.camera, tempRT, rcv, lightArray, SHADER_FORWARD);
-
-                            device.updateEnd();
-                        }
+                        const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera,
+                            clusteredLightingEnabled ? this.worldClusters : null,
+                            rcv, lightArray);
+                        renderPass.init(tempRT);
+                        renderPass.colorOps.clear = true;
+                        renderPass.colorOps.clearValue.copy(this.camera.clearColor);
+                        renderPass.render();
+                        renderPass.destroy();
 
                         // #if _PROFILER
                         this.stats.shadowMapTime += this.renderer._shadowMapTime;

@@ -43,6 +43,9 @@ const _uniqueLocations = new Map();
 // size of indirect draw entry in bytes, 5 x 32bit
 const _indirectEntryByteSize = 5 * 4;
 
+// size of indirect dispatch entry in bytes, 3 x 32bit (x, y, z workgroup counts)
+const _indirectDispatchEntryByteSize = 3 * 4;
+
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Object responsible for caching and creation of render pipelines.
@@ -77,6 +80,30 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @private
      */
     _indirectDrawNextIndex = 0;
+
+    /**
+     * Buffer used to store arguments for indirect dispatch calls.
+     *
+     * @type {StorageBuffer|null}
+     * @private
+     */
+    _indirectDispatchBuffer = null;
+
+    /**
+     * Number of indirect dispatch slots allocated.
+     *
+     * @type {number}
+     * @private
+     */
+    _indirectDispatchBufferCount = 0;
+
+    /**
+     * Next unused index in indirectDispatchBuffer.
+     *
+     * @type {number}
+     * @private
+     */
+    _indirectDispatchNextIndex = 0;
 
     /**
      * Object responsible for clearing the rendering surface by rendering a quad.
@@ -486,6 +513,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         this._indirectDrawNextIndex = 0;
+        this._indirectDispatchNextIndex = 0;
     }
 
     createBufferImpl(usageFlags) {
@@ -567,6 +595,39 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const nextIndex = this._indirectDrawNextIndex + count;
         Debug.assert(nextIndex <= this.maxIndirectDrawCount, `Insufficient indirect draw slots per frame (requested ${count}, currently ${nextIndex}), please adjust GraphicsDevice#maxIndirectDrawCount`);
         this._indirectDrawNextIndex = nextIndex;
+        return slot;
+    }
+
+    get indirectDispatchBuffer() {
+        this.allocateIndirectDispatchBuffer();
+        return this._indirectDispatchBuffer;
+    }
+
+    allocateIndirectDispatchBuffer() {
+
+        // handle reallocation
+        if (this._indirectDispatchNextIndex === 0 && this._indirectDispatchBufferCount < this.maxIndirectDispatchCount) {
+            this._indirectDispatchBuffer?.destroy();
+            this._indirectDispatchBuffer = null;
+        }
+
+        // allocate buffer
+        if (this._indirectDispatchBuffer === null) {
+            this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDispatchBufferCount = this.maxIndirectDispatchCount;
+        }
+    }
+
+    getIndirectDispatchSlot(count = 1) {
+
+        // make sure the buffer is allocated
+        this.allocateIndirectDispatchBuffer();
+
+        // allocate consecutive slots
+        const slot = this._indirectDispatchNextIndex;
+        const nextIndex = this._indirectDispatchNextIndex + count;
+        Debug.assert(nextIndex <= this.maxIndirectDispatchCount, `Insufficient indirect dispatch slots per frame (requested ${count}, currently ${nextIndex}), please adjust GraphicsDevice#maxIndirectDispatchCount`);
+        this._indirectDispatchNextIndex = nextIndex;
         return slot;
     }
 

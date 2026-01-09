@@ -1,9 +1,11 @@
-// @config DESCRIPTION This example demonstrates unified gsplat rendering with annotations for testing annotation functionality on gaussian splats.
+// @config DESCRIPTION Interactive 3D annotations on a gaussian splat model. Click hotspots to reveal product details with tooltips that follow the 3D positions.
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { Annotation } = await fileImport(`${rootPath}/static/scripts/esm/annotation.mjs`);
+const { Annotation, AnnotationManager } = await fileImport(`${rootPath}/static/scripts/esm/annotation.mjs`);
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+const { CameraFrame } = await fileImport(`${rootPath}/static/scripts/esm/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -20,17 +22,14 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
 
 createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
-    pc.LightComponentSystem,
     pc.ScriptComponentSystem,
     pc.GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.GSplatHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -46,133 +45,146 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
+// Create an Entity with a camera component
+const camera = new pc.Entity('Camera');
+camera.addComponent('camera', {
+    fov: 30
+});
+camera.setLocalPosition(-2, 1.2, -2.5);
+
+// Add camera controls and post-processing
+camera.addComponent('script');
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        enablePan: false,
+        focusPoint: new pc.Vec3(0, 0.575, 0),
+        zoomRange: new pc.Vec2(1, 5)
+    }
+});
+camera.script.create(CameraFrame, {
+    properties: {
+        vignette: {
+            enabled: true,
+            color: pc.Color.BLACK,
+            curvature: 0.5,
+            intensity: 0.5,
+            inner: 0.5,
+            outer: 1
+        }
+    }
+});
+app.root.addChild(camera);
+
 const assets = {
-    hotel: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/hotel-culpture.compressed.ply` }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
-    guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    bicycle: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/bicycle.sog` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
 
+    // Create the bicycle gsplat
+    const bicycle = new pc.Entity('Bicycle');
+    bicycle.addComponent('gsplat', {
+        asset: assets.bicycle
+    });
+    bicycle.setLocalEulerAngles(0, 0, 180);
+    app.root.addChild(bicycle);
+
+    // Add annotation manager to the bicycle entity
+    bicycle.addComponent('script');
+    const manager = bicycle.script.create(AnnotationManager);
+
     // Set default values for controls
     data.set('data', {
-        opacity: 1.0,
+        hotspotSize: 25,
+        hotspotColor: [0.8, 0.8, 0.8],
+        hoverColor: [1, 0.4, 0],
+        opacity: 1,
         behindOpacity: 0.25
     });
 
-    // Handle control changes
+    // Handle control changes - update the manager directly
     data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
-        if (path === 'data.opacity') {
-            Annotation.opacity = value;
-        } else if (path === 'data.behindOpacity') {
-            Annotation.behindOpacity = value;
+        const prop = path.split('.')[1];
+        if (prop === 'hotspotSize') {
+            manager.hotspotSize = value;
+        } else if (prop === 'hotspotColor' || prop === 'hoverColor') {
+            manager[prop] = new pc.Color(value[0], value[1], value[2]);
+        } else if (prop === 'opacity') {
+            manager.opacity = value;
+        } else if (prop === 'behindOpacity') {
+            manager.behindOpacity = value;
         }
     });
 
-    // instantiate hotel gsplat
-    const hotel = new pc.Entity('hotel');
-    hotel.addComponent('gsplat', {
-        asset: assets.hotel,
-        unified: true
-    });
-    hotel.setLocalEulerAngles(180, 0, 0);
-    app.root.addChild(hotel);
-
-    // create biker1
-    const biker1 = new pc.Entity('biker1');
-    biker1.addComponent('gsplat', {
-        asset: assets.biker,
-        unified: true
-    });
-    biker1.setLocalPosition(0, -1.8, -2);
-    biker1.setLocalEulerAngles(180, 90, 0);
-    app.root.addChild(biker1);
-
-    // clone the biker and add the clone to the scene
-    const biker2 = biker1.clone();
-    biker2.setLocalPosition(0, -1.8, 2);
-    biker2.rotate(0, 150, 0);
-    app.root.addChild(biker2);
-
-    // create guitar
-    const guitar = new pc.Entity('guitar');
-    guitar.addComponent('gsplat', {
-        asset: assets.guitar,
-        unified: true
-    });
-    guitar.setLocalPosition(2, -1.8, -0.5);
-    guitar.setLocalEulerAngles(0, 0, 180);
-    guitar.setLocalScale(0.7, 0.7, 0.7);
-    app.root.addChild(guitar);
-
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: pc.Color.BLACK,
-        fov: 80,
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.setLocalPosition(3, 1, 0.5);
-
-    // add orbit camera script with a mouse and a touch support
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: guitar,
-            distanceMax: 3.2,
-            frameOnStart: false
+    // Create annotations at specific locations (positions are local to the bicycle entity)
+    const annotations = [
+        {
+            pos: [0, -0.6, -0.86],
+            title: 'Smooth-Rolling Tires',
+            text: 'Wide, durable tires absorb road vibrations while rolling smoothly, offering a perfect balance of comfort, grip, and efficiency.'
+        },
+        {
+            pos: [0, -0.88, -0.49],
+            title: 'Front Lighting System',
+            text: 'The built-in front light improves visibility in low-light conditions, helping you see and be seen for safer rides day or night.'
+        },
+        {
+            pos: [0, -1.13, -0.31],
+            title: 'Upright Handlebar Position',
+            text: 'Raised handlebars promote an upright riding position, reducing strain on your back, shoulders, and wrists for longer, more enjoyable rides.'
+        },
+        {
+            pos: [0, -0.656, -0.048],
+            title: 'Step-Through Frame',
+            text: 'The low step-through frame makes getting on and off effortless—ideal for everyday riding, commuting, or riders who value comfort and accessibility.'
+        },
+        {
+            pos: [-0.07, -0.391, 0.181],
+            title: 'Chain Guard',
+            text: 'The enclosed chain guard protects your clothing and reduces maintenance, so you can ride without worrying about grease or snagging.'
+        },
+        {
+            pos: [-0.062, -0.748, 0.234],
+            title: 'Adjustable Seat Height',
+            text: 'Easily adjust the seat height to match your riding style and body position, ensuring optimal comfort and control.'
+        },
+        {
+            pos: [0, -1.0, 0.309],
+            title: 'Ergonomic Saddle',
+            text: 'A wide, cushioned saddle provides excellent support, making every ride comfortable—no matter how long the journey.'
+        },
+        {
+            pos: [0, -0.58, 0.416],
+            title: 'Reliable Braking System',
+            text: 'High-quality brakes deliver consistent stopping power, giving you peace of mind in traffic, on hills, or in changing weather.'
+        },
+        {
+            pos: [0, -0.78, 0.596],
+            title: 'Rear Cargo Rack',
+            text: 'A sturdy rear rack makes it easy to transport bags, groceries, or accessories—perfect for commuting or daily errands.'
+        },
+        {
+            pos: [0, -0.701, 0.816],
+            title: 'Full Coverage Fenders',
+            text: 'Full front and rear fenders protect you from splashes and debris, keeping your clothes clean in wet or unpredictable conditions.'
         }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
-
-    /**
-     * Create an annotation entity
-     * @param {pc.Vec3} position - Position in the scene
-     * @param {string} label - Label number
-     * @param {string} title - Annotation title
-     * @param {string} text - Annotation description
-     * @returns {pc.Entity} The annotation entity
-     */
-    const createAnnotation = (position, label, title, text) => {
-        const entity = new pc.Entity(`annotation${label}`);
-        entity.setLocalPosition(position);
-        entity.addComponent('script');
-        entity.script.create(Annotation, {
-            properties: {
-                label: label,
-                title: title,
-                text: text
-            }
-        });
-        return entity;
-    };
-
-    // Create annotations at specific locations
-    const annotationData = [
-        { pos: new pc.Vec3(0.6, -0.6, 1.7), title: 'Helmet 1', text: 'First helmet display.' },
-        { pos: new pc.Vec3(-0.5, -0.2, -1.5), title: 'Helmet 2', text: 'Second helmet display.' },
-        { pos: new pc.Vec3(2.0, 0, 0), title: 'Guitar', text: 'Guitar on display.' },
-        { pos: new pc.Vec3(-2.2, 2.0, -4.8), title: 'Black Light Projector', text: 'Black light projector equipment.' },
-        { pos: new pc.Vec3(2.0, 2.0, 0.2), title: 'White Light Projector', text: 'White light projector equipment.' },
-        { pos: new pc.Vec3(3.7, 0, -3.6), title: 'Stairs', text: 'Staircase area.' },
-        { pos: new pc.Vec3(-0.2, -0.5, -5.5), title: 'Basement', text: 'Basement level.' },
-        { pos: new pc.Vec3(-0.1, -1.5, -0.3), title: 'Statue', text: 'Statue display.' }
     ];
 
-    annotationData.forEach((data, index) => {
-        const annotation = createAnnotation(
-            data.pos,
-            String(index + 1),
-            data.title,
-            data.text
-        );
-        app.root.addChild(annotation);
+    annotations.forEach(({ pos, title, text }, index) => {
+        const annotation = new pc.Entity(title);
+        annotation.setLocalPosition(pos[0], pos[1], pos[2]);
+        annotation.addComponent('script');
+        annotation.script.create(Annotation, {
+            properties: {
+                label: String(index + 1),
+                title,
+                text
+            }
+        });
+        bicycle.addChild(annotation);
     });
 });
 
