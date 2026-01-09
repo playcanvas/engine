@@ -409,11 +409,9 @@ class BlurredPlanarReflection extends Script {
      * Height range for distance-based blur calculation.
      *
      * @attribute
-     * @range [1, 100]
-     * @precision 1
-     * @step 1
+     * @range [0]
      */
-    heightRange = 10.0;
+    heightRange = 1;
 
     /**
      * Background color to fade reflections into.
@@ -423,15 +421,15 @@ class BlurredPlanarReflection extends Script {
     fadeColor = new Color(0.5, 0.5, 0.5, 1);
 
     /**
-     * Enable scene color map on reflection cameras. Required for materials with
-     * refraction/transmission effects (e.g. glass lenses).
-     *
-     * @attribute
-     * @type {boolean}
+     * @private
      */
     _sceneColorMap = false;
 
     /**
+     * Enable scene color map on reflection cameras. Required for materials with
+     * refraction/transmission effects (e.g. glass lenses).
+     *
+     * @attribute
      * @type {boolean}
      */
     set sceneColorMap(value) {
