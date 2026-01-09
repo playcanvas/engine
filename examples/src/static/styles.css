@@ -221,6 +221,17 @@ body {
     margin-bottom: 8px;
 }
 
+/* Category panel header styling */
+#sideBar .categoryPanel > .pcui-panel-header {
+    background-color: #1a2426;
+}
+
+/* Border around category panels */
+#sideBar .categoryPanel {
+    border: 1px solid #5b7073;
+    border-radius: 4px;
+}
+
 .nav-item {
     margin: 12px;
     overflow: auto;
