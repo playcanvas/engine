@@ -8,6 +8,11 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * @category Math
  */
 class CurveSet {
+    /**
+     * The array of curves in the set.
+     *
+     * @type {Curve[]}
+     */
     curves = [];
 
     /**
@@ -110,6 +115,9 @@ class CurveSet {
      *
      * @param {number} index - The index of the curve to return.
      * @returns {Curve} The curve at the specified index.
+     * @example
+     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * const curve = curveSet.get(0); // returns the first curve
      */
     get(index) {
         return this.curves[index];
@@ -123,6 +131,9 @@ class CurveSet {
      * parameter is not supplied, the function allocates a new array internally to return the
      * result.
      * @returns {number[]} The interpolated curve values at the specified time.
+     * @example
+     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * const values = curveSet.value(0.5); // returns interpolated values for all curves at time 0.5
      */
     value(time, result = []) {
         const length = this.curves.length;
@@ -139,6 +150,9 @@ class CurveSet {
      * Returns a clone of the specified curve set object.
      *
      * @returns {this} A clone of the specified curve set.
+     * @example
+     * const curveSet = new pc.CurveSet([[0, 0, 1, 1]]);
+     * const clonedCurveSet = curveSet.clone();
      */
     clone() {
         /** @type {this} */

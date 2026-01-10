@@ -83,6 +83,10 @@ class Curve {
      * @param {number} time - Time to add new key.
      * @param {number} value - Value of new key.
      * @returns {number[]} The newly created `[time, value]` pair.
+     * @example
+     * const curve = new pc.Curve();
+     * curve.add(0, 1);   // add key at time 0 with value 1
+     * curve.add(1, 2);   // add key at time 1 with value 2
      */
     add(time, value) {
         const keys = this.keys;
@@ -105,6 +109,9 @@ class Curve {
      *
      * @param {number} index - The index of key to return.
      * @returns {number[]} The `[time, value]` pair at the specified index.
+     * @example
+     * const curve = new pc.Curve([0, 1, 1, 2]);
+     * const key = curve.get(0); // returns [0, 1]
      */
     get(index) {
         return this.keys[index];
@@ -122,6 +129,9 @@ class Curve {
      *
      * @param {number} time - The time at which to calculate the value.
      * @returns {number} The interpolated value.
+     * @example
+     * const curve = new pc.Curve([0, 0, 1, 10]);
+     * const value = curve.value(0.5); // returns interpolated value at time 0.5
      */
     value(time) {
         // we force reset the evaluation because keys may have changed since the last evaluate
@@ -129,6 +139,16 @@ class Curve {
         return this._eval.evaluate(time, true);
     }
 
+    /**
+     * Returns the key closest to the specified time.
+     *
+     * @param {number} time - The time to find the closest key to.
+     * @returns {number[]|null} The `[time, value]` pair closest to the specified time, or null if
+     * no keys exist.
+     * @example
+     * const curve = new pc.Curve([0, 1, 0.5, 2, 1, 3]);
+     * const key = curve.closest(0.6); // returns [0.5, 2]
+     */
     closest(time) {
         const keys = this.keys;
         const length = keys.length;
@@ -152,6 +172,9 @@ class Curve {
      * Returns a clone of the specified curve object.
      *
      * @returns {this} A clone of the specified curve.
+     * @example
+     * const curve = new pc.Curve([0, 0, 1, 10]);
+     * const clonedCurve = curve.clone();
      */
     clone() {
         /** @type {this} */

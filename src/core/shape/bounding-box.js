@@ -13,7 +13,8 @@ const tmpVecD = new Vec3();
 const tmpVecE = new Vec3();
 
 /**
- * Axis-Aligned Bounding Box.
+ * Axis-Aligned Bounding Box. An AABB is commonly used for fast overlap tests in collision
+ * detection, spatial indexing and frustum culling.
  *
  * @category Math
  */
@@ -49,10 +50,10 @@ class BoundingBox {
     /**
      * Create a new BoundingBox instance. The bounding box is axis-aligned.
      *
-     * @param {Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
-     * Defaults to (0, 0, 0).
+     * @param {Vec3} [center] - Center of box. The constructor copies this parameter. Defaults to
+     * (0, 0, 0).
      * @param {Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor
-     * takes a reference of this parameter. Defaults to (0.5, 0.5, 0.5).
+     * copies this parameter. Defaults to (0.5, 0.5, 0.5).
      */
     constructor(center, halfExtents) {
         if (center) {
@@ -284,7 +285,7 @@ class BoundingBox {
     }
 
     /**
-     * Test if a point is inside a AABB.
+     * Test if a point is inside an AABB.
      *
      * @param {Vec3} point - Point to test.
      * @returns {boolean} True if the point is inside the AABB and false otherwise.
