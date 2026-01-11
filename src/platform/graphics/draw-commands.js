@@ -114,6 +114,18 @@ class DrawCommands {
     }
 
     /**
+     * Resize persistent storage for the draw commands.
+     *
+     * @param {number} maxCount - Maximum number of draw calls to allocate storage for.
+     * @param {boolean} preserve - Whether to copy previous draw commands.
+     * @ignore
+     */
+    resize(maxCount, preserve) {
+        this._maxCount = maxCount;
+        this.impl.resize?.(maxCount, preserve);
+    }
+
+    /**
      * Writes one draw command into the allocated storage.
      *
      * @param {number} i - Draw index to update.

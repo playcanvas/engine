@@ -37,9 +37,39 @@ class WebgpuDrawCommands {
      * @param {number} maxCount - Number of sub-draws.
      */
     allocate(maxCount) {
-        this.gpuIndirect = new Uint32Array(5 * maxCount);
-        this.gpuIndirectSigned = new Int32Array(this.gpuIndirect.buffer);
-        this.storage = new StorageBuffer(this.device, this.gpuIndirect.byteLength, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+        this.resize(maxCount, false);
+    }
+
+    /**
+     * Resize AoS buffer and backing storage buffer.
+     * @param {number} maxCount - Number of sub-draws.
+     * @param {boolean} preserve - Whether to copy previous draw commands.
+     */
+    resize(maxCount, preserve) {
+
+        // The required amount of memory has already been allocated.
+        if (preserve && this.storage) {
+            const requestedByteSize = 5 * maxCount * Uint32Array.BYTES_PER_ELEMENT;
+            if (this.storage.byteSize === requestedByteSize) {
+                return;
+            }
+        }
+
+        const newGpuIndirect = new Uint32Array(5 * maxCount);
+        const newGpuIndirectSigned = new Int32Array(newGpuIndirect.buffer);
+        const newStorage = new StorageBuffer(this.device, newGpuIndirect.byteLength, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+
+        if (preserve && this.storage) {
+            const keepCount = Math.min(this.gpuIndirect.length, newGpuIndirect.length);
+            const keepByteSize = Math.min(this.storage.byteSize, newStorage.byteSize);
+            newStorage.copy(this.storage, 0, 0, keepByteSize);
+            newGpuIndirect.set(this.gpuIndirect.subarray(0, keepCount));
+        }
+
+        this.storage?.destroy();
+        this.storage = newStorage;
+        this.gpuIndirect = newGpuIndirect;
+        this.gpuIndirectSigned = newGpuIndirectSigned;
     }
 
     /**

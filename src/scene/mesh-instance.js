@@ -1197,9 +1197,10 @@ class MeshInstance {
      * across all cameras.
      * @param {number} [maxCount] - Maximum number of sub-draws to allocate. Defaults to 1. Pass 0
      * to disable multi-draw for the specified camera (or the shared entry when camera is null).
+     * @param {boolean} [preserve] - Whether to copy previous draw commands when resizing.
      * @returns {DrawCommands|undefined} The commands container to populate with sub-draw commands.
      */
-    setMultiDraw(camera, maxCount = 1) {
+    setMultiDraw(camera, maxCount = 1, preserve = false) {
         const key = camera?.camera ?? null;
         let cmd;
 
@@ -1221,7 +1222,7 @@ class MeshInstance {
                 cmd = new DrawCommands(this.mesh.device, indexSizeBytes);
                 this.drawCommands.set(key, cmd);
             }
-            cmd.allocate(maxCount);
+            cmd.resize(maxCount, preserve);
         }
         return cmd;
     }

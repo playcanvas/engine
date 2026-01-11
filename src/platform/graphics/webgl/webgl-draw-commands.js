@@ -28,9 +28,35 @@ class WebglDrawCommands {
      * @param {number} maxCount - Number of sub-draws.
      */
     allocate(maxCount) {
-        this.glCounts = new Int32Array(maxCount);
-        this.glOffsetsBytes = new Int32Array(maxCount);
-        this.glInstanceCounts = new Int32Array(maxCount);
+        this.resize(maxCount, false);
+    }
+
+    /**
+     * Resize SoA arrays for multi-draw.
+     * @param {number} maxCount - Number of sub-draws.
+     * @param {boolean} preserve - Whether to copy previous draw commands.
+     */
+    resize(maxCount, preserve) {
+
+        // We will recreate the data if we need to clear the data.
+        if (preserve && this.glCounts?.length === maxCount) {
+            return;
+        }
+
+        const newGlCounts = new Int32Array(maxCount);
+        const newGlOffsetsBytes = new Int32Array(maxCount);
+        const newGlInstanceCounts = new Int32Array(maxCount);
+
+        if (preserve && this.glCounts) {
+            const keepCount = Math.min(this.glCounts.length, newGlCounts.length);
+            newGlCounts.set(this.glCounts.subarray(0, keepCount));
+            newGlOffsetsBytes.set(this.glOffsetsBytes.subarray(0, keepCount));
+            newGlInstanceCounts.set(this.glInstanceCounts.subarray(0, keepCount));
+        }
+
+        this.glCounts = newGlCounts;
+        this.glOffsetsBytes = newGlOffsetsBytes;
+        this.glInstanceCounts = newGlInstanceCounts;
     }
 
     /**
