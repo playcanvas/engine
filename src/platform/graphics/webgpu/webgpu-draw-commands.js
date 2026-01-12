@@ -37,6 +37,11 @@ class WebgpuDrawCommands {
      * @param {number} maxCount - Number of sub-draws.
      */
     allocate(maxCount) {
+        // Skip reallocation if size matches exactly
+        if (this.gpuIndirect && this.gpuIndirect.length === 5 * maxCount) {
+            return;
+        }
+        this.storage?.destroy();
         this.gpuIndirect = new Uint32Array(5 * maxCount);
         this.gpuIndirectSigned = new Int32Array(this.gpuIndirect.buffer);
         this.storage = new StorageBuffer(this.device, this.gpuIndirect.byteLength, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
