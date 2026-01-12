@@ -650,8 +650,11 @@ class WebglTexture {
                         this._glPixelType,
                         mipObject);
                 }
-            } else if (texture.array && typeof mipObject === 'object') {
-                if (texture._arrayLength === mipObject.length) {
+            } else if (texture.array) {
+                // ----- 2D ARRAY -----
+                // Only upload if mipObject is a valid array with correct length.
+                // If mipObject is null or length doesn't match, skip - storage was already allocated via texStorage3D.
+                if (Array.isArray(mipObject) && texture._arrayLength === mipObject.length) {
                     if (texture._compressed) {
                         for (let index = 0; index < texture._arrayLength; index++) {
                             gl.compressedTexSubImage3D(
