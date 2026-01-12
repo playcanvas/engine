@@ -14,7 +14,9 @@ class GSplatSortBinWeights {
      *
      * @type {number}
      */
-    static NUM_BINS = 32;
+    static get NUM_BINS() {
+        return 32;
+    }
 
     /**
      * Weight tiers for camera-relative precision (distance from camera bin -> weight multiplier).
@@ -22,13 +24,15 @@ class GSplatSortBinWeights {
      *
      * @type {Array<{maxDistance: number, weight: number}>}
      */
-    static WEIGHT_TIERS = [
-        { maxDistance: 0, weight: 40.0 },   // Camera bin
-        { maxDistance: 2, weight: 20.0 },   // Adjacent bins
-        { maxDistance: 5, weight: 8.0 },    // Nearby bins
-        { maxDistance: 10, weight: 3.0 },   // Medium distance
-        { maxDistance: Infinity, weight: 1.0 }  // Far bins
-    ];
+    static get WEIGHT_TIERS() {
+        return [
+            { maxDistance: 0, weight: 40.0 },   // Camera bin
+            { maxDistance: 2, weight: 20.0 },   // Adjacent bins
+            { maxDistance: 5, weight: 8.0 },    // Nearby bins
+            { maxDistance: 10, weight: 3.0 },   // Medium distance
+            { maxDistance: Infinity, weight: 1.0 }  // Far bins
+        ];
+    }
 
     /**
      * Pre-allocated interleaved array [base0, divider0, base1, divider1, ...].
