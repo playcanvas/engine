@@ -101,7 +101,7 @@ assetListLoader.load(() => {
         farClip: 500,
         toneMapping: pc.TONEMAP_ACES2
     });
-    camera.setPosition(12, 15.8, 6.5);
+    camera.setPosition(12, 8.3, 4.5);
 
     // Add camera controls
     camera.addComponent('script');
