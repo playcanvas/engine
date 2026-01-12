@@ -1,7 +1,8 @@
 import { math } from './math.js';
 
 /**
- * A 2-dimensional vector.
+ * A 2-dimensional vector. Vec2 is commonly used to represent 2D positions, directions, texture
+ * coordinates (UVs) or any pair of related numeric values.
  *
  * @category Math
  */
@@ -336,7 +337,7 @@ class Vec2 {
     /**
      * Returns the magnitude squared of the specified 2-dimensional vector.
      *
-     * @returns {number} The magnitude of the specified 2-dimensional vector.
+     * @returns {number} The magnitude squared of the specified 2-dimensional vector.
      * @example
      * const vec = new pc.Vec2(3, 4);
      * const len = vec.lengthSq();
@@ -350,8 +351,8 @@ class Vec2 {
     /**
      * Returns the result of a linear interpolation between two specified 2-dimensional vectors.
      *
-     * @param {Vec2} lhs - The 2-dimensional to interpolate from.
-     * @param {Vec2} rhs - The 2-dimensional to interpolate to.
+     * @param {Vec2} lhs - The 2-dimensional vector to interpolate from.
+     * @param {Vec2} rhs - The 2-dimensional vector to interpolate to.
      * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1,
      * the linear interpolant will occur on a straight line between lhs and rhs. Outside of this
      * range, the linear interpolant will occur on a ray extrapolated from this line.
@@ -517,6 +518,10 @@ class Vec2 {
      *
      * @param {Vec2} [src] - The vector to floor. If not set, the operation is done in place.
      * @returns {Vec2} Self for chaining.
+     * @example
+     * const v = new pc.Vec2(1.2, 3.9);
+     * v.floor();
+     * // v is now [1, 3]
      */
     floor(src = this) {
         this.x = Math.floor(src.x);
@@ -529,6 +534,10 @@ class Vec2 {
      *
      * @param {Vec2} [src] - The vector to ceil. If not set, the operation is done in place.
      * @returns {Vec2} Self for chaining.
+     * @example
+     * const v = new pc.Vec2(1.2, 3.1);
+     * v.ceil();
+     * // v is now [2, 4]
      */
     ceil(src = this) {
         this.x = Math.ceil(src.x);
@@ -541,6 +550,10 @@ class Vec2 {
      *
      * @param {Vec2} [src] - The vector to round. If not set, the operation is done in place.
      * @returns {Vec2} Self for chaining.
+     * @example
+     * const v = new pc.Vec2(1.4, 3.6);
+     * v.round();
+     * // v is now [1, 4]
      */
     round(src = this) {
         this.x = Math.round(src.x);
@@ -553,6 +566,11 @@ class Vec2 {
      *
      * @param {Vec2} rhs - The 2-dimensional vector used as the source of elements to compare to.
      * @returns {Vec2} Self for chaining.
+     * @example
+     * const a = new pc.Vec2(5, 1);
+     * const b = new pc.Vec2(2, 8);
+     * a.min(b);
+     * // a is now [2, 1]
      */
     min(rhs) {
         if (rhs.x < this.x) this.x = rhs.x;
@@ -565,6 +583,11 @@ class Vec2 {
      *
      * @param {Vec2} rhs - The 2-dimensional vector used as the source of elements to compare to.
      * @returns {Vec2} Self for chaining.
+     * @example
+     * const a = new pc.Vec2(5, 1);
+     * const b = new pc.Vec2(2, 8);
+     * a.max(b);
+     * // a is now [5, 8]
      */
     max(rhs) {
         if (rhs.x > this.x) this.x = rhs.x;

@@ -1,7 +1,8 @@
+import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { Annotation } = await fileImport(`${rootPath}/static/scripts/esm/annotations.mjs`);
+const { Annotation, AnnotationManager } = await fileImport(`${rootPath}/static/scripts/esm/annotations.mjs`);
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 const { ShadowCatcher } = await fileImport(`${rootPath}/static/scripts/esm/shadow-catcher.mjs`);
 
@@ -100,13 +101,13 @@ assetListLoader.load(() => {
         farClip: 500,
         toneMapping: pc.TONEMAP_ACES2
     });
-    camera.setPosition(0, 1.75, 8);
+    camera.setPosition(12, 8.3, 4.5);
 
     // Add camera controls
     camera.addComponent('script');
     camera.script.create(CameraControls, {
         properties: {
-            focusPoint: new pc.Vec3(0, 1.75, 0),
+            focusPoint: new pc.Vec3(-1, 1.5, 0),
             pitchRange: new pc.Vec2(-90, 0),
             sceneSize: 2,
             zoomRange: new pc.Vec2(5, 25)
@@ -138,6 +139,33 @@ assetListLoader.load(() => {
         castShadows: true
     });
     jetFighter.addChild(jetModel);
+
+    // Add annotation manager to the jet fighter entity
+    jetFighter.addComponent('script');
+    const manager = jetFighter.script.create(AnnotationManager);
+
+    // Set default values for controls
+    data.set('data', {
+        hotspotSize: 25,
+        hotspotColor: [0.8, 0.8, 0.8],
+        hoverColor: [1, 0.4, 0],
+        opacity: 1,
+        behindOpacity: 0.25
+    });
+
+    // Handle control changes - update the manager directly
+    data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
+        const prop = path.split('.')[1];
+        if (prop === 'hotspotSize') {
+            manager.hotspotSize = value;
+        } else if (prop === 'hotspotColor' || prop === 'hoverColor') {
+            manager[prop] = new pc.Color(value[0], value[1], value[2]);
+        } else if (prop === 'opacity') {
+            manager.opacity = value;
+        } else if (prop === 'behindOpacity') {
+            manager.behindOpacity = value;
+        }
+    });
 
     /**
      * Create an annotation entity

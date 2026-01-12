@@ -16,7 +16,9 @@ class FloatPacking {
      * Packs a float to a 16-bit half-float representation used by the GPU.
      *
      * @param {number} value - The float value to pack.
-     * @returns {number} The packed value.
+     * @returns {number} The 16-bit half-float representation as an integer.
+     * @example
+     * const half = pc.FloatPacking.float2Half(1.5);
      */
     static float2Half(value) {
         // based on https://esdiscuss.org/topic/float16array

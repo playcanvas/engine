@@ -7,14 +7,14 @@ import replace from '@rollup/plugin-replace';
 import terser from '@rollup/plugin-terser';
 
 import { exampleMetaData } from './cache/metadata.mjs';
-import { copy } from './utils/plugins/rollup-copy.mjs';
-import { isModuleWithExternalDependencies } from './utils/utils.mjs';
-import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
 import { buildJSOptions, buildTypesOption } from '../utils/rollup-build-target.mjs';
 import { version } from '../utils/rollup-version-revision.mjs';
 import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
 import { buildShare } from './utils/plugins/rollup-build-share.mjs';
+import { copy } from './utils/plugins/rollup-copy.mjs';
 import { removePc } from './utils/plugins/rollup-remove-pc.mjs';
+import { treeshakeIgnore } from './utils/plugins/rollup-treeshake-ignore.mjs';
+import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 
 /** @import { RollupOptions } from 'rollup' */
 

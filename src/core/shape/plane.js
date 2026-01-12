@@ -5,8 +5,8 @@ import { Vec3 } from '../math/vec3.js';
  */
 
 /**
- * An infinite plane. Internally it's represented in a parametric equation form:
- * ax + by + cz + distance = 0.
+ * An infinite plane. Internally, it's represented in a parametric equation form:
+ * `ax + by + cz + distance = 0`.
  *
  * @category Math
  */

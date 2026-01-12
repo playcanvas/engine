@@ -11,7 +11,9 @@ const tmpSphere = new BoundingSphere();
 const tmpMat4 = new Mat4();
 
 /**
- * Oriented Box.
+ * An oriented bounding box is a box that can be rotated and translated in 3D space. It is defined
+ * by a world transform and half extents. Unlike an axis-aligned bounding box, an OBB can be
+ * oriented arbitrarily.
  *
  * @category Math
  */
@@ -100,7 +102,7 @@ class OrientedBox {
     }
 
     /**
-     * Test if a point is inside a OBB.
+     * Test if a point is inside an OBB.
      *
      * @param {Vec3} point - Point to test.
      * @returns {boolean} True if the point is inside the OBB and false otherwise.

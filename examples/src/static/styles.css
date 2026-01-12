@@ -211,6 +211,8 @@ body {
 
 #sideBar .categoryPanel {
     margin: 0 8px 8px 8px !important;
+    border: 1px solid #5b7073;
+    border-radius: 4px;
 }
 
 .categoryPanel:first-child {
@@ -219,6 +221,11 @@ body {
 
 #sideBar .categoryPanel.pcui-collapsed {
     margin-bottom: 8px;
+}
+
+/* Category panel header styling */
+#sideBar .categoryPanel > .pcui-panel-header {
+    background-color: #1a2426;
 }
 
 .nav-item {
