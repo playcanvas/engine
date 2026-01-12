@@ -12,7 +12,9 @@ const reservedScriptNames = new Set([
     '_onSetEnabled', '_checkState', '_onBeforeRemove',
     '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',
     '_onUpdate', '_onPostUpdate',
-    '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
+    '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent',
+    // 'worker' is reserved to prevent users from overwriting the native Worker constructor
+    'worker'
 ]);
 
 function getReservedScriptNames() {
@@ -30,7 +32,7 @@ function getReservedScriptNames() {
  * will perform hot swapping of existing Script Instances on entities using this new Script Type.
  * Note: There is a reserved list of names that cannot be used, such as list below as well as some
  * starting from `_` (underscore): system, entity, create, destroy, swap, move, scripts, onEnable,
- * onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
+ * onDisable, onPostStateChange, has, on, off, fire, once, hasEvent, worker.
  * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
  * to add a script to. By default it will use `Application.getApplication()` to get current
  * {@link AppBase}.
