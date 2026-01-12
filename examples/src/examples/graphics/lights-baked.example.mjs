@@ -29,9 +29,6 @@ createOptions.resourceHandlers = [pc.ScriptHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Clustered lighting is enabled by default (required for WebGPU)
-app.scene.clusteredLightingEnabled = false;
-
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
