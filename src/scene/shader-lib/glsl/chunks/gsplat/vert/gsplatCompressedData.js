@@ -65,20 +65,4 @@ vec4 getRotation() {
 vec3 getScale() {
     return exp(mix(vec3(chunkDataB.zw, chunkDataC.x), chunkDataC.yzw, unpack111011(packedData.z)));
 }
-
-// given a rotation matrix and scale vector, compute 3d covariance A and B
-void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
-    mat3 rot = quatToMat3(getRotation());
-    vec3 scale = getScale();
-
-    // M = S * R
-    mat3 M = transpose(mat3(
-        scale.x * rot[0],
-        scale.y * rot[1],
-        scale.z * rot[2]
-    ));
-
-    covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
-    covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
-}
 `;

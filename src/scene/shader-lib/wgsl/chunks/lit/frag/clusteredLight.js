@@ -13,7 +13,7 @@ export default /* wgsl */`
     #include "clusteredLightShadowsPS"
 #endif
 
-var clusterWorldTexture: texture_2d<f32>;
+var clusterWorldTexture: texture_2d<u32>;
 var lightsTexture: texture_2d<uff>;
 
 #ifdef CLUSTER_SHADOWS
@@ -29,15 +29,17 @@ var lightsTexture: texture_2d<uff>;
 
 uniform clusterMaxCells: i32;
 
-// 1.0 if clustered lighting can be skipped (0 lights in the clusters)
-uniform clusterSkip: f32;
+// number of lights in the cluster structure
+uniform numClusteredLights: i32;
+
+// width of the cluster texture
+uniform clusterTextureWidth: i32;
 
 uniform clusterCellsCountByBoundsSize: vec3f;
-uniform clusterTextureSize: vec3f;
 uniform clusterBoundsMin: vec3f;
 uniform clusterBoundsDelta: vec3f;
-uniform clusterCellsDot: vec3f;
-uniform clusterCellsMax: vec3f;
+uniform clusterCellsDot: vec3i;
+uniform clusterCellsMax: vec3i;
 uniform shadowAtlasParams: vec2f;
 
 // structure storing light properties of a clustered light
@@ -122,10 +124,10 @@ fn sampleLightTextureF(lightIndex: i32, index: i32) -> vec4f {
     return textureLoad(lightsTexture, vec2<i32>(index, lightIndex), 0);
 }
 
-fn decodeClusterLightCore(clusterLightData: ptr<function, ClusterLightData>, lightIndex: f32) {
+fn decodeClusterLightCore(clusterLightData: ptr<function, ClusterLightData>, lightIndex: i32) {
 
     // light index
-    clusterLightData.lightIndex = i32(lightIndex);
+    clusterLightData.lightIndex = lightIndex;
 
     // sample data encoding half-float values into 32bit uints
     let halfData: vec4f = sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_COLOR_ANGLES_BIAS});
@@ -501,7 +503,7 @@ fn evaluateLight(
 
 
 fn evaluateClusterLight(
-    lightIndex: f32,
+    lightIndex: i32,
     worldNormal: vec3f,
     viewDir: vec3f,
     reflectionDir: vec3f,
@@ -577,36 +579,36 @@ fn addClusteredLights(
     iridescence_intensity: f32
 ) {
 
-    // skip lights if no lights at all
-    if (uniform.clusterSkip > 0.5) {
+    // skip if no lights (index 0 is reserved for 'no light')
+    if (uniform.numClusteredLights <= 1) {
         return;
     }
 
     // world space position to 3d integer cell cordinates in the cluster structure
-    let cellCoords: vec3f = floor((vPositionW - uniform.clusterBoundsMin) * uniform.clusterCellsCountByBoundsSize);
+    let cellCoords: vec3i = vec3i(floor((vPositionW - uniform.clusterBoundsMin) * uniform.clusterCellsCountByBoundsSize));
 
     // no lighting when cell coordinate is out of range
-    if (!(any(cellCoords < vec3f(0.0)) || any(cellCoords >= uniform.clusterCellsMax))) {
+    if (!(any(cellCoords < vec3i(0)) || any(cellCoords >= uniform.clusterCellsMax))) {
 
         // cell index (mapping from 3d cell coordinates to linear memory)
-        let cellIndex: f32 = dot(uniform.clusterCellsDot, cellCoords);
+        let cellIndex: i32 = cellCoords.x * uniform.clusterCellsDot.x + cellCoords.y * uniform.clusterCellsDot.y + cellCoords.z * uniform.clusterCellsDot.z;
 
         // convert cell index to uv coordinates
-        let clusterV: f32 = floor(cellIndex * uniform.clusterTextureSize.y);
-        let clusterU: f32 = cellIndex - (clusterV * uniform.clusterTextureSize.x);
+        let clusterV: i32 = cellIndex / uniform.clusterTextureWidth;
+        let clusterU: i32 = cellIndex - clusterV * uniform.clusterTextureWidth;
 
         // loop over maximum number of light cells
         for (var lightCellIndex: i32 = 0; lightCellIndex < uniform.clusterMaxCells; lightCellIndex = lightCellIndex + 1) {
 
             // using a single channel texture with data in red channel
-            let lightIndexPacked: f32 = textureLoad(clusterWorldTexture, vec2<i32>(i32(clusterU) + lightCellIndex, i32(clusterV)), 0).r;
+            let lightIndex: u32 = textureLoad(clusterWorldTexture, vec2<i32>(clusterU + lightCellIndex, clusterV), 0).r;
 
-            if (lightIndexPacked <= 0.0) {
+            if (lightIndex == 0u) {
                 break;
             }
 
             evaluateClusterLight(
-                lightIndexPacked * 255.0,
+                i32(lightIndex),
                 worldNormal,
                 viewDir,
                 reflectionDir,

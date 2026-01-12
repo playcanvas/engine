@@ -54,8 +54,6 @@ import { GSplatPlacement } from '../../../scene/gsplat-unified/gsplat-placement.
  * entity.gsplat.unified = true;
  * ```
  *
- * Note: The `unified` property can only be changed when the component is disabled.
- *
  * Relevant Engine API examples:
  *
  * - [Simple Splat Loading](https://playcanvas.github.io/#/gaussian-splatting/simple)
@@ -221,7 +219,10 @@ class GSplatComponent extends Component {
      */
     set instance(value) {
 
-        Debug.assert(!this.unified);
+        if (this.unified) {
+            Debug.errorOnce('GSplatComponent#instance setter is not supported when unified is true.');
+            return;
+        }
 
         // destroy existing instance
         this.destroyInstance();
@@ -259,13 +260,13 @@ class GSplatComponent extends Component {
      *
      * **Note:** This setter is only supported when {@link unified} is `false`. When it's true, multiple
      * gsplat components share a single material per camera/layer combination. To access materials in
-     * unified mode, use {@link GsplatComponentSystem#getGSplatMaterial}.
+     * unified mode, use {@link GSplatComponentSystem#getMaterial}.
      *
      * @param {ShaderMaterial} value - The material instance.
      */
     set material(value) {
         if (this.unified) {
-            Debug.warn('GSplatComponent#material setter is not supported when unified true. Use app.systems.gsplat.getGSplatMaterial(camera, layer) to access materials.');
+            Debug.warn('GSplatComponent#material setter is not supported when unified true. Use app.systems.gsplat.getMaterial(camera, layer) to access materials.');
             return;
         }
         if (this._instance) {
@@ -280,13 +281,13 @@ class GSplatComponent extends Component {
      *
      * **Note:** This getter returns `null` when {@link unified} is `true`. In unified mode, materials are
      * organized per camera/layer combination rather than per component. To access materials in
-     * unified mode, use {@link GsplatComponentSystem#getGSplatMaterial}.
+     * unified mode, use {@link GSplatComponentSystem#getMaterial}.
      *
      * @type {ShaderMaterial|null}
      */
     get material() {
         if (this.unified) {
-            Debug.warnOnce('GSplatComponent#material getter returns null when unified=true. Use app.systems.gsplat.getGSplatMaterial(camera, layer) instead.');
+            Debug.warnOnce('GSplatComponent#material getter returns null when unified=true. Use app.systems.gsplat.getMaterial(camera, layer) instead.');
             return null;
         }
         return this._instance?.material ?? this._materialTmp ?? null;
@@ -330,18 +331,34 @@ class GSplatComponent extends Component {
     set castShadows(value) {
 
         if (this._castShadows !== value) {
+            const layers = this.layers;
+            const scene = this.system.app.scene;
 
+            // Handle unified mode placement
+            if (this._placement) {
+                if (value) {
+                    // Add to shadow casters
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(layers[i]);
+                        layer?.addGSplatShadowCaster(this._placement);
+                    }
+                } else {
+                    // Remove from shadow casters
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(layers[i]);
+                        layer?.removeGSplatShadowCaster(this._placement);
+                    }
+                }
+            }
+
+            // Handle non-unified mode mesh instance
             const mi = this.instance?.meshInstance;
 
             if (mi) {
-                const layers = this.layers;
-                const scene = this.system.app.scene;
                 if (this._castShadows && !value) {
                     for (let i = 0; i < layers.length; i++) {
                         const layer = scene.layers.getLayerById(this.layers[i]);
-                        if (layer) {
-                            layer.removeShadowCasters([mi]);
-                        }
+                        layer?.removeShadowCasters([mi]);
                     }
                 }
 
@@ -350,9 +367,7 @@ class GSplatComponent extends Component {
                 if (!this._castShadows && value) {
                     for (let i = 0; i < layers.length; i++) {
                         const layer = scene.layers.getLayerById(layers[i]);
-                        if (layer) {
-                            layer.addShadowCasters([mi]);
-                        }
+                        layer?.addShadowCasters([mi]);
                     }
                 }
             }
@@ -425,21 +440,19 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets whether to use the unified gsplat rendering. Can be changed only when the component is
-     * not enabled. Default is false.
+     * Sets whether to use the unified gsplat rendering. Default is false.
+     *
+     * Note: Material handling differs between modes. When unified is false, use
+     * {@link GSplatComponent#material}. When unified is true, materials are shared per
+     * camera/layer - use {@link GSplatComponentSystem#getMaterial} instead.
      *
      * @type {boolean}
-     * @alpha
      */
     set unified(value) {
-
-        if (this.enabled && this.entity.enabled) {
-            Debug.warn('GSplatComponent#unified can be changed only when the component is not enabled. Ignoring change.');
-            return;
+        if (this._unified !== value) {
+            this._unified = value;
+            this._onGSplatAssetAdded();
         }
-
-        this._unified = value;
-        this._onGSplatAssetAdded();
     }
 
     /**
@@ -538,7 +551,13 @@ class GSplatComponent extends Component {
         if (this._placement) {
             const layers = this.system.app.scene.layers;
             for (let i = 0; i < this._layers.length; i++) {
-                layers.getLayerById(this._layers[i])?.addGSplatPlacement(this._placement);
+                const layer = layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.addGSplatPlacement(this._placement);
+                    if (this._castShadows) {
+                        layer.addGSplatShadowCaster(this._placement);
+                    }
+                }
             }
             return;
         }
@@ -557,7 +576,11 @@ class GSplatComponent extends Component {
         if (this._placement) {
             const layers = this.system.app.scene.layers;
             for (let i = 0; i < this._layers.length; i++) {
-                layers.getLayerById(this._layers[i])?.removeGSplatPlacement(this._placement);
+                const layer = layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.removeGSplatPlacement(this._placement);
+                    layer.removeGSplatShadowCaster(this._placement);
+                }
             }
             return;
         }
@@ -606,21 +629,27 @@ class GSplatComponent extends Component {
     onLayerAdded(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
+        if (this.unified) {
+            Debug.errorOnce('GSplatComponent#onLayerAdded is not supported when unified is true.');
+            return;
+        }
+
         if (this._instance) {
             layer.addMeshInstances(this._instance.meshInstance);
         }
-
-        Debug.assert(!this.unified);
     }
 
     onLayerRemoved(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
+        if (this.unified) {
+            Debug.errorOnce('GSplatComponent#onLayerRemoved is not supported when unified is true.');
+            return;
+        }
+
         if (this._instance) {
             layer.removeMeshInstances(this._instance.meshInstance);
         }
-
-        Debug.assert(!this.unified);
     }
 
     onEnable() {
@@ -716,7 +745,8 @@ class GSplatComponent extends Component {
             if (asset) {
                 this.instance = new GSplatInstance(asset.resource, {
                     material: this._materialTmp,
-                    highQualitySH: this._highQualitySH
+                    highQualitySH: this._highQualitySH,
+                    scene: this.system.app.scene
                 });
                 this._materialTmp = null;
             }

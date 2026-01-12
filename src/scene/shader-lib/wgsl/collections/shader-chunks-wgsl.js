@@ -61,6 +61,7 @@ import lightingPS from '../chunks/lit/frag/lighting/lighting.js';
 import lightmapAddPS from '../chunks/lit/frag/lightmapAdd.js';
 import lightmapPS from '../chunks/standard/frag/lightmap.js';
 import lightSpecularAnisoGGXPS from '../chunks/lit/frag/lightSpecularAnisoGGX.js';
+import lightSpecularGGXPS from '../chunks/lit/frag/lightSpecularGGX.js';
 import lightSpecularBlinnPS from '../chunks/lit/frag/lightSpecularBlinn.js';
 import lightSheenPS from '../chunks/lit/frag/lightSheen.js';
 import linearizeDepthPS from '../chunks/common/frag/linearizeDepth.js';
@@ -89,7 +90,6 @@ import opacityPS from '../chunks/standard/frag/opacity.js';
 import opacityDitherPS from '../chunks/standard/frag/opacity-dither.js';
 import outputPS from '../chunks/lit/frag/output.js';
 import outputAlphaPS from '../chunks/lit/frag/outputAlpha.js';
-import packHalfPS from '../chunks/internal/frag/packHalf.js';
 import outputTex2DPS from '../chunks/common/frag/outputTex2D.js';
 import sheenPS from '../chunks/standard/frag/sheen.js';
 import sheenGlossPS from '../chunks/standard/frag/sheenGloss.js';
@@ -223,6 +223,7 @@ const shaderChunksWGSL = {
     lightmapAddPS,
     lightmapPS,
     lightSpecularAnisoGGXPS,
+    lightSpecularGGXPS,
     lightSpecularBlinnPS,
     lightSheenPS,
     linearizeDepthPS,
@@ -259,7 +260,6 @@ const shaderChunksWGSL = {
     opacityDitherPS,
     outputPS,
     outputAlphaPS,
-    packHalfPS,
     outputTex2DPS,
     sheenPS,
     sheenGlossPS,

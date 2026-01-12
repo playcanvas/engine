@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } = ReactPCUI;
+    const { BindingTwoWay, BooleanInput, ColorPicker, LabelGroup, Panel, SelectInput, SliderInput } = ReactPCUI;
     return fragment(
         jsx(
             LabelGroup,
@@ -220,6 +220,14 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     min: 0,
                     max: 1,
                     precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'color' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.vignette.color' }
                 })
             )
         ),

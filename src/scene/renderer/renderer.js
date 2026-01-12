@@ -10,7 +10,7 @@ import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
+    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
     BINDGROUP_MESH_UB
@@ -21,8 +21,7 @@ import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindGroupFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import {
-    VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
-    LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
+    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     EVENT_PRECULL, EVENT_POSTCULL, EVENT_CULL_END
 } from '../constants.js';
@@ -232,10 +231,10 @@ class Renderer {
         this.viewProjId = scope.resolve('matrix_viewProjection');
         this.flipYId = scope.resolve('projectionFlipY');
         this.tbnBasis = scope.resolve('tbnBasis');
-        this.nearClipId = scope.resolve('camera_near');
-        this.farClipId = scope.resolve('camera_far');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
+        this.viewportSize = new Float32Array(4);
+        this.viewportSizeId = scope.resolve('viewport_size');
         this.viewIndexId = scope.resolve('view_index');
         this.viewIndexId.setValue(0);
 
@@ -422,18 +421,25 @@ class Renderer {
 
         this.tbnBasis.setValue(flipY ? -1 : 1);
 
-        // Near and far clip values
-        const n = camera._nearClip;
-        const f = camera._farClip;
-        this.nearClipId.setValue(n);
-        this.farClipId.setValue(f);
-
         // camera params
-        this.cameraParams[0] = 1 / f;
-        this.cameraParams[1] = f;
-        this.cameraParams[2] = n;
-        this.cameraParams[3] = camera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
-        this.cameraParamsId.setValue(this.cameraParams);
+        this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
+
+        // viewport size
+        let viewportWidth = target ? target.width : this.device.width;
+        let viewportHeight = target ? target.height : this.device.height;
+        viewportWidth *= camera.rect.z;
+        viewportHeight *= camera.rect.w;
+
+        // adjust viewport for stereoscopic VR sessions
+        if (camera.xr?.active && camera.xr.views.list.length === 2) {
+            viewportWidth *= 0.5;
+        }
+
+        this.viewportSize[0] = viewportWidth;
+        this.viewportSize[1] = viewportHeight;
+        this.viewportSize[2] = 1 / viewportWidth;
+        this.viewportSize[3] = 1 / viewportHeight;
+        this.viewportSizeId.setValue(this.viewportSize);
 
         // exposure
         this.exposureId.setValue(this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure);
@@ -471,49 +477,6 @@ class Renderer {
 
             DebugGraphics.popGpuMarker(device);
         }
-    }
-
-    // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-    // TODO: this function is only used from outside of forward renderer, and should be deprecated
-    // when the functionality moves to the render passes. Note that Editor uses it as well.
-    setCamera(camera, target, clear, renderAction = null) {
-
-        this.setCameraUniforms(camera, target);
-        this.clearView(camera, target, clear, false);
-    }
-
-    // TODO: this is currently used by the lightmapper and the Editor,
-    // and will be removed when those call are removed.
-    clearView(camera, target, clear, forceWrite) {
-
-        const device = this.device;
-        DebugGraphics.pushGpuMarker(device, 'CLEAR-VIEW');
-
-        device.setRenderTarget(target);
-        device.updateBegin();
-
-        if (forceWrite) {
-            device.setColorWrite(true, true, true, true);
-            device.setDepthWrite(true);
-        }
-
-        this.setupViewport(camera, target);
-
-        if (clear) {
-
-            // use camera clear options if any
-            const options = camera._clearOptions;
-            device.clear(options ? options : {
-                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-                depth: camera._clearDepth,
-                flags: (camera._clearColorBuffer ? CLEARFLAG_COLOR : 0) |
-                       (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
-                       (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
-                stencil: camera._clearStencil
-            });
-        }
-
-        DebugGraphics.popGpuMarker(device);
     }
 
     setupCullMode(cullFaces, flipFactor, drawCall) {
@@ -737,6 +700,7 @@ class Renderer {
                 new UniformFormat('matrix_view3', UNIFORMTYPE_MAT3),
                 new UniformFormat('cubeMapRotationMatrix', UNIFORMTYPE_MAT3),
                 new UniformFormat('view_position', UNIFORMTYPE_VEC3),
+                new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
                 new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
@@ -746,14 +710,14 @@ class Renderer {
             if (isClustered) {
                 uniforms.push(...[
                     new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterTextureSize', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
+                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3),
                     new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
                     new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
-                    new UniformFormat('clusterSkip', UNIFORMTYPE_FLOAT)
+                    new UniformFormat('numClusteredLights', UNIFORMTYPE_INT),
+                    new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT)
                 ]);
             }
 

@@ -465,6 +465,7 @@ class LitShader {
         this.fDefineSet(this.lighting, 'LIT_LIGHTING');
         this.fDefineSet(options.useMetalness, 'LIT_METALNESS');
         this.fDefineSet(options.enableGGXSpecular, 'LIT_GGX_SPECULAR');
+        this.fDefineSet(options.useAnisotropy, 'LIT_ANISOTROPY');
         this.fDefineSet(options.useSpecularityFactor, 'LIT_SPECULARITY_FACTOR');
         this.fDefineSet(options.useCubeMapRotation, 'CUBEMAP_ROTATION');
         this.fDefineSet(options.occludeSpecularFloat, 'LIT_OCCLUDE_SPECULAR_FLOAT');

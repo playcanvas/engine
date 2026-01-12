@@ -228,8 +228,8 @@ class StandardMaterialOptionsBuilder {
         options.emissiveEncoding = stdMat.emissiveMap?.encoding;
         options.lightMapEncoding = stdMat.lightMap?.encoding;
         options.packedNormal = isPackedNormalMap(stdMat.normalMap);
-        options.refractionTint = equalish(stdMat.refraction, 1.0);
-        options.refractionIndexTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
+        options.refractionTint = !equalish(stdMat.refraction, 1.0);
+        options.refractionIndexTint = !equalish(stdMat.refractionIndex, 1.0 / 1.5);
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0);
         options.specularEncoding = stdMat.specularMap?.encoding;
         options.sheenEncoding = stdMat.sheenMap?.encoding;
@@ -242,7 +242,7 @@ class StandardMaterialOptionsBuilder {
         options.aoDetailMode = stdMat.aoDetailMode;
         options.clearCoatGloss = !!stdMat.clearCoatGloss;
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
-        options.iorTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
+        options.iorTint = !equalish(stdMat.refractionIndex, 1.0 / 1.5);
 
         // hack, see Scene.forcePassThroughSpecular description
         if (scene.forcePassThroughSpecular) {
@@ -280,6 +280,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useSpecular = useSpecular;
         options.litOptions.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
+        options.litOptions.useAnisotropy = stdMat.enableGGXSpecular && (stdMat.anisotropyIntensity > 0 || !!stdMat.anisotropyMap);
         options.litOptions.fresnelModel = stdMat.fresnelModel;
         options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || options.litOptions.reflectionSource !== REFLECTIONSRC_NONE);
         options.litOptions.useClearCoat = !!stdMat.clearCoat;

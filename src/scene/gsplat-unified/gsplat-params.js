@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
 
 /**
  * @import { Texture } from '../../platform/graphics/texture.js'
@@ -10,6 +11,12 @@ import { Debug } from '../../core/debug.js';
  * @category Graphics
  */
 class GSplatParams {
+    /**
+     * @type {ShaderMaterial}
+     * @private
+     */
+    _material = new ShaderMaterial();
+
     /**
      * Enables debug rendering of AABBs for GSplat objects. Defaults to false.
      *
@@ -27,6 +34,15 @@ class GSplatParams {
      * @type {boolean}
      */
     radialSorting = false;
+
+    /**
+     * Enables GPU-based sorting using compute shaders. WebGPU only.
+     * Must be set before gsplat components are created.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    gpuSorting = false;
 
     /**
      * Enables debug rendering of AABBs for GSplat octree nodes. Defaults to false.
@@ -309,6 +325,32 @@ class GSplatParams {
      * @type {number}
      */
     cooldownTicks = 100;
+
+    /**
+     * A material template that can be customized by the user. Any defines, parameters, or shader
+     * chunks set on this material will be automatically applied to all GSplat components rendered
+     * in unified mode. After making changes, call {@link Material#update} to for the changes to be applied
+     * on the next frame.
+     *
+     * @type {ShaderMaterial}
+     * @example
+     * // Set a custom parameter on all GSplat materials
+     * app.scene.gsplat.material.setParameter('alphaClip', 0.4);
+     * app.scene.gsplat.material.update();
+     */
+    get material() {
+        return this._material;
+    }
+
+    /**
+     * Called at the end of the frame to clear dirty flags.
+     *
+     * @ignore
+     */
+    frameEnd() {
+        this._material.dirty = false;
+        this.dirty = false;
+    }
 }
 
 export { GSplatParams };

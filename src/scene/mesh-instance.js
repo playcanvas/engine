@@ -1193,6 +1193,9 @@ class MeshInstance {
      * Sets the {@link MeshInstance} to be rendered using multi-draw, where multiple sub-draws are
      * executed with a single draw call.
      *
+     * Note: Each call to this method invalidates any previously stored draw command data for the
+     * specified camera.
+     *
      * @param {CameraComponent|null} camera - Camera component to bind commands to, or null to share
      * across all cameras.
      * @param {number} [maxCount] - Maximum number of sub-draws to allocate. Defaults to 1. Pass 0

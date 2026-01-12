@@ -679,6 +679,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     createTextureImpl(texture) {
+        this.textures.add(texture);
         return new WebglTexture(texture);
     }
 
@@ -1887,7 +1888,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 this._drawCallsPerFrame++;
 
                 // #if _PROFILER
-                this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                if (drawCommands) {
+                    // use pre-calculated primitive count from drawCommands
+                    this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+                } else {
+                    // single draw
+                    this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                }
                 // #endif
             }
         }
@@ -2074,12 +2081,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
     readTextureAsync(texture, x, y, width, height, options) {
 
         const face = options.face ?? 0;
+        const mipLevel = options.mipLevel ?? 0;
 
         // create a temporary render target if needed
         const renderTarget = options.renderTarget ?? new RenderTarget({
             colorBuffer: texture,
             depth: false,
-            face: face
+            face: face,
+            mipLevel: mipLevel
         });
         Debug.assert(renderTarget.colorBuffer === texture);
 
@@ -2089,6 +2098,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
         this.setFramebuffer(renderTarget.impl._glFrameBuffer);
+
+        // flush commands to GPU immediately if requested
+        if (options.immediate) {
+            this.gl.flush();
+        }
 
         return new Promise((resolve, reject) => {
             this.readPixelsAsync(x, y, width, height, data).then((data) => {

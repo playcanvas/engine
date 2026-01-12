@@ -1,6 +1,7 @@
 export default /* glsl */`
 #include "gsplatHelpersVS"
 #include "gsplatCustomizeVS"
+#include "gsplatModifyVS"
 
 #include "gsplatStructsVS"
 #include "gsplatEvalSHVS"

@@ -6,10 +6,6 @@ export default /* wgsl */`
     varying id: f32;
 #endif
 
-#ifdef PICK_PASS
-    #include "pickPS"
-#endif
-
 #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
     uniform alphaClip: f32;
 #endif
@@ -28,6 +24,10 @@ fn normExp(x: f32) -> f32 {
 
 varying gaussianUV: vec2f;
 varying gaussianColor: vec4f;
+
+#ifdef PICK_PASS
+    #include "pickPS"
+#endif
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {

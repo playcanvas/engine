@@ -8,7 +8,6 @@ export default /* glsl */`
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
 #include "gsplatSourceFormatVS"
-#include "packHalfPS"
 
 uniform int uStartLine;      // Start row in destination texture
 uniform int uViewportWidth;  // Width of the destination viewport in pixels
@@ -22,6 +21,10 @@ uniform vec3 uColorMultiply;
 
 // number of splats
 uniform int uActiveSplats;
+
+// pre-computed model matrix decomposition
+uniform vec3 model_scale;
+uniform vec4 model_rotation;  // (x,y,z,w) format
 
 void main(void) {
     // local fragment coordinates (within the viewport)
@@ -73,19 +76,19 @@ void main(void) {
         SplatCenter center;
         initCenter(modelCenter, center);
 
-        // read and transform covariance
-        vec3 covA, covB;
-        readCovariance(source, covA, covB);
+        // Get source rotation and scale
+        // getRotation() returns (w,x,y,z) format, convert to (x,y,z,w) for quatMul
+        vec4 srcRotation = getRotation().yzwx;
+        vec3 srcScale = getScale();
 
-        mat3 C = mat3(
-            covA.x, covA.y, covA.z,
-            covA.y, covB.x, covB.y,
-            covA.z, covB.y, covB.z
-        );
-        mat3 linear = mat3(matrix_model);
-        mat3 Ct = linear * C * transpose(linear);
-        covA = Ct[0];
-        covB = vec3(Ct[1][1], Ct[1][2], Ct[2][2]);
+        // Combine: world = model * source (both in x,y,z,w format)
+        vec4 worldRotation = quatMul(model_rotation, srcRotation);
+        // Ensure w is positive so sqrt() reconstruction works correctly
+        // (quaternions q and -q represent the same rotation)
+        if (worldRotation.w < 0.0) {
+            worldRotation = -worldRotation;
+        }
+        vec3 worldScale = model_scale * srcScale;
 
         // read color
         vec4 color = readColor(source);
@@ -121,8 +124,9 @@ void main(void) {
             pcFragColor0 = color;
         #endif
         #ifndef GSPLAT_COLOR_ONLY
-            pcFragColor1 = uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16Safe(vec2(covA.z, covB.z)));
-            pcFragColor2 = uvec2(packHalf2x16Safe(covA.xy), packHalf2x16Safe(covB.xy));
+            // Store rotation (xyz, w derived) and scale as 6 half-floats
+            pcFragColor1 = uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16(worldRotation.xy));
+            pcFragColor2 = uvec2(packHalf2x16(vec2(worldRotation.z, worldScale.x)), packHalf2x16(worldScale.yz));
         #endif
     }
 }

@@ -38,7 +38,7 @@ class StorageBuffer {
         const usage = addStorageUsage ? (BUFFERUSAGE_STORAGE | bufferUsage) : bufferUsage;
         this.impl = graphicsDevice.createBufferImpl(usage);
         this.impl.allocate(graphicsDevice, byteSize);
-        this.device.buffers.push(this);
+        this.device.buffers.add(this);
 
         this.adjustVramSizeTracking(graphicsDevice._vram, this.byteSize);
     }
@@ -50,10 +50,7 @@ class StorageBuffer {
 
         // stop tracking the buffer
         const device = this.device;
-        const idx = device.buffers.indexOf(this);
-        if (idx !== -1) {
-            device.buffers.splice(idx, 1);
-        }
+        device.buffers.delete(this);
 
         this.adjustVramSizeTracking(device._vram, -this.byteSize);
         this.impl.destroy(device);

@@ -276,6 +276,12 @@ class Vignette {
      * @step 0.001
      */
     curvature = 0.5;
+
+    /**
+     * @attribute
+     * @visibleif {enabled}
+     */
+    color = new Color(0, 0, 0, 1);
 }
 
 /** @interface */
@@ -499,6 +505,7 @@ class CameraFrame extends Script {
             dstVignette.inner = vignette.inner;
             dstVignette.outer = vignette.outer;
             dstVignette.curvature = vignette.curvature;
+            dstVignette.color.copy(vignette.color);
         }
 
         // taa

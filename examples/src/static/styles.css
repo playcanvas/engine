@@ -211,6 +211,8 @@ body {
 
 #sideBar .categoryPanel {
     margin: 0 8px 8px 8px !important;
+    border: 1px solid #5b7073;
+    border-radius: 4px;
 }
 
 .categoryPanel:first-child {
@@ -219,6 +221,11 @@ body {
 
 #sideBar .categoryPanel.pcui-collapsed {
     margin-bottom: 8px;
+}
+
+/* Category panel header styling */
+#sideBar .categoryPanel > .pcui-panel-header {
+    background-color: #1a2426;
 }
 
 .nav-item {
@@ -388,16 +395,16 @@ body {
     min-width: 47px;
 }
 
-#controlPanel-controls > .pcui-panel:first-child {
+#controlPanel > .pcui-panel-content > .pcui-panel:first-child {
     border-top: 1px solid #20292B;
 }
 
-#controlPanel-controls  .pcui-label-group > .pcui-label {
+#controlPanel .pcui-label-group > .pcui-label {
     font-size: 14px;
     max-width: 35%;
 }
 
-#controlPanel-controls  .pcui-label-group > .pcui-slider > .pcui-numeric-input {
+#controlPanel .pcui-label-group > .pcui-slider > .pcui-numeric-input {
     min-width: 46px;
 }
 

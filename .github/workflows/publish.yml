@@ -1,0 +1,62 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-preview.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'playcanvas' }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js 24.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org/"
+
+      - name: Parse tag name
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "TAG=${TAG_NAME}" >> $GITHUB_ENV
+          echo "VERSION=${TAG_NAME/v/}" >> $GITHUB_ENV
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build PlayCanvas
+        run: npm run build
+
+      - name: Run Publint
+        run: npm run publint
+
+      - name: Publish to npm
+        run: |
+          if [[ "${{ env.TAG }}" =~ "preview" ]]; then
+            tag=preview
+          elif [[ "${{ env.TAG }}" =~ "beta" ]]; then
+            tag=beta
+          else
+            tag=latest
+          fi
+          npm publish --tag $tag --provenance
+
+      - name: Write version
+        run: echo "${{ env.VERSION }}" > version.txt
+
+      - name: Upload version
+        uses: actions/upload-artifact@v6
+        with:
+          name: version
+          path: version.txt

@@ -14,7 +14,8 @@ const z = new Vec3();
 const scale = new Vec3();
 
 /**
- * A 4x4 matrix.
+ * A 4x4 matrix. Mat4 is commonly used to represent world, view and projection transformations in
+ * 3D graphics, combining rotation, translation and scale into a single matrix.
  *
  * @category Math
  */
@@ -304,6 +305,13 @@ class Mat4 {
      * @param {Mat4} rhs - The affine transformation 4x4 matrix used as the second multiplicand of
      * the operation.
      * @returns {Mat4} Self for chaining.
+     * @example
+     * const a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+     * const b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
+     * const r = new pc.Mat4();
+     *
+     * // r = a * b (optimized for affine transforms)
+     * r.mulAffine2(a, b);
      */
     mulAffine2(lhs, rhs) {
         const a = lhs.data;
@@ -576,7 +584,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 perspective projection matrix
-     * const persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
+     * const persp = new pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
      */
     setPerspective(fov, aspect, znear, zfar, fovIsHorizontal) {
         Mat4._getPerspectiveHalfSize(_halfSize, fov, aspect, znear, fovIsHorizontal);
@@ -600,7 +608,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 orthographic projection matrix
-     * const ortho = pc.Mat4().ortho(-2, 2, -2, 2, 1, 1000);
+     * const ortho = new pc.Mat4().setOrtho(-2, 2, -2, 2, 1, 1000);
      */
     setOrtho(left, right, bottom, top, near, far) {
         const r = this.data;
@@ -782,6 +790,9 @@ class Mat4 {
      * @param {Vec3} normal - The normal of the plane to reflect by.
      * @param {number} distance - The distance of plane to reflect by.
      * @returns {Mat4} Self for chaining.
+     * @example
+     * // Create a reflection matrix for a horizontal plane at y=0
+     * const reflection = new pc.Mat4().setReflection(pc.Vec3.UP, 0);
      */
     setReflection(normal, distance) {
 
@@ -888,6 +899,9 @@ class Mat4 {
      *
      * @param {number[]} src - Source array. Must have 16 values.
      * @returns {Mat4} Self for chaining.
+     * @example
+     * const m = new pc.Mat4();
+     * m.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 20, 30, 1]);
      */
     set(src) {
         const dst = this.data;
@@ -1171,8 +1185,10 @@ class Mat4 {
     }
 
     /**
-     * Sets the specified matrix to a rotation matrix defined by Euler angles. The Euler angles are
-     * specified in XYZ order and in degrees.
+     * Sets the specified matrix to a rotation matrix defined by Euler angles. The rotation is
+     * applied using an **intrinsic XYZ** order: first around the X-axis, then around the newly
+     * transformed Y-axis, and finally around the resulting Z-axis. Angles are specified in
+     * degrees.
      *
      * @param {number} ex - Angle to rotate around X axis in degrees.
      * @param {number} ey - Angle to rotate around Y axis in degrees.
@@ -1226,7 +1242,7 @@ class Mat4 {
 
     /**
      * Extracts the Euler angles equivalent to the rotational portion of the specified matrix. The
-     * returned Euler angles are in XYZ order an in degrees.
+     * returned Euler angles are in **intrinsic XYZ** order and in degrees.
      *
      * @param {Vec3} [eulers] - A 3-d vector to receive the Euler angles.
      * @returns {Vec3} A 3-d vector containing the Euler angles.

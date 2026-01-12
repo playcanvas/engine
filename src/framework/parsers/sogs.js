@@ -196,6 +196,7 @@ class SogsParser {
         data.sh0 = textures.sh0[0].resource;
         data.sh_centroids = textures.shN?.[0]?.resource;
         data.sh_labels = textures.shN?.[1]?.resource;
+        data.shBands = GSplatSogsData.calcBands(data.sh_centroids?.width);
 
         const decompress = asset.data?.decompress;
         const minimalMemory = asset.options?.minimalMemory ?? false;

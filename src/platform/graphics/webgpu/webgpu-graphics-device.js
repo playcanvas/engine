@@ -43,6 +43,9 @@ const _uniqueLocations = new Map();
 // size of indirect draw entry in bytes, 5 x 32bit
 const _indirectEntryByteSize = 5 * 4;
 
+// size of indirect dispatch entry in bytes, 3 x 32bit (x, y, z workgroup counts)
+const _indirectDispatchEntryByteSize = 3 * 4;
+
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Object responsible for caching and creation of render pipelines.
@@ -77,6 +80,30 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @private
      */
     _indirectDrawNextIndex = 0;
+
+    /**
+     * Buffer used to store arguments for indirect dispatch calls.
+     *
+     * @type {StorageBuffer|null}
+     * @private
+     */
+    _indirectDispatchBuffer = null;
+
+    /**
+     * Number of indirect dispatch slots allocated.
+     *
+     * @type {number}
+     * @private
+     */
+    _indirectDispatchBufferCount = 0;
+
+    /**
+     * Next unused index in indirectDispatchBuffer.
+     *
+     * @type {number}
+     * @private
+     */
+    _indirectDispatchNextIndex = 0;
 
     /**
      * Object responsible for clearing the rendering surface by rendering a quad.
@@ -277,6 +304,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         this.supportsClipDistances = requireFeature('clip-distances');
+        this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
+        this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
+        this.supportsPrimitiveIndex = requireFeature('primitive-index');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
         // copy all adapter limits to the requiredLimits object - to created a device with the best feature sets available
@@ -483,6 +513,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         this._indirectDrawNextIndex = 0;
+        this._indirectDispatchNextIndex = 0;
     }
 
     createBufferImpl(usageFlags) {
@@ -510,6 +541,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     createTextureImpl(texture) {
+        this.textures.add(texture);
         return new WebgpuTexture(texture);
     }
 
@@ -563,6 +595,39 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const nextIndex = this._indirectDrawNextIndex + count;
         Debug.assert(nextIndex <= this.maxIndirectDrawCount, `Insufficient indirect draw slots per frame (requested ${count}, currently ${nextIndex}), please adjust GraphicsDevice#maxIndirectDrawCount`);
         this._indirectDrawNextIndex = nextIndex;
+        return slot;
+    }
+
+    get indirectDispatchBuffer() {
+        this.allocateIndirectDispatchBuffer();
+        return this._indirectDispatchBuffer;
+    }
+
+    allocateIndirectDispatchBuffer() {
+
+        // handle reallocation
+        if (this._indirectDispatchNextIndex === 0 && this._indirectDispatchBufferCount < this.maxIndirectDispatchCount) {
+            this._indirectDispatchBuffer?.destroy();
+            this._indirectDispatchBuffer = null;
+        }
+
+        // allocate buffer
+        if (this._indirectDispatchBuffer === null) {
+            this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDispatchBufferCount = this.maxIndirectDispatchCount;
+        }
+    }
+
+    getIndirectDispatchSlot(count = 1) {
+
+        // make sure the buffer is allocated
+        this.allocateIndirectDispatchBuffer();
+
+        // allocate consecutive slots
+        const slot = this._indirectDispatchNextIndex;
+        const nextIndex = this._indirectDispatchNextIndex + count;
+        Debug.assert(nextIndex <= this.maxIndirectDispatchCount, `Insufficient indirect dispatch slots per frame (requested ${count}, currently ${nextIndex}), please adjust GraphicsDevice#maxIndirectDispatchCount`);
+        this._indirectDispatchNextIndex = nextIndex;
         return slot;
     }
 
@@ -693,6 +758,21 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 }
             }
 
+            // track draw calls - always count as 1 (one material setup, one API call)
+            this._drawCallsPerFrame++;
+
+            // #if _PROFILER
+            // track primitive count
+            if (drawCommands) {
+                // use pre-calculated primitive count from drawCommands
+                this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+            } else {
+                // single draw
+                const primCount = primitive.count * (numInstances > 1 ? numInstances : 1);
+                this._primsPerFrame[primitive.type] += primCount;
+            }
+            // #endif
+
             WebgpuDebug.end(this, 'Drawing', {
                 vb0,
                 vb1,
@@ -776,12 +856,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     _uploadDirtyTextures() {
-
-        this.textures.forEach((texture) => {
-            if (texture._needsUpload || texture._needsMipmaps) {
+        this.texturesToUpload.forEach((texture) => {
+            if (texture._needsUpload || texture._needsMipmapsUpload) {
                 texture.upload();
             }
         });
+        this.texturesToUpload.clear();
     }
 
     setupTimeStampWrites(passDesc, name) {
@@ -907,6 +987,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     startComputePass(name) {
+
+        // upload textures that need it, to avoid them being uploaded during the pass
+        this._uploadDirtyTextures();
 
         WebgpuDebug.internal(this);
         WebgpuDebug.validate(this);
@@ -1203,14 +1286,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             /** @type {GPUImageCopyTexture} */
             const copySrc = {
                 texture: source ? source.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
-                mipLevel: 0
+                mipLevel: source ? source.mipLevel : 0
             };
 
             // write to supplied render target, or to the framebuffer
             /** @type {GPUImageCopyTexture} */
             const copyDst = {
                 texture: dest ? dest.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
-                mipLevel: 0
+                mipLevel: dest ? dest.mipLevel : 0
             };
 
             Debug.assert(copySrc.texture !== null && copyDst.texture !== null);
@@ -1222,6 +1305,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // read from supplied render target, or from the framebuffer
             const sourceRT = source ? source : this.renderTarget;
             const sourceTexture = sourceRT.impl.depthAttachment.depthTexture;
+            const sourceMipLevel = sourceRT.mipLevel;
 
             if (source.samples > 1) {
 
@@ -1233,17 +1317,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
                 // write to supplied render target, or to the framebuffer
                 const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthAttachment.depthTexture;
+                const destMipLevel = dest ? dest.mipLevel : this.renderTarget.mipLevel;
 
                 /** @type {GPUImageCopyTexture} */
                 const copySrc = {
                     texture: sourceTexture,
-                    mipLevel: 0
+                    mipLevel: sourceMipLevel
                 };
 
                 /** @type {GPUImageCopyTexture} */
                 const copyDst = {
                     texture: destTexture,
-                    mipLevel: 0
+                    mipLevel: destMipLevel
                 };
 
                 Debug.assert(copySrc.texture !== null && copyDst.texture !== null);

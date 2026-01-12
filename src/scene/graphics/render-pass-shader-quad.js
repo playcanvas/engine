@@ -7,6 +7,7 @@ import { RenderPass } from '../../platform/graphics/render-pass.js';
 /**
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
+ * @import { Vec4 } from '../../core/math/vec4.js'
  */
 
 /**
@@ -61,6 +62,22 @@ class RenderPassShaderQuad extends RenderPass {
     stencilBack = null;
 
     /**
+     * Optional viewport rectangle (x, y, width, height). If set, the quad renders only to this
+     * region and the original viewport is restored after rendering.
+     *
+     * @type {Vec4|undefined}
+     */
+    viewport;
+
+    /**
+     * Optional scissor rectangle (x, y, width, height). If set, pixels outside this region are
+     * discarded. Only used when viewport is also set. Defaults to the viewport if not specified.
+     *
+     * @type {Vec4|undefined}
+     */
+    scissor;
+
+    /**
      * Sets the shader used to render the quad.
      *
      * @type {Shader}
@@ -92,7 +109,7 @@ class RenderPassShaderQuad extends RenderPass {
         device.setDepthState(this.depthState);
         device.setStencilState(this.stencilFront, this.stencilBack);
 
-        this.quadRender.render();
+        this.quadRender?.render(this.viewport, this.scissor);
     }
 }
 

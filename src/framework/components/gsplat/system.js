@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { GSplatDirector } from '../../../scene/gsplat-unified/gsplat-director.js';
@@ -9,6 +10,15 @@ import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsp
 import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
+
+// Register deprecation warning for old customization chunk
+Debug.call(() => {
+    ShaderChunks.registerValidation('gsplatCustomizeVS', {
+        message: 'Shader chunk gsplatCustomizeVS is deprecated. Use gsplatModifyVS for better performance.',
+        defaultCodeGLSL: gsplatChunksGLSL.gsplatCustomizeVS,
+        defaultCodeWGSL: gsplatChunksWGSL.gsplatCustomizeVS
+    });
+});
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -186,7 +196,7 @@ class GSplatComponentSystem extends ComponentSystem {
      *     material.setParameter('myParam', value);
      * });
      */
-    getGSplatMaterial(camera, layer) {
+    getMaterial(camera, layer) {
         const director = this.app.renderer.gsplatDirector;
         if (!director) return null;
 
@@ -195,6 +205,11 @@ class GSplatComponentSystem extends ComponentSystem {
 
         const layerData = cameraData.layersMap.get(layer);
         return layerData?.gsplatManager?.material ?? null;
+    }
+
+    getGSplatMaterial(camera, layer) {
+        Debug.deprecated('GSplatComponentSystem#getGSplatMaterial is deprecated. Use GSplatComponentSystem#getMaterial instead.');
+        return this.getMaterial(camera, layer);
     }
 }
 

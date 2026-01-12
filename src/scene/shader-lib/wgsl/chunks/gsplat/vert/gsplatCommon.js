@@ -1,6 +1,7 @@
 export default /* wgsl */`
 #include "gsplatHelpersVS"
 #include "gsplatCustomizeVS"
+#include "gsplatModifyVS"
 
 #include "gsplatStructsVS"
 #include "gsplatEvalSHVS"

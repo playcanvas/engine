@@ -145,6 +145,14 @@ class GraphicsDevice extends EventHandler {
     maxIndirectDrawCount = 1024;
 
     /**
+     * The maximum number of indirect compute dispatches that can be used within a single frame.
+     * Used on WebGPU only. Defaults to 256.
+     *
+     * @type {number}
+     */
+    maxIndirectDispatchCount = 256;
+
+    /**
      * The maximum supported texture anisotropy setting.
      *
      * @type {number}
@@ -264,12 +272,20 @@ class GraphicsDevice extends EventHandler {
     shaders = [];
 
     /**
-     * An array of currently created textures.
+     * A set of currently created textures.
      *
-     * @type {Texture[]}
+     * @type {Set<Texture>}
      * @ignore
      */
-    textures = [];
+    textures = new Set();
+
+    /**
+     * A set of textures that need to be uploaded to the GPU.
+     *
+     * @type {Set<Texture>}
+     * @ignore
+     */
+    texturesToUpload = new Set();
 
     /**
      * A set of currently created render targets.
@@ -314,6 +330,16 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     supportsClipDistances = false;
+
+    /**
+     * True if the device supports primitive index in fragment shaders (WebGPU only). When
+     * supported, fragment shaders can access the `pcPrimitiveIndex` built-in variable which
+     * uniquely identifies the current primitive being processed.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsPrimitiveIndex = false;
 
     /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
@@ -477,7 +503,7 @@ class GraphicsDevice extends EventHandler {
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
         this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
 
-        this.buffers = [];
+        this.buffers = new Set();
 
         this._vram = {
             // #if _PROFILER
@@ -545,6 +571,7 @@ class GraphicsDevice extends EventHandler {
         if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
         if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
         if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
+        if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
 
         // Platform defines
         if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
@@ -580,6 +607,18 @@ class GraphicsDevice extends EventHandler {
         if (idx !== -1) {
             this.shaders.splice(idx, 1);
         }
+    }
+
+    /**
+     * Called when a texture is destroyed to remove it from internal tracking structures.
+     *
+     * @param {Texture} texture - The texture being destroyed.
+     * @ignore
+     */
+    onTextureDestroyed(texture) {
+        this.textures.delete(texture);
+        this.texturesToUpload.delete(texture);
+        this.scope.removeValue(texture);
     }
 
     // executes after the extended classes have executed their destroy function
@@ -789,6 +828,34 @@ class GraphicsDevice extends EventHandler {
      * @type {StorageBuffer|null}
      */
     get indirectDrawBuffer() {
+        return null;
+    }
+
+    /**
+     * Retrieves the first available slot in the {@link indirectDispatchBuffer} used for indirect
+     * compute dispatch, which can be utilized by a {@link Compute} shader to generate indirect
+     * dispatch parameters for another compute shader.
+     *
+     * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
+     * @returns {number} - The first reserved slot index used for indirect dispatch.
+     */
+    getIndirectDispatchSlot(count = 1) {
+        return 0;
+    }
+
+    /**
+     * Returns the buffer used to store arguments for indirect compute dispatch calls. The size of
+     * the buffer is controlled by the {@link maxIndirectDispatchCount} property. This buffer can
+     * be passed to a {@link Compute} shader along with a slot obtained by calling
+     * {@link getIndirectDispatchSlot}, in order to prepare indirect dispatch parameters.
+     *
+     * Only available on WebGPU, returns null on other platforms.
+     *
+     * @type {StorageBuffer|null}
+     */
+    get indirectDispatchBuffer() {
         return null;
     }
 
@@ -1043,7 +1110,7 @@ class GraphicsDevice extends EventHandler {
 
             // log out all loaded textures, sorted by gpu memory size
             if (Tracing.get(TRACEID_TEXTURES)) {
-                const textures = this.textures.slice();
+                const textures = [...this.textures];
                 textures.sort((a, b) => b.gpuSize - a.gpuSize);
                 Debug.log(`Textures: ${textures.length}`);
                 let textureTotal = 0;

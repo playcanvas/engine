@@ -44,22 +44,6 @@
  * @module Engine
  */
 
-// #if _IS_UMD
-// POLYFILLS
-import './polyfill/array-fill.js';
-import './polyfill/array-find.js';
-import './polyfill/array-find-index.js';
-import './polyfill/math-log2.js';
-import './polyfill/math-sign.js';
-import './polyfill/number-isfinite.js';
-import './polyfill/object-assign.js';
-import './polyfill/object-entries.js';
-import './polyfill/object-values.js';
-import './polyfill/pointer-lock.js';
-import './polyfill/string.js';
-import './polyfill/typedarray-fill.js';
-// #endif
-
 // CORE
 export * from './core/constants.js';
 export { extend, revision, version } from './core/core.js';
@@ -120,6 +104,7 @@ export { Shader } from './platform/graphics/shader.js';
 export { StorageBuffer } from './platform/graphics/storage-buffer.js';
 export { Texture } from './platform/graphics/texture.js';
 export { TextureUtils } from './platform/graphics/texture-utils.js';
+export { TextureView } from './platform/graphics/texture-view.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
 export { UniformBufferFormat, UniformFormat } from './platform/graphics/uniform-buffer-format.js';
 export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
@@ -192,9 +177,11 @@ export { Animation, AnimationKey, AnimationNode } from './scene/animation/animat
 export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
+export { ComputeRadixSort } from './scene/graphics/compute-radix-sort.js';
 export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
 export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js';
+export { RenderPassRadixSort } from './scene/graphics/render-pass-radix-sort.js';
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
@@ -351,6 +338,7 @@ export { BundleRegistry } from './framework/bundle/bundle-registry.js';
 
 // FRAMEWORK / GRAPHICS
 export { Picker } from './framework/graphics/picker.js';
+export { RenderPassPicker } from './framework/graphics/render-pass-picker.js';
 
 // FRAMEWORK / HANDLERS
 export { basisInitialize } from './framework/handlers/basis.js';

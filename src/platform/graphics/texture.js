@@ -19,6 +19,7 @@ import {
     requiresManualGamma, pixelFormatInfo, isSrgbPixelFormat, pixelFormatLinearToGamma, pixelFormatGammaToLinear
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
+import { TextureView } from './texture-view.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -45,6 +46,8 @@ let id = 0;
  * sampling.
  *     - float formats are supported on WebGL2 and WebGPU with linear sampling only if
  * {@link GraphicsDevice#textureFloatFilterable} is true.
+ *     - {@link PIXELFORMAT_RGB9E5} is a compact HDR format with shared exponent, supported for
+ * sampling on both WebGL2 and WebGPU, but cannot be used as a render target.
  *
  * 2. **As renderable textures** that can be used as color buffers in a {@link RenderTarget}:
  *     - on WebGPU, rendering to float and half-float formats is always supported.
@@ -57,6 +60,9 @@ let id = 0;
  * is supported. This is the case of many mobile iOS devices.
  *     - you can determine available renderable HDR format using
  * {@link GraphicsDevice#getRenderableHdrFormat}.
+ *     - {@link PIXELFORMAT_RGB10A2} provides 10 bits per RGB channel with 2-bit alpha, offering
+ * higher precision than {@link PIXELFORMAT_RGBA8} at the same memory cost. It is renderable on
+ * both WebGL2 and WebGPU. {@link PIXELFORMAT_RGB10A2U} is the unsigned integer variant.
  * @category Graphics
  */
 class Texture {
@@ -294,9 +300,6 @@ class Texture {
 
         this.recreateImpl(upload);
 
-        // track the texture
-        graphicsDevice.textures.push(this);
-
         Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [${pixelFormatInfo.get(this.format)?.name}]` +
             `${this.cubemap ? '[Cubemap]' : ''}` +
             `${this.volume ? '[Volume]' : ''}` +
@@ -313,14 +316,7 @@ class Texture {
 
         const device = this.device;
         if (device) {
-            // stop tracking the texture
-            const idx = device.textures.indexOf(this);
-            if (idx !== -1) {
-                device.textures.splice(idx, 1);
-            }
-
-            // Remove texture from any uniforms
-            device.scope.removeValue(this);
+            device.onTextureDestroyed(this);
 
             // destroy implementation
             this.impl.destroy(device);
@@ -680,7 +676,10 @@ class Texture {
                 this._mipmaps = v;
             }
 
-            if (v) this._needsMipmapsUpload = true;
+            if (v) {
+                this._needsMipmapsUpload = true;
+                this.device?.texturesToUpload?.add(this);
+            }
         }
     }
 
@@ -903,7 +902,7 @@ class Texture {
     set flipY(flipY) {
         if (this._flipY !== flipY) {
             this._flipY = flipY;
-            this._needsUpload = true;
+            this.markForUpload();
         }
     }
 
@@ -919,7 +918,7 @@ class Texture {
     set premultiplyAlpha(premultiplyAlpha) {
         if (this._premultiplyAlpha !== premultiplyAlpha) {
             this._premultiplyAlpha = premultiplyAlpha;
-            this._needsUpload = true;
+            this.markForUpload();
         }
     }
 
@@ -955,7 +954,7 @@ class Texture {
     dirtyAll() {
         this._levelsUpdated = this._cubemap ? [[true, true, true, true, true, true]] : [true];
 
-        this._needsUpload = true;
+        this.markForUpload();
         this._needsMipmapsUpload = this._mipmaps;
         this._mipmapsUploaded = false;
 
@@ -1144,6 +1143,16 @@ class Texture {
     }
 
     /**
+     * Mark this texture as needing upload to the GPU.
+     *
+     * @ignore
+     */
+    markForUpload() {
+        this._needsUpload = true;
+        this.device?.texturesToUpload?.add(this);
+    }
+
+    /**
      * Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
      * is called by internally by {@link setSource} and {@link unlock}. However, it still needs to
      * be called explicitly in the case where an HTMLVideoElement is set as the source of the
@@ -1151,15 +1160,13 @@ class Texture {
      * rendered.
      */
     upload() {
-        this._needsUpload = true;
+        this.markForUpload();
         this._needsMipmapsUpload = this._mipmaps;
         this.impl.uploadImmediate?.(this.device, this);
     }
 
     /**
      * Download the textures data from the graphics memory to the local memory.
-     *
-     * Note a public API yet, as not all options are implemented on all platforms.
      *
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
@@ -1180,7 +1187,6 @@ class Texture {
      * to false.
      * @returns {Promise<Uint8Array|Uint16Array|Uint32Array|Float32Array>} A promise that resolves
      * with the pixel data of the texture.
-     * @ignore
      */
     read(x, y, width, height, options = {}) {
         return this.impl.read?.(x, y, width, height, options);
@@ -1200,6 +1206,31 @@ class Texture {
      */
     write(x, y, width, height, data) {
         return this.impl.write?.(x, y, width, height, data);
+    }
+
+    /**
+     * Creates a TextureView for this texture, specifying a subset of mip levels and array layers.
+     * TextureViews can be used with compute shaders to access specific portions of a texture.
+     *
+     * Note: TextureView is only supported on WebGPU. On WebGL, the full texture is always bound.
+     *
+     * @param {number} [baseMipLevel] - The first mip level accessible to the view. Defaults to 0.
+     * @param {number} [mipLevelCount] - The number of mip levels accessible to the view. Defaults
+     * to 1.
+     * @param {number} [baseArrayLayer] - The first array layer accessible to the view. Defaults to
+     * 0.
+     * @param {number} [arrayLayerCount] - The number of array layers accessible to the view.
+     * Defaults to 1.
+     * @returns {TextureView} A new TextureView for this texture.
+     * @example
+     * // Create a view for mip level 1
+     * const mip1View = texture.getView(1);
+     *
+     * // Use with compute shader
+     * compute.setParameter('outputTexture', mip1View);
+     */
+    getView(baseMipLevel = 0, mipLevelCount = 1, baseArrayLayer = 0, arrayLayerCount = 1) {
+        return new TextureView(this, baseMipLevel, mipLevelCount, baseArrayLayer, arrayLayerCount);
     }
 }
 

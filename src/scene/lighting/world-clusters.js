@@ -1,7 +1,7 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { math } from '../../core/math/math.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_R8U } from '../../platform/graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
 import { Debug } from '../../core/debug.js';
@@ -112,14 +112,11 @@ class WorldClusters {
 
     registerUniforms(device) {
 
-        this._clusterSkipId = device.scope.resolve('clusterSkip');
+        this._numClusteredLightsId = device.scope.resolve('numClusteredLights');
 
         this._clusterMaxCellsId = device.scope.resolve('clusterMaxCells');
 
         this._clusterWorldTextureId = device.scope.resolve('clusterWorldTexture');
-
-        this._clusterTextureSizeId = device.scope.resolve('clusterTextureSize');
-        this._clusterTextureSizeData = new Float32Array(3);
 
         this._clusterBoundsMinId = device.scope.resolve('clusterBoundsMin');
         this._clusterBoundsMinData = new Float32Array(3);
@@ -131,11 +128,14 @@ class WorldClusters {
         this._clusterCellsCountByBoundsSizeData = new Float32Array(3);
 
         this._clusterCellsDotId = device.scope.resolve('clusterCellsDot');
-        this._clusterCellsDotData = new Float32Array(3);
+        this._clusterCellsDotData = new Int32Array(3);
 
-        // number of cells in each direction (vec3)
+        // number of cells in each direction (ivec3)
         this._clusterCellsMaxId = device.scope.resolve('clusterCellsMax');
-        this._clusterCellsMaxData = new Float32Array(3);
+        this._clusterCellsMaxData = new Int32Array(3);
+
+        // width of the cluster texture
+        this._clusterTextureWidthId = device.scope.resolve('clusterTextureWidth');
     }
 
     // updates itself based on parameters stored in the scene
@@ -186,12 +186,8 @@ class WorldClusters {
             this.clusters = new Uint8ClampedArray(totalPixels);
             this.counts = new Int32Array(numCells);
 
-            this._clusterTextureSizeData[0] = width;
-            this._clusterTextureSizeData[1] = 1.0 / width;
-            this._clusterTextureSizeData[2] = 1.0 / height;
-
             this.releaseClusterTexture();
-            this.clusterTexture = this.lightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8, 'ClusterTexture');
+            this.clusterTexture = this.lightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8U, 'ClusterTexture');
         }
     }
 
@@ -205,8 +201,8 @@ class WorldClusters {
 
     updateUniforms() {
 
-        // skip clustered lights shader evaluation if only the dummy light exists
-        this._clusterSkipId.setValue(this._usedLights.length > 1 ? 0 : 1);
+        // number of clustered lights (index 0 is reserved for 'no light')
+        this._numClusteredLightsId.setValue(this._usedLights.length);
 
         this.lightsBuffer.updateUniforms();
 
@@ -231,11 +227,11 @@ class WorldClusters {
         this._clusterBoundsDeltaData[2] = boundsDelta.z;
 
         // assign values
-        this._clusterTextureSizeId.setValue(this._clusterTextureSizeData);
         this._clusterBoundsMinId.setValue(this._clusterBoundsMinData);
         this._clusterBoundsDeltaId.setValue(this._clusterBoundsDeltaData);
         this._clusterCellsDotId.setValue(this._clusterCellsDotData);
         this._clusterCellsMaxId.setValue(this._clusterCellsMaxData);
+        this._clusterTextureWidthId.setValue(this.clusterTexture.width);
     }
 
     // evaluates min and max coordinates of AABB of the light in the cell space

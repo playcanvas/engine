@@ -37,6 +37,11 @@ class WebgpuDrawCommands {
      * @param {number} maxCount - Number of sub-draws.
      */
     allocate(maxCount) {
+        // Skip reallocation if size matches exactly
+        if (this.gpuIndirect && this.gpuIndirect.length === 5 * maxCount) {
+            return;
+        }
+        this.storage?.destroy();
         this.gpuIndirect = new Uint32Array(5 * maxCount);
         this.gpuIndirectSigned = new Int32Array(this.gpuIndirect.buffer);
         this.storage = new StorageBuffer(this.device, this.gpuIndirect.byteLength, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
@@ -63,12 +68,29 @@ class WebgpuDrawCommands {
     /**
      * Upload AoS data to storage buffer.
      * @param {number} count - Number of active draws.
+     * @returns {number} Total primitive count.
      */
     update(count) {
         if (this.storage && count > 0) {
             const used = count * 5; // 5 uints per draw
             this.storage.write(0, this.gpuIndirect, 0, used);
         }
+
+        // calculate total primitives for stats
+        let totalPrimitives = 0;
+
+        // #if _PROFILER
+        if (this.gpuIndirect && count > 0) {
+            for (let d = 0; d < count; d++) {
+                const offset = d * 5;
+                const indexOrVertexCount = this.gpuIndirect[offset + 0];
+                const instanceCount = this.gpuIndirect[offset + 1];
+                totalPrimitives += indexOrVertexCount * instanceCount;
+            }
+        }
+        // #endif
+
+        return totalPrimitives;
     }
 
     destroy() {

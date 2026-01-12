@@ -13,7 +13,7 @@ export default /* glsl */`
     #include "clusteredLightShadowsPS"
 #endif
 
-uniform highp sampler2D clusterWorldTexture;
+uniform highp usampler2D clusterWorldTexture;
 uniform highp sampler2D lightsTexture;
 
 #ifdef CLUSTER_SHADOWS
@@ -27,15 +27,17 @@ uniform highp sampler2D lightsTexture;
 
 uniform int clusterMaxCells;
 
-// 1.0 if clustered lighting can be skipped (0 lights in the clusters)
-uniform float clusterSkip;
+// number of lights in the cluster structure
+uniform int numClusteredLights;
+
+// width of the cluster texture
+uniform int clusterTextureWidth;
 
 uniform vec3 clusterCellsCountByBoundsSize;
-uniform vec3 clusterTextureSize;
 uniform vec3 clusterBoundsMin;
 uniform vec3 clusterBoundsDelta;
-uniform vec3 clusterCellsDot;
-uniform vec3 clusterCellsMax;
+uniform ivec3 clusterCellsDot;
+uniform ivec3 clusterCellsMax;
 uniform vec2 shadowAtlasParams;
 
 // structure storing light properties of a clustered light
@@ -120,10 +122,10 @@ vec4 sampleLightTextureF(const ClusterLightData clusterLightData, int index) {
     return texelFetch(lightsTexture, ivec2(index, clusterLightData.lightIndex), 0);
 }
 
-void decodeClusterLightCore(inout ClusterLightData clusterLightData, float lightIndex) {
+void decodeClusterLightCore(inout ClusterLightData clusterLightData, int lightIndex) {
 
     // light index
-    clusterLightData.lightIndex = int(lightIndex);
+    clusterLightData.lightIndex = lightIndex;
 
     // sample data encoding half-float values into 32bit uints
     vec4 halfData = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_COLOR_ANGLES_BIAS});
@@ -492,7 +494,7 @@ void evaluateLight(
 }
 
 void evaluateClusterLight(
-    float lightIndex, 
+    int lightIndex, 
     vec3 worldNormal, 
     vec3 viewDir, 
     vec3 reflectionDir, 
@@ -566,34 +568,34 @@ void addClusteredLights(
     float iridescence_intensity
 ) {
 
-    // skip lights if no lights at all
-    if (clusterSkip > 0.5)
+    // skip if no lights (index 0 is reserved for 'no light')
+    if (numClusteredLights <= 1)
         return;
 
     // world space position to 3d integer cell cordinates in the cluster structure
-    vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
+    ivec3 cellCoords = ivec3(floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize));
 
     // no lighting when cell coordinate is out of range
-    if (!(any(lessThan(cellCoords, vec3(0.0))) || any(greaterThanEqual(cellCoords, clusterCellsMax)))) {
+    if (!(any(lessThan(cellCoords, ivec3(0))) || any(greaterThanEqual(cellCoords, clusterCellsMax)))) {
 
         // cell index (mapping from 3d cell coordinates to linear memory)
-        float cellIndex = dot(clusterCellsDot, cellCoords);
+        int cellIndex = cellCoords.x * clusterCellsDot.x + cellCoords.y * clusterCellsDot.y + cellCoords.z * clusterCellsDot.z;
 
         // convert cell index to uv coordinates
-        float clusterV = floor(cellIndex * clusterTextureSize.y);
-        float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
+        int clusterV = cellIndex / clusterTextureWidth;
+        int clusterU = cellIndex - clusterV * clusterTextureWidth;
 
         // loop over maximum number of light cells
         for (int lightCellIndex = 0; lightCellIndex < clusterMaxCells; lightCellIndex++) {
 
             // using a single channel texture with data in red channel
-            float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
+            uint lightIndex = texelFetch(clusterWorldTexture, ivec2(clusterU + lightCellIndex, clusterV), 0).x;
 
-            if (lightIndex <= 0.0)
+            if (lightIndex == 0u)
                 break;
 
             evaluateClusterLight(
-                lightIndex * 255.0, 
+                int(lightIndex), 
                 worldNormal, 
                 viewDir, 
                 reflectionDir,

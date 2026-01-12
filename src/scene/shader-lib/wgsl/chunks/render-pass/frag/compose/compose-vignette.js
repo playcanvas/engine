@@ -1,6 +1,7 @@
 export default /* wgsl */`
     #ifdef VIGNETTE
         uniform vignetterParams: vec4f;
+        uniform vignetteColor: vec3f;
         
         // Global variable for debug
         var<private> dVignette: f32;
@@ -23,7 +24,7 @@ export default /* wgsl */`
         }
 
         fn applyVignette(color: vec3f, uv: vec2f) -> vec3f {
-            return color * calcVignette(uv);
+            return mix(uniform.vignetteColor, color, calcVignette(uv));
         }
     #endif
 `;

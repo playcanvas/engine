@@ -9,6 +9,8 @@ import { GSplatRenderer } from './gsplat-renderer.js';
 import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
 import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
+import { GSplatSortKeyCompute } from './gsplat-sort-key-compute.js';
+import { ComputeRadixSort } from '../graphics/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Color } from '../../core/math/color.js';
@@ -17,11 +19,14 @@ import { Color } from '../../core/math/color.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatPlacement } from './gsplat-placement.js'
  * @import { Scene } from '../scene.js'
+ * @import { Layer } from '../layer.js'
+ * @import { GSplatDirector } from './gsplat-director.js'
  */
 
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
 const translation = new Vec3();
+const _cornerPoint = new Vec3();
 const invModelMat = new Mat4();
 const tempNonOctreePlacements = new Set();
 const tempOctreePlacements = new Set();
@@ -88,8 +93,33 @@ class GSplatManager {
      */
     lastWorldStateVersion = 0;
 
-    /** @type {GSplatUnifiedSorter} */
-    sorter;
+    /**
+     * Whether to use GPU-based sorting (WebGPU only).
+     *
+     * @type {boolean}
+     */
+    useGpuSorting = false;
+
+    /**
+     * CPU-based sorter (when not using GPU sorting).
+     *
+     * @type {GSplatUnifiedSorter|null}
+     */
+    cpuSorter = null;
+
+    /**
+     * GPU-based key generator (when using GPU sorting).
+     *
+     * @type {GSplatSortKeyCompute|null}
+     */
+    keyGenerator = null;
+
+    /**
+     * GPU-based radix sorter (when using GPU sorting).
+     *
+     * @type {ComputeRadixSort|null}
+     */
+    gpuSorter = null;
 
     /** @type {number} */
     sortedVersion = 0;
@@ -152,6 +182,19 @@ class GSplatManager {
      */
     hasNewOctreeInstances = false;
 
+    /**
+     * Bitmask flags controlling which render passes this manager participates in.
+     *
+     * @type {number|undefined}
+     */
+    renderMode;
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatDirector} director - The director.
+     * @param {Layer} layer - The layer.
+     * @param {GraphNode} cameraNode - The camera node.
+     */
     constructor(device, director, layer, cameraNode) {
         this.device = device;
         this.scene = director.scene;
@@ -159,7 +202,27 @@ class GSplatManager {
         this.cameraNode = cameraNode;
         this.workBuffer = new GSplatWorkBuffer(device);
         this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
-        this.sorter = this.createSorter();
+
+        // Choose sorting strategy based on gpuSorting flag and device capability
+        this.useGpuSorting = device.isWebGPU && director.scene.gsplat.gpuSorting;
+
+        if (this.useGpuSorting) {
+            this.keyGenerator = new GSplatSortKeyCompute(device);
+            this.gpuSorter = new ComputeRadixSort(device);
+        } else {
+            this.cpuSorter = this.createSorter();
+        }
+    }
+
+    /**
+     * Sets the render mode for this manager and its renderer.
+     *
+     * @param {number} renderMode - Bitmask flags controlling render passes (GSPLAT_FORWARD, GSPLAT_SHADOW, or both).
+     * @ignore
+     */
+    setRenderMode(renderMode) {
+        this.renderMode = renderMode;
+        this.renderer.setRenderMode(renderMode);
     }
 
     destroy() {
@@ -188,16 +251,24 @@ class GSplatManager {
 
         this.workBuffer.destroy();
         this.renderer.destroy();
-        this.sorter.destroy();
+
+        this.keyGenerator?.destroy();
+        this.gpuSorter?.destroy();
+        this.cpuSorter?.destroy();
     }
 
     get material() {
         return this.renderer.material;
     }
 
+    /**
+     * Creates the CPU sorter (Web Worker based).
+     *
+     * @returns {GSplatUnifiedSorter} The created sorter.
+     */
     createSorter() {
         // create sorter
-        const sorter = new GSplatUnifiedSorter();
+        const sorter = new GSplatUnifiedSorter(this.scene);
         sorter.on('sorted', (count, version, orderData) => {
             this.onSorted(count, version, orderData);
         });
@@ -296,8 +367,8 @@ class GSplatManager {
                 });
             }
 
-            // update sorter with current splats (adds new centers, removes unused ones)
-            this.sorter.updateCentersForSplats(splats);
+            // update cpu sorter with current splats (adds new centers, removes unused ones)
+            this.cpuSorter?.updateCentersForSplats(splats);
 
             const newState = new GSplatWorldState(this.device, this.lastWorldStateVersion, splats);
 
@@ -343,19 +414,8 @@ class GSplatManager {
 
     onSorted(count, version, orderData) {
 
-        // remove all old states between last sorted version and current version
-        for (let v = this.sortedVersion; v < version; v++) {
-            const oldState = this.worldStates.get(v);
-            if (oldState) {
-                // decrement ref count for all resources in old state
-                for (const splat of oldState.splats) {
-                    splat.resource.decRefCount();
-                }
-                this.worldStates.delete(v);
-                oldState.destroy();
-            }
-        }
-
+        // clean up old world states
+        this.cleanupOldWorldStates(version);
         this.sortedVersion = version;
 
         // find the world state that has been sorted
@@ -368,47 +428,138 @@ class GSplatManager {
             // to match centers buffer / sorted data
             if (!worldState.sortedBefore) {
                 worldState.sortedBefore = true;
-
-                // resize work buffer if needed
-                const textureSize = worldState.textureSize;
-                if (textureSize !== this.workBuffer.textureSize) {
-                    this.workBuffer.resize(textureSize);
-                    this.renderer.setMaxNumSplats(textureSize * textureSize);
-                }
-
-                // render all splats to work buffer
-                this.workBuffer.render(worldState.splats, this.cameraNode, this.getDebugColors());
-
-                // update all splats to sync their transforms and reset color accumulators
-                // (prevents redundant re-render later)
-                const { colorUpdateAngle, colorUpdateDistance } = this.scene.gsplat;
-                worldState.splats.forEach((splat) => {
-                    splat.update();
-                    splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
-                });
-
-                // update camera tracking for color updates
-                this.updateColorCameraTracking();
-
-                // apply pending file-release requests
-                if (worldState.pendingReleases && worldState.pendingReleases.length) {
-                    const cooldownTicks = this.scene.gsplat.cooldownTicks;
-                    for (const [octree, fileIndex] of worldState.pendingReleases) {
-                        // decrement once for each staged release; refcount system guards against premature unload
-                        octree.decRefCount(fileIndex, cooldownTicks);
-                    }
-                    worldState.pendingReleases.length = 0;
-                }
-
-                // number of splats to render
-                this.renderer.update(count, textureSize);
+                this.rebuildWorkBuffer(worldState, count);
             }
 
             // update order texture
             this.workBuffer.setOrderData(orderData);
 
             // update renderer with new order data
-            this.renderer.frameUpdate(this.scene.gsplat);
+            this.renderer.setOrderData();
+        }
+    }
+
+    /**
+     * Rebuilds the work buffer for a world state on its first sort.
+     * Resizes buffer, renders all splats, syncs transforms, and handles pending releases.
+     *
+     * @param {GSplatWorldState} worldState - The world state to rebuild for.
+     * @param {number} count - The number of splats.
+     */
+    rebuildWorkBuffer(worldState, count) {
+        // resize work buffer if needed
+        const textureSize = worldState.textureSize;
+        if (textureSize !== this.workBuffer.textureSize) {
+            this.workBuffer.resize(textureSize);
+            this.renderer.setMaxNumSplats(textureSize * textureSize);
+        }
+
+        // render all splats to work buffer
+        this.workBuffer.render(worldState.splats, this.cameraNode, this.getDebugColors());
+
+        // update all splats to sync their transforms and reset color accumulators
+        // (prevents redundant re-render later)
+        const { colorUpdateAngle, colorUpdateDistance } = this.scene.gsplat;
+        worldState.splats.forEach((splat) => {
+            splat.update();
+            splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
+        });
+
+        // update camera tracking for color updates
+        this.updateColorCameraTracking();
+
+        // apply pending file-release requests
+        if (worldState.pendingReleases && worldState.pendingReleases.length) {
+            const cooldownTicks = this.scene.gsplat.cooldownTicks;
+            for (const [octree, fileIndex] of worldState.pendingReleases) {
+                // decrement once for each staged release; refcount system guards against premature unload
+                octree.decRefCount(fileIndex, cooldownTicks);
+            }
+            worldState.pendingReleases.length = 0;
+        }
+
+        // number of splats to render
+        this.renderer.update(count, textureSize);
+    }
+
+    /**
+     * Cleans up old world states between the last sorted version and the new version.
+     * Decrements ref counts and destroys old states.
+     *
+     * @param {number} newVersion - The new version to clean up to.
+     */
+    cleanupOldWorldStates(newVersion) {
+        for (let v = this.sortedVersion; v < newVersion; v++) {
+            const oldState = this.worldStates.get(v);
+            if (oldState) {
+                // decrement ref count for all resources in old state
+                for (const splat of oldState.splats) {
+                    splat.resource.decRefCount();
+                }
+                this.worldStates.delete(v);
+                oldState.destroy();
+            }
+        }
+    }
+
+    /**
+     * Applies incremental work buffer updates for splats that have changed.
+     * Detects transform changes and color update thresholds, then batch renders updates.
+     * Sets sortNeeded = true when splats move.
+     *
+     * @param {GSplatWorldState} state - The world state to update.
+     */
+    applyWorkBufferUpdates(state) {
+        // color update thresholds
+        const { colorUpdateAngle, colorUpdateDistance, colorUpdateDistanceLodScale, colorUpdateAngleLodScale } = this.scene.gsplat;
+
+        // Calculate camera movement deltas for color updates
+        const { rotationDelta, translationDelta } = this.calculateColorCameraDeltas();
+
+        // check each splat for full or color update
+        state.splats.forEach((splat) => {
+            // Check if splat's transform changed (needs full update)
+            if (splat.update()) {
+
+                _updatedSplats.push(splat);
+
+                // Reset accumulators for fully updated splats
+                splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
+
+                // Splat moved, need to re-sort
+                this.sortNeeded = true;
+
+            } else if (splat.hasSphericalHarmonics) {
+
+                // Otherwise, check if color needs updating (accumulator-based)
+                // Add this frame's camera movement to accumulators
+                splat.colorAccumulatedRotation += rotationDelta;
+                splat.colorAccumulatedTranslation += translationDelta;
+
+                // Apply LOD-based scaling to thresholds
+                const lodIndex = splat.lodIndex ?? 0;
+                const distThreshold = colorUpdateDistance * Math.pow(colorUpdateDistanceLodScale, lodIndex);
+                const angleThreshold = colorUpdateAngle * Math.pow(colorUpdateAngleLodScale, lodIndex);
+
+                // Trigger update if either threshold exceeded
+                if (splat.colorAccumulatedRotation >= angleThreshold ||
+                    splat.colorAccumulatedTranslation >= distThreshold) {
+                    _splatsNeedingColorUpdate.push(splat);
+                    splat.resetColorAccumulators(angleThreshold, distThreshold);
+                }
+            }
+        });
+
+        // Batch render all updated splats in a single render pass
+        if (_updatedSplats.length > 0) {
+            this.workBuffer.render(_updatedSplats, this.cameraNode, this.getDebugColors());
+            _updatedSplats.length = 0;
+        }
+
+        // Batch render color updates for all splats that exceeded thresholds
+        if (_splatsNeedingColorUpdate.length > 0) {
+            this.workBuffer.renderColor(_splatsNeedingColorUpdate, this.cameraNode, this.getDebugColors());
+            _splatsNeedingColorUpdate.length = 0;
         }
     }
 
@@ -553,25 +704,27 @@ class GSplatManager {
 
     update() {
 
-        // apply any pending sorted results
-        this.sorter.applyPendingSorted();
+        // apply any pending sorted results (CPU path only)
+        if (this.cpuSorter) {
+            this.cpuSorter.applyPendingSorted();
+        }
 
-        // update viewport for renderer
-        this.renderer.updateViewport(this.cameraNode);
+        // GPU sorting is always ready, CPU sorting is ready if not too many jobs in flight
+        const sorterAvailable = this.useGpuSorting || (this.cpuSorter && this.cpuSorter.jobsInFlight < 3);
 
+        // full update every 10 frames
         let fullUpdate = false;
         this.framesTillFullUpdate--;
         if (this.framesTillFullUpdate <= 0) {
             this.framesTillFullUpdate = 10;
 
-            // if sorter can keep up
-            if (this.sorter.jobsInFlight < 3) {
+            if (sorterAvailable) {
                 fullUpdate = true;
             }
         }
 
         // when new octree instances are added, we need to evaluate their LOD immediately
-        const hasNewInstances = this.hasNewOctreeInstances && this.sorter.jobsInFlight < 3;
+        const hasNewInstances = this.hasNewOctreeInstances && sorterAvailable;
         if (hasNewInstances) this.hasNewOctreeInstances = false;
 
         let anyInstanceNeedsLodUpdate = false;
@@ -655,13 +808,6 @@ class GSplatManager {
         const lastState = this.worldStates.get(this.lastWorldStateVersion);
         if (lastState) {
 
-            if (!lastState.sortParametersSet) {
-                lastState.sortParametersSet = true;
-
-                const payload = this.prepareSortParameters(lastState);
-                this.sorter.setSortParameters(payload);
-            }
-
             // debug render world space bounds for all splats
             Debug.call(() => {
                 if (this.scene.gsplat.debugAabbs) {
@@ -674,73 +820,40 @@ class GSplatManager {
                 }
             });
 
-            // kick off sorting only if needed
-            if (this.sortNeeded) {
-                this.sort(lastState);
-                this.sortNeeded = false;
+            // CPU path: send sort parameters to worker
+            if (this.cpuSorter && !lastState.sortParametersSet) {
+                lastState.sortParametersSet = true;
 
-                // Update camera tracking for next sort check
-                this.lastSortCameraPos.copy(this.cameraNode.getPosition());
-                this.lastSortCameraFwd.copy(this.cameraNode.forward);
+                const payload = this.prepareSortParameters(lastState);
+                this.cpuSorter.setSortParameters(payload);
             }
+
         }
 
-        // re-render splats that have changed their transform this frame, using last sorted state
+        // Apply work buffer updates first (both GPU and CPU)
+        // For GPU: ensures sort uses current data
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (sortedState) {
+            this.applyWorkBufferUpdates(sortedState);
+        }
 
-            // color update thresholds
-            const { colorUpdateAngle, colorUpdateDistance, colorUpdateDistanceLodScale, colorUpdateAngleLodScale } = this.scene.gsplat;
-
-            // Calculate camera movement deltas for color updates
-            const { rotationDelta, translationDelta } = this.calculateColorCameraDeltas();
-
-            // check each splat for full or color update
-            sortedState.splats.forEach((splat) => {
-                // Check if splat's transform changed (needs full update)
-                if (splat.update()) {
-
-                    _updatedSplats.push(splat);
-                    // Reset accumulators for fully updated splats
-                    splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
-
-                    // Splat moved, need to re-sort
-                    this.sortNeeded = true;
-
-                } else if (splat.hasSphericalHarmonics) {
-
-                    // Otherwise, check if color needs updating (accumulator-based)
-                    // Add this frame's camera movement to accumulators
-                    splat.colorAccumulatedRotation += rotationDelta;
-                    splat.colorAccumulatedTranslation += translationDelta;
-
-                    // Apply LOD-based scaling to thresholds
-                    const lodIndex = splat.lodIndex ?? 0;
-                    const distThreshold = colorUpdateDistance * Math.pow(colorUpdateDistanceLodScale, lodIndex);
-                    const angleThreshold = colorUpdateAngle * Math.pow(colorUpdateAngleLodScale, lodIndex);
-
-                    // Trigger update if either threshold exceeded
-                    if (splat.colorAccumulatedRotation >= angleThreshold ||
-                        splat.colorAccumulatedTranslation >= distThreshold) {
-                        _splatsNeedingColorUpdate.push(splat);
-                        splat.resetColorAccumulators(angleThreshold, distThreshold);
-                    }
-                }
-            });
-
-            // Batch render all updated splats in a single render pass
-            if (_updatedSplats.length > 0) {
-                this.workBuffer.render(_updatedSplats, this.cameraNode, this.getDebugColors());
-                _updatedSplats.length = 0;
+        // kick off sorting only if needed (lastState already defined above)
+        if (this.sortNeeded && lastState) {
+            if (this.useGpuSorting) {
+                this.sortGpu(lastState);
+            } else {
+                this.sortCpu(lastState);
             }
+            this.sortNeeded = false;
 
-            // Batch render color updates for all splats that exceeded thresholds
-            if (_splatsNeedingColorUpdate.length > 0) {
-                this.workBuffer.renderColor(_splatsNeedingColorUpdate, this.cameraNode, this.getDebugColors());
-                _splatsNeedingColorUpdate.length = 0;
-            }
+            // Update camera tracking for next sort check
+            this.lastSortCameraPos.copy(this.cameraNode.getPosition());
+            this.lastSortCameraFwd.copy(this.cameraNode.forward);
+        }
 
-            // Update camera tracking once at the end of the frame
+        // renderer update and camera tracking
+        if (sortedState) {
+            this.renderer.frameUpdate(this.scene.gsplat);
             this.updateColorCameraTracking();
         }
 
@@ -766,11 +879,120 @@ class GSplatManager {
     }
 
     /**
-     * Sorts the splats of the given world state.
+     * Sorts the splats using GPU compute shaders
+     *
+     * @param {GSplatWorldState} worldState - The world state to sort.
+     */
+    sortGpu(worldState) {
+        const keyGenerator = this.keyGenerator;
+        const gpuSorter = this.gpuSorter;
+        Debug.assert(keyGenerator && gpuSorter, 'GPU sorter not initialized');
+        if (!keyGenerator || !gpuSorter) return;
+
+        const elementCount = worldState.totalUsedPixels;
+        if (elementCount === 0) return;
+
+        // Handle first-time setup for GPU path
+        if (!worldState.sortedBefore) {
+            worldState.sortedBefore = true;
+            this.rebuildWorkBuffer(worldState, elementCount);
+
+            // clean up old world states
+            this.cleanupOldWorldStates(worldState.version);
+            this.sortedVersion = worldState.version;
+        }
+
+        // number of bits used for sorting to match CPU sorter
+        const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
+        // Round up to multiple of 4 for radix sort
+        const roundedNumBits = Math.ceil(numBits / 4) * 4;
+
+        // Compute min/max distances for key normalization
+        const { minDist, maxDist } = this.computeDistanceRange(worldState);
+
+        // Generate sort keys from work buffer world-space positions
+        const keysBuffer = keyGenerator.generate(
+            this.workBuffer,
+            this.cameraNode,
+            this.scene.gsplat.radialSorting,
+            elementCount,
+            roundedNumBits,
+            minDist,
+            maxDist
+        );
+
+        // Run GPU radix sort
+        const sortedIndices = gpuSorter.sort(keysBuffer, elementCount, roundedNumBits);
+
+        // Set sorted indices directly on renderer (no CPU upload needed)
+        this.renderer.setOrderBuffer(sortedIndices);
+
+        // Update renderer with count
+        this.renderer.update(elementCount, worldState.textureSize);
+    }
+
+    /**
+     * Computes the min/max effective distances for the current world state.
+     *
+     * @param {GSplatWorldState} worldState - The world state.
+     * @returns {{minDist: number, maxDist: number}} The distance range.
+     */
+    computeDistanceRange(worldState) {
+        const cameraNode = this.cameraNode;
+        const cameraMat = cameraNode.getWorldTransform();
+        cameraMat.getTranslation(cameraPosition);
+        cameraMat.getZ(cameraDirection).normalize();
+
+        const radialSort = this.scene.gsplat.radialSorting;
+
+        // For radial: minDist is always 0, only track maxDist
+        // For linear: track both min and max along camera direction
+        let minDist = radialSort ? 0 : Infinity;
+        let maxDist = radialSort ? 0 : -Infinity;
+
+        for (const splat of worldState.splats) {
+            const modelMat = splat.node.getWorldTransform();
+            const aabbMin = splat.aabb.getMin();
+            const aabbMax = splat.aabb.getMax();
+
+            // Check all 8 corners of local-space AABB
+            for (let i = 0; i < 8; i++) {
+                _cornerPoint.x = (i & 1) ? aabbMax.x : aabbMin.x;
+                _cornerPoint.y = (i & 2) ? aabbMax.y : aabbMin.y;
+                _cornerPoint.z = (i & 4) ? aabbMax.z : aabbMin.z;
+
+                // Transform to world space
+                modelMat.transformPoint(_cornerPoint, _cornerPoint);
+
+                if (radialSort) {
+                    // Radial: distance from camera
+                    const dist = _cornerPoint.distance(cameraPosition);
+                    if (dist > maxDist) maxDist = dist;
+                } else {
+                    // Linear: distance along camera direction
+                    const dist = _cornerPoint.sub(cameraPosition).dot(cameraDirection);
+                    if (dist < minDist) minDist = dist;
+                    if (dist > maxDist) maxDist = dist;
+                }
+            }
+        }
+
+        // Handle empty state
+        if (maxDist === 0 || maxDist === -Infinity) {
+            return { minDist: 0, maxDist: 1 };
+        }
+
+        return { minDist, maxDist };
+    }
+
+    /**
+     * Sorts the splats using CPU worker (asynchronous).
      *
      * @param {GSplatWorldState} lastState - The last world state.
      */
-    sort(lastState) {
+    sortCpu(lastState) {
+        Debug.assert(this.cpuSorter, 'CPU sorter not initialized');
+        if (!this.cpuSorter) return;
 
         // Get camera's world-space properties
         const cameraNode = this.cameraNode;
@@ -813,7 +1035,7 @@ class GSplatManager {
             });
         });
 
-        this.sorter.setSortParams(sorterRequest, this.scene.gsplat.radialSorting);
+        this.cpuSorter.setSortParams(sorterRequest, this.scene.gsplat.radialSorting);
     }
 
     /**

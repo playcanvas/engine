@@ -16,6 +16,7 @@ import {
     EVENT_PRECULL,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
+    SHADOWCAMERA_NAME,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     shadowTypeInfo
 } from '../constants.js';
@@ -114,7 +115,7 @@ class ShadowRenderer {
     // creates shadow camera for a light and sets up its constant properties
     static createShadowCamera(shadowType, type, face) {
 
-        const shadowCam = LightCamera.create('ShadowCamera', type, face);
+        const shadowCam = LightCamera.create(SHADOWCAMERA_NAME, type, face);
 
         const shadowInfo = shadowTypeInfo.get(shadowType);
         Debug.assert(shadowInfo);
@@ -432,7 +433,7 @@ class ShadowRenderer {
         return shadowCam;
     }
 
-    renderFace(light, camera, face, clear, insideRenderPass = true) {
+    renderFace(light, camera, face, clear) {
 
         const device = this.device;
 
@@ -454,17 +455,11 @@ class ShadowRenderer {
             renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, null);
         }
 
-        if (insideRenderPass) {
-            renderer.setupViewport(shadowCam, rt);
+        renderer.setupViewport(shadowCam, rt);
 
-            // clear here is used to clear a viewport inside render target.
-            if (clear) {
-                renderer.clear(shadowCam);
-            }
-        } else {
-
-            // this is only used by lightmapper, till it's converted to render passes
-            renderer.clearView(shadowCam, rt, true, false);
+        // clear here is used to clear a viewport inside render target.
+        if (clear) {
+            renderer.clear(shadowCam);
         }
 
         this.setupRenderState(device, light);
@@ -477,22 +472,6 @@ class ShadowRenderer {
         // #if _PROFILER
         renderer._shadowMapTime += now() - shadowMapStartTime;
         // #endif
-    }
-
-    render(light, camera, insideRenderPass = true) {
-
-        if (this.needsShadowRendering(light)) {
-            const faceCount = light.numShadowFaces;
-
-            // render faces
-            for (let face = 0; face < faceCount; face++) {
-                this.prepareFace(light, camera, face);
-                this.renderFace(light, camera, face, true, insideRenderPass);
-            }
-
-            // apply vsm
-            this.renderVsm(light, camera);
-        }
     }
 
     renderVsm(light, camera) {

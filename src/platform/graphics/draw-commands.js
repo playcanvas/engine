@@ -76,6 +76,14 @@ class DrawCommands {
     slotIndex = 0;
 
     /**
+     * Total number of primitives across all sub-draws (pre-calculated).
+     *
+     * @type {number}
+     * @ignore
+     */
+    primitiveCount = 0;
+
+    /**
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {number} [indexSizeBytes] - Size of index in bytes for WebGL multi-draw (1, 2 or 4).
      * @ignore
@@ -127,7 +135,7 @@ class DrawCommands {
      */
     update(count) {
         this._count = count;
-        this.impl.update?.(count);
+        this.primitiveCount = this.impl.update?.(count) ?? 0;
     }
 }
 

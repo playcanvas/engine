@@ -115,7 +115,12 @@ class ShaderDefinitionUtils {
 
         const getDefinesWgsl = (isVertex, options) => {
 
-            let attachmentsDefine = '';
+            let code = '';
+
+            // Enable directives must come before all global declarations
+            if (!isVertex && device.supportsPrimitiveIndex) {
+                code += 'enable primitive_index;\n';
+            }
 
             // Define the fragment shader output type, vec4 by default
             if (!isVertex) {
@@ -126,11 +131,11 @@ class ShaderDefinitionUtils {
                     const glslOutType = fragmentOutputTypes[i] ?? 'vec4';
                     const wgslOutType = primitiveGlslToWgslTypeMap.get(glslOutType);
                     Debug.assert(wgslOutType, `Unknown output type translation: ${glslOutType} -> ${wgslOutType}`);
-                    attachmentsDefine += `alias pcOutType${i} = ${wgslOutType};\n`;
+                    code += `alias pcOutType${i} = ${wgslOutType};\n`;
                 }
             }
 
-            return attachmentsDefine;
+            return code;
         };
 
         const name = options.name ?? 'Untitled';
@@ -145,17 +150,17 @@ class ShaderDefinitionUtils {
 
             vertCode = `
                 ${getDefinesWgsl(true, options)}
+                ${vertexDefinesCode}
                 ${wgslVS}
                 ${sharedWGSL}
-                ${vertexDefinesCode}
                 ${options.vertexCode}
             `;
 
             fragCode = `
                 ${getDefinesWgsl(false, options)}
+                ${fragmentDefinesCode}
                 ${wgslFS}
                 ${sharedWGSL}
-                ${fragmentDefinesCode}
                 ${options.fragmentCode}
             `;
 
@@ -204,7 +209,7 @@ class ShaderDefinitionUtils {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Map<string, string>} [defines] - A map containing key-value pairs.
      * @returns {string} The shader code for the defines.
-     * @private
+     * @ignore
      */
     static getDefinesCode(device, defines) {
         let code = '';

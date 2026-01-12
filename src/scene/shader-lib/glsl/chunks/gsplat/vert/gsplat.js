@@ -27,16 +27,13 @@ void main(void) {
         return;
     }
 
-    #ifdef GSPLAT_WORKBUFFER_DATA
-        loadSplatTextures(source);
-    #endif
-
     vec3 modelCenter = readCenter(source);
 
     SplatCenter center;
     center.modelCenterOriginal = modelCenter;
     
     modifyCenter(modelCenter);
+    modifySplatCenter(modelCenter);
     center.modelCenterModified = modelCenter;
 
     if (!initCenter(modelCenter, center)) {
@@ -74,6 +71,7 @@ void main(void) {
     #endif
 
     modifyColor(modelCenter, clr);
+    modifySplatColor(modelCenter, clr);
 
     clipCorner(corner, clr.w);
 
