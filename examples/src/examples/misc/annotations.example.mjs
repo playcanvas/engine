@@ -101,13 +101,13 @@ assetListLoader.load(() => {
         farClip: 500,
         toneMapping: pc.TONEMAP_ACES2
     });
-    camera.setPosition(0, 1.75, 8);
+    camera.setPosition(12, 8.3, 4.5);
 
     // Add camera controls
     camera.addComponent('script');
     camera.script.create(CameraControls, {
         properties: {
-            focusPoint: new pc.Vec3(0, 1.75, 0),
+            focusPoint: new pc.Vec3(-1, 1.5, 0),
             pitchRange: new pc.Vec2(-90, 0),
             sceneSize: 2,
             zoomRange: new pc.Vec2(5, 25)
