@@ -11,7 +11,11 @@ import { GSplatPlacement } from '../../../scene/gsplat-unified/gsplat-placement.
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { GSplatComponentSystem } from './system.js'
+ * @import { GSplatResourceBase } from '../../../scene/gsplat/gsplat-resource-base.js'
+ * @import { ScopeId } from '../../../platform/graphics/scope-id.js'
  * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
+ * @import { StorageBuffer } from '../../../platform/graphics/storage-buffer.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
  */
 
 /**
@@ -127,6 +131,14 @@ class GSplatComponent extends Component {
     _assetReference;
 
     /**
+     * Direct resource reference (for container splats).
+     *
+     * @type {GSplatResourceBase|null}
+     * @private
+     */
+    _resource = null;
+
+    /**
      * @type {EventHandle|null}
      * @private
      */
@@ -154,6 +166,14 @@ class GSplatComponent extends Component {
      * @private
      */
     _unified = false;
+
+    /**
+     * Per-instance shader parameters. Stores objects with scopeId and data.
+     *
+     * @type {Map<string, {scopeId: ScopeId, data: *}>}
+     * @private
+     */
+    _parameters = new Map();
 
     /**
      * Create a new GSplatComponent.
@@ -530,6 +550,36 @@ class GSplatComponent extends Component {
         return this._assetReference.id;
     }
 
+    /**
+     * Sets a GSplat resource directly (for procedural/container splats).
+     * When set, this takes precedence over the asset property.
+     *
+     * @type {GSplatResourceBase|null}
+     */
+    set resource(value) {
+        if (this._resource === value) return;
+
+        // Clean up existing
+        if (this._resource) {
+            this._onGSplatAssetRemove();
+        }
+
+        this._resource = value;
+
+        if (this._resource && this.enabled && this.entity.enabled) {
+            this._onGSplatAssetLoad();
+        }
+    }
+
+    /**
+     * Gets the GSplat resource.
+     *
+     * @type {GSplatResourceBase|null}
+     */
+    get resource() {
+        return this._resource;
+    }
+
     /** @private */
     destroyInstance() {
 
@@ -667,6 +717,8 @@ class GSplatComponent extends Component {
             this.addToLayers();
         } else if (this.asset) {
             this._onGSplatAssetAdded();
+        } else if (this._resource) {
+            this._onGSplatAssetLoad();
         }
     }
 
@@ -705,6 +757,39 @@ class GSplatComponent extends Component {
         }
     }
 
+    /**
+     * Sets a shader parameter for this gsplat instance. Parameters set here are applied
+     * during unified rendering.
+     *
+     * @param {string} name - The name of the parameter (uniform name in shader).
+     * @param {number|number[]|ArrayBufferView|Texture|StorageBuffer} data - The value for the parameter.
+     */
+    setParameter(name, data) {
+        const scopeId = this.system.app.graphicsDevice.scope.resolve(name);
+        this._parameters.set(name, { scopeId, data });
+        if (this._placement) this._placement.renderDirty = true;
+    }
+
+    /**
+     * Gets a shader parameter value previously set with {@link setParameter}.
+     *
+     * @param {string} name - The name of the parameter.
+     * @returns {number|number[]|ArrayBufferView|undefined} The parameter value, or undefined if not set.
+     */
+    getParameter(name) {
+        return this._parameters.get(name)?.data;
+    }
+
+    /**
+     * Deletes a shader parameter previously set with {@link setParameter}.
+     *
+     * @param {string} name - The name of the parameter to delete.
+     */
+    deleteParameter(name) {
+        this._parameters.delete(name);
+        if (this._placement) this._placement.renderDirty = true;
+    }
+
     _onGSplatAssetAdded() {
         if (!this._assetReference.asset) {
             return;
@@ -722,39 +807,35 @@ class GSplatComponent extends Component {
         // remove existing instance
         this.destroyInstance();
 
-        const asset = this._assetReference.asset;
+        // Get resource from either direct resource or asset
+        const resource = this._resource ?? this._assetReference.asset?.resource;
+        if (!resource) return;
 
         if (this.unified) {
 
             this._placement = null;
 
-            if (asset) {
-                this._placement = new GSplatPlacement(asset.resource, this.entity);
-                this._placement.lodDistances = this._lodDistances;
-                this._placement.splatBudget = this._splatBudget;
+            this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters);
+            this._placement.lodDistances = this._lodDistances;
+            this._placement.splatBudget = this._splatBudget;
 
-                // add placement to layers if component is enabled
-                if (this.enabled && this.entity.enabled) {
-                    this.addToLayers();
-                }
+            // add placement to layers if component is enabled
+            if (this.enabled && this.entity.enabled) {
+                this.addToLayers();
             }
 
         } else {
 
             // create new instance
-            if (asset) {
-                this.instance = new GSplatInstance(asset.resource, {
-                    material: this._materialTmp,
-                    highQualitySH: this._highQualitySH,
-                    scene: this.system.app.scene
-                });
-                this._materialTmp = null;
-            }
+            this.instance = new GSplatInstance(resource, {
+                material: this._materialTmp,
+                highQualitySH: this._highQualitySH,
+                scene: this.system.app.scene
+            });
+            this._materialTmp = null;
         }
 
-        if (asset) {
-            this.customAabb = asset.resource.aabb.clone();
-        }
+        this.customAabb = resource.aabb.clone();
     }
 
     _onGSplatAssetUnload() {

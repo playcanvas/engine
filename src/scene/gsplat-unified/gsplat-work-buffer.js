@@ -49,7 +49,12 @@ class WorkBufferRenderInfo {
             clonedDefines.set('GSPLAT_COLOR_ONLY', '');
         }
 
-        const shader = ShaderUtils.createShader(this.device, {
+        // Get custom shader chunks from material (for container support)
+        const fragmentIncludes = material.hasShaderChunks ?
+            (device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl) :
+            undefined;
+
+        const shader = ShaderUtils.createShader(device, {
             uniqueName: `SplatCopyToWorkBuffer:${key}`,
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexDefines: clonedDefines,
@@ -57,6 +62,7 @@ class WorkBufferRenderInfo {
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatCopyToWorkBufferPS,
             fragmentWGSL: wgslGsplatCopyToWorkBufferPS,
+            fragmentIncludes: fragmentIncludes,
             fragmentOutputTypes: colorOnly ?
                 [colorOutputType] :
                 [colorOutputType, 'uvec4', 'uvec2']
@@ -125,8 +131,8 @@ class GSplatWorkBuffer {
 
         // Work buffer textures format:
         // - colorTexture (RGBA16F/RGBA16U): RGBA color with alpha
-        // - splatTexture0 (RGBA32U): modelCenter.xyz (3×32-bit floats as uint) + 2×16-bit covariance halfs (covA.z, covB.z)
-        // - splatTexture1 (RG32U): 4×16-bit covariance halfs packed as (covA.xy, covB.xy)
+        // - splatTexture0 (RGBA32U): worldCenter.xyz (3×32-bit floats as uint) + worldRotation.xy (2×16-bit halfs)
+        // - splatTexture1 (RG32U): worldRotation.z + worldScale.xyz (4×16-bit halfs, w derived via sqrt)
         this.colorTexture = this.createTexture('splatColor', this.colorTextureFormat, 1, 1);
         this.splatTexture0 = this.createTexture('splatTexture0', PIXELFORMAT_RGBA32U, 1, 1);
         this.splatTexture1 = this.createTexture('splatTexture1', PIXELFORMAT_RG32U, 1, 1);

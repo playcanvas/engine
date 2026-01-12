@@ -219,10 +219,12 @@ export { ShaderChunks } from './scene/shader-lib/shader-chunks.js';
 export { Sky } from './scene/skybox/sky.js';
 
 // SCENE / SPLAT
+export { GSplatContainer } from './scene/gsplat/gsplat-container.js';
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
-export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
-export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
+export { GSplatFormat } from './scene/gsplat/gsplat-format.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
+export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
 export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
 export { GSplatSogsResource } from './scene/gsplat/gsplat-sogs-resource.js';
 

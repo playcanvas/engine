@@ -5,6 +5,7 @@ import { Debug } from '../../core/debug.js';
  * @import { GraphNode } from '../graph-node.js'
  * @import { GSplatResource } from '../gsplat/gsplat-resource.js'
  * @import { GSplatOctreeResource } from './gsplat-octree.resource.js'
+ * @import { ScopeId } from '../../platform/graphics/scope-id.js'
  * @import { Vec2 } from '../../core/math/vec2.js'
  */
 
@@ -66,16 +67,43 @@ class GSplatPlacement {
     _aabb = new BoundingBox();
 
     /**
+     * Per-instance shader parameters. Reference to the component's parameters Map.
+     *
+     * @type {Map<string, {scopeId: ScopeId, data: *}>|null}
+     */
+    parameters = null;
+
+    /**
+     * Flag indicating the splat needs to be re-rendered to work buffer.
+     *
+     * @type {boolean}
+     */
+    renderDirty = false;
+
+    /**
+     * Returns and clears the render dirty flag.
+     *
+     * @returns {boolean} True if the splat needed re-rendering.
+     */
+    consumeRenderDirty() {
+        const dirty = this.renderDirty;
+        this.renderDirty = false;
+        return dirty;
+    }
+
+    /**
      * Create a new GSplatPlacement.
      *
      * @param {GSplatResource|null} resource - The resource of the splat.
      * @param {GraphNode} node - The node that the gsplat is linked to.
-     * @param {number} lodIndex - The LOD index for this placement.
+     * @param {number} [lodIndex] - The LOD index for this placement.
+     * @param {Map<string, {scopeId: ScopeId, data: *}>|null} [parameters] - Per-instance shader parameters.
      */
-    constructor(resource, node, lodIndex = 0) {
+    constructor(resource, node, lodIndex = 0, parameters = null) {
         this.resource = resource;
         this.node = node;
         this.lodIndex = lodIndex;
+        this.parameters = parameters;
     }
 
     set aabb(aabb) {

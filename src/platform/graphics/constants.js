@@ -975,7 +975,7 @@ export const PIXELFORMAT_RGB10A2U = 75;
  * sRGB color space to store the color values
  * srgbFormat: the corresponding sRGB format (which automatically converts the sRGB value to linear)
  *
- * @type {Map<number, { name: string, size?: number, blockSize?: number, ldr?: boolean, srgb?: boolean, srgbFormat?: number, isInt?: boolean }>}
+ * @type {Map<number, { name: string, size?: number, blockSize?: number, ldr?: boolean, srgb?: boolean, srgbFormat?: number, isInt?: boolean, isUint?: boolean }>}
  * @ignore
  */
 export const pixelFormatInfo = new Map([
@@ -1003,7 +1003,7 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_RG8S,          { name: 'RG8S', size: 2 }],
     [PIXELFORMAT_RGBA8S,        { name: 'RGBA8S', size: 4 }],
     [PIXELFORMAT_RGB10A2,       { name: 'RGB10A2', size: 4 }],
-    [PIXELFORMAT_RGB10A2U,      { name: 'RGB10A2U', size: 4, isInt: true }],
+    [PIXELFORMAT_RGB10A2U,      { name: 'RGB10A2U', size: 4, isUint: true }],
     [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4 }],
     [PIXELFORMAT_DEPTH16,       { name: 'DEPTH16', size: 2 }],
     [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4 }],
@@ -1040,25 +1040,27 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_ASTC_4x4_SRGB,      { name: 'ASTC_4x4_SRGB', blockSize: 16, ldr: true, srgb: true }],
     [PIXELFORMAT_BC7_SRGBA,          { name: 'BC7_SRGBA', blockSize: 16, ldr: true, srgb: true }],
 
-    // integer formats
+    // signed integer formats
     [PIXELFORMAT_R8I,      { name: 'R8I', size: 1, isInt: true }],
-    [PIXELFORMAT_R8U,      { name: 'R8U', size: 1, isInt: true }],
     [PIXELFORMAT_R16I,     { name: 'R16I', size: 2, isInt: true }],
-    [PIXELFORMAT_R16U,     { name: 'R16U', size: 2, isInt: true }],
     [PIXELFORMAT_R32I,     { name: 'R32I', size: 4, isInt: true }],
-    [PIXELFORMAT_R32U,     { name: 'R32U', size: 4, isInt: true }],
     [PIXELFORMAT_RG8I,     { name: 'RG8I', size: 2, isInt: true }],
-    [PIXELFORMAT_RG8U,     { name: 'RG8U', size: 2, isInt: true }],
     [PIXELFORMAT_RG16I,    { name: 'RG16I', size: 4, isInt: true }],
-    [PIXELFORMAT_RG16U,    { name: 'RG16U', size: 4, isInt: true }],
     [PIXELFORMAT_RG32I,    { name: 'RG32I', size: 8, isInt: true }],
-    [PIXELFORMAT_RG32U,    { name: 'RG32U', size: 8, isInt: true }],
     [PIXELFORMAT_RGBA8I,   { name: 'RGBA8I', size: 4, isInt: true }],
-    [PIXELFORMAT_RGBA8U,   { name: 'RGBA8U', size: 4, isInt: true }],
     [PIXELFORMAT_RGBA16I,  { name: 'RGBA16I', size: 8, isInt: true }],
-    [PIXELFORMAT_RGBA16U,  { name: 'RGBA16U', size: 8, isInt: true }],
     [PIXELFORMAT_RGBA32I,  { name: 'RGBA32I', size: 16, isInt: true }],
-    [PIXELFORMAT_RGBA32U,  { name: 'RGBA32U', size: 16, isInt: true }]
+
+    // unsigned integer formats
+    [PIXELFORMAT_R8U,      { name: 'R8U', size: 1, isUint: true }],
+    [PIXELFORMAT_R16U,     { name: 'R16U', size: 2, isUint: true }],
+    [PIXELFORMAT_R32U,     { name: 'R32U', size: 4, isUint: true }],
+    [PIXELFORMAT_RG8U,     { name: 'RG8U', size: 2, isUint: true }],
+    [PIXELFORMAT_RG16U,    { name: 'RG16U', size: 4, isUint: true }],
+    [PIXELFORMAT_RG32U,    { name: 'RG32U', size: 8, isUint: true }],
+    [PIXELFORMAT_RGBA8U,   { name: 'RGBA8U', size: 4, isUint: true }],
+    [PIXELFORMAT_RGBA16U,  { name: 'RGBA16U', size: 8, isUint: true }],
+    [PIXELFORMAT_RGBA32U,  { name: 'RGBA32U', size: 16, isUint: true }]
 ]);
 
 // update this function when exposing additional compressed pixel formats
@@ -1071,7 +1073,45 @@ export const isSrgbPixelFormat = (format) => {
 };
 
 export const isIntegerPixelFormat = (format) => {
-    return pixelFormatInfo.get(format)?.isInt === true;
+    const info = pixelFormatInfo.get(format);
+    return info?.isInt === true || info?.isUint === true;
+};
+
+// Cached shader type objects
+const GLSL_FLOAT = { sampler: 'sampler2D', returnType: 'vec4' };
+const GLSL_UINT = { sampler: 'usampler2D', returnType: 'uvec4' };
+const GLSL_INT = { sampler: 'isampler2D', returnType: 'ivec4' };
+
+const WGSL_FLOAT = { textureType: 'texture_2d<f32>', returnType: 'vec4f' };
+const WGSL_UINT = { textureType: 'texture_2d<u32>', returnType: 'vec4u' };
+const WGSL_INT = { textureType: 'texture_2d<i32>', returnType: 'vec4i' };
+
+/**
+ * Returns GLSL shader type info for the given pixel format.
+ *
+ * @param {number} format - The pixel format constant.
+ * @returns {{ sampler: string, returnType: string }} GLSL sampler and return type.
+ * @ignore
+ */
+export const getGlslShaderType = (format) => {
+    const info = pixelFormatInfo.get(format);
+    if (info?.isUint) return GLSL_UINT;
+    if (info?.isInt) return GLSL_INT;
+    return GLSL_FLOAT;
+};
+
+/**
+ * Returns WGSL shader type info for the given pixel format.
+ *
+ * @param {number} format - The pixel format constant.
+ * @returns {{ textureType: string, returnType: string }} WGSL texture type and return type.
+ * @ignore
+ */
+export const getWgslShaderType = (format) => {
+    const info = pixelFormatInfo.get(format);
+    if (info?.isUint) return WGSL_UINT;
+    if (info?.isInt) return WGSL_INT;
+    return WGSL_FLOAT;
 };
 
 /**
