@@ -3,7 +3,7 @@ import { PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { GSplatFormat } from './gsplat-format.js';
 
-class GSplatSogsResource extends GSplatResourceBase {
+class GSplatSogResource extends GSplatResourceBase {
     constructor(device, gsplatData) {
         super(device, gsplatData);
 
@@ -24,8 +24,8 @@ class GSplatSogsResource extends GSplatResourceBase {
 
         // Create format with streams and shader chunk include
         this.format = new GSplatFormat(device, streams, {
-            readGLSL: '#include "gsplatSogsVS"',
-            readWGSL: '#include "gsplatSogsVS"'
+            readGLSL: '#include "gsplatSogVS"',
+            readWGSL: '#include "gsplatSogVS"'
         });
     }
 
@@ -94,4 +94,4 @@ class GSplatSogsResource extends GSplatResourceBase {
     }
 }
 
-export { GSplatSogsResource };
+export { GSplatSogResource };

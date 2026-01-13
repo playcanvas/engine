@@ -225,8 +225,8 @@ export { GSplatFormat } from './scene/gsplat/gsplat-format.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
 export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
-export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
-export { GSplatSogsResource } from './scene/gsplat/gsplat-sogs-resource.js';
+export { GSplatSogData } from './scene/gsplat/gsplat-sog-data.js';
+export { GSplatSogResource } from './scene/gsplat/gsplat-sog-resource.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';

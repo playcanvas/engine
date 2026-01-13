@@ -1,4 +1,4 @@
-// SOGS GSplat format - work variables, helpers, and read functions
+// SOG GSplat format - work variables, helpers, and read functions
 // packedTexture is auto-generated from GSplatFormat streams
 export default /* wgsl */`
 #include "gsplatPackingPS"
@@ -71,5 +71,5 @@ fn getScale() -> vec3f {
     return exp(mix(vec3f(uniform.scales_mins), vec3f(uniform.scales_maxs), sdata));
 }
 
-#include "gsplatSogsSHVS"
+#include "gsplatSogSHVS"
 `;

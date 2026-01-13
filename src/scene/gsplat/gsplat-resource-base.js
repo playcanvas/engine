@@ -13,7 +13,7 @@ import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatData } from './gsplat-data.js'
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
- * @import { GSplatSogsData } from './gsplat-sogs-data.js'
+ * @import { GSplatSogData } from './gsplat-sog-data.js'
  * @import { GSplatFormat } from './gsplat-format.js'
  */
 
@@ -29,7 +29,7 @@ class GSplatResourceBase {
     /** @type {GraphicsDevice} */
     device;
 
-    /** @type {GSplatData | GSplatCompressedData | GSplatSogsData} */
+    /** @type {GSplatData | GSplatCompressedData | GSplatSogData} */
     gsplatData;
 
     /** @type {Float32Array} */

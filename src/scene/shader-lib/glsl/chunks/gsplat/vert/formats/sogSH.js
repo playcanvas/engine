@@ -1,4 +1,4 @@
-// Spherical Harmonics for SOGS GSplat format
+// Spherical Harmonics for SOG GSplat format
 export default /* glsl */`
 #if SH_BANDS > 0
 uniform highp sampler2D packedShN;

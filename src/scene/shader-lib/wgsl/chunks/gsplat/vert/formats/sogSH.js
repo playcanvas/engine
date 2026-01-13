@@ -1,4 +1,4 @@
-// Spherical Harmonics for SOGS GSplat format
+// Spherical Harmonics for SOG GSplat format
 export default /* wgsl */`
 #if SH_BANDS > 0
 var packedShN: texture_2d<f32>;
