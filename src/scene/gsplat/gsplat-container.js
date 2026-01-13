@@ -4,7 +4,6 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { ShaderMaterial } from '../materials/shader-material.js'
  * @import { GSplatFormat } from './gsplat-format.js'
  */
@@ -16,21 +15,6 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  * @category Graphics
  */
 class GSplatContainer extends GSplatResourceBase {
-    /**
-     * The format descriptor for this container.
-     *
-     * @type {GSplatFormat}
-     */
-    format;
-
-    /**
-     * Map of texture names to Texture instances.
-     *
-     * @type {Map<string, Texture>}
-     * @ignore
-     */
-    textures = new Map();
-
     /**
      * Number of splats in this container.
      *
@@ -64,6 +48,7 @@ class GSplatContainer extends GSplatResourceBase {
 
         // Allocate textures based on format streams
         const size = this.evalTextureSize(numSplats);
+        this.textureSize = size.x;
         for (const stream of format.streams) {
             const texture = this.createTexture(stream.name, stream.format, size);
             this.textures.set(stream.name, texture);
@@ -103,24 +88,12 @@ class GSplatContainer extends GSplatResourceBase {
     }
 
     /**
-     * Gets a texture by stream name.
-     *
-     * @param {string} name - The name of the stream.
-     * @returns {Texture|undefined} The texture, or undefined if not found.
-     */
-    getTexture(name) {
-        return this.textures.get(name);
-    }
-
-    /**
      * Configures material defines for this container.
      *
      * @param {Map<string, string>} defines - The defines map to configure.
      * @ignore
      */
     configureMaterialDefines(defines) {
-        // Flag that this is a container - shader will use container read path
-        defines.set('GSPLAT_CONTAINER', '');
         // Disable spherical harmonics for containers
         defines.set('SH_BANDS', '0');
     }
@@ -132,22 +105,17 @@ class GSplatContainer extends GSplatResourceBase {
      * @ignore
      */
     configureMaterial(material) {
-        // Set defines
-        this.configureMaterialDefines(material.defines);
+        // Call base to set defines, bind textures, and set textureSize
+        super.configureMaterial(material);
 
-        // Register format's shader chunks as includes
+        // Inject format chunks under container-specific names (used by gsplatContainerDeclVS/ReadVS)
         const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
         chunks.set('gsplatContainerDeclarationsVS', this.format.getDeclarations());
-        chunks.set('gsplatContainerReadVS', this.format.getReadCode());
+        chunks.set('gsplatContainerUserReadVS', this.format.getReadCode());
 
-        // Bind all textures from format streams
-        for (const [name, texture] of this.textures) {
-            material.setParameter(name, texture);
-        }
-
-        // Set texture size for load functions
-        const size = this.evalTextureSize(this._numSplats);
-        material.setParameter('splatTextureSize', size.x);
+        // Main entry points include the container wrapper chunks
+        chunks.set('gsplatDeclarationsVS', '#include "gsplatContainerDeclVS"');
+        chunks.set('gsplatReadVS', '#include "gsplatContainerReadVS"');
     }
 }
 

@@ -5,6 +5,7 @@ import {
 } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
+import { GSplatFormat } from '../gsplat/gsplat-format.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { math } from '../../core/math/math.js';
 
@@ -52,6 +53,9 @@ class GSplatRenderer {
 
     /** @type {boolean} */
     forceCopyMaterial = true;
+
+    /** @type {GSplatFormat} */
+    _format;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -149,9 +153,18 @@ class GSplatRenderer {
     configureMaterial() {
         const { device, workBuffer } = this;
 
-        // input format
-        this._material.setDefine('GSPLAT_WORKBUFFER_DATA', true);
+        // Create and cache format that includes work buffer reading chunks
+        this._format = new GSplatFormat(device, [], {
+            readGLSL: '#include "gsplatWorkBufferVS"',
+            readWGSL: '#include "gsplatWorkBufferVS"'
+        });
+
+        // Inject format's shader chunks
+        this._injectFormatChunks();
+
+        // Set defines
         this._material.setDefine('STORAGE_ORDER', device.isWebGPU);
+        this._material.setDefine('SH_BANDS', '0');
 
         // Check if using RGBA16U format (fallback for when RGBA16F not supported)
         const isColorUint = workBuffer.colorTextureFormat === PIXELFORMAT_RGBA16U;
@@ -161,7 +174,6 @@ class GSplatRenderer {
         this._material.setParameter('splatColor', workBuffer.colorTexture);
         this._material.setParameter('splatTexture0', workBuffer.splatTexture0);
         this._material.setParameter('splatTexture1', workBuffer.splatTexture1);
-        this._material.setDefine('SH_BANDS', '0');
 
         // set instance properties
         const dither = false;
@@ -178,6 +190,17 @@ class GSplatRenderer {
         this._material.blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
         this._material.depthWrite = !!dither;
         this._material.update();
+    }
+
+    /**
+     * Injects format shader chunks into the material.
+     * Called during initialization and after copying settings from user material.
+     * @private
+     */
+    _injectFormatChunks() {
+        const chunks = this.device.isWebGPU ? this._material.shaderChunks.wgsl : this._material.shaderChunks.glsl;
+        chunks.set('gsplatDeclarationsVS', this._format.getDeclarations());
+        chunks.set('gsplatReadVS', this._format.getReadCode());
     }
 
     update(count, textureSize) {
@@ -260,6 +283,9 @@ class GSplatRenderer {
         if (sourceMaterial.hasShaderChunks) {
             this._material.shaderChunks.copy(sourceMaterial.shaderChunks);
         }
+
+        // Re-inject format chunks that may have been overwritten by copy
+        this._injectFormatChunks();
 
         this._material.update();
     }

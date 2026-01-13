@@ -3,6 +3,7 @@ import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
+import { GSplatFormat } from './gsplat-format.js';
 
 /**
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
@@ -20,21 +21,6 @@ const strideCopy = (target, targetStride, src, srcStride, numEntries) => {
 };
 
 class GSplatCompressedResource extends GSplatResourceBase {
-    /** @type {Texture} */
-    packedTexture;
-
-    /** @type {Texture} */
-    chunkTexture;
-
-    /** @type {Texture?} */
-    shTexture0;
-
-    /** @type {Texture?} */
-    shTexture1;
-
-    /** @type {Texture?} */
-    shTexture2;
-
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatCompressedData} gsplatData - The splat data.
@@ -48,14 +34,17 @@ class GSplatCompressedResource extends GSplatResourceBase {
         gsplatData.getChunks(this.chunks);
 
         // initialize packed data
-        this.packedTexture = this.createTexture('packedData', PIXELFORMAT_RGBA32U, this.evalTextureSize(numSplats), vertexData);
+        const packedSize = this.evalTextureSize(numSplats);
+        this.textureSize = packedSize.x;
+        this.textures.set('packedTexture', this.createTexture('packedTexture', PIXELFORMAT_RGBA32U, packedSize, vertexData));
 
         // initialize chunk data
         const chunkTextureSize = this.evalTextureSize(numChunks);
         chunkTextureSize.x *= 5;
 
-        this.chunkTexture = this.createTexture('chunkData', PIXELFORMAT_RGBA32F, chunkTextureSize);
-        const chunkTextureData = this.chunkTexture.lock();
+        const chunkTexture = this.createTexture('chunkTexture', PIXELFORMAT_RGBA32F, chunkTextureSize);
+        this.textures.set('chunkTexture', chunkTexture);
+        const chunkTextureData = chunkTexture.lock();
         strideCopy(chunkTextureData, 20, chunkData, chunkSize, numChunks);
 
         if (chunkSize === 12) {
@@ -67,45 +56,38 @@ class GSplatCompressedResource extends GSplatResourceBase {
             }
         }
 
-        this.chunkTexture.unlock();
+        chunkTexture.unlock();
 
         // load optional spherical harmonics data
         if (shBands > 0) {
             const size = this.evalTextureSize(numSplats);
-            this.shTexture0 = this.createTexture('shTexture0', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData0.buffer));
-            this.shTexture1 = this.createTexture('shTexture1', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData1.buffer));
-            this.shTexture2 = this.createTexture('shTexture2', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData2.buffer));
-        } else {
-            this.shTexture0 = null;
-            this.shTexture1 = null;
-            this.shTexture2 = null;
+            this.textures.set('shTexture0', this.createTexture('shTexture0', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData0.buffer)));
+            this.textures.set('shTexture1', this.createTexture('shTexture1', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData1.buffer)));
+            this.textures.set('shTexture2', this.createTexture('shTexture2', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData2.buffer)));
         }
+
+        // Define streams for textures that use splatUV (chunkTexture is manual - uses custom UV)
+        const streams = [
+            { name: 'packedTexture', format: PIXELFORMAT_RGBA32U }
+        ];
+
+        // Create format with streams and shader chunk include
+        this.format = new GSplatFormat(device, streams, {
+            readGLSL: '#include "gsplatCompressedVS"',
+            readWGSL: '#include "gsplatCompressedVS"'
+        });
     }
 
     destroy() {
-        this.packedTexture?.destroy();
-        this.chunkTexture?.destroy();
-        this.shTexture0?.destroy();
-        this.shTexture1?.destroy();
-        this.shTexture2?.destroy();
+        for (const texture of this.textures.values()) {
+            texture.destroy();
+        }
+        this.textures.clear();
         super.destroy();
     }
 
     configureMaterialDefines(defines) {
-        defines.set('GSPLAT_COMPRESSED_DATA', true);
-        defines.set('SH_BANDS', this.shTexture0 ? 3 : 0);
-    }
-
-    configureMaterial(material) {
-        this.configureMaterialDefines(material.defines);
-
-        material.setParameter('packedTexture', this.packedTexture);
-        material.setParameter('chunkTexture', this.chunkTexture);
-        if (this.shTexture0) {
-            material.setParameter('shTexture0', this.shTexture0);
-            material.setParameter('shTexture1', this.shTexture1);
-            material.setParameter('shTexture2', this.shTexture2);
-        }
+        defines.set('SH_BANDS', this.textures.has('shTexture0') ? 3 : 0);
     }
 
     /**

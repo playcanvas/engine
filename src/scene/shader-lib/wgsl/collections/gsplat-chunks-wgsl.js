@@ -1,53 +1,53 @@
 import gsplatCenterVS from '../chunks/gsplat/vert/gsplatCenter.js';
-import gsplatColorVS from '../chunks/gsplat/vert/gsplatColor.js';
 import gsplatCommonVS from '../chunks/gsplat/vert/gsplatCommon.js';
-import gsplatCompressedDataVS from '../chunks/gsplat/vert/gsplatCompressedData.js';
-import gsplatCompressedSHVS from '../chunks/gsplat/vert/gsplatCompressedSH.js';
-import gsplatContainerDataVS from '../chunks/gsplat/vert/gsplatContainerData.js';
 import gsplatCustomizeVS from '../chunks/gsplat/vert/gsplatCustomize.js';
 import gsplatEvalSHVS from '../chunks/gsplat/vert/gsplatEvalSH.js';
 import gsplatHelpersVS from '../chunks/gsplat/vert/gsplatHelpers.js';
 import gsplatModifyVS from '../chunks/gsplat/vert/gsplatModify.js';
 import gsplatQuatToMat3VS from '../chunks/gsplat/vert/gsplatQuatToMat3.js';
-import gsplatSogsColorVS from '../chunks/gsplat/vert/gsplatSogsColor.js';
-import gsplatSogsDataVS from '../chunks/gsplat/vert/gsplatSogsData.js';
-import gsplatSogsSHVS from '../chunks/gsplat/vert/gsplatSogsSH.js';
-import gsplatSourceFormatVS from '../chunks/gsplat/vert/gsplatSourceFormat.js';
 import gsplatStructsVS from '../chunks/gsplat/vert/gsplatStructs.js';
 import gsplatCornerVS from '../chunks/gsplat/vert/gsplatCorner.js';
-import gsplatDataVS from '../chunks/gsplat/vert/gsplatData.js';
 import gsplatOutputVS from '../chunks/gsplat/vert/gsplatOutput.js';
 import gsplatPS from '../chunks/gsplat/frag/gsplat.js';
-import gsplatSHVS from '../chunks/gsplat/vert/gsplatSH.js';
 import gsplatSourceVS from '../chunks/gsplat/vert/gsplatSource.js';
 import gsplatVS from '../chunks/gsplat/vert/gsplat.js';
-import gsplatWorkBufferVS from '../chunks/gsplat/vert/gsplatWorkBuffer.js';
+import gsplatWorkBufferVS from '../chunks/gsplat/vert/formats/workBuffer.js';
 import gsplatPackingPS from '../chunks/gsplat/frag/gsplatPacking.js';
+import gsplatFormatVS from '../chunks/gsplat/vert/gsplatFormat.js';
+
+// Format-specific chunks (merged decl + read)
+import gsplatUncompressedVS from '../chunks/gsplat/vert/formats/uncompressed.js';
+import gsplatUncompressedSHVS from '../chunks/gsplat/vert/formats/uncompressedSH.js';
+import gsplatCompressedVS from '../chunks/gsplat/vert/formats/compressed.js';
+import gsplatCompressedSHVS from '../chunks/gsplat/vert/formats/compressedSH.js';
+import gsplatSogsVS from '../chunks/gsplat/vert/formats/sogs.js';
+import gsplatSogsSHVS from '../chunks/gsplat/vert/formats/sogsSH.js';
+import gsplatContainerDeclVS from '../chunks/gsplat/vert/formats/containerDecl.js';
+import gsplatContainerReadVS from '../chunks/gsplat/vert/formats/containerRead.js';
 
 export const gsplatChunksWGSL = {
     gsplatCenterVS,
-    gsplatContainerDataVS,
     gsplatCornerVS,
-    gsplatColorVS,
     gsplatCommonVS,
-    gsplatCompressedDataVS,
-    gsplatCompressedSHVS,
     gsplatCustomizeVS,
     gsplatEvalSHVS,
     gsplatHelpersVS,
     gsplatModifyVS,
-    gsplatSourceFormatVS,
     gsplatStructsVS,
     gsplatQuatToMat3VS,
-    gsplatSogsColorVS,
-    gsplatSogsDataVS,
-    gsplatSogsSHVS,
-    gsplatDataVS,
     gsplatOutputVS,
     gsplatPS,
-    gsplatSHVS,
     gsplatSourceVS,
     gsplatVS,
     gsplatWorkBufferVS,
-    gsplatPackingPS
+    gsplatPackingPS,
+    gsplatFormatVS,
+    gsplatUncompressedVS,
+    gsplatUncompressedSHVS,
+    gsplatCompressedVS,
+    gsplatCompressedSHVS,
+    gsplatSogsVS,
+    gsplatSogsSHVS,
+    gsplatContainerDeclVS,
+    gsplatContainerReadVS
 };

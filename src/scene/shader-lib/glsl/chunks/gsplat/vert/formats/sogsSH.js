@@ -1,4 +1,6 @@
+// Spherical Harmonics for SOGS GSplat format
 export default /* glsl */`
+#if SH_BANDS > 0
 uniform highp sampler2D packedShN;
 
 uniform float shN_mins;
@@ -18,4 +20,5 @@ void readSHData(in SplatSource source, out vec3 sh[SH_COEFFS], out float scale) 
 
     scale = 1.0;
 }
+#endif
 `;

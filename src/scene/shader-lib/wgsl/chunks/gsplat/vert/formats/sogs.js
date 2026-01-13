@@ -1,20 +1,37 @@
+// SOGS GSplat format - work variables, helpers, and read functions
+// packedTexture is auto-generated from GSplatFormat streams
 export default /* wgsl */`
 #include "gsplatPackingPS"
 
-var packedTexture: texture_2d<u32>;
-
+// uniform declarations for dequantization
 uniform means_mins: vec3f;
 uniform means_maxs: vec3f;
 
 uniform scales_mins: f32;
 uniform scales_maxs: f32;
 
+// SH0 color uniforms
+uniform sh0_mins: f32;
+uniform sh0_maxs: f32;
+
+// SH0 texture for color
+var packedSh0: texture_2d<f32>;
+
+// SH_C0 coefficient for 0th degree spherical harmonic
+const SH_C0: f32 = 0.28209479177387814;
+
+// work value
 var<private> packedSample: vec4<u32>;
+
+const norm: f32 = sqrt(2.0);
 
 // read the model-space center of the gaussian
 fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
+    // Initialize splatUV for generated load functions
+    splatUV = (*source).uv;
 
-    packedSample = textureLoad(packedTexture, source.uv, 0);
+    // read the packed texture sample using generated load function
+    packedSample = loadPackedTexture();
 
     let l = unpack8888(packedSample.x).xyz;
     let u = unpack8888(packedSample.y).xyz;
@@ -24,7 +41,11 @@ fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
-const norm: f32 = sqrt(2.0);
+fn readColor(source: ptr<function, SplatSource>) -> vec4f {
+    let clr = mix(vec3f(uniform.sh0_mins), vec3f(uniform.sh0_maxs), unpack111110(pack8888(textureLoad(packedSh0, (*source).uv, 0))));
+    let alpha = f32(packedSample.z & 0xffu) / 255.0;
+    return vec4f(vec3f(0.5) + clr * SH_C0, alpha);
+}
 
 fn getRotation() -> vec4f {
     let qdata = unpack8888(packedSample.z).xyz;
@@ -49,4 +70,6 @@ fn getScale() -> vec3f {
     let sdata = unpack101010(packedSample.w >> 2u);
     return exp(mix(vec3f(uniform.scales_mins), vec3f(uniform.scales_maxs), sdata));
 }
+
+#include "gsplatSogsSHVS"
 `;

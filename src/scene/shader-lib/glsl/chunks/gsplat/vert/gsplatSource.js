@@ -3,7 +3,6 @@ attribute vec3 vertex_position;         // xy: cornerUV, z: render order offset
 attribute uint vertex_id_attrib;        // render order base
 
 uniform uint numSplats;                 // total number of splats
-uniform uint splatTextureSize;          // texture size for splat data
 uniform highp usampler2D splatOrder;    // per-splat index to source gaussian
 
 // initialize the splat source structure

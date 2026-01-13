@@ -1,4 +1,5 @@
 import { getGlslShaderType, getWgslShaderType } from '../../platform/graphics/constants.js';
+import { hashCode } from '../../core/hash.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -31,52 +32,55 @@ class GSplatFormat {
     streams;
 
     /**
-     * User-provided GLSL code for reading splat data.
+     * User-provided code for reading splat data (GLSL or WGSL based on device).
      *
      * @type {string}
      * @private
      */
-    _readGLSL;
+    _read;
 
     /**
-     * User-provided WGSL code for reading splat data.
+     * User-provided additional declarations (GLSL or WGSL based on device).
      *
      * @type {string}
      * @private
      */
-    _readWGSL;
+    _declarations;
 
     /**
-     * User-provided additional GLSL declarations (e.g. custom uniforms).
-     *
-     * @type {string}
-     * @private
-     */
-    _userDeclarationsGLSL;
-
-    /**
-     * User-provided additional WGSL declarations (e.g. custom uniforms).
-     *
-     * @type {string}
-     * @private
-     */
-    _userDeclarationsWGSL;
-
-    /**
-     * Cached GLSL declarations.
+     * Cached declarations (generated + user-provided).
      *
      * @type {string|null}
      * @private
      */
-    _declarationsGLSL = null;
+    _cachedDeclarations = null;
 
     /**
-     * Cached WGSL declarations.
+     * Cached hash value.
      *
-     * @type {string|null}
+     * @type {number|undefined}
      * @private
      */
-    _declarationsWGSL = null;
+    _hash;
+
+    /**
+     * Returns a hash of this format's configuration. Used for shader caching.
+     * Computed from raw inputs to avoid generating shader code just for the hash.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get hash() {
+        if (this._hash === undefined) {
+            const streamsStr = this.streams.map(s => `${s.name}:${s.format}`).join(',');
+            this._hash = hashCode(
+                streamsStr +
+                this._read +
+                this._declarations
+            );
+        }
+        return this._hash;
+    }
 
     /**
      * Creates a new GSplatFormat instance.
@@ -97,114 +101,67 @@ class GSplatFormat {
         // Deep copy streams
         this.streams = streams.map(s => ({ name: s.name, format: s.format }));
 
-        this._readGLSL = options.readGLSL ?? '';
-        this._readWGSL = options.readWGSL ?? '';
-        this._userDeclarationsGLSL = options.declarationsGLSL ?? '';
-        this._userDeclarationsWGSL = options.declarationsWGSL ?? '';
+        // Pick the appropriate shader language based on device
+        const isWebGPU = device.isWebGPU;
+        this._read = isWebGPU ? (options.readWGSL ?? '') : (options.readGLSL ?? '');
+        this._declarations = isWebGPU ? (options.declarationsWGSL ?? '') : (options.declarationsGLSL ?? '');
     }
 
     /**
-     * Generates GLSL declarations (texture uniforms + read functions).
-     *
-     * @returns {string} GLSL shader code for declarations.
-     * @ignore
-     */
-    getDeclarationsGLSL() {
-        if (this._declarationsGLSL === null) {
-            const lines = ['uniform uint splatTextureSize;\nivec2 splatUV;\n'];
-
-            // Add user-provided declarations (e.g. custom uniforms)
-            if (this._userDeclarationsGLSL) {
-                lines.push(`${this._userDeclarationsGLSL}\n`);
-            }
-
-            // Generate texture uniforms
-            for (const stream of this.streams) {
-                const info = getGlslShaderType(stream.format);
-                lines.push(`uniform highp ${info.sampler} ${stream.name};`);
-            }
-
-            // Generate load functions
-            for (const stream of this.streams) {
-                const info = getGlslShaderType(stream.format);
-                lines.push(`${info.returnType} load${stream.name}() { return texelFetch(${stream.name}, splatUV, 0); }`);
-            }
-
-            this._declarationsGLSL = lines.join('\n');
-        }
-        return this._declarationsGLSL;
-    }
-
-    /**
-     * Generates WGSL declarations (texture uniforms + read functions).
-     *
-     * @returns {string} WGSL shader code for declarations.
-     * @ignore
-     */
-    getDeclarationsWGSL() {
-        if (this._declarationsWGSL === null) {
-            const lines = ['uniform splatTextureSize: u32;\nvar<private> splatUV: vec2i;\n'];
-
-            // Add user-provided declarations (e.g. custom uniforms)
-            if (this._userDeclarationsWGSL) {
-                lines.push(`${this._userDeclarationsWGSL}\n`);
-            }
-
-            // Generate texture uniforms
-            for (const stream of this.streams) {
-                const info = getWgslShaderType(stream.format);
-                lines.push(`var ${stream.name}: ${info.textureType};`);
-            }
-
-            // Generate load functions
-            for (const stream of this.streams) {
-                const info = getWgslShaderType(stream.format);
-                lines.push(`fn load${stream.name}() -> ${info.returnType} { return textureLoad(${stream.name}, splatUV, 0); }`);
-            }
-
-            this._declarationsWGSL = lines.join('\n');
-        }
-        return this._declarationsWGSL;
-    }
-
-    /**
-     * Returns declarations for the appropriate shader language based on device.
+     * Generates declarations (texture uniforms + load functions).
      *
      * @returns {string} Shader code for declarations.
      * @ignore
      */
     getDeclarations() {
-        return this._device.isWebGPU ? this.getDeclarationsWGSL() : this.getDeclarationsGLSL();
+        if (this._cachedDeclarations === null) {
+            const isWebGPU = this._device.isWebGPU;
+            const lines = [];
+
+            // Add user-provided declarations (e.g. custom uniforms)
+            if (this._declarations) {
+                lines.push(`${this._declarations}\n`);
+            }
+
+            if (isWebGPU) {
+                // WGSL: Generate texture uniforms and load functions
+                for (const stream of this.streams) {
+                    const info = getWgslShaderType(stream.format);
+                    lines.push(`var ${stream.name}: ${info.textureType};`);
+                }
+
+                for (const stream of this.streams) {
+                    const info = getWgslShaderType(stream.format);
+                    const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
+                    lines.push(`fn load${funcName}() -> ${info.returnType} { return textureLoad(${stream.name}, splatUV, 0); }`);
+                }
+            } else {
+                // GLSL: Generate texture uniforms and load functions
+                for (const stream of this.streams) {
+                    const info = getGlslShaderType(stream.format);
+                    lines.push(`uniform highp ${info.sampler} ${stream.name};`);
+                }
+
+                for (const stream of this.streams) {
+                    const info = getGlslShaderType(stream.format);
+                    const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
+                    lines.push(`${info.returnType} load${funcName}() { return texelFetch(${stream.name}, splatUV, 0); }`);
+                }
+            }
+
+            this._cachedDeclarations = lines.join('\n');
+        }
+        return this._cachedDeclarations;
     }
 
     /**
-     * Returns the GLSL read code (user's readGLSL).
-     *
-     * @returns {string} GLSL code that reads streams and sets splat attributes.
-     * @ignore
-     */
-    getReadCodeGLSL() {
-        return this._readGLSL;
-    }
-
-    /**
-     * Returns the WGSL read code (user's readWGSL).
-     *
-     * @returns {string} WGSL code that reads streams and sets splat attributes.
-     * @ignore
-     */
-    getReadCodeWGSL() {
-        return this._readWGSL;
-    }
-
-    /**
-     * Returns read code for the appropriate shader language based on device.
+     * Returns the read code.
      *
      * @returns {string} Shader code for reading splat data.
      * @ignore
      */
     getReadCode() {
-        return this._device.isWebGPU ? this.getReadCodeWGSL() : this.getReadCodeGLSL();
+        return this._read;
     }
 }
 

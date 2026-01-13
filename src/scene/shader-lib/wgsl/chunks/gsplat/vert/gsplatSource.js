@@ -3,7 +3,6 @@ attribute vertex_position: vec3f;         // xy: cornerUV, z: render order offse
 attribute vertex_id_attrib: u32;          // render order base
 
 uniform numSplats: u32;                   // total number of splats
-uniform splatTextureSize: u32;            // texture size for splat data
 
 #ifdef STORAGE_ORDER
     var<storage, read> splatOrder: array<u32>;

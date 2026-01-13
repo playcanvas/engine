@@ -7,7 +7,8 @@ export default /* glsl */`
 #include "gsplatCenterVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
-#include "gsplatSourceFormatVS"
+#include "gsplatFormatVS"
+#include "gsplatReadVS"
 
 uniform int uStartLine;      // Start row in destination texture
 uniform int uViewportWidth;  // Width of the destination viewport in pixels
@@ -56,14 +57,8 @@ void main(void) {
             uint originalIndex = uint(targetIndex);
         #endif
         
-        // source texture size
-        #if defined(GSPLAT_CONTAINER)
-            uint srcSize = splatTextureSize;
-        #elif defined(GSPLAT_SOGS_DATA) || defined(GSPLAT_COMPRESSED_DATA)
-            uint srcSize = uint(textureSize(packedTexture, 0).x);
-        #else
-            uint srcSize = uint(textureSize(splatColor, 0).x);
-        #endif
+        // source texture size (set by all resource types via splatTextureSize uniform)
+        uint srcSize = splatTextureSize;
         
         // Create SplatSource used to sample splat data textures
         SplatSource source;

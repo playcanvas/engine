@@ -1,3 +1,4 @@
+// Work buffer format - reads from sorted work buffer in unified rendering mode
 export default /* glsl */`
 uniform highp usampler2D splatTexture0;
 uniform highp usampler2D splatTexture1;
