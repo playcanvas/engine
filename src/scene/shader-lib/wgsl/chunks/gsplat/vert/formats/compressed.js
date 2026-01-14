@@ -1,8 +1,11 @@
+// Compressed GSplat format - work variables, helpers, and read functions
+// packedTexture is auto-generated from GSplatFormat streams
+// chunkTexture uses custom UV calculation and must be declared manually
 export default /* wgsl */`
 #include "gsplatPackingPS"
 
-var packedTexture: texture_2d<u32>;
-var chunkTexture: texture_2d<uff>;
+// manual texture declaration - uses custom UV, not splatUV
+var chunkTexture: texture_2d<f32>;
 
 // work values
 var<private> chunkDataA: vec4f;    // x: min_x, y: min_y, z: min_z, w: max_x
@@ -33,18 +36,23 @@ fn unpackRotation(bits: u32) -> vec4f {
 
 // read center
 fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
+    // Initialize splatUV for generated load functions
+    splatUV = (*source).uv;
+
     let tex_size_u = textureDimensions(chunkTexture, 0);
     let w: u32 = tex_size_u.x / 5u;
     let chunkId: u32 = source.id / 256u;
     let chunkUV: vec2<i32> = vec2<i32>(i32((chunkId % w) * 5u), i32(chunkId / w));
 
-    // read chunk and packed compressed data
+    // read chunk data with custom UV (manual texture access)
     chunkDataA = textureLoad(chunkTexture, chunkUV + vec2<i32>(0, 0), 0);
     chunkDataB = textureLoad(chunkTexture, chunkUV + vec2<i32>(1, 0), 0);
     chunkDataC = textureLoad(chunkTexture, chunkUV + vec2<i32>(2, 0), 0);
     chunkDataD = textureLoad(chunkTexture, chunkUV + vec2<i32>(3, 0), 0);
     chunkDataE = textureLoad(chunkTexture, chunkUV + vec2<i32>(4, 0), 0);
-    packedData = textureLoad(packedTexture, source.uv, 0);
+
+    // read packed data using generated load function (uses splatUV)
+    packedData = loadPackedTexture();
 
     return mix(chunkDataA.xyz, vec3f(chunkDataA.w, chunkDataB.xy), unpack111011(packedData.x));
 }
@@ -61,4 +69,6 @@ fn getRotation() -> vec4f {
 fn getScale() -> vec3f {
     return exp(mix(vec3f(chunkDataB.zw, chunkDataC.x), chunkDataC.yzw, unpack111011(packedData.z)));
 }
+
+#include "gsplatCompressedSHVS"
 `;

@@ -21,7 +21,7 @@ import { GSplatPlacement } from '../../../scene/gsplat-unified/gsplat-placement.
 /**
  * The GSplatComponent enables an {@link Entity} to render 3D Gaussian Splats. Splats are always
  * loaded from {@link Asset}s rather than being created programmatically. The asset type is
- * `gsplat` which supports multiple file formats including `.ply`, `.sog`, `.meta.json` (SOGS
+ * `gsplat` which supports multiple file formats including `.ply`, `.sog`, `.meta.json` (SOG
  * format), and `.lod-meta.json` (streaming LOD format).
  *
  * You should never need to use the GSplatComponent constructor directly. To add an
@@ -314,13 +314,13 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets whether to use the high quality or the approximate (but fast) spherical-harmonic calculation when rendering SOGS data.
+     * Sets whether to use the high quality or the approximate (but fast) spherical-harmonic calculation when rendering SOG data.
      *
      * The low quality approximation evaluates the scene's spherical harmonic contributions
      * along the camera's Z-axis instead of using each gaussian's view vector. This results
      * in gaussians being accurate at the center of the screen and becoming less accurate
      * as they appear further from the center. This is a good trade-off for performance
-     * when rendering large SOGS datasets, especially on mobile devices.
+     * when rendering large SOG datasets, especially on mobile devices.
      *
      * Defaults to false.
      *
@@ -334,7 +334,7 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Gets whether the high quality (true) or the fast approximate (false) spherical-harmonic calculation is used when rendering SOGS data.
+     * Gets whether the high quality (true) or the fast approximate (false) spherical-harmonic calculation is used when rendering SOG data.
      *
      * @type {boolean}
      */

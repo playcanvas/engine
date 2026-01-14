@@ -1,4 +1,6 @@
+// Spherical Harmonics for SOG GSplat format
 export default /* wgsl */`
+#if SH_BANDS > 0
 var packedShN: texture_2d<f32>;
 
 uniform shN_mins: f32;
@@ -18,4 +20,5 @@ fn readSHData(source: ptr<function, SplatSource>, sh: ptr<function, array<vec3f,
 
     *scale = 1.0;
 }
+#endif
 `;

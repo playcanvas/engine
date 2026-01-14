@@ -2,8 +2,8 @@ import { Asset } from '../../framework/asset/asset.js';
 import { Debug } from '../../core/debug.js';
 import { http, Http } from '../../platform/net/http.js';
 import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
-import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
-import { GSplatSogsResource } from '../../scene/gsplat/gsplat-sogs-resource.js';
+import { GSplatSogData } from '../../scene/gsplat/gsplat-sog-data.js';
+import { GSplatSogResource } from '../../scene/gsplat/gsplat-sog-resource.js';
 
 // combine the progress updates from multiple assets
 // and fire progress events on the target
@@ -81,7 +81,7 @@ const upgradeMeta = (meta) => {
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
  */
 
-class SogsParser {
+class SogParser {
     /** @type {AppBase} */
     app;
 
@@ -185,7 +185,7 @@ class SogsParser {
         }
 
         // construct the gsplat resource
-        const data = new GSplatSogsData();
+        const data = new GSplatSogData();
         data.url = url.original;
         data.meta = meta;
         data.numSplats = meta.count;
@@ -196,7 +196,7 @@ class SogsParser {
         data.sh0 = textures.sh0[0].resource;
         data.sh_centroids = textures.shN?.[0]?.resource;
         data.sh_labels = textures.shN?.[1]?.resource;
-        data.shBands = GSplatSogsData.calcBands(data.sh_centroids?.width);
+        data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
 
         const decompress = asset.data?.decompress;
         const minimalMemory = asset.options?.minimalMemory ?? false;
@@ -223,7 +223,7 @@ class SogsParser {
 
         const resource = decompress ?
             new GSplatResource(this.app.graphicsDevice, await data.decompress()) :
-            new GSplatSogsResource(this.app.graphicsDevice, data);
+            new GSplatSogResource(this.app.graphicsDevice, data);
 
         if (this._shouldAbort(asset, unloaded)) {
             resource.destroy();
@@ -278,4 +278,4 @@ class SogsParser {
     }
 }
 
-export { SogsParser };
+export { SogParser };

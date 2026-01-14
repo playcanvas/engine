@@ -1,3 +1,4 @@
+// Work buffer format - reads from sorted work buffer in unified rendering mode
 export default /* wgsl */`
 var splatTexture0: texture_2d<u32>;
 var splatTexture1: texture_2d<u32>;

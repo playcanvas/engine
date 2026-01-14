@@ -7,7 +7,8 @@ export default /* wgsl */`
 #include "gsplatCenterVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
-#include "gsplatSourceFormatVS"
+#include "gsplatFormatVS"
+#include "gsplatReadVS"
 
 uniform uStartLine: i32;      // Start row in destination texture
 uniform uViewportWidth: i32;  // Width of the destination viewport in pixels
@@ -56,15 +57,8 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             let originalIndex = targetIndex;
         #endif
         
-        // source texture size
-        var srcSize: u32;
-        #if defined(GSPLAT_CONTAINER)
-            srcSize = uniform.splatTextureSize;
-        #elif defined(GSPLAT_SOGS_DATA) || defined(GSPLAT_COMPRESSED_DATA)
-            srcSize = u32(textureDimensions(packedTexture, 0).x);
-        #else
-            srcSize = u32(textureDimensions(splatColor, 0).x);
-        #endif
+        // source texture size (set by all resource types via splatTextureSize uniform)
+        let srcSize = uniform.splatTextureSize;
         
         // Create SplatSource used to sample splat data textures
         var source: SplatSource;

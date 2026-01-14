@@ -52,7 +52,7 @@ const posScale = (gridSize / 2) * 0.5;  // positions range from -posScale to +po
 // and custom uTint/uTint2 uniforms for per-instance color gradient
 const format = new pc.GSplatFormat(device, [
     // this line gives us 'loadData' function in the shader, returning vec4
-    { name: 'Data', format: pc.PIXELFORMAT_RGBA8 }
+    { name: 'data', format: pc.PIXELFORMAT_RGBA8 }
 ], {
     // Declarations: add two tint uniforms for gradient
     declarationsGLSL: `
@@ -66,19 +66,19 @@ const format = new pc.GSplatFormat(device, [
     // Read code: denormalize position and lerp between tints based on pre-baked brightness
     readGLSL: `
         // use generated load function to get the data from textures
-        vec4 data = loadData();
+        vec4 splatData = loadData();
 
         // evaluate center, color, scale, and rotation of the splat
-        splatCenter = (data.rgb - 0.5) * ${(posScale * 2.0).toFixed(1)};
-        vec3 tint = mix(uTint2, uTint, data.a);
+        splatCenter = (splatData.rgb - 0.5) * ${(posScale * 2.0).toFixed(1)};
+        vec3 tint = mix(uTint2, uTint, splatData.a);
         splatColor = vec4(tint, 1.0);
         splatScale = vec3(0.15);
         splatRotation = vec4(0.0, 0.0, 0.0, 1.0);
     `,
     readWGSL: `
-        let data = loadData();
-        splatCenter = (data.rgb - 0.5) * ${(posScale * 2.0).toFixed(1)};
-        let tint = mix(uniform.uTint2, uniform.uTint, data.a);
+        let splatData = loadData();
+        splatCenter = (splatData.rgb - 0.5) * ${(posScale * 2.0).toFixed(1)};
+        let tint = mix(uniform.uTint2, uniform.uTint, splatData.a);
         splatColor = vec4f(tint, 1.0);
         splatScale = vec3f(0.15);
         splatRotation = vec4f(0.0, 0.0, 0.0, 1.0);
@@ -89,8 +89,8 @@ const format = new pc.GSplatFormat(device, [
 const numSplats = gridSize ** 3;
 const container = new pc.GSplatContainer(device, numSplats, format);
 
-// Fill Data texture (RGBA8: RGB=normalized position 0-1, A=brightness 0-1)
-const data = container.getTexture('Data').lock();
+// Fill data texture (RGBA8: RGB=normalized position 0-1, A=brightness 0-1)
+const data = container.getTexture('data').lock();
 // Fill centers array for sorting (Float32Array with xyz per splat)
 const centers = container.centers;
 
@@ -134,7 +134,7 @@ for (let x = 0; x < gridSize; x++) {
     }
 }
 
-container.getTexture('Data').unlock();
+container.getTexture('data').unlock();
 
 // Set bounding box for culling
 const halfSize = (gridSize / 2) * 0.5;

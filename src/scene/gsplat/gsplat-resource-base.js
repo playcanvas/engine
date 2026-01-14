@@ -13,7 +13,8 @@ import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatData } from './gsplat-data.js'
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
- * @import { GSplatSogsData } from './gsplat-sogs-data.js'
+ * @import { GSplatSogData } from './gsplat-sog-data.js'
+ * @import { GSplatFormat } from './gsplat-format.js'
  */
 
 let id = 0;
@@ -28,7 +29,7 @@ class GSplatResourceBase {
     /** @type {GraphicsDevice} */
     device;
 
-    /** @type {GSplatData | GSplatCompressedData | GSplatSogsData} */
+    /** @type {GSplatData | GSplatCompressedData | GSplatSogData} */
     gsplatData;
 
     /** @type {Float32Array} */
@@ -48,6 +49,31 @@ class GSplatResourceBase {
 
     /** @type {Map<string, WorkBufferRenderInfo>} */
     workBufferRenderInfos = new Map();
+
+    /**
+     * Format descriptor for this resource. Defines texture streams and shader code for reading
+     * splat data. Set by derived classes.
+     *
+     * @type {GSplatFormat|null}
+     * @ignore
+     */
+    format = null;
+
+    /**
+     * Map of texture names to Texture instances. Populated by derived classes.
+     *
+     * @type {Map<string, Texture>}
+     * @ignore
+     */
+    textures = new Map();
+
+    /**
+     * Cached texture width for shader uniform. Set by derived classes when creating textures.
+     *
+     * @type {number}
+     * @ignore
+     */
+    textureSize = 0;
 
     /**
      * @type {number}
@@ -155,7 +181,11 @@ class GSplatResourceBase {
         this.configureMaterialDefines(tempMap);
         if (useIntervals) tempMap.set('GSPLAT_LOD', '');
         if (colorOnly) tempMap.set('GSPLAT_COLOR_ONLY', '');
-        const key = Array.from(tempMap.entries()).map(([k, v]) => `${k}=${v}`).join(';');
+
+        // Include format hash to ensure different formats get different shaders
+        const formatHash = this.format?.hash ?? 0;
+        const definesKey = Array.from(tempMap.entries()).map(([k, v]) => `${k}=${v}`).join(';');
+        const key = `${formatHash};${definesKey}`;
 
         // get or create quad render
         let info = this.workBufferRenderInfos.get(key);
@@ -236,9 +266,51 @@ class GSplatResourceBase {
         return this.gsplatData.numSplats;
     }
 
-    configureMaterial(material) {
+    /**
+     * Gets a texture by name.
+     *
+     * @param {string} name - The name of the texture.
+     * @returns {Texture|undefined} The texture, or undefined if not found.
+     * @ignore
+     */
+    getTexture(name) {
+        return this.textures.get(name);
     }
 
+    /**
+     * Configures a material to use this resource's data. Base implementation injects format's
+     * shader chunks and binds textures from the textures Map.
+     *
+     * @param {ShaderMaterial} material - The material to configure.
+     * @ignore
+     */
+    configureMaterial(material) {
+        this.configureMaterialDefines(material.defines);
+
+        // Inject format's shader chunks if format is defined
+        if (this.format) {
+            const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
+            chunks.set('gsplatDeclarationsVS', this.format.getDeclarations());
+            chunks.set('gsplatReadVS', this.format.getReadCode());
+        }
+
+        // Bind all textures from the Map
+        for (const [name, texture] of this.textures) {
+            material.setParameter(name, texture);
+        }
+
+        // Set cached texture size
+        if (this.textureSize > 0) {
+            material.setParameter('splatTextureSize', this.textureSize);
+        }
+    }
+
+    /**
+     * Configures material defines for this resource. Derived classes should override this.
+     *
+     * @param {Map<string, string|number|boolean>} defines - The defines map to configure.
+     * @ignore
+     */
     configureMaterialDefines(defines) {
     }
 

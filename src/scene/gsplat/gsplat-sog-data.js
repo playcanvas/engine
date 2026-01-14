@@ -10,17 +10,17 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { CULLFACE_NONE, PIXELFORMAT_RGBA32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import glslGsplatSogsReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogsReorder.js';
-import wgslGsplatSogsReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsReorder.js';
+import glslGsplatSogReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogReorder.js';
+import wgslGsplatSogReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogReorder.js';
 
-import glslGsplatSogsReorderSh from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogsReorderSh.js';
+import glslGsplatSogReorderSh from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogReorderSh.js';
 import glslGsplatPackingPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatPacking.js';
 
-import wgslGsplatSogsReorderSH from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsReorderSh.js';
+import wgslGsplatSogReorderSH from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogReorderSh.js';
 import wgslGsplatPackingPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatPacking.js';
 
-import glslSogsCentersPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogsCenters.js';
-import wgslSogsCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogsCenters.js';
+import glslSogCentersPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogCenters.js';
+import wgslSogCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogCenters.js';
 
 /**
  * @import { EventHandle } from '../../core/event-handle.js'
@@ -49,7 +49,7 @@ const resolve = (scope, values) => {
     }
 };
 
-class GSplatSogsIterator {
+class GSplatSogIterator {
     constructor(data, p, r, s, c, sh) {
 
         const lerp = (a, b, t) => a * (1 - t) + b * t;
@@ -159,7 +159,7 @@ class GSplatSogsIterator {
     }
 }
 
-class GSplatSogsData {
+class GSplatSogData {
     meta;
 
     numSplats;
@@ -253,7 +253,7 @@ class GSplatSogsData {
     }
 
     createIter(p, r, s, c, sh) {
-        return new GSplatSogsIterator(this, p, r, s, c, sh);
+        return new GSplatSogIterator(this, p, r, s, c, sh);
     }
 
     calcAabb(result) {
@@ -295,7 +295,7 @@ class GSplatSogsData {
         );
     }
 
-    get isSogs() {
+    get isSog() {
         return true;
     }
 
@@ -392,7 +392,7 @@ class GSplatSogsData {
 
         // create a temporary texture to render centers into
         const centersTexture = new Texture(device, {
-            name: 'sogsCentersTexture',
+            name: 'sogCentersTexture',
             width,
             height,
             format: PIXELFORMAT_RGBA32U,
@@ -400,11 +400,11 @@ class GSplatSogsData {
         });
 
         const shader = ShaderUtils.createShader(device, {
-            uniqueName: 'GsplatSogsCentersShader',
+            uniqueName: 'GsplatSogCentersShader',
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'fullscreenQuadVS',
-            fragmentGLSL: glslSogsCentersPS,
-            fragmentWGSL: wgslSogsCentersPS,
+            fragmentGLSL: glslSogCentersPS,
+            fragmentWGSL: wgslSogCentersPS,
             fragmentOutputTypes: ['uvec4'],
             fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]])
         });
@@ -459,11 +459,11 @@ class GSplatSogsData {
 
         // Note: do not destroy it, keep it available for the lifetime of the app
         const shader = ShaderUtils.createShader(device, {
-            uniqueName: `GsplatSogsReorderShader-${shaderKey}`,
+            uniqueName: `GsplatSogReorderShader-${shaderKey}`,
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'fullscreenQuadVS',
-            fragmentGLSL: glslGsplatSogsReorderPS,
-            fragmentWGSL: wgslGsplatSogsReorderPS,
+            fragmentGLSL: glslGsplatSogReorderPS,
+            fragmentWGSL: wgslGsplatSogReorderPS,
             fragmentOutputTypes: ['uvec4', 'vec4'],
             fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]]),
             fragmentDefines: (meta.version === 2) ? undefined : new Map([['REORDER_V1', '1']])
@@ -510,11 +510,11 @@ class GSplatSogsData {
         const shaderKey = meta.version === 2 ? 'v2' : 'v1';
 
         const shader = ShaderUtils.createShader(device, {
-            uniqueName: `GsplatSogsReorderShShader-${shaderKey}`,
+            uniqueName: `GsplatSogReorderShShader-${shaderKey}`,
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'fullscreenQuadVS',
-            fragmentGLSL: glslGsplatSogsReorderSh,
-            fragmentWGSL: wgslGsplatSogsReorderSH,
+            fragmentGLSL: glslGsplatSogReorderSh,
+            fragmentWGSL: wgslGsplatSogReorderSH,
             fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]]),
             fragmentDefines: (meta.version === 2) ? undefined : new Map([['REORDER_V1', '1']])
         });
@@ -549,7 +549,7 @@ class GSplatSogsData {
         const urlSuffix = this.url ? `_${this.url}` : '';
 
         this.packedTexture = new Texture(device, {
-            name: `sogsPackedTexture${urlSuffix}`,
+            name: `sogPackedTexture${urlSuffix}`,
             width,
             height,
             format: PIXELFORMAT_RGBA32U,
@@ -557,7 +557,7 @@ class GSplatSogsData {
         });
 
         this.packedSh0 = new Texture(device, {
-            name: `sogsPackedSh0${urlSuffix}`,
+            name: `sogPackedSh0${urlSuffix}`,
             width,
             height,
             format: PIXELFORMAT_RGBA8,
@@ -565,7 +565,7 @@ class GSplatSogsData {
         });
 
         this.packedShN = this.sh_centroids && new Texture(device, {
-            name: `sogsPackedShN${urlSuffix}`,
+            name: `sogPackedShN${urlSuffix}`,
             width: this.sh_centroids.width,
             height: this.sh_centroids.height,
             format: PIXELFORMAT_RGBA8,
@@ -630,4 +630,4 @@ class GSplatSogsData {
     }
 }
 
-export { GSplatSogsData };
+export { GSplatSogData };

@@ -6,6 +6,7 @@ import {
     PIXELFORMAT_RGBA16F, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
+import { GSplatFormat } from './gsplat-format.js';
 
 /**
  * @import { GSplatData } from './gsplat-data.js'
@@ -23,29 +24,8 @@ const getSHData = (gsplatData, numCoeffs) => {
 
 /** @ignore */
 class GSplatResource extends GSplatResourceBase {
-    /** @type {Texture} */
-    colorTexture;
-
-    /** @type {Texture} */
-    transformATexture;
-
-    /** @type {Texture} */
-    transformBTexture;
-
     /** @type {0 | 1 | 2 | 3} */
     shBands;
-
-    /** @type {Texture | undefined} */
-    sh1to3Texture;
-
-    /** @type {Texture | undefined} */
-    sh4to7Texture;
-
-    /** @type {Texture | undefined} */
-    sh8to11Texture;
-
-    /** @type {Texture | undefined} */
-    sh12to15Texture;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -57,9 +37,11 @@ class GSplatResource extends GSplatResourceBase {
         const numSplats = gsplatData.numSplats;
 
         const size = this.evalTextureSize(numSplats);
-        this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA16F, size);
-        this.transformATexture = this.createTexture('transformA', PIXELFORMAT_RGBA32U, size);
-        this.transformBTexture = this.createTexture('transformB', PIXELFORMAT_RGBA16F, size);
+        this.textureSize = size.x;
+
+        this.textures.set('splatColor', this.createTexture('splatColor', PIXELFORMAT_RGBA16F, size));
+        this.textures.set('transformA', this.createTexture('transformA', PIXELFORMAT_RGBA32U, size));
+        this.textures.set('transformB', this.createTexture('transformB', PIXELFORMAT_RGBA16F, size));
 
         // write texture data
         this.updateColorData(gsplatData);
@@ -68,45 +50,44 @@ class GSplatResource extends GSplatResourceBase {
         // initialize SH data
         this.shBands = gsplatData.shBands;
         if (this.shBands > 0) {
-            this.sh1to3Texture = this.createTexture('splatSH_1to3', PIXELFORMAT_RGBA32U, size);
+            this.textures.set('splatSH_1to3', this.createTexture('splatSH_1to3', PIXELFORMAT_RGBA32U, size));
             if (this.shBands > 1) {
-                this.sh4to7Texture = this.createTexture('splatSH_4to7', PIXELFORMAT_RGBA32U, size);
+                this.textures.set('splatSH_4to7', this.createTexture('splatSH_4to7', PIXELFORMAT_RGBA32U, size));
                 if (this.shBands > 2) {
-                    this.sh8to11Texture = this.createTexture('splatSH_8to11', PIXELFORMAT_RGBA32U, size);
-                    this.sh12to15Texture = this.createTexture('splatSH_12to15', PIXELFORMAT_RGBA32U, size);
+                    this.textures.set('splatSH_8to11', this.createTexture('splatSH_8to11', PIXELFORMAT_RGBA32U, size));
+                    this.textures.set('splatSH_12to15', this.createTexture('splatSH_12to15', PIXELFORMAT_RGBA32U, size));
                 } else {
-                    this.sh8to11Texture = this.createTexture('splatSH_8to11', PIXELFORMAT_R32U, size);
+                    this.textures.set('splatSH_8to11', this.createTexture('splatSH_8to11', PIXELFORMAT_R32U, size));
                 }
             }
 
             this.updateSHData(gsplatData);
         }
+
+        // Define streams for textures that use splatUV
+        const streams = [
+            { name: 'splatColor', format: PIXELFORMAT_RGBA16F },
+            { name: 'transformA', format: PIXELFORMAT_RGBA32U },
+            { name: 'transformB', format: PIXELFORMAT_RGBA16F }
+        ];
+
+        // Create format with streams and shader chunk include
+        this.format = new GSplatFormat(device, streams, {
+            readGLSL: '#include "gsplatUncompressedVS"',
+            readWGSL: '#include "gsplatUncompressedVS"'
+        });
     }
 
     destroy() {
-        this.colorTexture?.destroy();
-        this.transformATexture?.destroy();
-        this.transformBTexture?.destroy();
-        this.sh1to3Texture?.destroy();
-        this.sh4to7Texture?.destroy();
-        this.sh8to11Texture?.destroy();
-        this.sh12to15Texture?.destroy();
+        for (const texture of this.textures.values()) {
+            texture.destroy();
+        }
+        this.textures.clear();
         super.destroy();
     }
 
     configureMaterialDefines(defines) {
         defines.set('SH_BANDS', this.shBands);
-    }
-
-    configureMaterial(material) {
-        this.configureMaterialDefines(material.defines);
-        material.setParameter('splatColor', this.colorTexture);
-        material.setParameter('transformA', this.transformATexture);
-        material.setParameter('transformB', this.transformBTexture);
-        if (this.sh1to3Texture) material.setParameter('splatSH_1to3', this.sh1to3Texture);
-        if (this.sh4to7Texture) material.setParameter('splatSH_4to7', this.sh4to7Texture);
-        if (this.sh8to11Texture) material.setParameter('splatSH_8to11', this.sh8to11Texture);
-        if (this.sh12to15Texture) material.setParameter('splatSH_12to15', this.sh12to15Texture);
     }
 
     /**
@@ -124,14 +105,14 @@ class GSplatResource extends GSplatResourceBase {
     }
 
     /**
-     * Updates pixel data of this.colorTexture based on the supplied color components and opacity.
+     * Updates pixel data of splatColor texture based on the supplied color components and opacity.
      * Assumes that the texture is using an RGBA format where RGB are color components influenced
      * by SH spherical harmonics and A is opacity after a sigmoid transformation.
      *
      * @param {GSplatData} gsplatData - The source data
      */
     updateColorData(gsplatData) {
-        const texture = this.colorTexture;
+        const texture = this.textures.get('splatColor');
         if (!texture) {
             return;
         }
@@ -167,13 +148,15 @@ class GSplatResource extends GSplatResourceBase {
 
         const float2Half = FloatPacking.float2Half;
 
-        if (!this.transformATexture) {
+        const transformA = this.textures.get('transformA');
+        const transformB = this.textures.get('transformB');
+        if (!transformA) {
             return;
         }
 
-        const dataA = this.transformATexture.lock();
+        const dataA = transformA.lock();
         const dataAFloat32 = new Float32Array(dataA.buffer);
-        const dataB = this.transformBTexture.lock();
+        const dataB = transformB.lock();
 
         const p = new Vec3();
         const r = new Quat();
@@ -199,18 +182,23 @@ class GSplatResource extends GSplatResourceBase {
             dataB[i * 4 + 3] = float2Half(r.z);
         }
 
-        this.transformATexture.unlock();
-        this.transformBTexture.unlock();
+        transformA.unlock();
+        transformB.unlock();
     }
 
     /**
      * @param {GSplatData} gsplatData - The source data
      */
     updateSHData(gsplatData) {
-        const sh1to3Data = this.sh1to3Texture.lock();
-        const sh4to7Data = this.sh4to7Texture?.lock();
-        const sh8to11Data = this.sh8to11Texture?.lock();
-        const sh12to15Data = this.sh12to15Texture?.lock();
+        const sh1to3Texture = this.textures.get('splatSH_1to3');
+        const sh4to7Texture = this.textures.get('splatSH_4to7');
+        const sh8to11Texture = this.textures.get('splatSH_8to11');
+        const sh12to15Texture = this.textures.get('splatSH_12to15');
+
+        const sh1to3Data = sh1to3Texture.lock();
+        const sh4to7Data = sh4to7Texture?.lock();
+        const sh8to11Data = sh8to11Texture?.lock();
+        const sh12to15Data = sh12to15Texture?.lock();
 
         const numCoeffs = {
             1: 3,
@@ -284,10 +272,10 @@ class GSplatResource extends GSplatResourceBase {
             }
         }
 
-        this.sh1to3Texture.unlock();
-        this.sh4to7Texture?.unlock();
-        this.sh8to11Texture?.unlock();
-        this.sh12to15Texture?.unlock();
+        sh1to3Texture.unlock();
+        sh4to7Texture?.unlock();
+        sh8to11Texture?.unlock();
+        sh12to15Texture?.unlock();
     }
 }
 

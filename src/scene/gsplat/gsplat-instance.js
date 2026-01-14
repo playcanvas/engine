@@ -4,7 +4,7 @@ import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U } f
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatResolveSH } from './gsplat-resolve-sh.js';
 import { GSplatSorter } from './gsplat-sorter.js';
-import { GSplatSogsData } from './gsplat-sogs-data.js';
+import { GSplatSogData } from './gsplat-sog-data.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
@@ -58,7 +58,7 @@ class GSplatInstance {
      * @param {GSplatResourceBase} resource - The splat instance.
      * @param {object} [options] - Options for the instance.
      * @param {ShaderMaterial|null} [options.material] - The material instance.
-     * @param {boolean} [options.highQualitySH] - Whether to use the high quality or the approximate spherical harmonic calculation. Only applies to SOGS data.
+     * @param {boolean} [options.highQualitySH] - Whether to use the high quality or the approximate spherical harmonic calculation. Only applies to SOG data.
      * @param {import('../scene.js').Scene} [options.scene] - The scene to fire sort timing events on.
      */
     constructor(resource, options = {}) {
@@ -121,7 +121,7 @@ class GSplatInstance {
             this.material.setParameter('numSplats', count);
         });
 
-        // configure sogs sh resolve
+        // configure sog sh resolve
         this.setHighQualitySH(options.highQualitySH ?? false);
     }
 
@@ -230,7 +230,7 @@ class GSplatInstance {
         const { resource } = this;
         const { gsplatData } = resource;
 
-        if (gsplatData instanceof GSplatSogsData &&
+        if (gsplatData instanceof GSplatSogData &&
             gsplatData.shBands > 0 &&
             value === !!this.resolveSH) {
 

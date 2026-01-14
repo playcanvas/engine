@@ -1,7 +1,7 @@
 import { Asset } from '../../framework/asset/asset.js';
 import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
-import { GSplatSogsData } from '../../scene/gsplat/gsplat-sogs-data.js';
-import { GSplatSogsResource } from '../../scene/gsplat/gsplat-sogs-resource.js';
+import { GSplatSogData } from '../../scene/gsplat/gsplat-sog-data.js';
+import { GSplatSogResource } from '../../scene/gsplat/gsplat-sog-resource.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -256,7 +256,7 @@ class SogBundleParser {
             const decompress = asset.data?.decompress;
             const minimalMemory = asset.options?.minimalMemory ?? false;
 
-            const data = new GSplatSogsData();
+            const data = new GSplatSogData();
             data.url = url.original;
             data.minimalMemory = minimalMemory;
             data.meta = meta;
@@ -268,7 +268,7 @@ class SogBundleParser {
             data.sh0 = textures[meta.sh0.files[0]].resource;
             data.sh_centroids = textures[meta.shN?.files[0]]?.resource;
             data.sh_labels = textures[meta.shN?.files[1]]?.resource;
-            data.shBands = GSplatSogsData.calcBands(data.sh_centroids?.width);
+            data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
 
             if (!decompress) {
                 // no need to prepare gpu data if decompressing
@@ -277,7 +277,7 @@ class SogBundleParser {
 
             const resource = decompress ?
                 new GSplatResource(this.app.graphicsDevice, await data.decompress()) :
-                new GSplatSogsResource(this.app.graphicsDevice, data);
+                new GSplatSogResource(this.app.graphicsDevice, data);
 
             callback(null, resource);
         } catch (err) {

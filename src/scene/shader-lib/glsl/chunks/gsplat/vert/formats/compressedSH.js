@@ -1,3 +1,4 @@
+// Spherical Harmonics for compressed GSplat format
 export default /* glsl */`
 #if SH_BANDS > 0
 

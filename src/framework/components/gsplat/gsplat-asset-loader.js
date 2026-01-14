@@ -99,7 +99,7 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
 
         // Force-unload all tracked assets
         for (const asset of this._urlToAsset.values()) {
-            // Fire 'unload' event to trigger cleanup in parsers (like sogs.js)
+            // Fire 'unload' event to trigger cleanup in parsers (like sog.js)
             asset.fire('unload', asset);
 
             // Remove event listeners
@@ -303,7 +303,7 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
         const asset = this._urlToAsset.get(url);
         if (asset) {
             // IMPORTANT: Fire 'unload' event explicitly before calling asset.unload()
-            // This ensures parsers with async loading (like sogs.js) can clean up
+            // This ensures parsers with async loading (like sog.js) can clean up
             // even if the asset hasn't finished loading yet
             // NOTE: Must fire BEFORE removing event listeners
             asset.fire('unload', asset);

@@ -1,7 +1,10 @@
+// Compressed GSplat format - work variables, helpers, and read functions
+// packedTexture is auto-generated from GSplatFormat streams
+// chunkTexture uses custom UV calculation and must be declared manually
 export default /* glsl */`
 #include "gsplatPackingPS"
 
-uniform highp usampler2D packedTexture;
+// manual texture declaration - uses custom UV, not splatUV
 uniform highp sampler2D chunkTexture;
 
 // work values
@@ -35,20 +38,24 @@ vec4 unpackRotation(uint bits) {
     return vec4(a, b, c, m);
 }
 
-
 // read center
 vec3 readCenter(SplatSource source) {
+    // Initialize splatUV for generated load functions
+    splatUV = source.uv;
+
     uint w = uint(textureSize(chunkTexture, 0).x) / 5u;
     uint chunkId = source.id / 256u;
     ivec2 chunkUV = ivec2((chunkId % w) * 5u, chunkId / w);
 
-    // read chunk and packed compressed data
+    // read chunk data with custom UV (manual texture access)
     chunkDataA = texelFetch(chunkTexture, chunkUV, 0);
     chunkDataB = texelFetch(chunkTexture, chunkUV + ivec2(1, 0), 0);
     chunkDataC = texelFetch(chunkTexture, chunkUV + ivec2(2, 0), 0);
     chunkDataD = texelFetch(chunkTexture, chunkUV + ivec2(3, 0), 0);
     chunkDataE = texelFetch(chunkTexture, chunkUV + ivec2(4, 0), 0);
-    packedData = texelFetch(packedTexture, source.uv, 0);
+
+    // read packed data using generated load function (uses splatUV)
+    packedData = loadPackedTexture();
 
     return mix(chunkDataA.xyz, vec3(chunkDataA.w, chunkDataB.xy), unpack111011(packedData.x));
 }
@@ -65,4 +72,6 @@ vec4 getRotation() {
 vec3 getScale() {
     return exp(mix(vec3(chunkDataB.zw, chunkDataC.x), chunkDataC.yzw, unpack111011(packedData.z)));
 }
+
+#include "gsplatCompressedSHVS"
 `;
