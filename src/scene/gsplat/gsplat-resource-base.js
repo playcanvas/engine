@@ -1,13 +1,12 @@
 import { Debug } from '../../core/debug.js';
-import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { ADDRESS_CLAMP_TO_EDGE, BUFFER_STATIC, FILTER_NEAREST, SEMANTIC_ATTR13, TYPE_UINT32 } from '../../platform/graphics/constants.js';
-import { Texture } from '../../platform/graphics/texture.js';
+import { BUFFER_STATIC, SEMANTIC_ATTR13, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { Mesh } from '../mesh.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
+import { GSplatStreams } from './gsplat-streams.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -15,6 +14,7 @@ import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
  * @import { GSplatSogData } from './gsplat-sog-data.js'
  * @import { GSplatFormat } from './gsplat-format.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 let id = 0;
@@ -60,20 +60,12 @@ class GSplatResourceBase {
     format = null;
 
     /**
-     * Map of texture names to Texture instances. Populated by derived classes.
+     * Manages textures for this resource based on format streams.
      *
-     * @type {Map<string, Texture>}
+     * @type {GSplatStreams}
      * @ignore
      */
-    textures = new Map();
-
-    /**
-     * Cached texture width for shader uniform. Set by derived classes when creating textures.
-     *
-     * @type {number}
-     * @ignore
-     */
-    textureSize = 0;
+    streams;
 
     /**
      * @type {number}
@@ -90,6 +82,7 @@ class GSplatResourceBase {
     constructor(device, gsplatData) {
         this.device = device;
         this.gsplatData = gsplatData;
+        this.streams = new GSplatStreams(device);
 
         this.centers = gsplatData.getCenters();
 
@@ -98,6 +91,7 @@ class GSplatResourceBase {
     }
 
     destroy() {
+        this.streams.destroy();
         this.mesh?.destroy();
         this.instanceIndices?.destroy();
         this.workBufferRenderInfos.forEach(info => info.destroy());
@@ -274,12 +268,22 @@ class GSplatResourceBase {
      * @ignore
      */
     getTexture(name) {
-        return this.textures.get(name);
+        return this.streams.getTexture(name);
+    }
+
+    /**
+     * Gets the cached texture width for shader uniform.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get textureSize() {
+        return this.streams.textureDimensions.x;
     }
 
     /**
      * Configures a material to use this resource's data. Base implementation injects format's
-     * shader chunks and binds textures from the textures Map.
+     * shader chunks and binds textures from the streams.
      *
      * @param {ShaderMaterial} material - The material to configure.
      * @ignore
@@ -294,8 +298,8 @@ class GSplatResourceBase {
             chunks.set('gsplatReadVS', this.format.getReadCode());
         }
 
-        // Bind all textures from the Map
-        for (const [name, texture] of this.textures) {
+        // Bind all textures from streams
+        for (const [name, texture] of this.streams.textures) {
             material.setParameter(name, texture);
         }
 
@@ -312,41 +316,6 @@ class GSplatResourceBase {
      * @ignore
      */
     configureMaterialDefines(defines) {
-    }
-
-    /**
-     * Evaluates the size of the texture based on the number of splats.
-     *
-     * @param {number} count - Number of gaussians.
-     * @returns {Vec2} Returns a Vec2 object representing the size of the texture.
-     */
-    evalTextureSize(count) {
-        return Vec2.ZERO;
-    }
-
-    /**
-     * Creates a new texture with the specified parameters.
-     *
-     * @param {string} name - The name of the texture to be created.
-     * @param {number} format - The pixel format of the texture.
-     * @param {Vec2} size - The size of the texture in a Vec2 object, containing width (x) and height (y).
-     * @param {Uint8Array|Uint16Array|Uint32Array} [data] - The initial data to fill the texture with.
-     * @returns {Texture} The created texture instance.
-     */
-    createTexture(name, format, size, data) {
-        return new Texture(this.device, {
-            name: name,
-            width: size.x,
-            height: size.y,
-            format: format,
-            cubemap: false,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            ...(data ? { levels: [data] } : { })
-        });
     }
 
     instantiate() {

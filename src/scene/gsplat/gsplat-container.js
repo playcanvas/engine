@@ -1,4 +1,3 @@
-import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 
@@ -46,23 +45,14 @@ class GSplatContainer extends GSplatResourceBase {
         this.format = format;
         this._numSplats = numSplats;
 
-        // Allocate textures based on format streams
-        const size = this.evalTextureSize(numSplats);
-        this.textureSize = size.x;
-        for (const stream of format.streams) {
-            const texture = this.createTexture(stream.name, stream.format, size);
-            this.textures.set(stream.name, texture);
-        }
+        // Use streams to create textures from format
+        this.streams.init(format, numSplats);
     }
 
     /**
      * Destroys this container and releases all resources.
      */
     destroy() {
-        for (const texture of this.textures.values()) {
-            texture.destroy();
-        }
-        this.textures.clear();
         super.destroy();
     }
 
@@ -73,18 +63,6 @@ class GSplatContainer extends GSplatResourceBase {
      */
     get numSplats() {
         return this._numSplats;
-    }
-
-    /**
-     * Evaluates the texture size needed to store a given number of elements.
-     *
-     * @param {number} count - The number of elements to store.
-     * @returns {Vec2} The width and height of the texture.
-     * @ignore
-     */
-    evalTextureSize(count) {
-        const width = Math.ceil(Math.sqrt(count));
-        return new Vec2(width, Math.ceil(count / width));
     }
 
     /**

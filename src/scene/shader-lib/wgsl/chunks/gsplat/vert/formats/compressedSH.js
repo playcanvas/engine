@@ -2,20 +2,16 @@
 export default /* wgsl */`
 #if SH_BANDS > 0
 
-var shTexture0: texture_2d<u32>;
-var shTexture1: texture_2d<u32>;
-var shTexture2: texture_2d<u32>;
-
 fn unpack8888s(bits: u32) -> vec4f {
     let unpacked_u = (vec4<u32>(bits) >> vec4<u32>(0u, 8u, 16u, 24u)) & vec4<u32>(0xffu);
     return vec4f(unpacked_u) * (8.0 / 255.0) - 4.0;
 }
 
 fn readSHData(source: ptr<function, SplatSource>, sh: ptr<function, array<vec3f, 15>>, scale: ptr<function, f32>) {
-    // read the sh coefficients
-    let shData0: vec4<u32> = textureLoad(shTexture0, source.uv, 0);
-    let shData1: vec4<u32> = textureLoad(shTexture1, source.uv, 0);
-    let shData2: vec4<u32> = textureLoad(shTexture2, source.uv, 0);
+    // read the sh coefficients using format-generated load functions
+    let shData0: vec4<u32> = loadShTexture0();
+    let shData1: vec4<u32> = loadShTexture1();
+    let shData2: vec4<u32> = loadShTexture2();
 
     let r0 = unpack8888s(shData0.x);
     let r1 = unpack8888s(shData0.y);

@@ -47,61 +47,50 @@ fn fetch1(t_in: u32) -> vec3f {
 }
 
 #if SH_BANDS == 1
-    var splatSH_1to3: texture_2d<u32>;
-
     fn readSHData(source: ptr<function, SplatSource>, sh: ptr<function, array<vec3f, 3>>, scale: ptr<function, f32>) {
-        let result = fetchScale(textureLoad(splatSH_1to3, source.uv, 0));
+        let result = fetchScale(loadSplatSH_1to3());
         *scale = result.scale;
         sh[0] = result.a;
         sh[1] = result.b;
         sh[2] = result.c;
     }
 #elif SH_BANDS == 2
-    var splatSH_1to3: texture_2d<u32>;
-    var splatSH_4to7: texture_2d<u32>;
-    var splatSH_8to11: texture_2d<u32>;
-
     fn readSHData(source: ptr<function, SplatSource>, sh: ptr<function, array<vec3f, 8>>, scale: ptr<function, f32>) {
-        let first: ScaleAndSH = fetchScale(textureLoad(splatSH_1to3, source.uv, 0));
+        let first: ScaleAndSH = fetchScale(loadSplatSH_1to3());
         *scale = first.scale;
         sh[0] = first.a;
         sh[1] = first.b;
         sh[2] = first.c;
 
-        let second: SH = fetch4(textureLoad(splatSH_4to7, source.uv, 0));
+        let second: SH = fetch4(loadSplatSH_4to7());
         sh[3] = second.a;
         sh[4] = second.b;
         sh[5] = second.c;
         sh[6] = second.d;
 
-        sh[7] = fetch1(textureLoad(splatSH_8to11, source.uv, 0).x);
+        sh[7] = fetch1(loadSplatSH_8to11().x);
     }
 #else
-    var splatSH_1to3: texture_2d<u32>;
-    var splatSH_4to7: texture_2d<u32>;
-    var splatSH_8to11: texture_2d<u32>;
-    var splatSH_12to15: texture_2d<u32>;
-
     fn readSHData(source: ptr<function, SplatSource>, sh: ptr<function, array<vec3f, 15>>, scale: ptr<function, f32>) {
-        let first: ScaleAndSH = fetchScale(textureLoad(splatSH_1to3, source.uv, 0));
+        let first: ScaleAndSH = fetchScale(loadSplatSH_1to3());
         *scale = first.scale;
         sh[0] = first.a;
         sh[1] = first.b;
         sh[2] = first.c;
 
-        let second: SH = fetch4(textureLoad(splatSH_4to7, source.uv, 0));
+        let second: SH = fetch4(loadSplatSH_4to7());
         sh[3] = second.a;
         sh[4] = second.b;
         sh[5] = second.c;
         sh[6] = second.d;
 
-        let third: SH = fetch4(textureLoad(splatSH_8to11, source.uv, 0));
+        let third: SH = fetch4(loadSplatSH_8to11());
         sh[7] = third.a;
         sh[8] = third.b;
         sh[9] = third.c;
         sh[10] = third.d;
 
-        let fourth: SH = fetch4(textureLoad(splatSH_12to15, source.uv, 0));
+        let fourth: SH = fetch4(loadSplatSH_12to15());
         sh[11] = fourth.a;
         sh[12] = fourth.b;
         sh[13] = fourth.c;

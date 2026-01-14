@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
@@ -64,11 +65,14 @@ class GSplatInstance {
     constructor(resource, options = {}) {
         this.resource = resource;
 
-        // create the order texture
-        this.orderTexture = resource.createTexture(
+        // create the order texture with the same dimensions as resource's splat data textures
+        const dims = resource.streams.textureDimensions;
+        Debug.assert(dims.x > 0 && dims.y > 0, 'Resource must have valid texture dimensions before creating instance');
+
+        this.orderTexture = resource.streams.createTexture(
             'splatOrder',
             PIXELFORMAT_R32U,
-            resource.evalTextureSize(resource.numSplats)
+            dims
         );
 
         if (options.material) {
