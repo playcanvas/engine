@@ -1,4 +1,3 @@
-import { Vec2 } from '../../core/math/vec2.js';
 import { PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { GSplatFormat } from './gsplat-format.js';
@@ -7,14 +6,16 @@ class GSplatSogResource extends GSplatResourceBase {
     constructor(device, gsplatData) {
         super(device, gsplatData);
 
-        // Set texture size for splatTextureSize uniform
+        // Set texture dimensions for splatTextureSize uniform and order texture creation
         // Use means_l if available, otherwise try packedTexture (for LOD assets)
         const sizeTexture = gsplatData.means_l || gsplatData.packedTexture;
-        this.textureSize = sizeTexture ? sizeTexture.width : 0;
+        if (sizeTexture) {
+            this.streams.textureDimensions.set(sizeTexture.width, sizeTexture.height);
+        }
 
-        // Add textures to map for auto-binding (textures are managed by gsplatData)
+        // Add external textures to streams for auto-binding (textures are managed by gsplatData, not destroyed here)
         if (gsplatData.packedTexture) {
-            this.textures.set('packedTexture', gsplatData.packedTexture);
+            this.streams.textures.set('packedTexture', gsplatData.packedTexture);
         }
 
         // Define streams for textures that use splatUV
@@ -23,6 +24,7 @@ class GSplatSogResource extends GSplatResourceBase {
         ];
 
         // Create format with streams and shader chunk include
+        // Note: We don't call streams.init() as textures are externally managed by gsplatData
         this.format = new GSplatFormat(device, streams, {
             readGLSL: '#include "gsplatSogVS"',
             readWGSL: '#include "gsplatSogVS"'
@@ -30,6 +32,8 @@ class GSplatSogResource extends GSplatResourceBase {
     }
 
     destroy() {
+        // Remove externally-owned textures without destroying them (they're owned by gsplatData)
+        this.streams.textures.delete('packedTexture');
         this.gsplatData.destroy();
         super.destroy();
     }
@@ -86,11 +90,6 @@ class GSplatSogResource extends GSplatResourceBase {
                 }
             });
         }
-    }
-
-    evalTextureSize(count) {
-        const tex = this.gsplatData.means_l || this.gsplatData.packedTexture;
-        return tex ? new Vec2(tex.width, tex.height) : new Vec2(0, 0);
     }
 }
 

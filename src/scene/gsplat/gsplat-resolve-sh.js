@@ -217,7 +217,7 @@ class GSplatResolveSH {
             }
         });
 
-        this.texture = resource.createTexture('centroids', PIXELFORMAT_RGBA8, new Vec2(64, 1024));
+        this.texture = resource.streams.createTexture('centroids', PIXELFORMAT_RGBA8, new Vec2(64, 1024));
         this.renderTarget = new RenderTarget({
             colorBuffer: this.texture,
             depth: false

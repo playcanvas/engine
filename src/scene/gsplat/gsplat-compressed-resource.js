@@ -8,7 +8,6 @@ import { GSplatFormat } from './gsplat-format.js';
 /**
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { Texture } from '../../platform/graphics/texture.js';
  */
 
 // copy data with padding
@@ -33,17 +32,59 @@ class GSplatCompressedResource extends GSplatResourceBase {
         this.chunks = new Float32Array(numChunks * 6);
         gsplatData.getChunks(this.chunks);
 
-        // initialize packed data
-        const packedSize = this.evalTextureSize(numSplats);
-        this.textureSize = packedSize.x;
-        this.textures.set('packedTexture', this.createTexture('packedTexture', PIXELFORMAT_RGBA32U, packedSize, vertexData));
+        // Define all streams upfront
+        // Note: chunkTexture uses different size/UV so we handle it specially
+        const formatStreams = [
+            { name: 'packedTexture', format: PIXELFORMAT_RGBA32U }
+        ];
 
-        // initialize chunk data
-        const chunkTextureSize = this.evalTextureSize(numChunks);
-        chunkTextureSize.x *= 5;
+        // Add SH streams if present
+        if (shBands > 0) {
+            formatStreams.push({ name: 'shTexture0', format: PIXELFORMAT_RGBA32U });
+            formatStreams.push({ name: 'shTexture1', format: PIXELFORMAT_RGBA32U });
+            formatStreams.push({ name: 'shTexture2', format: PIXELFORMAT_RGBA32U });
+        }
 
-        const chunkTexture = this.createTexture('chunkTexture', PIXELFORMAT_RGBA32F, chunkTextureSize);
-        this.textures.set('chunkTexture', chunkTexture);
+        // Create format with streams and shader chunk include
+        this.format = new GSplatFormat(device, formatStreams, {
+            readGLSL: '#include "gsplatCompressedVS"',
+            readWGSL: '#include "gsplatCompressedVS"'
+        });
+
+        // Let streams create textures from format
+        this.streams.init(this.format, numSplats);
+
+        // Initialize packed texture data
+        const packedTexture = this.streams.getTexture('packedTexture');
+        const packedData = packedTexture.lock();
+        packedData.set(vertexData);
+        packedTexture.unlock();
+
+        // Initialize SH texture data if present
+        if (shBands > 0) {
+            const shTexture0 = this.streams.getTexture('shTexture0');
+            const shTexture1 = this.streams.getTexture('shTexture1');
+            const shTexture2 = this.streams.getTexture('shTexture2');
+
+            const sh0Data = shTexture0.lock();
+            sh0Data.set(new Uint32Array(gsplatData.shData0.buffer));
+            shTexture0.unlock();
+
+            const sh1Data = shTexture1.lock();
+            sh1Data.set(new Uint32Array(gsplatData.shData1.buffer));
+            shTexture1.unlock();
+
+            const sh2Data = shTexture2.lock();
+            sh2Data.set(new Uint32Array(gsplatData.shData2.buffer));
+            shTexture2.unlock();
+        }
+
+        // Initialize chunk texture (uses different size - managed separately)
+        const chunkTextureSize = this.evalChunkTextureSize(numChunks);
+
+        const chunkTexture = this.streams.createTexture('chunkTexture', PIXELFORMAT_RGBA32F, chunkTextureSize);
+        this.streams.textures.set('chunkTexture', chunkTexture);
+
         const chunkTextureData = chunkTexture.lock();
         strideCopy(chunkTextureData, 20, chunkData, chunkSize, numChunks);
 
@@ -57,51 +98,27 @@ class GSplatCompressedResource extends GSplatResourceBase {
         }
 
         chunkTexture.unlock();
-
-        // load optional spherical harmonics data
-        if (shBands > 0) {
-            const size = this.evalTextureSize(numSplats);
-            this.textures.set('shTexture0', this.createTexture('shTexture0', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData0.buffer)));
-            this.textures.set('shTexture1', this.createTexture('shTexture1', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData1.buffer)));
-            this.textures.set('shTexture2', this.createTexture('shTexture2', PIXELFORMAT_RGBA32U, size, new Uint32Array(gsplatData.shData2.buffer)));
-        }
-
-        // Define streams for textures that use splatUV (chunkTexture is manual - uses custom UV)
-        const streams = [
-            { name: 'packedTexture', format: PIXELFORMAT_RGBA32U }
-        ];
-
-        // Create format with streams and shader chunk include
-        this.format = new GSplatFormat(device, streams, {
-            readGLSL: '#include "gsplatCompressedVS"',
-            readWGSL: '#include "gsplatCompressedVS"'
-        });
     }
 
     destroy() {
-        for (const texture of this.textures.values()) {
-            texture.destroy();
-        }
-        this.textures.clear();
         super.destroy();
     }
 
     configureMaterialDefines(defines) {
-        defines.set('SH_BANDS', this.textures.has('shTexture0') ? 3 : 0);
+        defines.set('SH_BANDS', this.streams.textures.has('shTexture0') ? 3 : 0);
     }
 
     /**
-     * Evaluates the texture size needed to store a given number of elements.
-     * The function calculates a width and height that is close to a square
-     * that can contain 'count' elements.
+     * Evaluates the texture size for chunk data.
      *
-     * @param {number} count - The number of elements to store in the texture.
+     * @param {number} numChunks - The number of chunks.
      * @returns {Vec2} The width and height of the texture.
+     * @private
      */
-    evalTextureSize(count) {
-        const width = Math.ceil(Math.sqrt(count));
-        const height = Math.ceil(count / width);
-        return new Vec2(width, height);
+    evalChunkTextureSize(numChunks) {
+        const width = Math.ceil(Math.sqrt(numChunks));
+        const height = Math.ceil(numChunks / width);
+        return new Vec2(width * 5, height);
     }
 }
 
