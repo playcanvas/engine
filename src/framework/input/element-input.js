@@ -3,7 +3,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Mouse } from '../../platform/input/mouse.js';
-import { getTouchTargetCoords } from '../../platform/input/touch-event.js';
+import { getTouchTargetCoords, Touch } from '../../platform/input/touch-event.js';
 import { getApplication } from '../globals.js';
 
 /**
@@ -294,14 +294,14 @@ class ElementTouchEvent extends ElementInputEvent {
          *
          * @type {Touch[]}
          */
-        this.touches = event.touches;
+        this.touches = Array.from(event.touches).map(t => new Touch(t));
         /**
          * The Touch objects representing individual points of contact whose states changed between
          * the previous touch event and this one.
          *
          * @type {Touch[]}
          */
-        this.changedTouches = event.changedTouches;
+        this.changedTouches = Array.from(event.changedTouches).map(t => new Touch(t));
         this.x = x;
         this.y = y;
         /**
