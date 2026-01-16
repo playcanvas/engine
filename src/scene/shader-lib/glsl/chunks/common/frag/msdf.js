@@ -32,6 +32,11 @@ vec4 applyMsdf(vec4 color) {
     // on the engine side, with the way premultiplied alpha is handled as well.
     color.rgb = gammaCorrectInput(color.rgb);
 
+#if GAMMA == NONE
+    // uniform color is linear, but with gamma 1.0, we want sRGB pass-through, so convert back to sRGB
+    color.rgb = pow(color.rgb + 0.0000001, vec3(1.0 / 2.2));
+#endif
+
     // sample the field
     vec3 tsample = texture2D(texture_msdfMap, vUv0).rgb;
     vec2 uvShdw = vUv0 - shadow_offset;

@@ -45,6 +45,11 @@ fn applyMsdf(color_in: vec4f) -> vec4f {
     // on the engine side, with the way premultiplied alpha is handled as well.
     var color = vec4f(gammaCorrectInputVec3(color_in.rgb), color_in.a);
 
+#if GAMMA == NONE
+    // uniform color is linear, but with gamma 1.0, we want sRGB pass-through, so convert back to sRGB
+    color = vec4f(pow(color.rgb + 0.0000001, vec3f(1.0 / 2.2)), color.a);
+#endif
+
     // sample the field
     let tsample: vec3f = textureSample(texture_msdfMap, texture_msdfMapSampler, vUv0).rgb;
     let uvShdw: vec2f = vUv0 - shadow_offsetValue;
