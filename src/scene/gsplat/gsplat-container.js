@@ -35,7 +35,7 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  * });
  *
  * // Create container with max capacity and fill texture data
- * const container = new pc.GSplatContainer(device, 100, format);  // maxNumSplats = 100
+ * const container = new pc.GSplatContainer(device, 100, format);  // maxSplats = 100
  * const texture = container.getTexture('data');
  * const pixels = texture.lock();
  * // ... fill pixels with position and scale data ...
@@ -57,7 +57,7 @@ class GSplatContainer extends GSplatResourceBase {
      * @type {number}
      * @private
      */
-    _maxNumSplats = 0;
+    _maxSplats = 0;
 
     /**
      * Current number of splats to render.
@@ -71,28 +71,28 @@ class GSplatContainer extends GSplatResourceBase {
      * Creates a new GSplatContainer instance.
      *
      * @param {GraphicsDevice} device - The graphics device.
-     * @param {number} maxNumSplats - Maximum number of splats this container can hold.
+     * @param {number} maxSplats - Maximum number of splats this container can hold.
      * @param {GSplatFormat} format - The format descriptor with streams and optional read code.
      */
-    constructor(device, maxNumSplats, format) {
+    constructor(device, maxSplats, format) {
         // Pre-allocate data before super() since gsplatData callbacks need it
-        const centers = new Float32Array(maxNumSplats * 3);
+        const centers = new Float32Array(maxSplats * 3);
         const aabb = new BoundingBox();
 
         // Create minimal gsplatData interface for base class
         const gsplatData = {
-            numSplats: maxNumSplats,
+            numSplats: maxSplats,
             getCenters: () => centers,
             calcAabb: box => box.copy(aabb)
         };
         super(device, gsplatData);
 
         this._format = format;
-        this._maxNumSplats = maxNumSplats;
-        this._numSplats = maxNumSplats;
+        this._maxSplats = maxSplats;
+        this._numSplats = maxSplats;
 
         // Use streams to create textures from format
-        this.streams.init(format, maxNumSplats);
+        this.streams.init(format, maxSplats);
     }
 
     /**
@@ -107,12 +107,12 @@ class GSplatContainer extends GSplatResourceBase {
      *
      * @type {number}
      */
-    get maxNumSplats() {
-        return this._maxNumSplats;
+    get maxSplats() {
+        return this._maxSplats;
     }
 
     /**
-     * Sets the number of splats to render. Must be between 0 and {@link maxNumSplats}.
+     * Sets the number of splats to render. Must be between 0 and {@link maxSplats}.
      *
      * Note: Changing this value triggers internal buffer reallocation in unified rendering mode.
      * Avoid calling this every frame. For per-frame visibility control, consider using
@@ -122,7 +122,7 @@ class GSplatContainer extends GSplatResourceBase {
      * @type {number}
      */
     set numSplats(value) {
-        this._numSplats = math.clamp(value, 0, this._maxNumSplats);
+        this._numSplats = math.clamp(value, 0, this._maxSplats);
     }
 
     /**
