@@ -306,7 +306,10 @@ class XrNavigation extends Script {
                     // Apply movement to camera parent (this entity)
                     this.entity.translate(this.tmpVec2A.x, 0, this.tmpVec2A.y);
                 }
-            } else if (inputSource.handedness === 'right') { // Right controller - snap turning
+            } else if (inputSource.handedness === 'right') { // Right controller - snap turning and elevation
+                //control elevation via right controller y-axis
+                this.entity.translate(0, Math.sign( inputSource.gamepad.axes[3] ) * this.movementSpeed * dt, 0);
+                
                 this.handleSnapTurning(inputSource);
             }
         }
