@@ -131,14 +131,14 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const scope = device.scope;
         Debug.assert(resource);
 
-        const { intervals, activeSplats, lineStart, viewport, intervalTexture } = splatInfo;
+        const { activeSplats, lineStart, viewport, intervalTexture } = splatInfo;
 
         // Get work buffer modifier for per-instance shader customization
         const workBufferModifier = splatInfo.workBufferModifier;
 
         // quad renderer and material are cached in the resource
         const workBufferRenderInfo = resource.getWorkBufferRenderInfo(
-            intervals.length > 0,
+            intervalTexture !== null,
             this.workBuffer.colorTextureFormat,
             this.colorOnly,
             workBufferModifier,

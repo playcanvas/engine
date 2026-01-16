@@ -9,6 +9,7 @@ import { GSplatRenderer } from './gsplat-renderer.js';
 import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
 import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
+import { GSplatPlacementStateTracker } from './gsplat-placement-state-tracker.js';
 import { GSplatSortKeyCompute } from './gsplat-sort-key-compute.js';
 import { ComputeRadixSort } from '../graphics/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
@@ -125,12 +126,12 @@ class GSplatManager {
     sortedVersion = 0;
 
     /**
-     * Sum of all placements' format versions and modifier hashes, used to detect state changes.
+     * Tracks placement state changes (format version, modifier hash, numSplats).
      *
-     * @type {number}
+     * @type {GSplatPlacementStateTracker}
      * @private
      */
-    _lastPlacementStateSum = 0;
+    _stateTracker = new GSplatPlacementStateTracker();
 
     /** @type {number} */
     framesTillFullUpdate = 0;
@@ -348,21 +349,12 @@ class GSplatManager {
 
     updateWorldState() {
 
-        // Check if any placement's format or modifier changed
-        let currentStateSum = 0;
-        for (const p of this.layerPlacements) {
-            currentStateSum += p.resource?.format?.extraStreamsVersion ?? 0;
-            currentStateSum += p.workBufferModifier?.hash ?? 0;
-        }
+        // Check for state changes (format version, modifier hash, numSplats)
+        let stateChanged = this._stateTracker.hasChanges(this.layerPlacements);
         for (const [, inst] of this.octreeInstances) {
-            for (const p of inst.activePlacements) {
-                currentStateSum += p.resource?.format?.extraStreamsVersion ?? 0;
-                currentStateSum += p.workBufferModifier?.hash ?? 0;
+            if (this._stateTracker.hasChanges(inst.activePlacements)) {
+                stateChanged = true;
             }
-        }
-        const stateChanged = currentStateSum !== this._lastPlacementStateSum;
-        if (stateChanged) {
-            this._lastPlacementStateSum = currentStateSum;
         }
 
         // Recreate world state if there are changes

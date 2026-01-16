@@ -26,10 +26,16 @@ const tempMap = new Map();
  *  @ignore
  */
 class GSplatResourceBase {
-    /** @type {GraphicsDevice} */
+    /**
+     * @type {GraphicsDevice}
+     * @ignore
+     */
     device;
 
-    /** @type {GSplatData | GSplatCompressedData | GSplatSogData} */
+    /**
+     * @type {GSplatData | GSplatCompressedData | GSplatSogData}
+     * @ignore
+     */
     gsplatData;
 
     /** @type {Float32Array} */
@@ -38,16 +44,28 @@ class GSplatResourceBase {
     /** @type {BoundingBox} */
     aabb;
 
-    /** @type {Mesh|null} */
+    /**
+     * @type {Mesh|null}
+     * @ignore
+     */
     mesh = null;
 
-    /** @type {VertexBuffer|null} */
+    /**
+     * @type {VertexBuffer|null}
+     * @ignore
+     */
     instanceIndices = null;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     id = id++;
 
-    /** @type {Map<string, WorkBufferRenderInfo>} */
+    /**
+     * @type {Map<string, WorkBufferRenderInfo>}
+     * @ignore
+     */
     workBufferRenderInfos = new Map();
 
     /**
@@ -125,6 +143,7 @@ class GSplatResourceBase {
      * in use by the rendering pipeline.
      *
      * @type {number}
+     * @ignore
      */
     get refCount() {
         return this._refCount;
@@ -170,6 +189,7 @@ class GSplatResourceBase {
      * @param {number} [formatHash] - Captured format hash for shader caching.
      * @param {string} [formatDeclarations] - Captured format declarations for shader compilation.
      * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
+     * @ignore
      */
     getWorkBufferRenderInfo(useIntervals, colorTextureFormat, colorOnly = false, workBufferModifier = null, formatHash, formatDeclarations = '') {
 
