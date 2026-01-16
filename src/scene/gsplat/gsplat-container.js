@@ -54,6 +54,11 @@ class GSplatContainer extends GSplatResourceBase {
     /**
      * Maximum number of splats this container can hold.
      *
+     * Internal note: We cannot (easily) implement resizing of the container, due textures needing
+     * to be constant for the world state in GsplatInfo. This is non-issue for gpu based sorting
+     * of course, but not for cpu based sorting. The workaround is to recreate container when the
+     * size changes.
+     *
      * @type {number}
      * @private
      */
