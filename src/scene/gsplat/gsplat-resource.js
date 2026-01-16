@@ -59,7 +59,7 @@ class GSplatResource extends GSplatResourceBase {
         }
 
         // Create format with streams and shader chunk include
-        this.format = new GSplatFormat(device, streams, {
+        this._format = new GSplatFormat(device, streams, {
             readGLSL: '#include "gsplatUncompressedVS"',
             readWGSL: '#include "gsplatUncompressedVS"'
         });

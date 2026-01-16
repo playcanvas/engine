@@ -8,6 +8,7 @@ import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
  * @import { GraphicsDevice } from "../../platform/graphics/graphics-device.js";
  * @import { GSplatResourceBase } from "../gsplat/gsplat-resource-base.js"
  * @import { GSplatPlacement } from "./gsplat-placement.js"
+ * @import { GSplatStreams } from "../gsplat/gsplat-streams.js"
  * @import { GraphNode } from '../graph-node.js';
  * @import { ScopeId } from '../../platform/graphics/scope-id.js';
  * @import { Vec2 } from '../../core/math/vec2.js';
@@ -17,6 +18,10 @@ import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
 const vecs = [];
 
 /**
+ * Represents a snapshot of gsplat state for rendering. This class captures all necessary data
+ * at a point in time and should not hold references back to the source placement. All required
+ * data should be copied or referenced, allowing placement to be modified without affecting the info.
+ *
  * @ignore
  */
 class GSplatInfo {
@@ -85,6 +90,34 @@ class GSplatInfo {
     parameters = null;
 
     /**
+     * Custom shader code for work buffer modification (object with code and pre-computed hash).
+     *
+     * @type {{ code: string, hash: number }|null}
+     */
+    workBufferModifier = null;
+
+    /**
+     * Instance texture streams (reference to placement's streams, stable object).
+     *
+     * @type {GSplatStreams|null}
+     */
+    instanceStreams = null;
+
+    /**
+     * Format hash captured at creation time for shader caching.
+     *
+     * @type {number}
+     */
+    formatHash = 0;
+
+    /**
+     * Format declarations captured at creation time for shader compilation.
+     *
+     * @type {string}
+     */
+    formatDeclarations = '';
+
+    /**
      * Callback to consume render dirty flag from the source placement.
      *
      * @type {Function|null}
@@ -111,7 +144,14 @@ class GSplatInfo {
         this.numSplats = resource.numSplats;
         this.aabb.copy(placement.aabb);
         this.parameters = placement.parameters;
+        this.workBufferModifier = placement.workBufferModifier;
+        this.formatHash = resource.format.hash;
+        this.formatDeclarations = resource.format.getDeclarations();
         this._consumeRenderDirty = consumeRenderDirty;
+
+        // no need to deep copy as streams can only be added to, so it won't hurt to have additional
+        // textures that the shader does not use yet.
+        this.instanceStreams = placement.streams;
 
         this.updateIntervals(placement.intervals);
     }
@@ -193,6 +233,14 @@ class GSplatInfo {
 
             // clear temp array
             vecs.length = 0;
+        } else {
+            // check if we need to limit to active splats (instead of rendering all splats)
+            const totalCenters = resource.centers?.length / 3;
+            if (totalCenters && this.activeSplats < totalCenters) {
+                // Provide interval [0, numSplats) to limit sorting to active splats only
+                this.intervals[0] = 0;
+                this.intervals[1] = this.activeSplats;
+            }
         }
     }
 

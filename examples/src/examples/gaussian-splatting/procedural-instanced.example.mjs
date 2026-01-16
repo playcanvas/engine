@@ -85,9 +85,9 @@ const format = new pc.GSplatFormat(device, [
     `
 });
 
-// Create container
-const numSplats = gridSize ** 3;
-const container = new pc.GSplatContainer(device, numSplats, format);
+// Create container with max capacity
+const maxSplats = gridSize ** 3;
+const container = new pc.GSplatContainer(device, maxSplats, format);
 
 // Fill data texture (RGBA8: RGB=normalized position 0-1, A=brightness 0-1)
 const data = container.getTexture('data').lock();
@@ -237,6 +237,10 @@ app.on('update', (dt) => {
         child.gsplat?.setParameter('uTint', hueToRgb(hue1));
         child.gsplat?.setParameter('uTint2', hueToRgb(hue2));
     });
+
+    // Bounce numSplats between 0 and max
+    const t = (Math.cos(time * 0.5) + 1) * 0.5;
+    container.numSplats = Math.floor(t * maxSplats);
 });
 
 export { app };
