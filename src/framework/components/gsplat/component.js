@@ -1,4 +1,5 @@
-import { LAYERID_WORLD } from '../../../scene/constants.js';
+import { hashCode } from '../../../core/hash.js';
+import { LAYERID_WORLD, WORKBUFFER_UPDATE_AUTO } from '../../../scene/constants.js';
 import { GSplatInstance } from '../../../scene/gsplat/gsplat-instance.js';
 import { Asset } from '../../asset/asset.js';
 import { AssetReference } from '../../asset/asset-reference.js';
@@ -174,6 +175,22 @@ class GSplatComponent extends Component {
      * @private
      */
     _parameters = new Map();
+
+    /**
+     * Render mode for work buffer updates.
+     *
+     * @type {number}
+     * @private
+     */
+    _workBufferUpdate = WORKBUFFER_UPDATE_AUTO;
+
+    /**
+     * Custom shader modify code for this component (object with code and pre-computed hash).
+     *
+     * @type {{ code: string, hash: number }|null}
+     * @private
+     */
+    _workBufferModifier = null;
 
     /**
      * Create a new GSplatComponent.
@@ -486,6 +503,81 @@ class GSplatComponent extends Component {
     }
 
     /**
+     * Sets the work buffer update mode. Only applicable in unified rendering mode.
+     *
+     * In unified mode, splat data is rendered to a work buffer only when needed (e.g., when
+     * transforms change). Can be:
+     * - {@link WORKBUFFER_UPDATE_AUTO}: Update only when needed (default).
+     * - {@link WORKBUFFER_UPDATE_ONCE}: Force update this frame, then switch to AUTO.
+     * - {@link WORKBUFFER_UPDATE_ALWAYS}: Update every frame.
+     *
+     * This is typically useful when using custom shader code via {@link workBufferModifier} that
+     * depends on external factors like time or animated uniforms.
+     *
+     * Note: {@link WORKBUFFER_UPDATE_ALWAYS} has a performance impact as it re-renders
+     * all splat data to the work buffer every frame. Where possible, consider using shader
+     * customization on the unified gsplat material (`app.scene.gsplat.material`) which is
+     * applied during final rendering without re-rendering the work buffer.
+     *
+     * @type {number}
+     */
+    set workBufferUpdate(value) {
+        this._workBufferUpdate = value;
+        if (this._placement) {
+            this._placement.workBufferUpdate = value;
+        }
+    }
+
+    /**
+     * Gets the work buffer update mode.
+     *
+     * @type {number}
+     */
+    get workBufferUpdate() {
+        return this._workBufferUpdate;
+    }
+
+    /**
+     * Sets custom shader code for modifying splats when written to the work buffer. Only
+     * applicable in unified rendering mode.
+     *
+     * Must provide all three functions:
+     * - `modifySplatCenter`: Modify the splat center position
+     * - `modifySplatRotationScale`: Modify the splat rotation and scale
+     * - `modifySplatColor`: Modify the splat color
+     *
+     * Calling this method automatically triggers a work buffer re-render.
+     *
+     * @param {{ glsl?: string, wgsl?: string }|null} value - The modifier code for GLSL and/or WGSL.
+     * @example
+     * entity.gsplat.setWorkBufferModifier({
+     *     glsl: `
+     *         void modifySplatCenter(inout vec3 center) {}
+     *         void modifySplatRotationScale(vec3 originalCenter, vec3 modifiedCenter, inout vec4 rotation, inout vec3 scale) {}
+     *         void modifySplatColor(vec3 center, inout vec4 color) { color.rgb *= vec3(1.0, 0.0, 0.0); }
+     *     `,
+     *     wgsl: `
+     *         fn modifySplatCenter(center: ptr<function, vec3f>) {}
+     *         fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {}
+     *         fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) { (*color).r = 1.0; (*color).g = 0.0; (*color).b = 0.0; }
+     *     `
+     * });
+     */
+    setWorkBufferModifier(value) {
+        if (value) {
+            const device = this.system.app.graphicsDevice;
+            const code = (device.isWebGPU ? value.wgsl : value.glsl) ?? null;
+            // create new object with pre-computed hash (object is not mutated, always replaced)
+            this._workBufferModifier = code ? { code, hash: hashCode(code) } : null;
+        } else {
+            this._workBufferModifier = null;
+        }
+        if (this._placement) {
+            this._placement.workBufferModifier = this._workBufferModifier;
+        }
+    }
+
+    /**
      * Sets an array of layer IDs ({@link Layer#id}) to which this gsplat should belong. Don't
      * push, pop, splice or modify this array. If you want to change it, set a new one instead.
      *
@@ -585,6 +677,7 @@ class GSplatComponent extends Component {
 
         if (this._placement) {
             this.removeFromLayers();
+            this._placement.destroy();
             this._placement = null;
         }
 
@@ -790,6 +883,33 @@ class GSplatComponent extends Component {
         if (this._placement) this._placement.renderDirty = true;
     }
 
+    /**
+     * Gets an instance texture by name. Instance textures are per-component textures defined
+     * in the resource's format with `instance: true`. Only available in unified mode.
+     *
+     * @param {string} name - The name of the texture.
+     * @returns {Texture|undefined} The texture, or undefined if not found or not in unified mode.
+     * @example
+     * // Add an instance stream to the resource format
+     * resource.format.extraStreams = [
+     *     { name: 'instanceTint', format: pc.PIXELFORMAT_RGBA8, instance: true }
+     * ];
+     *
+     * // Get the instance texture and fill it with data
+     * const texture = entity.gsplat.getInstanceTexture('instanceTint');
+     * if (texture) {
+     *     const data = texture.lock();
+     *     // Fill texture data...
+     *     texture.unlock();
+     * }
+     */
+    getInstanceTexture(name) {
+        if (!this._placement) {
+            return undefined;
+        }
+        return this._placement.getInstanceTexture(name, this.system.app.graphicsDevice);
+    }
+
     _onGSplatAssetAdded() {
         if (!this._assetReference.asset) {
             return;
@@ -818,6 +938,8 @@ class GSplatComponent extends Component {
             this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters);
             this._placement.lodDistances = this._lodDistances;
             this._placement.splatBudget = this._splatBudget;
+            this._placement.workBufferUpdate = this._workBufferUpdate;
+            this._placement.workBufferModifier = this._workBufferModifier;
 
             // add placement to layers if component is enabled
             if (this.enabled && this.entity.enabled) {

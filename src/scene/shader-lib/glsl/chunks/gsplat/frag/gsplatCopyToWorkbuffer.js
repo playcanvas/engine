@@ -9,6 +9,7 @@ export default /* glsl */`
 #include "gsplatQuatToMat3VS"
 #include "gsplatFormatVS"
 #include "gsplatReadVS"
+#include "gsplatModifyVS"
 
 uniform int uStartLine;      // Start row in destination texture
 uniform int uViewportWidth;  // Width of the destination viewport in pixels
@@ -87,6 +88,13 @@ void main(void) {
         }
         vec3 worldScale = model_scale * srcScale;
 
+        // Apply custom center modification
+        vec3 originalCenter = worldCenter;
+        modifySplatCenter(worldCenter);
+
+        // Apply custom rotation/scale modification
+        modifySplatRotationScale(originalCenter, worldCenter, worldRotation, worldScale);
+
         // read color
         vec4 color = readColor(source);
 
@@ -103,6 +111,9 @@ void main(void) {
             // evaluate
             color.xyz += evalSH(sh, dir) * scale;
         #endif
+
+        // Apply custom color modification
+        modifySplatColor(worldCenter, color);
 
         color.xyz *= uColorMultiply;
 

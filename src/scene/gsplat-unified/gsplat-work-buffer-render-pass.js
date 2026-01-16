@@ -133,11 +133,17 @@ class GSplatWorkBufferRenderPass extends RenderPass {
 
         const { intervals, activeSplats, lineStart, viewport, intervalTexture } = splatInfo;
 
+        // Get work buffer modifier for per-instance shader customization
+        const workBufferModifier = splatInfo.workBufferModifier;
+
         // quad renderer and material are cached in the resource
         const workBufferRenderInfo = resource.getWorkBufferRenderInfo(
             intervals.length > 0,
             this.workBuffer.colorTextureFormat,
-            this.colorOnly
+            this.colorOnly,
+            workBufferModifier,
+            splatInfo.formatHash,
+            splatInfo.formatDeclarations
         );
 
         // Assign material properties to scope
@@ -183,6 +189,15 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         if (splatInfo.parameters) {
             for (const param of splatInfo.parameters.values()) {
                 param.scopeId.setValue(param.data);
+            }
+        }
+
+        // Bind instance textures if available
+        if (splatInfo.instanceStreams) {
+            // Sync to ensure textures exist for any newly added streams
+            splatInfo.instanceStreams.syncWithFormat(splatInfo.resource.format);
+            for (const [name, texture] of splatInfo.instanceStreams.textures) {
+                scope.resolve(name).setValue(texture);
             }
         }
 

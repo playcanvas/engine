@@ -124,6 +124,14 @@ class GSplatManager {
     /** @type {number} */
     sortedVersion = 0;
 
+    /**
+     * Sum of all placements' format versions and modifier hashes, used to detect state changes.
+     *
+     * @type {number}
+     * @private
+     */
+    _lastPlacementStateSum = 0;
+
     /** @type {number} */
     framesTillFullUpdate = 0;
 
@@ -340,8 +348,25 @@ class GSplatManager {
 
     updateWorldState() {
 
+        // Check if any placement's format or modifier changed
+        let currentStateSum = 0;
+        for (const p of this.layerPlacements) {
+            currentStateSum += p.resource?.format?.extraStreamsVersion ?? 0;
+            currentStateSum += p.workBufferModifier?.hash ?? 0;
+        }
+        for (const [, inst] of this.octreeInstances) {
+            for (const p of inst.activePlacements) {
+                currentStateSum += p.resource?.format?.extraStreamsVersion ?? 0;
+                currentStateSum += p.workBufferModifier?.hash ?? 0;
+            }
+        }
+        const stateChanged = currentStateSum !== this._lastPlacementStateSum;
+        if (stateChanged) {
+            this._lastPlacementStateSum = currentStateSum;
+        }
+
         // Recreate world state if there are changes
-        const worldChanged = this.layerPlacementsDirty || this.worldStates.size === 0;
+        const worldChanged = this.layerPlacementsDirty || stateChanged || this.worldStates.size === 0;
         if (worldChanged) {
             this.lastWorldStateVersion++;
             const splats = [];
@@ -351,6 +376,7 @@ class GSplatManager {
 
             // add standalone splats
             for (const p of this.layerPlacements) {
+                p.ensureInstanceStreams(this.device);
                 const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p));
                 splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                 splats.push(splatInfo);
@@ -360,6 +386,7 @@ class GSplatManager {
             for (const [, inst] of this.octreeInstances) {
                 inst.activePlacements.forEach((p) => {
                     if (p.resource) {
+                        p.ensureInstanceStreams(this.device);
                         const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p));
                         splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                         splats.push(splatInfo);
