@@ -136,12 +136,12 @@ class XrInputSource extends EventHandler {
     static EVENT_HITTESTADD = 'hittest:add';
 
     /**
-     * Fired when {@link XrHitTestSource} is removed to the the input source. The handler is passed
+     * Fired when {@link XrHitTestSource} is removed from the input source. The handler is passed
      * the {@link XrHitTestSource} object that has been removed.
      *
      * @event
      * @example
-     * inputSource.on('remove', (hitTestSource) => {
+     * inputSource.on('hittest:remove', (hitTestSource) => {
      *     // hit test source is removed
      * });
      */
@@ -565,7 +565,7 @@ class XrInputSource extends EventHandler {
 
         const parent = this._manager.camera.parent;
         if (parent) {
-            const parentTransform = this._manager.camera.parent.getWorldTransform();
+            const parentTransform = parent.getWorldTransform();
 
             parentTransform.getTranslation(this._position);
             this._rotation.setFromMat4(parentTransform);
@@ -598,7 +598,7 @@ class XrInputSource extends EventHandler {
      * Get the local space position of input source if it is handheld ({@link XrInputSource#grip}
      * is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
      *
-     * @returns {Vec3|null} The world space position of handheld input source.
+     * @returns {Vec3|null} The local space position of handheld input source.
      */
     getLocalPosition() {
         return this._localPosition;
@@ -623,7 +623,7 @@ class XrInputSource extends EventHandler {
      * Get the local space rotation of input source if it is handheld ({@link XrInputSource#grip}
      * is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
      *
-     * @returns {Quat|null} The world space rotation of handheld input source.
+     * @returns {Quat|null} The local space rotation of handheld input source.
      */
     getLocalRotation() {
         return this._localRotation;
