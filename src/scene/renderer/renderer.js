@@ -508,8 +508,11 @@ class Renderer {
     updateCameraFrustum(camera) {
 
         if (camera.xr && camera.xr.views.list.length) {
-            // calculate combined frustum from all XR views to avoid culling objects
-            // visible in any view (e.g. right edge of right eye in stereo rendering)
+            // Calculate combined frustum from all XR views to avoid culling objects
+            // visible in any view (e.g. right edge of right eye in stereo rendering).
+            // This works because WebXR uses parallel projection for stereo views - both eyes
+            // look in the same direction with only a horizontal offset, so frustum plane
+            // normals are identical and we can merge by selecting outermost planes.
             const views = camera.xr.views.list;
 
             // first view establishes the base frustum

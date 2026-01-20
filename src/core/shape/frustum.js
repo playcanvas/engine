@@ -117,6 +117,10 @@ class Frustum {
      * both. This is useful for multi-view rendering such as stereo XR where culling should keep
      * objects visible in any view.
      *
+     * Note: This method assumes both frustums have similar orientation (parallel views). This is
+     * valid for WebXR stereo rendering where eyes use parallel projection with only a horizontal
+     * offset, not toe-in convergence.
+     *
      * @param {Frustum} other - The other frustum to add.
      * @returns {Frustum} Self for chaining.
      */
