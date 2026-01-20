@@ -98,8 +98,10 @@ class XrControllers extends Script {
                         jointEntity.setRotation(joint.getRotation());
                     }
                 } else {
-                    entity.setPosition(inputSource.getPosition());
-                    entity.setRotation(inputSource.getRotation());
+                    const position = inputSource.getPosition();
+                    const rotation = inputSource.getRotation();
+                    if (position) entity.setPosition(position);
+                    if (rotation) entity.setRotation(rotation);
                 }
             }
         }
