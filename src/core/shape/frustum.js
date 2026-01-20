@@ -112,6 +112,26 @@ class Frustum {
     }
 
     /**
+     * Expands this frustum to also contain another frustum. For each of the 6 planes, the plane
+     * that is further out (larger distance) is kept, creating a combined frustum that encompasses
+     * both. This is useful for multi-view rendering such as stereo XR where culling should keep
+     * objects visible in any view.
+     *
+     * @param {Frustum} other - The other frustum to add.
+     * @returns {Frustum} Self for chaining.
+     */
+    add(other) {
+        const planes = this.planes;
+        const otherPlanes = other.planes;
+        for (let p = 0; p < 6; p++) {
+            if (otherPlanes[p].distance > planes[p].distance) {
+                planes[p].copy(otherPlanes[p]);
+            }
+        }
+        return this;
+    }
+
+    /**
      * Tests whether a bounding sphere intersects the frustum. If the sphere is outside the
      * frustum, zero is returned. If the sphere intersects the frustum, 1 is returned. If the
      * sphere is completely inside the frustum, 2 is returned. Note that a sphere touching a
