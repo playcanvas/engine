@@ -586,7 +586,7 @@ class XrInputSource extends EventHandler {
      * @returns {Vec3|null} The world space position of handheld input source.
      */
     getPosition() {
-        if (!this._position) return null;
+        if (!this._grip) return null;
 
         this._updateTransforms();
         this._worldTransform.getTranslation(this._position);
@@ -611,7 +611,7 @@ class XrInputSource extends EventHandler {
      * @returns {Quat|null} The world space rotation of handheld input source.
      */
     getRotation() {
-        if (!this._rotation) return null;
+        if (!this._grip) return null;
 
         this._updateTransforms();
         this._rotation.setFromMat4(this._worldTransform);
