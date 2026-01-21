@@ -35,7 +35,7 @@ fn unpackRotation(bits: u32) -> vec4f {
 }
 
 // read center
-fn getCenter(source: ptr<function, SplatSource>) -> vec3f {
+fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
     // Initialize splatUV for generated load functions
     splatUV = (*source).uv;
 
@@ -57,7 +57,7 @@ fn getCenter(source: ptr<function, SplatSource>) -> vec3f {
     return mix(chunkDataA.xyz, vec3f(chunkDataA.w, chunkDataB.xy), unpack111011(packedData.x));
 }
 
-fn getColor(source: ptr<function, SplatSource>) -> vec4f {
+fn readColor(source: ptr<function, SplatSource>) -> vec4f {
     let r = unpack8888(packedData.w);
     return vec4f(mix(chunkDataD.xyz, vec3f(chunkDataD.w, chunkDataE.xy), r.rgb), r.w);
 }

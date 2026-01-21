@@ -14,7 +14,7 @@ uvec4 cachedSplatTexture0Data;
 uvec2 cachedSplatTexture1Data;
 
 // read the model-space center of the gaussian
-vec3 getCenter(SplatSource source) {
+vec3 readCenter(SplatSource source) {
     cachedSplatTexture0Data = texelFetch(splatTexture0, source.uv, 0);
     cachedSplatTexture1Data = texelFetch(splatTexture1, source.uv, 0).xy;
     return vec3(uintBitsToFloat(cachedSplatTexture0Data.r), uintBitsToFloat(cachedSplatTexture0Data.g), uintBitsToFloat(cachedSplatTexture0Data.b));
@@ -33,7 +33,7 @@ vec3 getScale() {
     return vec3(rotZscaleX.y, scaleYZ);
 }
 
-vec4 getColor(in SplatSource source) {
+vec4 readColor(in SplatSource source) {
     #ifdef GSPLAT_COLOR_UINT
         // Unpack RGBA from 4x half-float (16-bit) values stored in RGBA16U format
         uvec4 packed = texelFetch(splatColor, source.uv, 0);

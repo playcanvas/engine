@@ -1173,25 +1173,9 @@ export const WORKBUFFER_UPDATE_ONCE = 1;
 
 /**
  * Work buffer is updated every frame. Useful for custom shader code via
- * {@link GSplatComponent#setWorkBufferModifier} that depends on time or animated uniforms.
+ * {@link GSplatComponent#workBufferModifier} that depends on time or animated uniforms.
  *
  * @type {number}
  * @category Graphics
  */
 export const WORKBUFFER_UPDATE_ALWAYS = 2;
-
-/**
- * Stream texture is stored at resource level, shared across all component instances.
- *
- * @type {number}
- * @category Graphics
- */
-export const GSPLAT_STREAM_RESOURCE = 0;
-
-/**
- * Stream texture is stored per gsplat component instance.
- *
- * @type {number}
- * @category Graphics
- */
-export const GSPLAT_STREAM_INSTANCE = 1;

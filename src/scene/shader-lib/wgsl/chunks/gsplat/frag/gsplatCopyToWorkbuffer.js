@@ -67,7 +67,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         source.uv = vec2i(i32(source.id % srcSize), i32(source.id / srcSize));
 
         // read center in local space
-        var modelCenter = getCenter(&source);
+        var modelCenter = readCenter(&source);
 
         // compute world-space center for storage
         var worldCenter = (uniform.matrix_model * vec4f(modelCenter, 1.0)).xyz;
@@ -96,7 +96,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         modifySplatRotationScale(originalCenter, worldCenter, &worldRotation, &worldScale);
 
         // read color
-        var color = getColor(&source);
+        var color = readColor(&source);
 
         // evaluate spherical harmonics
         #if SH_BANDS > 0

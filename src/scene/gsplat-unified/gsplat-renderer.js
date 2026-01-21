@@ -199,7 +199,7 @@ class GSplatRenderer {
      */
     _injectFormatChunks() {
         const chunks = this.device.isWebGPU ? this._material.shaderChunks.wgsl : this._material.shaderChunks.glsl;
-        chunks.set('gsplatDeclarationsVS', this._format.getInputDeclarations());
+        chunks.set('gsplatDeclarationsVS', this._format.getDeclarations());
         chunks.set('gsplatReadVS', this._format.getReadCode());
     }
 

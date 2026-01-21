@@ -39,7 +39,7 @@ vec4 unpackRotation(uint bits) {
 }
 
 // read center
-vec3 getCenter(SplatSource source) {
+vec3 readCenter(SplatSource source) {
     // Initialize splatUV for generated load functions
     splatUV = source.uv;
 
@@ -60,7 +60,7 @@ vec3 getCenter(SplatSource source) {
     return mix(chunkDataA.xyz, vec3(chunkDataA.w, chunkDataB.xy), unpack111011(packedData.x));
 }
 
-vec4 getColor(in SplatSource source) {
+vec4 readColor(in SplatSource source) {
     vec4 r = unpack8888(packedData.w);
     return vec4(mix(chunkDataD.xyz, vec3(chunkDataD.w, chunkDataE.xy), r.rgb), r.w);
 }

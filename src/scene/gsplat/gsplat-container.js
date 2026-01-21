@@ -162,7 +162,7 @@ class GSplatContainer extends GSplatResourceBase {
 
         // Inject format chunks under container-specific names (used by gsplatContainerDeclVS/ReadVS)
         const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
-        chunks.set('gsplatContainerDeclarationsVS', this.format.getInputDeclarations());
+        chunks.set('gsplatContainerDeclarationsVS', this.format.getDeclarations());
         chunks.set('gsplatContainerUserReadVS', this.format.getReadCode());
 
         // Main entry points include the container wrapper chunks

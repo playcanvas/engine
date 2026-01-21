@@ -146,7 +146,7 @@ class GSplatInfo {
         this.parameters = placement.parameters;
         this.workBufferModifier = placement.workBufferModifier;
         this.formatHash = resource.format.hash;
-        this.formatDeclarations = resource.format.getInputDeclarations();
+        this.formatDeclarations = resource.format.getDeclarations();
         this._consumeRenderDirty = consumeRenderDirty;
 
         // no need to deep copy as streams can only be added to, so it won't hurt to have additional

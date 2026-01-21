@@ -85,16 +85,6 @@ class GSplatResourceBase {
     streams;
 
     /**
-     * Non-texture uniform parameters required by this resource's format.
-     * This is the single source of truth for format-specific uniforms (e.g., dequantization
-     * parameters) used by both material configuration and processing.
-     *
-     * @type {Map<string, any>}
-     * @ignore
-     */
-    parameters = new Map();
-
-    /**
      * @type {number}
      * @private
      */
@@ -117,9 +107,6 @@ class GSplatResourceBase {
         gsplatData.calcAabb(this.aabb);
     }
 
-    /**
-     * Destroys this resource and releases all GPU resources.
-     */
     destroy() {
         this.streams.destroy();
         this.mesh?.destroy();
@@ -356,11 +343,6 @@ class GSplatResourceBase {
         // Bind all textures from streams
         for (const [name, texture] of this.streams.textures) {
             material.setParameter(name, texture);
-        }
-
-        // Bind non-texture parameters (e.g., dequantization uniforms)
-        for (const [name, value] of this.parameters) {
-            material.setParameter(name, value);
         }
 
         // Set cached texture size
