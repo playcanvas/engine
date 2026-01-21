@@ -174,7 +174,7 @@ assetListLoader.load(() => {
         customColorTexture.unlock();
 
         // Use alpha blending: new color replaces old based on intensity (alpha)
-        // eslint-disable-next-line import/namespace
+
         processor.blendState = pc.BlendState.ALPHABLEND;
 
         // Set up workBufferModifier to read customColor and blend with original

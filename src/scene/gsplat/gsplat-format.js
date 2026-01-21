@@ -300,7 +300,7 @@ class GSplatFormat {
             const info = getShaderType(stream.format);
             const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
             const decl = template
-            .replace(/{name}/g, stream.name)
+            .replace(/\{name\}/g, stream.name)
             .replace('{sampler}', info.sampler ?? '')
             .replace('{textureType}', info.textureType ?? '')
             .replace('{returnType}', info.returnType)
