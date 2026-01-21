@@ -637,21 +637,6 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
     const result = new Mesh(device);
     result.aabb = getAccessorBoundingBox(accessors[primitive.attributes.POSITION]);
 
-    // create vertex description
-    const vertexDesc = [];
-    for (const [name, index] of Object.entries(primitive.attributes)) {
-        const accessor = accessors[index];
-        const semantic = gltfToEngineSemanticMap[name];
-        const componentType = getComponentType(accessor.componentType);
-
-        vertexDesc.push({
-            semantic: semantic,
-            components: getNumComponents(accessor.type),
-            type: componentType,
-            normalize: accessor.normalized ?? (semantic === SEMANTIC_COLOR && (componentType === TYPE_UINT8 || componentType === TYPE_UINT16))
-        });
-    }
-
     promises.push(new Promise((resolve, reject) => {
         // decode draco data
         const dracoExt = primitive.extensions.KHR_draco_mesh_compression;
@@ -660,30 +645,50 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
                 console.log(err);
                 reject(err);
             } else {
-                // worker reports order of attributes as array of attribute unique_id
-                const order = { };
-                for (const [name, index] of Object.entries(dracoExt.attributes)) {
-                    order[gltfToEngineSemanticMap[name]] = decompressedData.attributes.indexOf(index);
+                // create a mapping from draco attribute id to glTF semantic name
+                const idToSemantic = {};
+                for (const [name, id] of Object.entries(dracoExt.attributes)) {
+                    idToSemantic[id] = gltfToEngineSemanticMap[name];
                 }
+                // special id -1 is used for generated normals
+                idToSemantic[-1] = SEMANTIC_NORMAL;
 
-                // order vertexDesc
-                vertexDesc.sort((a, b) => {
-                    return order[a.semantic] - order[b.semantic];
-                });
+                // build vertex description from worker-provided attribute metadata
+                // this ensures we use the actual data types, sizes, and offsets from Draco decoding
+                const vertexDesc = [];
+                for (const attr of decompressedData.attributes) {
+                    const semantic = idToSemantic[attr.id];
+                    if (semantic !== undefined) {
+                        // get normalization info from glTF accessor if available
+                        let normalize = false;
+                        if (attr.id !== -1) {
+                            // find the glTF attribute name for this draco id
+                            for (const [name, id] of Object.entries(dracoExt.attributes)) {
+                                if (id === attr.id && primitive.attributes[name] !== undefined) {
+                                    const accessor = accessors[primitive.attributes[name]];
+                                    normalize = accessor.normalized ?? (semantic === SEMANTIC_COLOR && (attr.dataType === TYPE_UINT8 || attr.dataType === TYPE_UINT16));
+                                    break;
+                                }
+                            }
+                        }
 
-                // draco decompressor will generate normals if they are missing
-                if (!primitive.attributes?.NORMAL) {
-                    vertexDesc.splice(1, 0, {
-                        semantic: 'NORMAL',
-                        components: 3,
-                        type: TYPE_FLOAT32
-                    });
+                        vertexDesc.push({
+                            semantic: semantic,
+                            components: attr.numComponents,
+                            type: attr.dataType,
+                            normalize: normalize,
+                            // use offset and stride from worker to handle cases where Draco mesh
+                            // has additional attributes not listed in glTF
+                            offset: attr.offset,
+                            stride: decompressedData.stride
+                        });
+                    }
                 }
 
                 const vertexFormat = new VertexFormat(device, vertexDesc);
 
-                // create vertex buffer
-                const numVertices = decompressedData.vertices.byteLength / vertexFormat.size;
+                // use stride from worker to correctly calculate vertex count
+                const numVertices = decompressedData.vertices.byteLength / decompressedData.stride;
                 const indexFormat = numVertices <= 65535 ? INDEXFORMAT_UINT16 : INDEXFORMAT_UINT32;
                 const numIndices = decompressedData.indices.byteLength / (numVertices <= 65535 ? 2 : 4);
 
@@ -691,7 +696,7 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
                     if (numVertices !== accessors[primitive.attributes.POSITION].count) {
                         Debug.warn('mesh has invalid vertex count');
                     }
-                    if (numIndices !== accessors[primitive.indices].count) {
+                    if (primitive.indices !== undefined && numIndices !== accessors[primitive.indices].count) {
                         Debug.warn('mesh has invalid index count');
                     }
                 });
