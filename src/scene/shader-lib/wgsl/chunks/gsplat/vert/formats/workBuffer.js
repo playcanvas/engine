@@ -9,7 +9,7 @@ var<private> cachedSplatTexture0Data: vec4u;
 var<private> cachedSplatTexture1Data: vec2u;
 
 // read the model-space center of the gaussian
-fn readCenter(source: ptr<function, SplatSource>) -> vec3f {
+fn getCenter(source: ptr<function, SplatSource>) -> vec3f {
     cachedSplatTexture0Data = textureLoad(splatTexture0, source.uv, 0);
     cachedSplatTexture1Data = textureLoad(splatTexture1, source.uv, 0).xy;
     return vec3f(bitcast<f32>(cachedSplatTexture0Data.r), bitcast<f32>(cachedSplatTexture0Data.g), bitcast<f32>(cachedSplatTexture0Data.b));
@@ -28,7 +28,7 @@ fn getScale() -> vec3f {
     return vec3f(rotZscaleX.y, scaleYZ);
 }
 
-fn readColor(source: ptr<function, SplatSource>) -> vec4f {
+fn getColor(source: ptr<function, SplatSource>) -> vec4f {
     return textureLoad(splatColor, source.uv, 0);
 }   
 `;

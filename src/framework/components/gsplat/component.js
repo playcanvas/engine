@@ -664,12 +664,13 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Gets the GSplat resource.
+     * Gets the GSplat resource. Returns the directly set resource if available,
+     * otherwise returns the resource from the assigned asset.
      *
      * @type {GSplatResourceBase|null}
      */
     get resource() {
-        return this._resource;
+        return this._resource ?? this._assetReference.asset?.resource ?? null;
     }
 
     /** @private */
@@ -885,15 +886,15 @@ class GSplatComponent extends Component {
 
     /**
      * Gets an instance texture by name. Instance textures are per-component textures defined
-     * in the resource's format with `instance: true`. Only available in unified mode.
+     * in the resource's format with `storage: GSPLAT_STREAM_INSTANCE`. Only available in unified mode.
      *
      * @param {string} name - The name of the texture.
      * @returns {Texture|undefined} The texture, or undefined if not found or not in unified mode.
      * @example
      * // Add an instance stream to the resource format
-     * resource.format.extraStreams = [
-     *     { name: 'instanceTint', format: pc.PIXELFORMAT_RGBA8, instance: true }
-     * ];
+     * resource.format.addExtraStreams([
+     *     { name: 'instanceTint', format: pc.PIXELFORMAT_RGBA8, storage: pc.GSPLAT_STREAM_INSTANCE }
+     * ]);
      *
      * // Get the instance texture and fill it with data
      * const texture = entity.gsplat.getInstanceTexture('instanceTint');
