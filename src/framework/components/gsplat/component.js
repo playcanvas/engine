@@ -651,9 +651,14 @@ class GSplatComponent extends Component {
     set resource(value) {
         if (this._resource === value) return;
 
-        // Clean up existing
-        if (this._resource) {
+        // Clean up existing (whether from direct resource or asset)
+        if (this._resource || this._assetReference.asset?.resource) {
             this._onGSplatAssetRemove();
+        }
+
+        // Disconnect asset when setting resource directly
+        if (value && this._assetReference.id) {
+            this._assetReference.id = null;
         }
 
         this._resource = value;
