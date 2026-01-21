@@ -117,7 +117,7 @@ const gsplatSogColorGLSL = /* glsl */`
         return vec3(vb) / vec3(2047.0, 2047.0, 1023.0);
     }
 
-    vec4 readColor(in SplatSource source) {
+    vec4 getColor(in SplatSource source) {
         // sample base color
         vec4 baseSample = mix(sh0_mins, sh0_maxs, texelFetch(sh0, source.uv, 0));
 
@@ -152,7 +152,7 @@ const gsplatSogColorWGSL = /* wgsl */`
         return vec3f(vb) / vec3f(2047.0, 2047.0, 1023.0);
     }
 
-    fn readColor(source: ptr<function, SplatSource>) -> vec4f {
+    fn getColor(source: ptr<function, SplatSource>) -> vec4f {
         // sample base color
         let baseSample: vec4f = mix(uniform.sh0_mins, uniform.sh0_maxs, textureLoad(sh0, source.uv, 0));
         let base = vec4f(vec3f(0.5) + baseSample.xyz * SH_C0, 1.0 / (1.0 + exp(-baseSample.w)));

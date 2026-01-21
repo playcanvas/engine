@@ -9,6 +9,7 @@ export default /* wgsl */`
 #include "gsplatQuatToMat3VS"
 #include "gsplatFormatVS"
 #include "gsplatReadVS"
+#include "gsplatModifyVS"
 
 uniform uStartLine: i32;      // Start row in destination texture
 uniform uViewportWidth: i32;  // Width of the destination viewport in pixels
@@ -66,10 +67,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         source.uv = vec2i(i32(source.id % srcSize), i32(source.id / srcSize));
 
         // read center in local space
-        var modelCenter = readCenter(&source);
+        var modelCenter = getCenter(&source);
 
         // compute world-space center for storage
-        let worldCenter = (uniform.matrix_model * vec4f(modelCenter, 1.0)).xyz;
+        var worldCenter = (uniform.matrix_model * vec4f(modelCenter, 1.0)).xyz;
         var center: SplatCenter;
         initCenter(modelCenter, &center);
 
@@ -85,10 +86,17 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         if (worldRotation.w < 0.0) {
             worldRotation = -worldRotation;
         }
-        let worldScale = uniform.model_scale * srcScale;
+        var worldScale = uniform.model_scale * srcScale;
+
+        // Apply custom center modification
+        let originalCenter = worldCenter;
+        modifySplatCenter(&worldCenter);
+
+        // Apply custom rotation/scale modification
+        modifySplatRotationScale(originalCenter, worldCenter, &worldRotation, &worldScale);
 
         // read color
-        var color = readColor(&source);
+        var color = getColor(&source);
 
         // evaluate spherical harmonics
         #if SH_BANDS > 0
@@ -103,6 +111,9 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             // evaluate
             color = vec4f(color.xyz + evalSH(&sh, dir) * scale, color.w);
         #endif
+
+        // Apply custom color modification
+        modifySplatColor(worldCenter, &color);
 
         color = vec4f(color.xyz * uniform.uColorMultiply, color.w);
 

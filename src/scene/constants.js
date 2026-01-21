@@ -1153,3 +1153,45 @@ export const GSPLAT_SHADOW = 2;
  * @ignore
  */
 export const SHADOWCAMERA_NAME = 'pcShadowCamera';
+
+/**
+ * Work buffer is updated only when needed (transform, format, LOD changes, new gsplat etc).
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const WORKBUFFER_UPDATE_AUTO = 0;
+
+/**
+ * Work buffer is updated once on the next frame, then automatically switches to
+ * {@link WORKBUFFER_UPDATE_AUTO}.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const WORKBUFFER_UPDATE_ONCE = 1;
+
+/**
+ * Work buffer is updated every frame. Useful for custom shader code via
+ * {@link GSplatComponent#setWorkBufferModifier} that depends on time or animated uniforms.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const WORKBUFFER_UPDATE_ALWAYS = 2;
+
+/**
+ * Stream texture is stored at resource level, shared across all component instances.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_STREAM_RESOURCE = 0;
+
+/**
+ * Stream texture is stored per gsplat component instance.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_STREAM_INSTANCE = 1;

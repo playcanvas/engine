@@ -178,7 +178,7 @@ class GSplatInstance {
      */
     configureMaterial(material, options = {}) {
         // allow resource to configure the material
-        this.resource.configureMaterial(material);
+        this.resource.configureMaterial(material, null, this.resource.format.getInputDeclarations());
 
         // set instance properties
         material.setParameter('numSplats', 0);

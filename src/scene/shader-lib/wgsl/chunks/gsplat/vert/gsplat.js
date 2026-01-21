@@ -31,7 +31,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
-    var modelCenter: vec3f = readCenter(&source);
+    var modelCenter: vec3f = getCenter(&source);
 
     var center: SplatCenter;
     center.modelCenterOriginal = modelCenter;
@@ -53,7 +53,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     }
 
     // read color
-    var clr: vec4f = readColor(&source);
+    var clr: vec4f = getColor(&source);
 
     #if GSPLAT_AA
         // apply AA compensation

@@ -9,6 +9,7 @@ export default /* glsl */`
 #include "gsplatQuatToMat3VS"
 #include "gsplatFormatVS"
 #include "gsplatReadVS"
+#include "gsplatModifyVS"
 
 uniform int uStartLine;      // Start row in destination texture
 uniform int uViewportWidth;  // Width of the destination viewport in pixels
@@ -66,7 +67,7 @@ void main(void) {
         source.uv = ivec2(source.id % srcSize, source.id / srcSize);
 
         // read center in local space
-        vec3 modelCenter = readCenter(source);
+        vec3 modelCenter = getCenter(source);
 
         // compute world-space center for storage
         vec3 worldCenter = (matrix_model * vec4(modelCenter, 1.0)).xyz;
@@ -87,8 +88,15 @@ void main(void) {
         }
         vec3 worldScale = model_scale * srcScale;
 
+        // Apply custom center modification
+        vec3 originalCenter = worldCenter;
+        modifySplatCenter(worldCenter);
+
+        // Apply custom rotation/scale modification
+        modifySplatRotationScale(originalCenter, worldCenter, worldRotation, worldScale);
+
         // read color
-        vec4 color = readColor(source);
+        vec4 color = getColor(source);
 
         // evaluate spherical harmonics
         #if SH_BANDS > 0
@@ -103,6 +111,9 @@ void main(void) {
             // evaluate
             color.xyz += evalSH(sh, dir) * scale;
         #endif
+
+        // Apply custom color modification
+        modifySplatColor(worldCenter, color);
 
         color.xyz *= uColorMultiply;
 

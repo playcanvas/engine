@@ -17,6 +17,12 @@ class GSplatSogResource extends GSplatResourceBase {
         if (gsplatData.packedTexture) {
             this.streams.textures.set('packedTexture', gsplatData.packedTexture);
         }
+        if (gsplatData.packedSh0) {
+            this.streams.textures.set('packedSh0', gsplatData.packedSh0);
+        }
+        if (gsplatData.packedShN) {
+            this.streams.textures.set('packedShN', gsplatData.packedShN);
+        }
 
         // Define streams for textures that use splatUV
         const streams = [
@@ -25,71 +31,68 @@ class GSplatSogResource extends GSplatResourceBase {
 
         // Create format with streams and shader chunk include
         // Note: We don't call streams.init() as textures are externally managed by gsplatData
-        this.format = new GSplatFormat(device, streams, {
+        this._format = new GSplatFormat(device, streams, {
             readGLSL: '#include "gsplatSogVS"',
             readWGSL: '#include "gsplatSogVS"'
         });
+
+        // Populate parameters map with dequantization uniforms
+        this._populateParameters();
     }
 
     destroy() {
         // Remove externally-owned textures without destroying them (they're owned by gsplatData)
         this.streams.textures.delete('packedTexture');
+        this.streams.textures.delete('packedSh0');
+        this.streams.textures.delete('packedShN');
         this.gsplatData.destroy();
         super.destroy();
     }
 
-    configureMaterialDefines(defines) {
-        defines.set('SH_BANDS', this.gsplatData.shBands);
-    }
+    /**
+     * Populates the parameters map with dequantization uniforms for SOG format.
+     *
+     * @private
+     */
+    _populateParameters() {
+        const { meta } = this.gsplatData;
 
-    configureMaterial(material) {
-        // Call base to inject format's shader chunks and bind textures from map
-        super.configureMaterial(material);
+        // means
+        if (meta.means) {
+            this.parameters.set('means_mins', meta.means.mins);
+            this.parameters.set('means_maxs', meta.means.maxs);
+        }
 
-        const { gsplatData } = this;
-        const { meta } = gsplatData;
-
-        // packedTexture is handled via this.textures map in base class
-        // Bind remaining textures that aren't in the map
-        ['packedSh0', 'packedShN'].forEach((name) => {
-            if (gsplatData[name]) {
-                material.setParameter(name, gsplatData[name]);
-            }
-        });
-
-        ['means'].forEach((name) => {
-            const v = meta[name];
-            if (v) {
-                material.setParameter(`${name}_mins`, v.mins);
-                material.setParameter(`${name}_maxs`, v.maxs);
-            }
-        });
-
+        // scales, sh0, shN - version-dependent logic
         if (meta.version === 2) {
             ['scales', 'sh0', 'shN'].forEach((name) => {
                 const v = meta[name];
                 if (v) {
-                    material.setParameter(`${name}_mins`, v.codebook[0]);
-                    material.setParameter(`${name}_maxs`, v.codebook[255]);
+                    this.parameters.set(`${name}_mins`, v.codebook[0]);
+                    this.parameters.set(`${name}_maxs`, v.codebook[255]);
                 }
             });
         } else {
             ['scales', 'sh0'].forEach((name) => {
                 const v = meta[name];
                 if (v) {
-                    material.setParameter(`${name}_mins`, Math.min(...v.mins.slice(0, 3)));
-                    material.setParameter(`${name}_maxs`, Math.max(...v.maxs.slice(0, 3)));
+                    this.parameters.set(`${name}_mins`, Math.min(...v.mins.slice(0, 3)));
+                    this.parameters.set(`${name}_maxs`, Math.max(...v.maxs.slice(0, 3)));
                 }
             });
 
             ['shN'].forEach((name) => {
                 const v = meta[name];
                 if (v) {
-                    material.setParameter(`${name}_mins`, v.mins);
-                    material.setParameter(`${name}_maxs`, v.maxs);
+                    this.parameters.set(`${name}_mins`, v.mins);
+                    this.parameters.set(`${name}_maxs`, v.maxs);
                 }
             });
         }
+    }
+
+    configureMaterialDefines(defines) {
+        defines.set('SH_BANDS', this.gsplatData.shBands);
     }
 }
 
