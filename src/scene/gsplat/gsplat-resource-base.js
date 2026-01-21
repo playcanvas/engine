@@ -26,10 +26,16 @@ const tempMap = new Map();
  *  @ignore
  */
 class GSplatResourceBase {
-    /** @type {GraphicsDevice} */
+    /**
+     * @type {GraphicsDevice}
+     * @ignore
+     */
     device;
 
-    /** @type {GSplatData | GSplatCompressedData | GSplatSogData} */
+    /**
+     * @type {GSplatData | GSplatCompressedData | GSplatSogData}
+     * @ignore
+     */
     gsplatData;
 
     /** @type {Float32Array} */
@@ -38,26 +44,37 @@ class GSplatResourceBase {
     /** @type {BoundingBox} */
     aabb;
 
-    /** @type {Mesh|null} */
+    /**
+     * @type {Mesh|null}
+     * @ignore
+     */
     mesh = null;
 
-    /** @type {VertexBuffer|null} */
+    /**
+     * @type {VertexBuffer|null}
+     * @ignore
+     */
     instanceIndices = null;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     id = id++;
 
-    /** @type {Map<string, WorkBufferRenderInfo>} */
+    /**
+     * @type {Map<string, WorkBufferRenderInfo>}
+     * @ignore
+     */
     workBufferRenderInfos = new Map();
 
     /**
-     * Format descriptor for this resource. Defines texture streams and shader code for reading
-     * splat data. Set by derived classes.
+     * Format descriptor for this resource.
      *
-     * @type {GSplatFormat|null}
-     * @ignore
+     * @type {GSplatFormat}
+     * @protected
      */
-    format = null;
+    _format;
 
     /**
      * Manages textures for this resource based on format streams.
@@ -126,6 +143,7 @@ class GSplatResourceBase {
      * in use by the rendering pipeline.
      *
      * @type {number}
+     * @ignore
      */
     get refCount() {
         return this._refCount;
@@ -167,26 +185,32 @@ class GSplatResourceBase {
      * @param {boolean} useIntervals - Whether to use intervals.
      * @param {number} colorTextureFormat - The format of the color texture (RGBA16F or RGBA16U).
      * @param {boolean} colorOnly - Whether to render only color (not full MRT).
+     * @param {{ code: string, hash: number }|null} [workBufferModifier] - Optional custom modifier (object with code and pre-computed hash).
+     * @param {number} [formatHash] - Captured format hash for shader caching.
+     * @param {string} [formatDeclarations] - Captured format declarations for shader compilation.
      * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
+     * @ignore
      */
-    getWorkBufferRenderInfo(useIntervals, colorTextureFormat, colorOnly = false) {
+    getWorkBufferRenderInfo(useIntervals, colorTextureFormat, colorOnly = false, workBufferModifier = null, formatHash, formatDeclarations = '') {
 
         // configure defines to fetch cached data
         this.configureMaterialDefines(tempMap);
         if (useIntervals) tempMap.set('GSPLAT_LOD', '');
         if (colorOnly) tempMap.set('GSPLAT_COLOR_ONLY', '');
 
-        // Include format hash to ensure different formats get different shaders
-        const formatHash = this.format?.hash ?? 0;
-        const definesKey = Array.from(tempMap.entries()).map(([k, v]) => `${k}=${v}`).join(';');
-        const key = `${formatHash};${definesKey}`;
+        let definesKey = '';
+        for (const [k, v] of tempMap) {
+            if (definesKey) definesKey += ';';
+            definesKey += `${k}=${v}`;
+        }
+        const key = `${formatHash};${workBufferModifier?.hash ?? 0};${definesKey}`;
 
         // get or create quad render
         let info = this.workBufferRenderInfos.get(key);
         if (!info) {
 
             const material = new ShaderMaterial();
-            this.configureMaterial(material);
+            this.configureMaterial(material, workBufferModifier, formatDeclarations);
 
             // copy tempMap to material defines
             tempMap.forEach((v, k) => material.setDefine(k, v));
@@ -261,6 +285,16 @@ class GSplatResourceBase {
     }
 
     /**
+     * Gets the format descriptor for this resource. The format defines texture streams and
+     * shader code for reading splat data. Use this to add extra streams.
+     *
+     * @type {GSplatFormat}
+     */
+    get format() {
+        return this._format;
+    }
+
+    /**
      * Gets a texture by name.
      *
      * @param {string} name - The name of the texture.
@@ -286,16 +320,24 @@ class GSplatResourceBase {
      * shader chunks and binds textures from the streams.
      *
      * @param {ShaderMaterial} material - The material to configure.
+     * @param {{ code: string, hash: number }|null} [workBufferModifier] - Optional custom modifier (object with code and pre-computed hash).
+     * @param {string} [formatDeclarations] - Captured format declarations for shader compilation.
      * @ignore
      */
-    configureMaterial(material) {
+    configureMaterial(material, workBufferModifier = null, formatDeclarations) {
         this.configureMaterialDefines(material.defines);
 
-        // Inject format's shader chunks if format is defined
-        if (this.format) {
-            const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
-            chunks.set('gsplatDeclarationsVS', this.format.getDeclarations());
-            chunks.set('gsplatReadVS', this.format.getReadCode());
+        // Sync resource textures with format (handles extra streams)
+        this.streams.syncWithFormat(this.format);
+
+        // Inject format's shader chunks
+        const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
+        chunks.set('gsplatDeclarationsVS', formatDeclarations);
+        chunks.set('gsplatReadVS', this.format.getReadCode());
+
+        // Set modify chunk if provided
+        if (workBufferModifier?.code) {
+            chunks.set('gsplatModifyVS', workBufferModifier.code);
         }
 
         // Bind all textures from streams

@@ -25,7 +25,7 @@ class GSplatSogResource extends GSplatResourceBase {
 
         // Create format with streams and shader chunk include
         // Note: We don't call streams.init() as textures are externally managed by gsplatData
-        this.format = new GSplatFormat(device, streams, {
+        this._format = new GSplatFormat(device, streams, {
             readGLSL: '#include "gsplatSogVS"',
             readWGSL: '#include "gsplatSogVS"'
         });
@@ -42,9 +42,9 @@ class GSplatSogResource extends GSplatResourceBase {
         defines.set('SH_BANDS', this.gsplatData.shBands);
     }
 
-    configureMaterial(material) {
+    configureMaterial(material, workBufferModifier = null, formatDeclarations) {
         // Call base to inject format's shader chunks and bind textures from map
-        super.configureMaterial(material);
+        super.configureMaterial(material, workBufferModifier, formatDeclarations);
 
         const { gsplatData } = this;
         const { meta } = gsplatData;

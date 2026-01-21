@@ -43,6 +43,22 @@ class GSplatStreams {
     _textureDimensions = new Vec2();
 
     /**
+     * Whether this manages instance-level textures (true) or resource-level textures (false).
+     *
+     * @type {boolean}
+     * @private
+     */
+    _isInstance = false;
+
+    /**
+     * The format version at last sync.
+     *
+     * @type {number}
+     * @private
+     */
+    _formatVersion = -1;
+
+    /**
      * Gets the texture dimensions (width and height).
      *
      * @type {Vec2}
@@ -55,9 +71,12 @@ class GSplatStreams {
      * Creates a new GSplatStreams instance.
      *
      * @param {GraphicsDevice} device - The graphics device.
+     * @param {boolean} [isInstance] - Whether this manages instance-level textures (true) or
+     * resource-level textures (false). Defaults to false.
      */
-    constructor(device) {
+    constructor(device, isInstance = false) {
         this.device = device;
+        this._isInstance = isInstance;
     }
 
     /**
@@ -85,6 +104,9 @@ class GSplatStreams {
             const texture = this.createTexture(stream.name, stream.format, this._textureDimensions);
             this.textures.set(stream.name, texture);
         }
+
+        // Mark as synced with current version
+        this._formatVersion = format.extraStreamsVersion;
     }
 
     /**
@@ -94,7 +116,39 @@ class GSplatStreams {
      * @returns {Texture|undefined} The texture, or undefined if not found.
      */
     getTexture(name) {
+        // Creates textures if format was modified since last sync
+        this.syncWithFormat(this.format);
         return this.textures.get(name);
+    }
+
+    /**
+     * Synchronizes textures with the format's stream definitions.
+     * Creates new textures for added streams. Textures are never destroyed here -
+     * streams can only be added, not removed (see GSplatFormat._extraStreams for rationale).
+     *
+     * @param {GSplatFormat|null} format - The format to sync with, or null to skip.
+     * @ignore
+     */
+    syncWithFormat(format) {
+        if (format) {
+            // Only skip if same format AND version matches
+            if (this.format === format && this._formatVersion === format.extraStreamsVersion) {
+                return; // Already synced
+            }
+
+            this.format = format;
+            const streams = this._isInstance ? format.instanceStreams : format.resourceStreams;
+
+            // Create new textures for added streams
+            for (const stream of streams) {
+                if (!this.textures.has(stream.name)) {
+                    const texture = this.createTexture(stream.name, stream.format, this._textureDimensions);
+                    this.textures.set(stream.name, texture);
+                }
+            }
+
+            this._formatVersion = format.extraStreamsVersion;
+        }
     }
 
     /**
@@ -114,11 +168,12 @@ class GSplatStreams {
      * @param {string} name - The name of the texture to be created.
      * @param {number} format - The pixel format of the texture.
      * @param {Vec2} size - The size of the texture in a Vec2 object, containing width (x) and height (y).
-     * @param {Uint8Array|Uint16Array|Uint32Array} [data] - The initial data to fill the texture with.
+     * @param {Uint8Array|Uint16Array|Uint32Array|Float32Array} [data] - The initial data to fill the texture with.
      * @returns {Texture} The created texture instance.
      */
     createTexture(name, format, size, data) {
-        return new Texture(this.device, {
+        /** @type {object} */
+        const options = {
             name: name,
             width: size.x,
             height: size.y,
@@ -128,9 +183,12 @@ class GSplatStreams {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            ...(data ? { levels: [data] } : { })
-        });
+            addressV: ADDRESS_CLAMP_TO_EDGE
+        };
+        if (data) {
+            options.levels = [data];
+        }
+        return new Texture(this.device, /** @type {any} */ (options));
     }
 }
 
