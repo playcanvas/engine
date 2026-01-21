@@ -42,8 +42,11 @@ function DracoWorker(jsUrl, wasmUrl) {
             case draco.DT_INT32: return 4;
             case draco.DT_UINT32: return 5;
             case draco.DT_FLOAT32: return 6;
+            default:
+                // Unsupported or unhandled Draco data type (e.g. DT_BOOL, DT_COMPLEX64);
+                // default to TYPE_FLOAT32 for compatibility.
+                return 6;
         }
-        return 6; // default to float32
     };
 
     const attributeSizeInBytes = (attribute) => {
