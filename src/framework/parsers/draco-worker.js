@@ -31,6 +31,21 @@ function DracoWorker(jsUrl, wasmUrl) {
         return 1;
     };
 
+    // Convert Draco data type to PlayCanvas TYPE_* constant
+    // TYPE_INT8=0, TYPE_UINT8=1, TYPE_INT16=2, TYPE_UINT16=3, TYPE_INT32=4, TYPE_UINT32=5, TYPE_FLOAT32=6
+    const toEngineDataType = (dataType) => {
+        switch (dataType) {
+            case draco.DT_INT8: return 0;
+            case draco.DT_UINT8: return 1;
+            case draco.DT_INT16: return 2;
+            case draco.DT_UINT16: return 3;
+            case draco.DT_INT32: return 4;
+            case draco.DT_UINT32: return 5;
+            case draco.DT_FLOAT32: return 6;
+        }
+        return 6; // default to float32
+    };
+
     const attributeSizeInBytes = (attribute) => {
         return attribute.num_components() * componentSizeInBytes(attribute.data_type());
     };
@@ -158,9 +173,6 @@ function DracoWorker(jsUrl, wasmUrl) {
             return (attributeOrder[a.attribute_type()] ?? attributeOrder.length) - (attributeOrder[b.attribute_type()] ?? attributeOrder.length);
         });
 
-        // store attribute order by unique_id
-        result.attributes = attributes.map(a => a.unique_id());
-
         // calculate total vertex size and attribute offsets
         let totalVertexSize = 0;
         const offsets = attributes.map((a) => {
@@ -171,13 +183,36 @@ function DracoWorker(jsUrl, wasmUrl) {
 
         // we will generate normals if they're missing
         const hasNormals = attributes.some(a => a.attribute_type() === NORMAL_ATTRIBUTE);
-        const normalOffset = offsets[1];
+        let normalOffset = offsets[1] ?? 0;
         if (!hasNormals) {
+            // normals will be inserted after position, adjust offsets
+            normalOffset = offsets[0] + Math.ceil(attributeSizeInBytes(attributes[0]) / 4) * 4;
             for (let i = 1; i < offsets.length; ++i) {
                 offsets[i] += 12;
             }
             totalVertexSize += 12;
         }
+
+        // store attribute metadata including unique_id, data type, components, and offset
+        result.attributes = attributes.map((a, i) => ({
+            id: a.unique_id(),
+            dataType: toEngineDataType(a.data_type()),
+            numComponents: a.num_components(),
+            offset: offsets[i]
+        }));
+
+        // if normals are generated, insert normal attribute metadata after position
+        if (!hasNormals) {
+            result.attributes.splice(1, 0, {
+                id: -1,  // special id to indicate generated normals
+                dataType: 6, // TYPE_FLOAT32
+                numComponents: 3,
+                offset: normalOffset
+            });
+        }
+
+        // store the stride for the consumer
+        result.stride = totalVertexSize;
 
         // create vertex buffer
         result.vertices = new ArrayBuffer(mesh.num_points() * totalVertexSize);
@@ -230,7 +265,8 @@ function DracoWorker(jsUrl, wasmUrl) {
             error: result.error,
             indices: result.indices,
             vertices: result.vertices,
-            attributes: result.attributes
+            attributes: result.attributes,
+            stride: result.stride
         }, [result.indices, result.vertices].filter(t => t != null));
     };
 
