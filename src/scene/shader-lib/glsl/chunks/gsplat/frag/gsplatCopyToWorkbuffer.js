@@ -67,7 +67,7 @@ void main(void) {
         source.uv = ivec2(source.id % srcSize, source.id / srcSize);
 
         // read center in local space
-        vec3 modelCenter = readCenter(source);
+        vec3 modelCenter = getCenter(source);
 
         // compute world-space center for storage
         vec3 worldCenter = (matrix_model * vec4(modelCenter, 1.0)).xyz;
@@ -96,7 +96,7 @@ void main(void) {
         modifySplatRotationScale(originalCenter, worldCenter, worldRotation, worldScale);
 
         // read color
-        vec4 color = readColor(source);
+        vec4 color = getColor(source);
 
         // evaluate spherical harmonics
         #if SH_BANDS > 0
