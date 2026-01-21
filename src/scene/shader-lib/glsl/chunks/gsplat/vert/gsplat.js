@@ -27,7 +27,7 @@ void main(void) {
         return;
     }
 
-    vec3 modelCenter = readCenter(source);
+    vec3 modelCenter = getCenter(source);
 
     SplatCenter center;
     center.modelCenterOriginal = modelCenter;
@@ -49,7 +49,7 @@ void main(void) {
     }
 
     // read color
-    vec4 clr = readColor(source);
+    vec4 clr = getColor(source);
 
     #if GSPLAT_AA
         // apply AA compensation

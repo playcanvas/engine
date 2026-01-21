@@ -1,6 +1,13 @@
 import { getGlslShaderType, getWgslShaderType } from '../../platform/graphics/constants.js';
 import { hashCode } from '../../core/hash.js';
 import { Debug } from '../../core/debug.js';
+import { GSPLAT_STREAM_RESOURCE, GSPLAT_STREAM_INSTANCE } from '../constants.js';
+
+// Shader chunk templates for stream declarations
+import glslStreamDecl from '../shader-lib/glsl/chunks/gsplat/vert/gsplatStreamDecl.js';
+import wgslStreamDecl from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatStreamDecl.js';
+import glslStreamOutput from '../shader-lib/glsl/chunks/gsplat/vert/gsplatStreamOutput.js';
+import wgslStreamOutput from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatStreamOutput.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -10,7 +17,8 @@ import { Debug } from '../../core/debug.js';
  * @typedef {object} GSplatStreamDescriptor
  * @property {string} name - The name of the stream (used as texture uniform name).
  * @property {number} format - The pixel format of the texture (e.g. PIXELFORMAT_RGBA32F).
- * @property {boolean} [instance] - If true, texture is per gsplat component instance. Default: false.
+ * @property {number} [storage] - Storage type: GSPLAT_STREAM_RESOURCE (default, shared across
+ * instances) or GSPLAT_STREAM_INSTANCE (per-component instance).
  */
 
 /**
@@ -19,7 +27,7 @@ import { Debug } from '../../core/debug.js';
  * @param {GSplatStreamDescriptor[]} streams - Array of stream descriptors.
  * @returns {string} Serialized string.
  */
-const serializeStreams = streams => streams.map(s => `${s.name}:${s.format}:${s.instance}`).join(',');
+const serializeStreams = streams => streams.map(s => `${s.name}:${s.format}:${s.storage}`).join(',');
 
 /**
  * Gsplat resources store per-splat data (positions, colors, rotations, scales, spherical
@@ -49,7 +57,7 @@ class GSplatFormat {
     _device;
 
     /**
-     * Array of stream descriptors (deep copy).
+     * Array of stream descriptors.
      *
      * @type {GSplatStreamDescriptor[]}
      * @readonly
@@ -100,14 +108,6 @@ class GSplatFormat {
     _extraStreamsVersion = 0;
 
     /**
-     * Cached declarations (generated + user-provided).
-     *
-     * @type {string|null}
-     * @private
-     */
-    _cachedDeclarations = null;
-
-    /**
      * Cached hash value.
      *
      * @type {number|undefined}
@@ -136,27 +136,30 @@ class GSplatFormat {
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatStreamDescriptor[]} streams - Array of stream descriptors.
-     * @param {object} [options] - Optional parameters.
+     * @param {object} options - Format options.
      * @param {string} [options.readGLSL] - GLSL code that reads streams and sets splat
-     * attributes (splatCenter, splatColor, splatScale, splatRotation).
+     * attributes (splatCenter, splatColor, splatScale, splatRotation). Required for WebGL.
      * @param {string} [options.readWGSL] - WGSL code that reads streams and sets splat
-     * attributes (splatCenter, splatColor, splatScale, splatRotation).
+     * attributes (splatCenter, splatColor, splatScale, splatRotation). Required for WebGPU.
      * @param {string} [options.declarationsGLSL] - Additional GLSL declarations (e.g. custom uniforms).
      * @param {string} [options.declarationsWGSL] - Additional WGSL declarations (e.g. custom uniforms).
      */
-    constructor(device, streams, options = {}) {
+    constructor(device, streams, options) {
         this._device = device;
 
-        // Deep copy streams
-        this.streams = streams.map(s => ({ name: s.name, format: s.format, instance: s.instance ?? false }));
+        // Shallow copy streams array
+        this.streams = [...streams];
 
         // Initialize stream names set for duplicate checking
         this._streamNames = new Set(this.streams.map(s => s.name));
 
         // Pick the appropriate shader language based on device
         const isWebGPU = device.isWebGPU;
-        this._read = isWebGPU ? (options.readWGSL ?? '') : (options.readGLSL ?? '');
+        this._read = isWebGPU ? options.readWGSL : options.readGLSL;
         this._declarations = isWebGPU ? (options.declarationsWGSL ?? '') : (options.declarationsGLSL ?? '');
+
+        // Validate read code is provided for the current device
+        Debug.assert(this._read, `GSplatFormat: ${isWebGPU ? 'readWGSL' : 'readGLSL'} is required`);
     }
 
     /**
@@ -211,15 +214,15 @@ class GSplatFormat {
         if (this._resourceStreams === null) {
             // Base streams + extra streams that are not instance-level
             this._resourceStreams = [
-                ...this.streams.filter(s => !s.instance),
-                ...this._extraStreams.filter(s => !s.instance)
+                ...this.streams.filter(s => s.storage !== GSPLAT_STREAM_INSTANCE),
+                ...this._extraStreams.filter(s => s.storage !== GSPLAT_STREAM_INSTANCE)
             ];
         }
         return this._resourceStreams;
     }
 
     /**
-     * Returns all instance-level streams (extra streams where instance === true).
+     * Returns all instance-level streams (extra streams with GSPLAT_STREAM_INSTANCE storage).
      * Used by GSplatStreams for per-component-instance texture management.
      *
      * @type {GSplatStreamDescriptor[]}
@@ -227,7 +230,7 @@ class GSplatFormat {
      */
     get instanceStreams() {
         if (this._instanceStreams === null) {
-            this._instanceStreams = this._extraStreams.filter(s => s.instance);
+            this._instanceStreams = this._extraStreams.filter(s => s.storage === GSPLAT_STREAM_INSTANCE);
         }
         return this._instanceStreams;
     }
@@ -235,8 +238,8 @@ class GSplatFormat {
     /**
      * Adds additional texture streams for custom gsplat data. Each stream defines a texture
      * that can store extra information, accessible in shaders via generated load functions.
-     * Streams with `instance: true` are created per gsplat component instance, while others
-     * are shared across all instances of the same resource.
+     * Streams with `storage: GSPLAT_STREAM_INSTANCE` are created per gsplat component instance,
+     * while others are shared across all instances of the same resource.
      *
      * Note: Streams cannot be removed once added currently.
      *
@@ -252,11 +255,11 @@ class GSplatFormat {
                 continue;
             }
 
-            // Add with instance default
+            // Add with storage default
             this._extraStreams.push({
                 name: s.name,
                 format: s.format,
-                instance: s.instance ?? false
+                storage: s.storage ?? GSPLAT_STREAM_RESOURCE
             });
             this._streamNames.add(s.name);
             added = true;
@@ -269,53 +272,43 @@ class GSplatFormat {
     }
 
     /**
-     * Generates declarations (texture uniforms + load functions).
+     * Generates input declarations (texture uniforms + load functions).
      *
+     * @param {string[]} [streamNames] - Optional array of stream names to filter. If not provided,
+     * generates declarations for all streams.
      * @returns {string} Shader code for declarations.
      * @ignore
      */
-    getDeclarations() {
-        if (this._cachedDeclarations === null) {
-            const isWebGPU = this._device.isWebGPU;
-            const lines = [];
+    getInputDeclarations(streamNames) {
+        const isWebGPU = this._device.isWebGPU;
+        const template = isWebGPU ? wgslStreamDecl : glslStreamDecl;
+        const getShaderType = isWebGPU ? getWgslShaderType : getGlslShaderType;
+        const lines = [];
 
-            // Add user-provided declarations (e.g. custom uniforms)
-            if (this._declarations) {
-                lines.push(`${this._declarations}\n`);
-            }
-
-            // Get all streams (base + extra) - shader declares all regardless of instance flag
-            const allStreams = [...this.streams, ...this._extraStreams];
-
-            if (isWebGPU) {
-                // WGSL: Generate texture uniforms and load functions
-                for (const stream of allStreams) {
-                    const info = getWgslShaderType(stream.format);
-                    lines.push(`var ${stream.name}: ${info.textureType};`);
-                }
-
-                for (const stream of allStreams) {
-                    const info = getWgslShaderType(stream.format);
-                    const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
-                    lines.push(`fn load${funcName}() -> ${info.returnType} { return textureLoad(${stream.name}, splatUV, 0); }`);
-                }
-            } else {
-                // GLSL: Generate texture uniforms and load functions
-                for (const stream of allStreams) {
-                    const info = getGlslShaderType(stream.format);
-                    lines.push(`uniform highp ${info.sampler} ${stream.name};`);
-                }
-
-                for (const stream of allStreams) {
-                    const info = getGlslShaderType(stream.format);
-                    const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
-                    lines.push(`${info.returnType} load${funcName}() { return texelFetch(${stream.name}, splatUV, 0); }`);
-                }
-            }
-
-            this._cachedDeclarations = lines.join('\n');
+        // Add user-provided declarations only when getting all streams
+        if (!streamNames && this._declarations) {
+            lines.push(`${this._declarations}\n`);
         }
-        return this._cachedDeclarations;
+
+        // Get streams - filter if names specified
+        let streams = [...this.streams, ...this._extraStreams];
+        if (streamNames) {
+            streams = streams.filter(s => streamNames.includes(s.name));
+        }
+
+        for (const stream of streams) {
+            const info = getShaderType(stream.format);
+            const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
+            const decl = template
+            .replace(/\{name\}/g, stream.name)
+            .replace('{sampler}', info.sampler ?? '')
+            .replace('{textureType}', info.textureType ?? '')
+            .replace('{returnType}', info.returnType)
+            .replace('{funcName}', funcName);
+            lines.push(decl);
+        }
+
+        return lines.join('\n');
     }
 
     /**
@@ -329,13 +322,63 @@ class GSplatFormat {
     }
 
     /**
+     * Generates output declarations (write functions) for MRT output streams.
+     * Used by GSplatProcessor to generate output functions for dstStreams.
+     * Each stream maps to an MRT slot (pcFragColor0, pcFragColor1, etc. in GLSL or
+     * processOutput.color, processOutput.color1, etc. in WGSL).
+     *
+     * @param {GSplatStreamDescriptor[]} outputStreams - Stream descriptors for output.
+     * @returns {string} Shader code for output write functions.
+     * @ignore
+     */
+    getOutputDeclarations(outputStreams) {
+        const isWebGPU = this._device.isWebGPU;
+        const lines = [];
+
+        // Generate output declarations using chunk template
+        const template = isWebGPU ? wgslStreamOutput : glslStreamOutput;
+        const getShaderType = isWebGPU ? getWgslShaderType : getGlslShaderType;
+
+        for (let i = 0; i < outputStreams.length; i++) {
+            const stream = outputStreams[i];
+            const info = getShaderType(stream.format);
+            const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
+            const colorSlot = i === 0 ? 'color' : `color${i}`;
+            const decl = template
+            .replace('{funcName}', funcName)
+            .replace('{returnType}', info.returnType)
+            .replace('{index}', String(i))
+            .replace('{colorSlot}', colorSlot);
+            lines.push(decl);
+        }
+
+        return lines.join('\n');
+    }
+
+    /**
+     * Returns a stream descriptor by name.
+     *
+     * @param {string} name - The name of the stream to find.
+     * @returns {GSplatStreamDescriptor|undefined} The stream descriptor, or undefined if not found.
+     * @ignore
+     */
+    getStream(name) {
+        // Check base streams first
+        let stream = this.streams.find(s => s.name === name);
+        if (!stream) {
+            // Check extra streams
+            stream = this._extraStreams.find(s => s.name === name);
+        }
+        return stream;
+    }
+
+    /**
      * Invalidates all cached values when streams change.
      *
      * @private
      */
     _invalidateCaches() {
         this._hash = undefined;
-        this._cachedDeclarations = null;
         this._resourceStreams = null;
         this._instanceStreams = null;
     }
