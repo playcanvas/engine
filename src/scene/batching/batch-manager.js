@@ -191,6 +191,17 @@ class BatchManager {
     }
 
     /**
+     * Retrieves a {@link BatchGroup} object with a corresponding id, if it exists, or null
+     * otherwise.
+     *
+     * @param {number} id - The batch group id.
+     * @returns {BatchGroup|null} The batch group matching the id or null if not found.
+     */
+    getGroupById(id) {
+        return this._batchGroups[id] ?? null;
+    }
+
+    /**
      * Return a list of all {@link Batch} objects that belong to the Batch Group supplied.
      *
      * @param {number} batchGroupId - The id of the batch group.
