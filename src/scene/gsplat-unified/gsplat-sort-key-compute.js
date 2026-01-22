@@ -290,7 +290,7 @@ class GSplatSortKeyCompute {
         this.binWeightsBuffer.write(0, binWeights);
 
         // Set parameters
-        compute.setParameter('splatTexture0', workBuffer.splatTexture0);
+        compute.setParameter('splatTexture0', workBuffer.getTexture('splatTexture0'));
         compute.setParameter('sortKeys', this.keysBuffer);
         compute.setParameter('binWeights', this.binWeightsBuffer);
 

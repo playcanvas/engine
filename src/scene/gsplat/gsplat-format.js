@@ -17,8 +17,13 @@ import wgslStreamOutput from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatStream
  * @typedef {object} GSplatStreamDescriptor
  * @property {string} name - The name of the stream (used as texture uniform name).
  * @property {number} format - The pixel format of the texture (e.g. PIXELFORMAT_RGBA32F).
+ * When used as an extra stream for work buffers or as a destination stream for
+ * GSplatProcessor, the format must be renderable as these textures are used as render
+ * targets. Ensure the format is renderable on all target devices. See {@link Texture} for
+ * details on renderable formats and device capabilities.
  * @property {number} [storage] - Storage type: GSPLAT_STREAM_RESOURCE (default, shared across
- * instances) or GSPLAT_STREAM_INSTANCE (per-component instance).
+ * instances) or GSPLAT_STREAM_INSTANCE (per-component instance). Note: Work buffer formats
+ * (accessed via `app.scene.gsplat.format`) do not support GSPLAT_STREAM_INSTANCE.
  */
 
 /**

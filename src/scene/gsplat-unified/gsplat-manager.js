@@ -209,7 +209,8 @@ class GSplatManager {
         this.scene = director.scene;
         this.director = director;
         this.cameraNode = cameraNode;
-        this.workBuffer = new GSplatWorkBuffer(device);
+
+        this.workBuffer = new GSplatWorkBuffer(device, this.scene.gsplat.format);
         this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
 
         // Choose sorting strategy based on gpuSorting flag and device capability

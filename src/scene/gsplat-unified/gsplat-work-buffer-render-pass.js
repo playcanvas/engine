@@ -139,11 +139,11 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         // quad renderer and material are cached in the resource
         const workBufferRenderInfo = resource.getWorkBufferRenderInfo(
             intervalTexture !== null,
-            this.workBuffer.colorTextureFormat,
             this.colorOnly,
             workBufferModifier,
             splatInfo.formatHash,
-            splatInfo.formatDeclarations
+            splatInfo.formatDeclarations,
+            this.workBuffer.format
         );
 
         // Assign material properties to scope

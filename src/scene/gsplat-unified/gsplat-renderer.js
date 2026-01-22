@@ -1,11 +1,10 @@
-import { SEMANTIC_POSITION, SEMANTIC_ATTR13, CULLFACE_NONE, PIXELFORMAT_RGBA16U } from '../../platform/graphics/constants.js';
+import { SEMANTIC_POSITION, SEMANTIC_ATTR13, CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import {
     BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, GSPLAT_FORWARD, GSPLAT_SHADOW,
     SHADOWCAMERA_NAME
 } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
-import { GSplatFormat } from '../gsplat/gsplat-format.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { math } from '../../core/math/math.js';
 
@@ -54,8 +53,13 @@ class GSplatRenderer {
     /** @type {boolean} */
     forceCopyMaterial = true;
 
-    /** @type {GSplatFormat} */
-    _format;
+    /**
+     * Cached work buffer format version for detecting extra stream changes.
+     *
+     * @type {number}
+     * @private
+     */
+    _workBufferFormatVersion = -1;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -70,6 +74,7 @@ class GSplatRenderer {
         this.cameraNode = cameraNode;
         this.layer = layer;
         this.workBuffer = workBuffer;
+        this._workBufferFormatVersion = workBuffer.format.extraStreamsVersion;
 
         // construct the material which renders the splats from the work buffer
         this._material = new ShaderMaterial({
@@ -153,27 +158,15 @@ class GSplatRenderer {
     configureMaterial() {
         const { device, workBuffer } = this;
 
-        // Create and cache format that includes work buffer reading chunks
-        this._format = new GSplatFormat(device, [], {
-            readGLSL: '#include "gsplatWorkBufferVS"',
-            readWGSL: '#include "gsplatWorkBufferVS"'
-        });
-
-        // Inject format's shader chunks
+        // Inject format's shader chunks (uses workBuffer.format)
         this._injectFormatChunks();
 
         // Set defines
         this._material.setDefine('STORAGE_ORDER', device.isWebGPU);
         this._material.setDefine('SH_BANDS', '0');
 
-        // Check if using RGBA16U format (fallback for when RGBA16F not supported)
-        const isColorUint = workBuffer.colorTextureFormat === PIXELFORMAT_RGBA16U;
-        this._material.setDefine('GSPLAT_COLOR_UINT', isColorUint);
-
-        // input textures (work buffer textures)
-        this._material.setParameter('splatColor', workBuffer.colorTexture);
-        this._material.setParameter('splatTexture0', workBuffer.splatTexture0);
-        this._material.setParameter('splatTexture1', workBuffer.splatTexture1);
+        // Bind work buffer textures from the texture map
+        this._bindWorkBufferTextures();
 
         // set instance properties
         const dither = false;
@@ -193,14 +186,34 @@ class GSplatRenderer {
     }
 
     /**
+     * Binds work buffer textures to the material.
+     *
+     * @private
+     */
+    _bindWorkBufferTextures() {
+        const { workBuffer } = this;
+
+        for (const stream of workBuffer.format.resourceStreams) {
+            const texture = workBuffer.getTexture(stream.name);
+            if (texture) {
+                this._material.setParameter(stream.name, texture);
+            }
+        }
+    }
+
+    /**
      * Injects format shader chunks into the material.
      * Called during initialization and after copying settings from user material.
      * @private
      */
     _injectFormatChunks() {
         const chunks = this.device.isWebGPU ? this._material.shaderChunks.wgsl : this._material.shaderChunks.glsl;
-        chunks.set('gsplatDeclarationsVS', this._format.getInputDeclarations());
-        chunks.set('gsplatReadVS', this._format.getReadCode());
+        const wbFormat = this.workBuffer.format;
+
+        // Use work buffer format for declarations and read code
+        // getInputDeclarations() returns all streams (base + extra)
+        chunks.set('gsplatDeclarationsVS', wbFormat.getInputDeclarations());
+        chunks.set('gsplatReadVS', wbFormat.getReadCode());
     }
 
     update(count, textureSize) {
@@ -242,10 +255,36 @@ class GSplatRenderer {
             this._material.setParameter('colorRampIntensity', params.colorRampIntensity);
         }
 
+        // Check if work buffer format has changed (extra streams added)
+        this._syncWithWorkBufferFormat();
+
         // Copy material settings from params.material if dirty or on first update
         if (this.forceCopyMaterial || params.material.dirty) {
             this.copyMaterialSettings(params.material);
             this.forceCopyMaterial = false;
+        }
+    }
+
+    /**
+     * Syncs with work buffer format when extra streams are added.
+     *
+     * @private
+     */
+    _syncWithWorkBufferFormat() {
+        const wbFormat = this.workBuffer.format;
+        if (this._workBufferFormatVersion !== wbFormat.extraStreamsVersion) {
+            this._workBufferFormatVersion = wbFormat.extraStreamsVersion;
+
+            // Sync work buffer textures with format
+            this.workBuffer.syncWithFormat();
+
+            // Re-inject format chunks with extra stream declarations
+            this._injectFormatChunks();
+
+            // Bind any new textures from the work buffer
+            this._bindWorkBufferTextures();
+
+            this._material.update();
         }
     }
 

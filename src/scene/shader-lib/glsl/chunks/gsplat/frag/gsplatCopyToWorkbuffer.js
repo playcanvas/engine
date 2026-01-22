@@ -3,12 +3,15 @@ export default /* glsl */`
 
 #define GSPLAT_CENTER_NOPROJ
 
+#include "gsplatHelpersVS"
+#include "gsplatFormatVS"
+#include "gsplatDeclarationsVS"
 #include "gsplatStructsVS"
 #include "gsplatCenterVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
-#include "gsplatFormatVS"
 #include "gsplatReadVS"
+#include "gsplatWorkBufferOutputVS"
 #include "gsplatModifyVS"
 
 uniform int uStartLine;      // Start row in destination texture
@@ -38,13 +41,13 @@ void main(void) {
 
         // Out of bounds: write zeros
         #ifdef GSPLAT_COLOR_UINT
-            pcFragColor0 = uvec4(0u);
+            writeSplatColor(uvec4(0u));
         #else
-            pcFragColor0 = vec4(0.0);
+            writeSplatColor(vec4(0.0));
         #endif
         #ifndef GSPLAT_COLOR_ONLY
-            pcFragColor1 = uvec4(0u);
-            pcFragColor2 = uvec2(0u);
+            writeSplatTexture0(uvec4(0u));
+            writeSplatTexture1(uvec4(0u));
         #endif
 
     } else {
@@ -117,24 +120,24 @@ void main(void) {
 
         color.xyz *= uColorMultiply;
 
-        // write out results
+        // write out results using generated write functions
         #ifdef GSPLAT_COLOR_UINT
             // Pack RGBA as 4x half-float (16-bit) values for RGBA16U format
             uint packed_rg = packHalf2x16(color.rg);
             uint packed_ba = packHalf2x16(color.ba);
-            pcFragColor0 = uvec4(
+            writeSplatColor(uvec4(
                 packed_rg & 0xFFFFu,    // R as half
                 packed_rg >> 16u,       // G as half
                 packed_ba & 0xFFFFu,    // B as half
                 packed_ba >> 16u        // A as half
-            );
+            ));
         #else
-            pcFragColor0 = color;
+            writeSplatColor(color);
         #endif
         #ifndef GSPLAT_COLOR_ONLY
             // Store rotation (xyz, w derived) and scale as 6 half-floats
-            pcFragColor1 = uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16(worldRotation.xy));
-            pcFragColor2 = uvec2(packHalf2x16(vec2(worldRotation.z, worldScale.x)), packHalf2x16(worldScale.yz));
+            writeSplatTexture0(uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16(worldRotation.xy)));
+            writeSplatTexture1(uvec4(packHalf2x16(vec2(worldRotation.z, worldScale.x)), packHalf2x16(worldScale.yz), 0u, 0u));
         #endif
     }
 }
