@@ -20,7 +20,7 @@ class BokehEffect extends pc.PostEffect {
         // Depth-of-field shader with bokeh
         // ported from GLSL shader by Martins Upitis
         // http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
-        const fshader = pc.ShaderChunks.get(graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('screenDepthPS') + /* glsl */`
+        const fshader = `${pc.ShaderChunks.get(graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('screenDepthPS') /* glsl */}
 
             varying vec2 vUv0;
 

@@ -18,7 +18,7 @@ class SSAOEffect extends pc.PostEffect {
         this.ssaoScript = ssaoScript;
         this.needsDepthBuffer = true;
 
-        const fSsao = pc.ShaderChunks.get(graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('screenDepthPS') + /* glsl */`
+        const fSsao = `${pc.ShaderChunks.get(graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('screenDepthPS') /* glsl */}
 
             varying vec2 vUv0;
 
@@ -233,7 +233,7 @@ class SSAOEffect extends pc.PostEffect {
             }
         `;
 
-        const fblur = pc.ShaderChunks.get(graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('screenDepthPS') + /* glsl */`
+        const fblur = `${pc.ShaderChunks.get(graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('screenDepthPS') /* glsl */}
 
             varying vec2 vUv0;
 
