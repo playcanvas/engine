@@ -10,63 +10,60 @@
  * @property {Texture} texture The outline texture to use.
  * @property {Color} color The outline color.
  */
-function OutlineEffect(graphicsDevice, thickness) {
-    pc.PostEffect.call(this, graphicsDevice);
+class OutlineEffect extends pc.PostEffect {
+    constructor(graphicsDevice, thickness) {
+        super(graphicsDevice);
 
-    var fshader = [
-        `#define THICKNESS ${thickness ? thickness.toFixed(0) : 1}`,
-        'uniform float uWidth;',
-        'uniform float uHeight;',
-        'uniform vec4 uOutlineCol;',
-        'uniform sampler2D uColorBuffer;',
-        'uniform sampler2D uOutlineTex;',
-        '',
-        'varying vec2 vUv0;',
-        '',
-        'void main(void)',
-        '{',
-        '    vec4 texel1 = texture2D(uColorBuffer, vUv0);',
-        '    float sample0 = texture2D(uOutlineTex, vUv0).a;',
-        '    float outline = 0.0;',
-        '    if (sample0==0.0)',
-        '    {',
-        '        for (int x=-THICKNESS;x<=THICKNESS;x++)',
-        '        {',
-        '            for (int y=-THICKNESS;y<=THICKNESS;y++)',
-        '            {    ',
-        '                float tex=texture2DLod(uOutlineTex, vUv0 + vec2(float(x)/uWidth, float(y)/uHeight), 0.0).a;',
-        '                if (tex>0.0)',
-        '                {',
-        '                    outline=1.0;',
-        '                }',
-        '            }',
-        '        } ',
-        '    }',
-        '    gl_FragColor = mix(texel1, uOutlineCol, outline * uOutlineCol.a);',
-        '}'
-    ].join('\n');
+        const fshader = /* glsl */`
+            #define THICKNESS ${thickness ? thickness.toFixed(0) : 1}
+            uniform float uWidth;
+            uniform float uHeight;
+            uniform vec4 uOutlineCol;
+            uniform sampler2D uColorBuffer;
+            uniform sampler2D uOutlineTex;
 
-    this.shader = pc.ShaderUtils.createShader(graphicsDevice, {
-        uniqueName: 'OutlineShader',
-        attributes: { aPosition: pc.SEMANTIC_POSITION },
-        vertexGLSL: pc.PostEffect.quadVertexShader,
-        fragmentGLSL: fshader
-    });
+            varying vec2 vUv0;
 
-    // Uniforms
-    this.color = new pc.Color(1, 1, 1, 1);
-    this.texture = new pc.Texture(graphicsDevice);
-    this.texture.name = 'pe-outline';
-    this._colorData = new Float32Array(4);
-}
+            void main(void)
+            {
+                vec4 texel1 = texture2D(uColorBuffer, vUv0);
+                float sample0 = texture2D(uOutlineTex, vUv0).a;
+                float outline = 0.0;
+                if (sample0==0.0)
+                {
+                    for (int x=-THICKNESS;x<=THICKNESS;x++)
+                    {
+                        for (int y=-THICKNESS;y<=THICKNESS;y++)
+                        {
+                            float tex=texture2DLod(uOutlineTex, vUv0 + vec2(float(x)/uWidth, float(y)/uHeight), 0.0).a;
+                            if (tex>0.0)
+                            {
+                                outline=1.0;
+                            }
+                        }
+                    }
+                }
+                gl_FragColor = mix(texel1, uOutlineCol, outline * uOutlineCol.a);
+            }
+        `;
 
-OutlineEffect.prototype = Object.create(pc.PostEffect.prototype);
-OutlineEffect.prototype.constructor = OutlineEffect;
+        this.shader = pc.ShaderUtils.createShader(graphicsDevice, {
+            uniqueName: 'OutlineShader',
+            attributes: { aPosition: pc.SEMANTIC_POSITION },
+            vertexGLSL: pc.PostEffect.quadVertexShader,
+            fragmentGLSL: fshader
+        });
 
-Object.assign(OutlineEffect.prototype, {
-    render: function (inputTarget, outputTarget, rect) {
-        var device = this.device;
-        var scope = device.scope;
+        // Uniforms
+        this.color = new pc.Color(1, 1, 1, 1);
+        this.texture = new pc.Texture(graphicsDevice);
+        this.texture.name = 'pe-outline';
+        this._colorData = new Float32Array(4);
+    }
+
+    render(inputTarget, outputTarget, rect) {
+        const device = this.device;
+        const scope = device.scope;
 
         this._colorData[0] = this.color.r;
         this._colorData[1] = this.color.g;
@@ -80,7 +77,7 @@ Object.assign(OutlineEffect.prototype, {
         scope.resolve('uOutlineTex').setValue(this.texture);
         this.drawQuad(outputTarget, this.shader, rect);
     }
-});
+}
 
 // ----------------- SCRIPT DEFINITION ------------------ //
 var Outline = pc.createScript('outline');

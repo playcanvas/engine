@@ -10,112 +10,108 @@
  * @property {number} aperture Bigger values create a shallower depth of field.
  * @property {number} focus Controls the focus of the effect.
  */
-function BokehEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+class BokehEffect extends pc.PostEffect {
+    constructor(graphicsDevice) {
+        super(graphicsDevice);
 
-    this.needsDepthBuffer = true;
+        this.needsDepthBuffer = true;
 
-    // Shader author: alteredq / http://alteredqualia.com/
-    // Depth-of-field shader with bokeh
-    // ported from GLSL shader by Martins Upitis
-    // http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
-    var fshader = [
-        pc.ShaderChunks.get(graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('screenDepthPS'),
-        '',
-        'varying vec2 vUv0;',
-        '',
-        'uniform sampler2D uColorBuffer;',
-        '',
-        'uniform float uMaxBlur;',  // max blur amount
-        'uniform float uAperture;', // uAperture - bigger values for shallower depth of field
-        '',
-        'uniform float uFocus;',
-        'uniform float uAspect;',
-        '',
-        'void main()',
-        '{',
-        '    vec2 aspectCorrect = vec2( 1.0, uAspect );',
-        '',
-        '    float factor = ((getLinearScreenDepth(vUv0) * -1.0) - uFocus) / camera_params.y;',
-        '',
-        '    vec2 dofblur = vec2 ( clamp( factor * uAperture, -uMaxBlur, uMaxBlur ) );',
-        '',
-        '    vec2 dofblur9 = dofblur * 0.9;',
-        '    vec2 dofblur7 = dofblur * 0.7;',
-        '    vec2 dofblur4 = dofblur * 0.4;',
-        '',
-        '    vec4 col;',
-        '',
-        '    col  = texture2D( uColorBuffer, vUv0 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,   0.4  ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.15,  0.37 ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29,  0.29 ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.37,  0.15 ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.40,  0.0  ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.37, -0.15 ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29, -0.29 ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.15, -0.37 ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,  -0.4  ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.15,  0.37 ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29,  0.29 ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.37,  0.15 ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.4,   0.0  ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.37, -0.15 ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29, -0.29 ) * aspectCorrect ) * dofblur );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.15, -0.37 ) * aspectCorrect ) * dofblur );',
-        '',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.15,  0.37 ) * aspectCorrect ) * dofblur9 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.37,  0.15 ) * aspectCorrect ) * dofblur9 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.37, -0.15 ) * aspectCorrect ) * dofblur9 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.15, -0.37 ) * aspectCorrect ) * dofblur9 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.15,  0.37 ) * aspectCorrect ) * dofblur9 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.37,  0.15 ) * aspectCorrect ) * dofblur9 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.37, -0.15 ) * aspectCorrect ) * dofblur9 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.15, -0.37 ) * aspectCorrect ) * dofblur9 );',
-        '',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29,  0.29 ) * aspectCorrect ) * dofblur7 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.40,  0.0  ) * aspectCorrect ) * dofblur7 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29, -0.29 ) * aspectCorrect ) * dofblur7 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,  -0.4  ) * aspectCorrect ) * dofblur7 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29,  0.29 ) * aspectCorrect ) * dofblur7 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.4,   0.0  ) * aspectCorrect ) * dofblur7 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29, -0.29 ) * aspectCorrect ) * dofblur7 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,   0.4  ) * aspectCorrect ) * dofblur7 );',
-        '',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29,  0.29 ) * aspectCorrect ) * dofblur4 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.4,   0.0  ) * aspectCorrect ) * dofblur4 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29, -0.29 ) * aspectCorrect ) * dofblur4 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,  -0.4  ) * aspectCorrect ) * dofblur4 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29,  0.29 ) * aspectCorrect ) * dofblur4 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.4,   0.0  ) * aspectCorrect ) * dofblur4 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29, -0.29 ) * aspectCorrect ) * dofblur4 );',
-        '    col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,   0.4  ) * aspectCorrect ) * dofblur4 );',
-        '',
-        '    gl_FragColor = col / 41.0;',
-        '    gl_FragColor.a = 1.0;',
-        '}'
-    ].join('\n');
+        // Shader author: alteredq / http://alteredqualia.com/
+        // Depth-of-field shader with bokeh
+        // ported from GLSL shader by Martins Upitis
+        // http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
+        const fshader = pc.ShaderChunks.get(graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('screenDepthPS') + /* glsl */`
 
-    this.shader = pc.ShaderUtils.createShader(graphicsDevice, {
-        uniqueName: 'BokehShader',
-        attributes: { aPosition: pc.SEMANTIC_POSITION },
-        vertexGLSL: pc.PostEffect.quadVertexShader,
-        fragmentGLSL: fshader
-    });
+            varying vec2 vUv0;
 
-    // Uniforms
-    this.maxBlur = 0.02;
-    this.aperture = 1;
-    this.focus = 1;
-}
+            uniform sampler2D uColorBuffer;
 
-BokehEffect.prototype = Object.create(pc.PostEffect.prototype);
-BokehEffect.prototype.constructor = BokehEffect;
+            uniform float uMaxBlur;  // max blur amount
+            uniform float uAperture; // uAperture - bigger values for shallower depth of field
 
-Object.assign(BokehEffect.prototype, {
-    render: function (inputTarget, outputTarget, rect) {
-        var device = this.device;
-        var scope = device.scope;
+            uniform float uFocus;
+            uniform float uAspect;
+
+            void main()
+            {
+                vec2 aspectCorrect = vec2( 1.0, uAspect );
+
+                float factor = ((getLinearScreenDepth(vUv0) * -1.0) - uFocus) / camera_params.y;
+
+                vec2 dofblur = vec2 ( clamp( factor * uAperture, -uMaxBlur, uMaxBlur ) );
+
+                vec2 dofblur9 = dofblur * 0.9;
+                vec2 dofblur7 = dofblur * 0.7;
+                vec2 dofblur4 = dofblur * 0.4;
+
+                vec4 col;
+
+                col  = texture2D( uColorBuffer, vUv0 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,   0.4  ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.15,  0.37 ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29,  0.29 ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.37,  0.15 ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.40,  0.0  ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.37, -0.15 ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29, -0.29 ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.15, -0.37 ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,  -0.4  ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.15,  0.37 ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29,  0.29 ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.37,  0.15 ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.4,   0.0  ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.37, -0.15 ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29, -0.29 ) * aspectCorrect ) * dofblur );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.15, -0.37 ) * aspectCorrect ) * dofblur );
+
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.15,  0.37 ) * aspectCorrect ) * dofblur9 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.37,  0.15 ) * aspectCorrect ) * dofblur9 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.37, -0.15 ) * aspectCorrect ) * dofblur9 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.15, -0.37 ) * aspectCorrect ) * dofblur9 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.15,  0.37 ) * aspectCorrect ) * dofblur9 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.37,  0.15 ) * aspectCorrect ) * dofblur9 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.37, -0.15 ) * aspectCorrect ) * dofblur9 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.15, -0.37 ) * aspectCorrect ) * dofblur9 );
+
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29,  0.29 ) * aspectCorrect ) * dofblur7 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.40,  0.0  ) * aspectCorrect ) * dofblur7 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29, -0.29 ) * aspectCorrect ) * dofblur7 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,  -0.4  ) * aspectCorrect ) * dofblur7 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29,  0.29 ) * aspectCorrect ) * dofblur7 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.4,   0.0  ) * aspectCorrect ) * dofblur7 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29, -0.29 ) * aspectCorrect ) * dofblur7 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,   0.4  ) * aspectCorrect ) * dofblur7 );
+
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29,  0.29 ) * aspectCorrect ) * dofblur4 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.4,   0.0  ) * aspectCorrect ) * dofblur4 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.29, -0.29 ) * aspectCorrect ) * dofblur4 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,  -0.4  ) * aspectCorrect ) * dofblur4 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29,  0.29 ) * aspectCorrect ) * dofblur4 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.4,   0.0  ) * aspectCorrect ) * dofblur4 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2( -0.29, -0.29 ) * aspectCorrect ) * dofblur4 );
+                col += texture2D( uColorBuffer, vUv0 + ( vec2(  0.0,   0.4  ) * aspectCorrect ) * dofblur4 );
+
+                gl_FragColor = col / 41.0;
+                gl_FragColor.a = 1.0;
+            }
+        `;
+
+        this.shader = pc.ShaderUtils.createShader(graphicsDevice, {
+            uniqueName: 'BokehShader',
+            attributes: { aPosition: pc.SEMANTIC_POSITION },
+            vertexGLSL: pc.PostEffect.quadVertexShader,
+            fragmentGLSL: fshader
+        });
+
+        // Uniforms
+        this.maxBlur = 0.02;
+        this.aperture = 1;
+        this.focus = 1;
+    }
+
+    render(inputTarget, outputTarget, rect) {
+        const device = this.device;
+        const scope = device.scope;
 
         scope.resolve('uMaxBlur').setValue(this.maxBlur);
         scope.resolve('uAperture').setValue(this.aperture);
@@ -125,7 +121,7 @@ Object.assign(BokehEffect.prototype, {
 
         this.drawQuad(outputTarget, this.shader, rect);
     }
-});
+}
 
 // ----------------- SCRIPT DEFINITION ------------------ //
 var Bokeh = pc.createScript('bokeh');
