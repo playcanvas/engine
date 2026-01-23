@@ -26,6 +26,13 @@ const _dynamicBindGroup = new DynamicBindGroup();
 /**
  * An object that renders a quad using a {@link Shader}.
  *
+ * Note: QuadRender does not modify render states. Before calling {@link QuadRender#render},
+ * you should set up the following states as needed, otherwise previously set states will be used:
+ * - Blend state via {@link GraphicsDevice#setBlendState}
+ * - Cull mode via {@link GraphicsDevice#setCullMode}
+ * - Depth state via {@link GraphicsDevice#setDepthState}
+ * - Stencil state via {@link GraphicsDevice#setStencilState}
+ *
  * Example:
  *
  * ```javascript
@@ -36,6 +43,13 @@ const _dynamicBindGroup = new DynamicBindGroup();
  *     fragmentGLSL: '// fragment shader code'
  * });
  * const quad = new QuadRender(shader);
+ *
+ * // Set up render states before rendering
+ * app.graphicsDevice.setBlendState(BlendState.NOBLEND);
+ * app.graphicsDevice.setCullMode(CULLFACE_NONE);
+ * app.graphicsDevice.setDepthState(DepthState.NODEPTH);
+ * app.graphicsDevice.setStencilState(null, null);
+ *
  * quad.render();
  * quad.destroy();
  * ```
