@@ -117,18 +117,30 @@ class GSplatPlacement {
     _workBufferModifier = null;
 
     /**
+     * Parent placement
+     * Used by octree file placements to inherit workBufferModifier and parameters from
+     * the component's placement.
+     *
+     * @type {GSplatPlacement|null}
+     * @private
+     */
+    _parentPlacement = null;
+
+    /**
      * Create a new GSplatPlacement.
      *
      * @param {GSplatResource|null} resource - The resource of the splat.
      * @param {GraphNode} node - The node that the gsplat is linked to.
      * @param {number} [lodIndex] - The LOD index for this placement.
      * @param {Map<string, {scopeId: ScopeId, data: *}>|null} [parameters] - Per-instance shader parameters.
+     * @param {GSplatPlacement|null} [parentPlacement] - Parent placement for shader config delegation.
      */
-    constructor(resource, node, lodIndex = 0, parameters = null) {
+    constructor(resource, node, lodIndex = 0, parameters = null, parentPlacement = null) {
         this.resource = resource;
         this.node = node;
         this.lodIndex = lodIndex;
-        this.parameters = parameters;
+        this.parameters = parameters ?? parentPlacement?.parameters ?? null;
+        this._parentPlacement = parentPlacement;
     }
 
     /**
@@ -154,11 +166,12 @@ class GSplatPlacement {
 
     /**
      * Gets the work buffer modifier for this placement.
+     * Delegates to parent placement if available (for octree file placements).
      *
      * @type {{ code: string, hash: number }|null}
      */
     get workBufferModifier() {
-        return this._workBufferModifier;
+        return this._parentPlacement?.workBufferModifier ?? this._workBufferModifier;
     }
 
     /**
@@ -256,12 +269,13 @@ class GSplatPlacement {
 
     /**
      * Gets the instance streams container, or null if not initialized.
+     * Delegates to parent placement if available (for octree file placements).
      *
      * @type {GSplatStreams|null}
      * @ignore
      */
     get streams() {
-        return this._streams;
+        return this._parentPlacement?.streams ?? this._streams;
     }
 
     /**

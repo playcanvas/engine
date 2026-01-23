@@ -98,11 +98,12 @@ class GSplatInfo {
     getWorkBufferModifier = null;
 
     /**
-     * Instance texture streams (reference to placement's streams, stable object).
+     * Function to get current instance streams from source placement.
+     * Retrieved live (not snapshotted) to ensure streams are available after lazy creation.
      *
-     * @type {GSplatStreams|null}
+     * @type {(() => GSplatStreams|null)|null}
      */
-    instanceStreams = null;
+    getInstanceStreams = null;
 
     /**
      * Callback to consume render dirty flag from the source placement.
@@ -132,11 +133,8 @@ class GSplatInfo {
         this.aabb.copy(placement.aabb);
         this.parameters = placement.parameters;
         this.getWorkBufferModifier = () => placement.workBufferModifier;
+        this.getInstanceStreams = () => placement.streams;
         this._consumeRenderDirty = consumeRenderDirty;
-
-        // no need to deep copy as streams can only be added to, so it won't hurt to have additional
-        // textures that the shader does not use yet.
-        this.instanceStreams = placement.streams;
 
         this.updateIntervals(placement.intervals);
     }

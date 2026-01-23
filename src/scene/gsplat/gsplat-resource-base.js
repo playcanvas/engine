@@ -235,7 +235,14 @@ class GSplatResourceBase {
             const outputStreams = colorOnly ?
                 [workBufferFormat.getStream('splatColor')] :
                 [...workBufferFormat.streams, ...workBufferFormat.extraStreams];
-            chunks.set('gsplatWorkBufferOutputVS', workBufferFormat.getOutputDeclarations(outputStreams));
+            let outputCode = workBufferFormat.getOutputDeclarations(outputStreams);
+
+            // In color-only mode, generate no-op stubs for extra streams so user modifiers compile
+            if (colorOnly && workBufferFormat.extraStreams.length > 0) {
+                outputCode += `\n${workBufferFormat.getOutputStubs(workBufferFormat.extraStreams)}`;
+            }
+
+            chunks.set('gsplatWorkBufferOutputVS', outputCode);
 
             // copy tempMap to material defines
             tempMap.forEach((v, k) => material.setDefine(k, v));

@@ -353,8 +353,36 @@ class GSplatFormat {
             .replace('{funcName}', funcName)
             .replace('{returnType}', info.returnType)
             .replace('{index}', String(i))
-            .replace('{colorSlot}', colorSlot);
+            .replace('{colorSlot}', colorSlot)
+            .replace('{defineGuard}', '1');
             lines.push(decl);
+        }
+
+        return lines.join('\n');
+    }
+
+    /**
+     * Generates no-op stub functions for streams that aren't render targets.
+     * Used in color-only mode so user modifier code compiles but writes are ignored.
+     *
+     * @param {GSplatStreamDescriptor[]} streams - Stream descriptors to generate stubs for.
+     * @returns {string} Shader code for no-op write functions.
+     * @ignore
+     */
+    getOutputStubs(streams) {
+        const isWebGPU = this._device.isWebGPU;
+        const lines = [];
+        const template = isWebGPU ? wgslStreamOutput : glslStreamOutput;
+        const getShaderType = isWebGPU ? getWgslShaderType : getGlslShaderType;
+
+        for (const stream of streams) {
+            const info = getShaderType(stream.format);
+            const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
+            const stub = template
+            .replace('{funcName}', funcName)
+            .replace('{returnType}', info.returnType)
+            .replace('{defineGuard}', '0');
+            lines.push(stub);
         }
 
         return lines.join('\n');
