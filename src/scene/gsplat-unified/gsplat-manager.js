@@ -126,6 +126,22 @@ class GSplatManager {
     sortedVersion = 0;
 
     /**
+     * Cached work buffer format version for detecting extra stream changes.
+     *
+     * @type {number}
+     * @private
+     */
+    _workBufferFormatVersion = -1;
+
+    /**
+     * Flag set when the work buffer needs a full rebuild due to format changes.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _workBufferRebuildRequired = false;
+
+    /**
      * Tracks placement state changes (format version, modifier hash, numSplats).
      *
      * @type {GSplatPlacementStateTracker}
@@ -209,8 +225,10 @@ class GSplatManager {
         this.scene = director.scene;
         this.director = director;
         this.cameraNode = cameraNode;
-        this.workBuffer = new GSplatWorkBuffer(device);
+
+        this.workBuffer = new GSplatWorkBuffer(device, this.scene.gsplat.format);
         this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
+        this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
 
         // Choose sorting strategy based on gpuSorting flag and device capability
         this.useGpuSorting = device.isWebGPU && director.scene.gsplat.gpuSorting;
@@ -723,6 +741,14 @@ class GSplatManager {
 
     update() {
 
+        // detect work buffer format changes (extra streams added) and schedule a full rebuild
+        const wbFormatVersion = this.workBuffer.format.extraStreamsVersion;
+        if (this._workBufferFormatVersion !== wbFormatVersion) {
+            this._workBufferFormatVersion = wbFormatVersion;
+            this.workBuffer.syncWithFormat();
+            this._workBufferRebuildRequired = true;
+        }
+
         // apply any pending sorted results (CPU path only)
         if (this.cpuSorter) {
             this.cpuSorter.applyPendingSorted();
@@ -853,7 +879,12 @@ class GSplatManager {
         // For GPU: ensures sort uses current data
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (sortedState) {
-            this.applyWorkBufferUpdates(sortedState);
+            if (this._workBufferRebuildRequired) {
+                this.rebuildWorkBuffer(sortedState, sortedState.totalUsedPixels);
+                this._workBufferRebuildRequired = false;
+            } else {
+                this.applyWorkBufferUpdates(sortedState);
+            }
         }
 
         // kick off sorting only if needed (lastState already defined above)

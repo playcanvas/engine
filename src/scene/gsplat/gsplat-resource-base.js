@@ -63,18 +63,22 @@ class GSplatResourceBase {
     id = id++;
 
     /**
+     * Cache for work buffer render materials/shaders. Keyed by configuration hash.
+     * Stored per-resource because materials depend on resource-specific configuration
+     * (SH bands, textures, defines). Cleaned up when resource is destroyed.
+     *
      * @type {Map<string, WorkBufferRenderInfo>}
      * @ignore
      */
     workBufferRenderInfos = new Map();
 
     /**
-     * Format descriptor for this resource.
+     * Format descriptor for this resource. Assigned by derived classes.
      *
      * @type {GSplatFormat}
      * @protected
      */
-    _format;
+    _format = null;
 
     /**
      * Manages textures for this resource based on format streams.
@@ -196,15 +200,15 @@ class GSplatResourceBase {
      * Get or create a QuadRender for rendering to work buffer.
      *
      * @param {boolean} useIntervals - Whether to use intervals.
-     * @param {number} colorTextureFormat - The format of the color texture (RGBA16F or RGBA16U).
      * @param {boolean} colorOnly - Whether to render only color (not full MRT).
-     * @param {{ code: string, hash: number }|null} [workBufferModifier] - Optional custom modifier (object with code and pre-computed hash).
-     * @param {number} [formatHash] - Captured format hash for shader caching.
-     * @param {string} [formatDeclarations] - Captured format declarations for shader compilation.
+     * @param {{ code: string, hash: number }|null} workBufferModifier - Optional custom modifier (object with code and pre-computed hash).
+     * @param {number} formatHash - Captured format hash for shader caching.
+     * @param {string} formatDeclarations - Captured format declarations for shader compilation.
+     * @param {GSplatFormat} workBufferFormat - The work buffer format descriptor.
      * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
      * @ignore
      */
-    getWorkBufferRenderInfo(useIntervals, colorTextureFormat, colorOnly = false, workBufferModifier = null, formatHash, formatDeclarations = '') {
+    getWorkBufferRenderInfo(useIntervals, colorOnly, workBufferModifier, formatHash, formatDeclarations, workBufferFormat) {
 
         // configure defines to fetch cached data
         this.configureMaterialDefines(tempMap);
@@ -216,7 +220,7 @@ class GSplatResourceBase {
             if (definesKey) definesKey += ';';
             definesKey += `${k}=${v}`;
         }
-        const key = `${formatHash};${workBufferModifier?.hash ?? 0};${definesKey}`;
+        const key = `${formatHash};${workBufferFormat.hash};${workBufferModifier?.hash ?? 0};${definesKey}`;
 
         // get or create quad render
         let info = this.workBufferRenderInfos.get(key);
@@ -225,11 +229,19 @@ class GSplatResourceBase {
             const material = new ShaderMaterial();
             this.configureMaterial(material, workBufferModifier, formatDeclarations);
 
+            // Inject work buffer output declarations
+            const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
+            // For color-only mode, only output color stream; otherwise output all streams
+            const outputStreams = colorOnly ?
+                [workBufferFormat.getStream('splatColor')] :
+                [...workBufferFormat.streams, ...workBufferFormat.extraStreams];
+            chunks.set('gsplatWorkBufferOutputVS', workBufferFormat.getOutputDeclarations(outputStreams));
+
             // copy tempMap to material defines
             tempMap.forEach((v, k) => material.setDefine(k, v));
 
             // create new cache entry
-            info = new WorkBufferRenderInfo(this.device, key, material, colorTextureFormat, colorOnly);
+            info = new WorkBufferRenderInfo(this.device, key, material, colorOnly, workBufferFormat);
             this.workBufferRenderInfos.set(key, info);
         }
 
@@ -333,11 +345,11 @@ class GSplatResourceBase {
      * shader chunks and binds textures from the streams.
      *
      * @param {ShaderMaterial} material - The material to configure.
-     * @param {{ code: string, hash: number }|null} [workBufferModifier] - Optional custom modifier (object with code and pre-computed hash).
-     * @param {string} [formatDeclarations] - Captured format declarations for shader compilation.
+     * @param {{ code: string, hash: number }|null} workBufferModifier - Optional custom modifier (object with code and pre-computed hash).
+     * @param {string} formatDeclarations - Captured format declarations for shader compilation.
      * @ignore
      */
-    configureMaterial(material, workBufferModifier = null, formatDeclarations) {
+    configureMaterial(material, workBufferModifier, formatDeclarations) {
         this.configureMaterialDefines(material.defines);
 
         // Sync resource textures with format (handles extra streams)

@@ -339,7 +339,7 @@ class Scene extends EventHandler {
         });
 
         // gsplat params
-        this._gsplatParams = new GSplatParams();
+        this._gsplatParams = new GSplatParams(this.device);
 
         // skybox
         this._sky = new Sky(this);

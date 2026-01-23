@@ -1,7 +1,7 @@
-// Base format declarations and format-specific include
+// Base format declarations
 export default /* glsl */`
 uniform uint splatTextureSize;
-ivec2 splatUV;
 
-#include "gsplatDeclarationsVS"
+// Splat UV coordinate for texture fetches
+ivec2 splatUV;
 `;

@@ -11,7 +11,6 @@ import gsplatOutputVS from '../chunks/gsplat/vert/gsplatOutput.js';
 import gsplatPS from '../chunks/gsplat/frag/gsplat.js';
 import gsplatSourceVS from '../chunks/gsplat/vert/gsplatSource.js';
 import gsplatVS from '../chunks/gsplat/vert/gsplat.js';
-import gsplatWorkBufferVS from '../chunks/gsplat/vert/formats/workBuffer.js';
 import gsplatPackingPS from '../chunks/gsplat/frag/gsplatPacking.js';
 import gsplatFormatVS from '../chunks/gsplat/vert/gsplatFormat.js';
 
@@ -24,6 +23,7 @@ import gsplatSogVS from '../chunks/gsplat/vert/formats/sog.js';
 import gsplatSogSHVS from '../chunks/gsplat/vert/formats/sogSH.js';
 import gsplatContainerDeclVS from '../chunks/gsplat/vert/formats/containerDecl.js';
 import gsplatContainerReadVS from '../chunks/gsplat/vert/formats/containerRead.js';
+import gsplatWorkBufferReadVS from '../chunks/gsplat/vert/formats/workBufferRead.js';
 
 export const gsplatChunksGLSL = {
     gsplatCenterVS,
@@ -39,7 +39,6 @@ export const gsplatChunksGLSL = {
     gsplatPS,
     gsplatSourceVS,
     gsplatVS,
-    gsplatWorkBufferVS,
     gsplatPackingPS,
     gsplatFormatVS,
     gsplatUncompressedVS,
@@ -49,5 +48,6 @@ export const gsplatChunksGLSL = {
     gsplatSogVS,
     gsplatSogSHVS,
     gsplatContainerDeclVS,
-    gsplatContainerReadVS
+    gsplatContainerReadVS,
+    gsplatWorkBufferReadVS
 };

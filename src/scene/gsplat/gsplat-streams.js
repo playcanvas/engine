@@ -99,8 +99,9 @@ class GSplatStreams {
         this.format = format;
         this._textureDimensions = this.evalTextureSize(numElements);
 
-        // Create textures for all streams
-        for (const stream of format.streams) {
+        // Create textures for all streams (base + extra, filtered by _isInstance)
+        const streams = this._isInstance ? format.instanceStreams : format.resourceStreams;
+        for (const stream of streams) {
             const texture = this.createTexture(stream.name, stream.format, this._textureDimensions);
             this.textures.set(stream.name, texture);
         }
@@ -119,6 +120,26 @@ class GSplatStreams {
         // Creates textures if format was modified since last sync
         this.syncWithFormat(this.format);
         return this.textures.get(name);
+    }
+
+    /**
+     * Gets all textures in format order (streams followed by extraStreams).
+     *
+     * @returns {Texture[]} Array of textures in format order.
+     * @ignore
+     */
+    getTexturesInOrder() {
+        const result = [];
+        if (this.format) {
+            const allStreams = this._isInstance ? this.format.instanceStreams : this.format.resourceStreams;
+            for (const stream of allStreams) {
+                const texture = this.textures.get(stream.name);
+                if (texture) {
+                    result.push(texture);
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -160,6 +181,21 @@ class GSplatStreams {
     evalTextureSize(count) {
         const width = Math.ceil(Math.sqrt(count));
         return new Vec2(width, Math.ceil(count / width));
+    }
+
+    /**
+     * Resizes all managed textures to the specified dimensions. This assumes all textures
+     * have uniform dimensions (e.g. work buffer textures). Do not use on resources with
+     * mixed-size textures (e.g. SOG with differently-sized SH textures).
+     *
+     * @param {number} width - The new width.
+     * @param {number} height - The new height.
+     */
+    resize(width, height) {
+        this._textureDimensions.set(width, height);
+        for (const texture of this.textures.values()) {
+            texture.resize(width, height);
+        }
     }
 
     /**

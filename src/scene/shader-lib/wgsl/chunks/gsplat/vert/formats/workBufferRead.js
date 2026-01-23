@@ -1,17 +1,16 @@
-// Work buffer format - reads from sorted work buffer in unified rendering mode
+// Read functions for work buffer format - reads from sorted work buffer in unified rendering mode
 export default /* wgsl */`
-var splatTexture0: texture_2d<u32>;
-var splatTexture1: texture_2d<u32>;
-var splatColor: texture_2d<uff>;
-
 // cached texture fetches
 var<private> cachedSplatTexture0Data: vec4u;
 var<private> cachedSplatTexture1Data: vec2u;
 
 // read the model-space center of the gaussian
 fn getCenter(source: ptr<function, SplatSource>) -> vec3f {
-    cachedSplatTexture0Data = textureLoad(splatTexture0, source.uv, 0);
-    cachedSplatTexture1Data = textureLoad(splatTexture1, source.uv, 0).xy;
+    // Initialize splatUV for generated load functions
+    splatUV = (*source).uv;
+
+    cachedSplatTexture0Data = textureLoad(splatTexture0, splatUV, 0);
+    cachedSplatTexture1Data = textureLoad(splatTexture1, splatUV, 0).xy;
     return vec3f(bitcast<f32>(cachedSplatTexture0Data.r), bitcast<f32>(cachedSplatTexture0Data.g), bitcast<f32>(cachedSplatTexture0Data.b));
 }
 
@@ -29,6 +28,6 @@ fn getScale() -> vec3f {
 }
 
 fn getColor(source: ptr<function, SplatSource>) -> vec4f {
-    return textureLoad(splatColor, source.uv, 0);
-}   
+    return textureLoad(splatColor, splatUV, 0);
+}
 `;

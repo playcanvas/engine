@@ -1,7 +1,10 @@
 import { Debug } from '../../core/debug.js';
+import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U } from '../../platform/graphics/constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
+import { GSplatFormat } from '../gsplat/gsplat-format.js';
 
 /**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
@@ -16,6 +19,37 @@ class GSplatParams {
      * @private
      */
     _material = new ShaderMaterial();
+
+    /**
+     * Format descriptor for work buffer streams.
+     *
+     * @type {GSplatFormat}
+     * @private
+     */
+    _format;
+
+    /**
+     * Creates a new GSplatParams instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     */
+    constructor(device) {
+        // Check device capabilities for color format - use RGBA16U fallback if RGBA16F not supported
+        const colorFormat = device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F]) || PIXELFORMAT_RGBA16U;
+
+        // Work buffer textures format:
+        // - colorTexture (RGBA16F/RGBA16U): RGBA color with alpha
+        // - splatTexture0 (RGBA32U): worldCenter.xyz (3×32-bit floats as uint) + worldRotation.xy (2×16-bit halfs)
+        // - splatTexture1 (RG32U): worldRotation.z + worldScale.xyz (4×16-bit halfs, w derived via sqrt)
+        this._format = new GSplatFormat(device, [
+            { name: 'splatColor', format: colorFormat },
+            { name: 'splatTexture0', format: PIXELFORMAT_RGBA32U },
+            { name: 'splatTexture1', format: PIXELFORMAT_RG32U }
+        ], {
+            readGLSL: '#include "gsplatWorkBufferReadVS"',
+            readWGSL: '#include "gsplatWorkBufferReadVS"'
+        });
+    }
 
     /**
      * Enables debug rendering of AABBs for GSplat objects. Defaults to false.
@@ -340,6 +374,23 @@ class GSplatParams {
      */
     get material() {
         return this._material;
+    }
+
+    /**
+     * Format descriptor for work buffer streams. Describes the textures used by the work buffer
+     * for intermediate storage during unified rendering. Users can add extra streams via
+     * {@link GSplatFormat#addExtraStreams} for custom per-splat data.
+     *
+     * @type {GSplatFormat}
+     * @example
+     * // Add a custom stream to store per-splat component IDs
+     * app.scene.gsplat.format.addExtraStreams([{
+     *     name: 'splatId',
+     *     format: pc.PIXELFORMAT_R32U
+     * }]);
+     */
+    get format() {
+        return this._format;
     }
 
     /**
