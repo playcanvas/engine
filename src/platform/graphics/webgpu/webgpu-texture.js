@@ -155,7 +155,8 @@ class WebgpuTexture {
     }
 
     destroy(device) {
-        this.gpuTexture?.destroy();
+        // defer GPU texture destruction until after command buffer submission
+        device.deferDestroy(this.gpuTexture);
         this.gpuTexture = null;
         this.view = null;
         this.viewCache.clear();

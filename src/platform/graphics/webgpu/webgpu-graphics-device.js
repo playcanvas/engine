@@ -48,6 +48,15 @@ const _indirectDispatchEntryByteSize = 3 * 4;
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
+     * Array of GPU resources pending destruction. Resources are destroyed after the current
+     * command buffers are submitted to ensure they're not in use.
+     *
+     * @type {Array<GPUTexture|GPUBuffer|GPUQuerySet>}
+     * @private
+     */
+    _deferredDestroys = [];
+
+    /**
      * Object responsible for caching and creation of render pipelines.
      */
     renderPipeline = new WebgpuRenderPipeline(this);
@@ -1108,6 +1117,28 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // notify dynamic buffers
             this.dynamicBuffers.onCommandBuffersSubmitted();
+        }
+
+        // destroy deferred resources after submit to ensure they're no longer referenced
+        const deferredDestroys = this._deferredDestroys;
+        if (deferredDestroys.length > 0) {
+            for (let i = 0; i < deferredDestroys.length; i++) {
+                deferredDestroys[i].destroy();
+            }
+            deferredDestroys.length = 0;
+        }
+    }
+
+    /**
+     * Defer destruction of a GPU resource until after the current command buffers are submitted.
+     * This ensures the resource is not destroyed while still referenced by pending GPU commands.
+     *
+     * @param {GPUTexture|GPUBuffer|GPUQuerySet} gpuResource - The GPU resource to destroy.
+     * @private
+     */
+    deferDestroy(gpuResource) {
+        if (gpuResource) {
+            this._deferredDestroys.push(gpuResource);
         }
     }
 
