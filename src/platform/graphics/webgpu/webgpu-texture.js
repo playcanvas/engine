@@ -155,6 +155,11 @@ class WebgpuTexture {
     }
 
     destroy(device) {
+        this.gpuTexture?.destroy();
+        this.gpuTexture = null;
+        this.view = null;
+        this.viewCache.clear();
+        this.samplers.length = 0;
     }
 
     propertyChanged(flag) {
