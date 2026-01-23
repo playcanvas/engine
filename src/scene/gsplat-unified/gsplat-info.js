@@ -90,11 +90,12 @@ class GSplatInfo {
     parameters = null;
 
     /**
-     * Custom shader code for work buffer modification (object with code and pre-computed hash).
+     * Function to get current work buffer modifier from source placement.
+     * Retrieved live (not snapshotted) to ensure shader configuration stays current.
      *
-     * @type {{ code: string, hash: number }|null}
+     * @type {(() => ({ code: string, hash: number }|null))|null}
      */
-    workBufferModifier = null;
+    getWorkBufferModifier = null;
 
     /**
      * Instance texture streams (reference to placement's streams, stable object).
@@ -102,20 +103,6 @@ class GSplatInfo {
      * @type {GSplatStreams|null}
      */
     instanceStreams = null;
-
-    /**
-     * Format hash captured at creation time for shader caching.
-     *
-     * @type {number}
-     */
-    formatHash = 0;
-
-    /**
-     * Format declarations captured at creation time for shader compilation.
-     *
-     * @type {string}
-     */
-    formatDeclarations = '';
 
     /**
      * Callback to consume render dirty flag from the source placement.
@@ -144,9 +131,7 @@ class GSplatInfo {
         this.numSplats = resource.numSplats;
         this.aabb.copy(placement.aabb);
         this.parameters = placement.parameters;
-        this.workBufferModifier = placement.workBufferModifier;
-        this.formatHash = resource.format.hash;
-        this.formatDeclarations = resource.format.getInputDeclarations();
+        this.getWorkBufferModifier = () => placement.workBufferModifier;
         this._consumeRenderDirty = consumeRenderDirty;
 
         // no need to deep copy as streams can only be added to, so it won't hurt to have additional
