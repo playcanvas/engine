@@ -126,11 +126,12 @@ class GSplatStreams {
      * Gets all textures in format order (streams followed by extraStreams).
      *
      * @returns {Texture[]} Array of textures in format order.
+     * @ignore
      */
     getTexturesInOrder() {
         const result = [];
         if (this.format) {
-            const allStreams = [...this.format.streams, ...this.format.extraStreams];
+            const allStreams = this._isInstance ? this.format.instanceStreams : this.format.resourceStreams;
             for (const stream of allStreams) {
                 const texture = this.textures.get(stream.name);
                 if (texture) {
