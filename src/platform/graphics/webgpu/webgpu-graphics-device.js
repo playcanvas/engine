@@ -1134,7 +1134,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * This ensures the resource is not destroyed while still referenced by pending GPU commands.
      *
      * @param {GPUTexture|GPUBuffer|GPUQuerySet} gpuResource - The GPU resource to destroy.
-     * @ignore
+     * @private
      */
     deferDestroy(gpuResource) {
         if (gpuResource) {
