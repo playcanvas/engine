@@ -65,8 +65,6 @@ const getPixelFormatChannelsForRgbaReadback = (format) => {
             return 1;
         case PIXELFORMAT_RG8:
             return 2;
-        case PIXELFORMAT_RGB8:
-            return 3;
         default:
             return 0;
     }
@@ -2140,9 +2138,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const rgbaChannels = getPixelFormatChannelsForRgbaReadback(texture._format);
         const needsRgbaReadback = rgbaChannels > 0;
 
-        // Allocate output buffer in the user's expected format
-        const outputBuffer = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, 1, texture._format));
-        const outputData = options.data ?? new (getPixelFormatArrayType(texture._format))(outputBuffer);
+        // Use caller's buffer or allocate output buffer in the user's expected format
+        const outputData = options.data ?? new (getPixelFormatArrayType(texture._format))(
+            TextureUtils.calcLevelGpuSize(width, height, 1, texture._format)
+        );
 
         // For formats requiring RGBA readback, allocate a larger RGBA buffer
         const readBuffer = needsRgbaReadback ?

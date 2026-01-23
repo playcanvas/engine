@@ -76,10 +76,10 @@ const TEX_HEIGHT = 4;
 // Define formats to test (normalized 8-bit formats only)
 // Note: Integer formats (R8I, R8U, RG8I, RG8U) are excluded due to WebGL readPixels limitations
 // Note: RG8S is excluded because it's not renderable in WebGPU (RG8Snorm doesn't support RenderAttachment)
+// Note: RGB8 is excluded because WebGPU doesn't support it (maps to rgba8unorm internally)
 const formatsToTest = [
     { format: pc.PIXELFORMAT_R8, name: 'R8', channels: 1, arrayType: Uint8Array },
     { format: pc.PIXELFORMAT_RG8, name: 'RG8', channels: 2, arrayType: Uint8Array },
-    { format: pc.PIXELFORMAT_RGB8, name: 'RGB8', channels: 3, arrayType: Uint8Array },
     { format: pc.PIXELFORMAT_RGBA8, name: 'RGBA8', channels: 4, arrayType: Uint8Array }
 ];
 
@@ -164,6 +164,14 @@ async function testFormat(formatInfo) {
 
         // Read back from GPU
         const readData = await texture.read(0, 0, TEX_WIDTH, TEX_HEIGHT, { immediate: true });
+
+        // Verify returned buffer length matches expected
+        if (readData.length !== dataLength) {
+            const error = `Buffer length mismatch: expected ${dataLength}, got ${readData.length}`;
+            console.error(`  ✗ ${name}: FAILED - ${error}`);
+            texture.destroy();
+            return { name, passed: false, error };
+        }
 
         // Compare
         const result = compareArrays(expectedData, readData, dataLength);
