@@ -196,11 +196,12 @@ class GSplatWorkBufferRenderPass extends RenderPass {
             }
         }
 
-        // Bind instance textures if available
-        if (splatInfo.instanceStreams) {
+        // Bind instance textures if available (fetched live from placement)
+        const instanceStreams = splatInfo.getInstanceStreams?.();
+        if (instanceStreams) {
             // Sync to ensure textures exist for any newly added streams
-            splatInfo.instanceStreams.syncWithFormat(splatInfo.resource.format);
-            for (const [name, texture] of splatInfo.instanceStreams.textures) {
+            instanceStreams.syncWithFormat(splatInfo.resource.format);
+            for (const [name, texture] of instanceStreams.textures) {
                 scope.resolve(name).setValue(texture);
             }
         }
