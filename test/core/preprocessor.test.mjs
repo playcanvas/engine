@@ -203,6 +203,22 @@ describe('Preprocessor', function () {
         #if 0 || defined(A)
             NUM6
         #endif
+
+        // Edge cases: expressions starting with numbers should not be parsed as numeric literals
+        // Note: numeric comparisons like "3 == 3" are not supported (COMPARISON regex requires
+        // left operand to start with a letter), but we must ensure they don't incorrectly
+        // evaluate to true due to parseFloat("3 == 3") returning 3
+        #if 3 == 3
+            EDGE1
+        #endif
+
+        #if 0 != 1
+            EDGE2
+        #endif
+
+        #if 5 > 3
+            EDGE3
+        #endif
     `;
 
     it('returns false for MORPH_A', function () {
@@ -404,5 +420,19 @@ describe('Preprocessor', function () {
 
     it('returns true for NUM6 (#if 0 || defined(A))', function () {
         expect(Preprocessor.run(srcData, includes).includes('NUM6')).to.equal(true);
+    });
+
+    // Edge case tests: expressions starting with numbers must not be parsed as numeric literals
+    // These are unsupported expressions, but should evaluate to false rather than incorrectly true
+    it('returns false for EDGE1 (#if 3 == 3 is unsupported, must not parse "3" as truthy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('EDGE1')).to.equal(false);
+    });
+
+    it('returns false for EDGE2 (#if 0 != 1 is unsupported, must not parse "0" as falsy for wrong reason)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('EDGE2')).to.equal(false);
+    });
+
+    it('returns false for EDGE3 (#if 5 > 3 is unsupported, must not parse "5" as truthy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('EDGE3')).to.equal(false);
     });
 });
