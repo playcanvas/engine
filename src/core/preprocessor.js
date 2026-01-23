@@ -538,6 +538,12 @@ class Preprocessor {
             return { result: false, error };
         }
 
+        // Handle numeric literals (0 is false, non-zero is true) - standard C preprocessor behavior
+        const num = parseFloat(expr);
+        if (!isNaN(num)) {
+            return { result: num !== 0, error };
+        }
+
         // Handle defined(expr) and !defined(expr)
         const definedMatch = DEFINED.exec(expr);
         if (definedMatch) {

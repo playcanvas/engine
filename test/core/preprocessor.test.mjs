@@ -178,6 +178,31 @@ describe('Preprocessor', function () {
 
         TESTINJECTION {COUNT}
         INJECTSTRING {STRING}(x)
+
+        // Test numeric literals (standard C preprocessor behavior)
+        #if 1
+            NUM1
+        #endif
+
+        #if 0
+            NUM2
+        #endif
+
+        #if 42
+            NUM3
+        #endif
+
+        #if 0.0
+            NUM4
+        #endif
+
+        #if 1 && defined(A)
+            NUM5
+        #endif
+
+        #if 0 || defined(A)
+            NUM6
+        #endif
     `;
 
     it('returns false for MORPH_A', function () {
@@ -354,5 +379,30 @@ describe('Preprocessor', function () {
 
     it('returns true for PREC9 (spaces inside precedence parens)', function () {
         expect(Preprocessor.run(srcData, includes).includes('PREC9')).to.equal(true);
+    });
+
+    // Numeric literal tests
+    it('returns true for NUM1 (#if 1 is truthy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM1')).to.equal(true);
+    });
+
+    it('returns false for NUM2 (#if 0 is falsy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM2')).to.equal(false);
+    });
+
+    it('returns true for NUM3 (#if 42 non-zero is truthy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM3')).to.equal(true);
+    });
+
+    it('returns false for NUM4 (#if 0.0 is falsy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM4')).to.equal(false);
+    });
+
+    it('returns true for NUM5 (#if 1 && defined(A))', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM5')).to.equal(true);
+    });
+
+    it('returns true for NUM6 (#if 0 || defined(A))', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM6')).to.equal(true);
     });
 });
