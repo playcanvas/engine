@@ -7,6 +7,7 @@ import * as pc from 'playcanvas';
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 const { XrSession } = await fileImport(`${rootPath}/static/scripts/esm/xr-session.mjs`);
 const { XrControllers } = await fileImport(`${rootPath}/static/scripts/esm/xr-controllers.mjs`);
+const { XrNavigation } = await fileImport(`${rootPath}/static/scripts/esm/xr-navigation.mjs`);
 const { XrMenu } = await fileImport(`${rootPath}/static/scripts/esm/xr-menu.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -152,6 +153,9 @@ cameraParent.script.create(XrSession, {
 
 // Add XrControllers script - handles skinned hand/controller models
 cameraParent.script.create(XrControllers);
+
+// Add XrNavigation script - handles teleportation and smooth locomotion
+cameraParent.script.create(XrNavigation);
 
 // add directional light
 const light = new pc.Entity('Light');

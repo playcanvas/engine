@@ -72,7 +72,7 @@ class XrMenu extends Script {
      * @type {Vec3}
      * @attribute
      */
-    menuOffset = new Vec3(0, 0, 0.05);
+    menuOffset = new Vec3(0, 0, 0.06);
 
     /**
      * Vertical spacing between menu buttons in meters.
@@ -130,7 +130,7 @@ class XrMenu extends Script {
      * @attribute
      * @range [1, 30]
      */
-    followSpeed = 15;
+    followSpeed = 25;
 
     /**
      * Dot product threshold for detecting palm-up gesture. Higher values require the palm
@@ -293,9 +293,11 @@ class XrMenu extends Script {
             this._cameraEntity = this.app.root.findComponent('camera')?.entity || null;
         }
 
-        // Set up click sound
+        // Set up click sound (non-positional for UI feedback)
         if (this.clickSound) {
-            this.entity.addComponent('sound');
+            this.entity.addComponent('sound', {
+                positional: false
+            });
             this.entity.sound?.addSlot('click', {
                 asset: this.clickSound.id,
                 volume: 0.5
