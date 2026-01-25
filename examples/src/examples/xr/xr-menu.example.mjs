@@ -3,7 +3,8 @@ import files from 'examples/files';
 import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-// Import the XR scripts
+// Import scripts
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 const { XrSession } = await fileImport(`${rootPath}/static/scripts/esm/xr-session.mjs`);
 const { XrControllers } = await fileImport(`${rootPath}/static/scripts/esm/xr-controllers.mjs`);
 const { XrMenu } = await fileImport(`${rootPath}/static/scripts/esm/xr-menu.mjs`);
@@ -110,6 +111,13 @@ assetListLoader.load(() => {
     // create camera
     const cameraEntity = new pc.Entity('Camera');
     cameraEntity.addComponent('camera');
+    cameraEntity.setLocalPosition(0, 1.7, -2);
+    cameraEntity.addComponent('script');
+    cameraEntity.script.create(CameraControls, {
+        properties: {
+            focusPoint: new pc.Vec3(0, 1.75, 0)
+        }
+    });
     cameraParent.addChild(cameraEntity);
 
     // Add XrSession script to camera parent - handles XR lifecycle
