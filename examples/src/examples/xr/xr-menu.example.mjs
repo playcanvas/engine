@@ -108,9 +108,6 @@ app.on('destroy', () => {
     css.remove();
 });
 
-// use device pixel ratio
-app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
-
 // Load assets
 await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
