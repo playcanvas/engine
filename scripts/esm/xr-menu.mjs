@@ -195,7 +195,7 @@ class XrMenu extends Script {
      * @type {Color}
      * @attribute
      */
-    buttonColor = new Color(1, 1, 1, 0.9);
+    buttonColor = new Color(0.85, 0.85, 0.85, 0.9);
 
     /**
      * Color of menu buttons when hovered.
@@ -203,7 +203,7 @@ class XrMenu extends Script {
      * @type {Color}
      * @attribute
      */
-    hoverColor = new Color(1.2, 1.2, 1.2, 1.0);
+    hoverColor = new Color(1, 1, 1, 1);
 
     /**
      * Color of menu buttons when pressed/activated.
@@ -211,7 +211,7 @@ class XrMenu extends Script {
      * @type {Color}
      * @attribute
      */
-    pressColor = new Color(0.8, 0.8, 0.8, 1.0);
+    pressColor = new Color(0.7, 0.7, 0.7, 1);
 
     /**
      * Text color for button labels.
