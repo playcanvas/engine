@@ -34,7 +34,7 @@ const FINGER_JOINTS = [
  * - Uses PlayCanvas UI system for proper text rendering
  * - Smooth following with configurable dampening
  * - Finger touch and button click interaction support
- * - Input blocking signal for coordination with navigation scripts
+ * - Fires 'xr:menu:active' app event when menu visibility changes (for coordination with other scripts)
  *
  * @example
  * // Configure menu items via script attributes:
@@ -673,7 +673,7 @@ class XrMenu extends Script {
             }
         }
 
-        // Fire event for other scripts (e.g., xr-navigation) to respond
+        // Fire event for other scripts to coordinate (e.g., disable navigation while menu is open)
         this.app.fire('xr:menu:active', visible);
 
         // Reset hover state when hiding
