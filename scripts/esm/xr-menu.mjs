@@ -8,6 +8,14 @@ const tmpVec3B = new Vec3();
 const tmpVec3C = new Vec3();
 const tmpQuat = new Quat();
 
+// Finger joint IDs for extension detection (pre-allocated to avoid GC pressure)
+const FINGER_JOINTS = [
+    { tip: 'index-finger-tip', meta: 'index-finger-metacarpal' },
+    { tip: 'middle-finger-tip', meta: 'middle-finger-metacarpal' },
+    { tip: 'ring-finger-tip', meta: 'ring-finger-metacarpal' },
+    { tip: 'pinky-finger-tip', meta: 'pinky-finger-metacarpal' }
+];
+
 /**
  * Provides a hybrid WebXR menu system that works with both Hand Tracking ("Palm Up" gesture)
  * and Controllers (Button Toggle). The menu automatically detects the input mode and switches
@@ -742,17 +750,9 @@ class XrMenu extends Script {
         const hand = inputSource.hand;
         if (!hand || !hand.tracking) return false;
 
-        // Finger joint IDs
-        const fingers = [
-            { tip: 'index-finger-tip', meta: 'index-finger-metacarpal' },
-            { tip: 'middle-finger-tip', meta: 'middle-finger-metacarpal' },
-            { tip: 'ring-finger-tip', meta: 'ring-finger-metacarpal' },
-            { tip: 'pinky-finger-tip', meta: 'pinky-finger-metacarpal' }
-        ];
-
         let extendedCount = 0;
 
-        for (const finger of fingers) {
+        for (const finger of FINGER_JOINTS) {
             const tip = hand.getJointById(finger.tip);
             const meta = hand.getJointById(finger.meta);
 
@@ -781,40 +781,14 @@ class XrMenu extends Script {
      * @private
      */
     _isPalmFacingCamera(inputSource) {
-        const hand = inputSource.hand;
-        if (!hand || !hand.tracking) return false;
-
         // First check if fingers are extended (open hand)
         if (!this._areFingersExtended(inputSource)) {
             return false;
         }
 
-        const wrist = hand.wrist;
-        const middleMeta = hand.getJointById('middle-finger-metacarpal');
-        const indexMeta = hand.getJointById('index-finger-metacarpal');
-        const pinkyMeta = hand.getJointById('pinky-finger-metacarpal');
-
-        if (!wrist || !middleMeta || !indexMeta || !pinkyMeta) return false;
-
-        // Calculate palm normal using cross product of two vectors on the palm
-        const wristPos = wrist.getPosition();
-        const middlePos = middleMeta.getPosition();
-        const indexPos = indexMeta.getPosition();
-        const pinkyPos = pinkyMeta.getPosition();
-
-        // Vector from wrist to middle finger base
-        tmpVec3A.sub2(middlePos, wristPos);
-
-        // Vector from index to pinky (across the palm)
-        tmpVec3B.sub2(pinkyPos, indexPos);
-
-        // Cross product gives palm normal
-        tmpVec3C.cross(tmpVec3A, tmpVec3B).normalize();
-
-        // Flip normal for left hand
-        if (inputSource.handedness === 'left') {
-            tmpVec3C.mulScalar(-1);
-        }
+        // Get palm normal using shared calculation
+        const palmNormal = this._getPalmNormal(inputSource);
+        if (!palmNormal) return false;
 
         // Get camera forward direction
         if (!this._cameraEntity) return false;
@@ -823,7 +797,7 @@ class XrMenu extends Script {
 
         // Check if palm normal faces roughly toward camera (negative dot product)
         // We want the palm facing the user, so the normal should point toward the camera
-        const dot = tmpVec3C.dot(cameraForward);
+        const dot = palmNormal.dot(cameraForward);
 
         // Negative dot means palm is facing camera
         return dot < -this.palmUpThreshold;
