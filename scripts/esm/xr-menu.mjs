@@ -1071,6 +1071,9 @@ class XrMenu extends Script {
                 this._toggleMenuVisibility();
             }
             this._toggleButtonWasPressed = pressed;
+        } else {
+            // Reset toggle state if the gamepad or button is unavailable
+            this._toggleButtonWasPressed = false;
         }
 
         // Update menu position while visible OR still fading out
