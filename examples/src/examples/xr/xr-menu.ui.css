@@ -4,44 +4,56 @@ body {
 .container {
     display: flex;
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
-    height: auto;
-    flex-wrap: nowrap;
-    justify-content: center;
-    align-items: center;
+    left: 50%;
+    bottom: 32px;
+    transform: translateX(-50%);
+    gap: 8px;
 }
 .container > .button {
-    padding: 32px;
-    margin: 8px;
-    color: #fff;
-    background-color: rgba(0, 0, 0, 0.5);
-    font-size: 24px;
-    font-weight: bold;
-    opacity: 0.3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 28px;
+    color: rgba(255, 255, 255, 0.35);
+    background: rgba(40, 40, 50, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
     cursor: default;
+    transition: all 0.15s ease;
+    user-select: none;
 }
 .container > .button.active {
-    opacity: 1;
+    color: #fff;
+    background: rgba(255, 102, 0, 0.9);
+    border-color: rgba(255, 140, 60, 0.4);
     cursor: pointer;
 }
 .container > .button.active:hover {
-    background-color: rgba(0, 0, 0, 1);
+    background: rgba(255, 120, 30, 0.95);
+}
+.container > .button.active:active {
+    background: rgba(230, 90, 0, 0.95);
 }
 .message {
-    position: absolute;
-    margin: 8px;
-    bottom: 0;
-    right: 0;
-    padding: 8px 16px;
-    color: #fff;
-    background-color: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    left: 50%;
+    top: 32px;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    font-size: 14px;
 }
 @media only screen and (max-width: 600px) {
-    .message {
-        bottom: 80px;
+    .container {
+        bottom: 24px;
+    }
+    .container > .button {
+        padding: 12px 20px;
+        font-size: 15px;
     }
 }

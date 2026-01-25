@@ -68,17 +68,17 @@ createOptions.keyboard = new pc.Keyboard(window);
 createOptions.elementInput = new pc.ElementInput(canvas);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScreenComponentSystem,
     pc.ButtonComponentSystem,
-    pc.ElementComponentSystem,
-    pc.ScriptComponentSystem,
+    pc.CameraComponentSystem,
     pc.CollisionComponentSystem,
-    pc.RigidBodyComponentSystem
+    pc.ElementComponentSystem,
+    pc.LightComponentSystem,
+    pc.RenderComponentSystem,
+    pc.RigidBodyComponentSystem,
+    pc.ScreenComponentSystem,
+    pc.ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler, pc.ContainerHandler];
+createOptions.resourceHandlers = [pc.ContainerHandler, pc.FontHandler, pc.TextureHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
