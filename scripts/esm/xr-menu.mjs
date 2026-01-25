@@ -1,4 +1,4 @@
-import { Color, Entity, Quat, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { BUTTON_TRANSITION_MODE_TINT, Color, Entity, Quat, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 /** @import { Asset, XrInputSource } from 'playcanvas' */
 
@@ -456,7 +456,7 @@ class XrMenu extends Script {
         // Add button component for interactivity
         button.addComponent('button', {
             active: true,
-            transitionMode: 1, // Tint mode
+            transitionMode: BUTTON_TRANSITION_MODE_TINT,
             hoverTint: this.hoverColor,
             pressedTint: this.pressColor,
             inactiveTint: this.buttonColor
