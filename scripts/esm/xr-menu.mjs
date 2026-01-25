@@ -64,46 +64,46 @@ class XrMenu extends Script {
      * @type {Vec3}
      * @attribute
      */
-    menuOffset = new Vec3(0, 0.03, 0.03);
+    menuOffset = new Vec3(0, 0.03, 0.042);
 
     /**
      * Vertical spacing between menu buttons in meters.
      *
      * @type {number}
      * @attribute
-     * @range [0.01, 0.2]
-     * @precision 0.01
+     * @range [0.001, 0.05]
+     * @precision 0.001
      */
-    buttonSpacing = 0.06;
+    buttonSpacing = 0.0025;
 
     /**
      * Width of each button in meters.
      *
      * @type {number}
      * @attribute
-     * @range [0.05, 0.3]
+     * @range [0.02, 0.3]
      * @precision 0.01
      */
-    buttonWidth = 0.12;
+    buttonWidth = 0.075;
 
     /**
      * Height of each button in meters.
      *
      * @type {number}
      * @attribute
-     * @range [0.02, 0.1]
-     * @precision 0.01
+     * @range [0.01, 0.1]
+     * @precision 0.001
      */
-    buttonHeight = 0.04;
+    buttonHeight = 0.015;
 
     /**
      * Font size for button text in UI pixels.
      *
      * @type {number}
      * @attribute
-     * @range [8, 48]
+     * @range [4, 48]
      */
-    fontSize = 24;
+    fontSize = 8;
 
     /**
      * Overall scale multiplier for the entire menu.
@@ -122,7 +122,7 @@ class XrMenu extends Script {
      * @attribute
      * @range [1, 30]
      */
-    followSpeed = 12;
+    followSpeed = 15;
 
     /**
      * Dot product threshold for detecting palm-up gesture. Higher values require the palm
@@ -179,7 +179,7 @@ class XrMenu extends Script {
      * @type {Color}
      * @attribute
      */
-    buttonColor = new Color(0.15, 0.15, 0.25, 0.9);
+    buttonColor = new Color(1, 1, 1, 0.9);
 
     /**
      * Color of menu buttons when hovered.
@@ -187,7 +187,7 @@ class XrMenu extends Script {
      * @type {Color}
      * @attribute
      */
-    hoverColor = new Color(0.3, 0.3, 0.5, 1.0);
+    hoverColor = new Color(1.2, 1.2, 1.2, 1.0);
 
     /**
      * Color of menu buttons when pressed/activated.
@@ -195,7 +195,7 @@ class XrMenu extends Script {
      * @type {Color}
      * @attribute
      */
-    pressColor = new Color(0.1, 0.4, 0.6, 1.0);
+    pressColor = new Color(0.8, 0.8, 0.8, 1.0);
 
     /**
      * Text color for button labels.

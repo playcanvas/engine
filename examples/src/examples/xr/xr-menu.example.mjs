@@ -11,6 +11,16 @@ const { XrMenu } = await fileImport(`${rootPath}/static/scripts/esm/xr-menu.mjs`
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
+// Load Ammo.js physics engine
+pc.WasmModule.setConfig('Ammo', {
+    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
+});
+await new Promise((resolve) => {
+    pc.WasmModule.getInstance('Ammo', () => resolve());
+});
+
 // create UI
 // html
 const div = document.createElement('div');
@@ -24,7 +34,7 @@ document.head.appendChild(css);
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     /** @type {HTMLElement | null} */
     const el = document.querySelector('.message');
     if (el) {
@@ -39,9 +49,6 @@ const assets = {
     gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/vr-gallery.glb` })
 };
 
-// Make font asset available by ID
-assets.font.id = 42;
-
 // Create graphics device
 const gfxOptions = {
     deviceTypes: [deviceType],
@@ -51,7 +58,7 @@ const gfxOptions = {
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-// Create application with required component systems for UI
+// Create application with required component systems for UI and physics
 const createOptions = new pc.AppOptions();
 createOptions.xr = pc.XrManager;
 createOptions.graphicsDevice = device;
@@ -67,7 +74,9 @@ createOptions.componentSystems = [
     pc.ScreenComponentSystem,
     pc.ButtonComponentSystem,
     pc.ElementComponentSystem,
-    pc.ScriptComponentSystem
+    pc.ScriptComponentSystem,
+    pc.CollisionComponentSystem,
+    pc.RigidBodyComponentSystem
 ];
 createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler, pc.ContainerHandler];
 
@@ -95,6 +104,9 @@ assetListLoader.load(() => {
     app.start();
 
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+    // Set up physics gravity
+    app.systems.rigidbody.gravity.set(0, -9.81, 0);
 
     const colorCamera = new pc.Color(44 / 255, 62 / 255, 80 / 255);
 
@@ -134,61 +146,78 @@ assetListLoader.load(() => {
     light.setEulerAngles(45, 135, 0);
     app.root.addChild(light);
 
-    // Add VR gallery environment
+    // Add VR gallery environment with physics
     const galleryEntity = /** @type {pc.ContainerResource} */ (assets.gallery.resource).instantiateRenderEntity();
+    galleryEntity.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
+        const entity = render.entity;
+        entity.addComponent('rigidbody', {
+            type: 'static',
+            restitution: 0.5
+        });
+        entity.addComponent('collision', {
+            type: 'mesh',
+            renderAsset: render.asset
+        });
+    });
     app.root.addChild(galleryEntity);
 
-    // cube colors for visual feedback
-    const cubeColors = [
-        new pc.Color(1, 0.3, 0.3),   // Red
-        new pc.Color(0.3, 1, 0.3),   // Green
-        new pc.Color(0.3, 0.3, 1),   // Blue
-        new pc.Color(1, 1, 0.3)      // Yellow
-    ];
+    // Array to track spawned objects for reset
+    /** @type {pc.Entity[]} */
+    const spawnedObjects = [];
 
-    /** @type {pc.StandardMaterial[]} */
-    const cubeMaterials = [];
-
-    /**
-     * Creates a colored cube at the specified position.
-     *
-     * @param {number} x - The x coordinate.
-     * @param {number} y - The y coordinate.
-     * @param {number} z - The z coordinate.
-     * @param {pc.Color} color - The cube color.
-     * @returns {pc.Entity} The created cube entity.
-     */
-    const createCube = function (x, y, z, color) {
-        const cube = new pc.Entity();
-        const material = new pc.StandardMaterial();
-        // @ts-ignore engine-tsd
-        material.diffuse.copy(color);
-        // @ts-ignore engine-tsd
-        material.emissive.set(color.r * 0.1, color.g * 0.1, color.b * 0.1);
-        material.update();
-
-        // Store the material for later modification
-        cubeMaterials.push(material);
-
-        cube.addComponent('render', {
-            type: 'box',
-            material: material
-        });
-        cube.setLocalPosition(x, y, z);
-        cube.setLocalScale(0.3, 0.3, 0.3);
-        app.root.addChild(cube);
-        return cube;
+    // Materials for spawned objects (metallic look)
+    const createMetallicMaterial = (color) => {
+        const m = new pc.StandardMaterial();
+        m.diffuse = color;
+        m.metalness = 0.8;
+        m.gloss = 0.7;
+        m.useMetalness = true;
+        m.update();
+        return m;
+    };
+    const materials = {
+        box: createMetallicMaterial(new pc.Color(0.9, 0.4, 0.3)),
+        sphere: createMetallicMaterial(new pc.Color(0.3, 0.5, 0.9))
     };
 
-    // Create some cubes in a circle around the user
-    const cubes = [];
-    for (let i = 0; i < 4; i++) {
-        const angle = (i / 4) * Math.PI * 2;
-        const x = Math.sin(angle) * 2;
-        const z = Math.cos(angle) * 2;
-        const cube = createCube(x, 0.5, z, cubeColors[i]);
-        cubes.push(cube);
-    }
+    /**
+     * Spawns a physics shape at position (0, 5, 0).
+     *
+     * @param {'box'|'sphere'} type - The shape type.
+     */
+    const spawnShape = (type) => {
+        const entity = new pc.Entity(`Spawned${type}`);
+        entity.addComponent('render', {
+            type,
+            material: materials[type]
+        });
+        entity.addComponent('rigidbody', {
+            type: 'dynamic',
+            restitution: 0.5
+        });
+        entity.addComponent('collision', {
+            type,
+            halfExtents: new pc.Vec3(0.25, 0.25, 0.25),
+            radius: 0.25
+        });
+        entity.setLocalScale(0.5, 0.5, 0.5);
+        app.root.addChild(entity);
+
+        entity.rigidbody.teleport(0, 5, 0);
+
+        spawnedObjects.push(entity);
+    };
+
+    /**
+     * Resets the scene by destroying all spawned objects.
+     */
+    const resetScene = () => {
+        for (const obj of spawnedObjects) {
+            obj.destroy();
+        }
+        spawnedObjects.length = 0;
+        message('Scene reset');
+    };
 
     // XR Menu Script Entity
     const menuEntity = new pc.Entity('XrMenu');
@@ -196,80 +225,26 @@ assetListLoader.load(() => {
     menuEntity.script.create(XrMenu, {
         properties: {
             menuItems: [
-                { label: 'Red Cube', eventName: 'menu:red' },
-                { label: 'Green Cube', eventName: 'menu:green' },
-                { label: 'Blue Cube', eventName: 'menu:blue' },
-                { label: 'Exit VR', eventName: 'xr:end' }
+                { label: 'Spawn Cube', eventName: 'menu:spawnCube' },
+                { label: 'Spawn Sphere', eventName: 'menu:spawnSphere' },
+                { label: 'Reset', eventName: 'menu:reset' },
+                { label: 'Exit XR', eventName: 'xr:end' }
             ],
             fontAsset: assets.font,
-            buttonTexture: assets.buttonTexture,
-            preferredHand: 'left',
-            menuOffset: new pc.Vec3(0, 0.03, 0.042),
-            buttonWidth: 0.072,
-            buttonHeight: 0.015,
-            buttonSpacing: 0.0025,
-            fontSize: 8,
-            followSpeed: 15,
-            buttonColor: new pc.Color(1, 1, 1, 0.9),
-            hoverColor: new pc.Color(1.2, 1.2, 1.2, 1.0),
-            pressColor: new pc.Color(0.8, 0.8, 0.8, 1.0),
-            textColor: new pc.Color(1, 1, 1)
+            buttonTexture: assets.buttonTexture
         }
     });
     app.root.addChild(menuEntity);
 
-    /**
-     * Highlights a cube by scaling it up and making it glow.
-     *
-     * @param {number} index - The index of the cube to highlight.
-     */
-    const highlightCube = (index) => {
-        // Reset all cubes to normal state
-        for (let i = 0; i < cubes.length; i++) {
-            cubes[i].setLocalScale(0.3, 0.3, 0.3);
-            const color = cubeColors[i];
-            // @ts-ignore engine-tsd
-            cubeMaterials[i].emissive.set(color.r * 0.1, color.g * 0.1, color.b * 0.1);
-            cubeMaterials[i].update();
-        }
-        // Highlight selected - scale up and make it glow brightly
-        if (index >= 0 && index < cubes.length) {
-            cubes[index].setLocalScale(0.5, 0.5, 0.5);
-            const color = cubeColors[index];
-            // Make it glow brightly
-            // @ts-ignore engine-tsd
-            cubeMaterials[index].emissive.set(color.r * 0.8, color.g * 0.8, color.b * 0.8);
-            cubeMaterials[index].update();
-        }
-    };
-
     // Handle menu events
-    let selectedCubeIndex = -1;
-
-    app.on('menu:red', () => {
-        message('Red cube selected!');
-        selectedCubeIndex = 0;
-        highlightCube(0);
-    });
-
-    app.on('menu:green', () => {
-        message('Green cube selected!');
-        selectedCubeIndex = 1;
-        highlightCube(1);
-    });
-
-    app.on('menu:blue', () => {
-        message('Blue cube selected!');
-        selectedCubeIndex = 2;
-        highlightCube(2);
-    });
+    app.on('menu:spawnCube', () => spawnShape('box'));
+    app.on('menu:spawnSphere', () => spawnShape('sphere'));
+    app.on('menu:reset', resetScene);
 
     // Listen for menu active state to show in message
     app.on('xr:menu:active', (active) => {
         if (active) {
             message('Menu opened - point and touch to select');
-        } else if (selectedCubeIndex >= 0) {
-            message(`${['Red', 'Green', 'Blue', 'Yellow'][selectedCubeIndex]} cube selected`);
         } else {
             message('Open palm toward face to show menu');
         }
@@ -300,14 +275,11 @@ assetListLoader.load(() => {
         });
 
         // Button handler - fires events that XrSession listens to
-        const onXrButtonClick = function () {
-            // @ts-ignore
-            if (!this.classList.contains('active')) return;
+        const onXrButtonClick = (e) => {
+            const button = /** @type {HTMLElement} */ (e.currentTarget);
+            if (!button.classList.contains('active')) return;
 
-            // @ts-ignore
-            const type = this.getAttribute('data-xr');
-
-            // Fire the appropriate event that XrSession is listening for
+            const type = button.getAttribute('data-xr');
             if (type === pc.XRTYPE_AR) {
                 app.fire('ar:start');
             } else {
@@ -326,30 +298,6 @@ assetListLoader.load(() => {
         } else {
             message('Click to enter VR (hand tracking not available)');
         }
-
-        // Animate cubes
-        let pulseTime = 0;
-        app.on('update', (dt) => {
-            pulseTime += dt;
-
-            for (let i = 0; i < cubes.length; i++) {
-                cubes[i].rotate(0, 0.5, 0);
-
-                // Pulse the selected cube
-                if (i === selectedCubeIndex) {
-                    // Pulsing scale between 0.45 and 0.55
-                    const pulse = 0.5 + Math.sin(pulseTime * 5) * 0.05;
-                    cubes[i].setLocalScale(pulse, pulse, pulse);
-
-                    // Pulsing glow
-                    const color = cubeColors[i];
-                    const glow = 0.6 + Math.sin(pulseTime * 5) * 0.3;
-                    // @ts-ignore engine-tsd
-                    cubeMaterials[i].emissive.set(color.r * glow, color.g * glow, color.b * glow);
-                    cubeMaterials[i].update();
-                }
-            }
-        });
     } else {
         message('WebXR is not supported');
     }
