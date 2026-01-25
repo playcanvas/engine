@@ -35,7 +35,8 @@ const message = function (msg) {
 // Assets
 const assets = {
     font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/roboto-extralight.json` }),
-    buttonTexture: new pc.Asset('buttonTexture', 'texture', { url: `${rootPath}/static/assets/textures/blue-button.png` })
+    buttonTexture: new pc.Asset('buttonTexture', 'texture', { url: `${rootPath}/static/assets/textures/blue-button.png` }),
+    gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/vr-gallery.glb` })
 };
 
 // Make font asset available by ID
@@ -133,18 +134,9 @@ assetListLoader.load(() => {
     light.setEulerAngles(45, 135, 0);
     app.root.addChild(light);
 
-    // create floor
-    const floor = new pc.Entity('Floor');
-    floor.addComponent('render', {
-        type: 'plane'
-    });
-    floor.setLocalScale(10, 1, 10);
-    const floorMaterial = new pc.StandardMaterial();
-    // @ts-ignore engine-tsd
-    floorMaterial.diffuse.set(0.3, 0.3, 0.3);
-    floorMaterial.update();
-    floor.render.material = floorMaterial;
-    app.root.addChild(floor);
+    // Add VR gallery environment
+    const galleryEntity = /** @type {pc.ContainerResource} */ (assets.gallery.resource).instantiateRenderEntity();
+    app.root.addChild(galleryEntity);
 
     // cube colors for visual feedback
     const cubeColors = [
