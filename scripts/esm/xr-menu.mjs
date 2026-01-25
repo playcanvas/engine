@@ -846,6 +846,9 @@ class XrMenu extends Script {
     /**
      * Gets the palm anchor position and rotation for menu placement.
      *
+     * Note: Returns references to reused internal Vec3/Quat objects for performance.
+     * Callers must use the values immediately or copy them - do not store the references.
+     *
      * @param {XrInputSource} inputSource - The hand input source.
      * @returns {{position: Vec3, rotation: Quat}|null} Anchor transform or null.
      * @private
@@ -896,6 +899,9 @@ class XrMenu extends Script {
 
     /**
      * Gets the controller anchor position and rotation for menu placement.
+     *
+     * Note: Returns references to reused internal Vec3/Quat objects for performance.
+     * Callers must use the values immediately or copy them - do not store the references.
      *
      * @param {XrInputSource} inputSource - The controller input source.
      * @returns {{position: Vec3, rotation: Quat}|null} Anchor transform or null.
