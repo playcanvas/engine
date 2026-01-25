@@ -994,6 +994,9 @@ class XrMenu extends Script {
                     this._lastPressTime = now;
                     this._onButtonClick(closestButton);
                 }
+            } else if (this._pressedButton === closestButton && closestDist >= pressDist) {
+                // Finger moved out of press threshold but is still hovering - clear pressed state
+                this._pressedButton = null;
             }
         } else {
             // Finger fully exited hover zone - clear states and allow re-press
