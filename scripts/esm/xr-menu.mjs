@@ -1121,6 +1121,10 @@ class XrMenu extends Script {
         const inputSource = this._findPreferredInput();
         if (!inputSource) return;
 
+        // Reset controller toggle state when input source changes
+        if (this._activeInputSource !== inputSource) {
+            this._toggleButtonWasPressed = false;
+        }
         this._activeInputSource = inputSource;
 
         // Determine input mode and update accordingly
