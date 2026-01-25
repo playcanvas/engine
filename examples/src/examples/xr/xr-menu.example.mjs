@@ -45,6 +45,7 @@ const message = (msg) => {
 
 // Assets
 const assets = {
+    buttonTexture: new pc.Asset('buttonTexture', 'texture', { url: `${rootPath}/static/assets/textures/blue-button.png` }),
     cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
     envAtlas: new pc.Asset(
         'env-atlas',
@@ -53,7 +54,6 @@ const assets = {
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
     font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/roboto-extralight.json` }),
-    buttonTexture: new pc.Asset('buttonTexture', 'texture', { url: `${rootPath}/static/assets/textures/blue-button.png` }),
     gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/vr-gallery.glb` })
 };
 

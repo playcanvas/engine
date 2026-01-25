@@ -58,13 +58,13 @@ class XrMenu extends Script {
 
     /**
      * Offset from the anchor point where the menu appears.
-     * For hand tracking: Y is world-space vertical offset, Z is distance from palm surface.
+     * For hand tracking: Z is distance from palm center along the palm normal.
      * For controllers: Applied in controller-local space.
      *
      * @type {Vec3}
      * @attribute
      */
-    menuOffset = new Vec3(0, 0.03, 0.042);
+    menuOffset = new Vec3(0, 0, 0.05);
 
     /**
      * Vertical spacing between menu buttons in meters.
@@ -865,15 +865,12 @@ class XrMenu extends Script {
         const palmNormal = this._getPalmNormal(inputSource);
         if (!palmNormal) return null;
 
-        // Position between proximal joint and metacarpal (center of palm area)
-        this._targetPosition.lerp(middleMeta.getPosition(), middleProximal.getPosition(), 0.3);
+        // Position at center of palm (halfway between metacarpal and proximal)
+        this._targetPosition.lerp(middleMeta.getPosition(), middleProximal.getPosition(), 0.5);
 
         // Offset the menu along the palm normal (in front of palm)
         tmpVec3A.copy(palmNormal).mulScalar(this.menuOffset.z);
         this._targetPosition.add(tmpVec3A);
-
-        // Add vertical world-space offset
-        this._targetPosition.y += this.menuOffset.y;
 
         // Menu should face the camera (full look-at, not just Y rotation)
         if (this._cameraEntity) {
