@@ -49,6 +49,14 @@ class XrMenu extends Script {
     menuItems = [];
 
     /**
+     * Audio asset for button click sound.
+     *
+     * @type {Asset|null}
+     * @attribute
+     */
+    clickSound = null;
+
+    /**
      * Font asset for button text. Required for text rendering.
      *
      * @type {Asset|null}
@@ -283,6 +291,15 @@ class XrMenu extends Script {
         if (!this._cameraEntity) {
             // Try to find any camera in the scene
             this._cameraEntity = this.app.root.findComponent('camera')?.entity || null;
+        }
+
+        // Set up click sound
+        if (this.clickSound) {
+            this.entity.addComponent('sound');
+            this.entity.sound?.addSlot('click', {
+                asset: this.clickSound.id,
+                volume: 0.5
+            });
         }
 
         // Create menu container and UI
@@ -529,6 +546,11 @@ class XrMenu extends Script {
         // @ts-ignore
         const menuData = button.menuData;
         if (!menuData) return;
+
+        // Play click sound
+        if (this.entity.sound) {
+            this.entity.sound.play('click');
+        }
 
         // Visual feedback - flash press color and scale
         this._setButtonPress(button, true);

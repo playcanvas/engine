@@ -46,6 +46,7 @@ const message = (msg) => {
 // Assets
 const assets = {
     buttonTexture: new pc.Asset('buttonTexture', 'texture', { url: `${rootPath}/static/assets/textures/blue-button.png` }),
+    click: new pc.Asset('click', 'audio', { url: `${rootPath}/static/assets/sounds/click.mp3` }),
     cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
     envAtlas: new pc.Asset(
         'env-atlas',
@@ -74,8 +75,10 @@ createOptions.mouse = new pc.Mouse(document.body);
 createOptions.touch = new pc.TouchDevice(document.body);
 createOptions.keyboard = new pc.Keyboard(window);
 createOptions.elementInput = new pc.ElementInput(canvas);
+createOptions.soundManager = new pc.SoundManager();
 
 createOptions.componentSystems = [
+    pc.AudioListenerComponentSystem,
     pc.ButtonComponentSystem,
     pc.CameraComponentSystem,
     pc.CollisionComponentSystem,
@@ -84,9 +87,10 @@ createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.RigidBodyComponentSystem,
     pc.ScreenComponentSystem,
-    pc.ScriptComponentSystem
+    pc.ScriptComponentSystem,
+    pc.SoundComponentSystem
 ];
-createOptions.resourceHandlers = [pc.ContainerHandler, pc.FontHandler, pc.TextureHandler];
+createOptions.resourceHandlers = [pc.AudioHandler, pc.ContainerHandler, pc.FontHandler, pc.TextureHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -124,8 +128,9 @@ app.root.addChild(cameraParent);
 // create camera
 const cameraEntity = new pc.Entity('Camera');
 cameraEntity.addComponent('camera', {
-    toneMapping: pc.TONEMAP_ACES2
+    toneMapping: pc.TONEMAP_NEUTRAL
 });
+cameraEntity.addComponent('audiolistener');
 cameraEntity.setLocalPosition(0, 1.7, -2);
 cameraEntity.addComponent('script');
 cameraEntity.script.create(CameraControls, {
@@ -218,6 +223,7 @@ menuEntity.script.create(XrMenu, {
             { label: 'Reset', eventName: 'menu:reset' },
             { label: 'Exit XR', eventName: 'xr:end' }
         ],
+        clickSound: assets.click,
         fontAsset: assets.font,
         buttonTexture: assets.buttonTexture
     }
