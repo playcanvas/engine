@@ -103,22 +103,13 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
-
-    // Set up physics gravity
-    app.systems.rigidbody.gravity.set(0, -9.81, 0);
-
-    const colorCamera = new pc.Color(44 / 255, 62 / 255, 80 / 255);
-
     // create camera parent for locomotion (XrSession attaches to this)
     const cameraParent = new pc.Entity('CameraParent');
     app.root.addChild(cameraParent);
 
     // create camera
     const cameraEntity = new pc.Entity('Camera');
-    cameraEntity.addComponent('camera', {
-        clearColor: colorCamera
-    });
+    cameraEntity.addComponent('camera');
     cameraParent.addChild(cameraEntity);
 
     // Add XrSession script to camera parent - handles XR lifecycle
@@ -241,15 +232,6 @@ assetListLoader.load(() => {
     app.on('menu:spawnSphere', () => spawnShape('sphere'));
     app.on('menu:reset', resetScene);
 
-    // Listen for menu active state to show in message
-    app.on('xr:menu:active', (active) => {
-        if (active) {
-            message('Menu opened - point and touch to select');
-        } else {
-            message('Open palm toward face to show menu');
-        }
-    });
-
     if (app.xr.supported) {
         // XR availability
         document
@@ -263,15 +245,6 @@ assetListLoader.load(() => {
         app.xr.on('available', (type, available) => {
             const element = document.querySelector(`.container > .button[data-xr="${type}"]`);
             element?.classList.toggle('active', available);
-        });
-
-        // XR session events
-        app.xr.on('start', () => {
-            message('Open palm toward face to show menu');
-        });
-
-        app.xr.on('end', () => {
-            message('XR session ended');
         });
 
         // Button handler - fires events that XrSession listens to
@@ -288,10 +261,9 @@ assetListLoader.load(() => {
         };
 
         // Button clicks
-        const buttons = document.querySelectorAll('.container > .button');
-        for (let i = 0; i < buttons.length; i++) {
-            buttons[i].addEventListener('click', onXrButtonClick);
-        }
+        document.querySelectorAll('.container > .button').forEach((button) => {
+            button.addEventListener('click', onXrButtonClick);
+        });
 
         if (window.XRHand) {
             message('Click to enter VR, use hand tracking or controllers');
