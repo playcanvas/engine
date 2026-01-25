@@ -249,6 +249,13 @@ class XrNavigation extends Script {
 
         const hitPoint = this.findPlaneIntersection(origin, direction);
         if (hitPoint) {
+            // Adjust for camera's local XZ offset so the user's head ends up at the target
+            if (this.cameraEntity) {
+                const cameraLocalPos = this.cameraEntity.getLocalPosition();
+                hitPoint.x -= cameraLocalPos.x;
+                hitPoint.z -= cameraLocalPos.z;
+            }
+
             const cameraY = this.entity.getPosition().y;
             hitPoint.y = cameraY;
             this.entity.setPosition(hitPoint);
