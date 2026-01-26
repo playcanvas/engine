@@ -125,16 +125,35 @@ class XrControllers extends Script {
     }
 
     /**
+     * Destroys a single controller and its associated resources.
+     *
+     * @param {XrInputSource} inputSource - The input source to destroy.
+     * @private
+     */
+    _destroyController(inputSource) {
+        const controller = this.controllers.get(inputSource);
+        if (!controller) return;
+
+        controller.entity.destroy();
+
+        if (controller.asset) {
+            this.app.assets.remove(controller.asset);
+            controller.asset.unload();
+        }
+
+        this.controllers.delete(inputSource);
+        this.app.fire('xr:controller:remove', inputSource);
+    }
+
+    /**
      * Destroys all controller entities and clears the map.
      *
      * @private
      */
     _destroyAllControllers() {
-        for (const [inputSource, controller] of this.controllers) {
-            controller.entity.destroy();
-            this.app.fire('xr:controller:remove', inputSource);
+        for (const inputSource of this.controllers.keys()) {
+            this._destroyController(inputSource);
         }
-        this.controllers.clear();
     }
 
     /**
@@ -255,22 +274,7 @@ class XrControllers extends Script {
     _onInputSourceRemove(inputSource) {
         // Remove from pending set if still loading
         this._pendingInputSources.delete(inputSource);
-
-        const controller = this.controllers.get(inputSource);
-        if (controller) {
-            controller.entity.destroy();
-
-            // Optionally clean up the asset
-            if (controller.asset) {
-                this.app.assets.remove(controller.asset);
-                controller.asset.unload();
-            }
-
-            this.controllers.delete(inputSource);
-
-            // Fire event for other scripts to coordinate
-            this.app.fire('xr:controller:remove', inputSource);
-        }
+        this._destroyController(inputSource);
     }
 
     /**
