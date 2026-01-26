@@ -157,6 +157,25 @@ class XrControllers extends Script {
     }
 
     /**
+     * Tries to load profiles sequentially, returning the first successful result.
+     *
+     * @param {XrInputSource} inputSource - The input source.
+     * @param {string[]} profiles - Array of profile IDs to try.
+     * @param {number} [index=0] - Current index in the profiles array.
+     * @returns {Promise<{ profileId: string, asset: import('playcanvas').Asset } | null>} The result or null.
+     * @private
+     */
+    async _tryLoadProfiles(inputSource, profiles, index = 0) {
+        if (index >= profiles.length) return null;
+        if (!this._pendingInputSources.has(inputSource)) return null;
+
+        const result = await this._loadProfile(inputSource, profiles[index]);
+        if (result) return result;
+
+        return this._tryLoadProfiles(inputSource, profiles, index + 1);
+    }
+
+    /**
      * Called when an input source is added.
      *
      * @param {XrInputSource} inputSource - The input source that was added.
@@ -172,22 +191,9 @@ class XrControllers extends Script {
         this._pendingInputSources.add(inputSource);
 
         // Load profiles sequentially and stop on first success
-        let successfulResult = null;
+        const successfulResult = await this._tryLoadProfiles(inputSource, inputSource.profiles);
 
-        for (const profileId of inputSource.profiles) {
-            // Check if input source was removed during loading
-            if (!this._pendingInputSources.has(inputSource)) {
-                return;
-            }
-
-            const result = await this._loadProfile(inputSource, profileId);
-            if (result) {
-                successfulResult = result;
-                break;
-            }
-        }
-
-        // Check again if input source was removed during loading
+        // Check if input source was removed during loading
         if (!this._pendingInputSources.has(inputSource)) {
             // Clean up the loaded asset if we got one
             if (successfulResult?.asset) {
@@ -278,15 +284,6 @@ class XrControllers extends Script {
     }
 
     /**
-     * Gets the visibility state of controller models.
-     *
-     * @type {boolean}
-     */
-    get visible() {
-        return this._visible;
-    }
-
-    /**
      * Sets the visibility state of controller models.
      *
      * @type {boolean}
@@ -299,6 +296,15 @@ class XrControllers extends Script {
         for (const [, controller] of this.controllers) {
             controller.entity.enabled = value;
         }
+    }
+
+    /**
+     * Gets the visibility state of controller models.
+     *
+     * @type {boolean}
+     */
+    get visible() {
+        return this._visible;
     }
 
     update(dt) {
