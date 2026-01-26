@@ -596,6 +596,8 @@ class WebglTexture {
                         } else {
                             device.setUnpackFlipY(false);
                             device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
+                            // Ensure alignment is 1 for byte array uploads (see 2D texture comment)
+                            device.setUnpackAlignment(1);
                             if (this._glCreated && texData) {
                                 gl.texSubImage2D(
                                     gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
@@ -639,6 +641,8 @@ class WebglTexture {
                 } else {
                     device.setUnpackFlipY(false);
                     device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
+                    // Ensure alignment is 1 for byte array uploads (see 2D texture comment)
+                    device.setUnpackAlignment(1);
                     gl.texImage3D(gl.TEXTURE_3D,
                         mipLevel,
                         this._glInternalFormat,
@@ -671,6 +675,8 @@ class WebglTexture {
                             );
                         }
                     } else {
+                        // Ensure alignment is 1 for byte array uploads (see 2D texture comment)
+                        device.setUnpackAlignment(1);
                         for (let index = 0; index < texture._arrayLength; index++) {
                             gl.texSubImage3D(
                                 gl.TEXTURE_2D_ARRAY,
@@ -763,6 +769,11 @@ class WebglTexture {
                     } else {
                         device.setUnpackFlipY(false);
                         device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
+                        // Ensure alignment is 1 for byte array uploads. Other code paths (e.g.
+                        // webgl-upload-stream) may change UNPACK_ALIGNMENT to match the data type's
+                        // BYTES_PER_ELEMENT. For non-RGBA formats like R8/RG8/RGB8 with row widths
+                        // not divisible by 4, alignment must be 1 to avoid "buffer not big enough" errors.
+                        device.setUnpackAlignment(1);
                         if (this._glCreated && mipObject) {
                             gl.texSubImage2D(
                                 gl.TEXTURE_2D,

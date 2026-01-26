@@ -1181,7 +1181,6 @@ export const getPixelFormatArrayType = (format) => {
         case PIXELFORMAT_RG16I:
         case PIXELFORMAT_RGBA16I:
             return Int16Array;
-        case PIXELFORMAT_RG8:
         case PIXELFORMAT_R16U:
         case PIXELFORMAT_RG16U:
         case PIXELFORMAT_RGBA16U:
