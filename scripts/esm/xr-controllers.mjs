@@ -297,16 +297,6 @@ class XrControllers extends Script {
         }
     }
 
-    /**
-     * Gets the controller entity for a specific input source.
-     *
-     * @param {XrInputSource} inputSource - The input source.
-     * @returns {import('playcanvas').Entity | null} The controller entity or null.
-     */
-    getControllerEntity(inputSource) {
-        return this.controllers.get(inputSource)?.entity ?? null;
-    }
-
     update(dt) {
         if (!this.app.xr?.active || !this._visible) return;
 
