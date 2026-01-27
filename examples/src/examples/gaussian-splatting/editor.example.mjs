@@ -114,6 +114,38 @@ assetListLoader.load(() => {
 
     document.body.appendChild(uiPanel);
 
+    // Show/hide gizmo for an entity
+    const showGizmoFor = (entity) => {
+        if (activeGizmoEntity) {
+            gizmo.detach();
+        }
+        activeGizmoEntity = entity;
+        if (entity) {
+            gizmo.attach(entity);
+        }
+        updateEntityList();
+    };
+
+    // Remove entity from scene
+    const removeEntity = (editable) => {
+        showGizmoFor(null);
+
+        // Cleanup processors
+        editable.selectionProcessor?.destroy();
+        editable.deleteProcessor?.destroy();
+
+        // Remove from editables
+        const idx = editables.indexOf(editable);
+        if (idx !== -1) {
+            editables.splice(idx, 1);
+        }
+
+        // Destroy entity
+        editable.entity.destroy();
+
+        updateEntityList();
+    };
+
     function updateEntityList() {
         listContainer.innerHTML = '';
 
@@ -460,18 +492,6 @@ assetListLoader.load(() => {
         orbitInput.enabled = true;
     });
 
-    // Show/hide gizmo
-    const showGizmoFor = (entity) => {
-        if (activeGizmoEntity) {
-            gizmo.detach();
-        }
-        activeGizmoEntity = entity;
-        if (entity) {
-            gizmo.attach(entity);
-        }
-        updateEntityList();
-    };
-
     app.mouse.disableContextMenu();
 
     // Update loop - draw selection box, sync position, and update selection highlights
@@ -572,26 +592,6 @@ assetListLoader.load(() => {
             }
         }
     });
-
-    // Remove entity from scene
-    const removeEntity = (editable) => {
-        showGizmoFor(null);
-
-        // Cleanup processors
-        editable.selectionProcessor?.destroy();
-        editable.deleteProcessor?.destroy();
-
-        // Remove from editables
-        const idx = editables.indexOf(editable);
-        if (idx !== -1) {
-            editables.splice(idx, 1);
-        }
-
-        // Destroy entity
-        editable.entity.destroy();
-
-        updateEntityList();
-    };
 
     // Cleanup on destroy
     app.on('destroy', () => {
