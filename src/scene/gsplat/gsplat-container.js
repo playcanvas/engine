@@ -6,6 +6,7 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { ShaderMaterial } from '../materials/shader-material.js'
+ * @import { GSplatFormat } from './gsplat-format.js'
  */
 
 /**
@@ -13,15 +14,19 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  * programmatically using either a built-in format or a custom format with your own texture
  * streams and read code.
  *
- * Two built-in formats are provided:
- * - {@link GSplatFormat.createPackedFormat} - Compact 32U/16U format, works with
- *   {@link GSplatProcessor} on all platforms
- * - {@link GSplatFormat.createFloatFormat} - Float 32F/16F format, easy to populate from CPU
+ * A default format is provided via {@link GSplatFormat.createDefaultFormat} which uses float
+ * textures for easy CPU population.
  *
  * @example
- * // Example 1: Using the packed format (best for GSplatProcessor)
- * const format = pc.GSplatFormat.createPackedFormat(device);
+ * // Example 1: Using the default format (easy CPU population)
+ * const format = pc.GSplatFormat.createDefaultFormat(device);
  * const container = new pc.GSplatContainer(device, 100, format);
+ *
+ * // Float format textures are straightforward to fill
+ * const centerTex = container.getTexture('dataCenter');
+ * const pixels = centerTex.lock();
+ * // pixels is Float32Array, fill with [x, y, z, 0, x, y, z, 0, ...]
+ * centerTex.unlock();
  *
  * // Set bounding box and centers (required for culling/sorting)
  * container.aabb = new pc.BoundingBox();
@@ -31,18 +36,7 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  * entity.addComponent('gsplat', { resource: container, unified: true });
  *
  * @example
- * // Example 2: Using the float format (easy CPU population)
- * const format = pc.GSplatFormat.createFloatFormat(device);
- * const container = new pc.GSplatContainer(device, 100, format);
- *
- * // Float format textures are straightforward to fill
- * const centerTex = container.getTexture('dataCenter');
- * const pixels = centerTex.lock();
- * // pixels is Float32Array, fill with [x, y, z, 0, x, y, z, 0, ...]
- * centerTex.unlock();
- *
- * @example
- * // Example 3: Using a custom format
+ * // Example 2: Using a custom format
  * const format = new pc.GSplatFormat(device, [
  *     { name: 'data', format: pc.PIXELFORMAT_RGBA32F }
  * ], {
@@ -95,8 +89,8 @@ class GSplatContainer extends GSplatResourceBase {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {number} maxSplats - Maximum number of splats this container can hold.
      * @param {GSplatFormat} format - The format descriptor with streams and read code. Use
-     * {@link GSplatFormat.createPackedFormat} or {@link GSplatFormat.createFloatFormat}
-     * for built-in formats, or create a custom {@link GSplatFormat}.
+     * {@link GSplatFormat.createDefaultFormat} for the built-in format, or create a custom
+     * {@link GSplatFormat}.
      */
     constructor(device, maxSplats, format) {
         Debug.assert(format);
