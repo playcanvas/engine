@@ -31,7 +31,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
-    var modelCenter: vec3f = getCenter(&source);
+    var modelCenter: vec3f = getCenter();
 
     var center: SplatCenter;
     center.modelCenterOriginal = modelCenter;
@@ -53,7 +53,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     }
 
     // read color
-    var clr: vec4f = getColor(&source);
+    var clr: vec4f = getColor();
 
     #if GSPLAT_AA
         // apply AA compensation
@@ -69,7 +69,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         // read sh coefficients
         var sh: array<vec3f, SH_COEFFS>;
         var scale: f32;
-        readSHData(&source, &sh, &scale);
+        readSHData(&sh, &scale);
 
         // evaluate
         clr = vec4f(clr.xyz + evalSH(&sh, dir) * scale, clr.a);
@@ -95,7 +95,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #endif
 
     #ifndef DITHER_NONE
-        output.id = f32(source.id);
+        output.id = f32(splat.index);
     #endif
 
     #ifdef PREPASS_PASS

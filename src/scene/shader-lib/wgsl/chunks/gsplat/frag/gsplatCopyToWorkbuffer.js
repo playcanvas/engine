@@ -5,8 +5,8 @@ export default /* wgsl */`
 
 #include "gsplatHelpersVS"
 #include "gsplatFormatVS"
-#include "gsplatDeclarationsVS"
 #include "gsplatStructsVS"
+#include "gsplatDeclarationsVS"
 #include "gsplatCenterVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
@@ -48,10 +48,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     if (targetIndex >= uniform.uActiveSplats) {
 
         // Out of bounds: write zeros using generated write functions
-        writeSplatColor(vec4f(0.0));
+        writeDataColor(vec4f(0.0));
         #ifndef GSPLAT_COLOR_ONLY
-            writeSplatTexture0(vec4u(0u));
-            writeSplatTexture1(vec4u(0u));
+            writeDataTransformA(vec4u(0u));
+            writeDataTransformB(vec4u(0u));
         #endif
 
     } else {
@@ -65,16 +65,11 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             let originalIndex = targetIndex;
         #endif
         
-        // source texture size (set by all resource types via splatTextureSize uniform)
-        let srcSize = uniform.splatTextureSize;
-        
-        // Create SplatSource used to sample splat data textures
-        var source: SplatSource;
-        source.id = u32(originalIndex);
-        source.uv = vec2i(i32(source.id % srcSize), i32(source.id / srcSize));
+        // Initialize global splat for format read functions
+        setSplat(u32(originalIndex));
 
         // read center in local space
-        var modelCenter = getCenter(&source);
+        var modelCenter = getCenter();
 
         // compute world-space center for storage
         var worldCenter = (uniform.matrix_model * vec4f(modelCenter, 1.0)).xyz;
@@ -103,7 +98,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         modifySplatRotationScale(originalCenter, worldCenter, &worldRotation, &worldScale);
 
         // read color
-        var color = getColor(&source);
+        var color = getColor();
 
         // evaluate spherical harmonics
         #if SH_BANDS > 0
@@ -113,7 +108,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             // read sh coefficients
             var sh: array<vec3f, SH_COEFFS>;
             var scale: f32;
-            readSHData(&source, &sh, &scale);
+            readSHData(&sh, &scale);
 
             // evaluate
             color = vec4f(color.xyz + evalSH(&sh, dir) * scale, color.w);
@@ -125,11 +120,11 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         color = vec4f(color.xyz * uniform.uColorMultiply, color.w);
 
         // write out results using generated write functions
-        writeSplatColor(color);
+        writeDataColor(color);
         #ifndef GSPLAT_COLOR_ONLY
             // Store rotation (xyz, w derived) and scale as 6 half-floats
-            writeSplatTexture0(vec4u(bitcast<u32>(worldCenter.x), bitcast<u32>(worldCenter.y), bitcast<u32>(worldCenter.z), pack2x16float(worldRotation.xy)));
-            writeSplatTexture1(vec4u(pack2x16float(vec2f(worldRotation.z, worldScale.x)), pack2x16float(worldScale.yz), 0u, 0u));
+            writeDataTransformA(vec4u(bitcast<u32>(worldCenter.x), bitcast<u32>(worldCenter.y), bitcast<u32>(worldCenter.z), pack2x16float(worldRotation.xy)));
+            writeDataTransformB(vec4u(pack2x16float(vec2f(worldRotation.z, worldScale.x)), pack2x16float(worldScale.yz), 0u, 0u));
         #endif
     }
     

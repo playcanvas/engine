@@ -1,5 +1,6 @@
 import gsplatCenterVS from '../chunks/gsplat/vert/gsplatCenter.js';
 import gsplatCommonVS from '../chunks/gsplat/vert/gsplatCommon.js';
+import gsplatSplatVS from '../chunks/gsplat/gsplatSplat.js';
 import gsplatCustomizeVS from '../chunks/gsplat/vert/gsplatCustomize.js';
 import gsplatEvalSHVS from '../chunks/gsplat/vert/gsplatEvalSH.js';
 import gsplatHelpersVS from '../chunks/gsplat/vert/gsplatHelpers.js';
@@ -23,12 +24,14 @@ import gsplatSogVS from '../chunks/gsplat/vert/formats/sog.js';
 import gsplatSogSHVS from '../chunks/gsplat/vert/formats/sogSH.js';
 import gsplatContainerDeclVS from '../chunks/gsplat/vert/formats/containerDecl.js';
 import gsplatContainerReadVS from '../chunks/gsplat/vert/formats/containerRead.js';
-import gsplatWorkBufferReadVS from '../chunks/gsplat/vert/formats/workBufferRead.js';
+import gsplatContainerPackedReadVS from '../chunks/gsplat/vert/formats/containerPackedRead.js';
+import gsplatContainerFloatReadVS from '../chunks/gsplat/vert/formats/containerFloatRead.js';
 
 export const gsplatChunksWGSL = {
     gsplatCenterVS,
     gsplatCornerVS,
     gsplatCommonVS,
+    gsplatSplatVS,
     gsplatCustomizeVS,
     gsplatEvalSHVS,
     gsplatHelpersVS,
@@ -49,5 +52,6 @@ export const gsplatChunksWGSL = {
     gsplatSogSHVS,
     gsplatContainerDeclVS,
     gsplatContainerReadVS,
-    gsplatWorkBufferReadVS
+    gsplatContainerPackedReadVS,
+    gsplatContainerFloatReadVS
 };

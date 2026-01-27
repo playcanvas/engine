@@ -1,4 +1,4 @@
-import { SEMANTIC_POSITION, SEMANTIC_ATTR13, CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { SEMANTIC_POSITION, SEMANTIC_ATTR13, CULLFACE_NONE, PIXELFORMAT_RGBA16U } from '../../platform/graphics/constants.js';
 import {
     BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, GSPLAT_FORWARD, GSPLAT_SHADOW,
     SHADOWCAMERA_NAME
@@ -164,6 +164,12 @@ class GSplatRenderer {
         // Set defines
         this._material.setDefine('STORAGE_ORDER', device.isWebGPU);
         this._material.setDefine('SH_BANDS', '0');
+
+        // Set GSPLAT_COLOR_FLOAT define based on work buffer's color format
+        const colorStream = workBuffer.format.getStream('dataColor');
+        if (colorStream && colorStream.format !== PIXELFORMAT_RGBA16U) {
+            this._material.setDefine('GSPLAT_COLOR_FLOAT', '');
+        }
 
         // Bind work buffer textures from the texture map
         this._bindWorkBufferTextures();

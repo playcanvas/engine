@@ -1,10 +1,11 @@
 export default /* glsl */`
 
-// stores the source UV and order of the splat
+// Shared splat identification (index, uv) and setSplat() helper
+#include "gsplatSplatVS"
+
+// stores the render order and corner for this vertex
 struct SplatSource {
     uint order;         // render order
-    uint id;            // splat id
-    ivec2 uv;           // splat uv
     vec2 cornerUV;      // corner coordinates for this vertex of the gaussian (-1, -1)..(1, 1)
 };
 

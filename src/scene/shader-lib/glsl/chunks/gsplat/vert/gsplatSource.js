@@ -5,7 +5,7 @@ attribute uint vertex_id_attrib;        // render order base
 uniform uint numSplats;                 // total number of splats
 uniform highp usampler2D splatOrder;    // per-splat index to source gaussian
 
-// initialize the splat source structure
+// initialize the splat source structure and global splat
 bool initSource(out SplatSource source) {
     // calculate splat order
     source.order = vertex_id_attrib + uint(vertex_position.z);
@@ -17,11 +17,9 @@ bool initSource(out SplatSource source) {
 
     ivec2 orderUV = ivec2(source.order % splatTextureSize, source.order / splatTextureSize);
 
-    // read splat id
-    source.id = texelFetch(splatOrder, orderUV, 0).r;
-
-    // map id to uv
-    source.uv = ivec2(source.id % splatTextureSize, source.id / splatTextureSize);
+    // read splat id and initialize global splat for format read functions
+    uint splatId = texelFetch(splatOrder, orderUV, 0).r;
+    setSplat(splatId);
 
     // get the corner
     source.cornerUV = vertex_position.xy;

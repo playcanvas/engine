@@ -57,34 +57,36 @@ import wgslGsplatProcess from '../../scene/shader-lib/wgsl/chunks/gsplat/frag/gs
  * const processor = new pc.GSplatProcessor(
  *     app.graphicsDevice,
  *     { component: entity.gsplat },  // source: all streams auto-bound
- *     { component: entity.gsplat, streams: ['customColor'] },
+ *     { component: entity.gsplat, streams: ['customColor'] }, // destination: customColor stream only
  *     {
  *         processGLSL: `
- *             vec3 center = getCenter(source);
- *             float dist = distance(center, uPaintSphere.xyz);
- *             if (dist < uPaintSphere.w) {
- *                 writeCustomColor(uPaintColor);
- *             } else {
- *                 writeCustomColor(vec4(0.0));
+ *             uniform vec4 uPaintSphere;
+ *             uniform vec4 uPaintColor;
+ *
+ *             void process() {
+ *                 vec3 center = getCenter();
+ *                 float dist = distance(center, uPaintSphere.xyz);
+ *                 if (dist < uPaintSphere.w) {
+ *                     writeCustomColor(uPaintColor);
+ *                 } else {
+ *                     writeCustomColor(vec4(0.0));
+ *                 }
  *             }
  *         `,
  *         processWGSL: `
- *             let center = getCenter(&source);
- *             let dist = distance(center, uniform.uPaintSphere.xyz);
- *             if (dist < uniform.uPaintSphere.w) {
- *                 writeCustomColor(uniform.uPaintColor);
- *             } else {
- *                 writeCustomColor(vec4f(0.0));
- *             }
- *         `,
- *         declarationsGLSL: `
- *             uniform vec4 uPaintSphere;
- *             uniform vec4 uPaintColor;
- *         `,
- *         declarationsWGSL: `
  *             uniform uPaintSphere: vec4f;
  *             uniform uPaintColor: vec4f;
- *         `,
+ *
+ *             fn process() {
+ *                 let center = getCenter();
+ *                 let dist = distance(center, uniform.uPaintSphere.xyz);
+ *                 if (dist < uniform.uPaintSphere.w) {
+ *                     writeCustomColor(uniform.uPaintColor);
+ *                 } else {
+ *                     writeCustomColor(vec4f(0.0));
+ *                 }
+ *             }
+ *         `
  *     }
  * );
  *
@@ -207,14 +209,10 @@ class GSplatProcessor {
      * @param {GSplatProcessorBinding} destination - Destination configuration specifying where to write.
      * Can specify resource directly or component (for instance textures).
      * @param {object} options - Shader options for the processing logic.
-     * @param {string} [options.processGLSL] - GLSL code chunk included inside the main shader function.
-     * Implements the actual processing logic and can call loadXxx()/writeXxx() functions.
-     * @param {string} [options.processWGSL] - WGSL code chunk included inside the main shader function.
-     * Implements the actual processing logic and can call loadXxx()/writeXxx() functions.
-     * @param {string} [options.declarationsGLSL] - GLSL code included at global shader scope. Can contain
-     * uniform declarations, helper functions, or other global definitions.
-     * @param {string} [options.declarationsWGSL] - WGSL code included at global shader scope. Can contain
-     * uniform declarations, helper functions, or other global definitions.
+     * @param {string} [options.processGLSL] - GLSL code at module scope. Must define a `void process()`
+     * function that implements the processing logic. Can include uniform declarations and helper functions.
+     * @param {string} [options.processWGSL] - WGSL code at module scope. Must define a `fn process()`
+     * function that implements the processing logic. Can include uniform declarations and helper functions.
      */
     constructor(device, source, destination, options) {
         this._device = device;
@@ -353,7 +351,7 @@ class GSplatProcessor {
      * @private
      */
     _createShader(options) {
-        const { processGLSL: processChunkGLSL, processWGSL: processChunkWGSL = '', declarationsGLSL = '', declarationsWGSL = '' } = options;
+        const { processGLSL = '', processWGSL = '' } = options;
         const device = this._device;
         const srcFormat = this._srcResource.format;
         const dstFormat = this._dstResource.format;
@@ -363,10 +361,15 @@ class GSplatProcessor {
         let readCode = '';
 
         if (this._useAllInputStreams) {
-            // No source streams specified - use all format streams except destinations
+            // No source streams specified - use all format streams
             const allStreams = [...srcFormat.streams, ...srcFormat.extraStreams];
+
+            // Only filter out destination streams when source and destination are the same resource
+            // (can't read and write the same texture in one pass). When they're different resources,
+            // include all source streams even if they have the same names as destination streams.
+            const sameResource = this._srcResource === this._dstResource;
             const inputStreamNames = allStreams
-            .filter(s => !this._dstStreamNames.has(s.name))
+            .filter(s => !sameResource || !this._dstStreamNames.has(s.name))
             .map(s => s.name);
 
             // Include declarations for input streams, plus the read code (getCenter/getColor/etc)
@@ -393,17 +396,16 @@ class GSplatProcessor {
         const isWebGPU = device.isWebGPU;
 
         // Create shader includes for current platform
+        // User's process code provides process() function + any declarations at module scope
         const includes = new Map();
-        includes.set('gsplatProcessDeclarationsVS', isWebGPU ? declarationsWGSL : declarationsGLSL);
         includes.set('gsplatProcessInputVS', inputDeclarations);
         includes.set('gsplatProcessOutputVS', outputDeclarations);
         includes.set('gsplatProcessReadVS', readCode);
-        includes.set('gsplatProcessChunk', isWebGPU ? processChunkWGSL : processChunkGLSL);
+        includes.set('gsplatProcessChunk', isWebGPU ? processWGSL : processGLSL);
 
         // shader unique name hash
         const hash = hashCode([
-            isWebGPU ? processChunkWGSL : processChunkGLSL,
-            isWebGPU ? declarationsWGSL : declarationsGLSL,
+            isWebGPU ? processWGSL : processGLSL,
             this._useAllInputStreams ? '1' : '0'
         ].join('|'));
         const outputStreams = this._dstStreamDescriptors.map(s => s.name).join(',');
@@ -470,8 +472,9 @@ class GSplatProcessor {
             device.scope.resolve(name).setValue(texture);
         }
 
-        // Set texture size uniform
-        device.scope.resolve('splatTextureSize').setValue(this._srcResource.textureSize);
+        // Set texture size uniforms
+        device.scope.resolve('splatTextureSize').setValue(this._srcResource.textureDimensions.x);
+        device.scope.resolve('dstTextureSize').setValue(this._dstResource.textureDimensions.x);
 
         // Bind non-texture parameters from resource (e.g., dequantization uniforms for SOG)
         for (const [name, value] of this._srcResource.parameters) {

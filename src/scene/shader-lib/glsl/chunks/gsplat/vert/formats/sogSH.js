@@ -6,7 +6,7 @@ uniform highp sampler2D packedShN;
 uniform float shN_mins;
 uniform float shN_maxs;
 
-void readSHData(in SplatSource source, out vec3 sh[SH_COEFFS], out float scale) {
+void readSHData(out vec3 sh[SH_COEFFS], out float scale) {
     // extract spherical harmonics palette index
     ivec2 t = ivec2(packedSample.xy & 255u);
     int n = t.x + t.y * 256;

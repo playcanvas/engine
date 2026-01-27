@@ -39,12 +39,9 @@ vec4 unpackRotation(uint bits) {
 }
 
 // read center
-vec3 getCenter(SplatSource source) {
-    // Initialize splatUV for generated load functions
-    splatUV = source.uv;
-
+vec3 getCenter() {
     uint w = uint(textureSize(chunkTexture, 0).x) / 5u;
-    uint chunkId = source.id / 256u;
+    uint chunkId = splat.index / 256u;
     ivec2 chunkUV = ivec2((chunkId % w) * 5u, chunkId / w);
 
     // read chunk data with custom UV (manual texture access)
@@ -54,13 +51,13 @@ vec3 getCenter(SplatSource source) {
     chunkDataD = texelFetch(chunkTexture, chunkUV + ivec2(3, 0), 0);
     chunkDataE = texelFetch(chunkTexture, chunkUV + ivec2(4, 0), 0);
 
-    // read packed data using generated load function (uses splatUV)
+    // read packed data using generated load function (uses global splat.uv)
     packedData = loadPackedTexture();
 
     return mix(chunkDataA.xyz, vec3(chunkDataA.w, chunkDataB.xy), unpack111011(packedData.x));
 }
 
-vec4 getColor(in SplatSource source) {
+vec4 getColor() {
     vec4 r = unpack8888(packedData.w);
     return vec4(mix(chunkDataD.xyz, vec3(chunkDataD.w, chunkDataE.xy), r.rgb), r.w);
 }

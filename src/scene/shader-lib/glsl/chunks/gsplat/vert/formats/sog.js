@@ -24,11 +24,8 @@ uvec4 packedSample;
 const float norm = sqrt(2.0);
 
 // read the model-space center of the gaussian
-vec3 getCenter(SplatSource source) {
-    // Initialize splatUV for generated load functions
-    splatUV = source.uv;
-
-    // read the packed texture sample using generated load function
+vec3 getCenter() {
+    // read the packed texture sample using generated load function (uses global splat.uv)
     packedSample = loadPackedTexture();
 
     vec3 l = unpack8888(packedSample.x).xyz;
@@ -39,8 +36,8 @@ vec3 getCenter(SplatSource source) {
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
-vec4 getColor(in SplatSource source) {
-    vec3 clr = mix(vec3(sh0_mins), vec3(sh0_maxs), unpack111110(pack8888(texelFetch(packedSh0, source.uv, 0))));
+vec4 getColor() {
+    vec3 clr = mix(vec3(sh0_mins), vec3(sh0_maxs), unpack111110(pack8888(texelFetch(packedSh0, splat.uv, 0))));
     float alpha = float(packedSample.z & 0xffu) / 255.0;
     return vec4(vec3(0.5) + clr * SH_C0, alpha);
 }

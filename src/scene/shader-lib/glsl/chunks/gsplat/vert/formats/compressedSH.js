@@ -6,7 +6,7 @@ vec4 unpack8888s(in uint bits) {
     return vec4((uvec4(bits) >> uvec4(0u, 8u, 16u, 24u)) & 0xffu) * (8.0 / 255.0) - 4.0;
 }
 
-void readSHData(in SplatSource source, out vec3 sh[15], out float scale) {
+void readSHData(out vec3 sh[15], out float scale) {
     // read the sh coefficients using format-generated load functions
     uvec4 shData0 = loadShTexture0();
     uvec4 shData1 = loadShTexture1();

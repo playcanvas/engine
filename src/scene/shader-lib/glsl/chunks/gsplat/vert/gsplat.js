@@ -27,7 +27,7 @@ void main(void) {
         return;
     }
 
-    vec3 modelCenter = getCenter(source);
+    vec3 modelCenter = getCenter();
 
     SplatCenter center;
     center.modelCenterOriginal = modelCenter;
@@ -49,7 +49,7 @@ void main(void) {
     }
 
     // read color
-    vec4 clr = getColor(source);
+    vec4 clr = getColor();
 
     #if GSPLAT_AA
         // apply AA compensation
@@ -64,7 +64,7 @@ void main(void) {
         // read sh coefficients
         vec3 sh[SH_COEFFS];
         float scale;
-        readSHData(source, sh, scale);
+        readSHData(sh, scale);
 
         // evaluate
         clr.xyz += evalSH(sh, dir) * scale;
@@ -90,7 +90,7 @@ void main(void) {
     #endif
 
     #ifndef DITHER_NONE
-        id = float(source.id);
+        id = float(splat.index);
     #endif
 
     #ifdef PREPASS_PASS

@@ -5,8 +5,8 @@ export default /* glsl */`
 
 #include "gsplatHelpersVS"
 #include "gsplatFormatVS"
-#include "gsplatDeclarationsVS"
 #include "gsplatStructsVS"
+#include "gsplatDeclarationsVS"
 #include "gsplatCenterVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
@@ -41,13 +41,13 @@ void main(void) {
 
         // Out of bounds: write zeros
         #ifdef GSPLAT_COLOR_UINT
-            writeSplatColor(uvec4(0u));
+            writeDataColor(uvec4(0u));
         #else
-            writeSplatColor(vec4(0.0));
+            writeDataColor(vec4(0.0));
         #endif
         #ifndef GSPLAT_COLOR_ONLY
-            writeSplatTexture0(uvec4(0u));
-            writeSplatTexture1(uvec4(0u));
+            writeDataTransformA(uvec4(0u));
+            writeDataTransformB(uvec4(0u));
         #endif
 
     } else {
@@ -61,16 +61,11 @@ void main(void) {
             uint originalIndex = uint(targetIndex);
         #endif
         
-        // source texture size (set by all resource types via splatTextureSize uniform)
-        uint srcSize = splatTextureSize;
-        
-        // Create SplatSource used to sample splat data textures
-        SplatSource source;
-        source.id = uint(originalIndex);
-        source.uv = ivec2(source.id % srcSize, source.id / srcSize);
+        // Initialize global splat for format read functions
+        setSplat(originalIndex);
 
         // read center in local space
-        vec3 modelCenter = getCenter(source);
+        vec3 modelCenter = getCenter();
 
         // compute world-space center for storage
         vec3 worldCenter = (matrix_model * vec4(modelCenter, 1.0)).xyz;
@@ -99,7 +94,7 @@ void main(void) {
         modifySplatRotationScale(originalCenter, worldCenter, worldRotation, worldScale);
 
         // read color
-        vec4 color = getColor(source);
+        vec4 color = getColor();
 
         // evaluate spherical harmonics
         #if SH_BANDS > 0
@@ -109,7 +104,7 @@ void main(void) {
             // read sh coefficients
             vec3 sh[SH_COEFFS];
             float scale;
-            readSHData(source, sh, scale);
+            readSHData(sh, scale);
 
             // evaluate
             color.xyz += evalSH(sh, dir) * scale;
@@ -125,19 +120,19 @@ void main(void) {
             // Pack RGBA as 4x half-float (16-bit) values for RGBA16U format
             uint packed_rg = packHalf2x16(color.rg);
             uint packed_ba = packHalf2x16(color.ba);
-            writeSplatColor(uvec4(
+            writeDataColor(uvec4(
                 packed_rg & 0xFFFFu,    // R as half
                 packed_rg >> 16u,       // G as half
                 packed_ba & 0xFFFFu,    // B as half
                 packed_ba >> 16u        // A as half
             ));
         #else
-            writeSplatColor(color);
+            writeDataColor(color);
         #endif
         #ifndef GSPLAT_COLOR_ONLY
             // Store rotation (xyz, w derived) and scale as 6 half-floats
-            writeSplatTexture0(uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16(worldRotation.xy)));
-            writeSplatTexture1(uvec4(packHalf2x16(vec2(worldRotation.z, worldScale.x)), packHalf2x16(worldScale.yz), 0u, 0u));
+            writeDataTransformA(uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16(worldRotation.xy)));
+            writeDataTransformB(uvec4(packHalf2x16(vec2(worldRotation.z, worldScale.x)), packHalf2x16(worldScale.yz), 0u, 0u));
         #endif
     }
 }
