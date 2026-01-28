@@ -81,7 +81,14 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     clipCorner(&corner, clr.w);
 
     // write output
-    output.position = center.proj + vec4f(corner.offset, 0.0, 0.0);
+    #if GSPLAT_2DGS
+        // 2DGS: Project world corner directly
+        let modelCorner: vec3f = center.modelCenterModified + corner.offset;
+        output.position = uniform.matrix_projection * center.modelView * vec4f(modelCorner, 1.0);
+    #else
+        // 3DGS: Add clip-space offset to projected center
+        output.position = center.proj + vec4f(corner.offset.xyz, 0.0);
+    #endif
     output.gaussianUV = corner.uv;
 
     #ifdef GSPLAT_OVERDRAW
