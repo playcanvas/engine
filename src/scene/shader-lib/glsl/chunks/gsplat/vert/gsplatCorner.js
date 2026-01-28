@@ -78,11 +78,25 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
     vec2 v1 = l1 * diagonalVector;
     vec2 v2 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
 
-    corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) * c;
+    corner.offset = vec3((source.cornerUV.x * v1 + source.cornerUV.y * v2) * c, 0.0);
     corner.uv = source.cornerUV;
 
     return true;
 }
+
+#if GSPLAT_2DGS
+// 2DGS: Compute oriented quad corner in model space
+void initCorner2DGS(SplatSource source, vec4 rotation, vec3 scale, out SplatCorner corner) {
+    // Scale by 3.0 for 3-sigma coverage
+    vec2 localPos = source.cornerUV * vec2(scale.x, scale.y) * 3.0;
+
+    // Rotate the local position using the quaternion
+    vec3 v = vec3(localPos, 0.0);
+    vec3 t = 2.0 * cross(rotation.xyz, v);
+    corner.offset = v + rotation.w * t + cross(rotation.xyz, t);
+    corner.uv = source.cornerUV;
+}
+#endif
 
 // calculate the clip-space offset from the center for this gaussian
 bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) {
@@ -93,13 +107,19 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
     // Hook: modify rotation and scale
     modifySplatRotationScale(center.modelCenterOriginal, center.modelCenterModified, rotation, scale);
 
-    // Compute covariance from (possibly modified) rotation and scale
-    vec3 covA, covB;
-    computeCovariance(rotation.wxyz, scale, covA, covB);  // Convert back to (w,x,y,z)
+    #if GSPLAT_2DGS
+        initCorner2DGS(source, rotation, scale, corner);
+        return true;
+    #else
+        // 3DGS: Use covariance-based screen-space projection
+        // Compute covariance from (possibly modified) rotation and scale
+        vec3 covA, covB;
+        computeCovariance(rotation.wxyz, scale, covA, covB);  // Convert back to (w,x,y,z)
 
-    // Existing hook: modify covariance
-    modifyCovariance(center.modelCenterOriginal, center.modelCenterModified, covA, covB);
+        // Existing hook: modify covariance
+        modifyCovariance(center.modelCenterOriginal, center.modelCenterModified, covA, covB);
 
-    return initCornerCov(source, center, corner, covA, covB);
+        return initCornerCov(source, center, corner, covA, covB);
+    #endif
 }
 `;

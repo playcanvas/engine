@@ -21,7 +21,7 @@ struct SplatCenter {
 
 // stores the offset from center for the current gaussian
 struct SplatCorner {
-    offset: vec2f,        // corner offset from center in clip space
+    offset: vec3f,        // corner offset (clip XY for 3DGS, model XYZ for 2DGS)
     uv: vec2f,            // corner uv
     #if GSPLAT_AA
         aaFactor: f32, // for scenes generated with antialiasing

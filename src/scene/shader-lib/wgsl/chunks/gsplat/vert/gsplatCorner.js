@@ -78,11 +78,25 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
     let v1 = l1 * diagonalVector;
     let v2 = l2 * vec2f(diagonalVector.y, -diagonalVector.x); // Swizzle
 
-    corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) * c;
+    corner.offset = vec3f((source.cornerUV.x * v1 + source.cornerUV.y * v2) * c, 0.0);
     corner.uv = source.cornerUV;
 
     return true;
 }
+
+#if GSPLAT_2DGS
+// 2DGS: Compute oriented quad corner in model space
+fn initCorner2DGS(source: ptr<function, SplatSource>, rotation: vec4f, scale: vec3f, corner: ptr<function, SplatCorner>) {
+    // Scale by 3.0 for 3-sigma coverage
+    let localPos: vec2f = source.cornerUV * vec2f(scale.x, scale.y) * 3.0;
+
+    // Rotate the local position using the quaternion
+    let v: vec3f = vec3f(localPos, 0.0);
+    let t: vec3f = 2.0 * cross(rotation.xyz, v);
+    corner.offset = v + rotation.w * t + cross(rotation.xyz, t);
+    corner.uv = source.cornerUV;
+}
+#endif
 
 // calculate the clip-space offset from the center for this gaussian
 fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCenter>, corner: ptr<function, SplatCorner>) -> bool {
@@ -93,14 +107,20 @@ fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCen
     // Hook: modify rotation and scale
     modifySplatRotationScale(center.modelCenterOriginal, center.modelCenterModified, &rotation, &scale);
 
-    // Compute covariance from (possibly modified) rotation and scale
-    var covA: vec3f;
-    var covB: vec3f;
-    computeCovariance(rotation.wxyz, scale, &covA, &covB);  // Convert back to (w,x,y,z)
+    #if GSPLAT_2DGS
+        initCorner2DGS(source, rotation, scale, corner);
+        return true;
+    #else
+        // 3DGS: Use covariance-based screen-space projection
+        // Compute covariance from (possibly modified) rotation and scale
+        var covA: vec3f;
+        var covB: vec3f;
+        computeCovariance(rotation.wxyz, scale, &covA, &covB);  // Convert back to (w,x,y,z)
 
-    // Existing hook: modify covariance
-    modifyCovariance(center.modelCenterOriginal, center.modelCenterModified, &covA, &covB);
+        // Existing hook: modify covariance
+        modifyCovariance(center.modelCenterOriginal, center.modelCenterModified, &covA, &covB);
 
-    return initCornerCov(source, center, corner, covA, covB);
+        return initCornerCov(source, center, corner, covA, covB);
+    #endif
 }
 `;

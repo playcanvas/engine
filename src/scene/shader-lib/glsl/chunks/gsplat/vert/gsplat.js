@@ -76,7 +76,13 @@ void main(void) {
     clipCorner(corner, clr.w);
 
     // write output
-    gl_Position = center.proj + vec4(corner.offset, 0, 0);
+    #if GSPLAT_2DGS
+        // 2DGS: Project world corner directly
+        vec3 modelCorner = center.modelCenterModified + corner.offset;
+        gl_Position = matrix_projection * center.modelView * vec4(modelCorner, 1.0);
+    #else
+        gl_Position = center.proj + vec4(corner.offset.xyz, 0);
+    #endif
     gaussianUV = corner.uv;
 
     #ifdef GSPLAT_OVERDRAW
