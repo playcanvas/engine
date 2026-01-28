@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
@@ -10,10 +11,32 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
 
 /**
  * A container for procedural Gaussian Splat data. This class allows you to create splat data
- * programmatically by providing a custom format and filling the textures with data.
+ * programmatically using either a built-in format or a custom format with your own texture
+ * streams and read code.
+ *
+ * A default format is provided via {@link GSplatFormat.createDefaultFormat} which uses float
+ * textures for easy CPU population.
  *
  * @example
- * // Create a format with a single RGBA8 texture stream
+ * // Example 1: Using the default format (easy CPU population)
+ * const format = pc.GSplatFormat.createDefaultFormat(device);
+ * const container = new pc.GSplatContainer(device, 100, format);
+ *
+ * // Float format textures are straightforward to fill
+ * const centerTex = container.getTexture('dataCenter');
+ * const pixels = centerTex.lock();
+ * // pixels is Float32Array, fill with [x, y, z, 0, x, y, z, 0, ...]
+ * centerTex.unlock();
+ *
+ * // Set bounding box and centers (required for culling/sorting)
+ * container.aabb = new pc.BoundingBox();
+ * container.centers.set([x0, y0, z0, x1, y1, z1, ...]);  // xyz per splat
+ *
+ * // Add to scene
+ * entity.addComponent('gsplat', { resource: container, unified: true });
+ *
+ * @example
+ * // Example 2: Using a custom format
  * const format = new pc.GSplatFormat(device, [
  *     { name: 'data', format: pc.PIXELFORMAT_RGBA32F }
  * ], {
@@ -34,19 +57,7 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  *     `
  * });
  *
- * // Create container with max capacity and fill texture data
- * const container = new pc.GSplatContainer(device, 100, format);  // maxSplats = 100
- * const texture = container.getTexture('data');
- * const pixels = texture.lock();
- * // ... fill pixels with position and scale data ...
- * texture.unlock();
- *
- * // Set bounding box and centers (for culling/sorting)
- * container.aabb = new pc.BoundingBox();
- * container.centers.set([x0, y0, z0, x1, y1, z1, ...]);  // xyz per splat
- *
- * // Add to scene
- * entity.addComponent('gsplat', { resource: container, unified: true });
+ * const container = new pc.GSplatContainer(device, 100, format);
  *
  * @category Graphics
  */
@@ -77,9 +88,13 @@ class GSplatContainer extends GSplatResourceBase {
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {number} maxSplats - Maximum number of splats this container can hold.
-     * @param {GSplatFormat} format - The format descriptor with streams and optional read code.
+     * @param {GSplatFormat} format - The format descriptor with streams and read code. Use
+     * {@link GSplatFormat.createDefaultFormat} for the built-in format, or create a custom
+     * {@link GSplatFormat}.
      */
     constructor(device, maxSplats, format) {
+        Debug.assert(format);
+
         // Pre-allocate data before super() since gsplatData callbacks need it
         const centers = new Float32Array(maxSplats * 3);
         const aabb = new BoundingBox();
@@ -97,7 +112,7 @@ class GSplatContainer extends GSplatResourceBase {
         this._numSplats = maxSplats;
 
         // Use streams to create textures from format
-        this.streams.init(format, maxSplats);
+        this.streams.init(this._format, maxSplats);
     }
 
     /**
@@ -157,17 +172,20 @@ class GSplatContainer extends GSplatResourceBase {
      * @ignore
      */
     configureMaterial(material, workBufferModifier = null, formatDeclarations) {
-        // Call base to set defines, bind textures, and set textureSize
+        // Call base to set defines, bind textures, and set textureDimensions
         super.configureMaterial(material, workBufferModifier, formatDeclarations);
 
-        // Inject format chunks under container-specific names (used by gsplatContainerDeclVS/ReadVS)
+        // Inject format chunks
         const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
-        chunks.set('gsplatContainerDeclarationsVS', this.format.getInputDeclarations());
-        chunks.set('gsplatContainerUserReadVS', this.format.getReadCode());
 
-        // Main entry points include the container wrapper chunks
+        // Set declarations (load functions for streams)
+        chunks.set('gsplatContainerDeclarationsVS', this.format.getInputDeclarations());
+
+        // Main entry points - containerDecl includes load functions + module-scope vars
         chunks.set('gsplatDeclarationsVS', '#include "gsplatContainerDeclVS"');
-        chunks.set('gsplatReadVS', '#include "gsplatContainerReadVS"');
+
+        // Read code provides complete getCenter/getColor/getRotation/getScale functions
+        chunks.set('gsplatReadVS', this.format.getReadCode());
     }
 }
 

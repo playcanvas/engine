@@ -1,7 +1,6 @@
 // Read functions for Container GSplat format
 export default /* wgsl */`
-fn getCenter(source: ptr<function, SplatSource>) -> vec3f {
-    splatUV = (*source).uv;
+fn getCenter() -> vec3f {
     #include "gsplatContainerUserReadVS"
     return splatCenter;
 }
@@ -14,7 +13,7 @@ fn getScale() -> vec3f {
     return splatScale;
 }
 
-fn getColor(source: ptr<function, SplatSource>) -> vec4f {
+fn getColor() -> vec4f {
     return splatColor;
 }
 `;

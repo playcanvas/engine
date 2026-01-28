@@ -5,36 +5,37 @@ import * as pc from 'playcanvas';
 
 // Shader options for GSplatProcessor - paints splats inside brush sphere
 const shaderOptions = {
-    // GLSL process chunk - output paint color only for splats inside brush
+    // GLSL process code - provides process() function with declarations
     processGLSL: `
-        vec3 center = getCenter(source);
-        float dist = distance(center, uPaintSphere.xyz);
-        if (dist < uPaintSphere.w) {
-            // Inside brush - write paint color with intensity as alpha
-            writeCustomColor(uPaintColor);
-        } else {
-            // Outside brush - output transparent (blender will keep existing)
-            writeCustomColor(vec4(0.0));
-        }
-    `,
-    // WGSL process chunk
-    processWGSL: `
-        let center = getCenter(&source);
-        let dist = distance(center, uniform.uPaintSphere.xyz);
-        if (dist < uniform.uPaintSphere.w) {
-            writeCustomColor(uniform.uPaintColor);
-        } else {
-            writeCustomColor(vec4f(0.0));
-        }
-    `,
-    // Uniform declarations (each on separate line for WGSL parser)
-    declarationsGLSL: `
         uniform vec4 uPaintSphere;
         uniform vec4 uPaintColor;
+
+        void process() {
+            vec3 center = getCenter();
+            float dist = distance(center, uPaintSphere.xyz);
+            if (dist < uPaintSphere.w) {
+                // Inside brush - write paint color with intensity as alpha
+                writeCustomColor(uPaintColor);
+            } else {
+                // Outside brush - output transparent (blender will keep existing)
+                writeCustomColor(vec4(0.0));
+            }
+        }
     `,
-    declarationsWGSL: `
+    // WGSL process code
+    processWGSL: `
         uniform uPaintSphere: vec4f;
         uniform uPaintColor: vec4f;
+
+        fn process() {
+            let center = getCenter();
+            let dist = distance(center, uniform.uPaintSphere.xyz);
+            if (dist < uniform.uPaintSphere.w) {
+                writeCustomColor(uniform.uPaintColor);
+            } else {
+                writeCustomColor(vec4f(0.0));
+            }
+        }
     `
 };
 
@@ -51,8 +52,8 @@ const workBufferModifier = {
 
         // Modify color based on customColor
         void modifySplatColor(vec3 center, inout vec4 color) {
-            // Read custom color from texture
-            vec4 custom = texelFetch(customColor, splatUV, 0);
+            // Read custom color using generated load function
+            vec4 custom = loadCustomColor();
             if (custom.a > 0.0) {
                 // Blend original color with custom color based on alpha (intensity)
                 color.rgb = mix(color.rgb, custom.rgb, custom.a);
@@ -70,8 +71,8 @@ const workBufferModifier = {
 
         // Modify color based on customColor
         fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
-            // Read custom color from texture
-            let custom = textureLoad(customColor, splatUV, 0);
+            // Read custom color using generated load function
+            let custom = loadCustomColor();
             if (custom.a > 0.0) {
                 // Blend original color with custom color based on alpha (intensity)
                 (*color).r = mix((*color).r, custom.r, custom.a);

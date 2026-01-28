@@ -1,4 +1,7 @@
-import { getGlslShaderType, getWgslShaderType } from '../../platform/graphics/constants.js';
+import {
+    getGlslShaderType, getWgslShaderType,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+} from '../../platform/graphics/constants.js';
 import { hashCode } from '../../core/hash.js';
 import { Debug } from '../../core/debug.js';
 import { GSPLAT_STREAM_RESOURCE, GSPLAT_STREAM_INSTANCE } from '../constants.js';
@@ -8,6 +11,10 @@ import glslStreamDecl from '../shader-lib/glsl/chunks/gsplat/vert/gsplatStreamDe
 import wgslStreamDecl from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatStreamDecl.js';
 import glslStreamOutput from '../shader-lib/glsl/chunks/gsplat/vert/gsplatStreamOutput.js';
 import wgslStreamOutput from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatStreamOutput.js';
+
+// Container format read chunks
+import glslContainerFloatRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerFloatRead.js';
+import wgslContainerFloatRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/containerFloatRead.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -33,6 +40,16 @@ import wgslStreamOutput from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatStream
  * @returns {string} Serialized string.
  */
 const serializeStreams = streams => streams.map(s => `${s.name}:${s.format}:${s.storage}`).join(',');
+
+// Pre-compiled regex patterns for template replacement
+const RE_NAME = /\{name\}/g;
+const RE_SAMPLER = /\{sampler\}/g;
+const RE_TEXTURE_TYPE = /\{textureType\}/g;
+const RE_RETURN_TYPE = /\{returnType\}/g;
+const RE_FUNC_NAME = /\{funcName\}/g;
+const RE_INDEX = /\{index\}/g;
+const RE_COLOR_SLOT = /\{colorSlot\}/g;
+const RE_DEFINE_GUARD = /\{defineGuard\}/g;
 
 /**
  * Gsplat resources store per-splat data (positions, colors, rotations, scales, spherical
@@ -71,19 +88,12 @@ class GSplatFormat {
 
     /**
      * User-provided code for reading splat data (GLSL or WGSL based on device).
+     * Must define getCenter(), getColor(), getRotation(), getScale() functions.
      *
      * @type {string}
      * @private
      */
     _read;
-
-    /**
-     * User-provided additional declarations (GLSL or WGSL based on device).
-     *
-     * @type {string}
-     * @private
-     */
-    _declarations;
 
     /**
      * Extra streams added via addExtraStreams(). Streams can only be added, never removed.
@@ -142,12 +152,12 @@ class GSplatFormat {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatStreamDescriptor[]} streams - Array of stream descriptors.
      * @param {object} options - Format options.
-     * @param {string} [options.readGLSL] - GLSL code that reads streams and sets splat
-     * attributes (splatCenter, splatColor, splatScale, splatRotation). Required for WebGL.
-     * @param {string} [options.readWGSL] - WGSL code that reads streams and sets splat
-     * attributes (splatCenter, splatColor, splatScale, splatRotation). Required for WebGPU.
-     * @param {string} [options.declarationsGLSL] - Additional GLSL declarations (e.g. custom uniforms).
-     * @param {string} [options.declarationsWGSL] - Additional WGSL declarations (e.g. custom uniforms).
+     * @param {string} [options.readGLSL] - GLSL code defining getCenter(), getColor(),
+     * getRotation(), getScale() functions. Can include additional declarations at module scope.
+     * Required for WebGL.
+     * @param {string} [options.readWGSL] - WGSL code defining getCenter(), getColor(),
+     * getRotation(), getScale() functions. Can include additional declarations at module scope.
+     * Required for WebGPU.
      */
     constructor(device, streams, options) {
         this._device = device;
@@ -161,7 +171,6 @@ class GSplatFormat {
         // Pick the appropriate shader language based on device
         const isWebGPU = device.isWebGPU;
         this._read = isWebGPU ? options.readWGSL : options.readGLSL;
-        this._declarations = isWebGPU ? (options.declarationsWGSL ?? '') : (options.declarationsGLSL ?? '');
 
         // Validate read code is provided for the current device
         Debug.assert(this._read, `GSplatFormat: ${isWebGPU ? 'readWGSL' : 'readGLSL'} is required`);
@@ -181,8 +190,7 @@ class GSplatFormat {
             this._hash = hashCode(
                 streamsStr +
                 extraStr +
-                this._read +
-                this._declarations
+                this._read
             );
         }
         return this._hash;
@@ -290,11 +298,6 @@ class GSplatFormat {
         const getShaderType = isWebGPU ? getWgslShaderType : getGlslShaderType;
         const lines = [];
 
-        // Add user-provided declarations only when getting all streams
-        if (!streamNames && this._declarations) {
-            lines.push(`${this._declarations}\n`);
-        }
-
         // Get streams - filter if names specified
         let streams = [...this.streams, ...this._extraStreams];
         if (streamNames) {
@@ -305,11 +308,11 @@ class GSplatFormat {
             const info = getShaderType(stream.format);
             const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
             const decl = template
-            .replace(/\{name\}/g, stream.name)
-            .replace('{sampler}', info.sampler ?? '')
-            .replace('{textureType}', info.textureType ?? '')
-            .replace('{returnType}', info.returnType)
-            .replace('{funcName}', funcName);
+            .replace(RE_NAME, stream.name)
+            .replace(RE_SAMPLER, info.sampler ?? '')
+            .replace(RE_TEXTURE_TYPE, info.textureType ?? '')
+            .replace(RE_RETURN_TYPE, info.returnType)
+            .replace(RE_FUNC_NAME, funcName);
             lines.push(decl);
         }
 
@@ -350,11 +353,11 @@ class GSplatFormat {
             const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
             const colorSlot = i === 0 ? 'color' : `color${i}`;
             const decl = template
-            .replace('{funcName}', funcName)
-            .replace('{returnType}', info.returnType)
-            .replace('{index}', String(i))
-            .replace('{colorSlot}', colorSlot)
-            .replace('{defineGuard}', '1');
+            .replace(RE_FUNC_NAME, funcName)
+            .replace(RE_RETURN_TYPE, info.returnType)
+            .replace(RE_INDEX, String(i))
+            .replace(RE_COLOR_SLOT, colorSlot)
+            .replace(RE_DEFINE_GUARD, '1');
             lines.push(decl);
         }
 
@@ -379,9 +382,9 @@ class GSplatFormat {
             const info = getShaderType(stream.format);
             const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
             const stub = template
-            .replace('{funcName}', funcName)
-            .replace('{returnType}', info.returnType)
-            .replace('{defineGuard}', '0');
+            .replace(RE_FUNC_NAME, funcName)
+            .replace(RE_RETURN_TYPE, info.returnType)
+            .replace(RE_DEFINE_GUARD, '0');
             lines.push(stub);
         }
 
@@ -414,6 +417,33 @@ class GSplatFormat {
         this._hash = undefined;
         this._resourceStreams = null;
         this._instanceStreams = null;
+    }
+
+    /**
+     * Creates a default format using 32F/16F textures, simple to use for CPU data population.
+     * This format can be rendered to by {@link GSplatProcessor} when supported. Check
+     * {@link GraphicsDevice#textureFloatRenderable} (for RGBA32F) and
+     * {@link GraphicsDevice#textureHalfFloatRenderable} (for RGBA16F).
+     *
+     * The format stores:
+     * - `dataColor` (RGBA16F): color.rgba as half floats
+     * - `dataCenter` (RGBA32F): center.xyz as floats (w unused)
+     * - `dataScale` (RGBA16F): scale.xyz as half floats (w unused)
+     * - `dataRotation` (RGBA16F): rotation.xyzw as half floats (w stored directly, not derived)
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @returns {GSplatFormat} The default format.
+     */
+    static createDefaultFormat(device) {
+        return new GSplatFormat(device, [
+            { name: 'dataColor', format: PIXELFORMAT_RGBA16F },
+            { name: 'dataCenter', format: PIXELFORMAT_RGBA32F },
+            { name: 'dataScale', format: PIXELFORMAT_RGBA16F },
+            { name: 'dataRotation', format: PIXELFORMAT_RGBA16F }
+        ], {
+            readGLSL: glslContainerFloatRead,
+            readWGSL: wgslContainerFloatRead
+        });
     }
 }
 

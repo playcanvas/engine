@@ -11,18 +11,15 @@ fn unpackRotation(packed: vec3f) -> vec4f {
 }
 
 // read the model-space center of the gaussian
-fn getCenter(source: ptr<function, SplatSource>) -> vec3f {
-    // Initialize splatUV for generated load functions
-    splatUV = (*source).uv;
-
-    // read transform data using generated load functions
+fn getCenter() -> vec3f {
+    // read transform data using generated load functions (use global splat.uv)
     let tA: vec4<u32> = loadTransformA();
     tAw = tA.w;
     tBcached = loadTransformB();
     return bitcast<vec3f>(tA.xyz);
 }
 
-fn getColor(source: ptr<function, SplatSource>) -> vec4f {
+fn getColor() -> vec4f {
     return loadSplatColor();
 }
 

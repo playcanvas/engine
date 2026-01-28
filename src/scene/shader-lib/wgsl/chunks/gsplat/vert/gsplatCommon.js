@@ -1,11 +1,10 @@
 export default /* wgsl */`
 #include "gsplatHelpersVS"
 #include "gsplatFormatVS"
+#include "gsplatStructsVS"
 #include "gsplatDeclarationsVS"
 #include "gsplatCustomizeVS"
 #include "gsplatModifyVS"
-
-#include "gsplatStructsVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
 #include "gsplatReadVS"

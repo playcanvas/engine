@@ -47,7 +47,7 @@ fn fetch1(t_in: u32) -> vec3f {
 }
 
 #if SH_BANDS == 1
-    fn readSHData(source: ptr<function, SplatSource>, sh: ptr<function, array<vec3f, 3>>, scale: ptr<function, f32>) {
+    fn readSHData(sh: ptr<function, array<vec3f, 3>>, scale: ptr<function, f32>) {
         let result = fetchScale(loadSplatSH_1to3());
         *scale = result.scale;
         sh[0] = result.a;
@@ -55,7 +55,7 @@ fn fetch1(t_in: u32) -> vec3f {
         sh[2] = result.c;
     }
 #elif SH_BANDS == 2
-    fn readSHData(source: ptr<function, SplatSource>, sh: ptr<function, array<vec3f, 8>>, scale: ptr<function, f32>) {
+    fn readSHData(sh: ptr<function, array<vec3f, 8>>, scale: ptr<function, f32>) {
         let first: ScaleAndSH = fetchScale(loadSplatSH_1to3());
         *scale = first.scale;
         sh[0] = first.a;
@@ -71,7 +71,7 @@ fn fetch1(t_in: u32) -> vec3f {
         sh[7] = fetch1(loadSplatSH_8to11().x);
     }
 #else
-    fn readSHData(source: ptr<function, SplatSource>, sh: ptr<function, array<vec3f, 15>>, scale: ptr<function, f32>) {
+    fn readSHData(sh: ptr<function, array<vec3f, 15>>, scale: ptr<function, f32>) {
         let first: ScaleAndSH = fetchScale(loadSplatSH_1to3());
         *scale = first.scale;
         sh[0] = first.a;

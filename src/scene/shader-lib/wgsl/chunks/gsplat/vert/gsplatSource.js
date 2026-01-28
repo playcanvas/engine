@@ -11,29 +11,28 @@ uniform numSplats: u32;                   // total number of splats
     var splatOrder: texture_2d<u32>;
 #endif
 
-// initialize the splat source structure
+// initialize the splat source structure and global splat
 fn initSource(source: ptr<function, SplatSource>) -> bool {
     // calculate splat order
-    source.order = vertex_id_attrib + u32(vertex_position.z);
+    (*source).order = vertex_id_attrib + u32(vertex_position.z);
 
     // return if out of range (since the last block of splats may be partially full)
-    if (source.order >= uniform.numSplats) {
+    if ((*source).order >= uniform.numSplats) {
         return false;
     }
 
-    // read splat id
+    // read splat id and initialize global splat for format read functions
+    var splatId: u32;
     #ifdef STORAGE_ORDER
-        source.id = splatOrder[source.order];
+        splatId = splatOrder[(*source).order];
     #else
-        let uv = vec2u(source.order % uniform.splatTextureSize, source.order / uniform.splatTextureSize);
-        source.id = textureLoad(splatOrder, vec2i(uv), 0).r;
+        let uv = vec2u((*source).order % uniform.splatTextureSize, (*source).order / uniform.splatTextureSize);
+        splatId = textureLoad(splatOrder, vec2i(uv), 0).r;
     #endif
-
-    // map id to uv
-    source.uv = vec2i(vec2u(source.id % uniform.splatTextureSize, source.id / uniform.splatTextureSize));
+    setSplat(splatId);
 
     // get the corner
-    source.cornerUV = vertex_position.xy;
+    (*source).cornerUV = vertex_position.xy;
 
     return true;
 }

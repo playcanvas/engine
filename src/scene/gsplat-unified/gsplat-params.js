@@ -38,16 +38,16 @@ class GSplatParams {
         const colorFormat = device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F]) || PIXELFORMAT_RGBA16U;
 
         // Work buffer textures format:
-        // - colorTexture (RGBA16F/RGBA16U): RGBA color with alpha
-        // - splatTexture0 (RGBA32U): worldCenter.xyz (3×32-bit floats as uint) + worldRotation.xy (2×16-bit halfs)
-        // - splatTexture1 (RG32U): worldRotation.z + worldScale.xyz (4×16-bit halfs, w derived via sqrt)
+        // - dataColor (RGBA16F/RGBA16U): RGBA color with alpha
+        // - dataTransformA (RGBA32U): worldCenter.xyz (3×32-bit floats as uint) + worldRotation.xy (2×16-bit halfs)
+        // - dataTransformB (RG32U): worldRotation.z + worldScale.xyz (4×16-bit halfs, w derived via sqrt)
         this._format = new GSplatFormat(device, [
-            { name: 'splatColor', format: colorFormat },
-            { name: 'splatTexture0', format: PIXELFORMAT_RGBA32U },
-            { name: 'splatTexture1', format: PIXELFORMAT_RG32U }
+            { name: 'dataColor', format: colorFormat },
+            { name: 'dataTransformA', format: PIXELFORMAT_RGBA32U },
+            { name: 'dataTransformB', format: PIXELFORMAT_RG32U }
         ], {
-            readGLSL: '#include "gsplatWorkBufferReadVS"',
-            readWGSL: '#include "gsplatWorkBufferReadVS"'
+            readGLSL: '#include "gsplatContainerPackedReadVS"',
+            readWGSL: '#include "gsplatContainerPackedReadVS"'
         });
     }
 

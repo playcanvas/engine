@@ -15,6 +15,7 @@ import { GSplatStreams } from './gsplat-streams.js';
  * @import { GSplatSogData } from './gsplat-sog-data.js'
  * @import { GSplatFormat } from './gsplat-format.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
+ * @import { Vec2 } from '../../core/math/vec2.js'
  */
 
 let id = 0;
@@ -233,7 +234,7 @@ class GSplatResourceBase {
             const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
             // For color-only mode, only output color stream; otherwise output all streams
             const outputStreams = colorOnly ?
-                [workBufferFormat.getStream('splatColor')] :
+                [workBufferFormat.getStream('dataColor')] :
                 [...workBufferFormat.streams, ...workBufferFormat.extraStreams];
             let outputCode = workBufferFormat.getOutputDeclarations(outputStreams);
 
@@ -338,13 +339,12 @@ class GSplatResourceBase {
     }
 
     /**
-     * Gets the cached texture width for shader uniform.
+     * Gets the texture dimensions (width and height) used by this resource's data textures.
      *
-     * @type {number}
-     * @ignore
+     * @type {Vec2}
      */
-    get textureSize() {
-        return this.streams.textureDimensions.x;
+    get textureDimensions() {
+        return this.streams.textureDimensions;
     }
 
     /**
@@ -382,9 +382,9 @@ class GSplatResourceBase {
             material.setParameter(name, value);
         }
 
-        // Set cached texture size
-        if (this.textureSize > 0) {
-            material.setParameter('splatTextureSize', this.textureSize);
+        // Set texture size
+        if (this.textureDimensions.x > 0) {
+            material.setParameter('splatTextureSize', this.textureDimensions.x);
         }
     }
 

@@ -46,10 +46,11 @@ class WorkBufferRenderInfo {
 
         const clonedDefines = new Map(material.defines);
 
-        // Derive color format from format's splatColor stream
-        const colorStream = format.getStream('splatColor');
-        const isColorUint = colorStream.format === PIXELFORMAT_RGBA16U;
-        if (isColorUint) {
+        // Derive color format from format's dataColor stream
+        // GSPLAT_COLOR_UINT is for WRITING to work buffer when using RGBA16U format
+        // (converts float color to packed half-float format)
+        const colorStream = format.getStream('dataColor');
+        if (colorStream.format === PIXELFORMAT_RGBA16U) {
             clonedDefines.set('GSPLAT_COLOR_UINT', '');
         }
 
@@ -63,7 +64,7 @@ class WorkBufferRenderInfo {
             (device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl) :
             undefined;
 
-        // Get streams to output - color-only mode uses just splatColor, otherwise all streams
+        // Get streams to output - color-only mode uses just dataColor, otherwise all streams
         const outputStreams = colorOnly ? [colorStream] : [...format.streams, ...format.extraStreams];
 
         // Build fragmentOutputTypes from streams
@@ -122,7 +123,7 @@ class GSplatWorkBuffer {
     renderTarget;
 
     /**
-     * Color-only render target for updating just the splatColor stream.
+     * Color-only render target for updating just the dataColor stream.
      *
      * @type {RenderTarget}
      */
@@ -208,8 +209,8 @@ class GSplatWorkBuffer {
             flipY: true
         });
 
-        // Color-only render target uses just the first texture (splatColor)
-        const colorTexture = this.streams.getTexture('splatColor');
+        // Color-only render target uses just the first texture (dataColor)
+        const colorTexture = this.streams.getTexture('dataColor');
         this.colorRenderTarget = new RenderTarget({
             name: `GsplatWorkBuffer-Color-${this.id}`,
             colorBuffer: colorTexture,

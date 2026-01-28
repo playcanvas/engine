@@ -29,17 +29,17 @@ void fetch(in uint t, out vec3 a) {
 }
 
 #if SH_BANDS == 1
-    void readSHData(in SplatSource source, out vec3 sh[3], out float scale) {
+    void readSHData(out vec3 sh[3], out float scale) {
         fetchScale(loadSplatSH_1to3(), scale, sh[0], sh[1], sh[2]);
     }
 #elif SH_BANDS == 2
-    void readSHData(in SplatSource source, out vec3 sh[8], out float scale) {
+    void readSHData(out vec3 sh[8], out float scale) {
         fetchScale(loadSplatSH_1to3(), scale, sh[0], sh[1], sh[2]);
         fetch(loadSplatSH_4to7(), sh[3], sh[4], sh[5], sh[6]);
         fetch(loadSplatSH_8to11().x, sh[7]);
     }
 #else
-    void readSHData(in SplatSource source, out vec3 sh[15], out float scale) {
+    void readSHData(out vec3 sh[15], out float scale) {
         fetchScale(loadSplatSH_1to3(), scale, sh[0], sh[1], sh[2]);
         fetch(loadSplatSH_4to7(), sh[3], sh[4], sh[5], sh[6]);
         fetch(loadSplatSH_8to11(), sh[7], sh[8], sh[9], sh[10]);

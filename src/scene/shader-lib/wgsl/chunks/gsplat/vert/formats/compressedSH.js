@@ -7,7 +7,7 @@ fn unpack8888s(bits: u32) -> vec4f {
     return vec4f(unpacked_u) * (8.0 / 255.0) - 4.0;
 }
 
-fn readSHData(source: ptr<function, SplatSource>, sh: ptr<function, array<vec3f, 15>>, scale: ptr<function, f32>) {
+fn readSHData(sh: ptr<function, array<vec3f, 15>>, scale: ptr<function, f32>) {
     // read the sh coefficients using format-generated load functions
     let shData0: vec4<u32> = loadShTexture0();
     let shData1: vec4<u32> = loadShTexture1();
