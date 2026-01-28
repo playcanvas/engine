@@ -6,6 +6,14 @@ class GSplatOctreeResource {
     /** @type {BoundingBox} */
     aabb = new BoundingBox();
 
+    /**
+     * Version counter for centers array changes. Always 0 for octree resources (static).
+     *
+     * @type {number}
+     * @ignore
+     */
+    centersVersion = 0;
+
     /** @type {GSplatOctree|null} */
     octree;
 

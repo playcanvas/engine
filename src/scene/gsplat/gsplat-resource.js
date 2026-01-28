@@ -76,10 +76,6 @@ class GSplatResource extends GSplatResourceBase {
         }
     }
 
-    destroy() {
-        super.destroy();
-    }
-
     configureMaterialDefines(defines) {
         defines.set('SH_BANDS', this.shBands);
     }

@@ -247,7 +247,8 @@ app.on('update', (dt) => {
 
     // Bounce numSplats between 0 and max
     const t = (Math.cos(time * 0.5) + 1) * 0.5;
-    container.numSplats = Math.floor(t * maxSplats);
+    // Use update() with centersUpdated=false since centers are static (pre-filled)
+    container.update(Math.floor(t * maxSplats), false);
 });
 
 export { app };

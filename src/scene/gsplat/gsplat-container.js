@@ -116,13 +116,6 @@ class GSplatContainer extends GSplatResourceBase {
     }
 
     /**
-     * Destroys this container and releases all resources.
-     */
-    destroy() {
-        super.destroy();
-    }
-
-    /**
      * Maximum number of splats this container can hold.
      *
      * @type {number}
@@ -132,26 +125,29 @@ class GSplatContainer extends GSplatResourceBase {
     }
 
     /**
-     * Sets the number of splats to render. Must be between 0 and {@link maxSplats}.
-     *
-     * Note: Changing this value triggers internal buffer reallocation in unified rendering mode.
-     * Avoid calling this every frame. For per-frame visibility control, consider using
-     * {@link GSplatFormat} read shader code that returns `splatScale = vec3(0.0)` for splats
-     * you want to hide.
-     *
-     * @type {number}
-     */
-    set numSplats(value) {
-        this._numSplats = math.clamp(value, 0, this._maxSplats);
-    }
-
-    /**
      * Gets the number of splats to render.
      *
      * @type {number}
      */
     get numSplats() {
         return this._numSplats;
+    }
+
+    /**
+     * Updates the container after modifying texture data and centers. Call this after filling
+     * data to signal that the container contents have changed.
+     *
+     * @param {number} [numSplats] - Number of splats to render. Defaults to current value.
+     * Must be between 0 and {@link maxSplats}.
+     * @param {boolean} [centersUpdated] - Whether the centers array was modified. Set to
+     * false when only numSplats changes but center positions remain the same, to avoid the cost
+     * of re-cloning centers in the sorter (can be significant for large containers).
+     */
+    update(numSplats = this._numSplats, centersUpdated = true) {
+        this._numSplats = math.clamp(numSplats, 0, this._maxSplats);
+        if (centersUpdated) {
+            this.centersVersion++;
+        }
     }
 
     /**

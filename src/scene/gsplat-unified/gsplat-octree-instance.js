@@ -884,7 +884,6 @@ class GSplatOctreeInstance {
             const placement = this.filePlacements[fileIndex];
             if (placement) {
                 placement.resource = res;
-                placement.aabb.copy(res.aabb);
                 this.activePlacements.add(placement);
                 this.dirtyModifiedPlacements = true;
                 // clear pending removal if we are reusing the file

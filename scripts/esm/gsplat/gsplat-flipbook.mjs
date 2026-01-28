@@ -55,20 +55,18 @@ class AssetCache {
     }
 
     /**
-     * Process pending unloads, checking if resources are safe to unload.
-     * This should be called periodically (e.g., in update loop) to clean up resources
-     * that are no longer referenced by any script instances or GSplatManager.
+     * Process pending unloads, cleaning up resources that are no longer referenced
+     * by any script instances. Deferred destruction (waiting for sorter refCount)
+     * is handled internally by the resource's destroy() method.
      * @param {import('playcanvas').AppBase} app - The application instance
      */
     static processPendingUnloads(app) {
         for (const [url, entry] of this.cache.entries()) {
             if (entry.refCount <= 0 && entry.asset.resource) {
-                // Check if resource is still in use by any manager
-                if (entry.asset.resource.refCount === 0) {
-                    app.assets.remove(entry.asset);
-                    entry.asset.unload();
-                    this.cache.delete(url);
-                }
+                // No need to check resource.refCount - destroy() handles deferred destruction
+                app.assets.remove(entry.asset);
+                entry.asset.unload();
+                this.cache.delete(url);
             }
         }
     }

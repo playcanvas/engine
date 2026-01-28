@@ -15,6 +15,8 @@ import wgslStreamOutput from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatStream
 // Container format read chunks
 import glslContainerFloatRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerFloatRead.js';
 import wgslContainerFloatRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/containerFloatRead.js';
+import glslContainerSimpleRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerSimpleRead.js';
+import wgslContainerSimpleRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/containerSimpleRead.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -443,6 +445,25 @@ class GSplatFormat {
         ], {
             readGLSL: glslContainerFloatRead,
             readWGSL: wgslContainerFloatRead
+        });
+    }
+
+    /**
+     * Creates a simple format with uniform-scale splats and no rotation.
+     * Streams:
+     * - `dataCenter` (RGBA32F): center.xyz + uniform size in w
+     * - `dataColor` (RGBA16F): color.rgba as half floats
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @returns {GSplatFormat} The simple format.
+     */
+    static createSimpleFormat(device) {
+        return new GSplatFormat(device, [
+            { name: 'dataCenter', format: PIXELFORMAT_RGBA32F },
+            { name: 'dataColor', format: PIXELFORMAT_RGBA16F }
+        ], {
+            readGLSL: glslContainerSimpleRead,
+            readWGSL: wgslContainerSimpleRead
         });
     }
 }

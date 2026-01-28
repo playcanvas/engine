@@ -11,6 +11,9 @@ function UnifiedSortWorker() {
     // Sorting mode: false = forward vector (directional), true = radial distance (for cubemaps)
     let _radialSort = false;
 
+    // Flag to warn only once about sortKey overflow
+    let _warnedSortKeyOverflow = false;
+
     // Camera-relative bin-based precision optimization.
     // Arrays are size 33 (numBins + 1) to include a safety entry at index 32.
     // This handles the edge case where floating point calculation (d >>> 0) produces
@@ -162,6 +165,14 @@ function UnifiedSortWorker() {
         // accumulate counts
         for (let i = 1; i < bucketCount; i++) {
             countBuffer[i] += countBuffer[i - 1];
+        }
+
+        // fast check: after cumulative sum, last bucket = total valid splats
+        // If less than numVertices, some sortKeys were out of bounds (AABB issue)
+        const validCount = countBuffer[bucketCount - 1];
+        if (validCount !== numVertices && !_warnedSortKeyOverflow) {
+            _warnedSortKeyOverflow = true;
+            console.warn(`[SortWorker] ${numVertices - validCount} splats lost due to sortKey overflow. Check resource AABB bounds contain all the splats.`);
         }
 
         // build output array

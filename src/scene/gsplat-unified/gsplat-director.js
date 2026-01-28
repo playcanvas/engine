@@ -1,6 +1,7 @@
 import { GSplatManager } from './gsplat-manager.js';
 import { SetUtils } from '../../core/set-utils.js';
 import { GSPLAT_FORWARD, GSPLAT_SHADOW } from '../constants.js';
+import { GSplatResourceCleanup } from '../gsplat/gsplat-resource-cleanup.js';
 
 /**
  * @import { LayerComposition } from '../composition/layer-composition.js'
@@ -221,6 +222,9 @@ class GSplatDirector {
      * @param {LayerComposition} comp - The layer composition.
      */
     update(comp) {
+
+        // Process any pending resource destructions
+        GSplatResourceCleanup.process(this.device);
 
         // remove camera / layer entires for cameras / layers no longer in the composition
         this.camerasMap.forEach((cameraData, camera) => {
