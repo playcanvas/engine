@@ -139,7 +139,7 @@ class GSplatContainer extends GSplatResourceBase {
      *
      * @param {number} [numSplats] - Number of splats to render. Defaults to current value.
      * Must be between 0 and {@link maxSplats}.
-     * @param {boolean} [centersUpdated=true] - Whether the centers array was modified. Set to
+     * @param {boolean} [centersUpdated] - Whether the centers array was modified. Set to
      * false when only numSplats changes but center positions remain the same, to avoid the cost
      * of re-cloning centers in the sorter (can be significant for large containers).
      */
