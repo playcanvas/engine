@@ -142,12 +142,20 @@ class GSplatManager {
     _workBufferRebuildRequired = false;
 
     /**
-     * Tracks placement state changes (format version, modifier hash, numSplats).
+     * Tracks placement state changes (format version, modifier hash, numSplats, centersVersion).
      *
      * @type {GSplatPlacementStateTracker}
      * @private
      */
     _stateTracker = new GSplatPlacementStateTracker();
+
+    /**
+     * Tracks last seen centersVersion per resource ID for detecting centers updates.
+     *
+     * @type {Map<number, number>}
+     * @private
+     */
+    _centersVersions = new Map();
 
     /** @type {number} */
     framesTillFullUpdate = 0;
@@ -402,6 +410,20 @@ class GSplatManager {
                         splats.push(splatInfo);
                     }
                 });
+            }
+
+            // Check for centers version changes and force-update sorter for changed resources
+            if (this.cpuSorter) {
+                for (const splat of splats) {
+                    const resource = splat.resource;
+                    const lastVersion = this._centersVersions.get(resource.id);
+                    if (lastVersion !== resource.centersVersion) {
+                        this._centersVersions.set(resource.id, resource.centersVersion);
+                        // Force update by removing and re-adding centers
+                        this.cpuSorter.setCenters(resource.id, null);
+                        this.cpuSorter.setCenters(resource.id, resource.centers);
+                    }
+                }
             }
 
             // update cpu sorter with current splats (adds new centers, removes unused ones)
@@ -1095,7 +1117,7 @@ class GSplatManager {
      * @returns {object} - Data for sorter worker.
      */
     prepareSortParameters(worldState) {
-        return {
+        const params = {
             command: 'intervals',
             textureSize: worldState.textureSize,
             totalUsedPixels: worldState.totalUsedPixels,
@@ -1107,6 +1129,8 @@ class GSplatManager {
             // TODO: consider storing this in typed array and transfer it to sorter worker
             intervals: worldState.splats.map(splat => splat.intervals)
         };
+
+        return params;
     }
 }
 

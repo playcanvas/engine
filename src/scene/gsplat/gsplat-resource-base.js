@@ -7,6 +7,7 @@ import { Mesh } from '../mesh.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
 import { GSplatStreams } from './gsplat-streams.js';
+import { GSplatResourceCleanup } from './gsplat-resource-cleanup.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -41,6 +42,15 @@ class GSplatResourceBase {
 
     /** @type {Float32Array} */
     centers;
+
+    /**
+     * Version counter for centers array changes. Remains 0 for static resources.
+     * Only GSplatContainer increments this via its update() method.
+     *
+     * @type {number}
+     * @ignore
+     */
+    centersVersion = 0;
 
     /** @type {BoundingBox} */
     aabb;
@@ -123,9 +133,25 @@ class GSplatResourceBase {
     }
 
     /**
-     * Destroys this resource and releases all GPU resources.
+     * Destroys this resource. If the resource is still in use by the sorter, destruction is
+     * automatically deferred until it's safe.
      */
     destroy() {
+        if (this.refCount > 0) {
+            // Still in use by sorter, queue for deferred destruction
+            GSplatResourceCleanup.queueDestroy(this.device, this);
+            return;
+        }
+        this._actualDestroy();
+    }
+
+    /**
+     * Actually destroys this resource and releases all GPU resources.
+     * Derived classes should override this method instead of destroy().
+     *
+     * @protected
+     */
+    _actualDestroy() {
         this.streams.destroy();
         this.mesh?.destroy();
         this.instanceIndices?.destroy();
