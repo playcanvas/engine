@@ -127,7 +127,7 @@ class XrNavigation extends Script {
     enableSnapVertical = true;
 
     /**
-     * Height in meters for each vertical snap when using one grip.
+     * Height in meters for each vertical snap.
      * @attribute
      * @range [0.1, 2]
      * @precision 0.1
