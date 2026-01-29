@@ -434,9 +434,9 @@ class XrNavigation extends Script {
 
             // Check if right grip is held for boost
             const rightGripPressed = rightController.gamepad.buttons[1]?.pressed;
-            const snapHeight = rightGripPressed
-                ? this.snapVerticalBoostHeight
-                : this.snapVerticalHeight;
+            const snapHeight = rightGripPressed ?
+                this.snapVerticalBoostHeight :
+                this.snapVerticalHeight;
 
             // Apply vertical snap (positive = up, negative = down)
             this.entity.translate(0, Math.sign(vertical) * snapHeight, 0);
