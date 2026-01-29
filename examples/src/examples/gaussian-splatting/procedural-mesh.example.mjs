@@ -110,7 +110,7 @@ assetListLoader.load(() => {
     revealScript.tint.set(1, 1, 1);
 
     // Now disable the original terrain render components (keep gsplat visible)
-    const terrainRenders = terrain.find((node) => node.render && !node.name.includes('Gsplat'));
+    const terrainRenders = terrain.find(node => node.render && !node.name.includes('Gsplat'));
     terrainRenders.forEach((node) => {
         node.render.enabled = false;
     });

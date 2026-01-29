@@ -315,7 +315,6 @@ class GsplatMesh extends Script {
         // Array to collect all splats
         /** @type {Array<{x: number, y: number, z: number, r: number, g: number, b: number, a: number}>} */
         const allSplats = [];
-        let totalTriangles = 0;
 
         // Process all mesh instances
         for (const renderComponent of renderComponents) {
@@ -375,7 +374,6 @@ class GsplatMesh extends Script {
 
                     // Rasterize triangle to generate splats
                     rasterizeTriangle(tempVec0, tempVec1, tempVec2, splatSize, margin, color, allSplats);
-                    totalTriangles++;
                 }
             }
         }
