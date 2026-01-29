@@ -1,4 +1,4 @@
-// @config DESCRIPTION <span style="color:yellow"><b>Controls:</b> Right Mouse Button - paint | Left Mouse Button - orbit </span><br>3D painting on gaussian splats using GSplatProcessor.<br>Apartment model courtesy of <a href="https://x.com/StephaneAgullo">Stephane Agullo</a>.
+// @config DESCRIPTION <span style="color:yellow"><b>Controls:</b> Right Mouse Button - paint | Left Mouse Button - orbit </span><br>3D painting on gaussian splats using GSplatProcessor.
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';

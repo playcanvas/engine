@@ -1,4 +1,4 @@
-// @config DESCRIPTION <span style="color:yellow"><b>Controls:</b> Select button - show selection box | Gizmo - move selection box | Left Mouse Button - orbit </span><br>GSplat editor with AABB selection, deletion, and cloning using GSplatProcessor.<br>Apartment model courtesy of <a href="https://x.com/StephaneAgullo">Stephane Agullo</a>.
+// @config DESCRIPTION <span style="color:yellow"><b>Controls:</b> Select button - show selection box | Gizmo - move selection box | Left Mouse Button - orbit </span><br>GSplat editor with AABB selection, deletion, and cloning using GSplatProcessor.
 import { data } from 'examples/observer';
 import { deviceType, rootPath, localImport } from 'examples/utils';
 import * as pc from 'playcanvas';
