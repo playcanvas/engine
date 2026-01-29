@@ -1,9 +1,9 @@
-import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Debug } from '../../core/debug.js';
 import { GSplatStreams } from '../gsplat/gsplat-streams.js';
 import { WORKBUFFER_UPDATE_AUTO, WORKBUFFER_UPDATE_ALWAYS, WORKBUFFER_UPDATE_ONCE } from '../constants.js';
 
 /**
+ * @import { BoundingBox } from '../../core/shape/bounding-box.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { GSplatResource } from '../gsplat/gsplat-resource.js'
@@ -66,10 +66,11 @@ class GSplatPlacement {
 
     /**
      * The axis-aligned bounding box for this placement, in local space.
+     * Null means use resource.aabb as fallback.
      *
-     * @type {BoundingBox}
+     * @type {BoundingBox|null}
      */
-    _aabb = new BoundingBox();
+    _aabb = null;
 
     /**
      * Per-instance shader parameters. Reference to the component's parameters Map.
@@ -202,12 +203,24 @@ class GSplatPlacement {
         return dirty;
     }
 
+    /**
+     * Sets a custom AABB for this placement. Pass null to use resource.aabb as fallback.
+     *
+     * @param {BoundingBox|null} aabb - The bounding box to set, or null to clear.
+     */
     set aabb(aabb) {
-        this._aabb.copy(aabb);
+        this._aabb = aabb?.clone() ?? null;
     }
 
+    /**
+     * Gets the AABB for this placement. Returns custom AABB if set, otherwise resource.aabb.
+     *
+     * @returns {BoundingBox} The bounding box.
+     */
     get aabb() {
-        return this._aabb;
+        const aabb = this._aabb ?? this.resource?.aabb;
+        Debug.assert(aabb, 'GSplatPlacement.aabb is null - resource.aabb must be set');
+        return /** @type {BoundingBox} */ (aabb);
     }
 
     /**

@@ -170,9 +170,7 @@ class GSplatComponentSystem extends ComponentSystem {
         // clone component
         const component = this.addComponent(clone, data);
 
-        if (gSplatComponent.customAabb) {
-            component.customAabb = gSplatComponent.customAabb.clone();
-        }
+        component.customAabb = gSplatComponent.customAabb?.clone() ?? null;
 
         return component;
     }
