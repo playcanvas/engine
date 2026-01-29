@@ -1,10 +1,47 @@
 import { Color, Quat, Script, Vec3, LAYERID_SKYBOX } from 'playcanvas';
 
-export class XrSession extends Script {
+/** @import { Entity } from 'playcanvas' */
+
+/**
+ * Manages WebXR session lifecycle for VR and AR experiences. This script handles starting and
+ * ending XR sessions, manages camera rig transforms during XR, and provides automatic cleanup
+ * when sessions end.
+ *
+ * Features:
+ * - Supports both immersive-vr and immersive-ar session types
+ * - Configurable app events for starting/ending sessions
+ * - Automatic camera transform management for VR/AR transitions
+ * - AR mode automatically makes camera background transparent and hides skybox
+ * - ESC key support to exit XR sessions
+ * - Proper cleanup on session end and script destruction
+ *
+ * This script should be attached to a parent entity of the camera entity used for the XR
+ * session. The entity hierarchy should be: CameraParent (with XrSession) > CameraEntity.
+ * Use it in conjunction with `XrControllers`, `XrNavigation`, and `XrMenu` scripts.
+ *
+ * @example
+ * // Add to camera parent entity
+ * cameraParent.addComponent('script');
+ * cameraParent.script.create(XrSession, {
+ *     properties: {
+ *         startVrEvent: 'vr:start',
+ *         startArEvent: 'ar:start',
+ *         endEvent: 'xr:end'
+ *     }
+ * });
+ *
+ * // Start VR from anywhere in your app
+ * app.fire('vr:start');
+ *
+ * // Or start AR
+ * app.fire('ar:start');
+ */
+class XrSession extends Script {
     static scriptName = 'xrSession';
 
     /**
      * Event name to start the WebXR AR session.
+     *
      * @type {string}
      * @attribute
      */
@@ -12,6 +49,7 @@ export class XrSession extends Script {
 
     /**
      * Event name to start the WebXR VR session.
+     *
      * @type {string}
      * @attribute
      */
@@ -19,26 +57,83 @@ export class XrSession extends Script {
 
     /**
      * Event name to end the WebXR VR session.
+     *
      * @type {string}
      * @attribute
      */
     endEvent = 'xr:end';
 
+    /**
+     * Reference to the camera entity (child of this entity).
+     *
+     * @type {Entity|null}
+     * @private
+     */
     cameraEntity = null;
 
+    /**
+     * Reference to the camera root entity (this entity).
+     *
+     * @type {Entity|null}
+     * @private
+     */
     cameraRootEntity = null;
 
+    /**
+     * Cached clear color for restoration after AR session.
+     *
+     * @type {Color}
+     * @private
+     */
     clearColor = new Color();
 
+    /**
+     * Cached root entity position for restoration after XR session.
+     *
+     * @type {Vec3}
+     * @private
+     */
     positionRoot = new Vec3();
 
+    /**
+     * Cached root entity rotation for restoration after XR session.
+     *
+     * @type {Quat}
+     * @private
+     */
     rotationRoot = new Quat();
 
+    /**
+     * Cached camera entity position for restoration after XR session.
+     *
+     * @type {Vec3}
+     * @private
+     */
     positionCamera = new Vec3();
 
+    /**
+     * Cached camera entity rotation for restoration after XR session.
+     *
+     * @type {Quat}
+     * @private
+     */
     rotationCamera = new Quat();
 
+    /**
+     * Bound keydown event handler for ESC key detection.
+     *
+     * @type {((event: KeyboardEvent) => void)|null}
+     * @private
+     */
     onKeyDownHandler = null;
+
+    /**
+     * Cached sky layer enabled state for restoration after AR session.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _skyEnabled = true;
 
     initialize() {
         this.cameraEntity = this.entity.findComponent('camera')?.entity || null;
@@ -153,6 +248,7 @@ export class XrSession extends Script {
     disableSky() {
         const layer = this.app.scene.layers.getLayerById(LAYERID_SKYBOX);
         if (layer) {
+            this._skyEnabled = layer.enabled;
             layer.enabled = false;
         }
     }
@@ -160,7 +256,9 @@ export class XrSession extends Script {
     restoreSky() {
         const layer = this.app.scene.layers.getLayerById(LAYERID_SKYBOX);
         if (layer) {
-            layer.enabled = true;
+            layer.enabled = this._skyEnabled;
         }
     }
 }
+
+export { XrSession };
