@@ -31,6 +31,10 @@ uniform int uActiveSplats;
 uniform vec3 model_scale;
 uniform vec4 model_rotation;  // (x,y,z,w) format
 
+#ifdef GSPLAT_ID
+    uniform uint uId;
+#endif
+
 void main(void) {
     // local fragment coordinates (within the viewport)
     ivec2 localFragCoords = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y) - uStartLine);
@@ -133,6 +137,10 @@ void main(void) {
             // Store rotation (xyz, w derived) and scale as 6 half-floats
             writeDataTransformA(uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16(worldRotation.xy)));
             writeDataTransformB(uvec4(packHalf2x16(vec2(worldRotation.z, worldScale.x)), packHalf2x16(worldScale.yz), 0u, 0u));
+        #endif
+
+        #ifdef GSPLAT_ID
+            writePcId(uvec4(uId, 0u, 0u, 0u));
         #endif
     }
 }

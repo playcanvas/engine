@@ -59,6 +59,11 @@ class WorkBufferRenderInfo {
             clonedDefines.set('GSPLAT_COLOR_ONLY', '');
         }
 
+        // Enable ID output when pcId stream exists in format
+        if (format.getStream('pcId')) {
+            clonedDefines.set('GSPLAT_ID', '');
+        }
+
         // Get custom shader chunks from material (for container support)
         const fragmentIncludes = material.hasShaderChunks ?
             (device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl) :

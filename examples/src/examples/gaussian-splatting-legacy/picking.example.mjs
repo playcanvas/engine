@@ -1,4 +1,5 @@
-// @config DESCRIPTION This example shows how to use the Picker to pick GSplat objects in the scene.
+// @config HIDDEN
+// @config DESCRIPTION This example shows how to use the Picker to pick GSplat objects in the scene using legacy (non-unified) mode.
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -70,8 +71,7 @@ assetListLoader.load(() => {
         const splat = new pc.Entity(`splat-${i}`);
         splat.addComponent('gsplat', {
             asset: assets.logo,
-            castShadows: false,
-            unified: true
+            castShadows: false
         });
 
         app.root.addChild(splat);
@@ -81,9 +81,6 @@ assetListLoader.load(() => {
             fade: 0
         });
     }
-
-    // Enable gsplat ID for unified picking
-    app.scene.gsplat.id = true;
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
@@ -176,10 +173,9 @@ assetListLoader.load(() => {
                 picker.getSelectionAsync(x * pickerScale, y * pickerScale, 1, 1).then((meshInstances) => {
 
                     if (meshInstances.length > 0) {
-                        // Unified mode: picker returns the GSplatComponent directly
-                        const picked = meshInstances[0];
-                        const entity = entities.find(e => e.entity.gsplat === picked);
-
+                        const meshInstance = meshInstances[0];
+                        // find entity with matching mesh instance
+                        const entity = entities.find(e => e.entity.gsplat.instance.meshInstance === meshInstance);
                         if (entity) {
                             // trigger the visual effect only if not already animating
                             if (entity.fade === 0) {

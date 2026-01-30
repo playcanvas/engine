@@ -37,6 +37,10 @@ uniform uActiveSplats: i32;
 uniform model_scale: vec3f;
 uniform model_rotation: vec4f;  // (x,y,z,w) format
 
+#ifdef GSPLAT_ID
+    uniform uId: u32;
+#endif
+
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     // local fragment coordinates (within the viewport)
@@ -125,6 +129,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             // Store rotation (xyz, w derived) and scale as 6 half-floats
             writeDataTransformA(vec4u(bitcast<u32>(worldCenter.x), bitcast<u32>(worldCenter.y), bitcast<u32>(worldCenter.z), pack2x16float(worldRotation.xy)));
             writeDataTransformB(vec4u(pack2x16float(vec2f(worldRotation.z, worldScale.x)), pack2x16float(worldScale.yz), 0u, 0u));
+        #endif
+
+        #ifdef GSPLAT_ID
+            writePcId(vec4u(uniform.uId, 0u, 0u, 0u));
         #endif
     }
     
