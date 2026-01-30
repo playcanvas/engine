@@ -1,7 +1,6 @@
 import gsplatCenterVS from '../chunks/gsplat/vert/gsplatCenter.js';
 import gsplatCommonVS from '../chunks/gsplat/vert/gsplatCommon.js';
 import gsplatSplatVS from '../chunks/gsplat/vert/gsplatSplat.js';
-import gsplatCustomizeVS from '../chunks/gsplat/vert/gsplatCustomize.js';
 import gsplatEvalSHVS from '../chunks/gsplat/vert/gsplatEvalSH.js';
 import gsplatHelpersVS from '../chunks/gsplat/vert/gsplatHelpers.js';
 import gsplatModifyVS from '../chunks/gsplat/vert/gsplatModify.js';
@@ -32,7 +31,6 @@ export const gsplatChunksWGSL = {
     gsplatCornerVS,
     gsplatCommonVS,
     gsplatSplatVS,
-    gsplatCustomizeVS,
     gsplatEvalSHVS,
     gsplatHelpersVS,
     gsplatModifyVS,

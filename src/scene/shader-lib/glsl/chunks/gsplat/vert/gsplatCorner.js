@@ -116,9 +116,6 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
         vec3 covA, covB;
         computeCovariance(rotation.wxyz, scale, covA, covB);  // Convert back to (w,x,y,z)
 
-        // Existing hook: modify covariance
-        modifyCovariance(center.modelCenterOriginal, center.modelCenterModified, covA, covB);
-
         return initCornerCov(source, center, corner, covA, covB);
     #endif
 }

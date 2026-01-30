@@ -36,7 +36,6 @@ void main(void) {
     SplatCenter center;
     center.modelCenterOriginal = modelCenter;
     
-    modifyCenter(modelCenter);
     modifySplatCenter(modelCenter);
     center.modelCenterModified = modelCenter;
 
@@ -74,7 +73,6 @@ void main(void) {
         clr.xyz += evalSH(sh, dir) * scale;
     #endif
 
-    modifyColor(modelCenter, clr);
     modifySplatColor(modelCenter, clr);
 
     clipCorner(corner, clr.w);
