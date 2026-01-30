@@ -513,7 +513,7 @@ class GSplatComponent extends Component {
 
     /**
      * Gets the unique identifier for this component. This ID is used by the picking system
-     * and is also written to the work buffer when `app.scene.gsplat.id` is enabled, making
+     * and is also written to the work buffer when `app.scene.gsplat.enableIds` is enabled, making
      * it available to custom shaders for effects like highlighting or animation.
      *
      * @type {number}
