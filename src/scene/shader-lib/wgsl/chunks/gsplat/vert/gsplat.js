@@ -14,6 +14,10 @@ const discardVec: vec4f = vec4f(0.0, 0.0, 2.0, 1.0);
     varying vLinearDepth: f32;
 #endif
 
+#if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
+    varying @interpolate(flat) vPickId: u32;
+#endif
+
 #ifdef GSPLAT_OVERDRAW
     uniform colorRampIntensity: f32;
     var colorRamp: texture_2d<f32>;
@@ -107,6 +111,10 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 
     #ifdef PREPASS_PASS
         output.vLinearDepth = -center.view.z;
+    #endif
+
+    #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
+        output.vPickId = loadPcId().r;
     #endif
 
     return output;

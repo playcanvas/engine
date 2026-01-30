@@ -1,5 +1,7 @@
 import { Debug } from '../../core/debug.js';
-import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U } from '../../platform/graphics/constants.js';
+import {
+    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
+} from '../../platform/graphics/constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatFormat } from '../gsplat/gsplat-format.js';
 
@@ -119,6 +121,44 @@ class GSplatParams {
      */
     get colorizeLod() {
         return this._colorizeLod;
+    }
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _id = false;
+
+    /**
+     * Enables per-component ID storage in the work buffer. When enabled, each GSplat component
+     * gets a unique ID written to the work buffer. This ID is used by the picking system to
+     * identify which component was picked, but is also available to custom shaders for effects
+     * like highlighting, animation, or any per-component differentiation.
+     *
+     * Once enabled, the ID stream cannot be disabled (it persists for the lifetime of the app).
+     *
+     * @type {boolean}
+     */
+    set id(value) {
+        // Only accept true (once enabled, cannot be disabled)
+        if (value && !this._id) {
+            this._id = true;
+            if (!this._format.getStream('pcId')) {
+                this._format.addExtraStreams([
+                    { name: 'pcId', format: PIXELFORMAT_R32U }
+                ]);
+            }
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets the ID storage enabled state.
+     *
+     * @type {boolean}
+     */
+    get id() {
+        return this._id;
     }
 
     /**

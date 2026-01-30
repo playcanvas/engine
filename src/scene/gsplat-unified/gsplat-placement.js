@@ -43,6 +43,14 @@ class GSplatPlacement {
     intervals = new Map();
 
     /**
+     * Unique identifier for this placement. Used by the picking system and available
+     * for custom shader effects.
+     *
+     * @type {number}
+     */
+    id = 0;
+
+    /**
      * The LOD index for this placement.
      *
      * @type {number}
@@ -135,8 +143,10 @@ class GSplatPlacement {
      * @param {number} [lodIndex] - The LOD index for this placement.
      * @param {Map<string, {scopeId: ScopeId, data: *}>|null} [parameters] - Per-instance shader parameters.
      * @param {GSplatPlacement|null} [parentPlacement] - Parent placement for shader config delegation.
+     * @param {number|null} [id] - Unique identifier for picking. If not provided, inherits from parentPlacement.
      */
-    constructor(resource, node, lodIndex = 0, parameters = null, parentPlacement = null) {
+    constructor(resource, node, lodIndex = 0, parameters = null, parentPlacement = null, id = null) {
+        this.id = id ?? parentPlacement?.id ?? 0;
         this.resource = resource;
         this.node = node;
         this.lodIndex = lodIndex;

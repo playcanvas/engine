@@ -14,6 +14,10 @@ mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
     varying float vLinearDepth;
 #endif
 
+#if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
+    flat varying uint vPickId;
+#endif
+
 #ifdef GSPLAT_OVERDRAW
     uniform sampler2D colorRamp;
     uniform float colorRampIntensity;
@@ -101,6 +105,10 @@ void main(void) {
 
     #ifdef PREPASS_PASS
         vLinearDepth = -center.view.z;
+    #endif
+
+    #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
+        vPickId = loadPcId().r;
     #endif
 }
 `;

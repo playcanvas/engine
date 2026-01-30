@@ -37,6 +37,13 @@ class GSplatInfo {
     /** @type {number} */
     lodIndex;
 
+    /**
+     * Unique identifier from the placement, used for picking.
+     *
+     * @type {number}
+     */
+    placementId;
+
     /** @type {number} */
     numSplats;
 
@@ -129,6 +136,7 @@ class GSplatInfo {
         this.resource = resource;
         this.node = placement.node;
         this.lodIndex = placement.lodIndex;
+        this.placementId = placement.id;
         this.numSplats = resource.numSplats;
         this.aabb.copy(placement.aabb);
         this.parameters = placement.parameters;

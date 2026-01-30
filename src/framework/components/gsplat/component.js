@@ -6,6 +6,7 @@ import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
 import { Debug } from '../../../core/debug.js';
 import { GSplatPlacement } from '../../../scene/gsplat-unified/gsplat-placement.js';
+import { PickerId } from '../../../scene/picker-id.js';
 
 /**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
@@ -92,6 +93,14 @@ class GSplatComponent extends Component {
      * @private
      */
     _placement = null;
+
+    /**
+     * Unique identifier for this component, used by the picking system.
+     *
+     * @type {number}
+     * @private
+     */
+    _id = PickerId.get();
 
     /**
      * @type {ShaderMaterial|null}
@@ -500,6 +509,17 @@ class GSplatComponent extends Component {
      */
     get unified() {
         return this._unified;
+    }
+
+    /**
+     * Gets the unique identifier for this component. This ID is used by the picking system
+     * and is also written to the work buffer when `app.scene.gsplat.id` is enabled, making
+     * it available to custom shaders for effects like highlighting or animation.
+     *
+     * @type {number}
+     */
+    get id() {
+        return this._id;
     }
 
     /**
@@ -941,7 +961,7 @@ class GSplatComponent extends Component {
 
             this._placement = null;
 
-            this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters);
+            this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters, null, this._id);
             this._placement.lodDistances = this._lodDistances;
             this._placement.splatBudget = this._splatBudget;
             this._placement.workBufferUpdate = this._workBufferUpdate;

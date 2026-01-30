@@ -189,6 +189,9 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         scope.resolve('model_scale').setValue(this._modelScaleData);
         scope.resolve('model_rotation').setValue(this._modelRotationData);
 
+        // Set placement ID for picking (unconditionally - cheap even if shader doesn't use it)
+        scope.resolve('uId').setValue(splatInfo.placementId);
+
         // Apply per-instance shader parameters
         if (splatInfo.parameters) {
             for (const param of splatInfo.parameters.values()) {

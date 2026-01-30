@@ -96,6 +96,10 @@ class GSplatRenderer {
             this._internalDefines.add(key);
         });
 
+        // Also protect ID-related defines that may be added dynamically
+        this._internalDefines.add('GSPLAT_UNIFIED_ID');
+        this._internalDefines.add('PICK_CUSTOM_ID');
+
         this.meshInstance = this.createMeshInstance();
     }
 
@@ -170,6 +174,9 @@ class GSplatRenderer {
         if (colorStream && colorStream.format !== PIXELFORMAT_RGBA16U) {
             this._material.setDefine('GSPLAT_COLOR_FLOAT', '');
         }
+
+        // Enable unified ID defines when pcId stream exists
+        this._updateIdDefines();
 
         // Bind work buffer textures from the texture map
         this._bindWorkBufferTextures();
@@ -272,6 +279,19 @@ class GSplatRenderer {
     }
 
     /**
+     * Updates the ID-related defines based on whether pcId stream exists.
+     *
+     * @private
+     */
+    _updateIdDefines() {
+        // GSPLAT_UNIFIED_ID enables reading component ID from work buffer
+        // PICK_CUSTOM_ID prevents pick.js from declaring meshInstanceId uniform
+        const hasPcId = !!this.workBuffer.format.getStream('pcId');
+        this._material.setDefine('GSPLAT_UNIFIED_ID', hasPcId);
+        this._material.setDefine('PICK_CUSTOM_ID', hasPcId);
+    }
+
+    /**
      * Syncs with work buffer format when extra streams are added.
      *
      * @private
@@ -289,6 +309,9 @@ class GSplatRenderer {
 
             // Bind any new textures from the work buffer
             this._bindWorkBufferTextures();
+
+            // Enable unified ID defines when pcId stream exists
+            this._updateIdDefines();
 
             this._material.update();
         }
