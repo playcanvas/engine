@@ -83,7 +83,7 @@ assetListLoader.load(() => {
     }
 
     // Enable gsplat ID for unified picking
-    app.scene.gsplat.id = true;
+    app.scene.gsplat.enableIds = true;
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();

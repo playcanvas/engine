@@ -127,7 +127,7 @@ class GSplatParams {
      * @type {boolean}
      * @private
      */
-    _id = false;
+    _enableIds = false;
 
     /**
      * Enables per-component ID storage in the work buffer. When enabled, each GSplat component
@@ -139,10 +139,10 @@ class GSplatParams {
      *
      * @type {boolean}
      */
-    set id(value) {
+    set enableIds(value) {
         // Only accept true (once enabled, cannot be disabled)
-        if (value && !this._id) {
-            this._id = true;
+        if (value && !this._enableIds) {
+            this._enableIds = true;
             if (!this._format.getStream('pcId')) {
                 this._format.addExtraStreams([
                     { name: 'pcId', format: PIXELFORMAT_R32U }
@@ -157,8 +157,8 @@ class GSplatParams {
      *
      * @type {boolean}
      */
-    get id() {
-        return this._id;
+    get enableIds() {
+        return this._enableIds;
     }
 
     /**

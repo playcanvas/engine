@@ -122,7 +122,7 @@ class RenderPassPicker extends RenderPass {
                     // Process gsplat placements when ID is enabled
                     // The gsplat unified mesh instance is already handled above (added to layer.meshInstances)
                     // Here we just need to add the placement ID -> component mapping
-                    if (scene.gsplat.id) {
+                    if (scene.gsplat.enableIds) {
                         const placements = srcLayer.gsplatPlacements;
                         for (let j = 0; j < placements.length; j++) {
                             const placement = placements[j];
