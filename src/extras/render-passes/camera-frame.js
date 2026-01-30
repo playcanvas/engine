@@ -103,7 +103,13 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * @typedef {Object} ColorLUT
  * Properties related to the color lookup table (LUT) effect, a postprocessing technique used to
  * apply a color transformation to the image.
- * @property {Texture|null} texture - The texture of the color LUT effect. Defaults to null.
+ * @property {Texture|null} texture - The LUT texture. This must be a 2D "horizontal strip" texture
+ * representing an unwrapped 3D LUT (the same format used by Unreal Engine). For an N×N×N 3D LUT,
+ * the texture dimensions are N² × N pixels (width × height). For example, a 16×16×16 LUT uses a
+ * 256×16 texture, and a 32×32×32 LUT uses a 1024×32 texture. The texture contains N horizontal
+ * slices representing the blue channel, with each slice mapping red to the X-axis and green to
+ * the Y-axis. Note that HALD LUTs (e.g. from ImageMagick) and Unity LUTs use different layouts
+ * and are not compatible. Defaults to null.
  * @property {number} intensity - The intensity of the color LUT effect. Defaults to 1.
  */
 
