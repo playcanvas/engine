@@ -40,7 +40,6 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     var center: SplatCenter;
     center.modelCenterOriginal = modelCenter;
     
-    modifyCenter(&modelCenter);
     modifySplatCenter(&modelCenter);
     center.modelCenterModified = modelCenter;
 
@@ -79,7 +78,6 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         clr = vec4f(clr.xyz + evalSH(&sh, dir) * scale, clr.a);
     #endif
 
-    modifyColor(modelCenter, &clr);
     modifySplatColor(modelCenter, &clr);
 
     clipCorner(&corner, clr.w);

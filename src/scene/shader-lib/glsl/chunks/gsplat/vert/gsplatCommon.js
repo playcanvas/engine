@@ -3,7 +3,6 @@ export default /* glsl */`
 #include "gsplatFormatVS"
 #include "gsplatStructsVS"
 #include "gsplatDeclarationsVS"
-#include "gsplatCustomizeVS"
 #include "gsplatModifyVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
