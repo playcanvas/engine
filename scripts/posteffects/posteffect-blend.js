@@ -9,51 +9,48 @@
  * @property {Texture} blendMap The texture with which to blend the input render target with.
  * @property {number} mixRatio The amount of blending between the input and the blendMap. Ranges from 0 to 1.
  */
-function BlendEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+class BlendEffect extends pc.PostEffect {
+    constructor(graphicsDevice) {
+        super(graphicsDevice);
 
-    var fshader = [
-        'uniform float uMixRatio;',
-        'uniform sampler2D uColorBuffer;',
-        'uniform sampler2D uBlendMap;',
-        '',
-        'varying vec2 vUv0;',
-        '',
-        'void main(void)',
-        '{',
-        '    vec4 texel1 = texture2D(uColorBuffer, vUv0);',
-        '    vec4 texel2 = texture2D(uBlendMap, vUv0);',
-        '    gl_FragColor = mix(texel1, texel2, uMixRatio);',
-        '}'
-    ].join('\n');
+        const fshader = /* glsl */`
+            uniform float uMixRatio;
+            uniform sampler2D uColorBuffer;
+            uniform sampler2D uBlendMap;
 
-    this.shader = pc.ShaderUtils.createShader(graphicsDevice, {
-        uniqueName: 'BlendShader',
-        attributes: { aPosition: pc.SEMANTIC_POSITION },
-        vertexGLSL: pc.PostEffect.quadVertexShader,
-        fragmentGLSL: fshader
-    });
+            varying vec2 vUv0;
 
-    // Uniforms
-    this.mixRatio = 0.5;
-    this.blendMap = new pc.Texture(graphicsDevice);
-    this.blendMap.name = 'pe-blend';
-}
+            void main(void)
+            {
+                vec4 texel1 = texture2D(uColorBuffer, vUv0);
+                vec4 texel2 = texture2D(uBlendMap, vUv0);
+                gl_FragColor = mix(texel1, texel2, uMixRatio);
+            }
+        `;
 
-BlendEffect.prototype = Object.create(pc.PostEffect.prototype);
-BlendEffect.prototype.constructor = BlendEffect;
+        this.shader = pc.ShaderUtils.createShader(graphicsDevice, {
+            uniqueName: 'BlendShader',
+            attributes: { aPosition: pc.SEMANTIC_POSITION },
+            vertexGLSL: pc.PostEffect.quadVertexShader,
+            fragmentGLSL: fshader
+        });
 
-Object.assign(BlendEffect.prototype, {
-    render: function (inputTarget, outputTarget, rect) {
-        var device = this.device;
-        var scope = device.scope;
+        // Uniforms
+        this.mixRatio = 0.5;
+        this.blendMap = new pc.Texture(graphicsDevice);
+        this.blendMap.name = 'pe-blend';
+    }
+
+    render(inputTarget, outputTarget, rect) {
+        const device = this.device;
+        const scope = device.scope;
 
         scope.resolve('uMixRatio').setValue(this.mixRatio);
         scope.resolve('uColorBuffer').setValue(inputTarget.colorBuffer);
         scope.resolve('uBlendMap').setValue(this.blendMap);
         this.drawQuad(outputTarget, this.shader, rect);
     }
-});
+}
 
 // ----------------- SCRIPT DEFINITION ------------------ //
 var Blend = pc.createScript('blend');

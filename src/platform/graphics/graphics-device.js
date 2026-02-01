@@ -256,6 +256,32 @@ class GraphicsDevice extends EventHandler {
     supportsStorageTextureRead = false;
 
     /**
+     * True if the device supports the WGSL subgroup_uniformity extension, which allows
+     * subgroup functionality to be considered uniform in more cases during shader compilation.
+     * When a shader uses this feature, use an `enable` directive at the top of the WGSL shader:
+     * ```wgsl
+     * enable subgroups;
+     * ```
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsSubgroupUniformity = false;
+
+    /**
+     * True if the device supports the WGSL subgroup_id extension, which provides access to
+     * `subgroup_id` and `num_subgroups` built-in values in workgroups.
+     * When a shader uses this feature, use a `requires` directive at the top of the WGSL shader:
+     * ```wgsl
+     * requires subgroup_id;
+     * ```
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsSubgroupId = false;
+
+    /**
      * Currently active render target.
      *
      * @type {RenderTarget|null}

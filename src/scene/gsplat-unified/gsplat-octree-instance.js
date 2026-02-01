@@ -805,7 +805,7 @@ class GSplatOctreeInstance {
         if (!placement) {
 
             // create placement (with null resource initially)
-            placement = new GSplatPlacement(null, this.placement.node, lodIndex);
+            placement = new GSplatPlacement(null, this.placement.node, lodIndex, null, this.placement);
             this.filePlacements[fileIndex] = placement;
 
             // If we scheduled a remove for this file in this update, cancel it
@@ -884,7 +884,6 @@ class GSplatOctreeInstance {
             const placement = this.filePlacements[fileIndex];
             if (placement) {
                 placement.resource = res;
-                placement.aabb.copy(res.aabb);
                 this.activePlacements.add(placement);
                 this.dirtyModifiedPlacements = true;
                 // clear pending removal if we are reusing the file
@@ -989,7 +988,7 @@ class GSplatOctreeInstance {
 
             if (envResource) {
                 // create environment placement with the loaded resource
-                this.environmentPlacement = new GSplatPlacement(envResource, this.placement.node, 0);
+                this.environmentPlacement = new GSplatPlacement(envResource, this.placement.node, 0, null, this.placement);
                 this.environmentPlacement.aabb.copy(envResource.aabb);
                 this.activePlacements.add(this.environmentPlacement);
                 this.dirtyModifiedPlacements = true;

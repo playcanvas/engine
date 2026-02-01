@@ -234,8 +234,16 @@ class CameraComponent extends Component {
     /**
      * Sets the gamma correction to apply when rendering the scene. Can be:
      *
-     * - {@link GAMMA_NONE}
-     * - {@link GAMMA_SRGB}
+     * - {@link GAMMA_SRGB}: Output is gamma-encoded for standard sRGB displays. This is the
+     *   default and recommended setting for all normal rendering.
+     * - {@link GAMMA_NONE}: Output remains in linear space. This is only intended for advanced
+     *   HDR pipelines where the output is rendered to an intermediate HDR texture that will be
+     *   tonemapped and gamma-corrected in a subsequent pass.
+     *
+     * **Warning**: Setting `GAMMA_NONE` will cause the entire scene (including UI) to appear
+     * too dark on standard displays, as linear values are written directly without gamma
+     * encoding. For HDR rendering with post-processing, use {@link CameraFrame} which handles
+     * this automatically.
      *
      * Defaults to {@link GAMMA_SRGB}.
      *

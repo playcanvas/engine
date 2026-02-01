@@ -1,12 +1,12 @@
 export default /* glsl */`
 #include "gsplatHelpersVS"
-#include "gsplatCustomizeVS"
-#include "gsplatModifyVS"
-
+#include "gsplatFormatVS"
 #include "gsplatStructsVS"
+#include "gsplatDeclarationsVS"
+#include "gsplatModifyVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
-#include "gsplatSourceFormatVS"
+#include "gsplatReadVS"
 #include "gsplatSourceVS"
 #include "gsplatCenterVS"
 #include "gsplatCornerVS"

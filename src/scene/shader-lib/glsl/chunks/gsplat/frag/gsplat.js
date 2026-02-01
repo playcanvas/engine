@@ -18,6 +18,10 @@ export default /* glsl */`
 varying mediump vec2 gaussianUV;
 varying mediump vec4 gaussianColor;
 
+#if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
+    flat varying uint vPickId;
+#endif
+
 #ifdef PICK_PASS
     #include "pickPS"
 #endif
@@ -45,7 +49,13 @@ void main(void) {
 
     #ifdef PICK_PASS
 
-        pcFragColor0 = getPickOutput();
+        #ifdef GSPLAT_UNIFIED_ID
+            // Use component ID from work buffer (passed via varying)
+            pcFragColor0 = encodePickOutput(vPickId);
+        #else
+            // Use standard meshInstanceId path
+            pcFragColor0 = getPickOutput();
+        #endif
         #ifdef DEPTH_PICK_PASS
             pcFragColor1 = getPickDepth();
         #endif

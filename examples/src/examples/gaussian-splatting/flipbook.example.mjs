@@ -1,10 +1,10 @@
-// @config DESCRIPTION This example demonstrates gsplat flipbook animation using dynamically loaded splat sequences at different playback speeds.
-// @config HIDDEN
+// @config DESCRIPTION This example demonstrates gsplat flipbook animation using dynamically loaded splat sequence of ply files.
 // @config NO_MINISTATS
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const { GsplatFlipbook } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/gsplat-flipbook.mjs`);
+const { ShadowCatcher } = await fileImport(`${rootPath}/static/scripts/esm/shadow-catcher.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -57,6 +57,7 @@ const assets = {
         { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
+    apartment: new pc.Asset('apartment', 'container', { url: `${rootPath}/static/assets/models/apartment.glb` }),
     orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
 };
 
@@ -66,8 +67,14 @@ assetListLoader.load(() => {
 
     // setup skydome
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 0.2;
     app.scene.envAtlas = assets.helipad.resource;
+
+    // add room model
+    const roomEntity = assets.apartment.resource.instantiateRenderEntity({
+        castShadows: false
+    });
+    roomEntity.setLocalScale(30, 30, 30);
+    app.root.addChild(roomEntity);
 
     // Mini-Stats: add VRAM on top of default stats
     const msOptions = pc.MiniStats.getDefaultOptions();
@@ -85,91 +92,89 @@ assetListLoader.load(() => {
     const camera = new pc.Entity();
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
-        toneMapping: pc.TONEMAP_ACES
+        toneMapping: pc.TONEMAP_ACES,
+        farClip: 1500,
+        fov: 80
     });
-    camera.setLocalPosition(12.67, 1.16, -1.48);
+
+    const focusPoint = new pc.Entity();
+    focusPoint.setLocalPosition(-80, 80, -20);
 
     // add orbit camera script with a mouse and a touch support
     camera.addComponent('script');
     camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
-            distanceMax: 100,
+            focusEntity: focusPoint,
+            distanceMax: 500,
             frameOnStart: false
         }
     });
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
+    camera.setLocalPosition(-50, 100, 220);
+    camera.lookAt(0, 0, 100);
     app.root.addChild(camera);
 
-    // Helper function to create a flipbook entity
-    const createFlipbookEntity = (name, fps, folder, filenamePattern, startFrame, endFrame, position, rotation, scale) => {
-        const entity = new pc.Entity(name);
-        entity.addComponent('gsplat', {
-            unified: true
-        });
-        entity.addComponent('script');
-        const flipbook = entity.script.create(GsplatFlipbook);
-        if (flipbook) {
-            flipbook.fps = fps;
-            flipbook.folder = folder;
-            flipbook.filenamePattern = filenamePattern;
-            flipbook.startFrame = startFrame;
-            flipbook.endFrame = endFrame;
-            flipbook.playMode = 'bounce';
-            flipbook.playing = true;
-        }
-        entity.setLocalPosition(position[0], position[1], position[2]);
-        entity.setLocalEulerAngles(rotation[0], rotation[1], rotation[2]);
-        entity.setLocalScale(scale, scale, scale);
-        app.root.addChild(entity);
-        return entity;
-    };
-
-    // Create monkey flipbook at origin (camera focus)
-    const monkey = createFlipbookEntity(
-        'Monkey',
-        30,
-        `${rootPath}/static/assets/splats/flipbook`,
-        'monkey_{frame:04}.sog',
-        1,
-        50,
-        [0, 0, 0],
-        [180, 90, 0],
-        0.7
-    );
-
-    // Create first wave entity at 60 fps
-    createFlipbookEntity(
-        'Wave 1 (60fps)',
-        60,
-        `${rootPath}/static/assets/splats/wave`,
-        'wave_{frame:04}.sog',
-        1,
-        200,
-        [0, -7, 0],
-        [180, 90, 0],
-        5
-    );
-
-    // Create second wave entity at 30 fps (flipped upside down)
-    createFlipbookEntity(
-        'Wave 2 (30fps)',
-        30,
-        `${rootPath}/static/assets/splats/wave`,
-        'wave_{frame:04}.sog',
-        1,
-        200,
-        [0, 7, 0],
-        [0, 90, 0],
-        5
-    );
-
-    // Update camera focus to monkey entity
-    const orbitCamera = camera.script?.get('orbitCamera');
-    if (orbitCamera) {
-        orbitCamera.focusEntity = monkey;
+    // Create player flipbook
+    const player = new pc.Entity('Player');
+    player.addComponent('gsplat', {
+        castShadows: true,
+        unified: true
+    });
+    player.addComponent('script');
+    const flipbook = player.script.create(GsplatFlipbook);
+    if (flipbook) {
+        flipbook.fps = 30;
+        flipbook.folder = 'https://code.playcanvas.com/examples_data/example_basketball_02';
+        flipbook.filenamePattern = '{frame:03}.compressed.ply';
+        flipbook.startFrame = 1;
+        flipbook.endFrame = 149;
+        flipbook.playMode = 'bounce';
+        flipbook.playing = true;
     }
+    player.setLocalPosition(50, 0, -80);
+    player.setLocalEulerAngles(180, 20, 0);
+    player.setLocalScale(80, 80, 80);
+    app.root.addChild(player);
+
+    // set alpha clip value, used by shadows
+    app.scene.gsplat.material.setParameter('alphaClip', 0.1);
+
+    // Create shadow catcher
+    const shadowCatcher = new pc.Entity('ShadowCatcher');
+    shadowCatcher.addComponent('render', {
+        type: 'plane',
+        castShadows: false
+    });
+    shadowCatcher.setLocalScale(300, 300, 300);
+
+    shadowCatcher.addComponent('script');
+    shadowCatcher.script?.create(ShadowCatcher, {
+        properties: {
+            geometry: shadowCatcher,
+            scale: new pc.Vec3(1000, 1000, 1000)
+        }
+    });
+    shadowCatcher.setLocalPosition(0, 1, -180);
+    app.root.addChild(shadowCatcher);
+
+    // Shadow casting directional light
+    const directionalLight = new pc.Entity('light');
+    directionalLight.addComponent('light', {
+        type: 'directional',
+        color: pc.Color.BLACK,
+        castShadows: true,
+        intensity: 0,
+        shadowBias: 0.1,
+        normalOffsetBias: 0.05,
+        shadowDistance: 800,
+        shadowIntensity: 0.3,
+        shadowResolution: 2048,
+        shadowType: pc.SHADOW_PCF5_16F
+    });
+    directionalLight.setEulerAngles(55, 70, 0);
+    app.root.addChild(directionalLight);
 });
 
 export { app };

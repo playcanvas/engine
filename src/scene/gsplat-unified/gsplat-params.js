@@ -1,7 +1,12 @@
 import { Debug } from '../../core/debug.js';
+import {
+    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
+} from '../../platform/graphics/constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
+import { GSplatFormat } from '../gsplat/gsplat-format.js';
 
 /**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
@@ -16,6 +21,37 @@ class GSplatParams {
      * @private
      */
     _material = new ShaderMaterial();
+
+    /**
+     * Format descriptor for work buffer streams.
+     *
+     * @type {GSplatFormat}
+     * @private
+     */
+    _format;
+
+    /**
+     * Creates a new GSplatParams instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     */
+    constructor(device) {
+        // Check device capabilities for color format - use RGBA16U fallback if RGBA16F not supported
+        const colorFormat = device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F]) || PIXELFORMAT_RGBA16U;
+
+        // Work buffer textures format:
+        // - dataColor (RGBA16F/RGBA16U): RGBA color with alpha
+        // - dataTransformA (RGBA32U): worldCenter.xyz (3×32-bit floats as uint) + worldRotation.xy (2×16-bit halfs)
+        // - dataTransformB (RG32U): worldRotation.z + worldScale.xyz (4×16-bit halfs, w derived via sqrt)
+        this._format = new GSplatFormat(device, [
+            { name: 'dataColor', format: colorFormat },
+            { name: 'dataTransformA', format: PIXELFORMAT_RGBA32U },
+            { name: 'dataTransformB', format: PIXELFORMAT_RG32U }
+        ], {
+            readGLSL: '#include "gsplatContainerPackedReadVS"',
+            readWGSL: '#include "gsplatContainerPackedReadVS"'
+        });
+    }
 
     /**
      * Enables debug rendering of AABBs for GSplat objects. Defaults to false.
@@ -85,6 +121,44 @@ class GSplatParams {
      */
     get colorizeLod() {
         return this._colorizeLod;
+    }
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _enableIds = false;
+
+    /**
+     * Enables per-component ID storage in the work buffer. When enabled, each GSplat component
+     * gets a unique ID written to the work buffer. This ID is used by the picking system to
+     * identify which component was picked, but is also available to custom shaders for effects
+     * like highlighting, animation, or any per-component differentiation.
+     *
+     * Once enabled, the ID stream cannot be disabled (it persists for the lifetime of the app).
+     *
+     * @type {boolean}
+     */
+    set enableIds(value) {
+        // Only accept true (once enabled, cannot be disabled)
+        if (value && !this._enableIds) {
+            this._enableIds = true;
+            if (!this._format.getStream('pcId')) {
+                this._format.addExtraStreams([
+                    { name: 'pcId', format: PIXELFORMAT_R32U }
+                ]);
+            }
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets the ID storage enabled state.
+     *
+     * @type {boolean}
+     */
+    get enableIds() {
+        return this._enableIds;
     }
 
     /**
@@ -340,6 +414,23 @@ class GSplatParams {
      */
     get material() {
         return this._material;
+    }
+
+    /**
+     * Format descriptor for work buffer streams. Describes the textures used by the work buffer
+     * for intermediate storage during unified rendering. Users can add extra streams via
+     * {@link GSplatFormat#addExtraStreams} for custom per-splat data.
+     *
+     * @type {GSplatFormat}
+     * @example
+     * // Add a custom stream to store per-splat component IDs
+     * app.scene.gsplat.format.addExtraStreams([{
+     *     name: 'splatId',
+     *     format: pc.PIXELFORMAT_R32U
+     * }]);
+     */
+    get format() {
+        return this._format;
     }
 
     /**

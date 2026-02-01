@@ -99,7 +99,7 @@ const fragmentWGSL = /* wgsl */`
     }
 `;
 
-const gsplatSogsColorGLSL = /* glsl */`
+const gsplatSogColorGLSL = /* glsl */`
     uniform mediump sampler2D sh0;
     uniform highp sampler2D sh_labels;
     uniform mediump sampler2D sh_result;
@@ -117,7 +117,7 @@ const gsplatSogsColorGLSL = /* glsl */`
         return vec3(vb) / vec3(2047.0, 2047.0, 1023.0);
     }
 
-    vec4 readColor(in SplatSource source) {
+    vec4 getColor(in SplatSource source) {
         // sample base color
         vec4 baseSample = mix(sh0_mins, sh0_maxs, texelFetch(sh0, source.uv, 0));
 
@@ -135,7 +135,7 @@ const gsplatSogsColorGLSL = /* glsl */`
     }
 `;
 
-const gsplatSogsColorWGSL = /* wgsl */`
+const gsplatSogColorWGSL = /* wgsl */`
     var sh0: texture_2d<f32>;
     var sh_labels: texture_2d<f32>;
     var sh_result: texture_2d<f32>;
@@ -152,7 +152,7 @@ const gsplatSogsColorWGSL = /* wgsl */`
         return vec3f(vb) / vec3f(2047.0, 2047.0, 1023.0);
     }
 
-    fn readColor(source: ptr<function, SplatSource>) -> vec4f {
+    fn getColor(source: ptr<function, SplatSource>) -> vec4f {
         // sample base color
         let baseSample: vec4f = mix(uniform.sh0_mins, uniform.sh0_maxs, textureLoad(sh0, source.uv, 0));
         let base = vec4f(vec3f(0.5) + baseSample.xyz * SH_C0, 1.0 / (1.0 + exp(-baseSample.w)));
@@ -217,7 +217,7 @@ class GSplatResolveSH {
             }
         });
 
-        this.texture = resource.createTexture('centroids', PIXELFORMAT_RGBA8, new Vec2(64, 1024));
+        this.texture = resource.streams.createTexture('centroids', PIXELFORMAT_RGBA8, new Vec2(64, 1024));
         this.renderTarget = new RenderTarget({
             colorBuffer: this.texture,
             depth: false
@@ -232,8 +232,8 @@ class GSplatResolveSH {
         material.setDefine('SH_BANDS', '0');
 
         const { shaderChunks } = material;
-        shaderChunks.glsl.set('gsplatSogsColorVS', gsplatSogsColorGLSL);
-        shaderChunks.wgsl.set('gsplatSogsColorVS', gsplatSogsColorWGSL);
+        shaderChunks.glsl.set('gsplatSogColorVS', gsplatSogColorGLSL);
+        shaderChunks.wgsl.set('gsplatSogColorVS', gsplatSogColorWGSL);
 
         material.update();
 
@@ -247,8 +247,8 @@ class GSplatResolveSH {
         material.setDefine('SH_BANDS', gsplatInstance.resource.gsplatData.shBands.toString());
 
         const { shaderChunks } = material;
-        shaderChunks.glsl.delete('gsplatSogsColorVS');
-        shaderChunks.wgsl.delete('gsplatSogsColorVS');
+        shaderChunks.glsl.delete('gsplatSogColorVS');
+        shaderChunks.wgsl.delete('gsplatSogColorVS');
 
         material.update();
 

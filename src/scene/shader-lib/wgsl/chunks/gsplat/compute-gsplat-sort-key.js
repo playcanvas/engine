@@ -5,7 +5,7 @@
 export const computeGsplatSortKeySource = /* wgsl */`
 
 // Work buffer texture containing world-space centers (RGBA32U: xyz as floatBitsToUint)
-@group(0) @binding(0) var splatTexture0: texture_2d<u32>;
+@group(0) @binding(0) var dataTransformA: texture_2d<u32>;
 
 // Output sort keys (one u32 per splat)
 @group(0) @binding(1) var<storage, read_write> sortKeys: array<u32>;
@@ -45,7 +45,7 @@ fn computeSortKey(@builtin(global_invocation_id) global_id: vec3u) {
     let uv = vec2i(i32(gid % textureSize), i32(gid / textureSize));
     
     // Load world-space center from work buffer (stored as floatBitsToUint)
-    let packed = textureLoad(splatTexture0, uv, 0);
+    let packed = textureLoad(dataTransformA, uv, 0);
     let worldCenter = vec3f(
         bitcast<f32>(packed.r),
         bitcast<f32>(packed.g),

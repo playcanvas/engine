@@ -155,6 +155,12 @@ class WebgpuTexture {
     }
 
     destroy(device) {
+        // defer GPU texture destruction until after command buffer submission
+        device.deferDestroy(this.gpuTexture);
+        this.gpuTexture = null;
+        this.view = null;
+        this.viewCache.clear();
+        this.samplers.length = 0;
     }
 
     propertyChanged(flag) {

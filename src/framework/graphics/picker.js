@@ -13,6 +13,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 /**
  * @import { AppBase } from '../app-base.js'
  * @import { CameraComponent } from '../components/camera/component.js'
+ * @import { GSplatComponent } from '../components/gsplat/component.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
  * @import { Scene } from '../../scene/scene.js'
  */
@@ -125,9 +126,9 @@ class Picker {
     renderTargetDepth = null;
 
     /**
-     * Mapping table from ids to meshInstances.
+     * Mapping table from ids to MeshInstances or GSplatComponents.
      *
-     * @type {Map<number, MeshInstance>}
+     * @type {Map<number, MeshInstance | GSplatComponent>}
      * @private
      */
     mapping = new Map();
@@ -189,7 +190,8 @@ class Picker {
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle. Defaults to 1.
      * @param {number} [height] - The height of the rectangle. Defaults to 1.
-     * @returns {MeshInstance[]} An array of mesh instances that are in the selection.
+     * @returns {(MeshInstance | GSplatComponent)[]} An array of mesh instances or gsplat components
+     * that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
      * const selection = picker.getSelection(10, 20);
@@ -231,8 +233,8 @@ class Picker {
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle. Defaults to 1.
      * @param {number} [height] - The height of the rectangle. Defaults to 1.
-     * @returns {Promise<MeshInstance[]>} - Promise that resolves with an array of mesh instances
-     * that are in the selection.
+     * @returns {Promise<(MeshInstance | GSplatComponent)[]>} - Promise that resolves with an
+     * array of mesh instances or gsplat components that are in the selection.
      * @example
      * // Get the mesh instances at the rectangle with start at (10,20) and size of (5,5)
      * picker.getSelectionAsync(10, 20, 5, 5).then((meshInstances) => {

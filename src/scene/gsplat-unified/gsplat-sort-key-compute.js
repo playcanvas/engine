@@ -212,12 +212,12 @@ class GSplatSortKeyCompute {
         ]);
 
         // Bind group format:
-        // 0: splatTexture0 (texture_2d<u32>) - input world positions
+        // 0: dataTransformA (texture_2d<u32>) - input world positions
         // 1: sortKeys (storage, read_write) - output sort keys
         // 2: uniforms (uniform buffer)
         // 3: binWeights (storage, read) - combined bin base and divider values
         this.bindGroupFormat = new BindGroupFormat(device, [
-            new BindTextureFormat('splatTexture0', SHADERSTAGE_COMPUTE, undefined, SAMPLETYPE_UINT, false),
+            new BindTextureFormat('dataTransformA', SHADERSTAGE_COMPUTE, undefined, SAMPLETYPE_UINT, false),
             new BindStorageBufferFormat('sortKeys', SHADERSTAGE_COMPUTE, false),
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('binWeights', SHADERSTAGE_COMPUTE, true)
@@ -290,7 +290,7 @@ class GSplatSortKeyCompute {
         this.binWeightsBuffer.write(0, binWeights);
 
         // Set parameters
-        compute.setParameter('splatTexture0', workBuffer.splatTexture0);
+        compute.setParameter('dataTransformA', workBuffer.getTexture('dataTransformA'));
         compute.setParameter('sortKeys', this.keysBuffer);
         compute.setParameter('binWeights', this.binWeightsBuffer);
 
