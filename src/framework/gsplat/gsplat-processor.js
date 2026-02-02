@@ -52,6 +52,10 @@ import wgslGsplatProcess from '../../scene/shader-lib/wgsl/chunks/gsplat/frag/gs
  * Custom uniforms can be passed to the shader via {@link setParameter}, including scalar values,
  * vectors, and additional textures for effects like brush patterns or lookup tables.
  *
+ * The following built-in uniforms are available in processing shaders:
+ * - `srcNumSplats` (uint) - Number of splats in source resource
+ * - `dstNumSplats` (uint) - Number of splats in destination resource
+ *
  * @example
  * // Create a processor that reads splat positions and writes to a customColor texture
  * const processor = new pc.GSplatProcessor(
@@ -472,9 +476,11 @@ class GSplatProcessor {
             device.scope.resolve(name).setValue(texture);
         }
 
-        // Set texture size uniforms
+        // Set texture size and splat count uniforms
         device.scope.resolve('splatTextureSize').setValue(this._srcResource.textureDimensions.x);
         device.scope.resolve('dstTextureSize').setValue(this._dstResource.textureDimensions.x);
+        device.scope.resolve('srcNumSplats').setValue(this._srcResource.numSplats);
+        device.scope.resolve('dstNumSplats').setValue(this._dstResource.numSplats);
 
         // Bind non-texture parameters from resource (e.g., dequantization uniforms for SOG)
         for (const [name, value] of this._srcResource.parameters) {
