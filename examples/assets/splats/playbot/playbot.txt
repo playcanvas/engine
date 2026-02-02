@@ -6,7 +6,3 @@ Model Information:
 Model License:
 * license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 * requirements:	Author must be credited. Commercial use is allowed.
-
-Additional Resources:
-* design:	https://sa3d.fr/xp/playbot/playbot.jpg
-* 3D mesh:	https://sa3d.fr/xp/playbot/playbot.obj

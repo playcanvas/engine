@@ -227,6 +227,9 @@ assetListLoader.load(() => {
     app.scene.gsplat.lodUpdateAngle = 90;
     app.scene.gsplat.lodBehindPenalty = 4;
 
+    // allow rendering with lower LOD quality when optimal is not yet loaded
+    app.scene.gsplat.lodUnderfillLimit = 10;
+
     // internal LOD preset based on platform (7 LOD levels: 0-6)
     const isMobile = pc.platform.mobile;
     if (isMobile) {
