@@ -1,3 +1,4 @@
+// @config DESCRIPTION Shows multiple Gaussian Splat objects in a gallery scene with custom vertex shaders.
 import files from 'examples/files';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';

@@ -3,70 +3,25 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, Label } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, Label } = ReactPCUI;
     return fragment(
         jsx(
             Panel,
-            { headerText: 'Debug' },
+            { headerText: 'Settings' },
             jsx(
                 LabelGroup,
-                { text: 'High Res' },
+                { text: 'Colorize' },
                 jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'highRes' },
-                    value: observer.get('highRes') || false
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'AABBs' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'debugAabbs' },
-                    value: observer.get('debugAabbs')
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Colorize LOD' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'debugLod' },
-                    value: observer.get('debugLod')
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'LOD Preset' },
-                jsx(SelectInput, {
-                    type: 'string',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'lodPreset' },
-                    value: observer.get('lodPreset') || 'normal',
-                    options: [
-                        { v: 'normal', t: 'Normal (0–3)' },
-                        { v: 'ultra', t: 'Ultra (0–0)' },
-                        { v: 'high', t: 'High (1–2)' },
-                        { v: 'low', t: 'Low (2–3)' }
-                    ]
+                    link: { observer, path: 'colorize' },
+                    value: observer.get('colorize')
                 })
             )
         ),
         jsx(
             Panel,
             { headerText: 'Stats' },
-            jsx(
-                LabelGroup,
-                { text: 'Resolution' },
-                jsx(Label, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.stats.resolution' },
-                    value: observer.get('data.stats.resolution')
-                })
-            ),
             jsx(
                 LabelGroup,
                 { text: 'GSplat Count' },

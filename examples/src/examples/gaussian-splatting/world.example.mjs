@@ -1,3 +1,4 @@
+// @config DESCRIPTION Shows a large world scene with LOD streaming and additional moving splats.
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
