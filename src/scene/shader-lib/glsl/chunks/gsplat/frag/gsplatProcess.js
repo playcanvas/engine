@@ -1,9 +1,11 @@
 // Fragment shader template for GSplatProcessor - processes splat data from src to dst streams
 export default /* glsl */`
 
-// Texture size uniforms
+// Texture size and splat count uniforms
 uniform uint splatTextureSize;
 uniform uint dstTextureSize;
+uniform uint srcNumSplats;
+uniform uint dstNumSplats;
 
 // Shared splat identification (index, uv) and setSplat() helper
 #include "gsplatSplatVS"
@@ -25,12 +27,15 @@ void main(void) {
     ivec2 fragCoords = ivec2(gl_FragCoord.xy);
     
     // Linear index of the destination splat
-    int splatIndex = fragCoords.y * int(dstTextureSize) + fragCoords.x;
+    uint splatIndex = uint(fragCoords.y * int(dstTextureSize) + fragCoords.x);
+    
+    // Skip padding pixels (texture may be larger than actual splat count)
+    if (splatIndex >= dstNumSplats) discard;
     
     // Initialize global splat for sampling
     // Note: splat.uv assumes 1:1 mapping using splatTextureSize. When sizes differ,
     // call setSplat() with a different index in user code.
-    setSplat(uint(splatIndex));
+    setSplat(splatIndex);
     
     // Call user's process function
     process();
