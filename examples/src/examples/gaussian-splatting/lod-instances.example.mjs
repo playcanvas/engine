@@ -94,7 +94,6 @@ const workBufferModifier = {
 
 // Render modifier to read splatId and look up color from texture
 // Only colorize splats with y > 0.2 to tint the robot but not the ground
-// Cyan splats (low R, high G and B) get 10x brightness boost for bloom
 const glslRenderModifier = `
     uniform sampler2D uColorLookup;
 
@@ -102,19 +101,10 @@ const glslRenderModifier = `
     void modifySplatRotationScale(vec3 originalCenter, vec3 modifiedCenter, inout vec4 rotation, inout vec3 scale) {}
     void modifySplatColor(vec3 center, inout vec4 color) {
         if (center.y > 0.2) {
-            // Check if original splat color is bright glowing cyan (very low R, high G and B) - targets robot eyes
-            bool isCyan = color.r < 0.15 && color.g > 0.6 && color.b > 0.6 &&
-                          (color.g - color.r) > 0.5 && (color.b - color.r) > 0.5;
-
             // Read component ID from splatId stream, and look up color from color lookup texture
             uint id = loadSplatId().r;
             vec3 tintColor = texelFetch(uColorLookup, ivec2(int(id), 0), 0).rgb;
             color.rgb *= tintColor;
-
-            // Boost brightness for originally cyan splats
-            if (isCyan) {
-                color.rgb *= 30.0;
-            }
         }
     }
 `;
@@ -126,19 +116,10 @@ const wgslRenderModifier = `
     fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {}
     fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
         if (center.y > 0.2) {
-            // Check if original splat color is bright glowing cyan (very low R, high G and B) - targets robot eyes
-            let isCyan = (*color).r < 0.15 && (*color).g > 0.6 && (*color).b > 0.6 &&
-                         ((*color).g - (*color).r) > 0.5 && ((*color).b - (*color).r) > 0.5;
-
             // Read component ID from splatId stream, and look up color from color lookup texture
             let id = loadSplatId().r;
             let tintColor = textureLoad(uColorLookup, vec2i(i32(id), 0), 0).rgb;
             *color = vec4f((*color).rgb * tintColor, (*color).a);
-
-            // Boost brightness for originally cyan splats
-            if (isCyan) {
-                *color = vec4f((*color).rgb * 30.0, (*color).a);
-            }
         }
     }
 `;
@@ -150,6 +131,7 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.envAtlas = assets.envatlas.resource;
     app.scene.skyboxMip = 3;
+    app.scene.exposure = 1.5;
 
     // Add custom splatId stream to work buffer format (R32U)
     app.scene.gsplat.format.addExtraStreams([
@@ -201,16 +183,14 @@ assetListLoader.load(() => {
     // Set color lookup texture parameter
     app.scene.gsplat.material.setParameter('uColorLookup', colorTexture);
 
-    // Function to apply or remove colorization shader (for both GLSL and WGSL) and adjust exposure
+    // Function to apply or remove colorization shader (for both GLSL and WGSL)
     const applyColorize = (enabled) => {
         if (enabled) {
             app.scene.gsplat.material.getShaderChunks('glsl').set('gsplatModifyVS', glslRenderModifier);
             app.scene.gsplat.material.getShaderChunks('wgsl').set('gsplatModifyVS', wgslRenderModifier);
-            app.scene.exposure = 0.2;
         } else {
             app.scene.gsplat.material.getShaderChunks('glsl').delete('gsplatModifyVS');
             app.scene.gsplat.material.getShaderChunks('wgsl').delete('gsplatModifyVS');
-            app.scene.exposure = 1.3;
         }
         app.scene.gsplat.material.update();
     };
@@ -294,11 +274,6 @@ assetListLoader.load(() => {
         focusPoint: new pc.Vec3(2, 0.6, 0)
     });
 
-    // Add CameraFrame with bloom enabled
-    const cameraFrame = new pc.CameraFrame(app, camera.camera);
-    cameraFrame.bloom.intensity = 0.015;
-    cameraFrame.update();
-
     // update HUD stats and animate colors every frame
     let currentTime = 0;
     app.on('update', (dt) => {
@@ -309,10 +284,10 @@ assetListLoader.load(() => {
         const hueShift = currentTime * 0.1;  // Rotate hue over time
         for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
             const hue = (baseHues[i] + hueShift) % 1.0;
-            const rgb = hslToRgb(hue, 1.0, 0.3);  // Full saturation, low lightness
-            colorData[i * 4 + 0] = rgb[0];
-            colorData[i * 4 + 1] = rgb[1];
-            colorData[i * 4 + 2] = rgb[2];
+            const rgb = hslToRgb(hue, 1.0, 0.2);  // Full saturation, low lightness
+            colorData[i * 4 + 0] = rgb[0] * 2.0;
+            colorData[i * 4 + 1] = rgb[1] * 2.0;
+            colorData[i * 4 + 2] = rgb[2] * 2.0;
         }
         colorTexture.unlock();
 
