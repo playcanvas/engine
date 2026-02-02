@@ -1,3 +1,4 @@
+// @config DESCRIPTION Demonstrates LOD streaming combined with spherical harmonics for view-dependent effects.
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
