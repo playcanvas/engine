@@ -250,12 +250,11 @@ class GSplatComponent extends Component {
 
     /**
      * Gets the custom object space bounding box for visibility culling of the attached gsplat.
-     * Returns the custom AABB if set, otherwise falls back to the resource's AABB.
      *
      * @type {BoundingBox|null}
      */
     get customAabb() {
-        return this._customAabb ?? this._placement?.aabb ?? this.resource?.aabb ?? null;
+        return this._customAabb;
     }
 
     /**
