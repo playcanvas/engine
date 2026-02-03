@@ -3,11 +3,16 @@ export default /* glsl */`
 
 #define GSPLAT_CENTER_NOPROJ
 
+#include "gsplatHelpersVS"
+#include "gsplatFormatVS"
 #include "gsplatStructsVS"
+#include "gsplatDeclarationsVS"
 #include "gsplatCenterVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
-#include "gsplatSourceFormatVS"
+#include "gsplatReadVS"
+#include "gsplatWorkBufferOutputVS"
+#include "gsplatModifyVS"
 
 uniform int uStartLine;      // Start row in destination texture
 uniform int uViewportWidth;  // Width of the destination viewport in pixels
@@ -26,6 +31,10 @@ uniform int uActiveSplats;
 uniform vec3 model_scale;
 uniform vec4 model_rotation;  // (x,y,z,w) format
 
+#ifdef GSPLAT_ID
+    uniform uint uId;
+#endif
+
 void main(void) {
     // local fragment coordinates (within the viewport)
     ivec2 localFragCoords = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y) - uStartLine);
@@ -36,13 +45,13 @@ void main(void) {
 
         // Out of bounds: write zeros
         #ifdef GSPLAT_COLOR_UINT
-            pcFragColor0 = uvec4(0u);
+            writeDataColor(uvec4(0u));
         #else
-            pcFragColor0 = vec4(0.0);
+            writeDataColor(vec4(0.0));
         #endif
         #ifndef GSPLAT_COLOR_ONLY
-            pcFragColor1 = uvec4(0u);
-            pcFragColor2 = uvec2(0u);
+            writeDataTransformA(uvec4(0u));
+            writeDataTransformB(uvec4(0u));
         #endif
 
     } else {
@@ -56,20 +65,11 @@ void main(void) {
             uint originalIndex = uint(targetIndex);
         #endif
         
-        // source texture size
-        #if defined(GSPLAT_SOGS_DATA) || defined(GSPLAT_COMPRESSED_DATA)
-            uint srcSize = uint(textureSize(packedTexture, 0).x);
-        #else
-            uint srcSize = uint(textureSize(splatColor, 0).x);
-        #endif
-        
-        // Create SplatSource used to sample splat data textures
-        SplatSource source;
-        source.id = uint(originalIndex);
-        source.uv = ivec2(source.id % srcSize, source.id / srcSize);
+        // Initialize global splat for format read functions
+        setSplat(originalIndex);
 
         // read center in local space
-        vec3 modelCenter = readCenter(source);
+        vec3 modelCenter = getCenter();
 
         // compute world-space center for storage
         vec3 worldCenter = (matrix_model * vec4(modelCenter, 1.0)).xyz;
@@ -90,8 +90,15 @@ void main(void) {
         }
         vec3 worldScale = model_scale * srcScale;
 
+        // Apply custom center modification
+        vec3 originalCenter = worldCenter;
+        modifySplatCenter(worldCenter);
+
+        // Apply custom rotation/scale modification
+        modifySplatRotationScale(originalCenter, worldCenter, worldRotation, worldScale);
+
         // read color
-        vec4 color = readColor(source);
+        vec4 color = getColor();
 
         // evaluate spherical harmonics
         #if SH_BANDS > 0
@@ -101,32 +108,39 @@ void main(void) {
             // read sh coefficients
             vec3 sh[SH_COEFFS];
             float scale;
-            readSHData(source, sh, scale);
+            readSHData(sh, scale);
 
             // evaluate
             color.xyz += evalSH(sh, dir) * scale;
         #endif
 
+        // Apply custom color modification
+        modifySplatColor(worldCenter, color);
+
         color.xyz *= uColorMultiply;
 
-        // write out results
+        // write out results using generated write functions
         #ifdef GSPLAT_COLOR_UINT
             // Pack RGBA as 4x half-float (16-bit) values for RGBA16U format
             uint packed_rg = packHalf2x16(color.rg);
             uint packed_ba = packHalf2x16(color.ba);
-            pcFragColor0 = uvec4(
+            writeDataColor(uvec4(
                 packed_rg & 0xFFFFu,    // R as half
                 packed_rg >> 16u,       // G as half
                 packed_ba & 0xFFFFu,    // B as half
                 packed_ba >> 16u        // A as half
-            );
+            ));
         #else
-            pcFragColor0 = color;
+            writeDataColor(color);
         #endif
         #ifndef GSPLAT_COLOR_ONLY
             // Store rotation (xyz, w derived) and scale as 6 half-floats
-            pcFragColor1 = uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16(worldRotation.xy));
-            pcFragColor2 = uvec2(packHalf2x16(vec2(worldRotation.z, worldScale.x)), packHalf2x16(worldScale.yz));
+            writeDataTransformA(uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16(worldRotation.xy)));
+            writeDataTransformB(uvec4(packHalf2x16(vec2(worldRotation.z, worldScale.x)), packHalf2x16(worldScale.yz), 0u, 0u));
+        #endif
+
+        #ifdef GSPLAT_ID
+            writePcId(uvec4(uId, 0u, 0u, 0u));
         #endif
     }
 }

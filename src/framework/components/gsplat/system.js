@@ -11,12 +11,10 @@ import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsp
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 
-// Register deprecation warning for old customization chunk
+// Register warning for removed customization chunk
 Debug.call(() => {
     ShaderChunks.registerValidation('gsplatCustomizeVS', {
-        message: 'Shader chunk gsplatCustomizeVS is deprecated. Use gsplatModifyVS for better performance.',
-        defaultCodeGLSL: gsplatChunksGLSL.gsplatCustomizeVS,
-        defaultCodeWGSL: gsplatChunksWGSL.gsplatCustomizeVS
+        message: 'Shader chunk gsplatCustomizeVS has been removed. Use gsplatModifyVS instead.'
     });
 });
 
@@ -39,6 +37,7 @@ const _properties = [
     'material',
     'highQualitySH',
     'asset',
+    'resource',
     'layers'
 ];
 
@@ -169,9 +168,7 @@ class GSplatComponentSystem extends ComponentSystem {
         // clone component
         const component = this.addComponent(clone, data);
 
-        if (gSplatComponent.customAabb) {
-            component.customAabb = gSplatComponent.customAabb.clone();
-        }
+        component.customAabb = gSplatComponent.customAabb?.clone() ?? null;
 
         return component;
     }

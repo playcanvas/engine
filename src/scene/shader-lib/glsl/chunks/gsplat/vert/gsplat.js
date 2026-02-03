@@ -14,6 +14,10 @@ mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
     varying float vLinearDepth;
 #endif
 
+#if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
+    flat varying uint vPickId;
+#endif
+
 #ifdef GSPLAT_OVERDRAW
     uniform sampler2D colorRamp;
     uniform float colorRampIntensity;
@@ -27,12 +31,11 @@ void main(void) {
         return;
     }
 
-    vec3 modelCenter = readCenter(source);
+    vec3 modelCenter = getCenter();
 
     SplatCenter center;
     center.modelCenterOriginal = modelCenter;
     
-    modifyCenter(modelCenter);
     modifySplatCenter(modelCenter);
     center.modelCenterModified = modelCenter;
 
@@ -49,7 +52,7 @@ void main(void) {
     }
 
     // read color
-    vec4 clr = readColor(source);
+    vec4 clr = getColor();
 
     #if GSPLAT_AA
         // apply AA compensation
@@ -64,19 +67,24 @@ void main(void) {
         // read sh coefficients
         vec3 sh[SH_COEFFS];
         float scale;
-        readSHData(source, sh, scale);
+        readSHData(sh, scale);
 
         // evaluate
         clr.xyz += evalSH(sh, dir) * scale;
     #endif
 
-    modifyColor(modelCenter, clr);
     modifySplatColor(modelCenter, clr);
 
     clipCorner(corner, clr.w);
 
     // write output
-    gl_Position = center.proj + vec4(corner.offset, 0, 0);
+    #if GSPLAT_2DGS
+        // 2DGS: Project world corner directly
+        vec3 modelCorner = center.modelCenterModified + corner.offset;
+        gl_Position = matrix_projection * center.modelView * vec4(modelCorner, 1.0);
+    #else
+        gl_Position = center.proj + vec4(corner.offset.xyz, 0);
+    #endif
     gaussianUV = corner.uv;
 
     #ifdef GSPLAT_OVERDRAW
@@ -90,11 +98,15 @@ void main(void) {
     #endif
 
     #ifndef DITHER_NONE
-        id = float(source.id);
+        id = float(splat.index);
     #endif
 
     #ifdef PREPASS_PASS
         vLinearDepth = -center.view.z;
+    #endif
+
+    #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
+        vPickId = loadPcId().r;
     #endif
 }
 `;

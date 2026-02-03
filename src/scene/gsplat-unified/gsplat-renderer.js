@@ -54,6 +54,14 @@ class GSplatRenderer {
     forceCopyMaterial = true;
 
     /**
+     * Cached work buffer format version for detecting extra stream changes.
+     *
+     * @type {number}
+     * @private
+     */
+    _workBufferFormatVersion = -1;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GraphNode} node - The graph node.
      * @param {GraphNode} cameraNode - The camera node.
@@ -66,6 +74,7 @@ class GSplatRenderer {
         this.cameraNode = cameraNode;
         this.layer = layer;
         this.workBuffer = workBuffer;
+        this._workBufferFormatVersion = workBuffer.format.extraStreamsVersion;
 
         // construct the material which renders the splats from the work buffer
         this._material = new ShaderMaterial({
@@ -86,6 +95,10 @@ class GSplatRenderer {
         this._material.defines.forEach((value, key) => {
             this._internalDefines.add(key);
         });
+
+        // Also protect ID-related defines that may be added dynamically
+        this._internalDefines.add('GSPLAT_UNIFIED_ID');
+        this._internalDefines.add('PICK_CUSTOM_ID');
 
         this.meshInstance = this.createMeshInstance();
     }
@@ -149,19 +162,24 @@ class GSplatRenderer {
     configureMaterial() {
         const { device, workBuffer } = this;
 
-        // input format
-        this._material.setDefine('GSPLAT_WORKBUFFER_DATA', true);
+        // Inject format's shader chunks (uses workBuffer.format)
+        this._injectFormatChunks();
+
+        // Set defines
         this._material.setDefine('STORAGE_ORDER', device.isWebGPU);
-
-        // Check if using RGBA16U format (fallback for when RGBA16F not supported)
-        const isColorUint = workBuffer.colorTextureFormat === PIXELFORMAT_RGBA16U;
-        this._material.setDefine('GSPLAT_COLOR_UINT', isColorUint);
-
-        // input textures (work buffer textures)
-        this._material.setParameter('splatColor', workBuffer.colorTexture);
-        this._material.setParameter('splatTexture0', workBuffer.splatTexture0);
-        this._material.setParameter('splatTexture1', workBuffer.splatTexture1);
         this._material.setDefine('SH_BANDS', '0');
+
+        // Set GSPLAT_COLOR_FLOAT define based on work buffer's color format
+        const colorStream = workBuffer.format.getStream('dataColor');
+        if (colorStream && colorStream.format !== PIXELFORMAT_RGBA16U) {
+            this._material.setDefine('GSPLAT_COLOR_FLOAT', '');
+        }
+
+        // Enable unified ID defines when pcId stream exists
+        this._updateIdDefines();
+
+        // Bind work buffer textures from the texture map
+        this._bindWorkBufferTextures();
 
         // set instance properties
         const dither = false;
@@ -178,6 +196,37 @@ class GSplatRenderer {
         this._material.blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
         this._material.depthWrite = !!dither;
         this._material.update();
+    }
+
+    /**
+     * Binds work buffer textures to the material.
+     *
+     * @private
+     */
+    _bindWorkBufferTextures() {
+        const { workBuffer } = this;
+
+        for (const stream of workBuffer.format.resourceStreams) {
+            const texture = workBuffer.getTexture(stream.name);
+            if (texture) {
+                this._material.setParameter(stream.name, texture);
+            }
+        }
+    }
+
+    /**
+     * Injects format shader chunks into the material.
+     * Called during initialization and after copying settings from user material.
+     * @private
+     */
+    _injectFormatChunks() {
+        const chunks = this.device.isWebGPU ? this._material.shaderChunks.wgsl : this._material.shaderChunks.glsl;
+        const wbFormat = this.workBuffer.format;
+
+        // Use work buffer format for declarations and read code
+        // getInputDeclarations() returns all streams (base + extra)
+        chunks.set('gsplatDeclarationsVS', wbFormat.getInputDeclarations());
+        chunks.set('gsplatReadVS', wbFormat.getReadCode());
     }
 
     update(count, textureSize) {
@@ -219,10 +268,52 @@ class GSplatRenderer {
             this._material.setParameter('colorRampIntensity', params.colorRampIntensity);
         }
 
+        // Check if work buffer format has changed (extra streams added)
+        this._syncWithWorkBufferFormat();
+
         // Copy material settings from params.material if dirty or on first update
         if (this.forceCopyMaterial || params.material.dirty) {
             this.copyMaterialSettings(params.material);
             this.forceCopyMaterial = false;
+        }
+    }
+
+    /**
+     * Updates the ID-related defines based on whether pcId stream exists.
+     *
+     * @private
+     */
+    _updateIdDefines() {
+        // GSPLAT_UNIFIED_ID enables reading component ID from work buffer
+        // PICK_CUSTOM_ID prevents pick.js from declaring meshInstanceId uniform
+        const hasPcId = !!this.workBuffer.format.getStream('pcId');
+        this._material.setDefine('GSPLAT_UNIFIED_ID', hasPcId);
+        this._material.setDefine('PICK_CUSTOM_ID', hasPcId);
+    }
+
+    /**
+     * Syncs with work buffer format when extra streams are added.
+     *
+     * @private
+     */
+    _syncWithWorkBufferFormat() {
+        const wbFormat = this.workBuffer.format;
+        if (this._workBufferFormatVersion !== wbFormat.extraStreamsVersion) {
+            this._workBufferFormatVersion = wbFormat.extraStreamsVersion;
+
+            // Sync work buffer textures with format
+            this.workBuffer.syncWithFormat();
+
+            // Re-inject format chunks with extra stream declarations
+            this._injectFormatChunks();
+
+            // Bind any new textures from the work buffer
+            this._bindWorkBufferTextures();
+
+            // Enable unified ID defines when pcId stream exists
+            this._updateIdDefines();
+
+            this._material.update();
         }
     }
 
@@ -260,6 +351,9 @@ class GSplatRenderer {
         if (sourceMaterial.hasShaderChunks) {
             this._material.shaderChunks.copy(sourceMaterial.shaderChunks);
         }
+
+        // Re-inject format chunks that may have been overwritten by copy
+        this._injectFormatChunks();
 
         this._material.update();
     }

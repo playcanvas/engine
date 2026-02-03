@@ -3,12 +3,14 @@ import { Color, Script, Vec2, Vec3 } from 'playcanvas';
 /** @import { XrInputSource } from 'playcanvas' */
 
 /**
- * Handles VR navigation with support for both teleportation and smooth locomotion.
- * Both methods can be enabled simultaneously, allowing users to choose their preferred
+ * Handles VR navigation with support for teleportation, smooth locomotion, and snap vertical movement.
+ * All methods can be enabled simultaneously, allowing users to choose their preferred
  * navigation method on the fly.
  *
  * Teleportation: Point and teleport using trigger/pinch gestures
- * Smooth Locomotion: Use left thumbstick for movement and right thumbstick for snap turning
+ * Smooth Locomotion: Use left thumbstick for XZ movement
+ * Snap Turn: Use right thumbstick X-axis for snap turning
+ * Snap Vertical: Use right thumbstick Y-axis to snap up/down (right grip for larger jumps)
  *
  * This script should be attached to a parent entity of the camera entity used for the XR
  * session. The entity hierarchy should be: XrNavigationEntity > CameraEntity for proper
@@ -118,6 +120,48 @@ class XrNavigation extends Script {
      */
     controllerRayColor = new Color(1, 1, 1);
 
+    /**
+     * Enable snap vertical movement using right thumbstick Y (controllers only).
+     * @attribute
+     */
+    enableSnapVertical = true;
+
+    /**
+     * Height in meters for each vertical snap.
+     * @attribute
+     * @range [0.1, 2]
+     * @precision 0.1
+     * @enabledif {enableSnapVertical}
+     */
+    snapVerticalHeight = 0.5;
+
+    /**
+     * Height in meters for each vertical snap when holding right grip (boost).
+     * @attribute
+     * @range [0.5, 10]
+     * @precision 0.5
+     * @enabledif {enableSnapVertical}
+     */
+    snapVerticalBoostHeight = 2.0;
+
+    /**
+     * Thumbstick Y threshold to trigger vertical snap.
+     * @attribute
+     * @range [0.1, 1]
+     * @precision 0.01
+     * @enabledif {enableSnapVertical}
+     */
+    snapVerticalThreshold = 0.5;
+
+    /**
+     * Thumbstick Y threshold to reset vertical snap state.
+     * @attribute
+     * @range [0.05, 0.5]
+     * @precision 0.01
+     * @enabledif {enableSnapVertical}
+     */
+    snapVerticalResetThreshold = 0.25;
+
     /** @type {Set<XrInputSource>} */
     inputSources = new Set();
 
@@ -129,6 +173,9 @@ class XrNavigation extends Script {
 
     // Rotation state for snap turning
     lastRotateValue = 0;
+
+    // Vertical state for snap vertical movement
+    lastVerticalValue = 0;
 
     // Pre-allocated objects for performance (object pooling)
     tmpVec2A = new Vec2();
@@ -160,10 +207,11 @@ class XrNavigation extends Script {
         const methods = [];
         if (this.enableTeleport) methods.push('teleportation');
         if (this.enableMove) methods.push('smooth movement');
+        if (this.enableSnapVertical) methods.push('snap vertical');
         console.log(`XrNavigation: Enabled methods - ${methods.join(', ')}`);
 
-        if (!this.enableTeleport && !this.enableMove) {
-            console.warn('XrNavigation: Both teleportation and movement are disabled. Navigation will not work.');
+        if (!this.enableTeleport && !this.enableMove && !this.enableSnapVertical) {
+            console.warn('XrNavigation: All navigation methods are disabled. Navigation will not work.');
         }
 
         // Initialize color objects from Color attributes
@@ -268,6 +316,11 @@ class XrNavigation extends Script {
             this.handleSmoothLocomotion(dt);
         }
 
+        // Handle snap vertical movement (controllers only)
+        if (this.enableSnapVertical) {
+            this.handleSnapVertical();
+        }
+
         // Handle teleportation
         if (this.enableTeleport) {
             this.handleTeleportation();
@@ -341,6 +394,52 @@ class XrNavigation extends Script {
                 this.entity.rotateLocal(0, Math.sign(rotate) * this.rotateSpeed, 0);
                 this.entity.translateLocal(this.tmpVec3A.mulScalar(-1));
             }
+        }
+    }
+
+    /**
+     * Handles snap vertical movement using right thumbstick Y.
+     * Uses hysteresis to prevent multiple snaps from a single gesture.
+     * Hold right grip for larger snap height (boost).
+     *
+     * @private
+     */
+    handleSnapVertical() {
+        // Find right controller
+        let rightController = null;
+
+        for (const inputSource of this.inputSources) {
+            if (!inputSource.gamepad) continue;
+            if (inputSource.handedness === 'right') {
+                rightController = inputSource;
+                break;
+            }
+        }
+
+        if (!rightController || !rightController.gamepad) return;
+
+        // Get vertical input from right thumbstick Y axis (negative = up on stick)
+        const vertical = -rightController.gamepad.axes[3];
+
+        // Hysteresis system to prevent multiple snaps from single gesture
+        if (this.lastVerticalValue > 0 && vertical < this.snapVerticalResetThreshold) {
+            this.lastVerticalValue = 0;
+        } else if (this.lastVerticalValue < 0 && vertical > -this.snapVerticalResetThreshold) {
+            this.lastVerticalValue = 0;
+        }
+
+        // Only snap when thumbstick crosses threshold from neutral position
+        if (this.lastVerticalValue === 0 && Math.abs(vertical) > this.snapVerticalThreshold) {
+            this.lastVerticalValue = Math.sign(vertical);
+
+            // Check if right grip is held for boost
+            const rightGripPressed = rightController.gamepad.buttons[1]?.pressed;
+            const snapHeight = rightGripPressed ?
+                this.snapVerticalBoostHeight :
+                this.snapVerticalHeight;
+
+            // Apply vertical snap (positive = up, negative = down)
+            this.entity.translate(0, Math.sign(vertical) * snapHeight, 0);
         }
     }
 

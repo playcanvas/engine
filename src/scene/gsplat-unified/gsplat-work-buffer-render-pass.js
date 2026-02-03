@@ -131,13 +131,23 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const scope = device.scope;
         Debug.assert(resource);
 
-        const { intervals, activeSplats, lineStart, viewport, intervalTexture } = splatInfo;
+        const { activeSplats, lineStart, viewport, intervalTexture } = splatInfo;
+
+        // Get work buffer modifier (live from placement, not a snapshot copy)
+        const workBufferModifier = splatInfo.getWorkBufferModifier?.() ?? null;
+
+        // Get format info directly from resource (always current, not snapshotted)
+        const formatHash = resource.format.hash;
+        const formatDeclarations = resource.format.getInputDeclarations();
 
         // quad renderer and material are cached in the resource
         const workBufferRenderInfo = resource.getWorkBufferRenderInfo(
-            intervals.length > 0,
-            this.workBuffer.colorTextureFormat,
-            this.colorOnly
+            intervalTexture !== null,
+            this.colorOnly,
+            workBufferModifier,
+            formatHash,
+            formatDeclarations,
+            this.workBuffer.format
         );
 
         // Assign material properties to scope
@@ -178,6 +188,26 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         scope.resolve('matrix_model').setValue(worldTransform.data);
         scope.resolve('model_scale').setValue(this._modelScaleData);
         scope.resolve('model_rotation').setValue(this._modelRotationData);
+
+        // Set placement ID for picking (unconditionally - cheap even if shader doesn't use it)
+        scope.resolve('uId').setValue(splatInfo.placementId);
+
+        // Apply per-instance shader parameters
+        if (splatInfo.parameters) {
+            for (const param of splatInfo.parameters.values()) {
+                param.scopeId.setValue(param.data);
+            }
+        }
+
+        // Bind instance textures if available (fetched live from placement)
+        const instanceStreams = splatInfo.getInstanceStreams?.();
+        if (instanceStreams) {
+            // Sync to ensure textures exist for any newly added streams
+            instanceStreams.syncWithFormat(splatInfo.resource.format);
+            for (const [name, texture] of instanceStreams.textures) {
+                scope.resolve(name).setValue(texture);
+            }
+        }
 
         // Render the quad - QuadRender handles all the complex setup internally
         workBufferRenderInfo.quadRender.render(viewport);

@@ -1,4 +1,5 @@
 // @config HIDDEN
+// @config DESCRIPTION Demonstrates shadow catching with Gaussian Splats.
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 

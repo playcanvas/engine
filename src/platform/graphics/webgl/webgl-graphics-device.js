@@ -8,7 +8,7 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
-    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_R8, PIXELFORMAT_RG8, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -49,6 +49,26 @@ import { getBuiltInTexture } from '../built-in-textures.js';
  * @import { Shader } from '../shader.js'
  * @import { VertexBuffer } from '../vertex-buffer.js'
  */
+
+/**
+ * Returns the number of channels for 8-bit normalized formats that require RGBA readback.
+ * WebGL2's readPixels only guarantees RGBA/UNSIGNED_BYTE support, so these formats
+ * need to be read as RGBA and have their channels extracted.
+ *
+ * @param {number} format - The pixel format constant.
+ * @returns {number} Number of channels (1, 2, or 3), or 0 if format doesn't require RGBA readback.
+ * @ignore
+ */
+const getPixelFormatChannelsForRgbaReadback = (format) => {
+    switch (format) {
+        case PIXELFORMAT_R8:
+            return 1;
+        case PIXELFORMAT_RG8:
+            return 2;
+        default:
+            return 0;
+    }
+};
 
 const invalidateAttachments = [];
 
@@ -958,6 +978,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.unpackPremultiplyAlpha = false;
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 
+        this.unpackAlignment = 1;
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     }
 
@@ -1425,6 +1446,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // texImage2D and texSubImage2D, not compressedTexImage2D
             const gl = this.gl;
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiplyAlpha);
+        }
+    }
+
+    /**
+     * Sets the byte alignment for unpacking pixel data during texture uploads.
+     *
+     * @param {number} alignment - The alignment in bytes. Must be 1, 2, 4, or 8.
+     * @ignore
+     */
+    setUnpackAlignment(alignment) {
+        if (this.unpackAlignment !== alignment) {
+            this.unpackAlignment = alignment;
+            this.gl.pixelStorei(this.gl.UNPACK_ALIGNMENT, alignment);
         }
     }
 
@@ -2050,14 +2084,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} h - The height of the rectangle, in pixels.
      * @param {ArrayBufferView} pixels - The ArrayBufferView object that holds the returned pixel
      * data.
+     * @param {boolean} [forceRgba] - If true, forces RGBA/UNSIGNED_BYTE format for guaranteed
+     * WebGL support. Used for reading non-RGBA 8-bit normalized textures. Defaults to false.
      * @ignore
      */
-    async readPixelsAsync(x, y, w, h, pixels) {
+    async readPixelsAsync(x, y, w, h, pixels, forceRgba = false) {
         const gl = this.gl;
 
-        const impl = this.renderTarget.colorBuffer?.impl;
-        const format = impl?._glFormat ?? gl.RGBA;
-        const pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
+        let format, pixelType;
+        if (forceRgba) {
+            format = gl.RGBA;
+            pixelType = gl.UNSIGNED_BYTE;
+        } else {
+            const impl = this.renderTarget.colorBuffer?.impl;
+            format = impl?._glFormat ?? gl.RGBA;
+            pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
+        }
 
         // create temporary (gpu-side) buffer and copy data into it
         const buf = gl.createBuffer();
@@ -2092,8 +2134,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
         });
         Debug.assert(renderTarget.colorBuffer === texture);
 
-        const buffer = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, 1, texture._format));
-        const data = options.data ?? new (getPixelFormatArrayType(texture._format))(buffer);
+        // Check if this format requires RGBA readback (WebGL only guarantees RGBA/UNSIGNED_BYTE)
+        const rgbaChannels = getPixelFormatChannelsForRgbaReadback(texture._format);
+        const needsRgbaReadback = rgbaChannels > 0;
+
+        // Use caller's buffer or allocate output buffer in the user's expected format
+        const outputData = options.data ?? new (getPixelFormatArrayType(texture._format))(
+            TextureUtils.calcLevelGpuSize(width, height, 1, texture._format)
+        );
+
+        // For formats requiring RGBA readback, allocate a larger RGBA buffer
+        const readBuffer = needsRgbaReadback ?
+            new Uint8Array(width * height * 4) :
+            outputData;
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
@@ -2105,7 +2158,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         return new Promise((resolve, reject) => {
-            this.readPixelsAsync(x, y, width, height, data).then((data) => {
+            const readPromise = this.readPixelsAsync(x, y, width, height, readBuffer, needsRgbaReadback);
+
+            readPromise.then((data) => {
 
                 // return if the device was destroyed
                 if (this._destroyed) return;
@@ -2114,7 +2169,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 if (!options.renderTarget) {
                     renderTarget.destroy();
                 }
-                resolve(data);
+
+                // Extract channels from RGBA data if needed
+                if (needsRgbaReadback) {
+                    const pixelCount = width * height;
+                    for (let i = 0; i < pixelCount; i++) {
+                        for (let c = 0; c < rgbaChannels; c++) {
+                            outputData[i * rgbaChannels + c] = data[i * 4 + c];
+                        }
+                    }
+                    resolve(outputData);
+                } else {
+                    resolve(data);
+                }
             }).catch(reject);
         });
     }

@@ -25,6 +25,10 @@ fn normExp(x: f32) -> f32 {
 varying gaussianUV: vec2f;
 varying gaussianColor: vec4f;
 
+#if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
+    varying @interpolate(flat) vPickId: u32;
+#endif
+
 #ifdef PICK_PASS
     #include "pickPS"
 #endif
@@ -51,7 +55,13 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #ifdef PICK_PASS
 
-        output.color = getPickOutput();
+        #ifdef GSPLAT_UNIFIED_ID
+            // Use component ID from work buffer (passed via varying)
+            output.color = encodePickOutput(vPickId);
+        #else
+            // Use standard meshInstanceId path
+            output.color = getPickOutput();
+        #endif
         #ifdef DEPTH_PICK_PASS
             output.color1 = getPickDepth();
         #endif

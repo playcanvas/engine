@@ -9,6 +9,7 @@ import { GSplatRenderer } from './gsplat-renderer.js';
 import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
 import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
+import { GSplatPlacementStateTracker } from './gsplat-placement-state-tracker.js';
 import { GSplatSortKeyCompute } from './gsplat-sort-key-compute.js';
 import { ComputeRadixSort } from '../graphics/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
@@ -124,6 +125,38 @@ class GSplatManager {
     /** @type {number} */
     sortedVersion = 0;
 
+    /**
+     * Cached work buffer format version for detecting extra stream changes.
+     *
+     * @type {number}
+     * @private
+     */
+    _workBufferFormatVersion = -1;
+
+    /**
+     * Flag set when the work buffer needs a full rebuild due to format changes.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _workBufferRebuildRequired = false;
+
+    /**
+     * Tracks placement state changes (format version, modifier hash, numSplats, centersVersion).
+     *
+     * @type {GSplatPlacementStateTracker}
+     * @private
+     */
+    _stateTracker = new GSplatPlacementStateTracker();
+
+    /**
+     * Tracks last seen centersVersion per resource ID for detecting centers updates.
+     *
+     * @type {Map<number, number>}
+     * @private
+     */
+    _centersVersions = new Map();
+
     /** @type {number} */
     framesTillFullUpdate = 0;
 
@@ -200,8 +233,10 @@ class GSplatManager {
         this.scene = director.scene;
         this.director = director;
         this.cameraNode = cameraNode;
-        this.workBuffer = new GSplatWorkBuffer(device);
+
+        this.workBuffer = new GSplatWorkBuffer(device, this.scene.gsplat.format);
         this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
+        this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
 
         // Choose sorting strategy based on gpuSorting flag and device capability
         this.useGpuSorting = device.isWebGPU && director.scene.gsplat.gpuSorting;
@@ -340,8 +375,16 @@ class GSplatManager {
 
     updateWorldState() {
 
+        // Check for state changes (format version, modifier hash, numSplats)
+        let stateChanged = this._stateTracker.hasChanges(this.layerPlacements);
+        for (const [, inst] of this.octreeInstances) {
+            if (this._stateTracker.hasChanges(inst.activePlacements)) {
+                stateChanged = true;
+            }
+        }
+
         // Recreate world state if there are changes
-        const worldChanged = this.layerPlacementsDirty || this.worldStates.size === 0;
+        const worldChanged = this.layerPlacementsDirty || stateChanged || this.worldStates.size === 0;
         if (worldChanged) {
             this.lastWorldStateVersion++;
             const splats = [];
@@ -351,7 +394,8 @@ class GSplatManager {
 
             // add standalone splats
             for (const p of this.layerPlacements) {
-                const splatInfo = new GSplatInfo(this.device, p.resource, p);
+                p.ensureInstanceStreams(this.device);
+                const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p));
                 splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                 splats.push(splatInfo);
             }
@@ -360,11 +404,26 @@ class GSplatManager {
             for (const [, inst] of this.octreeInstances) {
                 inst.activePlacements.forEach((p) => {
                     if (p.resource) {
-                        const splatInfo = new GSplatInfo(this.device, p.resource, p);
+                        p.ensureInstanceStreams(this.device);
+                        const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p));
                         splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                         splats.push(splatInfo);
                     }
                 });
+            }
+
+            // Check for centers version changes and force-update sorter for changed resources
+            if (this.cpuSorter) {
+                for (const splat of splats) {
+                    const resource = splat.resource;
+                    const lastVersion = this._centersVersions.get(resource.id);
+                    if (lastVersion !== resource.centersVersion) {
+                        this._centersVersions.set(resource.id, resource.centersVersion);
+                        // Force update by removing and re-adding centers
+                        this.cpuSorter.setCenters(resource.id, null);
+                        this.cpuSorter.setCenters(resource.id, resource.centers);
+                    }
+                }
             }
 
             // update cpu sorter with current splats (adds new centers, removes unused ones)
@@ -704,6 +763,14 @@ class GSplatManager {
 
     update() {
 
+        // detect work buffer format changes (extra streams added) and schedule a full rebuild
+        const wbFormatVersion = this.workBuffer.format.extraStreamsVersion;
+        if (this._workBufferFormatVersion !== wbFormatVersion) {
+            this._workBufferFormatVersion = wbFormatVersion;
+            this.workBuffer.syncWithFormat();
+            this._workBufferRebuildRequired = true;
+        }
+
         // apply any pending sorted results (CPU path only)
         if (this.cpuSorter) {
             this.cpuSorter.applyPendingSorted();
@@ -834,7 +901,12 @@ class GSplatManager {
         // For GPU: ensures sort uses current data
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (sortedState) {
-            this.applyWorkBufferUpdates(sortedState);
+            if (this._workBufferRebuildRequired) {
+                this.rebuildWorkBuffer(sortedState, sortedState.totalUsedPixels);
+                this._workBufferRebuildRequired = false;
+            } else {
+                this.applyWorkBufferUpdates(sortedState);
+            }
         }
 
         // kick off sorting only if needed (lastState already defined above)
@@ -1045,7 +1117,7 @@ class GSplatManager {
      * @returns {object} - Data for sorter worker.
      */
     prepareSortParameters(worldState) {
-        return {
+        const params = {
             command: 'intervals',
             textureSize: worldState.textureSize,
             totalUsedPixels: worldState.totalUsedPixels,
@@ -1057,6 +1129,8 @@ class GSplatManager {
             // TODO: consider storing this in typed array and transfer it to sorter worker
             intervals: worldState.splats.map(splat => splat.intervals)
         };
+
+        return params;
     }
 }
 

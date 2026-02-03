@@ -1,7 +1,7 @@
 import { path } from '../../core/path.js';
 import { PlyParser } from '../parsers/ply.js';
 import { ResourceHandler } from './handler.js';
-import { SogsParser } from '../parsers/sogs.js';
+import { SogParser } from '../parsers/sog.js';
 import { SogBundleParser } from '../parsers/sog-bundle.js';
 import { GSplatOctreeParser } from '../parsers/gsplat-octree.js';
 
@@ -21,7 +21,7 @@ class GSplatHandler extends ResourceHandler {
         this.parsers = {
             ply: new PlyParser(app, 3),
             sog: new SogBundleParser(app),
-            json: new SogsParser(app, 3),
+            json: new SogParser(app, 3),
             octree: new GSplatOctreeParser(app, 3)
         };
     }

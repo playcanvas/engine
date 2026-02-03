@@ -1,10 +1,11 @@
+import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatResolveSH } from './gsplat-resolve-sh.js';
 import { GSplatSorter } from './gsplat-sorter.js';
-import { GSplatSogsData } from './gsplat-sogs-data.js';
+import { GSplatSogData } from './gsplat-sog-data.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
@@ -58,17 +59,20 @@ class GSplatInstance {
      * @param {GSplatResourceBase} resource - The splat instance.
      * @param {object} [options] - Options for the instance.
      * @param {ShaderMaterial|null} [options.material] - The material instance.
-     * @param {boolean} [options.highQualitySH] - Whether to use the high quality or the approximate spherical harmonic calculation. Only applies to SOGS data.
+     * @param {boolean} [options.highQualitySH] - Whether to use the high quality or the approximate spherical harmonic calculation. Only applies to SOG data.
      * @param {import('../scene.js').Scene} [options.scene] - The scene to fire sort timing events on.
      */
     constructor(resource, options = {}) {
         this.resource = resource;
 
-        // create the order texture
-        this.orderTexture = resource.createTexture(
+        // create the order texture with the same dimensions as resource's splat data textures
+        const dims = resource.streams.textureDimensions;
+        Debug.assert(dims.x > 0 && dims.y > 0, 'Resource must have valid texture dimensions before creating instance');
+
+        this.orderTexture = resource.streams.createTexture(
             'splatOrder',
             PIXELFORMAT_R32U,
-            resource.evalTextureSize(resource.numSplats)
+            dims
         );
 
         if (options.material) {
@@ -121,7 +125,7 @@ class GSplatInstance {
             this.material.setParameter('numSplats', count);
         });
 
-        // configure sogs sh resolve
+        // configure sog sh resolve
         this.setHighQualitySH(options.highQualitySH ?? false);
     }
 
@@ -174,7 +178,7 @@ class GSplatInstance {
      */
     configureMaterial(material, options = {}) {
         // allow resource to configure the material
-        this.resource.configureMaterial(material);
+        this.resource.configureMaterial(material, null, this.resource.format.getInputDeclarations());
 
         // set instance properties
         material.setParameter('numSplats', 0);
@@ -230,7 +234,7 @@ class GSplatInstance {
         const { resource } = this;
         const { gsplatData } = resource;
 
-        if (gsplatData instanceof GSplatSogsData &&
+        if (gsplatData instanceof GSplatSogData &&
             gsplatData.shBands > 0 &&
             value === !!this.resolveSH) {
 

@@ -1,6 +1,6 @@
+// @config DESCRIPTION Shows view-dependent color effects using spherical harmonics with Gaussian Splats.
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

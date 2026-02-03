@@ -70,7 +70,8 @@ assetListLoader.load(() => {
         const splat = new pc.Entity(`splat-${i}`);
         splat.addComponent('gsplat', {
             asset: assets.logo,
-            castShadows: false
+            castShadows: false,
+            unified: true
         });
 
         app.root.addChild(splat);
@@ -80,6 +81,9 @@ assetListLoader.load(() => {
             fade: 0
         });
     }
+
+    // Enable gsplat ID for unified picking
+    app.scene.gsplat.enableIds = true;
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
@@ -101,7 +105,9 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
-    camera.setLocalPosition(200, 0, 0);
+
+    // Set camera position looking at origin
+    camera.script.orbitCamera.resetAndLookAtPoint(new pc.Vec3(10, 4, 10), pc.Vec3.ZERO);
 
     // Custom render passes set up with bloom
     const cameraFrame = new pc.CameraFrame(app, camera.camera);
@@ -170,9 +176,10 @@ assetListLoader.load(() => {
                 picker.getSelectionAsync(x * pickerScale, y * pickerScale, 1, 1).then((meshInstances) => {
 
                     if (meshInstances.length > 0) {
-                        const meshInstance = meshInstances[0];
-                        // find entity with matching mesh instance
-                        const entity = entities.find(e => e.entity.gsplat.instance.meshInstance === meshInstance);
+                        // Unified mode: picker returns the GSplatComponent directly
+                        const picked = meshInstances[0];
+                        const entity = entities.find(e => e.entity.gsplat === picked);
+
                         if (entity) {
                             // trigger the visual effect only if not already animating
                             if (entity.fade === 0) {

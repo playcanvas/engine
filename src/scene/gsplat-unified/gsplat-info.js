@@ -8,7 +8,9 @@ import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
  * @import { GraphicsDevice } from "../../platform/graphics/graphics-device.js";
  * @import { GSplatResourceBase } from "../gsplat/gsplat-resource-base.js"
  * @import { GSplatPlacement } from "./gsplat-placement.js"
+ * @import { GSplatStreams } from "../gsplat/gsplat-streams.js"
  * @import { GraphNode } from '../graph-node.js';
+ * @import { ScopeId } from '../../platform/graphics/scope-id.js';
  * @import { Vec2 } from '../../core/math/vec2.js';
  */
 
@@ -16,6 +18,10 @@ import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
 const vecs = [];
 
 /**
+ * Represents a snapshot of gsplat state for rendering. This class captures all necessary data
+ * at a point in time and should not hold references back to the source placement. All required
+ * data should be copied or referenced, allowing placement to be modified without affecting the info.
+ *
  * @ignore
  */
 class GSplatInfo {
@@ -30,6 +36,13 @@ class GSplatInfo {
 
     /** @type {number} */
     lodIndex;
+
+    /**
+     * Unique identifier from the placement, used for picking.
+     *
+     * @type {number}
+     */
+    placementId;
 
     /** @type {number} */
     numSplats;
@@ -77,13 +90,45 @@ class GSplatInfo {
     colorAccumulatedTranslation = 0;
 
     /**
+     * Per-instance shader parameters. Reference to the component's parameters Map.
+     *
+     * @type {Map<string, {scopeId: ScopeId, data: *}>|null}
+     */
+    parameters = null;
+
+    /**
+     * Function to get current work buffer modifier from source placement.
+     * Retrieved live (not snapshotted) to ensure shader configuration stays current.
+     *
+     * @type {(() => ({ code: string, hash: number }|null))|null}
+     */
+    getWorkBufferModifier = null;
+
+    /**
+     * Function to get current instance streams from source placement.
+     * Retrieved live (not snapshotted) to ensure streams are available after lazy creation.
+     *
+     * @type {(() => GSplatStreams|null)|null}
+     */
+    getInstanceStreams = null;
+
+    /**
+     * Callback to consume render dirty flag from the source placement.
+     *
+     * @type {Function|null}
+     * @private
+     */
+    _consumeRenderDirty = null;
+
+    /**
      * Create a new GSplatInfo.
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatResourceBase} resource - The splat resource.
      * @param {GSplatPlacement} placement - The placement of the splat.
+     * @param {Function|null} [consumeRenderDirty] - Callback to consume render dirty flag.
      */
-    constructor(device, resource, placement) {
+    constructor(device, resource, placement, consumeRenderDirty = null) {
         Debug.assert(resource);
         Debug.assert(placement);
 
@@ -91,8 +136,13 @@ class GSplatInfo {
         this.resource = resource;
         this.node = placement.node;
         this.lodIndex = placement.lodIndex;
+        this.placementId = placement.id;
         this.numSplats = resource.numSplats;
         this.aabb.copy(placement.aabb);
+        this.parameters = placement.parameters;
+        this.getWorkBufferModifier = () => placement.workBufferModifier;
+        this.getInstanceStreams = () => placement.streams;
+        this._consumeRenderDirty = consumeRenderDirty;
 
         this.updateIntervals(placement.intervals);
     }
@@ -174,19 +224,27 @@ class GSplatInfo {
 
             // clear temp array
             vecs.length = 0;
+        } else {
+            // check if we need to limit to active splats (instead of rendering all splats)
+            const totalCenters = resource.centers?.length / 3;
+            if (totalCenters && this.activeSplats < totalCenters) {
+                // Provide interval [0, numSplats) to limit sorting to active splats only
+                this.intervals[0] = 0;
+                this.intervals[1] = this.activeSplats;
+            }
         }
     }
 
     update() {
-
-        // if the object's matrix has changed, store the update version to know when it happened
         const worldMatrix = this.node.getWorldTransform();
         const worldMatrixChanged = !this.previousWorldTransform.equals(worldMatrix);
         if (worldMatrixChanged) {
             this.previousWorldTransform.copy(worldMatrix);
         }
 
-        return worldMatrixChanged;
+        const renderDirty = this._consumeRenderDirty ? this._consumeRenderDirty() : false;
+
+        return worldMatrixChanged || renderDirty;
     }
 
     resetColorAccumulators(colorUpdateAngle, colorUpdateDistance) {
