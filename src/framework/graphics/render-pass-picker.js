@@ -14,6 +14,7 @@ import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
 
 const tempMeshInstances = [];
 const lights = [[], [], []];
+const defaultShadowAtlasParams = new Float32Array(2);
 
 /**
  * A render pass implementing rendering of mesh instances into a pick buffer.
@@ -143,6 +144,13 @@ class RenderPassPicker extends RenderPass {
                         }
 
                         renderer.setCameraUniforms(camera.camera, renderTarget);
+
+                        // TODO: These uniforms are not required by the picker pass, but it uses the
+                        // forward view format which includes them. Ideally, each pass should be able
+                        // to specify its own view format to avoid setting unnecessary uniforms.
+                        renderer.dispatchGlobalLights(scene);
+                        device.scope.resolve('shadowAtlasParams').setValue(defaultShadowAtlasParams);
+
                         if (device.supportsUniformBuffers) {
                             // Initialize view bind group format if not already done
                             renderer.initViewBindGroupFormat(clusteredLightingEnabled);
