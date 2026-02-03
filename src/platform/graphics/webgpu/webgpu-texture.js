@@ -197,7 +197,12 @@ class WebgpuTexture {
             return view;
         }
 
-        Debug.assert(this.view);
+        Debug.call(() => {
+            if (!this.view) {
+                Debug.errorOnce('View failed to be created for texture, texture is possibly destroyed', this);
+            }
+        });
+
         return this.view;
     }
 
