@@ -218,27 +218,27 @@ const createHatchMaterial = (device, textures) => {
             fn fragmentMain(input: FragmentInput) -> FragmentOutput
             {
                 var output: FragmentOutput;
-                var colorLinear: vec3f;
+                var colorLinear: half3;
 
                 #ifdef TOON
 
                     // just a simple toon shader - no texture sampling
-                    let level: f32 = f32(i32(input.brightness * uniform.uNumTextures)) / uniform.uNumTextures;
-                    colorLinear = level * uniform.uColor;
+                    let level: half = half(i32(input.brightness * uniform.uNumTextures)) / half(uniform.uNumTextures);
+                    colorLinear = level * half3(uniform.uColor);
 
                 #else
                     // brightness dictates the hatch texture level
-                    let level: f32 = (1.0 - input.brightness) * uniform.uNumTextures;
+                    let level: half = (half(1.0) - half(input.brightness)) * half(uniform.uNumTextures);
 
                     // sample the two nearest levels and interpolate between them
-                    let hatchUnder: vec3f = textureSample(uDiffuseMap, uDiffuseMapSampler, input.uv0 * uniform.uDensity, i32(floor(level))).xyz;
-                    let hatchAbove: vec3f = textureSample(uDiffuseMap, uDiffuseMapSampler, input.uv0 * uniform.uDensity, i32(min(ceil(level), uniform.uNumTextures - 1.0))).xyz;
-                    colorLinear = mix(hatchUnder, hatchAbove, fract(level)) * uniform.uColor;
+                    let hatchUnder: half3 = half3(textureSample(uDiffuseMap, uDiffuseMapSampler, input.uv0 * uniform.uDensity, i32(floor(level))).xyz);
+                    let hatchAbove: half3 = half3(textureSample(uDiffuseMap, uDiffuseMapSampler, input.uv0 * uniform.uDensity, i32(min(ceil(level), half(uniform.uNumTextures - 1.0)))).xyz);
+                    colorLinear = mix(hatchUnder, hatchAbove, fract(level)) * half3(uniform.uColor);
                 #endif
 
                 // handle standard color processing - the called functions are automatically attached to the
                 // shader based on the current fog / tone-mapping / gamma settings
-                let fogged: vec3f = addFog(colorLinear);
+                let fogged: vec3f = addFog(vec3f(colorLinear));
                 let toneMapped: vec3f = toneMap(fogged);
                 output.color = vec4f(gammaCorrectOutput(toneMapped), 1.0);
 

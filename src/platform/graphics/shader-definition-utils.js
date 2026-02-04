@@ -15,6 +15,7 @@ import wgslFS from './shader-chunks/frag/webgpu-wgsl.js';
 import wgslVS from './shader-chunks/vert/webgpu-wgsl.js';
 import sharedGLSL from './shader-chunks/frag/shared.js';
 import sharedWGSL from './shader-chunks/frag/shared-wgsl.js';
+import halfTypes from './shader-chunks/frag/half-types.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -115,12 +116,8 @@ class ShaderDefinitionUtils {
 
         const getDefinesWgsl = (isVertex, options) => {
 
-            let code = '';
-
             // Enable directives must come before all global declarations
-            if (!isVertex && device.supportsPrimitiveIndex) {
-                code += 'enable primitive_index;\n';
-            }
+            let code = ShaderDefinitionUtils.getWGSLEnables(device, isVertex ? 'vertex' : 'fragment');
 
             // Define the fragment shader output type, vec4 by default
             if (!isVertex) {
@@ -151,6 +148,7 @@ class ShaderDefinitionUtils {
             vertCode = `
                 ${getDefinesWgsl(true, options)}
                 ${vertexDefinesCode}
+                ${halfTypes}
                 ${wgslVS}
                 ${sharedWGSL}
                 ${options.vertexCode}
@@ -159,6 +157,7 @@ class ShaderDefinitionUtils {
             fragCode = `
                 ${getDefinesWgsl(false, options)}
                 ${fragmentDefinesCode}
+                ${halfTypes}
                 ${wgslFS}
                 ${sharedWGSL}
                 ${options.fragmentCode}
@@ -203,6 +202,26 @@ class ShaderDefinitionUtils {
             meshUniformBufferFormat: options.meshUniformBufferFormat,
             meshBindGroupFormat: options.meshBindGroupFormat
         };
+    }
+
+    /**
+     * Generates WGSL enable directives based on device capabilities. Enable directives must come
+     * before all global declarations in WGSL shaders.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {'vertex'|'fragment'|'compute'} shaderType - The type of shader.
+     * @returns {string} The WGSL enable directives code.
+     * @ignore
+     */
+    static getWGSLEnables(device, shaderType) {
+        let code = '';
+        if (device.supportsShaderF16) {
+            code += 'enable f16;\n';
+        }
+        if (shaderType === 'fragment' && device.supportsPrimitiveIndex) {
+            code += 'enable primitive_index;\n';
+        }
+        return code;
     }
 
     /**
