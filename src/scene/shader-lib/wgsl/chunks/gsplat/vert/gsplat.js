@@ -70,7 +70,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         let dir = normalize(center.view * modelView3x3);
 
         // read sh coefficients
-        var sh: array<vec3f, SH_COEFFS>;
+        var sh: array<half3, SH_COEFFS>;
         var scale: f32;
         readSHData(&sh, &scale);
 
