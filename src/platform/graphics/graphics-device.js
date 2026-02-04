@@ -368,6 +368,18 @@ class GraphicsDevice extends EventHandler {
     supportsPrimitiveIndex = false;
 
     /**
+     * True if the device supports 16-bit floating-point types in shaders (WebGPU only). When
+     * supported, shaders can use native WGSL types: `f16`, `vec2h`, `vec3h`, `vec4h`, `mat2x2h`,
+     * `mat3x3h`, `mat4x4h`. For convenience, PlayCanvas also provides type aliases (`half`,
+     * `half2`, `half3`, `half4`, `half2x2`, `half3x3`, `half4x4`) that resolve to f16 types when
+     * supported, or fall back to f32 types when not supported.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsShaderF16 = false;
+
+    /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
      *
      * @type {boolean}
@@ -598,6 +610,7 @@ class GraphicsDevice extends EventHandler {
         if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
         if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
         if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
+        if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
 
         // Platform defines
         if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
