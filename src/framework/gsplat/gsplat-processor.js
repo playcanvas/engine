@@ -297,7 +297,7 @@ class GSplatProcessor {
      * @param {GSplatProcessorBinding} binding - The binding configuration.
      * @param {string} name - The stream name.
      * @param {GSplatResourceBase} resource - The resolved resource.
-     * @returns {TextureType|undefined} The resolved texture, or undefined if not found.
+     * @returns {TextureType|null} The resolved texture, or null if not found.
      * @private
      */
     _resolveTexture(binding, name, resource) {
