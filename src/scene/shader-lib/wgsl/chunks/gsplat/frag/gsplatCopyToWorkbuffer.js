@@ -110,7 +110,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             let dir = normalize(center.view * mat3x3f(center.modelView[0].xyz, center.modelView[1].xyz, center.modelView[2].xyz));
 
             // read sh coefficients
-            var sh: array<vec3f, SH_COEFFS>;
+            var sh: array<half3, SH_COEFFS>;
             var scale: f32;
             readSHData(&sh, &scale);
 
