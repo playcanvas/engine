@@ -67,6 +67,16 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     fringingIntensity = 10;
 
+    _colorEnhanceEnabled = false;
+
+    colorEnhanceShadows = 0;
+
+    colorEnhanceHighlights = 0;
+
+    colorEnhanceVibrance = 0;
+
+    colorEnhanceDehaze = 0;
+
     _taaEnabled = false;
 
     _sharpness = 0.5;
@@ -116,6 +126,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.colorLUTId = scope.resolve('colorLUT');
         this.colorLUTParams = new Float32Array(4);
         this.colorLUTParamsId = scope.resolve('colorLUTParams');
+        this.colorEnhanceParamsId = scope.resolve('colorEnhanceParams');
     }
 
     set debug(value) {
@@ -217,6 +228,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
         return this._fringingEnabled;
     }
 
+    set colorEnhanceEnabled(value) {
+        if (this._colorEnhanceEnabled !== value) {
+            this._colorEnhanceEnabled = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get colorEnhanceEnabled() {
+        return this._colorEnhanceEnabled;
+    }
+
     set toneMapping(value) {
         if (this._toneMapping !== value) {
             this._toneMapping = value;
@@ -292,6 +314,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
                 `-${this.ssaoTexture ? 'ssao' : 'nossao'}` +
                 `-${this.gradingEnabled ? 'grading' : 'nograding'}` +
+                `-${this.colorEnhanceEnabled ? 'colorenhance' : 'nocolorenhance'}` +
                 `-${this.colorLUT ? 'colorlut' : 'nocolorlut'}` +
                 `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
@@ -311,6 +334,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 if (this.blurTextureUpscale) defines.set('DOF_UPSCALE', true);
                 if (this.ssaoTexture) defines.set('SSAO', true);
                 if (this.gradingEnabled) defines.set('GRADING', true);
+                if (this.colorEnhanceEnabled) defines.set('COLOR_ENHANCE', true);
                 if (this.colorLUT) defines.set('COLOR_LUT', true);
                 if (this.vignetteEnabled) defines.set('VIGNETTE', true);
                 if (this.fringingEnabled) defines.set('FRINGING', true);
@@ -357,6 +381,10 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._gradingEnabled) {
             this.bcsId.setValue([this.gradingBrightness, this.gradingContrast, this.gradingSaturation]);
             this.tintId.setValue([this.gradingTint.r, this.gradingTint.g, this.gradingTint.b]);
+        }
+
+        if (this._colorEnhanceEnabled) {
+            this.colorEnhanceParamsId.setValue([this.colorEnhanceShadows, this.colorEnhanceHighlights, this.colorEnhanceVibrance, this.colorEnhanceDehaze]);
         }
 
         const lutTexture = this._colorLUT;

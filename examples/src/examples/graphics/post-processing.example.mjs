@@ -256,6 +256,15 @@ assetListLoader.load(() => {
         cameraFrame.grading.brightness = data.get('data.grading.brightness');
         cameraFrame.grading.contrast = data.get('data.grading.contrast');
 
+        // colorEnhance
+        cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
+        if (cameraFrame.colorEnhance.enabled) {
+            cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
+            cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
+            cameraFrame.colorEnhance.vibrance = data.get('data.colorEnhance.vibrance');
+            cameraFrame.colorEnhance.dehaze = data.get('data.colorEnhance.dehaze');
+        }
+
         // vignette
         cameraFrame.vignette.inner = data.get('data.vignette.inner');
         cameraFrame.vignette.outer = data.get('data.vignette.outer');
@@ -306,6 +315,13 @@ assetListLoader.load(() => {
             saturation: 1,
             brightness: 1,
             contrast: 1
+        },
+        colorEnhance: {
+            enabled: false,
+            shadows: 0,
+            highlights: 0,
+            vibrance: 0,
+            dehaze: 0
         },
         vignette: {
             enabled: false,

@@ -91,6 +91,10 @@ assetListLoader.load(() => {
     cameraEntity.lookAt(0, 0, 1);
     app.root.addChild(cameraEntity);
 
+    // ------ Custom render passes set up ------
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
+    cameraFrame.update();
+
     // skydome presets
     const presetStreetDome = {
         skybox: {
@@ -167,11 +171,28 @@ assetListLoader.load(() => {
             app.scene.sky.center = new pc.Vec3(0, data.get('data.skybox.tripodY') ?? 0, 0);
             app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, data.get('data.skybox.rotation'), 0);
             app.scene.exposure = data.get('data.skybox.exposure');
+
+            // colorEnhance
+            cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
+            cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
+            cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
+            cameraFrame.colorEnhance.vibrance = data.get('data.colorEnhance.vibrance');
+            cameraFrame.colorEnhance.dehaze = data.get('data.colorEnhance.dehaze');
+            cameraFrame.update();
         }
     });
 
     // apply initial preset
     data.set('data.skybox.preset', 'Street Dome');
+
+    // set initial colorEnhance values (AFTER preset so it doesn't get overwritten)
+    data.set('data.colorEnhance', {
+        enabled: false,
+        shadows: 0,
+        highlights: 0,
+        vibrance: 0,
+        dehaze: 0
+    });
 });
 
 export { app };

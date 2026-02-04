@@ -298,6 +298,43 @@ class Fringing {
 }
 
 /** @interface */
+class ColorEnhance {
+    enabled = false;
+
+    /**
+     * @visibleif {enabled}
+     * @range [-3, 3]
+     * @precision 2
+     * @step 0.1
+     */
+    shadows = 0;
+
+    /**
+     * @visibleif {enabled}
+     * @range [-3, 3]
+     * @precision 2
+     * @step 0.1
+     */
+    highlights = 0;
+
+    /**
+     * @visibleif {enabled}
+     * @range [-1, 1]
+     * @precision 3
+     * @step 0.01
+     */
+    vibrance = 0;
+
+    /**
+     * @visibleif {enabled}
+     * @range [-1, 1]
+     * @precision 3
+     * @step 0.01
+     */
+    dehaze = 0;
+}
+
+/** @interface */
 class Taa {
     enabled = false;
 
@@ -415,6 +452,12 @@ class CameraFrame extends Script {
 
     /**
      * @attribute
+     * @type {ColorEnhance}
+     */
+    colorEnhance = new ColorEnhance();
+
+    /**
+     * @attribute
      * @type {Dof}
      */
     dof = new Dof();
@@ -445,7 +488,7 @@ class CameraFrame extends Script {
     postUpdate(dt) {
 
         const cf = this.engineCameraFrame;
-        const { rendering, bloom, grading, vignette, fringing, taa, ssao, dof, colorLUT } = this;
+        const { rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao, dof, colorLUT } = this;
 
         const dstRendering = cf.rendering;
         dstRendering.renderFormats.length = 0;
@@ -518,6 +561,16 @@ class CameraFrame extends Script {
         // fringing
         const dstFringing = cf.fringing;
         dstFringing.intensity = fringing.enabled ? fringing.intensity : 0;
+
+        // colorEnhance
+        const dstColorEnhance = cf.colorEnhance;
+        dstColorEnhance.enabled = colorEnhance.enabled;
+        if (colorEnhance.enabled) {
+            dstColorEnhance.shadows = colorEnhance.shadows;
+            dstColorEnhance.highlights = colorEnhance.highlights;
+            dstColorEnhance.vibrance = colorEnhance.vibrance;
+            dstColorEnhance.dehaze = colorEnhance.dehaze;
+        }
 
         // dof
         const dstDof = cf.dof;
