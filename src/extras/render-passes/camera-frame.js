@@ -145,6 +145,25 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 
 /**
+ * @typedef {Object} ColorEnhance
+ * Properties related to the color enhancement effect, a postprocessing technique that provides
+ * HDR-aware adjustments for shadows, highlights, vibrance, and dehaze. Shadows and highlights allow
+ * selective adjustment of dark and bright areas of the image, vibrance is a smart saturation
+ * that boosts less-saturated colors more than already-saturated ones, and dehaze removes atmospheric
+ * haze to increase clarity and contrast.
+ * @property {boolean} enabled - Whether color enhancement is enabled. Defaults to false.
+ * @property {number} shadows - The shadow adjustment, -3 to 3 range. Uses an exponential curve where
+ * -3 gives 0.125x, 0 gives 1x, and +3 gives 8x brightness on dark areas. Defaults to 0.
+ * @property {number} highlights - The highlight adjustment, -3 to 3 range. Uses an exponential curve
+ * where -3 gives 0.125x, 0 gives 1x, and +3 gives 8x brightness on bright areas. Defaults to 0.
+ * @property {number} vibrance - The vibrance (smart saturation), -1 to 1 range. Positive values boost
+ * saturation of less-saturated colors more than already-saturated ones. Negative values desaturate.
+ * Defaults to 0.
+ * @property {number} dehaze - The dehaze adjustment, -1 to 1 range. Positive values remove atmospheric
+ * haze, increasing clarity and contrast. Negative values add a haze effect. Defaults to 0.
+ */
+
+/**
  * @typedef {Object} Taa
  * Properties related to temporal anti-aliasing (TAA), which is a technique used to reduce aliasing
  * in the rendered image by blending multiple frames together over time.
@@ -303,6 +322,19 @@ class CameraFrame {
     };
 
     /**
+     * Color enhancement settings.
+     *
+     * @type {ColorEnhance}
+     */
+    colorEnhance = {
+        enabled: false,
+        shadows: 0,
+        highlights: 0,
+        vibrance: 0,
+        dehaze: 0
+    };
+
+    /**
      * DoF settings.
      *
      * @type {Dof}
@@ -443,7 +475,7 @@ class CameraFrame {
         if (!this._enabled) return;
 
         const cameraComponent = this.cameraComponent;
-        const { options, renderPassCamera, rendering, bloom, grading, vignette, fringing, taa, ssao } = this;
+        const { options, renderPassCamera, rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao } = this;
 
         // options that can cause the passes to be re-created
         this.updateOptions();
@@ -502,6 +534,14 @@ class CameraFrame {
         composePass.fringingEnabled = fringing.intensity > 0;
         if (composePass.fringingEnabled) {
             composePass.fringingIntensity = fringing.intensity;
+        }
+
+        composePass.colorEnhanceEnabled = colorEnhance.enabled;
+        if (colorEnhance.enabled) {
+            composePass.colorEnhanceShadows = colorEnhance.shadows;
+            composePass.colorEnhanceHighlights = colorEnhance.highlights;
+            composePass.colorEnhanceVibrance = colorEnhance.vibrance;
+            composePass.colorEnhanceDehaze = colorEnhance.dehaze;
         }
 
         // enable camera jitter if taa is enabled

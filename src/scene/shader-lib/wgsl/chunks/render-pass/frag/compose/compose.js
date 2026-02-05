@@ -11,6 +11,7 @@ export default /* wgsl */`
     #include "composeDofPS"
     #include "composeSsaoPS"
     #include "composeGradingPS"
+    #include "composeColorEnhancePS"
     #include "composeVignettePS"
     #include "composeFringingPS"
     #include "composeCasPS"
@@ -57,6 +58,11 @@ export default /* wgsl */`
         // Apply Bloom
         #ifdef BLOOM
             result = applyBloom(result, uv0);
+        #endif
+
+        // Apply Color Enhancement (shadows, highlights, vibrance)
+        #ifdef COLOR_ENHANCE
+            result = applyColorEnhance(result);
         #endif
 
         // Apply Color Grading

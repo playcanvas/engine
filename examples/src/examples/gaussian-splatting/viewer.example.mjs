@@ -174,6 +174,13 @@ assetListLoader.load(() => {
         bloom: {
             enabled: false,
             intensity: 0.03
+        },
+        colorEnhance: {
+            enabled: false,
+            shadows: 0,
+            highlights: 0,
+            vibrance: 0,
+            dehaze: 0
         }
     });
 
@@ -198,6 +205,13 @@ assetListLoader.load(() => {
         if (bloomEnabled) {
             cameraFrame.bloom.blurLevel = 7;
         }
+
+        // Color Enhance
+        cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
+        cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
+        cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
+        cameraFrame.colorEnhance.vibrance = data.get('data.colorEnhance.vibrance');
+        cameraFrame.colorEnhance.dehaze = data.get('data.colorEnhance.dehaze');
 
         cameraFrame.update();
     };
