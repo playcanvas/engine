@@ -1,4 +1,5 @@
 // @config DESCRIPTION Shows a large world scene with LOD streaming and additional moving splats.
+import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -110,6 +111,33 @@ assetListLoader.load(() => {
     app.scene.gsplat.colorUpdateAngle = 4;
     app.scene.gsplat.colorUpdateDistanceLodScale = 2;
     app.scene.gsplat.colorUpdateAngleLodScale = 2;
+
+    // initialize UI settings
+    data.set('debugLod', false);
+    data.set('splatBudget', pc.platform.mobile ? '1M' : '4M');
+
+    app.scene.gsplat.colorizeLod = !!data.get('debugLod');
+
+    data.on('debugLod:set', () => {
+        app.scene.gsplat.colorizeLod = !!data.get('debugLod');
+    });
+
+    const applySplatBudget = () => {
+        const preset = data.get('splatBudget');
+        const budgetMap = {
+            'none': 0,
+            '1M': 1000000,
+            '2M': 2000000,
+            '3M': 3000000,
+            '4M': 4000000,
+            '6M': 6000000
+        };
+        // Global splat budget applies to all GSplats in the scene
+        app.scene.gsplat.splatBudget = budgetMap[preset] || 0;
+    };
+
+    applySplatBudget();
+    data.on('splatBudget:set', applySplatBudget);
 
     // Auto-select LOD preset based on device
     const preset = pc.platform.mobile ? 'mobile' : 'desktop';
@@ -228,6 +256,9 @@ assetListLoader.load(() => {
         );
         logo2.lookAt(centerVec);
         logo2.rotateLocal(0, 0, time * rollSpeed2);
+
+        // Update HUD stats
+        data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
     });
 });
 

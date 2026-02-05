@@ -10,7 +10,6 @@ import { GSplatPlacement } from './gsplat-placement.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { GSplatOctree } from './gsplat-octree.js'
- * @import { Scene } from '../scene.js'
  * @import { EventHandle } from '../../core/event-handle.js'
  */
 
@@ -50,19 +49,36 @@ class NodeInfo {
     optimalLod = -1;
 
     /**
-     * Importance of this node (0..1 range, higher = more important).
-     * Used for budget enforcement - higher importance nodes maintain quality when budget is exceeded.
+     * World-space distance from camera to this node.
+     * Used for non-linear bucket mapping in budget enforcement.
      * @type {number}
      */
-    importance = 0;
+    worldDistance = 0;
+
+    /**
+     * Back-reference to owning GSplatOctreeInstance.
+     * @type {GSplatOctreeInstance|null}
+     */
+    inst = null;
+
+    /**
+     * Index in octree.nodes array.
+     * @type {number}
+     */
+    nodeIndex = 0;
+
+    /**
+     * Cached reference to this node's LOD array for fast budget balancing.
+     * @type {Array|null}
+     */
+    lods = null;
 
     /**
      * Resets all LOD values to -1 (invisible/uninitialized).
      */
-    reset() {
+    resetLod() {
         this.currentLod = -1;
         this.optimalLod = -1;
-        this.importance = 0;
     }
 }
 
@@ -118,6 +134,20 @@ class GSplatOctreeInstance {
     removedCandidates = new Set();
 
     /**
+     * Minimum allowed LOD index for this instance, clamped to valid octree bounds.
+     *
+     * @type {number}
+     */
+    rangeMin = 0;
+
+    /**
+     * Maximum allowed LOD index for this instance, clamped to valid octree bounds.
+     *
+     * @type {number}
+     */
+    rangeMax = 0;
+
+    /**
      * Previous node position at which LOD was last updated. This is used to determine if LOD needs
      * to be updated as the octree splat moves.
      *
@@ -146,20 +176,6 @@ class GSplatOctreeInstance {
      * @type {Map<number, number>}
      */
     pendingVisibleAdds = new Map();
-
-    /**
-     * Cached splat budget value.
-     * @type {number}
-     */
-    splatBudget = 0;
-
-    /**
-     * Reusable array of node indices for budget enforcement sorting.
-     * Lazy-allocated on first budget enforcement, then reused.
-     * @type {Uint32Array|null}
-     * @private
-     */
-    _nodeIndices = null;
 
     /**
      * Returns the count of resources pending load or prefetch, including environment if loading.
@@ -204,7 +220,10 @@ class GSplatOctreeInstance {
         // Initialize nodeInfos array with NodeInfo instances for all nodes
         this.nodeInfos = new Array(octree.nodes.length);
         for (let i = 0; i < octree.nodes.length; i++) {
-            this.nodeInfos[i] = new NodeInfo();
+            const nodeInfo = new NodeInfo();
+            nodeInfo.inst = this;
+            nodeInfo.nodeIndex = i;
+            this.nodeInfos[i] = nodeInfo;
         }
 
         // Initialize file placements array
@@ -295,7 +314,7 @@ class GSplatOctreeInstance {
 
         // Reset all nodes to invisible
         for (const nodeInfo of this.nodeInfos) {
-            nodeInfo.reset();
+            nodeInfo.resetLod();
         }
 
         // Clean up environment if present
@@ -463,12 +482,8 @@ class GSplatOctreeInstance {
         const rangeMax = Math.max(rangeMin, Math.min(lodRangeMax ?? maxLod, maxLod));
 
         // Pass 1: Evaluate optimal LOD for each node (distance-based)
-        const totalOptimalSplats = this.evaluateNodeLods(cameraNode, maxLod, lodDistances, rangeMin, rangeMax, params);
-
-        // Enforce splat budget if enabled (bidirectional: degrade or upgrade)
-        if (this.splatBudget > 0) {
-            this.enforceSplatBudget(totalOptimalSplats, this.splatBudget, rangeMin, rangeMax);
-        }
+        const uniformScale = this.placement.node.getWorldTransform().getScale().x;
+        this.evaluateNodeLods(cameraNode, maxLod, lodDistances, rangeMin, rangeMax, params, uniformScale);
 
         // Pass 2: Calculate desired LOD (underfill) and apply changes
         this.applyLodChanges(maxLod, params);
@@ -484,10 +499,11 @@ class GSplatOctreeInstance {
      * @param {number} rangeMin - Minimum allowed LOD index.
      * @param {number} rangeMax - Maximum allowed LOD index.
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
+     * @param {number} uniformScale - Uniform scale of the octree transform for world-space conversion.
      * @returns {number} Total number of splats that would be used by optimal LODs.
      * @private
      */
-    evaluateNodeLods(cameraNode, maxLod, lodDistances, rangeMin, rangeMax, params) {
+    evaluateNodeLods(cameraNode, maxLod, lodDistances, rangeMin, rangeMax, params, uniformScale) {
         const { lodBehindPenalty } = params;
 
         // transform camera position to octree local space
@@ -502,11 +518,9 @@ class GSplatOctreeInstance {
         const nodeInfos = this.nodeInfos;
         let totalSplats = 0;
 
-        // Use distance threshold for max LOD range to normalize importance
-        const maxDistance = lodDistances[rangeMax] || 100;
-
         for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
             const node = nodes[nodeIndex];
+            const nodeInfo = nodeInfos[nodeIndex];
 
             // Calculate the nearest point on the bounding box to the camera for accurate distance
             node.bounds.closestPoint(localCameraPosition, _dirToNode);
@@ -517,7 +531,6 @@ class GSplatOctreeInstance {
 
             // Apply angular-based multiplier for nodes behind the camera when enabled
             let penalizedDistance = actualDistance;
-            let importanceMultiplier = 1.0;
 
             if (lodBehindPenalty > 1 && actualDistance > 0.01) {
                 // dot using unnormalized direction to avoid extra normalize; divide by distance
@@ -528,7 +541,6 @@ class GSplatOctreeInstance {
                     const t = -dotOverDistance; // 0 .. 1 for front -> directly behind
                     const factor = 1 + t * (lodBehindPenalty - 1);
                     penalizedDistance = actualDistance * factor;
-                    importanceMultiplier = 1.0 / factor; // inverse for importance
                 }
             }
 
@@ -545,13 +557,12 @@ class GSplatOctreeInstance {
             if (optimalLodIndex < rangeMin) optimalLodIndex = rangeMin;
             if (optimalLodIndex > rangeMax) optimalLodIndex = rangeMax;
 
-            // Calculate importance: inverse of distance, normalized, with behind-camera penalty
-            const normalizedDistance = Math.min(actualDistance / maxDistance, 1.0);
-            const importance = (1.0 - normalizedDistance) * importanceMultiplier;
+            // Calculate world-space distance for budget enforcement bucketing
+            const worldDistance = actualDistance * uniformScale;
 
-            // Store optimal LOD and importance
-            nodeInfos[nodeIndex].optimalLod = optimalLodIndex;
-            nodeInfos[nodeIndex].importance = importance;
+            // Store optimal LOD and world distance
+            nodeInfo.optimalLod = optimalLodIndex;
+            nodeInfo.worldDistance = worldDistance;
 
             // Count splats for this optimal LOD
             const lod = nodes[nodeIndex].lods[optimalLodIndex];
@@ -564,109 +575,29 @@ class GSplatOctreeInstance {
     }
 
     /**
-     * Adjusts optimal LOD indices to fit within the splat budget bidirectionally.
-     * When over budget: degrades quality for lower-importance nodes first.
-     * When under budget: upgrades quality for higher-importance nodes first.
-     * Uses multiple passes, adjusting by one level per pass, until budget is reached
-     * or all nodes hit their respective limits (rangeMin or rangeMax).
+     * Evaluates optimal LOD for all nodes without applying changes.
+     * Called by GSplatManager during phased global budget enforcement.
      *
-     * @param {number} totalSplats - Current total splat count with optimal LODs.
-     * @param {number} splatBudget - Target splat count to reach.
-     * @param {number} rangeMin - Minimum allowed LOD index.
-     * @param {number} rangeMax - Maximum allowed LOD index.
-     * @private
+     * @param {GraphNode} cameraNode - The camera node.
+     * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
+     * @returns {number} Total optimal splat count.
      */
-    enforceSplatBudget(totalSplats, splatBudget, rangeMin, rangeMax) {
-        const nodes = this.octree.nodes;
-        const nodeInfos = this.nodeInfos;
+    evaluateOptimalLods(cameraNode, params) {
+        const maxLod = this.octree.lodLevels - 1;
+        const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
+        const { lodRangeMin, lodRangeMax } = params;
+        const rangeMin = Math.max(0, Math.min(lodRangeMin ?? 0, maxLod));
+        const rangeMax = Math.max(rangeMin, Math.min(lodRangeMax ?? maxLod, maxLod));
 
-        // Lazy-allocate node indices array on first use
-        if (!this._nodeIndices) {
-            this._nodeIndices = new Uint32Array(nodes.length);
-            for (let i = 0; i < nodes.length; i++) {
-                this._nodeIndices[i] = i;
-            }
-        }
+        // Store clamped range for budget balancer to use
+        this.rangeMin = rangeMin;
+        this.rangeMax = rangeMax;
 
-        // Sort node indices by importance (lowest first) - done once
-        const nodeIndices = this._nodeIndices;
-        nodeIndices.sort((a, b) => nodeInfos[a].importance - nodeInfos[b].importance);
+        // Get uniform scale for world-space conversion
+        const uniformScale = this.placement.node.getWorldTransform().getScale().x;
 
-        let currentSplats = totalSplats;
-
-        // Skip if already at budget
-        if (currentSplats === splatBudget) {
-            return;
-        }
-
-        // Determine direction and set iteration parameters
-        const isOverBudget = currentSplats > splatBudget;
-        const lodDelta = isOverBudget ? 1 : -1;
-
-        // Multiple passes: adjust by one LOD level per pass until budget is reached
-        while (isOverBudget ? currentSplats > splatBudget : currentSplats < splatBudget) {
-            let modified = false;
-
-            if (isOverBudget) {
-
-                // DEGRADE: process from lowest to highest importance
-                for (let i = 0; i < nodeIndices.length; i++) {
-                    const nodeIndex = nodeIndices[i];
-                    const nodeInfo = nodeInfos[nodeIndex];
-                    const node = nodes[nodeIndex];
-                    const currentOptimalLod = nodeInfo.optimalLod;
-
-                    // Try degrading to next coarser LOD (respect rangeMax constraint)
-                    if (currentOptimalLod < rangeMax) {
-                        const currentLod = node.lods[currentOptimalLod];
-                        const nextLod = node.lods[currentOptimalLod + 1];
-                        const splatsSaved = currentLod.count - nextLod.count;
-
-                        // Degrade to coarser LOD
-                        nodeInfo.optimalLod += lodDelta;
-                        currentSplats -= splatsSaved;
-                        modified = true;
-
-                        if (currentSplats <= splatBudget) {
-                            break; // Within budget
-                        }
-                    }
-                }
-            } else {
-
-                // UPGRADE: process from highest to lowest importance
-                for (let i = nodeIndices.length - 1; i >= 0; i--) {
-                    const nodeIndex = nodeIndices[i];
-                    const nodeInfo = nodeInfos[nodeIndex];
-                    const node = nodes[nodeIndex];
-                    const currentOptimalLod = nodeInfo.optimalLod;
-
-                    // Try upgrading to next finer LOD (respect rangeMin constraint)
-                    if (currentOptimalLod > rangeMin) {
-                        const currentLod = node.lods[currentOptimalLod];
-                        const nextLod = node.lods[currentOptimalLod - 1];
-                        const splatsAdded = nextLod.count - currentLod.count;
-
-                        // Only upgrade if we won't exceed budget
-                        if (currentSplats + splatsAdded <= splatBudget) {
-                            // Upgrade to finer LOD
-                            nodeInfo.optimalLod += lodDelta;
-                            currentSplats += splatsAdded;
-                            modified = true;
-
-                            if (currentSplats >= splatBudget) {
-                                break; // At budget
-                            }
-                        }
-                    }
-                }
-            }
-
-            // If no nodes were modified, we can't adjust further
-            if (!modified) {
-                break;
-            }
-        }
+        return this.evaluateNodeLods(cameraNode, maxLod, lodDistances,
+            rangeMin, rangeMax, params, uniformScale);
     }
 
     /**
@@ -675,7 +606,6 @@ class GSplatOctreeInstance {
      *
      * @param {number} maxLod - Maximum LOD index (lodLevels - 1).
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
-     * @private
      */
     applyLodChanges(maxLod, params) {
         const nodes = this.octree.nodes;
@@ -919,17 +849,9 @@ class GSplatOctreeInstance {
     /**
      * Updates the octree instance each frame.
      *
-     * @param {Scene} scene - Optional scene for debug rendering.
      * @returns {boolean} True if octree instance is dirty, false otherwise.
      */
-    update(scene) {
-
-        // Sync splat budget from placement and detect changes
-        const currentBudget = this.placement.splatBudget;
-        if (currentBudget !== this.splatBudget) {
-            this.splatBudget = currentBudget;
-            this.needsLodUpdate = true;
-        }
+    update() {
 
         // handle pending loads
         if (this.pending.size) {

@@ -63,30 +63,6 @@ class StreamedGsplat extends Script {
      */
     lowLodRange = [3, 5];
 
-    /**
-     * @attribute
-     * @type {number}
-     */
-    ultraSplatBudget = 6000000;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    highSplatBudget = 4000000;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    mediumSplatBudget = 2000000;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    lowSplatBudget = 1000000;
-
     /** @type {Asset[]} */
     _assets = [];
 
@@ -225,27 +201,6 @@ class StreamedGsplat extends Script {
         return range && range.length >= 2 ? range : [0, 5];
     }
 
-    _getCurrentSplatBudget() {
-        let budget;
-        switch (this._currentPreset) {
-            case 'ultra':
-                budget = this.ultraSplatBudget;
-                break;
-            case 'high':
-                budget = this.highSplatBudget;
-                break;
-            case 'medium':
-                budget = this.mediumSplatBudget;
-                break;
-            case 'low':
-                budget = this.lowSplatBudget;
-                break;
-            default:
-                budget = 0;
-        }
-        return budget || 0;
-    }
-
     _applyPreset() {
         const range = this._getCurrentLodRange();
         if (!range) return;
@@ -255,12 +210,10 @@ class StreamedGsplat extends Script {
         app.scene.gsplat.lodRangeMax = range[1];
 
         const lodDistances = this._getCurrentLodDistances();
-        const splatBudget = this._getCurrentSplatBudget();
 
         // Apply to main streaming asset only (environment doesn't support these settings)
         if (this.entity.gsplat) {
             this.entity.gsplat.lodDistances = lodDistances;
-            this.entity.gsplat.splatBudget = splatBudget;
         }
     }
 
