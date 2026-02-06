@@ -73,8 +73,8 @@ const _cullModes = [
 ];
 
 const _frontFaceModes = [
-    'cw',                   // FRONTFACE_CW
-    'ccw'                   // FRONTFACE_CCW
+    'ccw',                  // FRONTFACE_CCW
+    'cw'                    // FRONTFACE_CW
 ];
 
 const _stencilOps = [

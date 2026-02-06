@@ -336,8 +336,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         ];
 
         this.glFrontFace = [
-            gl.CW,
-            gl.CCW
+            gl.CCW,
+            gl.CW
         ];
 
         this.glFilter = [
