@@ -3,6 +3,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
     CULLFACE_NONE,
+    FRONTFACE_CCW,
     PIXELFORMAT_RGBA8,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
@@ -290,6 +291,7 @@ class GSplatResolveSH {
             });
 
             device.setCullMode(CULLFACE_NONE);
+            device.setFrontFaceMode(FRONTFACE_CCW);
             device.setDepthState(DepthState.NODEPTH);
             device.setStencilState(null, null);
             device.setBlendState(BlendState.NOBLEND);

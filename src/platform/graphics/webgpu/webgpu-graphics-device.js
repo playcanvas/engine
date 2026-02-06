@@ -731,7 +731,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 // render pipeline
                 pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                    this.stencilEnabled, this.stencilFront, this.stencilBack);
+                    this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFaceMode);
                 Debug.assert(pipeline);
 
                 if (this.pipeline !== pipeline) {
@@ -848,6 +848,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     setCullMode(cullMode) {
         this.cullMode = cullMode;
+    }
+
+    setFrontFaceMode(frontFaceMode) {
+        this.frontFaceMode = frontFaceMode;
     }
 
     setAlphaToCoverage(state) {

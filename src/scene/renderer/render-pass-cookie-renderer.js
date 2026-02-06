@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { CULLFACE_NONE, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, FRONTFACE_CCW, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI } from '../constants.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
@@ -165,6 +165,7 @@ class RenderPassCookieRenderer extends RenderPass {
         const device = this.device;
         device.setBlendState(BlendState.NOBLEND);
         device.setCullMode(CULLFACE_NONE);
+        device.setFrontFaceMode(FRONTFACE_CCW);
         device.setDepthState(DepthState.NODEPTH);
         device.setStencilState();
 

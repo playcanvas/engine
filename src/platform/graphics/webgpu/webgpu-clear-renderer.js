@@ -5,7 +5,8 @@ import {
     CULLFACE_NONE,
     PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL,
     UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
-    BINDGROUP_MESH_UB
+    BINDGROUP_MESH_UB,
+    FRONTFACE_CCW
 } from '../constants.js';
 import { Shader } from '../shader.js';
 import { DynamicBindGroup } from '../bind-group.js';
@@ -138,6 +139,7 @@ class WebgpuClearRenderer {
             uniformBuffer.endUpdate();
 
             device.setCullMode(CULLFACE_NONE);
+            device.setFrontFaceMode(FRONTFACE_CCW);
 
             // render 4 vertices without vertex buffer
             device.setShader(this.shader);

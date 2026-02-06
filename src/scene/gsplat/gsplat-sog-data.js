@@ -7,7 +7,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { CULLFACE_NONE, PIXELFORMAT_RGBA32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, FRONTFACE_CCW, PIXELFORMAT_RGBA32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import glslGsplatSogReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogReorder.js';
@@ -416,6 +416,7 @@ class GSplatSogData {
         });
 
         device.setCullMode(CULLFACE_NONE);
+        device.setFrontFaceMode(FRONTFACE_CCW);
         device.setBlendState(BlendState.NOBLEND);
         device.setDepthState(DepthState.NODEPTH);
 
@@ -476,6 +477,7 @@ class GSplatSogData {
         });
 
         device.setCullMode(CULLFACE_NONE);
+        device.setFrontFaceMode(FRONTFACE_CCW);
         device.setBlendState(BlendState.NOBLEND);
         device.setDepthState(DepthState.NODEPTH);
 
@@ -526,6 +528,7 @@ class GSplatSogData {
         });
 
         device.setCullMode(CULLFACE_NONE);
+        device.setFrontFaceMode(FRONTFACE_CCW);
         device.setBlendState(BlendState.NOBLEND);
         device.setDepthState(DepthState.NODEPTH);
 

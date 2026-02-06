@@ -126,6 +126,9 @@ class NullGraphicsDevice extends GraphicsDevice {
     setCullMode(cullMode) {
     }
 
+    setFrontFaceMode(frontFace) {
+    }
+
     setAlphaToCoverage(state) {
     }
 

@@ -552,6 +552,9 @@ class Renderer {
         // Cull mode
         device.setCullMode(material.cull);
 
+        // Front face mode
+        device.setFrontFaceMode(material.frontFaceMode);
+
         // Alpha test
         if (material.opacityMap) {
             this.opacityMapId.setValue(material.opacityMap);

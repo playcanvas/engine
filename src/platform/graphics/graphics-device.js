@@ -12,7 +12,8 @@ import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
-    semanticToLocation
+    semanticToLocation,
+    FRONTFACE_CCW
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
@@ -736,6 +737,7 @@ class GraphicsDevice extends EventHandler {
         this.blendState = new BlendState();
         this.depthState = new DepthState();
         this.cullMode = CULLFACE_BACK;
+        this.frontFaceMode = FRONTFACE_CCW;
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
@@ -800,6 +802,19 @@ class GraphicsDevice extends EventHandler {
      * - {@link CULLFACE_FRONT}
      */
     setCullMode(cullMode) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Controls how whether polygons are front- or back-facing by setting a winding
+     * orientation. The default frontFace mode is {@link FRONTFACE_CCW}.
+     *
+     * @param {number} frontFace - The front face mode to set. Can be:
+     *
+     * - {@link FRONTFACE_CW}
+     * - {@link FRONTFACE_CCW}
+     */
+    setFrontFaceMode(frontFace) {
         Debug.assert(false);
     }
 

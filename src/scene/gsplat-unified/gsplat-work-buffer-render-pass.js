@@ -6,7 +6,7 @@ import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
-import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, FRONTFACE_CCW } from '../../platform/graphics/constants.js';
 
 /**
  * @import { GSplatInfo } from './gsplat-info.js'
@@ -105,6 +105,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         // Set up render state
         device.setBlendState(BlendState.NOBLEND);
         device.setCullMode(CULLFACE_NONE);
+        device.setFrontFaceMode(FRONTFACE_CCW);
         device.setDepthState(DepthState.NODEPTH);
         device.setStencilState();
 
