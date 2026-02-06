@@ -187,7 +187,8 @@ assetListLoader.load(() => {
             '4M': 4000000,
             '6M': 6000000
         };
-        gs.splatBudget = budgetMap[preset] || 0;
+        // Global splat budget applies to all GSplats in the scene
+        app.scene.gsplat.splatBudget = budgetMap[preset] || 0;
     };
 
     applySplatBudget();

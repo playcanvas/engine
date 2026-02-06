@@ -212,13 +212,7 @@ assetListLoader.load(() => {
 
     // internal LOD preset based on platform (7 LOD levels: 0-6)
     const isMobile = pc.platform.mobile;
-    if (isMobile) {
-        app.scene.gsplat.lodRangeMin = 3;  // skip levels 0, 1, 2
-        app.scene.gsplat.lodRangeMax = 6;
-    } else {
-        app.scene.gsplat.lodRangeMin = 2;  // skip level 0 and 1
-        app.scene.gsplat.lodRangeMax = 6;
-    }
+    app.scene.gsplat.splatBudget = isMobile ? 1000000 : 3000000;
 
     // create grid of instances centered around origin on XZ plane
     const half = (GRID_SIZE - 1) * 0.5;
