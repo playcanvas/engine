@@ -737,7 +737,7 @@ class GraphicsDevice extends EventHandler {
         this.blendState = new BlendState();
         this.depthState = new DepthState();
         this.cullMode = CULLFACE_BACK;
-        this.frontFaceMode = FRONTFACE_CCW;
+        this.frontFace = FRONTFACE_CCW;
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
@@ -807,14 +807,14 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Controls how whether polygons are front- or back-facing by setting a winding
-     * orientation. The default frontFace mode is {@link FRONTFACE_CCW}.
+     * orientation. The default frontFace is {@link FRONTFACE_CCW}.
      *
-     * @param {number} frontFace - The front face mode to set. Can be:
+     * @param {number} frontFace - The front face to set. Can be:
      *
      * - {@link FRONTFACE_CW}
      * - {@link FRONTFACE_CCW}
      */
-    setFrontFaceMode(frontFace) {
+    setFrontFace(frontFace) {
         Debug.assert(false);
     }
 

@@ -96,7 +96,7 @@ class ParticleGPUUpdater {
         device.setBlendState(BlendState.NOBLEND);
         device.setDepthState(DepthState.NODEPTH);
         device.setCullMode(CULLFACE_NONE);
-        device.setFrontFaceMode(FRONTFACE_CCW);
+        device.setFrontFace(FRONTFACE_CCW);
 
         this.randomize();
 

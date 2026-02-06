@@ -34,9 +34,9 @@ class RenderPassShaderQuad extends RenderPass {
     cullMode = CULLFACE_NONE;
 
     /**
-     * The front face mode to use when rendering the quad. Defaults to {@link FRONTFACE_CCW}.
+     * The front face to use when rendering the quad. Defaults to {@link FRONTFACE_CCW}.
      */
-    frontFaceMode = FRONTFACE_CCW;
+    frontFace = FRONTFACE_CCW;
 
     /**
      * A blend state to use when rendering the quad. Defaults to {@link BlendState.NOBLEND}.
@@ -111,7 +111,7 @@ class RenderPassShaderQuad extends RenderPass {
         const device = this.device;
         device.setBlendState(this.blendState);
         device.setCullMode(this.cullMode);
-        device.setFrontFaceMode(this.frontFaceMode);
+        device.setFrontFace(this.frontFace);
         device.setDepthState(this.depthState);
         device.setStencilState(this.stencilFront, this.stencilBack);
 

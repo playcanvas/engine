@@ -105,7 +105,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         // Set up render state
         device.setBlendState(BlendState.NOBLEND);
         device.setCullMode(CULLFACE_NONE);
-        device.setFrontFaceMode(FRONTFACE_CCW);
+        device.setFrontFace(FRONTFACE_CCW);
         device.setDepthState(DepthState.NODEPTH);
         device.setStencilState();
 

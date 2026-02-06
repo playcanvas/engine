@@ -179,7 +179,7 @@ class Material {
      *
      * @type {number}
      */
-    frontFaceMode = FRONTFACE_CCW;
+    frontFace = FRONTFACE_CCW;
 
     /**
      * Stencil parameters for front faces (default is null).

@@ -2516,11 +2516,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    setFrontFaceMode(frontFaceMode) {
-        if (this.frontFaceMode !== frontFaceMode) {
-            const mode = this.glFrontFace[frontFaceMode];
+    setFrontFace(frontFace) {
+        if (this.frontFace !== frontFace) {
+            const mode = this.glFrontFace[frontFace];
             this.gl.frontFace(mode);
-            this.frontFaceMode = frontFaceMode;
+            this.frontFace = frontFace;
         }
     }
 

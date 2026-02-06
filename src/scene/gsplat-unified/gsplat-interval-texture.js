@@ -164,7 +164,7 @@ class GSplatIntervalTexture {
         scope.resolve('uActiveSplats').setValue(totalIntervalSplats);
 
         this.device.setCullMode(CULLFACE_NONE);
-        this.device.setFrontFaceMode(FRONTFACE_CCW);
+        this.device.setFrontFace(FRONTFACE_CCW);
         this.device.setBlendState(BlendState.NOBLEND);
         this.device.setDepthState(DepthState.NODEPTH);
 

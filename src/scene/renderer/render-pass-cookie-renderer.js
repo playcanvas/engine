@@ -165,7 +165,7 @@ class RenderPassCookieRenderer extends RenderPass {
         const device = this.device;
         device.setBlendState(BlendState.NOBLEND);
         device.setCullMode(CULLFACE_NONE);
-        device.setFrontFaceMode(FRONTFACE_CCW);
+        device.setFrontFace(FRONTFACE_CCW);
         device.setDepthState(DepthState.NODEPTH);
         device.setStencilState();
 

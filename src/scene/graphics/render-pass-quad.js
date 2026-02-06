@@ -20,7 +20,7 @@ class RenderPassQuad extends RenderPass {
         DebugGraphics.pushGpuMarker(device, `${this.name}:${this.quad.shader.name}`);
 
         device.setCullMode(CULLFACE_NONE);
-        device.setFrontFaceMode(FRONTFACE_CCW);
+        device.setFrontFace(FRONTFACE_CCW);
         device.setDepthState(DepthState.NODEPTH);
         device.setStencilState(null, null);
 

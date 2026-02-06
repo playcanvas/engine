@@ -416,7 +416,7 @@ class GSplatSogData {
         });
 
         device.setCullMode(CULLFACE_NONE);
-        device.setFrontFaceMode(FRONTFACE_CCW);
+        device.setFrontFace(FRONTFACE_CCW);
         device.setBlendState(BlendState.NOBLEND);
         device.setDepthState(DepthState.NODEPTH);
 
@@ -477,7 +477,7 @@ class GSplatSogData {
         });
 
         device.setCullMode(CULLFACE_NONE);
-        device.setFrontFaceMode(FRONTFACE_CCW);
+        device.setFrontFace(FRONTFACE_CCW);
         device.setBlendState(BlendState.NOBLEND);
         device.setDepthState(DepthState.NODEPTH);
 
@@ -528,7 +528,7 @@ class GSplatSogData {
         });
 
         device.setCullMode(CULLFACE_NONE);
-        device.setFrontFaceMode(FRONTFACE_CCW);
+        device.setFrontFace(FRONTFACE_CCW);
         device.setBlendState(BlendState.NOBLEND);
         device.setDepthState(DepthState.NODEPTH);
 

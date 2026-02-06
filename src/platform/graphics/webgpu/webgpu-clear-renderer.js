@@ -139,7 +139,7 @@ class WebgpuClearRenderer {
             uniformBuffer.endUpdate();
 
             device.setCullMode(CULLFACE_NONE);
-            device.setFrontFaceMode(FRONTFACE_CCW);
+            device.setFrontFace(FRONTFACE_CCW);
 
             // render 4 vertices without vertex buffer
             device.setShader(this.shader);

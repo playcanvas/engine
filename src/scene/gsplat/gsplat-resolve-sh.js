@@ -291,7 +291,7 @@ class GSplatResolveSH {
             });
 
             device.setCullMode(CULLFACE_NONE);
-            device.setFrontFaceMode(FRONTFACE_CCW);
+            device.setFrontFace(FRONTFACE_CCW);
             device.setDepthState(DepthState.NODEPTH);
             device.setStencilState(null, null);
             device.setBlendState(BlendState.NOBLEND);

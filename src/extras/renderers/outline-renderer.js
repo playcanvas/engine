@@ -316,7 +316,7 @@ class OutlineRenderer {
 
         device.setDepthState(DepthState.NODEPTH);
         device.setCullMode(CULLFACE_NONE);
-        device.setFrontFaceMode(FRONTFACE_CCW);
+        device.setFrontFace(FRONTFACE_CCW);
         device.setBlendState(this.blendState);
         this.quadRenderer.render();
     }
