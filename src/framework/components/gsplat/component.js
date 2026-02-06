@@ -120,15 +120,6 @@ class GSplatComponent extends Component {
     _lodDistances = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 
     /**
-     * Target number of splats to render for this component. The system will adjust LOD levels
-     * bidirectionally to reach this budget. Set to 0 to disable (default).
-     *
-     * @type {number}
-     * @private
-     */
-    _splatBudget = 0;
-
-    /**
      * @type {BoundingBox|null}
      * @private
      */
@@ -455,35 +446,16 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets the target number of splats to render for this component. The system will adjust LOD
-     * levels bidirectionally to reach this budget:
-     * - When over budget: degrades quality for less important geometry
-     * - When under budget: upgrades quality for more important geometry
-     *
-     * This ensures optimal use of available rendering budget while prioritizing quality for
-     * closer/more important geometry.
-     *
-     * Set to 0 to disable the budget (default). When disabled, optimal LOD is determined purely
-     * by distance and configured LOD parameters.
-     *
-     * Only applies to octree-based gsplat rendering in unified mode.
-     *
+     * @deprecated Use app.scene.gsplat.splatBudget instead for global budget control.
      * @type {number}
      */
     set splatBudget(value) {
-        this._splatBudget = value;
-        if (this._placement) {
-            this._placement.splatBudget = this._splatBudget;
-        }
+        Debug.removed('GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.');
     }
 
-    /**
-     * Gets the splat budget limit for this component.
-     *
-     * @type {number}
-     */
     get splatBudget() {
-        return this._splatBudget;
+        Debug.removed('GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.');
+        return 0;
     }
 
     /**
@@ -964,7 +936,6 @@ class GSplatComponent extends Component {
 
             this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters, null, this._id);
             this._placement.lodDistances = this._lodDistances;
-            this._placement.splatBudget = this._splatBudget;
             this._placement.workBufferUpdate = this._workBufferUpdate;
             this._placement.workBufferModifier = this._workBufferModifier;
 

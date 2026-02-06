@@ -1,4 +1,3 @@
-import { Debug } from '../../core/debug.js';
 import {
     PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
 } from '../../platform/graphics/constants.js';
@@ -293,13 +292,33 @@ class GSplatParams {
         return this._lodUnderfillLimit;
     }
 
+    /**
+     * @type {number}
+     * @private
+     */
+    _splatBudget = 0;
+
+    /**
+     * Target number of splats across all GSplats in the scene. When set > 0,
+     * the system adjusts LOD levels globally to stay within this budget.
+     * Set to 0 to disable budget enforcement and use LOD distances only (default).
+     *
+     * @type {number}
+     */
     set splatBudget(value) {
-        Debug.removed('GSplatParams.splatBudget is deprecated. Use GSplatComponent.splatBudget instead to set per-component budgets.');
+        if (this._splatBudget !== value) {
+            this._splatBudget = value;
+            this.dirty = true;
+        }
     }
 
+    /**
+     * Gets the target number of splats across all GSplats in the scene.
+     *
+     * @type {number}
+     */
     get splatBudget() {
-        Debug.removed('GSplatParams.splatBudget is deprecated. Use GSplatComponent.splatBudget instead to set per-component budgets.');
-        return 0;
+        return this._splatBudget;
     }
 
     /**

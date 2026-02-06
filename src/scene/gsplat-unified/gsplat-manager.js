@@ -15,10 +15,12 @@ import { ComputeRadixSort } from '../graphics/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Color } from '../../core/math/color.js';
+import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatPlacement } from './gsplat-placement.js'
+ * @import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js'
  * @import { Scene } from '../scene.js'
  * @import { Layer } from '../layer.js'
  * @import { GSplatDirector } from './gsplat-director.js'
@@ -27,7 +29,7 @@ import { Color } from '../../core/math/color.js';
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
 const translation = new Vec3();
-const _cornerPoint = new Vec3();
+const _tempVec3 = new Vec3();
 const invModelMat = new Mat4();
 const tempNonOctreePlacements = new Set();
 const tempOctreePlacements = new Set();
@@ -174,6 +176,14 @@ class GSplatManager {
 
     /** @type {boolean} */
     sortNeeded = true;
+
+    /**
+     * Budget balancer for global splat budget enforcement.
+     *
+     * @type {GSplatBudgetBalancer}
+     * @private
+     */
+    _budgetBalancer = new GSplatBudgetBalancer();
 
     /** @type {Vec3} */
     lastColorUpdateCameraPos = new Vec3(Infinity, Infinity, Infinity);
@@ -761,6 +771,89 @@ class GSplatManager {
         this.director.eventHandler.fire('frame:ready', this.cameraNode.camera, this.renderer.layer, ready, loadingCount);
     }
 
+    /**
+     * Computes max world-space distance across all octree instances. Used for sqrt-based bucket
+     * distribution in budget balancing. Non-octree placements are excluded since they have fixed
+     * splat counts and don't participate in LOD-based budget balancing.
+     *
+     * @returns {number} Maximum world-space distance, minimum 1 to avoid division by zero.
+     * @private
+     */
+    computeGlobalMaxDistance() {
+        let maxDist = 0;
+        cameraPosition.copy(this.cameraNode.getPosition());
+
+        for (const [, inst] of this.octreeInstances) {
+            const worldTransform = inst.placement.node.getWorldTransform();
+            const aabb = inst.placement.aabb;
+
+            // Transform center to world space and add bounding sphere radius
+            worldTransform.transformPoint(aabb.center, _tempVec3);
+            const scale = worldTransform.getScale().x;
+            const dist = _tempVec3.distance(cameraPosition) + aabb.halfExtents.length() * scale;
+            if (dist > maxDist) maxDist = dist;
+        }
+
+        return Math.max(maxDist, 1); // Avoid division by zero
+    }
+
+    /**
+     * Enforces global splat budget across all octree instances using phased approach.
+     *
+     * @param {number} budget - Target splat budget from GSplatParams.splatBudget.
+     * @private
+     */
+    _enforceBudget(budget) {
+        // Work buffer texture dimensions for row-alignment padding calculation
+        const textureWidth = this.workBuffer.textureSize;
+
+        // Phase 0: Calculate fixed splats and padding from non-octree components
+        // These have no LOD system, so their splat count is fixed
+        let fixedSplats = 0;
+        let paddingEstimate = 0;
+        for (const p of this.layerPlacements) {
+            const resource = /** @type {GSplatResourceBase} */ (p.resource);
+            if (resource) {
+                const numSplats = resource.numSplats ?? 0;
+                fixedSplats += numSplats;
+                // Each placement's data starts at a new row, padding = unused pixels in last row
+                paddingEstimate += (textureWidth - (numSplats % textureWidth)) % textureWidth;
+            }
+        }
+
+        // Remaining budget for octrees after accounting for fixed splats. Use Math.max(1, ...) to
+        // ensure budget enforcement stays active even when fixed splats consume all budget - 0 would
+        // disable enforcement, but 1 forces octrees to use minimum LOD (coarsest quality)
+        const octreeBudget = Math.max(1, budget - fixedSplats);
+
+        // Compute global max distance for distance bucket calculation
+        const globalMaxDistance = this.computeGlobalMaxDistance();
+
+        // Phase 2: Evaluate optimal LODs for all octrees and calculate padding for active placements
+        for (const [, inst] of this.octreeInstances) {
+            inst.evaluateOptimalLods(this.cameraNode, this.scene.gsplat);
+            for (const placement of inst.activePlacements) {
+                const resource = /** @type {GSplatResourceBase} */ (placement.resource);
+                const numSplats = resource?.numSplats ?? 0;
+                paddingEstimate += (textureWidth - (numSplats % textureWidth)) % textureWidth;
+            }
+        }
+
+        // Adjust budget for estimated padding overhead
+        // Note: This is an estimate based on current active placements; actual work buffer
+        // content may change after LOD evaluation applies changes
+        const adjustedBudget = Math.max(1, octreeBudget - paddingEstimate);
+
+        // Budget balancing across all octrees
+        this._budgetBalancer.balance(this.octreeInstances, adjustedBudget, globalMaxDistance);
+
+        // Apply LOD changes
+        for (const [, inst] of this.octreeInstances) {
+            const maxLod = inst.octree.lodLevels - 1;
+            inst.applyLodChanges(maxLod, this.scene.gsplat);
+        }
+    }
+
     update() {
 
         // detect work buffer format changes (extra streams added) and schedule a full rebuild
@@ -802,7 +895,7 @@ class GSplatManager {
             // process any pending / prefetch resource completions and collect LOD updates
             for (const [, inst] of this.octreeInstances) {
 
-                const isDirty = inst.update(this.scene);
+                const isDirty = inst.update();
                 this.layerPlacementsDirty ||= isDirty;
 
                 const instNeeds = inst.consumeNeedsLodUpdate();
@@ -862,9 +955,16 @@ class GSplatManager {
             this.lastLodCameraPos.copy(this.cameraNode.getPosition());
             this.lastLodCameraFwd.copy(this.cameraNode.forward);
 
-            // update LOD for all octree instances
-            for (const [, inst] of this.octreeInstances) {
-                inst.updateLod(this.cameraNode, this.scene.gsplat);
+            const budget = this.scene.gsplat.splatBudget;
+
+            if (budget > 0) {
+                // Global budget enforcement
+                this._enforceBudget(budget);
+            } else {
+                // Budget disabled - use LOD distances only, no budget adjustments
+                for (const [, inst] of this.octreeInstances) {
+                    inst.updateLod(this.cameraNode, this.scene.gsplat);
+                }
             }
         }
 
@@ -1029,20 +1129,20 @@ class GSplatManager {
 
             // Check all 8 corners of local-space AABB
             for (let i = 0; i < 8; i++) {
-                _cornerPoint.x = (i & 1) ? aabbMax.x : aabbMin.x;
-                _cornerPoint.y = (i & 2) ? aabbMax.y : aabbMin.y;
-                _cornerPoint.z = (i & 4) ? aabbMax.z : aabbMin.z;
+                _tempVec3.x = (i & 1) ? aabbMax.x : aabbMin.x;
+                _tempVec3.y = (i & 2) ? aabbMax.y : aabbMin.y;
+                _tempVec3.z = (i & 4) ? aabbMax.z : aabbMin.z;
 
                 // Transform to world space
-                modelMat.transformPoint(_cornerPoint, _cornerPoint);
+                modelMat.transformPoint(_tempVec3, _tempVec3);
 
                 if (radialSort) {
                     // Radial: distance from camera
-                    const dist = _cornerPoint.distance(cameraPosition);
+                    const dist = _tempVec3.distance(cameraPosition);
                     if (dist > maxDist) maxDist = dist;
                 } else {
                     // Linear: distance along camera direction
-                    const dist = _cornerPoint.sub(cameraPosition).dot(cameraDirection);
+                    const dist = _tempVec3.sub(cameraPosition).dot(cameraDirection);
                     if (dist < minDist) minDist = dist;
                     if (dist > maxDist) maxDist = dist;
                 }
