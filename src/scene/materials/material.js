@@ -7,7 +7,6 @@ import {
     BLENDEQUATION_MIN, BLENDEQUATION_MAX,
     CULLFACE_BACK,
     SHADERLANGUAGE_GLSL,
-    FRONTFACE_CW,
     FRONTFACE_CCW
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
@@ -172,7 +171,7 @@ class Material {
     /**
      * Controls how whether polygons are front- or back-facing by setting a winding
      * orientation. Can be:
-     * 
+     *
      * - {@link FRONTFACE_CW}: The clock-wise winding.
      * - {@link FRONTFACE_CCW}: The counter-clock-wise winding.
      *
