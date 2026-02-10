@@ -16,7 +16,14 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 #ifdef REORDER_V1
     output.color = unpack8888(pack111110(shNSample));
 #else
-    output.color = unpack8888(pack111110(resolveCodebook(shNSample, &uniform.shN_codebook)));
+    // resolve shN codebook
+    let shNIdx = vec3u(shNSample * 255.0);
+    let shNV = vec3f(
+        uniform.shN_codebook[shNIdx.x >> 2u][shNIdx.x & 3u],
+        uniform.shN_codebook[shNIdx.y >> 2u][shNIdx.y & 3u],
+        uniform.shN_codebook[shNIdx.z >> 2u][shNIdx.z & 3u]
+    );
+    output.color = unpack8888(pack111110((shNV - uniform.shN_codebook[0].x) / (uniform.shN_codebook[63].w - uniform.shN_codebook[0].x)));
 #endif
 
     return output;
