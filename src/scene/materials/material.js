@@ -79,10 +79,10 @@ class Material {
     /**
      * The mesh instances referencing this material
      *
-     * @type {MeshInstance[]}
+     * @type {Set<MeshInstance>}
      * @private
      */
-    meshInstances = [];
+    meshInstances = new Set();
 
     /**
      * The name of the material.
@@ -439,10 +439,8 @@ class Material {
     }
 
     _updateTransparency() {
-        const transparent = this.transparent;
-        const meshInstances = this.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            meshInstances[i].transparent = transparent;
+        for(const meshInstance of this.meshInstances) {
+            meshInstance.transparent = this.transparent;
         }
     }
 
@@ -675,9 +673,8 @@ class Material {
     }
 
     _updateMeshInstanceKeys() {
-        const meshInstances = this.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            meshInstances[i].updateKey();
+        for(const meshInstance of this.meshInstances) {
+            meshInstance.updateKey();
         }
     }
 
@@ -744,15 +741,12 @@ class Material {
     }
 
     clearVariants() {
-
         // clear variants on the material
         this.variants.clear();
 
         // but also clear them from all materials that reference them
-        const meshInstances = this.meshInstances;
-        const count = meshInstances.length;
-        for (let i = 0; i < count; i++) {
-            meshInstances[i].clearShaders();
+        for(const meshInstance of this.meshInstances) {
+            meshInstance.clearShaders();
         }
     }
 
@@ -884,8 +878,7 @@ class Material {
     destroy() {
         this.variants.clear();
 
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            const meshInstance = this.meshInstances[i];
+        for(const meshInstance of this.meshInstances) {
             meshInstance.clearShaders();
             meshInstance._material = null;
 
@@ -899,7 +892,7 @@ class Material {
             }
         }
 
-        this.meshInstances.length = 0;
+        this.meshInstances.clear();
     }
 
     /**
@@ -909,7 +902,7 @@ class Material {
      * @ignore
      */
     addMeshInstanceRef(meshInstance) {
-        this.meshInstances.push(meshInstance);
+        this.meshInstances.add(meshInstance);
     }
 
     /**
@@ -919,11 +912,7 @@ class Material {
      * @ignore
      */
     removeMeshInstanceRef(meshInstance) {
-        const meshInstances = this.meshInstances;
-        const i = meshInstances.indexOf(meshInstance);
-        if (i !== -1) {
-            meshInstances.splice(i, 1);
-        }
+        this.meshInstances.delete(meshInstance);
     }
 }
 
