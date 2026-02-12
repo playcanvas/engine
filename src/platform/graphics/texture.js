@@ -674,11 +674,13 @@ class Texture {
                 Debug.warn('Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false', this);
             } else {
                 this._mipmaps = v;
-            }
+                this._updateNumLevel();
+                this.propertyChanged(TEXPROPERTY_MIN_FILTER);
 
-            if (v) {
-                this._needsMipmapsUpload = true;
-                this.device?.texturesToUpload?.add(this);
+                if (v) {
+                    this._needsMipmapsUpload = true;
+                    this.device?.texturesToUpload?.add(this);
+                }
             }
         }
     }
