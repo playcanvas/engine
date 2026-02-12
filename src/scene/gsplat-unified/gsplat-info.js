@@ -315,7 +315,7 @@ class GSplatInfo {
 
     /**
      * Builds the nodeToLocalBounds mapping from the placement intervals. Each selected octree
-     * node gets a sequential index; unselected nodes get 0xFFFFFFFF. Uploads to a small R32U
+     * node gets a sequential index; unselected nodes remain 0. Uploads to a small R32U
      * texture for GPU access during work buffer rendering.
      *
      * @param {Map<number, Vec2>} intervals - Map of node index to interval.

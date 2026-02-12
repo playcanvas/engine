@@ -491,7 +491,7 @@ class GSplatWorkBuffer {
 
     /**
      * Updates the transforms texture with world matrices for each GSplatInfo.
-     * Each matrix uses 4 texels (RGBA32F per row) in the texture.
+     * Each matrix uses 3 texels (RGBA32F per row) in the texture.
      *
      * @param {GSplatInfo[]} splats - The splats to collect transforms from.
      */

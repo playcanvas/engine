@@ -420,7 +420,7 @@ class GSplatCompaction {
             // Flag buffer changed, force prefix sum kernel to rebind by destroying its passes.
             // The next resize() call will recreate them with the new buffer.
             if (this.prefixSumKernel) {
-                this.prefixSumKernel._destroyPasses();
+                this.prefixSumKernel.destroyPasses();
             }
         }
     }

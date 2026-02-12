@@ -12,7 +12,7 @@ import wgslGsplatNodeCullingPS from '../shader-lib/wgsl/chunks/gsplat/frag/gspla
 /**
  * Render pass for GPU frustum culling of bounding spheres. Reads local-space spheres and
  * transform indices, reconstructs world matrices, and tests against camera frustum planes.
- * Outputs a R32U visibility texture (1 = visible, 0 = culled).
+ * Outputs a bit-packed R32U visibility texture (each texel holds 32 sphere results as bits).
  *
  * @ignore
  */

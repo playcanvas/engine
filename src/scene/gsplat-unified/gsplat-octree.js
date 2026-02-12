@@ -273,7 +273,7 @@ class GSplatOctree {
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
-            levels: [/** @type {Uint8Array} */(data)]
+            levels: [data]
         });
     }
 
