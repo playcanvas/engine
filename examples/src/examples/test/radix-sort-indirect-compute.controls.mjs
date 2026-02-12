@@ -37,7 +37,7 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
                         { v: 32, t: '32 bits (8 passes)' }
                     ]
                 })
-            ),
+            )
             // Visible count now oscillates automatically (10%-90%) to simulate camera rotation
         )
     );

@@ -215,7 +215,7 @@ class Compute {
      *
      * @param {number} count - Total number of workgroups needed.
      * @param {Vec2} result - Output vector to receive X (x) and Y (y) dimensions.
-     * @param {number} [maxDimension=65535] - Maximum workgroups per dimension.
+     * @param {number} [maxDimension] - Maximum workgroups per dimension.
      * @returns {Vec2} The result vector with dimensions set.
      * @ignore
      */

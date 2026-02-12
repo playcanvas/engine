@@ -84,7 +84,7 @@ let verificationPending = false;
 let totalTests = 0;
 let totalPassed = 0;
 let totalFailed = 0;
-let logLines = [];
+const logLines = [];
 
 function log(msg) {
     console.log(msg);
@@ -354,9 +354,9 @@ app.on('update', () => {
     if (frameCount % 10 === 0 && !verificationPending) {
         verificationPending = true;
         doVerification(sortedIndicesBuffer, originalValues.slice(), maxElements, visibleCount, numBits)
-            .then(() => {
-                verificationPending = false;
-            });
+        .then(() => {
+            verificationPending = false;
+        });
     }
 });
 

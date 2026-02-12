@@ -439,7 +439,7 @@ class Material {
     }
 
     _updateTransparency() {
-        for(const meshInstance of this.meshInstances) {
+        for (const meshInstance of this.meshInstances) {
             meshInstance.transparent = this.transparent;
         }
     }
@@ -673,7 +673,7 @@ class Material {
     }
 
     _updateMeshInstanceKeys() {
-        for(const meshInstance of this.meshInstances) {
+        for (const meshInstance of this.meshInstances) {
             meshInstance.updateKey();
         }
     }
@@ -745,7 +745,7 @@ class Material {
         this.variants.clear();
 
         // but also clear them from all materials that reference them
-        for(const meshInstance of this.meshInstances) {
+        for (const meshInstance of this.meshInstances) {
             meshInstance.clearShaders();
         }
     }
@@ -878,7 +878,7 @@ class Material {
     destroy() {
         this.variants.clear();
 
-        for(const meshInstance of this.meshInstances) {
+        for (const meshInstance of this.meshInstances) {
             meshInstance.clearShaders();
             meshInstance._material = null;
 
