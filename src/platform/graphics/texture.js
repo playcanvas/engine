@@ -673,13 +673,24 @@ class Texture {
             } else if (isIntegerPixelFormat(this._format)) {
                 Debug.warn('Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false', this);
             } else {
+                const oldMipmaps = this._mipmaps;
+                const oldNumLevels = this._numLevels;
+
                 this._mipmaps = v;
                 this._updateNumLevel();
-                this.propertyChanged(TEXPROPERTY_MIN_FILTER);
 
-                if (this._mipmaps && this._numLevels > 1) {
-                    this._needsMipmapsUpload = true;
-                    this.device?.texturesToUpload?.add(this);
+                // Changing mip count on array textures requires re-creating immutable storage.
+                if (this.array && this._numLevels !== oldNumLevels) {
+                    this.recreateImpl();
+                } else if (this._mipmaps !== oldMipmaps) {
+                    this.propertyChanged(TEXPROPERTY_MIN_FILTER);
+
+                    if (this._mipmaps) {
+                        this._needsMipmapsUpload = true;
+                        this.device?.texturesToUpload?.add(this);
+                    } else {
+                        this._needsMipmapsUpload = false;
+                    }
                 }
             }
         }
