@@ -677,7 +677,7 @@ class Texture {
                 this._updateNumLevel();
                 this.propertyChanged(TEXPROPERTY_MIN_FILTER);
 
-                if (v) {
+                if (this._mipmaps && this._numLevels > 1) {
                     this._needsMipmapsUpload = true;
                     this.device?.texturesToUpload?.add(this);
                 }
