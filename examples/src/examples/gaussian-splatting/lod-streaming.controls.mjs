@@ -4,10 +4,31 @@
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, Label } = ReactPCUI;
+    const isWebGPU = observer.get('isWebGPU');
     return fragment(
         jsx(
             Panel,
             { headerText: 'Settings' },
+            isWebGPU && jsx(
+                LabelGroup,
+                { text: 'GPU Sorting' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gpuSorting' },
+                    value: observer.get('gpuSorting') || false
+                })
+            ),
+            isWebGPU && jsx(
+                LabelGroup,
+                { text: 'Culling' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'culling' },
+                    value: observer.get('culling') || false
+                })
+            ),
             jsx(
                 LabelGroup,
                 { text: 'High Res' },

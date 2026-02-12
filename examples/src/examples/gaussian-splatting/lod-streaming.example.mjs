@@ -108,6 +108,9 @@ const assets = {
     )
 };
 
+// Set device type flag before controls render (controls read this synchronously)
+data.set('isWebGPU', device.isWebGPU);
+
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
@@ -143,16 +146,25 @@ assetListLoader.load(() => {
     app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
-    // initialize UI settings
-    data.set('debugLod', false);
-    data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
-    data.set('splatBudget', pc.platform.mobile ? '1M' : '4M');
-
-    app.scene.gsplat.colorizeLod = !!data.get('debugLod');
-
+    // GPU sorting and culling are WebGPU-only features
+    if (device.isWebGPU) {
+        data.on('gpuSorting:set', () => {
+            app.scene.gsplat.gpuSorting = !!data.get('gpuSorting');
+        });
+        data.on('culling:set', () => {
+            app.scene.gsplat.culling = !!data.get('culling');
+        });
+    }
     data.on('debugLod:set', () => {
         app.scene.gsplat.colorizeLod = !!data.get('debugLod');
     });
+
+    // initialize UI settings (must be after observer registration)
+    data.set('gpuSorting', false);
+    data.set('culling', false);
+    data.set('debugLod', false);
+    data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
+    data.set('splatBudget', pc.platform.mobile ? '1M' : '4M');
 
     const entity = new pc.Entity(config.name || 'gsplat');
     entity.addComponent('gsplat', {

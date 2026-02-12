@@ -1,6 +1,7 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -97,7 +98,7 @@ class GSplatStreams {
      */
     init(format, numElements) {
         this.format = format;
-        this._textureDimensions = this.evalTextureSize(numElements);
+        this._textureDimensions = TextureUtils.calcTextureSize(numElements, new Vec2());
 
         // Create textures for all streams (base + extra, filtered by _isInstance)
         const streams = this._isInstance ? format.instanceStreams : format.resourceStreams;
@@ -170,17 +171,6 @@ class GSplatStreams {
 
             this._formatVersion = format.extraStreamsVersion;
         }
-    }
-
-    /**
-     * Evaluates the texture size needed to store a given number of elements.
-     *
-     * @param {number} count - The number of elements to store.
-     * @returns {Vec2} The width and height of the texture.
-     */
-    evalTextureSize(count) {
-        const width = Math.ceil(Math.sqrt(count));
-        return new Vec2(width, Math.ceil(count / width));
     }
 
     /**

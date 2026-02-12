@@ -35,6 +35,15 @@ uniform vec4 model_rotation;  // (x,y,z,w) format
     uniform uint uId;
 #endif
 
+#ifdef GSPLAT_NODE_INDEX
+    uniform uint uBoundsBaseIndex;
+    #ifdef HAS_NODE_MAPPING
+        uniform usampler2D nodeMappingTexture;
+        uniform usampler2D nodeToLocalBoundsTexture;
+        uniform int nodeToLocalBoundsWidth;
+    #endif
+#endif
+
 void main(void) {
     // local fragment coordinates (within the viewport)
     ivec2 localFragCoords = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y) - uStartLine);
@@ -141,6 +150,21 @@ void main(void) {
 
         #ifdef GSPLAT_ID
             writePcId(uvec4(uId, 0u, 0u, 0u));
+        #endif
+
+        #ifdef GSPLAT_NODE_INDEX
+            #ifdef HAS_NODE_MAPPING
+                // Octree resource: look up node index from source splat, then local bounds index
+                int srcTextureWidth = int(textureSize(nodeMappingTexture, 0).x);
+                ivec2 sourceCoord = ivec2(int(originalIndex) % srcTextureWidth, int(originalIndex) / srcTextureWidth);
+                uint nodeIndex = texelFetch(nodeMappingTexture, sourceCoord, 0).r;
+                ivec2 ntlCoord = ivec2(int(nodeIndex) % nodeToLocalBoundsWidth, int(nodeIndex) / nodeToLocalBoundsWidth);
+                uint localBoundsIdx = texelFetch(nodeToLocalBoundsTexture, ntlCoord, 0).r;
+                writePcNodeIndex(uvec4(uBoundsBaseIndex + localBoundsIdx, 0u, 0u, 0u));
+            #else
+                // Non-octree resource: single bounds entry
+                writePcNodeIndex(uvec4(uBoundsBaseIndex, 0u, 0u, 0u));
+            #endif
         #endif
     }
 }

@@ -18,6 +18,11 @@ struct RadixSortUniforms {
 };
 @group(0) @binding(6) var<uniform> uniforms: RadixSortUniforms;
 
+#ifdef USE_INDIRECT_SORT
+    // GPU-written element count
+    @group(0) @binding(7) var<storage, read> sortElementCount: array<u32>;
+#endif
+
 // Compile-time constants
 const THREADS_PER_WORKGROUP: u32 = {THREADS_PER_WORKGROUP}u;
 const WORKGROUP_SIZE_X: u32 = {WORKGROUP_SIZE_X}u;
@@ -26,7 +31,7 @@ const CURRENT_BIT: u32 = {CURRENT_BIT}u;
 const IS_FIRST_PASS: u32 = {IS_FIRST_PASS}u;
 
 @compute @workgroup_size(WORKGROUP_SIZE_X, WORKGROUP_SIZE_Y, 1)
-fn radix_sort_reorder(
+fn main(
     @builtin(workgroup_id) w_id: vec3<u32>,
     @builtin(num_workgroups) w_dim: vec3<u32>,
     @builtin(local_invocation_index) TID: u32,
@@ -35,7 +40,14 @@ fn radix_sort_reorder(
     let WID = WORKGROUP_ID * THREADS_PER_WORKGROUP;
     let GID = WID + TID;
 
-    if (GID >= uniforms.elementCount) {
+    // Read element count: from storage buffer (GPU-written) or uniform (CPU-set)
+    #ifdef USE_INDIRECT_SORT
+        let elementCount = sortElementCount[0];
+    #else
+        let elementCount = uniforms.elementCount;
+    #endif
+
+    if (GID >= elementCount) {
         return;
     }
 
