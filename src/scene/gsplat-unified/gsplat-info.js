@@ -3,10 +3,9 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { PIXELFORMAT_R32U, FILTER_NEAREST, ADDRESS_CLAMP_TO_EDGE } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U, FILTER_NEAREST, ADDRESS_CLAMP_TO_EDGE } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
-import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
 
 /**
  * @import { GraphicsDevice } from "../../platform/graphics/graphics-device.js";
@@ -18,10 +17,10 @@ import { GSplatIntervalTexture } from './gsplat-interval-texture.js';
  * @import { ScopeId } from '../../platform/graphics/scope-id.js';
  */
 
-/** @type {Vec2[]} */
-const vecs = [];
-
 const tmpSize = new Vec2();
+
+// Reusable buffer for sub-draw data (only grows, never shrinks)
+let subDrawDataArray = new Uint32Array(0);
 
 /**
  * Represents a snapshot of gsplat state for rendering. This class captures all necessary data
@@ -83,11 +82,20 @@ class GSplatInfo {
     aabb = new BoundingBox();
 
     /**
-     * Manager for the intervals texture generation
+     * Small RGBA32U texture storing per-sub-draw data for instanced interval rendering.
+     * Each texel: R = rowStart | (numRows << 16), G = colStart, B = colEnd, A = sourceBase.
+     * Null when intervals are not used (non-LOD or full range).
      *
-     * @type {GSplatIntervalTexture|null}
+     * @type {Texture|null}
      */
-    intervalTexture = null;
+    subDrawTexture = null;
+
+    /**
+     * Number of sub-draw instances for instanced interval rendering.
+     *
+     * @type {number}
+     */
+    subDrawCount = 0;
 
     /**
      * Small R32U texture mapping octree node index to sequential local bounds index.
@@ -195,7 +203,9 @@ class GSplatInfo {
 
     destroy() {
         this.intervals.length = 0;
-        this.intervalTexture?.destroy();
+        this.subDrawTexture?.destroy();
+        this.subDrawTexture = null;
+        this.subDrawCount = 0;
         this.nodeToLocalBoundsTexture?.destroy();
         this.nodeToLocalBoundsTexture = null;
     }
@@ -206,11 +216,17 @@ class GSplatInfo {
         this.padding = textureSize * count - activeSplats;
         Debug.assert(this.padding >= 0);
         this.viewport.set(0, start, textureSize, count);
+
+        // Build sub-draw data for instanced interval rendering
+        if (this.intervals.length > 0) {
+            this.updateSubDraws(textureSize);
+        }
     }
 
     /**
-     * Updates the flattened intervals array and GPU texture from placement intervals.
-     * Also updates the nodeToLocalBounds texture if octree nodes are available.
+     * Updates the flattened intervals array from placement intervals. Intervals are sorted and
+     * stored as half-open pairs [start, end). Called once from the constructor; sub-draw data
+     * is built later in setLines when the work buffer texture width is known.
      *
      * @param {Map<number, Vec2>} intervals - Map of node index to inclusive [x, y] intervals.
      */
@@ -223,52 +239,21 @@ class GSplatInfo {
         // If placement has intervals defined
         if (intervals.size > 0) {
 
-            // fast path: if the intervals cover the full range, intervals are not needed
-            // also collect references to inclusive Vec2 intervals into a reusable array for sorting
+            // Write half-open intervals and count total splats
             let totalCount = 0;
-            let used = 0;
+            let k = 0;
+            this.intervals.length = intervals.size * 2;
             for (const interval of intervals.values()) {
+                this.intervals[k++] = interval.x;
+                this.intervals[k++] = interval.y + 1;
                 totalCount += (interval.y - interval.x + 1);
-                vecs[used++] = interval;
             }
 
-            // not full range
-            if (totalCount !== this.numSplats) {
-
-                // finalize temp array length for sorting/merging
-                vecs.length = used;
-
-                // sort by start
-                vecs.sort((a, b) => (a.x - b.x));
-
-                // pre-size to the upper bound
-                this.intervals.length = used * 2;
-
-                // write merged intervals directly to this.intervals
-                let k = 0;
-                let currentStart = vecs[0].x;
-                let currentEnd = vecs[0].y;
-                for (let i = 1; i < used; i++) {
-                    const p = vecs[i];
-                    if (p.x === currentEnd + 1) {  // adjacent, extend current interval
-                        currentEnd = p.y;
-                    } else { // write half-open pair
-                        this.intervals[k++] = currentStart;
-                        this.intervals[k++] = currentEnd + 1;
-                        currentStart = p.x;
-                        currentEnd = p.y;
-                    }
-                }
-                // write final half-open pair
-                this.intervals[k++] = currentStart;
-                this.intervals[k++] = currentEnd + 1;
-
-                // trim to actual merged length
-                this.intervals.length = k;
-
-                // update GPU texture and active splats count
-                this.intervalTexture = new GSplatIntervalTexture(this.device);
-                this.activeSplats = this.intervalTexture.update(this.intervals, totalCount);
+            // If intervals cover the full range, they're not needed
+            if (totalCount === this.numSplats) {
+                this.intervals.length = 0;
+            } else {
+                this.activeSplats = totalCount;
             }
 
             // Update nodeToLocalBounds mapping for GPU culling
@@ -276,9 +261,6 @@ class GSplatInfo {
                 this.placementIntervals = intervals;
                 this.updateNodeToLocalBounds(intervals, this.octreeNodes.length);
             }
-
-            // clear temp array
-            vecs.length = 0;
         } else {
             // Non-octree: single bounds entry
             this.numBoundsEntries = 1;
@@ -291,6 +273,104 @@ class GSplatInfo {
                 this.intervals[1] = this.activeSplats;
             }
         }
+    }
+
+    /**
+     * Builds the sub-draw data texture from the current intervals. Each interval is split at
+     * row boundaries of the work buffer texture to produce axis-aligned rectangles. The result
+     * is a small RGBA32U texture where each texel stores the parameters for one instanced quad.
+     * Called once from setLines when the work buffer texture width is known.
+     *
+     * @param {number} textureWidth - The work buffer texture width.
+     */
+    updateSubDraws(textureWidth) {
+
+        const numIntervals = this.intervals.length / 2;
+
+        // Split intervals at row boundaries. Each interval produces at most 3 sub-draws:
+        // partial first row, full middle rows, partial last row.
+        // Reuse module-scope buffer, growing if needed (4 uints per sub-draw, 3 sub-draws per interval max).
+        const maxSubDraws = numIntervals * 3;
+        const requiredSize = maxSubDraws * 4;
+        if (subDrawDataArray.length < requiredSize) {
+            subDrawDataArray = new Uint32Array(requiredSize);
+        }
+        const subDrawData = subDrawDataArray;
+        const intervals = this.intervals;
+        let subDrawCount = 0;
+        let targetOffset = 0; // running target index across all intervals
+
+        for (let i = 0; i < numIntervals; i++) {
+            let sourceBase = intervals[i * 2];
+            const size = intervals[i * 2 + 1] - sourceBase;
+
+            let remaining = size;
+            let row = (targetOffset / textureWidth) | 0;
+            const col = targetOffset % textureWidth;
+
+            // Partial first row (if not starting at column 0)
+            if (col > 0) {
+                const count = Math.min(remaining, textureWidth - col);
+                const idx = subDrawCount * 4;
+                subDrawData[idx] = row | (1 << 16);         // rowStart | (numRows << 16)
+                subDrawData[idx + 1] = col;                   // colStart
+                subDrawData[idx + 2] = col + count;           // colEnd
+                subDrawData[idx + 3] = sourceBase;             // sourceBase
+                subDrawCount++;
+                sourceBase += count;
+                remaining -= count;
+                row++;
+            }
+
+            // Full middle rows
+            const fullRows = (remaining / textureWidth) | 0;
+            if (fullRows > 0) {
+                const idx = subDrawCount * 4;
+                subDrawData[idx] = row | (fullRows << 16);     // rowStart | (numRows << 16)
+                subDrawData[idx + 1] = 0;                       // colStart
+                subDrawData[idx + 2] = textureWidth;             // colEnd
+                subDrawData[idx + 3] = sourceBase;               // sourceBase
+                subDrawCount++;
+                sourceBase += fullRows * textureWidth;
+                remaining -= fullRows * textureWidth;
+                row += fullRows;
+            }
+
+            // Partial last row
+            if (remaining > 0) {
+                const idx = subDrawCount * 4;
+                subDrawData[idx] = row | (1 << 16);          // rowStart | (numRows << 16)
+                subDrawData[idx + 1] = 0;                      // colStart
+                subDrawData[idx + 2] = remaining;              // colEnd
+                subDrawData[idx + 3] = sourceBase;              // sourceBase
+                subDrawCount++;
+            }
+
+            targetOffset += size;
+        }
+
+        this.subDrawCount = subDrawCount;
+
+        // Calculate 2D texture dimensions to stay within device limits
+        const { x: texWidth, y: texHeight } = TextureUtils.calcTextureSize(subDrawCount, tmpSize);
+
+        // Create the sub-draw data texture
+        this.subDrawTexture = new Texture(this.device, {
+            name: 'subDrawData',
+            width: texWidth,
+            height: texHeight,
+            format: PIXELFORMAT_RGBA32U,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
+        });
+
+        // Upload sub-draw data
+        const texData = this.subDrawTexture.lock();
+        texData.set(subDrawData.subarray(0, subDrawCount * 4));
+        this.subDrawTexture.unlock();
     }
 
     update() {

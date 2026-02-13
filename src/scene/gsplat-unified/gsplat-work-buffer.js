@@ -15,6 +15,8 @@ import { QuadRender } from '../graphics/quad-render.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import glslGsplatCopyToWorkBufferPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
 import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
+import glslGsplatCopyInstancedQuadVS from '../shader-lib/glsl/chunks/gsplat/vert/gsplatCopyInstancedQuad.js';
+import wgslGsplatCopyInstancedQuadVS from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatCopyInstancedQuad.js';
 import { GSplatNodeCullRenderPass } from './gsplat-node-cull-render-pass.js';
 import { GSplatWorkBufferRenderPass } from './gsplat-work-buffer-render-pass.js';
 import { GSplatStreams } from '../gsplat/gsplat-streams.js';
@@ -53,7 +55,6 @@ class WorkBufferRenderInfo {
      * @param {GSplatFormat} format - The work buffer format descriptor.
      */
     constructor(device, key, material, colorOnly, format) {
-        this.device = device;
         this.material = material;
 
         const clonedDefines = new Map(material.defines);
@@ -96,18 +97,30 @@ class WorkBufferRenderInfo {
             fragmentOutputTypes.push(info.returnType);
         }
 
-        const shader = ShaderUtils.createShader(device, {
+        // Use instanced vertex shader for LOD path, fullscreen quad for non-LOD
+        const useInstanced = clonedDefines.has('GSPLAT_LOD');
+
+        const shaderOptions = {
             uniqueName: `SplatCopyToWorkBuffer:${key}`,
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexDefines: clonedDefines,
             fragmentDefines: clonedDefines,
-            vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatCopyToWorkBufferPS,
             fragmentWGSL: wgslGsplatCopyToWorkBufferPS,
             fragmentIncludes: fragmentIncludes,
             fragmentOutputTypes: fragmentOutputTypes
-        });
+        };
 
+        if (useInstanced) {
+            // Instanced LOD path: custom vertex shader that positions quads per instance
+            shaderOptions.vertexGLSL = glslGsplatCopyInstancedQuadVS;
+            shaderOptions.vertexWGSL = wgslGsplatCopyInstancedQuadVS;
+        } else {
+            // Standard fullscreen quad path
+            shaderOptions.vertexChunk = 'fullscreenQuadVS';
+        }
+
+        const shader = ShaderUtils.createShader(device, shaderOptions);
         this.quadRender = new QuadRender(shader);
     }
 

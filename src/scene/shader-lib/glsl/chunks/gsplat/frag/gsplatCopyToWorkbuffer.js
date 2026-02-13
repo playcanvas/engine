@@ -18,8 +18,8 @@ uniform int uStartLine;      // Start row in destination texture
 uniform int uViewportWidth;  // Width of the destination viewport in pixels
 
 #ifdef GSPLAT_LOD
-    // LOD intervals texture
-    uniform usampler2D uIntervalsTexture;
+    // Packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
+    flat varying ivec4 vSubDraw;
 #endif
 
 uniform vec3 uColorMultiply;
@@ -66,10 +66,10 @@ void main(void) {
     } else {
 
         #ifdef GSPLAT_LOD
-            // Use intervals texture to remap target index to source index
-            int intervalsSize = int(textureSize(uIntervalsTexture, 0).x);
-            ivec2 intervalUV = ivec2(targetIndex % intervalsSize, targetIndex / intervalsSize);
-            uint originalIndex = texelFetch(uIntervalsTexture, intervalUV, 0).r;
+            // Compute source index from packed sub-draw varying: (sourceBase, colStart, rowWidth, rowStart)
+            int localRow = int(gl_FragCoord.y) - uStartLine - vSubDraw.w;
+            int localCol = int(gl_FragCoord.x) - vSubDraw.y;
+            uint originalIndex = uint(vSubDraw.x + localRow * vSubDraw.z + localCol);
         #else
             uint originalIndex = uint(targetIndex);
         #endif

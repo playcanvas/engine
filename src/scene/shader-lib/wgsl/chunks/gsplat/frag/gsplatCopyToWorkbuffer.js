@@ -24,8 +24,8 @@ uniform uStartLine: i32;      // Start row in destination texture
 uniform uViewportWidth: i32;  // Width of the destination viewport in pixels
 
 #ifdef GSPLAT_LOD
-    // LOD intervals texture
-    var uIntervalsTexture: texture_2d<u32>;
+    // Packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
+    varying @interpolate(flat) vSubDraw: vec4i;
 #endif
 
 uniform uColorMultiply: vec3f;
@@ -70,10 +70,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     } else {
 
         #ifdef GSPLAT_LOD
-            // Use intervals texture to remap target index to source index
-            let intervalsSize = i32(textureDimensions(uIntervalsTexture, 0).x);
-            let intervalUV = vec2i(targetIndex % intervalsSize, targetIndex / intervalsSize);
-            let originalIndex = textureLoad(uIntervalsTexture, intervalUV, 0).r;
+            // Compute source index from packed sub-draw varying: (sourceBase, colStart, rowWidth, rowStart)
+            let localRow = i32(input.position.y) - uniform.uStartLine - input.vSubDraw.w;
+            let localCol = i32(input.position.x) - input.vSubDraw.y;
+            let originalIndex = u32(input.vSubDraw.x + localRow * input.vSubDraw.z + localCol);
         #else
             let originalIndex = targetIndex;
         #endif
