@@ -3,7 +3,7 @@ import { Frustum } from '../../core/shape/frustum.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32F,
+    ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32F,
     BUFFERUSAGE_COPY_DST, SEMANTIC_POSITION, getGlslShaderType
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -330,30 +330,6 @@ class GSplatWorkBuffer {
     }
 
     /**
-     * Creates a nearest-filtered, clamp-to-edge texture with no mipmaps.
-     *
-     * @param {string} name - Debug name for the texture.
-     * @param {number} width - Texture width.
-     * @param {number} height - Texture height.
-     * @param {number} format - Pixel format constant.
-     * @returns {Texture} The created texture.
-     * @private
-     */
-    _createTexture(name, width, height, format) {
-        return new Texture(this.device, {
-            name: name,
-            width: width,
-            height: height,
-            format: format,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
-    }
-
-    /**
      * Gets a texture by name.
      *
      * @param {string} name - The texture name.
@@ -469,14 +445,14 @@ class GSplatWorkBuffer {
 
         // Create/resize bounds sphere texture (RGBA32F: center.xyz, radius)
         if (!this.boundsSphereTexture) {
-            this.boundsSphereTexture = this._createTexture('boundsSphereTexture', width, height, PIXELFORMAT_RGBA32F);
+            this.boundsSphereTexture = Texture.createDataTexture2D(this.device, 'boundsSphereTexture', width, height, PIXELFORMAT_RGBA32F);
         } else {
             this.boundsSphereTexture.resize(width, height);
         }
 
         // Create/resize transform index texture (R32U: GSplatInfo index per bounds entry)
         if (!this.boundsTransformIndexTexture) {
-            this.boundsTransformIndexTexture = this._createTexture('boundsTransformIndexTexture', width, height, PIXELFORMAT_R32U);
+            this.boundsTransformIndexTexture = Texture.createDataTexture2D(this.device, 'boundsTransformIndexTexture', width, height, PIXELFORMAT_R32U);
         } else {
             this.boundsTransformIndexTexture.resize(width, height);
         }
@@ -518,7 +494,7 @@ class GSplatWorkBuffer {
         const { x: width, y: height } = TextureUtils.calcTextureSize(totalTexels, tmpSize, 3);
 
         if (!this.transformsTexture) {
-            this.transformsTexture = this._createTexture('transformsTexture', width, height, PIXELFORMAT_RGBA32F);
+            this.transformsTexture = Texture.createDataTexture2D(this.device, 'transformsTexture', width, height, PIXELFORMAT_RGBA32F);
         } else {
             this.transformsTexture.resize(width, height);
         }
@@ -579,7 +555,7 @@ class GSplatWorkBuffer {
 
         // Create/resize visibility texture (R32U: bit-packed, 32 spheres per texel)
         if (!this.nodeVisibilityTexture) {
-            this.nodeVisibilityTexture = this._createTexture('nodeVisibilityTexture', width, height, PIXELFORMAT_R32U);
+            this.nodeVisibilityTexture = Texture.createDataTexture2D(this.device, 'nodeVisibilityTexture', width, height, PIXELFORMAT_R32U);
 
             this.cullingRenderTarget = new RenderTarget({
                 name: 'NodeCullingRT',

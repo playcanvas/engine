@@ -1,5 +1,4 @@
 import { Vec2 } from '../../core/math/vec2.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 
@@ -198,23 +197,7 @@ class GSplatStreams {
      * @returns {Texture} The created texture instance.
      */
     createTexture(name, format, size, data) {
-        /** @type {object} */
-        const options = {
-            name: name,
-            width: size.x,
-            height: size.y,
-            format: format,
-            cubemap: false,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        };
-        if (data) {
-            options.levels = [data];
-        }
-        return new Texture(this.device, /** @type {any} */ (options));
+        return Texture.createDataTexture2D(this.device, name, size.x, size.y, format, data ? [data] : undefined);
     }
 }
 

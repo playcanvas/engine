@@ -4,7 +4,7 @@ import { math } from '../../core/math/math.js';
 import {
     isCompressedPixelFormat,
     getPixelFormatArrayType,
-    ADDRESS_REPEAT,
+    ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
     PIXELFORMAT_RGBA8,
@@ -66,6 +66,34 @@ let id = 0;
  * @category Graphics
  */
 class Texture {
+    /**
+     * Creates a 2D data texture with nearest filtering, clamp-to-edge addressing and no mipmaps.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
+     * @param {string} name - The name of the texture.
+     * @param {number} width - The width of the texture in pixels.
+     * @param {number} height - The height of the texture in pixels.
+     * @param {number} format - The pixel format of the texture.
+     * @param {Uint8Array[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [levels]
+     * - Optional initial mip level data.
+     * @returns {Texture} The created texture.
+     * @ignore
+     */
+    static createDataTexture2D(graphicsDevice, name, width, height, format, levels) {
+        return new Texture(graphicsDevice, {
+            name,
+            width,
+            height,
+            format,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            levels
+        });
+    }
+
     /**
      * The name of the texture.
      *

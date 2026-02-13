@@ -2,7 +2,7 @@ import { BlueNoise } from '../../core/math/blue-noise.js';
 import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL,
+    PIXELFORMAT_R8, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -173,17 +173,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
     createRenderTarget(name) {
         return new RenderTarget({
             depth: false,
-            colorBuffer: new Texture(this.device, {
-                name: name,
-                width: 1,
-                height: 1,
-                format: PIXELFORMAT_R8,
-                mipmaps: false,
-                minFilter: FILTER_NEAREST,
-                magFilter: FILTER_NEAREST,
-                addressU: ADDRESS_CLAMP_TO_EDGE,
-                addressV: ADDRESS_CLAMP_TO_EDGE
-            })
+            colorBuffer: Texture.createDataTexture2D(this.device, name, 1, 1, PIXELFORMAT_R8)
         });
     }
 
