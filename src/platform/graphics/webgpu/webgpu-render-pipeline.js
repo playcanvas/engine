@@ -183,7 +183,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         lookupHashes[11] = stencilEnabled ? stencilFront.key : 0;
         lookupHashes[12] = stencilEnabled ? stencilBack.key : 0;
         lookupHashes[13] = ibFormat ?? 0;
-        lookupHashes[14] = frontFace ?? FRONTFACE_CCW; // Default ccw
+        lookupHashes[14] = frontFace;
         const hash = hash32Fnv1a(lookupHashes);
 
         // cached pipeline
@@ -337,7 +337,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
             primitive: {
                 topology: primitiveTopology,
-                frontFace: _frontFace[frontFace ?? FRONTFACE_CCW], // Default ccw
+                frontFace: _frontFace[frontFace], // Default ccw
                 cullMode: _cullModes[cullMode]
             },
 
