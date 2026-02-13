@@ -1,7 +1,7 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
-import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRISTRIP } from '../../platform/graphics/constants.js';
+import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRIANGLES } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -12,11 +12,10 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
  */
 
 const _quadPrimitive = {
-    type: PRIMITIVE_TRISTRIP,
+    type: PRIMITIVE_TRIANGLES,
     base: 0,
-    baseVertex: 0,
-    count: 4,
-    indexed: false
+    count: 6,
+    indexed: true
 };
 
 const _tempViewport = new Vec4();
@@ -119,8 +118,12 @@ class QuadRender {
      * not changed if not provided.
      * @param {Vec4} [scissor] - The scissor rectangle of the quad, in pixels. Used only if the
      * viewport is provided.
+     * @param {number} [numInstances] - Number of instances to draw. When provided, renders
+     * multiple quads using instanced drawing. Each instance can use the instance index
+     * (`gl_InstanceID` in GLSL, `pcInstanceIndex` in WGSL) to fetch per-quad data from
+     * a texture or buffer, allowing each quad to be parameterized independently.
      */
-    render(viewport, scissor) {
+    render(viewport, scissor, numInstances) {
 
         const device = this.shader.device;
         DebugGraphics.pushGpuMarker(device, 'QuadRender');
@@ -163,7 +166,7 @@ class QuadRender {
             }
         }
 
-        device.draw(_quadPrimitive);
+        device.draw(_quadPrimitive, device.quadIndexBuffer, numInstances);
 
         // restore if changed
         if (viewport) {

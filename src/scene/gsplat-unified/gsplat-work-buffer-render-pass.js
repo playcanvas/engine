@@ -131,7 +131,8 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const scope = device.scope;
         Debug.assert(resource);
 
-        const { activeSplats, lineStart, viewport, intervalTexture } = splatInfo;
+        const { activeSplats, lineStart, viewport, subDrawTexture, subDrawCount } = splatInfo;
+        const useIntervals = subDrawTexture !== null && subDrawCount > 0;
 
         // Get work buffer modifier (live from placement, not a snapshot copy)
         const workBufferModifier = splatInfo.getWorkBufferModifier?.() ?? null;
@@ -142,7 +143,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
 
         // quad renderer and material are cached in the resource
         const workBufferRenderInfo = resource.getWorkBufferRenderInfo(
-            intervalTexture !== null,
+            useIntervals,
             this.colorOnly,
             workBufferModifier,
             formatHash,
@@ -152,11 +153,6 @@ class GSplatWorkBufferRenderPass extends RenderPass {
 
         // Assign material properties to scope
         workBufferRenderInfo.material.setParameters(device);
-
-        if (intervalTexture) {
-            // Set LOD intervals texture for remapping of indices
-            scope.resolve('uIntervalsTexture').setValue(intervalTexture.texture);
-        }
 
         scope.resolve('uActiveSplats').setValue(activeSplats);
         scope.resolve('uStartLine').setValue(lineStart);
@@ -216,8 +212,17 @@ class GSplatWorkBufferRenderPass extends RenderPass {
             }
         }
 
-        // Render the quad - QuadRender handles all the complex setup internally
-        workBufferRenderInfo.quadRender.render(viewport);
+        if (useIntervals) {
+            // Instanced draw path: one quad per interval row-segment
+            scope.resolve('uSubDrawData').setValue(subDrawTexture);
+            scope.resolve('uLineCount').setValue(splatInfo.lineCount);
+            scope.resolve('uTextureWidth').setValue(viewport.z);
+
+            workBufferRenderInfo.quadRender.render(viewport, undefined, subDrawCount);
+        } else {
+            // Standard single-quad draw path
+            workBufferRenderInfo.quadRender.render(viewport);
+        }
     }
 
     destroy() {
