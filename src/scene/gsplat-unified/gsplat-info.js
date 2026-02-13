@@ -3,7 +3,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U, FILTER_NEAREST, ADDRESS_CLAMP_TO_EDGE } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 
@@ -355,17 +355,7 @@ class GSplatInfo {
         const { x: texWidth, y: texHeight } = TextureUtils.calcTextureSize(subDrawCount, tmpSize);
 
         // Create the sub-draw data texture
-        this.subDrawTexture = new Texture(this.device, {
-            name: 'subDrawData',
-            width: texWidth,
-            height: texHeight,
-            format: PIXELFORMAT_RGBA32U,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
+        this.subDrawTexture = Texture.createDataTexture2D(this.device, 'subDrawData', texWidth, texHeight, PIXELFORMAT_RGBA32U);
 
         // Upload sub-draw data
         const texData = this.subDrawTexture.lock();
@@ -416,18 +406,7 @@ class GSplatInfo {
         this.numBoundsEntries = localIdx;
 
         // Create the texture with initial data
-        this.nodeToLocalBoundsTexture = new Texture(this.device, {
-            name: 'nodeToLocalBoundsTexture',
-            width: width,
-            height: height,
-            format: PIXELFORMAT_R32U,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            levels: [data]
-        });
+        this.nodeToLocalBoundsTexture = Texture.createDataTexture2D(this.device, 'nodeToLocalBoundsTexture', width, height, PIXELFORMAT_R32U, [data]);
     }
 
     /**

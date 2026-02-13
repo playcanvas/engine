@@ -3,7 +3,7 @@ import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { TRACEID_OCTREE_RESOURCES } from '../../core/constants.js';
-import { PIXELFORMAT_R8U, PIXELFORMAT_R16U, PIXELFORMAT_R32U, FILTER_NEAREST, ADDRESS_CLAMP_TO_EDGE } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_R8U, PIXELFORMAT_R16U, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
 // Temporary array reused to avoid allocations during cooldown ticking
@@ -263,18 +263,7 @@ class GSplatOctree {
             }
         }
 
-        return new Texture(resource.device, {
-            name: `nodeMappingTexture-${fileIndex}`,
-            width: dim.x,
-            height: dim.y,
-            format: format,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            levels: [data]
-        });
+        return Texture.createDataTexture2D(resource.device, `nodeMappingTexture-${fileIndex}`, dim.x, dim.y, format, [data]);
     }
 
     getFileResource(fileIndex) {
