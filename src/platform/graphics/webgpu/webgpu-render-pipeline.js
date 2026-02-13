@@ -337,7 +337,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
             primitive: {
                 topology: primitiveTopology,
-                frontFace: _frontFace[frontFace], // Default ccw
+                frontFace: _frontFace[frontFace],
                 cullMode: _cullModes[cullMode]
             },
 
