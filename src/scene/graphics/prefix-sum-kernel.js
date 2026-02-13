@@ -80,7 +80,7 @@ class PrefixSumKernel {
      * Destroys the kernel and releases resources.
      */
     destroy() {
-        this._destroyPasses();
+        this.destroyPasses();
 
         this._scanShader?.destroy();
         this._addBlockShader?.destroy();
@@ -218,7 +218,7 @@ class PrefixSumKernel {
 
         if (requiredPasses > currentPasses) {
             // Need more passes - destroy old and recreate with new capacity
-            this._destroyPasses();
+            this.destroyPasses();
             this.createPassesRecursive(dataBuffer, count);
             return;
         }
@@ -245,9 +245,9 @@ class PrefixSumKernel {
     /**
      * Destroys passes but keeps shaders and formats.
      *
-     * @private
+     * @ignore
      */
-    _destroyPasses() {
+    destroyPasses() {
         for (const pass of this.passes) {
             pass.blockSumBuffer?.destroy();
         }

@@ -6,6 +6,7 @@
  * @import { StorageBuffer } from './storage-buffer.js'
  * @import { Texture } from './texture.js'
  * @import { TextureView } from './texture-view.js'
+ * @import { Vec2 } from '../../core/math/vec2.js'
  * @import { VertexBuffer } from './vertex-buffer.js'
  */
 
@@ -204,6 +205,26 @@ class Compute {
         this.indirectSlotIndex = slotIndex;
         this.indirectBuffer = buffer;
         this.indirectFrameStamp = this.device.renderVersion;
+    }
+
+    /**
+     * Calculate near-square 2D dispatch dimensions for a given workgroup count,
+     * respecting the WebGPU per-dimension limit. When the count fits within a single
+     * dimension, Y is 1. Otherwise, dimensions are chosen to be roughly square to
+     * minimize wasted padding threads.
+     *
+     * @param {number} count - Total number of workgroups needed.
+     * @param {Vec2} result - Output vector to receive X (x) and Y (y) dimensions.
+     * @param {number} [maxDimension] - Maximum workgroups per dimension.
+     * @returns {Vec2} The result vector with dimensions set.
+     * @ignore
+     */
+    static calcDispatchSize(count, result, maxDimension = 65535) {
+        if (count <= maxDimension) {
+            return result.set(count, 1);
+        }
+        const x = Math.floor(Math.sqrt(count));
+        return result.set(x, Math.ceil(count / x));
     }
 }
 

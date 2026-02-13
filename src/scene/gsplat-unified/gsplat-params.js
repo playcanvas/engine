@@ -50,6 +50,7 @@ class GSplatParams {
             readGLSL: '#include "gsplatContainerPackedReadVS"',
             readWGSL: '#include "gsplatContainerPackedReadVS"'
         });
+        this._format.allowStreamRemoval = true;
     }
 
     /**
@@ -72,7 +73,6 @@ class GSplatParams {
 
     /**
      * Enables GPU-based sorting using compute shaders. WebGPU only.
-     * Must be set before gsplat components are created.
      *
      * @type {boolean}
      * @ignore
@@ -129,17 +129,14 @@ class GSplatParams {
     _enableIds = false;
 
     /**
-     * Enables per-component ID storage in the work buffer. When enabled, each GSplat component
-     * gets a unique ID written to the work buffer. This ID is used by the picking system to
-     * identify which component was picked, but is also available to custom shaders for effects
-     * like highlighting, animation, or any per-component differentiation.
-     *
-     * Once enabled, the ID stream cannot be disabled (it persists for the lifetime of the app).
+     * Enables or disables per-component ID storage in the work buffer. When enabled, each GSplat
+     * component gets a unique ID written to the work buffer. This ID is used by the picking
+     * system to identify which component was picked, but is also available to custom shaders for
+     * effects like highlighting, animation, or any per-component differentiation.
      *
      * @type {boolean}
      */
     set enableIds(value) {
-        // Only accept true (once enabled, cannot be disabled)
         if (value && !this._enableIds) {
             this._enableIds = true;
             if (!this._format.getStream('pcId')) {
@@ -147,7 +144,9 @@ class GSplatParams {
                     { name: 'pcId', format: PIXELFORMAT_R32U }
                 ]);
             }
-            this.dirty = true;
+        } else if (!value && this._enableIds) {
+            this._enableIds = false;
+            this._format.removeExtraStreams(['pcId']);
         }
     }
 
@@ -158,6 +157,43 @@ class GSplatParams {
      */
     get enableIds() {
         return this._enableIds;
+    }
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _culling = false;
+
+    /**
+     * Enables or disables GPU frustum culling. When enabled, octree nodes outside the camera
+     * frustum are culled on the GPU before rendering. WebGPU only.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    set culling(value) {
+        if (value && !this._culling) {
+            this._culling = true;
+            if (!this._format.getStream('pcNodeIndex')) {
+                this._format.addExtraStreams([
+                    { name: 'pcNodeIndex', format: PIXELFORMAT_R32U }
+                ]);
+            }
+        } else if (!value && this._culling) {
+            this._culling = false;
+            this._format.removeExtraStreams(['pcNodeIndex']);
+        }
+    }
+
+    /**
+     * Gets the culling enabled state.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get culling() {
+        return this._culling;
     }
 
     /**
