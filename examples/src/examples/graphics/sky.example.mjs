@@ -176,6 +176,7 @@ assetListLoader.load(() => {
             cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
             cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
             cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
+            cameraFrame.colorEnhance.midtones = data.get('data.colorEnhance.midtones');
             cameraFrame.colorEnhance.vibrance = data.get('data.colorEnhance.vibrance');
             cameraFrame.colorEnhance.dehaze = data.get('data.colorEnhance.dehaze');
             cameraFrame.update();
@@ -190,6 +191,7 @@ assetListLoader.load(() => {
         enabled: false,
         shadows: 0,
         highlights: 0,
+        midtones: 0,
         vibrance: 0,
         dehaze: 0
     });

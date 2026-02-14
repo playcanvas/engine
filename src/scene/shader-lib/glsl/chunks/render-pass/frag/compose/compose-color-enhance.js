@@ -1,6 +1,7 @@
 export default /* glsl */`
     #ifdef COLOR_ENHANCE
         uniform vec4 colorEnhanceParams; // x=shadows, y=highlights, z=vibrance, w=dehaze
+        uniform float colorEnhanceMidtones;
 
         vec3 applyColorEnhance(vec3 color) {
             float maxChannel = max(color.r, max(color.g, color.b));
@@ -17,6 +18,20 @@ export default /* glsl */`
 
                 color *= pow(2.0, colorEnhanceParams.x * shadowWeight);
                 color *= pow(2.0, colorEnhanceParams.y * highlightWeight);
+            }
+
+            // Midtones - localized exposure in log-luminance space
+            if (colorEnhanceMidtones != 0.0) {
+                const float pivot = 0.18;
+                const float widthStops = 1.25;
+                const float maxStops = 2.0;
+                float y = max(dot(color, vec3(0.2126, 0.7152, 0.0722)), 1e-6);
+
+                // 0 at pivot, +/-1 one stop away from pivot
+                float d = log2(y / pivot);
+                float w = exp(-(d * d) / (2.0 * widthStops * widthStops));
+                float stops = colorEnhanceMidtones * maxStops * w;
+                color *= exp2(stops);
             }
 
             // Vibrance - skip if zero (coherent branch)

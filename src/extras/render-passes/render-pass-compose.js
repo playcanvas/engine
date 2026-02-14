@@ -77,6 +77,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     colorEnhanceDehaze = 0;
 
+    colorEnhanceMidtones = 0;
+
     _taaEnabled = false;
 
     _sharpness = 0.5;
@@ -127,6 +129,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.colorLUTParams = new Float32Array(4);
         this.colorLUTParamsId = scope.resolve('colorLUTParams');
         this.colorEnhanceParamsId = scope.resolve('colorEnhanceParams');
+        this.colorEnhanceMidtonesId = scope.resolve('colorEnhanceMidtones');
     }
 
     set debug(value) {
@@ -385,6 +388,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         if (this._colorEnhanceEnabled) {
             this.colorEnhanceParamsId.setValue([this.colorEnhanceShadows, this.colorEnhanceHighlights, this.colorEnhanceVibrance, this.colorEnhanceDehaze]);
+            this.colorEnhanceMidtonesId.setValue(this.colorEnhanceMidtones);
         }
 
         const lutTexture = this._colorLUT;

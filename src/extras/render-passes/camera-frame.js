@@ -159,6 +159,9 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * @property {number} vibrance - The vibrance (smart saturation), -1 to 1 range. Positive values boost
  * saturation of less-saturated colors more than already-saturated ones. Negative values desaturate.
  * Defaults to 0.
+ * @property {number} midtones - The midtone adjustment, -1 to 1 range. Positive values brighten
+ * midtones, negative values darken midtones, with shadows and highlights more strongly preserved
+ * than by a linear exposure change. Defaults to 0.
  * @property {number} dehaze - The dehaze adjustment, -1 to 1 range. Positive values remove atmospheric
  * haze, increasing clarity and contrast. Negative values add a haze effect. Defaults to 0.
  */
@@ -331,6 +334,7 @@ class CameraFrame {
         shadows: 0,
         highlights: 0,
         vibrance: 0,
+        midtones: 0,
         dehaze: 0
     };
 
@@ -541,6 +545,7 @@ class CameraFrame {
             composePass.colorEnhanceShadows = colorEnhance.shadows;
             composePass.colorEnhanceHighlights = colorEnhance.highlights;
             composePass.colorEnhanceVibrance = colorEnhance.vibrance;
+            composePass.colorEnhanceMidtones = colorEnhance.midtones;
             composePass.colorEnhanceDehaze = colorEnhance.dehaze;
         }
 

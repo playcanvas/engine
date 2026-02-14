@@ -323,6 +323,14 @@ class ColorEnhance {
      * @precision 3
      * @step 0.01
      */
+    midtones = 0;
+
+    /**
+     * @visibleif {enabled}
+     * @range [-1, 1]
+     * @precision 3
+     * @step 0.01
+     */
     vibrance = 0;
 
     /**
@@ -568,6 +576,7 @@ class CameraFrame extends Script {
         if (colorEnhance.enabled) {
             dstColorEnhance.shadows = colorEnhance.shadows;
             dstColorEnhance.highlights = colorEnhance.highlights;
+            dstColorEnhance.midtones = colorEnhance.midtones;
             dstColorEnhance.vibrance = colorEnhance.vibrance;
             dstColorEnhance.dehaze = colorEnhance.dehaze;
         }
