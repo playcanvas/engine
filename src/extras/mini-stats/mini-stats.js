@@ -68,6 +68,8 @@ const delayedStartStats = new Set([
  * graphs. Defaults to 1.
  * @property {number} [cpuTimingMinSize] - Minimum size index at which to show CPU sub-timing
  * graphs (script, anim, physics, render). Defaults to 1.
+ * @property {number} [vramTimingMinSize] - Minimum size index at which to show VRAM subcategory
+ * graphs. Defaults to 1.
  */
 
 /**
@@ -118,10 +120,11 @@ class MiniStats {
         this.wordAtlas = new WordAtlas(device, words);
         this._activeSizeIndex = options.startSizeIndex;
 
-        // if GPU pass tracking or CPU timing is enabled, use the last width for medium/large sizes
+        // if GPU pass tracking, CPU timing or VRAM detail is enabled, use the last width for medium/large sizes
         const gpuTimingMinSize = options.gpuTimingMinSize ?? 1;
         const cpuTimingMinSize = options.cpuTimingMinSize ?? 1;
-        if (gpuTimingMinSize < this.sizes.length || cpuTimingMinSize < this.sizes.length) {
+        const vramTimingMinSize = options.vramTimingMinSize ?? 1;
+        if (gpuTimingMinSize < this.sizes.length || cpuTimingMinSize < this.sizes.length || vramTimingMinSize < this.sizes.length) {
             const lastWidth = this.sizes[this.sizes.length - 1].width;
             for (let i = 1; i < this.sizes.length - 1; i++) {
                 this.sizes[i].width = lastWidth;
@@ -177,6 +180,10 @@ class MiniStats {
         this.cpuTimingMinSize = cpuTimingMinSize;
         this.cpuGraphs = new Map(); // Map<statName, { graph, lastNonZeroFrame }>
 
+        // VRAM subcategory tracking
+        this.vramTimingMinSize = vramTimingMinSize;
+        this.vramGraphs = new Map(); // Map<statName, { graph, lastNonZeroFrame }>
+
         this.frameIndex = 0;
         this.textRefreshRate = options.textRefreshRate;
 
@@ -197,6 +204,8 @@ class MiniStats {
 
         this.graphs.forEach(graph => graph.destroy());
         this.gpuPassGraphs.clear();
+        this.cpuGraphs.clear();
+        this.vramGraphs.clear();
         this.wordAtlas.destroy();
         this.texture.destroy();
         this.div.remove();
@@ -210,6 +219,7 @@ class MiniStats {
      * - GPU utilization
      * - Overall frame time
      * - Draw call count
+     * - Total VRAM usage
      *
      * @returns {object} The default options for MiniStats.
      * @example
@@ -267,6 +277,16 @@ class MiniStats {
                     name: 'DrawCalls',
                     stats: ['drawCalls.total'],
                     watermark: 1000
+                },
+
+                // used VRAM in MB
+                {
+                    name: 'VRAM',
+                    stats: ['vram.totalUsed'],
+                    decimalPlaces: 1,
+                    multiplier: 1 / (1024 * 1024),
+                    unitsName: 'MB',
+                    watermark: 1024
                 }
             ],
 
@@ -274,7 +294,10 @@ class MiniStats {
             gpuTimingMinSize: 1,
 
             // minimum size index to show CPU sub-timing graphs
-            cpuTimingMinSize: 1
+            cpuTimingMinSize: 1,
+
+            // minimum size index to show VRAM subcategory graphs
+            vramTimingMinSize: 1
         };
     }
 
@@ -306,9 +329,9 @@ class MiniStats {
             }
             this.gpuPassGraphs.clear();
 
-            // reset main GPU graph to default background color
+            // keep main GPU graph in GPU color group
             const gpuGraph = this.graphs.find(g => g.name === 'GPU');
-            if (gpuGraph) gpuGraph.graphType = 0.0;
+            if (gpuGraph) gpuGraph.graphType = 0.33;
         }
 
         // delete CPU sub-timing graphs when switching below threshold
@@ -323,9 +346,9 @@ class MiniStats {
             }
             this.cpuGraphs.clear();
 
-            // reset main CPU graph to default background color
+            // keep main CPU graph in CPU color group
             const cpuGraph = this.graphs.find(g => g.name === 'CPU');
-            if (cpuGraph) cpuGraph.graphType = 0.0;
+            if (cpuGraph) cpuGraph.graphType = 0.66;
         }
     }
 
@@ -407,20 +430,37 @@ class MiniStats {
     initGraphs(app, device, options) {
         this.graphs = [];
 
+        // Add VRAM first so it appears at the bottom in the compact stacked view.
+        // Graphs are rendered bottom-to-top.
+        if (options.stats) {
+            options.stats.forEach((entry) => {
+                if (entry.name === 'VRAM') {
+                    const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
+                    const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
+                    this.graphs.push(graph);
+                }
+            });
+        }
+
         if (options.cpu.enabled) {
             const timer = new CpuTimer(app);
             const graph = new Graph('CPU', app, options.cpu.watermark, options.textRefreshRate, timer);
+            graph.graphType = 0.66;
             this.graphs.push(graph);
         }
 
         if (options.gpu.enabled) {
             const timer = new GpuTimer(device);
             const graph = new Graph('GPU', app, options.gpu.watermark, options.textRefreshRate, timer);
+            graph.graphType = 0.33;
             this.graphs.push(graph);
         }
 
         if (options.stats) {
             options.stats.forEach((entry) => {
+                if (entry.name === 'VRAM') {
+                    return;
+                }
                 const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
                 const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
                 this.graphs.push(graph);
@@ -590,6 +630,7 @@ class MiniStats {
 
         // scan for new sub-stats
         const statsEntries = (stats instanceof Map) ? stats : Object.entries(stats);
+        const mainGraph = this.graphs.find(g => g.name === mainGraphName);
         for (const [statName, timing] of statsEntries) {
             if (!subGraphs.has(statName)) {
                 // Skip creating graph for auto-hide stats with zero timing
@@ -607,11 +648,15 @@ class MiniStats {
                 }
                 const graphName = `  ${displayName}`;  // indent with 2 spaces
 
-                // initial watermark (will be synced to main graph)
-                const watermark = 10.0;
+                // use main graph watermark when available
+                const watermark = mainGraph?.watermark ?? 10.0;
+
+                const decimalPlaces = 1;
+                const unitsName = statPathPrefix === 'vram' ? 'MB' : 'ms';
+                const multiplier = statPathPrefix === 'vram' ? 1 / (1024 * 1024) : 1;
 
                 const statPath = `${statPathPrefix}.${statName}`;
-                const timer = new StatsTimer(this.app, [statPath], 1, 'ms', 1);
+                const timer = new StatsTimer(this.app, [statPath], decimalPlaces, unitsName, multiplier);
                 const graph = new Graph(graphName, this.app, watermark, this.textRefreshRate, timer);
 
                 // Set graph type for background tinting
@@ -656,22 +701,9 @@ class MiniStats {
         }
 
         // sync all sub-stat watermarks to match main graph
-        const mainGraph = this.graphs.find(g => g.name === mainGraphName);
         if (mainGraph) {
             for (const statData of subGraphs.values()) {
                 statData.graph.watermark = mainGraph.watermark;
-            }
-
-            // set main graph background color to match sub-graphs when they exist
-            if (subGraphs.size > 0) {
-                if (statPathPrefix === 'gpu') {
-                    mainGraph.graphType = 0.33;  // Match GPU sub-graphs
-                } else if (statPathPrefix === 'frame') {
-                    mainGraph.graphType = 0.66;  // Match CPU sub-graphs
-                }
-            } else {
-                // reset to default background when no sub-graphs
-                mainGraph.graphType = 0.0;
             }
         }
     }
@@ -756,6 +788,19 @@ class MiniStats {
                     gsplatSort: this.app.stats.frame.gsplatSort
                 };
                 this.updateSubStats(this.cpuGraphs, 'CPU', cpuStats, 'frame', 240);
+            }
+
+            // Update VRAM subcategory graphs when size index meets threshold
+            if (this._activeSizeIndex >= this.vramTimingMinSize) {
+                const vram = this.app.stats.vram;
+                const vramStats = {
+                    tex: vram.tex,
+                    geom: vram.geom
+                };
+                if (this.device.isWebGPU) {
+                    vramStats.buffers = vram.buffers;
+                }
+                this.updateSubStats(this.vramGraphs, 'VRAM', vramStats, 'vram', 0);
             }
         }
 
