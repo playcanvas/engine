@@ -169,7 +169,7 @@ class Material {
     cull = CULLFACE_BACK;
 
     /**
-     * Controls how whether polygons are front- or back-facing by setting a winding
+     * Controls whether polygons are front- or back-facing by setting a winding
      * orientation. Can be:
      *
      * - {@link FRONTFACE_CW}: The clock-wise winding.
