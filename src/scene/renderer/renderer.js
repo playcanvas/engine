@@ -505,6 +505,11 @@ class Renderer {
         }
     }
 
+    setupFrontFace(drawCall) {
+        const material = drawCall.material;
+        this.device.setCullMode(material.frontFace);
+    }
+
     updateCameraFrustum(camera) {
 
         if (camera.xr && camera.xr.views.list.length) {

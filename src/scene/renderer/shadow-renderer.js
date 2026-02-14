@@ -330,6 +330,7 @@ class ShadowRenderer {
             }
 
             renderer.setupCullMode(true, flipFactor, meshInstance);
+            renderer.setupFrontFace(meshInstance);
 
             // Uniforms I (shadow): material
             material.setParameters(device);
