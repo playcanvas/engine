@@ -824,7 +824,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Controls how whether polygons are front- or back-facing by setting a winding
+     * Controls whether polygons are front- or back-facing by setting a winding
      * orientation. The default frontFace is {@link FRONTFACE_CCW}.
      *
      * @param {number} frontFace - The front face to set. Can be:
