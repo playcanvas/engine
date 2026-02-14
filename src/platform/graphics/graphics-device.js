@@ -8,8 +8,10 @@ import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 import {
+    BUFFER_STATIC,
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
+    INDEXFORMAT_UINT16,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
     semanticToLocation,
@@ -17,6 +19,7 @@ import {
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
+import { IndexBuffer } from './index-buffer.js';
 import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
@@ -28,7 +31,6 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from './constants.js'
  * @import { DynamicBuffers } from './dynamic-buffers.js'
  * @import { GpuProfiler } from './gpu-profiler.js'
- * @import { IndexBuffer } from './index-buffer.js'
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
@@ -422,6 +424,15 @@ class GraphicsDevice extends EventHandler {
     quadVertexBuffer;
 
     /**
+     * An index buffer for drawing a quad as an indexed triangle list.
+     * Contains 6 indices: [0, 1, 2, 2, 1, 3] forming two triangles.
+     *
+     * @type {IndexBuffer}
+     * @ignore
+     */
+    quadIndexBuffer;
+
+    /**
      * An object representing current blend state
      *
      * @ignore
@@ -597,6 +608,10 @@ class GraphicsDevice extends EventHandler {
         this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
             data: positions
         });
+
+        // create quad index buffer for indexed triangle list (two triangles forming a quad)
+        const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
+        this.quadIndexBuffer = new IndexBuffer(this, INDEXFORMAT_UINT16, 6, BUFFER_STATIC, indices.buffer);
     }
 
     /**
@@ -630,6 +645,9 @@ class GraphicsDevice extends EventHandler {
 
         this.quadVertexBuffer?.destroy();
         this.quadVertexBuffer = null;
+
+        this.quadIndexBuffer?.destroy();
+        this.quadIndexBuffer = null;
 
         this.dynamicBuffers?.destroy();
         this.dynamicBuffers = null;

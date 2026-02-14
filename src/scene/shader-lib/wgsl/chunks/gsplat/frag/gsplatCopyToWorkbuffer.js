@@ -24,8 +24,8 @@ uniform uStartLine: i32;      // Start row in destination texture
 uniform uViewportWidth: i32;  // Width of the destination viewport in pixels
 
 #ifdef GSPLAT_LOD
-    // LOD intervals texture
-    var uIntervalsTexture: texture_2d<u32>;
+    // Packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
+    varying @interpolate(flat) vSubDraw: vec4i;
 #endif
 
 uniform uColorMultiply: vec3f;
@@ -39,6 +39,15 @@ uniform model_rotation: vec4f;  // (x,y,z,w) format
 
 #ifdef GSPLAT_ID
     uniform uId: u32;
+#endif
+
+#ifdef GSPLAT_NODE_INDEX
+    uniform uBoundsBaseIndex: u32;
+    #ifdef HAS_NODE_MAPPING
+        var nodeMappingTexture: texture_2d<u32>;
+        var nodeToLocalBoundsTexture: texture_2d<u32>;
+        uniform nodeToLocalBoundsWidth: i32;
+    #endif
 #endif
 
 @fragment
@@ -61,10 +70,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     } else {
 
         #ifdef GSPLAT_LOD
-            // Use intervals texture to remap target index to source index
-            let intervalsSize = i32(textureDimensions(uIntervalsTexture, 0).x);
-            let intervalUV = vec2i(targetIndex % intervalsSize, targetIndex / intervalsSize);
-            let originalIndex = textureLoad(uIntervalsTexture, intervalUV, 0).r;
+            // Compute source index from packed sub-draw varying: (sourceBase, colStart, rowWidth, rowStart)
+            let localRow = i32(input.position.y) - uniform.uStartLine - input.vSubDraw.w;
+            let localCol = i32(input.position.x) - input.vSubDraw.y;
+            let originalIndex = u32(input.vSubDraw.x + localRow * input.vSubDraw.z + localCol);
         #else
             let originalIndex = targetIndex;
         #endif
@@ -133,6 +142,21 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         #ifdef GSPLAT_ID
             writePcId(vec4u(uniform.uId, 0u, 0u, 0u));
+        #endif
+
+        #ifdef GSPLAT_NODE_INDEX
+            #ifdef HAS_NODE_MAPPING
+                // Octree resource: look up node index from source splat, then local bounds index
+                let srcTextureWidth = i32(textureDimensions(nodeMappingTexture, 0).x);
+                let sourceCoord = vec2i(i32(originalIndex) % srcTextureWidth, i32(originalIndex) / srcTextureWidth);
+                let nodeIndex = textureLoad(nodeMappingTexture, sourceCoord, 0).r;
+                let ntlCoord = vec2i(i32(nodeIndex) % uniform.nodeToLocalBoundsWidth, i32(nodeIndex) / uniform.nodeToLocalBoundsWidth);
+                let localBoundsIdx = textureLoad(nodeToLocalBoundsTexture, ntlCoord, 0).r;
+                writePcNodeIndex(vec4u(uniform.uBoundsBaseIndex + localBoundsIdx, 0u, 0u, 0u));
+            #else
+                // Non-octree resource: single bounds entry
+                writePcNodeIndex(vec4u(uniform.uBoundsBaseIndex, 0u, 0u, 0u));
+            #endif
         #endif
     }
     

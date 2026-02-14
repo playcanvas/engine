@@ -98,10 +98,18 @@ class GSplatFormat {
     _read;
 
     /**
-     * Extra streams added via addExtraStreams(). Streams can only be added, never removed.
-     * This restriction exists because:
-     * - GSplatInfo captures references to instance textures as snapshots
-     * - If textures were destroyed on removal, snapshots would have dangling references
+     * When true, allows extra streams to be removed via {@link removeExtraStreams}.
+     * Only work buffer formats (returned by {@link GSplatParams#format}) should set this.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    allowStreamRemoval = false;
+
+    /**
+     * Extra streams added via addExtraStreams(). For resource formats, streams can only be
+     * added, never removed. For work buffer formats (where {@link allowStreamRemoval} is true),
+     * streams can also be removed via {@link removeExtraStreams}.
      *
      * @type {GSplatStreamDescriptor[]}
      * @private
@@ -281,6 +289,36 @@ class GSplatFormat {
         }
 
         if (added) {
+            this._extraStreamsVersion++;
+            this._invalidateCaches();
+        }
+    }
+
+    /**
+     * Removes extra streams by name. Only supported on work buffer formats
+     * (returned by {@link GSplatParams#format}). Removing streams from resource
+     * formats is not supported.
+     *
+     * @param {string[]} names - Array of stream names to remove.
+     * @ignore
+     */
+    removeExtraStreams(names) {
+        if (!this.allowStreamRemoval) {
+            Debug.assert(false, 'GSplatFormat.removeExtraStreams: only supported on work buffer formats');
+            return;
+        }
+
+        let removed = false;
+        for (const name of names) {
+            const idx = this._extraStreams.findIndex(s => s.name === name);
+            if (idx !== -1) {
+                this._extraStreams.splice(idx, 1);
+                this._streamNames.delete(name);
+                removed = true;
+            }
+        }
+
+        if (removed) {
             this._extraStreamsVersion++;
             this._invalidateCaches();
         }

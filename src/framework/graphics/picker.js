@@ -1,5 +1,5 @@
 import { Color } from '../../core/math/color.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { Layer } from '../../scene/layer.js';
@@ -398,17 +398,7 @@ class Picker {
     }
 
     createTexture(name) {
-        return new Texture(this.device, {
-            format: PIXELFORMAT_RGBA8,
-            width: this.width,
-            height: this.height,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            name: name
-        });
+        return Texture.createDataTexture2D(this.device, name, this.width, this.height, PIXELFORMAT_RGBA8);
     }
 
     allocateRenderTarget() {

@@ -4,7 +4,7 @@ import { math } from '../../core/math/math.js';
 import {
     isCompressedPixelFormat,
     getPixelFormatArrayType,
-    ADDRESS_REPEAT,
+    ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
     PIXELFORMAT_RGBA8,
@@ -66,6 +66,34 @@ let id = 0;
  * @category Graphics
  */
 class Texture {
+    /**
+     * Creates a 2D data texture with nearest filtering, clamp-to-edge addressing and no mipmaps.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
+     * @param {string} name - The name of the texture.
+     * @param {number} width - The width of the texture in pixels.
+     * @param {number} height - The height of the texture in pixels.
+     * @param {number} format - The pixel format of the texture.
+     * @param {Uint8Array[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [levels]
+     * - Optional initial mip level data.
+     * @returns {Texture} The created texture.
+     * @ignore
+     */
+    static createDataTexture2D(graphicsDevice, name, width, height, format, levels) {
+        return new Texture(graphicsDevice, {
+            name,
+            width,
+            height,
+            format,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            levels
+        });
+    }
+
     /**
      * The name of the texture.
      *
@@ -265,7 +293,7 @@ class Texture {
         if (options.numLevels !== undefined) {
             this._numLevels = options.numLevels;
         }
-        this._updateNumLevel();
+        this._updateNumLevels();
 
         this._minFilter = options.minFilter ?? FILTER_LINEAR_MIPMAP_LINEAR;
         this._magFilter = options.magFilter ?? FILTER_LINEAR;
@@ -376,7 +404,7 @@ class Texture {
             this._width = Math.floor(width);
             this._height = Math.floor(height);
             this._depth = Math.floor(depth);
-            this._updateNumLevel();
+            this._updateNumLevels();
 
             // re-create the implementation
             this.impl = device.createTextureImpl(this);
@@ -421,7 +449,7 @@ class Texture {
         this.renderVersionDirty = this.device.renderVersion;
     }
 
-    _updateNumLevel() {
+    _updateNumLevels() {
 
         const maxLevels = this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
         const requestedLevels = this._numLevelsRequested;
@@ -673,12 +701,25 @@ class Texture {
             } else if (isIntegerPixelFormat(this._format)) {
                 Debug.warn('Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false', this);
             } else {
-                this._mipmaps = v;
-            }
+                const oldMipmaps = this._mipmaps;
+                const oldNumLevels = this._numLevels;
 
-            if (v) {
-                this._needsMipmapsUpload = true;
-                this.device?.texturesToUpload?.add(this);
+                this._mipmaps = v;
+                this._updateNumLevels();
+
+                // Changing mip count on array textures requires re-creating immutable storage.
+                if (this.array && this._numLevels !== oldNumLevels) {
+                    this.recreateImpl();
+                } else if (this._mipmaps !== oldMipmaps) {
+                    this.propertyChanged(TEXPROPERTY_MIN_FILTER);
+
+                    if (this._mipmaps) {
+                        this._needsMipmapsUpload = true;
+                        this.device?.texturesToUpload?.add(this);
+                    } else {
+                        this._needsMipmapsUpload = false;
+                    }
+                }
             }
         }
     }

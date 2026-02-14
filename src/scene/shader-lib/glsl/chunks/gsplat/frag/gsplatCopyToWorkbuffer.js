@@ -18,8 +18,8 @@ uniform int uStartLine;      // Start row in destination texture
 uniform int uViewportWidth;  // Width of the destination viewport in pixels
 
 #ifdef GSPLAT_LOD
-    // LOD intervals texture
-    uniform usampler2D uIntervalsTexture;
+    // Packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
+    flat varying ivec4 vSubDraw;
 #endif
 
 uniform vec3 uColorMultiply;
@@ -33,6 +33,15 @@ uniform vec4 model_rotation;  // (x,y,z,w) format
 
 #ifdef GSPLAT_ID
     uniform uint uId;
+#endif
+
+#ifdef GSPLAT_NODE_INDEX
+    uniform uint uBoundsBaseIndex;
+    #ifdef HAS_NODE_MAPPING
+        uniform usampler2D nodeMappingTexture;
+        uniform usampler2D nodeToLocalBoundsTexture;
+        uniform int nodeToLocalBoundsWidth;
+    #endif
 #endif
 
 void main(void) {
@@ -57,10 +66,10 @@ void main(void) {
     } else {
 
         #ifdef GSPLAT_LOD
-            // Use intervals texture to remap target index to source index
-            int intervalsSize = int(textureSize(uIntervalsTexture, 0).x);
-            ivec2 intervalUV = ivec2(targetIndex % intervalsSize, targetIndex / intervalsSize);
-            uint originalIndex = texelFetch(uIntervalsTexture, intervalUV, 0).r;
+            // Compute source index from packed sub-draw varying: (sourceBase, colStart, rowWidth, rowStart)
+            int localRow = int(gl_FragCoord.y) - uStartLine - vSubDraw.w;
+            int localCol = int(gl_FragCoord.x) - vSubDraw.y;
+            uint originalIndex = uint(vSubDraw.x + localRow * vSubDraw.z + localCol);
         #else
             uint originalIndex = uint(targetIndex);
         #endif
@@ -141,6 +150,21 @@ void main(void) {
 
         #ifdef GSPLAT_ID
             writePcId(uvec4(uId, 0u, 0u, 0u));
+        #endif
+
+        #ifdef GSPLAT_NODE_INDEX
+            #ifdef HAS_NODE_MAPPING
+                // Octree resource: look up node index from source splat, then local bounds index
+                int srcTextureWidth = int(textureSize(nodeMappingTexture, 0).x);
+                ivec2 sourceCoord = ivec2(int(originalIndex) % srcTextureWidth, int(originalIndex) / srcTextureWidth);
+                uint nodeIndex = texelFetch(nodeMappingTexture, sourceCoord, 0).r;
+                ivec2 ntlCoord = ivec2(int(nodeIndex) % nodeToLocalBoundsWidth, int(nodeIndex) / nodeToLocalBoundsWidth);
+                uint localBoundsIdx = texelFetch(nodeToLocalBoundsTexture, ntlCoord, 0).r;
+                writePcNodeIndex(uvec4(uBoundsBaseIndex + localBoundsIdx, 0u, 0u, 0u));
+            #else
+                // Non-octree resource: single bounds entry
+                writePcNodeIndex(uvec4(uBoundsBaseIndex, 0u, 0u, 0u));
+            #endif
         #endif
     }
 }

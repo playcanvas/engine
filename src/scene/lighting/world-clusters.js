@@ -1,7 +1,8 @@
+import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { math } from '../../core/math/math.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { PIXELFORMAT_R8U } from '../../platform/graphics/constants.js';
+import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
 import { Debug } from '../../core/debug.js';
@@ -10,6 +11,7 @@ import { Debug } from '../../core/debug.js';
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
+const tmpSize = new Vec2();
 const tempVec3 = new Vec3();
 const tempMin3 = new Vec3();
 const tempMax3 = new Vec3();
@@ -164,9 +166,7 @@ class WorldClusters {
             const totalPixels = this.maxCellLightCount * numCells;
 
             // cluster texture size - roughly square that fits all cells. The width is multiply of numPixels to simplify shader math
-            let width = Math.ceil(Math.sqrt(totalPixels));
-            width = math.roundUp(width, this.maxCellLightCount);
-            const height = Math.ceil(totalPixels / width);
+            const { x: width, y: height } = TextureUtils.calcTextureSize(totalPixels, tmpSize, this.maxCellLightCount);
 
             // if the texture is allowed size
             Debug.assert(width <= maxTextureSize && height <= maxTextureSize,

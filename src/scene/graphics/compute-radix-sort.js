@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
@@ -157,19 +158,19 @@ class ComputeRadixSort {
     /**
      * Dispatch dimensions.
      *
-     * @type {{x: number, y: number}}
+     * @type {Vec2}
      */
-    _dispatchSize = { x: 1, y: 1 };
+    _dispatchSize = new Vec2(1, 1);
 
     /**
-     * Cached bind group format for block sum shader.
+     * Cached bind group format for block sum shader (created lazily for current mode).
      *
      * @type {BindGroupFormat|null}
      */
     _blockSumBindGroupFormat = null;
 
     /**
-     * Cached bind group format for reorder shader.
+     * Cached bind group format for reorder shader (created lazily for current mode).
      *
      * @type {BindGroupFormat|null}
      */
@@ -190,6 +191,13 @@ class ComputeRadixSort {
     _passes = [];
 
     /**
+     * Whether the current passes are for indirect sort mode.
+     *
+     * @type {boolean}
+     */
+    _indirect = false;
+
+    /**
      * Creates a new ComputeRadixSort instance.
      *
      * @param {GraphicsDevice} device - The graphics device (must support compute).
@@ -197,7 +205,12 @@ class ComputeRadixSort {
     constructor(device) {
         Debug.assert(device.supportsCompute, 'ComputeRadixSort requires compute shader support (WebGPU)');
         this.device = device;
-        this._createBindGroupFormats();
+
+        // Create uniform buffer format (shared by both direct and indirect modes)
+        this._uniformBufferFormat = new UniformBufferFormat(device, [
+            new UniformFormat('workgroupCount', UNIFORMTYPE_UINT),
+            new UniformFormat('elementCount', UNIFORMTYPE_UINT)
+        ]);
     }
 
     /**
@@ -266,27 +279,31 @@ class ComputeRadixSort {
     }
 
     /**
-     * Creates bind group formats (called once in constructor).
+     * Ensures bind group formats exist for the given mode. Destroys and recreates
+     * them if switching between direct and indirect modes.
      *
+     * @param {boolean} indirect - Whether to create indirect sort formats.
      * @private
      */
-    _createBindGroupFormats() {
+    _ensureBindGroupFormats(indirect) {
+        if (this._blockSumBindGroupFormat && this._indirect === indirect) {
+            return;
+        }
+
+        // Destroy existing formats if switching mode
+        this._blockSumBindGroupFormat?.destroy();
+        this._reorderBindGroupFormat?.destroy();
+
         const device = this.device;
 
-        // Create uniform buffer format for runtime uniforms
-        this._uniformBufferFormat = new UniformBufferFormat(device, [
-            new UniformFormat('workgroupCount', UNIFORMTYPE_UINT),
-            new UniformFormat('elementCount', UNIFORMTYPE_UINT)
-        ]);
-
-        this._blockSumBindGroupFormat = new BindGroupFormat(device, [
+        const blockSumEntries = [
             new BindStorageBufferFormat('input', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('local_prefix_sums', SHADERSTAGE_COMPUTE, false),
             new BindStorageBufferFormat('block_sums', SHADERSTAGE_COMPUTE, false),
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
-        ]);
+        ];
 
-        this._reorderBindGroupFormat = new BindGroupFormat(device, [
+        const reorderEntries = [
             new BindStorageBufferFormat('inputKeys', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('outputKeys', SHADERSTAGE_COMPUTE, false),
             new BindStorageBufferFormat('local_prefix_sum', SHADERSTAGE_COMPUTE, true),
@@ -294,21 +311,37 @@ class ComputeRadixSort {
             new BindStorageBufferFormat('inputValues', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('outputValues', SHADERSTAGE_COMPUTE, false),
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
-        ]);
+        ];
+
+        // Indirect sort adds a GPU-written element count buffer
+        if (indirect) {
+            blockSumEntries.push(new BindStorageBufferFormat('sortElementCount', SHADERSTAGE_COMPUTE, true));
+            reorderEntries.push(new BindStorageBufferFormat('sortElementCount', SHADERSTAGE_COMPUTE, true));
+        }
+
+        this._blockSumBindGroupFormat = new BindGroupFormat(device, blockSumEntries);
+        this._reorderBindGroupFormat = new BindGroupFormat(device, reorderEntries);
     }
 
     /**
      * Creates cached compute passes for all bit offsets.
      *
      * @param {number} numBits - Number of bits to sort.
+     * @param {boolean} indirect - Whether to create indirect sort passes.
      * @private
      */
-    _createPasses(numBits) {
+    _createPasses(numBits, indirect) {
         // Destroy old passes and their shaders
         this._destroyPasses();
         this._numBits = numBits;
 
+        // Ensure bind group formats match the requested mode (must happen before
+        // updating _indirect, since _ensureBindGroupFormats compares against it)
+        this._ensureBindGroupFormats(indirect);
+        this._indirect = indirect;
+
         const numPasses = numBits / BITS_PER_PASS;
+        const suffix = indirect ? '-Indirect' : '';
 
         for (let pass = 0; pass < numPasses; pass++) {
             const bitOffset = pass * BITS_PER_PASS;
@@ -316,26 +349,26 @@ class ComputeRadixSort {
 
             // Create shaders with constants baked in
             const blockSumShader = this._createShader(
-                `RadixSort4bit-BlockSum-${bitOffset}`,
+                `RadixSort4bit-BlockSum${suffix}-${bitOffset}`,
                 radixSort4bitSource,
-                'radix_sort',
                 bitOffset,
                 false,
-                this._blockSumBindGroupFormat
+                this._blockSumBindGroupFormat,
+                indirect
             );
 
             const reorderShader = this._createShader(
-                `RadixSort4bit-Reorder-${bitOffset}`,
+                `RadixSort4bit-Reorder${suffix}-${bitOffset}`,
                 radixSortReorderSource,
-                'radix_sort_reorder',
                 bitOffset,
                 isFirstPass,
-                this._reorderBindGroupFormat
+                this._reorderBindGroupFormat,
+                indirect
             );
 
             // Create compute instances
-            const blockSumCompute = new Compute(this.device, blockSumShader, `RadixSort4bit-BlockSum-${bitOffset}`);
-            const reorderCompute = new Compute(this.device, reorderShader, `RadixSort4bit-Reorder-${bitOffset}`);
+            const blockSumCompute = new Compute(this.device, blockSumShader, `RadixSort4bit-BlockSum${suffix}-${bitOffset}`);
+            const reorderCompute = new Compute(this.device, reorderShader, `RadixSort4bit-Reorder${suffix}-${bitOffset}`);
 
             this._passes.push({ blockSumCompute, reorderCompute });
         }
@@ -346,20 +379,17 @@ class ComputeRadixSort {
      *
      * @param {number} elementCount - Number of elements to sort.
      * @param {number} numBits - Number of bits to sort.
+     * @param {boolean} indirect - Whether passes should use indirect dispatch.
      * @private
      */
-    _allocateBuffers(elementCount, numBits) {
+    _allocateBuffers(elementCount, numBits, indirect) {
         const workgroupCount = Math.ceil(elementCount / THREADS_PER_WORKGROUP);
 
         // Only reallocate buffers if we need MORE capacity (grow-only policy)
         const buffersNeedRealloc = workgroupCount > this._allocatedWorkgroupCount || !this._keys0;
 
-        // Check if we need to recreate passes (only when numBits changes)
-        const passesNeedRecreate = numBits !== this._numBits;
-
-        // Update current working size and dispatch dimensions
-        this._workgroupCount = workgroupCount;
-        this._dispatchSize = this._findOptimalDispatchSize(workgroupCount);
+        // Recreate passes when numBits or indirect mode changes
+        const passesNeedRecreate = numBits !== this._numBits || indirect !== this._indirect;
 
         if (buffersNeedRealloc) {
 
@@ -368,8 +398,6 @@ class ComputeRadixSort {
 
             // Store the new capacity
             this._allocatedWorkgroupCount = workgroupCount;
-            this._workgroupCount = workgroupCount;
-            this._dispatchSize = this._findOptimalDispatchSize(workgroupCount);
 
             const elementSize = elementCount * 4;
             const blockSumSize = BUCKET_COUNT * workgroupCount * 4;
@@ -393,31 +421,17 @@ class ComputeRadixSort {
             this._prefixSumKernel = new PrefixSumKernel(this.device);
         }
 
+        // Update current working size and dispatch dimensions (must be after
+        // _destroyBuffers which resets _workgroupCount)
+        this._workgroupCount = workgroupCount;
+        Compute.calcDispatchSize(workgroupCount, this._dispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
+
         // Resize prefix kernel (creates passes on first call, updates counts otherwise)
         this._prefixSumKernel.resize(this._blockSums, BUCKET_COUNT * workgroupCount);
 
         if (passesNeedRecreate) {
-            this._createPasses(numBits);
+            this._createPasses(numBits, indirect);
         }
-    }
-
-    /**
-     * Find optimal dispatch dimensions.
-     *
-     * @param {number} workgroupCount - Total workgroups needed.
-     * @returns {{x: number, y: number}} Dispatch dimensions.
-     * @private
-     */
-    _findOptimalDispatchSize(workgroupCount) {
-        const maxDimension = this.device.limits.maxComputeWorkgroupsPerDimension || 65535;
-
-        if (workgroupCount <= maxDimension) {
-            return { x: workgroupCount, y: 1 };
-        }
-
-        const x = Math.floor(Math.sqrt(workgroupCount));
-        const y = Math.ceil(workgroupCount / x);
-        return { x, y };
     }
 
     /**
@@ -425,14 +439,14 @@ class ComputeRadixSort {
      *
      * @param {string} name - Shader name.
      * @param {string} source - Shader source.
-     * @param {string} entryPoint - Entry point function.
      * @param {number} currentBit - Current bit offset for this pass.
      * @param {boolean} isFirstPass - Whether this is the first pass (uses GID for indices).
      * @param {BindGroupFormat} bindGroupFormat - Bind group format.
+     * @param {boolean} indirect - Whether to add the USE_INDIRECT_SORT define.
      * @returns {Shader} The created shader.
      * @private
      */
-    _createShader(name, source, entryPoint, currentBit, isFirstPass, bindGroupFormat) {
+    _createShader(name, source, currentBit, isFirstPass, bindGroupFormat, indirect) {
         // Build defines map with {VARIABLE} keys for preprocessor injection
         const cdefines = new Map();
         cdefines.set('{WORKGROUP_SIZE_X}', WORKGROUP_SIZE_X);
@@ -440,20 +454,22 @@ class ComputeRadixSort {
         cdefines.set('{THREADS_PER_WORKGROUP}', THREADS_PER_WORKGROUP);
         cdefines.set('{CURRENT_BIT}', currentBit);
         cdefines.set('{IS_FIRST_PASS}', isFirstPass ? 1 : 0);
+        if (indirect) {
+            cdefines.set('USE_INDIRECT_SORT', '');
+        }
 
         return new Shader(this.device, {
             name: name,
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: source,
             cdefines: cdefines,
-            computeEntryPoint: entryPoint,
             computeBindGroupFormat: bindGroupFormat,
             computeUniformBufferFormats: { uniforms: this._uniformBufferFormat }
         });
     }
 
     /**
-     * Executes the GPU radix sort.
+     * Executes the GPU radix sort using direct dispatch.
      *
      * @param {StorageBuffer} keysBuffer - Input storage buffer containing u32 keys.
      * @param {number} elementCount - Number of elements to sort.
@@ -465,13 +481,50 @@ class ComputeRadixSort {
         Debug.assert(elementCount > 0, 'ComputeRadixSort.sort: elementCount must be > 0');
         Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSort.sort: numBits must be a multiple of ${BITS_PER_PASS}`);
 
+        return this._execute(keysBuffer, elementCount, numBits, false, -1, null);
+    }
+
+    /**
+     * Executes the GPU radix sort using indirect dispatch. Only sorts `visibleCount`
+     * elements (GPU-written) instead of the full buffer, reducing sort cost proportionally.
+     *
+     * @param {StorageBuffer} keysBuffer - Input storage buffer containing u32 keys.
+     * @param {number} maxElementCount - Maximum number of elements (buffer allocation size).
+     * @param {number} numBits - Number of bits to sort (must be multiple of 4).
+     * @param {number} dispatchSlot - Slot index in the device's indirect dispatch buffer.
+     * @param {StorageBuffer} sortElementCountBuffer - GPU-written buffer containing visible count.
+     * @returns {StorageBuffer} Storage buffer containing sorted indices.
+     */
+    sortIndirect(keysBuffer, maxElementCount, numBits, dispatchSlot, sortElementCountBuffer) {
+        Debug.assert(keysBuffer, 'ComputeRadixSort.sortIndirect: keysBuffer is required');
+        Debug.assert(maxElementCount > 0, 'ComputeRadixSort.sortIndirect: maxElementCount must be > 0');
+        Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSort.sortIndirect: numBits must be a multiple of ${BITS_PER_PASS}`);
+        Debug.assert(sortElementCountBuffer, 'ComputeRadixSort.sortIndirect: sortElementCountBuffer is required');
+
+        return this._execute(keysBuffer, maxElementCount, numBits, true, dispatchSlot, sortElementCountBuffer);
+    }
+
+    /**
+     * Shared execution logic for both direct and indirect radix sort.
+     *
+     * @param {StorageBuffer} keysBuffer - Input keys buffer.
+     * @param {number} elementCount - Number of elements (or max elements for indirect).
+     * @param {number} numBits - Number of bits to sort.
+     * @param {boolean} indirect - Whether to use indirect dispatch.
+     * @param {number} dispatchSlot - Indirect dispatch slot index (-1 for direct).
+     * @param {StorageBuffer|null} sortElementCountBuffer - GPU-written element count (null for direct).
+     * @returns {StorageBuffer} Storage buffer containing sorted indices.
+     * @private
+     */
+    _execute(keysBuffer, elementCount, numBits, indirect, dispatchSlot, sortElementCountBuffer) {
         this._elementCount = elementCount;
 
         // Allocate buffers and create passes if needed
-        this._allocateBuffers(elementCount, numBits);
+        this._allocateBuffers(elementCount, numBits, indirect);
 
         const device = this.device;
         const numPasses = numBits / BITS_PER_PASS;
+        const suffix = indirect ? '-Indirect' : '';
 
         // First pass reads directly from input buffer (no copy needed)
         // Subsequent passes ping-pong between internal buffers
@@ -480,21 +533,33 @@ class ComputeRadixSort {
         let nextKeys = this._keys0;
         let nextValues = this._values1;
 
-        // Execute radix passes using cached compute instances
         for (let pass = 0; pass < numPasses; pass++) {
             const { blockSumCompute, reorderCompute } = this._passes[pass];
             const isLastPass = (pass === numPasses - 1);
+
+            // For indirect sort, clear block sums before each pass using clear() which
+            // encodes a clearBuffer command into the command encoder. This is critical:
+            // write() uses queue.writeBuffer() which executes BEFORE the command buffer,
+            // so all clears would happen before any dispatch. clear() executes in-order
+            // within the command buffer, ensuring each pass sees zeroed inactive slots.
+            if (indirect) {
+                this._blockSums.clear();
+            }
 
             // Phase 1: Compute local prefix sums and block sums
             blockSumCompute.setParameter('input', currentKeys);
             blockSumCompute.setParameter('local_prefix_sums', this._localPrefixSums);
             blockSumCompute.setParameter('block_sums', this._blockSums);
-
-            // Set uniform values
             blockSumCompute.setParameter('workgroupCount', this._workgroupCount);
             blockSumCompute.setParameter('elementCount', elementCount);
-            blockSumCompute.setupDispatch(this._dispatchSize.x, this._dispatchSize.y, 1);
-            device.computeDispatch([blockSumCompute], 'RadixSort-BlockSum');
+
+            if (indirect) {
+                blockSumCompute.setParameter('sortElementCount', sortElementCountBuffer);
+                blockSumCompute.setupIndirectDispatch(dispatchSlot);
+            } else {
+                blockSumCompute.setupDispatch(this._dispatchSize.x, this._dispatchSize.y, 1);
+            }
+            device.computeDispatch([blockSumCompute], `RadixSort-BlockSum${suffix}`);
 
             // Phase 2: Prefix sum on block sums
             this._prefixSumKernel.dispatch(device);
@@ -509,12 +574,16 @@ class ComputeRadixSort {
             reorderCompute.setParameter('prefix_block_sum', this._blockSums);
             reorderCompute.setParameter('inputValues', currentValues);
             reorderCompute.setParameter('outputValues', outputValues);
-
-            // Set uniform values
             reorderCompute.setParameter('workgroupCount', this._workgroupCount);
             reorderCompute.setParameter('elementCount', elementCount);
-            reorderCompute.setupDispatch(this._dispatchSize.x, this._dispatchSize.y, 1);
-            device.computeDispatch([reorderCompute], 'RadixSort-Reorder');
+
+            if (indirect) {
+                reorderCompute.setParameter('sortElementCount', sortElementCountBuffer);
+                reorderCompute.setupIndirectDispatch(dispatchSlot);
+            } else {
+                reorderCompute.setupDispatch(this._dispatchSize.x, this._dispatchSize.y, 1);
+            }
+            device.computeDispatch([reorderCompute], `RadixSort-Reorder${suffix}`);
 
             // Swap buffers for next pass (skip on last pass - not needed)
             if (!isLastPass) {
