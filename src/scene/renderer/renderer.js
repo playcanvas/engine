@@ -505,6 +505,11 @@ class Renderer {
         }
     }
 
+    setupFrontFace(drawCall) {
+        const material = drawCall.material;
+        this.device.setFrontFace(material.frontFace);
+    }
+
     updateCameraFrustum(camera) {
 
         if (camera.xr && camera.xr.views.list.length) {
@@ -551,6 +556,9 @@ class Renderer {
 
         // Cull mode
         device.setCullMode(material.cull);
+
+        // Front face
+        device.setFrontFace(material.frontFace);
 
         // Alpha test
         if (material.opacityMap) {
