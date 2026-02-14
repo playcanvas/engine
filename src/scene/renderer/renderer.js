@@ -507,7 +507,7 @@ class Renderer {
 
     setupFrontFace(drawCall) {
         const material = drawCall.material;
-        this.device.setCullMode(material.frontFace);
+        this.device.setFrontFace(material.frontFace);
     }
 
     updateCameraFrustum(camera) {
