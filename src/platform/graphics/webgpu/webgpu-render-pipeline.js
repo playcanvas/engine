@@ -6,7 +6,7 @@ import { WebgpuVertexBufferLayout } from './webgpu-vertex-buffer-layout.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 import { WebgpuPipeline } from './webgpu-pipeline.js';
 import { DebugGraphics } from '../debug-graphics.js';
-import { bindGroupNames, FRONTFACE_CCW, PRIMITIVE_LINESTRIP, PRIMITIVE_TRISTRIP } from '../constants.js';
+import { bindGroupNames, PRIMITIVE_LINESTRIP, PRIMITIVE_TRISTRIP } from '../constants.js';
 
 /**
  * @import { BindGroupFormat } from '../bind-group-format.js'
