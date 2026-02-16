@@ -202,6 +202,17 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'midtones' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.midtones' },
+                    min: -1,
+                    max: 1,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'vibrance' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
