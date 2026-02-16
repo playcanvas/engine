@@ -44,7 +44,7 @@ class Graph {
     update(ms) {
         const timings = this.timer.timings;
 
-        // calculate stacked total
+        // calculate total
         const total = timings.reduce((a, v) => a + v, 0);
 
         // update averages and max
@@ -63,14 +63,11 @@ class Graph {
         }
 
         if (this.enabled) {
-            // update timings
-            let value = 0;
+            // update total timing sample
             const range = 1.5 * this.watermark;
-            for (let i = 0; i < timings.length; ++i) {
-                // scale the value into the range
-                value += Math.floor(timings[i] / range * 255);
-                this.sample[i] = value;
-            }
+            this.sample[0] = Math.floor(total / range * 255);
+            this.sample[1] = 0;
+            this.sample[2] = 0;
 
             // .a store watermark
             this.sample[3] = this.watermark / range * 255;

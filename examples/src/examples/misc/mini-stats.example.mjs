@@ -97,10 +97,10 @@ options.stats = [
         unitsName: 'ms'
     },
 
-    // used VRAM, displayed using 2 colors - red for textures, green for geometry
+    // used VRAM in MB
     {
         name: 'VRAM',
-        stats: ['vram.tex', 'vram.geom'],
+        stats: ['vram.totalUsed'],
         decimalPlaces: 1,
         multiplier: 1 / (1024 * 1024),
         unitsName: 'MB',

@@ -76,16 +76,8 @@ assetListLoader.load(() => {
     roomEntity.setLocalScale(30, 30, 30);
     app.root.addChild(roomEntity);
 
-    // Mini-Stats: add VRAM on top of default stats
+    // Mini-Stats with default options
     const msOptions = pc.MiniStats.getDefaultOptions();
-    msOptions.stats.push({
-        name: 'VRAM',
-        stats: ['vram.tex'],
-        decimalPlaces: 1,
-        multiplier: 1 / (1024 * 1024),
-        unitsName: 'MB',
-        watermark: 1024
-    });
     const miniStats = new pc.MiniStats(app, msOptions); // eslint-disable-line no-unused-vars
 
     // Create an Entity with a camera component
