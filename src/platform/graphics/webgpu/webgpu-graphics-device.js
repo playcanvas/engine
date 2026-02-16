@@ -317,6 +317,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsClipDistances = requireFeature('clip-distances');
         this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
         this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
+        this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
