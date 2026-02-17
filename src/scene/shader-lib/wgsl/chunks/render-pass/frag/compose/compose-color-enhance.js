@@ -1,6 +1,7 @@
 export default /* wgsl */`
     #ifdef COLOR_ENHANCE
         uniform colorEnhanceParams: vec4f; // x=shadows, y=highlights, z=vibrance, w=dehaze
+        uniform colorEnhanceMidtones: f32;
 
         fn applyColorEnhance(color: vec3f) -> vec3f {
             var colorOut = color;
@@ -18,6 +19,20 @@ export default /* wgsl */`
 
                 colorOut *= pow(2.0, uniform.colorEnhanceParams.x * shadowWeight);
                 colorOut *= pow(2.0, uniform.colorEnhanceParams.y * highlightWeight);
+            }
+
+            // Midtones - localized exposure in log-luminance space
+            if (uniform.colorEnhanceMidtones != 0.0) {
+                let pivot = 0.18;
+                let widthStops = 1.25;
+                let maxStops = 2.0;
+                let y = max(dot(colorOut, vec3f(0.2126, 0.7152, 0.0722)), 1e-6);
+
+                // 0 at pivot, +/-1 one stop away from pivot
+                let d = log2(y / pivot);
+                let w = exp(-(d * d) / (2.0 * widthStops * widthStops));
+                let stops = uniform.colorEnhanceMidtones * maxStops * w;
+                colorOut *= exp2(stops);
             }
 
             // Vibrance - skip if zero (coherent branch)
