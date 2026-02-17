@@ -1,6 +1,6 @@
 import { QuadRender } from './quad-render.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
-import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, FRONTFACE_CCW } from '../../platform/graphics/constants.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
@@ -32,6 +32,11 @@ class RenderPassShaderQuad extends RenderPass {
      * The cull mode to use when rendering the quad. Defaults to {@link CULLFACE_NONE}.
      */
     cullMode = CULLFACE_NONE;
+
+    /**
+     * The front face to use when rendering the quad. Defaults to {@link FRONTFACE_CCW}.
+     */
+    frontFace = FRONTFACE_CCW;
 
     /**
      * A blend state to use when rendering the quad. Defaults to {@link BlendState.NOBLEND}.
@@ -106,6 +111,7 @@ class RenderPassShaderQuad extends RenderPass {
         const device = this.device;
         device.setBlendState(this.blendState);
         device.setCullMode(this.cullMode);
+        device.setFrontFace(this.frontFace);
         device.setDepthState(this.depthState);
         device.setStencilState(this.stencilFront, this.stencilBack);
 

@@ -3,7 +3,7 @@ import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
-import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, FRONTFACE_CCW } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
@@ -96,6 +96,7 @@ class ParticleGPUUpdater {
         device.setBlendState(BlendState.NOBLEND);
         device.setDepthState(DepthState.NODEPTH);
         device.setCullMode(CULLFACE_NONE);
+        device.setFrontFace(FRONTFACE_CCW);
 
         this.randomize();
 

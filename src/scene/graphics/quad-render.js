@@ -29,6 +29,7 @@ const _dynamicBindGroup = new DynamicBindGroup();
  * you should set up the following states as needed, otherwise previously set states will be used:
  * - Blend state via {@link GraphicsDevice#setBlendState}
  * - Cull mode via {@link GraphicsDevice#setCullMode}
+ * - FrontFace via {@link GraphicsDevice#setFrontFace}
  * - Depth state via {@link GraphicsDevice#setDepthState}
  * - Stencil state via {@link GraphicsDevice#setStencilState}
  *
@@ -46,6 +47,7 @@ const _dynamicBindGroup = new DynamicBindGroup();
  * // Set up render states before rendering
  * app.graphicsDevice.setBlendState(BlendState.NOBLEND);
  * app.graphicsDevice.setCullMode(CULLFACE_NONE);
+ * app.graphicsDevice.setFrontFace(FRONTFACE_CCW);
  * app.graphicsDevice.setDepthState(DepthState.NODEPTH);
  * app.graphicsDevice.setStencilState(null, null);
  *
