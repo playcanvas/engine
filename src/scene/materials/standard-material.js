@@ -580,8 +580,9 @@ class StandardMaterial extends Material {
      *
      * // Notify the material that it has been modified
      * material.update();
+     * @param {Partial<StandardMaterial>} [options] - Options for the material.
      */
-    constructor() {
+    constructor(options) {
         super();
 
         // storage for texture and cubemap asset references
@@ -593,6 +594,10 @@ class StandardMaterial extends Material {
         this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
 
         this.reset();
+        if (options) {
+            Object.assign(this, options);
+            this.update();
+        }
     }
 
     reset() {
