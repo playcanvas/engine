@@ -572,7 +572,7 @@ class XrManager extends EventHandler {
      * ended. The callback has one argument Error - it is null if successfully ended XR session.
      * @example
      * app.keyboard.on('keydown', (evt) => {
-     *     if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+     *     if (evt.key === pc.Key.Escape && app.xr.active) {
      *         app.xr.end();
      *     }
      * });
