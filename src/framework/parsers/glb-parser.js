@@ -772,7 +772,7 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, 
                     indices = new Uint16Array(indices);
                 }
 
-                const indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
+                const indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices.buffer);
                 mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].count = indices.length;
             } else {
