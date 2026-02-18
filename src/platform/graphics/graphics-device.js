@@ -999,17 +999,18 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Reports whether a texture source is a canvas, image, video or ImageBitmap.
+     * Reports whether a texture source is a canvas, image, video, ImageBitmap, or HTML element.
      *
      * @param {*} texture - Texture source data.
-     * @returns {boolean} True if the texture is a canvas, image, video or ImageBitmap and false
+     * @returns {boolean} True if the texture is a canvas, image, video, ImageBitmap, or HTML element and false
      * otherwise.
      * @ignore
      */
     _isBrowserInterface(texture) {
         return this._isImageBrowserInterface(texture) ||
                 this._isImageCanvasInterface(texture) ||
-                this._isImageVideoInterface(texture);
+                this._isImageVideoInterface(texture) ||
+                this._isHTMLElementInterface(texture);
     }
 
     _isImageBrowserInterface(texture) {
@@ -1023,6 +1024,13 @@ class GraphicsDevice extends EventHandler {
 
     _isImageVideoInterface(texture) {
         return (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);
+    }
+
+    _isHTMLElementInterface(texture) {
+        return (typeof HTMLElement !== 'undefined' && texture instanceof HTMLElement &&
+                !(texture instanceof HTMLImageElement) &&
+                !(texture instanceof HTMLCanvasElement) &&
+                !(texture instanceof HTMLVideoElement));
     }
 
     /**
