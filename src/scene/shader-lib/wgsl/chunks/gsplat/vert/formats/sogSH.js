@@ -7,7 +7,7 @@ uniform shN_mins: f32;
 uniform shN_maxs: f32;
 
 fn readSHTexel(u: i32, v: i32) -> half3 {
-    return half3(mix(vec3f(uniform.shN_mins), vec3f(uniform.shN_maxs), unpack111110(pack8888(textureLoad(packedShN, vec2i(u, v), 0)))));
+    return mix(half3(half(uniform.shN_mins)), half3(half(uniform.shN_maxs)), half3(unpack111110(pack8888(textureLoad(packedShN, vec2i(u, v), 0)))));
 }
 
 fn readSHData(sh: ptr<function, array<half3, SH_COEFFS>>, scale: ptr<function, f32>) {
