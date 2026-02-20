@@ -97,7 +97,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 
     #ifdef GSPLAT_OVERDRAW
         // Overdraw visualization mode: color by elevation
-        let t: f32 = clamp(modelCenter.y / 20.0, 0.0, 1.0);
+        let t: f32 = clamp(center.modelCenterOriginal.y / 20.0, 0.0, 1.0);
         let rampColor: vec3f = textureSampleLevel(colorRamp, colorRampSampler, vec2f(t, 0.5), 0.0).rgb;
         clr.a = clr.a * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
         output.gaussianColor = half4(half3(rampColor), clr.a);
