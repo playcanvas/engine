@@ -27,15 +27,6 @@
     },
     {
       "matchPackageNames": [
-        "sinon"
-      ],
-      "matchFileNames": [
-        "package.json"
-      ],
-      "enabled": false
-    },
-    {
-      "matchPackageNames": [
         "monaco-editor"
       ],
       "matchFileNames": [
