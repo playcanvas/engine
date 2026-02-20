@@ -3,11 +3,11 @@ uniform viewport_size: vec4f;             // viewport width, height, 1/width, 1/
 
 // Rotation and scale source data are f16 - compute covariance in half precision
 fn computeCovariance(rotation: vec4f, scale: vec3f, covA_ptr: ptr<function, half3>, covB_ptr: ptr<function, half3>) {
-    let rot: mat3x3h = quatToMat3(rotation);
+    let rot: half3x3 = quatToMat3(rotation);
     let s: half3 = half3(scale);
 
     // M = S * R
-    let M: mat3x3h = transpose(mat3x3h(
+    let M: half3x3 = transpose(half3x3(
         s.x * rot[0],
         s.y * rot[1],
         s.z * rot[2]
