@@ -58,7 +58,7 @@ fn initSource(source: ptr<function, SplatSource>) -> bool {
     setSplat(splatId);
 
     // get the corner
-    source.cornerUV = vertex_position.xy;
+    source.cornerUV = half2(vertex_position.xy);
 
     return true;
 }
