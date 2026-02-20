@@ -268,6 +268,10 @@ class Camera {
             this._farClip = newValue;
             this._projMatDirty = true;
         }
+        if (this._xr?.active) {
+            this._xrProperties.farClip = newValue;
+            this._xr._setClipPlanes(this._xrProperties.nearClip, newValue);
+        }
     }
 
     get farClip() {
@@ -329,6 +333,10 @@ class Camera {
         if (this._nearClip !== newValue) {
             this._nearClip = newValue;
             this._projMatDirty = true;
+        }
+        if (this._xr?.active) {
+            this._xrProperties.nearClip = newValue;
+            this._xr._setClipPlanes(newValue, this._xrProperties.farClip);
         }
     }
 
@@ -764,10 +772,10 @@ class Camera {
      * @ignore
      */
     fillShaderParams(output) {
-        const f = this._farClip;
+        const f = this.farClip;
         output[0] = 1 / f;
         output[1] = f;
-        output[2] = this._nearClip;
+        output[2] = this.nearClip;
         output[3] = this._projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
         return output;
     }
