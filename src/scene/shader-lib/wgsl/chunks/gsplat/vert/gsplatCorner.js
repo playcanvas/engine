@@ -1,28 +1,30 @@
 export default /* wgsl */`
 uniform viewport_size: vec4f;             // viewport width, height, 1/width, 1/height
 
-// compute 3d covariance from rotation (w,x,y,z format) and scale
-fn computeCovariance(rotation: vec4f, scale: vec3f, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
-    let rot = quatToMat3(rotation);
+// Rotation and scale source data are f16 - compute covariance in half precision
+fn computeCovariance(rotation: vec4f, scale: vec3f, covA_ptr: ptr<function, half3>, covB_ptr: ptr<function, half3>) {
+    let rot: mat3x3h = quatToMat3(rotation);
+    let s: half3 = half3(scale);
 
     // M = S * R
-    let M = transpose(mat3x3f(
-        scale.x * rot[0],
-        scale.y * rot[1],
-        scale.z * rot[2]
+    let M: mat3x3h = transpose(mat3x3h(
+        s.x * rot[0],
+        s.y * rot[1],
+        s.z * rot[2]
     ));
 
-    *covA_ptr = vec3f(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
-    *covB_ptr = vec3f(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
+    *covA_ptr = half3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
+    *covB_ptr = half3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
 }
 
 // calculate the clip-space offset from the center for this gaussian
-fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, SplatCenter>, corner: ptr<function, SplatCorner>, covA: vec3f, covB: vec3f) -> bool {
+fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, SplatCenter>, corner: ptr<function, SplatCorner>, covA: half3, covB: half3) -> bool {
 
+    // Covariance from half-precision rotation/scale, promote to f32 for projection math
     let Vrk = mat3x3f(
-        vec3f(covA.x, covA.y, covA.z),
-        vec3f(covA.y, covB.x, covB.y),
-        vec3f(covA.z, covB.y, covB.z)
+        vec3f(half3(covA.x, covA.y, covA.z)),
+        vec3f(half3(covA.y, covB.x, covB.y)),
+        vec3f(half3(covA.z, covB.y, covB.z))
     );
 
     let focal = uniform.viewport_size.x * center.projMat00;
@@ -44,7 +46,7 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
         // calculate AA factor
         let detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0]; // Using [0][1] * [1][0] as matrix might not be perfectly symmetric numerically
         let detBlur = (cov[0][0] + 0.3) * (cov[1][1] + 0.3) - cov[0][1] * cov[1][0];
-        corner.aaFactor = sqrt(detOrig / detBlur);
+        corner.aaFactor = half(sqrt(max(detOrig / detBlur, 0.0)));
     #endif
 
     let diagonal1 = cov[0][0] + 0.3;
@@ -78,7 +80,7 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
     let v1 = l1 * diagonalVector;
     let v2 = l2 * vec2f(diagonalVector.y, -diagonalVector.x); // Swizzle
 
-    corner.offset = vec3f((source.cornerUV.x * v1 + source.cornerUV.y * v2) * c, 0.0);
+    corner.offset = vec3f((f32(source.cornerUV.x) * v1 + f32(source.cornerUV.y) * v2) * c, 0.0);
     corner.uv = source.cornerUV;
 
     return true;
@@ -88,7 +90,7 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
 // 2DGS: Compute oriented quad corner in model space
 fn initCorner2DGS(source: ptr<function, SplatSource>, rotation: vec4f, scale: vec3f, corner: ptr<function, SplatCorner>) {
     // Scale by 3.0 for 3-sigma coverage
-    let localPos: vec2f = source.cornerUV * vec2f(scale.x, scale.y) * 3.0;
+    let localPos: vec2f = vec2f(source.cornerUV) * vec2f(scale.x, scale.y) * 3.0;
 
     // Rotate the local position using the quaternion
     let v: vec3f = vec3f(localPos, 0.0);
@@ -112,9 +114,9 @@ fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCen
         return true;
     #else
         // 3DGS: Use covariance-based screen-space projection
-        // Compute covariance from (possibly modified) rotation and scale
-        var covA: vec3f;
-        var covB: vec3f;
+        // Compute covariance in half precision (rotation/scale are f16 source data)
+        var covA: half3;
+        var covB: half3;
         computeCovariance(rotation.wxyz, scale, &covA, &covB);  // Convert back to (w,x,y,z)
 
         return initCornerCov(source, center, corner, covA, covB);

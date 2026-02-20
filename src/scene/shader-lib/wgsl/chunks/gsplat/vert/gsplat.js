@@ -1,8 +1,8 @@
 export default /* wgsl */`
 #include "gsplatCommonVS"
 
-varying gaussianUV: vec2f;
-varying gaussianColor: vec4f;
+varying gaussianUV: half2;
+varying gaussianColor: half4;
 
 #ifndef DITHER_NONE
     varying id: f32;
@@ -55,11 +55,10 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
-    // read color
-    var clr: vec4f = getColor();
+    // read color (~11 bit source data, use half precision)
+    var clr: half4 = half4(getColor());
 
     #if GSPLAT_AA
-        // apply AA compensation
         clr.a = clr.a * corner.aaFactor;
     #endif
 
@@ -74,13 +73,16 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         var scale: f32;
         readSHData(&sh, &scale);
 
-        // evaluate
-        clr = vec4f(clr.xyz + evalSH(&sh, dir) * scale, clr.a);
+        // evaluate (SH coefficients and result are half precision)
+        clr = half4(clr.xyz + evalSH(&sh, dir) * half(scale), clr.a);
     #endif
 
-    modifySplatColor(modelCenter, &clr);
+    // user hook operates in f32
+    var clrF32 = vec4f(clr);
+    modifySplatColor(modelCenter, &clrF32);
+    clr = half4(clrF32);
 
-    clipCorner(&corner, clr.w);
+    clipCorner(&corner, f32(clr.w));
 
     // write output
     #if GSPLAT_2DGS
@@ -95,12 +97,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 
     #ifdef GSPLAT_OVERDRAW
         // Overdraw visualization mode: color by elevation
-        let t: f32 = clamp(originalCenter.y / 20.0, 0.0, 1.0);
+        let t: f32 = clamp(modelCenter.y / 20.0, 0.0, 1.0);
         let rampColor: vec3f = textureSampleLevel(colorRamp, colorRampSampler, vec2f(t, 0.5), 0.0).rgb;
-        clr.a = clr.a * (1.0 / 32.0) * uniform.colorRampIntensity;
-        output.gaussianColor = vec4f(rampColor, clr.a);
+        clr.a = clr.a * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
+        output.gaussianColor = half4(half3(rampColor), clr.a);
     #else
-        output.gaussianColor = vec4f(prepareOutputFromGamma(max(clr.xyz, vec3f(0.0))), clr.w);
+        output.gaussianColor = half4(half3(prepareOutputFromGamma(max(vec3f(clr.xyz), vec3f(0.0)))), clr.w);
     #endif
 
     #ifndef DITHER_NONE

@@ -32,7 +32,7 @@ export default /* wgsl */`
     #endif
 
     // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
-    fn evalSH(sh: ptr<function, array<half3, SH_COEFFS>>, dir: vec3f) -> vec3f {
+    fn evalSH(sh: ptr<function, array<half3, SH_COEFFS>>, dir: vec3f) -> half3 {
         let d: half3 = half3(dir);
 
         // 1st degree
@@ -69,7 +69,7 @@ export default /* wgsl */`
             );
         #endif
 
-        return vec3f(result);
+        return result;
     }
     #endif
 `;
