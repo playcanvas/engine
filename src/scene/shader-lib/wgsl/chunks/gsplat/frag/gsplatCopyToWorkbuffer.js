@@ -124,7 +124,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             readSHData(&sh, &scale);
 
             // evaluate
-            color = vec4f(color.xyz + evalSH(&sh, dir) * scale, color.w);
+            color = vec4f(color.xyz + vec3f(evalSH(&sh, dir) * half(scale)), color.w);
         #endif
 
         // Apply custom color modification
