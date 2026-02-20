@@ -64,6 +64,7 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         const fDefines = new Map(options.defines);
 
         if (options.soft > 0) fDefines.set('SOFT', '');
+        if (options.lighting) fDefines.set('LIGHTING', '');
         if (options.halflambert) fDefines.set('HALF_LAMBERT', '');
 
         fDefines.set('NORMAL', normalTypeNames[options.normal]);
