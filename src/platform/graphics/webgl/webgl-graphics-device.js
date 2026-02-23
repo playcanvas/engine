@@ -2139,8 +2139,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const needsRgbaReadback = rgbaChannels > 0;
 
         // Use caller's buffer or allocate output buffer in the user's expected format
-        const outputData = options.data ?? new (getPixelFormatArrayType(texture._format))(
-            TextureUtils.calcLevelGpuSize(width, height, 1, texture._format)
+        const ArrayType = getPixelFormatArrayType(texture._format);
+        const outputData = options.data ?? new ArrayType(
+            TextureUtils.calcLevelGpuSize(width, height, 1, texture._format) / ArrayType.BYTES_PER_ELEMENT
         );
 
         // For formats requiring RGBA readback, allocate a larger RGBA buffer
