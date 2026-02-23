@@ -1,31 +1,3 @@
-import fs from 'fs';
-
-/**
- * esbuild plugin that strips specified function calls from source code.
- * Equivalent to @rollup/plugin-strip.
- *
- * Removes entire expression statements that are calls to the listed functions,
- * e.g. `Debug.assert(condition, msg);` is removed entirely.
- *
- * @param {Object} options - Plugin options.
- * @param {string[]} options.functions - List of function names to strip (e.g. 'Debug.assert').
- * @returns {import('esbuild').Plugin} The esbuild plugin.
- */
-export function stripPlugin({ functions = [] } = {}) {
-    const pattern = buildStripPattern(functions);
-
-    return {
-        name: 'strip',
-        setup(build) {
-            build.onLoad({ filter: /\.js$/ }, async (args) => {
-                let source = await fs.promises.readFile(args.path, 'utf8');
-                source = applyStrip(source, pattern);
-                return { contents: source, loader: 'js' };
-            });
-        }
-    };
-}
-
 /**
  * Build a regex that matches the start of a strip-target call.
  * Matches at line start with optional whitespace and optional label prefix (e.g. `default:`).
@@ -36,12 +8,11 @@ export function stripPlugin({ functions = [] } = {}) {
  */
 export function buildStripPattern(functions) {
     const escaped = functions.map(f => f.replace(/\./g, '\\.')).join('|');
-    // Match at line start: optional whitespace, optional label (e.g. `default:`), then function call
     return new RegExp(`^([ \\t]*(?:\\w+:[ \\t]*)?)(${escaped})\\(`, 'gm');
 }
 
 /**
- * Apply strip processing to source text — callable without esbuild for unbundled transforms.
+ * Strip specified function calls from source text.
  * Uses parenthesis counting to find the end of the call, avoiding regex backtracking.
  *
  * @param {string} source - Source code.
