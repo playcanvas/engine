@@ -1,14 +1,15 @@
 import esbuild from 'esbuild';
 import fs from 'fs';
-import { dirname, resolve as pathResolve, join as pathJoin, relative as pathRelative, posix, sep } from 'path';
+import {
+    dirname, join as pathJoin, relative as pathRelative,
+    resolve as pathResolve, posix, sep
+} from 'path';
 import { fileURLToPath } from 'url';
 
-import { processJSCC } from './plugins/esbuild-jscc.mjs';
-import { buildStripPattern, applyStrip } from './plugins/esbuild-strip.mjs';
-import { processShaderChunks } from './plugins/esbuild-shader-chunks.mjs';
-import { applyDynamicImportSuppress } from './plugins/esbuild-dynamic.mjs';
 import { importValidationPlugin } from './plugins/esbuild-import-validation.mjs';
-import { transformPipelinePlugin } from './plugins/esbuild-transform-pipeline.mjs';
+import {
+    applyTransforms, buildStripPattern, transformPipelinePlugin
+} from './plugins/esbuild-transform-pipeline.mjs';
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
 
@@ -73,107 +74,19 @@ function getJSCCConfig(buildType) {
 
     switch (buildType) {
         case 'debug':
-            return { values: { ...base, _DEBUG: 1, _PROFILER: 1 }, keepLines: true };
+            return {
+                values: { ...base, _DEBUG: 1, _PROFILER: 1 },
+                keepLines: true
+            };
         case 'profiler':
-            return { values: { ...base, _PROFILER: 1 }, keepLines: false };
+            return {
+                values: { ...base, _PROFILER: 1 },
+                keepLines: false
+            };
         case 'release':
         default:
             return { values: base, keepLines: false };
     }
-}
-
-/**
- * Build esbuild plugins list for a given build configuration.
- * Uses a single combined pipeline plugin for all source transforms (since esbuild
- * only runs the first matching onLoad handler per file).
- *
- * @param {object} opts - Build options.
- * @param {'debug'|'release'|'profiler'|'min'} opts.buildType - The build type.
- * @param {boolean} opts.isUMD - Whether this is a UMD (IIFE) build.
- * @param {string} opts.input - Entry point path.
- * @returns {import('esbuild').Plugin[]} Plugins array.
- */
-function getPlugins({ buildType, isUMD, input }) {
-    const isDebug = buildType === 'debug';
-    const effectiveBuildType = buildType === 'min' ? 'release' : buildType;
-    const jsccConfig = getJSCCConfig(effectiveBuildType);
-
-    const plugins = [
-        transformPipelinePlugin({
-            jsccValues: jsccConfig.values,
-            jsccKeepLines: jsccConfig.keepLines,
-            stripFunctions: !isDebug ? STRIP_FUNCTIONS : null,
-            processShaders: !isDebug,
-            dynamicImportLegacy: isUMD,
-            dynamicImportSuppress: !isUMD
-        })
-    ];
-
-    if (isDebug) {
-        plugins.push(importValidationPlugin(input));
-    }
-
-    return plugins;
-}
-
-/**
- * Build a bundled JS target (single output file).
- *
- * @param {object} options - Build options.
- * @param {'umd'|'esm'} options.moduleFormat - The module format.
- * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
- * @param {string} [options.input] - Entry point (default: 'src/index.js').
- * @param {string} [options.dir] - Output directory (default: 'build').
- * @returns {Promise<void>}
- */
-async function buildBundled({
-    moduleFormat,
-    buildType,
-    input = 'src/index.js',
-    dir = 'build'
-}) {
-    const isUMD = moduleFormat === 'umd';
-    const isDebug = buildType === 'debug';
-    const isMin = buildType === 'min';
-    const prefix = OUT_PREFIX[buildType];
-    const outfile = `${dir}/${prefix}${isUMD ? '.js' : '.mjs'}`;
-
-    const banner = getBanner(BANNER[buildType]);
-
-    /** @type {import('esbuild').BuildOptions} */
-    const opts = {
-        entryPoints: [input],
-        bundle: true,
-        outfile,
-        format: isUMD ? 'iife' : 'esm',
-        globalName: isUMD ? 'pc' : undefined,
-        target: 'es2020',
-        sourcemap: isDebug ? 'inline' : false,
-        minify: isMin,
-        legalComments: 'none',
-        banner: { js: banner },
-        plugins: getPlugins({ buildType, isUMD, input }),
-        external: ['node:worker_threads'],
-        logLevel: 'warning'
-    };
-
-    if (isMin) {
-        opts.drop = ['console'];
-    }
-
-    if (isUMD) {
-        // Wrap IIFE output with a UMD detection header
-        opts.banner = {
-            js: `${banner}\n(function (root, factory) {\n\tif (typeof module !== 'undefined' && module.exports) {\n\t\tmodule.exports = factory();\n\t} else {\n\t\troot.pc = factory();\n\t}\n}(typeof self !== 'undefined' ? self : this, function () {`
-        };
-        opts.footer = {
-            js: 'return pc;\n}));'
-        };
-        // Use 'esm' internally so esbuild doesn't double-wrap, we handle the UMD wrapper ourselves
-        opts.format = 'esm';
-    }
-
-    await esbuild.build(opts);
 }
 
 /**
@@ -197,16 +110,87 @@ function collectJSFiles(dirPath) {
 }
 
 /**
- * Resolve and copy the fflate module into the unbundled output directory,
- * replicating Rollup's node_modules → modules renaming.
+ * Build a bundled JS target (single output file).
  *
- * @param {string} outDir - Output directory (e.g. 'build/playcanvas').
+ * @param {object} options - Build options.
+ * @param {'umd'|'esm'} options.moduleFormat - The module format.
+ * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
+ * @param {string} [options.input] - Entry point (default: 'src/index.js').
+ * @param {string} [options.dir] - Output directory (default: 'build').
+ * @returns {Promise<void>}
  */
-function copyFflateModule(outDir) {
-    const fflateEntry = pathJoin(rootDir, 'node_modules', 'fflate', 'esm', 'browser.js');
-    const destDir = pathJoin(outDir, 'modules', 'fflate', 'esm');
-    fs.mkdirSync(destDir, { recursive: true });
-    fs.copyFileSync(fflateEntry, pathJoin(destDir, 'browser.js'));
+async function buildBundled({
+    moduleFormat,
+    buildType,
+    input = 'src/index.js',
+    dir = 'build'
+}) {
+    const isUMD = moduleFormat === 'umd';
+    const isDebug = buildType === 'debug';
+    const isMin = buildType === 'min';
+    const prefix = OUT_PREFIX[buildType];
+    const outfile = `${dir}/${prefix}${isUMD ? '.js' : '.mjs'}`;
+    const effectiveBuildType = buildType === 'min' ? 'release' : buildType;
+    const jsccConfig = getJSCCConfig(effectiveBuildType);
+
+    const banner = getBanner(BANNER[buildType]);
+
+    const plugins = [
+        transformPipelinePlugin({
+            jsccValues: jsccConfig.values,
+            jsccKeepLines: jsccConfig.keepLines,
+            stripFunctions: !isDebug ? STRIP_FUNCTIONS : null,
+            processShaders: !isDebug,
+            dynamicImportLegacy: isUMD,
+            dynamicImportSuppress: !isUMD
+        })
+    ];
+
+    if (isDebug) {
+        plugins.push(importValidationPlugin(input));
+    }
+
+    /** @type {import('esbuild').BuildOptions} */
+    const opts = {
+        entryPoints: [input],
+        bundle: true,
+        outfile,
+        format: isUMD ? 'iife' : 'esm',
+        globalName: isUMD ? 'pc' : undefined,
+        target: 'es2020',
+        sourcemap: isDebug ? 'inline' : false,
+        minify: isMin,
+        legalComments: 'none',
+        banner: { js: banner },
+        plugins,
+        external: ['node:worker_threads'],
+        logLevel: 'warning'
+    };
+
+    if (isMin) {
+        opts.drop = ['console'];
+    }
+
+    if (isUMD) {
+        opts.banner = {
+            js: [
+                banner,
+                '(function (root, factory) {',
+                '\tif (typeof module !== \'undefined\' && module.exports) {',
+                '\t\tmodule.exports = factory();',
+                '\t} else {',
+                '\t\troot.pc = factory();',
+                '\t}',
+                '}(typeof self !== \'undefined\' ? self : this, function () {'
+            ].join('\n')
+        };
+        opts.footer = {
+            js: 'return pc;\n}));'
+        };
+        opts.format = 'esm';
+    }
+
+    await esbuild.build(opts);
 }
 
 /**
@@ -228,37 +212,35 @@ async function buildUnbundled({
     const outDir = `${dir}/${prefix}`;
     const effectiveBuildType = buildType === 'min' ? 'release' : buildType;
     const jsccConfig = getJSCCConfig(effectiveBuildType);
-    const stripPattern = !isDebug ? buildStripPattern(STRIP_FUNCTIONS) : null;
+    const stripPattern =
+        !isDebug ? buildStripPattern(STRIP_FUNCTIONS) : null;
 
     const srcFiles = collectJSFiles(input);
 
     const transformPromises = srcFiles.map(async (srcFile) => {
         let source = await fs.promises.readFile(srcFile, 'utf8');
 
-        // Apply JSCC
-        source = processJSCC(source, jsccConfig.values, jsccConfig.keepLines);
-
-        // Apply shader chunks (non-debug)
-        if (!isDebug) {
-            source = processShaderChunks(source);
-        }
-
-        // Apply strip (non-debug)
-        if (stripPattern) {
-            source = applyStrip(source, stripPattern);
-        }
-
-        // Apply dynamic import suppress (always for ESM unbundled)
-        source = applyDynamicImportSuppress(source);
+        source = applyTransforms(source, {
+            jsccValues: jsccConfig.values,
+            jsccKeepLines: jsccConfig.keepLines,
+            stripPattern,
+            processShaders: !isDebug,
+            dynamicImportLegacy: false,
+            dynamicImportSuppress: true
+        });
 
         // Rewrite bare 'fflate' import to relative modules path
-        if (source.includes('from \'fflate\'') || source.includes('from "fflate"')) {
+        if (source.includes('from \'fflate\'') ||
+            source.includes('from "fflate"')) {
             const relFromSrc = pathRelative(dirname(srcFile), input);
             const modulePath = posix.join(
                 relFromSrc.split(sep).join('/'),
                 '..', 'modules', 'fflate', 'esm', 'browser.js'
             );
-            source = source.replace(/from ['"]fflate['"]/g, `from '${modulePath}'`);
+            source = source.replace(
+                /from ['"]fflate['"]/g,
+                `from '${modulePath}'`
+            );
         }
 
         const destFile = pathJoin(outDir, srcFile);
@@ -268,8 +250,13 @@ async function buildUnbundled({
 
     await Promise.all(transformPromises);
 
-    // Copy fflate module
-    copyFflateModule(outDir);
+    // Copy fflate module into unbundled output
+    const fflateEntry = pathJoin(
+        rootDir, 'node_modules', 'fflate', 'esm', 'browser.js'
+    );
+    const destDir = pathJoin(outDir, 'modules', 'fflate', 'esm');
+    fs.mkdirSync(destDir, { recursive: true });
+    fs.copyFileSync(fflateEntry, pathJoin(destDir, 'browser.js'));
 }
 
 /**
@@ -297,8 +284,10 @@ async function buildTarget({
     if (bundled) {
         await buildBundled({ moduleFormat, buildType, input, dir });
     } else {
-        await buildUnbundled({ buildType, input: dirname(input), dir });
+        await buildUnbundled({
+            buildType, input: dirname(input), dir
+        });
     }
 }
 
-export { buildTarget, buildBundled, buildUnbundled, OUT_PREFIX, BANNER };
+export { buildTarget, OUT_PREFIX };
