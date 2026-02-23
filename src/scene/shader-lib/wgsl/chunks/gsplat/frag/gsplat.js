@@ -85,7 +85,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             opacityDither(f32(alpha), id * 0.013);
         #endif
 
-        output.color = vec4f(vec3f(input.gaussianColor.xyz * alpha), f32(alpha));
+        output.color = vec4f(vec3f(gaussianColor.xyz * alpha), f32(alpha));
     #endif
 
     return output;
