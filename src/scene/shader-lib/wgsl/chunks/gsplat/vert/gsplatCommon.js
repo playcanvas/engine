@@ -13,8 +13,8 @@ export default /* wgsl */`
 #include "gsplatOutputVS"
 
 // modify the gaussian corner so it excludes gaussian regions with alpha less than 1/255
-fn clipCorner(corner: ptr<function, SplatCorner>, alpha: f32) {
-    let clip: half = half(min(1.0, sqrt(-log(1.0 / (255.0 * alpha))) / 2.0));
+fn clipCorner(corner: ptr<function, SplatCorner>, alpha: half) {
+    let clip = min(half(1.0), sqrt(-log(half(1.0) / (half(255.0) * alpha))) / half(2.0));
     corner.offset = corner.offset * f32(clip);
     corner.uv = corner.uv * clip;
 }

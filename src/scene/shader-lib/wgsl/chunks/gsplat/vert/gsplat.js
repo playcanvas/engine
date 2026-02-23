@@ -82,7 +82,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     modifySplatColor(modelCenter, &clrF32);
     clr = half4(clrF32);
 
-    clipCorner(&corner, f32(clr.w));
+    clipCorner(&corner, clr.w);
 
     // write output
     #if GSPLAT_2DGS
