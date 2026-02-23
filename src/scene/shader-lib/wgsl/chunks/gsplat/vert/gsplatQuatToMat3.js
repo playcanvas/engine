@@ -1,7 +1,6 @@
 export default /* wgsl */`
 // Rotation source data is f16 - compute in half precision
-fn quatToMat3(R: vec4f) -> half3x3 {
-    let r: half4 = half4(R);
+fn quatToMat3(r: half4) -> half3x3 {
     let r2: half4 = r + r;
     let x: half   = r2.x * r.w;
     let y: half4  = r2.y * r;

@@ -1,30 +1,28 @@
 export default /* wgsl */`
 uniform viewport_size: vec4f;             // viewport width, height, 1/width, 1/height
 
-// Rotation and scale source data are f16 - compute covariance in half precision
-fn computeCovariance(rotation: vec4f, scale: vec3f, covA_ptr: ptr<function, half3>, covB_ptr: ptr<function, half3>) {
+// Rotation and scale source data are f16; covariance must be f32 to avoid scale^2 overflow
+fn computeCovariance(rotation: half4, scale: half3, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
     let rot: half3x3 = quatToMat3(rotation);
-    let s: half3 = half3(scale);
 
-    // M = S * R
-    let M: half3x3 = transpose(half3x3(
-        s.x * rot[0],
-        s.y * rot[1],
-        s.z * rot[2]
+    // M = S * R (promote to f32 to avoid overflow in dot products)
+    let M: mat3x3f = transpose(mat3x3f(
+        vec3f(scale.x) * vec3f(rot[0]),
+        vec3f(scale.y) * vec3f(rot[1]),
+        vec3f(scale.z) * vec3f(rot[2])
     ));
 
-    *covA_ptr = half3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
-    *covB_ptr = half3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
+    *covA_ptr = vec3f(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
+    *covB_ptr = vec3f(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
 }
 
 // calculate the clip-space offset from the center for this gaussian
-fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, SplatCenter>, corner: ptr<function, SplatCorner>, covA: half3, covB: half3) -> bool {
+fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, SplatCenter>, corner: ptr<function, SplatCorner>, covA: vec3f, covB: vec3f) -> bool {
 
-    // Covariance from half-precision rotation/scale, promote to f32 for projection math
     let Vrk = mat3x3f(
-        vec3f(half3(covA.x, covA.y, covA.z)),
-        vec3f(half3(covA.y, covB.x, covB.y)),
-        vec3f(half3(covA.z, covB.y, covB.z))
+        vec3f(covA.x, covA.y, covA.z),
+        vec3f(covA.y, covB.x, covB.y),
+        vec3f(covA.z, covB.y, covB.z)
     );
 
     let focal = uniform.viewport_size.x * center.projMat00;
@@ -114,10 +112,9 @@ fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCen
         return true;
     #else
         // 3DGS: Use covariance-based screen-space projection
-        // Compute covariance in half precision (rotation/scale are f16 source data)
-        var covA: half3;
-        var covB: half3;
-        computeCovariance(rotation.wxyz, scale, &covA, &covB);  // Convert back to (w,x,y,z)
+        var covA: vec3f;
+        var covB: vec3f;
+        computeCovariance(half4(rotation.wxyz), half3(scale), &covA, &covB);  // Convert back to (w,x,y,z)
 
         return initCornerCov(source, center, corner, covA, covB);
     #endif
