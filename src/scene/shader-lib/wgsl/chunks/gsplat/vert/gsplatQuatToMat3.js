@@ -14,15 +14,12 @@ fn quatToMat3(r: half4) -> half3x3 {
     );
 }
 
-fn quatMul(a: vec4f, b: vec4f) -> vec4f {
-    let ha: half4 = half4(a);
-    let hb: half4 = half4(b);
-    let r: half4 = half4(
-        ha.w * hb.x + ha.x * hb.w + ha.y * hb.z - ha.z * hb.y,
-        ha.w * hb.y - ha.x * hb.z + ha.y * hb.w + ha.z * hb.x,
-        ha.w * hb.z + ha.x * hb.y - ha.y * hb.x + ha.z * hb.w,
-        ha.w * hb.w - ha.x * hb.x - ha.y * hb.y - ha.z * hb.z
+fn quatMul(a: half4, b: half4) -> half4 {
+    return half4(
+        a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+        a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+        a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
+        a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z
     );
-    return vec4f(r);
 }
 `;

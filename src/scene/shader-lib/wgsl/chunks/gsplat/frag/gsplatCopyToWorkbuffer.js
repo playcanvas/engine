@@ -95,7 +95,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         let srcScale = getScale();
 
         // Combine: world = model * source (both in x,y,z,w format)
-        var worldRotation = quatMul(uniform.model_rotation, srcRotation);
+        var worldRotation = vec4f(quatMul(half4(uniform.model_rotation), half4(srcRotation)));
         // Ensure w is positive so sqrt() reconstruction works correctly
         // (quaternions q and -q represent the same rotation)
         if (worldRotation.w < 0.0) {
