@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 
 import { importValidationPlugin } from './plugins/esbuild-import-validation.mjs';
 import {
-    applyTransforms, buildStripPattern, transformPipelinePlugin
+    applyTransforms, createStripTransform, transformPipelinePlugin
 } from './plugins/esbuild-transform-pipeline.mjs';
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
@@ -142,7 +142,8 @@ async function buildBundled({
             stripFunctions: !isDebug ? STRIP_FUNCTIONS : null,
             processShaders: !isDebug,
             dynamicImportLegacy: isUMD,
-            dynamicImportSuppress: !isUMD
+            dynamicImportSuppress: !isUMD,
+            stripComments: !isDebug
         })
     ];
 
@@ -178,6 +179,8 @@ async function buildBundled({
                 '(function (root, factory) {',
                 '\tif (typeof module !== \'undefined\' && module.exports) {',
                 '\t\tmodule.exports = factory();',
+                '\t} else if (typeof define === \'function\' && define.amd) {',
+                '\t\tdefine(factory);',
                 '\t} else {',
                 '\t\troot.pc = factory();',
                 '\t}',
@@ -212,8 +215,8 @@ async function buildUnbundled({
     const outDir = `${dir}/${prefix}`;
     const effectiveBuildType = buildType === 'min' ? 'release' : buildType;
     const jsccConfig = getJSCCConfig(effectiveBuildType);
-    const stripPattern =
-        !isDebug ? buildStripPattern(STRIP_FUNCTIONS) : null;
+    const strip =
+        !isDebug ? createStripTransform(STRIP_FUNCTIONS) : null;
 
     const srcFiles = collectJSFiles(input);
 
@@ -223,10 +226,11 @@ async function buildUnbundled({
         source = applyTransforms(source, {
             jsccValues: jsccConfig.values,
             jsccKeepLines: jsccConfig.keepLines,
-            stripPattern,
+            strip,
             processShaders: !isDebug,
             dynamicImportLegacy: false,
-            dynamicImportSuppress: true
+            dynamicImportSuppress: true,
+            stripComments: !isDebug
         });
 
         // Rewrite bare 'fflate' import to relative modules path
@@ -241,6 +245,19 @@ async function buildUnbundled({
                 /from ['"]fflate['"]/g,
                 `from '${modulePath}'`
             );
+        }
+
+        // Skip files that have no meaningful content after transforms
+        if (!isDebug) {
+            const meaningful = source
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            .replace(/\/\/.*/g, '')
+            .replace(/^\s*import\s.*$/gm, '')
+            .replace(/^\s*export\s.*$/gm, '')
+            .trim();
+            if (meaningful.length === 0) {
+                return;
+            }
         }
 
         const destFile = pathJoin(outDir, srcFile);
