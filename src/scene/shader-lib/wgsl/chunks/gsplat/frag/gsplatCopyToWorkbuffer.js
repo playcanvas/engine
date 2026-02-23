@@ -66,6 +66,12 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             writeDataTransformA(vec4u(0u));
             writeDataTransformB(vec4u(0u));
         #endif
+        #ifdef GSPLAT_ID
+            writePcId(vec4u(0u));
+        #endif
+        #ifdef GSPLAT_NODE_INDEX
+            writePcNodeIndex(vec4u(0xFFFFFFFFu, 0u, 0u, 0u));
+        #endif
 
     } else {
 
@@ -95,7 +101,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         let srcScale = getScale();
 
         // Combine: world = model * source (both in x,y,z,w format)
-        var worldRotation = quatMul(uniform.model_rotation, srcRotation);
+        var worldRotation = vec4f(quatMul(half4(uniform.model_rotation), half4(srcRotation)));
         // Ensure w is positive so sqrt() reconstruction works correctly
         // (quaternions q and -q represent the same rotation)
         if (worldRotation.w < 0.0) {
@@ -124,7 +130,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             readSHData(&sh, &scale);
 
             // evaluate
-            color = vec4f(color.xyz + evalSH(&sh, dir) * scale, color.w);
+            color = vec4f(color.xyz + vec3f(evalSH(&sh, dir) * half(scale)), color.w);
         #endif
 
         // Apply custom color modification

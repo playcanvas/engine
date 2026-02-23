@@ -6,7 +6,7 @@ import swcPlugin from '@rollup/plugin-swc';
 // unofficial package plugins
 import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
-import { visualizer } from 'rollup-plugin-visualizer';
+import { visualizer } from 'rollup-plugin-visualizer'; // eslint-disable-line import/no-unresolved
 
 // custom plugins
 import { shaderChunks } from './plugins/rollup-shader-chunks.mjs';

@@ -540,19 +540,19 @@ export class AnnotationManager extends Script {
     /**
      * Updates 3D rotation and scale of hotspot planes.
      * @param {Annotation} annotation - The annotation
+     * @param {number} viewDepth - The view-space depth (positive distance along the camera's forward direction)
      * @private
      */
-    _updateAnnotationRotationAndScale(annotation) {
+    _updateAnnotationRotationAndScale(annotation, viewDepth) {
         const cameraRotation = this._camera.getRotation();
         annotation.entity.setRotation(cameraRotation);
         annotation.entity.rotateLocal(90, 0, 0);
 
-        const cameraPos = this._camera.getPosition();
-        const distance = annotation.entity.getPosition().distance(cameraPos);
+        // Use view-space depth (not Euclidean distance) to match the projection matrix
         const canvas = this.app.graphicsDevice.canvas;
         const screenHeight = canvas.clientHeight;
         const projMatrix = this._camera.camera.projectionMatrix;
-        const worldSize = (this._hotspotSize / screenHeight) * (2 * distance / projMatrix.data[5]);
+        const worldSize = (this._hotspotSize / screenHeight) * (2 * viewDepth / projMatrix.data[5]);
 
         annotation.entity.setLocalScale(worldSize, worldSize, worldSize);
     }
@@ -902,7 +902,7 @@ export class AnnotationManager extends Script {
                 }
 
                 this._updateAnnotationPositions(annotation, resources, screenPos);
-                this._updateAnnotationRotationAndScale(annotation);
+                this._updateAnnotationRotationAndScale(annotation, -vec.z);
 
                 // Update material opacity
                 resources.materials[0].opacity = this._opacity;

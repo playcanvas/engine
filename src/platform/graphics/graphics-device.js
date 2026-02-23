@@ -361,6 +361,24 @@ class GraphicsDevice extends EventHandler {
     supportsClipDistances = false;
 
     /**
+     * True if the device supports WebGPU texture format tier 1 capabilities. When enabled, a wider
+     * set of normalized texture formats can be used as render targets and storage textures.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureFormatTier1 = false;
+
+    /**
+     * True if the device supports WebGPU texture format tier 2 capabilities. This extends tier 1
+     * and enables read-write storage access for selected texture formats.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureFormatTier2 = false;
+
+    /**
      * True if the device supports primitive index in fragment shaders (WebGPU only). When
      * supported, fragment shaders can access the `pcPrimitiveIndex` built-in variable which
      * uniquely identifies the current primitive being processed.
