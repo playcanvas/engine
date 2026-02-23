@@ -173,7 +173,7 @@ class Material {
      * orientation. Can be:
      *
      * - {@link FRONTFACE_CW}: The clock-wise winding.
-     * - {@link FRONTFACE_CCW}: The counter-clock-wise winding.
+     * - {@link FRONTFACE_CCW}: The counterclockwise winding.
      *
      * Defaults to {@link FRONTFACE_CCW}.
      *
