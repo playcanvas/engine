@@ -108,7 +108,8 @@
     "typedoc": "0.28.19",
     "typedoc-plugin-mdn-links": "5.1.1",
     "typedoc-plugin-missing-exports": "4.1.3",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "unplugin-strip": "^0.2.1"
   },
   "optionalDependencies": {
     "canvas": "3.2.3"
