@@ -4,12 +4,13 @@ uniform viewport_size: vec4f;             // viewport width, height, 1/width, 1/
 // Rotation and scale source data are f16; covariance must be f32 to avoid scale^2 overflow
 fn computeCovariance(rotation: half4, scale: half3, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
     let rot: half3x3 = quatToMat3(rotation);
+    let s: vec3f = vec3f(scale);
 
     // M = S * R (promote to f32 to avoid overflow in dot products)
     let M: mat3x3f = transpose(mat3x3f(
-        vec3f(scale.x) * vec3f(rot[0]),
-        vec3f(scale.y) * vec3f(rot[1]),
-        vec3f(scale.z) * vec3f(rot[2])
+        s.x * vec3f(rot[0]),
+        s.y * vec3f(rot[1]),
+        s.z * vec3f(rot[2])
     ));
 
     *covA_ptr = vec3f(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
