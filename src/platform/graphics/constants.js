@@ -347,8 +347,7 @@ export const CULLFACE_FRONTANDBACK = 3;
 /**
  * The counter-clock-wise winding. Specifies whether polygons are front- or back-facing by setting a winding orientation.
  *
- * The counter-clock-wise winding. Specifies whether polygons are front- or back-facing by setting a winding orientation.
- *
+
  * @category Graphics
  */
 export const FRONTFACE_CCW = 0;
@@ -358,7 +357,7 @@ export const FRONTFACE_CCW = 0;
  *
  * @category Graphics
  *
- * @category Graphics
+
  */
 export const FRONTFACE_CW = 1;
 
