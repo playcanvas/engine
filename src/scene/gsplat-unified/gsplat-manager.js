@@ -1222,7 +1222,8 @@ class GSplatManager {
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (sortedState) {
             if (this._workBufferRebuildRequired) {
-                this.rebuildWorkBuffer(sortedState, sortedState.totalUsedPixels);
+                const count = this.useGpuSorting ? sortedState.totalUsedPixels : sortedState.totalActiveSplats;
+                this.rebuildWorkBuffer(sortedState, count);
                 this._workBufferRebuildRequired = false;
             } else {
                 this.applyWorkBufferUpdates(sortedState);
@@ -1236,7 +1237,7 @@ class GSplatManager {
             // Restore direct rendering with current order data
             this.renderer.setOrderData();
             if (sortedState) {
-                this.renderer.update(sortedState.totalUsedPixels, sortedState.textureSize);
+                this.renderer.update(sortedState.totalActiveSplats, sortedState.textureSize);
             }
         }
 
@@ -1309,9 +1310,8 @@ class GSplatManager {
         // fire frame:ready event
         this.fireFrameReadyEvent();
 
-        // return the number of visible splats for stats
-        const { textureSize } = this.workBuffer;
-        return textureSize * textureSize;
+        // return the number of active splats for stats
+        return sortedState ? sortedState.totalActiveSplats : 0;
     }
 
     /**
@@ -1553,7 +1553,7 @@ class GSplatManager {
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (!sortedState) return;
 
-        const elementCount = sortedState.totalUsedPixels;
+        const elementCount = sortedState.totalActiveSplats;
         if (elementCount === 0) return;
 
         // Run frustum culling first — this creates nodeVisibilityTexture on first call
@@ -1710,10 +1710,10 @@ class GSplatManager {
             command: 'intervals',
             textureSize: worldState.textureSize,
             totalUsedPixels: worldState.totalUsedPixels,
+            totalActiveSplats: worldState.totalActiveSplats,
             version: worldState.version,
             ids: worldState.splats.map(splat => splat.resource.id),
             lineStarts: worldState.splats.map(splat => splat.lineStart),
-            padding: worldState.splats.map(splat => splat.padding),
 
             // TODO: consider storing this in typed array and transfer it to sorter worker
             intervals: worldState.splats.map(splat => splat.intervals)

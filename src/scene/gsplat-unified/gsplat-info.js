@@ -336,12 +336,19 @@ class GSplatInfo {
                 row += fullRows;
             }
 
-            // Partial last row
+            // Partial last row. Only the very last interval's partial row is true
+            // padding — intermediate intervals pack contiguously, so extending their
+            // partial rows would overwrite the next interval's target region with garbage
+            // source data. For the final interval, extend to full row width so trailing
+            // padding pixels get fragment invocations and the shader writes zeros there;
+            // without this, uncovered pixels retain stale data from previous render passes,
+            // causing ghost splats with GPU sorting.
             if (remaining > 0) {
+                const isLastInterval = (i === numIntervals - 1);
                 const idx = subDrawCount * 4;
                 subDrawData[idx] = row | (1 << 16);          // rowStart | (numRows << 16)
                 subDrawData[idx + 1] = 0;                      // colStart
-                subDrawData[idx + 2] = remaining;              // colEnd
+                subDrawData[idx + 2] = isLastInterval ? textureWidth : remaining;  // colEnd
                 subDrawData[idx + 3] = sourceBase;              // sourceBase
                 subDrawCount++;
             }

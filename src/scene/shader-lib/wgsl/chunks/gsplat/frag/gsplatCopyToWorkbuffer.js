@@ -66,6 +66,12 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             writeDataTransformA(vec4u(0u));
             writeDataTransformB(vec4u(0u));
         #endif
+        #ifdef GSPLAT_ID
+            writePcId(vec4u(0u));
+        #endif
+        #ifdef GSPLAT_NODE_INDEX
+            writePcNodeIndex(vec4u(0xFFFFFFFFu, 0u, 0u, 0u));
+        #endif
 
     } else {
 
