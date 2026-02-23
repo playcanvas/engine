@@ -43,7 +43,7 @@ class GSplatWorldState {
 
     /**
      * Total number of pixels actually used in the texture (excluding unused regions).
-     * This is the count that should be sent to the sort worker and renderer.
+     * Used by the GPU sorting path which operates on work-buffer pixel indices.
      *
      * @type {number}
      */
