@@ -82,6 +82,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     modifySplatColor(modelCenter, &clrF32);
     clr = half4(clrF32);
 
+    // discard splats with alpha too low to contribute any visible pixel
+    if (half(255.0) * clr.w <= half(1.0)) {
+        output.position = discardVec;
+        return output;
+    }
+
     clipCorner(&corner, clr.w);
 
     // write output
