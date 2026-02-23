@@ -7,6 +7,7 @@ function UnifiedSortWorker() {
     let centersData;
     let distances;
     let countBuffer;
+    let indexMap;
 
     // Sorting mode: false = forward vector (directional), true = radial distance (for cubemaps)
     let _radialSort = false;
@@ -44,12 +45,14 @@ function UnifiedSortWorker() {
         binDivider[numBins] = 0;
     };
 
-    // Common sort key evaluation logic
+    // Sort key evaluation iterates only active splats (padding is excluded).
+    // The indexMap (built on intervals) provides the work-buffer pixel mapping.
     const evaluateSortKeysCommon = (sortParams, minDist, range, distances, countBuffer, centersData, processSplatFn) => {
-        const { ids, lineStarts, padding, intervals, textureSize } = centersData;
+        const { ids, intervals } = centersData;
 
         // pre-calculate inverse bin range
         const invBinRange = numBins / range;
+        let compactIdx = 0;
 
         // loop over all the splat placements
         for (let paramIdx = 0; paramIdx < sortParams.length; paramIdx++) {
@@ -62,9 +65,6 @@ function UnifiedSortWorker() {
                 console.error('UnifiedSortWorker: No centers found for id', id);
             }
 
-            // start index in unified buffer
-            let targetIndex = lineStarts[paramIdx] * textureSize;
-
             // Use provided intervals or process all centers
             const intervalsArray = intervals[paramIdx].length > 0 ? intervals[paramIdx] : [0, centers.length / 3];
 
@@ -74,23 +74,15 @@ function UnifiedSortWorker() {
                 const intervalEnd = intervalsArray[i + 1] * 3;
 
                 // Process each center in this interval using the provided function
-                targetIndex = processSplatFn(centers, params, intervalStart, intervalEnd, targetIndex,
+                compactIdx = processSplatFn(centers, params, intervalStart, intervalEnd, compactIdx,
                     invBinRange, minDist, range, distances, countBuffer);
             }
-
-            // add padding, to make sure the whole buffer (including padding) is sorted
-            const pad = padding[paramIdx];
-            countBuffer[0] += pad;
-
-            // set distance values for padding positions to prevent garbage data
-            distances.fill(0, targetIndex, targetIndex + pad);
-            targetIndex += pad;
         }
     };
 
     const evaluateSortKeysLinear = (sortParams, minDist, range, distances, countBuffer, centersData) => {
         evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData,
-            (centers, params, intervalStart, intervalEnd, targetIndex, invBinRange, minDist, range, distances, countBuffer) => {
+            (centers, params, intervalStart, intervalEnd, compactIdx, invBinRange, minDist, range, distances, countBuffer) => {
                 // camera related params
                 const { transformedDirection, offset, scale } = params;
                 const dx = transformedDirection.x;
@@ -116,17 +108,17 @@ function UnifiedSortWorker() {
                     const bin = d >>> 0;
                     const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
 
-                    distances[targetIndex++] = sortKey;
+                    distances[compactIdx++] = sortKey;
                     countBuffer[sortKey]++;
                 }
 
-                return targetIndex;
+                return compactIdx;
             });
     };
 
     const evaluateSortKeysRadial = (sortParams, minDist, range, distances, countBuffer, centersData) => {
         evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData,
-            (centers, params, intervalStart, intervalEnd, targetIndex, invBinRange, minDist, range, distances, countBuffer) => {
+            (centers, params, intervalStart, intervalEnd, compactIdx, invBinRange, minDist, range, distances, countBuffer) => {
                 // camera related params
                 const { transformedPosition, scale } = params;
 
@@ -145,18 +137,18 @@ function UnifiedSortWorker() {
                     // World-space radial distance from camera
                     const dist = Math.sqrt(distSq) * scale;
 
-                    // Bin-based mapping (normalize by minDist for binning)
                     // Invert distance so far objects get small keys (rendered first, back-to-front)
                     const invertedDist = range - dist;
+                    // Bin-based mapping
                     const d = invertedDist * invBinRange;
                     const bin = d >>> 0;
                     const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
 
-                    distances[targetIndex++] = sortKey;
+                    distances[compactIdx++] = sortKey;
                     countBuffer[sortKey]++;
                 }
 
-                return targetIndex;
+                return compactIdx;
             });
     };
 
@@ -175,11 +167,11 @@ function UnifiedSortWorker() {
             console.warn(`[SortWorker] ${numVertices - validCount} splats lost due to sortKey overflow. Check resource AABB bounds contain all the splats.`);
         }
 
-        // build output array
+        // build output array — map through indexMap to get work-buffer pixel indices
         for (let i = 0; i < numVertices; i++) {
             const distance = distances[i];
             const destIndex = --countBuffer[distance];
-            order[destIndex] = i;
+            order[destIndex] = indexMap[i];
         }
     };
 
@@ -269,7 +261,7 @@ function UnifiedSortWorker() {
             computeEffectiveDistanceRangeRadial(sortParams) :
             computeEffectiveDistanceRangeLinear(sortParams);
 
-        const numVertices = centersData.totalUsedPixels;
+        const numVertices = centersData.totalActiveSplats;
 
         // calculate number of bits needed to store sorting result
         const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));
@@ -320,6 +312,34 @@ function UnifiedSortWorker() {
         myself.postMessage(response, transferList);
     };
 
+    /**
+     * Builds the indexMap that maps compact splat index to work-buffer pixel index.
+     * Called once when the intervals message arrives (world state change), not per-sort.
+     *
+     * @param {object} data - The intervals message data containing layout metadata.
+     */
+    const buildIndexMap = (data) => {
+        const { ids, lineStarts, intervals, textureSize, totalActiveSplats } = data;
+
+        if (!indexMap || indexMap.length < totalActiveSplats) {
+            indexMap = new Uint32Array(totalActiveSplats);
+        }
+
+        let compactIdx = 0;
+        for (let paramIdx = 0; paramIdx < ids.length; paramIdx++) {
+            const centers = centersMap.get(ids[paramIdx]);
+            let workBufferIndex = lineStarts[paramIdx] * textureSize;
+            const intervalsArray = intervals[paramIdx].length > 0 ? intervals[paramIdx] : [0, centers.length / 3];
+
+            for (let i = 0; i < intervalsArray.length; i += 2) {
+                const count = intervalsArray[i + 1] - intervalsArray[i];
+                for (let j = 0; j < count; j++) {
+                    indexMap[compactIdx++] = workBufferIndex++;
+                }
+            }
+        }
+    };
+
     myself.addEventListener('message', (message) => {
         const msgData = message.data ?? message;
 
@@ -348,6 +368,7 @@ function UnifiedSortWorker() {
             // intervals
             case 'intervals': {
                 centersData = msgData;
+                buildIndexMap(centersData);
                 break;
             }
         }

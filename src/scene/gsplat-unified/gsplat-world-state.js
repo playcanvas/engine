@@ -50,6 +50,14 @@ class GSplatWorldState {
     totalUsedPixels = 0;
 
     /**
+     * Total number of active (non-padding) splats across all placements.
+     * Excludes row-alignment padding at the end of each placement's last line.
+     *
+     * @type {number}
+     */
+    totalActiveSplats = 0;
+
+    /**
      * Files to decrement when this state becomes active.
      * Array of tuples: [octree, fileIndex]
      * @type {Array<[GSplatOctree, number]>}
@@ -120,19 +128,22 @@ class GSplatWorldState {
     assignLines(splats, size) {
         if (splats.length === 0) {
             this.totalUsedPixels = 0;
+            this.totalActiveSplats = 0;
             return;
         }
 
         let start = 0;
+        let totalActive = 0;
         for (const splat of splats) {
             const activeSplats = splat.activeSplats;
+            totalActive += activeSplats;
             const numLines = Math.ceil(activeSplats / size);
             splat.setLines(start, numLines, size, activeSplats);
             start += numLines;
         }
 
-        // Calculate total used pixels (lines used × texture width)
         this.totalUsedPixels = start * size;
+        this.totalActiveSplats = totalActive;
     }
 }
 

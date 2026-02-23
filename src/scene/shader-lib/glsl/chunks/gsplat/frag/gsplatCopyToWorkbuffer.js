@@ -62,6 +62,12 @@ void main(void) {
             writeDataTransformA(uvec4(0u));
             writeDataTransformB(uvec4(0u));
         #endif
+        #ifdef GSPLAT_ID
+            writePcId(uvec4(0u));
+        #endif
+        #ifdef GSPLAT_NODE_INDEX
+            writePcNodeIndex(uvec4(0xFFFFFFFFu, 0u, 0u, 0u));
+        #endif
 
     } else {
 

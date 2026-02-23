@@ -336,12 +336,16 @@ class GSplatInfo {
                 row += fullRows;
             }
 
-            // Partial last row
+            // Partial last row — extend to full row width so that the trailing padding
+            // pixels get fragment invocations and the shader writes zeros there. Without
+            // this, uncovered pixels retain stale data from previous render passes, causing
+            // ghost splats with GPU sorting. In the future, interval-based compaction could
+            // eliminate padding from the pipeline entirely, making this unnecessary.
             if (remaining > 0) {
                 const idx = subDrawCount * 4;
                 subDrawData[idx] = row | (1 << 16);          // rowStart | (numRows << 16)
                 subDrawData[idx + 1] = 0;                      // colStart
-                subDrawData[idx + 2] = remaining;              // colEnd
+                subDrawData[idx + 2] = textureWidth;            // colEnd (full row)
                 subDrawData[idx + 3] = sourceBase;              // sourceBase
                 subDrawCount++;
             }
