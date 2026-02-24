@@ -400,8 +400,11 @@ class GSplatManager {
         this.keyGenerator = null;
         this.gpuSorter?.destroy();
         this.gpuSorter = null;
-        this.destroyIntervalCompaction();
-        this.destroyCompaction();
+        // Disable once when destroying both compaction systems together.
+        const disableIndirectDraw = false;
+        this.renderer.disableIndirectDraw();
+        this.destroyIntervalCompaction(disableIndirectDraw);
+        this.destroyCompaction(disableIndirectDraw);
     }
 
     /**
@@ -409,9 +412,11 @@ class GSplatManager {
      *
      * @private
      */
-    destroyIntervalCompaction() {
+    destroyIntervalCompaction(disableIndirectDraw = true) {
         if (this.intervalCompaction) {
-            this.renderer.disableIndirectDraw();
+            if (disableIndirectDraw) {
+                this.renderer.disableIndirectDraw();
+            }
             this.intervalCompaction.destroy();
             this.intervalCompaction = null;
         }
@@ -422,9 +427,11 @@ class GSplatManager {
      *
      * @private
      */
-    destroyCompaction() {
+    destroyCompaction(disableIndirectDraw = true) {
         if (this.compaction) {
-            this.renderer.disableIndirectDraw();
+            if (disableIndirectDraw) {
+                this.renderer.disableIndirectDraw();
+            }
             this.compaction.destroy();
             this.compaction = null;
         }
@@ -764,13 +771,9 @@ class GSplatManager {
             this.renderer.setMaxNumSplats(textureSize * textureSize);
         }
 
-        // Bounds texture is needed for frustum culling
+        // Bounds and transforms textures are needed for frustum culling
         if (this.scene.gsplat.culling) {
             this.workBuffer.updateBoundsTexture(worldState.splats);
-        }
-
-        // Transforms texture is needed for frustum culling
-        if (this.scene.gsplat.culling) {
             this.workBuffer.updateTransformsTexture(worldState.splats);
         }
 
