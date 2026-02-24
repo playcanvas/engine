@@ -6,17 +6,17 @@ attribute vertex_id_attrib: u32;          // render order base
     // When using indirect draw with compaction, numSplats is written by the
     // write-indirect-args compute shader and read from a storage buffer.
     var<storage, read> numSplatsStorage: array<u32>;
-    // Compacted visible splat IDs for double indirection
+    // Sorted visible splat IDs
     var<storage, read> compactedSplatIds: array<u32>;
 #else
     uniform numSplats: u32;               // total number of splats
-#endif
 
-#ifdef STORAGE_ORDER
-    var<storage, read> splatOrder: array<u32>;
-#else
-    // texture for non-unified gsplat rendering
-    var splatOrder: texture_2d<u32>;
+    #ifdef STORAGE_ORDER
+        var<storage, read> splatOrder: array<u32>;
+    #else
+        // texture for non-unified gsplat rendering
+        var splatOrder: texture_2d<u32>;
+    #endif
 #endif
 
 // initialize the splat source structure
@@ -37,16 +37,7 @@ fn initSource(source: ptr<function, SplatSource>) -> bool {
     // read splat id and initialize global splat for format read functions
     var splatId: u32;
     #ifdef GSPLAT_INDIRECT_DRAW
-        #ifdef GSPLAT_COMPACTED_ORDER
-            // Single indirection: compactedSplatIds already contains sorted visible IDs
-            // (used when CPU sorting + GPU compaction produces pre-sorted compacted output)
-            splatId = compactedSplatIds[source.order];
-        #else
-            // Double indirection: sortedIndices -> compactedSplatIds -> actual splat ID
-            // (used when GPU sorting produces sort indices into the compacted buffer)
-            let sortedIdx = splatOrder[source.order];
-            splatId = compactedSplatIds[sortedIdx];
-        #endif
+        splatId = compactedSplatIds[source.order];
     #else
         #ifdef STORAGE_ORDER
             splatId = splatOrder[source.order];

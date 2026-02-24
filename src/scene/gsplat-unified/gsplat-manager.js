@@ -80,10 +80,9 @@ let _randomColorRaw = null;
  *      indices). The last prefix sum element gives visibleCount.
  *   3. Generate sort keys: an indirect compute dispatch (visibleCount threads) reads each
  *      compactedSplatIds[i] to look up the splat's depth and writes a sort key to keysBuffer.
- *   4. Radix sort: an indirect GPU radix sort over keysBuffer produces sortedIndices, which
- *      are indices into compactedSplatIds (not direct splat IDs).
- *   5. Render: the vertex shader performs double indirection —
- *      sortedIndices[vertexId] → compactedSplatIds[idx] → splatId.
+ *   4. Radix sort: an indirect GPU radix sort over keysBuffer, with compactedSplatIds supplied
+ *      as initial values, produces a buffer of sorted splat IDs directly.
+ *   5. Render: the vertex shader reads sortedSplatIds[vertexId] → splatId.
  *
  * CPU sorting (WebGPU):
  *   1. Sort on worker: camera position and splat centers are sent to a web worker which
@@ -94,17 +93,12 @@ let _randomColorRaw = null;
  *      the visibility bits, using USE_SORTED_ORDER to read orderBuffer[i] for the splat ID.
  *      A prefix sum and scatter pass produce compactedSplatIds that is both sorted and
  *      visibility-filtered. The last prefix sum element gives visibleCount.
- *   4. Render: the vertex shader performs single indirection —
- *      compactedSplatIds[vertexId] → splatId.
+ *   4. Render: the vertex shader reads compactedSplatIds[vertexId] → splatId.
  *
  * CPU sorting (WebGL):
  *   1. Sort on worker: same as the WebGPU CPU path, producing orderBuffer (texture).
  *   2. Render: the vertex shader reads orderBuffer[vertexId] → splatId directly.
  *      No culling or compaction is available on WebGL.
- *
- * The GPU path sorts after compaction, requiring double indirection at render time.
- * The CPU path sorts before compaction, so the compacted buffer preserves sort order
- * and only single indirection is needed.
  *
  * @ignore
  */
@@ -215,15 +209,6 @@ class GSplatManager {
      * @type {boolean}
      */
     cpuCompactionNeeded = false;
-
-    /**
-     * Whether the compacted splat IDs are already in sorted order (CPU sort + GPU compaction).
-     * When true, the vertex shader uses single indirection; when false, it applies an
-     * additional splatOrder lookup (double indirection, GPU sort + GPU compaction).
-     *
-     * @type {boolean}
-     */
-    sortedCompaction = false;
 
     /** @type {number} */
     sortedVersion = 0;
@@ -1459,7 +1444,7 @@ class GSplatManager {
         );
 
         // Apply sorted results to the renderer
-        this.applyGpuSortResults(worldState, sortedIndices, compactedSplatIds);
+        this.applyGpuSortResults(worldState, sortedIndices);
     }
 
     /**
@@ -1508,32 +1493,31 @@ class GSplatManager {
             this.indirectDispatchSlot
         );
 
-        // Run GPU radix sort with indirect dispatch (sorts only visibleCount elements)
+        // Run GPU radix sort with indirect dispatch (sorts only visibleCount elements).
+        // Pass compactedSplatIds as initial values so the sort output contains actual
+        // splat IDs rather than indices into the compacted buffer (single indirection).
         return gpuSorter.sortIndirect(
             keysBuffer,
             elementCount,
             roundedNumBits,
             this.indirectDispatchSlot,
-            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer)
+            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
+            /** @type {StorageBuffer} */ (compactedSplatIds)
         );
     }
 
     /**
      * Applies GPU sort results to the renderer with indirect draw from interval compaction.
+     * The sortedIndices buffer already contains actual splat IDs (single indirection) because
+     * compactedSplatIds were fed as initial values to the radix sort.
      *
      * @param {GSplatWorldState} worldState - The world state being sorted.
-     * @param {StorageBuffer} sortedIndices - The sorted indices buffer from the radix sort.
-     * @param {StorageBuffer} compactedSplatIds - Compacted splat IDs from interval compaction.
+     * @param {StorageBuffer} sortedIndices - Buffer containing sorted splat IDs.
      * @private
      */
-    applyGpuSortResults(worldState, sortedIndices, compactedSplatIds) {
-        // Set sorted indices directly on renderer (no CPU upload needed)
-        this.renderer.setOrderBuffer(sortedIndices);
-
-        // Set up indirect draw on the renderer (GPU path: double indirection)
-        this.sortedCompaction = false;
+    applyGpuSortResults(worldState, sortedIndices) {
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
-        this.renderer.setIndirectDraw(this.indirectDrawSlot, /** @type {StorageBuffer} */ (ic.compactedSplatIds), /** @type {StorageBuffer} */ (ic.numSplatsBuffer), false);
+        this.renderer.setIndirectDraw(this.indirectDrawSlot, sortedIndices, /** @type {StorageBuffer} */ (ic.numSplatsBuffer));
 
         // Update renderer for indirect draw (instancingCount and numSplats are GPU-driven)
         this.renderer.updateIndirect(worldState.textureSize);
@@ -1581,15 +1565,16 @@ class GSplatManager {
         if (!sortedState) return;
 
         if (this.intervalCompaction) {
-            // GPU sort path: interval compaction
+            // GPU sort path: radix sort output already contains sorted splat IDs
             this.allocateAndWriteIntervalIndirectArgs(this.lastCompactedNumIntervals);
+            const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
             const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
-            this.renderer.setIndirectDraw(this.indirectDrawSlot, /** @type {StorageBuffer} */ (ic.compactedSplatIds), /** @type {StorageBuffer} */ (ic.numSplatsBuffer), false);
+            this.renderer.setIndirectDraw(this.indirectDrawSlot, /** @type {StorageBuffer} */ (gpuSorter.sortedIndices), /** @type {StorageBuffer} */ (ic.numSplatsBuffer));
         } else {
-            // CPU sort path: regular compaction
+            // CPU sort path: compacted buffer already contains sorted visible splat IDs
             this.allocateAndWriteIndirectArgs(this.lastCompactedTotalSplats);
             const compaction = /** @type {GSplatCompaction} */ (this.compaction);
-            this.renderer.setIndirectDraw(this.indirectDrawSlot, /** @type {StorageBuffer} */ (compaction.compactedSplatIds), /** @type {StorageBuffer} */ (compaction.numSplatsBuffer), this.sortedCompaction);
+            this.renderer.setIndirectDraw(this.indirectDrawSlot, /** @type {StorageBuffer} */ (compaction.compactedSplatIds), /** @type {StorageBuffer} */ (compaction.numSplatsBuffer));
         }
         this.renderer.updateIndirect(sortedState.textureSize);
     }
@@ -1633,14 +1618,11 @@ class GSplatManager {
 
         this.allocateAndWriteIndirectArgs(elementCount);
 
-        // Set up indirect draw on the renderer with sortedCompaction=true, since the
-        // compacted buffer already contains sorted visible splatIds (single indirection)
-        this.sortedCompaction = true;
+        // Set up indirect draw: compacted buffer already contains sorted visible splatIds
         this.renderer.setIndirectDraw(
             this.indirectDrawSlot,
             /** @type {StorageBuffer} */ (this.compaction.compactedSplatIds),
-            /** @type {StorageBuffer} */ (this.compaction.numSplatsBuffer),
-            true  // sortedCompaction: single indirection (CPU sort + GPU compaction)
+            /** @type {StorageBuffer} */ (this.compaction.numSplatsBuffer)
         );
         this.renderer.updateIndirect(sortedState.textureSize);
     }
