@@ -198,6 +198,13 @@ class ComputeRadixSort {
     _indirect = false;
 
     /**
+     * Whether the current passes expect caller-supplied initial values on pass 0.
+     *
+     * @type {boolean}
+     */
+    _hasInitialValues = false;
+
+    /**
      * Creates a new ComputeRadixSort instance.
      *
      * @param {GraphicsDevice} device - The graphics device (must support compute).
@@ -328,9 +335,10 @@ class ComputeRadixSort {
      *
      * @param {number} numBits - Number of bits to sort.
      * @param {boolean} indirect - Whether to create indirect sort passes.
+     * @param {boolean} hasInitialValues - Whether pass 0 reads from caller-supplied initial values.
      * @private
      */
-    _createPasses(numBits, indirect) {
+    _createPasses(numBits, indirect, hasInitialValues) {
         // Destroy old passes and their shaders
         this._destroyPasses();
         this._numBits = numBits;
@@ -339,13 +347,14 @@ class ComputeRadixSort {
         // updating _indirect, since _ensureBindGroupFormats compares against it)
         this._ensureBindGroupFormats(indirect);
         this._indirect = indirect;
+        this._hasInitialValues = hasInitialValues;
 
         const numPasses = numBits / BITS_PER_PASS;
         const suffix = indirect ? '-Indirect' : '';
 
         for (let pass = 0; pass < numPasses; pass++) {
             const bitOffset = pass * BITS_PER_PASS;
-            const isFirstPass = pass === 0;
+            const isFirstPass = pass === 0 && !hasInitialValues;
 
             // Create shaders with constants baked in
             const blockSumShader = this._createShader(
@@ -380,16 +389,17 @@ class ComputeRadixSort {
      * @param {number} elementCount - Number of elements to sort.
      * @param {number} numBits - Number of bits to sort.
      * @param {boolean} indirect - Whether passes should use indirect dispatch.
+     * @param {boolean} hasInitialValues - Whether pass 0 reads caller-supplied initial values.
      * @private
      */
-    _allocateBuffers(elementCount, numBits, indirect) {
+    _allocateBuffers(elementCount, numBits, indirect, hasInitialValues) {
         const workgroupCount = Math.ceil(elementCount / THREADS_PER_WORKGROUP);
 
         // Only reallocate buffers if we need MORE capacity (grow-only policy)
         const buffersNeedRealloc = workgroupCount > this._allocatedWorkgroupCount || !this._keys0;
 
-        // Recreate passes when numBits or indirect mode changes
-        const passesNeedRecreate = numBits !== this._numBits || indirect !== this._indirect;
+        // Recreate passes when numBits, indirect mode, or initial-values mode changes
+        const passesNeedRecreate = numBits !== this._numBits || indirect !== this._indirect || hasInitialValues !== this._hasInitialValues;
 
         if (buffersNeedRealloc) {
 
@@ -430,7 +440,7 @@ class ComputeRadixSort {
         this._prefixSumKernel.resize(this._blockSums, BUCKET_COUNT * workgroupCount);
 
         if (passesNeedRecreate) {
-            this._createPasses(numBits, indirect);
+            this._createPasses(numBits, indirect, hasInitialValues);
         }
     }
 
@@ -481,7 +491,7 @@ class ComputeRadixSort {
         Debug.assert(elementCount > 0, 'ComputeRadixSort.sort: elementCount must be > 0');
         Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSort.sort: numBits must be a multiple of ${BITS_PER_PASS}`);
 
-        return this._execute(keysBuffer, elementCount, numBits, false, -1, null);
+        return this._execute(keysBuffer, elementCount, numBits, false, -1, null, undefined);
     }
 
     /**
@@ -493,15 +503,18 @@ class ComputeRadixSort {
      * @param {number} numBits - Number of bits to sort (must be multiple of 4).
      * @param {number} dispatchSlot - Slot index in the device's indirect dispatch buffer.
      * @param {StorageBuffer} sortElementCountBuffer - GPU-written buffer containing visible count.
-     * @returns {StorageBuffer} Storage buffer containing sorted indices.
+     * @param {StorageBuffer} [initialValues] - Optional buffer of initial values for pass 0.
+     * When provided, the sort produces output values derived from this buffer instead of
+     * sequential indices. The buffer is only read, never modified.
+     * @returns {StorageBuffer} Storage buffer containing sorted values.
      */
-    sortIndirect(keysBuffer, maxElementCount, numBits, dispatchSlot, sortElementCountBuffer) {
+    sortIndirect(keysBuffer, maxElementCount, numBits, dispatchSlot, sortElementCountBuffer, initialValues) {
         Debug.assert(keysBuffer, 'ComputeRadixSort.sortIndirect: keysBuffer is required');
         Debug.assert(maxElementCount > 0, 'ComputeRadixSort.sortIndirect: maxElementCount must be > 0');
         Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSort.sortIndirect: numBits must be a multiple of ${BITS_PER_PASS}`);
         Debug.assert(sortElementCountBuffer, 'ComputeRadixSort.sortIndirect: sortElementCountBuffer is required');
 
-        return this._execute(keysBuffer, maxElementCount, numBits, true, dispatchSlot, sortElementCountBuffer);
+        return this._execute(keysBuffer, maxElementCount, numBits, true, dispatchSlot, sortElementCountBuffer, initialValues);
     }
 
     /**
@@ -513,23 +526,25 @@ class ComputeRadixSort {
      * @param {boolean} indirect - Whether to use indirect dispatch.
      * @param {number} dispatchSlot - Indirect dispatch slot index (-1 for direct).
      * @param {StorageBuffer|null} sortElementCountBuffer - GPU-written element count (null for direct).
-     * @returns {StorageBuffer} Storage buffer containing sorted indices.
+     * @param {StorageBuffer} [initialValues] - Optional initial values buffer for pass 0.
+     * @returns {StorageBuffer} Storage buffer containing sorted values.
      * @private
      */
-    _execute(keysBuffer, elementCount, numBits, indirect, dispatchSlot, sortElementCountBuffer) {
+    _execute(keysBuffer, elementCount, numBits, indirect, dispatchSlot, sortElementCountBuffer, initialValues) {
         this._elementCount = elementCount;
+        const hasInitialValues = !!initialValues;
 
         // Allocate buffers and create passes if needed
-        this._allocateBuffers(elementCount, numBits, indirect);
+        this._allocateBuffers(elementCount, numBits, indirect, hasInitialValues);
 
         const device = this.device;
         const numPasses = numBits / BITS_PER_PASS;
         const suffix = indirect ? '-Indirect' : '';
 
-        // First pass reads directly from input buffer (no copy needed)
-        // Subsequent passes ping-pong between internal buffers
+        // When initial values are provided, pass 0 reads from that buffer (IS_FIRST_PASS=0).
+        // Otherwise pass 0 uses GID as the value (IS_FIRST_PASS=1), ignoring currentValues.
         let currentKeys = keysBuffer;
-        let currentValues = this._values0;
+        let currentValues = initialValues ?? this._values0;
         let nextKeys = this._keys0;
         let nextValues = this._values1;
 

@@ -100,7 +100,6 @@ class GSplatRenderer {
         this._internalDefines.add('GSPLAT_UNIFIED_ID');
         this._internalDefines.add('PICK_CUSTOM_ID');
         this._internalDefines.add('GSPLAT_INDIRECT_DRAW');
-        this._internalDefines.add('GSPLAT_COMPACTED_ORDER');
 
         this.meshInstance = this.createMeshInstance();
     }
@@ -260,13 +259,10 @@ class GSplatRenderer {
      * Must be called each frame when compaction is active (slots are per-frame).
      *
      * @param {number} drawSlot - The indirect draw slot index in the device's buffer.
-     * @param {StorageBuffer} compactedSplatIds - Buffer containing compacted visible splat IDs.
+     * @param {StorageBuffer} compactedSplatIds - Buffer containing sorted visible splat IDs.
      * @param {StorageBuffer} numSplatsBuffer - Buffer containing numSplats for vertex shader.
-     * @param {boolean} [sortedCompaction] - When true, compactedSplatIds already contains
-     * sorted visible splat IDs (CPU sorting + GPU compaction). Uses single indirection instead
-     * of double indirection in the vertex shader.
      */
-    setIndirectDraw(drawSlot, compactedSplatIds, numSplatsBuffer, sortedCompaction = false) {
+    setIndirectDraw(drawSlot, compactedSplatIds, numSplatsBuffer) {
         this.meshInstance.setIndirect(null, drawSlot, 1);
 
         // Bind compaction buffers for vertex shader
@@ -274,20 +270,8 @@ class GSplatRenderer {
         this._material.setParameter('numSplatsStorage', numSplatsBuffer);
 
         // Set GSPLAT_INDIRECT_DRAW define if not already set
-        let needsUpdate = false;
         if (!this._material.getDefine('GSPLAT_INDIRECT_DRAW')) {
             this._material.setDefine('GSPLAT_INDIRECT_DRAW', true);
-            needsUpdate = true;
-        }
-
-        // Set/clear GSPLAT_COMPACTED_ORDER define for single vs double indirection
-        const currentSortedCompaction = !!this._material.getDefine('GSPLAT_COMPACTED_ORDER');
-        if (sortedCompaction !== currentSortedCompaction) {
-            this._material.setDefine('GSPLAT_COMPACTED_ORDER', sortedCompaction);
-            needsUpdate = true;
-        }
-
-        if (needsUpdate) {
             this._material.update();
         }
     }
@@ -298,16 +282,8 @@ class GSplatRenderer {
     disableIndirectDraw() {
         this.meshInstance.setIndirect(null, -1);
 
-        let needsUpdate = false;
         if (this._material.getDefine('GSPLAT_INDIRECT_DRAW')) {
             this._material.setDefine('GSPLAT_INDIRECT_DRAW', false);
-            needsUpdate = true;
-        }
-        if (this._material.getDefine('GSPLAT_COMPACTED_ORDER')) {
-            this._material.setDefine('GSPLAT_COMPACTED_ORDER', false);
-            needsUpdate = true;
-        }
-        if (needsUpdate) {
             this._material.update();
         }
 
@@ -322,16 +298,6 @@ class GSplatRenderer {
         } else {
             this._material.setParameter('splatOrder', this.workBuffer.orderTexture);
         }
-    }
-
-    /**
-     * Sets a storage buffer containing sorted indices directly as the order data.
-     * Used by GPU sorting to bypass CPU upload.
-     *
-     * @param {StorageBuffer} buffer - The storage buffer containing sorted indices (u32 values).
-     */
-    setOrderBuffer(buffer) {
-        this._material.setParameter('splatOrder', buffer);
     }
 
     frameUpdate(params) {
