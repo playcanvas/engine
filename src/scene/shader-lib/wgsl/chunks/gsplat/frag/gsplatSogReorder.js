@@ -49,8 +49,23 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         let sh0 = pack111110(resolve(uniform.sh0Mins.xyz, uniform.sh0Maxs.xyz, sh0Sample.xyz));
         let alpha = sigmoid(mix(uniform.sh0Mins.w, uniform.sh0Maxs.w, sh0Sample.w));
     #else
-        let scale = pack101010(resolveCodebook(scalesSample, &uniform.scales_codebook));    // resolve scale to 10,10,10 bits
-        let sh0 = pack111110(resolveCodebook(sh0Sample.xyz, &uniform.sh0_codebook));        // resolve sh0 to 11,11,10 bits
+        // resolve scale codebook to 10,10,10 bits
+        let scalesIdx = vec3u(scalesSample * 255.0);
+        let scalesV = vec3f(
+            uniform.scales_codebook[scalesIdx.x >> 2u][scalesIdx.x & 3u],
+            uniform.scales_codebook[scalesIdx.y >> 2u][scalesIdx.y & 3u],
+            uniform.scales_codebook[scalesIdx.z >> 2u][scalesIdx.z & 3u]
+        );
+        let scale = pack101010((scalesV - uniform.scales_codebook[0].x) / (uniform.scales_codebook[63].w - uniform.scales_codebook[0].x));
+
+        // resolve sh0 codebook to 11,11,10 bits
+        let sh0Idx = vec3u(sh0Sample.xyz * 255.0);
+        let sh0V = vec3f(
+            uniform.sh0_codebook[sh0Idx.x >> 2u][sh0Idx.x & 3u],
+            uniform.sh0_codebook[sh0Idx.y >> 2u][sh0Idx.y & 3u],
+            uniform.sh0_codebook[sh0Idx.z >> 2u][sh0Idx.z & 3u]
+        );
+        let sh0 = pack111110((sh0V - uniform.sh0_codebook[0].x) / (uniform.sh0_codebook[63].w - uniform.sh0_codebook[0].x));
         let alpha = sh0Sample.w;
     #endif
 

@@ -915,7 +915,7 @@ class GSplatComponent extends Component {
      * in the resource's format with `storage: GSPLAT_STREAM_INSTANCE`. Only available in unified mode.
      *
      * @param {string} name - The name of the texture.
-     * @returns {Texture|undefined} The texture, or undefined if not found or not in unified mode.
+     * @returns {Texture|null} The texture, or null if not found or not in unified mode.
      * @example
      * // Add an instance stream to the resource format
      * resource.format.addExtraStreams([
@@ -932,9 +932,9 @@ class GSplatComponent extends Component {
      */
     getInstanceTexture(name) {
         if (!this._placement) {
-            return undefined;
+            return null;
         }
-        return this._placement.getInstanceTexture(name, this.system.app.graphicsDevice);
+        return this._placement.getInstanceTexture(name, this.system.app.graphicsDevice) ?? null;
     }
 
     _onGSplatAssetAdded() {

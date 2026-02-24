@@ -357,11 +357,10 @@ class GSplatResourceBase {
      * Gets a texture by name.
      *
      * @param {string} name - The name of the texture.
-     * @returns {Texture|undefined} The texture, or undefined if not found.
-     * @ignore
+     * @returns {Texture|null} The texture, or null if not found.
      */
     getTexture(name) {
-        return this.streams.getTexture(name);
+        return this.streams.getTexture(name) ?? null;
     }
 
     /**
