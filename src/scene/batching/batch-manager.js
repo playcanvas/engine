@@ -268,10 +268,43 @@ class BatchManager {
         }
     }
 
+    /**
+     * Filter out mesh instances that have skin or morph, as these are not supported by batching.
+     * If any mesh instance has skin/morph, the entire set is excluded.
+     *
+     * @param {MeshInstance[]} meshInstances - The mesh instances to filter.
+     * @param {string} nodeName - The node name for warning messages.
+     * @returns {MeshInstance[]|null} The mesh instances if none have skin/morph, or null if any do.
+     * @private
+     */
+    _filterBatchableInstances(meshInstances, nodeName) {
+        let hasUnsupported = false;
+        let hasSupported = false;
+        for (let i = 0; i < meshInstances.length; i++) {
+            if (meshInstances[i].skinInstance || meshInstances[i].morphInstance) {
+                hasUnsupported = true;
+            } else {
+                hasSupported = true;
+            }
+        }
+
+        if (hasUnsupported) {
+            if (hasSupported) {
+                Debug.warnOnce(`BatchManager: Some mesh instances on entity "${nodeName}" have skin/morph and the whole entity will be excluded from batching.`);
+            }
+            return null;
+        }
+
+        return meshInstances;
+    }
+
     _extractRender(node, arr, group, groupMeshInstances) {
         if (node.render) {
-            arr = groupMeshInstances[node.render.batchGroupId] = arr.concat(node.render.meshInstances);
-            node.render.removeFromLayers();
+            const valid = this._filterBatchableInstances(node.render.meshInstances, node.name);
+            if (valid) {
+                arr = groupMeshInstances[node.render.batchGroupId] = arr.concat(valid);
+                node.render.removeFromLayers();
+            }
         }
 
         return arr;
@@ -279,12 +312,15 @@ class BatchManager {
 
     _extractModel(node, arr, group, groupMeshInstances) {
         if (node.model && node.model.model) {
-            arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
-            node.model.removeModelFromLayers();
+            const valid = this._filterBatchableInstances(node.model.meshInstances, node.name);
+            if (valid) {
+                arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(valid);
+                node.model.removeModelFromLayers();
 
-            // #if _DEBUG
-            node.model._batchGroup = group;
-            // #endif
+                // #if _DEBUG
+                node.model._batchGroup = group;
+                // #endif
+            }
         }
 
         return arr;
