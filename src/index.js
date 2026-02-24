@@ -127,6 +127,7 @@ export { GamePads } from './platform/input/game-pads.js';
 export { Keyboard } from './platform/input/keyboard.js';
 export { KeyboardEvent } from './platform/input/keyboard-event.js';
 export { Mouse } from './platform/input/mouse.js';
+export { MouseButton } from './platform/input/mouse-button.js';
 export { MouseEvent } from './platform/input/mouse-event.js';
 export { TouchDevice } from './platform/input/touch-device.js';
 export { getTouchTargetCoords, Touch, TouchEvent } from './platform/input/touch-event.js';

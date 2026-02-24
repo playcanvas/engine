@@ -3,6 +3,10 @@ import { EventHandler } from '../../core/event-handler.js';
 
 import { KeyboardEvent } from './keyboard-event.js';
 
+/**
+ * @import { Key } from './key.js'
+ */
+
 // internal global keyboard events
 const _keyboardEvent = new KeyboardEvent();
 
@@ -70,7 +74,7 @@ class Keyboard extends EventHandler {
      * @event
      * @example
      * const onKeyDown = (e) => {
-     *     if (e.key === pc.KEY_SPACE) {
+     *     if (e.key === pc.Key.Space) {
      *         // space key pressed
      *     }
      *     e.event.preventDefault(); // Use original browser event to prevent browser action.
@@ -86,7 +90,7 @@ class Keyboard extends EventHandler {
      * @event
      * @example
      * const onKeyUp = (e) => {
-     *     if (e.key === pc.KEY_SPACE) {
+     *     if (e.key === pc.Key.Space) {
      *         // space key released
      *     }
      *     e.event.preventDefault(); // Use original browser event to prevent browser action.
@@ -313,7 +317,7 @@ class Keyboard extends EventHandler {
     /**
      * Return true if the key is currently down.
      *
-     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
+     * @param {Key} key - The keyCode of the key to test.
      * @returns {boolean} True if the key was pressed, false if not.
      */
     isPressed(key) {
@@ -326,7 +330,7 @@ class Keyboard extends EventHandler {
     /**
      * Returns true if the key was pressed since the last update.
      *
-     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
+     * @param {Key} key - The keyCode of the key to test.
      * @returns {boolean} True if the key was pressed.
      */
     wasPressed(key) {
@@ -339,7 +343,7 @@ class Keyboard extends EventHandler {
     /**
      * Returns true if the key was released since the last update.
      *
-     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
+     * @param {Key} key - The keyCode of the key to test.
      * @returns {boolean} True if the key was pressed.
      */
     wasReleased(key) {
