@@ -58,6 +58,14 @@ class GSplatWorldState {
     totalActiveSplats = 0;
 
     /**
+     * Total number of intervals across all placements. Each placement contributes
+     * either its interval count (intervals.length / 2) or 1 if it has no intervals.
+     *
+     * @type {number}
+     */
+    totalIntervals = 0;
+
+    /**
      * Files to decrement when this state becomes active.
      * Array of tuples: [octree, fileIndex]
      * @type {Array<[GSplatOctree, number]>}
@@ -129,14 +137,26 @@ class GSplatWorldState {
         if (splats.length === 0) {
             this.totalUsedPixels = 0;
             this.totalActiveSplats = 0;
+            this.totalIntervals = 0;
             return;
         }
 
         let start = 0;
         let totalActive = 0;
+        let totalIntervals = 0;
         for (const splat of splats) {
             const activeSplats = splat.activeSplats;
             totalActive += activeSplats;
+            // Count intervals for GPU compaction. Partial-load octree splats use the flat
+            // intervals array; fully-loaded octree splats (intervals cleared) fall back to
+            // placementIntervals for per-node culling granularity; non-octree splats use 1.
+            if (splat.intervals.length > 0) {
+                totalIntervals += splat.intervals.length / 2;
+            } else if (splat.placementIntervals && splat.placementIntervals.size > 0) {
+                totalIntervals += splat.placementIntervals.size;
+            } else {
+                totalIntervals += 1;
+            }
             const numLines = Math.ceil(activeSplats / size);
             splat.setLines(start, numLines, size, activeSplats);
             start += numLines;
@@ -144,6 +164,7 @@ class GSplatWorldState {
 
         this.totalUsedPixels = start * size;
         this.totalActiveSplats = totalActive;
+        this.totalIntervals = totalIntervals;
     }
 }
 
