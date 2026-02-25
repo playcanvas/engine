@@ -505,9 +505,20 @@ class Renderer {
         }
     }
 
-    setupFrontFace(drawCall) {
-        const material = drawCall.material;
-        this.device.setFrontFace(material.frontFace);
+    setupFrontFace(flipFactor, drawCall) {
+
+        // Calculate total face flip factor
+        const flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
+
+        // Determine final front face winding
+        let finalFrontFace = drawCall.material.frontFace;
+
+        // invert: CCW→CW or CW→CCW to keep correct in shaders
+        if (flipFaces < 0) {
+            finalFrontFace ^= 1;
+        }
+
+        this.device.setFrontFace(finalFrontFace);
     }
 
     updateCameraFrustum(camera) {
