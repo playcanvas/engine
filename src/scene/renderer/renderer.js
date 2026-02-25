@@ -15,7 +15,8 @@ import {
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
     BINDGROUP_MESH_UB,
-    FRONTFACE_CCW
+    FRONTFACE_CCW,
+    FRONTFACE_CW
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -509,19 +510,13 @@ class Renderer {
     setupFrontFace(flipFactor, drawCall) {
 
         // Determine final front face winding
-        // In order not to break the current implementation,
-        // we will add changes for a value different from the default
-        // value specified in the material
         let finalFrontFace = drawCall.material.frontFace;
-        if (finalFrontFace !== FRONTFACE_CCW) {
 
-            // Calculate total face flip factor
-            const flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
+        // Calculate total face flip factor
+        const flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
 
-            // invert: CW→CCW
-            if (flipFaces < 0) {
-                finalFrontFace = FRONTFACE_CCW;
-            }
+        if (flipFaces < 0) {
+            finalFrontFace = finalFrontFace === FRONTFACE_CCW ? FRONTFACE_CW : FRONTFACE_CCW;
         }
 
         this.device.setFrontFace(finalFrontFace);
