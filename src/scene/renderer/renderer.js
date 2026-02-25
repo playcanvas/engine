@@ -484,42 +484,45 @@ class Renderer {
         }
     }
 
-    setupCullMode(cullFaces, flipFactor, drawCall) {
+    setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall) {
         const material = drawCall.material;
-        let mode = CULLFACE_NONE;
-        if (cullFaces) {
-            let flipFaces = 1;
+        const worldScaleSign = drawCall.node.worldScaleSign;
 
-            if (material.cull === CULLFACE_FRONT || material.cull === CULLFACE_BACK) {
-                flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
-            }
+        // Calculate total face flip factor
+        const flipFaces = flipFactor * drawCall.flipFacesFactor * worldScaleSign;
+
+        let cullMode = CULLFACE_NONE;
+        let frontFace = material.frontFace;
+
+        if (flipFaces < 0) {
+            frontFace = frontFace === FRONTFACE_CCW ? FRONTFACE_CW : FRONTFACE_CCW;
+        }
+
+        if (cullFaces) {
+
+            cullMode = material.cull;
 
             if (flipFaces < 0) {
-                mode = material.cull === CULLFACE_FRONT ? CULLFACE_BACK : CULLFACE_FRONT;
-            } else {
-                mode = material.cull;
+
+                if (cullMode === CULLFACE_FRONT) {
+                    cullMode = CULLFACE_BACK;
+                } else if (cullMode === CULLFACE_BACK) {
+                    cullMode = CULLFACE_FRONT;
+                }
             }
         }
-        this.device.setCullMode(mode);
 
-        if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
-            this.twoSidedLightingNegScaleFactorId.setValue(drawCall.node.worldScaleSign);
+        this.device.setCullMode(cullMode);
+        this.device.setFrontFace(frontFace);
+
+        if (cullMode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
+            this.twoSidedLightingNegScaleFactorId.setValue(worldScaleSign);
         }
     }
 
-    setupFrontFace(flipFactor, drawCall) {
-
-        // Determine final front face winding
-        let finalFrontFace = drawCall.material.frontFace;
-
-        // Calculate total face flip factor
-        const flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
-
-        if (flipFaces < 0) {
-            finalFrontFace = finalFrontFace === FRONTFACE_CCW ? FRONTFACE_CW : FRONTFACE_CCW;
-        }
-
-        this.device.setFrontFace(finalFrontFace);
+    setupCullMode(cullFaces, flipFactor, drawCall) {
+        Debug.deprecated('pc.Renderer.setupCullMode is deprecated. Use \'pc.Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
+        this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
     }
 
     updateCameraFrustum(camera) {
