@@ -68,12 +68,6 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
         let uv = vec2i(i32(splatId % texW), i32(splatId / texW));
         let nodeIdx = textureLoad(pcNodeIndex, uv, 0).r;
 
-        // Padding pixels use sentinel 0xFFFFFFFF — always invisible
-        if (nodeIdx == 0xFFFFFFFFu) {
-            flagBuffer[idx] = 0u;
-            continue;
-        }
-
         // Check visibility bit from bit-packed texture
         let texelIdx = nodeIdx >> 5u;
         let bitIdx = nodeIdx & 31u;
