@@ -624,7 +624,7 @@ class ForwardRenderer extends Renderer {
             }
 
             DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}, Material: ${material.name}`);
-            
+
             this.setupCullModeAndFrontFace(camera._cullFaces, flipFactor, drawCall);
 
             const stencilFront = drawCall.stencilFront ?? material.stencilFront;
