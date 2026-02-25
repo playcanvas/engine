@@ -186,10 +186,7 @@ class GSplatRenderer {
         const dither = false;
         this._material.setParameter('numSplats', 0);
 
-        // Set order data - texture for WebGL only at init time, it does not need to be updated
-        if (workBuffer.orderTexture) {
-            this._material.setParameter('splatOrder', workBuffer.orderTexture);
-        }
+        this.setOrderData();
 
         this._material.setParameter('alphaClip', 0.3);
         this._material.setDefine(`DITHER_${dither ? 'BLUENOISE' : 'NONE'}`, '');

@@ -1112,7 +1112,28 @@ class GSplatManager {
         }
     }
 
+    /**
+     * Detects if the work buffer format has been replaced (e.g. dataFormat changed) and
+     * recreates the work buffer if needed.
+     *
+     * @private
+     */
+    handleFormatChange() {
+        const currentFormat = this.scene.gsplat.format;
+        if (this.workBuffer.format !== currentFormat) {
+            this.workBuffer.destroy();
+            this.workBuffer = new GSplatWorkBuffer(this.device, currentFormat);
+            this.renderer.workBuffer = this.workBuffer;
+            this.renderer.configureMaterial();
+            this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
+            this._workBufferRebuildRequired = true;
+            this.sortNeeded = true;
+        }
+    }
+
     update() {
+
+        this.handleFormatChange();
 
         // detect work buffer format changes (extra streams added) and schedule a full rebuild
         const wbFormatVersion = this.workBuffer.format.extraStreamsVersion;
@@ -1283,6 +1304,9 @@ class GSplatManager {
                 const count = this.useGpuSorting ? sortedState.totalUsedPixels : sortedState.totalActiveSplats;
                 this.rebuildWorkBuffer(sortedState, count);
                 this._workBufferRebuildRequired = false;
+
+                // rebuildWorkBuffer may resize, which destroys/recreates orderBuffer — rebind it
+                this.renderer.setOrderData();
 
                 // boundsBaseIndex may have changed — force interval metadata re-upload
                 if (this.intervalCompaction) {
