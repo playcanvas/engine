@@ -66,7 +66,7 @@ void main(void) {
             writePcId(uvec4(0u));
         #endif
         #ifdef GSPLAT_NODE_INDEX
-            writePcNodeIndex(uvec4(0xFFFFFFFFu, 0u, 0u, 0u));
+            writePcNodeIndex(uvec4(0u));
         #endif
 
     } else {
