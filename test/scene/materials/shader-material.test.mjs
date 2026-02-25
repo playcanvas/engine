@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { CULLFACE_BACK, FUNC_LESSEQUAL } from '../../../src/platform/graphics/constants.js';
+import { CULLFACE_BACK, FUNC_LESSEQUAL, FRONTFACE_CCW } from '../../../src/platform/graphics/constants.js';
 import { BLEND_NONE } from '../../../src/scene/constants.js';
 import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js';
 
@@ -14,6 +14,7 @@ describe('Material', function () {
         expect(material.blendType).to.equal(BLEND_NONE);
         expect(material.blueWrite).to.equal(true);
         expect(material.cull).to.equal(CULLFACE_BACK);
+        expect(material.frontFace).to.equal(FRONTFACE_CCW);
         expect(material.depthBias).to.equal(0);
         expect(material.depthTest).to.equal(true);
         expect(material.depthFunc).to.equal(FUNC_LESSEQUAL);
