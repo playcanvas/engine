@@ -509,10 +509,9 @@ class GSplatParams {
     cooldownTicks = 100;
 
     /**
-     * Work buffer data format. Controls the precision and bandwidth of the intermediate work
-     * buffer used during unified GSplat rendering. Can be set to {@link GSPLATDATA_LARGE}
-     * (default, 32 bytes/splat, full precision) or {@link GSPLATDATA_COMPACT} (20 bytes/splat,
-     * reduced precision optimized for mobile). Changing this recreates the work buffer.
+     * Work buffer data format. Controls the precision and bandwidth of the intermediate work buffer
+     * used during unified GSplat rendering. Can be set to {@link GSPLATDATA_COMPACT} (20 bytes/splat)
+     * or {@link GSPLATDATA_LARGE} (32 bytes/splat). Defaults to {@link GSPLATDATA_COMPACT}.
      *
      * @type {string}
      */
