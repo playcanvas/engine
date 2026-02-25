@@ -517,8 +517,8 @@ class Renderer {
 
             // Calculate total face flip factor
             const flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
-            
-            // invert: CW→CCW to keep correct in shaders
+
+            // invert: CW→CCW
             if (flipFaces < 0) {
                 finalFrontFace = FRONTFACE_CCW;
             }
