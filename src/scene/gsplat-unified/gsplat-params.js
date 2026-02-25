@@ -74,6 +74,7 @@ class GSplatParams {
             // Compact work buffer format (20 bytes/splat):
             // - dataColor (R32U): RGB color (11+11+10 bits, range [0, 4])
             // - dataTransformA (RGBA32U): center.xyz (3×32-bit floats) + half-angle quaternion (11+11+10 bits)
+            //   See: https://marc-b-reynolds.github.io/quaternions/2017/05/02/QuatQuantPart1.html
             // - dataTransformB (R32U): scale.xyz (3×8-bit log-encoded, e^-12..e^9) + alpha (8 bits)
             format = new GSplatFormat(this._device, [
                 { name: 'dataColor', format: PIXELFORMAT_R32U },
