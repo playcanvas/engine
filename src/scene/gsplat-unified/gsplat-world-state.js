@@ -106,7 +106,7 @@ class GSplatWorldState {
             } else {
                 totalIntervals += 1;
             }
-            splat.setLayout(pixelOffset, this.textureSize, splat.activeSplats);
+            splat.setLayout(pixelOffset, this.textureSize);
             pixelOffset += splat.activeSplats;
         }
 

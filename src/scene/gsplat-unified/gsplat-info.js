@@ -21,6 +21,9 @@ const tmpSize = new Vec2();
 // Reusable buffer for sub-draw data (only grows, never shrinks)
 let subDrawDataArray = new Uint32Array(0);
 
+// Temporary full-range interval used by updateSubDraws when this.intervals is empty
+const _fullRangeInterval = [0, 0];
+
 /**
  * Represents a snapshot of gsplat state for rendering. This class captures all necessary data
  * at a point in time and should not hold references back to the source placement. All required
@@ -209,17 +212,9 @@ class GSplatInfo {
      *
      * @param {number} pixelOffset - Starting pixel offset in the work buffer.
      * @param {number} textureSize - The work buffer texture width.
-     * @param {number} activeSplats - Number of active splats.
      */
-    setLayout(pixelOffset, textureSize, activeSplats) {
+    setLayout(pixelOffset, textureSize) {
         this.pixelOffset = pixelOffset;
-
-        // Synthesize a full-range interval when none exist, so all paths use sub-draws
-        if (this.intervals.length === 0) {
-            this.intervals[0] = 0;
-            this.intervals[1] = activeSplats;
-        }
-
         this.updateSubDraws(textureSize);
     }
 
@@ -276,16 +271,25 @@ class GSplatInfo {
     }
 
     /**
-     * Builds the sub-draw data texture from the current intervals. Each interval is split at
-     * row boundaries of the work buffer texture to produce axis-aligned rectangles. The result
-     * is a small RGBA32U texture where each texel stores the parameters for one instanced quad.
-     * Called once from setLayout when the work buffer texture width is known.
+     * Builds the sub-draw data texture from the current intervals (or a synthetic full-range
+     * interval when none exist). Each interval is split at row boundaries of the work buffer
+     * texture to produce axis-aligned rectangles stored as a small RGBA32U texture.
      *
      * @param {number} textureWidth - The work buffer texture width.
      */
     updateSubDraws(textureWidth) {
 
-        const numIntervals = this.intervals.length / 2;
+        // Use a local full-range interval when none exist, so the instanced draw path
+        // always has sub-draws. This must NOT mutate this.intervals because the GPU
+        // interval compaction reads this.intervals separately for per-node culling.
+        let intervals = this.intervals;
+        let numIntervals = intervals.length / 2;
+        if (numIntervals === 0) {
+            _fullRangeInterval[0] = 0;
+            _fullRangeInterval[1] = this.activeSplats;
+            intervals = _fullRangeInterval;
+            numIntervals = 1;
+        }
 
         // Split intervals at row boundaries. Each interval produces at most 3 sub-draws:
         // partial first row, full middle rows, partial last row.
@@ -296,7 +300,6 @@ class GSplatInfo {
             subDrawDataArray = new Uint32Array(requiredSize);
         }
         const subDrawData = subDrawDataArray;
-        const intervals = this.intervals;
         let subDrawCount = 0;
         let targetOffset = this.pixelOffset; // absolute pixel position in work buffer
 
