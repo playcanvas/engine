@@ -150,10 +150,14 @@ assetListLoader.load(() => {
     data.on('debugLod:set', () => {
         app.scene.gsplat.colorizeLod = !!data.get('debugLod');
     });
+    data.on('compact:set', () => {
+        app.scene.gsplat.dataFormat = data.get('compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
+    });
 
     // initialize UI settings (must be after observer registration)
     data.set('gpuSorting', false);
     data.set('culling', false);
+    data.set('compact', true);
     data.set('debugLod', false);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
     data.set('splatBudget', pc.platform.mobile ? '1M' : '4M');

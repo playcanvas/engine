@@ -69,9 +69,6 @@ class GSplatInfo {
     /** @type {number} */
     lineCount = 0;
 
-    /** @type {number} */
-    padding = 0;
-
     /** @type {Vec4} */
     viewport = new Vec4();
 
@@ -213,14 +210,15 @@ class GSplatInfo {
     setLines(start, count, textureSize, activeSplats) {
         this.lineStart = start;
         this.lineCount = count;
-        this.padding = textureSize * count - activeSplats;
-        Debug.assert(this.padding >= 0);
         this.viewport.set(0, start, textureSize, count);
 
-        // Build sub-draw data for instanced interval rendering
-        if (this.intervals.length > 0) {
-            this.updateSubDraws(textureSize);
+        // Synthesize a full-range interval when none exist, so all paths use sub-draws
+        if (this.intervals.length === 0) {
+            this.intervals[0] = 0;
+            this.intervals[1] = activeSplats;
         }
+
+        this.updateSubDraws(textureSize);
     }
 
     /**

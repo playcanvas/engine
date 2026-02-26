@@ -41,6 +41,16 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Compact' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'compact' },
+                    value: observer.get('compact') || false
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Colorize LOD' },
                 jsx(BooleanInput, {
                     type: 'toggle',

@@ -1195,3 +1195,21 @@ export const GSPLAT_STREAM_RESOURCE = 0;
  * @category Graphics
  */
 export const GSPLAT_STREAM_INSTANCE = 1;
+
+/**
+ * Large work buffer data format with full precision. Uses RGBA16F color, float16
+ * rotation and float16 scale. 32 bytes per splat.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const GSPLATDATA_LARGE = 'large';
+
+/**
+ * Compact work buffer data format optimized for reduced memory and bandwidth. Uses 11+11+10 bit
+ * RGB color, half-angle quaternion rotation and log-encoded scale. 20 bytes per splat.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const GSPLATDATA_COMPACT = 'compact';
