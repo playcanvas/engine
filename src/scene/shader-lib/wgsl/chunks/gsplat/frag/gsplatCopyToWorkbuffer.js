@@ -21,8 +21,6 @@ var<private> processOutput: FragmentOutput;
 #include "gsplatWriteVS"
 #include "gsplatModifyVS"
 
-uniform uStartLine: i32;      // Start row in destination texture
-
 // Packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
 varying @interpolate(flat) vSubDraw: vec4i;
 
@@ -48,7 +46,7 @@ uniform model_rotation: vec4f;  // (x,y,z,w) format
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     // Compute source index from packed sub-draw varying: (sourceBase, colStart, rowWidth, rowStart)
-    let localRow = i32(input.position.y) - uniform.uStartLine - input.vSubDraw.w;
+    let localRow = i32(input.position.y) - input.vSubDraw.w;
     let localCol = i32(input.position.x) - input.vSubDraw.y;
     let originalIndex = u32(input.vSubDraw.x + localRow * input.vSubDraw.z + localCol);
 

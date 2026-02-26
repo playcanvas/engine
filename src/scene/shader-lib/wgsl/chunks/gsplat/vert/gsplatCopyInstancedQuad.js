@@ -11,8 +11,7 @@ attribute vertex_position: vec2f;
 // B = colEnd
 // A = sourceBase
 var uSubDrawData: texture_2d<u32>;
-uniform uLineCount: i32;
-uniform uTextureWidth: i32;
+uniform uTextureSize: vec2i;  // (width, height)
 
 // packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
 varying @interpolate(flat) vSubDraw: vec4i;
@@ -38,7 +37,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     // Map to NDC within the viewport
     // WebGPU viewport transform inverts Y: y_pixel = viewport.y + viewport.h * (1 - y_ndc) / 2
     // so we negate Y compared to the GLSL version to get correct row positioning
-    let ndc = vec4f(f32(colStart), f32(colEnd), f32(rowStart), f32(rowStart + numRows)) / vec4f(f32(uniform.uTextureWidth), f32(uniform.uTextureWidth), f32(uniform.uLineCount), f32(uniform.uLineCount)) * 2.0 - 1.0;
+    let ndc = vec4f(f32(colStart), f32(colEnd), f32(rowStart), f32(rowStart + numRows)) / vec4f(f32(uniform.uTextureSize.x), f32(uniform.uTextureSize.x), f32(uniform.uTextureSize.y), f32(uniform.uTextureSize.y)) * 2.0 - 1.0;
 
     output.position = vec4f(mix(ndc.x, ndc.y, u), mix(-ndc.z, -ndc.w, v), 0.5, 1.0);
 
