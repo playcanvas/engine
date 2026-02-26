@@ -3,6 +3,22 @@ import { expect } from 'chai';
 import { BlockAllocator, MemBlock } from '../../src/core/block-allocator.js';
 
 /**
+ * Deterministic PRNG (mulberry32) seeded with a fixed value for reproducible stress tests.
+ *
+ * @param {number} seed - The seed value.
+ * @returns {Function} A function that returns a pseudo-random number in [0, 1).
+ */
+function mulberry32(seed) {
+    return function () {
+        seed |= 0;
+        seed = seed + 0x6D2B79F5 | 0;
+        let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+}
+
+/**
  * Verify invariants of the allocator's internal state:
  * - Main list forms a valid doubly-linked list covering the full capacity.
  * - Free list exactly matches all free nodes in the main list.
@@ -479,6 +495,7 @@ describe('BlockAllocator', function () {
     describe('stress test with buffer validation', function () {
 
         it('maintains buffer integrity through allocations, frees, and defrags', function () {
+            const random = mulberry32(12345);
             const CAPACITY = 10000;
             const alloc = new BlockAllocator(CAPACITY);
             const buffer = new Uint32Array(CAPACITY);
@@ -489,7 +506,7 @@ describe('BlockAllocator', function () {
 
             // Allocate many small blocks
             for (let i = 0; i < 200; i++) {
-                const size = 10 + Math.floor(Math.random() * 40);
+                const size = 10 + Math.floor(random() * 40);
                 const block = alloc.allocate(size);
                 if (block) {
                     const id = nextId++;
@@ -522,7 +539,7 @@ describe('BlockAllocator', function () {
 
             // Allocate more into the gaps
             for (let i = 0; i < 100; i++) {
-                const size = 5 + Math.floor(Math.random() * 20);
+                const size = 5 + Math.floor(random() * 20);
                 const block = alloc.allocate(size);
                 if (block) {
                     const id = nextId++;
@@ -563,15 +580,16 @@ describe('BlockAllocator', function () {
         });
 
         it('handles many allocations and frees without corruption', function () {
+            const random = mulberry32(67890);
             const alloc = new BlockAllocator(5000, 1000);
             const active = new Map();
             let nextId = 1;
 
             for (let round = 0; round < 50; round++) {
                 // Allocate some
-                const numAlloc = 10 + Math.floor(Math.random() * 20);
+                const numAlloc = 10 + Math.floor(random() * 20);
                 for (let i = 0; i < numAlloc; i++) {
-                    const size = 1 + Math.floor(Math.random() * 50);
+                    const size = 1 + Math.floor(random() * 50);
                     const block = alloc.allocate(size);
                     if (block) {
                         active.set(nextId++, block);
@@ -582,7 +600,7 @@ describe('BlockAllocator', function () {
                 const keys = [...active.keys()];
                 const numFree = Math.floor(keys.length / 3);
                 for (let i = 0; i < numFree; i++) {
-                    const idx = Math.floor(Math.random() * keys.length);
+                    const idx = Math.floor(random() * keys.length);
                     const key = keys[idx];
                     alloc.free(active.get(key));
                     active.delete(key);
@@ -613,15 +631,16 @@ describe('BlockAllocator', function () {
         });
 
         it('updateAllocation stress test with grow', function () {
+            const random = mulberry32(24680);
             const alloc = new BlockAllocator(500, 500);
             const active = [];
             let nextId = 1;
-            const buffer = new Uint32Array(10000);
+            let buffer = new Uint32Array(10000);
             buffer.fill(0);
 
             // Initial fill
             for (let i = 0; i < 20; i++) {
-                const size = 5 + Math.floor(Math.random() * 20);
+                const size = 5 + Math.floor(random() * 20);
                 const block = alloc.allocate(size);
                 if (block) {
                     const id = nextId++;
@@ -637,26 +656,27 @@ describe('BlockAllocator', function () {
                 const numFree = Math.min(5, Math.floor(active.length / 3));
                 const toFree = [];
                 for (let i = 0; i < numFree; i++) {
-                    const idx = Math.floor(Math.random() * active.length);
+                    const idx = Math.floor(random() * active.length);
                     toFree.push(active[idx].block);
                     active.splice(idx, 1);
                 }
 
                 // Build new allocation requests
                 const toAllocSizes = [];
-                const numNew = 3 + Math.floor(Math.random() * 5);
+                const numNew = 3 + Math.floor(random() * 5);
                 for (let i = 0; i < numNew; i++) {
-                    toAllocSizes.push(5 + Math.floor(Math.random() * 20));
+                    toAllocSizes.push(5 + Math.floor(random() * 20));
                 }
 
                 const fullRebuild = alloc.updateAllocation(toFree, toAllocSizes);
                 verifyInvariants(alloc);
 
                 if (fullRebuild) {
-                    // Re-stamp all blocks into resized buffer
+                    // Resize buffer if capacity grew
                     if (alloc.capacity > buffer.length) {
                         const newBuf = new Uint32Array(alloc.capacity);
                         newBuf.set(buffer);
+                        buffer = newBuf;
                     }
                     for (const { block, id } of active) {
                         writeBlock(buffer, block, id);

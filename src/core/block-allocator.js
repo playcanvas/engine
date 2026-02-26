@@ -612,7 +612,7 @@ class BlockAllocator {
                 result.add(allocBlock);
                 i++;
 
-                // Continue from allocBlock (now to the left) to find more
+                // Continue from the block after freeBlock to find more opportunities
                 block = freeBlock._next;
             } else {
                 block = next;
