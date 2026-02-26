@@ -1,3 +1,5 @@
+import { Debug } from '../../core/debug.js';
+
 /**
  * @import { GSplatInfo } from './gsplat-info.js'
  * @import { GSplatOctree } from './gsplat-octree.js'
@@ -70,6 +72,7 @@ class GSplatWorldState {
             totalPixels += splats[i].activeSplats;
         }
         this.textureSize = totalPixels > 0 ? Math.ceil(Math.sqrt(totalPixels)) : 1;
+        Debug.assert(this.textureSize <= device.maxTextureSize, `GSplatWorldState: required texture size ${this.textureSize} exceeds device limit ${device.maxTextureSize}`);
         this.assignOffsets(this.splats);
     }
 
