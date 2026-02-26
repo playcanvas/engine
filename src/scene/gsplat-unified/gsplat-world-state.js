@@ -42,16 +42,7 @@ class GSplatWorldState {
     textureSize = 0;
 
     /**
-     * Total number of pixels actually used in the texture (excluding unused regions).
-     * Used by the GPU sorting path which operates on work-buffer pixel indices.
-     *
-     * @type {number}
-     */
-    totalUsedPixels = 0;
-
-    /**
-     * Total number of active (non-padding) splats across all placements.
-     * Excludes row-alignment padding at the end of each placement's last line.
+     * Total number of active splats across all placements.
      *
      * @type {number}
      */
@@ -76,50 +67,13 @@ class GSplatWorldState {
         this.version = version;
         this.splats = splats;
 
-        this.estimateTextureSize(this.splats, device.maxTextureSize);
-        this.assignLines(this.splats, this.textureSize);
-    }
-
-    /**
-     * Estimates the square texture size that can store all splats, using binary search to find the
-     * smallest size that fits.
-     *
-     * @param {GSplatInfo[]} splats - The splats to allocate space for.
-     * @param {number} maxSize - Max texture size (width and height).
-     * @returns {boolean} - True if the texture size was found.
-     */
-    estimateTextureSize(splats, maxSize) {
-        const fits = (size) => {
-            let rows = 0;
-            for (const splat of splats) {
-                rows += Math.ceil(splat.activeSplats / size);
-                if (rows > size) return false;
-            }
-            return true;
-        };
-
-        let low = 1;
-        let high = maxSize;
-        let bestSize = null;
-
-        while (low <= high) {
-            const mid = Math.floor((low + high) / 2);
-            if (fits(mid)) {
-                bestSize = mid;
-                high = mid - 1;
-            } else {
-                low = mid + 1;
-            }
+        let totalPixels = 0;
+        for (let i = 0; i < splats.length; i++) {
+            totalPixels += splats[i].activeSplats;
         }
-
-        if (bestSize === null) {
-            this.textureSize = 0;
-            Debug.error('estimateTextureSize: failed to find a valid texture size');
-            return false;
-        }
-
-        this.textureSize = bestSize;
-        return true;
+        this.textureSize = totalPixels > 0 ? Math.ceil(Math.sqrt(totalPixels)) : 1;
+        Debug.assert(this.textureSize <= device.maxTextureSize, `GSplatWorldState: required texture size ${this.textureSize} exceeds device limit ${device.maxTextureSize}`);
+        this.assignOffsets(this.splats);
     }
 
     destroy() {
@@ -128,25 +82,20 @@ class GSplatWorldState {
     }
 
     /**
-     * Assigns lines to each splat based on the texture size.
+     * Assigns pixel offsets to each splat, packing them contiguously with no row padding.
      *
-     * @param {GSplatInfo[]} splats - The splats to assign lines to.
-     * @param {number} size - The texture size.
+     * @param {GSplatInfo[]} splats - The splats to assign offsets to.
      */
-    assignLines(splats, size) {
+    assignOffsets(splats) {
         if (splats.length === 0) {
-            this.totalUsedPixels = 0;
             this.totalActiveSplats = 0;
             this.totalIntervals = 0;
             return;
         }
 
-        let start = 0;
-        let totalActive = 0;
+        let pixelOffset = 0;
         let totalIntervals = 0;
         for (const splat of splats) {
-            const activeSplats = splat.activeSplats;
-            totalActive += activeSplats;
             // Count intervals for GPU compaction. Partial-load octree splats use the flat
             // intervals array; fully-loaded octree splats (intervals cleared) fall back to
             // placementIntervals for per-node culling granularity; non-octree splats use 1.
@@ -157,13 +106,11 @@ class GSplatWorldState {
             } else {
                 totalIntervals += 1;
             }
-            const numLines = Math.ceil(activeSplats / size);
-            splat.setLines(start, numLines, size, activeSplats);
-            start += numLines;
+            splat.setLayout(pixelOffset, this.textureSize, splat.activeSplats);
+            pixelOffset += splat.activeSplats;
         }
 
-        this.totalUsedPixels = start * size;
-        this.totalActiveSplats = totalActive;
+        this.totalActiveSplats = pixelOffset;
         this.totalIntervals = totalIntervals;
     }
 }

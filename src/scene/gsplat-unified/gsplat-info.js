@@ -1,7 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
-import { Vec4 } from '../../core/math/vec4.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -63,14 +62,12 @@ class GSplatInfo {
      */
     intervals = [];
 
-    /** @type {number} */
-    lineStart = 0;
-
-    /** @type {number} */
-    lineCount = 0;
-
-    /** @type {Vec4} */
-    viewport = new Vec4();
+    /**
+     * Starting pixel offset in the work buffer texture.
+     *
+     * @type {number}
+     */
+    pixelOffset = 0;
 
     /** @type {Mat4} */
     previousWorldTransform = new Mat4();
@@ -207,10 +204,15 @@ class GSplatInfo {
         this.nodeToLocalBoundsTexture = null;
     }
 
-    setLines(start, count, textureSize, activeSplats) {
-        this.lineStart = start;
-        this.lineCount = count;
-        this.viewport.set(0, start, textureSize, count);
+    /**
+     * Sets the pixel offset and builds sub-draw data for this splat.
+     *
+     * @param {number} pixelOffset - Starting pixel offset in the work buffer.
+     * @param {number} textureSize - The work buffer texture width.
+     * @param {number} activeSplats - Number of active splats.
+     */
+    setLayout(pixelOffset, textureSize, activeSplats) {
+        this.pixelOffset = pixelOffset;
 
         // Synthesize a full-range interval when none exist, so all paths use sub-draws
         if (this.intervals.length === 0) {
@@ -224,7 +226,7 @@ class GSplatInfo {
     /**
      * Updates the flattened intervals array from placement intervals. Intervals are sorted and
      * stored as half-open pairs [start, end). Called once from the constructor; sub-draw data
-     * is built later in setLines when the work buffer texture width is known.
+     * is built later in setLayout when the work buffer texture width is known.
      *
      * @param {Map<number, Vec2>} intervals - Map of node index to inclusive [x, y] intervals.
      */
@@ -277,7 +279,7 @@ class GSplatInfo {
      * Builds the sub-draw data texture from the current intervals. Each interval is split at
      * row boundaries of the work buffer texture to produce axis-aligned rectangles. The result
      * is a small RGBA32U texture where each texel stores the parameters for one instanced quad.
-     * Called once from setLines when the work buffer texture width is known.
+     * Called once from setLayout when the work buffer texture width is known.
      *
      * @param {number} textureWidth - The work buffer texture width.
      */
@@ -296,7 +298,7 @@ class GSplatInfo {
         const subDrawData = subDrawDataArray;
         const intervals = this.intervals;
         let subDrawCount = 0;
-        let targetOffset = 0; // running target index across all intervals
+        let targetOffset = this.pixelOffset; // absolute pixel position in work buffer
 
         for (let i = 0; i < numIntervals; i++) {
             let sourceBase = intervals[i * 2];

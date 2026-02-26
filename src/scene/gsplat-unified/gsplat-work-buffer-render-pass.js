@@ -56,6 +56,9 @@ class GSplatWorkBufferRenderPass extends RenderPass {
     /** @type {Float32Array} */
     _modelRotationData = new Float32Array(4);
 
+    /** @type {Int32Array} */
+    _textureSize = new Int32Array(2);
+
     constructor(device, workBuffer, colorOnly = false) {
         super(device);
         this.workBuffer = workBuffer;
@@ -131,7 +134,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const scope = device.scope;
         Debug.assert(resource);
 
-        const { lineStart, viewport, subDrawTexture, subDrawCount } = splatInfo;
+        const { subDrawTexture, subDrawCount } = splatInfo;
 
         // Get work buffer modifier (live from placement, not a snapshot copy)
         const workBufferModifier = splatInfo.getWorkBufferModifier?.() ?? null;
@@ -151,8 +154,6 @@ class GSplatWorkBufferRenderPass extends RenderPass {
 
         // Assign material properties to scope
         workBufferRenderInfo.material.setParameters(device);
-
-        scope.resolve('uStartLine').setValue(lineStart);
 
         // Colorize by LOD using provided colors; use index 0 as fallback for non-LOD splats
         const color = this.colorsByLod?.[splatInfo.lodIndex] ?? this.colorsByLod?.[0] ?? _whiteColor;
@@ -210,10 +211,12 @@ class GSplatWorkBufferRenderPass extends RenderPass {
 
         // Instanced draw: one quad per sub-draw row-segment
         scope.resolve('uSubDrawData').setValue(subDrawTexture);
-        scope.resolve('uLineCount').setValue(splatInfo.lineCount);
-        scope.resolve('uTextureWidth').setValue(viewport.z);
+        const ts = this.workBuffer.textureSize;
+        this._textureSize[0] = ts;
+        this._textureSize[1] = ts;
+        scope.resolve('uTextureSize').setValue(this._textureSize);
 
-        workBufferRenderInfo.quadRender.render(viewport, undefined, subDrawCount);
+        workBufferRenderInfo.quadRender.render(undefined, undefined, subDrawCount);
     }
 
     destroy() {

@@ -12,8 +12,7 @@ attribute vec2 vertex_position;
 // A = sourceBase
 precision highp usampler2D;
 uniform usampler2D uSubDrawData;
-uniform int uLineCount;
-uniform int uTextureWidth;
+uniform ivec2 uTextureSize;  // (width, height)
 
 // packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
 flat varying ivec4 vSubDraw;
@@ -33,7 +32,7 @@ void main(void) {
     float v = float(gl_VertexID >> 1);       // 0 or 1 (bottom or top)
 
     // Map to NDC within the viewport
-    vec4 ndc = vec4(colStart, colEnd, rowStart, rowStart + numRows) / vec4(uTextureWidth, uTextureWidth, uLineCount, uLineCount) * 2.0 - 1.0;
+    vec4 ndc = vec4(colStart, colEnd, rowStart, rowStart + numRows) / vec4(uTextureSize.x, uTextureSize.x, uTextureSize.y, uTextureSize.y) * 2.0 - 1.0;
 
     gl_Position = vec4(mix(ndc.x, ndc.y, u), mix(ndc.z, ndc.w, v), 0.5, 1.0);
 
