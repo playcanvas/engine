@@ -226,7 +226,6 @@ class GSplatResourceBase {
     /**
      * Get or create a QuadRender for rendering to work buffer.
      *
-     * @param {boolean} useIntervals - Whether to use intervals.
      * @param {boolean} colorOnly - Whether to render only color (not full MRT).
      * @param {{ code: string, hash: number }|null} workBufferModifier - Optional custom modifier (object with code and pre-computed hash).
      * @param {number} formatHash - Captured format hash for shader caching.
@@ -235,11 +234,11 @@ class GSplatResourceBase {
      * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
      * @ignore
      */
-    getWorkBufferRenderInfo(useIntervals, colorOnly, workBufferModifier, formatHash, formatDeclarations, workBufferFormat) {
+    getWorkBufferRenderInfo(colorOnly, workBufferModifier, formatHash, formatDeclarations, workBufferFormat) {
 
         // configure defines to fetch cached data
         this.configureMaterialDefines(tempMap);
-        if (useIntervals) tempMap.set('GSPLAT_LOD', '');
+        tempMap.set('GSPLAT_LOD', '');
         if (colorOnly) tempMap.set('GSPLAT_COLOR_ONLY', '');
 
         // Set HAS_NODE_MAPPING when resource has node mapping texture (octree resources)
@@ -275,6 +274,12 @@ class GSplatResourceBase {
             }
 
             chunks.set('gsplatWorkBufferOutputVS', outputCode);
+
+            // Inject format-specific write encoding chunk
+            const writeCode = workBufferFormat.getWriteCode();
+            if (writeCode) {
+                chunks.set('gsplatWriteVS', writeCode);
+            }
 
             // copy tempMap to material defines
             tempMap.forEach((v, k) => material.setDefine(k, v));
