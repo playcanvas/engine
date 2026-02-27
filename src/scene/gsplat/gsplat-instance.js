@@ -146,9 +146,11 @@ class GSplatInstance {
     setMaterialOrderData(material) {
         if (this.orderBuffer) {
             material.setParameter('splatOrder', this.orderBuffer);
+            material.setDefine('STORAGE_ORDER', true);
         } else {
             material.setParameter('splatOrder', this.orderTexture);
             material.setParameter('splatTextureSize', this.orderTexture.width);
+            material.setDefine('STORAGE_ORDER', false);
         }
     }
 
@@ -183,7 +185,6 @@ class GSplatInstance {
         material.setParameter('numSplats', 0);
         this.setMaterialOrderData(material);
         material.setParameter('alphaClip', 0.3);
-        material.setDefine('STORAGE_ORDER', this.resource.device.isWebGPU);
         material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
         material.cull = CULLFACE_NONE;
         material.blendType = options.dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
