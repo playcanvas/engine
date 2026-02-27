@@ -146,11 +146,9 @@ class GSplatInstance {
     setMaterialOrderData(material) {
         if (this.orderBuffer) {
             material.setParameter('splatOrder', this.orderBuffer);
-            material.setDefine('STORAGE_ORDER', true);
         } else {
             material.setParameter('splatOrder', this.orderTexture);
             material.setParameter('splatTextureSize', this.orderTexture.width);
-            material.setDefine('STORAGE_ORDER', false);
         }
     }
 

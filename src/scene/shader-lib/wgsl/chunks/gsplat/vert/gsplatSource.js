@@ -11,12 +11,7 @@ attribute vertex_id_attrib: u32;          // render order base
 #else
     uniform numSplats: u32;               // total number of splats
 
-    #ifdef STORAGE_ORDER
-        var<storage, read> splatOrder: array<u32>;
-    #else
-        // texture for non-unified gsplat rendering
-        var splatOrder: texture_2d<u32>;
-    #endif
+    var<storage, read> splatOrder: array<u32>;
 #endif
 
 // initialize the splat source structure
@@ -39,12 +34,7 @@ fn initSource(source: ptr<function, SplatSource>) -> bool {
     #ifdef GSPLAT_INDIRECT_DRAW
         splatId = compactedSplatIds[source.order];
     #else
-        #ifdef STORAGE_ORDER
-            splatId = splatOrder[source.order];
-        #else
-            let uv = vec2u(source.order % uniform.splatTextureSize, source.order / uniform.splatTextureSize);
-            splatId = textureLoad(splatOrder, vec2i(uv), 0).r;
-        #endif
+        splatId = splatOrder[source.order];
     #endif
     setSplat(splatId);
 

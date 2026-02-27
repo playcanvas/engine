@@ -167,7 +167,6 @@ class GSplatRenderer {
         this._injectFormatChunks();
 
         // Set defines
-        this._material.setDefine('STORAGE_ORDER', device.isWebGPU);
         this._material.setDefine('SH_BANDS', '0');
 
         // Set GSPLAT_COLOR_FLOAT define based on work buffer's color format
