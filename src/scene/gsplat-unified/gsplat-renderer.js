@@ -161,7 +161,7 @@ class GSplatRenderer {
     }
 
     configureMaterial() {
-        const { device, workBuffer } = this;
+        const { workBuffer } = this;
 
         // Inject format's shader chunks (uses workBuffer.format)
         this._injectFormatChunks();
