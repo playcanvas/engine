@@ -319,7 +319,7 @@ function UnifiedSortWorker() {
      * @param {object} data - The intervals message data containing layout metadata.
      */
     const buildIndexMap = (data) => {
-        const { ids, lineStarts, intervals, textureSize, totalActiveSplats } = data;
+        const { ids, pixelOffsets, intervals, totalActiveSplats } = data;
 
         if (!indexMap || indexMap.length < totalActiveSplats) {
             indexMap = new Uint32Array(totalActiveSplats);
@@ -328,7 +328,7 @@ function UnifiedSortWorker() {
         let compactIdx = 0;
         for (let paramIdx = 0; paramIdx < ids.length; paramIdx++) {
             const centers = centersMap.get(ids[paramIdx]);
-            let workBufferIndex = lineStarts[paramIdx] * textureSize;
+            let workBufferIndex = pixelOffsets[paramIdx];
             const intervalsArray = intervals[paramIdx].length > 0 ? intervals[paramIdx] : [0, centers.length / 3];
 
             for (let i = 0; i < intervalsArray.length; i += 2) {

@@ -1301,7 +1301,7 @@ class GSplatManager {
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (sortedState) {
             if (this._workBufferRebuildRequired) {
-                const count = this.useGpuSorting ? sortedState.totalUsedPixels : sortedState.totalActiveSplats;
+                const count = sortedState.totalActiveSplats;
                 this.rebuildWorkBuffer(sortedState, count);
                 this._workBufferRebuildRequired = false;
 
@@ -1412,7 +1412,7 @@ class GSplatManager {
         Debug.assert(keyGenerator && gpuSorter, 'GPU sorter not initialized');
         if (!keyGenerator || !gpuSorter) return;
 
-        const elementCount = worldState.totalUsedPixels;
+        const elementCount = worldState.totalActiveSplats;
         if (elementCount === 0) return;
 
         // Lazily create interval compaction
@@ -1768,11 +1768,10 @@ class GSplatManager {
         return {
             command: 'intervals',
             textureSize: worldState.textureSize,
-            totalUsedPixels: worldState.totalUsedPixels,
             totalActiveSplats: worldState.totalActiveSplats,
             version: worldState.version,
             ids: worldState.splats.map(splat => splat.resource.id),
-            lineStarts: worldState.splats.map(splat => splat.lineStart),
+            pixelOffsets: worldState.splats.map(splat => splat.pixelOffset),
 
             // TODO: consider storing this in typed array and transfer it to sorter worker
             intervals: worldState.splats.map(splat => splat.intervals)

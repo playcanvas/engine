@@ -342,7 +342,6 @@ class GSplatIntervalCompaction {
         this._uploadedVersion = worldState.version;
 
         const splats = worldState.splats;
-        const textureSize = worldState.textureSize;
         const numIntervals = worldState.totalIntervals;
 
         if (numIntervals === 0) return;
@@ -359,7 +358,7 @@ class GSplatIntervalCompaction {
 
         for (let s = 0; s < splats.length; s++) {
             const splat = splats[s];
-            let workBufferBase = splat.lineStart * textureSize;
+            let workBufferBase = splat.pixelOffset;
 
             if (splat.intervals.length > 0) {
                 // Partial octree load: sub-draws pack intervals sequentially in Map
@@ -379,7 +378,7 @@ class GSplatIntervalCompaction {
                 // per-node bounding spheres still exist. Without sub-draws the work buffer
                 // stores splats in source order, so each node's data starts at
                 // basePixel + sourceStart rather than sequential packing.
-                const basePixel = splat.lineStart * textureSize;
+                const basePixel = splat.pixelOffset;
                 let localBoundsIdx = 0;
                 for (const interval of splat.placementIntervals.values()) {
                     const start = interval.x;

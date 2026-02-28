@@ -15,8 +15,6 @@ export default /* glsl */`
 #include "gsplatWriteVS"
 #include "gsplatModifyVS"
 
-uniform int uStartLine;      // Start row in destination texture
-
 // Packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
 flat varying ivec4 vSubDraw;
 
@@ -41,7 +39,7 @@ uniform vec4 model_rotation;  // (x,y,z,w) format
 
 void main(void) {
     // Compute source index from packed sub-draw varying: (sourceBase, colStart, rowWidth, rowStart)
-    int localRow = int(gl_FragCoord.y) - uStartLine - vSubDraw.w;
+    int localRow = int(gl_FragCoord.y) - vSubDraw.w;
     int localCol = int(gl_FragCoord.x) - vSubDraw.y;
     uint originalIndex = uint(vSubDraw.x + localRow * vSubDraw.z + localCol);
 
