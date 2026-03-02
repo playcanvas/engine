@@ -418,7 +418,7 @@ describe('BlockAllocator', function () {
         });
 
         it('triggers grow and defrag when space runs out', function () {
-            const alloc = new BlockAllocator(50, 50);
+            const alloc = new BlockAllocator(50);
             const a = alloc.allocate(25);
             alloc.allocate(25);
             // Full, now try to allocate more
@@ -632,7 +632,7 @@ describe('BlockAllocator', function () {
 
         it('updateAllocation stress test with grow', function () {
             const random = mulberry32(24680);
-            const alloc = new BlockAllocator(500, 500);
+            const alloc = new BlockAllocator(500);
             const active = [];
             let nextId = 1;
             let buffer = new Uint32Array(10000);

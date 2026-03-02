@@ -124,6 +124,16 @@ class BlockAllocator {
     _tailFree = null;
 
     /**
+     * Advisory starting point for the next free-block search. Avoids repeatedly scanning past
+     * small fragments at the start of the free list during sequential allocations. Reset to
+     * _headFree on free() and defrag() since those may create earlier gaps.
+     *
+     * @type {MemBlock|null}
+     * @private
+     */
+    _freeHint = null;
+
+    /**
      * Pool of recycled MemBlock objects.
      *
      * @type {MemBlock[]}
@@ -164,22 +174,23 @@ class BlockAllocator {
     _freeRegionCount = 0;
 
     /**
-     * Minimum growth increment used by {@link BlockAllocator#updateAllocation}.
+     * Multiplicative growth factor used by {@link BlockAllocator#updateAllocation}.
+     * When growing, the new capacity is at least `capacity * growMultiplier`.
      *
      * @type {number}
      * @private
      */
-    _growSize;
+    _growMultiplier;
 
     /**
      * Create a new BlockAllocator.
      *
      * @param {number} [capacity] - Initial address space capacity. Defaults to 0.
-     * @param {number} [growSize] - Minimum growth increment for auto-grow in
-     * {@link BlockAllocator#updateAllocation}. Defaults to 1024.
+     * @param {number} [growMultiplier] - Multiplicative growth factor for auto-grow in
+     * {@link BlockAllocator#updateAllocation}. Defaults to 1.1 (10% extra).
      */
-    constructor(capacity = 0, growSize = 1024) {
-        this._growSize = growSize;
+    constructor(capacity = 0, growMultiplier = 1.1) {
+        this._growMultiplier = growMultiplier;
         if (capacity > 0) {
             this._capacity = capacity;
             this._freeSize = capacity;
@@ -188,6 +199,7 @@ class BlockAllocator {
             this._tailAll = block;
             this._headFree = block;
             this._tailFree = block;
+            this._freeHint = block;
             this._freeRegionCount = 1;
         }
     }
@@ -339,6 +351,9 @@ class BlockAllocator {
      * @private
      */
     _removeFromFreeList(block) {
+        if (this._freeHint === block) {
+            this._freeHint = block._nextFree;
+        }
         if (block._prevFree) block._prevFree._nextFree = block._nextFree;
         else this._headFree = block._nextFree;
         if (block._nextFree) block._nextFree._prevFree = block._prevFree;
@@ -349,18 +364,34 @@ class BlockAllocator {
     }
 
     /**
-     * Scan the free list for the first block with size >= requested.
+     * Scan the free list for the first block with size >= requested, starting from _freeHint
+     * to skip past small fragments already examined by recent allocations.
      *
      * @param {number} size - Minimum size needed.
      * @returns {MemBlock|null} The first fitting free block, or null.
      * @private
      */
     _findFreeBlock(size) {
-        let block = this._headFree;
+        let block = this._freeHint ?? this._headFree;
         while (block) {
-            if (block._size >= size) return block;
+            if (block._size >= size) {
+                this._freeHint = block;
+                return block;
+            }
             block = block._nextFree;
         }
+
+        // Hint skipped earlier blocks — retry from head up to the hint
+        block = this._headFree;
+        const stop = this._freeHint;
+        while (block && block !== stop) {
+            if (block._size >= size) {
+                this._freeHint = block;
+                return block;
+            }
+            block = block._nextFree;
+        }
+
         return null;
     }
 
@@ -406,6 +437,7 @@ class BlockAllocator {
         block._free = true;
         this._usedSize -= block._size;
         this._freeSize += block._size;
+        this._freeHint = null;
 
         const prev = block._prev;
         const next = block._next;
@@ -492,6 +524,7 @@ class BlockAllocator {
      */
     defrag(maxMoves = 0, result = new Set()) {
         result.clear();
+        this._freeHint = null;
 
         if (this._freeRegionCount === 0) return result;
 
@@ -724,10 +757,11 @@ class BlockAllocator {
                     totalRemaining += /** @type {number} */ (toAllocate[j]);
                 }
 
-                // Grow if needed
+                // Grow if needed, or if free space would be below headroom threshold
                 const neededCapacity = this._usedSize + totalRemaining;
-                if (neededCapacity > this._capacity) {
-                    this.grow(Math.max(this._capacity + this._growSize, neededCapacity));
+                const headroomCapacity = Math.ceil(neededCapacity * this._growMultiplier);
+                if (headroomCapacity > this._capacity) {
+                    this.grow(headroomCapacity);
                 }
 
                 // Full defrag: compact everything

@@ -328,10 +328,11 @@ function UnifiedSortWorker() {
         let compactIdx = 0;
         for (let paramIdx = 0; paramIdx < ids.length; paramIdx++) {
             const centers = centersMap.get(ids[paramIdx]);
-            let workBufferIndex = pixelOffsets[paramIdx];
+            const offsets = pixelOffsets[paramIdx];
             const intervalsArray = intervals[paramIdx].length > 0 ? intervals[paramIdx] : [0, centers.length / 3];
 
             for (let i = 0; i < intervalsArray.length; i += 2) {
+                let workBufferIndex = offsets[i / 2];
                 const count = intervalsArray[i + 1] - intervalsArray[i];
                 for (let j = 0; j < count; j++) {
                     indexMap[compactIdx++] = workBufferIndex++;

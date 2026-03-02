@@ -260,6 +260,8 @@ class GSplatDirector {
         });
 
         let gsplatCount = 0;
+        let bufferCopyUploaded = 0;
+        let bufferCopyTotal = 0;
 
         // for all cameras in the composition
         const camerasComponents = comp.cameras;
@@ -311,9 +313,13 @@ class GSplatDirector {
                 for (const layerData of cameraData.layersMap.values()) {
                     if (layerData.gsplatManager) {
                         gsplatCount += layerData.gsplatManager.update();
+                        bufferCopyUploaded += layerData.gsplatManager.bufferCopyUploaded;
+                        bufferCopyTotal += layerData.gsplatManager.bufferCopyTotal;
                     }
                     if (layerData.gsplatManagerShadow) {
                         gsplatCount += layerData.gsplatManagerShadow.update();
+                        bufferCopyUploaded += layerData.gsplatManagerShadow.bufferCopyUploaded;
+                        bufferCopyTotal += layerData.gsplatManagerShadow.bufferCopyTotal;
                     }
                 }
             }
@@ -321,6 +327,8 @@ class GSplatDirector {
 
         // update stats
         this.renderer._gsplatCount = gsplatCount;
+        this.renderer._gsplatBufferCopy = bufferCopyTotal > 0 ?
+            (bufferCopyUploaded / bufferCopyTotal * 100) : 0;
 
         // clear dirty flags
         this.scene.gsplat.frameEnd();

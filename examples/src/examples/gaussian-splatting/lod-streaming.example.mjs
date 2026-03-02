@@ -81,7 +81,7 @@ const config = {
 const LOD_PRESETS = {
     'desktop-max': {
         range: [0, 5],
-        lodDistances: [10, 20, 40, 80, 120, 150, 200]
+        lodDistances: [7, 20, 40, 80, 120, 150, 200]
     },
     'desktop': {
         range: [1, 5],
@@ -119,21 +119,29 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 1;
     app.scene.exposure = 1.5;
 
-    // Mini-Stats: add gsplats on top of default stats
+    // Mini-Stats: insert gsplat stats after the default 'Frame' entry
     const msOptions = pc.MiniStats.getDefaultOptions();
-    msOptions.stats.push({
+    const frameIndex = msOptions.stats.findIndex(s => s.name === 'Frame');
+    msOptions.stats.splice(frameIndex + 1, 0, {
         name: 'GSplats',
         stats: ['frame.gsplats'],
         decimalPlaces: 3,
         multiplier: 1 / 1000000,
         unitsName: 'M',
         watermark: 10
+    }, {
+        name: 'GsplatsCopy',
+        stats: ['frame.gsplatBufferCopy'],
+        decimalPlaces: 1,
+        multiplier: 1,
+        unitsName: '%',
+        watermark: 100
     });
     const miniStats = new pc.MiniStats(app, msOptions); // eslint-disable-line no-unused-vars
 
     // enable rotation-based LOD updates and behind-camera penalty
     app.scene.gsplat.lodUpdateAngle = 90;
-    app.scene.gsplat.lodBehindPenalty = 5;
+    app.scene.gsplat.lodBehindPenalty = 3;
     app.scene.gsplat.radialSorting = true;
     app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
@@ -156,7 +164,7 @@ assetListLoader.load(() => {
 
     // initialize UI settings (must be after observer registration)
     data.set('gpuSorting', false);
-    data.set('culling', false);
+    data.set('culling', device.isWebGPU);
     data.set('compact', true);
     data.set('debugLod', false);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
@@ -193,7 +201,12 @@ assetListLoader.load(() => {
             '2M': 2000000,
             '3M': 3000000,
             '4M': 4000000,
-            '6M': 6000000
+            '5M': 5000000,
+            '6M': 6000000,
+            '7M': 7000000,
+            '8M': 8000000,
+            '9M': 9000000,
+            '10M': 10000000
         };
         // Global splat budget applies to all GSplats in the scene
         app.scene.gsplat.splatBudget = budgetMap[preset] || 0;

@@ -32,8 +32,6 @@ uniform vec4 model_rotation;  // (x,y,z,w) format
     uniform uint uBoundsBaseIndex;
     #ifdef HAS_NODE_MAPPING
         uniform usampler2D nodeMappingTexture;
-        uniform usampler2D nodeToLocalBoundsTexture;
-        uniform int nodeToLocalBoundsWidth;
     #endif
 #endif
 
@@ -106,15 +104,13 @@ void main(void) {
 
     #ifdef GSPLAT_NODE_INDEX
         #ifdef HAS_NODE_MAPPING
-            // Octree resource: look up node index from source splat, then local bounds index
+            // Octree: nodeIndex is the direct bounds offset (all nodes uploaded)
             int srcTextureWidth = int(textureSize(nodeMappingTexture, 0).x);
             ivec2 sourceCoord = ivec2(int(originalIndex) % srcTextureWidth, int(originalIndex) / srcTextureWidth);
             uint nodeIndex = texelFetch(nodeMappingTexture, sourceCoord, 0).r;
-            ivec2 ntlCoord = ivec2(int(nodeIndex) % nodeToLocalBoundsWidth, int(nodeIndex) / nodeToLocalBoundsWidth);
-            uint localBoundsIdx = texelFetch(nodeToLocalBoundsTexture, ntlCoord, 0).r;
-            writePcNodeIndex(uvec4(uBoundsBaseIndex + localBoundsIdx, 0u, 0u, 0u));
+            writePcNodeIndex(uvec4(uBoundsBaseIndex + nodeIndex, 0u, 0u, 0u));
         #else
-            // Non-octree resource: single bounds entry
+            // Non-octree: single bounds entry
             writePcNodeIndex(uvec4(uBoundsBaseIndex, 0u, 0u, 0u));
         #endif
     #endif

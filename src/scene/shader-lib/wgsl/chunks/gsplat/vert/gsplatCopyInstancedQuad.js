@@ -12,6 +12,7 @@ attribute vertex_position: vec2f;
 // A = sourceBase
 var uSubDrawData: texture_2d<u32>;
 uniform uTextureSize: vec2i;  // (width, height)
+uniform uSubDrawBase: i32;
 
 // packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
 varying @interpolate(flat) vSubDraw: vec4i;
@@ -22,7 +23,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 
     // Read sub-draw parameters from 2D data texture
     let subDrawWidth = i32(textureDimensions(uSubDrawData, 0).x);
-    let instIdx = i32(input.instanceIndex);
+    let instIdx = i32(input.instanceIndex) + uniform.uSubDrawBase;
     let data = textureLoad(uSubDrawData, vec2i(instIdx % subDrawWidth, instIdx / subDrawWidth), 0);
     let rowStart = i32(data.r & 0xFFFFu);
     let numRows = i32(data.r >> 16u);

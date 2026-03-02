@@ -38,8 +38,6 @@ uniform model_rotation: vec4f;  // (x,y,z,w) format
     uniform uBoundsBaseIndex: u32;
     #ifdef HAS_NODE_MAPPING
         var nodeMappingTexture: texture_2d<u32>;
-        var nodeToLocalBoundsTexture: texture_2d<u32>;
-        uniform nodeToLocalBoundsWidth: i32;
     #endif
 #endif
 
@@ -113,15 +111,13 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #ifdef GSPLAT_NODE_INDEX
         #ifdef HAS_NODE_MAPPING
-            // Octree resource: look up node index from source splat, then local bounds index
+            // Octree: nodeIndex is the direct bounds offset (all nodes uploaded)
             let srcTextureWidth = i32(textureDimensions(nodeMappingTexture, 0).x);
             let sourceCoord = vec2i(i32(originalIndex) % srcTextureWidth, i32(originalIndex) / srcTextureWidth);
             let nodeIndex = textureLoad(nodeMappingTexture, sourceCoord, 0).r;
-            let ntlCoord = vec2i(i32(nodeIndex) % uniform.nodeToLocalBoundsWidth, i32(nodeIndex) / uniform.nodeToLocalBoundsWidth);
-            let localBoundsIdx = textureLoad(nodeToLocalBoundsTexture, ntlCoord, 0).r;
-            writePcNodeIndex(vec4u(uniform.uBoundsBaseIndex + localBoundsIdx, 0u, 0u, 0u));
+            writePcNodeIndex(vec4u(uniform.uBoundsBaseIndex + nodeIndex, 0u, 0u, 0u));
         #else
-            // Non-octree resource: single bounds entry
+            // Non-octree: single bounds entry
             writePcNodeIndex(vec4u(uniform.uBoundsBaseIndex, 0u, 0u, 0u));
         #endif
     #endif

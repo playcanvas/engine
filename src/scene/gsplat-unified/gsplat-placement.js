@@ -1,6 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { GSplatStreams } from '../gsplat/gsplat-streams.js';
 import { WORKBUFFER_UPDATE_AUTO, WORKBUFFER_UPDATE_ALWAYS, WORKBUFFER_UPDATE_ONCE } from '../constants.js';
+import { GsplatAllocId } from './gsplat-alloc-id.js';
 
 /**
  * @import { BoundingBox } from '../../core/shape/bounding-box.js'
@@ -49,6 +50,13 @@ class GSplatPlacement {
      * @type {number}
      */
     id = 0;
+
+    /**
+     * Unique allocation identifier for persistent work buffer allocation tracking.
+     *
+     * @type {number}
+     */
+    allocId = GsplatAllocId.get();
 
     /**
      * The LOD index for this placement.
@@ -119,14 +127,13 @@ class GSplatPlacement {
     _workBufferModifier = null;
 
     /**
-     * Parent placement
-     * Used by octree file placements to inherit workBufferModifier and parameters from
-     * the component's placement.
+     * Parent placement. Used by octree file placements to inherit workBufferModifier and
+     * parameters from the component's placement.
      *
      * @type {GSplatPlacement|null}
-     * @private
+     * @ignore
      */
-    _parentPlacement = null;
+    parentPlacement = null;
 
     /**
      * Create a new GSplatPlacement.
@@ -144,7 +151,7 @@ class GSplatPlacement {
         this.node = node;
         this.lodIndex = lodIndex;
         this.parameters = parameters ?? parentPlacement?.parameters ?? null;
-        this._parentPlacement = parentPlacement;
+        this.parentPlacement = parentPlacement;
     }
 
     /**
@@ -175,7 +182,7 @@ class GSplatPlacement {
      * @type {{ code: string, hash: number }|null}
      */
     get workBufferModifier() {
-        return this._parentPlacement?.workBufferModifier ?? this._workBufferModifier;
+        return this.parentPlacement?.workBufferModifier ?? this._workBufferModifier;
     }
 
     /**
@@ -291,7 +298,7 @@ class GSplatPlacement {
      * @ignore
      */
     get streams() {
-        return this._parentPlacement?.streams ?? this._streams;
+        return this.parentPlacement?.streams ?? this._streams;
     }
 
     /**
