@@ -807,6 +807,7 @@ class GSplatOctreeInstance {
                 // Only remove if it was added (has resource)
                 if (placement.resource) {
                     this.activePlacements.delete(placement);
+                    this.dirtyPlacementSetChanged = true;
                 }
 
                 // schedule a single decRef via world state
@@ -832,6 +833,7 @@ class GSplatOctreeInstance {
                 placement.resource = res;
                 this.activePlacements.add(placement);
                 this.dirtyModifiedPlacements = true;
+                this.dirtyPlacementSetChanged = true;
                 // clear pending removal if we are reusing the file
                 this.removedCandidates.delete(fileIndex);
                 return true;

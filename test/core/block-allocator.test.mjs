@@ -581,7 +581,7 @@ describe('BlockAllocator', function () {
 
         it('handles many allocations and frees without corruption', function () {
             const random = mulberry32(67890);
-            const alloc = new BlockAllocator(5000, 1000);
+            const alloc = new BlockAllocator(5000, 1.5);
             const active = new Map();
             let nextId = 1;
 

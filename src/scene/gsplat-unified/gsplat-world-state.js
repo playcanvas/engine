@@ -202,8 +202,10 @@ class GSplatWorldState {
             if (existing.size !== size) {
                 _toFree.push(existing);
                 allocationMap.delete(allocId);
-                _toAllocateIds.push(allocId);
-                _toAllocate.push(size);
+                if (size > 0) {
+                    _toAllocateIds.push(allocId);
+                    _toAllocate.push(size);
+                }
             }
         } else if (size > 0) {
             _toAllocateIds.push(allocId);
