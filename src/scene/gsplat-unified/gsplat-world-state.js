@@ -146,6 +146,8 @@ class GSplatWorldState {
         this.splats.length = 0;
         this.needsUpload.length = 0;
         this.needsUploadIds.clear();
+        this.allocIdToSplat.clear();
+        this.boundsGroups.length = 0;
     }
 
     /**

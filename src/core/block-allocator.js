@@ -125,8 +125,9 @@ class BlockAllocator {
 
     /**
      * Advisory starting point for the next free-block search. Avoids repeatedly scanning past
-     * small fragments at the start of the free list during sequential allocations. Reset to
-     * _headFree on free() and defrag() since those may create earlier gaps.
+     * small fragments at the start of the free list during sequential allocations. Cleared
+     * (set to null) on free() and defrag(), causing the next search to restart from _headFree
+     * since those operations may create earlier gaps.
      *
      * @type {MemBlock|null}
      * @private
@@ -372,7 +373,8 @@ class BlockAllocator {
      * @private
      */
     _findFreeBlock(size) {
-        let block = this._freeHint ?? this._headFree;
+        const hint = this._freeHint;
+        let block = hint ?? this._headFree;
         while (block) {
             if (block._size >= size) {
                 this._freeHint = block;
@@ -382,14 +384,15 @@ class BlockAllocator {
         }
 
         // Hint skipped earlier blocks — retry from head up to the hint
-        block = this._headFree;
-        const stop = this._freeHint;
-        while (block && block !== stop) {
-            if (block._size >= size) {
-                this._freeHint = block;
-                return block;
+        if (hint) {
+            block = this._headFree;
+            while (block !== hint) {
+                if (block._size >= size) {
+                    this._freeHint = block;
+                    return block;
+                }
+                block = block._nextFree;
             }
-            block = block._nextFree;
         }
 
         return null;
