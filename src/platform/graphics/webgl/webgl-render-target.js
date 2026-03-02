@@ -1,12 +1,15 @@
 import { Debug } from '../../../core/debug.js';
 import { PIXELFORMAT_RGBA8 } from '../constants.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { DeviceCache } from '../device-cache.js';
 import { getMultisampledTextureCache } from '../multi-sampled-texture-cache.js';
 
 /**
  * @import { RenderTarget } from '../render-target.js'
  * @import { WebglGraphicsDevice } from './webgl-graphics-device.js'
  */
+
+const _validatedFboConfigs = new DeviceCache();
 
 /**
  * A private class representing a pair of framebuffers, when MSAA is used.
@@ -372,6 +375,24 @@ class WebglRenderTarget {
      * @private
      */
     _checkFbo(device, target, type = '') {
+
+        // Build a key from attachment formats, depth/stencil config, samples, and FBO type.
+        // Dimensions are excluded as they don't affect framebuffer completeness.
+        const colorFormats = target._colorBuffers?.map(b => b?.format ?? -1).join(',') ?? '';
+        const depthInfo = target._depth ? (target._depthBuffer ? `dt${target._depthBuffer.format}` : (target._stencil ? 'ds' : 'd')) : '';
+        const key = `${type}:${colorFormats}:${depthInfo}:${target._samples}`;
+
+        // clear validated configs on context loss to re-validate after restore
+        const validated = _validatedFboConfigs.get(device, () => {
+            const set = new Set();
+            set.loseContext = () => set.clear();
+            return set;
+        });
+
+        if (validated.has(key)) {
+            return;
+        }
+
         const gl = device.gl;
         const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
         let errorCode;
@@ -388,6 +409,10 @@ class WebglRenderTarget {
             case gl.FRAMEBUFFER_UNSUPPORTED:
                 errorCode = 'FRAMEBUFFER_UNSUPPORTED';
                 break;
+        }
+
+        if (!errorCode) {
+            validated.add(key);
         }
 
         Debug.assert(!errorCode, `Framebuffer creation failed with error code ${errorCode}, render target: ${target.name} ${type}`, target);
