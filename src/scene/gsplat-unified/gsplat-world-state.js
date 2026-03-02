@@ -366,7 +366,6 @@ class GSplatWorldState {
             splats[i].boundsBaseIndex = group.boundsBaseIndex;
         }
     }
-
 }
 
 export { GSplatWorldState };

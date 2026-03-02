@@ -42,6 +42,7 @@ const _updatedSplats = [];
 const _splatsNeedingColorUpdate = [];
 const _cameraDeltas = { rotationDelta: 0, translationDelta: 0 };
 const tempOctreesTicked = new Set();
+const _queuedSplats = new Set();
 
 const _lodColorsRaw = [
     [1, 0, 0],  // red
@@ -898,17 +899,17 @@ class GSplatManager {
                 if (oldState) {
                     for (const allocId of oldState.needsUploadIds) {
                         if (!activeIds.has(allocId)) {
+                            activeIds.add(allocId);
                             const splat = lookup.get(allocId);
-                            if (splat) {
+                            if (splat && !_queuedSplats.has(splat)) {
                                 activeState.needsUpload.push(splat);
-                                for (let j = 0; j < splat.intervalAllocIds.length; j++) {
-                                    activeIds.add(splat.intervalAllocIds[j]);
-                                }
+                                _queuedSplats.add(splat);
                             }
                         }
                     }
                 }
             }
+            _queuedSplats.clear();
         }
 
         // Pass 3: cleanup all old states (including the previously sorted one)
