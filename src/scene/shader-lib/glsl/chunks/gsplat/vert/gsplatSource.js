@@ -3,7 +3,7 @@ attribute vec3 vertex_position;         // xy: cornerUV, z: render order offset
 attribute uint vertex_id_attrib;        // render order base
 
 uniform uint numSplats;                 // total number of splats
-uniform highp usampler2D splatOrder;    // per-splat index to source gaussian
+uniform highp sampler2D splatOrder;     // per-splat index to source gaussian (RGBA8)
 
 // initialize the splat source structure and global splat
 bool initSource(out SplatSource source) {
@@ -17,8 +17,12 @@ bool initSource(out SplatSource source) {
 
     ivec2 orderUV = ivec2(source.order % splatTextureSize, source.order / splatTextureSize);
 
-    // read splat id and initialize global splat for format read functions
-    uint splatId = texelFetch(splatOrder, orderUV, 0).r;
+    // read splat id: decode uint from RGBA8 normalized texel
+    vec4 orderBytes = texelFetch(splatOrder, orderUV, 0);
+    uint splatId = uint(orderBytes.r * 255.0 + 0.5) |
+                  (uint(orderBytes.g * 255.0 + 0.5) << 8u) |
+                  (uint(orderBytes.b * 255.0 + 0.5) << 16u) |
+                  (uint(orderBytes.a * 255.0 + 0.5) << 24u);
     setSplat(splatId);
 
     // get the corner

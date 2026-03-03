@@ -3,7 +3,7 @@ import { Frustum } from '../../core/shape/frustum.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32F,
+    ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32F,
     BUFFERUSAGE_COPY_DST, SEMANTIC_POSITION, getGlslShaderType
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -262,7 +262,7 @@ class GSplatWorkBuffer {
                 name: 'SplatGlobalOrder',
                 width: 1,
                 height: 1,
-                format: PIXELFORMAT_R32U,
+                format: PIXELFORMAT_RGBA8,
                 mipmaps: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE
