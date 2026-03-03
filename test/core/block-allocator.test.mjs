@@ -70,19 +70,26 @@ function verifyInvariants(alloc) {
     expect(usedSize + freeSize).to.equal(cap, 'usedSize + freeSize !== capacity');
     expect(freeCount).to.equal(alloc._freeRegionCount, 'freeRegionCount mismatch');
 
-    // Walk free list forwards and compare to expected free blocks
-    const freeListBlocks = [];
-    let fNode = alloc._headFree;
-    let prevFree = null;
-    while (fNode) {
-        expect(fNode._free).to.be.true;
-        expect(fNode._prevFree).to.equal(prevFree, `broken _prevFree at offset ${fNode._offset}`);
-        freeListBlocks.push(fNode);
-        prevFree = fNode;
-        fNode = fNode._nextFree;
+    // Walk all buckets and collect free blocks, verify bucket threading
+    const bucketBlocks = new Set();
+    for (let b = 0; b < alloc._freeBucketHeads.length; b++) {
+        let fNode = alloc._freeBucketHeads[b];
+        let prevFree = null;
+        while (fNode) {
+            expect(fNode._free).to.be.true;
+            expect(fNode._bucket).to.equal(b, `block at offset ${fNode._offset} in wrong bucket`);
+            expect(fNode._prevFree).to.equal(prevFree, `broken _prevFree at offset ${fNode._offset}`);
+            const expectedBucket = 31 - Math.clz32(fNode._size);
+            expect(b).to.equal(expectedBucket, `block size ${fNode._size} in bucket ${b}, expected ${expectedBucket}`);
+            bucketBlocks.add(fNode);
+            prevFree = fNode;
+            fNode = fNode._nextFree;
+        }
     }
-    expect(alloc._tailFree).to.equal(prevFree, 'tailFree mismatch');
-    expect(freeListBlocks).to.deep.equal(freeBlocks, 'free list does not match free blocks in main list');
+    expect(bucketBlocks.size).to.equal(freeBlocks.length, 'bucket free count does not match main list free count');
+    for (const fb of freeBlocks) {
+        expect(bucketBlocks.has(fb)).to.be.true;
+    }
 }
 
 /**

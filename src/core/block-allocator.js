@@ -49,7 +49,7 @@ class MemBlock {
     _next = null;
 
     /**
-     * Previous node in the free-list.
+     * Previous node in the bucket free-list.
      *
      * @type {MemBlock|null}
      * @private
@@ -57,12 +57,20 @@ class MemBlock {
     _prevFree = null;
 
     /**
-     * Next node in the free-list.
+     * Next node in the bucket free-list.
      *
      * @type {MemBlock|null}
      * @private
      */
     _nextFree = null;
+
+    /**
+     * Index of the size bucket this free block belongs to, or -1 if not in any bucket.
+     *
+     * @type {number}
+     * @private
+     */
+    _bucket = -1;
 
     /**
      * The offset of this block in the address space.
@@ -84,9 +92,12 @@ class MemBlock {
 }
 
 /**
- * A general-purpose 1D block allocator backed by a doubly-linked list with free-list threading.
- * Manages a linear address space where contiguous blocks can be allocated and freed. Supports
- * incremental defragmentation and automatic growth.
+ * A general-purpose 1D block allocator backed by a doubly-linked list with segregated free-list
+ * buckets. Manages a linear address space where contiguous blocks can be allocated and freed.
+ * Supports incremental defragmentation and automatic growth.
+ *
+ * Free blocks are organized into power-of-2 size buckets for best-fit allocation, which reduces
+ * fragmentation compared to a single first-fit free list.
  *
  * @ignore
  */
@@ -108,31 +119,14 @@ class BlockAllocator {
     _tailAll = null;
 
     /**
-     * Head of the free list (free blocks only, offset-ordered).
+     * Segregated free-list bucket heads. Each entry is the head of a doubly-linked list of free
+     * blocks whose size falls in that power-of-2 range. Bucket i covers sizes [2^i, 2^(i+1)).
+     * The array grows dynamically as larger free blocks appear.
      *
-     * @type {MemBlock|null}
+     * @type {Array<MemBlock|null>}
      * @private
      */
-    _headFree = null;
-
-    /**
-     * Tail of the free list.
-     *
-     * @type {MemBlock|null}
-     * @private
-     */
-    _tailFree = null;
-
-    /**
-     * Advisory starting point for the next free-block search. Avoids repeatedly scanning past
-     * small fragments at the start of the free list during sequential allocations. Cleared
-     * (set to null) on free() and defrag(), causing the next search to restart from _headFree
-     * since those operations may create earlier gaps.
-     *
-     * @type {MemBlock|null}
-     * @private
-     */
-    _freeHint = null;
+    _freeBucketHeads = [];
 
     /**
      * Pool of recycled MemBlock objects.
@@ -198,10 +192,7 @@ class BlockAllocator {
             const block = this._obtain(0, capacity, true);
             this._headAll = block;
             this._tailAll = block;
-            this._headFree = block;
-            this._tailFree = block;
-            this._freeHint = block;
-            this._freeRegionCount = 1;
+            this._addToBucket(block);
         }
     }
 
@@ -244,6 +235,70 @@ class BlockAllocator {
     }
 
     /**
+     * Compute the bucket index for a given block size. Uses floor(log2(size)) via the CLZ
+     * intrinsic for integer math.
+     *
+     * @param {number} size - Block size (must be > 0).
+     * @returns {number} Bucket index.
+     * @private
+     */
+    _bucketFor(size) {
+        return 31 - Math.clz32(size);
+    }
+
+    /**
+     * Add a free block to the appropriate size bucket. Prepends to the bucket list for O(1)
+     * insertion. Grows the bucket array if needed.
+     *
+     * @param {MemBlock} block - The free block to add.
+     * @private
+     */
+    _addToBucket(block) {
+        const b = this._bucketFor(block._size);
+        block._bucket = b;
+        while (b >= this._freeBucketHeads.length) {
+            this._freeBucketHeads.push(null);
+        }
+        block._prevFree = null;
+        block._nextFree = this._freeBucketHeads[b];
+        if (this._freeBucketHeads[b]) this._freeBucketHeads[b]._prevFree = block;
+        this._freeBucketHeads[b] = block;
+        this._freeRegionCount++;
+    }
+
+    /**
+     * Remove a free block from its current size bucket.
+     *
+     * @param {MemBlock} block - The free block to remove.
+     * @private
+     */
+    _removeFromBucket(block) {
+        const b = block._bucket;
+        if (block._prevFree) block._prevFree._nextFree = block._nextFree;
+        else this._freeBucketHeads[b] = block._nextFree;
+        if (block._nextFree) block._nextFree._prevFree = block._prevFree;
+        block._prevFree = null;
+        block._nextFree = null;
+        block._bucket = -1;
+        this._freeRegionCount--;
+    }
+
+    /**
+     * Move a free block to the correct bucket after its size changed (e.g. due to merging or
+     * splitting). Only performs the remove+add if the bucket actually changed.
+     *
+     * @param {MemBlock} block - The free block whose size has changed.
+     * @private
+     */
+    _rebucket(block) {
+        const newBucket = this._bucketFor(block._size);
+        if (newBucket !== block._bucket) {
+            this._removeFromBucket(block);
+            this._addToBucket(block);
+        }
+    }
+
+    /**
      * Obtain a MemBlock from the pool or create a new one.
      *
      * @param {number} offset - The offset.
@@ -266,6 +321,7 @@ class BlockAllocator {
         block._next = null;
         block._prevFree = null;
         block._nextFree = null;
+        block._bucket = -1;
         return block;
     }
 
@@ -280,6 +336,7 @@ class BlockAllocator {
         block._next = null;
         block._prevFree = null;
         block._nextFree = null;
+        block._bucket = -1;
         this._pool.push(block);
     }
 
@@ -322,79 +379,40 @@ class BlockAllocator {
     }
 
     /**
-     * Insert a free block into the free list after a given free node.
-     *
-     * @param {MemBlock} block - The free block to insert.
-     * @param {MemBlock|null} afterFree - Insert after this free node (null = insert at head).
-     * @private
-     */
-    _insertAfterInFreeList(block, afterFree) {
-        if (afterFree === null) {
-            block._prevFree = null;
-            block._nextFree = this._headFree;
-            if (this._headFree) this._headFree._prevFree = block;
-            this._headFree = block;
-            if (!this._tailFree) this._tailFree = block;
-        } else {
-            block._prevFree = afterFree;
-            block._nextFree = afterFree._nextFree;
-            if (afterFree._nextFree) afterFree._nextFree._prevFree = block;
-            afterFree._nextFree = block;
-            if (this._tailFree === afterFree) this._tailFree = block;
-        }
-        this._freeRegionCount++;
-    }
-
-    /**
-     * Remove a block from the free list.
-     *
-     * @param {MemBlock} block - The block to remove.
-     * @private
-     */
-    _removeFromFreeList(block) {
-        if (this._freeHint === block) {
-            this._freeHint = block._nextFree;
-        }
-        if (block._prevFree) block._prevFree._nextFree = block._nextFree;
-        else this._headFree = block._nextFree;
-        if (block._nextFree) block._nextFree._prevFree = block._prevFree;
-        else this._tailFree = block._prevFree;
-        block._prevFree = null;
-        block._nextFree = null;
-        this._freeRegionCount--;
-    }
-
-    /**
-     * Scan the free list for the first block with size >= requested, starting from _freeHint
-     * to skip past small fragments already examined by recent allocations.
+     * Find the best-fit free block for the requested size using segregated buckets. Scans the
+     * target bucket for the smallest block >= size (best-fit), then falls through to higher
+     * buckets where any block is guaranteed large enough (first-fit).
      *
      * @param {number} size - Minimum size needed.
-     * @returns {MemBlock|null} The first fitting free block, or null.
+     * @returns {MemBlock|null} The best fitting free block, or null.
      * @private
      */
     _findFreeBlock(size) {
-        const hint = this._freeHint;
-        let block = hint ?? this._headFree;
-        while (block) {
-            if (block._size >= size) {
-                this._freeHint = block;
-                return block;
-            }
-            block = block._nextFree;
-        }
+        const startBucket = this._bucketFor(size);
+        const len = this._freeBucketHeads.length;
 
-        // Hint skipped earlier blocks — retry from head up to the hint
-        if (hint) {
-            block = this._headFree;
-            while (block !== hint) {
-                if (block._size >= size) {
-                    this._freeHint = block;
-                    return block;
+        // Target bucket: best-fit (smallest block >= size)
+        if (startBucket < len) {
+            let best = null;
+            let node = this._freeBucketHeads[startBucket];
+            while (node) {
+                if (node._size >= size) {
+                    if (!best || node._size < best._size) {
+                        best = node;
+                        if (node._size === size) break;
+                    }
                 }
-                block = block._nextFree;
+                node = node._nextFree;
             }
+            if (best) return best;
         }
 
+        // Higher buckets: first-fit (any block is large enough)
+        for (let b = startBucket + 1; b < len; b++) {
+            if (this._freeBucketHeads[b]) {
+                return this._freeBucketHeads[b];
+            }
+        }
         return null;
     }
 
@@ -416,7 +434,7 @@ class BlockAllocator {
         if (gap._size === size) {
             // Perfect fit: convert free block to allocated
             gap._free = false;
-            this._removeFromFreeList(gap);
+            this._removeFromBucket(gap);
             return gap;
         }
 
@@ -424,6 +442,7 @@ class BlockAllocator {
         const alloc = this._obtain(gap._offset, size, false);
         gap._offset += size;
         gap._size -= size;
+        this._rebucket(gap);
         this._insertAfterInMainList(alloc, gap._prev);
         return alloc;
     }
@@ -440,7 +459,6 @@ class BlockAllocator {
         block._free = true;
         this._usedSize -= block._size;
         this._freeSize += block._size;
-        this._freeHint = null;
 
         const prev = block._prev;
         const next = block._next;
@@ -452,35 +470,26 @@ class BlockAllocator {
             prev._size += block._size + next._size;
             this._removeFromMainList(block);
             this._removeFromMainList(next);
-            this._removeFromFreeList(next);
+            this._removeFromBucket(next);
             this._release(block);
             this._release(next);
-            // prev stays in free list, net -1 region (next removed, block never added)
+            this._rebucket(prev);
         } else if (prevFree) {
             // Left neighbor free: merge into prev
             prev._size += block._size;
             this._removeFromMainList(block);
             this._release(block);
-            // prev stays in free list, net 0 regions
+            this._rebucket(prev);
         } else if (nextFree) {
-            // Right neighbor free: absorb right into block, take right's free-list position
+            // Right neighbor free: absorb right into block
             block._size += next._size;
-            // Replace next with block in free list
-            block._prevFree = next._prevFree;
-            block._nextFree = next._nextFree;
-            if (next._prevFree) next._prevFree._nextFree = block;
-            else this._headFree = block;
-            if (next._nextFree) next._nextFree._prevFree = block;
-            else this._tailFree = block;
             this._removeFromMainList(next);
+            this._removeFromBucket(next);
             this._release(next);
-            // net 0 regions (next removed, block takes its place)
+            this._addToBucket(block);
         } else {
-            // Neither neighbor free: insert into free list at correct position
-            // Walk main list backward to find the preceding free node
-            let scan = block._prev;
-            while (scan && !scan._free) scan = scan._prev;
-            this._insertAfterInFreeList(block, scan);
+            // Neither neighbor free: insert into bucket
+            this._addToBucket(block);
         }
     }
 
@@ -499,11 +508,12 @@ class BlockAllocator {
         if (this._tailAll && this._tailAll._free) {
             // Extend existing tail free block
             this._tailAll._size += added;
+            this._rebucket(this._tailAll);
         } else {
             // Append new free block
             const block = this._obtain(this._capacity - added, added, true);
             this._insertAfterInMainList(block, this._tailAll);
-            this._insertAfterInFreeList(block, this._tailFree);
+            this._addToBucket(block);
         }
     }
 
@@ -527,7 +537,6 @@ class BlockAllocator {
      */
     defrag(maxMoves = 0, result = new Set()) {
         result.clear();
-        this._freeHint = null;
 
         if (this._freeRegionCount === 0) return result;
 
@@ -547,16 +556,20 @@ class BlockAllocator {
      * @private
      */
     _defragFull(result) {
-        // Remove all free blocks from both lists and pool them
-        let freeNode = this._headFree;
-        while (freeNode) {
-            const nextFree = freeNode._nextFree;
-            this._removeFromMainList(freeNode);
-            this._release(freeNode);
-            freeNode = nextFree;
+        // Remove all free blocks from all buckets and pool them
+        for (let b = 0; b < this._freeBucketHeads.length; b++) {
+            let node = this._freeBucketHeads[b];
+            while (node) {
+                const nextFree = node._nextFree;
+                this._removeFromMainList(node);
+                node._prevFree = null;
+                node._nextFree = null;
+                node._bucket = -1;
+                this._pool.push(node);
+                node = nextFree;
+            }
+            this._freeBucketHeads[b] = null;
         }
-        this._headFree = null;
-        this._tailFree = null;
         this._freeRegionCount = 0;
 
         // Walk remaining (all allocated) blocks, assign sequential offsets
@@ -576,11 +589,7 @@ class BlockAllocator {
         if (remaining > 0) {
             const freeBlock = this._obtain(offset, remaining, true);
             this._insertAfterInMainList(freeBlock, this._tailAll);
-            this._headFree = freeBlock;
-            this._tailFree = freeBlock;
-            freeBlock._prevFree = null;
-            freeBlock._nextFree = null;
-            this._freeRegionCount = 1;
+            this._addToBucket(freeBlock);
         }
     }
 
@@ -641,8 +650,9 @@ class BlockAllocator {
                     const right = freeBlock._next;
                     freeBlock._size += right._size;
                     this._removeFromMainList(right);
-                    this._removeFromFreeList(right);
+                    this._removeFromBucket(right);
                     this._release(right);
+                    this._rebucket(freeBlock);
                 }
 
                 result.add(allocBlock);
@@ -679,30 +689,27 @@ class BlockAllocator {
         // Create free region where block was
         const freed = this._obtain(block._offset, blockSize, true);
 
-        // Insert freed region and merge with neighbors
-        // Find correct position: between prev and next
+        // Insert freed region into main list
         this._insertAfterInMainList(freed, prev);
-
-        // Find free-list insertion point for freed region
-        let scanFree = freed._prev;
-        while (scanFree && !scanFree._free) scanFree = scanFree._prev;
-        this._insertAfterInFreeList(freed, scanFree);
+        this._addToBucket(freed);
 
         // Merge freed with right neighbor
         if (freed._next && freed._next._free) {
             const right = freed._next;
             freed._size += right._size;
             this._removeFromMainList(right);
-            this._removeFromFreeList(right);
+            this._removeFromBucket(right);
             this._release(right);
+            this._rebucket(freed);
         }
         // Merge freed with left neighbor
         if (freed._prev && freed._prev._free) {
             const left = freed._prev;
             left._size += freed._size;
             this._removeFromMainList(freed);
-            this._removeFromFreeList(freed);
+            this._removeFromBucket(freed);
             this._release(freed);
+            this._rebucket(left);
         }
 
         // 2. Place block at gap
@@ -710,16 +717,16 @@ class BlockAllocator {
 
         if (gap._size === blockSize) {
             // Perfect fit: replace gap with block
-            // Insert block where gap is in main list
             const gapPrev = gap._prev;
             this._removeFromMainList(gap);
-            this._removeFromFreeList(gap);
+            this._removeFromBucket(gap);
             this._release(gap);
             this._insertAfterInMainList(block, gapPrev);
         } else {
             // Partial fit: shrink gap, insert block before it
             gap._offset += blockSize;
             gap._size -= blockSize;
+            this._rebucket(gap);
             this._insertAfterInMainList(block, gap._prev);
         }
     }

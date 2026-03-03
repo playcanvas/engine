@@ -118,7 +118,7 @@ class GSplatInfo {
     /**
      * Small RGBA32U texture storing per-sub-draw data for instanced interval rendering.
      * Each texel: R = rowStart | (numRows << 16), G = colStart, B = colEnd, A = sourceBase.
-     * Null when intervals are not used (non-LOD or full range).
+     * Created lazily by {@link ensureSubDrawTexture} when needed for rendering.
      *
      * @type {Texture|null}
      */
@@ -247,14 +247,30 @@ class GSplatInfo {
     }
 
     /**
-     * Sets per-interval pixel offsets and builds sub-draw data for this splat.
+     * Sets per-interval pixel offsets for this splat. Sub-draw computation and GPU texture
+     * creation are deferred to {@link ensureSubDrawTexture} to avoid work for splats that
+     * may never be rendered (e.g. intermediate world states or unchanged splats).
      *
      * @param {number[]} intervalOffsets - Per-interval pixel offsets in the work buffer.
-     * @param {number} textureSize - The work buffer texture width.
      */
-    setLayout(intervalOffsets, textureSize) {
+    setLayout(intervalOffsets) {
         this.intervalOffsets = intervalOffsets;
-        this.updateSubDraws(textureSize);
+        this.subDrawTexture?.destroy();
+        this.subDrawTexture = null;
+        this.subDrawCount = 0;
+    }
+
+    /**
+     * Ensures the sub-draw texture exists, computing sub-draw data and creating the GPU texture
+     * on first call. Must be called outside a render pass (e.g. in the render pass update method)
+     * since WebGPU does not allow texture creation inside a render pass.
+     *
+     * @param {number} textureWidth - The work buffer texture width.
+     */
+    ensureSubDrawTexture(textureWidth) {
+        if (!this.subDrawTexture && textureWidth > 0) {
+            this.updateSubDraws(textureWidth);
+        }
     }
 
     /**

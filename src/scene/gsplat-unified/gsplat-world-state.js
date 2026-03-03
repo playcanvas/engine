@@ -318,7 +318,7 @@ class GSplatWorldState {
             }
 
             if (intervalOffsets.length > 0) {
-                splat.setLayout(intervalOffsets, this.textureSize);
+                splat.setLayout(intervalOffsets);
 
                 if (splatChanged) {
                     this.needsUpload.push(splat);

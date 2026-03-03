@@ -181,6 +181,14 @@ class GSplatWorkBufferRenderPass extends RenderPass {
             }
         }
 
+        // Lazily create per-splat sub-draw textures only for splats that will use them
+        // (those not using the shared partial texture, i.e. _partialData count === 0).
+        for (let i = 0; i < this.splats.length; i++) {
+            if (this._partialData[i * 2 + 1] === 0) {
+                this.splats[i].ensureSubDrawTexture(textureWidth);
+            }
+        }
+
         this.cameraNode = cameraNode;
         return this.splats.length > 0;
     }
