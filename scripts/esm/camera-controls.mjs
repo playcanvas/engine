@@ -703,6 +703,7 @@ class CameraControls extends Script {
      * @param {number} dt - The time delta.
      */
     update(dt) {
+        dt = Math.min(dt, 0.1);
         const { keyCode } = KeyboardMouseSource;
 
         const { key, button, mouse, wheel } = this._desktopInput.read();
@@ -741,13 +742,15 @@ class CameraControls extends Script {
         const desktopPan = +(this._state.shift || this._state.mouse[1]);
         const mobileJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
 
-        // multipliers
+        // rate-based multipliers (keyboard, gamepad, virtual joystick)
         const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
             this.moveSlowSpeed : this.moveSpeed) * dt;
-        const zoomMult = this.zoomSpeed * 60 * dt;
-        const zoomTouchMult = zoomMult * this.zoomPinchSens;
-        const rotateMult = this.rotateSpeed * 60 * dt;
         const rotateJoystickMult = this.rotateSpeed * this.rotateJoystickSens * 60 * dt;
+
+        // delta-based multipliers (mouse, touch, wheel)
+        const rotateDeltaMult = this.rotateSpeed;
+        const zoomDeltaMult = this.zoomSpeed;
+        const zoomTouchDeltaMult = this.zoomSpeed * this.zoomPinchSens;
 
         const { deltas } = frame;
 
@@ -758,13 +761,13 @@ class CameraControls extends Script {
         const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._pose.distance);
         v.add(panMove.mulScalar(orbit * desktopPan * +this.enablePan));
         const wheelMove = tmpV2.set(0, 0, wheel[0]);
-        v.add(wheelMove.mulScalar(orbit * zoomMult));
+        v.add(wheelMove.mulScalar(orbit * zoomDeltaMult));
         deltas.move.append([v.x, v.y, v.z]);
 
         // desktop rotate
         v.set(0, 0, 0);
         const mouseRotate = tmpV2.set(mouse[0], mouse[1], 0);
-        v.add(mouseRotate.mulScalar((1 - (orbit * desktopPan)) * rotateMult));
+        v.add(mouseRotate.mulScalar((1 - (orbit * desktopPan)) * rotateDeltaMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // mobile move
@@ -774,15 +777,15 @@ class CameraControls extends Script {
         const orbitMove = screenToWorld(this._camera, touch[0], touch[1], this._pose.distance);
         v.add(orbitMove.mulScalar(orbit * double * +this.enablePan));
         const pinchMove = tmpV2.set(0, 0, pinch[0]);
-        v.add(pinchMove.mulScalar(orbit * double * zoomTouchMult));
+        v.add(pinchMove.mulScalar(orbit * double * zoomTouchDeltaMult));
         deltas.move.append([v.x, v.y, v.z]);
 
         // mobile rotate
         v.set(0, 0, 0);
         const orbitRotate = tmpV2.set(touch[0], touch[1], 0);
-        v.add(orbitRotate.mulScalar(orbit * (1 - double) * rotateMult));
+        v.add(orbitRotate.mulScalar(orbit * (1 - double) * rotateDeltaMult));
         const flyRotate = tmpV2.set(rightInput[0], rightInput[1], 0);
-        v.add(flyRotate.mulScalar(fly * (mobileJoystick ? rotateJoystickMult : rotateMult)));
+        v.add(flyRotate.mulScalar(fly * (mobileJoystick ? rotateJoystickMult : rotateDeltaMult)));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // gamepad move
