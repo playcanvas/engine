@@ -119,25 +119,7 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 1;
     app.scene.exposure = 1.5;
 
-    // Mini-Stats: insert gsplat stats after the default 'Frame' entry
-    const msOptions = pc.MiniStats.getDefaultOptions();
-    const frameIndex = msOptions.stats.findIndex(s => s.name === 'Frame');
-    msOptions.stats.splice(frameIndex + 1, 0, {
-        name: 'GSplats',
-        stats: ['frame.gsplats'],
-        decimalPlaces: 3,
-        multiplier: 1 / 1000000,
-        unitsName: 'M',
-        watermark: 10
-    }, {
-        name: 'GsplatsCopy',
-        stats: ['frame.gsplatBufferCopy'],
-        decimalPlaces: 1,
-        multiplier: 1,
-        unitsName: '%',
-        watermark: 100
-    });
-    const miniStats = new pc.MiniStats(app, msOptions); // eslint-disable-line no-unused-vars
+    const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']));
 
     // enable rotation-based LOD updates and behind-camera penalty
     app.scene.gsplat.lodUpdateAngle = 90;
