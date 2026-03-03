@@ -240,7 +240,7 @@ class MiniStats {
      *
      * @param {string[]} [extraStats] - Optional array of preset names from
      * {@link MiniStats.statPresets} to include. The preset stats are inserted after the 'Frame'
-     * entry.
+     * entry. Can be: 'gsplats', 'gsplatsCopy'.
      * @returns {object} The default options for MiniStats.
      * @example
      * // default options without extra stats
