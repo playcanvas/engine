@@ -125,12 +125,33 @@ class GSplatParams {
     radialSorting = false;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _gpuSorting = false;
+
+    /**
      * Enables GPU-based sorting using compute shaders. WebGPU only.
      *
      * @type {boolean}
      * @ignore
      */
-    gpuSorting = false;
+    set gpuSorting(value) {
+        if (value !== this._gpuSorting) {
+            this._gpuSorting = value;
+            this._syncNodeIndexStream();
+        }
+    }
+
+    /**
+     * Gets the GPU sorting enabled state.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get gpuSorting() {
+        return this._gpuSorting;
+    }
 
     /**
      * Enables debug rendering of AABBs for GSplat octree nodes. Defaults to false.
@@ -226,16 +247,9 @@ class GSplatParams {
      * @ignore
      */
     set culling(value) {
-        if (value && !this._culling) {
-            this._culling = true;
-            if (!this._format.getStream('pcNodeIndex')) {
-                this._format.addExtraStreams([
-                    { name: 'pcNodeIndex', format: PIXELFORMAT_R32U }
-                ]);
-            }
-        } else if (!value && this._culling) {
-            this._culling = false;
-            this._format.removeExtraStreams(['pcNodeIndex']);
+        if (value !== this._culling) {
+            this._culling = value;
+            this._syncNodeIndexStream();
         }
     }
 
@@ -247,6 +261,25 @@ class GSplatParams {
      */
     get culling() {
         return this._culling;
+    }
+
+    /**
+     * Adds or removes the pcNodeIndex extra stream based on current culling and gpuSorting state.
+     * Only the CPU sort + culling path needs per-splat node index in the work buffer; the GPU sort
+     * path uses interval-based compaction which reads node visibility directly from intervals.
+     *
+     * @private
+     */
+    _syncNodeIndexStream() {
+        const needsNodeIndex = this._culling && !(this._gpuSorting && this._device.isWebGPU);
+        const hasNodeIndex = !!this._format.getStream('pcNodeIndex');
+        if (needsNodeIndex && !hasNodeIndex) {
+            this._format.addExtraStreams([
+                { name: 'pcNodeIndex', format: PIXELFORMAT_R32U }
+            ]);
+        } else if (!needsNodeIndex && hasNodeIndex) {
+            this._format.removeExtraStreams(['pcNodeIndex']);
+        }
     }
 
     /**
