@@ -18,6 +18,7 @@ import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Color } from '../../core/math/color.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
+import { BlockAllocator } from '../../core/block-allocator.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -27,6 +28,7 @@ import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
  * @import { Scene } from '../scene.js'
  * @import { Layer } from '../layer.js'
  * @import { GSplatDirector } from './gsplat-director.js'
+ * @import { MemBlock } from '../../core/block-allocator.js'
  */
 
 const cameraPosition = new Vec3();
@@ -40,6 +42,7 @@ const _updatedSplats = [];
 const _splatsNeedingColorUpdate = [];
 const _cameraDeltas = { rotationDelta: 0, translationDelta: 0 };
 const tempOctreesTicked = new Set();
+const _queuedSplats = new Set();
 
 const _lodColorsRaw = [
     [1, 0, 0],  // red
@@ -230,6 +233,20 @@ class GSplatManager {
     _workBufferRebuildRequired = false;
 
     /**
+     * Number of blocks uploaded to the work buffer this frame.
+     *
+     * @type {number}
+     */
+    bufferCopyUploaded = 0;
+
+    /**
+     * Total number of blocks in the work buffer this frame.
+     *
+     * @type {number}
+     */
+    bufferCopyTotal = 0;
+
+    /**
      * Tracks placement state changes (format version, modifier hash, numSplats, centersVersion).
      *
      * @type {GSplatPlacementStateTracker}
@@ -277,6 +294,23 @@ class GSplatManager {
      */
     _budgetBalancer = new GSplatBudgetBalancer();
 
+    /**
+     * Persistent block allocator for work buffer pixel allocations. Grows on demand.
+     *
+     * @type {BlockAllocator}
+     * @private
+     */
+    _allocator;
+
+    /**
+     * Maps allocId (from GSplatPlacement) to the corresponding MemBlock in the allocator.
+     * Shared with GSplatWorldState constructors which mutate it during diff.
+     *
+     * @type {Map<number, MemBlock>}
+     * @private
+     */
+    _allocationMap = new Map();
+
     /** @type {Vec3} */
     lastColorUpdateCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
@@ -298,6 +332,15 @@ class GSplatManager {
 
     /** @type {boolean} */
     layerPlacementsDirty = false;
+
+    /**
+     * True when placements have been added or removed since the last world state was created.
+     * Triggers a full work buffer rebuild so boundsBaseIndex and pcNodeIndex stay consistent.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _placementSetChanged = false;
 
     /** @type {Map<GSplatPlacement, GSplatOctreeInstance>} */
     octreeInstances = new Map();
@@ -335,6 +378,12 @@ class GSplatManager {
         this.scene = director.scene;
         this.director = director;
         this.cameraNode = cameraNode;
+
+        // Pre-allocate the block allocator with headroom above the splat budget to reduce
+        // early grows and fragmentation during initial scene loading.
+        const allocatorGrowMultiplier = 1.15;
+        const budget = this.scene.gsplat.splatBudget;
+        this._allocator = new BlockAllocator(budget > 0 ? Math.ceil(budget * allocatorGrowMultiplier) : 0, allocatorGrowMultiplier);
 
         this.workBuffer = new GSplatWorkBuffer(device, this.scene.gsplat.format);
         this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
@@ -580,6 +629,7 @@ class GSplatManager {
 
                 // mark world as dirty since octree set changed
                 this.layerPlacementsDirty = true;
+                this._placementSetChanged = true;
 
                 // queue the instance to be processed during next world state creation
                 this.octreeInstancesToDestroy.push(inst);
@@ -597,6 +647,7 @@ class GSplatManager {
                 }
             }
         }
+        this._placementSetChanged ||= this.layerPlacementsDirty;
 
         // update layerPlacements to new non-octree list
         this.layerPlacements.length = 0;
@@ -620,7 +671,8 @@ class GSplatManager {
         }
 
         // Recreate world state if there are changes
-        const worldChanged = this.layerPlacementsDirty || stateChanged || this.worldStates.size === 0;
+        const placementsChanged = this.layerPlacementsDirty;
+        const worldChanged = placementsChanged || stateChanged || this.worldStates.size === 0;
         if (worldChanged) {
             this.lastWorldStateVersion++;
             const splats = [];
@@ -642,7 +694,8 @@ class GSplatManager {
                     if (p.resource) {
                         p.ensureInstanceStreams(this.device);
                         const octreeNodes = p.intervals.size > 0 ? inst.octree.nodes : null;
-                        const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p), octreeNodes);
+                        const nodeInfos = octreeNodes ? inst.nodeInfos : null;
+                        const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p), octreeNodes, nodeInfos);
                         splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                         splats.push(splatInfo);
                     }
@@ -666,7 +719,10 @@ class GSplatManager {
             // update cpu sorter with current splats (adds new centers, removes unused ones)
             this.cpuSorter?.updateCentersForSplats(splats);
 
-            const newState = new GSplatWorldState(this.device, this.lastWorldStateVersion, splats);
+            const newState = new GSplatWorldState(
+                this.device, this.lastWorldStateVersion, splats,
+                this._allocator, this._allocationMap
+            );
 
             // increment ref count for all resources in new state
             for (const splat of newState.splats) {
@@ -699,9 +755,16 @@ class GSplatManager {
                 this.octreeInstancesToDestroy.length = 0;
             }
 
+            // When placements are added/removed, boundsBaseIndex values shift and all
+            // pcNodeIndex values must be rewritten. Force a full rebuild so no stale indices remain.
+            if (this._placementSetChanged && this.scene.gsplat.culling) {
+                newState.fullRebuild = true;
+            }
+
             this.worldStates.set(this.lastWorldStateVersion, newState);
 
             this.layerPlacementsDirty = false;
+            this._placementSetChanged = false;
 
             // New world state requires sorting
             this.sortNeeded = true;
@@ -743,12 +806,13 @@ class GSplatManager {
 
     /**
      * Rebuilds the work buffer for a world state on its first sort.
-     * Resizes buffer, renders all splats, syncs transforms, and handles pending releases.
+     * Resizes buffer, renders changed splats, syncs transforms, and handles pending releases.
      *
      * @param {GSplatWorldState} worldState - The world state to rebuild for.
      * @param {number} count - The number of splats.
+     * @param {boolean} [forceFullRebuild] - Force rendering all splats (e.g. format change).
      */
-    rebuildWorkBuffer(worldState, count) {
+    rebuildWorkBuffer(worldState, count, forceFullRebuild = false) {
         // resize work buffer if needed
         const textureSize = worldState.textureSize;
         if (textureSize !== this.workBuffer.textureSize) {
@@ -756,22 +820,36 @@ class GSplatManager {
             this.renderer.setMaxNumSplats(textureSize * textureSize);
         }
 
-        // Bounds and transforms textures are needed for frustum culling
+        // Bounds and transforms textures are needed for frustum culling.
+        // These index splats sequentially, so always use the full splats array.
         if (this.scene.gsplat.culling) {
-            this.workBuffer.updateBoundsTexture(worldState.splats);
-            this.workBuffer.updateTransformsTexture(worldState.splats);
+            this.workBuffer.updateBoundsTexture(worldState.boundsGroups);
+            this.workBuffer.updateTransformsTexture(worldState.boundsGroups);
         }
 
-        // render all splats to work buffer
-        this.workBuffer.render(worldState.splats, this.cameraNode, this.getDebugColors());
+        // Render splats to work buffer: full rebuild renders all, partial renders only changed
+        const renderAll = forceFullRebuild || worldState.fullRebuild;
+        const splatsToRender = renderAll ? worldState.splats : worldState.needsUpload;
+        const changedAllocIds = renderAll ? null : worldState.needsUploadIds;
+
+        if (splatsToRender.length > 0) {
+            const totalBlocks = this._allocationMap.size;
+            const uploadBlocks = renderAll ? totalBlocks : worldState.needsUploadIds.size;
+
+            // accumulate buffer copy stats for this frame
+            this.bufferCopyUploaded += uploadBlocks;
+            this.bufferCopyTotal = totalBlocks;
+
+            this.workBuffer.render(splatsToRender, this.cameraNode, this.getDebugColors(), changedAllocIds);
+        }
 
         // update all splats to sync their transforms and reset color accumulators
         // (prevents redundant re-render later)
         const { colorUpdateAngle, colorUpdateDistance } = this.scene.gsplat;
-        worldState.splats.forEach((splat) => {
-            splat.update();
-            splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
-        });
+        for (let i = 0; i < worldState.splats.length; i++) {
+            worldState.splats[i].update();
+            worldState.splats[i].resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
+        }
 
         // update camera tracking for color updates
         this.updateColorCameraTracking();
@@ -792,11 +870,49 @@ class GSplatManager {
 
     /**
      * Cleans up old world states between the last sorted version and the new version.
-     * Decrements ref counts and destroys old states.
+     * Merges upload requirements from skipped states into the active state, then
+     * decrements ref counts and destroys old states.
      *
      * @param {number} newVersion - The new version to clean up to.
      */
     cleanupOldWorldStates(newVersion) {
+        const activeState = /** @type {GSplatWorldState} */ (/** @type {unknown} */ (this.worldStates.get(newVersion)));
+
+        // Pass 1: propagate fullRebuild from skipped states
+        if (!activeState.fullRebuild) {
+            for (let v = this.sortedVersion + 1; v < newVersion; v++) {
+                if (this.worldStates.get(v)?.fullRebuild) {
+                    activeState.fullRebuild = true;
+                    break;
+                }
+            }
+        }
+
+        // Pass 2: merge needsUpload from skipped states (skip if full rebuild).
+        // Uses the active state's allocIdToSplat reverse map for O(changedIds) lookups
+        // instead of scanning all splats.
+        if (!activeState.fullRebuild) {
+            const activeIds = activeState.needsUploadIds;
+            const lookup = activeState.allocIdToSplat;
+            for (let v = this.sortedVersion + 1; v < newVersion; v++) {
+                const oldState = this.worldStates.get(v);
+                if (oldState) {
+                    for (const allocId of oldState.needsUploadIds) {
+                        if (!activeIds.has(allocId)) {
+                            activeIds.add(allocId);
+                            const splat = lookup.get(allocId);
+                            if (splat && !_queuedSplats.has(splat)) {
+                                activeState.needsUpload.push(splat);
+                                _queuedSplats.add(splat);
+                            }
+                        }
+                    }
+                }
+            }
+            _queuedSplats.clear();
+        }
+
+        // Pass 3: cleanup all old states (including the previously sorted one)
         for (let v = this.sortedVersion; v < newVersion; v++) {
             const oldState = this.worldStates.get(v);
             if (oldState) {
@@ -825,11 +941,13 @@ class GSplatManager {
         const { rotationDelta, translationDelta } = this.calculateColorCameraDeltas();
 
         // check each splat for full or color update
+        let uploadedBlocks = 0;
         state.splats.forEach((splat) => {
             // Check if splat's transform changed (needs full update)
             if (splat.update()) {
 
                 _updatedSplats.push(splat);
+                uploadedBlocks += splat.intervalAllocIds.length;
 
                 // Reset accumulators for fully updated splats
                 splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
@@ -853,10 +971,15 @@ class GSplatManager {
                 if (splat.colorAccumulatedRotation >= angleThreshold ||
                     splat.colorAccumulatedTranslation >= distThreshold) {
                     _splatsNeedingColorUpdate.push(splat);
+                    uploadedBlocks += splat.intervalAllocIds.length;
                     splat.resetColorAccumulators(angleThreshold, distThreshold);
                 }
             }
         });
+
+        // accumulate buffer copy stats for this frame (counted in alloc blocks, not splats)
+        this.bufferCopyUploaded += uploadedBlocks;
+        this.bufferCopyTotal = this._allocationMap.size;
 
         // Batch render all updated splats in a single render pass
         if (_updatedSplats.length > 0) {
@@ -1133,6 +1256,10 @@ class GSplatManager {
 
     update() {
 
+        // reset per-frame buffer copy stats
+        this.bufferCopyUploaded = 0;
+        this.bufferCopyTotal = 0;
+
         this.handleFormatChange();
 
         // detect work buffer format changes (extra streams added) and schedule a full rebuild
@@ -1180,6 +1307,7 @@ class GSplatManager {
 
                 const isDirty = inst.update();
                 this.layerPlacementsDirty ||= isDirty;
+                this._placementSetChanged ||= inst.consumePlacementSetChanged();
 
                 const instNeeds = inst.consumeNeedsLodUpdate();
                 anyInstanceNeedsLodUpdate ||= instNeeds;
@@ -1240,6 +1368,11 @@ class GSplatManager {
         if (this.scene.gsplat.dirty) {
             this.layerPlacementsDirty = true;
             this.renderer.updateOverdrawMode(this.scene.gsplat);
+
+            // Re-render all splats into the work buffer so persistent data (e.g. debug
+            // colorization) is refreshed immediately instead of trickling in over time.
+            this._workBufferRebuildRequired = true;
+            this.sortNeeded = true;
         }
 
         // when camera or octree need LOD evaluated, or params are dirty, or resources completed, or new instances added
@@ -1302,7 +1435,7 @@ class GSplatManager {
         if (sortedState) {
             if (this._workBufferRebuildRequired) {
                 const count = sortedState.totalActiveSplats;
-                this.rebuildWorkBuffer(sortedState, count);
+                this.rebuildWorkBuffer(sortedState, count, true);
                 this._workBufferRebuildRequired = false;
 
                 // rebuildWorkBuffer may resize, which destroys/recreates orderBuffer — rebind it
@@ -1423,11 +1556,13 @@ class GSplatManager {
         // Handle first-time setup for GPU path
         if (!worldState.sortedBefore) {
             worldState.sortedBefore = true;
-            this.rebuildWorkBuffer(worldState, elementCount);
 
-            // clean up old world states
+            // Clean up old states first so skipped upload requirements are merged
+            // into this world state before rebuildWorkBuffer renders them
             this.cleanupOldWorldStates(worldState.version);
             this.sortedVersion = worldState.version;
+
+            this.rebuildWorkBuffer(worldState, elementCount);
         }
 
         // Upload interval metadata after rebuild so boundsBaseIndex is assigned
@@ -1555,7 +1690,7 @@ class GSplatManager {
      * @private
      */
     _runFrustumCulling(worldState) {
-        this.workBuffer.updateTransformsTexture(worldState.splats);
+        this.workBuffer.updateTransformsTexture(worldState.boundsGroups);
 
         const cam = this.cameraNode.camera;
         this.workBuffer.updateNodeVisibility(cam.projectionMatrix, cam.viewMatrix);
@@ -1771,7 +1906,7 @@ class GSplatManager {
             totalActiveSplats: worldState.totalActiveSplats,
             version: worldState.version,
             ids: worldState.splats.map(splat => splat.resource.id),
-            pixelOffsets: worldState.splats.map(splat => splat.pixelOffset),
+            pixelOffsets: worldState.splats.map(splat => splat.intervalOffsets),
 
             // TODO: consider storing this in typed array and transfer it to sorter worker
             intervals: worldState.splats.map(splat => splat.intervals)

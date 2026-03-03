@@ -358,40 +358,20 @@ class GSplatIntervalCompaction {
 
         for (let s = 0; s < splats.length; s++) {
             const splat = splats[s];
-            let workBufferBase = splat.pixelOffset;
 
             if (splat.intervals.length > 0) {
-                // Partial octree load: sub-draws pack intervals sequentially in Map
-                // iteration order, so workBufferBase increments by each interval's count.
-                let localBoundsIdx = 0;
+                // Octree: each interval has its own offset from per-node allocation
+                const nodeIndices = splat.intervalNodeIndices;
                 for (let i = 0; i < splat.intervals.length; i += 2) {
                     const count = splat.intervals[i + 1] - splat.intervals[i];
-                    data[writeIdx++] = workBufferBase;
+                    data[writeIdx++] = splat.intervalOffsets[i / 2];
                     data[writeIdx++] = count;
-                    data[writeIdx++] = splat.boundsBaseIndex + localBoundsIdx;
+                    data[writeIdx++] = splat.boundsBaseIndex + (nodeIndices.length > 0 ? nodeIndices[i / 2] : 0);
                     data[writeIdx++] = 0;
-                    workBufferBase += count;
-                    localBoundsIdx++;
-                }
-            } else if (splat.placementIntervals && splat.placementIntervals.size > 0) {
-                // Fully-loaded octree: intervals were cleared (all nodes active) but
-                // per-node bounding spheres still exist. Without sub-draws the work buffer
-                // stores splats in source order, so each node's data starts at
-                // basePixel + sourceStart rather than sequential packing.
-                const basePixel = splat.pixelOffset;
-                let localBoundsIdx = 0;
-                for (const interval of splat.placementIntervals.values()) {
-                    const start = interval.x;
-                    const count = interval.y - start + 1;
-                    data[writeIdx++] = basePixel + start;
-                    data[writeIdx++] = count;
-                    data[writeIdx++] = splat.boundsBaseIndex + localBoundsIdx;
-                    data[writeIdx++] = 0;
-                    localBoundsIdx++;
                 }
             } else {
-                // Non-octree: single interval covering the entire splat.
-                data[writeIdx++] = workBufferBase;
+                // Non-octree: single interval covering the entire splat
+                data[writeIdx++] = splat.intervalOffsets[0];
                 data[writeIdx++] = splat.activeSplats;
                 data[writeIdx++] = splat.boundsBaseIndex;
                 data[writeIdx++] = 0;
