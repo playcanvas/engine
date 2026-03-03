@@ -807,7 +807,13 @@ class GSplatOctreeInstance {
                 // Only remove if it was added (has resource)
                 if (placement.resource) {
                     this.activePlacements.delete(placement);
-                    this.dirtyPlacementSetChanged = true;
+
+                    // Only signal a placement set change when the last child is removed,
+                    // since that removes the bounds group and may shift boundsBaseIndex
+                    // for other groups. Earlier removals leave the group intact.
+                    if (this.activePlacements.size === 0) {
+                        this.dirtyPlacementSetChanged = true;
+                    }
                 }
 
                 // schedule a single decRef via world state
@@ -831,9 +837,17 @@ class GSplatOctreeInstance {
             const placement = this.filePlacements[fileIndex];
             if (placement) {
                 placement.resource = res;
+
+                // Only signal a placement set change when the first child is added,
+                // since that creates a new bounds group and may shift boundsBaseIndex
+                // for other groups. Subsequent children join the existing group and
+                // don't affect bounds structure.
+                if (this.activePlacements.size === 0) {
+                    this.dirtyPlacementSetChanged = true;
+                }
+
                 this.activePlacements.add(placement);
                 this.dirtyModifiedPlacements = true;
-                this.dirtyPlacementSetChanged = true;
                 // clear pending removal if we are reusing the file
                 this.removedCandidates.delete(fileIndex);
                 return true;
