@@ -941,11 +941,13 @@ class GSplatManager {
         const { rotationDelta, translationDelta } = this.calculateColorCameraDeltas();
 
         // check each splat for full or color update
+        let uploadedBlocks = 0;
         state.splats.forEach((splat) => {
             // Check if splat's transform changed (needs full update)
             if (splat.update()) {
 
                 _updatedSplats.push(splat);
+                uploadedBlocks += splat.intervalAllocIds.length;
 
                 // Reset accumulators for fully updated splats
                 splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
@@ -969,13 +971,14 @@ class GSplatManager {
                 if (splat.colorAccumulatedRotation >= angleThreshold ||
                     splat.colorAccumulatedTranslation >= distThreshold) {
                     _splatsNeedingColorUpdate.push(splat);
+                    uploadedBlocks += splat.intervalAllocIds.length;
                     splat.resetColorAccumulators(angleThreshold, distThreshold);
                 }
             }
         });
 
-        // accumulate buffer copy stats for this frame
-        this.bufferCopyUploaded += _updatedSplats.length + _splatsNeedingColorUpdate.length;
+        // accumulate buffer copy stats for this frame (counted in alloc blocks, not splats)
+        this.bufferCopyUploaded += uploadedBlocks;
         this.bufferCopyTotal = this._allocationMap.size;
 
         // Batch render all updated splats in a single render pass
