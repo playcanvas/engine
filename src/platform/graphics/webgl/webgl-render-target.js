@@ -411,7 +411,7 @@ class WebglRenderTarget {
                 break;
         }
 
-        if (!errorCode) {
+        if (status === gl.FRAMEBUFFER_COMPLETE) {
             validated.add(key);
         }
 
