@@ -119,7 +119,7 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 1;
     app.scene.exposure = 1.5;
 
-    const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']));
+    const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
     // enable rotation-based LOD updates and behind-camera penalty
     app.scene.gsplat.lodUpdateAngle = 90;
