@@ -173,6 +173,25 @@ assetListLoader.load(() => {
     };
 
     applyPreset();
+
+    // Start with lowest LOD only for fast initial load
+    const lodLevels = gs.resource?.octree?.lodLevels;
+    if (lodLevels) {
+        const worstLod = lodLevels - 1;
+        app.scene.gsplat.lodRangeMin = worstLod;
+        app.scene.gsplat.lodRangeMax = worstLod;
+    }
+
+    // When lowest LOD is fully loaded, switch to the normal quality range
+    const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
+    const onFrameReady = (/** @type {any} */ camera, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
+        if (ready && loadingCount === 0) {
+            gsplatSystem.off('frame:ready', onFrameReady);
+            applyPreset();
+        }
+    };
+    gsplatSystem.on('frame:ready', onFrameReady);
+
     data.on('lodPreset:set', applyPreset);
 
     const applySplatBudget = () => {
