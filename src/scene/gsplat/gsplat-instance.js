@@ -214,6 +214,10 @@ class GSplatInstance {
     }
 
     update() {
+
+        // Apply deferred sort results (at most one upload per frame).
+        this.sorter?.applyPendingSorted();
+
         if (this.cameras.length > 0) {
 
             // sort by the first camera it's visible for
