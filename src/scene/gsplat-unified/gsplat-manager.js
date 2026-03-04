@@ -1530,6 +1530,13 @@ class GSplatManager {
         // fire frame:ready event
         this.fireFrameReadyEvent();
 
+        // If event listeners dirtied params (e.g. changed LOD range), ensure LOD is re-evaluated
+        if (this.scene.gsplat.dirty) {
+            for (const [, inst] of this.octreeInstances) {
+                inst.needsLodUpdate = true;
+            }
+        }
+
         // return the number of active splats for stats
         return sortedState ? sortedState.totalActiveSplats : 0;
     }
