@@ -152,6 +152,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     emptyBindGroup;
 
     /**
+     * Monotonically increasing counter incremented each time queue.submit() is called.
+     *
+     * @type {number}
+     * @ignore
+     */
+    submitVersion = 0;
+
+    /**
      * Current command buffer encoder.
      *
      * @type {GPUCommandEncoder|null}
@@ -1117,6 +1125,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             this.wgpu.queue.submit(this.commandBuffers);
             this.commandBuffers.length = 0;
+            this.submitVersion++;
 
             // notify dynamic buffers
             this.dynamicBuffers.onCommandBuffersSubmitted();

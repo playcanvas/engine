@@ -32,6 +32,15 @@ class WebgpuUploadStream {
     _destroyed = false;
 
     /**
+     * The device's _submitVersion at the time the last staging copy was recorded.
+     * Used to detect whether the copy has been submitted before the next upload.
+     *
+     * @type {number}
+     * @private
+     */
+    _lastUploadSubmitVersion = -1;
+
+    /**
      * @param {UploadStream} uploadStream - The upload stream.
      */
     constructor(uploadStream) {
@@ -138,6 +147,18 @@ class WebgpuUploadStream {
         const byteOffset = offset * data.BYTES_PER_ELEMENT;
         const byteSize = size * data.BYTES_PER_ELEMENT;
 
+        // Detect when a previous staging copy is still on an unsubmitted command buffer.
+        // update() will call mapAsync on that buffer, putting it in "mapping pending" state,
+        // which causes WebGPU validation errors ("buffer used in submit while mapped") when
+        // the command buffer is eventually submitted.
+        if (this.pendingStagingBuffers.length > 0) {
+            // @ts-ignore - submitVersion is available on WebgpuGraphicsDevice
+            Debug.assert(device.submitVersion !== this._lastUploadSubmitVersion,
+                'UploadStream: each instance can only upload once per submit. A previous staging ' +
+                'buffer copy has not been submitted yet. This causes WebGPU "buffer used in submit ' +
+                'while mapped" errors. Ensure the caller defers uploads to one per frame.');
+        }
+
         // Update staging buffers
         this.update(byteSize);
 
@@ -170,15 +191,11 @@ class WebgpuUploadStream {
             byteSize
         );
 
-        // Detect multiple uploads per frame (indicates command buffer hasn't been submitted yet)
-        Debug.assert(
-            this.pendingStagingBuffers.length === 0,
-            'Multiple WebGPU staging buffer uploads detected in the same frame before command buffer submission. ' +
-            'This can cause "buffer used while mapped" errors. Ensure only one upload occurs per frame.'
-        );
-
         // Track for recycling
         this.pendingStagingBuffers.push(buffer);
+
+        // @ts-ignore - submitVersion is available on WebgpuGraphicsDevice
+        this._lastUploadSubmitVersion = device.submitVersion;
     }
 }
 
