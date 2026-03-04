@@ -5,6 +5,7 @@ import {
 } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
+import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { math } from '../../core/math/math.js';
 
@@ -228,8 +229,12 @@ class GSplatRenderer {
 
     update(count, textureSize) {
 
-        // limit splat render count to exclude those behind the camera
-        this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
+        // On WebGL each instance is one quad; on WebGPU each instance is instanceSize quads
+        if (this.device.isWebGPU) {
+            this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
+        } else {
+            this.meshInstance.instancingCount = count;
+        }
 
         // update splat count on the material
         this._material.setParameter('numSplats', count);
@@ -291,8 +296,9 @@ class GSplatRenderer {
         // Set the appropriate order data resource based on device type
         if (this.device.isWebGPU) {
             this._material.setParameter('splatOrder', this.workBuffer.orderBuffer);
-        } else {
-            this._material.setParameter('splatOrder', this.workBuffer.orderTexture);
+        } else if (this.meshInstance?.instancingData) {
+            // Update the VB reference without recreating InstancingData (which would reset instancingCount)
+            this.meshInstance.instancingData.vertexBuffer = this.workBuffer.orderVB ?? null;
         }
     }
 
@@ -422,32 +428,52 @@ class GSplatRenderer {
 
     setMaxNumSplats(numSplats) {
 
-        // round up to the nearest multiple of instanceSize (same as createInstanceIndices does internally)
-        const roundedNumSplats = math.roundUp(numSplats, GSplatResourceBase.instanceSize);
+        if (this.device.isWebGPU) {
+            // round up to the nearest multiple of instanceSize (same as createInstanceIndices does internally)
+            const roundedNumSplats = math.roundUp(numSplats, GSplatResourceBase.instanceSize);
 
-        if (this.instanceIndicesCount < roundedNumSplats) {
-            this.instanceIndicesCount = roundedNumSplats;
+            if (this.instanceIndicesCount < roundedNumSplats) {
+                this.instanceIndicesCount = roundedNumSplats;
 
-            // destroy old instance indices
-            this.instanceIndices?.destroy();
+                // destroy old instance indices
+                this.instanceIndices?.destroy();
 
-            // create new instance indices
-            this.instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, numSplats);
-            this.meshInstance.setInstancing(this.instanceIndices, true);
+                // create new instance indices
+                this.instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, numSplats);
+                this.meshInstance.setInstancing(this.instanceIndices, true);
 
-            // update texture size uniform
+                // update texture size uniform
+                this._material.setParameter('splatTextureSize', this.workBuffer.textureSize);
+            }
+        } else {
+            // On WebGL the orderVB is the instance buffer, managed by workBuffer.resize()
             this._material.setParameter('splatTextureSize', this.workBuffer.textureSize);
         }
     }
 
     createMeshInstance() {
 
-        const mesh = GSplatResourceBase.createMesh(this.device);
-        const textureSize = this.workBuffer.textureSize;
-        const instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, textureSize * textureSize);
+        let mesh;
+        let instanceVB;
+
+        if (this.device.isWebGPU) {
+            mesh = GSplatResourceBase.createMesh(this.device);
+            const textureSize = this.workBuffer.textureSize;
+            instanceVB = GSplatResourceBase.createInstanceIndices(this.device, textureSize * textureSize);
+        } else {
+            // Single quad mesh — corners derived from gl_VertexID in the shader
+            mesh = new Mesh(this.device);
+            mesh.setPositions(new Float32Array([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0]), 3);
+            mesh.setIndices(new Uint32Array([0, 1, 2, 0, 2, 3]));
+            mesh.update();
+
+            // Instance buffer carries sorted splatIds directly
+            instanceVB = this.workBuffer.orderVB;
+        }
+
         const meshInstance = new MeshInstance(mesh, this._material);
         meshInstance.node = this.node;
-        meshInstance.setInstancing(instanceIndices, true);
+        meshInstance.setInstancing(instanceVB, true);
 
         // only start rendering the splat after we've received the splat order data
         meshInstance.instancingCount = 0;

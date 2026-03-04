@@ -1,28 +1,23 @@
 export default /* glsl */`
-attribute vec3 vertex_position;         // xy: cornerUV, z: render order offset
-attribute uint vertex_id_attrib;        // render order base
+attribute vec3 vertex_position;         // unused on WebGL (corners from gl_VertexID)
+attribute uint vertex_id_attrib;        // sorted splatId (per-instance)
 
 uniform uint numSplats;                 // total number of splats
-uniform highp usampler2D splatOrder;    // per-splat index to source gaussian
 
 // initialize the splat source structure and global splat
 bool initSource(out SplatSource source) {
-    // calculate splat order
-    source.order = vertex_id_attrib + uint(vertex_position.z);
+    // splatId comes directly from the instance vertex buffer
+    uint splatId = vertex_id_attrib;
 
-    // return if out of range (since the last block of splats may be partially full)
-    if (source.order >= numSplats) {
-        return false;
-    }
+    source.order = uint(gl_InstanceID);
 
-    ivec2 orderUV = ivec2(source.order % splatTextureSize, source.order / splatTextureSize);
-
-    // read splat id and initialize global splat for format read functions
-    uint splatId = texelFetch(splatOrder, orderUV, 0).r;
     setSplat(splatId);
 
-    // get the corner
-    source.cornerUV = vertex_position.xy;
+    // derive quad corner from gl_VertexID (index buffer: 0,1,2, 0,2,3)
+    source.cornerUV = vec2(
+        (gl_VertexID == 1 || gl_VertexID == 2) ? 1.0 : -1.0,
+        (gl_VertexID >= 2) ? 1.0 : -1.0
+    );
 
     return true;
 }

@@ -292,6 +292,7 @@ class GSplatWorldState {
             const intervalOffsets = [];
 
             if (numIntervals > 0 && allocIds.length === numIntervals) {
+                let missingBlocks = 0;
                 for (let j = 0; j < numIntervals; j++) {
                     this.allocIdToSplat.set(allocIds[j], splat);
                     const block = allocationMap.get(allocIds[j]);
@@ -302,7 +303,12 @@ class GSplatWorldState {
                             splatChanged = true;
                             this.needsUploadIds.add(allocIds[j]);
                         }
+                    } else {
+                        missingBlocks++;
                     }
+                }
+                if (missingBlocks > 0) {
+                    console.warn(`assignSplatOffsets: ${missingBlocks}/${numIntervals} intervals missing from allocationMap (intervalOffsets.length=${intervalOffsets.length}, numIntervals=${numIntervals})`);
                 }
             } else {
                 this.allocIdToSplat.set(splat.allocId, splat);

@@ -3,12 +3,15 @@ import { Frustum } from '../../core/shape/frustum.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32F,
-    BUFFERUSAGE_COPY_DST, SEMANTIC_POSITION, getGlslShaderType
+    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32F,
+    BUFFERUSAGE_COPY_DST, SEMANTIC_POSITION, getGlslShaderType,
+    BUFFER_DYNAMIC, SEMANTIC_ATTR13, TYPE_UINT32
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 import { UploadStream } from '../../platform/graphics/upload-stream.js';
 import { QuadRender } from '../graphics/quad-render.js';
@@ -170,6 +173,9 @@ class GSplatWorkBuffer {
     /** @type {StorageBuffer|undefined} */
     orderBuffer;
 
+    /** @type {VertexBuffer|undefined} */
+    orderVB;
+
     /** @type {UploadStream} */
     uploadStream;
 
@@ -254,19 +260,11 @@ class GSplatWorkBuffer {
         // Create upload stream for non-blocking uploads
         this.uploadStream = new UploadStream(device);
 
-        // Use storage buffer on WebGPU, texture on WebGL
+        // Use storage buffer on WebGPU, dynamic vertex buffer on WebGL
         if (device.isWebGPU) {
             this.orderBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST);
         } else {
-            this.orderTexture = new Texture(device, {
-                name: 'SplatGlobalOrder',
-                width: 1,
-                height: 1,
-                format: PIXELFORMAT_R32U,
-                mipmaps: false,
-                addressU: ADDRESS_CLAMP_TO_EDGE,
-                addressV: ADDRESS_CLAMP_TO_EDGE
-            });
+            this.orderVB = this._createOrderVB(1);
         }
 
         // Create the optimized render pass for batched splat rendering
@@ -345,6 +343,7 @@ class GSplatWorkBuffer {
         this.streams.destroy();
         this.orderTexture?.destroy();
         this.orderBuffer?.destroy();
+        this.orderVB?.destroy();
         this.renderTarget?.destroy();
         this.colorRenderTarget?.destroy();
         this.uploadStream.destroy();
@@ -367,7 +366,17 @@ class GSplatWorkBuffer {
             this.uploadStream.upload(data, this.orderBuffer, 0, data.length);
         } else {
             Debug.assert(data.length === size * size);
-            this.uploadStream.upload(data, this.orderTexture, 0, data.length);
+            const vb = this.orderVB;
+            const gl = this.device.gl;
+            if (!vb.impl.bufferId) {
+                vb.impl.bufferId = gl.createBuffer();
+            }
+            gl.bindBuffer(gl.ARRAY_BUFFER, vb.impl.bufferId);
+            if (!vb._glAllocated) {
+                gl.bufferData(gl.ARRAY_BUFFER, vb.numVertices * 4, gl.STREAM_DRAW);
+                vb._glAllocated = true;
+            }
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
         }
     }
 
@@ -387,8 +396,29 @@ class GSplatWorkBuffer {
                 this.orderBuffer = new StorageBuffer(this.device, newByteSize, BUFFERUSAGE_COPY_DST);
             }
         } else {
-            this.orderTexture.resize(textureSize, textureSize);
+            const newCount = textureSize * textureSize;
+            if (!this.orderVB || this.orderVB.numVertices < newCount) {
+                this.orderVB?.destroy();
+                this.orderVB = this._createOrderVB(newCount);
+            }
         }
+    }
+
+    /**
+     * Creates a dynamic vertex buffer for order data (WebGL path).
+     *
+     * @param {number} count - Number of splat entries.
+     * @returns {VertexBuffer} The dynamic vertex buffer.
+     * @private
+     */
+    _createOrderVB(count) {
+        const vertexFormat = new VertexFormat(this.device, [
+            { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_UINT32, asInt: true }
+        ]);
+        vertexFormat.instancing = true;
+        return new VertexBuffer(this.device, vertexFormat, count, {
+            usage: BUFFER_DYNAMIC
+        });
     }
 
     /**
