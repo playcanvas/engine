@@ -26,6 +26,14 @@ class GSplatSorter extends EventHandler {
     uploadStream;
 
     /**
+     * Pending sorted result from the worker, applied on the next applyPendingSorted() call.
+     * When multiple results arrive between frames, only the latest is kept.
+     *
+     * @type {{ count: number, data: Uint32Array }|null}
+     */
+    pendingSorted = null;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {import('../scene.js').Scene} [scene] - The scene to fire sort timing events on.
      */
@@ -49,12 +57,13 @@ class GSplatSorter extends EventHandler {
                 order: oldOrder
             }, [oldOrder]);
 
-            // upload new order data to GPU
-            const data = new Uint32Array(newOrder);
+            // Store result for deferred application. Only the latest result is kept,
+            // avoiding redundant uploads when multiple worker messages arrive between frames.
             this.orderData = newOrder;
-            this.uploadStream.upload(data, this.target);
-
-            this.fire('updated', msgData.count);
+            this.pendingSorted = {
+                count: msgData.count,
+                data: new Uint32Array(newOrder)
+            };
         };
 
         const workerSource = `(${SortWorker.toString()})()`;
@@ -106,6 +115,19 @@ class GSplatSorter extends EventHandler {
         const transfer = [orderBuffer.buffer, centers.buffer].concat(chunks ? [chunks.buffer] : []);
 
         this.worker.postMessage(obj, transfer);
+    }
+
+    /**
+     * Applies the most recent pending sorted result (if any), uploading to GPU
+     * and firing the 'updated' event. Call once per frame from the instance's update().
+     */
+    applyPendingSorted() {
+        if (this.pendingSorted) {
+            const { count, data } = this.pendingSorted;
+            this.pendingSorted = null;
+            this.uploadStream.upload(data, this.target);
+            this.fire('updated', count);
+        }
     }
 
     setMapping(mapping) {
