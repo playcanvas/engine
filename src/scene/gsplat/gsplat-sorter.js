@@ -57,13 +57,16 @@ class GSplatSorter extends EventHandler {
                 order: oldOrder
             }, [oldOrder]);
 
-            // Store result for deferred application. Only the latest result is kept,
+            // Store result for deferred GPU upload. Only the latest result is kept,
             // avoiding redundant uploads when multiple worker messages arrive between frames.
             this.orderData = newOrder;
             this.pendingSorted = {
                 count: msgData.count,
                 data: new Uint32Array(newOrder)
             };
+
+            // Notify immediately so listeners can request a new frame (e.g. renderNextFrame).
+            this.fire('updated');
         };
 
         const workerSource = `(${SortWorker.toString()})()`;
@@ -118,16 +121,19 @@ class GSplatSorter extends EventHandler {
     }
 
     /**
-     * Applies the most recent pending sorted result (if any), uploading to GPU
-     * and firing the 'updated' event. Call once per frame from the instance's update().
+     * Applies the most recent pending sorted result (if any), uploading order data to the GPU.
+     * Call once per frame from the instance's update().
+     *
+     * @returns {number} The splat count from the applied result, or -1 if nothing was pending.
      */
     applyPendingSorted() {
         if (this.pendingSorted) {
             const { count, data } = this.pendingSorted;
             this.pendingSorted = null;
             this.uploadStream.upload(data, this.target);
-            this.fire('updated', count);
+            return count;
         }
+        return -1;
     }
 
     setMapping(mapping) {

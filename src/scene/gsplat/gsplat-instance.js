@@ -120,10 +120,6 @@ class GSplatInstance {
         const orderTarget = this.orderBuffer ?? this.orderTexture;
         this.sorter = new GSplatSorter(device, options.scene);
         this.sorter.init(orderTarget, numSplats, centers, chunks);
-        this.sorter.on('updated', (count) => {
-            this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
-            this.material.setParameter('numSplats', count);
-        });
 
         this.setHighQualitySH(options.highQualitySH ?? false);
     }
@@ -215,8 +211,12 @@ class GSplatInstance {
 
     update() {
 
-        // Apply deferred sort results (at most one upload per frame).
-        this.sorter?.applyPendingSorted();
+        // Apply deferred sort results (at most one GPU upload per frame).
+        const count = this.sorter?.applyPendingSorted() ?? -1;
+        if (count >= 0) {
+            this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
+            this.material.setParameter('numSplats', count);
+        }
 
         if (this.cameras.length > 0) {
 
