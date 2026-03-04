@@ -191,6 +191,7 @@ class GSplatRenderer {
         this._material.setDefine(`DITHER_${dither ? 'BLUENOISE' : 'NONE'}`, '');
         this._material.cull = CULLFACE_NONE;
         this._material.blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
+        this._material.depthTest = false;
         this._material.depthWrite = !!dither;
         this._material.update();
     }
