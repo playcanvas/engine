@@ -26,12 +26,10 @@ const _dynamicBindGroup = new DynamicBindGroup();
  * An object that renders a quad using a {@link Shader}.
  *
  * Note: QuadRender does not modify render states. Before calling {@link QuadRender#render},
- * you should set up the following states as needed, otherwise previously set states will be used:
- * - Blend state via {@link GraphicsDevice#setBlendState}
- * - Cull mode via {@link GraphicsDevice#setCullMode}
- * - FrontFace via {@link GraphicsDevice#setFrontFace}
- * - Depth state via {@link GraphicsDevice#setDepthState}
- * - Stencil state via {@link GraphicsDevice#setStencilState}
+ * you should set up the required states using {@link GraphicsDevice#setDrawStates}, or the
+ * individual setters ({@link GraphicsDevice#setBlendState}, {@link GraphicsDevice#setCullMode},
+ * {@link GraphicsDevice#setFrontFace}, {@link GraphicsDevice#setDepthState},
+ * {@link GraphicsDevice#setStencilState}). Otherwise previously set states will be used.
  *
  * Example:
  *
@@ -44,12 +42,8 @@ const _dynamicBindGroup = new DynamicBindGroup();
  * });
  * const quad = new QuadRender(shader);
  *
- * // Set up render states before rendering
- * app.graphicsDevice.setBlendState(BlendState.NOBLEND);
- * app.graphicsDevice.setCullMode(CULLFACE_NONE);
- * app.graphicsDevice.setFrontFace(FRONTFACE_CCW);
- * app.graphicsDevice.setDepthState(DepthState.NODEPTH);
- * app.graphicsDevice.setStencilState(null, null);
+ * // Set up render states before rendering (defaults are suitable for full-screen quads)
+ * app.graphicsDevice.setDrawStates();
  *
  * quad.render();
  * quad.destroy();

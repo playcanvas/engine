@@ -3,11 +3,9 @@ import { Entity } from '../../framework/entity.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_SRC_ALPHA,
-    CULLFACE_NONE,
-    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, FRONTFACE_CCW, PIXELFORMAT_SRGBA8,
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
@@ -314,10 +312,7 @@ class OutlineRenderer {
         const device = this.app.graphicsDevice;
         device.scope.resolve('source').setValue(this.rt.colorBuffer);
 
-        device.setDepthState(DepthState.NODEPTH);
-        device.setCullMode(CULLFACE_NONE);
-        device.setFrontFace(FRONTFACE_CCW);
-        device.setBlendState(this.blendState);
+        device.setDrawStates(this.blendState);
         this.quadRenderer.render();
     }
 

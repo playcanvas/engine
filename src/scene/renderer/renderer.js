@@ -13,7 +13,7 @@ import {
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
+    CULLFACE_NONE,
     BINDGROUP_MESH_UB,
     FRONTFACE_CCW,
     FRONTFACE_CW
@@ -252,8 +252,6 @@ class Renderer {
         this.opacityMapId = scope.resolve('texture_opacityMap');
 
         this.exposureId = scope.resolve('exposure');
-        this.twoSidedLightingNegScaleFactorId = scope.resolve('twoSidedLightingNegScaleFactor');
-        this.twoSidedLightingNegScaleFactorId.setValue(0);
 
         this.morphPositionTex = scope.resolve('morphPositionTex');
         this.morphNormalTex = scope.resolve('morphNormalTex');
@@ -486,38 +484,15 @@ class Renderer {
 
     setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall) {
         const material = drawCall.material;
-        const worldScaleSign = drawCall.node.worldScaleSign;
+        const flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
 
-        // Calculate total face flip factor
-        const flipFaces = flipFactor * drawCall.flipFacesFactor * worldScaleSign;
-
-        let cullMode = CULLFACE_NONE;
         let frontFace = material.frontFace;
-
         if (flipFaces < 0) {
             frontFace = frontFace === FRONTFACE_CCW ? FRONTFACE_CW : FRONTFACE_CCW;
         }
 
-        if (cullFaces) {
-
-            cullMode = material.cull;
-
-            if (flipFaces < 0) {
-
-                if (cullMode === CULLFACE_FRONT) {
-                    cullMode = CULLFACE_BACK;
-                } else if (cullMode === CULLFACE_BACK) {
-                    cullMode = CULLFACE_FRONT;
-                }
-            }
-        }
-
-        this.device.setCullMode(cullMode);
+        this.device.setCullMode(cullFaces ? material.cull : CULLFACE_NONE);
         this.device.setFrontFace(frontFace);
-
-        if (cullMode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
-            this.twoSidedLightingNegScaleFactorId.setValue(worldScaleSign);
-        }
     }
 
     setupCullMode(cullFaces, flipFactor, drawCall) {

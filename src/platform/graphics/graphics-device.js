@@ -9,7 +9,7 @@ import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 import {
     BUFFER_STATIC,
-    CULLFACE_BACK,
+    CULLFACE_BACK, CULLFACE_NONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     INDEXFORMAT_UINT16,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
@@ -852,6 +852,28 @@ class GraphicsDevice extends EventHandler {
      */
     setFrontFace(frontFace) {
         Debug.assert(false);
+    }
+
+    /**
+     * Sets all draw-related render states in a single call. All parameters have sensible defaults
+     * for utility rendering (full-screen quads, particles, etc.), so calling `setDrawStates()` with
+     * no arguments resets to a safe baseline.
+     *
+     * @param {BlendState} [blendState] - Blend state. Defaults to {@link BlendState.NOBLEND}.
+     * @param {DepthState} [depthState] - Depth state. Defaults to {@link DepthState.NODEPTH}.
+     * @param {number} [cullMode] - Cull mode. Defaults to {@link CULLFACE_NONE}.
+     * @param {number} [frontFace] - Front face winding. Defaults to {@link FRONTFACE_CCW}.
+     * @param {StencilParameters} [stencilFront] - Front stencil parameters.
+     * @param {StencilParameters} [stencilBack] - Back stencil parameters.
+     */
+    setDrawStates(blendState = BlendState.NOBLEND, depthState = DepthState.NODEPTH,
+        cullMode = CULLFACE_NONE, frontFace = FRONTFACE_CCW,
+        stencilFront, stencilBack) {
+        this.setBlendState(blendState);
+        this.setDepthState(depthState);
+        this.setCullMode(cullMode);
+        this.setFrontFace(frontFace);
+        this.setStencilState(stencilFront, stencilBack);
     }
 
     /**
