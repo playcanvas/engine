@@ -13,6 +13,7 @@ attribute vec2 vertex_position;
 precision highp usampler2D;
 uniform usampler2D uSubDrawData;
 uniform ivec2 uTextureSize;  // (width, height)
+uniform int uSubDrawBase;
 
 // packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
 flat varying ivec4 vSubDraw;
@@ -20,7 +21,8 @@ flat varying ivec4 vSubDraw;
 void main(void) {
     // Read sub-draw parameters from 2D data texture
     int subDrawWidth = textureSize(uSubDrawData, 0).x;
-    uvec4 data = texelFetch(uSubDrawData, ivec2(gl_InstanceID % subDrawWidth, gl_InstanceID / subDrawWidth), 0);
+    int idx = gl_InstanceID + uSubDrawBase;
+    uvec4 data = texelFetch(uSubDrawData, ivec2(idx % subDrawWidth, idx / subDrawWidth), 0);
     int rowStart = int(data.r & 0xFFFFu);
     int numRows = int(data.r >> 16u);
     int colStart = int(data.g);

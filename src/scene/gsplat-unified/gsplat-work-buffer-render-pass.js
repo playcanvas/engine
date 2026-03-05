@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
@@ -6,7 +7,9 @@ import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
-import { CULLFACE_NONE, FRONTFACE_CCW } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, FRONTFACE_CCW, PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 
 /**
  * @import { GSplatInfo } from './gsplat-info.js'
@@ -18,6 +21,7 @@ import { CULLFACE_NONE, FRONTFACE_CCW } from '../../platform/graphics/constants.
 const _viewMat = new Mat4();
 const _modelScale = new Vec3();
 const _modelRotation = new Quat();
+const _tmpSize = new Vec2();
 
 const _whiteColor = [1, 1, 1];
 
@@ -59,10 +63,33 @@ class GSplatWorkBufferRenderPass extends RenderPass {
     /** @type {Int32Array} */
     _textureSize = new Int32Array(2);
 
+    /**
+     * Shared grow-only texture holding packed sub-draw data for all partial renders in a frame.
+     *
+     * @type {Texture}
+     */
+    _subDrawTexture;
+
+    /**
+     * Flat array of interleaved [baseOffset, count] pairs, parallel to this.splats.
+     * For splat at index i: _partialData[i*2] = base offset into _subDrawTexture,
+     * _partialData[i*2+1] = sub-draw count (0 means use splat's own sub-draws).
+     *
+     * @type {number[]}
+     */
+    _partialData = [];
+
     constructor(device, workBuffer, colorOnly = false) {
         super(device);
         this.workBuffer = workBuffer;
         this.colorOnly = colorOnly;
+        this._subDrawTexture = Texture.createDataTexture2D(device, 'GsplatSubDrawData', 1, 1, PIXELFORMAT_RGBA32U);
+    }
+
+    destroy() {
+        this.splats.length = 0;
+        this._subDrawTexture.destroy();
+        super.destroy();
     }
 
     /**
@@ -82,17 +109,83 @@ class GSplatWorkBufferRenderPass extends RenderPass {
      * @param {GSplatInfo[]} splats - Array of GSplatInfo objects to render.
      * @param {GraphNode} cameraNode - The camera node for rendering.
      * @param {number[][]|undefined} colorsByLod - Optional array of RGB colors per LOD index.
+     * @param {Set<number>|null} [changedAllocIds] - Set of changed allocIds for partial render.
      * @returns {boolean} True if there are splats to render, false otherwise.
      */
-    update(splats, cameraNode, colorsByLod) {
+    update(splats, cameraNode, colorsByLod, changedAllocIds = null) {
         this.splats.length = 0;
+        this._partialData.length = 0;
         this.colorsByLod = colorsByLod;
 
-        // Filter active splats that need rendering
-        for (let i = 0; i < splats.length; i++) {
-            const splatInfo = splats[i];
-            if (splatInfo.activeSplats > 0) {
-                this.splats.push(splatInfo);
+        const textureWidth = this.workBuffer.textureSize;
+
+        if (changedAllocIds) {
+
+            // Ensure shared sub-draw texture has enough capacity (grow-only)
+            const requiredCapacity = changedAllocIds.size * 3;
+            if (this._subDrawTexture.width * this._subDrawTexture.height < requiredCapacity) {
+                TextureUtils.calcTextureSize(requiredCapacity, _tmpSize);
+                this._subDrawTexture.resize(_tmpSize.x, _tmpSize.y);
+            }
+
+            const texData = /** @type {Uint32Array} */ (this._subDrawTexture.lock());
+            let writeOffset = 0;
+
+            for (let i = 0; i < splats.length; i++) {
+                const splatInfo = splats[i];
+                if (splatInfo.activeSplats <= 0) continue;
+
+                const intervals = splatInfo.intervals;
+                const numIntervals = intervals.length / 2;
+
+                if (numIntervals === 0) {
+                    // Non-octree: render using splat's own sub-draws if changed
+                    if (changedAllocIds.has(splatInfo.allocId)) {
+                        this.splats.push(splatInfo);
+                        this._partialData.push(0, 0);
+                    }
+                } else {
+                    // Octree: write sub-draws for changed intervals into shared texture
+                    const baseOffset = writeOffset;
+                    const allocIds = splatInfo.intervalAllocIds;
+
+                    for (let j = 0; j < numIntervals; j++) {
+                        if (changedAllocIds.has(allocIds[j])) {
+                            writeOffset = splatInfo.appendSubDraws(
+                                texData, writeOffset,
+                                intervals[j * 2], intervals[j * 2 + 1] - intervals[j * 2],
+                                splatInfo.intervalOffsets[j], textureWidth
+                            );
+                        }
+                    }
+
+                    const count = writeOffset - baseOffset;
+                    if (count > 0) {
+                        this.splats.push(splatInfo);
+                        this._partialData.push(baseOffset, count);
+                    }
+                }
+            }
+
+            this._subDrawTexture.unlock();
+
+        } else {
+
+            // Full rebuild: all active splats, no partial data
+            for (let i = 0; i < splats.length; i++) {
+                const splatInfo = splats[i];
+                if (splatInfo.activeSplats > 0) {
+                    this.splats.push(splatInfo);
+                    this._partialData.push(0, 0);
+                }
+            }
+        }
+
+        // Lazily create per-splat sub-draw textures only for splats that will use them
+        // (those not using the shared partial texture, i.e. _partialData count === 0).
+        for (let i = 0; i < this.splats.length; i++) {
+            if (this._partialData[i * 2 + 1] === 0) {
+                this.splats[i].ensureSubDrawTexture(textureWidth);
             }
         }
 
@@ -101,7 +194,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
     }
 
     execute() {
-        const { device, splats, cameraNode } = this;
+        const { device, splats, cameraNode, _partialData } = this;
 
         DebugGraphics.pushGpuMarker(device, 'GSplatWorkBuffer');
 
@@ -119,23 +212,34 @@ class GSplatWorkBufferRenderPass extends RenderPass {
 
         // render each splat info
         for (let i = 0; i < splats.length; i++) {
-            this.renderSplat(splats[i]);
+            const count = _partialData[i * 2 + 1];
+            if (count > 0) {
+                // Partial render using shared sub-draw texture with base offset
+                this.renderSplat(splats[i], this._subDrawTexture, count, _partialData[i * 2]);
+            } else {
+                this.renderSplat(splats[i]);
+            }
         }
 
         DebugGraphics.popGpuMarker(device);
     }
 
     /**
-     * Render a single splat info object.
+     * Render a single splat info object. Optionally renders only a subset of sub-draws
+     * using an override texture and count (for partial work buffer updates).
      *
      * @param {GSplatInfo} splatInfo - The splat info to render.
+     * @param {Texture} [overrideSubDrawTexture] - Override sub-draw texture for partial renders.
+     * @param {number} [overrideSubDrawCount] - Override sub-draw count for partial renders.
+     * @param {number} [subDrawBase] - Base offset into the sub-draw texture.
      */
-    renderSplat(splatInfo) {
+    renderSplat(splatInfo, overrideSubDrawTexture, overrideSubDrawCount, subDrawBase = 0) {
         const { device, resource } = splatInfo;
         const scope = device.scope;
         Debug.assert(resource);
 
-        const { subDrawTexture, subDrawCount } = splatInfo;
+        const subDrawTexture = overrideSubDrawTexture ?? splatInfo.subDrawTexture;
+        const subDrawCount = overrideSubDrawCount ?? splatInfo.subDrawCount;
 
         // Get work buffer modifier (live from placement, not a snapshot copy)
         const workBufferModifier = splatInfo.getWorkBufferModifier?.() ?? null;
@@ -186,11 +290,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         // Set placement ID for picking (unconditionally - cheap even if shader doesn't use it)
         scope.resolve('uId').setValue(splatInfo.placementId);
 
-        // Bind per-GSplatInfo culling bounds data
-        if (splatInfo.nodeToLocalBoundsTexture) {
-            scope.resolve('nodeToLocalBoundsTexture').setValue(splatInfo.nodeToLocalBoundsTexture);
-            scope.resolve('nodeToLocalBoundsWidth').setValue(splatInfo.nodeToLocalBoundsTexture.width);
-        }
+        // Bind per-GSplatInfo culling bounds base index
         scope.resolve('uBoundsBaseIndex').setValue(splatInfo.boundsBaseIndex);
 
         // Apply per-instance shader parameters
@@ -212,17 +312,13 @@ class GSplatWorkBufferRenderPass extends RenderPass {
 
         // Instanced draw: one quad per sub-draw row-segment
         scope.resolve('uSubDrawData').setValue(subDrawTexture);
+        scope.resolve('uSubDrawBase').setValue(subDrawBase);
         const ts = this.workBuffer.textureSize;
         this._textureSize[0] = ts;
         this._textureSize[1] = ts;
         scope.resolve('uTextureSize').setValue(this._textureSize);
 
         workBufferRenderInfo.quadRender.render(undefined, undefined, subDrawCount);
-    }
-
-    destroy() {
-        this.splats.length = 0;
-        super.destroy();
     }
 }
 

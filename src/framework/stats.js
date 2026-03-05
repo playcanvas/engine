@@ -40,6 +40,7 @@ class ApplicationStats {
             triangles: 0,
             gsplats: 0,
             gsplatSort: 0,
+            gsplatBufferCopy: 0,
             otherPrimitives: 0,
             shaders: 0,
             materials: 0,

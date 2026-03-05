@@ -345,7 +345,7 @@ export { RenderPassPicker } from './framework/graphics/render-pass-picker.js';
 
 // FRAMEWORK / HANDLERS
 export { basisInitialize } from './framework/handlers/basis.js';
-export { dracoInitialize } from './framework/parsers/draco-decoder.js';
+export { dracoInitialize, dracoDecode } from './framework/parsers/draco-decoder.js';
 export { AnimClipHandler } from './framework/handlers/anim-clip.js';
 export { AnimStateGraphHandler } from './framework/handlers/anim-state-graph.js';
 export { AnimationHandler } from './framework/handlers/animation.js';

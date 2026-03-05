@@ -398,10 +398,12 @@ class GSplatWorkBuffer {
      * @param {GraphNode} cameraNode - The camera node.
      * @param {number[][]|undefined} colorsByLod - Array of RGB colors per LOD. Index by lodIndex; if a
      * shorter array is provided, index 0 will be reused as fallback.
+     * @param {Set<number>|null} [changedAllocIds] - When provided, only render sub-draws for intervals
+     * whose allocIds are in this set (per-node partial update).
      */
-    render(splats, cameraNode, colorsByLod) {
+    render(splats, cameraNode, colorsByLod, changedAllocIds = null) {
         // render splats using render pass
-        if (this.renderPass.update(splats, cameraNode, colorsByLod)) {
+        if (this.renderPass.update(splats, cameraNode, colorsByLod, changedAllocIds)) {
             this.renderPass.render();
         }
     }
@@ -422,17 +424,16 @@ class GSplatWorkBuffer {
     }
 
     /**
-     * Updates the bounds sphere texture with local-space bounding spheres from all GSplatInfos.
-     * Assigns boundsBaseIndex to each GSplatInfo and fills the shared RGBA32F texture.
+     * Updates the bounds sphere texture with local-space bounding spheres from pre-built
+     * bounds groups. Each group contributes one set of sphere entries and maps to one
+     * transform index.
      *
-     * @param {GSplatInfo[]} splats - The splats to collect bounds from.
+     * @param {Array<{splat: GSplatInfo, boundsBaseIndex: number, numBoundsEntries: number}>} boundsGroups - Pre-built bounds groups.
      */
-    updateBoundsTexture(splats) {
-        // Pass 1: assign base indices and count total entries
+    updateBoundsTexture(boundsGroups) {
         let totalEntries = 0;
-        for (let i = 0; i < splats.length; i++) {
-            splats[i].boundsBaseIndex = totalEntries;
-            totalEntries += splats[i].numBoundsEntries;
+        for (let i = 0; i < boundsGroups.length; i++) {
+            totalEntries += boundsGroups[i].numBoundsEntries;
         }
 
         this.totalBoundsEntries = totalEntries;
@@ -450,7 +451,7 @@ class GSplatWorkBuffer {
             this.boundsSphereTexture.resize(width, height);
         }
 
-        // Create/resize transform index texture (R32U: GSplatInfo index per bounds entry)
+        // Create/resize transform index texture (R32U: group index per bounds entry)
         if (!this.boundsTransformIndexTexture) {
             this.boundsTransformIndexTexture = Texture.createDataTexture2D(this.device, 'boundsTransformIndexTexture', width, height, PIXELFORMAT_R32U);
         } else {
@@ -460,15 +461,13 @@ class GSplatWorkBuffer {
         const sphereData = this.boundsSphereTexture.lock();
         const indexData = /** @type {Uint32Array} */ (this.boundsTransformIndexTexture.lock());
 
-        // Pass 2: fill both textures
-        for (let i = 0; i < splats.length; i++) {
-            const base = splats[i].boundsBaseIndex;
-            const count = splats[i].numBoundsEntries;
+        for (let i = 0; i < boundsGroups.length; i++) {
+            const group = boundsGroups[i];
+            const base = group.boundsBaseIndex;
+            const count = group.numBoundsEntries;
 
-            // Write bounding spheres
-            splats[i].writeBoundsSpheres(sphereData, base * 4);
+            group.splat.writeBoundsSpheres(sphereData, base * 4);
 
-            // Write transform index (all bounds entries for this GSplatInfo point to transform i)
             for (let j = 0; j < count; j++) {
                 indexData[base + j] = i;
             }
@@ -479,13 +478,13 @@ class GSplatWorkBuffer {
     }
 
     /**
-     * Updates the transforms texture with world matrices for each GSplatInfo.
+     * Updates the transforms texture with one world matrix per bounds group.
      * Each matrix uses 3 texels (RGBA32F per row) in the texture.
      *
-     * @param {GSplatInfo[]} splats - The splats to collect transforms from.
+     * @param {Array<{splat: GSplatInfo, boundsBaseIndex: number, numBoundsEntries: number}>} boundsGroups - Pre-built bounds groups.
      */
-    updateTransformsTexture(splats) {
-        const numMatrices = splats.length;
+    updateTransformsTexture(boundsGroups) {
+        const numMatrices = boundsGroups.length;
         if (numMatrices === 0) return;
 
         // 3 texels per matrix (rows of a 4x3 affine matrix). Width is a multiple of 3 so all 3
@@ -509,8 +508,8 @@ class GSplatWorkBuffer {
         //   row2 = data[2], data[6], data[10], data[14]
         // The shader reconstructs the mat4 by transposing + appending (0,0,0,1).
         let offset = 0;
-        for (let i = 0; i < splats.length; i++) {
-            const m = splats[i].node.getWorldTransform().data;
+        for (let i = 0; i < boundsGroups.length; i++) {
+            const m = boundsGroups[i].splat.node.getWorldTransform().data;
             // row 0
             data[offset++] = m[0]; data[offset++] = m[4]; data[offset++] = m[8]; data[offset++] = m[12];
             // row 1

@@ -212,6 +212,23 @@ class MiniStats {
     }
 
     /**
+     * Predefined stat groups that can be included via {@link MiniStats.getDefaultOptions}. Each
+     * key maps to an array of {@link MiniStatsGraphOptions} entries that are inserted after the
+     * 'Frame' stat in the default options.
+     *
+     * @type {Object<string, MiniStatsGraphOptions[]>}
+     * @ignore
+     */
+    static statPresets = {
+        gsplats: [
+            { name: 'GSplats', stats: ['frame.gsplats'], decimalPlaces: 3, multiplier: 1 / 1000000, unitsName: 'M', watermark: 10 }
+        ],
+        gsplatsCopy: [
+            { name: 'GsplatsCopy', stats: ['frame.gsplatBufferCopy'], decimalPlaces: 1, multiplier: 1, unitsName: '%', watermark: 100 }
+        ]
+    };
+
+    /**
      * Returns the default options for MiniStats. The default options configure the overlay to
      * show the following graphs:
      *
@@ -221,12 +238,19 @@ class MiniStats {
      * - Draw call count
      * - Total VRAM usage
      *
+     * @param {string[]} [extraStats] - Optional array of preset names from
+     * {@link MiniStats.statPresets} to include. The preset stats are inserted after the 'Frame'
+     * entry. Can be: 'gsplats', 'gsplatsCopy'.
      * @returns {object} The default options for MiniStats.
      * @example
+     * // default options without extra stats
      * const options = pc.MiniStats.getDefaultOptions();
+     * @example
+     * // include gsplat stats
+     * const options = pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']);
      */
-    static getDefaultOptions() {
-        return {
+    static getDefaultOptions(extraStats = []) {
+        const options = {
 
             // sizes of area to render individual graphs in and spacing between individual graphs
             sizes: [
@@ -299,6 +323,16 @@ class MiniStats {
             // minimum size index to show VRAM subcategory graphs
             vramTimingMinSize: 1
         };
+
+        if (extraStats.length > 0) {
+            const frameIndex = options.stats.findIndex(s => s.name === 'Frame');
+            const insertIndex = frameIndex !== -1 ? frameIndex + 1 : options.stats.length;
+            // reverse so user-specified order matches visual top-to-bottom order
+            const extra = extraStats.flatMap(name => MiniStats.statPresets[name] ?? []).reverse();
+            options.stats.splice(insertIndex, 0, ...extra);
+        }
+
+        return options;
     }
 
     /**

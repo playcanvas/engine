@@ -89,7 +89,12 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: '2M', t: '2M' },
                         { v: '3M', t: '3M' },
                         { v: '4M', t: '4M' },
-                        { v: '6M', t: '6M' }
+                        { v: '5M', t: '5M' },
+                        { v: '6M', t: '6M' },
+                        { v: '7M', t: '7M' },
+                        { v: '8M', t: '8M' },
+                        { v: '9M', t: '9M' },
+                        { v: '10M', t: '10M' }
                     ]
                 })
             )

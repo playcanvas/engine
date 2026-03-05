@@ -5,6 +5,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Color } from '../../core/math/color.js';
 import { GSplatPlacement } from './gsplat-placement.js';
+import { GsplatAllocId } from './gsplat-alloc-id.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -74,6 +75,12 @@ class NodeInfo {
     lods = null;
 
     /**
+     * Unique allocation identifier for persistent work buffer allocation tracking.
+     * @type {number}
+     */
+    allocId = GsplatAllocId.get();
+
+    /**
      * Resets all LOD values to -1 (invisible/uninitialized).
      */
     resetLod() {
@@ -94,6 +101,14 @@ class GSplatOctreeInstance {
 
     /** @type {boolean} */
     dirtyModifiedPlacements = false;
+
+    /**
+     * Set to true when placements are added or removed, signaling that the manager needs to
+     * create a new world state and trigger a full work buffer rebuild.
+     *
+     * @type {boolean}
+     */
+    dirtyPlacementSetChanged = false;
 
     /** @type {GraphicsDevice} */
     device;
@@ -326,6 +341,7 @@ class GSplatOctreeInstance {
 
         // Mark that LOD needs to be re-evaluated after context restore
         this.dirtyModifiedPlacements = true;
+        this.dirtyPlacementSetChanged = true;
         this.needsLodUpdate = true;
     }
 
@@ -791,6 +807,13 @@ class GSplatOctreeInstance {
                 // Only remove if it was added (has resource)
                 if (placement.resource) {
                     this.activePlacements.delete(placement);
+
+                    // Only signal a placement set change when the last child is removed,
+                    // since that removes the bounds group and may shift boundsBaseIndex
+                    // for other groups. Earlier removals leave the group intact.
+                    if (this.activePlacements.size === 0) {
+                        this.dirtyPlacementSetChanged = true;
+                    }
                 }
 
                 // schedule a single decRef via world state
@@ -814,6 +837,15 @@ class GSplatOctreeInstance {
             const placement = this.filePlacements[fileIndex];
             if (placement) {
                 placement.resource = res;
+
+                // Only signal a placement set change when the first child is added,
+                // since that creates a new bounds group and may shift boundsBaseIndex
+                // for other groups. Subsequent children join the existing group and
+                // don't affect bounds structure.
+                if (this.activePlacements.size === 0) {
+                    this.dirtyPlacementSetChanged = true;
+                }
+
                 this.activePlacements.add(placement);
                 this.dirtyModifiedPlacements = true;
                 // clear pending removal if we are reusing the file
@@ -914,6 +946,7 @@ class GSplatOctreeInstance {
                 this.environmentPlacement.aabb.copy(envResource.aabb);
                 this.activePlacements.add(this.environmentPlacement);
                 this.dirtyModifiedPlacements = true;
+                this.dirtyPlacementSetChanged = true;
             }
         }
 
@@ -921,6 +954,17 @@ class GSplatOctreeInstance {
         const dirty = this.dirtyModifiedPlacements;
         this.dirtyModifiedPlacements = false;
         return dirty;
+    }
+
+    /**
+     * Consumes and returns whether the active placement set membership changed (add/remove).
+     *
+     * @returns {boolean} True if placements were added or removed since last call.
+     */
+    consumePlacementSetChanged() {
+        const changed = this.dirtyPlacementSetChanged;
+        this.dirtyPlacementSetChanged = false;
+        return changed;
     }
 
     // debug render world space bounds for octree nodes based on current LOD selection

@@ -165,7 +165,7 @@ assetListLoader.load(() => {
     // Initialize data values
     data.set('data', {
         skydome: false,
-        compact: true,
+        compact: false,
         orientation: 180,
         tonemapping: pc.TONEMAP_LINEAR,
         grading: {

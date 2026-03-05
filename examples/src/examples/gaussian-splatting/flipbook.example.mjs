@@ -76,9 +76,7 @@ assetListLoader.load(() => {
     roomEntity.setLocalScale(30, 30, 30);
     app.root.addChild(roomEntity);
 
-    // Mini-Stats with default options
-    const msOptions = pc.MiniStats.getDefaultOptions();
-    const miniStats = new pc.MiniStats(app, msOptions); // eslint-disable-line no-unused-vars
+    const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();

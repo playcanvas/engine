@@ -2,7 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 
@@ -23,6 +23,7 @@ let subDrawDataArray = new Uint32Array(0);
 
 // Temporary full-range interval used by updateSubDraws when this.intervals is empty
 const _fullRangeInterval = [0, 0];
+
 
 /**
  * Represents a snapshot of gsplat state for rendering. This class captures all necessary data
@@ -51,6 +52,23 @@ class GSplatInfo {
      */
     placementId;
 
+    /**
+     * Unique allocation identifier for persistent work buffer allocation tracking.
+     * Copied from the source placement.
+     *
+     * @type {number}
+     */
+    allocId;
+
+    /**
+     * Identifies the bounds group this splat belongs to. All file placements from the same
+     * octree instance share the parent placement's allocId. Non-octree placements use their
+     * own allocId. Used to deduplicate bounds and transform texture entries.
+     *
+     * @type {number}
+     */
+    parentPlacementId;
+
     /** @type {number} */
     numSplats;
 
@@ -65,12 +83,31 @@ class GSplatInfo {
      */
     intervals = [];
 
+
     /**
-     * Starting pixel offset in the work buffer texture.
+     * Per-interval pixel offsets in the work buffer. For non-octree splats this has one entry.
+     * For octree splats each entry corresponds to one interval in this.intervals.
      *
-     * @type {number}
+     * @type {number[]}
      */
-    pixelOffset = 0;
+    intervalOffsets = [];
+
+    /**
+     * Per-interval allocation IDs for persistent tracking. Parallel to intervals: for octree
+     * splats each entry is the NodeInfo.allocId for that interval's node; for non-octree
+     * splats this has one entry equal to this.allocId.
+     *
+     * @type {number[]}
+     */
+    intervalAllocIds = [];
+
+    /**
+     * Per-interval octree node indices. Parallel to intervals: for octree splats each entry
+     * is the nodeIndex for that interval. Empty for non-octree splats.
+     *
+     * @type {number[]}
+     */
+    intervalNodeIndices = [];
 
     /** @type {Mat4} */
     previousWorldTransform = new Mat4();
@@ -81,7 +118,7 @@ class GSplatInfo {
     /**
      * Small RGBA32U texture storing per-sub-draw data for instanced interval rendering.
      * Each texel: R = rowStart | (numRows << 16), G = colStart, B = colEnd, A = sourceBase.
-     * Null when intervals are not used (non-LOD or full range).
+     * Created lazily by {@link ensureSubDrawTexture} when needed for rendering.
      *
      * @type {Texture|null}
      */
@@ -93,14 +130,6 @@ class GSplatInfo {
      * @type {number}
      */
     subDrawCount = 0;
-
-    /**
-     * Small R32U texture mapping octree node index to sequential local bounds index.
-     * Used by the GPU culling system during work buffer rendering.
-     *
-     * @type {Texture|null}
-     */
-    nodeToLocalBoundsTexture = null;
 
     /**
      * Number of bounding sphere entries this GSplatInfo contributes to the shared bounds texture.
@@ -125,12 +154,12 @@ class GSplatInfo {
     octreeNodes = null;
 
     /**
-     * Reference to the placement's intervals map for bounds sphere writing.
-     * Kept as a live reference since the placement intervals are stable during a frame.
+     * Per-node info array from the octree instance, providing allocId for each node.
+     * Indexed by nodeIndex. Null for non-octree splats.
      *
-     * @type {Map<number, Vec2>|null}
+     * @type {Array<{allocId: number}>|null}
      */
-    placementIntervals = null;
+    nodeInfos = null;
 
     /** @type {number} */
     colorAccumulatedRotation = 0;
@@ -177,8 +206,9 @@ class GSplatInfo {
      * @param {GSplatPlacement} placement - The placement of the splat.
      * @param {Function|null} [consumeRenderDirty] - Callback to consume render dirty flag.
      * @param {GSplatOctreeNode[]|null} [octreeNodes] - Octree nodes for bounds lookup.
+     * @param {Array<{allocId: number}>|null} [nodeInfos] - Per-node info array from octree instance.
      */
-    constructor(device, resource, placement, consumeRenderDirty = null, octreeNodes = null) {
+    constructor(device, resource, placement, consumeRenderDirty = null, octreeNodes = null, nodeInfos = null) {
         Debug.assert(resource);
         Debug.assert(placement);
 
@@ -187,6 +217,13 @@ class GSplatInfo {
         this.node = placement.node;
         this.lodIndex = placement.lodIndex;
         this.placementId = placement.id;
+        this.allocId = placement.allocId;
+        // Only octree file splats (with octreeNodes) share the parent's bounds group.
+        // Other child placements (e.g. environment) have independent bounds and must
+        // use their own allocId.
+        this.parentPlacementId = (octreeNodes && placement.parentPlacement) ?
+            placement.parentPlacement.allocId :
+            placement.allocId;
         this.numSplats = resource.numSplats;
         this.aabb.copy(placement.aabb);
         this.parameters = placement.parameters;
@@ -194,28 +231,46 @@ class GSplatInfo {
         this.getInstanceStreams = () => placement.streams;
         this._consumeRenderDirty = consumeRenderDirty;
         this.octreeNodes = octreeNodes;
+        this.nodeInfos = nodeInfos;
 
         this.updateIntervals(placement.intervals);
     }
 
     destroy() {
         this.intervals.length = 0;
+        this.intervalOffsets.length = 0;
+        this.intervalAllocIds.length = 0;
+        this.intervalNodeIndices.length = 0;
         this.subDrawTexture?.destroy();
         this.subDrawTexture = null;
         this.subDrawCount = 0;
-        this.nodeToLocalBoundsTexture?.destroy();
-        this.nodeToLocalBoundsTexture = null;
     }
 
     /**
-     * Sets the pixel offset and builds sub-draw data for this splat.
+     * Sets per-interval pixel offsets for this splat. Sub-draw computation and GPU texture
+     * creation are deferred to {@link ensureSubDrawTexture} to avoid work for splats that
+     * may never be rendered (e.g. intermediate world states or unchanged splats).
      *
-     * @param {number} pixelOffset - Starting pixel offset in the work buffer.
-     * @param {number} textureSize - The work buffer texture width.
+     * @param {number[]} intervalOffsets - Per-interval pixel offsets in the work buffer.
      */
-    setLayout(pixelOffset, textureSize) {
-        this.pixelOffset = pixelOffset;
-        this.updateSubDraws(textureSize);
+    setLayout(intervalOffsets) {
+        this.intervalOffsets = intervalOffsets;
+        this.subDrawTexture?.destroy();
+        this.subDrawTexture = null;
+        this.subDrawCount = 0;
+    }
+
+    /**
+     * Ensures the sub-draw texture exists, computing sub-draw data and creating the GPU texture
+     * on first call. Must be called outside a render pass (e.g. in the render pass update method)
+     * since WebGPU does not allow texture creation inside a render pass.
+     *
+     * @param {number} textureWidth - The work buffer texture width.
+     */
+    ensureSubDrawTexture(textureWidth) {
+        if (!this.subDrawTexture && textureWidth > 0) {
+            this.updateSubDraws(textureWidth);
+        }
     }
 
     /**
@@ -229,36 +284,44 @@ class GSplatInfo {
 
         const resource = this.resource;
         this.intervals.length = 0;
+        this.intervalAllocIds.length = 0;
+        this.intervalNodeIndices.length = 0;
         this.activeSplats = resource.numSplats;
 
         // If placement has intervals defined
         if (intervals.size > 0) {
 
-            // Write half-open intervals and count total splats
+            // Write half-open intervals, count total splats, and build per-interval allocIds/nodeIndices
             let totalCount = 0;
             let k = 0;
             this.intervals.length = intervals.size * 2;
-            for (const interval of intervals.values()) {
+            for (const [nodeIndex, interval] of intervals) {
                 this.intervals[k++] = interval.x;
                 this.intervals[k++] = interval.y + 1;
                 totalCount += (interval.y - interval.x + 1);
+
+                if (this.nodeInfos) {
+                    this.intervalAllocIds.push(this.nodeInfos[nodeIndex].allocId);
+                    this.intervalNodeIndices.push(nodeIndex);
+                }
             }
 
-            // If intervals cover the full range, they're not needed
-            if (totalCount === this.numSplats) {
+            if (this.octreeNodes) {
+                // Octree: always keep intervals (even when fully loaded) so each node
+                // maintains its own non-contiguous offset in the work buffer.
+                // numBoundsEntries covers ALL nodes for stable boundsBaseIndex across LOD changes.
+                this.activeSplats = totalCount;
+                this.numBoundsEntries = this.octreeNodes.length;
+            } else if (totalCount === this.numSplats) {
+                // Non-octree: clear intervals when they cover the full range
                 this.intervals.length = 0;
             } else {
                 this.activeSplats = totalCount;
             }
-
-            // Update nodeToLocalBounds mapping for GPU culling
-            if (this.octreeNodes) {
-                this.placementIntervals = intervals;
-                this.updateNodeToLocalBounds(intervals, this.octreeNodes.length);
-            }
         } else {
-            // Non-octree: single bounds entry
+            // Non-octree: single bounds entry, single allocation
             this.numBoundsEntries = 1;
+            this.intervalAllocIds.push(this.allocId);
 
             // check if we need to limit to active splats (instead of rendering all splats)
             const totalCenters = resource.centers?.length / 3;
@@ -268,6 +331,61 @@ class GSplatInfo {
                 this.intervals[1] = this.activeSplats;
             }
         }
+    }
+
+    /**
+     * Splits an interval at row boundaries into sub-draws (partial first row, full middle rows,
+     * partial last row) and appends them to the sub-draw data array.
+     *
+     * @param {Uint32Array} subDrawData - The output array to append sub-draw entries to.
+     * @param {number} subDrawCount - Current number of sub-draws already in the array.
+     * @param {number} sourceBase - Source splat index for this interval.
+     * @param {number} size - Number of splats in this interval.
+     * @param {number} targetOffset - Pixel offset in the work buffer texture.
+     * @param {number} textureWidth - Width of the work buffer texture.
+     * @returns {number} Updated sub-draw count.
+     */
+    appendSubDraws(subDrawData, subDrawCount, sourceBase, size, targetOffset, textureWidth) {
+        let remaining = size;
+        let row = (targetOffset / textureWidth) | 0;
+        const col = targetOffset % textureWidth;
+
+        if (col > 0) {
+            const count = Math.min(remaining, textureWidth - col);
+            const idx = subDrawCount * 4;
+            subDrawData[idx] = row | (1 << 16);
+            subDrawData[idx + 1] = col;
+            subDrawData[idx + 2] = col + count;
+            subDrawData[idx + 3] = sourceBase;
+            subDrawCount++;
+            sourceBase += count;
+            remaining -= count;
+            row++;
+        }
+
+        const fullRows = (remaining / textureWidth) | 0;
+        if (fullRows > 0) {
+            const idx = subDrawCount * 4;
+            subDrawData[idx] = row | (fullRows << 16);
+            subDrawData[idx + 1] = 0;
+            subDrawData[idx + 2] = textureWidth;
+            subDrawData[idx + 3] = sourceBase;
+            subDrawCount++;
+            sourceBase += fullRows * textureWidth;
+            remaining -= fullRows * textureWidth;
+            row += fullRows;
+        }
+
+        if (remaining > 0) {
+            const idx = subDrawCount * 4;
+            subDrawData[idx] = row | (1 << 16);
+            subDrawData[idx + 1] = 0;
+            subDrawData[idx + 2] = remaining;
+            subDrawData[idx + 3] = sourceBase;
+            subDrawCount++;
+        }
+
+        return subDrawCount;
     }
 
     /**
@@ -301,55 +419,11 @@ class GSplatInfo {
         }
         const subDrawData = subDrawDataArray;
         let subDrawCount = 0;
-        let targetOffset = this.pixelOffset; // absolute pixel position in work buffer
 
         for (let i = 0; i < numIntervals; i++) {
-            let sourceBase = intervals[i * 2];
-            const size = intervals[i * 2 + 1] - sourceBase;
-
-            let remaining = size;
-            let row = (targetOffset / textureWidth) | 0;
-            const col = targetOffset % textureWidth;
-
-            // Partial first row (if not starting at column 0)
-            if (col > 0) {
-                const count = Math.min(remaining, textureWidth - col);
-                const idx = subDrawCount * 4;
-                subDrawData[idx] = row | (1 << 16);         // rowStart | (numRows << 16)
-                subDrawData[idx + 1] = col;                   // colStart
-                subDrawData[idx + 2] = col + count;           // colEnd
-                subDrawData[idx + 3] = sourceBase;             // sourceBase
-                subDrawCount++;
-                sourceBase += count;
-                remaining -= count;
-                row++;
-            }
-
-            // Full middle rows
-            const fullRows = (remaining / textureWidth) | 0;
-            if (fullRows > 0) {
-                const idx = subDrawCount * 4;
-                subDrawData[idx] = row | (fullRows << 16);     // rowStart | (numRows << 16)
-                subDrawData[idx + 1] = 0;                       // colStart
-                subDrawData[idx + 2] = textureWidth;             // colEnd
-                subDrawData[idx + 3] = sourceBase;               // sourceBase
-                subDrawCount++;
-                sourceBase += fullRows * textureWidth;
-                remaining -= fullRows * textureWidth;
-                row += fullRows;
-            }
-
-            // Partial last row
-            if (remaining > 0) {
-                const idx = subDrawCount * 4;
-                subDrawData[idx] = row | (1 << 16);          // rowStart | (numRows << 16)
-                subDrawData[idx + 1] = 0;                      // colStart
-                subDrawData[idx + 2] = remaining;              // colEnd
-                subDrawData[idx + 3] = sourceBase;              // sourceBase
-                subDrawCount++;
-            }
-
-            targetOffset += size;
+            subDrawCount = this.appendSubDraws(subDrawData, subDrawCount,
+                intervals[i * 2], intervals[i * 2 + 1] - intervals[i * 2],
+                this.intervalOffsets[i], textureWidth);
         }
 
         this.subDrawCount = subDrawCount;
@@ -387,34 +461,9 @@ class GSplatInfo {
     }
 
     /**
-     * Builds the nodeToLocalBounds mapping from the placement intervals. Each selected octree
-     * node gets a sequential index; unselected nodes remain 0. Uploads to a small R32U
-     * texture for GPU access during work buffer rendering.
-     *
-     * @param {Map<number, Vec2>} intervals - Map of node index to interval.
-     * @param {number} numNodes - Total number of octree nodes.
-     */
-    updateNodeToLocalBounds(intervals, numNodes) {
-        // Calculate texture dimensions for the small lookup texture
-        const { x: width, y: height } = TextureUtils.calcTextureSize(numNodes, tmpSize);
-        const texelCount = width * height;
-
-        // Build the mapping: selected nodes get sequential indices
-        const data = new Uint32Array(texelCount);
-
-        let localIdx = 0;
-        for (const nodeIndex of intervals.keys()) {
-            data[nodeIndex] = localIdx++;
-        }
-        this.numBoundsEntries = localIdx;
-
-        // Create the texture with initial data
-        this.nodeToLocalBoundsTexture = Texture.createDataTexture2D(this.device, 'nodeToLocalBoundsTexture', width, height, PIXELFORMAT_R32U, [data]);
-    }
-
-    /**
      * Writes bounding sphere data for this GSplatInfo into a shared Float32Array.
-     * For octree resources, copies precomputed spheres from octree nodes.
+     * For octree resources, writes spheres for ALL nodes (indexed by nodeIndex) to keep
+     * boundsBaseIndex stable across LOD changes.
      * For non-octree resources, computes a single sphere from the resource AABB.
      *
      * @param {Float32Array} data - The shared bounds sphere data array.
@@ -422,9 +471,8 @@ class GSplatInfo {
      */
     writeBoundsSpheres(data, offset) {
         if (this.octreeNodes) {
-            // Octree: copy precomputed spheres for each selected node
-            for (const nodeIndex of this.placementIntervals.keys()) {
-                const s = this.octreeNodes[nodeIndex].boundingSphere;
+            for (let i = 0; i < this.octreeNodes.length; i++) {
+                const s = this.octreeNodes[i].boundingSphere;
                 data[offset++] = s.x;
                 data[offset++] = s.y;
                 data[offset++] = s.z;
