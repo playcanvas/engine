@@ -115,7 +115,7 @@ assetListLoader.load(() => {
     player.addComponent('script');
     const flipbook = player.script.create(GsplatFlipbook);
     if (flipbook) {
-        flipbook.fps = 30;
+        flipbook.fps = 15;
         flipbook.folder = 'https://code.playcanvas.com/examples_data/example_basketball_02';
         flipbook.filenamePattern = '{frame:03}.compressed.ply';
         flipbook.startFrame = 1;
