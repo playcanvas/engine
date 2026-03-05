@@ -1,13 +1,9 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
-    CULLFACE_NONE,
-    FRONTFACE_CCW,
     PIXELFORMAT_RGBA8,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { ShaderChunks } from '../shader-lib/shader-chunks.js';
@@ -290,11 +286,7 @@ class GSplatResolveSH {
                 shN_maxs: meta.shN.maxs
             });
 
-            device.setCullMode(CULLFACE_NONE);
-            device.setFrontFace(FRONTFACE_CCW);
-            device.setDepthState(DepthState.NODEPTH);
-            device.setStencilState(null, null);
-            device.setBlendState(BlendState.NOBLEND);
+            device.setDrawStates();
 
             this.quadRender.render();
         };

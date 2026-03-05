@@ -1,14 +1,12 @@
 import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { CULLFACE_NONE, FRONTFACE_CCW, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI } from '../constants.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { LightCamera } from './light-camera.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
 import { QuadRender } from '../graphics/quad-render.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 /**
@@ -163,11 +161,7 @@ class RenderPassCookieRenderer extends RenderPass {
 
         // render state
         const device = this.device;
-        device.setBlendState(BlendState.NOBLEND);
-        device.setCullMode(CULLFACE_NONE);
-        device.setFrontFace(FRONTFACE_CCW);
-        device.setDepthState(DepthState.NODEPTH);
-        device.setStencilState();
+        device.setDrawStates();
 
         const renderTargetWidth = this.renderTarget.colorBuffer.width;
         const cubeSlotsOffsets = this._cubeSlotsOffsets;

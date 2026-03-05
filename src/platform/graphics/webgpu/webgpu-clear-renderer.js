@@ -2,11 +2,9 @@ import { Debug } from '../../../core/debug.js';
 import { UniformBufferFormat, UniformFormat } from '../uniform-buffer-format.js';
 import { BlendState } from '../blend-state.js';
 import {
-    CULLFACE_NONE,
     PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL,
     UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
-    BINDGROUP_MESH_UB,
-    FRONTFACE_CCW
+    BINDGROUP_MESH_UB
 } from '../constants.js';
 import { Shader } from '../shader.js';
 import { DynamicBindGroup } from '../bind-group.js';
@@ -110,25 +108,25 @@ class WebgpuClearRenderer {
             device.setBindGroup(BINDGROUP_MESH, device.emptyBindGroup);
 
             // setup clear color
+            let blendState;
             if ((flags & CLEARFLAG_COLOR) && (renderTarget.colorBuffer || renderTarget.impl.assignedColorTexture)) {
                 const color = options.color ?? defaultOptions.color;
                 this.colorData.set(color);
-
-                device.setBlendState(BlendState.NOBLEND);
+                blendState = BlendState.NOBLEND;
             } else {
-                device.setBlendState(BlendState.NOWRITE);
+                blendState = BlendState.NOWRITE;
             }
             uniformBuffer.set('color', this.colorData);
 
             // setup depth clear
+            let depthState;
             if ((flags & CLEARFLAG_DEPTH) && renderTarget.depth) {
                 const depth = options.depth ?? defaultOptions.depth;
                 uniformBuffer.set('depth', depth);
-                device.setDepthState(DepthState.WRITEDEPTH);
-
+                depthState = DepthState.WRITEDEPTH;
             } else {
                 uniformBuffer.set('depth', 1);
-                device.setDepthState(DepthState.NODEPTH);
+                depthState = DepthState.NODEPTH;
             }
 
             // setup stencil clear
@@ -138,8 +136,7 @@ class WebgpuClearRenderer {
 
             uniformBuffer.endUpdate();
 
-            device.setCullMode(CULLFACE_NONE);
-            device.setFrontFace(FRONTFACE_CCW);
+            device.setDrawStates(blendState, depthState);
 
             // render 4 vertices without vertex buffer
             device.setShader(this.shader);

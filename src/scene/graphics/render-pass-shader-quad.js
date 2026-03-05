@@ -108,12 +108,7 @@ class RenderPassShaderQuad extends RenderPass {
     execute() {
 
         // render state
-        const device = this.device;
-        device.setBlendState(this.blendState);
-        device.setCullMode(this.cullMode);
-        device.setFrontFace(this.frontFace);
-        device.setDepthState(this.depthState);
-        device.setStencilState(this.stencilFront, this.stencilBack);
+        this.device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace, this.stencilFront, this.stencilBack);
 
         this.quadRender?.render(this.viewport, this.scissor);
     }

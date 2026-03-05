@@ -1,6 +1,4 @@
-import { CULLFACE_NONE, FRONTFACE_CCW } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 /**
@@ -19,10 +17,7 @@ class RenderPassQuad extends RenderPass {
         const { device } = this;
         DebugGraphics.pushGpuMarker(device, `${this.name}:${this.quad.shader.name}`);
 
-        device.setCullMode(CULLFACE_NONE);
-        device.setFrontFace(FRONTFACE_CCW);
-        device.setDepthState(DepthState.NODEPTH);
-        device.setStencilState(null, null);
+        device.setDrawStates();
 
         this.quad.render(this.rect, this.scissorRect);
         DebugGraphics.popGpuMarker(device);
