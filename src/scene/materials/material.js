@@ -6,7 +6,8 @@ import {
     BLENDEQUATION_ADD, BLENDEQUATION_REVERSE_SUBTRACT,
     BLENDEQUATION_MIN, BLENDEQUATION_MAX,
     CULLFACE_BACK,
-    SHADERLANGUAGE_GLSL
+    SHADERLANGUAGE_GLSL,
+    FRONTFACE_CCW
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
@@ -166,6 +167,19 @@ class Material {
      * @type {number}
      */
     cull = CULLFACE_BACK;
+
+    /**
+     * Controls whether polygons are front- or back-facing by setting a winding
+     * orientation. Can be:
+     *
+     * - {@link FRONTFACE_CW}: The clock-wise winding.
+     * - {@link FRONTFACE_CCW}: The counterclockwise winding.
+     *
+     * Defaults to {@link FRONTFACE_CCW}.
+     *
+     * @type {number}
+     */
+    frontFace = FRONTFACE_CCW;
 
     /**
      * Stencil parameters for front faces (default is null).
@@ -637,6 +651,7 @@ class Material {
         this._depthState.copy(source._depthState);
 
         this.cull = source.cull;
+        this.frontFace = source.frontFace;
 
         this.stencilFront = source.stencilFront?.clone();
         if (source.stencilBack) {

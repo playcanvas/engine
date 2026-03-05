@@ -14,7 +14,9 @@ import {
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    BINDGROUP_MESH_UB
+    BINDGROUP_MESH_UB,
+    FRONTFACE_CCW,
+    FRONTFACE_CW
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -482,27 +484,45 @@ class Renderer {
         }
     }
 
-    setupCullMode(cullFaces, flipFactor, drawCall) {
+    setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall) {
         const material = drawCall.material;
-        let mode = CULLFACE_NONE;
-        if (cullFaces) {
-            let flipFaces = 1;
+        const worldScaleSign = drawCall.node.worldScaleSign;
 
-            if (material.cull === CULLFACE_FRONT || material.cull === CULLFACE_BACK) {
-                flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
-            }
+        // Calculate total face flip factor
+        const flipFaces = flipFactor * drawCall.flipFacesFactor * worldScaleSign;
+
+        let cullMode = CULLFACE_NONE;
+        let frontFace = material.frontFace;
+
+        if (flipFaces < 0) {
+            frontFace = frontFace === FRONTFACE_CCW ? FRONTFACE_CW : FRONTFACE_CCW;
+        }
+
+        if (cullFaces) {
+
+            cullMode = material.cull;
 
             if (flipFaces < 0) {
-                mode = material.cull === CULLFACE_FRONT ? CULLFACE_BACK : CULLFACE_FRONT;
-            } else {
-                mode = material.cull;
+
+                if (cullMode === CULLFACE_FRONT) {
+                    cullMode = CULLFACE_BACK;
+                } else if (cullMode === CULLFACE_BACK) {
+                    cullMode = CULLFACE_FRONT;
+                }
             }
         }
-        this.device.setCullMode(mode);
 
-        if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
-            this.twoSidedLightingNegScaleFactorId.setValue(drawCall.node.worldScaleSign);
+        this.device.setCullMode(cullMode);
+        this.device.setFrontFace(frontFace);
+
+        if (cullMode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
+            this.twoSidedLightingNegScaleFactorId.setValue(worldScaleSign);
         }
+    }
+
+    setupCullMode(cullFaces, flipFactor, drawCall) {
+        Debug.deprecated('pc.Renderer.setupCullMode is deprecated. Use \'pc.Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
+        this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
     }
 
     updateCameraFrustum(camera) {
@@ -551,6 +571,9 @@ class Renderer {
 
         // Cull mode
         device.setCullMode(material.cull);
+
+        // Front face
+        device.setFrontFace(material.frontFace);
 
         // Alpha test
         if (material.opacityMap) {
