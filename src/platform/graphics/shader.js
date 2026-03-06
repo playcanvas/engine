@@ -5,6 +5,7 @@ import { Preprocessor } from '../../core/preprocessor.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { ShaderDefinitionUtils } from './shader-definition-utils.js';
+import halfTypes from './shader-chunks/frag/half-types.js';
 
 /**
  * @import { BindGroupFormat } from './bind-group-format.js'
@@ -139,12 +140,20 @@ class Shader {
                 this.cUnmodified = definition.cshader;
             });
 
-            // Prepend defines to compute shader source
+            // Prepend enables and defines to compute shader source
+            const enablesCode = ShaderDefinitionUtils.getWGSLEnables(graphicsDevice, 'compute');
             const definesCode = ShaderDefinitionUtils.getDefinesCode(graphicsDevice, definition.cdefines);
-            const cshader = definesCode + definition.cshader;
+
+            const cshader = enablesCode + definesCode + definition.cshader;
+
+            // Add built-in halfTypesCS include for compute shaders (if not already provided by user)
+            const cincludes = definition.cincludes ?? new Map();
+            if (!cincludes.has('halfTypesCS')) {
+                cincludes.set('halfTypesCS', halfTypes);
+            }
 
             // pre-process compute shader source
-            definition.cshader = Preprocessor.run(cshader, definition.cincludes, {
+            definition.cshader = Preprocessor.run(cshader, cincludes, {
                 sourceName: `compute shader for ${this.label}`,
                 stripDefines: true
             });

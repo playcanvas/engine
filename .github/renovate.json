@@ -27,21 +27,18 @@
     },
     {
       "matchPackageNames": [
-        "sinon"
-      ],
-      "matchFileNames": [
-        "package.json"
-      ],
-      "enabled": false
-    },
-    {
-      "matchPackageNames": [
         "monaco-editor"
       ],
       "matchFileNames": [
         "examples/package.json"
       ],
       "enabled": false
+    },
+    {
+      "matchPackageNames": [
+        "eslint"
+      ],
+      "allowedVersions": "<10.0.0"
     }
   ],
   "ignorePaths": [

@@ -75,6 +75,12 @@ void main(void) {
 
     modifySplatColor(modelCenter, clr);
 
+    // discard splats with alpha too low to contribute any visible pixel
+    if (255.0 * clr.w <= 1.0) {
+        gl_Position = discardVec;
+        return;
+    }
+
     clipCorner(corner, clr.w);
 
     // write output

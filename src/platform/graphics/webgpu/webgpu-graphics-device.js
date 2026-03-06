@@ -152,6 +152,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     emptyBindGroup;
 
     /**
+     * Monotonically increasing counter incremented each time queue.submit() is called.
+     *
+     * @type {number}
+     * @ignore
+     */
+    submitVersion = 0;
+
+    /**
      * Current command buffer encoder.
      *
      * @type {GPUCommandEncoder|null}
@@ -317,6 +325,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsClipDistances = requireFeature('clip-distances');
         this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
         this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
+        this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
@@ -731,7 +740,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 // render pipeline
                 pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                    this.stencilEnabled, this.stencilFront, this.stencilBack);
+                    this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace);
                 Debug.assert(pipeline);
 
                 if (this.pipeline !== pipeline) {
@@ -848,6 +857,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     setCullMode(cullMode) {
         this.cullMode = cullMode;
+    }
+
+    setFrontFace(frontFace) {
+        this.frontFace = frontFace;
     }
 
     setAlphaToCoverage(state) {
@@ -1116,6 +1129,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             this.wgpu.queue.submit(this.commandBuffers);
             this.commandBuffers.length = 0;
+            this.submitVersion++;
 
             // notify dynamic buffers
             this.dynamicBuffers.onCommandBuffersSubmitted();

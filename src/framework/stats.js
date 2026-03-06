@@ -40,6 +40,7 @@ class ApplicationStats {
             triangles: 0,
             gsplats: 0,
             gsplatSort: 0,
+            gsplatBufferCopy: 0,
             otherPrimitives: 0,
             shaders: 0,
             materials: 0,
@@ -88,13 +89,19 @@ class ApplicationStats {
 
         Object.defineProperty(this.vram, 'totalUsed', {
             get: function () {
-                return this.tex + this.vb + this.ib;
+                return this.tex + this.vb + this.ib + this.ub + this.sb;
             }
         });
 
         Object.defineProperty(this.vram, 'geom', {
             get: function () {
                 return this.vb + this.ib;
+            }
+        });
+
+        Object.defineProperty(this.vram, 'buffers', {
+            get: function () {
+                return this.ub + this.sb;
             }
         });
     }

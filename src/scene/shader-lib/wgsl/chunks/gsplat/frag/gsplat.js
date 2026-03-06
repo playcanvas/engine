@@ -15,15 +15,15 @@ export default /* wgsl */`
     #include "floatAsUintPS"
 #endif
 
-const EXP4      = exp(-4.0);
-const INV_EXP4  = 1.0 / (1.0 - EXP4);
+const EXP4: half = exp(half(-4.0));
+const INV_EXP4: half = half(1.0) / (half(1.0) - EXP4);
 
-fn normExp(x: f32) -> f32 {
-    return (exp(x * -4.0) - EXP4) * INV_EXP4;
+fn normExp(x: half) -> half {
+    return (exp(x * half(-4.0)) - EXP4) * INV_EXP4;
 }
 
-varying gaussianUV: vec2f;
-varying gaussianColor: vec4f;
+varying gaussianUV: half2;
+varying gaussianColor: half4;
 
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
     varying @interpolate(flat) vPickId: u32;
@@ -37,17 +37,17 @@ varying gaussianColor: vec4f;
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
 
-    let A: f32 = dot(gaussianUV, gaussianUV);
-    if (A > 1.0) {
+    let A: half = dot(gaussianUV, gaussianUV);
+    if (A > half(1.0)) {
         discard;
         return output;
     }
 
     // evaluate alpha
-    var alpha = normExp(A) * gaussianColor.a;
+    var alpha: half = normExp(A) * gaussianColor.a;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
-        if (alpha < uniform.alphaClip) {
+        if (alpha < half(uniform.alphaClip)) {
             discard;
             return output;
         }
@@ -76,16 +76,16 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #else
 
-        if (alpha < (1.0 / 255.0)) {
+        if (alpha < half(1.0 / 255.0)) {
             discard;
             return output;
         }
 
         #ifndef DITHER_NONE
-            opacityDither(&alpha, id * 0.013);
+            opacityDither(f32(alpha), id * 0.013);
         #endif
 
-        output.color = vec4f(input.gaussianColor.xyz * alpha, alpha);
+        output.color = vec4f(vec3f(gaussianColor.xyz * alpha), f32(alpha));
     #endif
 
     return output;

@@ -8,14 +8,18 @@ import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 import {
-    CULLFACE_BACK,
+    BUFFER_STATIC,
+    CULLFACE_BACK, CULLFACE_NONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
+    INDEXFORMAT_UINT16,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
-    semanticToLocation
+    semanticToLocation,
+    FRONTFACE_CCW
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
+import { IndexBuffer } from './index-buffer.js';
 import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
@@ -27,7 +31,6 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from './constants.js'
  * @import { DynamicBuffers } from './dynamic-buffers.js'
  * @import { GpuProfiler } from './gpu-profiler.js'
- * @import { IndexBuffer } from './index-buffer.js'
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
@@ -358,6 +361,24 @@ class GraphicsDevice extends EventHandler {
     supportsClipDistances = false;
 
     /**
+     * True if the device supports WebGPU texture format tier 1 capabilities. When enabled, a wider
+     * set of normalized texture formats can be used as render targets and storage textures.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureFormatTier1 = false;
+
+    /**
+     * True if the device supports WebGPU texture format tier 2 capabilities. This extends tier 1
+     * and enables read-write storage access for selected texture formats.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureFormatTier2 = false;
+
+    /**
      * True if the device supports primitive index in fragment shaders (WebGPU only). When
      * supported, fragment shaders can access the `pcPrimitiveIndex` built-in variable which
      * uniquely identifies the current primitive being processed.
@@ -366,6 +387,18 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     supportsPrimitiveIndex = false;
+
+    /**
+     * True if the device supports 16-bit floating-point types in shaders (WebGPU only). When
+     * supported, shaders can use native WGSL types: `f16`, `vec2h`, `vec3h`, `vec4h`, `mat2x2h`,
+     * `mat3x3h`, `mat4x4h`. For convenience, PlayCanvas also provides type aliases (`half`,
+     * `half2`, `half3`, `half4`, `half2x2`, `half3x3`, `half4x4`) that resolve to f16 types when
+     * supported, or fall back to f32 types when not supported.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsShaderF16 = false;
 
     /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
@@ -407,6 +440,15 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     quadVertexBuffer;
+
+    /**
+     * An index buffer for drawing a quad as an indexed triangle list.
+     * Contains 6 indices: [0, 1, 2, 2, 1, 3] forming two triangles.
+     *
+     * @type {IndexBuffer}
+     * @ignore
+     */
+    quadIndexBuffer;
 
     /**
      * An object representing current blend state
@@ -584,6 +626,10 @@ class GraphicsDevice extends EventHandler {
         this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
             data: positions
         });
+
+        // create quad index buffer for indexed triangle list (two triangles forming a quad)
+        const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
+        this.quadIndexBuffer = new IndexBuffer(this, INDEXFORMAT_UINT16, 6, BUFFER_STATIC, indices.buffer);
     }
 
     /**
@@ -598,6 +644,7 @@ class GraphicsDevice extends EventHandler {
         if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
         if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
         if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
+        if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
 
         // Platform defines
         if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
@@ -616,6 +663,9 @@ class GraphicsDevice extends EventHandler {
 
         this.quadVertexBuffer?.destroy();
         this.quadVertexBuffer = null;
+
+        this.quadIndexBuffer?.destroy();
+        this.quadIndexBuffer = null;
 
         this.dynamicBuffers?.destroy();
         this.dynamicBuffers = null;
@@ -723,6 +773,7 @@ class GraphicsDevice extends EventHandler {
         this.blendState = new BlendState();
         this.depthState = new DepthState();
         this.cullMode = CULLFACE_BACK;
+        this.frontFace = FRONTFACE_CCW;
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
@@ -788,6 +839,41 @@ class GraphicsDevice extends EventHandler {
      */
     setCullMode(cullMode) {
         Debug.assert(false);
+    }
+
+    /**
+     * Controls whether polygons are front- or back-facing by setting a winding
+     * orientation. The default frontFace is {@link FRONTFACE_CCW}.
+     *
+     * @param {number} frontFace - The front face to set. Can be:
+     *
+     * - {@link FRONTFACE_CW}
+     * - {@link FRONTFACE_CCW}
+     */
+    setFrontFace(frontFace) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets all draw-related render states in a single call. All parameters have sensible defaults
+     * for utility rendering (full-screen quads, particles, etc.), so calling `setDrawStates()` with
+     * no arguments resets to a safe baseline.
+     *
+     * @param {BlendState} [blendState] - Blend state. Defaults to {@link BlendState.NOBLEND}.
+     * @param {DepthState} [depthState] - Depth state. Defaults to {@link DepthState.NODEPTH}.
+     * @param {number} [cullMode] - Cull mode. Defaults to {@link CULLFACE_NONE}.
+     * @param {number} [frontFace] - Front face winding. Defaults to {@link FRONTFACE_CCW}.
+     * @param {StencilParameters} [stencilFront] - Front stencil parameters.
+     * @param {StencilParameters} [stencilBack] - Back stencil parameters.
+     */
+    setDrawStates(blendState = BlendState.NOBLEND, depthState = DepthState.NODEPTH,
+        cullMode = CULLFACE_NONE, frontFace = FRONTFACE_CCW,
+        stencilFront, stencilBack) {
+        this.setBlendState(blendState);
+        this.setDepthState(depthState);
+        this.setCullMode(cullMode);
+        this.setFrontFace(frontFace);
+        this.setStencilState(stencilFront, stencilBack);
     }
 
     /**

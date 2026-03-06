@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
@@ -31,6 +32,9 @@ const THREADS_PER_WORKGROUP = WORKGROUP_SIZE_X * WORKGROUP_SIZE_Y; // 256
 
 // Temporary Vec3 for camera direction (avoids allocation in hot path)
 const _cameraDir = new Vec3();
+
+// Reusable Vec2 for dispatch size calculations (avoids per-frame allocations)
+const _dispatchSize = new Vec2();
 
 /**
  * A class for generating GPU sort keys from GSplat world-space positions using compute shaders.
@@ -83,11 +87,25 @@ class GSplatSortKeyCompute {
     computeRadialSort = false;
 
     /**
-     * Bind group format for the compute shader.
+     * Whether the current compute instance uses indirect sort (with compaction).
+     *
+     * @type {boolean}
+     */
+    computeUseIndirectSort = false;
+
+    /**
+     * Bind group format for the compute shader (without compaction).
      *
      * @type {BindGroupFormat|null}
      */
     bindGroupFormat = null;
+
+    /**
+     * Bind group format for the compute shader (with indirect sort + compaction).
+     *
+     * @type {BindGroupFormat|null}
+     */
+    bindGroupFormatIndirect = null;
 
     /**
      * Uniform buffer format.
@@ -143,11 +161,13 @@ class GSplatSortKeyCompute {
         this.binWeightsBuffer?.destroy();
         this.compute?.shader?.destroy();
         this.bindGroupFormat?.destroy();
+        this.bindGroupFormatIndirect?.destroy();
 
         this.keysBuffer = null;
         this.binWeightsBuffer = null;
         this.compute = null;
         this.bindGroupFormat = null;
+        this.bindGroupFormatIndirect = null;
         this.uniformBufferFormat = null;
     }
 
@@ -155,43 +175,52 @@ class GSplatSortKeyCompute {
      * Gets or creates the compute instance for the specified sort mode.
      * Destroys and recreates the compute instance if the mode changes.
      *
-     * @param {boolean} radialSort - Whether to get the radial sort variant.
+     * @param {boolean} computeRadialSort - Whether to get the radial sort variant.
+     * @param {boolean} computeUseIndirectSort - Whether indirect dispatch with compaction is used.
      * @returns {Compute} The compute instance.
      * @private
      */
-    _getCompute(radialSort) {
-        if (!this.compute || this.computeRadialSort !== radialSort) {
+    _getCompute(computeRadialSort, computeUseIndirectSort = false) {
+        if (!this.compute || this.computeRadialSort !== computeRadialSort ||
+            this.computeUseIndirectSort !== computeUseIndirectSort) {
             // Destroy old compute instance if mode changed
             this.compute?.shader?.destroy();
 
             // compute shader
-            const name = radialSort ? 'GSplatSortKeyCompute-Radial' : 'GSplatSortKeyCompute-Linear';
+            const modeName = computeRadialSort ? 'Radial' : 'Linear';
+            const name = `GSplatSortKeyCompute-${modeName}${computeUseIndirectSort ? '-Indirect' : ''}`;
             const cdefines = new Map([
                 ['{WORKGROUP_SIZE_X}', `${WORKGROUP_SIZE_X}`],
                 ['{WORKGROUP_SIZE_Y}', `${WORKGROUP_SIZE_Y}`]
             ]);
-            if (radialSort) {
+            if (computeRadialSort) {
                 cdefines.set('RADIAL_SORT', '');
             }
+            if (computeUseIndirectSort) {
+                cdefines.set('USE_INDIRECT_SORT', '');
+            }
+
+            const bgFormat = computeUseIndirectSort ? this.bindGroupFormatIndirect : this.bindGroupFormat;
+
             const shader = new Shader(this.device, {
                 name: name,
                 shaderLanguage: SHADERLANGUAGE_WGSL,
                 cshader: computeGsplatSortKeySource,
                 cdefines: cdefines,
-                computeEntryPoint: 'computeSortKey',
-                computeBindGroupFormat: this.bindGroupFormat,
+                computeBindGroupFormat: bgFormat,
                 computeUniformBufferFormats: { uniforms: this.uniformBufferFormat }
             });
 
             // Create new compute instance for the requested mode
             this.compute = new Compute(this.device, shader, name);
-            this.computeRadialSort = radialSort;
+            this.computeRadialSort = computeRadialSort;
+            this.computeUseIndirectSort = computeUseIndirectSort;
         }
         return this.compute;
     }
 
     /**
-     * Creates the bind group format for the compute shaders.
+     * Creates the bind group formats for the compute shaders.
      *
      * @private
      */
@@ -211,7 +240,7 @@ class GSplatSortKeyCompute {
             new UniformFormat('numBins', UNIFORMTYPE_UINT)
         ]);
 
-        // Bind group format:
+        // Base bind group format (without compaction):
         // 0: dataTransformA (texture_2d<u32>) - input world positions
         // 1: sortKeys (storage, read_write) - output sort keys
         // 2: uniforms (uniform buffer)
@@ -221,6 +250,19 @@ class GSplatSortKeyCompute {
             new BindStorageBufferFormat('sortKeys', SHADERSTAGE_COMPUTE, false),
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('binWeights', SHADERSTAGE_COMPUTE, true)
+        ]);
+
+        // Indirect sort bind group format (compaction + indirect dispatch):
+        // 0-3: same as above
+        // 4: compactedSplatIds (storage, read)
+        // 5: sortElementCountBuf (storage, read) — same buffer the radix sort reads
+        this.bindGroupFormatIndirect = new BindGroupFormat(device, [
+            new BindTextureFormat('dataTransformA', SHADERSTAGE_COMPUTE, undefined, SAMPLETYPE_UINT, false),
+            new BindStorageBufferFormat('sortKeys', SHADERSTAGE_COMPUTE, false),
+            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('binWeights', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('compactedSplatIds', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('sortElementCountBuf', SHADERSTAGE_COMPUTE, true)
         ]);
     }
 
@@ -242,18 +284,18 @@ class GSplatSortKeyCompute {
     }
 
     /**
-     * Generates sort keys from the work buffer.
+     * Generates sort keys from the work buffer using direct dispatch (no culling/compaction).
      *
      * @param {GSplatWorkBuffer} workBuffer - The work buffer containing world-space splat data.
      * @param {GraphNode} cameraNode - The camera node for position and direction.
-     * @param {boolean} radialSort - Whether to use radial sorting mode.
+     * @param {boolean} computeRadialSort - Whether to use radial sorting mode.
      * @param {number} elementCount - Number of splats to process.
      * @param {number} numBits - Number of bits for sort keys (determines bucket count).
      * @param {number} minDist - Minimum distance value for normalization.
      * @param {number} maxDist - Maximum distance value for normalization.
      * @returns {StorageBuffer} The storage buffer containing generated sort keys.
      */
-    generate(workBuffer, cameraNode, radialSort, elementCount, numBits, minDist, maxDist) {
+    generate(workBuffer, cameraNode, computeRadialSort, elementCount, numBits, minDist, maxDist) {
         Debug.assert(elementCount > 0, 'GSplatSortKeyCompute.generate: elementCount must be > 0');
 
         // Ensure capacity
@@ -261,11 +303,10 @@ class GSplatSortKeyCompute {
 
         // Calculate workgroup dimensions
         const workgroupCount = Math.ceil(elementCount / THREADS_PER_WORKGROUP);
-        const numWorkgroupsX = Math.min(workgroupCount, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
-        const numWorkgroupsY = Math.ceil(workgroupCount / numWorkgroupsX);
+        Compute.calcDispatchSize(workgroupCount, _dispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
 
-        // Get or create compute instance based on sort mode (lazy creation)
-        const compute = this._getCompute(radialSort);
+        // Get or create compute instance for direct dispatch (no compaction)
+        const compute = this._getCompute(computeRadialSort);
 
         // Get camera world position and direction
         // Use Z-axis (not forward) to match CPU sorter
@@ -281,7 +322,7 @@ class GSplatSortKeyCompute {
         const bucketCount = (1 << numBits);
 
         // Determine camera bin for weighting (using shared utility)
-        const cameraBin = GSplatSortBinWeights.computeCameraBin(radialSort, minDist, range);
+        const cameraBin = GSplatSortBinWeights.computeCameraBin(computeRadialSort, minDist, range);
 
         // Compute bin weights using shared utility
         const binWeights = this.binWeightsUtil.compute(cameraBin, bucketCount);
@@ -310,12 +351,93 @@ class GSplatSortKeyCompute {
         compute.setParameter('textureSize', workBuffer.textureSize);
         compute.setParameter('minDist', minDist);
         compute.setParameter('invRange', invRange);
-        compute.setParameter('numWorkgroupsX', numWorkgroupsX);
+        compute.setParameter('numWorkgroupsX', _dispatchSize.x);
         compute.setParameter('numBins', GSplatSortBinWeights.NUM_BINS);
 
         // Dispatch
-        compute.setupDispatch(numWorkgroupsX, numWorkgroupsY, 1);
+        compute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
         this.device.computeDispatch([compute], 'GSplatSortKeyCompute');
+
+        return this.keysBuffer;
+    }
+
+    /**
+     * Generates sort keys using indirect dispatch. Only `visibleCount` threads are launched
+     * (GPU-determined), reducing key generation work proportionally to the culled fraction.
+     *
+     * @param {GSplatWorkBuffer} workBuffer - The work buffer containing world-space splat data.
+     * @param {GraphNode} cameraNode - The camera node for position and direction.
+     * @param {boolean} computeRadialSort - Whether to use radial sorting mode.
+     * @param {number} maxElementCount - Maximum number of splats (buffer allocation size).
+     * @param {number} numBits - Number of bits for sort keys.
+     * @param {number} minDist - Minimum distance value for normalization.
+     * @param {number} maxDist - Maximum distance value for normalization.
+     * @param {StorageBuffer} compactedSplatIds - Compacted visible splat IDs.
+     * @param {StorageBuffer} sortElementCountBuffer - GPU-written buffer containing visible count.
+     * @param {number} dispatchSlot - Slot index in the device's indirect dispatch buffer.
+     * @returns {StorageBuffer} The storage buffer containing generated sort keys.
+     */
+    generateIndirect(workBuffer, cameraNode, computeRadialSort, maxElementCount, numBits, minDist, maxDist, compactedSplatIds, sortElementCountBuffer, dispatchSlot) {
+        Debug.assert(maxElementCount > 0, 'GSplatSortKeyCompute.generateIndirect: maxElementCount must be > 0');
+
+        // Ensure capacity for max element count
+        this._ensureCapacity(maxElementCount);
+
+        // Get or create compute instance for indirect sort (implies compaction)
+        const compute = this._getCompute(computeRadialSort, true);
+
+        // Get camera world position and direction
+        const cameraPos = cameraNode.getPosition();
+        const cameraMat = cameraNode.getWorldTransform();
+        const cameraDir = cameraMat.getZ(_cameraDir).normalize();
+
+        // Calculate normalization parameters
+        const range = maxDist - minDist;
+        const invRange = range > 0 ? 1.0 / range : 1.0;
+
+        // Calculate bucket count from numBits
+        const bucketCount = (1 << numBits);
+
+        // Determine camera bin for weighting
+        const cameraBin = GSplatSortBinWeights.computeCameraBin(computeRadialSort, minDist, range);
+
+        // Compute and upload bin weights
+        const binWeights = this.binWeightsUtil.compute(cameraBin, bucketCount);
+        this.binWeightsBuffer.write(0, binWeights);
+
+        // Set parameters
+        compute.setParameter('dataTransformA', workBuffer.getTexture('dataTransformA'));
+        compute.setParameter('sortKeys', this.keysBuffer);
+        compute.setParameter('binWeights', this.binWeightsBuffer);
+        compute.setParameter('compactedSplatIds', compactedSplatIds);
+        compute.setParameter('sortElementCountBuf', sortElementCountBuffer);
+
+        // Set uniforms - elementCount is maxElementCount for the numWorkgroupsX-based GID calculation
+        this.cameraPositionData[0] = cameraPos.x;
+        this.cameraPositionData[1] = cameraPos.y;
+        this.cameraPositionData[2] = cameraPos.z;
+        compute.setParameter('cameraPosition', this.cameraPositionData);
+
+        this.cameraDirectionData[0] = cameraDir.x;
+        this.cameraDirectionData[1] = cameraDir.y;
+        this.cameraDirectionData[2] = cameraDir.z;
+        compute.setParameter('cameraDirection', this.cameraDirectionData);
+
+        compute.setParameter('elementCount', maxElementCount);
+        compute.setParameter('numBits', numBits);
+        compute.setParameter('textureSize', workBuffer.textureSize);
+        compute.setParameter('minDist', minDist);
+        compute.setParameter('invRange', invRange);
+
+        // For indirect dispatch, use the same workgroup layout as direct path
+        const workgroupCount = Math.ceil(maxElementCount / THREADS_PER_WORKGROUP);
+        Compute.calcDispatchSize(workgroupCount, _dispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
+        compute.setParameter('numWorkgroupsX', _dispatchSize.x);
+        compute.setParameter('numBins', GSplatSortBinWeights.NUM_BINS);
+
+        // Use indirect dispatch
+        compute.setupIndirectDispatch(dispatchSlot);
+        this.device.computeDispatch([compute], 'GSplatSortKeyCompute-Indirect');
 
         return this.keysBuffer;
     }

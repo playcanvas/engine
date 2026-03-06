@@ -6,7 +6,8 @@ import {
     BLENDEQUATION_ADD, BLENDEQUATION_REVERSE_SUBTRACT,
     BLENDEQUATION_MIN, BLENDEQUATION_MAX,
     CULLFACE_BACK,
-    SHADERLANGUAGE_GLSL
+    SHADERLANGUAGE_GLSL,
+    FRONTFACE_CCW
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
@@ -79,10 +80,10 @@ class Material {
     /**
      * The mesh instances referencing this material
      *
-     * @type {MeshInstance[]}
+     * @type {Set<MeshInstance>}
      * @private
      */
-    meshInstances = [];
+    meshInstances = new Set();
 
     /**
      * The name of the material.
@@ -166,6 +167,19 @@ class Material {
      * @type {number}
      */
     cull = CULLFACE_BACK;
+
+    /**
+     * Controls whether polygons are front- or back-facing by setting a winding
+     * orientation. Can be:
+     *
+     * - {@link FRONTFACE_CW}: The clock-wise winding.
+     * - {@link FRONTFACE_CCW}: The counterclockwise winding.
+     *
+     * Defaults to {@link FRONTFACE_CCW}.
+     *
+     * @type {number}
+     */
+    frontFace = FRONTFACE_CCW;
 
     /**
      * Stencil parameters for front faces (default is null).
@@ -439,10 +453,8 @@ class Material {
     }
 
     _updateTransparency() {
-        const transparent = this.transparent;
-        const meshInstances = this.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            meshInstances[i].transparent = transparent;
+        for (const meshInstance of this.meshInstances) {
+            meshInstance.transparent = this.transparent;
         }
     }
 
@@ -639,6 +651,7 @@ class Material {
         this._depthState.copy(source._depthState);
 
         this.cull = source.cull;
+        this.frontFace = source.frontFace;
 
         this.stencilFront = source.stencilFront?.clone();
         if (source.stencilBack) {
@@ -675,9 +688,8 @@ class Material {
     }
 
     _updateMeshInstanceKeys() {
-        const meshInstances = this.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            meshInstances[i].updateKey();
+        for (const meshInstance of this.meshInstances) {
+            meshInstance.updateKey();
         }
     }
 
@@ -744,15 +756,12 @@ class Material {
     }
 
     clearVariants() {
-
         // clear variants on the material
         this.variants.clear();
 
         // but also clear them from all materials that reference them
-        const meshInstances = this.meshInstances;
-        const count = meshInstances.length;
-        for (let i = 0; i < count; i++) {
-            meshInstances[i].clearShaders();
+        for (const meshInstance of this.meshInstances) {
+            meshInstance.clearShaders();
         }
     }
 
@@ -884,8 +893,7 @@ class Material {
     destroy() {
         this.variants.clear();
 
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            const meshInstance = this.meshInstances[i];
+        for (const meshInstance of this.meshInstances) {
             meshInstance.clearShaders();
             meshInstance._material = null;
 
@@ -899,7 +907,7 @@ class Material {
             }
         }
 
-        this.meshInstances.length = 0;
+        this.meshInstances.clear();
     }
 
     /**
@@ -909,7 +917,7 @@ class Material {
      * @ignore
      */
     addMeshInstanceRef(meshInstance) {
-        this.meshInstances.push(meshInstance);
+        this.meshInstances.add(meshInstance);
     }
 
     /**
@@ -919,11 +927,7 @@ class Material {
      * @ignore
      */
     removeMeshInstanceRef(meshInstance) {
-        const meshInstances = this.meshInstances;
-        const i = meshInstances.indexOf(meshInstance);
-        if (i !== -1) {
-            meshInstances.splice(i, 1);
-        }
+        this.meshInstances.delete(meshInstance);
     }
 }
 

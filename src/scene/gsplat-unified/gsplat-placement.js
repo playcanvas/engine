@@ -1,6 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { GSplatStreams } from '../gsplat/gsplat-streams.js';
 import { WORKBUFFER_UPDATE_AUTO, WORKBUFFER_UPDATE_ALWAYS, WORKBUFFER_UPDATE_ONCE } from '../constants.js';
+import { GsplatAllocId } from './gsplat-alloc-id.js';
 
 /**
  * @import { BoundingBox } from '../../core/shape/bounding-box.js'
@@ -51,6 +52,13 @@ class GSplatPlacement {
     id = 0;
 
     /**
+     * Unique allocation identifier for persistent work buffer allocation tracking.
+     *
+     * @type {number}
+     */
+    allocId = GsplatAllocId.get();
+
+    /**
      * The LOD index for this placement.
      *
      * @type {number}
@@ -58,19 +66,49 @@ class GSplatPlacement {
     lodIndex = 0;
 
     /**
-     * LOD distance thresholds for octree-based gsplat. Only used when the
-     * resource is an octree resource; otherwise ignored and kept null.
-     *
-     * @type {number[]|null}
-     */
-    _lodDistances = null;
-
-    /**
-     * Target number of splats to render for this placement. Set to 0 to disable (default).
+     * Base distance for the first LOD transition (LOD 0 to LOD 1).
      *
      * @type {number}
+     * @private
      */
-    splatBudget = 0;
+    _lodBaseDistance = 5;
+
+    /**
+     * Geometric multiplier between successive LOD distance thresholds.
+     * Distance for LOD level i is: lodBaseDistance * lodMultiplier^i.
+     *
+     * @type {number}
+     * @private
+     */
+    _lodMultiplier = 3;
+
+    /**
+     * @type {number}
+     */
+    set lodBaseDistance(value) {
+        if (this._lodBaseDistance !== value) {
+            this._lodBaseDistance = value;
+            this.lodDirty = true;
+        }
+    }
+
+    get lodBaseDistance() {
+        return this._lodBaseDistance;
+    }
+
+    /**
+     * @type {number}
+     */
+    set lodMultiplier(value) {
+        if (this._lodMultiplier !== value) {
+            this._lodMultiplier = value;
+            this.lodDirty = true;
+        }
+    }
+
+    get lodMultiplier() {
+        return this._lodMultiplier;
+    }
 
     /**
      * The axis-aligned bounding box for this placement, in local space.
@@ -94,6 +132,13 @@ class GSplatPlacement {
      * @private
      */
     _streams = null;
+
+    /**
+     * Flag indicating LOD parameters have changed and LOD needs re-evaluation.
+     *
+     * @type {boolean}
+     */
+    lodDirty = false;
 
     /**
      * Flag indicating the splat needs to be re-rendered to work buffer.
@@ -126,14 +171,13 @@ class GSplatPlacement {
     _workBufferModifier = null;
 
     /**
-     * Parent placement
-     * Used by octree file placements to inherit workBufferModifier and parameters from
-     * the component's placement.
+     * Parent placement. Used by octree file placements to inherit workBufferModifier and
+     * parameters from the component's placement.
      *
      * @type {GSplatPlacement|null}
-     * @private
+     * @ignore
      */
-    _parentPlacement = null;
+    parentPlacement = null;
 
     /**
      * Create a new GSplatPlacement.
@@ -151,7 +195,7 @@ class GSplatPlacement {
         this.node = node;
         this.lodIndex = lodIndex;
         this.parameters = parameters ?? parentPlacement?.parameters ?? null;
-        this._parentPlacement = parentPlacement;
+        this.parentPlacement = parentPlacement;
     }
 
     /**
@@ -182,7 +226,7 @@ class GSplatPlacement {
      * @type {{ code: string, hash: number }|null}
      */
     get workBufferModifier() {
-        return this._parentPlacement?.workBufferModifier ?? this._workBufferModifier;
+        return this.parentPlacement?.workBufferModifier ?? this._workBufferModifier;
     }
 
     /**
@@ -234,35 +278,13 @@ class GSplatPlacement {
     }
 
     /**
-     * Sets LOD distance thresholds. Only applicable for octree resources. The provided array is
-     * copied. If the resource has an octree with N LOD levels, the array should contain N-1
-     * elements. For non-octree resources, the value is ignored and kept null.
+     * Computes the LOD distance threshold for a given level using the geometric progression.
      *
-     * @type {number[]|null}
+     * @param {number} level - The LOD level index.
+     * @returns {number} The distance threshold for the given LOD level.
      */
-    set lodDistances(distances) {
-        const isOctree = !!(this.resource && /** @type {any} */ (this.resource).octree);
-        if (isOctree) {
-            if (distances) {
-                const lodLevels = /** @type {any} */ (this.resource).octree?.lodLevels ?? 1;
-                Debug.assert(Array.isArray(distances), 'lodDistances must be an array');
-                Debug.assert(distances.length >= lodLevels, 'lodDistances must have at least octree LOD levels - 1 entries, privided:',
-                    distances.length, 'expected:', lodLevels);
-
-                this._lodDistances = distances.slice();
-            } else {
-                this._lodDistances = null;
-            }
-        }
-    }
-
-    /**
-     * Gets a copy of LOD distance thresholds, or null when not set.
-     *
-     * @type {number[]|null}
-     */
-    get lodDistances() {
-        return this._lodDistances ? this._lodDistances.slice() : null;
+    getLodDistance(level) {
+        return this.lodBaseDistance * Math.pow(this.lodMultiplier, level);
     }
 
     /**
@@ -298,7 +320,7 @@ class GSplatPlacement {
      * @ignore
      */
     get streams() {
-        return this._parentPlacement?.streams ?? this._streams;
+        return this.parentPlacement?.streams ?? this._streams;
     }
 
     /**

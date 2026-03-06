@@ -210,25 +210,10 @@ assetListLoader.load(() => {
     // allow rendering with lower LOD quality when optimal is not yet loaded
     app.scene.gsplat.lodUnderfillLimit = 10;
 
-    // internal LOD preset based on platform (7 LOD levels: 0-6)
-    const isMobile = pc.platform.mobile;
-    if (isMobile) {
-        app.scene.gsplat.lodRangeMin = 3;  // skip levels 0, 1, 2
-        app.scene.gsplat.lodRangeMax = 6;
-    } else {
-        app.scene.gsplat.lodRangeMin = 2;  // skip level 0 and 1
-        app.scene.gsplat.lodRangeMax = 6;
-    }
+    data.set('splatBudget', pc.platform.mobile ? 1 : 3);
 
     // create grid of instances centered around origin on XZ plane
     const half = (GRID_SIZE - 1) * 0.5;
-    /**
-     * Compute per-LOD distances from a base value.
-     * @param {number} base - The base distance in world units.
-     * @returns {number[]} The array of distances for LODs 0..6.
-     */
-    const lodBase = 1.2;
-    const lodDistances = [lodBase, lodBase * 2, lodBase * 3, lodBase * 4, lodBase * 5, lodBase * 6, lodBase * 7];
 
     // Create a grid of playbot instances using unified gsplat component
     let componentIndex = 0;
@@ -245,12 +230,20 @@ assetListLoader.load(() => {
             entity.setLocalEulerAngles(180, 0, 0);
             app.root.addChild(entity);
             const gs = /** @type {any} */ (entity.gsplat);
-            gs.lodDistances = lodDistances;
+            gs.lodBaseDistance = 1.2;
             gs.setParameter('uComponentId', componentIndex);
             gs.setWorkBufferModifier(workBufferModifier);
             componentIndex++;
         }
     }
+
+    const applySplatBudget = () => {
+        const millions = data.get('splatBudget');
+        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
+    };
+
+    applySplatBudget();
+    data.on('splatBudget:set', applySplatBudget);
 
     // Create a camera with fly controls
     const camera = new pc.Entity('camera');

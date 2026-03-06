@@ -47,54 +47,54 @@ fn fetch1(t_in: u32) -> vec3f {
 }
 
 #if SH_BANDS == 1
-    fn readSHData(sh: ptr<function, array<vec3f, 3>>, scale: ptr<function, f32>) {
+    fn readSHData(sh: ptr<function, array<half3, 3>>, scale: ptr<function, f32>) {
         let result = fetchScale(loadSplatSH_1to3());
         *scale = result.scale;
-        sh[0] = result.a;
-        sh[1] = result.b;
-        sh[2] = result.c;
+        sh[0] = half3(result.a);
+        sh[1] = half3(result.b);
+        sh[2] = half3(result.c);
     }
 #elif SH_BANDS == 2
-    fn readSHData(sh: ptr<function, array<vec3f, 8>>, scale: ptr<function, f32>) {
+    fn readSHData(sh: ptr<function, array<half3, 8>>, scale: ptr<function, f32>) {
         let first: ScaleAndSH = fetchScale(loadSplatSH_1to3());
         *scale = first.scale;
-        sh[0] = first.a;
-        sh[1] = first.b;
-        sh[2] = first.c;
+        sh[0] = half3(first.a);
+        sh[1] = half3(first.b);
+        sh[2] = half3(first.c);
 
         let second: SH = fetch4(loadSplatSH_4to7());
-        sh[3] = second.a;
-        sh[4] = second.b;
-        sh[5] = second.c;
-        sh[6] = second.d;
+        sh[3] = half3(second.a);
+        sh[4] = half3(second.b);
+        sh[5] = half3(second.c);
+        sh[6] = half3(second.d);
 
-        sh[7] = fetch1(loadSplatSH_8to11().x);
+        sh[7] = half3(fetch1(loadSplatSH_8to11().x));
     }
 #else
-    fn readSHData(sh: ptr<function, array<vec3f, 15>>, scale: ptr<function, f32>) {
+    fn readSHData(sh: ptr<function, array<half3, 15>>, scale: ptr<function, f32>) {
         let first: ScaleAndSH = fetchScale(loadSplatSH_1to3());
         *scale = first.scale;
-        sh[0] = first.a;
-        sh[1] = first.b;
-        sh[2] = first.c;
+        sh[0] = half3(first.a);
+        sh[1] = half3(first.b);
+        sh[2] = half3(first.c);
 
         let second: SH = fetch4(loadSplatSH_4to7());
-        sh[3] = second.a;
-        sh[4] = second.b;
-        sh[5] = second.c;
-        sh[6] = second.d;
+        sh[3] = half3(second.a);
+        sh[4] = half3(second.b);
+        sh[5] = half3(second.c);
+        sh[6] = half3(second.d);
 
         let third: SH = fetch4(loadSplatSH_8to11());
-        sh[7] = third.a;
-        sh[8] = third.b;
-        sh[9] = third.c;
-        sh[10] = third.d;
+        sh[7] = half3(third.a);
+        sh[8] = half3(third.b);
+        sh[9] = half3(third.c);
+        sh[10] = half3(third.d);
 
         let fourth: SH = fetch4(loadSplatSH_12to15());
-        sh[11] = fourth.a;
-        sh[12] = fourth.b;
-        sh[13] = fourth.c;
-        sh[14] = fourth.d;
+        sh[11] = half3(fourth.a);
+        sh[12] = half3(fourth.b);
+        sh[13] = half3(fourth.c);
+        sh[14] = half3(fourth.d);
     }
 #endif
 

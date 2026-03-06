@@ -31,18 +31,53 @@ struct BinWeight {
 };
 @group(0) @binding(3) var<storage, read> binWeights: array<BinWeight>;
 
+#ifdef USE_INDIRECT_SORT
+    // Compacted visible splat IDs from stream compaction
+    @group(0) @binding(4) var<storage, read> compactedSplatIds: array<u32>;
+
+    // sortElementCount from write-indirect-args (same buffer the radix sort reads)
+    @group(0) @binding(5) var<storage, read> sortElementCountBuf: array<u32>;
+#endif
+
 @compute @workgroup_size({WORKGROUP_SIZE_X}, {WORKGROUP_SIZE_Y}, 1)
-fn computeSortKey(@builtin(global_invocation_id) global_id: vec3u) {
-    let gid = global_id.x + global_id.y * ({WORKGROUP_SIZE_X} * uniforms.numWorkgroupsX);
+fn main(
+    @builtin(global_invocation_id) global_id: vec3u,
+    @builtin(workgroup_id) w_id: vec3u,
+    @builtin(num_workgroups) w_dim: vec3u,
+    @builtin(local_invocation_index) TID: u32
+) {
+    // Compute flat GID: for indirect dispatch use workgroup/local builtins (dispatch
+    // dimensions are GPU-written so uniforms.numWorkgroupsX won't match). For direct
+    // dispatch the 2D global_invocation_id linearization is used.
+    #ifdef USE_INDIRECT_SORT
+        let WORKGROUP_ID = w_id.x + w_id.y * w_dim.x;
+        let gid = WORKGROUP_ID * ({WORKGROUP_SIZE_X}u * {WORKGROUP_SIZE_Y}u) + TID;
+    #else
+        let gid = global_id.x + global_id.y * ({WORKGROUP_SIZE_X} * uniforms.numWorkgroupsX);
+    #endif
     
     // Early exit for out-of-bounds threads
     if (gid >= uniforms.elementCount) {
         return;
     }
+
+    #ifdef USE_INDIRECT_SORT
+        // With indirect dispatch, only visibleCount threads are launched (plus up to
+        // 255 padding threads from workgroup rounding). Early-out for padding threads.
+        let visibleCount = sortElementCountBuf[0];
+        if (gid >= visibleCount) {
+            return;
+        }
+
+        // Read actual splat ID from compacted buffer
+        let splatId = compactedSplatIds[gid];
+    #else
+        let splatId = gid;
+    #endif
     
-    // Calculate texture UV from linear index
+    // Calculate texture UV from splat ID
     let textureSize = uniforms.textureSize;
-    let uv = vec2i(i32(gid % textureSize), i32(gid / textureSize));
+    let uv = vec2i(i32(splatId % textureSize), i32(splatId / textureSize));
     
     // Load world-space center from work buffer (stored as floatBitsToUint)
     let packed = textureLoad(dataTransformA, uv, 0);

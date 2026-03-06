@@ -3,12 +3,11 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { CULLFACE_NONE, PIXELFORMAT_RGBA32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
-import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
+import { PIXELFORMAT_RGBA32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { QuadRender } from '../../scene/graphics/quad-render.js';
+import { RenderPassQuad } from '../../scene/graphics/render-pass-quad.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import glslGsplatSogReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogReorder.js';
 import wgslGsplatSogReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogReorder.js';
@@ -415,10 +414,6 @@ class GSplatSogData {
             mipLevel: 0
         });
 
-        device.setCullMode(CULLFACE_NONE);
-        device.setBlendState(BlendState.NOBLEND);
-        device.setDepthState(DepthState.NODEPTH);
-
         resolve(scope, {
             means_l: this.means_l,
             means_u: this.means_u,
@@ -427,7 +422,14 @@ class GSplatSogData {
             means_maxs: this.meta.means.maxs
         });
 
-        drawQuadWithShader(device, renderTarget, shader);
+        const quad = new QuadRender(shader);
+        const renderPass = new RenderPassQuad(device, quad);
+        renderPass.name = 'SogGenerateCenters';
+        renderPass.init(renderTarget);
+        renderPass.colorOps.clear = false;
+        renderPass.depthStencilOps.clearDepth = false;
+        renderPass.render();
+        quad.destroy();
 
         renderTarget.destroy();
 
@@ -475,10 +477,6 @@ class GSplatSogData {
             mipLevel: 0
         });
 
-        device.setCullMode(CULLFACE_NONE);
-        device.setBlendState(BlendState.NOBLEND);
-        device.setDepthState(DepthState.NODEPTH);
-
         resolve(scope, {
             means_l,
             means_u,
@@ -497,7 +495,14 @@ class GSplatSogData {
             sh0Maxs: meta.sh0.maxs
         });
 
-        drawQuadWithShader(device, renderTarget, shader);
+        const quad = new QuadRender(shader);
+        const renderPass = new RenderPassQuad(device, quad);
+        renderPass.name = 'SogPackGpuMemory';
+        renderPass.init(renderTarget);
+        renderPass.colorOps.clear = false;
+        renderPass.depthStencilOps.clearDepth = false;
+        renderPass.render();
+        quad.destroy();
 
         renderTarget.destroy();
     }
@@ -525,16 +530,19 @@ class GSplatSogData {
             mipLevel: 0
         });
 
-        device.setCullMode(CULLFACE_NONE);
-        device.setBlendState(BlendState.NOBLEND);
-        device.setDepthState(DepthState.NODEPTH);
-
         resolve(scope, {
             sh_centroids,
             'shN_codebook[0]': this.meta.shN.codebook
         });
 
-        drawQuadWithShader(device, renderTarget, shader);
+        const quad = new QuadRender(shader);
+        const renderPass = new RenderPassQuad(device, quad);
+        renderPass.name = 'SogPackShMemory';
+        renderPass.init(renderTarget);
+        renderPass.colorOps.clear = false;
+        renderPass.depthStencilOps.clearDepth = false;
+        renderPass.render();
+        quad.destroy();
 
         renderTarget.destroy();
     }

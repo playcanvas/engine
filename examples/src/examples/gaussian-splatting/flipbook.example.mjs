@@ -76,17 +76,7 @@ assetListLoader.load(() => {
     roomEntity.setLocalScale(30, 30, 30);
     app.root.addChild(roomEntity);
 
-    // Mini-Stats: add VRAM on top of default stats
-    const msOptions = pc.MiniStats.getDefaultOptions();
-    msOptions.stats.push({
-        name: 'VRAM',
-        stats: ['vram.tex'],
-        decimalPlaces: 1,
-        multiplier: 1 / (1024 * 1024),
-        unitsName: 'MB',
-        watermark: 1024
-    });
-    const miniStats = new pc.MiniStats(app, msOptions); // eslint-disable-line no-unused-vars
+    const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
@@ -125,7 +115,7 @@ assetListLoader.load(() => {
     player.addComponent('script');
     const flipbook = player.script.create(GsplatFlipbook);
     if (flipbook) {
-        flipbook.fps = 30;
+        flipbook.fps = 15;
         flipbook.folder = 'https://code.playcanvas.com/examples_data/example_basketball_02';
         flipbook.filenamePattern = '{frame:03}.compressed.ply';
         flipbook.startFrame = 1;

@@ -96,9 +96,10 @@ class GSplatRenderer {
             this._internalDefines.add(key);
         });
 
-        // Also protect ID-related defines that may be added dynamically
+        // Also protect defines that may be added dynamically
         this._internalDefines.add('GSPLAT_UNIFIED_ID');
         this._internalDefines.add('PICK_CUSTOM_ID');
+        this._internalDefines.add('GSPLAT_INDIRECT_DRAW');
 
         this.meshInstance = this.createMeshInstance();
     }
@@ -160,13 +161,12 @@ class GSplatRenderer {
     }
 
     configureMaterial() {
-        const { device, workBuffer } = this;
+        const { workBuffer } = this;
 
         // Inject format's shader chunks (uses workBuffer.format)
         this._injectFormatChunks();
 
         // Set defines
-        this._material.setDefine('STORAGE_ORDER', device.isWebGPU);
         this._material.setDefine('SH_BANDS', '0');
 
         // Set GSPLAT_COLOR_FLOAT define based on work buffer's color format
@@ -185,10 +185,7 @@ class GSplatRenderer {
         const dither = false;
         this._material.setParameter('numSplats', 0);
 
-        // Set order data - texture for WebGL only at init time, it does not need to be updated
-        if (workBuffer.orderTexture) {
-            this._material.setParameter('splatOrder', workBuffer.orderTexture);
-        }
+        this.setOrderData();
 
         this._material.setParameter('alphaClip', 0.3);
         this._material.setDefine(`DITHER_${dither ? 'BLUENOISE' : 'NONE'}`, '');
@@ -242,6 +239,54 @@ class GSplatRenderer {
         this.meshInstance.visible = count > 0;
     }
 
+    /**
+     * Updates renderer for indirect draw mode. The instance count and numSplats
+     * are GPU-driven via indirect draw args and a storage buffer.
+     *
+     * @param {number} textureSize - The work buffer texture size.
+     */
+    updateIndirect(textureSize) {
+        this._material.setParameter('splatTextureSize', textureSize);
+        this.meshInstance.visible = true;
+    }
+
+    /**
+     * Configures indirect draw on the mesh instance and binds compaction buffers.
+     * Must be called each frame when compaction is active (slots are per-frame).
+     *
+     * @param {number} drawSlot - The indirect draw slot index in the device's buffer.
+     * @param {StorageBuffer} compactedSplatIds - Buffer containing sorted visible splat IDs.
+     * @param {StorageBuffer} numSplatsBuffer - Buffer containing numSplats for vertex shader.
+     */
+    setIndirectDraw(drawSlot, compactedSplatIds, numSplatsBuffer) {
+        this.meshInstance.setIndirect(null, drawSlot, 1);
+
+        // Bind compaction buffers for vertex shader
+        this._material.setParameter('compactedSplatIds', compactedSplatIds);
+        this._material.setParameter('numSplatsStorage', numSplatsBuffer);
+
+        // Set GSPLAT_INDIRECT_DRAW define if not already set
+        if (!this._material.getDefine('GSPLAT_INDIRECT_DRAW')) {
+            this._material.setDefine('GSPLAT_INDIRECT_DRAW', true);
+            this._material.update();
+        }
+    }
+
+    /**
+     * Disables indirect draw, restoring the renderer to direct (CPU-sorted) mode.
+     */
+    disableIndirectDraw() {
+        this.meshInstance.setIndirect(null, -1);
+
+        if (this._material.getDefine('GSPLAT_INDIRECT_DRAW')) {
+            this._material.setDefine('GSPLAT_INDIRECT_DRAW', false);
+            this._material.update();
+        }
+
+        // Restore order data from work buffer (CPU upload path)
+        this.setOrderData();
+    }
+
     setOrderData() {
         // Set the appropriate order data resource based on device type
         if (this.device.isWebGPU) {
@@ -249,16 +294,6 @@ class GSplatRenderer {
         } else {
             this._material.setParameter('splatOrder', this.workBuffer.orderTexture);
         }
-    }
-
-    /**
-     * Sets a storage buffer containing sorted indices directly as the order data.
-     * Used by GPU sorting to bypass CPU upload.
-     *
-     * @param {StorageBuffer} buffer - The storage buffer containing sorted indices (u32 values).
-     */
-    setOrderBuffer(buffer) {
-        this._material.setParameter('splatOrder', buffer);
     }
 
     frameUpdate(params) {

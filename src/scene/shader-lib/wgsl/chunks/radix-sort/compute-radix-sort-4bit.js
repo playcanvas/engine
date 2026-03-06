@@ -15,6 +15,11 @@ struct RadixSortUniforms {
 };
 @group(0) @binding(3) var<uniform> uniforms: RadixSortUniforms;
 
+#ifdef USE_INDIRECT_SORT
+    // GPU-written element count for indirect sort
+    @group(0) @binding(4) var<storage, read> sortElementCount: array<u32>;
+#endif
+
 // Compile-time constants
 const THREADS_PER_WORKGROUP: u32 = {THREADS_PER_WORKGROUP}u;
 const WORKGROUP_SIZE_X: u32 = {WORKGROUP_SIZE_X}u;
@@ -26,7 +31,7 @@ var<workgroup> histogram: array<atomic<u32>, 16>;
 var<workgroup> thread_digits: array<u32, 256>;  // Store each thread's digit
 
 @compute @workgroup_size(WORKGROUP_SIZE_X, WORKGROUP_SIZE_Y, 1)
-fn radix_sort(
+fn main(
     @builtin(workgroup_id) w_id: vec3<u32>,
     @builtin(num_workgroups) w_dim: vec3<u32>,
     @builtin(local_invocation_index) TID: u32,
@@ -41,8 +46,15 @@ fn radix_sort(
     }
     workgroupBarrier();
 
+    // Read element count: from storage buffer (GPU-written) or uniform (CPU-set)
+    #ifdef USE_INDIRECT_SORT
+        let elementCount = sortElementCount[0];
+    #else
+        let elementCount = uniforms.elementCount;
+    #endif
+
     // Extract 4 bits from the input (0-15), use 16 as invalid marker
-    let is_valid = GID < uniforms.elementCount && WORKGROUP_ID < uniforms.workgroupCount;
+    let is_valid = GID < elementCount && WORKGROUP_ID < uniforms.workgroupCount;
     let elm = select(0u, input[GID], is_valid);
     let digit: u32 = select(16u, (elm >> CURRENT_BIT) & 0xFu, is_valid);
 

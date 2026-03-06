@@ -17,27 +17,51 @@ class StreamedGsplat extends Script {
 
     /**
      * @attribute
-     * @type {number[]}
+     * @type {number}
      */
-    ultraLodDistances = [5, 20, 35, 50, 65, 90, 150];
+    ultraLodBaseDistance = 7;
 
     /**
      * @attribute
-     * @type {number[]}
+     * @type {number}
      */
-    highLodDistances = [5, 20, 35, 50, 65, 90, 150];
+    ultraLodMultiplier = 3;
 
     /**
      * @attribute
-     * @type {number[]}
+     * @type {number}
      */
-    mediumLodDistances = [5, 7, 12, 25, 75, 120, 200];
+    highLodBaseDistance = 5;
 
     /**
      * @attribute
-     * @type {number[]}
+     * @type {number}
      */
-    lowLodDistances = [5, 7, 12, 25, 75, 120, 200];
+    highLodMultiplier = 3;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    mediumLodBaseDistance = 5;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    mediumLodMultiplier = 2;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    lowLodBaseDistance = 5;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    lowLodMultiplier = 2;
 
     /**
      * @attribute
@@ -62,30 +86,6 @@ class StreamedGsplat extends Script {
      * @type {number[]}
      */
     lowLodRange = [3, 5];
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    ultraSplatBudget = 6000000;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    highSplatBudget = 4000000;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    mediumSplatBudget = 2000000;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    lowSplatBudget = 1000000;
 
     /** @type {Asset[]} */
     _assets = [];
@@ -136,7 +136,8 @@ class StreamedGsplat extends Script {
                 // Add component directly to this entity
                 this.entity.addComponent('gsplat', {
                     unified: true,
-                    lodDistances: this._getCurrentLodDistances(),
+                    lodBaseDistance: this._getCurrentLodBaseDistance(),
+                    lodMultiplier: this._getCurrentLodMultiplier(),
                     asset: a
                 });
 
@@ -169,7 +170,8 @@ class StreamedGsplat extends Script {
                 // Add the component while entity is disabled
                 child.addComponent('gsplat', {
                     unified: true,
-                    lodDistances: this._getCurrentLodDistances(),
+                    lodBaseDistance: this._getCurrentLodBaseDistance(),
+                    lodMultiplier: this._getCurrentLodMultiplier(),
                     asset: a
                 });
 
@@ -183,25 +185,34 @@ class StreamedGsplat extends Script {
         });
     }
 
-    _getCurrentLodDistances() {
-        let distances;
+    _getCurrentLodBaseDistance() {
         switch (this._currentPreset) {
             case 'ultra':
-                distances = this.ultraLodDistances;
-                break;
+                return this.ultraLodBaseDistance;
             case 'high':
-                distances = this.highLodDistances;
-                break;
+                return this.highLodBaseDistance;
             case 'medium':
-                distances = this.mediumLodDistances;
-                break;
+                return this.mediumLodBaseDistance;
             case 'low':
-                distances = this.lowLodDistances;
-                break;
+                return this.lowLodBaseDistance;
             default:
-                distances = [5, 20, 35, 50, 65, 90, 150];
+                return 5;
         }
-        return distances && distances.length > 0 ? distances : [5, 20, 35, 50, 65, 90, 150];
+    }
+
+    _getCurrentLodMultiplier() {
+        switch (this._currentPreset) {
+            case 'ultra':
+                return this.ultraLodMultiplier;
+            case 'high':
+                return this.highLodMultiplier;
+            case 'medium':
+                return this.mediumLodMultiplier;
+            case 'low':
+                return this.lowLodMultiplier;
+            default:
+                return 3;
+        }
     }
 
     _getCurrentLodRange() {
@@ -225,27 +236,6 @@ class StreamedGsplat extends Script {
         return range && range.length >= 2 ? range : [0, 5];
     }
 
-    _getCurrentSplatBudget() {
-        let budget;
-        switch (this._currentPreset) {
-            case 'ultra':
-                budget = this.ultraSplatBudget;
-                break;
-            case 'high':
-                budget = this.highSplatBudget;
-                break;
-            case 'medium':
-                budget = this.mediumSplatBudget;
-                break;
-            case 'low':
-                budget = this.lowSplatBudget;
-                break;
-            default:
-                budget = 0;
-        }
-        return budget || 0;
-    }
-
     _applyPreset() {
         const range = this._getCurrentLodRange();
         if (!range) return;
@@ -254,13 +244,10 @@ class StreamedGsplat extends Script {
         app.scene.gsplat.lodRangeMin = range[0];
         app.scene.gsplat.lodRangeMax = range[1];
 
-        const lodDistances = this._getCurrentLodDistances();
-        const splatBudget = this._getCurrentSplatBudget();
-
         // Apply to main streaming asset only (environment doesn't support these settings)
         if (this.entity.gsplat) {
-            this.entity.gsplat.lodDistances = lodDistances;
-            this.entity.gsplat.splatBudget = splatBudget;
+            this.entity.gsplat.lodBaseDistance = this._getCurrentLodBaseDistance();
+            this.entity.gsplat.lodMultiplier = this._getCurrentLodMultiplier();
         }
     }
 

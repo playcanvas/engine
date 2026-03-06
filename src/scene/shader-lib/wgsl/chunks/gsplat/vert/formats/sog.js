@@ -39,9 +39,9 @@ fn getCenter() -> vec3f {
 }
 
 fn getColor() -> vec4f {
-    let clr = mix(vec3f(uniform.sh0_mins), vec3f(uniform.sh0_maxs), unpack111110(pack8888(textureLoad(packedSh0, splat.uv, 0))));
-    let alpha = f32(packedSample.z & 0xffu) / 255.0;
-    return vec4f(vec3f(0.5) + clr * SH_C0, alpha);
+    let clr = mix(half3(half(uniform.sh0_mins)), half3(half(uniform.sh0_maxs)), half3(unpack111110(pack8888(textureLoad(packedSh0, splat.uv, 0)))));
+    let alpha = half(f32(packedSample.z & 0xffu) / 255.0);
+    return vec4f(half4(half3(0.5) + clr * half(SH_C0), alpha));
 }
 
 fn getRotation() -> vec4f {

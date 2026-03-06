@@ -112,21 +112,20 @@ class GSplatComponent extends Component {
     _highQualitySH = true;
 
     /**
-     * LOD distance thresholds, stored as a copy.
-     *
-     * @type {number[]|null}
-     * @private
-     */
-    _lodDistances = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
-
-    /**
-     * Target number of splats to render for this component. The system will adjust LOD levels
-     * bidirectionally to reach this budget. Set to 0 to disable (default).
+     * Base distance for the first LOD transition (LOD 0 to LOD 1).
      *
      * @type {number}
      * @private
      */
-    _splatBudget = 0;
+    _lodBaseDistance = 5;
+
+    /**
+     * Geometric multiplier between successive LOD distance thresholds.
+     *
+     * @type {number}
+     * @private
+     */
+    _lodMultiplier = 3;
 
     /**
      * @type {BoundingBox|null}
@@ -433,57 +432,88 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets LOD distance thresholds used by octree-based gsplat rendering. The provided array
-     * is copied.
+     * Sets the base distance for the first LOD transition (LOD 0 to LOD 1). Objects closer
+     * than this distance use the highest quality LOD. Each subsequent LOD level transitions
+     * at a progressively larger distance, controlled by {@link lodMultiplier}. Clamped to a
+     * minimum of 0.1. Defaults to 5.
      *
+     * @type {number}
+     */
+    set lodBaseDistance(value) {
+        this._lodBaseDistance = Math.max(0.1, value);
+        if (this._placement) {
+            this._placement.lodBaseDistance = this._lodBaseDistance;
+        }
+    }
+
+    /**
+     * Gets the base distance for the first LOD transition.
+     *
+     * @type {number}
+     */
+    get lodBaseDistance() {
+        return this._lodBaseDistance;
+    }
+
+    /**
+     * Sets the multiplier between successive LOD distance thresholds. Each LOD level
+     * transitions at this factor times the previous level's distance, creating a geometric
+     * progression. Lower values keep higher quality at distance; higher values switch to
+     * coarser LODs sooner. Clamped to a minimum of 1.2 to avoid degenerate logarithmic LOD
+     * computation. LOD distances are automatically compensated for the camera's field of
+     * view — a wider FOV makes objects appear smaller on screen, so LOD switches to coarser
+     * levels sooner to match the reduced screen-space detail. Defaults to 3.
+     *
+     * @type {number}
+     */
+    set lodMultiplier(value) {
+        this._lodMultiplier = Math.max(1.2, value);
+        if (this._placement) {
+            this._placement.lodMultiplier = this._lodMultiplier;
+        }
+    }
+
+    /**
+     * Gets the geometric multiplier between successive LOD distance thresholds.
+     *
+     * @type {number}
+     */
+    get lodMultiplier() {
+        return this._lodMultiplier;
+    }
+
+    /**
+     * @deprecated Use {@link lodBaseDistance} and {@link lodMultiplier} instead.
      * @type {number[]|null}
      */
     set lodDistances(value) {
-        this._lodDistances = Array.isArray(value) ? value.slice() : null;
-        if (this._placement) {
-            this._placement.lodDistances = this._lodDistances;
+        Debug.removed('GSplatComponent#lodDistances is removed. Use lodBaseDistance and lodMultiplier instead.');
+        if (Array.isArray(value) && value.length > 0) {
+            this.lodBaseDistance = value[0];
+            this.lodMultiplier = 3;
         }
     }
 
     /**
-     * Gets a copy of LOD distance thresholds previously set, or null when not set.
-     *
-     * @type {number[]|null}
+     * @deprecated Use {@link lodBaseDistance} and {@link lodMultiplier} instead.
+     * @type {number[]}
      */
     get lodDistances() {
-        return this._lodDistances ? this._lodDistances.slice() : null;
+        Debug.removed('GSplatComponent#lodDistances is removed. Use lodBaseDistance and lodMultiplier instead.');
+        return [];
     }
 
     /**
-     * Sets the target number of splats to render for this component. The system will adjust LOD
-     * levels bidirectionally to reach this budget:
-     * - When over budget: degrades quality for less important geometry
-     * - When under budget: upgrades quality for more important geometry
-     *
-     * This ensures optimal use of available rendering budget while prioritizing quality for
-     * closer/more important geometry.
-     *
-     * Set to 0 to disable the budget (default). When disabled, optimal LOD is determined purely
-     * by distance and configured LOD parameters.
-     *
-     * Only applies to octree-based gsplat rendering in unified mode.
-     *
+     * @deprecated Use app.scene.gsplat.splatBudget instead for global budget control.
      * @type {number}
      */
     set splatBudget(value) {
-        this._splatBudget = value;
-        if (this._placement) {
-            this._placement.splatBudget = this._splatBudget;
-        }
+        Debug.removed('GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.');
     }
 
-    /**
-     * Gets the splat budget limit for this component.
-     *
-     * @type {number}
-     */
     get splatBudget() {
-        return this._splatBudget;
+        Debug.removed('GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.');
+        return 0;
     }
 
     /**
@@ -963,8 +993,8 @@ class GSplatComponent extends Component {
             this._placement = null;
 
             this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters, null, this._id);
-            this._placement.lodDistances = this._lodDistances;
-            this._placement.splatBudget = this._splatBudget;
+            this._placement.lodBaseDistance = this._lodBaseDistance;
+            this._placement.lodMultiplier = this._lodMultiplier;
             this._placement.workBufferUpdate = this._workBufferUpdate;
             this._placement.workBufferModifier = this._workBufferModifier;
 

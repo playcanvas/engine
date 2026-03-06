@@ -1,4 +1,4 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8 } from '../../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8 } from '../../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
@@ -83,17 +83,7 @@ class PostEffectQueue {
         const width = Math.floor(rect.z * (renderTarget?.width ?? device.width));
         const height = Math.floor(rect.w * (renderTarget?.height ?? device.height));
 
-        const colorBuffer = new Texture(device, {
-            name: name,
-            format: format,
-            width: width,
-            height: height,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
+        const colorBuffer = Texture.createDataTexture2D(device, name, width, height, format);
 
         return colorBuffer;
     }

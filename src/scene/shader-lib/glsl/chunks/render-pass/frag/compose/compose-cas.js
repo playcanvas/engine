@@ -8,9 +8,14 @@ export default /* glsl */`
         uniform float sharpness;
 
         // reversible LDR <-> HDR tone mapping, as CAS needs LDR input
-        float maxComponent(float x, float y, float z) { return max(x, max(y, z)); }
-        vec3 toSDR(vec3 c) { return c / (1.0 + maxComponent(c.r, c.g, c.b)); }
-        vec3 toHDR(vec3 c) { return c / (1.0 - maxComponent(c.r, c.g, c.b)); }
+        #ifdef CAS_HDR
+            float maxComponent(float x, float y, float z) { return max(x, max(y, z)); }
+            vec3 toSDR(vec3 c) { return c / (1.0 + maxComponent(c.r, c.g, c.b)); }
+            vec3 toHDR(vec3 c) { return c / (1.0 - maxComponent(c.r, c.g, c.b)); }
+        #else
+            vec3 toSDR(vec3 c) { return c; }
+            vec3 toHDR(vec3 c) { return c; }
+        #endif
 
         vec3 applyCas(vec3 color, vec2 uv, float sharpness) {
             float x = sceneTextureInvRes.x;

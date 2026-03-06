@@ -89,6 +89,8 @@ assetListLoader.load(() => {
 
     let splatEntity = null;
 
+    app.scene.gsplat.lodBehindPenalty = 3;
+
     /**
      * Calculate the bounding box of an entity.
      *
@@ -165,6 +167,7 @@ assetListLoader.load(() => {
     // Initialize data values
     data.set('data', {
         skydome: false,
+        compact: false,
         orientation: 180,
         tonemapping: pc.TONEMAP_LINEAR,
         grading: {
@@ -174,6 +177,14 @@ assetListLoader.load(() => {
         bloom: {
             enabled: false,
             intensity: 0.03
+        },
+        colorEnhance: {
+            enabled: false,
+            shadows: 0,
+            highlights: 0,
+            midtones: 0,
+            vibrance: 0,
+            dehaze: 0
         }
     });
 
@@ -199,6 +210,14 @@ assetListLoader.load(() => {
             cameraFrame.bloom.blurLevel = 7;
         }
 
+        // Color Enhance
+        cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
+        cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
+        cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
+        cameraFrame.colorEnhance.midtones = data.get('data.colorEnhance.midtones');
+        cameraFrame.colorEnhance.vibrance = data.get('data.colorEnhance.vibrance');
+        cameraFrame.colorEnhance.dehaze = data.get('data.colorEnhance.dehaze');
+
         cameraFrame.update();
     };
 
@@ -209,6 +228,8 @@ assetListLoader.load(() => {
     data.on('*:set', (/** @type {string} */ path) => {
         if (path === 'data.skydome') {
             applySkydome();
+        } else if (path === 'data.compact') {
+            app.scene.gsplat.dataFormat = data.get('data.compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
         } else if (path === 'data.orientation') {
             // Apply orientation to splat entity
             if (splatEntity) {

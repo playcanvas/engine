@@ -3,6 +3,8 @@ import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { TRACEID_OCTREE_RESOURCES } from '../../core/constants.js';
+import { PIXELFORMAT_R8U, PIXELFORMAT_R16U, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
 // Temporary array reused to avoid allocations during cooldown ticking
 const _toDelete = [];
@@ -227,6 +229,43 @@ class GSplatOctree {
         }
     }
 
+    /**
+     * Generates a node mapping texture for a file resource. Each texel maps a source splat index
+     * to its owning octree node index. Used by the GPU culling system to look up bounding spheres.
+     *
+     * @param {number} fileIndex - The file index in the octree files array.
+     * @param {GSplatResource} resource - The loaded file resource.
+     * @returns {Texture} The generated node mapping texture.
+     * @private
+     */
+    _generateNodeMappingTexture(fileIndex, resource) {
+        const numNodes = this.nodes.length;
+
+        // Choose format based on node count
+        const format = numNodes <= 256 ? PIXELFORMAT_R8U :
+            numNodes <= 65536 ? PIXELFORMAT_R16U : PIXELFORMAT_R32U;
+
+        const ArrayType = numNodes <= 256 ? Uint8Array :
+            numNodes <= 65536 ? Uint16Array : Uint32Array;
+
+        // Must use same dimensions as resource data textures for coordinate alignment
+        const dim = resource.streams.textureDimensions;
+        const data = new ArrayType(dim.x * dim.y);
+
+        // Each file corresponds to exactly one LOD level — go directly to that LOD
+        const lodLevel = this.files[fileIndex].lodLevel;
+        for (let nodeIndex = 0; nodeIndex < numNodes; nodeIndex++) {
+            const lod = this.nodes[nodeIndex].lods[lodLevel];
+            if (lod.fileIndex === fileIndex) {
+                for (let i = 0; i < lod.count; i++) {
+                    data[lod.offset + i] = nodeIndex;
+                }
+            }
+        }
+
+        return Texture.createDataTexture2D(resource.device, `nodeMappingTexture-${fileIndex}`, dim.x, dim.y, format, [data]);
+    }
+
     getFileResource(fileIndex) {
         return this.fileResources.get(fileIndex);
     }
@@ -350,6 +389,13 @@ class GSplatOctree {
         const fullUrl = this.files[fileIndex].url;
         const res = this.assetLoader?.getResource(fullUrl);
         if (res) {
+
+            // Generate and register nodeMappingTexture for GPU culling bounds lookup
+            if (!res.streams.textures.has('nodeMappingTexture')) {
+                const texture = this._generateNodeMappingTexture(fileIndex, res);
+                res.streams.textures.set('nodeMappingTexture', texture);
+            }
+
             this.fileResources.set(fileIndex, res);
 
             // if the file finished loading and is no longer needed, schedule a cooldown

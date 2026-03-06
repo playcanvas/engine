@@ -335,6 +335,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.FRONT_AND_BACK
         ];
 
+        this.glFrontFace = [
+            gl.CCW,
+            gl.CW
+        ];
+
         this.glFilter = [
             gl.NEAREST,
             gl.LINEAR,
@@ -1783,11 +1788,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         Debug.assert(samplerName !== 'uDepthMap', 'Engine provided texture with sampler name \'uDepthMap\' is not longer supported, use \'uSceneDepthMap\' instead');
 
                         if (samplerName === 'uSceneDepthMap') {
-                            Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                            Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
                             samplerValue = getBuiltInTexture(this, 'white');
                         }
                         if (samplerName === 'uSceneColorMap') {
-                            Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                            Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
                             samplerValue = getBuiltInTexture(this, 'pink');
                         }
 
@@ -2509,6 +2514,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
             this.cullMode = cullMode;
+        }
+    }
+
+    setFrontFace(frontFace) {
+        if (this.frontFace !== frontFace) {
+            const mode = this.glFrontFace[frontFace];
+            this.gl.frontFace(mode);
+            this.frontFace = frontFace;
         }
     }
 

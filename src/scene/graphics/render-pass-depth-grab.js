@@ -1,4 +1,4 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -38,17 +38,13 @@ class RenderPassDepthGrab extends RenderPass {
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth) {
 
         // allocate texture buffer
-        const texture = new Texture(device, {
-            name: _depthUniformName,
-            format,
-            width: sourceRenderTarget ? sourceRenderTarget.colorBuffer.width : device.width,
-            height: sourceRenderTarget ? sourceRenderTarget.colorBuffer.height : device.height,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
+        const texture = Texture.createDataTexture2D(
+            device,
+            _depthUniformName,
+            sourceRenderTarget ? sourceRenderTarget.colorBuffer.width : device.width,
+            sourceRenderTarget ? sourceRenderTarget.colorBuffer.height : device.height,
+            format
+        );
 
         if (renderTarget) {
 
