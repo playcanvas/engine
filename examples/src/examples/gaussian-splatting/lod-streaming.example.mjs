@@ -149,6 +149,7 @@ assetListLoader.load(() => {
     });
 
     // initialize UI settings (must be after observer registration)
+    data.set('cameraFov', 75);
     data.set('gpuSorting', false);
     data.set('culling', device.isWebGPU);
     data.set('compact', true);
