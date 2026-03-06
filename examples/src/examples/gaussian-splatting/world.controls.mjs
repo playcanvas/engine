@@ -3,7 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, SliderInput, Label } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SliderInput, Label } = ReactPCUI;
     return fragment(
         jsx(
             Panel,
