@@ -102,13 +102,14 @@ class GSplatBudgetBalancer {
         const isOverBudget = currentSplats > budget;
 
         // Multiple passes: adjust by one LOD level per pass until budget is reached
-        while (isOverBudget ? currentSplats > budget : currentSplats < budget) {
+        let done = false;
+        while (!done && (isOverBudget ? currentSplats > budget : currentSplats < budget)) {
             let modified = false;
 
             if (isOverBudget) {
                 // Degrade: process from FARTHEST (bucket NUM_BUCKETS-1) to NEAREST (bucket 0)
                 // This preserves quality for nearby geometry
-                for (let b = NUM_BUCKETS - 1; b >= 0 && currentSplats > budget; b--) {
+                for (let b = NUM_BUCKETS - 1; b >= 0 && !done; b--) {
                     const bucket = this._buckets[b];
                     for (let i = 0, len = bucket.length; i < len; i++) {
                         const nodeInfo = bucket[i];
@@ -118,14 +119,17 @@ class GSplatBudgetBalancer {
                             currentSplats -= lods[optimalLod].count - lods[optimalLod + 1].count;
                             nodeInfo.optimalLod = optimalLod + 1;
                             modified = true;
-                            if (currentSplats <= budget) break;
+                            if (currentSplats <= budget) {
+                                done = true;
+                                break;
+                            }
                         }
                     }
                 }
             } else {
                 // Upgrade: process from NEAREST (bucket 0) to FARTHEST (bucket NUM_BUCKETS-1)
                 // This improves quality for nearby geometry first
-                for (let b = 0; b < NUM_BUCKETS && currentSplats < budget; b++) {
+                for (let b = 0; b < NUM_BUCKETS && !done; b++) {
                     const bucket = this._buckets[b];
                     for (let i = 0, len = bucket.length; i < len; i++) {
                         const nodeInfo = bucket[i];
@@ -137,7 +141,13 @@ class GSplatBudgetBalancer {
                                 nodeInfo.optimalLod = optimalLod - 1;
                                 currentSplats += splatsAdded;
                                 modified = true;
-                                if (currentSplats >= budget) break;
+                                if (currentSplats >= budget) {
+                                    done = true;
+                                    break;
+                                }
+                            } else {
+                                done = true;
+                                break;
                             }
                         }
                     }

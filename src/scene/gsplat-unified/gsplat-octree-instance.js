@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { math } from '../../core/math/math.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
@@ -21,6 +22,9 @@ const _dirToNode = new Vec3();
 
 const _tempCompletedUrls = [];
 const _tempDebugAabb = new BoundingBox();
+
+// tan(22.5deg) for the engine's default 45-degree vertical FOV, used as the FOV compensation reference
+const REF_TAN_HALF_FOV = Math.tan(22.5 * math.DEG_TO_RAD);
 
 // Color instances used by debug wireframe rendering for LOD visualization
 const _lodColors = [
@@ -61,12 +65,6 @@ class NodeInfo {
      * @type {GSplatOctreeInstance|null}
      */
     inst = null;
-
-    /**
-     * Index in octree.nodes array.
-     * @type {number}
-     */
-    nodeIndex = 0;
 
     /**
      * Cached reference to this node's LOD array for fast budget balancing.
@@ -237,7 +235,7 @@ class GSplatOctreeInstance {
         for (let i = 0; i < octree.nodes.length; i++) {
             const nodeInfo = new NodeInfo();
             nodeInfo.inst = this;
-            nodeInfo.nodeIndex = i;
+
             this.nodeInfos[i] = nodeInfo;
         }
 
@@ -362,53 +360,6 @@ class GSplatOctreeInstance {
     }
 
     /**
-     * Calculate LOD index for a specific node using pre-calculated local camera position.
-     * @param {Vec3} localCameraPosition - The camera position in local space.
-     * @param {Vec3} localCameraForward - The camera forward direction in local space (normalized).
-     * @param {number} nodeIndex - The node index.
-     * @param {number} maxLod - The maximum LOD index (lodLevels - 1).
-     * @param {number[]} lodDistances - Array of distance thresholds per LOD.
-     * @param {number} lodBehindPenalty - Multiplier for behind-camera distance. 1 disables penalty.
-     * @returns {number} The LOD index for this node, or -1 if node should not be rendered.
-     */
-    calculateNodeLod(localCameraPosition, localCameraForward, nodeIndex, maxLod, lodDistances, lodBehindPenalty) {
-        const node = this.octree.nodes[nodeIndex];
-
-        // Calculate the nearest point on the bounding box to the camera for accurate distance
-        node.bounds.closestPoint(localCameraPosition, _dirToNode);
-
-        // Calculate direction from camera to nearest point on box
-        _dirToNode.sub(localCameraPosition);
-        let distance = _dirToNode.length();
-
-        // Apply angular-based multiplier for nodes behind the camera when enabled
-        if (lodBehindPenalty > 1 && distance > 0.01) {
-
-            // dot using unnormalized direction to avoid extra normalize; divide by distance
-            const dotOverDistance = localCameraForward.dot(_dirToNode) / distance;
-
-            // Only apply penalty when behind the camera (dot < 0)
-            if (dotOverDistance < 0) {
-                const t = -dotOverDistance; // 0 .. 1 for front -> directly behind
-                const factor = 1 + t * (lodBehindPenalty - 1);
-                distance *= factor;
-            }
-        }
-
-        // Find appropriate LOD based on distance and available LOD levels
-        for (let lod = 0; lod < maxLod; lod++) {
-            if (distance < lodDistances[lod]) {
-                return lod;
-            }
-        }
-
-        // If distance is greater than all thresholds, use the highest available LOD
-        return maxLod;
-
-        // return -1 for past far plane
-    }
-
-    /**
      * Selects desired LOD index for a node using the underfill strategy. When underfill is enabled,
      * it prefers already-loaded LODs within [optimalLodIndex .. optimalLodIndex + lodUnderfillLimit].
      * If none are loaded, it selects the coarsest available LOD within the range.
@@ -490,7 +441,7 @@ class GSplatOctreeInstance {
     updateLod(cameraNode, params) {
 
         const maxLod = this.octree.lodLevels - 1;
-        const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
+        const { lodBaseDistance, lodMultiplier } = this.placement;
 
         // Clamp configured LOD range to valid bounds [0, maxLod] and ensure min <= max
         const { lodRangeMin, lodRangeMax } = params;
@@ -499,7 +450,7 @@ class GSplatOctreeInstance {
 
         // Pass 1: Evaluate optimal LOD for each node (distance-based)
         const uniformScale = this.placement.node.getWorldTransform().getScale().x;
-        this.evaluateNodeLods(cameraNode, maxLod, lodDistances, rangeMin, rangeMax, params, uniformScale);
+        this.evaluateNodeLods(cameraNode, maxLod, lodBaseDistance, lodMultiplier, rangeMin, rangeMax, params, uniformScale);
 
         // Pass 2: Calculate desired LOD (underfill) and apply changes
         this.applyLodChanges(maxLod, params);
@@ -509,9 +460,13 @@ class GSplatOctreeInstance {
      * Evaluates optimal LOD indices for all nodes based on camera position and parameters.
      * This is Pass 1 of the LOD update process. Results are stored in nodeInfos array.
      *
+     * Uses geometric LOD distances (lodBaseDistance * lodMultiplier^i) with FOV compensation
+     * so that LOD transitions are perceptually uniform under perspective projection.
+     *
      * @param {GraphNode} cameraNode - The camera node.
      * @param {number} maxLod - Maximum LOD index (lodLevels - 1).
-     * @param {number[]} lodDistances - Array of distance thresholds per LOD.
+     * @param {number} lodBaseDistance - Base distance for first LOD transition.
+     * @param {number} lodMultiplier - Geometric ratio between successive LOD thresholds.
      * @param {number} rangeMin - Minimum allowed LOD index.
      * @param {number} rangeMax - Maximum allowed LOD index.
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
@@ -519,8 +474,20 @@ class GSplatOctreeInstance {
      * @returns {number} Total number of splats that would be used by optimal LODs.
      * @private
      */
-    evaluateNodeLods(cameraNode, maxLod, lodDistances, rangeMin, rangeMax, params, uniformScale) {
+    evaluateNodeLods(cameraNode, maxLod, lodBaseDistance, lodMultiplier, rangeMin, rangeMax, params, uniformScale) {
         const { lodBehindPenalty } = params;
+
+        // Compute FOV compensation: use min(tanHalfV, tanHalfH) to handle ultra-wide and portrait
+        const camera = cameraNode.camera;
+        let tanHalfVFov = Math.tan(camera.fov * 0.5 * math.DEG_TO_RAD);
+        if (camera.horizontalFov) {
+            tanHalfVFov /= camera.aspectRatio;
+        }
+        const tanHalfHFov = tanHalfVFov * camera.aspectRatio;
+        const fovScale = Math.min(tanHalfVFov, tanHalfHFov) / REF_TAN_HALF_FOV;
+
+        // Precompute inverse log of multiplier for O(1) LOD index computation
+        const invLogMult = 1.0 / Math.log(lodMultiplier);
 
         // transform camera position to octree local space
         const worldCameraPosition = cameraNode.getPosition();
@@ -560,25 +527,22 @@ class GSplatOctreeInstance {
                 }
             }
 
-            // Find appropriate LOD based on penalized distance
-            let optimalLodIndex = maxLod;
-            for (let lod = 0; lod < maxLod; lod++) {
-                if (penalizedDistance < lodDistances[lod]) {
-                    optimalLodIndex = lod;
-                    break;
-                }
+            // Compute LOD index via logarithm with FOV compensation
+            const fovAdjustedDistance = penalizedDistance * fovScale;
+            let optimalLodIndex;
+            if (fovAdjustedDistance < lodBaseDistance) {
+                optimalLodIndex = 0;
+            } else {
+                const rawLod = 1 + Math.log(fovAdjustedDistance / lodBaseDistance) * invLogMult;
+                optimalLodIndex = Math.min(maxLod, rawLod | 0);
             }
 
             // Clamp to configured range
             if (optimalLodIndex < rangeMin) optimalLodIndex = rangeMin;
             if (optimalLodIndex > rangeMax) optimalLodIndex = rangeMax;
 
-            // Calculate world-space distance for budget enforcement bucketing
-            const worldDistance = actualDistance * uniformScale;
-
-            // Store optimal LOD and world distance
             nodeInfo.optimalLod = optimalLodIndex;
-            nodeInfo.worldDistance = worldDistance;
+            nodeInfo.worldDistance = fovAdjustedDistance * uniformScale;
 
             // Count splats for this optimal LOD
             const lod = nodes[nodeIndex].lods[optimalLodIndex];
@@ -596,11 +560,14 @@ class GSplatOctreeInstance {
      *
      * @param {GraphNode} cameraNode - The camera node.
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
+     * @param {number} [budgetScale] - Dynamic scale applied to LOD parameters to shift
+     * boundaries closer to the budget target. Applied to lodBaseDistance directly, and
+     * gently to lodMultiplier via pow(budgetScale, -0.2). Defaults to 1.
      * @returns {number} Total optimal splat count.
      */
-    evaluateOptimalLods(cameraNode, params) {
+    evaluateOptimalLods(cameraNode, params, budgetScale = 1) {
         const maxLod = this.octree.lodLevels - 1;
-        const lodDistances = this.placement.lodDistances || [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
+        const { lodBaseDistance, lodMultiplier } = this.placement;
         const { lodRangeMin, lodRangeMax } = params;
         const rangeMin = Math.max(0, Math.min(lodRangeMin ?? 0, maxLod));
         const rangeMax = Math.max(rangeMin, Math.min(lodRangeMax ?? maxLod, maxLod));
@@ -612,7 +579,10 @@ class GSplatOctreeInstance {
         // Get uniform scale for world-space conversion
         const uniformScale = this.placement.node.getWorldTransform().getScale().x;
 
-        return this.evaluateNodeLods(cameraNode, maxLod, lodDistances,
+        const effectiveBase = lodBaseDistance * budgetScale;
+        const effectiveMult = Math.max(1.2, lodMultiplier * Math.pow(budgetScale, -0.2));
+
+        return this.evaluateNodeLods(cameraNode, maxLod, effectiveBase, effectiveMult,
             rangeMin, rangeMax, params, uniformScale);
     }
 
@@ -884,6 +854,12 @@ class GSplatOctreeInstance {
      * @returns {boolean} True if octree instance is dirty, false otherwise.
      */
     update() {
+
+        // Re-evaluate LODs when lodBaseDistance or lodMultiplier changed on the component
+        if (this.placement.lodDirty) {
+            this.placement.lodDirty = false;
+            this.needsLodUpdate = true;
+        }
 
         // handle pending loads
         if (this.pending.size) {

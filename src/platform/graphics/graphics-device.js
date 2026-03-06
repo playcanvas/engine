@@ -9,12 +9,13 @@ import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 import {
     BUFFER_STATIC,
-    CULLFACE_BACK,
+    CULLFACE_BACK, CULLFACE_NONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     INDEXFORMAT_UINT16,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
-    semanticToLocation
+    semanticToLocation,
+    FRONTFACE_CCW
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
@@ -772,6 +773,7 @@ class GraphicsDevice extends EventHandler {
         this.blendState = new BlendState();
         this.depthState = new DepthState();
         this.cullMode = CULLFACE_BACK;
+        this.frontFace = FRONTFACE_CCW;
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
@@ -837,6 +839,41 @@ class GraphicsDevice extends EventHandler {
      */
     setCullMode(cullMode) {
         Debug.assert(false);
+    }
+
+    /**
+     * Controls whether polygons are front- or back-facing by setting a winding
+     * orientation. The default frontFace is {@link FRONTFACE_CCW}.
+     *
+     * @param {number} frontFace - The front face to set. Can be:
+     *
+     * - {@link FRONTFACE_CW}
+     * - {@link FRONTFACE_CCW}
+     */
+    setFrontFace(frontFace) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets all draw-related render states in a single call. All parameters have sensible defaults
+     * for utility rendering (full-screen quads, particles, etc.), so calling `setDrawStates()` with
+     * no arguments resets to a safe baseline.
+     *
+     * @param {BlendState} [blendState] - Blend state. Defaults to {@link BlendState.NOBLEND}.
+     * @param {DepthState} [depthState] - Depth state. Defaults to {@link DepthState.NODEPTH}.
+     * @param {number} [cullMode] - Cull mode. Defaults to {@link CULLFACE_NONE}.
+     * @param {number} [frontFace] - Front face winding. Defaults to {@link FRONTFACE_CCW}.
+     * @param {StencilParameters} [stencilFront] - Front stencil parameters.
+     * @param {StencilParameters} [stencilBack] - Back stencil parameters.
+     */
+    setDrawStates(blendState = BlendState.NOBLEND, depthState = DepthState.NODEPTH,
+        cullMode = CULLFACE_NONE, frontFace = FRONTFACE_CCW,
+        stencilFront, stencilBack) {
+        this.setBlendState(blendState);
+        this.setDepthState(depthState);
+        this.setCullMode(cullMode);
+        this.setFrontFace(frontFace);
+        this.setStencilState(stencilFront, stencilBack);
     }
 
     /**

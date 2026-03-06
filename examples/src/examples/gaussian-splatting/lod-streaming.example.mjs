@@ -76,24 +76,28 @@ const config = {
     focusPoint: [12, 3, 0]
 };
 
-// LOD preset definitions with customizable distances
-/** @type {Record<string, { range: number[], lodDistances: number[] }>} */
+// LOD preset definitions
+/** @type {Record<string, { range: number[], lodBaseDistance: number, lodMultiplier: number }>} */
 const LOD_PRESETS = {
     'desktop-max': {
         range: [0, 5],
-        lodDistances: [7, 20, 40, 80, 120, 150, 200]
+        lodBaseDistance: 7,
+        lodMultiplier: 3
     },
     'desktop': {
         range: [1, 5],
-        lodDistances: [5, 10, 25, 50, 65, 90, 150]
+        lodBaseDistance: 5,
+        lodMultiplier: 4
     },
     'mobile-max': {
         range: [2, 5],
-        lodDistances: [5, 7, 12, 25, 75, 120, 200]
+        lodBaseDistance: 5,
+        lodMultiplier: 2
     },
     'mobile': {
         range: [3, 5],
-        lodDistances: [2, 4, 6, 10, 75, 120, 200]
+        lodBaseDistance: 2,
+        lodMultiplier: 2
     }
 };
 
@@ -150,7 +154,7 @@ assetListLoader.load(() => {
     data.set('compact', true);
     data.set('debugLod', false);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
-    data.set('splatBudget', pc.platform.mobile ? '1M' : '4M');
+    data.set('splatBudget', pc.platform.mobile ? 1 : 4);
 
     const entity = new pc.Entity(config.name || 'gsplat');
     entity.addComponent('gsplat', {
@@ -169,7 +173,10 @@ assetListLoader.load(() => {
         const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
         app.scene.gsplat.lodRangeMin = presetData.range[0];
         app.scene.gsplat.lodRangeMax = presetData.range[1];
-        gs.lodDistances = presetData.lodDistances;
+        gs.lodBaseDistance = presetData.lodBaseDistance;
+        gs.lodMultiplier = presetData.lodMultiplier;
+        data.set('lodBaseDistance', presetData.lodBaseDistance);
+        data.set('lodMultiplier', presetData.lodMultiplier);
     };
 
     applyPreset();
@@ -194,23 +201,16 @@ assetListLoader.load(() => {
 
     data.on('lodPreset:set', applyPreset);
 
+    data.on('lodBaseDistance:set', () => {
+        gs.lodBaseDistance = data.get('lodBaseDistance');
+    });
+    data.on('lodMultiplier:set', () => {
+        gs.lodMultiplier = data.get('lodMultiplier');
+    });
+
     const applySplatBudget = () => {
-        const preset = data.get('splatBudget');
-        const budgetMap = {
-            'none': 0,
-            '1M': 1000000,
-            '2M': 2000000,
-            '3M': 3000000,
-            '4M': 4000000,
-            '5M': 5000000,
-            '6M': 6000000,
-            '7M': 7000000,
-            '8M': 8000000,
-            '9M': 9000000,
-            '10M': 10000000
-        };
-        // Global splat budget applies to all GSplats in the scene
-        app.scene.gsplat.splatBudget = budgetMap[preset] || 0;
+        const millions = data.get('splatBudget');
+        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
     };
 
     applySplatBudget();
@@ -233,6 +233,10 @@ assetListLoader.load(() => {
 
     app.root.addChild(camera);
 
+    data.on('cameraFov:set', () => {
+        camera.camera.fov = data.get('cameraFov');
+    });
+
     // Add the GsplatRevealRadial script to the gsplat entity
     entity.addComponent('script');
     const revealScript = entity.script?.create(GsplatRevealRadial);
@@ -251,8 +255,8 @@ assetListLoader.load(() => {
         sceneSize: 500,
         moveSpeed: /** @type {number} */ (config.moveSpeed),
         moveFastSpeed: /** @type {number} */ (config.moveFastSpeed),
-        enableOrbit: config.enableOrbit ?? false,
-        enablePan: config.enablePan ?? false,
+        enableOrbit: false,
+        enablePan: false,
         focusPoint: focusPoint
     });
 

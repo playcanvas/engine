@@ -335,6 +335,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.FRONT_AND_BACK
         ];
 
+        this.glFrontFace = [
+            gl.CCW,
+            gl.CW
+        ];
+
         this.glFilter = [
             gl.NEAREST,
             gl.LINEAR,
@@ -2509,6 +2514,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
             this.cullMode = cullMode;
+        }
+    }
+
+    setFrontFace(frontFace) {
+        if (this.frontFace !== frontFace) {
+            const mode = this.glFrontFace[frontFace];
+            this.gl.frontFace(mode);
+            this.frontFace = frontFace;
         }
     }
 
