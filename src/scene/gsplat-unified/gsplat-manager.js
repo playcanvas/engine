@@ -271,6 +271,9 @@ class GSplatManager {
     /** @type {Vec3} */
     lastLodCameraFwd = new Vec3(Infinity, Infinity, Infinity);
 
+    /** @type {number} */
+    lastLodCameraFov = -1;
+
     /** @type {Vec3} */
     lastSortCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
@@ -293,6 +296,18 @@ class GSplatManager {
      * @private
      */
     _budgetBalancer = new GSplatBudgetBalancer();
+
+    /**
+     * Dynamic scale factor applied to LOD parameters during budget enforcement. Shifts all
+     * LOD boundaries uniformly to bring the initial estimate closer to the budget target,
+     * reducing balancer work. Applied directly to lodBaseDistance and gently to lodMultiplier.
+     * Values > 1 push boundaries outward (more splats), values < 1 pull them inward
+     * (fewer splats).
+     *
+     * @type {number}
+     * @private
+     */
+    _budgetScale = 1.0;
 
     /**
      * Persistent block allocator for work buffer pixel allocations. Grows on demand.
@@ -1025,7 +1040,12 @@ class GSplatManager {
             }
         }
 
-        return cameraMoved || cameraRotated;
+        // FOV change check (trigger when FOV differs by more than ~2%)
+        const currentFov = this.cameraNode.camera.fov;
+        const fovChanged = this.lastLodCameraFov < 0 ||
+            Math.abs(currentFov - this.lastLodCameraFov) > this.lastLodCameraFov * 0.02;
+
+        return cameraMoved || cameraRotated || fovChanged;
     }
 
     /**
@@ -1175,7 +1195,7 @@ class GSplatManager {
             if (dist > maxDist) maxDist = dist;
         }
 
-        return Math.max(maxDist, 1); // Avoid division by zero
+        return Math.max(maxDist, 1);
     }
 
     /**
@@ -1211,8 +1231,9 @@ class GSplatManager {
         const globalMaxDistance = this.computeGlobalMaxDistance();
 
         // Phase 2: Evaluate optimal LODs for all octrees and calculate padding for active placements
+        let totalOptimalSplats = 0;
         for (const [, inst] of this.octreeInstances) {
-            inst.evaluateOptimalLods(this.cameraNode, this.scene.gsplat);
+            totalOptimalSplats += inst.evaluateOptimalLods(this.cameraNode, this.scene.gsplat, this._budgetScale);
             for (const placement of inst.activePlacements) {
                 const resource = /** @type {GSplatResourceBase} */ (placement.resource);
                 const numSplats = resource?.numSplats ?? 0;
@@ -1224,6 +1245,20 @@ class GSplatManager {
         // Note: This is an estimate based on current active placements; actual work buffer
         // content may change after LOD evaluation applies changes
         const adjustedBudget = Math.max(1, octreeBudget - paddingEstimate);
+
+        // Adapt _budgetScale to bring LOD estimates closer to budget by uniformly shifting
+        // all LOD boundaries. Larger base distance → more nodes at LOD 0 → more splats, so:
+        // under budget (ratio < 1) → increase scale, over budget (ratio > 1) → decrease scale.
+        // The scale intentionally targets ~60-140% of budget (wide dead zone), leaving the
+        // balancer to handle the remaining gap with per-node adjustments.
+        const ratio = totalOptimalSplats / adjustedBudget;
+        const budgetScaleDeadZone = 0.4;
+        const budgetScaleBlendRate = 0.3;
+        if (ratio > 1 + budgetScaleDeadZone || ratio < 1 - budgetScaleDeadZone) {
+            const invCorrection = 1 / Math.sqrt(ratio);
+            this._budgetScale *= 1 + (invCorrection - 1) * budgetScaleBlendRate;
+            this._budgetScale = Math.max(0.01, Math.min(this._budgetScale, 100.0));
+        }
 
         // Budget balancing across all octrees
         this._budgetBalancer.balance(this.octreeInstances, adjustedBudget, globalMaxDistance);
@@ -1384,8 +1419,10 @@ class GSplatManager {
             }
 
             // update last camera data when LOD was evaluated
-            this.lastLodCameraPos.copy(this.cameraNode.getPosition());
-            this.lastLodCameraFwd.copy(this.cameraNode.forward);
+            const cameraNode = this.cameraNode;
+            this.lastLodCameraPos.copy(cameraNode.getPosition());
+            this.lastLodCameraFwd.copy(cameraNode.forward);
+            this.lastLodCameraFov = cameraNode.camera.fov;
 
             const budget = this.scene.gsplat.splatBudget;
 
@@ -1394,6 +1431,7 @@ class GSplatManager {
                 this._enforceBudget(budget);
             } else {
                 // Budget disabled - use LOD distances only, no budget adjustments
+                this._budgetScale = 1.0;
                 for (const [, inst] of this.octreeInstances) {
                     inst.updateLod(this.cameraNode, this.scene.gsplat);
                 }

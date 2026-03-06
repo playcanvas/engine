@@ -66,12 +66,19 @@ class GSplatPlacement {
     lodIndex = 0;
 
     /**
-     * LOD distance thresholds for octree-based gsplat. Only used when the
-     * resource is an octree resource; otherwise ignored and kept null.
+     * Base distance for the first LOD transition (LOD 0 to LOD 1).
      *
-     * @type {number[]|null}
+     * @type {number}
      */
-    _lodDistances = null;
+    lodBaseDistance = 5;
+
+    /**
+     * Geometric multiplier between successive LOD distance thresholds.
+     * Distance for LOD level i is: lodBaseDistance * lodMultiplier^i.
+     *
+     * @type {number}
+     */
+    lodMultiplier = 3;
 
     /**
      * The axis-aligned bounding box for this placement, in local space.
@@ -95,6 +102,13 @@ class GSplatPlacement {
      * @private
      */
     _streams = null;
+
+    /**
+     * Flag indicating LOD parameters have changed and LOD needs re-evaluation.
+     *
+     * @type {boolean}
+     */
+    lodDirty = false;
 
     /**
      * Flag indicating the splat needs to be re-rendered to work buffer.
@@ -234,35 +248,13 @@ class GSplatPlacement {
     }
 
     /**
-     * Sets LOD distance thresholds. Only applicable for octree resources. The provided array is
-     * copied. If the resource has an octree with N LOD levels, the array should contain N-1
-     * elements. For non-octree resources, the value is ignored and kept null.
+     * Computes the LOD distance threshold for a given level using the geometric progression.
      *
-     * @type {number[]|null}
+     * @param {number} level - The LOD level index.
+     * @returns {number} The distance threshold for the given LOD level.
      */
-    set lodDistances(distances) {
-        const isOctree = !!(this.resource && /** @type {any} */ (this.resource).octree);
-        if (isOctree) {
-            if (distances) {
-                const lodLevels = /** @type {any} */ (this.resource).octree?.lodLevels ?? 1;
-                Debug.assert(Array.isArray(distances), 'lodDistances must be an array');
-                Debug.assert(distances.length >= lodLevels, 'lodDistances must have at least octree LOD levels - 1 entries, privided:',
-                    distances.length, 'expected:', lodLevels);
-
-                this._lodDistances = distances.slice();
-            } else {
-                this._lodDistances = null;
-            }
-        }
-    }
-
-    /**
-     * Gets a copy of LOD distance thresholds, or null when not set.
-     *
-     * @type {number[]|null}
-     */
-    get lodDistances() {
-        return this._lodDistances ? this._lodDistances.slice() : null;
+    getLodDistance(level) {
+        return this.lodBaseDistance * Math.pow(this.lodMultiplier, level);
     }
 
     /**

@@ -60,15 +60,15 @@ const config = {
 };
 
 // LOD preset definitions
-/** @type {Record<string, { range: number[], lodDistances: number[] }>} */
+/** @type {Record<string, { range: number[], lodBaseDistance: number }>} */
 const LOD_PRESETS = {
     'desktop': {
         range: [0, 2],
-        lodDistances: [15, 30, 80, 250, 300]
+        lodBaseDistance: 15
     },
     'mobile': {
-        range: [2, 5],
-        lodDistances: [15, 30, 80, 250, 300]
+        range: [1, 5],
+        lodBaseDistance: 15
     }
 };
 
@@ -115,7 +115,7 @@ assetListLoader.load(() => {
 
     // initialize UI settings
     data.set('debugLod', false);
-    data.set('splatBudget', pc.platform.mobile ? '1M' : '4M');
+    data.set('splatBudget', pc.platform.mobile ? 1 : 4);
 
     app.scene.gsplat.colorizeLod = !!data.get('debugLod');
 
@@ -124,17 +124,8 @@ assetListLoader.load(() => {
     });
 
     const applySplatBudget = () => {
-        const preset = data.get('splatBudget');
-        const budgetMap = {
-            'none': 0,
-            '1M': 1000000,
-            '2M': 2000000,
-            '3M': 3000000,
-            '4M': 4000000,
-            '6M': 6000000
-        };
-        // Global splat budget applies to all GSplats in the scene
-        app.scene.gsplat.splatBudget = budgetMap[preset] || 0;
+        const millions = data.get('splatBudget');
+        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
     };
 
     applySplatBudget();
@@ -161,7 +152,18 @@ assetListLoader.load(() => {
 
     // Apply LOD distances to skatepark
     const gs = /** @type {any} */ (skatepark.gsplat);
-    gs.lodDistances = presetData.lodDistances;
+    gs.lodBaseDistance = presetData.lodBaseDistance;
+    gs.lodMultiplier = 4;
+
+    data.set('lodBaseDistance', presetData.lodBaseDistance);
+    data.set('lodMultiplier', 4);
+
+    data.on('lodBaseDistance:set', () => {
+        gs.lodBaseDistance = data.get('lodBaseDistance');
+    });
+    data.on('lodMultiplier:set', () => {
+        gs.lodMultiplier = data.get('lodMultiplier');
+    });
 
     // World center coordinates
     const worldCenter = { x: 18, y: -1.3, z: 13.5 };
@@ -218,9 +220,20 @@ assetListLoader.load(() => {
         sceneSize: 500,
         moveSpeed: config.moveSpeed,
         moveFastSpeed: config.moveFastSpeed,
-        enableOrbit: config.enableOrbit,
-        enablePan: config.enablePan,
+        enableOrbit: false,
+        enablePan: false,
         focusPoint: focusPoint
+    });
+
+    data.set('orbitCamera', false);
+    data.on('orbitCamera:set', () => {
+        const orbit = !!data.get('orbitCamera');
+        cc.enableOrbit = orbit;
+        cc.enablePan = orbit;
+        cc.enableFly = !orbit;
+        if (orbit) {
+            cc.focusPoint = new pc.Vec3(worldCenter.x, worldCenter.y, worldCenter.z);
+        }
     });
 
     // Orbit parameters
