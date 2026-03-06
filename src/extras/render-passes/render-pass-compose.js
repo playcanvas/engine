@@ -81,6 +81,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _taaEnabled = false;
 
+    _hdrScene = true;
+
     _sharpness = 0.5;
 
     _gammaCorrection = GAMMA_SRGB;
@@ -268,6 +270,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
         return this._sharpness > 0;
     }
 
+    set hdrScene(value) {
+        if (this._hdrScene !== value) {
+            this._hdrScene = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get hdrScene() {
+        return this._hdrScene;
+    }
+
     postInit() {
         // clear all buffers to avoid them being loaded from memory
         this.setClearColor(Color.BLACK);
@@ -322,7 +335,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
                 `-${this.taaEnabled ? 'taa' : 'notaa'}` +
-                `-${this.isSharpnessEnabled ? 'cas' : 'nocas'}` +
+                `-${this.isSharpnessEnabled ? (this._hdrScene ? 'cashdr' : 'cas') : 'nocas'}` +
                 `-${this._debug ?? ''}` +
                 `-decl${declHash}-start${startHash}-end${endHash}`;
 
@@ -342,7 +355,10 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 if (this.vignetteEnabled) defines.set('VIGNETTE', true);
                 if (this.fringingEnabled) defines.set('FRINGING', true);
                 if (this.taaEnabled) defines.set('TAA', true);
-                if (this.isSharpnessEnabled) defines.set('CAS', true);
+                if (this.isSharpnessEnabled) {
+                    defines.set('CAS', true);
+                    if (this._hdrScene) defines.set('CAS_HDR', true);
+                }
                 if (this._debug) defines.set('DEBUG_COMPOSE', this._debug);
 
                 const includes = new Map(shaderChunks);
