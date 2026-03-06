@@ -76,24 +76,28 @@ const config = {
     focusPoint: [12, 3, 0]
 };
 
-// LOD preset definitions with customizable distances
-/** @type {Record<string, { range: number[], lodBaseDistance: number }>} */
+// LOD preset definitions
+/** @type {Record<string, { range: number[], lodBaseDistance: number, lodMultiplier: number }>} */
 const LOD_PRESETS = {
     'desktop-max': {
         range: [0, 5],
-        lodBaseDistance: 7
+        lodBaseDistance: 7,
+        lodMultiplier: 3
     },
     'desktop': {
         range: [1, 5],
-        lodBaseDistance: 5
+        lodBaseDistance: 5,
+        lodMultiplier: 4
     },
     'mobile-max': {
         range: [2, 5],
-        lodBaseDistance: 5
+        lodBaseDistance: 5,
+        lodMultiplier: 2
     },
     'mobile': {
         range: [3, 5],
-        lodBaseDistance: 2
+        lodBaseDistance: 2,
+        lodMultiplier: 2
     }
 };
 
@@ -170,9 +174,9 @@ assetListLoader.load(() => {
         app.scene.gsplat.lodRangeMin = presetData.range[0];
         app.scene.gsplat.lodRangeMax = presetData.range[1];
         gs.lodBaseDistance = presetData.lodBaseDistance;
+        gs.lodMultiplier = presetData.lodMultiplier;
         data.set('lodBaseDistance', presetData.lodBaseDistance);
-        data.set('lodMultiplier', 4);
-        data.set('cameraFov', 75);
+        data.set('lodMultiplier', presetData.lodMultiplier);
     };
 
     applyPreset();

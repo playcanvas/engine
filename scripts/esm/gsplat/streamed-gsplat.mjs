@@ -19,7 +19,13 @@ class StreamedGsplat extends Script {
      * @attribute
      * @type {number}
      */
-    ultraLodBaseDistance = 5;
+    ultraLodBaseDistance = 7;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    ultraLodMultiplier = 3;
 
     /**
      * @attribute
@@ -31,13 +37,31 @@ class StreamedGsplat extends Script {
      * @attribute
      * @type {number}
      */
+    highLodMultiplier = 3;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
     mediumLodBaseDistance = 5;
 
     /**
      * @attribute
      * @type {number}
      */
+    mediumLodMultiplier = 2;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
     lowLodBaseDistance = 5;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    lowLodMultiplier = 2;
 
     /**
      * @attribute
@@ -113,6 +137,7 @@ class StreamedGsplat extends Script {
                 this.entity.addComponent('gsplat', {
                     unified: true,
                     lodBaseDistance: this._getCurrentLodBaseDistance(),
+                    lodMultiplier: this._getCurrentLodMultiplier(),
                     asset: a
                 });
 
@@ -146,6 +171,7 @@ class StreamedGsplat extends Script {
                 child.addComponent('gsplat', {
                     unified: true,
                     lodBaseDistance: this._getCurrentLodBaseDistance(),
+                    lodMultiplier: this._getCurrentLodMultiplier(),
                     asset: a
                 });
 
@@ -171,6 +197,21 @@ class StreamedGsplat extends Script {
                 return this.lowLodBaseDistance;
             default:
                 return 5;
+        }
+    }
+
+    _getCurrentLodMultiplier() {
+        switch (this._currentPreset) {
+            case 'ultra':
+                return this.ultraLodMultiplier;
+            case 'high':
+                return this.highLodMultiplier;
+            case 'medium':
+                return this.mediumLodMultiplier;
+            case 'low':
+                return this.lowLodMultiplier;
+            default:
+                return 3;
         }
     }
 
@@ -206,6 +247,7 @@ class StreamedGsplat extends Script {
         // Apply to main streaming asset only (environment doesn't support these settings)
         if (this.entity.gsplat) {
             this.entity.gsplat.lodBaseDistance = this._getCurrentLodBaseDistance();
+            this.entity.gsplat.lodMultiplier = this._getCurrentLodMultiplier();
         }
     }
 
