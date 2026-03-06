@@ -434,15 +434,15 @@ class GSplatComponent extends Component {
     /**
      * Sets the base distance for the first LOD transition (LOD 0 to LOD 1). Objects closer
      * than this distance use the highest quality LOD. Each subsequent LOD level transitions
-     * at a progressively larger distance, controlled by {@link lodMultiplier}. Defaults to 5.
+     * at a progressively larger distance, controlled by {@link lodMultiplier}. Clamped to a
+     * minimum of 0.1. Defaults to 5.
      *
      * @type {number}
      */
     set lodBaseDistance(value) {
-        this._lodBaseDistance = value;
+        this._lodBaseDistance = Math.max(0.1, value);
         if (this._placement) {
-            this._placement.lodBaseDistance = value;
-            this._placement.lodDirty = true;
+            this._placement.lodBaseDistance = this._lodBaseDistance;
         }
     }
 
@@ -459,17 +459,17 @@ class GSplatComponent extends Component {
      * Sets the multiplier between successive LOD distance thresholds. Each LOD level
      * transitions at this factor times the previous level's distance, creating a geometric
      * progression. Lower values keep higher quality at distance; higher values switch to
-     * coarser LODs sooner. LOD distances are automatically compensated for the camera's
-     * field of view — a wider FOV makes objects appear smaller on screen, so LOD switches
-     * to coarser levels sooner to match the reduced screen-space detail. Defaults to 3.
+     * coarser LODs sooner. Clamped to a minimum of 1.2 to avoid degenerate logarithmic LOD
+     * computation. LOD distances are automatically compensated for the camera's field of
+     * view — a wider FOV makes objects appear smaller on screen, so LOD switches to coarser
+     * levels sooner to match the reduced screen-space detail. Defaults to 3.
      *
      * @type {number}
      */
     set lodMultiplier(value) {
-        this._lodMultiplier = value;
+        this._lodMultiplier = Math.max(1.2, value);
         if (this._placement) {
-            this._placement.lodMultiplier = value;
-            this._placement.lodDirty = true;
+            this._placement.lodMultiplier = this._lodMultiplier;
         }
     }
 

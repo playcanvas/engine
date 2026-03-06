@@ -107,7 +107,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'lodMultiplier' },
-                    min: 1,
+                    min: 1.2,
                     max: 5,
                     precision: 1
                 })

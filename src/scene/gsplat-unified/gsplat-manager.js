@@ -1251,13 +1251,15 @@ class GSplatManager {
         // under budget (ratio < 1) → increase scale, over budget (ratio > 1) → decrease scale.
         // The scale intentionally targets ~60-140% of budget (wide dead zone), leaving the
         // balancer to handle the remaining gap with per-node adjustments.
-        const ratio = totalOptimalSplats / adjustedBudget;
-        const budgetScaleDeadZone = 0.4;
-        const budgetScaleBlendRate = 0.3;
-        if (ratio > 1 + budgetScaleDeadZone || ratio < 1 - budgetScaleDeadZone) {
-            const invCorrection = 1 / Math.sqrt(ratio);
-            this._budgetScale *= 1 + (invCorrection - 1) * budgetScaleBlendRate;
-            this._budgetScale = Math.max(0.01, Math.min(this._budgetScale, 100.0));
+        if (totalOptimalSplats > 0) {
+            const ratio = totalOptimalSplats / adjustedBudget;
+            const budgetScaleDeadZone = 0.4;
+            const budgetScaleBlendRate = 0.3;
+            if (ratio > 1 + budgetScaleDeadZone || ratio < 1 - budgetScaleDeadZone) {
+                const invCorrection = 1 / Math.sqrt(ratio);
+                this._budgetScale *= 1 + (invCorrection - 1) * budgetScaleBlendRate;
+                this._budgetScale = Math.max(0.01, Math.min(this._budgetScale, 100.0));
+            }
         }
 
         // Budget balancing across all octrees

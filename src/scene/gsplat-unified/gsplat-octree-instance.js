@@ -67,12 +67,6 @@ class NodeInfo {
     inst = null;
 
     /**
-     * Index in octree.nodes array.
-     * @type {number}
-     */
-    nodeIndex = 0;
-
-    /**
      * Cached reference to this node's LOD array for fast budget balancing.
      * @type {Array|null}
      */

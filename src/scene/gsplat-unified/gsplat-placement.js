@@ -69,16 +69,46 @@ class GSplatPlacement {
      * Base distance for the first LOD transition (LOD 0 to LOD 1).
      *
      * @type {number}
+     * @private
      */
-    lodBaseDistance = 5;
+    _lodBaseDistance = 5;
 
     /**
      * Geometric multiplier between successive LOD distance thresholds.
      * Distance for LOD level i is: lodBaseDistance * lodMultiplier^i.
      *
      * @type {number}
+     * @private
      */
-    lodMultiplier = 3;
+    _lodMultiplier = 3;
+
+    /**
+     * @type {number}
+     */
+    set lodBaseDistance(value) {
+        if (this._lodBaseDistance !== value) {
+            this._lodBaseDistance = value;
+            this.lodDirty = true;
+        }
+    }
+
+    get lodBaseDistance() {
+        return this._lodBaseDistance;
+    }
+
+    /**
+     * @type {number}
+     */
+    set lodMultiplier(value) {
+        if (this._lodMultiplier !== value) {
+            this._lodMultiplier = value;
+            this.lodDirty = true;
+        }
+    }
+
+    get lodMultiplier() {
+        return this._lodMultiplier;
+    }
 
     /**
      * The axis-aligned bounding box for this placement, in local space.
