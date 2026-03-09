@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { BUFFERUSAGE_COPY_DST, CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
+import { BUFFERUSAGE_COPY_DST, CULLFACE_NONE, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatResolveSH } from './gsplat-resolve-sh.js';
@@ -16,7 +16,6 @@ import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
  * @import { GraphNode } from '../graph-node.js'
  * @import { Mesh } from '../mesh.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
- * @import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js'
  */
 
 const mat = new Mat4();
@@ -97,8 +96,7 @@ class GSplatInstance {
                 vertexWGSL: '#include "gsplatVS"',
                 fragmentWGSL: '#include "gsplatPS"',
                 attributes: {
-                    vertex_position: SEMANTIC_POSITION,
-                    vertex_id_attrib: SEMANTIC_ATTR13
+                    vertex_position: SEMANTIC_POSITION
                 }
             });
 
@@ -108,7 +106,7 @@ class GSplatInstance {
 
         resource.ensureMesh();
         this.meshInstance = new MeshInstance(/** @type {Mesh} */ (resource.mesh), this._material);
-        this.meshInstance.setInstancing(/** @type {VertexBuffer} */ (resource.instanceIndices), true);
+        this.meshInstance.setInstancing(true, true);
         this.meshInstance.gsplatInstance = this;
 
         // only start rendering the splat after we've received the splat order data
@@ -176,6 +174,7 @@ class GSplatInstance {
     configureMaterial(material, options = {}) {
         this.resource.configureMaterial(material, null, this.resource.format.getInputDeclarations());
 
+        material.setDefine('{GSPLAT_INSTANCE_SIZE}', GSplatResourceBase.instanceSize);
         material.setParameter('numSplats', 0);
         this.setMaterialOrderData(material);
         material.setParameter('alphaClip', 0.3);
