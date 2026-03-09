@@ -242,6 +242,12 @@ class GSplatRenderer {
     updateIndirect(textureSize) {
         this._material.setParameter('splatTextureSize', textureSize);
         this.meshInstance.visible = true;
+
+        // Ensure instancingCount is non-zero so the forward/shadow renderers don't
+        // skip this draw call. The actual instance count is GPU-driven via indirect args.
+        if (this.meshInstance.instancingCount <= 0) {
+            this.meshInstance.instancingCount = 1;
+        }
     }
 
     /**

@@ -87,6 +87,7 @@ class GSplatInstance {
 
         if (options.material) {
             this._material = options.material;
+            this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', String(GSplatResourceBase.instanceSize));
             this.setMaterialOrderData(this._material);
         } else {
             this._material = new ShaderMaterial({
@@ -152,6 +153,7 @@ class GSplatInstance {
     set material(value) {
         if (this._material !== value) {
             this._material = value;
+            this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', String(GSplatResourceBase.instanceSize));
             this.setMaterialOrderData(this._material);
 
             if (this.meshInstance) {
