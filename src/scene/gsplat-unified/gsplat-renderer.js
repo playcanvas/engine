@@ -1,4 +1,4 @@
-import { SEMANTIC_POSITION, SEMANTIC_ATTR13, CULLFACE_NONE, PIXELFORMAT_RGBA16U } from '../../platform/graphics/constants.js';
+import { SEMANTIC_POSITION, CULLFACE_NONE, PIXELFORMAT_RGBA16U } from '../../platform/graphics/constants.js';
 import {
     BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, GSPLAT_FORWARD, GSPLAT_SHADOW,
     SHADOWCAMERA_NAME
@@ -6,10 +6,8 @@ import {
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { MeshInstance } from '../mesh-instance.js';
-import { math } from '../../core/math/math.js';
 
 /**
- * @import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js'
  * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
  * @import { Layer } from '../layer.js'
  * @import { GraphNode } from '../graph-node.js'
@@ -28,12 +26,6 @@ class GSplatRenderer {
 
     /** @type {MeshInstance} */
     meshInstance;
-
-    /** @type {VertexBuffer|null} */
-    instanceIndices = null;
-
-    /** @type {number} */
-    instanceIndicesCount = 0;
 
     /** @type {Layer} */
     layer;
@@ -84,10 +76,11 @@ class GSplatRenderer {
             vertexWGSL: '#include "gsplatVS"',
             fragmentWGSL: '#include "gsplatPS"',
             attributes: {
-                vertex_position: SEMANTIC_POSITION,
-                vertex_id_attrib: SEMANTIC_ATTR13
+                vertex_position: SEMANTIC_POSITION
             }
         });
+
+        this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', GSplatResourceBase.instanceSize);
 
         this.configureMaterial();
 
@@ -97,6 +90,7 @@ class GSplatRenderer {
         });
 
         // Also protect defines that may be added dynamically
+        this._internalDefines.add('{GSPLAT_INSTANCE_SIZE}');
         this._internalDefines.add('GSPLAT_UNIFIED_ID');
         this._internalDefines.add('PICK_CUSTOM_ID');
         this._internalDefines.add('GSPLAT_INDIRECT_DRAW');
@@ -248,6 +242,12 @@ class GSplatRenderer {
     updateIndirect(textureSize) {
         this._material.setParameter('splatTextureSize', textureSize);
         this.meshInstance.visible = true;
+
+        // Ensure instancingCount is non-zero so the forward/shadow renderers don't
+        // skip this draw call. The actual instance count is GPU-driven via indirect args.
+        if (this.meshInstance.instancingCount <= 0) {
+            this.meshInstance.instancingCount = 1;
+        }
     }
 
     /**
@@ -420,34 +420,12 @@ class GSplatRenderer {
         }
     }
 
-    setMaxNumSplats(numSplats) {
-
-        // round up to the nearest multiple of instanceSize (same as createInstanceIndices does internally)
-        const roundedNumSplats = math.roundUp(numSplats, GSplatResourceBase.instanceSize);
-
-        if (this.instanceIndicesCount < roundedNumSplats) {
-            this.instanceIndicesCount = roundedNumSplats;
-
-            // destroy old instance indices
-            this.instanceIndices?.destroy();
-
-            // create new instance indices
-            this.instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, numSplats);
-            this.meshInstance.setInstancing(this.instanceIndices, true);
-
-            // update texture size uniform
-            this._material.setParameter('splatTextureSize', this.workBuffer.textureSize);
-        }
-    }
-
     createMeshInstance() {
 
         const mesh = GSplatResourceBase.createMesh(this.device);
-        const textureSize = this.workBuffer.textureSize;
-        const instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, textureSize * textureSize);
         const meshInstance = new MeshInstance(mesh, this._material);
         meshInstance.node = this.node;
-        meshInstance.setInstancing(instanceIndices, true);
+        meshInstance.setInstancing(true, true);
 
         // only start rendering the splat after we've received the splat order data
         meshInstance.instancingCount = 0;

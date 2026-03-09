@@ -832,7 +832,6 @@ class GSplatManager {
         const textureSize = worldState.textureSize;
         if (textureSize !== this.workBuffer.textureSize) {
             this.workBuffer.resize(textureSize);
-            this.renderer.setMaxNumSplats(textureSize * textureSize);
         }
 
         // Bounds and transforms textures are needed for frustum culling.

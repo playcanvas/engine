@@ -3,6 +3,7 @@ import { BoundingBox } from '../core/shape/bounding-box.js';
 import { BoundingSphere } from '../core/shape/bounding-sphere.js';
 import { BindGroup } from '../platform/graphics/bind-group.js';
 import { UniformBuffer } from '../platform/graphics/uniform-buffer.js';
+import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { DrawCommands } from '../platform/graphics/draw-commands.js';
 import { indexFormatByteSize } from '../platform/graphics/constants.js';
 import {
@@ -39,7 +40,6 @@ import { PickerId } from './picker-id.js';
  * @import { Texture } from '../platform/graphics/texture.js'
  * @import { UniformBufferFormat } from '../platform/graphics/uniform-buffer-format.js'
  * @import { Vec3 } from '../core/math/vec3.js'
- * @import { VertexBuffer } from '../platform/graphics/vertex-buffer.js'
  * @import { CameraComponent } from '../framework/components/camera/component.js';
  */
 
@@ -1129,8 +1129,11 @@ class MeshInstance {
      * Note that {@link instancingCount} is automatically set to the number of vertices of the
      * vertex buffer when it is provided.
      *
-     * @param {VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
-     * (usually world matrices). Pass null to turn off hardware instancing.
+     * @param {VertexBuffer|true|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
+     * (usually world matrices). Pass `true` to enable attributeless instancing where the instance
+     * index is derived from `gl_InstanceID` / `instance_index` builtins rather than a vertex
+     * buffer attribute — the caller must set {@link instancingCount} manually. Pass null to turn
+     * off hardware instancing.
      * @param {boolean} cull - Whether to perform frustum culling on this instance. If true, the whole
      * instance will be culled by the  camera frustum. This often involves setting
      * {@link RenderComponent#customAabb} containing all instances. Defaults to false, which means
@@ -1138,11 +1141,15 @@ class MeshInstance {
      */
     setInstancing(vertexBuffer, cull = false) {
         if (vertexBuffer) {
-            this.instancingData = new InstancingData(vertexBuffer.numVertices);
-            this.instancingData.vertexBuffer = vertexBuffer;
+            if (vertexBuffer === true) {
+                this.instancingData = new InstancingData(0);
+            } else {
+                this.instancingData = new InstancingData(vertexBuffer.numVertices);
+                this.instancingData.vertexBuffer = vertexBuffer;
 
-            // mark vertex buffer as instancing data
-            vertexBuffer.format.instancing = true;
+                // mark vertex buffer as instancing data
+                vertexBuffer.format.instancing = true;
+            }
 
             // set up culling
             this.cull = cull;
@@ -1151,7 +1158,9 @@ class MeshInstance {
             this.cull = true;
         }
 
-        this._updateShaderDefs(vertexBuffer ? (this._shaderDefs | SHADERDEF_INSTANCING) : (this._shaderDefs & ~SHADERDEF_INSTANCING));
+        this._updateShaderDefs(vertexBuffer instanceof VertexBuffer ?
+            (this._shaderDefs | SHADERDEF_INSTANCING) :
+            (this._shaderDefs & ~SHADERDEF_INSTANCING));
     }
 
     /**
