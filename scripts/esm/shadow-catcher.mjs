@@ -70,6 +70,11 @@ class ShadowCatcher extends Script {
 
         shadowCatcherMaterial.update();
 
+        // if the entity already has render, use it directly
+        if (!this.geometry && this.entity.render) {
+            this.geometry = this.entity;
+        }
+
         // create shadow catcher geometry if none was provided
         if (!this.geometry) {
             this._geometryCreated = true;
@@ -80,12 +85,16 @@ class ShadowCatcher extends Script {
                 material: shadowCatcherMaterial
             });
         }
-        this.entity.addChild(this.geometry);
+
+        if (this.geometry !== this.entity) {
+            this.entity.addChild(this.geometry);
+        }
 
         this.geometry?.render?.meshInstances.forEach((mi) => {
 
             // set up the geometry to render very early during the transparent pass, before other transparent objects
-            mi.drawOrder = -1;
+            // use drawBucket for coarse sorting - higher bucket renders first in back-to-front mode
+            mi.drawBucket = 250;
 
             // if geometry was provided, set the material
             if (!this._geometryCreated) {

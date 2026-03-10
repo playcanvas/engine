@@ -38,7 +38,7 @@ const KEYWORD_RESOURCE = /^[ \t]*var\s*(?:(<storage,[^>]*>)\s*([\w\d_]+)\s*:\s*(
 
 // match varying name from string like: '@interpolate(perspective, centroid) smoothColor : vec3f;'
 // eslint-disable-next-line
-const VARYING = /(?:@interpolate\([^)]*\)\s*)?([\w]+)\s*:/;
+const VARYING = /(?:@interpolate\([^)]*\)\s*)?([\w]+)\s*:\s*([\w<>]+)/;
 
 // marker for a place in the source code to be replaced by code
 const MARKER = '@@@';
@@ -335,10 +335,10 @@ class WebgpuShaderProcessorWGSL {
         const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions, shader);
 
         // VS - convert a list of varyings to a shader block
-        const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true);
+        const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true, device);
 
         // FS - convert a list of varyings to a shader block
-        const fragmentVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(fragmentExtracted.varyings, varyingMap, false);
+        const fragmentVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(fragmentExtracted.varyings, varyingMap, false, device);
 
         // uniforms - merge vertex and fragment uniforms, and create shared uniform buffers
         // Note that as both vertex and fragment can declare the same uniform, we need to remove duplicates
@@ -602,12 +602,12 @@ class WebgpuShaderProcessorWGSL {
         let code = '';
         processingOptions.bindGroupFormats.forEach((format, bindGroupIndex) => {
             if (format) {
-                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, bindGroupIndex, 1);
+                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, bindGroupIndex);
             }
         });
 
         // and also for generated mesh format
-        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH, 0);
+        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH);
 
         return {
             code,
@@ -671,31 +671,27 @@ class WebgpuShaderProcessorWGSL {
      * ```
      * @param {BindGroupFormat} format - The format of the bind group.
      * @param {number} bindGroup - The bind group index.
-     * @param {number} startBindIndex - The starting bind index.
      * @returns {string} - The shader code for the bind group.
      */
-    static getTextureShaderDeclaration(format, bindGroup, startBindIndex) {
+    static getTextureShaderDeclaration(format, bindGroup) {
         let code = '';
-        let bindIndex = startBindIndex;
 
         format.textureFormats.forEach((format) => {
 
             const textureTypeName = getTextureDeclarationType(format.textureDimension, format.sampleType);
-            code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.name}: ${textureTypeName};\n`;
-            bindIndex++;
+            code += `@group(${bindGroup}) @binding(${format.slot}) var ${format.name}: ${textureTypeName};\n`;
 
             if (format.hasSampler) {
+                // A slot should have been left empty for the sampler at format.slot+1
                 const samplerName = format.sampleType === SAMPLETYPE_DEPTH ? 'sampler_comparison' : 'sampler';
-                code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.samplerName}: ${samplerName};\n`;
-                bindIndex++;
+                code += `@group(${bindGroup}) @binding(${format.slot + 1}) var ${format.samplerName}: ${samplerName};\n`;
             }
         });
 
         format.storageBufferFormats.forEach((format) => {
 
             const access = format.readOnly ? 'read' : 'read_write';
-            code += `@group(${bindGroup}) @binding(${bindIndex}) var<storage, ${access}> ${format.name} : ${format.format};\n`;
-            bindIndex++;
+            code += `@group(${bindGroup}) @binding(${format.slot}) var<storage, ${access}> ${format.name} : ${format.format};\n`;
 
         });
 
@@ -705,7 +701,7 @@ class WebgpuShaderProcessorWGSL {
         return code;
     }
 
-    static processVaryings(varyingLines, varyingMap, isVertex) {
+    static processVaryings(varyingLines, varyingMap, isVertex, device) {
         let block = '';
         let blockPrivates = '';
         let blockCopy = '';
@@ -715,6 +711,7 @@ class WebgpuShaderProcessorWGSL {
 
             if (match) {
                 const name = match[1];
+                const type = match[2];
 
                 if (isVertex) {
                     // store it in the map
@@ -731,7 +728,7 @@ class WebgpuShaderProcessorWGSL {
                 if (!isVertex) {
 
                     // private global variable for fragment varying
-                    blockPrivates += `    var<private> ${line};\n`;
+                    blockPrivates += `    var<private> ${name}: ${type};\n`;
 
                     // copy input variable to the private variable
                     blockCopy += `    ${name} = input.${name};\n`;
@@ -745,14 +742,26 @@ class WebgpuShaderProcessorWGSL {
         } else {
             block += '    @builtin(position) position : vec4f,\n';          // interpolated fragment position
             block += '    @builtin(front_facing) frontFacing : bool,\n';    // front-facing
-            block += '    @builtin(sample_index) sampleIndex : u32\n';      // sample index for MSAA
+            block += '    @builtin(sample_index) sampleIndex : u32,\n';     // sample index for MSAA
+            if (device.supportsPrimitiveIndex) {
+                block += '    @builtin(primitive_index) primitiveIndex : u32,\n';  // primitive index
+            }
         }
+
+        // primitive index support
+        const primitiveIndexGlobals = device.supportsPrimitiveIndex ? `
+            var<private> pcPrimitiveIndex: u32;
+        ` : '';
+        const primitiveIndexCopy = device.supportsPrimitiveIndex ? `
+                pcPrimitiveIndex = input.primitiveIndex;
+        ` : '';
 
         // global variables for build-in input into fragment shader
         const fragmentGlobals = isVertex ? '' : `
             var<private> pcPosition: vec4f;
             var<private> pcFrontFacing: bool;
             var<private> pcSampleIndex: u32;
+            ${primitiveIndexGlobals}
             ${blockPrivates}
             
             // function to copy inputs (varyings) to private global variables
@@ -761,6 +770,7 @@ class WebgpuShaderProcessorWGSL {
                 pcPosition = input.position;
                 pcFrontFacing = input.frontFacing;
                 pcSampleIndex = input.sampleIndex;
+                ${primitiveIndexCopy}
             }
         `;
 
@@ -776,8 +786,13 @@ class WebgpuShaderProcessorWGSL {
     static generateFragmentOutputStruct(src, numRenderTargets) {
         let structCode = 'struct FragmentOutput {\n';
 
+        // only include color outputs that the shader actually writes to
+        const colorName = i => `color${i > 0 ? i : ''}`;
         for (let i = 0; i < numRenderTargets; i++) {
-            structCode += `    @location(${i}) color${i > 0 ? i : ''} : pcOutType${i},\n`;
+            const name = colorName(i);
+            if (src.search(new RegExp(`\\.${name}\\s*=`)) !== -1) {
+                structCode += `    @location(${i}) ${name} : pcOutType${i},\n`;
+            }
         }
 
         // find if the src contains `.fragDepth =`, ignoring whitespace before = sign

@@ -70,7 +70,7 @@ class Frustum {
      * @param {Mat4} matrix - The matrix describing the shape of the frustum.
      * @example
      * // Create a perspective projection matrix
-     * const projection = pc.Mat4();
+     * const projection = new pc.Mat4();
      * projection.setPerspective(45, 16 / 9, 1, 1000);
      *
      * // Create a frustum shape that is represented by the matrix
@@ -109,6 +109,30 @@ class Frustum {
             }
         }
         return true;
+    }
+
+    /**
+     * Expands this frustum to also contain another frustum. For each of the 6 planes, the plane
+     * that is further out (larger distance) is kept, creating a combined frustum that encompasses
+     * both. This is useful for multi-view rendering such as stereo XR where culling should keep
+     * objects visible in any view.
+     *
+     * Note: This method assumes both frustums have similar orientation (parallel views). This is
+     * valid for WebXR stereo rendering where eyes use parallel projection with only a horizontal
+     * offset, not toe-in convergence.
+     *
+     * @param {Frustum} other - The other frustum to add.
+     * @returns {Frustum} Self for chaining.
+     */
+    add(other) {
+        const planes = this.planes;
+        const otherPlanes = other.planes;
+        for (let p = 0; p < 6; p++) {
+            if (otherPlanes[p].distance > planes[p].distance) {
+                planes[p].copy(otherPlanes[p]);
+            }
+        }
+        return this;
     }
 
     /**

@@ -3,7 +3,7 @@ export default /* wgsl */`
 attribute vertex_boneWeights: vec4f;
 attribute vertex_boneIndices: vec4f;
 
-var texture_poseMap: texture_2d<f32>;
+var texture_poseMap: texture_2d<uff>;
 
 struct BoneMatrix {
     v1: vec4f,

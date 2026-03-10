@@ -1,6 +1,7 @@
 export default /* glsl */`
     #ifdef VIGNETTE
         uniform vec4 vignetterParams;
+        uniform vec3 vignetteColor;
         
         // Global variable for debug
         float dVignette;
@@ -23,7 +24,7 @@ export default /* glsl */`
         }
 
         vec3 applyVignette(vec3 color, vec2 uv) {
-            return color * calcVignette(uv);
+            return mix(vignetteColor, color, calcVignette(uv));
         }
     #endif
 `;

@@ -44,22 +44,6 @@
  * @module Engine
  */
 
-// #if _IS_UMD
-// POLYFILLS
-import './polyfill/array-fill.js';
-import './polyfill/array-find.js';
-import './polyfill/array-find-index.js';
-import './polyfill/math-log2.js';
-import './polyfill/math-sign.js';
-import './polyfill/number-isfinite.js';
-import './polyfill/object-assign.js';
-import './polyfill/object-entries.js';
-import './polyfill/object-values.js';
-import './polyfill/pointer-lock.js';
-import './polyfill/string.js';
-import './polyfill/typedarray-fill.js';
-// #endif
-
 // CORE
 export * from './core/constants.js';
 export { extend, revision, version } from './core/core.js';
@@ -109,6 +93,7 @@ export { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat, BindStorag
 export { BlendState } from './platform/graphics/blend-state.js';
 export { Compute } from './platform/graphics/compute.js';
 export { DepthState } from './platform/graphics/depth-state.js';
+export { DrawCommands } from './platform/graphics/draw-commands.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { RenderTarget } from './platform/graphics/render-target.js';
@@ -119,6 +104,7 @@ export { Shader } from './platform/graphics/shader.js';
 export { StorageBuffer } from './platform/graphics/storage-buffer.js';
 export { Texture } from './platform/graphics/texture.js';
 export { TextureUtils } from './platform/graphics/texture-utils.js';
+export { TextureView } from './platform/graphics/texture-view.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
 export { UniformBufferFormat, UniformFormat } from './platform/graphics/uniform-buffer-format.js';
 export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
@@ -191,9 +177,11 @@ export { Animation, AnimationKey, AnimationNode } from './scene/animation/animat
 export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
+export { ComputeRadixSort } from './scene/graphics/compute-radix-sort.js';
 export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
 export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js';
+export { RenderPassRadixSort } from './scene/graphics/render-pass-radix-sort.js';
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
@@ -231,12 +219,15 @@ export { ShaderChunks } from './scene/shader-lib/shader-chunks.js';
 export { Sky } from './scene/skybox/sky.js';
 
 // SCENE / SPLAT
+export { GSplatContainer } from './scene/gsplat/gsplat-container.js';
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
-export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
-export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
+export { GSplatFormat } from './scene/gsplat/gsplat-format.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
-export { GSplatSogsData } from './scene/gsplat/gsplat-sogs-data.js';
-export { GSplatSogsResource } from './scene/gsplat/gsplat-sogs-resource.js';
+export { GSplatProcessor } from './framework/gsplat/gsplat-processor.js';
+export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
+export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
+export { GSplatSogData } from './scene/gsplat/gsplat-sog-data.js';
+export { GSplatSogResource } from './scene/gsplat/gsplat-sog-resource.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
@@ -350,10 +341,11 @@ export { BundleRegistry } from './framework/bundle/bundle-registry.js';
 
 // FRAMEWORK / GRAPHICS
 export { Picker } from './framework/graphics/picker.js';
+export { RenderPassPicker } from './framework/graphics/render-pass-picker.js';
 
 // FRAMEWORK / HANDLERS
 export { basisInitialize } from './framework/handlers/basis.js';
-export { dracoInitialize } from './framework/parsers/draco-decoder.js';
+export { dracoInitialize, dracoDecode } from './framework/parsers/draco-decoder.js';
 export { AnimClipHandler } from './framework/handlers/anim-clip.js';
 export { AnimStateGraphHandler } from './framework/handlers/anim-state-graph.js';
 export { AnimationHandler } from './framework/handlers/animation.js';

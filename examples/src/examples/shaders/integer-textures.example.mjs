@@ -43,9 +43,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -146,7 +144,8 @@ const outputShader = pc.ShaderUtils.createShader(device, {
     uniqueName: 'RenderOutputShader',
     attributes: { aPosition: pc.SEMANTIC_POSITION },
     vertexChunk: 'quadVS',
-    fragmentGLSL: files['renderOutput.frag']
+    fragmentGLSL: files['renderOutput.glsl.frag'],
+    fragmentWGSL: files['renderOutput.wgsl.frag']
     // For the output shader, we don't need to specify the output type,
     // as we are returning a vec4 by default.
 });

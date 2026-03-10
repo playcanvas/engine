@@ -45,6 +45,29 @@ class GpuProfiler {
      */
     _frameTime = 0;
 
+    /**
+     * Per-pass timing data, with accumulated timings for passes with the same name.
+     *
+     * @type {Map<string, number>}
+     * @private
+     */
+    _passTimings = new Map();
+
+    /**
+     * Cache for parsed pass names to avoid repeated string operations.
+     *
+     * @type {Map<string, string>}
+     * @private
+     */
+    _nameCache = new Map();
+
+    /**
+     * The maximum number of slots that can be allocated during the frame.
+     *
+     * @type {number}
+     */
+    maxCount = 9999;
+
     loseContext() {
         this.pastFrameAllocations.clear();
     }
@@ -62,6 +85,16 @@ class GpuProfiler {
         return this._enableRequest;
     }
 
+    /**
+     * Get the per-pass timing data.
+     *
+     * @type {Map<string, number>}
+     * @ignore
+     */
+    get passTimings() {
+        return this._passTimings;
+    }
+
     processEnableRequest() {
         if (this._enableRequest !== this._enabled) {
             this._enabled = this._enableRequest;
@@ -76,15 +109,54 @@ class GpuProfiler {
         this.frameAllocations = [];
     }
 
+    /**
+     * Parse a render pass name to a simplified form for stats.
+     * Uses a cache to avoid repeated string operations.
+     *
+     * @param {string} name - The original pass name (e.g., "RenderPassCompose").
+     * @returns {string} The parsed name (e.g., "compose").
+     * @private
+     */
+    _parsePassName(name) {
+        // check cache first
+        let parsedName = this._nameCache.get(name);
+        if (parsedName === undefined) {
+            // remove "RenderPass" prefix if present
+            if (name.startsWith('RenderPass')) {
+                parsedName = name.substring(10);
+            } else {
+                parsedName = name;
+            }
+            this._nameCache.set(name, parsedName);
+        }
+        return parsedName;
+    }
+
     report(renderVersion, timings) {
 
         if (timings) {
             const allocations = this.pastFrameAllocations.get(renderVersion);
+            if (!allocations) {
+                return;
+            }
             Debug.assert(allocations.length === timings.length);
 
             // store frame duration
             if (timings.length > 0) {
                 this._frameTime = timings.reduce((sum, t) => sum + t, 0);
+            }
+
+            // clear old pass timings
+            this._passTimings.clear();
+
+            // accumulate per-pass timings
+            for (let i = 0; i < allocations.length; ++i) {
+                const name = allocations[i];
+                const timing = timings[i];
+                const parsedName = this._parsePassName(name);
+
+                // accumulate timings for passes with the same name
+                this._passTimings.set(parsedName, (this._passTimings.get(parsedName) || 0) + timing);
             }
 
             // log out timings
@@ -109,10 +181,15 @@ class GpuProfiler {
      * frame. This allows multiple timers to be used during the frame, each with a unique name.
      *
      * @param {string} name - The name of the slot.
-     * @returns {number} The assigned slot index.
+     * @returns {number} The assigned slot index, or -1 if the slot count exceeds the maximum number
+     * of slots.
+     *
      * @ignore
      */
     getSlot(name) {
+        if (this.frameAllocations.length >= this.maxCount) {
+            return -1;
+        }
         const slot = this.frameAllocations.length;
         this.frameAllocations.push(name);
         return slot;

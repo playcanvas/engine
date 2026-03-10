@@ -13,7 +13,7 @@ export default /* glsl */`
     #include "clusteredLightShadowsPS"
 #endif
 
-uniform highp sampler2D clusterWorldTexture;
+uniform highp usampler2D clusterWorldTexture;
 uniform highp sampler2D lightsTexture;
 
 #ifdef CLUSTER_SHADOWS
@@ -27,23 +27,22 @@ uniform highp sampler2D lightsTexture;
 
 uniform int clusterMaxCells;
 
-// 1.0 if clustered lighting can be skipped (0 lights in the clusters)
-uniform float clusterSkip;
+// number of lights in the cluster structure
+uniform int numClusteredLights;
+
+// width of the cluster texture
+uniform int clusterTextureWidth;
 
 uniform vec3 clusterCellsCountByBoundsSize;
-uniform vec3 clusterTextureSize;
 uniform vec3 clusterBoundsMin;
 uniform vec3 clusterBoundsDelta;
-uniform vec3 clusterCellsDot;
-uniform vec3 clusterCellsMax;
+uniform ivec3 clusterCellsDot;
+uniform ivec3 clusterCellsMax;
 uniform vec2 shadowAtlasParams;
 
 // structure storing light properties of a clustered light
 // it's sorted to have all vectors aligned to 4 floats to limit padding
 struct ClusterLightData {
-
-    // 32bit of flags
-    uint flags;
 
     // area light sizes / orientation
     vec3 halfWidth;
@@ -90,9 +89,6 @@ struct ClusterLightData {
     float shadowBias;
     float shadowNormalBias;
 
-    // compressed angles, two haf-floats stored in a float
-    float anglesData;
-
     // spot light inner and outer angle cosine
     float innerConeAngleCos;
     float outerConeAngleCos;
@@ -108,31 +104,38 @@ struct ClusterLightData {
 
 // Note: on some devices (tested on Pixel 3A XL), this matrix when stored inside the light struct has lower precision compared to
 // when stored outside, so we store it outside to avoid spot shadow flickering. This might need to be done to other / all members
-// of the structure if further similar issues are observed.
+// of the structure if further similar issues are observed. See https://github.com/KhronosGroup/WebGL/issues/3351
 
 // shadow (spot light only) / cookie projection matrix
 mat4 lightProjectionMatrix;
+
+// NOTE: On some Samsung devices, these values can suffer precision / corruption issues when stored
+// as members of ClusterLightData. Keep them as module-scope temporaries instead. See issue #7800.
+uint clusterLightData_flags;             // 32bit of flags
+float clusterLightData_anglesData;       // compressed angles, two haf-floats stored in a float
+uint clusterLightData_colorBFlagsData;   // blue color component and angle flags (as uint for efficient bit operations)
 
 vec4 sampleLightTextureF(const ClusterLightData clusterLightData, int index) {
     return texelFetch(lightsTexture, ivec2(index, clusterLightData.lightIndex), 0);
 }
 
-void decodeClusterLightCore(inout ClusterLightData clusterLightData, float lightIndex) {
+void decodeClusterLightCore(inout ClusterLightData clusterLightData, int lightIndex) {
 
     // light index
-    clusterLightData.lightIndex = int(lightIndex);
+    clusterLightData.lightIndex = lightIndex;
 
     // sample data encoding half-float values into 32bit uints
     vec4 halfData = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_COLOR_ANGLES_BIAS});
 
     // store floats we decode later as needed
-    clusterLightData.anglesData = halfData.z;
+    clusterLightData_anglesData = halfData.z;
     clusterLightData.biasesData = halfData.w;
+    clusterLightData_colorBFlagsData = floatBitsToUint(halfData.y);
 
     // decompress color half-floats
     vec2 colorRG = unpackHalf2x16(floatBitsToUint(halfData.x));
-    vec2 colorB_ = unpackHalf2x16(floatBitsToUint(halfData.y));
-    clusterLightData.color = vec3(colorRG, colorB_.x) * {LIGHT_COLOR_DIVIDER};
+    vec2 colorB_flags = unpackHalf2x16(clusterLightData_colorBFlagsData);
+    clusterLightData.color = vec3(colorRG, colorB_flags.x) * {LIGHT_COLOR_DIVIDER};
 
     // position and range, full floats
     vec4 lightPosRange = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_POSITION_RANGE});
@@ -146,22 +149,29 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
     clusterLightData.direction = lightDir_Flags.xyz;
 
     // 32bit flags
-    clusterLightData.flags = floatBitsToUint(lightDir_Flags.w);
-    clusterLightData.isSpot = (clusterLightData.flags & (1u << 30u)) != 0u;
-    clusterLightData.shape = (clusterLightData.flags >> 28u) & 0x3u;
-    clusterLightData.falloffModeLinear = (clusterLightData.flags & (1u << 27u)) == 0u;
-    clusterLightData.shadowIntensity = float((clusterLightData.flags >> 0u) & 0xFFu) / 255.0;
-    clusterLightData.cookieIntensity = float((clusterLightData.flags >> 8u) & 0xFFu) / 255.0;
-    clusterLightData.isDynamic = (clusterLightData.flags & (1u << 22u)) != 0u;
-    clusterLightData.isLightmapped = (clusterLightData.flags & (1u << 21u)) != 0u;
+    clusterLightData_flags = floatBitsToUint(lightDir_Flags.w);
+    clusterLightData.isSpot = (clusterLightData_flags & (1u << 30u)) != 0u;
+    clusterLightData.shape = (clusterLightData_flags >> 28u) & 0x3u;
+    clusterLightData.falloffModeLinear = (clusterLightData_flags & (1u << 27u)) == 0u;
+    clusterLightData.shadowIntensity = float((clusterLightData_flags >> 0u) & 0xFFu) / 255.0;
+    clusterLightData.cookieIntensity = float((clusterLightData_flags >> 8u) & 0xFFu) / 255.0;
+    clusterLightData.isDynamic = (clusterLightData_flags & (1u << 22u)) != 0u;
+    clusterLightData.isLightmapped = (clusterLightData_flags & (1u << 21u)) != 0u;
 }
 
 void decodeClusterLightSpot(inout ClusterLightData clusterLightData) {
+    // decompress spot light angles
+    uint angleFlags = (clusterLightData_colorBFlagsData >> 16u) & 0xFFFFu;  // Extract upper 16 bits as integer
 
-    // spot light cos angles
-    vec2 angles = unpackHalf2x16(floatBitsToUint(clusterLightData.anglesData));
-    clusterLightData.innerConeAngleCos = angles.x;
-    clusterLightData.outerConeAngleCos = angles.y;
+    vec2 angleValues = unpackHalf2x16(floatBitsToUint(clusterLightData_anglesData));
+    float innerVal = angleValues.x;
+    float outerVal = angleValues.y;
+
+    // decode based on flags (branch-free)
+    float innerIsVersine = float(angleFlags & 1u);          // bit 0: inner angle format
+    float outerIsVersine = float((angleFlags >> 1u) & 1u);  // bit 1: outer angle format
+    clusterLightData.innerConeAngleCos = mix(innerVal, 1.0 - innerVal, innerIsVersine);
+    clusterLightData.outerConeAngleCos = mix(outerVal, 1.0 - outerVal, outerIsVersine);
 }
 
 void decodeClusterLightOmniAtlasViewport(inout ClusterLightData clusterLightData) {
@@ -194,7 +204,7 @@ void decodeClusterLightShadowData(inout ClusterLightData clusterLightData) {
 void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
 
     // extract channel mask from flags
-    uint cookieFlags = (clusterLightData.flags >> 23u) & 0x0Fu;  // 4bits, each bit enables a channel
+    uint cookieFlags = (clusterLightData_flags >> 23u) & 0x0Fu;  // 4bits, each bit enables a channel
     clusterLightData.cookieChannelMask = vec4(uvec4(cookieFlags) & uvec4(1u, 2u, 4u, 8u));
     clusterLightData.cookieChannelMask = step(1.0, clusterLightData.cookieChannelMask);  // Normalize to 0.0 or 1.0
 }
@@ -481,7 +491,7 @@ void evaluateLight(
 }
 
 void evaluateClusterLight(
-    float lightIndex, 
+    int lightIndex, 
     vec3 worldNormal, 
     vec3 viewDir, 
     vec3 reflectionDir, 
@@ -555,34 +565,34 @@ void addClusteredLights(
     float iridescence_intensity
 ) {
 
-    // skip lights if no lights at all
-    if (clusterSkip > 0.5)
+    // skip if no lights (index 0 is reserved for 'no light')
+    if (numClusteredLights <= 1)
         return;
 
     // world space position to 3d integer cell cordinates in the cluster structure
-    vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
+    ivec3 cellCoords = ivec3(floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize));
 
     // no lighting when cell coordinate is out of range
-    if (!(any(lessThan(cellCoords, vec3(0.0))) || any(greaterThanEqual(cellCoords, clusterCellsMax)))) {
+    if (!(any(lessThan(cellCoords, ivec3(0))) || any(greaterThanEqual(cellCoords, clusterCellsMax)))) {
 
         // cell index (mapping from 3d cell coordinates to linear memory)
-        float cellIndex = dot(clusterCellsDot, cellCoords);
+        int cellIndex = cellCoords.x * clusterCellsDot.x + cellCoords.y * clusterCellsDot.y + cellCoords.z * clusterCellsDot.z;
 
         // convert cell index to uv coordinates
-        float clusterV = floor(cellIndex * clusterTextureSize.y);
-        float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
+        int clusterV = cellIndex / clusterTextureWidth;
+        int clusterU = cellIndex - clusterV * clusterTextureWidth;
 
         // loop over maximum number of light cells
         for (int lightCellIndex = 0; lightCellIndex < clusterMaxCells; lightCellIndex++) {
 
             // using a single channel texture with data in red channel
-            float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
+            uint lightIndex = texelFetch(clusterWorldTexture, ivec2(clusterU + lightCellIndex, clusterV), 0).x;
 
-            if (lightIndex <= 0.0)
+            if (lightIndex == 0u)
                 break;
 
             evaluateClusterLight(
-                lightIndex * 255.0, 
+                int(lightIndex), 
                 worldNormal, 
                 viewDir, 
                 reflectionDir,

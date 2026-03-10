@@ -16,10 +16,12 @@ struct TexLerpUnpackResult {
     unpacked: vec3f
 }
 
-fn tex1Dlod_lerp(tex: texture_2d<f32>, texSampler: sampler, tc: vec2f) -> TexLerpUnpackResult {
+fn tex1Dlod_lerp(tex: texture_2d<f32>, textureSize: vec2u, tc: vec2f) -> TexLerpUnpackResult {
     let tc_next = tc + vec2f(uniform.graphSampleSize);
-    let a = textureSampleLevel(tex, texSampler, tc, 0.0);
-    let b = textureSampleLevel(tex, texSampler, tc_next, 0.0);
+    let texelA: vec2i = vec2i(tc * vec2f(textureSize));
+    let texelB: vec2i = vec2i(tc_next * vec2f(textureSize));
+    let a = textureLoad(tex, texelA, 0);
+    let b = textureLoad(tex, texelB, 0);
     let c = fract(tc.x * uniform.graphNumSamples);
 
     let unpackedA = unpack3NFloats(a.w);
@@ -55,21 +57,23 @@ fn fragmentMain(input : FragmentInput) -> FragmentOutput {
     outLife = inLife + uniform.delta;
     let nlife = clamp(outLife / uniform.lifetime, 0.0, 1.0);
 
-    let lerpResult0 = tex1Dlod_lerp(internalTex0, internalTex0Sampler, vec2f(nlife, 0.0));
+    let internalTexSize = textureDimensions(internalTex0, 0);
+
+    let lerpResult0 = tex1Dlod_lerp(internalTex0, internalTexSize, vec2f(nlife, 0.0));
     var localVelocity = lerpResult0.result;
     let localVelocityDiv = lerpResult0.unpacked;
 
-    let lerpResult1 = tex1Dlod_lerp(internalTex1, internalTex1Sampler, vec2f(nlife, 0.0));
+    let lerpResult1 = tex1Dlod_lerp(internalTex1, internalTexSize, vec2f(nlife, 0.0));
     var velocity = lerpResult1.result;
     let velocityDiv = lerpResult1.unpacked;
 
-    let lerpResult2 = tex1Dlod_lerp(internalTex2, internalTex2Sampler, vec2f(nlife, 0.0));
+    let lerpResult2 = tex1Dlod_lerp(internalTex2, internalTexSize, vec2f(nlife, 0.0));
     let params = lerpResult2.result;
     let paramDiv = lerpResult2.unpacked;
     var rotSpeed = params.x;
     let rotSpeedDiv = paramDiv.y;
 
-    let lerpResult3 = tex1Dlod_lerp(internalTex3, internalTex3Sampler, vec2f(nlife, 0.0));
+    let lerpResult3 = tex1Dlod_lerp(internalTex3, internalTexSize, vec2f(nlife, 0.0));
     let radialParams = lerpResult3.result;
     let radialParamDiv = lerpResult3.unpacked;
     let radialSpeed = radialParams.x;

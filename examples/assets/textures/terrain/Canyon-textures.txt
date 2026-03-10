@@ -1,0 +1,6 @@
+Model Information:
+* title:	Canyon and River Height Map
+* source:	https://www.motionforgepictures.com/height-maps/
+
+Model License:
+* The heightmaps available from this page, are provided for free under a CCO 1.0 Universal creative commons license.

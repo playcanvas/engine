@@ -1,10 +1,12 @@
+import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
+import { BUFFERUSAGE_COPY_DST, CULLFACE_NONE, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
+import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatResolveSH } from './gsplat-resolve-sh.js';
 import { GSplatSorter } from './gsplat-sorter.js';
-import { GSplatSogsData } from './gsplat-sogs-data.js';
+import { GSplatSogData } from './gsplat-sog-data.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
@@ -12,21 +14,23 @@ import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
 /**
  * @import { Camera } from '../camera.js'
  * @import { GraphNode } from '../graph-node.js'
+ * @import { Mesh } from '../mesh.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 const mat = new Mat4();
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
-const viewport = [0, 0];
-
 /** @ignore */
 class GSplatInstance {
     /** @type {GSplatResourceBase} */
     resource;
 
-    /** @type {Texture} */
+    /** @type {Texture|undefined} */
     orderTexture;
+
+    /** @type {StorageBuffer|undefined} */
+    orderBuffer;
 
     /** @type {ShaderMaterial} */
     _material;
@@ -58,26 +62,34 @@ class GSplatInstance {
      * @param {GSplatResourceBase} resource - The splat instance.
      * @param {object} [options] - Options for the instance.
      * @param {ShaderMaterial|null} [options.material] - The material instance.
-     * @param {boolean} [options.highQualitySH] - Whether to use the high quality or the approximate spherical harmonic calculation. Only applies to SOGS data.
+     * @param {boolean} [options.highQualitySH] - Whether to use the high quality or the approximate spherical harmonic calculation. Only applies to SOG data.
+     * @param {import('../scene.js').Scene} [options.scene] - The scene to fire sort timing events on.
      */
     constructor(resource, options = {}) {
         this.resource = resource;
 
-        // create the order texture
-        this.orderTexture = resource.createTexture(
-            'splatOrder',
-            PIXELFORMAT_R32U,
-            resource.evalTextureSize(resource.numSplats)
-        );
+        const device = resource.device;
+        const dims = resource.streams.textureDimensions;
+        Debug.assert(dims.x > 0 && dims.y > 0, 'Resource must have valid texture dimensions before creating instance');
+
+        const numSplats = dims.x * dims.y;
+
+        // create order target: StorageBuffer on WebGPU, Texture on WebGL
+        if (device.isWebGPU) {
+            this.orderBuffer = new StorageBuffer(device, numSplats * 4, BUFFERUSAGE_COPY_DST);
+        } else {
+            this.orderTexture = resource.streams.createTexture(
+                'splatOrder',
+                PIXELFORMAT_R32U,
+                dims
+            );
+        }
 
         if (options.material) {
-            // material is provided
             this._material = options.material;
-
-            // patch splat order
-            this._material.setParameter('splatOrder', this.orderTexture);
+            this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', String(GSplatResourceBase.instanceSize));
+            this.setMaterialOrderData(this._material);
         } else {
-            // construct the material
             this._material = new ShaderMaterial({
                 uniqueName: 'SplatMaterial',
                 vertexGLSL: '#include "gsplatVS"',
@@ -85,45 +97,36 @@ class GSplatInstance {
                 vertexWGSL: '#include "gsplatVS"',
                 fragmentWGSL: '#include "gsplatPS"',
                 attributes: {
-                    vertex_position: SEMANTIC_POSITION,
-                    vertex_id_attrib: SEMANTIC_ATTR13
+                    vertex_position: SEMANTIC_POSITION
                 }
             });
 
-            // default configure
             this.configureMaterial(this._material);
-
-            // update
             this._material.update();
         }
 
-        this.meshInstance = new MeshInstance(resource.mesh, this._material);
-        this.meshInstance.setInstancing(resource.instanceIndices, true);
+        resource.ensureMesh();
+        this.meshInstance = new MeshInstance(/** @type {Mesh} */ (resource.mesh), this._material);
+        this.meshInstance.setInstancing(true, true);
         this.meshInstance.gsplatInstance = this;
 
         // only start rendering the splat after we've received the splat order data
         this.meshInstance.instancingCount = 0;
 
-        // clone centers to allow multiple instances of sorter
         const centers = resource.centers.slice();
         const chunks = resource.chunks?.slice();
 
-        // create sorter
-        this.sorter = new GSplatSorter();
-        this.sorter.init(this.orderTexture, centers, chunks);
-        this.sorter.on('updated', (count) => {
-            // limit splat render count to exclude those behind the camera
-            this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
+        const orderTarget = this.orderBuffer ?? this.orderTexture;
+        this.sorter = new GSplatSorter(device, options.scene);
+        this.sorter.init(orderTarget, numSplats, centers, chunks);
 
-            // update splat count on the material
-            this.material.setParameter('numSplats', count);
-        });
-
-        // configure sogs sh resolve
         this.setHighQualitySH(options.highQualitySH ?? false);
     }
 
     destroy() {
+        this.resource?.releaseMesh();
+        this.orderTexture?.destroy();
+        this.orderBuffer?.destroy();
         this.resolveSH?.destroy();
         this.material?.destroy();
         this.meshInstance?.destroy();
@@ -131,15 +134,27 @@ class GSplatInstance {
     }
 
     /**
+     * Set order data parameters on the material.
+     *
+     * @param {ShaderMaterial} material - The material to configure.
+     */
+    setMaterialOrderData(material) {
+        if (this.orderBuffer) {
+            material.setParameter('splatOrder', this.orderBuffer);
+        } else {
+            material.setParameter('splatOrder', this.orderTexture);
+            material.setParameter('splatTextureSize', this.orderTexture.width);
+        }
+    }
+
+    /**
      * @param {ShaderMaterial} value - The material instance.
      */
     set material(value) {
         if (this._material !== value) {
-            // set the new material
             this._material = value;
-
-            // patch order texture
-            this._material.setParameter('splatOrder', this.orderTexture);
+            this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', String(GSplatResourceBase.instanceSize));
+            this.setMaterialOrderData(this._material);
 
             if (this.meshInstance) {
                 this.meshInstance.material = value;
@@ -159,34 +174,16 @@ class GSplatInstance {
      * @param {boolean} [options.dither] - Specify true to configure the material for dithered rendering (stochastic alpha).
      */
     configureMaterial(material, options = {}) {
-        // allow resource to configure the material
-        this.resource.configureMaterial(material);
+        this.resource.configureMaterial(material, null, this.resource.format.getInputDeclarations());
 
-        // set instance properties
+        material.setDefine('{GSPLAT_INSTANCE_SIZE}', GSplatResourceBase.instanceSize);
         material.setParameter('numSplats', 0);
-        material.setParameter('splatOrder', this.orderTexture);
+        this.setMaterialOrderData(material);
         material.setParameter('alphaClip', 0.3);
         material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
         material.cull = CULLFACE_NONE;
         material.blendType = options.dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
         material.depthWrite = !!options.dither;
-    }
-
-    updateViewport(cameraNode) {
-        const camera = cameraNode?.camera;
-        const renderTarget = camera?.renderTarget;
-        const { width, height } = renderTarget ?? this.resource.device;
-
-        viewport[0] = width;
-        viewport[1] = height;
-
-        // adjust viewport for stereoscopic VR sessions
-        const xr = camera?.camera?.xr;
-        if (xr?.active && xr.views.list.length === 2) {
-            viewport[0] *= 0.5;
-        }
-
-        this.material.setParameter('viewport', viewport);
     }
 
     /**
@@ -211,11 +208,17 @@ class GSplatInstance {
                 this.sorter.setCamera(cameraPosition, cameraDirection);
             }
         }
-
-        this.updateViewport(cameraNode);
     }
 
     update() {
+
+        // Apply deferred sort results (at most one GPU upload per frame).
+        const count = this.sorter?.applyPendingSorted() ?? -1;
+        if (count >= 0) {
+            this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
+            this.material.setParameter('numSplats', count);
+        }
+
         if (this.cameras.length > 0) {
 
             // sort by the first camera it's visible for
@@ -235,7 +238,7 @@ class GSplatInstance {
         const { resource } = this;
         const { gsplatData } = resource;
 
-        if (gsplatData instanceof GSplatSogsData &&
+        if (gsplatData instanceof GSplatSogData &&
             gsplatData.shBands > 0 &&
             value === !!this.resolveSH) {
 

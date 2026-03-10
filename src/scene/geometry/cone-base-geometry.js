@@ -1,7 +1,7 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Geometry } from './geometry.js';
 
-const primitiveUv1Padding = 4.0 / 64;
+const primitiveUv1Padding = 8.0 / 64;
 const primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
 
 /**

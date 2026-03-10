@@ -62,6 +62,9 @@ class FrameGraph {
         const renderPasses = this.renderPasses;
         for (let i = 0; i < renderPasses.length; i++) {
             const renderPass = renderPasses[i];
+            renderPass._skipStart = false;
+            renderPass._skipEnd = false;
+
             const renderTarget = renderPass.renderTarget;
 
             // if using a target, or null which represents the default back-buffer

@@ -221,6 +221,12 @@ class TextElement {
         // substring render range
         this._rangeStart = 0;
         this._rangeEnd = 0;
+
+        // If not being initialized (i.e., type changed after component was already enabled),
+        // we need to call onEnable to add the model to layers
+        if (!element._beingInitialized && element.enabled && element.entity.enabled) {
+            this.onEnable();
+        }
     }
 
     destroy() {

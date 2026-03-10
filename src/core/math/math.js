@@ -13,7 +13,7 @@ const math = {
     DEG_TO_RAD: Math.PI / 180,
 
     /**
-     * Conversion factor between degrees and radians.
+     * Conversion factor between radians and degrees.
      *
      * @type {number}
      */
@@ -26,6 +26,10 @@ const math = {
      * @param {number} min - Min value.
      * @param {number} max - Max value.
      * @returns {number} The clamped value.
+     * @example
+     * pc.math.clamp(5, 0, 10);  // returns 5
+     * pc.math.clamp(-5, 0, 10); // returns 0
+     * pc.math.clamp(15, 0, 10); // returns 10
      */
     clamp(value, min, max) {
         if (value >= max) return max;
@@ -130,6 +134,10 @@ const math = {
      * a is returned. When alpha is 1, b is returned. Between 0 and 1, a linear interpolation
      * between a and b is returned. alpha is clamped between 0 and 1.
      * @returns {number} The linear interpolation of two numbers.
+     * @example
+     * pc.math.lerp(0, 10, 0);   // returns 0
+     * pc.math.lerp(0, 10, 0.5); // returns 5
+     * pc.math.lerp(0, 10, 1);   // returns 10
      */
     lerp(a, b, alpha) {
         return a + (b - a) * math.clamp(alpha, 0, 1);
@@ -145,6 +153,9 @@ const math = {
      * a is returned. When alpha is 1, b is returned. Between 0 and 1, a linear interpolation
      * between a and b is returned. alpha is clamped between 0 and 1.
      * @returns {number} The linear interpolation of two angles.
+     * @example
+     * pc.math.lerpAngle(350, 10, 0.5); // returns 0 (shortest path crosses 360/0 boundary)
+     * pc.math.lerpAngle(0, 90, 0.5);   // returns 45
      */
     lerpAngle(a, b, alpha) {
         if (b - a > 180) {
@@ -161,6 +172,9 @@ const math = {
      *
      * @param {number} x - Number to check for power-of-two property.
      * @returns {boolean} true if power-of-two and false otherwise.
+     * @example
+     * pc.math.powerOfTwo(32); // returns true
+     * pc.math.powerOfTwo(17); // returns false
      */
     powerOfTwo(x) {
         return ((x !== 0) && !(x & (x - 1)));
@@ -171,6 +185,9 @@ const math = {
      *
      * @param {number} val - The value for which to calculate the next power of 2.
      * @returns {number} The next power of 2.
+     * @example
+     * pc.math.nextPowerOfTwo(17); // returns 32
+     * pc.math.nextPowerOfTwo(32); // returns 32
      */
     nextPowerOfTwo(val) {
         val--;
@@ -188,6 +205,9 @@ const math = {
      *
      * @param {number} val - The value for which to calculate the nearest power of 2.
      * @returns {number} The nearest power of 2.
+     * @example
+     * pc.math.nearestPowerOfTwo(17); // returns 16
+     * pc.math.nearestPowerOfTwo(24); // returns 32
      */
     nearestPowerOfTwo(val) {
         return Math.pow(2, Math.round(Math.log2(val)));
@@ -200,6 +220,8 @@ const math = {
      * @param {number} min - Lower bound for range.
      * @param {number} max - Upper bound for range.
      * @returns {number} Pseudo-random number between the supplied range.
+     * @example
+     * pc.math.random(0, 10); // returns a random number between 0 and 10
      */
     random(min, max) {
         const diff = max - min;
@@ -220,6 +242,8 @@ const math = {
      * @param {number} max - The upper bound of the interpolation range.
      * @param {number} x - The value to interpolate.
      * @returns {number} The smoothly interpolated value clamped between zero and one.
+     * @example
+     * pc.math.smoothstep(0, 10, 5); // returns 0.5
      */
     smoothstep(min, max, x) {
         if (x <= min) return 0;
@@ -240,6 +264,8 @@ const math = {
      * @param {number} max - The upper bound of the interpolation range.
      * @param {number} x - The value to interpolate.
      * @returns {number} The smoothly interpolated value clamped between zero and one.
+     * @example
+     * pc.math.smootherstep(0, 10, 5); // returns 0.5
      */
     smootherstep(min, max, x) {
         if (x <= min) return 0;
@@ -256,6 +282,9 @@ const math = {
      * @param {number} numToRound - The number to round up.
      * @param {number} multiple - The multiple to round up to.
      * @returns {number} A number rounded up to nearest multiple.
+     * @example
+     * pc.math.roundUp(17, 4); // returns 20
+     * pc.math.roundUp(16, 4); // returns 16
      */
     roundUp(numToRound, multiple) {
         if (multiple === 0) {

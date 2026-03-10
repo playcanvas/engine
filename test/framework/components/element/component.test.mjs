@@ -156,4 +156,38 @@ describe('ElementComponent', function () {
 
         expect(screen.screen._elements).to.not.include(e.element);
     });
+
+    describe('#type', function () {
+
+        it('adds model to layers when type is set to image after entity is in hierarchy', function () {
+            // This tests the fix for: https://github.com/playcanvas/engine/issues/1989
+            // When entity is added to hierarchy before element type is set, the image should still render
+            const e = new Entity();
+            app.root.addChild(e);
+
+            e.addComponent('element');
+            e.element.type = 'image';
+
+            // Verify that the image element's model has been added to the layers
+            const uiLayer = app.scene.layers.getLayerById(LAYERID_UI);
+            expect(uiLayer).to.not.be.null;
+            expect(e.element._image).to.not.be.null;
+            expect(e.element._image._renderable.model).to.not.be.null;
+            expect(e.element._addedModels).to.include(e.element._image._renderable.model);
+        });
+
+        it('adds model to layers when type is set to text after entity is in hierarchy', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+
+            e.addComponent('element');
+            e.element.type = 'text';
+
+            // Verify that the text element's model has been added to the layers
+            expect(e.element._text).to.not.be.null;
+            expect(e.element._text._model).to.not.be.null;
+            expect(e.element._addedModels).to.include(e.element._text._model);
+        });
+
+    });
 });

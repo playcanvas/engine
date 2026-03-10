@@ -54,6 +54,16 @@ class Template {
 
         this._templateRoot = parser.parse(this._data);
     }
+
+    set data(value) {
+        this._data = value;
+        // cache invalidation: the next instantiate() will parse and use the new _data
+        this._templateRoot = null;
+    }
+
+    get data() {
+        return this._data;
+    }
 }
 
 export { Template };

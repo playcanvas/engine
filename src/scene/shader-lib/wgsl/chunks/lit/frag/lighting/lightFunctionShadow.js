@@ -4,23 +4,24 @@ export default /* wgsl */`
 // shadow casting functionality
 #ifdef LIGHT{i}CASTSHADOW
 
-    // generate shadow coordinates function, based on per light defines:
-    // - _SHADOW_SAMPLE_NORMAL_OFFSET
-    // - _SHADOW_SAMPLE_ORTHO
-    // - _SHADOW_SAMPLE_POINT
-    // - _SHADOW_SAMPLE_SOURCE_ZBUFFER
-    fn getShadowSampleCoord{i}(shadowTransform: mat4x4f, shadowParams: vec4f, worldPosition: vec3f, lightPos: vec3f, lightDir: ptr<function, vec3f>, lightDirNorm: vec3f, normal: vec3f) -> vec3f {
-
-        var surfacePosition = worldPosition;
-
-        #ifdef LIGHT{i}_SHADOW_SAMPLE_POINT
+    // Omni shadow coordinate function - uses light direction for cubemap sampling
+    #ifdef LIGHT{i}_SHADOW_SAMPLE_POINT
+        fn getShadowSampleCoordOmni{i}(shadowParams: vec4f, worldPosition: vec3f, lightPos: vec3f, lightDir: ptr<function, vec3f>, lightDirNorm: vec3f, normal: vec3f) -> vec3f {
             #ifdef LIGHT{i}_SHADOW_SAMPLE_NORMAL_OFFSET
                 let distScale: f32 = length(*lightDir);
-                surfacePosition = surfacePosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
+                var surfacePosition = worldPosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
                 *lightDir = surfacePosition - lightPos;
-                return *lightDir;
             #endif
-        #else
+            return *lightDir;
+        }
+    #endif
+
+    // Directional/Spot shadow coordinate function - uses shadow matrix transformation
+    #ifndef LIGHT{i}_SHADOW_SAMPLE_POINT
+        fn getShadowSampleCoord{i}(shadowTransform: mat4x4f, shadowParams: vec4f, worldPosition: vec3f, lightPos: vec3f, lightDir: ptr<function, vec3f>, lightDirNorm: vec3f, normal: vec3f) -> vec3f {
+
+            var surfacePosition = worldPosition;
+
             #ifdef LIGHT{i}_SHADOW_SAMPLE_SOURCE_ZBUFFER
                 #ifdef LIGHT{i}_SHADOW_SAMPLE_NORMAL_OFFSET
                     surfacePosition = surfacePosition + normal * shadowParams.y;
@@ -36,7 +37,6 @@ export default /* wgsl */`
                 #endif
             #endif
 
-            // Use var for modification
             var positionInShadowSpace: vec4f = shadowTransform * vec4f(surfacePosition, 1.0);
             #ifdef LIGHT{i}_SHADOW_SAMPLE_ORTHO
                 positionInShadowSpace.z = saturate(positionInShadowSpace.z) - 0.0001;
@@ -49,45 +49,39 @@ export default /* wgsl */`
                 #endif
             #endif
 
-            // this is currently unused
-            #ifdef SHADOW_SAMPLE_Z_BIAS
-                // positionInShadowSpace.z += getShadowBias(shadowParams.x, shadowParams.z);
-            #endif
-
-            surfacePosition = positionInShadowSpace.xyz;
-        #endif
-
-        return surfacePosition;
-    }
+            return positionInShadowSpace.xyz;
+        }
+    #endif
 
     // shadow evaluation function
     fn getShadow{i}(lightDirW_in: vec3f) -> f32 {
 
-        // directional shadow cascades
-        #ifdef LIGHT{i}_SHADOW_CASCADES
-
-            // select shadow cascade matrix
-            var cascadeIndex: i32 = getShadowCascadeIndex(uniform.light{i}_shadowCascadeDistances, uniform.light{i}_shadowCascadeCount);
-
-            #ifdef LIGHT{i}_SHADOW_CASCADE_BLEND
-                cascadeIndex = ditherShadowCascadeIndex(cascadeIndex, uniform.light{i}_shadowCascadeDistances, uniform.light{i}_shadowCascadeCount, uniform.light{i}_shadowCascadeBlend);
-            #endif
-
-            var shadowMatrix: mat4x4f = uniform.light{i}_shadowMatrixPalette[cascadeIndex];
-
-        #else
-
-            var shadowMatrix: mat4x4f = uniform.light{i}_shadowMatrix;
-
-        #endif
-
         var lightDirArg = lightDirW_in;
 
-        #if LIGHT{i}TYPE == DIRECTIONAL
-            // directional light does not have a position
-            var shadowCoord: vec3f = getShadowSampleCoord{i}(shadowMatrix, uniform.light{i}_shadowParams, vPositionW, vec3f(0.0), &lightDirArg, dLightDirNormW, dVertexNormalW);
+        #if LIGHT{i}TYPE == OMNI
+
+            // omni shadows use cubemap and sample by direction
+            var shadowCoord: vec3f = getShadowSampleCoordOmni{i}(uniform.light{i}_shadowParams, vPositionW, uniform.light{i}_position, &lightDirArg, dLightDirNormW, dVertexNormalW);
+
         #else
-             var shadowCoord: vec3f = getShadowSampleCoord{i}(shadowMatrix, uniform.light{i}_shadowParams, vPositionW, uniform.light{i}_position, &lightDirArg, dLightDirNormW, dVertexNormalW);
+
+            // directional and spot shadows use shadow matrix transformation
+            #ifdef LIGHT{i}_SHADOW_CASCADES
+                var cascadeIndex: i32 = getShadowCascadeIndex(uniform.light{i}_shadowCascadeDistances, uniform.light{i}_shadowCascadeCount);
+                #ifdef LIGHT{i}_SHADOW_CASCADE_BLEND
+                    cascadeIndex = ditherShadowCascadeIndex(cascadeIndex, uniform.light{i}_shadowCascadeDistances, uniform.light{i}_shadowCascadeCount, uniform.light{i}_shadowCascadeBlend);
+                #endif
+                var shadowMatrix: mat4x4f = uniform.light{i}_shadowMatrixPalette[cascadeIndex];
+            #else
+                var shadowMatrix: mat4x4f = uniform.light{i}_shadowMatrix;
+            #endif
+
+            #if LIGHT{i}TYPE == DIRECTIONAL
+                var shadowCoord: vec3f = getShadowSampleCoord{i}(shadowMatrix, uniform.light{i}_shadowParams, vPositionW, vec3f(0.0), &lightDirArg, dLightDirNormW, dVertexNormalW);
+            #else
+                var shadowCoord: vec3f = getShadowSampleCoord{i}(shadowMatrix, uniform.light{i}_shadowParams, vPositionW, uniform.light{i}_position, &lightDirArg, dLightDirNormW, dVertexNormalW);
+            #endif
+
         #endif
 
 

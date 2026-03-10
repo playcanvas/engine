@@ -72,6 +72,11 @@ const _cullModes = [
     'front'                 // CULLFACE_FRONT
 ];
 
+const _frontFace = [
+    'ccw',                  // FRONTFACE_CCW
+    'cw'                    // FRONTFACE_CW
+];
+
 const _stencilOps = [
     'keep',                 // STENCILOP_KEEP
     'zero',                 // STENCILOP_ZERO
@@ -107,7 +112,7 @@ class CacheEntry {
 }
 
 class WebgpuRenderPipeline extends WebgpuPipeline {
-    lookupHashes = new Uint32Array(14);
+    lookupHashes = new Uint32Array(15);
 
     constructor(device) {
         super(device);
@@ -141,11 +146,12 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
      * @param {boolean} stencilEnabled - Whether stencil is enabled.
      * @param {StencilParameters} stencilFront - The stencil state for front faces.
      * @param {StencilParameters} stencilBack - The stencil state for back faces.
+     * @param {number} frontFace - The front face.
      * @returns {GPURenderPipeline} Returns the render pipeline.
      * @private
      */
     get(primitive, vertexFormat0, vertexFormat1, ibFormat, shader, renderTarget, bindGroupFormats, blendState,
-        depthState, cullMode, stencilEnabled, stencilFront, stencilBack) {
+        depthState, cullMode, stencilEnabled, stencilFront, stencilBack, frontFace) {
 
         Debug.assert(bindGroupFormats.length <= 3);
 
@@ -177,6 +183,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         lookupHashes[11] = stencilEnabled ? stencilFront.key : 0;
         lookupHashes[12] = stencilEnabled ? stencilBack.key : 0;
         lookupHashes[13] = ibFormat ?? 0;
+        lookupHashes[14] = frontFace;
         const hash = hash32Fnv1a(lookupHashes);
 
         // cached pipeline
@@ -206,7 +213,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         const cacheEntry = new CacheEntry();
         cacheEntry.hashes = new Uint32Array(lookupHashes);
         cacheEntry.pipeline = this.create(primitiveTopology, ibFormat, shader, renderTarget, pipelineLayout, blendState,
-            depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack);
+            depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack, frontFace);
 
         // add to cache
         if (cacheEntries) {
@@ -313,7 +320,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
     }
 
     create(primitiveTopology, ibFormat, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout,
-        cullMode, stencilEnabled, stencilFront, stencilBack) {
+        cullMode, stencilEnabled, stencilFront, stencilBack, frontFace) {
 
         const wgpu = this.device.wgpu;
 
@@ -330,7 +337,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
             primitive: {
                 topology: primitiveTopology,
-                frontFace: 'ccw',
+                frontFace: _frontFace[frontFace],
                 cullMode: _cullModes[cullMode]
             },
 

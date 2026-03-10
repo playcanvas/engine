@@ -104,7 +104,15 @@ class LitShader {
 
         // shader language
         const userChunks = options.shaderChunks;
-        this.shaderLanguage = (device.isWebGPU && allowWGSL && userChunks?.useWGSL) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        this.shaderLanguage = (device.isWebGPU && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+
+        if (device.isWebGPU && this.shaderLanguage === SHADERLANGUAGE_GLSL) {
+            if (!device.hasTranspilers) {
+                Debug.errorOnce('Cannot use GLSL shader on WebGPU without transpilers', {
+                    litShader: this
+                });
+            }
+        }
 
         // resolve custom chunk attributes
         this.attributes = {
@@ -132,6 +140,7 @@ class LitShader {
             userChunkMap.forEach((chunk, chunkName) => {
 
                 // extract attribute names from the used chunk
+                Debug.assert(chunk);
                 for (const a in builtinAttributes) {
                     if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
                         this.attributes[a] = builtinAttributes[a];
@@ -284,6 +293,9 @@ class LitShader {
             attributes.vertex_color = SEMANTIC_COLOR;
             vDefines.set('VERTEX_COLOR', true);
             varyings.set('vVertexColor', 'vec4');
+            if (options.useVertexColorGamma) {
+                vDefines.set('STD_VERTEX_COLOR_GAMMA', '');
+            }
         }
 
         if (options.useMsdf && options.msdfTextAttribute) {
@@ -453,6 +465,7 @@ class LitShader {
         this.fDefineSet(this.lighting, 'LIT_LIGHTING');
         this.fDefineSet(options.useMetalness, 'LIT_METALNESS');
         this.fDefineSet(options.enableGGXSpecular, 'LIT_GGX_SPECULAR');
+        this.fDefineSet(options.useAnisotropy, 'LIT_ANISOTROPY');
         this.fDefineSet(options.useSpecularityFactor, 'LIT_SPECULARITY_FACTOR');
         this.fDefineSet(options.useCubeMapRotation, 'CUBEMAP_ROTATION');
         this.fDefineSet(options.occludeSpecularFloat, 'LIT_OCCLUDE_SPECULAR_FLOAT');

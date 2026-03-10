@@ -415,7 +415,7 @@ class RenderPass {
      * the existing content.
      */
     setClearDepth(depthValue) {
-        if (depthValue) {
+        if (depthValue !== undefined) {
             this.depthStencilOps.clearDepthValue = depthValue;
         }
         this.depthStencilOps.clearDepth = depthValue !== undefined;
@@ -428,7 +428,7 @@ class RenderPass {
      * preserve the existing content.
      */
     setClearStencil(stencilValue) {
-        if (stencilValue) {
+        if (stencilValue !== undefined) {
             this.depthStencilOps.clearStencilValue = stencilValue;
         }
         this.depthStencilOps.clearStencil = stencilValue !== undefined;

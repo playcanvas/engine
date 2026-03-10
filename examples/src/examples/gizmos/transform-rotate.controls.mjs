@@ -38,6 +38,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Snap' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.snap' }
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Snap Increment' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -49,47 +58,156 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Orbit Rotation' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+                { text: 'Drag Mode' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 'show', t: 'Show' },
+                        { v: 'hide', t: 'Hide' },
+                        { v: 'selected', t: 'Selected' }
+                    ],
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.orbitRotation' }
+                    link: { observer, path: 'gizmo.dragMode' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Rotation Mode' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 'absolute', t: 'Absolute' },
+                        { v: 'orbit', t: 'Orbit' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.rotationMode' }
                 })
             )
         ),
         jsx(
             Panel,
-            { headerText: 'Color' },
+            { headerText: 'Theme' },
             jsx(
                 LabelGroup,
-                { text: 'X Axis' },
+                { text: 'Shape Base X' },
                 jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.xAxisColor' }
+                    link: { observer, path: 'gizmo.theme.shapeBase.x' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Y Axis' },
+                { text: 'Shape Base Y' },
                 jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.yAxisColor' }
+                    link: { observer, path: 'gizmo.theme.shapeBase.y' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Z Axis' },
+                { text: 'Shape Base Z' },
                 jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.zAxisColor' }
+                    link: { observer, path: 'gizmo.theme.shapeBase.z' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Color Alpha' },
+                { text: 'Shape Base XYZ' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.shapeBase.xyz' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Shape Base Face' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.shapeBase.f' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Shape Hover X' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.shapeHover.x' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Shape Hover Y' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.shapeHover.y' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Shape Hover Z' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.shapeHover.z' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Shape Hover XYZ' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.shapeHover.xyz' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Shape Hover Face' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.shapeHover.f' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Guide Base X' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.guideBase.x' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Guide Base Y' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.guideBase.y' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Guide Base Z' },
+                jsx(ColorPicker, {
+                    channels: 4,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.theme.guideBase.z' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Guide Occlusion' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.colorAlpha' },
+                    link: { observer, path: 'gizmo.theme.guideOcclusion' },
                     min: 0,
                     max: 1,
                     precision: 2
@@ -97,11 +215,11 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Shading' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+                { text: 'Disabled' },
+                jsx(ColorPicker, {
+                    channels: 4,
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.shading' }
+                    link: { observer, path: 'gizmo.theme.disabled' }
                 })
             )
         ),
@@ -154,6 +272,26 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.faceRingRadius' },
                     max: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Center Radius' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.centerRadius' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Angle Guide Thickness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.angleGuideThickness' },
+                    min: 0.001,
+                    max: 0.1,
+                    step: 0.01,
+                    precision: 3
                 })
             )
         ),

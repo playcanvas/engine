@@ -52,6 +52,9 @@ const LOOP_INDEX = /\{i\}/g;
 // matches color attachments, for example: pcFragColor1
 const FRAGCOLOR = /(pcFragColor[1-8])\b/g;
 
+// matches a pure numeric literal (integer or decimal, no sign since - is blocked by INVALID)
+const NUMERIC_LITERAL = /^\d+(?:\.\d+)?$/;
+
 /**
  * Pure static class implementing subset of C-style preprocessor.
  * inspired by: https://github.com/dcodeIO/Preprocessor.js
@@ -536,6 +539,12 @@ class Preprocessor {
         }
         if (expr === 'false') {
             return { result: false, error };
+        }
+
+        // Handle numeric literals (0 is false, non-zero is true) - standard C preprocessor behavior
+        // Only match pure numeric literals to avoid incorrectly parsing expressions like "3 == 3"
+        if (NUMERIC_LITERAL.test(expr)) {
+            return { result: parseFloat(expr) !== 0, error };
         }
 
         // Handle defined(expr) and !defined(expr)

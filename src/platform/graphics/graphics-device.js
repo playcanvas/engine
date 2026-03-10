@@ -8,14 +8,18 @@ import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 import {
-    CULLFACE_BACK,
+    BUFFER_STATIC,
+    CULLFACE_BACK, CULLFACE_NONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
+    INDEXFORMAT_UINT16,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
-    semanticToLocation
+    semanticToLocation,
+    FRONTFACE_CCW
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
+import { IndexBuffer } from './index-buffer.js';
 import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
@@ -27,11 +31,11 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from './constants.js'
  * @import { DynamicBuffers } from './dynamic-buffers.js'
  * @import { GpuProfiler } from './gpu-profiler.js'
- * @import { IndexBuffer } from './index-buffer.js'
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
  * @import { StorageBuffer } from './storage-buffer.js';
+ * @import { DrawCommands } from './draw-commands.js';
  */
 
 const _tempSet = new Set();
@@ -111,6 +115,14 @@ class GraphicsDevice extends EventHandler {
     isWebGL2 = false;
 
     /**
+     * True if the deviceType is Null
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isNull = false;
+
+    /**
      * True if the back-buffer is using HDR format, which means that the browser will display the
      * rendered images in high dynamic range mode. This is true if the options.displayFormat is set
      * to {@link DISPLAYFORMAT_HDR} when creating the graphics device using
@@ -134,6 +146,14 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     maxIndirectDrawCount = 1024;
+
+    /**
+     * The maximum number of indirect compute dispatches that can be used within a single frame.
+     * Used on WebGPU only. Defaults to 256.
+     *
+     * @type {number}
+     */
+    maxIndirectDispatchCount = 256;
 
     /**
      * The maximum supported texture anisotropy setting.
@@ -209,6 +229,14 @@ class GraphicsDevice extends EventHandler {
     supportsStencil;
 
     /**
+     * True if the device supports multi-draw. This is always supported on WebGPU, and support on
+     * WebGL2 is optional, but pretty common.
+     *
+     * @type {boolean}
+     */
+    supportsMultiDraw = true;
+
+    /**
      * True if the device supports compute shaders.
      *
      * @readonly
@@ -231,6 +259,32 @@ class GraphicsDevice extends EventHandler {
     supportsStorageTextureRead = false;
 
     /**
+     * True if the device supports the WGSL subgroup_uniformity extension, which allows
+     * subgroup functionality to be considered uniform in more cases during shader compilation.
+     * When a shader uses this feature, use an `enable` directive at the top of the WGSL shader:
+     * ```wgsl
+     * enable subgroups;
+     * ```
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsSubgroupUniformity = false;
+
+    /**
+     * True if the device supports the WGSL subgroup_id extension, which provides access to
+     * `subgroup_id` and `num_subgroups` built-in values in workgroups.
+     * When a shader uses this feature, use a `requires` directive at the top of the WGSL shader:
+     * ```wgsl
+     * requires subgroup_id;
+     * ```
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsSubgroupId = false;
+
+    /**
      * Currently active render target.
      *
      * @type {RenderTarget|null}
@@ -247,12 +301,20 @@ class GraphicsDevice extends EventHandler {
     shaders = [];
 
     /**
-     * An array of currently created textures.
+     * A set of currently created textures.
      *
-     * @type {Texture[]}
+     * @type {Set<Texture>}
      * @ignore
      */
-    textures = [];
+    textures = new Set();
+
+    /**
+     * A set of textures that need to be uploaded to the GPU.
+     *
+     * @type {Set<Texture>}
+     * @ignore
+     */
+    texturesToUpload = new Set();
 
     /**
      * A set of currently created render targets.
@@ -299,6 +361,46 @@ class GraphicsDevice extends EventHandler {
     supportsClipDistances = false;
 
     /**
+     * True if the device supports WebGPU texture format tier 1 capabilities. When enabled, a wider
+     * set of normalized texture formats can be used as render targets and storage textures.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureFormatTier1 = false;
+
+    /**
+     * True if the device supports WebGPU texture format tier 2 capabilities. This extends tier 1
+     * and enables read-write storage access for selected texture formats.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureFormatTier2 = false;
+
+    /**
+     * True if the device supports primitive index in fragment shaders (WebGPU only). When
+     * supported, fragment shaders can access the `pcPrimitiveIndex` built-in variable which
+     * uniquely identifies the current primitive being processed.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsPrimitiveIndex = false;
+
+    /**
+     * True if the device supports 16-bit floating-point types in shaders (WebGPU only). When
+     * supported, shaders can use native WGSL types: `f16`, `vec2h`, `vec3h`, `vec4h`, `mat2x2h`,
+     * `mat3x3h`, `mat4x4h`. For convenience, PlayCanvas also provides type aliases (`half`,
+     * `half2`, `half3`, `half4`, `half2x2`, `half3x3`, `half4x4`) that resolve to f16 types when
+     * supported, or fall back to f32 types when not supported.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsShaderF16 = false;
+
+    /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
      *
      * @type {boolean}
@@ -338,6 +440,15 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     quadVertexBuffer;
+
+    /**
+     * An index buffer for drawing a quad as an indexed triangle list.
+     * Contains 6 indices: [0, 1, 2, 2, 1, 3] forming two triangles.
+     *
+     * @type {IndexBuffer}
+     * @ignore
+     */
+    quadIndexBuffer;
 
     /**
      * An object representing current blend state
@@ -388,6 +499,12 @@ class GraphicsDevice extends EventHandler {
      * @type {GpuProfiler}
      */
     gpuProfiler;
+
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    _destroyed = false;
 
     defaultClearOptions = {
         color: [0, 0, 0, 1],
@@ -454,7 +571,7 @@ class GraphicsDevice extends EventHandler {
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
         this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
 
-        this.buffers = [];
+        this.buffers = new Set();
 
         this._vram = {
             // #if _PROFILER
@@ -509,6 +626,10 @@ class GraphicsDevice extends EventHandler {
         this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
             data: positions
         });
+
+        // create quad index buffer for indexed triangle list (two triangles forming a quad)
+        const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
+        this.quadIndexBuffer = new IndexBuffer(this, INDEXFORMAT_UINT16, 6, BUFFER_STATIC, indices.buffer);
     }
 
     /**
@@ -521,6 +642,15 @@ class GraphicsDevice extends EventHandler {
         capsDefines.clear();
         if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
         if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
+        if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
+        if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
+        if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
+
+        // Platform defines
+        if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
+        if (platform.mobile) capsDefines.set('PLATFORM_MOBILE', '');
+        if (platform.android) capsDefines.set('PLATFORM_ANDROID', '');
+        if (platform.ios) capsDefines.set('PLATFORM_IOS', '');
     }
 
     /**
@@ -534,11 +664,16 @@ class GraphicsDevice extends EventHandler {
         this.quadVertexBuffer?.destroy();
         this.quadVertexBuffer = null;
 
+        this.quadIndexBuffer?.destroy();
+        this.quadIndexBuffer = null;
+
         this.dynamicBuffers?.destroy();
         this.dynamicBuffers = null;
 
         this.gpuProfiler?.destroy();
         this.gpuProfiler = null;
+
+        this._destroyed = true;
     }
 
     onDestroyShader(shader) {
@@ -548,6 +683,18 @@ class GraphicsDevice extends EventHandler {
         if (idx !== -1) {
             this.shaders.splice(idx, 1);
         }
+    }
+
+    /**
+     * Called when a texture is destroyed to remove it from internal tracking structures.
+     *
+     * @param {Texture} texture - The texture being destroyed.
+     * @ignore
+     */
+    onTextureDestroyed(texture) {
+        this.textures.delete(texture);
+        this.texturesToUpload.delete(texture);
+        this.scope.removeValue(texture);
     }
 
     // executes after the extended classes have executed their destroy function
@@ -626,6 +773,7 @@ class GraphicsDevice extends EventHandler {
         this.blendState = new BlendState();
         this.depthState = new DepthState();
         this.cullMode = CULLFACE_BACK;
+        this.frontFace = FRONTFACE_CCW;
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
@@ -694,6 +842,41 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Controls whether polygons are front- or back-facing by setting a winding
+     * orientation. The default frontFace is {@link FRONTFACE_CCW}.
+     *
+     * @param {number} frontFace - The front face to set. Can be:
+     *
+     * - {@link FRONTFACE_CW}
+     * - {@link FRONTFACE_CCW}
+     */
+    setFrontFace(frontFace) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets all draw-related render states in a single call. All parameters have sensible defaults
+     * for utility rendering (full-screen quads, particles, etc.), so calling `setDrawStates()` with
+     * no arguments resets to a safe baseline.
+     *
+     * @param {BlendState} [blendState] - Blend state. Defaults to {@link BlendState.NOBLEND}.
+     * @param {DepthState} [depthState] - Depth state. Defaults to {@link DepthState.NODEPTH}.
+     * @param {number} [cullMode] - Cull mode. Defaults to {@link CULLFACE_NONE}.
+     * @param {number} [frontFace] - Front face winding. Defaults to {@link FRONTFACE_CCW}.
+     * @param {StencilParameters} [stencilFront] - Front stencil parameters.
+     * @param {StencilParameters} [stencilBack] - Back stencil parameters.
+     */
+    setDrawStates(blendState = BlendState.NOBLEND, depthState = DepthState.NODEPTH,
+        cullMode = CULLFACE_NONE, frontFace = FRONTFACE_CCW,
+        stencilFront, stencilBack) {
+        this.setBlendState(blendState);
+        this.setDepthState(depthState);
+        this.setCullMode(cullMode);
+        this.setFrontFace(frontFace);
+        this.setStencilState(stencilFront, stencilBack);
+    }
+
+    /**
      * Sets the specified render target on the device. If null is passed as a parameter, the back
      * buffer becomes the current target for all rendering operations.
      *
@@ -733,13 +916,16 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Retrieves the available slot in the {@link indirectDrawBuffer} used for indirect rendering,
-     * which can be utilized by a {@link Compute} shader to generate indirect draw parameters and by
-     * {@link MeshInstance#setIndirect} to configure indirect draw calls.
+     * Retrieves the first available slot in the {@link indirectDrawBuffer} used for indirect
+     * rendering, which can be utilized by a {@link Compute} shader to generate indirect draw
+     * parameters and by {@link MeshInstance#setIndirect} to configure indirect draw calls.
      *
-     * @returns {number} - The slot used for indirect rendering.
+     * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
+     * @returns {number} - The first reserved slot index used for indirect rendering.
      */
-    getIndirectDrawSlot() {
+    getIndirectDrawSlot(count = 1) {
         return 0;
     }
 
@@ -754,6 +940,34 @@ class GraphicsDevice extends EventHandler {
      * @type {StorageBuffer|null}
      */
     get indirectDrawBuffer() {
+        return null;
+    }
+
+    /**
+     * Retrieves the first available slot in the {@link indirectDispatchBuffer} used for indirect
+     * compute dispatch, which can be utilized by a {@link Compute} shader to generate indirect
+     * dispatch parameters for another compute shader.
+     *
+     * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
+     * @returns {number} - The first reserved slot index used for indirect dispatch.
+     */
+    getIndirectDispatchSlot(count = 1) {
+        return 0;
+    }
+
+    /**
+     * Returns the buffer used to store arguments for indirect compute dispatch calls. The size of
+     * the buffer is controlled by the {@link maxIndirectDispatchCount} property. This buffer can
+     * be passed to a {@link Compute} shader along with a slot obtained by calling
+     * {@link getIndirectDispatchSlot}, in order to prepare indirect dispatch parameters.
+     *
+     * Only available on WebGPU, returns null on other platforms.
+     *
+     * @type {StorageBuffer|null}
+     */
+    get indirectDispatchBuffer() {
         return null;
     }
 
@@ -819,7 +1033,7 @@ class GraphicsDevice extends EventHandler {
      * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
      * @param {number} [numInstances] - The number of instances to render when using instancing.
      * Defaults to 1.
-     * @param {number} [indirectSlot] - The slot of the indirect buffer to use for the draw call.
+     * @param {DrawCommands} [drawCommands] - The draw commands to use for the draw call.
      * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
      * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
@@ -835,7 +1049,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @ignore
      */
-    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
         Debug.assert(false);
     }
 
@@ -1016,14 +1230,14 @@ class GraphicsDevice extends EventHandler {
 
             // log out all loaded textures, sorted by gpu memory size
             if (Tracing.get(TRACEID_TEXTURES)) {
-                const textures = this.textures.slice();
+                const textures = [...this.textures];
                 textures.sort((a, b) => b.gpuSize - a.gpuSize);
                 Debug.log(`Textures: ${textures.length}`);
                 let textureTotal = 0;
                 textures.forEach((texture, index) => {
                     const textureSize  = texture.gpuSize;
                     textureTotal += textureSize;
-                    Debug.log(`${index}. ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
+                    Debug.log(`${index}. Id: ${texture.id} ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
                 });
                 Debug.log(`Total: ${(textureTotal / 1024 / 1024).toFixed(2)}MB`);
             }

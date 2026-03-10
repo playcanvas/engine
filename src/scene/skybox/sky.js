@@ -14,7 +14,7 @@ import { SkyMesh } from './sky-mesh.js';
  */
 class Sky {
     /**
-     * The type of the sky. One of the SKYMESH_* constants.
+     * The type of the sky. One of the SKYTYPE_* constants.
      *
      * @type {string}
      * @private
@@ -80,7 +80,7 @@ class Sky {
     }
 
     /**
-     * The type of the sky. One of the SKYMESH_* constants. Defaults to {@link SKYTYPE_INFINITE}.
+     * The type of the sky. One of the SKYTYPE_* constants. Defaults to {@link SKYTYPE_INFINITE}.
      * Can be:
      *
      * - {@link SKYTYPE_INFINITE}

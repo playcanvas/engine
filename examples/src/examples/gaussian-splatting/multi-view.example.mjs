@@ -1,3 +1,4 @@
+// @config DESCRIPTION Renders Gaussian Splats from multiple camera viewports simultaneously with different projection types.
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 

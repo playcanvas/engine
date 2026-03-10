@@ -1,21 +1,23 @@
 import { Debug } from '../../core/debug.js';
-import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { ADDRESS_CLAMP_TO_EDGE, BUFFER_STATIC, FILTER_NEAREST, SEMANTIC_ATTR13, TYPE_UINT32 } from '../../platform/graphics/constants.js';
-import { Texture } from '../../platform/graphics/texture.js';
-import { VertexFormat } from '../../platform/graphics/vertex-format.js';
-import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { Mesh } from '../mesh.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
+import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
+import { GSplatStreams } from './gsplat-streams.js';
+import { GSplatResourceCleanup } from './gsplat-resource-cleanup.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatData } from './gsplat-data.js'
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
- * @import { GSplatSogsData } from './gsplat-sogs-data.js'
- * @import { GSplatLodBlocks } from './unified/gsplat-lod-blocks.js'
+ * @import { GSplatSogData } from './gsplat-sog-data.js'
+ * @import { GSplatFormat } from './gsplat-format.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ * @import { Vec2 } from '../../core/math/vec2.js'
  */
 
 let id = 0;
+const tempMap = new Map();
 
 /**
  * Base class for a GSplat resource and defines common properties.
@@ -23,56 +25,259 @@ let id = 0;
  *  @ignore
  */
 class GSplatResourceBase {
-    /** @type {GraphicsDevice} */
+    /**
+     * @type {GraphicsDevice}
+     * @ignore
+     */
     device;
 
-    /** @type {GSplatData | GSplatCompressedData | GSplatSogsData} */
+    /**
+     * @type {GSplatData | GSplatCompressedData | GSplatSogData}
+     * @ignore
+     */
     gsplatData;
-
-    /** @type {GSplatLodBlocks|null} */
-    lodBlocks = null;
 
     /** @type {Float32Array} */
     centers;
 
+    /**
+     * Version counter for centers array changes. Remains 0 for static resources.
+     * Only GSplatContainer increments this via its update() method.
+     *
+     * @type {number}
+     * @ignore
+     */
+    centersVersion = 0;
+
     /** @type {BoundingBox} */
     aabb;
 
-    /** @type {Mesh} */
-    mesh;
+    /**
+     * @type {Mesh|null}
+     * @ignore
+     */
+    mesh = null;
 
-    /** @type {VertexBuffer} */
-    instanceIndices;
-
-    /** @type {boolean} */
-    hasLod = false;
-
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     id = id++;
+
+    /**
+     * Cache for work buffer render materials/shaders. Keyed by configuration hash.
+     * Stored per-resource because materials depend on resource-specific configuration
+     * (SH bands, textures, defines). Cleaned up when resource is destroyed.
+     *
+     * @type {Map<string, WorkBufferRenderInfo>}
+     * @ignore
+     */
+    workBufferRenderInfos = new Map();
+
+    /**
+     * Format descriptor for this resource. Assigned by derived classes.
+     *
+     * @type {GSplatFormat}
+     * @protected
+     */
+    _format = null;
+
+    /**
+     * Manages textures for this resource based on format streams.
+     *
+     * @type {GSplatStreams}
+     * @ignore
+     */
+    streams;
+
+    /**
+     * Non-texture uniform parameters required by this resource's format.
+     * This is the single source of truth for format-specific uniforms (e.g., dequantization
+     * parameters) used by both material configuration and processing.
+     *
+     * @type {Map<string, any>}
+     * @ignore
+     */
+    parameters = new Map();
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _refCount = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _meshRefCount = 0;
 
     constructor(device, gsplatData) {
         this.device = device;
         this.gsplatData = gsplatData;
+        this.streams = new GSplatStreams(device);
 
-        this.centers = new Float32Array(gsplatData.numSplats * 3);
-        gsplatData.getCenters(this.centers);
+        this.centers = gsplatData.getCenters();
 
         this.aabb = new BoundingBox();
         gsplatData.calcAabb(this.aabb);
-
-        // construct the mesh
-        this.mesh = GSplatResourceBase.createMesh(device);
-        this.instanceIndices = GSplatResourceBase.createInstanceIndices(device, gsplatData.numSplats);
-
-        // keep extra reference since mesh is shared between instances
-        this.mesh.incRefCount();
-
-        this.mesh.aabb.copy(this.aabb);
     }
 
+    /**
+     * Destroys this resource. If the resource is still in use by the sorter, destruction is
+     * automatically deferred until it's safe.
+     */
     destroy() {
+        if (this.refCount > 0) {
+            // Still in use by sorter, queue for deferred destruction
+            GSplatResourceCleanup.queueDestroy(this.device, this);
+            return;
+        }
+        this._actualDestroy();
+    }
+
+    /**
+     * Actually destroys this resource and releases all GPU resources.
+     * Derived classes should override this method instead of destroy().
+     *
+     * @protected
+     */
+    _actualDestroy() {
+        this.streams.destroy();
         this.mesh?.destroy();
-        this.instanceIndices?.destroy();
+        this.workBufferRenderInfos.forEach(info => info.destroy());
+        this.workBufferRenderInfos.clear();
+    }
+
+    /**
+     * Increments the reference count.
+     *
+     * @ignore
+     */
+    incRefCount() {
+        this._refCount++;
+    }
+
+    /**
+     * Decrements the reference count.
+     *
+     * @ignore
+     */
+    decRefCount() {
+        this._refCount--;
+    }
+
+    /**
+     * Gets the current reference count. This represents how many times this resource is currently
+     * being used internally by the engine. For {@link GSplatComponent#asset|assets} assigned to
+     * {@link GSplatComponent#unified|unified} gsplat components, this tracks active usage during
+     * rendering and sorting operations.
+     *
+     * Resources should not be unloaded while the reference count is non-zero, as they are still
+     * in use by the rendering pipeline.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get refCount() {
+        return this._refCount;
+    }
+
+    /**
+     * Ensures mesh and instanceIndices exist. Creates them lazily on first call. Must be paired
+     * with a call to releaseMesh() when done.
+     *
+     * @ignore
+     */
+    ensureMesh() {
+        if (!this.mesh) {
+            this.mesh = GSplatResourceBase.createMesh(this.device);
+            this.mesh.aabb.copy(this.aabb);
+        }
+        this._meshRefCount++;
+    }
+
+    /**
+     * Releases reference to mesh. When all references are released, cleans up instanceIndices.
+     * The mesh itself is destroyed by MeshInstance when its internal refCount reaches zero.
+     *
+     * @ignore
+     */
+    releaseMesh() {
+        this._meshRefCount--;
+        if (this._meshRefCount < 1) {
+            this.mesh = null; // mesh instances destroy mesh when their refCount reaches zero
+        }
+    }
+
+    /**
+     * Get or create a QuadRender for rendering to work buffer.
+     *
+     * @param {boolean} colorOnly - Whether to render only color (not full MRT).
+     * @param {{ code: string, hash: number }|null} workBufferModifier - Optional custom modifier (object with code and pre-computed hash).
+     * @param {number} formatHash - Captured format hash for shader caching.
+     * @param {string} formatDeclarations - Captured format declarations for shader compilation.
+     * @param {GSplatFormat} workBufferFormat - The work buffer format descriptor.
+     * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
+     * @ignore
+     */
+    getWorkBufferRenderInfo(colorOnly, workBufferModifier, formatHash, formatDeclarations, workBufferFormat) {
+
+        // configure defines to fetch cached data
+        this.configureMaterialDefines(tempMap);
+        tempMap.set('GSPLAT_LOD', '');
+        if (colorOnly) tempMap.set('GSPLAT_COLOR_ONLY', '');
+
+        // Set HAS_NODE_MAPPING when resource has node mapping texture (octree resources)
+        if (this.streams.textures.has('nodeMappingTexture')) {
+            tempMap.set('HAS_NODE_MAPPING', '');
+        }
+
+        let definesKey = '';
+        for (const [k, v] of tempMap) {
+            if (definesKey) definesKey += ';';
+            definesKey += `${k}=${v}`;
+        }
+        const key = `${formatHash};${workBufferFormat.hash};${workBufferModifier?.hash ?? 0};${definesKey}`;
+
+        // get or create quad render
+        let info = this.workBufferRenderInfos.get(key);
+        if (!info) {
+
+            const material = new ShaderMaterial();
+            this.configureMaterial(material, workBufferModifier, formatDeclarations);
+
+            // Inject work buffer output declarations
+            const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
+            // For color-only mode, only output color stream; otherwise output all streams
+            const outputStreams = colorOnly ?
+                [workBufferFormat.getStream('dataColor')] :
+                [...workBufferFormat.streams, ...workBufferFormat.extraStreams];
+            let outputCode = workBufferFormat.getOutputDeclarations(outputStreams);
+
+            // In color-only mode, generate no-op stubs for extra streams so user modifiers compile
+            if (colorOnly && workBufferFormat.extraStreams.length > 0) {
+                outputCode += `\n${workBufferFormat.getOutputStubs(workBufferFormat.extraStreams)}`;
+            }
+
+            chunks.set('gsplatWorkBufferOutputVS', outputCode);
+
+            // Inject format-specific write encoding chunk
+            const writeCode = workBufferFormat.getWriteCode();
+            if (writeCode) {
+                chunks.set('gsplatWriteVS', writeCode);
+            }
+
+            // copy tempMap to material defines
+            tempMap.forEach((v, k) => material.setDefine(k, v));
+
+            // create new cache entry
+            info = new WorkBufferRenderInfo(this.device, key, material, colorOnly, workBufferFormat);
+            this.workBufferRenderInfos.set(key, info);
+        }
+
+        tempMap.clear();
+        return info;
     }
 
     static createMesh(device) {
@@ -105,28 +310,6 @@ class GSplatResourceBase {
         return mesh;
     }
 
-    static createInstanceIndices(device, splatCount) {
-        const splatInstanceSize = GSplatResourceBase.instanceSize;
-        const numSplats = Math.ceil(splatCount / splatInstanceSize) * splatInstanceSize;
-        const numSplatInstances = numSplats / splatInstanceSize;
-
-        const indexData = new Uint32Array(numSplatInstances);
-        for (let i = 0; i < numSplatInstances; ++i) {
-            indexData[i] = i * splatInstanceSize;
-        }
-
-        const vertexFormat = new VertexFormat(device, [
-            { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_UINT32, asInt: true }
-        ]);
-
-        const instanceIndices = new VertexBuffer(device, vertexFormat, numSplatInstances, {
-            usage: BUFFER_STATIC,
-            data: indexData.buffer
-        });
-
-        return instanceIndices;
-    }
-
     static get instanceSize() {
         return 128; // number of splats per instance
     }
@@ -135,82 +318,83 @@ class GSplatResourceBase {
         return this.gsplatData.numSplats;
     }
 
-    configureMaterial(material) {
+    /**
+     * Gets the format descriptor for this resource. The format defines texture streams and
+     * shader code for reading splat data. Use this to add extra streams.
+     *
+     * @type {GSplatFormat}
+     */
+    get format() {
+        return this._format;
     }
 
     /**
-     * Evaluates the size of the texture based on the number of splats.
+     * Gets a texture by name.
      *
-     * @param {number} count - Number of gaussians.
-     * @returns {Vec2} Returns a Vec2 object representing the size of the texture.
+     * @param {string} name - The name of the texture.
+     * @returns {Texture|null} The texture, or null if not found.
      */
-    evalTextureSize(count) {
-        return Vec2.ZERO;
+    getTexture(name) {
+        return this.streams.getTexture(name) ?? null;
     }
 
     /**
-     * Creates a new texture with the specified parameters.
+     * Gets the texture dimensions (width and height) used by this resource's data textures.
      *
-     * @param {string} name - The name of the texture to be created.
-     * @param {number} format - The pixel format of the texture.
-     * @param {Vec2} size - The size of the texture in a Vec2 object, containing width (x) and height (y).
-     * @param {Uint8Array|Uint16Array|Uint32Array} [data] - The initial data to fill the texture with.
-     * @returns {Texture} The created texture instance.
+     * @type {Vec2}
      */
-    createTexture(name, format, size, data) {
-        return new Texture(this.device, {
-            name: name,
-            width: size.x,
-            height: size.y,
-            format: format,
-            cubemap: false,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            ...(data ? { levels: [data] } : { })
-        });
+    get textureDimensions() {
+        return this.streams.textureDimensions;
     }
 
     /**
-     * Calculate block centers by averaging splat centers within each block
+     * Configures a material to use this resource's data. Base implementation injects format's
+     * shader chunks and binds textures from the streams.
      *
-     * @param {number} numSplats - Total number of splats
-     * @param {number} blockSize - Size of each block
-     * @param {number} numBlocks - Number of blocks (avoids recalculation)
-     * @param {Float32Array} blocksCenter - Output array for block centers (3 floats per block)
-     * @protected
+     * @param {ShaderMaterial} material - The material to configure.
+     * @param {{ code: string, hash: number }|null} workBufferModifier - Optional custom modifier (object with code and pre-computed hash).
+     * @param {string} formatDeclarations - Captured format declarations for shader compilation.
+     * @ignore
      */
-    calculateBlockCenters(numSplats, blockSize, numBlocks, blocksCenter) {
-        for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
-            const startIdx = blockIdx * blockSize;
-            const endIdx = Math.min(startIdx + blockSize, numSplats);
-            const blockSplatCount = endIdx - startIdx;
+    configureMaterial(material, workBufferModifier, formatDeclarations) {
+        this.configureMaterialDefines(material.defines);
 
-            // Calculate block center by averaging all splat centers in this block
-            let centerX = 0, centerY = 0, centerZ = 0;
-            for (let i = startIdx; i < endIdx; i++) {
-                const centerBase = i * 3;
-                centerX += this.centers[centerBase];
-                centerY += this.centers[centerBase + 1];
-                centerZ += this.centers[centerBase + 2];
-            }
+        // Sync resource textures with format (handles extra streams)
+        this.streams.syncWithFormat(this.format);
 
-            // Store average center in blocksCenter
-            const blockCenterBase = blockIdx * 3;
-            blocksCenter[blockCenterBase] = centerX / blockSplatCount;
-            blocksCenter[blockCenterBase + 1] = centerY / blockSplatCount;
-            blocksCenter[blockCenterBase + 2] = centerZ / blockSplatCount;
+        // Inject format's shader chunks
+        const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
+        chunks.set('gsplatDeclarationsVS', formatDeclarations);
+        chunks.set('gsplatReadVS', this.format.getReadCode());
+
+        // Set modify chunk if provided
+        if (workBufferModifier?.code) {
+            chunks.set('gsplatModifyVS', workBufferModifier.code);
+        }
+
+        // Bind all textures from streams
+        for (const [name, texture] of this.streams.textures) {
+            material.setParameter(name, texture);
+        }
+
+        // Bind non-texture parameters (e.g., dequantization uniforms)
+        for (const [name, value] of this.parameters) {
+            material.setParameter(name, value);
+        }
+
+        // Set texture size
+        if (this.textureDimensions.x > 0) {
+            material.setParameter('splatTextureSize', this.textureDimensions.x);
         }
     }
 
     /**
-     * Generate LODs if supported. To be implemented by derived classes.
+     * Configures material defines for this resource. Derived classes should override this.
      *
-     * @protected
+     * @param {Map<string, string|number|boolean>} defines - The defines map to configure.
+     * @ignore
      */
-    generateLods() {
+    configureMaterialDefines(defines) {
     }
 
     instantiate() {

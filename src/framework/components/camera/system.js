@@ -54,6 +54,7 @@ class CameraComponentSystem extends ComponentSystem {
             'calculateTransform',
             'clearColor',
             'clearColorBuffer',
+            'clearDepth',
             'clearDepthBuffer',
             'clearStencilBuffer',
             'renderSceneColorMap',

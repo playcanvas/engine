@@ -1,5 +1,6 @@
 /**
- * 3-dimensional vector.
+ * A 3-dimensional vector. Vec3 is commonly used to represent 3D positions, directions, Euler
+ * angles or scales.
  *
  * @category Math
  */
@@ -366,7 +367,7 @@ class Vec3 {
     /**
      * Returns the magnitude squared of the specified 3-dimensional vector.
      *
-     * @returns {number} The magnitude of the specified 3-dimensional vector.
+     * @returns {number} The magnitude squared of the specified 3-dimensional vector.
      * @example
      * const vec = new pc.Vec3(3, 4, 0);
      * const len = vec.lengthSq();
@@ -380,8 +381,8 @@ class Vec3 {
     /**
      * Returns the result of a linear interpolation between two specified 3-dimensional vectors.
      *
-     * @param {Vec3} lhs - The 3-dimensional to interpolate from.
-     * @param {Vec3} rhs - The 3-dimensional to interpolate to.
+     * @param {Vec3} lhs - The 3-dimensional vector to interpolate from.
+     * @param {Vec3} rhs - The 3-dimensional vector to interpolate to.
      * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1,
      * the linear interpolant will occur on a straight line between lhs and rhs. Outside of this
      * range, the linear interpolant will occur on a ray extrapolated from this line.
@@ -501,6 +502,10 @@ class Vec3 {
      *
      * @param {Vec3} [src] - The vector to floor. If not set, the operation is done in place.
      * @returns {Vec3} Self for chaining.
+     * @example
+     * const v = new pc.Vec3(1.2, 3.9, 5.5);
+     * v.floor();
+     * // v is now [1, 3, 5]
      */
     floor(src = this) {
         this.x = Math.floor(src.x);
@@ -514,6 +519,10 @@ class Vec3 {
      *
      * @param {Vec3} [src] - The vector to ceil. If not set, the operation is done in place.
      * @returns {Vec3} Self for chaining.
+     * @example
+     * const v = new pc.Vec3(1.2, 3.1, 5.9);
+     * v.ceil();
+     * // v is now [2, 4, 6]
      */
     ceil(src = this) {
         this.x = Math.ceil(src.x);
@@ -527,6 +536,10 @@ class Vec3 {
      *
      * @param {Vec3} [src] - The vector to round. If not set, the operation is done in place.
      * @returns {Vec3} Self for chaining.
+     * @example
+     * const v = new pc.Vec3(1.4, 3.6, 5.5);
+     * v.round();
+     * // v is now [1, 4, 6]
      */
     round(src = this) {
         this.x = Math.round(src.x);
@@ -540,6 +553,11 @@ class Vec3 {
      *
      * @param {Vec3} rhs - The 3-dimensional vector used as the source of elements to compare to.
      * @returns {Vec3} Self for chaining.
+     * @example
+     * const a = new pc.Vec3(5, 1, 7);
+     * const b = new pc.Vec3(2, 8, 3);
+     * a.min(b);
+     * // a is now [2, 1, 3]
      */
     min(rhs) {
         if (rhs.x < this.x) this.x = rhs.x;
@@ -553,6 +571,11 @@ class Vec3 {
      *
      * @param {Vec3} rhs - The 3-dimensional vector used as the source of elements to compare to.
      * @returns {Vec3} Self for chaining.
+     * @example
+     * const a = new pc.Vec3(5, 1, 7);
+     * const b = new pc.Vec3(2, 8, 3);
+     * a.max(b);
+     * // a is now [5, 8, 7]
      */
     max(rhs) {
         if (rhs.x > this.x) this.x = rhs.x;

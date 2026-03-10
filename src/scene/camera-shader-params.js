@@ -66,7 +66,8 @@ class CameraShaderParams {
             this._definesDirty = false;
             defines.clear();
 
-            if (this._sceneDepthMapLinear) defines.set('SCENE_DEPTHMAP_LINEAR', true);
+            if (this._sceneDepthMapLinear) defines.set('SCENE_DEPTHMAP_LINEAR', '');
+            if (this.shaderOutputGamma === GAMMA_SRGB) defines.set('SCENE_COLORMAP_GAMMA', '');
             defines.set('FOG', this._fog.toUpperCase());
             defines.set('TONEMAP', tonemapNames[this._toneMapping]);
             defines.set('GAMMA', gammaNames[this.shaderOutputGamma]);

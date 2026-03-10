@@ -5,7 +5,7 @@ export default /* glsl */`
         vec3 applyFringing(vec3 color, vec2 uv) {
             // offset depends on the direction from the center
             vec2 centerDistance = uv - 0.5;
-            vec2 offset = fringingIntensity * pow(centerDistance, vec2(2.0, 2.0));
+            vec2 offset = fringingIntensity * centerDistance * centerDistance;
 
             color.r = texture2D(sceneTexture, uv - offset).r;
             color.b = texture2D(sceneTexture, uv + offset).b;

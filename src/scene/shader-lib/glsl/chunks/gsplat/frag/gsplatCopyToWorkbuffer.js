@@ -3,104 +3,116 @@ export default /* glsl */`
 
 #define GSPLAT_CENTER_NOPROJ
 
+#include "gsplatHelpersVS"
+#include "gsplatFormatVS"
 #include "gsplatStructsVS"
+#include "gsplatDeclarationsVS"
 #include "gsplatCenterVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
-#include "gsplatSourceFormatVS"
+#include "gsplatReadVS"
+#include "gsplatWorkBufferOutputVS"
+#include "gsplatWriteVS"
+#include "gsplatModifyVS"
 
-uniform mat4 uTransform;
+// Packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
+flat varying ivec4 vSubDraw;
 
-uniform int uStartLine;      // Start row in destination texture
-uniform int uViewportWidth;  // Width of the destination viewport in pixels
+uniform vec3 uColorMultiply;
 
-#ifdef GSPLAT_LOD
-    // LOD intervals texture
-    uniform usampler2D uIntervalsTexture;
+// pre-computed model matrix decomposition
+uniform vec3 model_scale;
+uniform vec4 model_rotation;  // (x,y,z,w) format
+
+#ifdef GSPLAT_ID
+    uniform uint uId;
 #endif
 
-// number of splats
-uniform int uActiveSplats;
+#ifdef GSPLAT_NODE_INDEX
+    uniform uint uBoundsBaseIndex;
+    #ifdef HAS_NODE_MAPPING
+        uniform usampler2D nodeMappingTexture;
+    #endif
+#endif
 
 void main(void) {
-    // local fragment coordinates (within the viewport)
-    ivec2 localFragCoords = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y) - uStartLine);
+    // Compute source index from packed sub-draw varying: (sourceBase, colStart, rowWidth, rowStart)
+    int localRow = int(gl_FragCoord.y) - vSubDraw.w;
+    int localCol = int(gl_FragCoord.x) - vSubDraw.y;
+    uint originalIndex = uint(vSubDraw.x + localRow * vSubDraw.z + localCol);
 
-    // linear index of the splat
-    int targetIndex = localFragCoords.y * uViewportWidth + localFragCoords.x;
-    if (targetIndex >= uActiveSplats) {
+    // Initialize global splat for format read functions
+    setSplat(originalIndex);
 
-        // Out of bounds: write zeros
-        pcFragColor0 = vec4(0.0);
-        pcFragColor1 = vec4(0.0);
-        pcFragColor2 = vec4(0.0);
-        pcFragColor3 = vec4(0.0);
+    // read center in local space
+    vec3 modelCenter = getCenter();
 
-    } else {
+    // compute world-space center for storage
+    vec3 worldCenter = (matrix_model * vec4(modelCenter, 1.0)).xyz;
+    SplatCenter center;
+    initCenter(modelCenter, center);
 
-        #ifdef GSPLAT_LOD
-            // Use intervals texture to remap target index to source index
-            int intervalsSize = int(textureSize(uIntervalsTexture, 0).x);
-            ivec2 intervalUV = ivec2(targetIndex % intervalsSize, targetIndex / intervalsSize);
-            uint originalIndex = texelFetch(uIntervalsTexture, intervalUV, 0).r;
-        #else
-            uint originalIndex = uint(targetIndex);
-        #endif
-        
-        // source texture size
-        #if defined(GSPLAT_SOGS_DATA) || defined(GSPLAT_COMPRESSED_DATA)
-            uint srcSize = uint(textureSize(packedTexture, 0).x);
-        #else
-            uint srcSize = uint(textureSize(splatColor, 0).x);
-        #endif
-        
-        // Create SplatSource used to sample splat data textures
-        SplatSource source;
-        source.id = uint(originalIndex);
-        source.uv = ivec2(source.id % srcSize, source.id / srcSize);
+    // Get source rotation and scale
+    // getRotation() returns (w,x,y,z) format, convert to (x,y,z,w) for quatMul
+    vec4 srcRotation = getRotation().yzwx;
+    vec3 srcScale = getScale();
 
-        // read and transform center
-        vec3 modelCenter = readCenter(source);
-        modelCenter = (uTransform * vec4(modelCenter, 1.0)).xyz;
-        SplatCenter center;
-        initCenter(modelCenter, center);
-
-        // read and transform covariance
-        vec3 covA, covB;
-        readCovariance(source, covA, covB);
-
-        mat3 C = mat3(
-            covA.x, covA.y, covA.z,
-            covA.y, covB.x, covB.y,
-            covA.z, covB.y, covB.z
-        );
-        mat3 linear = mat3(uTransform);
-        mat3 Ct = linear * C * transpose(linear);
-        covA = Ct[0];
-        covB = vec3(Ct[1][1], Ct[1][2], Ct[2][2]);
-
-        // read color
-        vec4 color = readColor(source);
-
-        // evaluate spherical harmonics
-        #if SH_BANDS > 0
-            // calculate the model-space view direction
-            vec3 dir = normalize(center.view * mat3(center.modelView));
-
-            // read sh coefficients
-            vec3 sh[SH_COEFFS];
-            float scale;
-            readSHData(source, sh, scale);
-
-            // evaluate
-            color.xyz += evalSH(sh, dir) * scale;
-        #endif
-
-        // write out results
-        pcFragColor0 = color;
-        pcFragColor1 = vec4(modelCenter, 1.0);
-        pcFragColor2 = vec4(covA, 1.0);
-        pcFragColor3 = vec4(covB, 1.0);
+    // Combine: world = model * source (both in x,y,z,w format)
+    vec4 worldRotation = quatMul(model_rotation, srcRotation);
+    // Ensure w is positive so sqrt() reconstruction works correctly
+    // (quaternions q and -q represent the same rotation)
+    if (worldRotation.w < 0.0) {
+        worldRotation = -worldRotation;
     }
+    vec3 worldScale = model_scale * srcScale;
+
+    // Apply custom center modification
+    vec3 originalCenter = worldCenter;
+    modifySplatCenter(worldCenter);
+
+    // Apply custom rotation/scale modification
+    modifySplatRotationScale(originalCenter, worldCenter, worldRotation, worldScale);
+
+    // read color
+    vec4 color = getColor();
+
+    // evaluate spherical harmonics
+    #if SH_BANDS > 0
+        // calculate the model-space view direction
+        vec3 dir = normalize(center.view * mat3(center.modelView));
+
+        // read sh coefficients
+        vec3 sh[SH_COEFFS];
+        float scale;
+        readSHData(sh, scale);
+
+        // evaluate
+        color.xyz += evalSH(sh, dir) * scale;
+    #endif
+
+    // Apply custom color modification
+    modifySplatColor(worldCenter, color);
+
+    color.xyz *= uColorMultiply;
+
+    // write color + transform using format-specific encoding
+    writeSplat(worldCenter, worldRotation, worldScale, color);
+
+    #ifdef GSPLAT_ID
+        writePcId(uvec4(uId, 0u, 0u, 0u));
+    #endif
+
+    #ifdef GSPLAT_NODE_INDEX
+        #ifdef HAS_NODE_MAPPING
+            // Octree: nodeIndex is the direct bounds offset (all nodes uploaded)
+            int srcTextureWidth = int(textureSize(nodeMappingTexture, 0).x);
+            ivec2 sourceCoord = ivec2(int(originalIndex) % srcTextureWidth, int(originalIndex) / srcTextureWidth);
+            uint nodeIndex = texelFetch(nodeMappingTexture, sourceCoord, 0).r;
+            writePcNodeIndex(uvec4(uBoundsBaseIndex + nodeIndex, 0u, 0u, 0u));
+        #else
+            // Non-octree: single bounds entry
+            writePcNodeIndex(uvec4(uBoundsBaseIndex, 0u, 0u, 0u));
+        #endif
+    #endif
 }
 `;

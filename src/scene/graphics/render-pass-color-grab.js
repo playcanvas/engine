@@ -64,6 +64,9 @@ class RenderPassColorGrab extends RenderPass {
             // assign new texture
             renderTarget._colorBuffer = texture;
             renderTarget._colorBuffers = [texture];
+
+            // update cached dimensions
+            renderTarget.evaluateDimensions();
         } else {
 
             // create new render target with the texture

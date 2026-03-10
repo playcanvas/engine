@@ -1,7 +1,7 @@
 import { Vec3 } from '../math/vec3.js';
 
 /**
- * An infinite ray.
+ * An infinite ray. Rays are commonly used for picking, raycasting and intersection tests.
  *
  * @category Math
  */
