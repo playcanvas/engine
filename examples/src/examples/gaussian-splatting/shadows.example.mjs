@@ -82,10 +82,10 @@ assetListLoader.load(() => {
     app.scene.sky.node.setLocalPosition(pc.Vec3.ZERO);
     app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
 
-    data.set('alphaClip', 0.4);
     data.on('alphaClip:set', () => {
         app.scene.gsplat.alphaClip = data.get('alphaClip');
     });
+    data.set('alphaClip', 0.4);
 
     // Create first splat entity
     const biker = new pc.Entity('biker');
