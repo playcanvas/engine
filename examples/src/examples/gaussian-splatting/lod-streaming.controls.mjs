@@ -34,6 +34,16 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
         jsx(
             Panel,
             { headerText: 'Settings' },
+            jsx(
+                LabelGroup,
+                { text: 'Radial' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'radialSorting' },
+                    value: observer.get('radialSorting') ?? true
+                })
+            ),
             isWebGPU && jsx(
                 LabelGroup,
                 { text: 'GPU Sorting' },
