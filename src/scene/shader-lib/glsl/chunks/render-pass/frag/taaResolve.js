@@ -14,9 +14,7 @@ export default /* glsl */`
     vec2 reproject(vec2 uv, float depth) {
 
         // fragment NDC
-        #ifndef WEBGPU
-            depth = depth * 2.0 - 1.0;
-        #endif
+        depth = depth * 2.0 - 1.0;
         vec4 ndc = vec4(uv * 2.0 - 1.0, depth, 1.0);
 
         // remove jitter from the current frame
@@ -54,18 +52,8 @@ export default /* glsl */`
 
     void main()
     {
-        vec2 uv = uv0;
-
-        #ifdef WEBGPU
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // This hack is needed on webgpu, which makes TAA work but the resulting image is upside-down.
-            // We could flip the image in the following pass, but ideally a better solution should be found.
-            uv.y = 1.0 - uv.y;
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        #endif
-
         // current frame
-        vec4 srcColor = texture2D(sourceTexture, uv);
+        vec4 srcColor = texture2D(sourceTexture, uv0);
 
         // current depth is in linear space, convert it to non-linear space
         float linearDepth = getLinearScreenDepth(uv0);
@@ -87,7 +75,7 @@ export default /* glsl */`
         #endif
 
         // handle disocclusion by clamping the history color
-        vec4 historyColorClamped = colorClamp(uv, historyColor);
+        vec4 historyColorClamped = colorClamp(uv0, historyColor);
 
         // handle history buffer outside of the frame
         float mixFactor = (historyUv.x < 0.0 || historyUv.x > 1.0 || historyUv.y < 0.0 || historyUv.y > 1.0) ?

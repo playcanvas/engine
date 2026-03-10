@@ -24,13 +24,6 @@ export default /* glsl */`
 
         vec2 uv = uv0;
 
-        // TAA pass renders upside-down on WebGPU, flip it here
-        #ifdef TAA
-        #ifdef WEBGPU
-            uv.y = 1.0 - uv.y;
-        #endif
-        #endif
-
         vec4 scene = texture2DLod(sceneTexture, uv, 0.0);
         vec3 result = scene.rgb;
 

@@ -27,11 +27,6 @@ export default /* wgsl */`
         var output: FragmentOutput;
         var uv = uv0;
 
-        // TAA pass renders upside-down on WebGPU, flip it here
-        #ifdef TAA
-            uv.y = 1.0 - uv.y;
-        #endif
-
         let scene = textureSampleLevel(sceneTexture, sceneTextureSampler, uv, 0.0);
         var result = scene.rgb;
 
