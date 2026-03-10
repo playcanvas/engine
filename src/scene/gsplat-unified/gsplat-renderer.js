@@ -181,7 +181,6 @@ class GSplatRenderer {
 
         this.setOrderData();
 
-        this._material.setParameter('alphaClip', 0.3);
         this._material.setDefine(`DITHER_${dither ? 'BLUENOISE' : 'NONE'}`, '');
         this._material.cull = CULLFACE_NONE;
         this._material.blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;

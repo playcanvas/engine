@@ -60,6 +60,9 @@ class GSplatParams {
     constructor(device) {
         this._device = device;
         this._format = this._createFormat(GSPLATDATA_COMPACT);
+
+        this._material.setParameter('alphaClip', 0.3);
+        this._material.setParameter('minPixelSize', 2.0);
     }
 
     /**
@@ -532,6 +535,95 @@ class GSplatParams {
     colorUpdateAngleLodScale = 2;
 
     /**
+     * Sets the alpha threshold below which splats are discarded during shadow, pick, and prepass
+     * rendering. Higher values create more aggressive clipping, while lower values preserve more
+     * translucent splats. Defaults to 0.3.
+     *
+     * @type {number}
+     */
+    set alphaClip(value) {
+        this._material.setParameter('alphaClip', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets the alpha clip threshold.
+     *
+     * @type {number}
+     */
+    get alphaClip() {
+        return this._material.getParameter('alphaClip')?.data ?? 0.3;
+    }
+
+    /**
+     * Sets the minimum screen-space pixel size below which splats are discarded. Defaults to 2.
+     *
+     * @type {number}
+     */
+    set minPixelSize(value) {
+        this._material.setParameter('minPixelSize', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets the minimum pixel size threshold.
+     *
+     * @type {number}
+     */
+    get minPixelSize() {
+        return this._material.getParameter('minPixelSize')?.data ?? 2.0;
+    }
+
+    /**
+     * Enables anti-aliasing compensation for Gaussian splats. Defaults to false.
+     *
+     * This option is intended for splat data that was generated with anti-aliasing
+     * enabled during training/export. It improves visual stability and reduces
+     * flickering for very small or distant splats.
+     *
+     * If the source splats were generated without anti-aliasing, enabling this
+     * option may slightly soften the image or alter opacity.
+     * @type {boolean}
+     */
+    set antiAlias(value) {
+        this._material.setDefine('GSPLAT_AA', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets whether anti-aliasing compensation is enabled.
+     *
+     * @type {boolean}
+     */
+    get antiAlias() {
+        return !!this._material.getDefine('GSPLAT_AA');
+    }
+
+    /**
+     * Enables 2D Gaussian Splatting mode. Defaults to false.
+     *
+     * Renders splats as oriented 2D surface elements instead of volumetric 3D Gaussians.
+     * This provides a more surface-accurate appearance but requires splat data that
+     * was generated for 2D Gaussian Splatting.
+     *
+     * Enabling this with standard 3D splat data may produce incorrect results.
+     * @type {boolean}
+     */
+    set twoDimensional(value) {
+        this._material.setDefine('GSPLAT_2DGS', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets whether 2D Gaussian Splatting mode is enabled.
+     *
+     * @type {boolean}
+     */
+    get twoDimensional() {
+        return !!this._material.getDefine('GSPLAT_2DGS');
+    }
+
+    /**
      * Number of update ticks before unloading unused streamed resources. When a streamed resource's
      * reference count reaches zero, it enters a cooldown period before being unloaded. This allows
      * recently used data to remain in memory for quick reuse if needed again soon. Set to 0 to
@@ -589,7 +681,7 @@ class GSplatParams {
      * @type {ShaderMaterial}
      * @example
      * // Set a custom parameter on all GSplat materials
-     * app.scene.gsplat.material.setParameter('alphaClip', 0.4);
+     * app.scene.gsplat.material.setParameter('myCustomParam', 1.0);
      * app.scene.gsplat.material.update();
      */
     get material() {
