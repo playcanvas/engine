@@ -420,10 +420,10 @@ class CameraFrame {
     }
 
     /**
-     * Creates a render pass for the camera frame. Override this method to utilize a custom render
+     * Creates a frame pass for the camera frame. Override this method to utilize a custom frame
      * pass, typically one that extends {@link FramePassCameraFrame}.
      *
-     * @returns {FramePassCameraFrame} - The render pass.
+     * @returns {FramePassCameraFrame} - The frame pass.
      */
     createRenderPass() {
         return new FramePassCameraFrame(this.app, this, this.cameraComponent, this.options);
