@@ -1102,9 +1102,9 @@ class GraphicsDevice extends EventHandler {
      */
     _isHTMLElementInterface(texture) {
         return (typeof HTMLElement !== 'undefined' && texture instanceof HTMLElement &&
-                !(texture instanceof HTMLImageElement) &&
-                !(texture instanceof HTMLCanvasElement) &&
-                !(texture instanceof HTMLVideoElement));
+                !(typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) &&
+                !(typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) &&
+                !(typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement));
     }
 
     /**
