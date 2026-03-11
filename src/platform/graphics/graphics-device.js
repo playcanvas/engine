@@ -401,6 +401,16 @@ class GraphicsDevice extends EventHandler {
     supportsShaderF16 = false;
 
     /**
+     * True if HTML elements (e.g. `<div>`) can be used as texture sources via the HTML-in-Canvas
+     * API. When supported, an HTML element appended to a canvas with the `layoutsubtree` attribute
+     * can be passed to {@link Texture#setSource} and rendered as a live texture in the 3D scene.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsHtmlTextures = false;
+
+    /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
      *
      * @type {boolean}
@@ -1054,17 +1064,18 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Reports whether a texture source is a canvas, image, video or ImageBitmap.
+     * Reports whether a texture source is a canvas, image, video, ImageBitmap, or HTML element.
      *
      * @param {*} texture - Texture source data.
-     * @returns {boolean} True if the texture is a canvas, image, video or ImageBitmap and false
-     * otherwise.
+     * @returns {boolean} True if the texture is a canvas, image, video, ImageBitmap, or HTML
+     * element and false otherwise.
      * @ignore
      */
     _isBrowserInterface(texture) {
         return this._isImageBrowserInterface(texture) ||
                 this._isImageCanvasInterface(texture) ||
-                this._isImageVideoInterface(texture);
+                this._isImageVideoInterface(texture) ||
+                this._isHTMLElementInterface(texture);
     }
 
     _isImageBrowserInterface(texture) {
@@ -1078,6 +1089,22 @@ class GraphicsDevice extends EventHandler {
 
     _isImageVideoInterface(texture) {
         return (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);
+    }
+
+    /**
+     * Reports whether a texture source is a generic HTML element (not image, canvas, or video).
+     * Used for the HTML-in-Canvas proposal (texElementImage2D).
+     *
+     * @param {*} texture - Texture source data.
+     * @returns {boolean} True if the texture is an HTMLElement that is not an image, canvas, or
+     * video.
+     * @ignore
+     */
+    _isHTMLElementInterface(texture) {
+        return (typeof HTMLElement !== 'undefined' && texture instanceof HTMLElement &&
+                !(typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) &&
+                !(typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) &&
+                !(typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement));
     }
 
     /**
