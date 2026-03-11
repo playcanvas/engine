@@ -57,6 +57,9 @@ class GSplatRenderer {
         this._workBufferFormatVersion = workBuffer.format.extraStreamsVersion;
     }
 
+    destroy() {
+    }
+
     /**
      * Sets the render mode for this renderer.
      *
@@ -76,9 +79,10 @@ class GSplatRenderer {
     }
 
     /**
-     * Configures the renderer's material after a work buffer format change.
+     * Called when the work buffer format has changed. Derived classes reconfigure
+     * their rendering resources (materials, pipelines, bindings, etc.).
      */
-    configureMaterial() {
+    onWorkBufferFormatChanged() {
     }
 
     /**
@@ -91,27 +95,20 @@ class GSplatRenderer {
     }
 
     /**
-     * Updates the renderer for indirect (GPU-driven) draw mode.
-     *
-     * @param {number} textureSize - The work buffer texture size.
-     */
-    updateIndirect(textureSize) {
-    }
-
-    /**
-     * Configures indirect draw and binds compaction buffers.
+     * Configures the renderer to use GPU-sorted data for rendering.
      *
      * @param {number} drawSlot - The indirect draw slot index.
-     * @param {StorageBuffer} compactedSplatIds - Buffer containing sorted visible splat IDs.
+     * @param {StorageBuffer} sortedIds - Buffer containing sorted visible splat IDs.
      * @param {StorageBuffer} numSplatsBuffer - Buffer containing the visible splat count.
+     * @param {number} textureSize - The work buffer texture size.
      */
-    setIndirectDraw(drawSlot, compactedSplatIds, numSplatsBuffer) {
+    setGpuSortedRendering(drawSlot, sortedIds, numSplatsBuffer, textureSize) {
     }
 
     /**
-     * Disables indirect draw, restoring the renderer to direct (CPU-sorted) mode.
+     * Switches the renderer to CPU-sorted rendering mode.
      */
-    disableIndirectDraw() {
+    setCpuSortedRendering() {
     }
 
     /**
@@ -134,9 +131,6 @@ class GSplatRenderer {
      * @param {object} params - The gsplat parameters.
      */
     updateOverdrawMode(params) {
-    }
-
-    destroy() {
     }
 }
 

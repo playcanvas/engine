@@ -133,6 +133,10 @@ class GSplatQuadRenderer extends GSplatRenderer {
         return this._material;
     }
 
+    onWorkBufferFormatChanged() {
+        this.configureMaterial();
+    }
+
     configureMaterial() {
         const { workBuffer } = this;
 
@@ -213,12 +217,26 @@ class GSplatQuadRenderer extends GSplatRenderer {
     }
 
     /**
-     * Updates renderer for indirect draw mode. The instance count and numSplats
-     * are GPU-driven via indirect draw args and a storage buffer.
+     * Configures the renderer to use GPU-sorted data for rendering.
      *
+     * @param {number} drawSlot - The indirect draw slot index in the device's buffer.
+     * @param {StorageBuffer} sortedIds - Buffer containing sorted visible splat IDs.
+     * @param {StorageBuffer} numSplatsBuffer - Buffer containing numSplats for vertex shader.
      * @param {number} textureSize - The work buffer texture size.
      */
-    updateIndirect(textureSize) {
+    setGpuSortedRendering(drawSlot, sortedIds, numSplatsBuffer, textureSize) {
+        this.meshInstance.setIndirect(null, drawSlot, 1);
+
+        // Bind compaction buffers for vertex shader
+        this._material.setParameter('compactedSplatIds', sortedIds);
+        this._material.setParameter('numSplatsStorage', numSplatsBuffer);
+
+        // Set GSPLAT_INDIRECT_DRAW define if not already set
+        if (!this._material.getDefine('GSPLAT_INDIRECT_DRAW')) {
+            this._material.setDefine('GSPLAT_INDIRECT_DRAW', true);
+            this._material.update();
+        }
+
         this._material.setParameter('splatTextureSize', textureSize);
         this.meshInstance.visible = true;
 
@@ -230,31 +248,9 @@ class GSplatQuadRenderer extends GSplatRenderer {
     }
 
     /**
-     * Configures indirect draw on the mesh instance and binds compaction buffers.
-     * Must be called each frame when compaction is active (slots are per-frame).
-     *
-     * @param {number} drawSlot - The indirect draw slot index in the device's buffer.
-     * @param {StorageBuffer} compactedSplatIds - Buffer containing sorted visible splat IDs.
-     * @param {StorageBuffer} numSplatsBuffer - Buffer containing numSplats for vertex shader.
+     * Switches the renderer to CPU-sorted rendering mode.
      */
-    setIndirectDraw(drawSlot, compactedSplatIds, numSplatsBuffer) {
-        this.meshInstance.setIndirect(null, drawSlot, 1);
-
-        // Bind compaction buffers for vertex shader
-        this._material.setParameter('compactedSplatIds', compactedSplatIds);
-        this._material.setParameter('numSplatsStorage', numSplatsBuffer);
-
-        // Set GSPLAT_INDIRECT_DRAW define if not already set
-        if (!this._material.getDefine('GSPLAT_INDIRECT_DRAW')) {
-            this._material.setDefine('GSPLAT_INDIRECT_DRAW', true);
-            this._material.update();
-        }
-    }
-
-    /**
-     * Disables indirect draw, restoring the renderer to direct (CPU-sorted) mode.
-     */
-    disableIndirectDraw() {
+    setCpuSortedRendering() {
         this.meshInstance.setIndirect(null, -1);
 
         if (this._material.getDefine('GSPLAT_INDIRECT_DRAW')) {

@@ -450,22 +450,24 @@ class GSplatManager {
         this.keyGenerator = null;
         this.gpuSorter?.destroy();
         this.gpuSorter = null;
-        // Disable once when destroying both compaction systems together.
-        const disableIndirectDraw = false;
-        this.renderer.disableIndirectDraw();
-        this.destroyIntervalCompaction(disableIndirectDraw);
-        this.destroyCompaction(disableIndirectDraw);
+
+        // Switch renderer to CPU mode once, before destroying both compaction systems.
+        const useCpuSort = false;
+        this.renderer.setCpuSortedRendering();
+        this.destroyIntervalCompaction(useCpuSort);
+        this.destroyCompaction(useCpuSort);
     }
 
     /**
-     * Destroys interval compaction resources and disables indirect draw on the renderer.
+     * Destroys interval compaction resources.
      *
+     * @param {boolean} [useCpuSort] - Whether to switch the renderer to CPU-sorted mode.
      * @private
      */
-    destroyIntervalCompaction(disableIndirectDraw = true) {
+    destroyIntervalCompaction(useCpuSort = true) {
         if (this.intervalCompaction) {
-            if (disableIndirectDraw) {
-                this.renderer.disableIndirectDraw();
+            if (useCpuSort) {
+                this.renderer.setCpuSortedRendering();
             }
             this.intervalCompaction.destroy();
             this.intervalCompaction = null;
@@ -473,14 +475,15 @@ class GSplatManager {
     }
 
     /**
-     * Destroys compaction resources and disables indirect draw on the renderer.
+     * Destroys compaction resources.
      *
+     * @param {boolean} [useCpuSort] - Whether to switch the renderer to CPU-sorted mode.
      * @private
      */
-    destroyCompaction(disableIndirectDraw = true) {
+    destroyCompaction(useCpuSort = true) {
         if (this.compaction) {
-            if (disableIndirectDraw) {
-                this.renderer.disableIndirectDraw();
+            if (useCpuSort) {
+                this.renderer.setCpuSortedRendering();
             }
             this.compaction.destroy();
             this.compaction = null;
@@ -531,8 +534,8 @@ class GSplatManager {
             this.cpuSorter.updateCentersForSplats(currentState.splats);
         }
 
-        // Disable indirect draw on the renderer (also hides until update() restores visibility)
-        this.renderer.disableIndirectDraw();
+        // Switch renderer to CPU-sorted mode (also hides until update() restores visibility)
+        this.renderer.setCpuSortedRendering();
     }
 
     get material() {
@@ -1281,7 +1284,7 @@ class GSplatManager {
             this.workBuffer.destroy();
             this.workBuffer = new GSplatWorkBuffer(this.device, currentFormat);
             this.renderer.workBuffer = this.workBuffer;
-            this.renderer.configureMaterial();
+            this.renderer.onWorkBufferFormatChanged();
             this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
             this._workBufferRebuildRequired = true;
             this.sortNeeded = true;
@@ -1723,10 +1726,7 @@ class GSplatManager {
      */
     applyGpuSortResults(worldState, sortedIndices) {
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
-        this.renderer.setIndirectDraw(this.indirectDrawSlot, sortedIndices, /** @type {StorageBuffer} */ (ic.numSplatsBuffer));
-
-        // Update renderer for indirect draw (instancingCount and numSplats are GPU-driven)
-        this.renderer.updateIndirect(worldState.textureSize);
+        this.renderer.setGpuSortedRendering(this.indirectDrawSlot, sortedIndices, /** @type {StorageBuffer} */ (ic.numSplatsBuffer), worldState.textureSize);
     }
 
     /**
@@ -1775,14 +1775,13 @@ class GSplatManager {
             this.allocateAndWriteIntervalIndirectArgs(this.lastCompactedNumIntervals);
             const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
             const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
-            this.renderer.setIndirectDraw(this.indirectDrawSlot, /** @type {StorageBuffer} */ (gpuSorter.sortedIndices), /** @type {StorageBuffer} */ (ic.numSplatsBuffer));
+            this.renderer.setGpuSortedRendering(this.indirectDrawSlot, /** @type {StorageBuffer} */ (gpuSorter.sortedIndices), /** @type {StorageBuffer} */ (ic.numSplatsBuffer), sortedState.textureSize);
         } else {
             // CPU sort path: compacted buffer already contains sorted visible splat IDs
             this.allocateAndWriteIndirectArgs(this.lastCompactedTotalSplats);
             const compaction = /** @type {GSplatCompaction} */ (this.compaction);
-            this.renderer.setIndirectDraw(this.indirectDrawSlot, /** @type {StorageBuffer} */ (compaction.compactedSplatIds), /** @type {StorageBuffer} */ (compaction.numSplatsBuffer));
+            this.renderer.setGpuSortedRendering(this.indirectDrawSlot, /** @type {StorageBuffer} */ (compaction.compactedSplatIds), /** @type {StorageBuffer} */ (compaction.numSplatsBuffer), sortedState.textureSize);
         }
-        this.renderer.updateIndirect(sortedState.textureSize);
     }
 
     /**
@@ -1824,13 +1823,13 @@ class GSplatManager {
 
         this.allocateAndWriteIndirectArgs(elementCount);
 
-        // Set up indirect draw: compacted buffer already contains sorted visible splatIds
-        this.renderer.setIndirectDraw(
+        // Set up GPU-sorted rendering: compacted buffer already contains sorted visible splatIds
+        this.renderer.setGpuSortedRendering(
             this.indirectDrawSlot,
             /** @type {StorageBuffer} */ (this.compaction.compactedSplatIds),
-            /** @type {StorageBuffer} */ (this.compaction.numSplatsBuffer)
+            /** @type {StorageBuffer} */ (this.compaction.numSplatsBuffer),
+            sortedState.textureSize
         );
-        this.renderer.updateIndirect(sortedState.textureSize);
     }
 
     /**
