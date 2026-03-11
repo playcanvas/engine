@@ -5,7 +5,7 @@ import { GraphNode } from '../graph-node.js';
 import { GSplatInfo } from './gsplat-info.js';
 import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
-import { GSplatRenderer } from './gsplat-renderer.js';
+import { GSplatQuadRenderer } from './gsplat-quad-renderer.js';
 import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
 import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
@@ -29,6 +29,7 @@ import { BlockAllocator } from '../../core/block-allocator.js';
  * @import { Layer } from '../layer.js'
  * @import { GSplatDirector } from './gsplat-director.js'
  * @import { MemBlock } from '../../core/block-allocator.js'
+ * @import { GSplatRenderer } from './gsplat-renderer.js'
  */
 
 const cameraPosition = new Vec3();
@@ -401,7 +402,7 @@ class GSplatManager {
         this._allocator = new BlockAllocator(budget > 0 ? Math.ceil(budget * allocatorGrowMultiplier) : 0, allocatorGrowMultiplier);
 
         this.workBuffer = new GSplatWorkBuffer(device, this.scene.gsplat.format);
-        this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
+        this.renderer = new GSplatQuadRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
         this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
 
         // Initialize sorting strategy based on current gpuSorting setting
@@ -530,11 +531,8 @@ class GSplatManager {
             this.cpuSorter.updateCentersForSplats(currentState.splats);
         }
 
-        // Disable indirect draw on the renderer
+        // Disable indirect draw on the renderer (also hides until update() restores visibility)
         this.renderer.disableIndirectDraw();
-
-        // Hide mesh until the CPU sort delivers fresh data
-        this.renderer.meshInstance.visible = false;
     }
 
     get material() {
@@ -1470,8 +1468,11 @@ class GSplatManager {
 
         // Apply work buffer updates first (both GPU and CPU)
         // For GPU: ensures sort uses current data
+        // Skip when sortedBefore is false — the state is waiting for fresh sort data
+        // (e.g. after switching from GPU to CPU sorting) and rendering with stale
+        // order data would produce incorrect frames.
         const sortedState = this.worldStates.get(this.sortedVersion);
-        if (sortedState) {
+        if (sortedState?.sortedBefore) {
             if (this._workBufferRebuildRequired) {
                 const count = sortedState.totalActiveSplats;
                 this.rebuildWorkBuffer(sortedState, count, true);
@@ -1548,7 +1549,7 @@ class GSplatManager {
         }
 
         // renderer update and camera tracking
-        if (sortedState) {
+        if (sortedState?.sortedBefore) {
             this.renderer.frameUpdate(this.scene.gsplat);
             this.updateColorCameraTracking();
         }
