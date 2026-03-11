@@ -3,9 +3,9 @@ import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
 import { isIntegerPixelFormat, pixelFormatInfo } from './constants.js';
+import { FramePass } from './frame-pass.js';
 
 /**
- * @import { GraphicsDevice } from '../graphics/graphics-device.js'
  * @import { RenderTarget } from '../graphics/render-target.js'
  * @import { Texture } from './texture.js'
  */
@@ -102,54 +102,13 @@ class DepthStencilAttachmentOps {
 }
 
 /**
- * A render pass represents a node in the frame graph, and encapsulates a system which
- * renders to a render target using an execution callback.
+ * A render pass represents a node in the frame graph that renders to a render target using a GPU
+ * render pass. It extends {@link FramePass} with render target management, color/depth/stencil
+ * attachment operations, and GPU render pass lifecycle (start/end).
  *
  * @ignore
  */
-class RenderPass {
-    /** @type {string} */
-    _name;
-
-    /**
-     * The graphics device.
-     *
-     * @type {GraphicsDevice}
-     */
-    device;
-
-    /**
-     * True if the render pass is enabled.
-     *
-     * @type {boolean}
-     * @private
-     */
-    _enabled = true;
-
-    /**
-     * True if the render pass start is skipped. This means the render pass is merged into the
-     * previous one.
-     *
-     * @type {boolean}
-     * @private
-     */
-    _skipStart = false;
-
-    /**
-     * True if the render pass end is skipped. This means the following render pass is merged into
-     * this one.
-     *
-     * @type {boolean}
-     * @private
-     */
-    _skipEnd = false;
-
-    /**
-     * True if the render pass is enabled and execute function will be called. Note that before and
-     * after functions are called regardless of this flag.
-     */
-    executeEnabled = true;
-
+class RenderPass extends FramePass {
     /**
      * The render target for this render pass:
      *
@@ -209,42 +168,6 @@ class RenderPass {
      * @type {boolean}
      */
     fullSizeClearRect = true;
-
-    /**
-     * Render passes which need to be executed before this pass.
-     *
-     * @type {RenderPass[]}
-     */
-    beforePasses = [];
-
-    /**
-     * Render passes which need to be executed after this pass.
-     *
-     * @type {RenderPass[]}
-     */
-    afterPasses = [];
-
-    /**
-     * Creates an instance of the RenderPass.
-     *
-     * @param {GraphicsDevice} graphicsDevice - The
-     * graphics device.
-     */
-    constructor(graphicsDevice) {
-        Debug.assert(graphicsDevice);
-        this.device = graphicsDevice;
-    }
-
-    set name(value) {
-        this._name = value;
-    }
-
-    get name() {
-        if (!this._name) {
-            this._name = this.constructor.name;
-        }
-        return this._name;
-    }
 
     set scaleX(value) {
         Debug.assert(this._options, 'The render pass needs to be initialized first.');
@@ -341,9 +264,6 @@ class RenderPass {
         }
     }
 
-    destroy() {
-    }
-
     postInit() {
     }
 
@@ -355,36 +275,6 @@ class RenderPass {
             const height = Math.floor(resizeSource.height * this.scaleY);
             this.renderTarget.resize(width, height);
         }
-    }
-
-    before() {
-    }
-
-    execute() {
-    }
-
-    after() {
-    }
-
-    onEnable() {
-    }
-
-    onDisable() {
-    }
-
-    set enabled(value) {
-        if (this._enabled !== value) {
-            this._enabled = value;
-            if (value) {
-                this.onEnable();
-            } else {
-                this.onDisable();
-            }
-        }
-    }
-
-    get enabled() {
-        return this._enabled;
     }
 
     /**

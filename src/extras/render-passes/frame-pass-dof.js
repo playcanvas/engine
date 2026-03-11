@@ -1,7 +1,7 @@
 import { Color } from '../../core/math/color.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RG8, PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
 
 import { RenderPassDownsample } from './render-pass-downsample.js';
@@ -19,7 +19,7 @@ import { RenderPassDofBlur } from './render-pass-dof-blur.js';
  * @category Graphics
  * @ignore
  */
-class RenderPassDof extends RenderPass {
+class FramePassDof extends FramePass {
     focusDistance = 100;
 
     focusRange = 50;
@@ -192,4 +192,4 @@ class RenderPassDof extends RenderPass {
     }
 }
 
-export { RenderPassDof };
+export { FramePassDof };

@@ -163,7 +163,7 @@ assetListLoader.load(() => {
     tintPass.init(null);
 
     // assign those two passes to the camera to be used instead of its default rendering
-    cameraEntity.camera.renderPasses = [renderPass, tintPass];
+    cameraEntity.camera.framePasses = [renderPass, tintPass];
 
     // update things every frame
     let angle = 3;

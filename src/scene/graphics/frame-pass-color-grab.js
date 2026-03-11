@@ -1,6 +1,6 @@
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
@@ -12,7 +12,7 @@ const _colorUniformName = 'uSceneColorMap';
  *
  * @ignore
  */
-class RenderPassColorGrab extends RenderPass {
+class FramePassColorGrab extends FramePass {
     colorRenderTarget = null;
 
     /**
@@ -139,4 +139,4 @@ class RenderPassColorGrab extends RenderPass {
     }
 }
 
-export { RenderPassColorGrab };
+export { FramePassColorGrab };

@@ -37,7 +37,7 @@ import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
-import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
+import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -193,7 +193,7 @@ class Renderer {
 
         // clustered passes
         if (this.scene.clusteredLightingEnabled) {
-            this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
+            this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.shadowRenderer,
                 this._shadowRendererLocal, this.lightTextureAtlas);
         }
 

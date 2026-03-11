@@ -1,15 +1,15 @@
 import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_NONE, GAMMA_NONE } from '../../scene/constants.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { RenderPassColorGrab } from '../../scene/graphics/render-pass-color-grab.js';
+import { FramePass } from '../../platform/graphics/frame-pass.js';
+import { FramePassColorGrab } from '../../scene/graphics/frame-pass-color-grab.js';
 import { RenderPassForward } from '../../scene/renderer/render-pass-forward.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 
-import { RenderPassBloom } from './render-pass-bloom.js';
+import { FramePassBloom } from './frame-pass-bloom.js';
 import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
-import { RenderPassDof } from './render-pass-dof.js';
+import { FramePassDof } from './frame-pass-dof.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 import { RenderPassSsao } from './render-pass-ssao.js';
 import { SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE } from './constants.js';
@@ -22,8 +22,8 @@ import { Color } from '../../core/math/color.js';
  */
 
 /**
- * Options used to configure the RenderPassCameraFrame. To modify these options, you must create
- * a new instance of the RenderPassCameraFrame with the desired settings.
+ * Options used to configure the FramePassCameraFrame. To modify these options, you must create
+ * a new instance of the FramePassCameraFrame with the desired settings.
  *
  * @ignore
  */
@@ -76,7 +76,7 @@ const _defaultOptions = new CameraFrameOptions();
  * @category Graphics
  * @ignore
  */
-class RenderPassCameraFrame extends RenderPass {
+class FramePassCameraFrame extends FramePass {
     app;
 
     prePass;
@@ -375,7 +375,7 @@ class RenderPassCameraFrame extends RenderPass {
         // grab pass allowing us to copy the render scene into a texture and use for refraction
         // the source for the copy is the texture we render the scene to
         if (options.sceneColorMap) {
-            this.colorGrabPass = new RenderPassColorGrab(device);
+            this.colorGrabPass = new FramePassColorGrab(device);
             this.colorGrabPass.source = this.rt;
 
             // if grab pass is used, render the layers after it (otherwise they were already rendered)
@@ -430,13 +430,13 @@ class RenderPassCameraFrame extends RenderPass {
 
         if (this._bloomEnabled) {
             // create a bloom pass, which generates bloom texture based on the provided texture
-            this.bloomPass = new RenderPassBloom(this.device, inputTexture, this.hdrFormat);
+            this.bloomPass = new FramePassBloom(this.device, inputTexture, this.hdrFormat);
         }
     }
 
     setupDofPass(options, inputTexture, inputTextureHalf) {
         if (options.dofEnabled)  {
-            this.dofPass = new RenderPassDof(this.device, this.cameraComponent, inputTexture, inputTextureHalf, options.dofHighQuality, options.dofNearBlur);
+            this.dofPass = new FramePassDof(this.device, this.cameraComponent, inputTexture, inputTextureHalf, options.dofHighQuality, options.dofNearBlur);
         }
     }
 
@@ -503,4 +503,4 @@ class RenderPassCameraFrame extends RenderPass {
     }
 }
 
-export { RenderPassCameraFrame, CameraFrameOptions };
+export { FramePassCameraFrame, CameraFrameOptions };

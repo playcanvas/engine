@@ -1,16 +1,14 @@
 import { Debug } from '../../core/debug.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { FramePass } from '../../platform/graphics/frame-pass.js';
 
 /**
- * A render pass used to render post-effects.
+ * A frame pass used to render post-effects.
  */
-class RenderPassPostprocessing extends RenderPass {
+class FramePassPostprocessing extends FramePass {
     constructor(device, renderer, renderAction) {
         super(device);
         this.renderer = renderer;
         this.renderAction = renderAction;
-
-        this.requiresCubemaps = false;
     }
 
     execute() {
@@ -24,4 +22,4 @@ class RenderPassPostprocessing extends RenderPass {
     }
 }
 
-export { RenderPassPostprocessing };
+export { FramePassPostprocessing };
