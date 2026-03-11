@@ -150,11 +150,6 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
-app.on('destroy', () => {
-    window.removeEventListener('resize', resize);
-    canvas.removeEventListener('paint', onPaintUpload);
-    if (htmlPanel.parentNode) htmlPanel.parentNode.removeChild(htmlPanel);
-});
 
 // --- HTML UI Panel ---
 // The UI panel is a regular HTML <div> styled with CSS. When HTML-in-Canvas is
@@ -185,7 +180,7 @@ htmlPanel.style.background = 'rgba(15, 15, 25, 0.375)';
 htmlPanel.style.backdropFilter = 'blur(12px)';
 htmlPanel.style.webkitBackdropFilter = 'blur(12px)';
 htmlPanel.style.borderRadius = '20px';
-htmlPanel.style.fontFamily = "'Segoe UI', Arial, sans-serif";
+htmlPanel.style.fontFamily = '\'Segoe UI\', Arial, sans-serif';
 htmlPanel.style.color = 'white';
 htmlPanel.style.display = 'flex';
 htmlPanel.style.flexDirection = 'column';
@@ -273,6 +268,12 @@ const onPaintUpload = () => {
     if (!app.graphicsDevice || !panelTexture) return;
     panelTexture.upload();
 };
+
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+    canvas.removeEventListener('paint', onPaintUpload);
+    if (htmlPanel.parentNode) htmlPanel.parentNode.removeChild(htmlPanel);
+});
 
 if (supportsHtmlInCanvas) {
     canvas.appendChild(htmlPanel);

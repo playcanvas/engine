@@ -39,12 +39,6 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
-app.on('destroy', () => {
-    window.removeEventListener('resize', resize);
-    canvas.removeEventListener('paint', onPaintUpload);
-    if (htmlElement.parentNode) htmlElement.parentNode.removeChild(htmlElement);
-    if (style.parentNode) style.parentNode.removeChild(style);
-});
 
 // Create an HTML element to use as texture source.
 // Per the HTML-in-Canvas proposal, the element must be a direct child of the canvas.
@@ -150,6 +144,13 @@ const onPaintUpload = () => {
     if (!app.graphicsDevice) return;
     htmlTexture.upload();
 };
+
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+    canvas.removeEventListener('paint', onPaintUpload);
+    if (htmlElement.parentNode) htmlElement.parentNode.removeChild(htmlElement);
+    if (style.parentNode) style.parentNode.removeChild(style);
+});
 
 if (device.supportsHtmlTextures) {
     // The browser must paint the HTML element before texElementImage2D can use it.
