@@ -433,11 +433,11 @@ class GSplatManager {
         }
         this.octreeInstancesToDestroy.length = 0;
 
-        this.workBuffer.destroy();
-        this.renderer.destroy();
-
         this.destroyGpuSorting();
         this.destroyCpuSorting();
+
+        this.workBuffer.destroy();
+        this.renderer.destroy();
     }
 
     /**

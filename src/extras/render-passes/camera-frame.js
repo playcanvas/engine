@@ -3,7 +3,7 @@ import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
 import { SSAOTYPE_NONE } from './constants.js';
-import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-frame.js';
+import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-frame.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
@@ -364,7 +364,7 @@ class CameraFrame {
     options = new CameraFrameOptions();
 
     /**
-     * @type {RenderPassCameraFrame|null}
+     * @type {FramePassCameraFrame|null}
      * @private
      */
     renderPassCamera = null;
@@ -400,15 +400,15 @@ class CameraFrame {
 
     enable() {
         this.renderPassCamera = this.createRenderPass();
-        this.cameraComponent.renderPasses = [this.renderPassCamera];
+        this.cameraComponent.framePasses = [this.renderPassCamera];
     }
 
     disable() {
         const cameraComponent = this.cameraComponent;
-        cameraComponent.renderPasses?.forEach((renderPass) => {
+        cameraComponent.framePasses?.forEach((renderPass) => {
             renderPass.destroy();
         });
-        cameraComponent.renderPasses = [];
+        cameraComponent.framePasses = [];
         cameraComponent.rendering = null;
 
         cameraComponent.jitter = 0;
@@ -421,12 +421,12 @@ class CameraFrame {
 
     /**
      * Creates a render pass for the camera frame. Override this method to utilize a custom render
-     * pass, typically one that extends {@link RenderPassCameraFrame}.
+     * pass, typically one that extends {@link FramePassCameraFrame}.
      *
-     * @returns {RenderPassCameraFrame} - The render pass.
+     * @returns {FramePassCameraFrame} - The render pass.
      */
     createRenderPass() {
-        return new RenderPassCameraFrame(this.app, this, this.cameraComponent, this.options);
+        return new FramePassCameraFrame(this.app, this, this.cameraComponent, this.options);
     }
 
     /**

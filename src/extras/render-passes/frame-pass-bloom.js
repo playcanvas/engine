@@ -2,7 +2,7 @@ import { Color } from '../../core/math/color.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE } from '../../platform/graphics/constants.js';
 
 import { RenderPassDownsample } from './render-pass-downsample.js';
@@ -20,7 +20,7 @@ import { math } from '../../core/math/math.js';
  * @category Graphics
  * @ignore
  */
-class RenderPassBloom extends RenderPass {
+class FramePassBloom extends FramePass {
     bloomTexture;
 
     blurLevel = 16;
@@ -156,4 +156,4 @@ class RenderPassBloom extends RenderPass {
     }
 }
 
-export { RenderPassBloom };
+export { FramePassBloom };

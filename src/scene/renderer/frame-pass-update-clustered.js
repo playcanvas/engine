@@ -1,5 +1,5 @@
 import { now } from '../../core/time.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { RenderPassCookieRenderer } from './render-pass-cookie-renderer.js';
 import { RenderPassShadowLocalClustered } from './render-pass-shadow-local-clustered.js';
 
@@ -8,7 +8,7 @@ import { RenderPassShadowLocalClustered } from './render-pass-shadow-local-clust
  *
  * @ignore
  */
-class RenderPassUpdateClustered extends RenderPass {
+class FramePassUpdateClustered extends FramePass {
     constructor(device, renderer, shadowRenderer, shadowRendererLocal, lightTextureAtlas) {
         super(device);
         this.renderer = renderer;
@@ -60,4 +60,4 @@ class RenderPassUpdateClustered extends RenderPass {
     }
 }
 
-export { RenderPassUpdateClustered };
+export { FramePassUpdateClustered };

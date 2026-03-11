@@ -1,6 +1,6 @@
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
@@ -12,7 +12,7 @@ const _depthUniformName = 'uSceneDepthMap';
  *
  * @ignore
  */
-class RenderPassDepthGrab extends RenderPass {
+class FramePassDepthGrab extends FramePass {
     depthRenderTarget = null;
 
     camera = null;
@@ -147,4 +147,4 @@ class RenderPassDepthGrab extends RenderPass {
     }
 }
 
-export { RenderPassDepthGrab };
+export { FramePassDepthGrab };

@@ -188,7 +188,7 @@ class LayerComposition extends EventHandler {
 
                 // if the camera uses custom render passes, only add a dummy render action to mark
                 // the place where to add them during building of the frame graph
-                if (camera.camera.renderPasses.length > 0) {
+                if (camera.camera.framePasses.length > 0) {
                     this.addDummyRenderAction(renderActionCount, camera);
                     renderActionCount++;
                     continue;

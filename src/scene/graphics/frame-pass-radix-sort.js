@@ -2,7 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { FramePass } from '../../platform/graphics/frame-pass.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST,
     PIXELFORMAT_R32F, PIXELFORMAT_R32U
@@ -20,7 +20,7 @@ const BITS_PER_STEP = 4;  // 4-bit radix (16 buckets)
 const GROUP_SIZE = 4;     // Log2 of 16 (16 elements per group)
 
 /**
- * A render pass that performs GPU-based radix sort using mipmap-based prefix sums.
+ * A frame pass that performs GPU-based radix sort using mipmap-based prefix sums.
  *
  * This implementation is based on:
  * - VRChat Gaussian Splatting by MichaelMoroz: https://github.com/MichaelMoroz/VRChatGaussianSplatting
@@ -74,7 +74,7 @@ const GROUP_SIZE = 4;     // Log2 of 16 (16 elements per group)
  * @category Graphics
  * @ignore
  */
-class RenderPassRadixSort extends RenderPass {
+class FramePassRadixSort extends FramePass {
     /**
      * The current sorted indices texture (R32U). Access sorted indices using Morton lookup.
      *
@@ -181,7 +181,7 @@ class RenderPassRadixSort extends RenderPass {
     _keysTexture = null;
 
     /**
-     * Creates a new RenderPassRadixSort instance.
+     * Creates a new FramePassRadixSort instance.
      *
      * @param {GraphicsDevice} device - The graphics device.
      */
@@ -217,9 +217,9 @@ class RenderPassRadixSort extends RenderPass {
      * @param {number} [numBits] - Number of bits to sort (1-24). More bits = more passes.
      */
     setup(keysTexture, elementCount, numBits = 16) {
-        Debug.assert(keysTexture, 'RenderPassRadixSort.setup: keysTexture is required');
-        Debug.assert(elementCount > 0, 'RenderPassRadixSort.setup: elementCount must be > 0');
-        Debug.assert(numBits >= 1 && numBits <= 24, 'RenderPassRadixSort.setup: numBits must be 1-24');
+        Debug.assert(keysTexture, 'FramePassRadixSort.setup: keysTexture is required');
+        Debug.assert(elementCount > 0, 'FramePassRadixSort.setup: elementCount must be > 0');
+        Debug.assert(numBits >= 1 && numBits <= 24, 'FramePassRadixSort.setup: numBits must be 1-24');
 
         this._keysTexture = keysTexture;
         this._elementCount = elementCount;
@@ -488,4 +488,4 @@ class RenderPassRadixSort extends RenderPass {
     }
 }
 
-export { RenderPassRadixSort };
+export { FramePassRadixSort };
