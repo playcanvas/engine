@@ -180,6 +180,7 @@ class GSplatInstance {
         material.setParameter('numSplats', 0);
         this.setMaterialOrderData(material);
         material.setParameter('alphaClip', 0.3);
+        material.setParameter('minPixelSize', 2.0);
         material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
         material.cull = CULLFACE_NONE;
         material.blendType = options.dither ? BLEND_NONE : BLEND_PREMULTIPLIED;

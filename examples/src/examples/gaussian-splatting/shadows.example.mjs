@@ -1,5 +1,6 @@
 // @config HIDDEN
 // @config DESCRIPTION Demonstrates shadow catching with Gaussian Splats.
+import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -81,10 +82,10 @@ assetListLoader.load(() => {
     app.scene.sky.node.setLocalPosition(pc.Vec3.ZERO);
     app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
 
-    // Customize GSplat material using unified mode material customization
-    // This sets the alpha clip value for all GSplat instances in unified mode
-    app.scene.gsplat.material.setParameter('alphaClip', 0.4);
-    app.scene.gsplat.material.update();
+    data.on('alphaClip:set', () => {
+        app.scene.gsplat.alphaClip = data.get('alphaClip');
+    });
+    data.set('alphaClip', 0.4);
 
     // Create first splat entity
     const biker = new pc.Entity('biker');

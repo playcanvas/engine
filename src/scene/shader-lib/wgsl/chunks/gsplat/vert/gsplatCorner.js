@@ -1,5 +1,6 @@
 export default /* wgsl */`
 uniform viewport_size: vec4f;             // viewport width, height, 1/width, 1/height
+uniform minPixelSize: f32;
 
 // Rotation and scale source data are f16; covariance must be f32 to avoid scale^2 overflow
 fn computeCovariance(rotation: half4, scale: half3, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
@@ -63,8 +64,8 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
     let l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     let l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
 
-    // early-out gaussians smaller than 2 pixels
-    if (l1 < 2.0 && l2 < 2.0) {
+    // early-out gaussians smaller than minPixelSize
+    if (max(l1, l2) < uniform.minPixelSize) {
         return false;
     }
 

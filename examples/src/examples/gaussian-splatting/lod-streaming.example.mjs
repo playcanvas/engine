@@ -146,6 +146,9 @@ assetListLoader.load(() => {
             app.scene.gsplat.culling = !!data.get('culling');
         });
     }
+    data.on('minPixelSize:set', () => {
+        app.scene.gsplat.minPixelSize = data.get('minPixelSize');
+    });
     data.on('debugLod:set', () => {
         app.scene.gsplat.colorizeLod = !!data.get('debugLod');
     });
@@ -155,6 +158,7 @@ assetListLoader.load(() => {
 
     // initialize UI settings (must be after observer registration)
     data.set('cameraFov', 75);
+    data.set('minPixelSize', 2);
     data.set('radialSorting', true);
     data.set('gpuSorting', false);
     data.set('culling', device.isWebGPU);

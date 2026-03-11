@@ -128,8 +128,7 @@ assetListLoader.load(() => {
     player.setLocalScale(80, 80, 80);
     app.root.addChild(player);
 
-    // set alpha clip value, used by shadows
-    app.scene.gsplat.material.setParameter('alphaClip', 0.1);
+    app.scene.gsplat.alphaClip = 0.1;
 
     // Create shadow catcher
     const shadowCatcher = new pc.Entity('ShadowCatcher');
