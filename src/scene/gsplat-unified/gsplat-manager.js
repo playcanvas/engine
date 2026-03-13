@@ -184,8 +184,8 @@ class GSplatManager {
     indirectDrawSlot = -1;
 
     /**
-     * Indirect dispatch slot index for the current frame (-1 when not using indirect dispatch).
-     * Shared by sort key gen, block sum, and reorder phases.
+     * Indirect dispatch slot index for key gen (first of 2 consecutive slots).
+     * Slot 0 = key gen (256 threads/workgroup), slot 1 = sort (1024 elements/workgroup).
      *
      * @type {number}
      */
@@ -1665,7 +1665,7 @@ class GSplatManager {
      */
     allocateAndWriteIntervalIndirectArgs(numIntervals) {
         this.indirectDrawSlot = this.device.getIndirectDrawSlot(1);
-        this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(1);
+        this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(2);
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
         ic.writeIndirectArgs(this.indirectDrawSlot, this.indirectDispatchSlot, numIntervals);
         this.lastCompactedNumIntervals = numIntervals;
@@ -1688,7 +1688,7 @@ class GSplatManager {
         const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
 
-        // Generate sort keys using indirect dispatch (only visibleCount threads launched)
+        // Generate sort keys using indirect dispatch (slot 0: key gen workgroups)
         const keysBuffer = keyGenerator.generateIndirect(
             this.workBuffer,
             this.cameraNode,
@@ -1702,14 +1702,14 @@ class GSplatManager {
             this.indirectDispatchSlot
         );
 
-        // Run GPU radix sort with indirect dispatch (sorts only visibleCount elements).
+        // Run GPU radix sort with indirect dispatch (slot 1: sort workgroups).
         // Pass compactedSplatIds as initial values so the sort output contains actual
         // splat IDs rather than indices into the compacted buffer (single indirection).
         return gpuSorter.sortIndirect(
             keysBuffer,
             elementCount,
             roundedNumBits,
-            this.indirectDispatchSlot,
+            this.indirectDispatchSlot + 1,
             /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
             /** @type {StorageBuffer} */ (compactedSplatIds)
         );
@@ -1752,7 +1752,7 @@ class GSplatManager {
      */
     allocateAndWriteIndirectArgs(totalSplats) {
         this.indirectDrawSlot = this.device.getIndirectDrawSlot(1);
-        this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(1);
+        this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(2);
         const compaction = /** @type {GSplatCompaction} */ (this.compaction);
         compaction.writeIndirectArgs(this.indirectDrawSlot, this.indirectDispatchSlot, totalSplats);
         this.lastCompactedTotalSplats = totalSplats;

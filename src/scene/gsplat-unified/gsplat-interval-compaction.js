@@ -16,6 +16,7 @@ import { computeGsplatIntervalCullSource } from '../shader-lib/wgsl/chunks/gspla
 import { computeGsplatIntervalScatterSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-interval-scatter.js';
 import { computeGsplatWriteIndirectArgsSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-write-indirect-args.js';
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
+import { RADIX_SORT_ELEMENTS_PER_WORKGROUP } from '../graphics/compute-radix-sort.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 
 /**
@@ -28,7 +29,7 @@ const WORKGROUP_SIZE = 256;
 
 const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
 
-const SORT_THREADS_PER_WORKGROUP = 256;
+const SORT_ELEMENTS_PER_WORKGROUP = RADIX_SORT_ELEMENTS_PER_WORKGROUP;
 
 // 16 bytes per interval: { workBufferBase, splatCount, boundsIndex, pad }
 const INTERVAL_STRIDE = 4;
@@ -290,7 +291,8 @@ class GSplatIntervalCompaction {
 
         const cdefines = new Map([
             ['{INSTANCE_SIZE}', GSplatResourceBase.instanceSize],
-            ['{SORT_THREADS_PER_WORKGROUP}', SORT_THREADS_PER_WORKGROUP]
+            ['{KEYGEN_THREADS_PER_WORKGROUP}', 256],
+            ['{SORT_ELEMENTS_PER_WORKGROUP}', SORT_ELEMENTS_PER_WORKGROUP]
         ]);
 
         const shader = new Shader(device, {
