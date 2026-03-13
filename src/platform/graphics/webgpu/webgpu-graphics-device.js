@@ -327,6 +327,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
         this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
+        this.supportsSubgroups = requireFeature('subgroups');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
         // copy all adapter limits to the requiredLimits object - to created a device with the best feature sets available

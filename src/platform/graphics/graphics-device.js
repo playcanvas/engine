@@ -259,12 +259,21 @@ class GraphicsDevice extends EventHandler {
     supportsStorageTextureRead = false;
 
     /**
+     * True if the device supports subgroup operations in shaders (WebGPU only). When supported,
+     * compute and fragment shaders can use WGSL subgroup builtins such as `subgroupBroadcast`,
+     * `subgroupAll`, `subgroupAny`, `subgroupAdd`, `subgroupShuffle`, etc. The `enable subgroups;`
+     * directive is automatically injected into WGSL shaders when this feature is available.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsSubgroups = false;
+
+    /**
      * True if the device supports the WGSL subgroup_uniformity extension, which allows
      * subgroup functionality to be considered uniform in more cases during shader compilation.
-     * When a shader uses this feature, use an `enable` directive at the top of the WGSL shader:
-     * ```wgsl
-     * enable subgroups;
-     * ```
+     * This is automatically enabled via the `enable subgroups;` directive when
+     * {@link GraphicsDevice#supportsSubgroups} is true.
      *
      * @readonly
      * @type {boolean}
@@ -273,14 +282,11 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if the device supports the WGSL subgroup_id extension, which provides access to
-     * `subgroup_id` and `num_subgroups` built-in values in workgroups.
-     * When a shader uses this feature, use a `requires` directive at the top of the WGSL shader:
-     * ```wgsl
-     * requires subgroup_id;
-     * ```
+     * `subgroup_id` and `num_subgroups` built-in values in workgroups. The `requires subgroup_id;`
+     * directive is automatically injected into WGSL shaders when this feature is available.
      *
-     * @readonly
      * @type {boolean}
+     * @readonly
      */
     supportsSubgroupId = false;
 
@@ -655,6 +661,8 @@ class GraphicsDevice extends EventHandler {
         if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
         if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
         if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
+        if (this.supportsSubgroups) capsDefines.set('CAPS_SUBGROUPS', '');
+        if (this.supportsSubgroupId) capsDefines.set('CAPS_SUBGROUP_ID', '');
 
         // Platform defines
         if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
