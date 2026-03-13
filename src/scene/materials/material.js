@@ -755,6 +755,9 @@ class Material {
         return this.parameters;
     }
 
+    /**
+     * Clears all cached shader variants from the material and mesh instances that reference it.
+     */
     clearVariants() {
         // clear variants on the material
         this.variants.clear();
