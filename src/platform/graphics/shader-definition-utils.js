@@ -221,6 +221,12 @@ class ShaderDefinitionUtils {
         if (shaderType === 'fragment' && device.supportsPrimitiveIndex) {
             code += 'enable primitive_index;\n';
         }
+        if (device.supportsSubgroups) {
+            code += 'enable subgroups;\n';
+        }
+        if (device.supportsSubgroupId) {
+            code += 'requires subgroup_id;\n';
+        }
         return code;
     }
 
