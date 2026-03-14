@@ -1,5 +1,6 @@
 export default /* glsl */`
 uniform vec4 viewport_size;             // viewport width, height, 1/width, 1/height
+uniform float minPixelSize;
 
 // compute 3d covariance from rotation (w,x,y,z format) and scale
 void computeCovariance(vec4 rotation, vec3 scale, out vec3 covA, out vec3 covB) {
@@ -62,8 +63,8 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
     float l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     float l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
 
-    // early-out gaussians smaller than 2 pixels
-    if (l1 < 2.0 && l2 < 2.0) {
+    // early-out gaussians smaller than minPixelSize
+    if (max(l1, l2) < minPixelSize) {
         return false;
     }
 

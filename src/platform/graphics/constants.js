@@ -345,6 +345,20 @@ export const CULLFACE_FRONT = 2;
 export const CULLFACE_FRONTANDBACK = 3;
 
 /**
+ * The counterclockwise winding. Specifies whether polygons are front- or back-facing by setting a winding orientation.
+ *
+ * @category Graphics
+ */
+export const FRONTFACE_CCW = 0;
+
+/**
+ * The clockwise winding. Specifies whether polygons are front- or back-facing by setting a winding orientation.
+ *
+ * @category Graphics
+ */
+export const FRONTFACE_CW = 1;
+
+/**
  * Point sample filtering.
  *
  * @category Graphics

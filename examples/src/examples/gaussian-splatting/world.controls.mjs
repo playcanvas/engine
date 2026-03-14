@@ -3,8 +3,22 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, Label } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SliderInput, Label } = ReactPCUI;
     return fragment(
+        jsx(
+            Panel,
+            { headerText: 'Camera' },
+            jsx(
+                LabelGroup,
+                { text: 'Orbit' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'orbitCamera' },
+                    value: observer.get('orbitCamera') || false
+                })
+            )
+        ),
         jsx(
             Panel,
             { headerText: 'Settings' },
@@ -21,19 +35,35 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             jsx(
                 LabelGroup,
                 { text: 'Splat Budget' },
-                jsx(SelectInput, {
-                    type: 'string',
+                jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'splatBudget' },
-                    value: observer.get('splatBudget') || '4M',
-                    options: [
-                        { v: 'none', t: 'No limit' },
-                        { v: '1M', t: '1M' },
-                        { v: '2M', t: '2M' },
-                        { v: '3M', t: '3M' },
-                        { v: '4M', t: '4M' },
-                        { v: '6M', t: '6M' }
-                    ]
+                    min: 0,
+                    max: 10,
+                    precision: 1,
+                    step: 0.1
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'LOD Base Dist' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lodBaseDistance' },
+                    min: 1,
+                    max: 50,
+                    precision: 1
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'LOD Multiplier' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lodMultiplier' },
+                    min: 1.2,
+                    max: 10,
+                    precision: 1
                 })
             )
         ),

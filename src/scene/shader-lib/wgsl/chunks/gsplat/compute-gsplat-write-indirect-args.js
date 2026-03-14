@@ -55,13 +55,18 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // Write numSplats for vertex shader
     numSplatsBuf[0] = count;
 
-    // Write indirect dispatch args for sort (shared slot for key gen, block sum, reorder)
-    // All use 256 threads/workgroup
-    let sortWorkgroupCount = (count + {SORT_THREADS_PER_WORKGROUP}u - 1u) / {SORT_THREADS_PER_WORKGROUP}u;
+    // Write indirect dispatch args: slot 0 = key gen, slot 1 = sort
     let dispatchOffset = uniforms.dispatchSlotOffset;
-    indirectDispatchArgs[dispatchOffset + 0u] = sortWorkgroupCount;
+
+    let keygenWorkgroupCount = (count + {KEYGEN_THREADS_PER_WORKGROUP}u - 1u) / {KEYGEN_THREADS_PER_WORKGROUP}u;
+    indirectDispatchArgs[dispatchOffset + 0u] = keygenWorkgroupCount;
     indirectDispatchArgs[dispatchOffset + 1u] = 1u;
     indirectDispatchArgs[dispatchOffset + 2u] = 1u;
+
+    let sortWorkgroupCount = (count + {SORT_ELEMENTS_PER_WORKGROUP}u - 1u) / {SORT_ELEMENTS_PER_WORKGROUP}u;
+    indirectDispatchArgs[dispatchOffset + 3u] = sortWorkgroupCount;
+    indirectDispatchArgs[dispatchOffset + 4u] = 1u;
+    indirectDispatchArgs[dispatchOffset + 5u] = 1u;
 
     // Write sortElementCount for sort shaders (= visibleCount)
     sortElementCountBuf[0] = count;

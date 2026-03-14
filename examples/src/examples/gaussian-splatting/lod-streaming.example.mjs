@@ -76,24 +76,28 @@ const config = {
     focusPoint: [12, 3, 0]
 };
 
-// LOD preset definitions with customizable distances
-/** @type {Record<string, { range: number[], lodDistances: number[] }>} */
+// LOD preset definitions
+/** @type {Record<string, { range: number[], lodBaseDistance: number, lodMultiplier: number }>} */
 const LOD_PRESETS = {
     'desktop-max': {
         range: [0, 5],
-        lodDistances: [10, 20, 40, 80, 120, 150, 200]
+        lodBaseDistance: 7,
+        lodMultiplier: 3
     },
     'desktop': {
         range: [1, 5],
-        lodDistances: [5, 10, 25, 50, 65, 90, 150]
+        lodBaseDistance: 5,
+        lodMultiplier: 4
     },
     'mobile-max': {
         range: [2, 5],
-        lodDistances: [5, 7, 12, 25, 75, 120, 200]
+        lodBaseDistance: 5,
+        lodMultiplier: 2
     },
     'mobile': {
         range: [3, 5],
-        lodDistances: [2, 4, 6, 10, 75, 120, 200]
+        lodBaseDistance: 2,
+        lodMultiplier: 2
     }
 };
 
@@ -119,22 +123,17 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 1;
     app.scene.exposure = 1.5;
 
-    // Mini-Stats: add gsplats on top of default stats
-    const msOptions = pc.MiniStats.getDefaultOptions();
-    msOptions.stats.push({
-        name: 'GSplats',
-        stats: ['frame.gsplats'],
-        decimalPlaces: 3,
-        multiplier: 1 / 1000000,
-        unitsName: 'M',
-        watermark: 10
-    });
-    const miniStats = new pc.MiniStats(app, msOptions); // eslint-disable-line no-unused-vars
+    const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
     // enable rotation-based LOD updates and behind-camera penalty
     app.scene.gsplat.lodUpdateAngle = 90;
-    app.scene.gsplat.lodBehindPenalty = 5;
+    app.scene.gsplat.lodBehindPenalty = 3;
     app.scene.gsplat.radialSorting = true;
+
+    data.on('radialSorting:set', () => {
+        app.scene.gsplat.radialSorting = !!data.get('radialSorting');
+    });
+
     app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
@@ -147,16 +146,26 @@ assetListLoader.load(() => {
             app.scene.gsplat.culling = !!data.get('culling');
         });
     }
+    data.on('minPixelSize:set', () => {
+        app.scene.gsplat.minPixelSize = data.get('minPixelSize');
+    });
     data.on('debugLod:set', () => {
         app.scene.gsplat.colorizeLod = !!data.get('debugLod');
     });
+    data.on('compact:set', () => {
+        app.scene.gsplat.dataFormat = data.get('compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
+    });
 
     // initialize UI settings (must be after observer registration)
+    data.set('cameraFov', 75);
+    data.set('minPixelSize', 2);
+    data.set('radialSorting', true);
     data.set('gpuSorting', false);
-    data.set('culling', false);
+    data.set('culling', device.isWebGPU);
+    data.set('compact', true);
     data.set('debugLod', false);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
-    data.set('splatBudget', pc.platform.mobile ? '1M' : '4M');
+    data.set('splatBudget', pc.platform.mobile ? 1 : 4);
 
     const entity = new pc.Entity(config.name || 'gsplat');
     entity.addComponent('gsplat', {
@@ -175,24 +184,44 @@ assetListLoader.load(() => {
         const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
         app.scene.gsplat.lodRangeMin = presetData.range[0];
         app.scene.gsplat.lodRangeMax = presetData.range[1];
-        gs.lodDistances = presetData.lodDistances;
+        gs.lodBaseDistance = presetData.lodBaseDistance;
+        gs.lodMultiplier = presetData.lodMultiplier;
+        data.set('lodBaseDistance', presetData.lodBaseDistance);
+        data.set('lodMultiplier', presetData.lodMultiplier);
     };
 
     applyPreset();
+
+    // Start with lowest LOD only for fast initial load
+    const lodLevels = gs.resource?.octree?.lodLevels;
+    if (lodLevels) {
+        const worstLod = lodLevels - 1;
+        app.scene.gsplat.lodRangeMin = worstLod;
+        app.scene.gsplat.lodRangeMax = worstLod;
+    }
+
+    // When lowest LOD is fully loaded, switch to the normal quality range
+    const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
+    const onFrameReady = (/** @type {any} */ camera, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
+        if (ready && loadingCount === 0) {
+            gsplatSystem.off('frame:ready', onFrameReady);
+            applyPreset();
+        }
+    };
+    gsplatSystem.on('frame:ready', onFrameReady);
+
     data.on('lodPreset:set', applyPreset);
 
+    data.on('lodBaseDistance:set', () => {
+        gs.lodBaseDistance = data.get('lodBaseDistance');
+    });
+    data.on('lodMultiplier:set', () => {
+        gs.lodMultiplier = data.get('lodMultiplier');
+    });
+
     const applySplatBudget = () => {
-        const preset = data.get('splatBudget');
-        const budgetMap = {
-            'none': 0,
-            '1M': 1000000,
-            '2M': 2000000,
-            '3M': 3000000,
-            '4M': 4000000,
-            '6M': 6000000
-        };
-        // Global splat budget applies to all GSplats in the scene
-        app.scene.gsplat.splatBudget = budgetMap[preset] || 0;
+        const millions = data.get('splatBudget');
+        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
     };
 
     applySplatBudget();
@@ -215,6 +244,10 @@ assetListLoader.load(() => {
 
     app.root.addChild(camera);
 
+    data.on('cameraFov:set', () => {
+        camera.camera.fov = data.get('cameraFov');
+    });
+
     // Add the GsplatRevealRadial script to the gsplat entity
     entity.addComponent('script');
     const revealScript = entity.script?.create(GsplatRevealRadial);
@@ -233,8 +266,8 @@ assetListLoader.load(() => {
         sceneSize: 500,
         moveSpeed: /** @type {number} */ (config.moveSpeed),
         moveFastSpeed: /** @type {number} */ (config.moveFastSpeed),
-        enableOrbit: config.enableOrbit ?? false,
-        enablePan: config.enablePan ?? false,
+        enableOrbit: false,
+        enablePan: false,
         focusPoint: focusPoint
     });
 

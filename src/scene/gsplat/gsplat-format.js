@@ -370,6 +370,28 @@ class GSplatFormat {
     }
 
     /**
+     * Sets the write code for encoding splat data into the work buffer. The appropriate code
+     * for the current backend (GLSL or WGSL) is stored.
+     *
+     * @param {string} writeGLSL - GLSL code for writing/encoding splat data.
+     * @param {string} writeWGSL - WGSL code for writing/encoding splat data.
+     * @ignore
+     */
+    setWriteCode(writeGLSL, writeWGSL) {
+        this._write = this._device.isWebGPU ? writeWGSL : writeGLSL;
+    }
+
+    /**
+     * Returns the write code for encoding splat data into the work buffer.
+     *
+     * @returns {string|undefined} Shader code for writing splat data, or undefined if not set.
+     * @ignore
+     */
+    getWriteCode() {
+        return this._write;
+    }
+
+    /**
      * Generates output declarations (write functions) for MRT output streams.
      * Used by GSplatProcessor to generate output functions for dstStreams.
      * Each stream maps to an MRT slot (pcFragColor0, pcFragColor1, etc. in GLSL or

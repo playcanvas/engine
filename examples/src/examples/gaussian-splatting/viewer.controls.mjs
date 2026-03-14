@@ -21,6 +21,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Compact' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.compact' }
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Orientation' },
                 jsx(SelectInput, {
                     binding: new BindingTwoWay(),

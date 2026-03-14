@@ -1,8 +1,19 @@
 import {
-    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
+    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
+    PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
 } from '../../platform/graphics/constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatFormat } from '../gsplat/gsplat-format.js';
+import { GSPLATDATA_COMPACT } from '../constants.js';
+
+import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
+import glslCompactWrite from '../shader-lib/glsl/chunks/gsplat/frag/formats/containerCompactWrite.js';
+import glslPackedRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerPackedRead.js';
+import glslPackedWrite from '../shader-lib/glsl/chunks/gsplat/frag/formats/containerPackedWrite.js';
+import wgslCompactRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/containerCompactRead.js';
+import wgslCompactWrite from '../shader-lib/wgsl/chunks/gsplat/frag/formats/containerCompactWrite.js';
+import wgslPackedRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/containerPackedRead.js';
+import wgslPackedWrite from '../shader-lib/wgsl/chunks/gsplat/frag/formats/containerPackedWrite.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -30,27 +41,72 @@ class GSplatParams {
     _format;
 
     /**
+     * @type {GraphicsDevice}
+     * @private
+     */
+    _device;
+
+    /**
+     * @type {string}
+     * @private
+     */
+    _dataFormat = GSPLATDATA_COMPACT;
+
+    /**
      * Creates a new GSplatParams instance.
      *
      * @param {GraphicsDevice} device - The graphics device.
      */
     constructor(device) {
-        // Check device capabilities for color format - use RGBA16U fallback if RGBA16F not supported
-        const colorFormat = device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F]) || PIXELFORMAT_RGBA16U;
+        this._device = device;
+        this._format = this._createFormat(GSPLATDATA_COMPACT);
 
-        // Work buffer textures format:
-        // - dataColor (RGBA16F/RGBA16U): RGBA color with alpha
-        // - dataTransformA (RGBA32U): worldCenter.xyz (3×32-bit floats as uint) + worldRotation.xy (2×16-bit halfs)
-        // - dataTransformB (RG32U): worldRotation.z + worldScale.xyz (4×16-bit halfs, w derived via sqrt)
-        this._format = new GSplatFormat(device, [
-            { name: 'dataColor', format: colorFormat },
-            { name: 'dataTransformA', format: PIXELFORMAT_RGBA32U },
-            { name: 'dataTransformB', format: PIXELFORMAT_RG32U }
-        ], {
-            readGLSL: '#include "gsplatContainerPackedReadVS"',
-            readWGSL: '#include "gsplatContainerPackedReadVS"'
-        });
-        this._format.allowStreamRemoval = true;
+        this._material.setParameter('alphaClip', 0.3);
+        this._material.setParameter('minPixelSize', 2.0);
+    }
+
+    /**
+     * @param {string} dataFormat - The data format constant.
+     * @returns {GSplatFormat} The created format.
+     * @private
+     */
+    _createFormat(dataFormat) {
+        let format;
+
+        if (dataFormat === GSPLATDATA_COMPACT) {
+            // Compact work buffer format (20 bytes/splat):
+            // - dataColor (R32U): RGB color (11+11+10 bits, range [0, 4])
+            // - dataTransformA (RGBA32U): center.xyz (3×32-bit floats) + half-angle quaternion (11+11+10 bits)
+            //   See: https://marc-b-reynolds.github.io/quaternions/2017/05/02/QuatQuantPart1.html
+            // - dataTransformB (R32U): scale.xyz (3×8-bit log-encoded, e^-12..e^9) + alpha (8 bits)
+            format = new GSplatFormat(this._device, [
+                { name: 'dataColor', format: PIXELFORMAT_R32U },
+                { name: 'dataTransformA', format: PIXELFORMAT_RGBA32U },
+                { name: 'dataTransformB', format: PIXELFORMAT_R32U }
+            ], {
+                readGLSL: glslCompactRead,
+                readWGSL: wgslCompactRead
+            });
+            format.setWriteCode(glslCompactWrite, wgslCompactWrite);
+        } else {
+            // Large work buffer format (32 bytes/splat):
+            // - dataColor (RGBA16F/RGBA16U): RGBA color with alpha
+            // - dataTransformA (RGBA32U): center.xyz (3×32-bit floats as uint) + rotation.xy (2×16-bit halfs)
+            // - dataTransformB (RG32U): rotation.z + scale.xyz (4×16-bit halfs, scale.w derived via sqrt)
+            const colorFormat = this._device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F]) || PIXELFORMAT_RGBA16U;
+            format = new GSplatFormat(this._device, [
+                { name: 'dataColor', format: colorFormat },
+                { name: 'dataTransformA', format: PIXELFORMAT_RGBA32U },
+                { name: 'dataTransformB', format: PIXELFORMAT_RG32U }
+            ], {
+                readGLSL: glslPackedRead,
+                readWGSL: wgslPackedRead
+            });
+            format.setWriteCode(glslPackedWrite, wgslPackedWrite);
+        }
+
+        format.allowStreamRemoval = true;
+        return format;
     }
 
     /**
@@ -72,12 +128,33 @@ class GSplatParams {
     radialSorting = false;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _gpuSorting = false;
+
+    /**
      * Enables GPU-based sorting using compute shaders. WebGPU only.
      *
      * @type {boolean}
      * @ignore
      */
-    gpuSorting = false;
+    set gpuSorting(value) {
+        if (value !== this._gpuSorting) {
+            this._gpuSorting = value;
+            this._syncNodeIndexStream();
+        }
+    }
+
+    /**
+     * Gets the GPU sorting enabled state.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get gpuSorting() {
+        return this._gpuSorting;
+    }
 
     /**
      * Enables debug rendering of AABBs for GSplat octree nodes. Defaults to false.
@@ -173,16 +250,9 @@ class GSplatParams {
      * @ignore
      */
     set culling(value) {
-        if (value && !this._culling) {
-            this._culling = true;
-            if (!this._format.getStream('pcNodeIndex')) {
-                this._format.addExtraStreams([
-                    { name: 'pcNodeIndex', format: PIXELFORMAT_R32U }
-                ]);
-            }
-        } else if (!value && this._culling) {
-            this._culling = false;
-            this._format.removeExtraStreams(['pcNodeIndex']);
+        if (value !== this._culling) {
+            this._culling = value;
+            this._syncNodeIndexStream();
         }
     }
 
@@ -194,6 +264,25 @@ class GSplatParams {
      */
     get culling() {
         return this._culling;
+    }
+
+    /**
+     * Adds or removes the pcNodeIndex extra stream based on current culling and gpuSorting state.
+     * Only the CPU sort + culling path needs per-splat node index in the work buffer; the GPU sort
+     * path uses interval-based compaction which reads node visibility directly from intervals.
+     *
+     * @private
+     */
+    _syncNodeIndexStream() {
+        const needsNodeIndex = this._culling && !(this._gpuSorting && this._device.isWebGPU);
+        const hasNodeIndex = !!this._format.getStream('pcNodeIndex');
+        if (needsNodeIndex && !hasNodeIndex) {
+            this._format.addExtraStreams([
+                { name: 'pcNodeIndex', format: PIXELFORMAT_R32U }
+            ]);
+        } else if (!needsNodeIndex && hasNodeIndex) {
+            this._format.removeExtraStreams(['pcNodeIndex']);
+        }
     }
 
     /**
@@ -446,6 +535,95 @@ class GSplatParams {
     colorUpdateAngleLodScale = 2;
 
     /**
+     * Sets the alpha threshold below which splats are discarded during shadow, pick, and prepass
+     * rendering. Higher values create more aggressive clipping, while lower values preserve more
+     * translucent splats. Defaults to 0.3.
+     *
+     * @type {number}
+     */
+    set alphaClip(value) {
+        this._material.setParameter('alphaClip', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets the alpha clip threshold.
+     *
+     * @type {number}
+     */
+    get alphaClip() {
+        return this._material.getParameter('alphaClip')?.data ?? 0.3;
+    }
+
+    /**
+     * Sets the minimum screen-space pixel size below which splats are discarded. Defaults to 2.
+     *
+     * @type {number}
+     */
+    set minPixelSize(value) {
+        this._material.setParameter('minPixelSize', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets the minimum pixel size threshold.
+     *
+     * @type {number}
+     */
+    get minPixelSize() {
+        return this._material.getParameter('minPixelSize')?.data ?? 2.0;
+    }
+
+    /**
+     * Enables anti-aliasing compensation for Gaussian splats. Defaults to false.
+     *
+     * This option is intended for splat data that was generated with anti-aliasing
+     * enabled during training/export. It improves visual stability and reduces
+     * flickering for very small or distant splats.
+     *
+     * If the source splats were generated without anti-aliasing, enabling this
+     * option may slightly soften the image or alter opacity.
+     * @type {boolean}
+     */
+    set antiAlias(value) {
+        this._material.setDefine('GSPLAT_AA', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets whether anti-aliasing compensation is enabled.
+     *
+     * @type {boolean}
+     */
+    get antiAlias() {
+        return !!this._material.getDefine('GSPLAT_AA');
+    }
+
+    /**
+     * Enables 2D Gaussian Splatting mode. Defaults to false.
+     *
+     * Renders splats as oriented 2D surface elements instead of volumetric 3D Gaussians.
+     * This provides a more surface-accurate appearance but requires splat data that
+     * was generated for 2D Gaussian Splatting.
+     *
+     * Enabling this with standard 3D splat data may produce incorrect results.
+     * @type {boolean}
+     */
+    set twoDimensional(value) {
+        this._material.setDefine('GSPLAT_2DGS', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets whether 2D Gaussian Splatting mode is enabled.
+     *
+     * @type {boolean}
+     */
+    get twoDimensional() {
+        return !!this._material.getDefine('GSPLAT_2DGS');
+    }
+
+    /**
      * Number of update ticks before unloading unused streamed resources. When a streamed resource's
      * reference count reaches zero, it enters a cooldown period before being unloaded. This allows
      * recently used data to remain in memory for quick reuse if needed again soon. Set to 0 to
@@ -456,6 +634,45 @@ class GSplatParams {
     cooldownTicks = 100;
 
     /**
+     * Work buffer data format. Controls the precision and bandwidth of the intermediate work buffer
+     * used during unified GSplat rendering. Can be set to {@link GSPLATDATA_COMPACT} (20 bytes/splat)
+     * or {@link GSPLATDATA_LARGE} (32 bytes/splat). Defaults to {@link GSPLATDATA_COMPACT}.
+     *
+     * @type {string}
+     */
+    set dataFormat(value) {
+        if (this._dataFormat !== value) {
+            this._dataFormat = value;
+
+            // capture extra streams from the old format
+            const extraStreams = this._format.extraStreams.map(s => ({
+                name: s.name,
+                format: s.format,
+                storage: s.storage
+            }));
+
+            // create new format with the new data layout
+            this._format = this._createFormat(value);
+
+            // re-add extra streams
+            if (extraStreams.length > 0) {
+                this._format.addExtraStreams(extraStreams);
+            }
+
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets the work buffer data format.
+     *
+     * @type {string}
+     */
+    get dataFormat() {
+        return this._dataFormat;
+    }
+
+    /**
      * A material template that can be customized by the user. Any defines, parameters, or shader
      * chunks set on this material will be automatically applied to all GSplat components rendered
      * in unified mode. After making changes, call {@link Material#update} to for the changes to be applied
@@ -464,7 +681,7 @@ class GSplatParams {
      * @type {ShaderMaterial}
      * @example
      * // Set a custom parameter on all GSplat materials
-     * app.scene.gsplat.material.setParameter('alphaClip', 0.4);
+     * app.scene.gsplat.material.setParameter('myCustomParam', 1.0);
      * app.scene.gsplat.material.update();
      */
     get material() {

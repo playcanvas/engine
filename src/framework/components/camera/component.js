@@ -14,7 +14,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
  * @import { Layer } from '../../../scene/layer.js'
  * @import { Mat4 } from '../../../core/math/mat4.js'
- * @import { RenderPass } from '../../../platform/graphics/render-pass.js'
+ * @import { FramePass } from '../../../platform/graphics/frame-pass.js'
  * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
  * @import { FogParams } from '../../../scene/fog-params.js'
  * @import { Vec3 } from '../../../core/math/vec3.js'
@@ -205,26 +205,46 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the render passes the camera uses for rendering, instead of its default rendering.
+     * Sets the frame passes the camera uses for rendering, instead of its default rendering.
      * Set this to null to return to the default behavior.
      *
-     * @type {RenderPass[]|null}
+     * @type {FramePass[]|null}
      * @ignore
      */
-    set renderPasses(passes) {
-        this._camera.renderPasses = passes || [];
+    set framePasses(passes) {
+        this._camera.framePasses = passes || [];
         this.dirtyLayerCompositionCameras();
         this.system.app.scene.updateShaders = true;
     }
 
     /**
-     * Gets the render passes the camera uses for rendering, instead of its default rendering.
+     * Gets the frame passes the camera uses for rendering, instead of its default rendering.
      *
-     * @type {RenderPass[]}
+     * @type {FramePass[]}
+     * @ignore
+     */
+    get framePasses() {
+        return this._camera.framePasses;
+    }
+
+    /**
+     * @type {FramePass[]|null}
+     * @deprecated Use {@link CameraComponent#framePasses} instead.
+     * @ignore
+     */
+    set renderPasses(passes) {
+        Debug.deprecated('CameraComponent#renderPasses is deprecated. Use CameraComponent#framePasses instead.');
+        this.framePasses = passes;
+    }
+
+    /**
+     * @type {FramePass[]}
+     * @deprecated Use {@link CameraComponent#framePasses} instead.
      * @ignore
      */
     get renderPasses() {
-        return this._camera.renderPasses;
+        Debug.deprecated('CameraComponent#renderPasses is deprecated. Use CameraComponent#framePasses instead.');
+        return this.framePasses;
     }
 
     get shaderParams() {
@@ -901,8 +921,8 @@ class CameraComponent extends Component {
     set renderTarget(value) {
 
         Debug.call(() => {
-            if (this._camera.renderPasses.length > 0) {
-                Debug.warn(`Setting a render target on the camera ${this.entity.name} after the render passes is not supported, set it up first.`);
+            if (this._camera.framePasses.length > 0) {
+                Debug.warn(`Setting a render target on the camera ${this.entity.name} after the frame passes is not supported, set it up first.`);
             }
         });
 

@@ -212,6 +212,23 @@ class MiniStats {
     }
 
     /**
+     * Predefined stat groups that can be included via {@link MiniStats.getDefaultOptions}. Each
+     * key maps to an array of {@link MiniStatsGraphOptions} entries that are inserted after the
+     * 'Frame' stat in the default options.
+     *
+     * @type {Object<string, MiniStatsGraphOptions[]>}
+     * @ignore
+     */
+    static statPresets = {
+        gsplats: [
+            { name: 'GSplats', stats: ['frame.gsplats'], decimalPlaces: 3, multiplier: 1 / 1000000, unitsName: 'M', watermark: 10 }
+        ],
+        gsplatsCopy: [
+            { name: 'GsplatsCopy', stats: ['frame.gsplatBufferCopy'], decimalPlaces: 1, multiplier: 1, unitsName: '%', watermark: 100 }
+        ]
+    };
+
+    /**
      * Returns the default options for MiniStats. The default options configure the overlay to
      * show the following graphs:
      *
@@ -221,12 +238,19 @@ class MiniStats {
      * - Draw call count
      * - Total VRAM usage
      *
+     * @param {string[]} [extraStats] - Optional array of preset names from
+     * {@link MiniStats.statPresets} to include. The preset stats are inserted after the 'Frame'
+     * entry. Can be: 'gsplats', 'gsplatsCopy'.
      * @returns {object} The default options for MiniStats.
      * @example
+     * // default options without extra stats
      * const options = pc.MiniStats.getDefaultOptions();
+     * @example
+     * // include gsplat stats
+     * const options = pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']);
      */
-    static getDefaultOptions() {
-        return {
+    static getDefaultOptions(extraStats = []) {
+        const options = {
 
             // sizes of area to render individual graphs in and spacing between individual graphs
             sizes: [
@@ -299,6 +323,16 @@ class MiniStats {
             // minimum size index to show VRAM subcategory graphs
             vramTimingMinSize: 1
         };
+
+        if (extraStats.length > 0) {
+            const frameIndex = options.stats.findIndex(s => s.name === 'Frame');
+            const insertIndex = frameIndex !== -1 ? frameIndex + 1 : options.stats.length;
+            // reverse so user-specified order matches visual top-to-bottom order
+            const extra = extraStats.flatMap(name => MiniStats.statPresets[name] ?? []).reverse();
+            options.stats.splice(insertIndex, 0, ...extra);
+        }
+
+        return options;
     }
 
     /**
@@ -317,38 +351,15 @@ class MiniStats {
         // update opacity based on size (larger sizes have higher default opacity)
         this.opacity = value > 0 ? 0.85 : 0.7;
 
-        // delete GPU pass graphs when switching below threshold
+        // delete sub-stat graphs when switching below their thresholds
         if (value < this.gpuTimingMinSize && this.gpuPassGraphs) {
-            for (const passData of this.gpuPassGraphs.values()) {
-                const index = this.graphs.indexOf(passData.graph);
-                if (index !== -1) {
-                    this.graphs.splice(index, 1);
-                }
-                this.freeRow(passData.graph);
-                passData.graph.destroy();
-            }
-            this.gpuPassGraphs.clear();
-
-            // keep main GPU graph in GPU color group
-            const gpuGraph = this.graphs.find(g => g.name === 'GPU');
-            if (gpuGraph) gpuGraph.graphType = 0.33;
+            this.clearSubGraphs(this.gpuPassGraphs, 'GPU', 0.33);
         }
-
-        // delete CPU sub-timing graphs when switching below threshold
         if (value < this.cpuTimingMinSize && this.cpuGraphs) {
-            for (const statData of this.cpuGraphs.values()) {
-                const index = this.graphs.indexOf(statData.graph);
-                if (index !== -1) {
-                    this.graphs.splice(index, 1);
-                }
-                this.freeRow(statData.graph);
-                statData.graph.destroy();
-            }
-            this.cpuGraphs.clear();
-
-            // keep main CPU graph in CPU color group
-            const cpuGraph = this.graphs.find(g => g.name === 'CPU');
-            if (cpuGraph) cpuGraph.graphType = 0.66;
+            this.clearSubGraphs(this.cpuGraphs, 'CPU', 0.66);
+        }
+        if (value < this.vramTimingMinSize && this.vramGraphs) {
+            this.clearSubGraphs(this.vramGraphs);
         }
     }
 
@@ -740,6 +751,31 @@ class MiniStats {
         if (row !== undefined) {
             this.freeRows.push(row);
             this.graphRows.delete(graph);
+        }
+    }
+
+    /**
+     * Remove all sub-stat graphs from a tracking map when collapsing below a size threshold.
+     *
+     * @param {Map} subGraphs - The sub-graph map to clear.
+     * @param {string} [mainGraphName] - If provided, reset the main graph's graphType.
+     * @param {number} [graphType] - The graphType value to restore on the main graph.
+     * @private
+     */
+    clearSubGraphs(subGraphs, mainGraphName, graphType) {
+        for (const statData of subGraphs.values()) {
+            const index = this.graphs.indexOf(statData.graph);
+            if (index !== -1) {
+                this.graphs.splice(index, 1);
+            }
+            this.freeRow(statData.graph);
+            statData.graph.destroy();
+        }
+        subGraphs.clear();
+
+        if (mainGraphName) {
+            const mainGraph = this.graphs.find(g => g.name === mainGraphName);
+            if (mainGraph) mainGraph.graphType = graphType;
         }
     }
 

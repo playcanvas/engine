@@ -5,18 +5,20 @@ import { GraphNode } from '../graph-node.js';
 import { GSplatInfo } from './gsplat-info.js';
 import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
-import { GSplatRenderer } from './gsplat-renderer.js';
+import { GSplatQuadRenderer } from './gsplat-quad-renderer.js';
 import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
 import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
 import { GSplatPlacementStateTracker } from './gsplat-placement-state-tracker.js';
 import { GSplatSortKeyCompute } from './gsplat-sort-key-compute.js';
 import { GSplatCompaction } from './gsplat-compaction.js';
+import { GSplatIntervalCompaction } from './gsplat-interval-compaction.js';
 import { ComputeRadixSort } from '../graphics/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Color } from '../../core/math/color.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
+import { BlockAllocator } from '../../core/block-allocator.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -26,6 +28,8 @@ import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
  * @import { Scene } from '../scene.js'
  * @import { Layer } from '../layer.js'
  * @import { GSplatDirector } from './gsplat-director.js'
+ * @import { MemBlock } from '../../core/block-allocator.js'
+ * @import { GSplatRenderer } from './gsplat-renderer.js'
  */
 
 const cameraPosition = new Vec3();
@@ -39,6 +43,7 @@ const _updatedSplats = [];
 const _splatsNeedingColorUpdate = [];
 const _cameraDeltas = { rotationDelta: 0, translationDelta: 0 };
 const tempOctreesTicked = new Set();
+const _queuedSplats = new Set();
 
 const _lodColorsRaw = [
     [1, 0, 0],  // red
@@ -68,6 +73,36 @@ let _randomColorRaw = null;
 /**
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
  * stored and rendered from.
+ *
+ * GPU sorting (WebGPU only):
+ *   1. [culling] Frustum cull: a fragment shader tests each bounding sphere against frustum
+ *      planes and writes results into a bit-packed nodeVisibilityTexture (1 bit per sphere).
+ *   2. Interval compaction: operates on contiguous intervals of splats (one per octree node)
+ *      rather than individual pixels. A cull/count pass writes each interval's splat count
+ *      (or 0 if culled) into a count buffer. A prefix sum produces output offsets. A scatter
+ *      pass expands visible intervals into compactedSplatIds (flat list of work-buffer pixel
+ *      indices). The last prefix sum element gives visibleCount.
+ *   3. Generate sort keys: an indirect compute dispatch (visibleCount threads) reads each
+ *      compactedSplatIds[i] to look up the splat's depth and writes a sort key to keysBuffer.
+ *   4. Radix sort: an indirect GPU radix sort over keysBuffer, with compactedSplatIds supplied
+ *      as initial values, produces a buffer of sorted splat IDs directly.
+ *   5. Render: the vertex shader reads sortedSplatIds[vertexId] → splatId.
+ *
+ * CPU sorting (WebGPU):
+ *   1. Sort on worker: camera position and splat centers are sent to a web worker which
+ *      performs a radix sort and returns the sorted order as orderBuffer (storage buffer).
+ *   2. [culling] Frustum cull: same fragment shader as the GPU path, producing the
+ *      bit-packed nodeVisibilityTexture.
+ *   3. [culling] Per-pixel compaction: a flag pass tests each splat's pcNodeIndex against
+ *      the visibility bits, using USE_SORTED_ORDER to read orderBuffer[i] for the splat ID.
+ *      A prefix sum and scatter pass produce compactedSplatIds that is both sorted and
+ *      visibility-filtered. The last prefix sum element gives visibleCount.
+ *   4. Render: the vertex shader reads compactedSplatIds[vertexId] → splatId.
+ *
+ * CPU sorting (WebGL):
+ *   1. Sort on worker: same as the WebGPU CPU path, producing orderBuffer (texture).
+ *   2. Render: the vertex shader reads orderBuffer[vertexId] → splatId directly.
+ *      No culling or compaction is available on WebGL.
  *
  * @ignore
  */
@@ -128,11 +163,18 @@ class GSplatManager {
     gpuSorter = null;
 
     /**
-     * GPU stream compaction for culling (when using GPU sorting + culling).
+     * GPU stream compaction for culling (CPU sort path on WebGPU).
      *
      * @type {GSplatCompaction|null}
      */
     compaction = null;
+
+    /**
+     * Interval-based GPU compaction (always-on for GPU sort path).
+     *
+     * @type {GSplatIntervalCompaction|null}
+     */
+    intervalCompaction = null;
 
     /**
      * Indirect draw slot index for the current frame (-1 when not using indirect draw).
@@ -142,15 +184,15 @@ class GSplatManager {
     indirectDrawSlot = -1;
 
     /**
-     * Indirect dispatch slot index for the current frame (-1 when not using indirect dispatch).
-     * Shared by sort key gen, block sum, and reorder phases.
+     * Indirect dispatch slot index for key gen (first of 2 consecutive slots).
+     * Slot 0 = key gen (256 threads/workgroup), slot 1 = sort (1024 elements/workgroup).
      *
      * @type {number}
      */
     indirectDispatchSlot = -1;
 
     /**
-     * Total splats from the last compaction dispatch. Needed for writeIndirectArgs
+     * Total splats from the last CPU compaction dispatch. Needed for writeIndirectArgs
      * to index into the prefix sum buffer to read the visible count.
      *
      * @type {number}
@@ -158,20 +200,19 @@ class GSplatManager {
     lastCompactedTotalSplats = 0;
 
     /**
+     * Total intervals from the last interval compaction dispatch. Needed for
+     * writeIndirectArgs to index into the prefix sum buffer for visible count.
+     *
+     * @type {number}
+     */
+    lastCompactedNumIntervals = 0;
+
+    /**
      * Flag set when CPU sort results arrive and compaction needs to run.
      *
      * @type {boolean}
      */
     cpuCompactionNeeded = false;
-
-    /**
-     * Whether the compacted splat IDs are already in sorted order (CPU sort + GPU compaction).
-     * When true, the vertex shader uses single indirection; when false, it applies an
-     * additional splatOrder lookup (double indirection, GPU sort + GPU compaction).
-     *
-     * @type {boolean}
-     */
-    sortedCompaction = false;
 
     /** @type {number} */
     sortedVersion = 0;
@@ -191,6 +232,20 @@ class GSplatManager {
      * @private
      */
     _workBufferRebuildRequired = false;
+
+    /**
+     * Number of blocks uploaded to the work buffer this frame.
+     *
+     * @type {number}
+     */
+    bufferCopyUploaded = 0;
+
+    /**
+     * Total number of blocks in the work buffer this frame.
+     *
+     * @type {number}
+     */
+    bufferCopyTotal = 0;
 
     /**
      * Tracks placement state changes (format version, modifier hash, numSplats, centersVersion).
@@ -217,6 +272,9 @@ class GSplatManager {
     /** @type {Vec3} */
     lastLodCameraFwd = new Vec3(Infinity, Infinity, Infinity);
 
+    /** @type {number} */
+    lastLodCameraFov = -1;
+
     /** @type {Vec3} */
     lastSortCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
@@ -240,6 +298,35 @@ class GSplatManager {
      */
     _budgetBalancer = new GSplatBudgetBalancer();
 
+    /**
+     * Dynamic scale factor applied to LOD parameters during budget enforcement. Shifts all
+     * LOD boundaries uniformly to bring the initial estimate closer to the budget target,
+     * reducing balancer work. Applied directly to lodBaseDistance and gently to lodMultiplier.
+     * Values > 1 push boundaries outward (more splats), values < 1 pull them inward
+     * (fewer splats).
+     *
+     * @type {number}
+     * @private
+     */
+    _budgetScale = 1.0;
+
+    /**
+     * Persistent block allocator for work buffer pixel allocations. Grows on demand.
+     *
+     * @type {BlockAllocator}
+     * @private
+     */
+    _allocator;
+
+    /**
+     * Maps allocId (from GSplatPlacement) to the corresponding MemBlock in the allocator.
+     * Shared with GSplatWorldState constructors which mutate it during diff.
+     *
+     * @type {Map<number, MemBlock>}
+     * @private
+     */
+    _allocationMap = new Map();
+
     /** @type {Vec3} */
     lastColorUpdateCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
@@ -261,6 +348,15 @@ class GSplatManager {
 
     /** @type {boolean} */
     layerPlacementsDirty = false;
+
+    /**
+     * True when placements have been added or removed since the last world state was created.
+     * Triggers a full work buffer rebuild so boundsBaseIndex and pcNodeIndex stay consistent.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _placementSetChanged = false;
 
     /** @type {Map<GSplatPlacement, GSplatOctreeInstance>} */
     octreeInstances = new Map();
@@ -299,8 +395,14 @@ class GSplatManager {
         this.director = director;
         this.cameraNode = cameraNode;
 
+        // Pre-allocate the block allocator with headroom above the splat budget to reduce
+        // early grows and fragmentation during initial scene loading.
+        const allocatorGrowMultiplier = 1.15;
+        const budget = this.scene.gsplat.splatBudget;
+        this._allocator = new BlockAllocator(budget > 0 ? Math.ceil(budget * allocatorGrowMultiplier) : 0, allocatorGrowMultiplier);
+
         this.workBuffer = new GSplatWorkBuffer(device, this.scene.gsplat.format);
-        this.renderer = new GSplatRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
+        this.renderer = new GSplatQuadRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
         this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
 
         // Initialize sorting strategy based on current gpuSorting setting
@@ -331,11 +433,11 @@ class GSplatManager {
         }
         this.octreeInstancesToDestroy.length = 0;
 
-        this.workBuffer.destroy();
-        this.renderer.destroy();
-
         this.destroyGpuSorting();
         this.destroyCpuSorting();
+
+        this.workBuffer.destroy();
+        this.renderer.destroy();
     }
 
     /**
@@ -348,17 +450,41 @@ class GSplatManager {
         this.keyGenerator = null;
         this.gpuSorter?.destroy();
         this.gpuSorter = null;
-        this.destroyCompaction();
+
+        // Switch renderer to CPU mode once, before destroying both compaction systems.
+        const useCpuSort = false;
+        this.renderer.setCpuSortedRendering();
+        this.destroyIntervalCompaction(useCpuSort);
+        this.destroyCompaction(useCpuSort);
     }
 
     /**
-     * Destroys compaction resources and disables indirect draw on the renderer.
+     * Destroys interval compaction resources.
      *
+     * @param {boolean} [useCpuSort] - Whether to switch the renderer to CPU-sorted mode.
      * @private
      */
-    destroyCompaction() {
+    destroyIntervalCompaction(useCpuSort = true) {
+        if (this.intervalCompaction) {
+            if (useCpuSort) {
+                this.renderer.setCpuSortedRendering();
+            }
+            this.intervalCompaction.destroy();
+            this.intervalCompaction = null;
+        }
+    }
+
+    /**
+     * Destroys compaction resources.
+     *
+     * @param {boolean} [useCpuSort] - Whether to switch the renderer to CPU-sorted mode.
+     * @private
+     */
+    destroyCompaction(useCpuSort = true) {
         if (this.compaction) {
-            this.renderer.disableIndirectDraw();
+            if (useCpuSort) {
+                this.renderer.setCpuSortedRendering();
+            }
             this.compaction.destroy();
             this.compaction = null;
         }
@@ -408,11 +534,8 @@ class GSplatManager {
             this.cpuSorter.updateCentersForSplats(currentState.splats);
         }
 
-        // Disable indirect draw on the renderer
-        this.renderer.disableIndirectDraw();
-
-        // Hide mesh until the CPU sort delivers fresh data
-        this.renderer.meshInstance.visible = false;
+        // Switch renderer to CPU-sorted mode (also hides until update() restores visibility)
+        this.renderer.setCpuSortedRendering();
     }
 
     get material() {
@@ -522,6 +645,7 @@ class GSplatManager {
 
                 // mark world as dirty since octree set changed
                 this.layerPlacementsDirty = true;
+                this._placementSetChanged = true;
 
                 // queue the instance to be processed during next world state creation
                 this.octreeInstancesToDestroy.push(inst);
@@ -539,6 +663,7 @@ class GSplatManager {
                 }
             }
         }
+        this._placementSetChanged ||= this.layerPlacementsDirty;
 
         // update layerPlacements to new non-octree list
         this.layerPlacements.length = 0;
@@ -562,7 +687,8 @@ class GSplatManager {
         }
 
         // Recreate world state if there are changes
-        const worldChanged = this.layerPlacementsDirty || stateChanged || this.worldStates.size === 0;
+        const placementsChanged = this.layerPlacementsDirty;
+        const worldChanged = placementsChanged || stateChanged || this.worldStates.size === 0;
         if (worldChanged) {
             this.lastWorldStateVersion++;
             const splats = [];
@@ -584,7 +710,8 @@ class GSplatManager {
                     if (p.resource) {
                         p.ensureInstanceStreams(this.device);
                         const octreeNodes = p.intervals.size > 0 ? inst.octree.nodes : null;
-                        const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p), octreeNodes);
+                        const nodeInfos = octreeNodes ? inst.nodeInfos : null;
+                        const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p), octreeNodes, nodeInfos);
                         splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                         splats.push(splatInfo);
                     }
@@ -608,7 +735,10 @@ class GSplatManager {
             // update cpu sorter with current splats (adds new centers, removes unused ones)
             this.cpuSorter?.updateCentersForSplats(splats);
 
-            const newState = new GSplatWorldState(this.device, this.lastWorldStateVersion, splats);
+            const newState = new GSplatWorldState(
+                this.device, this.lastWorldStateVersion, splats,
+                this._allocator, this._allocationMap
+            );
 
             // increment ref count for all resources in new state
             for (const splat of newState.splats) {
@@ -641,9 +771,16 @@ class GSplatManager {
                 this.octreeInstancesToDestroy.length = 0;
             }
 
+            // When placements are added/removed, boundsBaseIndex values shift and all
+            // pcNodeIndex values must be rewritten. Force a full rebuild so no stale indices remain.
+            if (this._placementSetChanged && this.scene.gsplat.culling) {
+                newState.fullRebuild = true;
+            }
+
             this.worldStates.set(this.lastWorldStateVersion, newState);
 
             this.layerPlacementsDirty = false;
+            this._placementSetChanged = false;
 
             // New world state requires sorting
             this.sortNeeded = true;
@@ -685,35 +822,49 @@ class GSplatManager {
 
     /**
      * Rebuilds the work buffer for a world state on its first sort.
-     * Resizes buffer, renders all splats, syncs transforms, and handles pending releases.
+     * Resizes buffer, renders changed splats, syncs transforms, and handles pending releases.
      *
      * @param {GSplatWorldState} worldState - The world state to rebuild for.
      * @param {number} count - The number of splats.
+     * @param {boolean} [forceFullRebuild] - Force rendering all splats (e.g. format change).
      */
-    rebuildWorkBuffer(worldState, count) {
+    rebuildWorkBuffer(worldState, count, forceFullRebuild = false) {
         // resize work buffer if needed
         const textureSize = worldState.textureSize;
         if (textureSize !== this.workBuffer.textureSize) {
             this.workBuffer.resize(textureSize);
-            this.renderer.setMaxNumSplats(textureSize * textureSize);
         }
 
-        // Update bounds and transforms textures when culling is enabled
+        // Bounds and transforms textures are needed for frustum culling.
+        // These index splats sequentially, so always use the full splats array.
         if (this.scene.gsplat.culling) {
-            this.workBuffer.updateBoundsTexture(worldState.splats);
-            this.workBuffer.updateTransformsTexture(worldState.splats);
+            this.workBuffer.updateBoundsTexture(worldState.boundsGroups);
+            this.workBuffer.updateTransformsTexture(worldState.boundsGroups);
         }
 
-        // render all splats to work buffer
-        this.workBuffer.render(worldState.splats, this.cameraNode, this.getDebugColors());
+        // Render splats to work buffer: full rebuild renders all, partial renders only changed
+        const renderAll = forceFullRebuild || worldState.fullRebuild;
+        const splatsToRender = renderAll ? worldState.splats : worldState.needsUpload;
+        const changedAllocIds = renderAll ? null : worldState.needsUploadIds;
+
+        if (splatsToRender.length > 0) {
+            const totalBlocks = this._allocationMap.size;
+            const uploadBlocks = renderAll ? totalBlocks : worldState.needsUploadIds.size;
+
+            // accumulate buffer copy stats for this frame
+            this.bufferCopyUploaded += uploadBlocks;
+            this.bufferCopyTotal = totalBlocks;
+
+            this.workBuffer.render(splatsToRender, this.cameraNode, this.getDebugColors(), changedAllocIds);
+        }
 
         // update all splats to sync their transforms and reset color accumulators
         // (prevents redundant re-render later)
         const { colorUpdateAngle, colorUpdateDistance } = this.scene.gsplat;
-        worldState.splats.forEach((splat) => {
-            splat.update();
-            splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
-        });
+        for (let i = 0; i < worldState.splats.length; i++) {
+            worldState.splats[i].update();
+            worldState.splats[i].resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
+        }
 
         // update camera tracking for color updates
         this.updateColorCameraTracking();
@@ -734,11 +885,49 @@ class GSplatManager {
 
     /**
      * Cleans up old world states between the last sorted version and the new version.
-     * Decrements ref counts and destroys old states.
+     * Merges upload requirements from skipped states into the active state, then
+     * decrements ref counts and destroys old states.
      *
      * @param {number} newVersion - The new version to clean up to.
      */
     cleanupOldWorldStates(newVersion) {
+        const activeState = /** @type {GSplatWorldState} */ (/** @type {unknown} */ (this.worldStates.get(newVersion)));
+
+        // Pass 1: propagate fullRebuild from skipped states
+        if (!activeState.fullRebuild) {
+            for (let v = this.sortedVersion + 1; v < newVersion; v++) {
+                if (this.worldStates.get(v)?.fullRebuild) {
+                    activeState.fullRebuild = true;
+                    break;
+                }
+            }
+        }
+
+        // Pass 2: merge needsUpload from skipped states (skip if full rebuild).
+        // Uses the active state's allocIdToSplat reverse map for O(changedIds) lookups
+        // instead of scanning all splats.
+        if (!activeState.fullRebuild) {
+            const activeIds = activeState.needsUploadIds;
+            const lookup = activeState.allocIdToSplat;
+            for (let v = this.sortedVersion + 1; v < newVersion; v++) {
+                const oldState = this.worldStates.get(v);
+                if (oldState) {
+                    for (const allocId of oldState.needsUploadIds) {
+                        if (!activeIds.has(allocId)) {
+                            activeIds.add(allocId);
+                            const splat = lookup.get(allocId);
+                            if (splat && !_queuedSplats.has(splat)) {
+                                activeState.needsUpload.push(splat);
+                                _queuedSplats.add(splat);
+                            }
+                        }
+                    }
+                }
+            }
+            _queuedSplats.clear();
+        }
+
+        // Pass 3: cleanup all old states (including the previously sorted one)
         for (let v = this.sortedVersion; v < newVersion; v++) {
             const oldState = this.worldStates.get(v);
             if (oldState) {
@@ -767,11 +956,13 @@ class GSplatManager {
         const { rotationDelta, translationDelta } = this.calculateColorCameraDeltas();
 
         // check each splat for full or color update
+        let uploadedBlocks = 0;
         state.splats.forEach((splat) => {
             // Check if splat's transform changed (needs full update)
             if (splat.update()) {
 
                 _updatedSplats.push(splat);
+                uploadedBlocks += splat.intervalAllocIds.length;
 
                 // Reset accumulators for fully updated splats
                 splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
@@ -795,10 +986,15 @@ class GSplatManager {
                 if (splat.colorAccumulatedRotation >= angleThreshold ||
                     splat.colorAccumulatedTranslation >= distThreshold) {
                     _splatsNeedingColorUpdate.push(splat);
+                    uploadedBlocks += splat.intervalAllocIds.length;
                     splat.resetColorAccumulators(angleThreshold, distThreshold);
                 }
             }
         });
+
+        // accumulate buffer copy stats for this frame (counted in alloc blocks, not splats)
+        this.bufferCopyUploaded += uploadedBlocks;
+        this.bufferCopyTotal = this._allocationMap.size;
 
         // Batch render all updated splats in a single render pass
         if (_updatedSplats.length > 0) {
@@ -844,7 +1040,12 @@ class GSplatManager {
             }
         }
 
-        return cameraMoved || cameraRotated;
+        // FOV change check (trigger when FOV differs by more than ~2%)
+        const currentFov = this.cameraNode.camera.fov;
+        const fovChanged = this.lastLodCameraFov < 0 ||
+            Math.abs(currentFov - this.lastLodCameraFov) > this.lastLodCameraFov * 0.02;
+
+        return cameraMoved || cameraRotated || fovChanged;
     }
 
     /**
@@ -994,7 +1195,7 @@ class GSplatManager {
             if (dist > maxDist) maxDist = dist;
         }
 
-        return Math.max(maxDist, 1); // Avoid division by zero
+        return Math.max(maxDist, 1);
     }
 
     /**
@@ -1030,8 +1231,9 @@ class GSplatManager {
         const globalMaxDistance = this.computeGlobalMaxDistance();
 
         // Phase 2: Evaluate optimal LODs for all octrees and calculate padding for active placements
+        let totalOptimalSplats = 0;
         for (const [, inst] of this.octreeInstances) {
-            inst.evaluateOptimalLods(this.cameraNode, this.scene.gsplat);
+            totalOptimalSplats += inst.evaluateOptimalLods(this.cameraNode, this.scene.gsplat, this._budgetScale);
             for (const placement of inst.activePlacements) {
                 const resource = /** @type {GSplatResourceBase} */ (placement.resource);
                 const numSplats = resource?.numSplats ?? 0;
@@ -1044,6 +1246,22 @@ class GSplatManager {
         // content may change after LOD evaluation applies changes
         const adjustedBudget = Math.max(1, octreeBudget - paddingEstimate);
 
+        // Adapt _budgetScale to bring LOD estimates closer to budget by uniformly shifting
+        // all LOD boundaries. Larger base distance → more nodes at LOD 0 → more splats, so:
+        // under budget (ratio < 1) → increase scale, over budget (ratio > 1) → decrease scale.
+        // The scale intentionally targets ~60-140% of budget (wide dead zone), leaving the
+        // balancer to handle the remaining gap with per-node adjustments.
+        if (totalOptimalSplats > 0) {
+            const ratio = totalOptimalSplats / adjustedBudget;
+            const budgetScaleDeadZone = 0.4;
+            const budgetScaleBlendRate = 0.3;
+            if (ratio > 1 + budgetScaleDeadZone || ratio < 1 - budgetScaleDeadZone) {
+                const invCorrection = 1 / Math.sqrt(ratio);
+                this._budgetScale *= 1 + (invCorrection - 1) * budgetScaleBlendRate;
+                this._budgetScale = Math.max(0.01, Math.min(this._budgetScale, 100.0));
+            }
+        }
+
         // Budget balancing across all octrees
         this._budgetBalancer.balance(this.octreeInstances, adjustedBudget, globalMaxDistance);
 
@@ -1054,7 +1272,32 @@ class GSplatManager {
         }
     }
 
+    /**
+     * Detects if the work buffer format has been replaced (e.g. dataFormat changed) and
+     * recreates the work buffer if needed.
+     *
+     * @private
+     */
+    handleFormatChange() {
+        const currentFormat = this.scene.gsplat.format;
+        if (this.workBuffer.format !== currentFormat) {
+            this.workBuffer.destroy();
+            this.workBuffer = new GSplatWorkBuffer(this.device, currentFormat);
+            this.renderer.workBuffer = this.workBuffer;
+            this.renderer.onWorkBufferFormatChanged();
+            this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
+            this._workBufferRebuildRequired = true;
+            this.sortNeeded = true;
+        }
+    }
+
     update() {
+
+        // reset per-frame buffer copy stats
+        this.bufferCopyUploaded = 0;
+        this.bufferCopyTotal = 0;
+
+        this.handleFormatChange();
 
         // detect work buffer format changes (extra streams added) and schedule a full rebuild
         const wbFormatVersion = this.workBuffer.format.extraStreamsVersion;
@@ -1101,6 +1344,7 @@ class GSplatManager {
 
                 const isDirty = inst.update();
                 this.layerPlacementsDirty ||= isDirty;
+                this._placementSetChanged ||= inst.consumePlacementSetChanged();
 
                 const instNeeds = inst.consumeNeedsLodUpdate();
                 anyInstanceNeedsLodUpdate ||= instNeeds;
@@ -1136,7 +1380,7 @@ class GSplatManager {
         }
 
         // if culling is active but we do not need to sort, check if the frustum changed requiring re-culling
-        if (this.compaction && !this.sortNeeded && this.testFrustumChanged()) {
+        if ((this.compaction || this.intervalCompaction) && !this.sortNeeded && this.testFrustumChanged()) {
 
             // store the current camera frustum related properties
             this.lastCullingCameraFwd.copy(this.cameraNode.forward);
@@ -1161,6 +1405,11 @@ class GSplatManager {
         if (this.scene.gsplat.dirty) {
             this.layerPlacementsDirty = true;
             this.renderer.updateOverdrawMode(this.scene.gsplat);
+
+            // Re-render all splats into the work buffer so persistent data (e.g. debug
+            // colorization) is refreshed immediately instead of trickling in over time.
+            this._workBufferRebuildRequired = true;
+            this.sortNeeded = true;
         }
 
         // when camera or octree need LOD evaluated, or params are dirty, or resources completed, or new instances added
@@ -1172,8 +1421,10 @@ class GSplatManager {
             }
 
             // update last camera data when LOD was evaluated
-            this.lastLodCameraPos.copy(this.cameraNode.getPosition());
-            this.lastLodCameraFwd.copy(this.cameraNode.forward);
+            const cameraNode = this.cameraNode;
+            this.lastLodCameraPos.copy(cameraNode.getPosition());
+            this.lastLodCameraFwd.copy(cameraNode.forward);
+            this.lastLodCameraFov = cameraNode.camera.fov;
 
             const budget = this.scene.gsplat.splatBudget;
 
@@ -1182,6 +1433,7 @@ class GSplatManager {
                 this._enforceBudget(budget);
             } else {
                 // Budget disabled - use LOD distances only, no budget adjustments
+                this._budgetScale = 1.0;
                 for (const [, inst] of this.octreeInstances) {
                     inst.updateLod(this.cameraNode, this.scene.gsplat);
                 }
@@ -1219,12 +1471,23 @@ class GSplatManager {
 
         // Apply work buffer updates first (both GPU and CPU)
         // For GPU: ensures sort uses current data
+        // Skip when sortedBefore is false — the state is waiting for fresh sort data
+        // (e.g. after switching from GPU to CPU sorting) and rendering with stale
+        // order data would produce incorrect frames.
         const sortedState = this.worldStates.get(this.sortedVersion);
-        if (sortedState) {
+        if (sortedState?.sortedBefore) {
             if (this._workBufferRebuildRequired) {
-                const count = this.useGpuSorting ? sortedState.totalUsedPixels : sortedState.totalActiveSplats;
-                this.rebuildWorkBuffer(sortedState, count);
+                const count = sortedState.totalActiveSplats;
+                this.rebuildWorkBuffer(sortedState, count, true);
                 this._workBufferRebuildRequired = false;
+
+                // rebuildWorkBuffer may resize, which destroys/recreates orderBuffer — rebind it
+                this.renderer.setOrderData();
+
+                // boundsBaseIndex may have changed — force interval metadata re-upload
+                if (this.intervalCompaction) {
+                    this.intervalCompaction._uploadedVersion = -1;
+                }
             } else {
                 this.applyWorkBufferUpdates(sortedState);
             }
@@ -1283,13 +1546,13 @@ class GSplatManager {
         if (this.cpuCompactionNeeded) {
             this.cpuCompactionNeeded = false;
             this._runCpuCompaction();
-        } else if (this.compaction && !gpuSortedThisFrame) {
+        } else if ((this.compaction || this.intervalCompaction) && !gpuSortedThisFrame) {
             // Refresh the per-frame indirect draw slot (sortGpu already handled GPU-sort frames)
             this.refreshIndirectDraw();
         }
 
         // renderer update and camera tracking
-        if (sortedState) {
+        if (sortedState?.sortedBefore) {
             this.renderer.frameUpdate(this.scene.gsplat);
             this.updateColorCameraTracking();
         }
@@ -1310,6 +1573,13 @@ class GSplatManager {
         // fire frame:ready event
         this.fireFrameReadyEvent();
 
+        // If event listeners dirtied params (e.g. changed LOD range), ensure LOD is re-evaluated
+        if (this.scene.gsplat.dirty) {
+            for (const [, inst] of this.octreeInstances) {
+                inst.needsLodUpdate = true;
+            }
+        }
+
         // return the number of active splats for stats
         return sortedState ? sortedState.totalActiveSplats : 0;
     }
@@ -1325,21 +1595,31 @@ class GSplatManager {
         Debug.assert(keyGenerator && gpuSorter, 'GPU sorter not initialized');
         if (!keyGenerator || !gpuSorter) return;
 
-        const elementCount = worldState.totalUsedPixels;
+        const elementCount = worldState.totalActiveSplats;
         if (elementCount === 0) return;
+
+        // Lazily create interval compaction
+        if (!this.intervalCompaction) {
+            this.intervalCompaction = new GSplatIntervalCompaction(this.device);
+        }
 
         // Handle first-time setup for GPU path
         if (!worldState.sortedBefore) {
             worldState.sortedBefore = true;
-            this.rebuildWorkBuffer(worldState, elementCount);
 
-            // clean up old world states
+            // Clean up old states first so skipped upload requirements are merged
+            // into this world state before rebuildWorkBuffer renders them
             this.cleanupOldWorldStates(worldState.version);
             this.sortedVersion = worldState.version;
+
+            this.rebuildWorkBuffer(worldState, elementCount);
         }
 
-        // Run frustum culling (after any rebuild) so the visibility texture
-        // is always consistent with the current work buffer data before compaction.
+        // Upload interval metadata after rebuild so boundsBaseIndex is assigned
+        this.intervalCompaction.uploadIntervals(worldState);
+
+        // Run frustum culling when available (after any rebuild) so the visibility
+        // texture is consistent with the current work buffer data before compaction.
         const cullingEnabled = this.canCull;
         if (cullingEnabled) {
             const state = this.worldStates.get(this.sortedVersion);
@@ -1347,6 +1627,17 @@ class GSplatManager {
                 this._runFrustumCulling(state);
             }
         }
+
+        // Always run interval compaction (culling or not)
+        const numIntervals = worldState.totalIntervals;
+        const totalActiveSplats = worldState.totalActiveSplats;
+        const nodeVisibilityTexture = cullingEnabled ? this.workBuffer.nodeVisibilityTexture : null;
+        this.intervalCompaction.dispatchCompact(nodeVisibilityTexture, numIntervals, totalActiveSplats, cullingEnabled);
+
+        // Allocate indirect draw/dispatch slots and write args from visible count
+        this.allocateAndWriteIntervalIndirectArgs(numIntervals);
+
+        const compactedSplatIds = this.intervalCompaction.compactedSplatIds;
 
         // number of bits used for sorting to match CPU sorter
         const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
@@ -1356,139 +1647,86 @@ class GSplatManager {
         // Compute min/max distances for key normalization
         const { minDist, maxDist } = this.computeDistanceRange(worldState);
 
-        // Run compaction if culling is active
-        const compactedSplatIds = cullingEnabled ? this.dispatchGpuCompaction(elementCount) : null;
-
-        // Generate sort keys and run GPU radix sort
+        // Generate sort keys and run GPU radix sort (always indirect, compaction is always on)
         const sortedIndices = this.dispatchGpuSort(
             elementCount, roundedNumBits, minDist, maxDist, compactedSplatIds
         );
 
         // Apply sorted results to the renderer
-        this.applyGpuSortResults(worldState, sortedIndices, compactedSplatIds);
+        this.applyGpuSortResults(worldState, sortedIndices);
     }
 
     /**
-     * Runs GPU stream compaction: filters visible splats into a dense buffer and
-     * prepares indirect draw/dispatch arguments from the visible count.
+     * Allocates per-frame indirect draw and dispatch slots and runs writeIndirectArgs
+     * for interval compaction.
      *
-     * @param {number} elementCount - Total number of splats.
-     * @returns {StorageBuffer|null} The compacted splat IDs buffer, or null if compaction failed.
+     * @param {number} numIntervals - Total interval count (index into prefix sum for visible count).
      * @private
      */
-    dispatchGpuCompaction(elementCount) {
-        if (!this.compaction) {
-            this.compaction = new GSplatCompaction(this.device);
-        }
-
-        const pcNodeIndexTexture = this.workBuffer.getTexture('pcNodeIndex');
-        const nodeVisibilityTexture = this.workBuffer.nodeVisibilityTexture;
-        if (!pcNodeIndexTexture || !nodeVisibilityTexture) return null;
-
-        // Run compaction: produces compactedSplatIds and visibleCount
-        this.compaction.dispatchCompact(
-            pcNodeIndexTexture,
-            nodeVisibilityTexture,
-            elementCount,
-            this.workBuffer.textureSize
-        );
-
-        this.allocateAndWriteIndirectArgs(elementCount);
-
-        return this.compaction.compactedSplatIds;
+    allocateAndWriteIntervalIndirectArgs(numIntervals) {
+        this.indirectDrawSlot = this.device.getIndirectDrawSlot(1);
+        this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(2);
+        const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
+        ic.writeIndirectArgs(this.indirectDrawSlot, this.indirectDispatchSlot, numIntervals);
+        this.lastCompactedNumIntervals = numIntervals;
     }
 
     /**
-     * Generates sort keys and runs GPU radix sort. Uses indirect dispatch when
-     * compaction is active (sorting only visible splats), or direct dispatch otherwise.
+     * Generates sort keys and runs GPU radix sort using indirect dispatch
+     * (sorting only the visible splat count determined by interval compaction).
      *
      * @param {number} elementCount - Total number of splats.
      * @param {number} roundedNumBits - Number of sort bits (rounded to multiple of 4).
      * @param {number} minDist - Minimum distance for key normalization.
      * @param {number} maxDist - Maximum distance for key normalization.
-     * @param {StorageBuffer|null} compactedSplatIds - Compacted splat IDs, or null for direct sort.
+     * @param {StorageBuffer|null} compactedSplatIds - Compacted splat IDs from interval compaction.
      * @returns {StorageBuffer} The sorted indices buffer.
      * @private
      */
     dispatchGpuSort(elementCount, roundedNumBits, minDist, maxDist, compactedSplatIds) {
         const keyGenerator = /** @type {GSplatSortKeyCompute} */ (this.keyGenerator);
         const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
+        const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
 
-        if (compactedSplatIds) {
-            const compaction = /** @type {GSplatCompaction} */ (this.compaction);
-
-            // Generate sort keys using indirect dispatch (only visibleCount threads launched)
-            const keysBuffer = keyGenerator.generateIndirect(
-                this.workBuffer,
-                this.cameraNode,
-                this.scene.gsplat.radialSorting,
-                elementCount,
-                roundedNumBits,
-                minDist,
-                maxDist,
-                /** @type {StorageBuffer} */ (compactedSplatIds),
-                /** @type {StorageBuffer} */ (compaction.sortElementCountBuffer),
-                this.indirectDispatchSlot
-            );
-
-            // Run GPU radix sort with indirect dispatch (sorts only visibleCount elements)
-            return gpuSorter.sortIndirect(
-                keysBuffer,
-                elementCount,
-                roundedNumBits,
-                this.indirectDispatchSlot,
-                /** @type {StorageBuffer} */ (compaction.sortElementCountBuffer)
-            );
-        }
-
-        // Generate sort keys from work buffer world-space positions (direct dispatch)
-        const keysBuffer = keyGenerator.generate(
+        // Generate sort keys using indirect dispatch (slot 0: key gen workgroups)
+        const keysBuffer = keyGenerator.generateIndirect(
             this.workBuffer,
             this.cameraNode,
             this.scene.gsplat.radialSorting,
             elementCount,
             roundedNumBits,
             minDist,
-            maxDist
+            maxDist,
+            /** @type {StorageBuffer} */ (compactedSplatIds),
+            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
+            this.indirectDispatchSlot
         );
 
-        // Run GPU radix sort (direct dispatch)
-        return gpuSorter.sort(keysBuffer, elementCount, roundedNumBits);
+        // Run GPU radix sort with indirect dispatch (slot 1: sort workgroups).
+        // Pass compactedSplatIds as initial values so the sort output contains actual
+        // splat IDs rather than indices into the compacted buffer (single indirection).
+        return gpuSorter.sortIndirect(
+            keysBuffer,
+            elementCount,
+            roundedNumBits,
+            this.indirectDispatchSlot + 1,
+            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
+            /** @type {StorageBuffer} */ (compactedSplatIds)
+        );
     }
 
     /**
-     * Applies GPU sort results to the renderer. Sets up indirect draw when compaction
-     * is active, or direct draw otherwise (destroying compaction if transitioning).
+     * Applies GPU sort results to the renderer with indirect draw from interval compaction.
+     * The sortedIndices buffer already contains actual splat IDs (single indirection) because
+     * compactedSplatIds were fed as initial values to the radix sort.
      *
      * @param {GSplatWorldState} worldState - The world state being sorted.
-     * @param {StorageBuffer} sortedIndices - The sorted indices buffer from the radix sort.
-     * @param {StorageBuffer|null} compactedSplatIds - Compacted splat IDs, or null if no compaction.
+     * @param {StorageBuffer} sortedIndices - Buffer containing sorted splat IDs.
      * @private
      */
-    applyGpuSortResults(worldState, sortedIndices, compactedSplatIds) {
-        const elementCount = worldState.totalUsedPixels;
-
-        if (compactedSplatIds) {
-            // Set sorted indices directly on renderer (no CPU upload needed)
-            this.renderer.setOrderBuffer(sortedIndices);
-
-            // Set up indirect draw on the renderer (GPU path: double indirection)
-            this.sortedCompaction = false;
-            const compaction = /** @type {GSplatCompaction} */ (this.compaction);
-            this.renderer.setIndirectDraw(this.indirectDrawSlot, /** @type {StorageBuffer} */ (compaction.compactedSplatIds), /** @type {StorageBuffer} */ (compaction.numSplatsBuffer), false);
-
-            // Update renderer for indirect draw (instancingCount and numSplats are GPU-driven)
-            this.renderer.updateIndirect(worldState.textureSize);
-        } else {
-            // Transitioning from compaction to non-compaction: destroy compaction
-            this.destroyCompaction();
-
-            // Set sorted indices
-            this.renderer.setOrderBuffer(sortedIndices);
-
-            // Non-compacted path: update renderer with CPU-side count
-            this.renderer.update(elementCount, worldState.textureSize);
-        }
+    applyGpuSortResults(worldState, sortedIndices) {
+        const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
+        this.renderer.setGpuSortedRendering(this.indirectDrawSlot, sortedIndices, /** @type {StorageBuffer} */ (ic.numSplatsBuffer), worldState.textureSize);
     }
 
     /**
@@ -1499,7 +1737,7 @@ class GSplatManager {
      * @private
      */
     _runFrustumCulling(worldState) {
-        this.workBuffer.updateTransformsTexture(worldState.splats);
+        this.workBuffer.updateTransformsTexture(worldState.boundsGroups);
 
         const cam = this.cameraNode.camera;
         this.workBuffer.updateNodeVisibility(cam.projectionMatrix, cam.viewMatrix);
@@ -1514,7 +1752,7 @@ class GSplatManager {
      */
     allocateAndWriteIndirectArgs(totalSplats) {
         this.indirectDrawSlot = this.device.getIndirectDrawSlot(1);
-        this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(1);
+        this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(2);
         const compaction = /** @type {GSplatCompaction} */ (this.compaction);
         compaction.writeIndirectArgs(this.indirectDrawSlot, this.indirectDispatchSlot, totalSplats);
         this.lastCompactedTotalSplats = totalSplats;
@@ -1529,16 +1767,21 @@ class GSplatManager {
      * @private
      */
     refreshIndirectDraw() {
-        const compaction = /** @type {GSplatCompaction} */ (this.compaction);
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (!sortedState) return;
 
-        // Re-run writeIndirectArgs with the existing visibleCount (unchanged since last sort)
-        this.allocateAndWriteIndirectArgs(this.lastCompactedTotalSplats);
-
-        // Re-bind the indirect draw slot on the renderer (slot is per-frame)
-        this.renderer.setIndirectDraw(this.indirectDrawSlot, /** @type {StorageBuffer} */ (compaction.compactedSplatIds), /** @type {StorageBuffer} */ (compaction.numSplatsBuffer), this.sortedCompaction);
-        this.renderer.updateIndirect(sortedState.textureSize);
+        if (this.intervalCompaction) {
+            // GPU sort path: radix sort output already contains sorted splat IDs
+            this.allocateAndWriteIntervalIndirectArgs(this.lastCompactedNumIntervals);
+            const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
+            const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
+            this.renderer.setGpuSortedRendering(this.indirectDrawSlot, /** @type {StorageBuffer} */ (gpuSorter.sortedIndices), /** @type {StorageBuffer} */ (ic.numSplatsBuffer), sortedState.textureSize);
+        } else {
+            // CPU sort path: compacted buffer already contains sorted visible splat IDs
+            this.allocateAndWriteIndirectArgs(this.lastCompactedTotalSplats);
+            const compaction = /** @type {GSplatCompaction} */ (this.compaction);
+            this.renderer.setGpuSortedRendering(this.indirectDrawSlot, /** @type {StorageBuffer} */ (compaction.compactedSplatIds), /** @type {StorageBuffer} */ (compaction.numSplatsBuffer), sortedState.textureSize);
+        }
     }
 
     /**
@@ -1580,16 +1823,13 @@ class GSplatManager {
 
         this.allocateAndWriteIndirectArgs(elementCount);
 
-        // Set up indirect draw on the renderer with sortedCompaction=true, since the
-        // compacted buffer already contains sorted visible splatIds (single indirection)
-        this.sortedCompaction = true;
-        this.renderer.setIndirectDraw(
+        // Set up GPU-sorted rendering: compacted buffer already contains sorted visible splatIds
+        this.renderer.setGpuSortedRendering(
             this.indirectDrawSlot,
             /** @type {StorageBuffer} */ (this.compaction.compactedSplatIds),
             /** @type {StorageBuffer} */ (this.compaction.numSplatsBuffer),
-            true  // sortedCompaction: single indirection (CPU sort + GPU compaction)
+            sortedState.textureSize
         );
-        this.renderer.updateIndirect(sortedState.textureSize);
     }
 
     /**
@@ -1709,11 +1949,10 @@ class GSplatManager {
         return {
             command: 'intervals',
             textureSize: worldState.textureSize,
-            totalUsedPixels: worldState.totalUsedPixels,
             totalActiveSplats: worldState.totalActiveSplats,
             version: worldState.version,
             ids: worldState.splats.map(splat => splat.resource.id),
-            lineStarts: worldState.splats.map(splat => splat.lineStart),
+            pixelOffsets: worldState.splats.map(splat => splat.intervalOffsets),
 
             // TODO: consider storing this in typed array and transfer it to sorter worker
             intervals: worldState.splats.map(splat => splat.intervals)

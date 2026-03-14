@@ -63,23 +63,23 @@ const config = {
 };
 
 // LOD preset definitions with customizable distances
-/** @type {Record<string, { range: number[], lodDistances: number[] }>} */
+/** @type {Record<string, { range: number[], lodBaseDistance: number }>} */
 const LOD_PRESETS = {
     'desktop-max': {
         range: [0, 5],
-        lodDistances: [15, 30, 80, 250, 300]
+        lodBaseDistance: 15
     },
     'desktop': {
         range: [0, 2],
-        lodDistances: [15, 30, 80, 250, 300]
+        lodBaseDistance: 15
     },
     'mobile-max': {
         range: [1, 2],
-        lodDistances: [15, 30, 80, 250, 300]
+        lodBaseDistance: 15
     },
     'mobile': {
         range: [2, 5],
-        lodDistances: [15, 30, 80, 250, 300]
+        lodBaseDistance: 15
     }
 };
 
@@ -119,6 +119,7 @@ assetListLoader.load(() => {
     data.set('debugLod', false);
     data.set('colorizeSH', false);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
+    data.set('splatBudget', pc.platform.mobile ? 1 : 3);
 
     app.scene.gsplat.colorizeLod = !!data.get('debugLod');
     app.scene.gsplat.colorizeColorUpdate = !!data.get('colorizeSH');
@@ -148,11 +149,30 @@ assetListLoader.load(() => {
         const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
         app.scene.gsplat.lodRangeMin = presetData.range[0];
         app.scene.gsplat.lodRangeMax = presetData.range[1];
-        gs.lodDistances = presetData.lodDistances;
+        gs.lodBaseDistance = presetData.lodBaseDistance;
+        data.set('lodBaseDistance', presetData.lodBaseDistance);
     };
 
     applyPreset();
     data.on('lodPreset:set', applyPreset);
+
+    data.set('lodMultiplier', 4);
+    gs.lodMultiplier = 4;
+
+    data.on('lodBaseDistance:set', () => {
+        gs.lodBaseDistance = data.get('lodBaseDistance');
+    });
+    data.on('lodMultiplier:set', () => {
+        gs.lodMultiplier = data.get('lodMultiplier');
+    });
+
+    const applySplatBudget = () => {
+        const millions = data.get('splatBudget');
+        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
+    };
+
+    applySplatBudget();
+    data.on('splatBudget:set', applySplatBudget);
 
     // Create a camera with fly controls
     const camera = new pc.Entity('camera');

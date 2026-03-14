@@ -13,8 +13,10 @@ import {
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    BINDGROUP_MESH_UB
+    CULLFACE_NONE,
+    BINDGROUP_MESH_UB,
+    FRONTFACE_CCW,
+    FRONTFACE_CW
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -35,7 +37,7 @@ import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
-import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
+import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -191,7 +193,7 @@ class Renderer {
 
         // clustered passes
         if (this.scene.clusteredLightingEnabled) {
-            this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
+            this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.shadowRenderer,
                 this._shadowRendererLocal, this.lightTextureAtlas);
         }
 
@@ -250,8 +252,6 @@ class Renderer {
         this.opacityMapId = scope.resolve('texture_opacityMap');
 
         this.exposureId = scope.resolve('exposure');
-        this.twoSidedLightingNegScaleFactorId = scope.resolve('twoSidedLightingNegScaleFactor');
-        this.twoSidedLightingNegScaleFactorId.setValue(0);
 
         this.morphPositionTex = scope.resolve('morphPositionTex');
         this.morphNormalTex = scope.resolve('morphNormalTex');
@@ -482,27 +482,22 @@ class Renderer {
         }
     }
 
-    setupCullMode(cullFaces, flipFactor, drawCall) {
+    setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall) {
         const material = drawCall.material;
-        let mode = CULLFACE_NONE;
-        if (cullFaces) {
-            let flipFaces = 1;
+        const flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
 
-            if (material.cull === CULLFACE_FRONT || material.cull === CULLFACE_BACK) {
-                flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
-            }
-
-            if (flipFaces < 0) {
-                mode = material.cull === CULLFACE_FRONT ? CULLFACE_BACK : CULLFACE_FRONT;
-            } else {
-                mode = material.cull;
-            }
+        let frontFace = material.frontFace;
+        if (flipFaces < 0) {
+            frontFace = frontFace === FRONTFACE_CCW ? FRONTFACE_CW : FRONTFACE_CCW;
         }
-        this.device.setCullMode(mode);
 
-        if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
-            this.twoSidedLightingNegScaleFactorId.setValue(drawCall.node.worldScaleSign);
-        }
+        this.device.setCullMode(cullFaces ? material.cull : CULLFACE_NONE);
+        this.device.setFrontFace(frontFace);
+    }
+
+    setupCullMode(cullFaces, flipFactor, drawCall) {
+        Debug.deprecated('pc.Renderer.setupCullMode is deprecated. Use \'pc.Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
+        this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
     }
 
     updateCameraFrustum(camera) {
@@ -551,6 +546,9 @@ class Renderer {
 
         // Cull mode
         device.setCullMode(material.cull);
+
+        // Front face
+        device.setFrontFace(material.frontFace);
 
         // Alpha test
         if (material.opacityMap) {

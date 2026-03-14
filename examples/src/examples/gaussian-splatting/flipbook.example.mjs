@@ -76,9 +76,7 @@ assetListLoader.load(() => {
     roomEntity.setLocalScale(30, 30, 30);
     app.root.addChild(roomEntity);
 
-    // Mini-Stats with default options
-    const msOptions = pc.MiniStats.getDefaultOptions();
-    const miniStats = new pc.MiniStats(app, msOptions); // eslint-disable-line no-unused-vars
+    const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
@@ -117,7 +115,7 @@ assetListLoader.load(() => {
     player.addComponent('script');
     const flipbook = player.script.create(GsplatFlipbook);
     if (flipbook) {
-        flipbook.fps = 30;
+        flipbook.fps = 15;
         flipbook.folder = 'https://code.playcanvas.com/examples_data/example_basketball_02';
         flipbook.filenamePattern = '{frame:03}.compressed.ply';
         flipbook.startFrame = 1;
@@ -130,8 +128,7 @@ assetListLoader.load(() => {
     player.setLocalScale(80, 80, 80);
     app.root.addChild(player);
 
-    // set alpha clip value, used by shadows
-    app.scene.gsplat.material.setParameter('alphaClip', 0.1);
+    app.scene.gsplat.alphaClip = 0.1;
 
     // Create shadow catcher
     const shadowCatcher = new pc.Entity('ShadowCatcher');

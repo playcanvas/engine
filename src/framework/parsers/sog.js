@@ -9,6 +9,7 @@ import { GSplatSogResource } from '../../scene/gsplat/gsplat-sog-resource.js';
 // and fire progress events on the target
 const combineProgress = (target, assets) => {
     const map = new Map();
+    const count = assets.length;
 
     const fire = () => {
         let loaded = 0;
@@ -18,6 +19,13 @@ const combineProgress = (target, assets) => {
             loaded += value.loaded;
             total += value.total;
         });
+
+        // Estimate total for assets that haven't reported yet by assuming
+        // they are roughly the same average size as the ones that have.
+        const reporting = map.size;
+        if (reporting > 0 && reporting < count) {
+            total = Math.ceil(total * count / reporting);
+        }
 
         target.fire('progress', loaded, total);
     };

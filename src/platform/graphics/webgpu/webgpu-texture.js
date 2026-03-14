@@ -327,6 +327,9 @@ class WebgpuTexture {
     uploadImmediate(device, texture) {
 
         if (texture._needsUpload || texture._needsMipmapsUpload) {
+            Debug.assert(!device.insideRenderPass,
+                `Texture.upload() for "${texture.name}" was called while inside a render pass, which is not currently supported. ` +
+                'Move texture updates to the before() or after() function of the RenderPass.');
             this.uploadData(device);
 
             texture._needsUpload = false;

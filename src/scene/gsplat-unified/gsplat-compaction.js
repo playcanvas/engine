@@ -17,6 +17,7 @@ import { computeGsplatCompactFlagSource } from '../shader-lib/wgsl/chunks/gsplat
 import { computeGsplatCompactScatterSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-compact-scatter.js';
 import { computeGsplatWriteIndirectArgsSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-write-indirect-args.js';
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
+import { RADIX_SORT_ELEMENTS_PER_WORKGROUP } from '../graphics/compute-radix-sort.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 
 /**
@@ -33,8 +34,8 @@ const SPLATS_PER_THREAD = 4;
 // Instance size must match GSplatResourceBase.instanceSize
 const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
 
-// Sort threads per workgroup must match ComputeRadixSort (16x16 = 256)
-const SORT_THREADS_PER_WORKGROUP = 256;
+// Elements per workgroup for sort dispatch (must match ComputeRadixSort)
+const SORT_ELEMENTS_PER_WORKGROUP = RADIX_SORT_ELEMENTS_PER_WORKGROUP;
 
 // Reusable Vec2 for dispatch size calculations (avoids per-frame allocations)
 const _dispatchSize = new Vec2();
@@ -380,7 +381,8 @@ class GSplatCompaction {
 
         const cdefines = new Map([
             ['{INSTANCE_SIZE}', GSplatResourceBase.instanceSize],
-            ['{SORT_THREADS_PER_WORKGROUP}', SORT_THREADS_PER_WORKGROUP]
+            ['{KEYGEN_THREADS_PER_WORKGROUP}', 256],
+            ['{SORT_ELEMENTS_PER_WORKGROUP}', SORT_ELEMENTS_PER_WORKGROUP]
         ]);
 
         const shader = new Shader(device, {

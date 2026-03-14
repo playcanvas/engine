@@ -89,6 +89,8 @@ assetListLoader.load(() => {
 
     let splatEntity = null;
 
+    app.scene.gsplat.lodBehindPenalty = 3;
+
     /**
      * Calculate the bounding box of an entity.
      *
@@ -165,6 +167,7 @@ assetListLoader.load(() => {
     // Initialize data values
     data.set('data', {
         skydome: false,
+        compact: false,
         orientation: 180,
         tonemapping: pc.TONEMAP_LINEAR,
         grading: {
@@ -225,6 +228,8 @@ assetListLoader.load(() => {
     data.on('*:set', (/** @type {string} */ path) => {
         if (path === 'data.skydome') {
             applySkydome();
+        } else if (path === 'data.compact') {
+            app.scene.gsplat.dataFormat = data.get('data.compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
         } else if (path === 'data.orientation') {
             // Apply orientation to splat entity
             if (splatEntity) {

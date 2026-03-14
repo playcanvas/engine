@@ -13,7 +13,11 @@ export default /* wgsl */`
 
     varying uv0: vec2f;
 
-    fn reproject(uv: vec2f, depth: f32) -> vec2f {
+    fn reproject(uv_in: vec2f, depth: f32) -> vec2f {
+
+        // uv was Y-flipped by getImageEffectUV for texture sampling,
+        // un-flip to reconstruct correct NDC (viewProj matrices use standard Y convention)
+        var uv = vec2f(uv_in.x, 1.0 - uv_in.y);
 
         var ndc = vec4f(uv * 2.0 - 1.0, depth, 1.0);
 
@@ -27,7 +31,11 @@ export default /* wgsl */`
         // world position to screen space of the previous frame
         let screenPrevious = uniform.matrix_viewProjectionPrevious * worldPosition;
 
-        return (screenPrevious.xy / screenPrevious.w) * 0.5 + 0.5;
+        // flip result back to texture sampling convention
+        var result = (screenPrevious.xy / screenPrevious.w) * 0.5 + 0.5;
+        result.y = 1.0 - result.y;
+
+        return result;
     }
 
     fn colorClamp(uv: vec2f, historyColor: vec4f) -> vec4f {
@@ -54,16 +62,8 @@ export default /* wgsl */`
     fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         var output: FragmentOutput;
 
-        var uv = input.uv0;
-
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // This hack is needed on webgpu, which makes TAA work but the resulting image is upside-down.
-        // We could flip the image in the following pass, but ideally a better solution should be found.
-        uv.y = 1.0 - uv.y;
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
         // current frame
-        let srcColor = textureSample(sourceTexture, sourceTextureSampler, uv);
+        let srcColor = textureSample(sourceTexture, sourceTextureSampler, uv0);
 
         // current depth is in linear space, convert it to non-linear space
         let linearDepth = getLinearScreenDepth(uv0);
@@ -85,7 +85,7 @@ export default /* wgsl */`
         #endif
 
         // handle disocclusion by clamping the history color
-        let historyColorClamped = colorClamp(uv, historyColor);
+        let historyColorClamped = colorClamp(uv0, historyColor);
 
         // handle history buffer outside of the frame
         let mixFactor_condition = historyUv.x < 0.0 || historyUv.x > 1.0 || historyUv.y < 0.0 || historyUv.y > 1.0;

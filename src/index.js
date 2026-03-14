@@ -180,8 +180,9 @@ export { Skeleton } from './scene/animation/skeleton.js';
 export { ComputeRadixSort } from './scene/graphics/compute-radix-sort.js';
 export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
-export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js';
-export { RenderPassRadixSort } from './scene/graphics/render-pass-radix-sort.js';
+export { FramePass } from './platform/graphics/frame-pass.js';
+export { FramePassColorGrab } from './scene/graphics/frame-pass-color-grab.js';
+export { FramePassRadixSort } from './scene/graphics/frame-pass-radix-sort.js';
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
@@ -345,7 +346,7 @@ export { RenderPassPicker } from './framework/graphics/render-pass-picker.js';
 
 // FRAMEWORK / HANDLERS
 export { basisInitialize } from './framework/handlers/basis.js';
-export { dracoInitialize } from './framework/parsers/draco-decoder.js';
+export { dracoInitialize, dracoDecode } from './framework/parsers/draco-decoder.js';
 export { AnimClipHandler } from './framework/handlers/anim-clip.js';
 export { AnimStateGraphHandler } from './framework/handlers/anim-state-graph.js';
 export { AnimationHandler } from './framework/handlers/animation.js';
