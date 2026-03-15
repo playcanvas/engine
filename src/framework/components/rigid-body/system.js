@@ -2,9 +2,10 @@ import { now } from '../../../core/time.js';
 import { ObjectPool } from '../../../core/object-pool.js';
 import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
+import { Quat } from '../../../core/math/quat.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
+import { BODYFLAG_NORESPONSE_OBJECT, BODYSTATE_ACTIVE_TAG } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
@@ -516,7 +517,19 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
-        const props = ['mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'rollingFriction', 'restitution', 'type', 'group', 'mask'];
+        const props = [
+            'mass',
+            'linearDamping',
+            'angularDamping',
+            'linearFactor',
+            'angularFactor',
+            'friction',
+            'rollingFriction',
+            'restitution',
+            'type',
+            'group',
+            'mask'
+        ];
 
         for (const property of props) {
             if (data.hasOwnProperty(property)) {
@@ -1137,7 +1150,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
             if (numContacts > 0) {
                 // don't fire contact events for triggers
-                if (flags0 & BODYFLAG_NORESPONSE_OBJECT || flags1 & BODYFLAG_NORESPONSE_OBJECT) {
+                if ((flags0 & BODYFLAG_NORESPONSE_OBJECT) ||
+                    (flags1 & BODYFLAG_NORESPONSE_OBJECT)) {
+
                     const e0Events = e0.collision && (e0.collision.hasEvent('triggerenter') || e0.collision.hasEvent('triggerleave'));
                     const e1Events = e1.collision && (e1.collision.hasEvent('triggerenter') || e1.collision.hasEvent('triggerleave'));
                     const e0BodyEvents = e0.rigidbody && (e0.rigidbody.hasEvent('triggerenter') || e0.rigidbody.hasEvent('triggerleave'));
@@ -1265,7 +1280,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         // Check to see whether we need to update gravity on the dynamics world
         const gravity = this.dynamicsWorld.getGravity();
-        if (gravity.x() !== this._gravityFloat32[0] || gravity.y() !== this._gravityFloat32[1] || gravity.z() !== this._gravityFloat32[2]) {
+        if (gravity.x() !== this._gravityFloat32[0] ||
+            gravity.y() !== this._gravityFloat32[1] ||
+            gravity.z() !== this._gravityFloat32[2]) {
             gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
             this.dynamicsWorld.setGravity(gravity);
         }

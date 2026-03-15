@@ -186,12 +186,10 @@ class CameraComponent extends Component {
      * @returns {number} The id of the shader pass.
      */
     setShaderPass(name) {
-        const shaderPass = ShaderPass.get(this.system.app.graphicsDevice);
-        const shaderPassInfo = name
-            ? shaderPass.allocate(name, {
-                  isForward: true
-              })
-            : null;
+        const shaderPass =  ShaderPass.get(this.system.app.graphicsDevice);
+        const shaderPassInfo = name ? shaderPass.allocate(name, {
+            isForward: true
+        }) : null;
         this._camera.shaderPassInfo = shaderPassInfo;
 
         return shaderPassInfo.index;
@@ -709,7 +707,7 @@ class CameraComponent extends Component {
         const scene = this.system.app.scene;
 
         // Remove from old layers
-        oldLayers.forEach(layerId => {
+        oldLayers.forEach((layerId) => {
             const layer = scene.layers.getLayerById(layerId);
             layer?.removeCamera(this);
         });
@@ -718,7 +716,7 @@ class CameraComponent extends Component {
 
         // Only add to new layers if enabled
         if (this.enabled && this.entity.enabled) {
-            newValue.forEach(layerId => {
+            newValue.forEach((layerId) => {
                 const layer = scene.layers.getLayerById(layerId);
                 layer?.addCamera(this);
             });
@@ -921,6 +919,7 @@ class CameraComponent extends Component {
      * @type {RenderTarget}
      */
     set renderTarget(value) {
+
         Debug.call(() => {
             if (this._camera.framePasses.length > 0) {
                 Debug.warn(`Setting a render target on the camera ${this.entity.name} after the frame passes is not supported, set it up first.`);
@@ -1017,6 +1016,7 @@ class CameraComponent extends Component {
     _enableDepthLayer(value) {
         const hasDepthLayer = this.layers.find(layerId => layerId === LAYERID_DEPTH);
         if (hasDepthLayer) {
+
             /** @type {Layer} */
             const depthLayer = this.system.app.scene.layers.getLayerById(LAYERID_DEPTH);
 

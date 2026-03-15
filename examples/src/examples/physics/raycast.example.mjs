@@ -9,7 +9,7 @@ pc.WasmModule.setConfig('Ammo', {
     wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
     fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
 });
-await new Promise(resolve => {
+await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -28,8 +28,22 @@ const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.keyboard = new pc.Keyboard(document.body);
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem, pc.ScriptComponentSystem, pc.CollisionComponentSystem, pc.RigidBodyComponentSystem, pc.ElementComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.JsonHandler, pc.FontHandler];
+createOptions.componentSystems = [
+    pc.RenderComponentSystem,
+    pc.CameraComponentSystem,
+    pc.LightComponentSystem,
+    pc.ScriptComponentSystem,
+    pc.CollisionComponentSystem,
+    pc.RigidBodyComponentSystem,
+    pc.ElementComponentSystem
+];
+createOptions.resourceHandlers = [
+    pc.TextureHandler,
+    pc.ContainerHandler,
+    pc.ScriptHandler,
+    pc.JsonHandler,
+    pc.FontHandler
+];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -168,7 +182,7 @@ assetListLoader.load(() => {
         app.drawLine(start, end, white);
 
         const results = app.systems.rigidbody.raycastAll(start, end);
-        results.forEach(result => {
+        results.forEach((result) => {
             result.entity.render.material = red;
 
             // Render the normal on the surface from the hit point

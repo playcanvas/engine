@@ -5,7 +5,13 @@ import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 
-import { BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8, TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR, SHADERLANGUAGE_GLSL } from '../platform/graphics/constants.js';
+import {
+    BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
+    PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
+    SHADERLANGUAGE_GLSL
+} from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
@@ -47,7 +53,11 @@ import { MouseEvent } from '../platform/input/mouse-event.js';
 import { AppBase } from '../framework/app-base.js';
 import { getApplication } from '../framework/globals.js';
 import { ModelComponent } from '../framework/components/model/component.js';
-import { BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION, BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC } from '../framework/components/rigid-body/constants.js';
+import {
+    BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
+    BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
+    BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
+} from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem, HitResult } from '../framework/components/rigid-body/system.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
@@ -96,42 +106,42 @@ export const CHUNKAPI_2_8 = '2.8';
 const _viewport = new Vec4();
 
 export function createSphere(device, opts) {
-    Debug.deprecated("pc.createSphere is deprecated. Use 'pc.Mesh.fromGeometry(device, new SphereGeometry(options);' format instead.");
+    Debug.deprecated('pc.createSphere is deprecated. Use \'pc.Mesh.fromGeometry(device, new SphereGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new SphereGeometry(opts));
 }
 
 export function createPlane(device, opts) {
-    Debug.deprecated("pc.createPlane is deprecated. Use 'pc.Mesh.fromGeometry(device, new PlaneGeometry(options);' format instead.");
+    Debug.deprecated('pc.createPlane is deprecated. Use \'pc.Mesh.fromGeometry(device, new PlaneGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new PlaneGeometry(opts));
 }
 
 export function createBox(device, opts) {
-    Debug.deprecated("pc.createBox is deprecated. Use 'pc.Mesh.fromGeometry(device, new BoxGeometry(options);' format instead.");
+    Debug.deprecated('pc.createBox is deprecated. Use \'pc.Mesh.fromGeometry(device, new BoxGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new BoxGeometry(opts));
 }
 
 export function createTorus(device, opts) {
-    Debug.deprecated("pc.createTorus is deprecated. Use 'pc.Mesh.fromGeometry(device, new TorusGeometry(options);' format instead.");
+    Debug.deprecated('pc.createTorus is deprecated. Use \'pc.Mesh.fromGeometry(device, new TorusGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new TorusGeometry(opts));
 }
 
 export function createCapsule(device, opts) {
-    Debug.deprecated("pc.createCapsule is deprecated. Use 'pc.Mesh.fromGeometry(device, new CapsuleGeometry(options);' format instead.");
+    Debug.deprecated('pc.createCapsule is deprecated. Use \'pc.Mesh.fromGeometry(device, new CapsuleGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new CapsuleGeometry(opts));
 }
 
 export function createCone(device, opts) {
-    Debug.deprecated("pc.createCone is deprecated. Use 'pc.Mesh.fromGeometry(device, new ConeGeometry(options);' format instead.");
+    Debug.deprecated('pc.createCone is deprecated. Use \'pc.Mesh.fromGeometry(device, new ConeGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new ConeGeometry(opts));
 }
 
 export function createCylinder(device, opts) {
-    Debug.deprecated("pc.createCylinder is deprecated. Use 'pc.Mesh.fromGeometry(device, new CylinderGeometry(options);' format instead.");
+    Debug.deprecated('pc.createCylinder is deprecated. Use \'pc.Mesh.fromGeometry(device, new CylinderGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new CylinderGeometry(opts));
 }
 
 export function createMesh(device, positions, opts = {}) {
-    Debug.deprecated("pc.createMesh is deprecated. Use 'pc.Mesh.fromGeometry(device, new Geometry();' format instead.");
+    Debug.deprecated('pc.createMesh is deprecated. Use \'pc.Mesh.fromGeometry(device, new Geometry();\' format instead.');
 
     const geom = new Geometry();
     geom.positions = positions;
@@ -148,6 +158,7 @@ export function createMesh(device, positions, opts = {}) {
 }
 
 export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
+
     Debug.deprecated('pc.drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.');
 
     // convert rect in normalized space to viewport in pixel space
@@ -396,20 +407,17 @@ export const Node = AnimationNode;
 export const LitOptions = LitShaderOptions;
 
 // deprecated access to global shader chunks
-export const shaderChunks = new Proxy(
-    {},
-    {
-        get(target, prop) {
-            Debug.deprecated(`Using pc.shaderChunks to access global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('${prop}');`);
-            return ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).get(prop);
-        },
-        set(target, prop, value) {
-            Debug.deprecated(`Using pc.shaderChunks to override global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).set('${prop}');`);
-            ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).set(prop, value);
-            return true;
-        }
+export const shaderChunks = new Proxy({}, {
+    get(target, prop) {
+        Debug.deprecated(`Using pc.shaderChunks to access global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('${prop}');`);
+        return ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).get(prop);
+    },
+    set(target, prop, value) {
+        Debug.deprecated(`Using pc.shaderChunks to override global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).set('${prop}');`);
+        ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).set(prop, value);
+        return true;
     }
-);
+});
 
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {
