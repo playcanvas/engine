@@ -1,5 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
-import { EVENT_GAMEPADCONNECTED, EVENT_GAMEPADDISCONNECTED, PAD_FACE_1, PAD_FACE_2, PAD_FACE_3, PAD_FACE_4, PAD_L_SHOULDER_1, PAD_R_SHOULDER_1, PAD_L_SHOULDER_2, PAD_R_SHOULDER_2, PAD_SELECT, PAD_START, PAD_L_STICK_BUTTON, PAD_R_STICK_BUTTON, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_VENDOR, XRPAD_TRIGGER, XRPAD_SQUEEZE, XRPAD_TOUCHPAD_BUTTON, XRPAD_STICK_BUTTON, XRPAD_A, XRPAD_B, PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y, XRPAD_TOUCHPAD_X, XRPAD_TOUCHPAD_Y, XRPAD_STICK_X, XRPAD_STICK_Y } from './constants.js';
+import { PAD_FACE_1, PAD_FACE_2, PAD_FACE_3, PAD_FACE_4, PAD_L_SHOULDER_1, PAD_R_SHOULDER_1, PAD_L_SHOULDER_2, PAD_R_SHOULDER_2, PAD_SELECT, PAD_START, PAD_L_STICK_BUTTON, PAD_R_STICK_BUTTON, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_VENDOR, XRPAD_TRIGGER, XRPAD_SQUEEZE, XRPAD_TOUCHPAD_BUTTON, XRPAD_STICK_BUTTON, XRPAD_A, XRPAD_B, PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y, XRPAD_TOUCHPAD_X, XRPAD_TOUCHPAD_Y, XRPAD_STICK_X, XRPAD_STICK_Y } from './constants.js';
 import { math } from '../../core/math/math.js';
 import { platform } from '../../core/platform.js';
 
@@ -10,7 +10,6 @@ const dummyArray = Object.freeze([]);
  *
  * @type {Function}
  * @returns {Gamepad[]} Retrieved gamepads from the device.
- * @ignore
  */
 let getGamepads = function () {
     return dummyArray;
@@ -85,7 +84,7 @@ const MAPS = {
             'PAD_LEFT',
             'PAD_RIGHT',
 
-             // Vendor specific button
+            // Vendor specific button
             'PAD_VENDOR'
         ],
 
@@ -118,7 +117,7 @@ const MAPS = {
             'PAD_L_STICK_BUTTON',
             'PAD_R_STICK_BUTTON',
 
-             // Vendor specific button
+            // Vendor specific button
             'PAD_VENDOR'
         ],
 
@@ -216,7 +215,6 @@ const custom_maps = {};
  *
  * @param {Gamepad} pad - The HTML5 Gamepad object.
  * @returns {object} Object defining the order of buttons and axes for given HTML5 Gamepad.
- * @ignore
  */
 function getMap(pad) {
     const custom = custom_maps[pad.id];
@@ -229,7 +227,7 @@ function getMap(pad) {
             const product = PRODUCT_CODES[code];
 
             if (!pad.mapping) {
-                const raw = MAPS['RAW_' + product];
+                const raw = MAPS[`RAW_${product}`];
 
                 if (raw) {
                     return raw;
@@ -255,7 +253,6 @@ let deadZone = 0.25;
 /**
  * @param {number} ms - Number of milliseconds to sleep for.
  * @returns {Promise<void>}
- * @ignore
  */
 function sleep(ms) {
     return new Promise((resolve) => {
@@ -407,7 +404,7 @@ class GamePad {
          * The buttons present on the GamePad. Order is provided by API, use GamePad#buttons instead.
          *
          * @type {GamePadButton[]}
-         * @ignore
+         * @private
          */
         this._buttons = gamepad.buttons.map(b => new GamePadButton(b));
 
@@ -415,7 +412,7 @@ class GamePad {
          * The axes values from the GamePad. Order is provided by API, use GamePad#axes instead.
          *
          * @type {number[]}
-         * @ignore
+         * @private
          */
         this._axes = [...gamepad.axes];
 
@@ -423,7 +420,7 @@ class GamePad {
          * Previous value for the analog axes present on the gamepad. Values are between -1 and 1.
          *
          * @type {number[]}
-         * @ignore
+         * @private
          */
         this._previousAxes = [...gamepad.axes];
 
@@ -830,7 +827,7 @@ class GamePads extends EventHandler {
          * The list of previous buttons states
          *
          * @type {boolean[][]}
-         * @ignore
+         * @private
          */
         this._previous = [];
 
@@ -906,7 +903,7 @@ class GamePads extends EventHandler {
         }
 
         current.push(pad);
-        this.fire(EVENT_GAMEPADCONNECTED, pad);
+        this.fire('gamepadconnected', pad);
     }
 
     /**
@@ -920,7 +917,7 @@ class GamePads extends EventHandler {
         const padIndex = current.findIndex(gp => gp.index === event.gamepad.index);
 
         if (padIndex !== -1) {
-            this.fire(EVENT_GAMEPADDISCONNECTED, current[padIndex]);
+            this.fire('gamepaddisconnected', current[padIndex]);
             current.splice(padIndex, 1);
         }
     }

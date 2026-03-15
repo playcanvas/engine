@@ -1,34 +1,32 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
-    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
+    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
 });
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    platform: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/scifi-platform.glb' }),
-    mosquito: new pc.Asset('mosquito', 'container', { url: rootPath + '/static/assets/models/MosquitoInAmber.glb' }),
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' }),
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    platform: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/scifi-platform.glb` }),
+    mosquito: new pc.Asset('mosquito', 'container', { url: `${rootPath}/static/assets/models/MosquitoInAmber.glb` }),
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
 
     // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
     // to avoid the additional cost. This is only used for the UI which renders on top of the
@@ -189,7 +187,11 @@ assetListLoader.load(() => {
         const label = new pc.Entity(name);
         label.addComponent('element', {
             text: text,
-            color: new pc.Color(100, 50, 80), // very bright color to affect the bloom
+
+            // very bright color to affect the bloom - this is not correct, as this is sRGB color that
+            // is valid only in 0..1 range, but UI does not expose emissive intensity currently
+            color: new pc.Color(18, 15, 5),
+
             anchor: new pc.Vec4(x, y, 0.5, 0.5),
             fontAsset: assets.font,
             fontSize: 28,
@@ -211,57 +213,13 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    const currentOptions = {
-        camera: cameraEntity.camera, // camera used to render those passes
-        samples: 0, // number of samples for multi-sampling
-        sceneColorMap: true, // true if the scene color should be captured
-        bloomEnabled: true,
-
-        // disabled TAA as it currently does not handle dynamic objects
-        prepassEnabled: false,
-        taaEnabled: false
-    };
-
-    const setupRenderPass = () => {
-        // destroy existing pass if any
-        if (cameraEntity.camera.renderPasses.length > 0) {
-            cameraEntity.camera.renderPasses[0].destroy();
-        }
-
-        // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
-        // Internally this sets up additional passes it needs, based on the options passed to it.
-        const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
-
-        // and set up these rendering passes to be used by the camera, instead of its default rendering
-        cameraEntity.camera.renderPasses = [renderPassCamera];
-    };
-
-    // ------
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
+    cameraFrame.rendering.sceneColorMap = true;
+    cameraFrame.update();
 
     const applySettings = () => {
-        // if settings require render passes to be re-created
-        const noPasses = cameraEntity.camera.renderPasses.length === 0;
-        const taaEnabled = data.get('data.taa.enabled');
-        const bloomEnabled = data.get('data.bloom.enabled');
 
-        if (noPasses || taaEnabled !== currentOptions.taaEnabled || bloomEnabled !== currentOptions.bloomEnabled) {
-            currentOptions.taaEnabled = taaEnabled;
-            currentOptions.bloomEnabled = bloomEnabled;
-            currentOptions.prepassEnabled = taaEnabled;
-
-            // create new pass
-            setupRenderPass();
-        }
-
-        const renderPassCamera = cameraEntity.camera.renderPasses[0];
-        const composePass = renderPassCamera.composePass;
-
-        // apply all runtime settings
-
-        // SCENE
-        composePass.toneMapping = data.get('data.scene.tonemapping');
-        renderPassCamera.renderTargetScale = data.get('data.scene.scale');
-
+        // background
         const background = data.get('data.scene.background');
         cameraEntity.camera.clearColor = new pc.Color(
             lightColor.r * background,
@@ -270,57 +228,88 @@ assetListLoader.load(() => {
         );
         light.light.intensity = background;
 
+        // emissive
         const emissive = data.get('data.scene.emissive');
         emissiveMaterials.forEach((material) => {
             material.emissiveIntensity = emissive;
             material.update();
         });
 
-        // taa - enable camera jitter if taa is enabled
-        cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
+        // enabled
+        cameraFrame.enabled = data.get('data.enabled');
 
-        // bloom
-        if (bloomEnabled) {
-            renderPassCamera.lastMipLevel = data.get('data.bloom.lastMipLevel');
-            composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
-        }
+        // Scene
+        cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
+        cameraFrame.rendering.toneMapping = data.get('data.scene.tonemapping');
+
+        // TAA
+        cameraFrame.taa.enabled = data.get('data.taa.enabled');
+        cameraFrame.taa.jitter = data.get('data.taa.jitter');
+
+        // Bloom
+        cameraFrame.bloom.intensity = data.get('data.bloom.enabled') ? pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100) : 0;
+        cameraFrame.bloom.blurLevel = data.get('data.bloom.blurLevel');
 
         // grading
-        composePass.gradingSaturation = data.get('data.grading.saturation');
-        composePass.gradingBrightness = data.get('data.grading.brightness');
-        composePass.gradingContrast = data.get('data.grading.contrast');
-        composePass.gradingEnabled = data.get('data.grading.enabled');
+        cameraFrame.grading.enabled = data.get('data.grading.enabled');
+        cameraFrame.grading.saturation = data.get('data.grading.saturation');
+        cameraFrame.grading.brightness = data.get('data.grading.brightness');
+        cameraFrame.grading.contrast = data.get('data.grading.contrast');
+
+        // colorEnhance
+        cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
+        if (cameraFrame.colorEnhance.enabled) {
+            cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
+            cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
+            cameraFrame.colorEnhance.midtones = data.get('data.colorEnhance.midtones');
+            cameraFrame.colorEnhance.vibrance = data.get('data.colorEnhance.vibrance');
+            cameraFrame.colorEnhance.dehaze = data.get('data.colorEnhance.dehaze');
+        }
 
         // vignette
-        composePass.vignetteEnabled = data.get('data.vignette.enabled');
-        composePass.vignetteInner = data.get('data.vignette.inner');
-        composePass.vignetteOuter = data.get('data.vignette.outer');
-        composePass.vignetteCurvature = data.get('data.vignette.curvature');
-        composePass.vignetteIntensity = data.get('data.vignette.intensity');
+        cameraFrame.vignette.inner = data.get('data.vignette.inner');
+        cameraFrame.vignette.outer = data.get('data.vignette.outer');
+        cameraFrame.vignette.curvature = data.get('data.vignette.curvature');
+        cameraFrame.vignette.intensity = data.get('data.vignette.enabled') ? data.get('data.vignette.intensity') : 0;
+        const vignetteColor = data.get('data.vignette.color');
+        if (vignetteColor) {
+            cameraFrame.vignette.color.set(vignetteColor[0], vignetteColor[1], vignetteColor[2]);
+        }
 
         // fringing
-        composePass.fringingEnabled = data.get('data.fringing.enabled');
-        composePass.fringingIntensity = data.get('data.fringing.intensity');
+        cameraFrame.fringing.intensity = data.get('data.fringing.enabled') ? data.get('data.fringing.intensity') : 0;
+
+        // debug
+        switch (data.get('data.scene.debug')) {
+            case 0: cameraFrame.debug = null; break;
+            case 1: cameraFrame.debug = 'bloom'; break;
+            case 2: cameraFrame.debug = 'vignette'; break;
+            case 3: cameraFrame.debug = 'scene'; break;
+        }
+
+        // apply all settings
+        cameraFrame.update();
     };
 
     // apply UI changes
-    let initialValuesSetup = false;
     data.on('*:set', () => {
-        if (initialValuesSetup) applySettings();
+        applySettings();
     });
 
     // set initial values
     data.set('data', {
+        enabled: true,
         scene: {
             scale: 1.8,
             background: 6,
             emissive: 200,
-            tonemapping: pc.TONEMAP_ACES
+            tonemapping: pc.TONEMAP_ACES,
+            debug: 0
         },
         bloom: {
-            enabled: currentOptions.bloomEnabled,
-            intensity: 10,
-            lastMipLevel: 1
+            enabled: true,
+            intensity: 5,
+            blurLevel: 16
         },
         grading: {
             enabled: false,
@@ -328,30 +317,35 @@ assetListLoader.load(() => {
             brightness: 1,
             contrast: 1
         },
+        colorEnhance: {
+            enabled: false,
+            shadows: 0,
+            highlights: 0,
+            midtones: 0,
+            vibrance: 0,
+            dehaze: 0
+        },
         vignette: {
             enabled: false,
             inner: 0.5,
             outer: 1.0,
             curvature: 0.5,
-            intensity: 0.3
+            intensity: 0.3,
+            color: [0, 0, 0]
         },
         fringing: {
             enabled: false,
             intensity: 50
         },
         taa: {
-            enabled: currentOptions.taaEnabled,
+            enabled: false,
             jitter: 1
         }
     });
 
-    // apply initial settings after all values are set
-    initialValuesSetup = true;
-    applySettings();
-
     // update things every frame
     let angle = 0;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         angle += dt;
 
         // scale the boxes

@@ -32,7 +32,7 @@ class JsonHandler extends ResourceHandler {
             options.responseType = Http.ResponseType.JSON;
         }
 
-        http.get(url.load, options, function (err, response) {
+        http.get(url.load, options, (err, response) => {
             if (!err) {
                 callback(null, response);
             } else {

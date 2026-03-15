@@ -1,29 +1,63 @@
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { Asset } from '../../asset/asset.js';
-
 import { Component } from '../component.js';
+
+/**
+ * @import { CollisionComponentData } from './data.js'
+ * @import { CollisionComponentSystem } from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { GraphNode } from '../../../scene/graph-node.js'
+ * @import { Model } from '../../../scene/model.js'
+ */
 
 const _vec3 = new Vec3();
 const _quat = new Quat();
 
 /**
- * A collision volume. Use this in conjunction with a {@link RigidBodyComponent} to make a
+ * The CollisionComponent enables an {@link Entity} to act as a collision volume. Use it on its own
+ * to define a trigger volume. Or use it in conjunction with a {@link RigidBodyComponent} to make a
  * collision volume that can be simulated using the physics engine.
  *
- * If the {@link Entity} does not have a {@link RigidBodyComponent} then this collision volume will
- * act as a trigger volume. When an entity with a dynamic or kinematic body enters or leaves an
- * entity with a trigger volume, both entities will receive trigger events.
+ * When an entity is configured as a trigger volume, if an entity with a dynamic or kinematic body
+ * enters or leaves that trigger volume, both entities will receive trigger events.
  *
- * The following table shows all the events that can be fired between two Entities:
+ * You should never need to use the CollisionComponent constructor directly. To add an
+ * CollisionComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
- * |                                       | Rigid Body (Static)                                                   | Rigid Body (Dynamic or Kinematic)                                     | Trigger Volume                                      |
- * | ------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------- |
- * | **Rigid Body (Static)**               |                                                                       | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> |                                                     |
- * | **Rigid Body (Dynamic or Kinematic)** | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> | <ul><li>triggerenter</li><li>triggerleave</li></ul> |
- * | **Trigger Volume**                    |                                                                       | <ul><li>triggerenter</li><li>triggerleave</li></ul>                   |                                                     |
+ * ```javascript
+ * const entity = pc.Entity();
+ * entity.addComponent('collision'); // This defaults to 1x1x1 box-shaped trigger volume
+ * ```
  *
+ * To create a 0.5 radius dynamic rigid body sphere:
+ *
+ * ```javascript
+ * const entity = pc.Entity();
+ * entity.addComponent('collision', {
+ *     type: 'sphere'
+ * });
+ * entity.addComponent('rigidbody', {
+ *     type: 'dynamic'
+ * });
+ * ```
+ *
+ * Once the CollisionComponent is added to the entity, you can access it via the
+ * {@link Entity#collision} property:
+ *
+ * ```javascript
+ * entity.collision.type = 'cylinder'; // Set the collision volume to a cylinder
+ *
+ * console.log(entity.collision.type); // Get the collision volume type and print it
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Compound Collision](https://playcanvas.github.io/#/physics/compound-collision)
+ * - [Falling Shapes](https://playcanvas.github.io/#/physics/falling-shapes)
+ * - [Offset Collision](https://playcanvas.github.io/#/physics/offset-collision)
+ *
+ * @hideconstructor
  * @category Physics
  */
 class CollisionComponent extends Component {
@@ -53,7 +87,7 @@ class CollisionComponent extends Component {
     static EVENT_COLLISIONSTART = 'collisionstart';
 
     /**
-     * Fired two rigid-bodies stop touching. The handler is passed an {@link Entity} that
+     * Fired when two rigid bodies stop touching. The handler is passed an {@link Entity} that
      * represents the other rigid body involved in the collision.
      *
      * @event
@@ -88,20 +122,20 @@ class CollisionComponent extends Component {
      */
     static EVENT_TRIGGERLEAVE = 'triggerleave';
 
+    /** @private */
+    _compoundParent = null;
+
+    /** @private */
+    _hasOffset = false;
+
     /**
      * Create a new CollisionComponent.
      *
-     * @param {import('./system.js').CollisionComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {CollisionComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
-
-        /** @private */
-        this._compoundParent = null;
-        this._hasOffset = false;
 
         this.entity.on('insert', this._onInsert, this);
 
@@ -121,7 +155,7 @@ class CollisionComponent extends Component {
 
     // TODO: Remove this override in upgrading component
     /**
-     * @type {import('./data.js').CollisionComponentData}
+     * @type {CollisionComponentData}
      * @ignore
      */
     get data() {
@@ -361,7 +395,7 @@ class CollisionComponent extends Component {
     /**
      * Sets the model that is added to the scene graph for the mesh collision volume.
      *
-     * @type {import('../../../scene/model.js').Model | null}
+     * @type {Model | null}
      */
     set model(arg) {
         this._setValue('model', arg);
@@ -370,7 +404,7 @@ class CollisionComponent extends Component {
     /**
      * Gets the model that is added to the scene graph for the mesh collision volume.
      *
-     * @type {import('../../../scene/model.js').Model | null}
+     * @type {Model | null}
      */
     get model() {
         return this.data.model;
@@ -622,13 +656,13 @@ class CollisionComponent extends Component {
      * @returns {number|null} The shape's index in the child array of the compound shape.
      * @private
      */
-    _getCompoundChildShapeIndex(shape) {
+    getCompoundChildShapeIndex(shape) {
         const compound = this.data.shape;
         const shapes = compound.getNumChildShapes();
 
         for (let i = 0; i < shapes; i++) {
             const childShape = compound.getChildShape(i);
-            if (childShape.ptr === shape.ptr) {
+            if (Ammo.getPointer(childShape) === Ammo.getPointer(shape)) {
                 return i;
             }
         }
@@ -637,7 +671,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/graph-node.js').GraphNode} parent - The parent node.
+     * @param {GraphNode} parent - The parent node.
      * @private
      */
     _onInsert(parent) {

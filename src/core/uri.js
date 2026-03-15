@@ -25,11 +25,11 @@ function createURI(options) {
     }
 
     if (options.scheme) {
-        s += options.scheme + ':';
+        s += `${options.scheme}:`;
     }
 
     if (options.authority) {
-        s += '//' + options.authority;
+        s += `//${options.authority}`;
     }
 
     if (options.host) {
@@ -45,18 +45,18 @@ function createURI(options) {
     }
 
     if (options.query) {
-        s += '?' + options.query;
+        s += `?${options.query}`;
     }
 
     if (options.fragment) {
-        s += '#' + options.fragment;
+        s += `#${options.fragment}`;
     }
 
     return s;
 }
 
 // See http://tools.ietf.org/html/rfc2396#appendix-B for details of RegExp
-const re = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
+const re = /^(([^:/?#]+):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
 /**
  * A URI object.
@@ -122,21 +122,21 @@ class URI {
         let s = '';
 
         if (this.scheme) {
-            s += this.scheme + ':';
+            s += `${this.scheme}:`;
         }
 
         if (this.authority) {
-            s += '//' + this.authority;
+            s += `//${this.authority}`;
         }
 
         s += this.path;
 
         if (this.query) {
-            s += '?' + this.query;
+            s += `?${this.query}`;
         }
 
         if (this.fragment) {
-            s += '#' + this.fragment;
+            s += `#${this.fragment}`;
         }
 
         return s;
@@ -188,7 +188,7 @@ class URI {
                 if (q !== '') {
                     q += '&';
                 }
-                q += encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
+                q += `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
             }
         }
 

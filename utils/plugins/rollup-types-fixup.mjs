@@ -1,16 +1,24 @@
-import * as fs from 'node:fs';
+import fs from 'fs';
+import path from 'path';
 
 const GREEN_OUT = '\x1b[32m';
-const BOLD_OUT = `\x1b[1m`;
-const REGULAR_OUT = `\x1b[22m`;
+const BOLD_OUT = '\x1b[1m';
+const REGULAR_OUT = '\x1b[22m';
 
 const TYPES_PATH = './build/playcanvas/src';
 
 const STANDARD_MAT_PROPS = [
     ['alphaFade', 'boolean'],
     ['ambient', 'Color'],
-    ['ambientTint', 'boolean'],
     ['anisotropy', 'number'],
+    ['anisotropyIntensity', 'number'],
+    ['anisotropyRotation', 'number'],
+    ['anisotropyMap', 'Texture|null'],
+    ['anisotropyMapOffset', 'Vec2'],
+    ['anisotropyMapRotation', 'number'],
+    ['anisotropyMapTiling', 'Vec2'],
+    ['anisotropyMapUv', 'number'],
+    ['aoIntensity', 'number'],
     ['aoMap', 'Texture|null'],
     ['aoMapChannel', 'string'],
     ['aoMapOffset', 'Vec2'],
@@ -79,7 +87,6 @@ const STANDARD_MAT_PROPS = [
     ['emissiveMapRotation', 'number'],
     ['emissiveMapTiling', 'Vec2'],
     ['emissiveMapUv', 'number'],
-    ['emissiveTint', 'boolean'],
     ['emissiveVertexColor', 'boolean'],
     ['emissiveVertexColorChannel', 'string'],
     ['enableGGXSpecular', 'boolean'],
@@ -133,7 +140,6 @@ const STANDARD_MAT_PROPS = [
     ['occludeDirect', 'number'],
     ['occludeSpecular', 'number'],
     ['occludeSpecularIntensity', 'number'],
-    ['onUpdateShader', 'UpdateShaderCallback'],
     ['opacity', 'number'],
     ['opacityDither', 'string'],
     ['opacityShadowDither', 'string'],
@@ -151,6 +157,7 @@ const STANDARD_MAT_PROPS = [
     ['refraction', 'number'],
     ['refractionIndex', 'number'],
     ['dispersion', 'number'],
+    ['shadowCatcher', 'boolean'],
     ['specular', 'Color'],
     ['specularMap', 'Texture|null'],
     ['specularMapChannel', 'string'],
@@ -176,7 +183,6 @@ const STANDARD_MAT_PROPS = [
     ['sheenMapRotation', 'number'],
     ['sheenMapTiling', 'Vec2'],
     ['sheenMapUv', 'number'],
-    ['sheenTint', 'boolean'],
     ['sheenVertexColor', 'boolean'],
     ['sheenVertexColorChannel', 'string'],
     ['sphereMap', 'Texture|null'],
@@ -192,12 +198,28 @@ const STANDARD_MAT_PROPS = [
 const REPLACEMENTS = [{
     path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
     replacement: {
-        from: 'reset(): void;',
-        to: `reset(): void;
-${STANDARD_MAT_PROPS.map(prop => `
-    set ${prop[0]}(arg: ${prop[1]});
-    get ${prop[0]}(): ${prop[1]};
-`).join('')}`,
+        transformer: (contents) => {
+
+            // Find the jsdoc block description using eg "@property {Type} {name}"
+            return contents.replace('reset(): void;', `reset(): void;
+                ${STANDARD_MAT_PROPS.map((prop) => {
+        const typeDefinition = `@property {${prop[1]}} ${prop[0]}`;
+        const typeDescriptionIndex = contents.match(typeDefinition);
+        const typeDescription = typeDescriptionIndex ?
+            contents.slice(typeDescriptionIndex.index + typeDefinition.length, contents.indexOf('\n * @property', typeDescriptionIndex.index + typeDefinition.length)) :
+            '';
+
+        // Strip newlines, asterisks, and tabs from the type description
+        const cleanTypeDescription = typeDescription
+        .trim()
+        .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
+        .replace(/\s+/g, ' '); // collapse whitespace
+
+        const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
+        return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
+    }).join('')}`
+            );
+        },
         footer: `
 import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
@@ -239,16 +261,20 @@ import { Texture } from '../../platform/graphics/texture.js';
     }
 }];
 
-export function typesFixup() {
+export function typesFixup(root = '.') {
     return {
         name: 'types-fixup',
         buildStart() {
             REPLACEMENTS.forEach((item) => {
-                const { from, to, footer } = item.replacement;
-                let contents = fs.readFileSync(item.path, 'utf-8');
-                contents = contents.replace(from, to);
+                const { from, to, footer, transformer } = item.replacement;
+                let contents = fs.readFileSync(path.resolve(root, item.path), 'utf-8');
+                if (transformer) {
+                    contents = transformer(contents);
+                } else {
+                    contents = contents.replace(from, to);
+                }
                 contents += footer ?? '';
-                fs.writeFileSync(item.path, contents, 'utf-8');
+                fs.writeFileSync(path.resolve(root, item.path), contents, 'utf-8');
                 console.log(`${GREEN_OUT}type fixed ${BOLD_OUT}${item.path}${REGULAR_OUT}`);
             });
         }

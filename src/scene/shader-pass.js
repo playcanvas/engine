@@ -1,9 +1,12 @@
 import { Debug } from '../core/debug.js';
+import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
-    SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY
+    SHADER_FORWARD, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS, SHADER_DEPTH_PICK
 } from './constants.js';
 
-import { DeviceCache } from '../platform/graphics/device-cache.js';
+/**
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ */
 
 // device cache storing shader pass data per device
 const shaderPassDeviceCache = new DeviceCache();
@@ -22,8 +25,8 @@ class ShaderPassInfo {
     /** @type {string} */
     name;
 
-    /** @type {string} */
-    shaderDefines;
+    /** @type {Map<string, string>} */
+    defines = new Map();
 
     /**
      * @param {string} name - The name, for example 'depth'. Must contain only letters, numbers,
@@ -33,11 +36,11 @@ class ShaderPassInfo {
      * @param {boolean} [options.isForward] - Whether the pass is forward.
      * @param {boolean} [options.isShadow] - Whether the pass is shadow.
      * @param {boolean} [options.lightType] - Type of light, for example `pc.LIGHTTYPE_DIRECTIONAL`.
-     * @param {boolean} [options.shadowType] - Type of shadow, for example `pc.SHADOW_PCF3`.
+     * @param {boolean} [options.shadowType] - Type of shadow, for example `pc.SHADOW_PCF3_32F`.
      */
     constructor(name, index, options = {}) {
 
-        Debug.assert(/^[a-zA-Z][_a-zA-Z0-9]*$/.test(name), `ShaderPass name can only contain letters, numbers and underscores and start with a letter: ${name}`);
+        Debug.assert(/^[a-z]\w*$/i.test(name), `ShaderPass name can only contain letters, numbers and underscores and start with a letter: ${name}`);
 
         this.name = name;
         this.index = index;
@@ -45,7 +48,7 @@ class ShaderPassInfo {
         // assign options as properties to this object
         Object.assign(this, options);
 
-        this.shaderDefines = this.buildShaderDefines();
+        this.buildShaderDefines();
     }
 
     buildShaderDefines() {
@@ -55,19 +58,16 @@ class ShaderPassInfo {
             keyword = 'SHADOW';
         } else if (this.isForward) {
             keyword = 'FORWARD';
-        } else if (this.index === SHADER_DEPTH) {
-            keyword = 'DEPTH';
         } else if (this.index === SHADER_PICK) {
             keyword = 'PICK';
+        } else if (this.index === SHADER_DEPTH_PICK) {
+            // depth pick generates both PICK_PASS and DEPTH_PICK_PASS defines
+            keyword = 'PICK';
+            this.defines.set('DEPTH_PICK_PASS', '');
         }
 
-        // define based on on the options based name
-        const define1 = keyword ? `#define ${keyword}_PASS\n` : '';
-
-        // define based on the name
-        const define2 = `#define ${this.name.toUpperCase()}_PASS\n`;
-
-        return define1 + define2;
+        this.defines.set(`${keyword}_PASS`, '');
+        this.defines.set(`${this.name.toUpperCase()}_PASS`, '');
     }
 }
 
@@ -103,17 +103,16 @@ class ShaderPass {
 
         // add default passes in the required order, to match the constants
         add('forward', SHADER_FORWARD, { isForward: true });
-        add('prepass', SHADER_PREPASS_VELOCITY);
-        add('depth', SHADER_DEPTH);
-        add('pick', SHADER_PICK);
+        add('prepass', SHADER_PREPASS);
         add('shadow', SHADER_SHADOW);
+        add('pick', SHADER_PICK);
+        add('depth_pick', SHADER_DEPTH_PICK);
     }
 
     /**
      * Get access to the shader pass instance for the specified device.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @returns { ShaderPass } The shader pass instance for the specified device.
      */
     static get(device) {

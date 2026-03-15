@@ -25,7 +25,7 @@ class CssHandler extends ResourceHandler {
         http.get(url.load, {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
-        }, function (err, response) {
+        }, (err, response) => {
             if (!err) {
                 callback(null, response);
             } else {

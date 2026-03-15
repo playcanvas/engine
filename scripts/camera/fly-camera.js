@@ -14,9 +14,9 @@ FlyCamera.attributes.add('mode', {
     type: 'number',
     default: 0,
     enum: [{
-        "Lock": 0
+        'Lock': 0
     }, {
-        "Drag": 1
+        'Drag': 1
     }]
 });
 
@@ -63,11 +63,13 @@ FlyCamera.prototype.update = function (dt) {
 
 FlyCamera.prototype.onMouseMove = function (event) {
     if (!this.mode) {
-        if (!pc.Mouse.isPointerLocked())
+        if (!pc.Mouse.isPointerLocked()) {
             return;
+        }
     } else {
-        if (!this.lmbDown)
+        if (!this.lmbDown) {
             return;
+        }
     }
 
 

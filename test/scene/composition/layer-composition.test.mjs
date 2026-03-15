@@ -1,7 +1,7 @@
-import { Layer } from '../../../src/scene/layer.js';
-import { LayerComposition } from '../../../src/scene/composition/layer-composition.js';
-
 import { expect } from 'chai';
+
+import { LayerComposition } from '../../../src/scene/composition/layer-composition.js';
+import { Layer } from '../../../src/scene/layer.js';
 
 describe('LayerComposition', function () {
 

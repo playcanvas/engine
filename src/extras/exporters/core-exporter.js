@@ -1,24 +1,16 @@
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import {
+    FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8,
+    SEMANTIC_POSITION
+} from '../../platform/graphics/constants.js';
 
-const textureBlitVertexShader = /* glsl */`
-    attribute vec2 vertex_position;
-    varying vec2 uv0;
-    void main(void) {
-        gl_Position = vec4(vertex_position, 0.5, 1.0);
-        uv0 = vertex_position.xy * 0.5 + 0.5;
-    }`;
-
-const textureBlitFragmentShader = /* glsl */`
-    varying vec2 uv0;
-    uniform sampler2D blitTexture;
-    void main(void) {
-        gl_FragColor = texture2D(blitTexture, uv0);
-    }`;
+/**
+ * @import { Color } from '../../core/math/color.js'
+ */
 
 /**
  * The base class for the exporters, implementing shared functionality.
@@ -38,7 +30,7 @@ class CoreExporter {
      *
      * @param {Texture} texture - The source texture to be converted.
      * @param {object} options - Object for passing optional arguments.
-     * @param {import('../../core/math/color.js').Color} [options.color] - The tint color to modify the texture with.
+     * @param {Color} [options.color] - The tint color to modify the texture with.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
      * @returns {Promise<HTMLCanvasElement>|Promise<undefined>} - The canvas element containing the image.
      *
@@ -108,9 +100,14 @@ class CoreExporter {
             depth: false
         });
 
-        // render to a render target using a blit shader
-        const shader = createShaderFromCode(device, textureBlitVertexShader, textureBlitFragmentShader, 'ShaderCoreExporterBlit');
-        device.scope.resolve('blitTexture').setValue(texture);
+        const shader = ShaderUtils.createShader(device, {
+            uniqueName: 'ShaderCoreExporterBlit',
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentChunk: 'outputTex2DPS'
+        });
+
+        device.scope.resolve('source').setValue(texture);
         device.setBlendState(BlendState.NOBLEND);
         drawQuadWithShader(device, renderTarget, shader);
 

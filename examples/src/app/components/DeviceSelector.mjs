@@ -1,12 +1,12 @@
-import { Component } from 'react';
 import { SelectInput } from '@playcanvas/pcui/react';
+import { Component } from 'react';
 
-import { jsx } from '../jsx.mjs';
 import {
     DEVICETYPE_WEBGPU,
     DEVICETYPE_WEBGL2,
     DEVICETYPE_NULL
 } from '../constants.mjs';
+import { jsx } from '../jsx.mjs';
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGPU]: 'WebGPU',

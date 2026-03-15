@@ -8,6 +8,11 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * @category Math
  */
 class CurveSet {
+    /**
+     * The array of curves in the set.
+     *
+     * @type {Curve[]}
+     */
     curves = [];
 
     /**
@@ -19,9 +24,14 @@ class CurveSet {
     /**
      * Creates a new CurveSet instance.
      *
-     * @param {Array<number[]>} curveKeys - An array of arrays of keys (pairs of numbers with the
-     * time first and value second).
+     * @param {...*} args - Variable arguments with several possible formats:
+     * - No arguments: Creates a CurveSet with a single default curve.
+     * - Single number argument: Creates a CurveSet with the specified number of default curves.
+     * - Single array argument: An array of arrays, where each sub-array contains keys (pairs of
+     * numbers with the time first and value second).
+     * - Multiple arguments: Each argument becomes a separate curve.
      * @example
+     * // Create from an array of arrays of keys
      * const curveSet = new pc.CurveSet([
      *     [
      *         0, 0,        // At 0 time, value of 0
@@ -37,24 +47,27 @@ class CurveSet {
      *     ]
      * ]);
      */
-    constructor() {
-        if (arguments.length > 1) {
-            for (let i = 0; i < arguments.length; i++) {
-                this.curves.push(new Curve(arguments[i]));
+    constructor(...args) {
+        if (args.length > 1) {
+            // Multiple arguments: each becomes a curve
+            for (let i = 0; i < args.length; i++) {
+                this.curves.push(new Curve(args[i]));
             }
+        } else if (args.length === 0) {
+            // No arguments: create a single default curve
+            this.curves.push(new Curve());
         } else {
-            if (arguments.length === 0) {
-                this.curves.push(new Curve());
+            // Single argument
+            const arg = args[0];
+            if (typeof arg === 'number') {
+                // Number: create specified number of default curves
+                for (let i = 0; i < arg; i++) {
+                    this.curves.push(new Curve());
+                }
             } else {
-                const arg = arguments[0];
-                if (typeof arg === 'number') {
-                    for (let i = 0; i < arg; i++) {
-                        this.curves.push(new Curve());
-                    }
-                } else {
-                    for (let i = 0; i < arg.length; i++) {
-                        this.curves.push(new Curve(arg[i]));
-                    }
+                // Array: each element becomes a curve
+                for (let i = 0; i < arg.length; i++) {
+                    this.curves.push(new Curve(arg[i]));
                 }
             }
         }
@@ -102,6 +115,9 @@ class CurveSet {
      *
      * @param {number} index - The index of the curve to return.
      * @returns {Curve} The curve at the specified index.
+     * @example
+     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * const curve = curveSet.get(0); // returns the first curve
      */
     get(index) {
         return this.curves[index];
@@ -115,6 +131,9 @@ class CurveSet {
      * parameter is not supplied, the function allocates a new array internally to return the
      * result.
      * @returns {number[]} The interpolated curve values at the specified time.
+     * @example
+     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * const values = curveSet.value(0.5); // returns interpolated values for all curves at time 0.5
      */
     value(time, result = []) {
         const length = this.curves.length;
@@ -131,6 +150,9 @@ class CurveSet {
      * Returns a clone of the specified curve set object.
      *
      * @returns {this} A clone of the specified curve set.
+     * @example
+     * const curveSet = new pc.CurveSet([[0, 0, 1, 1]]);
+     * const clonedCurveSet = curveSet.clone();
      */
     clone() {
         /** @type {this} */

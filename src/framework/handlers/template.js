@@ -29,9 +29,9 @@ class TemplateHandler extends ResourceHandler {
             maxRetries: this.maxRetries
         };
 
-        http.get(url.load, options, function (err, response) {
+        http.get(url.load, options, (err, response) => {
             if (err) {
-                callback('Error requesting template: ' + url.original);
+                callback(`Error requesting template: ${url.original}`);
             } else {
                 callback(err, response);
             }
@@ -51,6 +51,18 @@ class TemplateHandler extends ResourceHandler {
     openBinary(data) {
         this.decoder ??= new TextDecoder('utf-8');
         return new Template(this._app, JSON.parse(this.decoder.decode(data)));
+    }
+
+    patch(asset, registry) {
+        // only process if this looks like valid template data
+        if (!asset || !asset.resource || !asset.data || !asset.data.entities) {
+            return;
+        }
+
+        const template = asset.resource;
+
+        // the `data` setter will handle cache invalidation
+        template.data = asset.data;
     }
 }
 

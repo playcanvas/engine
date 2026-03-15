@@ -4,10 +4,8 @@ import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    CHUNKAPI_1_65,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_RGBA8,
@@ -18,27 +16,21 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
-
-import { MeshInstance } from '../../scene/mesh-instance.js';
-import { LightingParams } from '../../scene/lighting/lighting-params.js';
-import { WorldClusters } from '../../scene/lighting/world-clusters.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
-
 import {
     BAKE_COLORDIR,
-    FOG_NONE, GAMMA_NONE, TONEMAP_LINEAR,
+    GAMMA_NONE, TONEMAP_LINEAR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
     MASK_BAKE, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC,
-    SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
-    SHADER_FORWARD
+    SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
 } from '../../scene/constants.js';
+import { MeshInstance } from '../../scene/mesh-instance.js';
+import { LightingParams } from '../../scene/lighting/lighting-params.js';
+import { WorldClusters } from '../../scene/lighting/world-clusters.js';
 import { Camera } from '../../scene/camera.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
-
 import { BakeLightSimple } from './bake-light-simple.js';
 import { BakeLightAmbient } from './bake-light-ambient.js';
 import { BakeMeshNode } from './bake-mesh-node.js';
@@ -47,7 +39,16 @@ import { LightmapFilters } from './lightmap-filters.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPassLightmapper } from './render-pass-lightmapper.js';
-import { RenderingParams } from '../../scene/renderer/rendering-params.js';
+import { RenderPassShadowLocalClustered } from '../../scene/renderer/render-pass-shadow-local-clustered.js';
+import { RenderPassShadowLocalNonClustered } from '../../scene/renderer/render-pass-shadow-local-non-clustered.js';
+
+/**
+ * @import { AssetRegistry } from '../asset/asset-registry.js'
+ * @import { Entity } from '../entity.js'
+ * @import { ForwardRenderer } from '../../scene/renderer/forward-renderer.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../../scene/scene.js'
+ */
 
 const MAX_LIGHTMAP_SIZE = 2048;
 
@@ -65,14 +66,11 @@ class Lightmapper {
     /**
      * Create a new Lightmapper instance.
      *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device used by the lightmapper.
-     * @param {import('../entity.js').Entity} root - The root entity of the scene.
-     * @param {import('../../scene/scene.js').Scene} scene - The scene to lightmap.
-     * @param {import('../../scene/renderer/forward-renderer.js').ForwardRenderer} renderer - The
-     * renderer.
-     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - Registry of assets to
-     * lightmap.
+     * @param {GraphicsDevice} device - The graphics device used by the lightmapper.
+     * @param {Entity} root - The root entity of the scene.
+     * @param {Scene} scene - The scene to lightmap.
+     * @param {ForwardRenderer} renderer - The renderer.
+     * @param {AssetRegistry} assets - Registry of assets to lightmap.
      * @ignore
      */
     constructor(device, root, scene, renderer, assets) {
@@ -129,6 +127,8 @@ class Lightmapper {
 
     initBake(device) {
 
+        this.bakeHDR = this.scene.lightmapPixelFormat !== PIXELFORMAT_RGBA8;
+
         // only initialize one time
         if (!this._initCalled) {
             this._initCalled = true;
@@ -165,10 +165,8 @@ class Lightmapper {
             this.camera = camera;
 
             // baking uses HDR (no gamma / tone mapping)
-            const rp = new RenderingParams();
-            rp.gammaCorrection = GAMMA_NONE;
-            rp.toneMapping = TONEMAP_LINEAR;
-            this.camera.renderingParams = rp;
+            this.camera.shaderParams.gammaCorrection = GAMMA_NONE;
+            this.camera.shaderParams.toneMapping = TONEMAP_LINEAR;
         }
 
         // create light cluster structure
@@ -193,6 +191,13 @@ class Lightmapper {
 
             this.worldClusters = new WorldClusters(device);
             this.worldClusters.name = 'ClusterLightmapper';
+
+            // render pass for clustered local light shadows
+            this.shadowLocalClusteredPass = new RenderPassShadowLocalClustered(
+                device,
+                this.renderer.shadowRenderer,
+                this.renderer._shadowRendererLocal
+            );
         }
     }
 
@@ -232,40 +237,28 @@ class Lightmapper {
         }
     }
 
-    createMaterialForPass(device, scene, pass, addAmbient) {
+    createMaterialForPass(scene, pass, addAmbient) {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
-        material.chunks.APIVersion = CHUNKAPI_1_65;
-        const transformDefines = '#define UV1LAYOUT\n';
-        material.chunks.transformVS = transformDefines + shaderChunks.transformVS; // draw into UV1 texture space
+        material.setDefine('UV1LAYOUT', '');    // draw into UV1 texture space
+        material.setDefine('LIT_LIGHTMAP_BAKING', '');
 
         if (pass === PASS_COLOR) {
-            let bakeLmEndChunk = shaderChunksLightmapper.bakeLmEndPS; // encode to RGBM
+            material.setDefine('LIT_LIGHTMAP_BAKING_COLOR', '');
             if (addAmbient) {
-                // diffuse light stores accumulated AO, apply contrast and brightness to it
-                // and multiply ambient light color by the AO
-                bakeLmEndChunk = `
-                    dDiffuseLight = ((dDiffuseLight - 0.5) * max(${scene.ambientBakeOcclusionContrast.toFixed(1)} + 1.0, 0.0)) + 0.5;
-                    dDiffuseLight += vec3(${scene.ambientBakeOcclusionBrightness.toFixed(1)});
-                    dDiffuseLight = saturate(dDiffuseLight);
-                    dDiffuseLight *= dAmbientLight;
-                ` + bakeLmEndChunk;
+                material.setDefine('LIT_LIGHTMAP_BAKING_ADD_AMBIENT', '');
             } else {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
-                material.ambientTint = true;
             }
-            material.chunks.basePS = shaderChunks.basePS + (scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? '\n#define LIGHTMAP_RGBM\n' : '');
-            material.chunks.endPS = bakeLmEndChunk;
+
+            if (!this.bakeHDR) material.setDefine('LIGHTMAP_RGBM', '');
+
             material.lightMap = this.blackTex;
         } else {
-            material.chunks.basePS = shaderChunks.basePS + '\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n';
-            material.chunks.endPS = shaderChunksLightmapper.bakeDirLmEndPS;
+            material.setDefine('LIT_LIGHTMAP_BAKING_DIR', '');
+            material.setDefine('STD_LIGHTMAP_DIR', '');
         }
 
-        // avoid writing unrelated things to alpha
-        material.chunks.outputAlphaPS = '\n';
-        material.chunks.outputAlphaOpaquePS = '\n';
-        material.chunks.outputAlphaPremulPS = '\n';
         material.cull = CULLFACE_NONE;
         material.forceUv1 = true; // provide data to xformUv1
         material.update();
@@ -276,13 +269,13 @@ class Lightmapper {
     createMaterials(device, scene, passCount) {
         for (let pass = 0; pass < passCount; pass++) {
             if (!this.passMaterials[pass]) {
-                this.passMaterials[pass] = this.createMaterialForPass(device, scene, pass, false);
+                this.passMaterials[pass] = this.createMaterialForPass(scene, pass, false);
             }
         }
 
         // material used on last render of ambient light to multiply accumulated AO in lightmap by ambient light
         if (!this.ambientAOMaterial) {
-            this.ambientAOMaterial = this.createMaterialForPass(device, scene, 0, true);
+            this.ambientAOMaterial = this.createMaterialForPass(scene, 0, true);
             this.ambientAOMaterial.onUpdateShader = function (options) {
                 // mark LM as without ambient, to add it
                 options.litOptions.lightMapWithoutAmbient = true;
@@ -302,7 +295,7 @@ class Lightmapper {
             height: size,
             format: this.scene.lightmapPixelFormat,
             mipmaps: false,
-            type: this.scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
+            type: this.bakeHDR ? TEXTURETYPE_DEFAULT : TEXTURETYPE_RGBM,
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -509,8 +502,8 @@ class Lightmapper {
     /**
      * Generates and applies the lightmaps.
      *
-     * @param {import('../entity.js').Entity[]|null} nodes - An array of entities (with model or
-     * render components) to render lightmaps for. If not supplied, the entire scene will be baked.
+     * @param {Entity[]|null} nodes - An array of entities (with model or render components) to
+     * render lightmaps for. If not supplied, the entire scene will be baked.
      * @param {number} [mode] - Baking mode. Can be:
      *
      * - {@link BAKE_COLOR}: single color lightmap
@@ -625,7 +618,7 @@ class Lightmapper {
 
             // texture and render target for each pass, stored per node
             for (let pass = 0; pass < passCount; pass++) {
-                const tex = this.createTexture(size, ('lightmapper_lightmap_' + i));
+                const tex = this.createTexture(size, (`lightmapper_lightmap_${i}`));
                 LightmapCache.incRef(tex);
                 bakeNode.renderTargets[pass] = new RenderTarget({
                     colorBuffer: tex,
@@ -635,7 +628,7 @@ class Lightmapper {
 
             // single temporary render target of each size
             if (!this.renderTargets.has(size)) {
-                const tex = this.createTexture(size, ('lightmapper_temp_lightmap_' + size));
+                const tex = this.createTexture(size, (`lightmapper_temp_lightmap_${size}`));
                 LightmapCache.incRef(tex);
                 this.renderTargets.set(size, new RenderTarget({
                     colorBuffer: tex,
@@ -645,11 +638,11 @@ class Lightmapper {
         }
     }
 
-    prepareLightsToBake(layerComposition, allLights, bakeLights) {
+    prepareLightsToBake(allLights, bakeLights) {
 
         // ambient light
         if (this.scene.ambientBake) {
-            const ambientLight = new BakeLightAmbient(this.scene);
+            const ambientLight = new BakeLightAmbient(this);
             bakeLights.push(ambientLight);
         }
 
@@ -659,7 +652,7 @@ class Lightmapper {
             const light = sceneLights[i];
 
             // store all lights and their original settings we need to temporarily modify
-            const bakeLight = new BakeLightSimple(this.scene, light);
+            const bakeLight = new BakeLightSimple(this, light);
             allLights.push(bakeLight);
 
             // bake light
@@ -684,11 +677,7 @@ class Lightmapper {
     setupScene() {
 
         // backup
-        this.fog = this.scene.fog;
         this.ambientLight.copy(this.scene.ambientLight);
-
-        // set up scene
-        this.scene.fog = FOG_NONE;
 
         // if not baking ambient, set it to black
         if (!this.scene.ambientBake) {
@@ -697,11 +686,14 @@ class Lightmapper {
 
         // apply scene settings
         this.renderer.setSceneConstants();
+
+        // uniforms
+        this.device.scope.resolve('ambientBakeOcclusionContrast').setValue(this.scene.ambientBakeOcclusionContrast);
+        this.device.scope.resolve('ambientBakeOcclusionBrightness').setValue(this.scene.ambientBakeOcclusionBrightness);
     }
 
     restoreScene() {
 
-        this.scene.fog = this.fog;
         this.scene.ambientLight.copy(this.ambientLight);
     }
 
@@ -864,17 +856,29 @@ class Lightmapper {
 
             } else {
 
-                // TODO: lightmapper on WebGPU does not yet support spot and omni shadows
-                if (this.device.isWebGPU) {
-                    Debug.warnOnce('Lightmapper on WebGPU does not yet support spot and omni shadows.');
-                    return true;
-                }
-
                 this.renderer._shadowRendererLocal.cull(light, comp, casters);
 
-                // TODO: this needs to use render passes to work on WebGPU
-                const insideRenderPass = false;
-                this.renderer.shadowRenderer.render(light, this.camera, insideRenderPass);
+                if (isClustered) {
+                    // Clustered mode: use a single render pass for all faces to the shadow atlas
+                    this.shadowLocalClusteredPass.update([light]);
+                    if (this.shadowLocalClusteredPass.enabled) {
+                        this.shadowLocalClusteredPass.render();
+                    }
+                } else {
+                    // Non-clustered mode: use render passes for each face
+                    const faceCount = light.numShadowFaces;
+                    const applyVsm = light._type === LIGHTTYPE_SPOT;
+                    for (let face = 0; face < faceCount; face++) {
+                        const renderPass = new RenderPassShadowLocalNonClustered(
+                            this.device,
+                            this.renderer.shadowRenderer,
+                            light,
+                            face,
+                            applyVsm
+                        );
+                        renderPass.render();
+                    }
+                }
             }
         }
 
@@ -884,12 +888,14 @@ class Lightmapper {
     postprocessTextures(device, bakeNodes, passCount) {
 
         const numDilates2x = 1; // 1 or 2 dilates (depending on filter being enabled)
-        const dilateShader = this.lightmapFilters.shaderDilate;
+        const dilateShader = this.lightmapFilters.getDilate(device, this.bakeHDR);
+        let denoiseShader;
 
         // bilateral denoise filter - runs as a first pass, before dilate
         const filterLightmap = this.scene.lightmapFilterEnabled;
         if (filterLightmap) {
-            this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness);
+            this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness, this.bakeHDR);
+            denoiseShader = this.lightmapFilters.getDenoise(this.bakeHDR);
         }
 
         device.setBlendState(BlendState.NOBLEND);
@@ -916,7 +922,7 @@ class Lightmapper {
 
                     this.lightmapFilters.setSourceTexture(lightmap);
                     const bilateralFilterEnabled = filterLightmap && pass === 0 && i === 0;
-                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? this.lightmapFilters.shaderDenoise : dilateShader);
+                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? denoiseShader : dilateShader);
 
                     this.lightmapFilters.setSourceTexture(tempTex);
                     drawQuadWithShader(device, nodeRT, dilateShader);
@@ -949,7 +955,7 @@ class Lightmapper {
         // Collect bakeable lights, and also keep allLights along with their properties we change to restore them later
         this.renderer.collectLights(comp);
         const allLights = [], bakeLights = [];
-        this.prepareLightsToBake(comp, allLights, bakeLights);
+        this.prepareLightsToBake(allLights, bakeLights);
 
         // update transforms
         this.updateTransforms(allNodes);
@@ -979,7 +985,7 @@ class Lightmapper {
                 m.mask = MASK_BAKE; // only affected by LM lights
 
                 // patch material
-                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], m.material.lightMap ? m.material.lightMap : this.blackTex);
+                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], this.blackTex);
                 m.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], this.blackTex);
             }
         }
@@ -1099,37 +1105,14 @@ class Lightmapper {
                             this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
                         }
 
-                        if (device.isWebGPU) {
-
-                            // TODO: On WebGPU we use a render pass, but this has some issue it seems,
-                            // and needs to be investigated and fixed. In the LightsBaked example, edges of
-                            // some geometry are not lit correctly, especially visible on boxes. Most likely
-                            // some global per frame / per camera constants are not set up or similar, that
-                            // renderForward sets up.
-                            const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera,
-                                                                         clusteredLightingEnabled ? this.worldClusters : null,
-                                                                         rcv, lightArray);
-                            renderPass.init(tempRT);
-                            renderPass.render();
-                            renderPass.destroy();
-
-                        } else {    // use the old path for WebGL till the render pass way above is fixed
-
-                            // ping-ponging output
-                            this.renderer.setCamera(this.camera, tempRT, true);
-
-                            // prepare clustered lighting
-                            if (clusteredLightingEnabled) {
-                                this.worldClusters.activate();
-                            }
-
-                            this.renderer._forwardTime = 0;
-                            this.renderer._shadowMapTime = 0;
-
-                            this.renderer.renderForward(this.camera, rcv, lightArray, SHADER_FORWARD);
-
-                            device.updateEnd();
-                        }
+                        const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera,
+                            clusteredLightingEnabled ? this.worldClusters : null,
+                            rcv, lightArray);
+                        renderPass.init(tempRT);
+                        renderPass.colorOps.clear = true;
+                        renderPass.colorOps.clearValue.copy(this.camera.clearColor);
+                        renderPass.render();
+                        renderPass.destroy();
 
                         // #if _PROFILER
                         this.stats.shadowMapTime += this.renderer._shadowMapTime;

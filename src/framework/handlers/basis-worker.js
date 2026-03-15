@@ -59,7 +59,7 @@ function BasisWorker() {
     // map of basis format to engine pixel format
     const basisToEngineMapping = (basisFormat, deviceDetails) => {
         switch (basisFormat) {
-            case BASIS_FORMAT.cTFETC1: return deviceDetails.formats.etc1 ? PIXEL_FORMAT.ETC1 : PIXEL_FORMAT.ETC2_RGB;
+            case BASIS_FORMAT.cTFETC1: return deviceDetails.formats.etc2 ? PIXEL_FORMAT.ETC2_RGB : PIXEL_FORMAT.ETC1;
             case BASIS_FORMAT.cTFETC2: return PIXEL_FORMAT.ETC2_RGBA;
             case BASIS_FORMAT.cTFBC1: return PIXEL_FORMAT.DXT1;
             case BASIS_FORMAT.cTFBC3: return PIXEL_FORMAT.DXT5;
@@ -136,7 +136,10 @@ function BasisWorker() {
                     return 'etc2';
                 }
             } else {
-                if (deviceDetails.formats.etc1 || deviceDetails.formats.etc2) {
+                if (deviceDetails.formats.etc2) {
+                    return 'etc2';
+                }
+                if (deviceDetails.formats.etc1) {
                     return 'etc1';
                 }
             }
@@ -156,7 +159,7 @@ function BasisWorker() {
     };
 
     // return true if the texture dimensions are valid for the target format
-    const dimensionsValid = (width, height, format, webgl2) => {
+    const dimensionsValid = (width, height, format) => {
         switch (format) {
             // etc1, 2
             case BASIS_FORMAT.cTFETC1:
@@ -171,7 +174,7 @@ function BasisWorker() {
             // pvrtc
             case BASIS_FORMAT.cTFPVRTC1_4_RGB:
             case BASIS_FORMAT.cTFPVRTC1_4_RGBA:
-                return isPOT(width, height) && ((width === height) || webgl2);
+                return isPOT(width, height);
             // astc
             case BASIS_FORMAT.cTFASTC_4x4:
                 return true;
@@ -221,7 +224,7 @@ function BasisWorker() {
             basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
             // if image dimensions don't work on target, fall back to uncompressed
-            if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
+            if (!dimensionsValid(width, height, basisFormat)) {
                 basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
             }
         }
@@ -229,7 +232,7 @@ function BasisWorker() {
         if (!basisFile.startTranscoding()) {
             basisFile.close();
             basisFile.delete();
-            throw new Error('Failed to start transcoding url=' + url);
+            throw new Error(`Failed to start transcoding url=${url}`);
         }
 
         let i;
@@ -242,7 +245,7 @@ function BasisWorker() {
             if (!basisFile.transcodeImage(dst, mip, 0, 0, basisFormat, 0, -1, -1)) {
                 basisFile.close();
                 basisFile.delete();
-                throw new Error('Failed to transcode image url=' + url);
+                throw new Error(`Failed to transcode image url=${url}`);
             }
 
             const is16BitFormat = (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444);
@@ -307,7 +310,7 @@ function BasisWorker() {
             basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
             // if image dimensions don't work on target, fall back to uncompressed
-            if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
+            if (!dimensionsValid(width, height, basisFormat)) {
                 basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
             }
         }
@@ -315,7 +318,7 @@ function BasisWorker() {
         if (!basisFile.startTranscoding()) {
             basisFile.close();
             basisFile.delete();
-            throw new Error('Failed to start transcoding url=' + url);
+            throw new Error(`Failed to start transcoding url=${url}`);
         }
 
         let i;
@@ -332,11 +335,11 @@ function BasisWorker() {
                     // fails to transcode. this is a workaround which copies the previous mip
                     // level data instead of failing.
                     dst.set(new Uint8Array(levelData[mip - 1].buffer));
-                    console.warn('Failed to transcode last mipmap level, using previous level instead url=' + url);
+                    console.warn(`Failed to transcode last mipmap level, using previous level instead url=${url}`);
                 } else {
                     basisFile.close();
                     basisFile.delete();
-                    throw new Error('Failed to transcode image url=' + url);
+                    throw new Error(`Failed to transcode image url=${url}`);
                 }
             }
 
@@ -388,26 +391,26 @@ function BasisWorker() {
         // initialize the wasm module
         const instantiateWasmFunc = (imports, successCallback) => {
             WebAssembly.instantiate(config.module, imports)
-                .then((result) => {
-                    successCallback(result);
-                })
-                .catch((reason) => {
-                    console.error('instantiate failed + ' + reason);
-                });
+            .then((result) => {
+                successCallback(result);
+            })
+            .catch((reason) => {
+                console.error(`instantiate failed + ${reason}`);
+            });
             return {};
         };
 
         self.BASIS(config.module ? { instantiateWasm: instantiateWasmFunc } : null)
-            .then((instance) => {
-                instance.initializeBasis();
+        .then((instance) => {
+            instance.initializeBasis();
 
-                // set globals
-                basis = instance;
-                rgbPriority = config.rgbPriority;
-                rgbaPriority = config.rgbaPriority;
+            // set globals
+            basis = instance;
+            rgbPriority = config.rgbPriority;
+            rgbaPriority = config.rgbaPriority;
 
-                callback(null);
-            });
+            callback(null);
+        });
     };
 
     // handle incoming worker requests

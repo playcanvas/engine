@@ -1,32 +1,30 @@
-import * as pc from 'playcanvas';
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/idle.glb' }),
-    walkAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/walk.glb' }),
+    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/idle.glb` }),
+    walkAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/walk.glb` }),
     eagerAnim: new pc.Asset('idleAnim', 'container', {
-        url: rootPath + '/static/assets/animations/bitmoji/idle-eager.glb'
+        url: `${rootPath}/static/assets/animations/bitmoji/idle-eager.glb`
     }),
     danceAnim: new pc.Asset('danceAnim', 'container', {
-        url: rootPath + '/static/assets/animations/bitmoji/win-dance.glb'
+        url: `${rootPath}/static/assets/animations/bitmoji/win-dance.glb`
     }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
-    ),
-    bloom: new pc.Asset('bloom', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-bloom.js' })
+    )
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -42,13 +40,11 @@ createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
     pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
     pc.AnimComponentSystem
 ];
 createOptions.resourceHandlers = [
     pc.TextureHandler,
     pc.ContainerHandler,
-    pc.ScriptHandler,
     pc.AnimClipHandler,
     pc.AnimStateGraphHandler
 ];
@@ -80,15 +76,6 @@ assetListLoader.load(() => {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
     cameraEntity.translate(0, 0.75, 3);
-    // add bloom postprocessing (this is ignored by the picker)
-    cameraEntity.addComponent('script');
-    cameraEntity.script.create('bloom', {
-        attributes: {
-            bloomIntensity: 1,
-            bloomThreshold: 0.7,
-            blurAmount: 4
-        }
-    });
     app.root.addChild(cameraEntity);
 
     // Create an entity with a light component
@@ -97,7 +84,7 @@ assetListLoader.load(() => {
         castShadows: true,
         intensity: 1.5,
         normalOffsetBias: 0.02,
-        shadowType: pc.SHADOW_PCF5,
+        shadowType: pc.SHADOW_PCF5_32F,
         shadowDistance: 6,
         shadowResolution: 2048,
         shadowBias: 0.02
@@ -184,6 +171,33 @@ assetListLoader.load(() => {
     characterStateLayer.assignAnimation('Emote.Eager', assets.eagerAnim.resource.animations[0].resource);
     characterStateLayer.assignAnimation('Emote.Dance', assets.danceAnim.resource.animations[0].resource);
     characterStateLayer.assignAnimation('Emote.Walk', assets.walkAnim.resource.animations[0].resource);
+
+    // Initialize observer data
+    data.set('data', {
+        pos: { x: -0.5, y: 0.5 },
+        animPoints: []
+    });
+
+    // Helper to update animation points for visualization
+    const updateAnimPoints = () => {
+        const points = characterStateLayer._controller._states.Emote.animations.map((/** @type {any} */ animNode) => ({
+            x: animNode.point?.x ?? 0,
+            y: animNode.point?.y ?? 0,
+            weight: animNode.weight ?? 0
+        }));
+        data.set('data.animPoints', points);
+    };
+
+    // Set initial animation points
+    updateAnimPoints();
+
+    // Listen for position changes from controls
+    data.on('data.pos:set', (value) => {
+        modelEntity.anim.setFloat('posX', value.x);
+        modelEntity.anim.setFloat('posY', value.y);
+        // Update animation points when position changes (weights recalculate)
+        updateAnimPoints();
+    });
 
     app.root.addChild(modelEntity);
 

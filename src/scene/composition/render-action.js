@@ -1,26 +1,32 @@
 /**
+ * @import { BindGroup } from '../../platform/graphics/bind-group.js'
+ * @import { Layer } from '../layer.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ */
+
+/**
  * Class representing an entry in the final order of rendering of cameras and layers in the engine
  * this is populated at runtime based on LayerComposition
  *
  * @ignore
  */
 class RenderAction {
+    // {CameraComponent|null}
+    camera = null;
+
     constructor() {
 
         // the layer
-        /** @type {import('../layer.js').Layer|null} */
+        /** @type {Layer|null} */
         this.layer = null;
 
         // true if this uses transparent sublayer, opaque otherwise
         this.transparent = false;
 
-        // camera of type CameraComponent
-        this.camera = null;
-
         /**
-         * render target this render action renders to (taken from either camera or layer)
+         * Render target this render action renders to.
          *
-         * @type {import('../../platform/graphics/render-target.js').RenderTarget|null}
+         * @type {RenderTarget|null}
          */
         this.renderTarget = null;
 
@@ -42,7 +48,7 @@ class RenderAction {
         this.lastCameraUse = false;
 
         // an array of view bind groups (the number of these corresponds to the number of views when XR is used)
-        /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */
+        /** @type {BindGroup[]} */
         this.viewBindGroups = [];
 
         // true if the camera should render using render passes it specifies

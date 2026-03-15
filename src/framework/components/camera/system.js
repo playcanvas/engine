@@ -1,12 +1,14 @@
 import { sortPriority } from '../../../core/sort.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { CameraComponent } from './component.js';
 import { CameraComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = ['enabled'];
 
@@ -27,7 +29,7 @@ class CameraComponentSystem extends ComponentSystem {
     /**
      * Create a new CameraComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The Application.
+     * @param {AppBase} app - The Application.
      * @ignore
      */
     constructor(app) {
@@ -42,8 +44,6 @@ class CameraComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.on('prerender', this.onAppPrerender, this);
-
-        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -54,6 +54,7 @@ class CameraComponentSystem extends ComponentSystem {
             'calculateTransform',
             'clearColor',
             'clearColorBuffer',
+            'clearDepth',
             'clearDepthBuffer',
             'clearStencilBuffer',
             'renderSceneColorMap',
@@ -61,6 +62,7 @@ class CameraComponentSystem extends ComponentSystem {
             'cullFaces',
             'farClip',
             'flipFaces',
+            'fog',
             'fov',
             'frustumCulling',
             'horizontalFov',
@@ -74,7 +76,9 @@ class CameraComponentSystem extends ComponentSystem {
             'scissorRect',
             'aperture',
             'shutter',
-            'sensitivity'
+            'sensitivity',
+            'gammaCorrection',
+            'toneMapping'
         ];
 
         for (let i = 0; i < properties.length; i++) {
@@ -137,7 +141,9 @@ class CameraComponentSystem extends ComponentSystem {
             scissorRect: c.scissorRect,
             aperture: c.aperture,
             sensitivity: c.sensitivity,
-            shutter: c.shutter
+            shutter: c.shutter,
+            gammaCorrection: c.gammaCorrection,
+            toneMapping: c.toneMapping
         });
     }
 
@@ -145,9 +151,6 @@ class CameraComponentSystem extends ComponentSystem {
         this.removeCamera(component);
 
         component.onRemove();
-    }
-
-    onUpdate(dt) {
     }
 
     onAppPrerender() {
@@ -170,9 +173,9 @@ class CameraComponentSystem extends ComponentSystem {
     }
 
     destroy() {
-        super.destroy();
+        this.app.off('prerender', this.onAppPrerender, this);
 
-        this.app.systems.off('update', this.onUpdate, this);
+        super.destroy();
     }
 }
 

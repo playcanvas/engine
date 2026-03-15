@@ -1,11 +1,11 @@
-import { Component } from 'react';
 import { loader } from '@monaco-editor/react';
+import { Component } from 'react';
 
-import { pcTypes } from '../../paths.mjs';
 import { jsx } from '../../jsx.mjs';
+import * as languages from '../../monaco/languages/index.mjs';
 import { playcanvasTheme } from '../../monaco/theme.mjs';
 import { jsRules } from '../../monaco/tokenizer-rules.mjs';
-import * as languages from '../../monaco/languages/index.mjs';
+import { pcTypes } from '../../paths.mjs';
 
 /** @typedef {import('../../events.js').StateEvent} StateEvent */
 
@@ -19,7 +19,7 @@ function getShowMinimap() {
     return showMinimap;
 }
 
-// eslint-disable-next-line jsdoc/require-property
+
 /**
  * @typedef {Record<string, any>} Props
  */
@@ -90,9 +90,9 @@ class CodeEditorBase extends TypedComponent {
         for (const id in languages) {
             monaco.languages.register({ id });
             // @ts-ignore
-            monaco.languages.setLanguageConfiguration(id, languages[id].conf);
+            monaco.languages.setLanguageConfiguration(id, languages[id].conf); // eslint-disable-line import/namespace
             // @ts-ignore
-            monaco.languages.setMonarchTokensProvider(id, languages[id].language);
+            monaco.languages.setMonarchTokensProvider(id, languages[id].language); // eslint-disable-line import/namespace
         }
 
         // patches highlighter tokenizer for javascript to include jsdoc
@@ -104,20 +104,20 @@ class CodeEditorBase extends TypedComponent {
         });
 
         fetch(pcTypes)
-            .then((r) => {
-                return r.text();
-            })
-            .then((playcanvasDefs) => {
-                // set types
-                monaco.languages.typescript.typescriptDefaults.addExtraLib(
-                    playcanvasDefs,
-                    '@playcanvas/playcanvas.d.ts'
-                );
-                monaco.languages.typescript.javascriptDefaults.addExtraLib(
-                    playcanvasDefs,
-                    '@playcanvas/playcanvas.d.ts'
-                );
-            });
+        .then((r) => {
+            return r.text();
+        })
+        .then((playcanvasDefs) => {
+            // set types
+            monaco.languages.typescript.typescriptDefaults.addExtraLib(
+                playcanvasDefs,
+                '@playcanvas/playcanvas.d.ts'
+            );
+            monaco.languages.typescript.javascriptDefaults.addExtraLib(
+                playcanvasDefs,
+                '@playcanvas/playcanvas.d.ts'
+            );
+        });
     }
 
     /**

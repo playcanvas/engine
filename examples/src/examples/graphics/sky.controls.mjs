@@ -4,8 +4,8 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, VectorInput, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
+    const { BindingTwoWay, BooleanInput, VectorInput, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
     return fragment(
         jsx(
             Panel,
@@ -91,6 +91,74 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     precision: 2
                 })
             )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Color Enhance' },
+            jsx(
+                LabelGroup,
+                { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.enabled' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'shadows' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.shadows' },
+                    min: -3,
+                    max: 3,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'highlights' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.highlights' },
+                    min: -3,
+                    max: 3,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'midtones' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.midtones' },
+                    min: -1,
+                    max: 1,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'vibrance' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.vibrance' },
+                    min: -1,
+                    max: 1,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'dehaze' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.dehaze' },
+                    min: -1,
+                    max: 1,
+                    precision: 2
+                })
+            )
         )
     );
-}
+};

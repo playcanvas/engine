@@ -1,17 +1,26 @@
 import { MOUSEBUTTON_NONE } from './constants.js';
 
 /**
+ * @import { Mouse } from './mouse.js'
+ */
+
+/**
  * Returns true if pointer lock is currently enabled.
  *
  * @returns {boolean} True if pointer lock is currently enabled.
- * @ignore
  */
 function isMousePointerLocked() {
     return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
 }
 
 /**
- * MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
+ * The MouseEvent object is passed into all event handlers registered on the {@link Mouse}. The
+ * events are:
+ *
+ * - {@link Mouse.EVENT_MOUSEDOWN}
+ * - {@link Mouse.EVENT_MOUSEUP}
+ * - {@link Mouse.EVENT_MOUSEMOVE}
+ * - {@link Mouse.EVENT_MOUSEWHEEL}
  *
  * @category Input
  */
@@ -57,7 +66,7 @@ class MouseEvent {
 
     /**
      * A value representing the amount the mouse wheel has moved, only valid for
-     * {@link EVENT_MOUSEWHEEL} events.
+     * {@link Mouse.EVENT_MOUSEWHEEL} events.
      *
      * @type {number}
      */
@@ -108,7 +117,7 @@ class MouseEvent {
     /**
      * Create a new MouseEvent instance.
      *
-     * @param {import('./mouse.js').Mouse} mouse - The Mouse device that is firing this event.
+     * @param {Mouse} mouse - The Mouse device that is firing this event.
      * @param {globalThis.MouseEvent|globalThis.WheelEvent} event - The original browser event that fired.
      */
     constructor(mouse, event) {

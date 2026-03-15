@@ -1,7 +1,13 @@
-import { Shader } from "../shader.js";
-import { SHADERLANGUAGE_WGSL } from "../constants.js";
-import { Debug, DebugHelper } from "../../../core/debug.js";
-import { DebugGraphics } from "../debug-graphics.js";
+import { Shader } from '../shader.js';
+import { SHADERLANGUAGE_WGSL } from '../constants.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
+import { DebugGraphics } from '../debug-graphics.js';
+
+/**
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
+ * @import { WebgpuShader } from './webgpu-shader.js'
+ * @import { WebgpuTexture } from './webgpu-texture.js'
+ */
 
 /**
  * A WebGPU helper class implementing texture mipmap generation.
@@ -9,8 +15,16 @@ import { DebugGraphics } from "../debug-graphics.js";
  * @ignore
  */
 class WebgpuMipmapRenderer {
-    /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
+    /** @type {WebgpuGraphicsDevice} */
     device;
+
+    /**
+     * Cache of render pipelines keyed by texture format.
+     *
+     * @type {Map<string, GPURenderPipeline>}
+     * @private
+     */
+    pipelineCache = new Map();
 
     constructor(device) {
         this.device = device;
@@ -59,17 +73,18 @@ class WebgpuMipmapRenderer {
     destroy() {
         this.shader.destroy();
         this.shader = null;
+        this.pipelineCache.clear();
     }
 
     /**
      * Generates mipmaps for the specified WebGPU texture.
      *
-     * @param {import('./webgpu-texture.js').WebgpuTexture} webgpuTexture - The texture to generate mipmaps for.
+     * @param {WebgpuTexture} webgpuTexture - The texture to generate mipmaps for.
      */
     generate(webgpuTexture) {
 
         // ignore texture with no mipmaps
-        const textureDescr = webgpuTexture.descr;
+        const textureDescr = webgpuTexture.desc;
         if (textureDescr.mipLevelCount <= 1) {
             return;
         }
@@ -82,28 +97,34 @@ class WebgpuMipmapRenderer {
 
         const device = this.device;
         const wgpu = device.wgpu;
+        const format = textureDescr.format;
 
-        /** @type {import('./webgpu-shader.js').WebgpuShader} */
-        const webgpuShader = this.shader.impl;
+        // Get or create cached pipeline for this texture format
+        let pipeline = this.pipelineCache.get(format);
+        if (!pipeline) {
+            /** @type {WebgpuShader} */
+            const webgpuShader = this.shader.impl;
 
-        const pipeline = wgpu.createRenderPipeline({
-            layout: 'auto',
-            vertex: {
-                module: webgpuShader.getVertexShaderModule(),
-                entryPoint: webgpuShader.vertexEntryPoint
-            },
-            fragment: {
-                module: webgpuShader.getFragmentShaderModule(),
-                entryPoint: webgpuShader.fragmentEntryPoint,
-                targets: [{
-                    format: textureDescr.format // use the same format as the texture
-                }]
-            },
-            primitive: {
-                topology: 'triangle-strip'
-            }
-        });
-        DebugHelper.setLabel(pipeline, 'RenderPipeline-MipmapRenderer');
+            pipeline = wgpu.createRenderPipeline({
+                layout: 'auto',
+                vertex: {
+                    module: webgpuShader.getVertexShaderModule(),
+                    entryPoint: webgpuShader.vertexEntryPoint
+                },
+                fragment: {
+                    module: webgpuShader.getFragmentShaderModule(),
+                    entryPoint: webgpuShader.fragmentEntryPoint,
+                    targets: [{
+                        format: format
+                    }]
+                },
+                primitive: {
+                    topology: 'triangle-strip'
+                }
+            });
+            DebugHelper.setLabel(pipeline, `RenderPipeline-MipmapRenderer-${format}`);
+            this.pipelineCache.set(format, pipeline);
+        }
 
         const texture = webgpuTexture.texture;
         const numFaces = texture.cubemap ? 6 : (texture.array ? texture.arrayLength : 1);
@@ -119,8 +140,7 @@ class WebgpuMipmapRenderer {
         }
 
         // loop through each mip level and render the previous level's contents into it.
-        const commandEncoder = device.commandEncoder ?? wgpu.createCommandEncoder();
-        DebugHelper.setLabel(commandEncoder, 'MipmapRendererEncoder');
+        const commandEncoder = device.getCommandEncoder();
 
         DebugGraphics.pushGpuMarker(device, 'MIPMAP-RENDERER');
 
@@ -166,14 +186,6 @@ class WebgpuMipmapRenderer {
         }
 
         DebugGraphics.popGpuMarker(device);
-
-        // submit the encoded commands if we created the encoder
-        if (!device.commandEncoder) {
-
-            const cb = commandEncoder.finish();
-            DebugHelper.setLabel(cb, 'MipmapRenderer-CommandBuffer');
-            device.addCommandBuffer(cb);
-        }
 
         // clear invalidated state
         device.pipeline = null;

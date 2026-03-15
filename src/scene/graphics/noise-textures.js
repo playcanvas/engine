@@ -1,7 +1,7 @@
-import { blueNoiseData } from "../../core/math/blue-noise.js";
-import { ADDRESS_REPEAT, FILTER_NEAREST, PIXELFORMAT_RGBA8, TEXTURETYPE_DEFAULT } from "../../platform/graphics/constants.js";
-import { DeviceCache } from "../../platform/graphics/device-cache.js";
-import { Texture } from "../../platform/graphics/texture.js";
+import { blueNoiseData } from '../../core/math/blue-noise.js';
+import { ADDRESS_REPEAT, FILTER_NEAREST, PIXELFORMAT_RGBA8, TEXTURETYPE_DEFAULT } from '../../platform/graphics/constants.js';
+import { DeviceCache } from '../../platform/graphics/device-cache.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
 const createTexture = (device, namePrefix, size, data) => {
     const texture = new Texture(device, {
@@ -32,7 +32,7 @@ const getBlueNoiseTexture = (device) => {
 
         const data = blueNoiseData();
         const size = Math.sqrt(data.length / 4);
-        return createTexture(device, "BlueNoise", size, data);
+        return createTexture(device, 'BlueNoise', size, data);
     });
 };
 

@@ -1,7 +1,7 @@
 // @config WEBGPU_DISABLED
-import * as pc from 'playcanvas';
 import files from 'examples/files';
 import { deviceType, loadES5, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -13,8 +13,8 @@ const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.
 // Note that many additional formats are supported by the library and can be used.
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 /** @type {pc.GraphicsDevice} */
@@ -46,7 +46,6 @@ app.on('destroy', () => {
  * @param {string} url - The url to load.
  */
 async function loadModel(url) {
-    console.log('loader.gl example url', url);
     // load the url using the draco format loader
     // @ts-ignore: cannot find CORE and DRACO
     const modelData = await CORE.load(url, DRACO.DracoLoader);
@@ -69,14 +68,16 @@ async function loadModel(url) {
     mesh.setColors32(colors32);
     mesh.update(pc.PRIMITIVE_POINTS);
 
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'MyShader', {
-        aPosition: pc.SEMANTIC_POSITION,
-        aColor: pc.SEMANTIC_COLOR
-    });
-
     // create material using the shader
-    const material = new pc.Material();
-    material.shader = shader;
+    const material = new pc.ShaderMaterial({
+        uniqueName: 'MyShader',
+        vertexGLSL: files['shader.vert'],
+        fragmentGLSL: files['shader.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aColor: pc.SEMANTIC_COLOR
+        }
+    });
     material.blendType = pc.BLENDMODE_ONE_MINUS_DST_ALPHA;
     material.cull = pc.CULLFACE_NONE;
 
@@ -99,10 +100,10 @@ camera.translate(-20, 15, 20);
 camera.lookAt(0, 7, 0);
 app.root.addChild(camera);
 // Load the draco model, don't wait for it.
-loadModel(rootPath + '/static/assets/models/park_points.drc');
+loadModel(`${rootPath}/static/assets/models/park_points.drc`);
 // update things each frame
 let time = 0;
-app.on('update', function (dt) {
+app.on('update', (dt) => {
     time += dt;
     // orbit the camera
     if (camera) {

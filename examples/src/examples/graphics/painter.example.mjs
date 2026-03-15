@@ -1,13 +1,11 @@
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -54,7 +52,7 @@ app.on('destroy', () => {
  */
 function createPrimitive(primitiveType, position, scale, layer, material) {
     // create primitive
-    const primitive = new pc.Entity();
+    const primitive = new pc.Entity(`Brush-${primitiveType}`);
     primitive.addComponent('render', {
         type: primitiveType,
         layers: layer,
@@ -91,7 +89,6 @@ app.scene.layers.insert(paintLayer, 0);
 
 // create a material we use for the paint brush - it uses emissive color to control its color, which is assigned later
 const brushMaterial = new pc.StandardMaterial();
-brushMaterial.emissiveTint = true;
 brushMaterial.useLighting = false;
 brushMaterial.update();
 
@@ -141,7 +138,9 @@ app.root.addChild(camera);
 
 // material used to add render target into the world
 const material = new pc.StandardMaterial();
+material.name = 'EmissiveMaterial';
 material.emissiveMap = texture;
+material.emissive = pc.Color.WHITE;
 material.useLighting = false;
 material.update();
 
@@ -161,7 +160,7 @@ const pos = new pc.Vec3();
 const usedBrushes = [];
 
 // update things each frame
-app.on('update', function (dt) {
+app.on('update', (dt) => {
     // if the last brush stroke is finished, generate new random one
     if (progress >= 1) {
         progress = 0;

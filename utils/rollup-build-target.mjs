@@ -1,32 +1,36 @@
 // official package plugins
-import { babel } from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import strip from '@rollup/plugin-strip';
-import terser from '@rollup/plugin-terser';
+import swcPlugin from '@rollup/plugin-swc';
 
-// unoffical package plugins
+// unofficial package plugins
+import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
-import { visualizer } from 'rollup-plugin-visualizer';
+import { visualizer } from 'rollup-plugin-visualizer'; // eslint-disable-line import/no-unresolved
 
 // custom plugins
 import { shaderChunks } from './plugins/rollup-shader-chunks.mjs';
 import { engineLayerImportValidation } from './plugins/rollup-import-validation.mjs';
 import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 import { dynamicImportLegacyBrowserSupport, dynamicImportBundlerSuppress } from './plugins/rollup-dynamic.mjs';
-import { treeshakeIgnore } from './plugins/rollup-treeshake-ignore.mjs';
+import { runTsc } from './plugins/rollup-run-tsc.mjs';
+import { typesFixup } from './plugins/rollup-types-fixup.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
-import { babelOptions } from './rollup-babel-options.mjs';
+import { swcOptions } from './rollup-swc-options.mjs';
 
-/** @typedef {import('rollup').RollupOptions} RollupOptions */
-/** @typedef {import('rollup').OutputOptions} OutputOptions */
-/** @typedef {import('rollup').ModuleFormat} ModuleFormat */
-/** @typedef {import('@rollup/plugin-strip').RollupStripOptions} RollupStripOptions */
+import { dirname, resolve as pathResolve } from 'path';
+import { fileURLToPath } from 'url';
 
-const TREESHAKE_IGNORE_REGEXES = [
-    /polyfill/
-];
+/** @import { RollupOptions, OutputOptions } from 'rollup' */
+
+// Find path to the repo root
+// @ts-ignore import.meta not allowed by tsconfig module:es6, but it works
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const rootDir = pathResolve(__dirname, '..');
+
 
 const STRIP_FUNCTIONS = [
     'Debug.assert',
@@ -40,10 +44,11 @@ const STRIP_FUNCTIONS = [
     'Debug.errorOnce',
     'Debug.log',
     'Debug.logOnce',
+    'Debug.removed',
     'Debug.trace',
     'DebugHelper.setName',
     'DebugHelper.setLabel',
-    `DebugHelper.setDestroyed`,
+    'DebugHelper.setDestroyed',
     'DebugGraphics.toString',
     'DebugGraphics.clearGpuMarkers',
     'DebugGraphics.pushGpuMarker',
@@ -52,6 +57,7 @@ const STRIP_FUNCTIONS = [
     'WebgpuDebug.memory',
     'WebgpuDebug.internal',
     'WebgpuDebug.end',
+    'WebgpuDebug.endShader',
     'WorldClustersDebug.render'
 ];
 
@@ -73,16 +79,14 @@ const HISTORY = new Map();
 
 /**
  * @param {'debug'|'release'|'profiler'} buildType - The build type.
- * @param {boolean} isUMD - Whether the build is for UMD.
  * @returns {object} - The JSCC options.
  */
-function getJSCCOptions(buildType, isUMD) {
+function getJSCCOptions(buildType) {
     const options = {
         debug: {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision,
-                _IS_UMD: +isUMD,
                 _DEBUG: 1,
                 _PROFILER: 1
             },
@@ -92,8 +96,7 @@ function getJSCCOptions(buildType, isUMD) {
         release: {
             values: {
                 _CURRENT_SDK_VERSION: version,
-                _CURRENT_SDK_REVISION: revision,
-                _IS_UMD: +isUMD
+                _CURRENT_SDK_REVISION: revision
             },
             asloader: false
         },
@@ -101,7 +104,6 @@ function getJSCCOptions(buildType, isUMD) {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision,
-                _IS_UMD: +isUMD,
                 _PROFILER: 1
             },
             asloader: false
@@ -111,16 +113,15 @@ function getJSCCOptions(buildType, isUMD) {
 }
 
 /**
+ * @param {string} type - The type of the output (e.g., 'umd', 'es').
  * @returns {OutputOptions['plugins']} - The output plugins.
  */
-function getOutPlugins() {
-    const plugins = [
-        terser()
-    ];
+function getOutPlugins(type) {
+    const plugins = [];
 
     if (process.env.treemap) {
         plugins.push(visualizer({
-            filename: 'treemap.html',
+            filename: `treemap.${type}.html`,
             brotliSize: true,
             gzipSize: true
         }));
@@ -128,15 +129,22 @@ function getOutPlugins() {
 
     if (process.env.treenet) {
         plugins.push(visualizer({
-            filename: 'treenet.html',
+            filename: `treenet.${type}.html`,
             template: 'network'
         }));
     }
 
     if (process.env.treesun) {
         plugins.push(visualizer({
-            filename: 'treesun.html',
+            filename: `treesun.${type}.html`,
             template: 'sunburst'
+        }));
+    }
+
+    if (process.env.treeflame) {
+        plugins.push(visualizer({
+            filename: `treeflame.${type}.html`,
+            template: 'flamegraph'
         }));
     }
 
@@ -144,7 +152,11 @@ function getOutPlugins() {
 }
 
 /**
- * Build a target that Rollup is supposed to build (bundled and unbundled).
+ * Build rollup options for JS (bundled and unbundled).
+ *
+ * For faster subsequent builds, the unbundled and release builds are cached in the HISTORY map to
+ * be used for bundled and minified builds. They are stored in the HISTORY map with the key:
+ * `<debug|release|profiler>-<umd|esm>-<bundled>`.
  *
  * @param {object} options - The build target options.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
@@ -154,11 +166,20 @@ function getOutPlugins() {
  * @param {string} [options.dir] - Only used for examples to change the output location.
  * @returns {RollupOptions[]} Rollup targets.
  */
-function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.js', dir = 'build' }) {
+function buildJSOptions({
+    moduleFormat,
+    buildType,
+    bundleState,
+    input = 'src/index.js',
+    dir = 'build'
+}) {
     const isUMD = moduleFormat === 'umd';
     const isDebug = buildType === 'debug';
     const isMin = buildType === 'min';
     const bundled = isUMD || isMin || bundleState === 'bundled';
+
+    const prefix = `${OUT_PREFIX[buildType]}`;
+    const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
 
     const targets = [];
 
@@ -178,7 +199,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
                 sourcemap: isDebug && 'inline',
                 name: 'pc',
                 preserveModules: false,
-                file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
+                file: `${dir}/${prefix}.mjs`
             }
         };
 
@@ -197,11 +218,14 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
          */
         const target = {
             input: release.output.file,
+            plugins: [
+                swcPlugin({ swc: swcOptions(isDebug, isMin) })
+            ],
             output: {
-                plugins: getOutPlugins(),
-                file: `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}`
+                banner: isUMD ? getBanner(BANNER[buildType]) : undefined,
+                file: `${dir}/${file}`
             },
-            context: isUMD ? "this" : undefined
+            context: isUMD ? 'this' : undefined
         };
 
         HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
@@ -217,25 +241,25 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
         input,
         output: {
             banner: bundled ? getBanner(BANNER[buildType]) : undefined,
-            plugins: isMin ? getOutPlugins() : undefined,
+            plugins: buildType === 'release' ? getOutPlugins(isUMD ? 'umd' : 'es') : undefined,
             format: isUMD ? 'umd' : 'es',
             indent: '\t',
             sourcemap: bundled && isDebug && 'inline',
             name: 'pc',
             preserveModules: !bundled,
-            file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}` : undefined,
-            dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined,
+            preserveModulesRoot: !bundled ? rootDir : undefined,
+            file: bundled ? `${dir}/${file}` : undefined,
+            dir: !bundled ? `${dir}/${prefix}` : undefined,
             entryFileNames: chunkInfo => `${chunkInfo.name.replace(/node_modules/g, 'modules')}.js`
         },
         plugins: [
             resolve(),
-            jscc(getJSCCOptions(isMin ? 'release' : buildType, isUMD)),
-            isUMD ? treeshakeIgnore(TREESHAKE_IGNORE_REGEXES) : undefined,
+            jscc(getJSCCOptions(isMin ? 'release' : buildType)),
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
             !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-            babel(babelOptions(isDebug, isUMD)),
+            swcPlugin({ swc: swcOptions(isDebug, isMin) }),
             !isUMD ? dynamicImportBundlerSuppress() : undefined,
             !isDebug ? spacesToTabs() : undefined
         ]
@@ -247,4 +271,34 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
     return targets;
 }
 
-export { buildTarget };
+/**
+ * Build rollup options for TypeScript definitions.
+ *
+ * @param {object} options - The build target options.
+ * @param {string} [options.root] - The root directory for finding the TypeScript definitions.
+ * @param {string} [options.dir] - The output directory for the TypeScript definitions.
+ * @returns {RollupOptions} Rollup targets.
+ */
+function buildTypesOption({
+    root = '.',
+    dir = 'build'
+} = {}) {
+    return {
+        input: `${root}/build/playcanvas/src/index.d.ts`,
+        output: [{
+            file: `${dir}/playcanvas.d.ts`,
+            footer: 'export as namespace pc;\nexport as namespace pcx;',
+            format: 'es'
+        }],
+        watch: {
+            include: `${root}/src/**`
+        },
+        plugins: [
+            runTsc(`${root}/tsconfig.build.json`),
+            typesFixup(root),
+            dts()
+        ]
+    };
+}
+
+export { buildJSOptions, buildTypesOption };

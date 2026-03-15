@@ -84,7 +84,7 @@ if (app.xr.supported) {
         if (app.xr.isAvailable(pc.XRTYPE_AR)) {
             c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
                 callback: function (err) {
-                    if (err) message('WebXR Immersive AR failed to start: ' + err.message);
+                    if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
         } else {
@@ -92,12 +92,12 @@ if (app.xr.supported) {
         }
     };
 
-    app.mouse.on('mousedown', function () {
+    app.mouse.on('mousedown', () => {
         if (!app.xr.active) activate();
     });
 
     if (app.touch) {
-        app.touch.on('touchend', function (evt) {
+        app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -112,20 +112,20 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', function (evt) {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
-    app.xr.on('start', function () {
+    app.xr.on('start', () => {
         message('Immersive AR session has started');
     });
-    app.xr.on('end', function () {
+    app.xr.on('end', () => {
         message('Immersive AR session has ended');
     });
-    app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
-        message('Immersive AR is ' + (available ? 'available' : 'unavailable'));
+    app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
+        message(`Immersive AR is ${available ? 'available' : 'unavailable'}`);
     });
 
     if (!app.xr.isAvailable(pc.XRTYPE_AR)) {

@@ -1,30 +1,45 @@
 import { Debug } from '../../core/debug.js';
-
 import {
     BLENDMODE_ZERO, BLENDMODE_ONE, BLENDMODE_SRC_COLOR,
     BLENDMODE_DST_COLOR, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA,
     BLENDMODE_ONE_MINUS_SRC_ALPHA,
     BLENDEQUATION_ADD, BLENDEQUATION_REVERSE_SUBTRACT,
     BLENDEQUATION_MIN, BLENDEQUATION_MAX,
-    CULLFACE_BACK
+    CULLFACE_BACK,
+    SHADERLANGUAGE_GLSL,
+    FRONTFACE_CCW
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
-import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-
 import {
     BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX, BLEND_SUBTRACTIVE
 } from '../constants.js';
-import { processShader } from '../shader-lib/utils.js';
 import { getDefaultMaterial } from './default-material.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
+
+/**
+ * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Light } from '../light.js';
+ * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { CameraShaderParams } from '../camera-shader-params.js'
+ * @import { Scene } from '../scene.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
+ * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
+ * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+ * @import { ShaderChunkMap } from '../shader-lib/shader-chunk-map.js';
+ * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
+ */
 
 // blend mode mapping to op, srcBlend and dstBlend
 const blendModes = [];
 blendModes[BLEND_SUBTRACTIVE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUATION_REVERSE_SUBTRACT };
 blendModes[BLEND_NONE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ZERO, op: BLENDEQUATION_ADD };
-blendModes[BLEND_NORMAL] = { src: BLENDMODE_SRC_ALPHA, dst: BLENDMODE_ONE_MINUS_SRC_ALPHA, op: BLENDEQUATION_ADD };
+blendModes[BLEND_NORMAL] = { src: BLENDMODE_SRC_ALPHA, dst: BLENDMODE_ONE_MINUS_SRC_ALPHA, op: BLENDEQUATION_ADD, alphaSrc: BLENDMODE_ONE };
 blendModes[BLEND_PREMULTIPLIED] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE_MINUS_SRC_ALPHA, op: BLENDEQUATION_ADD };
 blendModes[BLEND_ADDITIVE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUATION_ADD };
 blendModes[BLEND_ADDITIVEALPHA] = { src: BLENDMODE_SRC_ALPHA, dst: BLENDMODE_ONE, op: BLENDEQUATION_ADD };
@@ -37,29 +52,38 @@ blendModes[BLEND_MAX] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUAT
 let id = 0;
 
 /**
- * A material determines how a particular mesh instance is rendered. It specifies the shader and
- * render state that is set before the mesh instance is submitted to the graphics device.
+ * @typedef {object} ShaderVariantParams - The description of the parameters used by the
+ * Material#getShaderVariant function.
+ * @property {GraphicsDevice} device - The graphics device.
+ * @property {Scene} scene - The scene.
+ * @property {number} objDefs - The object definitions.
+ * @property {CameraShaderParams} cameraShaderParams - The camera shader parameters.
+ * @property {number} pass - The shader pass.
+ * @property {Light[][]} sortedLights - The sorted lights.
+ * @property {UniformBufferFormat|undefined} viewUniformFormat - The view uniform format.
+ * @property {BindGroupFormat|undefined} viewBindGroupFormat - The view bind group format.
+ * @property {VertexFormat} vertexFormat - The vertex format.
+ * @ignore
+ */
+
+/**
+ * A material determines how a particular {@link MeshInstance} is rendered, and specifies
+ * render state including uniforms, textures, defines, and other properties.
+ *
+ * This is a base class and cannot be instantiated and used directly. Only subclasses such
+ * as {@link ShaderMaterial} and {@link StandardMaterial} can be used to define materials
+ * for rendering.
  *
  * @category Graphics
  */
 class Material {
     /**
-     * A shader used to render the material. Note that this is used only by materials where the
-     * user specifies the shader. Most material types generate multiple shader variants, and do not
-     * set this.
-     *
-     * @type {import('../../platform/graphics/shader.js').Shader}
-     * @private
-     */
-    _shader = null;
-
-    /**
      * The mesh instances referencing this material
      *
-     * @type {import('../mesh-instance.js').MeshInstance[]}
+     * @type {Set<MeshInstance>}
      * @private
      */
-    meshInstances = [];
+    meshInstances = new Set();
 
     /**
      * The name of the material.
@@ -83,10 +107,20 @@ class Material {
      * The cache of shader variants generated for this material. The key represents the unique
      * variant, the value is the shader.
      *
-     * @type {Map<number, import('../../platform/graphics/shader.js').Shader>}
+     * @type {Map<number, Shader>}
      * @ignore
      */
     variants = new Map();
+
+    /**
+     * The set of defines used to generate the shader variants.
+     *
+     * @type {Map<string, string>}
+     * @ignore
+     */
+    defines = new Map();
+
+    _definesDirty = false;
 
     parameters = {};
 
@@ -135,18 +169,153 @@ class Material {
     cull = CULLFACE_BACK;
 
     /**
+     * Controls whether polygons are front- or back-facing by setting a winding
+     * orientation. Can be:
+     *
+     * - {@link FRONTFACE_CW}: The clock-wise winding.
+     * - {@link FRONTFACE_CCW}: The counterclockwise winding.
+     *
+     * Defaults to {@link FRONTFACE_CCW}.
+     *
+     * @type {number}
+     */
+    frontFace = FRONTFACE_CCW;
+
+    /**
      * Stencil parameters for front faces (default is null).
      *
-     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      */
     stencilFront = null;
 
     /**
      * Stencil parameters for back faces (default is null).
      *
-     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      */
     stencilBack = null;
+
+    /**
+     * @type {ShaderChunks|null}
+     * @private
+     */
+    _shaderChunks = null;
+
+    // this is deprecated, keeping for backwards compatibility
+    _oldChunks = {};
+
+    _dirtyShader = true;
+
+    /** @protected */
+    constructor() {
+        if (new.target === Material) {
+            Debug.error('Material class cannot be instantiated, use ShaderMaterial instead');
+        }
+    }
+
+    /**
+     * Returns true if the material has custom shader chunks.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get hasShaderChunks() {
+        return this._shaderChunks != null;
+    }
+
+    /**
+     * Returns the shader chunks for the material. Those get allocated if they are not already.
+     *
+     * @type {ShaderChunks}
+     * @ignore
+     */
+    get shaderChunks() {
+        if (!this._shaderChunks) {
+            this._shaderChunks = new ShaderChunks();
+        }
+        return this._shaderChunks;
+    }
+
+    /**
+     * Returns an object containing shader chunks for a specific shader language for the material.
+     * These chunks define custom GLSL or WGSL code used to construct the final shader for the
+     * material. The chunks can be also be included in shaders using the `#include "ChunkName"`
+     * directive.
+     *
+     * On the WebGL platform:
+     *  - If GLSL chunks are provided, they are used directly.
+     *
+     * On the WebGPU platform:
+     * - If WGSL chunks are provided, they are used directly.
+     * - If only GLSL chunks are provided, a GLSL shader is generated and then transpiled to WGSL,
+     * which is less efficient.
+     *
+     * To ensure faster shader compilation, it is recommended to provide shader chunks for all
+     * supported platforms.
+     *
+     * A simple example on how to override a shader chunk providing emissive color for both GLSL and
+     * WGSL to simply return a red color:
+     *
+     * ```javascript
+     * material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('emissivePS', `
+     *     void getEmission() {
+     *         dEmission = vec3(1.0, 0.0, 1.0);
+     *     }
+     * `);
+     *
+     * material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('emissivePS', `
+     *     fn getEmission() {
+     *         dEmission = vec3f(1.0, 0.0, 1.0);
+     *     }
+     * `);
+     *
+     * // call update to apply the changes
+     * material.update();
+     * ```
+     *
+     * @param {string} [shaderLanguage] - Specifies the shader language of shaders. Defaults to
+     * {@link SHADERLANGUAGE_GLSL}.
+     * @returns {ShaderChunkMap} - The shader chunks for the specified shader language.
+     */
+    getShaderChunks(shaderLanguage = SHADERLANGUAGE_GLSL) {
+        const chunks = this.shaderChunks;
+        return shaderLanguage === SHADERLANGUAGE_GLSL ? chunks.glsl : chunks.wgsl;
+    }
+
+    /**
+     * Sets the version of the shader chunks.
+     *
+     * This should be a string containing the current engine major and minor version (e.g., '2.8'
+     * for engine v2.8.1) and ensures compatibility with the current engine version. When providing
+     * custom shader chunks, set this to the latest supported version. If a future engine release no
+     * longer supports the specified version, a warning will be issued. In that case, update your
+     * shader chunks to match the new format and set this to the latest version accordingly.
+     *
+     * @type {string}
+     */
+    set shaderChunksVersion(value) {
+        this.shaderChunks.version = value;
+    }
+
+    /**
+     * Returns the version of the shader chunks.
+     *
+     * @type {string}
+     */
+    get shaderChunksVersion() {
+        return this.shaderChunks.version;
+    }
+
+    set chunks(value) {
+        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
+        this._oldChunks = value;
+    }
+
+    get chunks() {
+        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
+        Object.assign(this._oldChunks, Object.fromEntries(this.shaderChunks.glsl));
+        return this._oldChunks;
+    }
 
     /**
      * Sets the offset for the output depth buffer value. Useful for decals to prevent z-fighting.
@@ -278,34 +447,14 @@ class Material {
         return this._blendState.alphaWrite;
     }
 
-    /**
-     * Sets the shader used by this material to render mesh instances. Defaults to `null`.
-     *
-     * @type {import('../../platform/graphics/shader.js').Shader|null}
-     */
-    set shader(shader) {
-        this._shader = shader;
-    }
-
-    /**
-     * Gets the shader used by this material to render mesh instances.
-     *
-     * @type {import('../../platform/graphics/shader.js').Shader|null}
-     */
-    get shader() {
-        return this._shader;
-    }
-
     // returns boolean depending on material being transparent
     get transparent() {
         return this._blendState.blend;
     }
 
     _updateTransparency() {
-        const transparent = this.transparent;
-        const meshInstances = this.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            meshInstances[i].transparent = transparent;
+        for (const meshInstance of this.meshInstances) {
+            meshInstance.transparent = this.transparent;
         }
     }
 
@@ -362,7 +511,7 @@ class Material {
         const blendMode = blendModes[type];
         Debug.assert(blendMode, `Unknown blend mode ${type}`);
         this._blendState.setColorBlend(blendMode.op, blendMode.src, blendMode.dst);
-        this._blendState.setAlphaBlend(blendMode.op, blendMode.src, blendMode.dst);
+        this._blendState.setAlphaBlend(blendMode.alphaOp ?? blendMode.op, blendMode.alphaSrc ?? blendMode.src, blendMode.alphaDst ?? blendMode.dst);
 
         const blend = type !== BLEND_NONE;
         if (this._blendState.blend !== blend) {
@@ -493,7 +642,6 @@ class Material {
      */
     copy(source) {
         this.name = source.name;
-        this._shader = source._shader;
 
         // Render states
         this.alphaTest = source.alphaTest;
@@ -503,11 +651,28 @@ class Material {
         this._depthState.copy(source._depthState);
 
         this.cull = source.cull;
+        this.frontFace = source.frontFace;
 
         this.stencilFront = source.stencilFront?.clone();
         if (source.stencilBack) {
             this.stencilBack = source.stencilFront === source.stencilBack ? this.stencilFront : source.stencilBack.clone();
         }
+
+        // Shader parameters
+        this.clearParameters();
+        for (const name in source.parameters) {
+            if (source.parameters.hasOwnProperty(name)) {
+                this._setParameterSimple(name, source.parameters[name].data);
+            }
+        }
+
+        // defines
+        this.defines.clear();
+        source.defines.forEach((value, key) => this.defines.set(key, value));
+
+        // shader chunks
+        this._shaderChunks = source.hasShaderChunks ? new ShaderChunks() : null;
+        this._shaderChunks?.copy(source._shaderChunks);
 
         return this;
     }
@@ -523,28 +688,62 @@ class Material {
     }
 
     _updateMeshInstanceKeys() {
-        const meshInstances = this.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            meshInstances[i].updateKey();
+        for (const meshInstance of this.meshInstances) {
+            meshInstance.updateKey();
         }
     }
 
     updateUniforms(device, scene) {
-    }
-
-    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
-
-        // generate shader variant - its the same shader, but with different processing options
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
-        return processShader(this._shader, processingOptions);
+        if (this._dirtyShader) {
+            this.clearVariants();
+        }
     }
 
     /**
-     * Applies any changes made to the material's properties.
+     * @param {ShaderVariantParams} params - The parameters used to generate the shader variant.
+     * @ignore
+     */
+    getShaderVariant(params) {
+        Debug.assert(false, 'Not implemented');
+    }
+
+    /**
+     * Applies any changes made to the material's properties. This method should be called after
+     * modifying material properties to ensure the changes take effect.
+     *
+     * The method will clear cached shader variants and trigger recompilation if:
+     * - Modified material properties require a different shader variant (e.g., enabling/disabling
+     *   textures or other properties that affect shader generation)
+     * - Material-specific shader chunks (from {@link Material#getShaderChunks}) have been modified
+     * - Global shader chunks (from {@link ShaderChunks.get}) have been modified
+     * - Material defines have been changed
+     *
+     * Note: Shaders are not compiled immediately. Instead, existing shader variants are cleared
+     * and new variants will be compiled on-demand as they are needed for different render passes
+     * (e.g., {@link SHADER_FORWARD}, {@link SHADER_SHADOW}).
+     *
+     * When global shader chunks are modified, `update()` must be called on each material that
+     * should reflect those changes.
      */
     update() {
+
+        // handle deprecated chunks for backwards compatibility
+        if (Object.keys(this._oldChunks).length > 0) {
+            for (const [key, value] of Object.entries(this._oldChunks)) {
+                this.shaderChunks.glsl.set(key, value);
+                delete this._oldChunks[key];
+            }
+        }
+
+        // if the defines or chunks were modified, we need to rebuild the shaders
+        if (this._definesDirty || this._shaderChunks?.isDirty()) {
+            this._definesDirty = false;
+            this._shaderChunks?.resetDirty();
+
+            this.clearVariants();
+        }
+
         this.dirty = true;
-        if (this._shader) this._shader.failed = false;
     }
 
     // Parameter management
@@ -557,15 +756,12 @@ class Material {
     }
 
     clearVariants() {
-
         // clear variants on the material
         this.variants.clear();
 
         // but also clear them from all materials that reference them
-        const meshInstances = this.meshInstances;
-        const count = meshInstances.length;
-        for (let i = 0; i < count; i++) {
-            meshInstances[i].clearShaders();
+        for (const meshInstance of this.meshInstances) {
+            meshInstance.clearShaders();
         }
     }
 
@@ -579,12 +775,30 @@ class Material {
         return this.parameters[name];
     }
 
+    _setParameterSimple(name, data) {
+
+        Debug.call(() => {
+            if (data === undefined) {
+                Debug.warnOnce(`Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`, this);
+            }
+        });
+
+        const param = this.parameters[name];
+        if (param) {
+            param.data = data;
+        } else {
+            this.parameters[name] = {
+                scopeId: null,
+                data: data
+            };
+        }
+    }
+
     /**
      * Sets a shader parameter on a material.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|import('../../platform/graphics/texture.js').Texture} data -
-     * The value for the specified parameter.
+     * @param {number|number[]|ArrayBufferView|Texture|StorageBuffer} data - The value for the specified parameter.
      */
     setParameter(name, data) {
 
@@ -600,15 +814,7 @@ class Material {
             data = uniformObject.value;
         }
 
-        const param = this.parameters[name];
-        if (param) {
-            param.data = data;
-        } else {
-            this.parameters[name] = {
-                scopeId: null,
-                data: data
-            };
-        }
+        this._setParameterSimple(name, data);
     }
 
     /**
@@ -639,15 +845,55 @@ class Material {
     }
 
     /**
+     * Adds or removes a define on the material. Defines can be used to enable or disable various
+     * parts of the shader code.
+     *
+     * @param {string} name - The name of the define to set.
+     * @param {string|undefined|boolean} value - The value of the define. If undefined or false, the
+     * define is removed.
+     *
+     * A simple example on how to set a custom shader define value used by the shader processor.
+     *
+     * ```javascript
+     * material.setDefine('MY_DEFINE', true);
+     *
+     * // call update to apply the changes, which will recompile the shader using the new define
+     * material.update();
+     * ```
+     */
+    setDefine(name, value) {
+        let modified = false;
+        const { defines } = this;
+
+        if (value !== undefined && value !== false) {
+            modified = !defines.has(name) || defines.get(name) !== value;
+            defines.set(name, value);
+        } else {
+            modified = defines.has(name);
+            defines.delete(name);
+        }
+
+        this._definesDirty ||= modified;
+    }
+
+    /**
+     * Returns true if a define is enabled on the material, otherwise false.
+     *
+     * @param {string} name - The name of the define to check.
+     * @returns {boolean} The value of the define.
+     */
+    getDefine(name) {
+        return this.defines.has(name);
+    }
+
+    /**
      * Removes this material from the scene and possibly frees up memory from its shaders (if there
      * are no other materials using it).
      */
     destroy() {
         this.variants.clear();
-        this._shader = null;
 
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            const meshInstance = this.meshInstances[i];
+        for (const meshInstance of this.meshInstances) {
             meshInstance.clearShaders();
             meshInstance._material = null;
 
@@ -661,33 +907,27 @@ class Material {
             }
         }
 
-        this.meshInstances.length = 0;
+        this.meshInstances.clear();
     }
 
     /**
      * Registers mesh instance as referencing the material.
      *
-     * @param {import('../mesh-instance.js').MeshInstance} meshInstance - The mesh instance to
-     * register.
+     * @param {MeshInstance} meshInstance - The mesh instance to register.
      * @ignore
      */
     addMeshInstanceRef(meshInstance) {
-        this.meshInstances.push(meshInstance);
+        this.meshInstances.add(meshInstance);
     }
 
     /**
      * De-registers mesh instance as referencing the material.
      *
-     * @param {import('../mesh-instance.js').MeshInstance} meshInstance - The mesh instance to
-     * de-register.
+     * @param {MeshInstance} meshInstance - The mesh instance to de-register.
      * @ignore
      */
     removeMeshInstanceRef(meshInstance) {
-        const meshInstances = this.meshInstances;
-        const i = meshInstances.indexOf(meshInstance);
-        if (i !== -1) {
-            meshInstances.splice(i, 1);
-        }
+        this.meshInstances.delete(meshInstance);
     }
 }
 

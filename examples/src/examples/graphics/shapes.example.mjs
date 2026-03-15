@@ -1,13 +1,11 @@
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -45,7 +43,7 @@ const shapes = ['box', 'plane', 'cone', 'cylinder', 'sphere', 'capsule'];
 let x = -1,
     y = -1;
 
-shapes.forEach(function (shape) {
+shapes.forEach((shape) => {
     // Create an entity with a render component
     const entity = new pc.Entity(shape);
     entity.addComponent('render', {

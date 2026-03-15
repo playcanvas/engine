@@ -1,5 +1,5 @@
 /**
- * A NULL implementation of the Texture.
+ * A Null implementation of the Texture.
  *
  * @ignore
  */

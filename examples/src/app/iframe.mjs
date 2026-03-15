@@ -34,7 +34,8 @@ class IFrame {
     }
 
     get path() {
-        const groups = /([\w\d-]+)_([\w\d-]+).html$/g.exec(this.window?.location.href ?? '');
+        /* eslint-disable-next-line */
+        const groups = /([\w-]+)_([\w-]+).html$/.exec(this.window?.location.href ?? '');
         if (!groups) {
             return '';
         }

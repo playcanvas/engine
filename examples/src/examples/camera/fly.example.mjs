@@ -1,13 +1,30 @@
+// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move </div><div>(<b>Hold Shift</b>) Move Fast (<b>Hold Ctrl</b>) Move Slow</div><div>(<b>LMB / RMB </b>) Fly</div></div>
+import { data } from 'examples/observer';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+
+const tmpVa = new pc.Vec2();
+
+const canvas = document.getElementById('application-canvas');
+if (!(canvas instanceof HTMLCanvasElement)) {
+    throw new Error('No canvas found');
+}
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
+};
+
+const assets = {
+    helipad: new pc.Asset(
+        'helipad-env-atlas',
+        'texture',
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+    ),
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` })
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -15,8 +32,6 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.keyboard = new pc.Keyboard(window);
 
 createOptions.componentSystems = [
     pc.RenderComponentSystem,
@@ -24,7 +39,7 @@ createOptions.componentSystems = [
     pc.LightComponentSystem,
     pc.ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.ScriptHandler];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -40,105 +55,172 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/fly-camera.js' })
-};
+await new Promise((resolve) => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-/**
- * @param {pc.Asset[] | number[]} assetList - The asset list.
- * @param {pc.AssetRegistry} assetRegistry - The asset registry.
- * @returns {Promise<void>} The promise.
- */
-function loadAssets(assetList, assetRegistry) {
-    return new Promise((resolve) => {
-        const assetListLoader = new pc.AssetListLoader(assetList, assetRegistry);
-        assetListLoader.load(resolve);
-    });
-}
-await loadAssets(Object.values(assets), app.assets);
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 app.start();
 
-// ***********    Helper functions    *******************
-/**
- * @param {pc.Color} color - The color.
- * @returns {pc.StandardMaterial} The material.
- */
-function createMaterial(color) {
-    const material = new pc.StandardMaterial();
-    material.diffuse = color;
-    // we need to call material.update when we change its properties
-    material.update();
-    return material;
-}
+app.scene.ambientLight.set(0.4, 0.4, 0.4);
 
-/**
- * @param {pc.Vec3} position - The position.
- * @param {pc.Vec3} size - The size.
- * @param {pc.Material} material - The material.
- */
-function createBox(position, size, material) {
-    // create an entity and add a model component of type 'box'
-    const box = new pc.Entity();
-    box.addComponent('render', {
-        type: 'box',
-        material: material
-    });
+app.scene.skyboxMip = 1;
+app.scene.skyboxIntensity = 0.4;
+app.scene.envAtlas = assets.helipad.resource;
 
-    // move the box
-    box.setLocalPosition(position);
-    box.setLocalScale(size);
-
-    // add the box to the hierarchy
-    app.root.addChild(box);
-}
-
-// ***********    Create Boxes    *******************
-
-// create a few boxes in our scene
-const red = createMaterial(pc.Color.RED);
-for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 2; j++) {
-        createBox(new pc.Vec3(i * 2, 0, j * 4), pc.Vec3.ONE, red);
-    }
-}
-
-// create a floor
-const white = createMaterial(pc.Color.WHITE);
-createBox(new pc.Vec3(0, -0.5, 0), new pc.Vec3(10, 0.1, 10), white);
-
-// ***********    Create lights   *******************
-
-// make our scene prettier by adding a directional light
+// Create a directional light
 const light = new pc.Entity();
-light.addComponent('light', {
-    type: 'omni',
-    color: new pc.Color(1, 1, 1),
-    range: 100
-});
-light.setLocalPosition(0, 0, 2);
-
-// add the light to the hierarchy
+light.addComponent('light');
+light.setLocalEulerAngles(45, 30, 0);
 app.root.addChild(light);
 
-// ***********    Create camera    *******************
+const statue = assets.statue.resource.instantiateRenderEntity();
+statue.setLocalPosition(0, -0.5, 0);
+app.root.addChild(statue);
 
-// Create an Entity with a camera component
+/**
+ * Calculate the bounding box of an entity.
+ *
+ * @param {pc.BoundingBox} bbox - The bounding box.
+ * @param {pc.Entity} entity - The entity.
+ * @returns {pc.BoundingBox} The bounding box.
+ */
+const calcEntityAABB = (bbox, entity) => {
+    bbox.center.set(0, 0, 0);
+    bbox.halfExtents.set(0, 0, 0);
+    entity.findComponents('render').forEach((render) => {
+        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
+            bbox.add(mi.aabb);
+        });
+    });
+    return bbox;
+};
+
+const start = new pc.Vec3(0, 20, 30);
+const bbox = calcEntityAABB(new pc.BoundingBox(), statue);
+
 const camera = new pc.Entity();
-camera.addComponent('camera', {
-    clearColor: new pc.Color(0.5, 0.5, 0.8),
-    nearClip: 0.3,
-    farClip: 30
+camera.addComponent('camera');
+camera.addComponent('script');
+camera.setPosition(start);
+app.root.addChild(camera);
+const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+const sceneSize = bbox.halfExtents.length();
+Object.assign(cc, {
+    focusPoint: bbox.center,
+    enableOrbit: false,
+    enablePan: false,
+    moveSpeed: 2 * sceneSize,
+    moveFastSpeed: 4 * sceneSize,
+    moveSlowSpeed: sceneSize
 });
 
-// add the fly camera script to the camera
-camera.addComponent('script');
-camera.script.create('flyCamera');
+/**
+ * @param {string} side - The name.
+ * @param {number} baseSize - The base size.
+ * @param {number} stickSize - The stick size.
+ */
+const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
+    const base = document.createElement('div');
+    Object.assign(base.style, {
+        display: 'none',
+        position: 'absolute',
+        width: `${baseSize}px`,
+        height: `${baseSize}px`,
+        borderRadius: '50%',
+        backgroundColor: 'rgba(50, 50, 50, 0.5)',
+        boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5)'
+    });
 
-// add the camera to the hierarchy
-app.root.addChild(camera);
+    const stick = document.createElement('div');
+    Object.assign(stick.style, {
+        display: 'none',
+        position: 'absolute',
+        width: `${stickSize}px`,
+        height: `${stickSize}px`,
+        borderRadius: '50%',
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)'
+    });
 
-// Move the camera a little further away
-camera.translate(2, 0.8, 9);
+    /**
+     * @param {HTMLElement} el - The element to set position for.
+     * @param {number} size - The size of the element.
+     * @param {number} x - The x position.
+     * @param {number} y - The y position.
+     */
+    const show = (el, size, x, y) => {
+        el.style.display = 'block';
+        el.style.left = `${x - size * 0.5}px`;
+        el.style.top = `${y - size * 0.5}px`;
+    };
+
+    /**
+     * @param {HTMLElement} el - The element to hide.
+     */
+    const hide = (el) => {
+        el.style.display = 'none';
+    };
+
+    app.on(`${cc.joystickEventName}:${side}`, (bx, by, sx, sy) => {
+        if (bx < 0 || by < 0 || sx < 0 || sy < 0) {
+            hide(base);
+            hide(stick);
+            return;
+        }
+
+        show(base, baseSize, bx, by);
+        show(stick, stickSize, sx, sy);
+    });
+
+    document.body.append(base, stick);
+};
+
+// Create joystick UI
+createJoystickUI('left');
+createJoystickUI('right');
+
+// Bind controls to camera attributes
+data.set('attr', [
+    'rotateSpeed',
+    'rotateJoystickSens',
+    'moveSpeed',
+    'moveFastSpeed',
+    'moveSlowSpeed',
+    'rotateDamping',
+    'moveDamping',
+    'pitchRange',
+    'yawRange',
+    'gamepadDeadZone',
+    'mobileInputLayout'
+].reduce((/** @type {Record<string, any>} */ obj, key) => {
+    const value = cc[key];
+
+    if (value instanceof pc.Vec2) {
+        obj[key] = [value.x, value.y];
+        return obj;
+    }
+
+    obj[key] = cc[key];
+    return obj;
+}, {}));
+
+data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
+    const [category, key, index] = path.split('.');
+    if (category !== 'attr') {
+        return;
+    }
+
+    if (Array.isArray(value)) {
+        cc[key] = tmpVa.set(value[0], value[1]);
+        return;
+    }
+    if (index !== undefined) {
+        const arr = data.get(`${category}.${key}`);
+        cc[key] = tmpVa.set(arr[0], arr[1]);
+        return;
+    }
+
+    cc[key] = value;
+});
 
 export { app };

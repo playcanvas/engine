@@ -1,8 +1,8 @@
-import { Debug } from "../../core/debug.js";
-import { SKYTYPE_BOX, SKYTYPE_DOME, SKYTYPE_INFINITE } from "../constants.js";
-import { Mesh } from "../mesh.js";
-import { BoxGeometry } from "../geometry/box-geometry.js";
-import { DomeGeometry } from "../geometry/dome-geometry.js";
+import { Debug } from '../../core/debug.js';
+import { SKYTYPE_BOX, SKYTYPE_DOME, SKYTYPE_INFINITE } from '../constants.js';
+import { Mesh } from '../mesh.js';
+import { BoxGeometry } from '../geometry/box-geometry.js';
+import { DomeGeometry } from '../geometry/dome-geometry.js';
 
 class SkyGeometry {
     static create(device, type) {

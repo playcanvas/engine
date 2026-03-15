@@ -1,15 +1,13 @@
 // @config WEBGPU_DISABLED
-import * as pc from 'playcanvas';
 import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -25,7 +23,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' })
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -118,16 +116,14 @@ assetListLoader.load(() => {
         // set large bounding box so we don't need to update it each frame
         mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(100, 100, 100));
 
-        // Create the shader from the vertex and fragment shaders which is used to render point sprites
-        shader = new pc.Shader(app.graphicsDevice, {
-            attributes: { aPosition: pc.SEMANTIC_POSITION },
-            vshader: files['shaderCloud.vert'],
-            fshader: files['shaderCloud.frag']
+        // Create the material from the vertex and fragment shaders which is used to render point sprites
+        const material = new pc.ShaderMaterial({
+            uniqueName: 'TransformFeerback',
+            vertexGLSL: files['shaderCloud.vert'],
+            fragmentGLSL: files['shaderCloud.frag'],
+            attributes: { aPosition: pc.SEMANTIC_POSITION }
         });
 
-        // Create a new material with the new shader and additive alpha blending
-        const material = new pc.Material();
-        material.shader = shader;
         material.blendType = pc.BLEND_ADDITIVEALPHA;
         material.depthWrite = false;
 
@@ -147,13 +143,14 @@ assetListLoader.load(() => {
         shader = pc.TransformFeedback.createShader(
             app.graphicsDevice,
             files['shaderFeedback.vert'],
-            'transformShaderExample'
+            'transformShaderExample',
+            ['updated_vertex_position']
         );
     }
 
     // update things each frame
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         // rotate camera around
         time += dt;
         camera.setLocalPosition(9 * Math.sin(time * 0.2), 6, 25 * Math.cos(time * 0.2));

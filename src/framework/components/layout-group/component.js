@@ -1,12 +1,15 @@
 import { Debug } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import { ORIENTATION_HORIZONTAL } from '../../../scene/constants.js';
-
 import { FITTING_NONE } from './constants.js';
 import { Component } from '../component.js';
 import { LayoutCalculator } from './layout-calculator.js';
+
+/**
+ * @import { Entity } from '../../entity.js'
+ * @import { LayoutGroupComponentSystem } from './system.js'
+ */
 
 function getElement(entity) {
     return entity.element;
@@ -20,40 +23,48 @@ function isEnabledAndHasEnabledElement(entity) {
  * A LayoutGroupComponent enables the Entity to position and scale child {@link ElementComponent}s
  * according to configurable layout rules.
  *
+ * @hideconstructor
  * @category User Interface
  */
 class LayoutGroupComponent extends Component {
+    /** @private */
+    _orientation = ORIENTATION_HORIZONTAL;
+
+    /** @private */
+    _reverseX = false;
+
+    /** @private */
+    _reverseY = true;
+
+    /** @private */
+    _alignment = new Vec2(0, 1);
+
+    /** @private */
+    _padding = new Vec4();
+
+    /** @private */
+    _spacing = new Vec2();
+
+    /** @private */
+    _widthFitting = FITTING_NONE;
+
+    /** @private */
+    _heightFitting = FITTING_NONE;
+
+    /** @private */
+    _wrap = false;
+
+    /** @private */
+    _layoutCalculator = new LayoutCalculator();
+
     /**
      * Create a new LayoutGroupComponent instance.
      *
-     * @param {import('./system.js').LayoutGroupComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {LayoutGroupComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
-
-        /** @private */
-        this._orientation = ORIENTATION_HORIZONTAL;
-        /** @private */
-        this._reverseX = false;
-        /** @private */
-        this._reverseY = true;
-        /** @private */
-        this._alignment = new Vec2(0, 1);
-        /** @private */
-        this._padding = new Vec4();
-        /** @private */
-        this._spacing = new Vec2();
-        /** @private */
-        this._widthFitting = FITTING_NONE;
-        /** @private */
-        this._heightFitting = FITTING_NONE;
-        /** @private */
-        this._wrap = false;
-        /** @private */
-        this._layoutCalculator = new LayoutCalculator();
 
         // Listen for the group container being resized
         this._listenForReflowEvents(this.entity, 'on');
@@ -70,11 +81,11 @@ class LayoutGroupComponent extends Component {
         // Listen for ElementComponents and LayoutChildComponents being added
         // to self or to children - covers cases where they are not already
         // present at the point when this component is constructed.
-        Debug.assert(system.app.systems.element, `System 'element' doesn't exist`);
+        Debug.assert(system.app.systems.element, 'System \'element\' doesn\'t exist');
         system.app.systems.element.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.element.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
 
-        Debug.assert(system.app.systems.layoutchild, `System 'layoutchild' doesn't exist`);
+        Debug.assert(system.app.systems.layoutchild, 'System \'layoutchild\' doesn\'t exist');
         system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.layoutchild.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
     }

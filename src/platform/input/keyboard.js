@@ -11,7 +11,6 @@ const _keyboardEvent = new KeyboardEvent();
  *
  * @param {globalThis.KeyboardEvent} event - A browser keyboard event.
  * @returns {KeyboardEvent} A PlayCanvas keyboard event.
- * @ignore
  */
 function makeKeyboardEvent(event) {
     _keyboardEvent.key = event.keyCode;
@@ -25,7 +24,6 @@ function makeKeyboardEvent(event) {
  *
  * @param {string|number} s - Either a character code or the key character.
  * @returns {number} The character code.
- * @ignore
  */
 function toKeyCode(s) {
     if (typeof s === 'string') {
@@ -53,8 +51,15 @@ const _keyCodeToKeyIdentifier = {
 };
 
 /**
- * A Keyboard device bound to an Element. Allows you to detect the state of the key presses. Note
- * that the Keyboard object must be attached to an Element before it can detect any key presses.
+ * Manages keyboard input by tracking key states and dispatching events. Extends {@link EventHandler}
+ * in order to fire `keydown` and `keyup` events (see {@link KeyboardEvent}).
+ *
+ * Allows the state of individual keys to be queried to check if they are currently pressed or were
+ * pressed/released since the last update. The class automatically handles browser visibility
+ * changes and window blur events by clearing key states. The Keyboard instance must be attached to
+ * a DOM element before it can detect key events.
+ *
+ * Your application's Keyboard instance is managed and accessible via {@link AppBase#keyboard}.
  *
  * @category Input
  */
@@ -71,7 +76,7 @@ class Keyboard extends EventHandler {
      *     e.event.preventDefault(); // Use original browser event to prevent browser action.
      * };
      *
-     * app.keyboard.on("keydown", onKeyDown, this);
+     * app.keyboard.on('keydown', onKeyDown, this);
      */
     static EVENT_KEYDOWN = 'keydown';
 
@@ -87,7 +92,7 @@ class Keyboard extends EventHandler {
      *     e.event.preventDefault(); // Use original browser event to prevent browser action.
      * };
      *
-     * app.keyboard.on("keyup", onKeyUp, this);
+     * app.keyboard.on('keyup', onKeyUp, this);
      */
     static EVENT_KEYUP = 'keyup';
 
@@ -191,10 +196,10 @@ class Keyboard extends EventHandler {
         let hex = keyCode.toString(16).toUpperCase();
         const length = hex.length;
         for (let count = 0; count < (4 - length); count++) {
-            hex = '0' + hex;
+            hex = `0${hex}`;
         }
 
-        return 'U+' + hex;
+        return `U+${hex}`;
     }
 
     /**

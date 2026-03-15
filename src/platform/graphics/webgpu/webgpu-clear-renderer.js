@@ -1,21 +1,21 @@
-import { Debug } from "../../../core/debug.js";
-import { UniformBufferFormat, UniformFormat } from "../uniform-buffer-format.js";
-import { BlendState } from "../blend-state.js";
+import { Debug } from '../../../core/debug.js';
+import { UniformBufferFormat, UniformFormat } from '../uniform-buffer-format.js';
+import { BlendState } from '../blend-state.js';
 import {
-    CULLFACE_NONE,
     PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL,
     UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH_UB
-} from "../constants.js";
-import { Shader } from "../shader.js";
-import { DynamicBindGroup } from "../bind-group.js";
-import { UniformBuffer } from "../uniform-buffer.js";
-import { DebugGraphics } from "../debug-graphics.js";
-import { DepthState } from "../depth-state.js";
+} from '../constants.js';
+import { Shader } from '../shader.js';
+import { DynamicBindGroup } from '../bind-group.js';
+import { UniformBuffer } from '../uniform-buffer.js';
+import { DebugGraphics } from '../debug-graphics.js';
+import { DepthState } from '../depth-state.js';
 
 const primitive = {
     type: PRIMITIVE_TRISTRIP,
     base: 0,
+    baseVertex: 0,
     count: 4,
     indexed: false
 };
@@ -23,7 +23,7 @@ const primitive = {
 /**
  * A WebGPU helper class implementing a viewport clear operation. When rendering to a texture,
  * the whole surface can be cleared using loadOp, but if only a viewport needs to be cleared, or if
- * it needs to be cleared later during the rendering, this need to be archieved by rendering a quad.
+ * it needs to be cleared later during the rendering, this need to be achieved by rendering a quad.
  * This class renders a full-screen quad, and expects the viewport / scissor to be set up to clip
  * it to only required area.
  *
@@ -108,35 +108,35 @@ class WebgpuClearRenderer {
             device.setBindGroup(BINDGROUP_MESH, device.emptyBindGroup);
 
             // setup clear color
+            let blendState;
             if ((flags & CLEARFLAG_COLOR) && (renderTarget.colorBuffer || renderTarget.impl.assignedColorTexture)) {
                 const color = options.color ?? defaultOptions.color;
                 this.colorData.set(color);
-
-                device.setBlendState(BlendState.NOBLEND);
+                blendState = BlendState.NOBLEND;
             } else {
-                device.setBlendState(BlendState.NOWRITE);
+                blendState = BlendState.NOWRITE;
             }
             uniformBuffer.set('color', this.colorData);
 
             // setup depth clear
+            let depthState;
             if ((flags & CLEARFLAG_DEPTH) && renderTarget.depth) {
                 const depth = options.depth ?? defaultOptions.depth;
                 uniformBuffer.set('depth', depth);
-                device.setDepthState(DepthState.WRITEDEPTH);
-
+                depthState = DepthState.WRITEDEPTH;
             } else {
                 uniformBuffer.set('depth', 1);
-                device.setDepthState(DepthState.NODEPTH);
+                depthState = DepthState.NODEPTH;
             }
 
             // setup stencil clear
             if ((flags & CLEARFLAG_STENCIL) && renderTarget.stencil) {
-                Debug.warnOnce("ClearRenderer does not support stencil clear at the moment");
+                Debug.warnOnce('ClearRenderer does not support stencil clear at the moment');
             }
 
             uniformBuffer.endUpdate();
 
-            device.setCullMode(CULLFACE_NONE);
+            device.setDrawStates(blendState, depthState);
 
             // render 4 vertices without vertex buffer
             device.setShader(this.shader);

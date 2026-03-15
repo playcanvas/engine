@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     const { BindingTwoWay, BooleanInput, Button, Label, LabelGroup, Panel, SelectInput, SliderInput } = ReactPCUI;
     return fragment(
         jsx(
@@ -44,9 +44,12 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     link: { observer, path: 'settings.shadowType' },
                     type: 'number',
                     options: [
-                        { v: pc.SHADOW_PCF1, t: 'PCF1' },
-                        { v: pc.SHADOW_PCF3, t: 'PCF3' },
-                        { v: pc.SHADOW_PCF5, t: 'PCF5' }
+                        { v: pc.SHADOW_PCF1_32F, t: 'PCF1_32F' },
+                        { v: pc.SHADOW_PCF3_32F, t: 'PCF3_32F' },
+                        { v: pc.SHADOW_PCF5_32F, t: 'PCF5_32F' },
+                        { v: pc.SHADOW_PCF1_16F, t: 'PCF1_16F' },
+                        { v: pc.SHADOW_PCF3_16F, t: 'PCF3_16F' },
+                        { v: pc.SHADOW_PCF5_16F, t: 'PCF5_16F' }
                     ]
                 })
             )
@@ -95,6 +98,17 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     value: observer.get('settings.shadowIntensity')
                 })
             ),
+            jsx(
+                LabelGroup,
+                { text: 'Cookie Intensity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.cookieIntensity' },
+                    min: 0,
+                    max: 1,
+                    value: observer.get('settings.cookieIntensity')
+                })
+            ),
             jsx(Button, {
                 text: 'Add Light',
                 onClick: () => observer.emit('add')
@@ -138,4 +152,4 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             )
         )
     );
-}
+};

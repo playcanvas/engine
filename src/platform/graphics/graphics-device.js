@@ -1,3 +1,4 @@
+import { version } from '../../core/core.js';
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
@@ -6,18 +7,38 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
-
 import {
-    CULLFACE_BACK,
+    BUFFER_STATIC,
+    CULLFACE_BACK, CULLFACE_NONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+    INDEXFORMAT_UINT16,
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    DISPLAYFORMAT_LDR,
+    semanticToLocation,
+    FRONTFACE_CCW
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
+import { IndexBuffer } from './index-buffer.js';
 import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 import { StencilParameters } from './stencil-parameters.js';
+import { DebugGraphics } from './debug-graphics.js';
+
+/**
+ * @import { Compute } from './compute.js'
+ * @import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from './constants.js'
+ * @import { DynamicBuffers } from './dynamic-buffers.js'
+ * @import { GpuProfiler } from './gpu-profiler.js'
+ * @import { RenderTarget } from './render-target.js'
+ * @import { Shader } from './shader.js'
+ * @import { Texture } from './texture.js'
+ * @import { StorageBuffer } from './storage-buffer.js';
+ * @import { DrawCommands } from './draw-commands.js';
+ */
+
+const _tempSet = new Set();
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -50,7 +71,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * The render target representing the main back-buffer.
      *
-     * @type {import('./render-target.js').RenderTarget|null}
+     * @type {RenderTarget|null}
      * @ignore
      */
     backBuffer = null;
@@ -94,12 +115,45 @@ class GraphicsDevice extends EventHandler {
     isWebGL2 = false;
 
     /**
+     * True if the deviceType is Null
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isNull = false;
+
+    /**
+     * True if the back-buffer is using HDR format, which means that the browser will display the
+     * rendered images in high dynamic range mode. This is true if the options.displayFormat is set
+     * to {@link DISPLAYFORMAT_HDR} when creating the graphics device using
+     * {@link createGraphicsDevice}, and HDR is supported by the device.
+     */
+    isHdr = false;
+
+    /**
      * The scope namespace for shader attributes and variables.
      *
      * @type {ScopeSpace}
      * @readonly
      */
     scope;
+
+    /**
+     * The maximum number of indirect draw calls that can be used within a single frame. Used on
+     * WebGPU only. This needs to be adjusted based on the maximum number of draw calls that can
+     * be used within a single frame. Defaults to 1024.
+     *
+     * @type {number}
+     */
+    maxIndirectDrawCount = 1024;
+
+    /**
+     * The maximum number of indirect compute dispatches that can be used within a single frame.
+     * Used on WebGPU only. Defaults to 256.
+     *
+     * @type {number}
+     */
+    maxIndirectDispatchCount = 256;
 
     /**
      * The maximum supported texture anisotropy setting.
@@ -159,12 +213,28 @@ class GraphicsDevice extends EventHandler {
     samples;
 
     /**
+     * The maximum supported number of hardware anti-aliasing samples.
+     *
+     * @readonly
+     * @type {number}
+     */
+    maxSamples = 1;
+
+    /**
      * True if the main framebuffer contains stencil attachment.
      *
      * @ignore
      * @type {boolean}
      */
     supportsStencil;
+
+    /**
+     * True if the device supports multi-draw. This is always supported on WebGPU, and support on
+     * WebGL2 is optional, but pretty common.
+     *
+     * @type {boolean}
+     */
+    supportsMultiDraw = true;
 
     /**
      * True if the device supports compute shaders.
@@ -189,9 +259,41 @@ class GraphicsDevice extends EventHandler {
     supportsStorageTextureRead = false;
 
     /**
+     * True if the device supports subgroup operations in shaders (WebGPU only). When supported,
+     * compute and fragment shaders can use WGSL subgroup builtins such as `subgroupBroadcast`,
+     * `subgroupAll`, `subgroupAny`, `subgroupAdd`, `subgroupShuffle`, etc. The `enable subgroups;`
+     * directive is automatically injected into WGSL shaders when this feature is available.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsSubgroups = false;
+
+    /**
+     * True if the device supports the WGSL subgroup_uniformity extension, which allows
+     * subgroup functionality to be considered uniform in more cases during shader compilation.
+     * This is automatically enabled via the `enable subgroups;` directive when
+     * {@link GraphicsDevice#supportsSubgroups} is true.
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsSubgroupUniformity = false;
+
+    /**
+     * True if the device supports the WGSL subgroup_id extension, which provides access to
+     * `subgroup_id` and `num_subgroups` built-in values in workgroups. The `requires subgroup_id;`
+     * directive is automatically injected into WGSL shaders when this feature is available.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsSubgroupId = false;
+
+    /**
      * Currently active render target.
      *
-     * @type {import('./render-target.js').RenderTarget|null}
+     * @type {RenderTarget|null}
      * @ignore
      */
     renderTarget = null;
@@ -199,23 +301,31 @@ class GraphicsDevice extends EventHandler {
     /**
      * Array of objects that need to be re-initialized after a context restore event
      *
-     * @type {import('./shader.js').Shader[]}
+     * @type {Shader[]}
      * @ignore
      */
     shaders = [];
 
     /**
-     * An array of currently created textures.
+     * A set of currently created textures.
      *
-     * @type {import('./texture.js').Texture[]}
+     * @type {Set<Texture>}
      * @ignore
      */
-    textures = [];
+    textures = new Set();
+
+    /**
+     * A set of textures that need to be uploaded to the GPU.
+     *
+     * @type {Set<Texture>}
+     * @ignore
+     */
+    texturesToUpload = new Set();
 
     /**
      * A set of currently created render targets.
      *
-     * @type {Set<import('./render-target.js').RenderTarget>}
+     * @type {Set<RenderTarget>}
      * @ignore
      */
     targets = new Set();
@@ -249,6 +359,64 @@ class GraphicsDevice extends EventHandler {
     supportsUniformBuffers = false;
 
     /**
+     * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
+     * primitives' clip volume with user-defined half-spaces in the output of vertex stage.
+     *
+     * @type {boolean}
+     */
+    supportsClipDistances = false;
+
+    /**
+     * True if the device supports WebGPU texture format tier 1 capabilities. When enabled, a wider
+     * set of normalized texture formats can be used as render targets and storage textures.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureFormatTier1 = false;
+
+    /**
+     * True if the device supports WebGPU texture format tier 2 capabilities. This extends tier 1
+     * and enables read-write storage access for selected texture formats.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureFormatTier2 = false;
+
+    /**
+     * True if the device supports primitive index in fragment shaders (WebGPU only). When
+     * supported, fragment shaders can access the `pcPrimitiveIndex` built-in variable which
+     * uniquely identifies the current primitive being processed.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsPrimitiveIndex = false;
+
+    /**
+     * True if the device supports 16-bit floating-point types in shaders (WebGPU only). When
+     * supported, shaders can use native WGSL types: `f16`, `vec2h`, `vec3h`, `vec4h`, `mat2x2h`,
+     * `mat3x3h`, `mat4x4h`. For convenience, PlayCanvas also provides type aliases (`half`,
+     * `half2`, `half3`, `half4`, `half2x2`, `half3x3`, `half4x4`) that resolve to f16 types when
+     * supported, or fall back to f32 types when not supported.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsShaderF16 = false;
+
+    /**
+     * True if HTML elements (e.g. `<div>`) can be used as texture sources via the HTML-in-Canvas
+     * API. When supported, an HTML element appended to a canvas with the `layoutsubtree` attribute
+     * can be passed to {@link Texture#setSource} and rendered as a live texture in the 3D scene.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsHtmlTextures = false;
+
+    /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
      *
      * @type {boolean}
@@ -256,12 +424,12 @@ class GraphicsDevice extends EventHandler {
      */
     textureFloatRenderable;
 
-     /**
-      * True if 16-bit floating-point textures can be used as a frame buffer.
-      *
-      * @type {boolean}
-      * @readonly
-      */
+    /**
+     * True if 16-bit floating-point textures can be used as a frame buffer.
+     *
+     * @type {boolean}
+     * @readonly
+     */
     textureHalfFloatRenderable;
 
     /**
@@ -273,12 +441,12 @@ class GraphicsDevice extends EventHandler {
      */
     textureRG11B10Renderable = false;
 
-     /**
-      * True if filtering can be applied when sampling float textures.
-      *
-      * @type {boolean}
-      * @readonly
-      */
+    /**
+     * True if filtering can be applied when sampling float textures.
+     *
+     * @type {boolean}
+     * @readonly
+     */
     textureFloatFilterable = false;
 
     /**
@@ -288,6 +456,15 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     quadVertexBuffer;
+
+    /**
+     * An index buffer for drawing a quad as an indexed triangle list.
+     * Contains 6 indices: [0, 1, 2, 2, 1, 3] forming two triangles.
+     *
+     * @type {IndexBuffer}
+     * @ignore
+     */
+    quadIndexBuffer;
 
     /**
      * An object representing current blend state
@@ -327,7 +504,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * The dynamic buffer manager.
      *
-     * @type {import('./dynamic-buffers.js').DynamicBuffers}
+     * @type {DynamicBuffers}
      * @ignore
      */
     dynamicBuffers;
@@ -335,9 +512,15 @@ class GraphicsDevice extends EventHandler {
     /**
      * The GPU profiler.
      *
-     * @type {import('./gpu-profiler.js').GpuProfiler}
+     * @type {GpuProfiler}
      */
     gpuProfiler;
+
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    _destroyed = false;
 
     defaultClearOptions = {
         color: [0, 0, 0, 1],
@@ -346,25 +529,65 @@ class GraphicsDevice extends EventHandler {
         flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
     };
 
+    /**
+     * The current client rect.
+     *
+     * @type {{ width: number, height: number }}
+     * @ignore
+     */
+    clientRect = {
+        width: 0,
+        height: 0
+    };
+
+    /**
+     * A very heavy handed way to force all shaders to be rebuilt. Avoid using as much as possible.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _shadersDirty = false;
+
+    /**
+     * A list of shader defines based on the capabilities of the device.
+     *
+     * @type {Map<string, string>}
+     * @ignore
+     */
+    capsDefines = new Map();
+
+    /**
+     * A set of maps to clear at the end of the frame.
+     *
+     * @type {Set<Map>}
+     * @ignore
+     */
+    mapsToClear = new Set();
+
     static EVENT_RESIZE = 'resizecanvas';
 
     constructor(canvas, options) {
         super();
 
         this.canvas = canvas;
+        if ('setAttribute' in canvas) {
+            canvas.setAttribute('data-engine', `PlayCanvas ${version}`);
+        }
 
         // copy options and handle defaults
         this.initOptions = { ...options };
+        this.initOptions.alpha ??= true;
         this.initOptions.depth ??= true;
         this.initOptions.stencil ??= true;
         this.initOptions.antialias ??= true;
         this.initOptions.powerPreference ??= 'high-performance';
+        this.initOptions.displayFormat ??= DISPLAYFORMAT_LDR;
 
         // Some devices window.devicePixelRatio can be less than one
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
         this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
 
-        this.buffers = [];
+        this.buffers = new Set();
 
         this._vram = {
             // #if _PROFILER
@@ -400,9 +623,9 @@ class GraphicsDevice extends EventHandler {
         this._renderTargetCreationTime = 0;
 
         // Create the ScopeNamespace for shader attributes and variables
-        this.scope = new ScopeSpace("Device");
+        this.scope = new ScopeSpace('Device');
 
-        this.textureBias = this.scope.resolve("textureBias");
+        this.textureBias = this.scope.resolve('textureBias');
         this.textureBias.setValue(0.0);
     }
 
@@ -419,6 +642,33 @@ class GraphicsDevice extends EventHandler {
         this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
             data: positions
         });
+
+        // create quad index buffer for indexed triangle list (two triangles forming a quad)
+        const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
+        this.quadIndexBuffer = new IndexBuffer(this, INDEXFORMAT_UINT16, 6, BUFFER_STATIC, indices.buffer);
+    }
+
+    /**
+     * Initialize the map of device capabilities, which are supplied to shaders as defines.
+     *
+     * @ignore
+     */
+    initCapsDefines() {
+        const { capsDefines } = this;
+        capsDefines.clear();
+        if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
+        if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
+        if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
+        if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
+        if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
+        if (this.supportsSubgroups) capsDefines.set('CAPS_SUBGROUPS', '');
+        if (this.supportsSubgroupId) capsDefines.set('CAPS_SUBGROUP_ID', '');
+
+        // Platform defines
+        if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
+        if (platform.mobile) capsDefines.set('PLATFORM_MOBILE', '');
+        if (platform.android) capsDefines.set('PLATFORM_ANDROID', '');
+        if (platform.ios) capsDefines.set('PLATFORM_IOS', '');
     }
 
     /**
@@ -432,11 +682,16 @@ class GraphicsDevice extends EventHandler {
         this.quadVertexBuffer?.destroy();
         this.quadVertexBuffer = null;
 
+        this.quadIndexBuffer?.destroy();
+        this.quadIndexBuffer = null;
+
         this.dynamicBuffers?.destroy();
         this.dynamicBuffers = null;
 
         this.gpuProfiler?.destroy();
         this.gpuProfiler = null;
+
+        this._destroyed = true;
     }
 
     onDestroyShader(shader) {
@@ -446,6 +701,18 @@ class GraphicsDevice extends EventHandler {
         if (idx !== -1) {
             this.shaders.splice(idx, 1);
         }
+    }
+
+    /**
+     * Called when a texture is destroyed to remove it from internal tracking structures.
+     *
+     * @param {Texture} texture - The texture being destroyed.
+     * @ignore
+     */
+    onTextureDestroyed(texture) {
+        this.textures.delete(texture);
+        this.texturesToUpload.delete(texture);
+        this.scope.removeValue(texture);
     }
 
     // executes after the extended classes have executed their destroy function
@@ -512,7 +779,6 @@ class GraphicsDevice extends EventHandler {
     }
 
     initializeContextCaches() {
-        this.indexBuffer = null;
         this.vertexBuffers = [];
         this.shader = null;
         this.shaderValid = undefined;
@@ -525,6 +791,7 @@ class GraphicsDevice extends EventHandler {
         this.blendState = new BlendState();
         this.depthState = new DepthState();
         this.cullMode = CULLFACE_BACK;
+        this.frontFace = FRONTFACE_CCW;
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
@@ -593,11 +860,45 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Controls whether polygons are front- or back-facing by setting a winding
+     * orientation. The default frontFace is {@link FRONTFACE_CCW}.
+     *
+     * @param {number} frontFace - The front face to set. Can be:
+     *
+     * - {@link FRONTFACE_CW}
+     * - {@link FRONTFACE_CCW}
+     */
+    setFrontFace(frontFace) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets all draw-related render states in a single call. All parameters have sensible defaults
+     * for utility rendering (full-screen quads, particles, etc.), so calling `setDrawStates()` with
+     * no arguments resets to a safe baseline.
+     *
+     * @param {BlendState} [blendState] - Blend state. Defaults to {@link BlendState.NOBLEND}.
+     * @param {DepthState} [depthState] - Depth state. Defaults to {@link DepthState.NODEPTH}.
+     * @param {number} [cullMode] - Cull mode. Defaults to {@link CULLFACE_NONE}.
+     * @param {number} [frontFace] - Front face winding. Defaults to {@link FRONTFACE_CCW}.
+     * @param {StencilParameters} [stencilFront] - Front stencil parameters.
+     * @param {StencilParameters} [stencilBack] - Back stencil parameters.
+     */
+    setDrawStates(blendState = BlendState.NOBLEND, depthState = DepthState.NODEPTH,
+        cullMode = CULLFACE_NONE, frontFace = FRONTFACE_CCW,
+        stencilFront, stencilBack) {
+        this.setBlendState(blendState);
+        this.setDepthState(depthState);
+        this.setCullMode(cullMode);
+        this.setFrontFace(frontFace);
+        this.setStencilState(stencilFront, stencilBack);
+    }
+
+    /**
      * Sets the specified render target on the device. If null is passed as a parameter, the back
      * buffer becomes the current target for all rendering operations.
      *
-     * @param {import('./render-target.js').RenderTarget|null} renderTarget - The render target to
-     * activate.
+     * @param {RenderTarget|null} renderTarget - The render target to activate.
      * @example
      * // Set a render target to receive all rendering output
      * device.setRenderTarget(renderTarget);
@@ -610,25 +911,11 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Sets the current index buffer on the graphics device. On subsequent calls to
-     * {@link GraphicsDevice#draw}, the specified index buffer will be used to provide index data
-     * for any indexed primitives.
+     * Sets the current vertex buffer on the graphics device. For subsequent draw calls, the
+     * specified vertex buffer(s) will be used to provide vertex data for any primitives.
      *
-     * @param {import('./index-buffer.js').IndexBuffer|null} indexBuffer - The index buffer to assign to
-     * the device.
-     */
-    setIndexBuffer(indexBuffer) {
-        // Store the index buffer
-        this.indexBuffer = indexBuffer;
-    }
-
-    /**
-     * Sets the current vertex buffer on the graphics device. On subsequent calls to
-     * {@link GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex
-     * data for any primitives.
-     *
-     * @param {import('./vertex-buffer.js').VertexBuffer} vertexBuffer - The vertex buffer to
-     * assign to the device.
+     * @param {VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
+     * @ignore
      */
     setVertexBuffer(vertexBuffer) {
 
@@ -647,9 +934,65 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Retrieves the first available slot in the {@link indirectDrawBuffer} used for indirect
+     * rendering, which can be utilized by a {@link Compute} shader to generate indirect draw
+     * parameters and by {@link MeshInstance#setIndirect} to configure indirect draw calls.
+     *
+     * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
+     * @returns {number} - The first reserved slot index used for indirect rendering.
+     */
+    getIndirectDrawSlot(count = 1) {
+        return 0;
+    }
+
+    /**
+     * Returns the buffer used to store arguments for indirect draw calls. The size of the buffer is
+     * controlled by the {@link maxIndirectDrawCount} property. This buffer can be passed to a
+     * {@link Compute} shader along with a slot obtained by calling {@link getIndirectDrawSlot}, in
+     * order to prepare indirect draw parameters. Also see {@link MeshInstance#setIndirect}.
+     *
+     * Only available on WebGPU, returns null on other platforms.
+     *
+     * @type {StorageBuffer|null}
+     */
+    get indirectDrawBuffer() {
+        return null;
+    }
+
+    /**
+     * Retrieves the first available slot in the {@link indirectDispatchBuffer} used for indirect
+     * compute dispatch, which can be utilized by a {@link Compute} shader to generate indirect
+     * dispatch parameters for another compute shader.
+     *
+     * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
+     * @returns {number} - The first reserved slot index used for indirect dispatch.
+     */
+    getIndirectDispatchSlot(count = 1) {
+        return 0;
+    }
+
+    /**
+     * Returns the buffer used to store arguments for indirect compute dispatch calls. The size of
+     * the buffer is controlled by the {@link maxIndirectDispatchCount} property. This buffer can
+     * be passed to a {@link Compute} shader along with a slot obtained by calling
+     * {@link getIndirectDispatchSlot}, in order to prepare indirect dispatch parameters.
+     *
+     * Only available on WebGPU, returns null on other platforms.
+     *
+     * @type {StorageBuffer|null}
+     */
+    get indirectDispatchBuffer() {
+        return null;
+    }
+
+    /**
      * Queries the currently set render target on the device.
      *
-     * @returns {import('./render-target.js').RenderTarget} The current render target.
+     * @returns {RenderTarget} The current render target.
      * @example
      * // Get the current render target
      * const renderTarget = device.getRenderTarget();
@@ -661,8 +1004,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Initialize render target before it can be used.
      *
-     * @param {import('./render-target.js').RenderTarget} target - The render target to be
-     * initialized.
+     * @param {RenderTarget} target - The render target to be initialized.
      * @ignore
      */
     initRenderTarget(target) {
@@ -686,17 +1028,62 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Reports whether a texture source is a canvas, image, video or ImageBitmap.
+     * Submits a graphical primitive to the hardware for immediate rendering.
+     *
+     * @param {object} primitive - Primitive object describing how to submit current vertex/index
+     * buffers.
+     * @param {number} primitive.type - The type of primitive to render. Can be:
+     *
+     * - {@link PRIMITIVE_POINTS}
+     * - {@link PRIMITIVE_LINES}
+     * - {@link PRIMITIVE_LINELOOP}
+     * - {@link PRIMITIVE_LINESTRIP}
+     * - {@link PRIMITIVE_TRIANGLES}
+     * - {@link PRIMITIVE_TRISTRIP}
+     * - {@link PRIMITIVE_TRIFAN}
+     *
+     * @param {number} primitive.base - The offset of the first index or vertex to dispatch in the
+     * draw call.
+     * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw
+     * call.
+     * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby
+     * using the currently set index buffer and false otherwise.
+     * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
+     * @param {number} [numInstances] - The number of instances to render when using instancing.
+     * Defaults to 1.
+     * @param {DrawCommands} [drawCommands] - The draw commands to use for the draw call.
+     * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
+     * When set to true, vertex and index buffers related state is set up. Defaults to true.
+     * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
+     * When set to true, vertex and index buffers related state is cleared. Defaults to true.
+     * @example
+     * // Render a single, unindexed triangle
+     * device.draw({
+     *     type: pc.PRIMITIVE_TRIANGLES,
+     *     base: 0,
+     *     count: 3,
+     *     indexed: false
+     * });
+     *
+     * @ignore
+     */
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Reports whether a texture source is a canvas, image, video, ImageBitmap, or HTML element.
      *
      * @param {*} texture - Texture source data.
-     * @returns {boolean} True if the texture is a canvas, image, video or ImageBitmap and false
-     * otherwise.
+     * @returns {boolean} True if the texture is a canvas, image, video, ImageBitmap, or HTML
+     * element and false otherwise.
      * @ignore
      */
     _isBrowserInterface(texture) {
         return this._isImageBrowserInterface(texture) ||
                 this._isImageCanvasInterface(texture) ||
-                this._isImageVideoInterface(texture);
+                this._isImageVideoInterface(texture) ||
+                this._isHTMLElementInterface(texture);
     }
 
     _isImageBrowserInterface(texture) {
@@ -710,6 +1097,22 @@ class GraphicsDevice extends EventHandler {
 
     _isImageVideoInterface(texture) {
         return (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);
+    }
+
+    /**
+     * Reports whether a texture source is a generic HTML element (not image, canvas, or video).
+     * Used for the HTML-in-Canvas proposal (texElementImage2D).
+     *
+     * @param {*} texture - Texture source data.
+     * @returns {boolean} True if the texture is an HTMLElement that is not an image, canvas, or
+     * video.
+     * @ignore
+     */
+    _isHTMLElementInterface(texture) {
+        return (typeof HTMLElement !== 'undefined' && texture instanceof HTMLElement &&
+                !(typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) &&
+                !(typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) &&
+                !(typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement));
     }
 
     /**
@@ -745,8 +1148,20 @@ class GraphicsDevice extends EventHandler {
         this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
     }
 
+    update() {
+        this.updateClientRect();
+    }
+
     updateClientRect() {
-        this.clientRect = this.canvas.getBoundingClientRect();
+        if (platform.worker) {
+            // Web Workers don't do page layout, so getBoundingClientRect is not available
+            this.clientRect.width = this.canvas.width;
+            this.clientRect.height = this.canvas.height;
+        } else {
+            const rect = this.canvas.getBoundingClientRect();
+            this.clientRect.width = rect.width;
+            this.clientRect.height = rect.height;
+        }
     }
 
     /**
@@ -773,7 +1188,7 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     set fullscreen(fullscreen) {
-        Debug.error("GraphicsDevice.fullscreen is not implemented on current device.");
+        Debug.error('GraphicsDevice.fullscreen is not implemented on current device.');
     }
 
     /**
@@ -782,7 +1197,7 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     get fullscreen() {
-        Debug.error("GraphicsDevice.fullscreen is not implemented on current device.");
+        Debug.error('GraphicsDevice.fullscreen is not implemented on current device.');
         return false;
     }
 
@@ -810,7 +1225,7 @@ class GraphicsDevice extends EventHandler {
      * - {@link DEVICETYPE_WEBGL2}
      * - {@link DEVICETYPE_WEBGPU}
      *
-     * @type {import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
+     * @type {DEVICETYPE_WEBGL2|DEVICETYPE_WEBGPU}
      */
     get deviceType() {
         return this._deviceType;
@@ -822,7 +1237,7 @@ class GraphicsDevice extends EventHandler {
     endRenderPass(renderPass) {
     }
 
-    startComputePass() {
+    startComputePass(name) {
     }
 
     endComputePass() {
@@ -842,14 +1257,14 @@ class GraphicsDevice extends EventHandler {
 
             // log out all loaded textures, sorted by gpu memory size
             if (Tracing.get(TRACEID_TEXTURES)) {
-                const textures = this.textures.slice();
+                const textures = [...this.textures];
                 textures.sort((a, b) => b.gpuSize - a.gpuSize);
                 Debug.log(`Textures: ${textures.length}`);
                 let textureTotal = 0;
                 textures.forEach((texture, index) => {
                     const textureSize  = texture.gpuSize;
                     textureTotal += textureSize;
-                    Debug.log(`${index}. ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
+                    Debug.log(`${index}. Id: ${texture.id} ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
                 });
                 Debug.log(`Total: ${(textureTotal / 1024 / 1024).toFixed(2)}MB`);
             }
@@ -863,21 +1278,25 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
+        // clear all maps scheduled for end of frame clearing
+        this.mapsToClear.forEach(map => map.clear());
+        this.mapsToClear.clear();
     }
 
     /**
      * Dispatch multiple compute shaders inside a single compute shader pass.
      *
-     * @param {Array<import('./compute.js').Compute>} computes - An array of compute shaders to
-     * dispatch.
+     * @param {Array<Compute>} computes - An array of compute shaders to dispatch.
+     * @param {string} [name] - The name of the dispatch, used for debugging and reporting only.
      */
-    computeDispatch(computes) {
+    computeDispatch(computes, name = 'Unnamed') {
     }
 
     /**
      * Get a renderable HDR pixel format supported by the graphics device.
      *
      * Note:
+     *
      * - When the `filterable` parameter is set to false, this function returns one of the supported
      * formats on the majority of devices apart from some very old iOS and Android devices (99%).
      * - When the `filterable` parameter is set to true, the function returns a format on a
@@ -891,17 +1310,21 @@ class GraphicsDevice extends EventHandler {
      *
      * @param {boolean} [filterable] - If true, the format also needs to be filterable. Defaults to
      * true.
+     * @param {number} [samples] - The number of samples to check for. Some formats are not
+     * compatible with multi-sampling, for example {@link PIXELFORMAT_RGBA32F} on WebGPU platform.
+     * Defaults to 1.
      * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
      * supported.
      */
-    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true) {
+    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1) {
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
             switch (format) {
 
                 case PIXELFORMAT_111110F: {
-                    if (this.textureRG11B10Renderable)
+                    if (this.textureRG11B10Renderable) {
                         return format;
+                    }
                     break;
                 }
 
@@ -912,6 +1335,12 @@ class GraphicsDevice extends EventHandler {
                     break;
 
                 case PIXELFORMAT_RGBA32F:
+
+                    // on WebGPU platform, RGBA32F is not compatible with multi-sampling
+                    if (this.isWebGPU && samples > 1) {
+                        continue;
+                    }
+
                     if (this.textureFloatRenderable && (!filterable || this.textureFloatFilterable)) {
                         return format;
                     }
@@ -919,6 +1348,37 @@ class GraphicsDevice extends EventHandler {
             }
         }
         return undefined;
+    }
+
+    /**
+     * Validate that all attributes required by the shader are present in the currently assigned
+     * vertex buffers.
+     *
+     * @param {Shader} shader - The shader to validate.
+     * @param {VertexFormat} vb0Format - The format of the first vertex buffer.
+     * @param {VertexFormat} vb1Format - The format of the second vertex buffer.
+     * @protected
+     */
+    validateAttributes(shader, vb0Format, vb1Format) {
+
+        Debug.call(() => {
+
+            // add all attribute locations from vertex formats to the set
+            _tempSet.clear();
+            vb0Format?.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
+            vb1Format?.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
+
+            // every location shader needs must be in the vertex buffer
+            for (const [location, name] of shader.attributes) {
+                if (!_tempSet.has(location)) {
+                    Debug.errorOnce(`Vertex attribute [${name}] at location ${location} required by the shader is not present in the currently assigned vertex buffers, while rendering [${DebugGraphics.toString()}]`, {
+                        shader,
+                        vb0Format,
+                        vb1Format
+                    });
+                }
+            }
+        });
     }
 }
 

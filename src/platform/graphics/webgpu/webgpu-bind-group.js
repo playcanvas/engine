@@ -1,5 +1,12 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { WebgpuDebug } from './webgpu-debug.js';
+import { TextureView } from '../texture-view.js';
+
+/**
+ * @import { BindGroup } from '../bind-group.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
+ * @import { WebgpuTexture } from './webgpu-texture.js'
+ */
 
 /**
  * A WebGPU implementation of the BindGroup, which is a wrapper over GPUBindGroup.
@@ -19,15 +26,15 @@ class WebgpuBindGroup {
         const device = bindGroup.device;
 
         /** @type {GPUBindGroupDescriptor} */
-        const descr = this.createDescriptor(device, bindGroup);
+        const desc = this.createDescriptor(device, bindGroup);
 
         WebgpuDebug.validate(device);
 
-        this.bindGroup = device.wgpu.createBindGroup(descr);
+        this.bindGroup = device.wgpu.createBindGroup(desc);
 
-        WebgpuDebug.end(device, {
+        WebgpuDebug.end(device, 'BindGroup creation', {
             debugFormat: this.debugFormat,
-            descr: descr,
+            desc: desc,
             format: bindGroup.format,
             bindGroup: bindGroup
         });
@@ -40,8 +47,8 @@ class WebgpuBindGroup {
     /**
      * Creates a bind group descriptor in WebGPU format
      *
-     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - Graphics device.
-     * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to create the
+     * @param {WebgpuGraphicsDevice} device - Graphics device.
+     * @param {BindGroup} bindGroup - Bind group to create the
      * descriptor for.
      * @returns {object} - Returns the generated descriptor of type GPUBindGroupDescriptor, which
      * can be used to create a GPUBindGroup
@@ -79,16 +86,20 @@ class WebgpuBindGroup {
 
         // textures
         const textureFormats = bindGroup.format.textureFormats;
-        bindGroup.textures.forEach((tex, textureIndex) => {
+        bindGroup.textures.forEach((value, textureIndex) => {
 
-            /** @type {import('./webgpu-texture.js').WebgpuTexture} */
-            const wgpuTexture = tex.impl;
+            // Value can be a Texture or TextureView
+            const isTextureView = value instanceof TextureView;
+            const texture = isTextureView ? value.texture : value;
+
+            /** @type {WebgpuTexture} */
+            const wgpuTexture = texture.impl;
             const textureFormat = format.textureFormats[textureIndex];
             const slot = textureFormats[textureIndex].slot;
 
-            // texture
-            const view = wgpuTexture.getView(device);
-            Debug.assert(view, 'NULL texture view cannot be used by the bind group');
+            // texture - pass TextureView for mip level / array layer selection if provided
+            const view = wgpuTexture.getView(device, isTextureView ? value : undefined);
+            Debug.assert(view, `NULL texture view [${textureFormat.name}] (slot ${slot}) cannot be used by the bind group`);
             Debug.call(() => {
                 this.debugFormat += `${slot}: ${bindGroup.format.textureFormats[textureIndex].name}\n`;
             });
@@ -101,7 +112,7 @@ class WebgpuBindGroup {
             // sampler
             if (textureFormat.hasSampler) {
                 const sampler = wgpuTexture.getSampler(device, textureFormat.sampleType);
-                Debug.assert(sampler, 'NULL sampler cannot be used by the bind group');
+                Debug.assert(sampler, `NULL sampler [${textureFormat.name}] (slot ${slot + 1}) cannot be used by the bind group`);
                 Debug.call(() => {
                     this.debugFormat += `${slot + 1}: ${sampler.label}\n`;
                 });
@@ -115,15 +126,19 @@ class WebgpuBindGroup {
 
         // storage textures
         const storageTextureFormats = bindGroup.format.storageTextureFormats;
-        bindGroup.storageTextures.forEach((tex, textureIndex) => {
+        bindGroup.storageTextures.forEach((value, textureIndex) => {
 
-            /** @type {import('./webgpu-texture.js').WebgpuTexture} */
-            const wgpuTexture = tex.impl;
+            // Value can be a Texture or TextureView
+            const isTextureView = value instanceof TextureView;
+            const texture = isTextureView ? value.texture : value;
+
+            /** @type {WebgpuTexture} */
+            const wgpuTexture = texture.impl;
             const slot = storageTextureFormats[textureIndex].slot;
 
-            // texture
-            const view = wgpuTexture.getView(device);
-            Debug.assert(view, 'NULL texture view cannot be used by the bind group');
+            // Get view - pass TextureView for mip level / array layer selection if provided
+            const view = wgpuTexture.getView(device, isTextureView ? value : undefined);
+            Debug.assert(view, `NULL storage texture view [${storageTextureFormats[textureIndex].name}] (slot ${slot}) cannot be used by the bind group`);
             Debug.call(() => {
                 this.debugFormat += `${slot}: ${bindGroup.format.storageTextureFormats[textureIndex].name}\n`;
             });
@@ -141,7 +156,7 @@ class WebgpuBindGroup {
             const wgpuBuffer = buffer.impl.buffer;
             const slot = storageBufferFormats[bufferIndex].slot;
 
-            Debug.assert(wgpuBuffer, 'NULL storage buffer cannot be used by the bind group');
+            Debug.assert(wgpuBuffer, `NULL storage buffer [${storageBufferFormats[bufferIndex].name}] (slot ${slot}, id ${buffer.id}, size ${buffer.byteSize}) cannot be used by the bind group`);
             Debug.call(() => {
                 this.debugFormat += `${slot}: SB\n`;
             });
@@ -154,14 +169,14 @@ class WebgpuBindGroup {
             });
         });
 
-        const descr = {
+        const desc = {
             layout: bindGroup.format.impl.bindGroupLayout,
             entries: entries
         };
 
-        DebugHelper.setLabel(descr, bindGroup.name);
+        DebugHelper.setLabel(desc, bindGroup.name);
 
-        return descr;
+        return desc;
     }
 }
 

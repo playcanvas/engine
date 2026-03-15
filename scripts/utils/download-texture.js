@@ -3,7 +3,7 @@
 // Taken from https://rawgit.com/zholos/js_bitmap/master/bitmap.js
 function constructPngUrl(data, width, height) {
     var row = function (data, width, y) {
-        var result = "\0";
+        var result = '\0';
         var r = y * width * 4;
         for (var x = 0; x < width; x++) {
             result += String.fromCharCode(data[r], data[r + 1], data[r + 2], data[r + 3]);
@@ -13,9 +13,10 @@ function constructPngUrl(data, width, height) {
     };
 
     var rows = function (data, width, height) {
-        var result = "";
-        for (var y = 0; y < height; y++)
+        var result = '';
+        for (var y = 0; y < height; y++) {
             result += row(data, width, y);
+        }
         return result;
     };
 
@@ -33,7 +34,7 @@ function constructPngUrl(data, width, height) {
     };
 
     var deflate = function (data) {
-        var compressed = "\x78\x01";
+        var compressed = '\x78\x01';
         var i = 0;
         do {
             var block = data.slice(i, i + 65535);
@@ -48,9 +49,11 @@ function constructPngUrl(data, width, height) {
 
     var crc32 = function (data) {
         var c = ~0;
-        for (var i = 0; i < data.length; i++)
-            for (var b = data.charCodeAt(i) | 0x100; b !== 1; b >>>= 1)
+        for (var i = 0; i < data.length; i++) {
+            for (var b = data.charCodeAt(i) | 0x100; b !== 1; b >>>= 1) {
                 c = (c >>> 1) ^ ((c ^ b) & 1 ? 0xedb88320 : 0);
+            }
+        }
         return ~c;
     };
 
@@ -58,12 +61,12 @@ function constructPngUrl(data, width, height) {
         return hton(data.length) + type + data + hton(crc32(type + data));
     };
 
-    var png = "\x89PNG\r\n\x1a\n" +
-        chunk("IHDR", hton(width) + hton(height) + "\x08\x06\0\0\0") +
-        chunk("IDAT", deflate(rows(data, width, height))) +
-        chunk("IEND", "");
+    var png = `\x89PNG\r\n\x1a\n${
+        chunk('IHDR', `${hton(width) + hton(height)}\x08\x06\0\0\0`)
+    }${chunk('IDAT', deflate(rows(data, width, height)))
+    }${chunk('IEND', '')}`;
 
-    return "data:image/png;base64," + btoa(png);
+    return `data:image/png;base64,${btoa(png)}`;
 }
 
 // Construct a PNG using canvas API. This function is much faster than the manual approach,
@@ -76,7 +79,7 @@ var constructPngUrlOld = function (data, width, height) {       // eslint-disabl
     var context = canvas.getContext('2d');
     context.putImageData(new ImageData(data, width, height), 0, 0);
 
-    return canvas.toDataURL("image/png");
+    return canvas.toDataURL('image/png');
 };
 
 // download the data uri
@@ -87,14 +90,14 @@ function download(url, filename) {
 
     // create a "fake" click-event to trigger the download
     if (document.createEvent) {
-        var e = document.createEvent("MouseEvents");
-        e.initMouseEvent("click", true, true, window,
-                         0, 0, 0, 0, 0, false, false, false,
-                         false, 0, null);
+        var e = document.createEvent('MouseEvents');
+        e.initMouseEvent('click', true, true, window,
+            0, 0, 0, 0, 0, false, false, false,
+            false, 0, null);
 
         lnk.dispatchEvent(e);
     } else if (lnk.fireEvent) {
-        lnk.fireEvent("onclick");
+        lnk.fireEvent('onclick');
     }
 }
 

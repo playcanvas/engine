@@ -1,5 +1,6 @@
 /**
- * A 4-dimensional vector.
+ * A 4-dimensional vector. Vec4 is commonly used to represent homogeneous coordinates or shader
+ * uniforms requiring four components.
  *
  * @category Math
  */
@@ -33,15 +34,31 @@ class Vec4 {
     w;
 
     /**
-     * Creates a new Vec4 object.
+     * Creates a new Vec4 instance.
      *
+     * @overload
+     * @param {number} [x] - The x value. Defaults to 0.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @param {number} [z] - The z value. Defaults to 0.
+     * @param {number} [w] - The w value. Defaults to 0.
+     * @example
+     * const v1 = new pc.Vec4(); // defaults to 0, 0, 0, 0
+     * const v2 = new pc.Vec4(1, 2, 3, 4);
+     */
+    /**
+     * Creates a new Vec4 instance.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the vector values from.
+     * @example
+     * const v = new pc.Vec4([1, 2, 3, 4]);
+     */
+    /**
      * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 4, the
      * array will be used to populate all components.
      * @param {number} [y] - The y value. Defaults to 0.
      * @param {number} [z] - The z value. Defaults to 0.
      * @param {number} [w] - The w value. Defaults to 0.
-     * @example
-     * const v = new pc.Vec4(1, 2, 3, 4);
      */
     constructor(x = 0, y = 0, z = 0, w = 0) {
         if (x.length === 4) {
@@ -68,7 +85,7 @@ class Vec4 {
      *
      * a.add(b);
      *
-     * // Outputs [30, 30, 30]
+     * // Outputs [30, 30, 30, 30]
      * console.log("The result of the addition is: " + a.toString());
      */
     add(rhs) {
@@ -92,7 +109,7 @@ class Vec4 {
      * const r = new pc.Vec4();
      *
      * r.add2(a, b);
-     * // Outputs [30, 30, 30]
+     * // Outputs [30, 30, 30, 30]
      *
      * console.log("The result of the addition is: " + r.toString());
      */
@@ -222,8 +239,8 @@ class Vec4 {
      * const r = new pc.Vec4();
      *
      * r.div2(a, b);
-     * // Outputs [2, 3, 4, 5]
      *
+     * // Outputs [2, 3, 4, 5]
      * console.log("The result of the division is: " + r.toString());
      */
     div2(lhs, rhs) {
@@ -323,9 +340,9 @@ class Vec4 {
     /**
      * Returns the magnitude squared of the specified 4-dimensional vector.
      *
-     * @returns {number} The magnitude of the specified 4-dimensional vector.
+     * @returns {number} The magnitude squared of the specified 4-dimensional vector.
      * @example
-     * const vec = new pc.Vec4(3, 4, 0);
+     * const vec = new pc.Vec4(3, 4, 0, 0);
      * const len = vec.lengthSq();
      * // Outputs 25
      * console.log("The length squared of the vector is: " + len);
@@ -337,8 +354,8 @@ class Vec4 {
     /**
      * Returns the result of a linear interpolation between two specified 4-dimensional vectors.
      *
-     * @param {Vec4} lhs - The 4-dimensional to interpolate from.
-     * @param {Vec4} rhs - The 4-dimensional to interpolate to.
+     * @param {Vec4} lhs - The 4-dimensional vector to interpolate from.
+     * @param {Vec4} rhs - The 4-dimensional vector to interpolate to.
      * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1,
      * the linear interpolant will occur on a straight line between lhs and rhs. Outside of this
      * range, the linear interpolant will occur on a ray extrapolated from this line.
@@ -463,6 +480,10 @@ class Vec4 {
      *
      * @param {Vec4} [src] - The vector to floor. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
+     * @example
+     * const v = new pc.Vec4(1.2, 3.9, 5.5, 7.8);
+     * v.floor();
+     * // v is now [1, 3, 5, 7]
      */
     floor(src = this) {
         this.x = Math.floor(src.x);
@@ -477,6 +498,10 @@ class Vec4 {
      *
      * @param {Vec4} [src] - The vector to ceil. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
+     * @example
+     * const v = new pc.Vec4(1.2, 3.1, 5.9, 7.4);
+     * v.ceil();
+     * // v is now [2, 4, 6, 8]
      */
     ceil(src = this) {
         this.x = Math.ceil(src.x);
@@ -491,6 +516,10 @@ class Vec4 {
      *
      * @param {Vec4} [src] - The vector to round. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
+     * @example
+     * const v = new pc.Vec4(1.4, 3.6, 5.5, 7.2);
+     * v.round();
+     * // v is now [1, 4, 6, 7]
      */
     round(src = this) {
         this.x = Math.round(src.x);
@@ -505,6 +534,11 @@ class Vec4 {
      *
      * @param {Vec4} rhs - The 4-dimensional vector used as the source of elements to compare to.
      * @returns {Vec4} Self for chaining.
+     * @example
+     * const a = new pc.Vec4(5, 1, 7, 3);
+     * const b = new pc.Vec4(2, 8, 3, 9);
+     * a.min(b);
+     * // a is now [2, 1, 3, 3]
      */
     min(rhs) {
         if (rhs.x < this.x) this.x = rhs.x;
@@ -519,6 +553,11 @@ class Vec4 {
      *
      * @param {Vec4} rhs - The 4-dimensional vector used as the source of elements to compare to.
      * @returns {Vec4} Self for chaining.
+     * @example
+     * const a = new pc.Vec4(5, 1, 7, 3);
+     * const b = new pc.Vec4(2, 8, 3, 9);
+     * a.max(b);
+     * // a is now [5, 8, 7, 9]
      */
     max(rhs) {
         if (rhs.x > this.x) this.x = rhs.x;
@@ -555,7 +594,7 @@ class Vec4 {
     /**
      * Subtracts a 4-dimensional vector from another in place.
      *
-     * @param {Vec4} rhs - The vector to add to the specified vector.
+     * @param {Vec4} rhs - The vector to subtract from the specified vector.
      * @returns {Vec4} Self for chaining.
      * @example
      * const a = new pc.Vec4(10, 10, 10, 10);
@@ -623,6 +662,27 @@ class Vec4 {
     }
 
     /**
+     * Set the values of the vector from an array.
+     *
+     * @param {number[]|ArrayBufferView} arr - The array to set the vector values from.
+     * @param {number} [offset] - The zero-based index at which to start copying elements from the
+     * array. Default is 0.
+     * @returns {Vec4} Self for chaining.
+     * @example
+     * const v = new pc.Vec4();
+     * v.fromArray([20, 10, 5, 0]);
+     * // v is set to [20, 10, 5, 0]
+     */
+    fromArray(arr, offset = 0) {
+        this.x = arr[offset] ?? this.x;
+        this.y = arr[offset + 1] ?? this.y;
+        this.z = arr[offset + 2] ?? this.z;
+        this.w = arr[offset + 3] ?? this.w;
+
+        return this;
+    }
+
+    /**
      * Converts the vector to string form.
      *
      * @returns {string} The vector in string form.
@@ -636,12 +696,58 @@ class Vec4 {
     }
 
     /**
+     * @overload
+     * @param {number[]} [arr] - The array to populate with the vector's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]} The vector as an array.
+     */
+    /**
+     * @overload
+     * @param {ArrayBufferView} arr - The array to populate with the vector's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {ArrayBufferView} The vector as an array.
+     */
+    /**
+     * Converts the vector to an array.
+     *
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the vector's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]|ArrayBufferView} The vector as an array.
+     * @example
+     * const v = new pc.Vec4(20, 10, 5, 1);
+     * // Outputs [20, 10, 5, 1]
+     * console.log(v.toArray());
+     */
+    toArray(arr = [], offset = 0) {
+        arr[offset] = this.x;
+        arr[offset + 1] = this.y;
+        arr[offset + 2] = this.z;
+        arr[offset + 3] = this.w;
+
+        return arr;
+    }
+
+    /**
      * A constant vector set to [0, 0, 0, 0].
      *
      * @type {Vec4}
      * @readonly
      */
     static ZERO = Object.freeze(new Vec4(0, 0, 0, 0));
+
+    /**
+     * A constant vector set to [0.5, 0.5, 0.5, 0.5].
+     *
+     * @type {Vec4}
+     * @readonly
+     */
+    static HALF = Object.freeze(new Vec4(0.5, 0.5, 0.5, 0.5));
 
     /**
      * A constant vector set to [1, 1, 1, 1].

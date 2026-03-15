@@ -2,6 +2,10 @@ import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
+ */
+
+/**
  * A WebGPU implementation of the Buffer.
  *
  * @ignore
@@ -34,7 +38,7 @@ class WebgpuBuffer {
     }
 
     allocate(device, size) {
-        Debug.assert(!this.buffer, "Buffer already allocated");
+        Debug.assert(!this.buffer, 'Buffer already allocated');
         this.buffer = device.wgpu.createBuffer({
             size,
             usage: this.usageFlags
@@ -42,7 +46,7 @@ class WebgpuBuffer {
     }
 
     /**
-     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - Graphics device.
+     * @param {WebgpuGraphicsDevice} device - Graphics device.
      * @param {*} storage -
      */
     unlock(device, storage) {
@@ -61,11 +65,11 @@ class WebgpuBuffer {
             this.allocate(device, size);
 
             DebugHelper.setLabel(this.buffer,
-                                 this.usageFlags & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
-                                     this.usageFlags & GPUBufferUsage.INDEX ? 'IndexBuffer' :
-                                         this.usageFlags & GPUBufferUsage.UNIFORM ? "UniformBuffer" :
-                                             this.usageFlags & GPUBufferUsage.STORAGE ? "StorageBuffer" :
-                                                 ''
+                this.usageFlags & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
+                    this.usageFlags & GPUBufferUsage.INDEX ? 'IndexBuffer' :
+                        this.usageFlags & GPUBufferUsage.UNIFORM ? 'UniformBuffer' :
+                            this.usageFlags & GPUBufferUsage.STORAGE ? 'StorageBuffer' :
+                                ''
             );
 
 
@@ -94,8 +98,8 @@ class WebgpuBuffer {
         wgpu.queue.writeBuffer(this.buffer, 0, data, 0, data.length);
     }
 
-    read(device, offset, size, data) {
-        return device.readStorageBuffer(this, offset, size, data);
+    read(device, offset, size, data, immediate) {
+        return device.readStorageBuffer(this, offset, size, data, immediate);
     }
 
     write(device, bufferOffset, data, dataOffset, size) {

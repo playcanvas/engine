@@ -1,32 +1,52 @@
 /**
- * This module provides the core functionality for the PlayCanvas Engine. It includes the main
- * classes and methods used to create and manage a PlayCanvas application. It provides APIs for
- * graphics, audio, input, physics, asset management, scripting and much more. It also includes an
- * application framework and entity-component system, making it easy to manage the lifetime of your
- * application.
+ * Welcome to the PlayCanvas Engine API Reference. The PlayCanvas Engine is an open source framework
+ * for building interactive 3D applications. It is written in JavaScript and is built on top of
+ * standard browser APIs including WebGL, WebGPU, Web Audio and WebXR.
+ *
+ * ### 🧑 Who Should Use This Manual?
+ *
+ * This API reference is intended for developers who are building applications using:
+ *
+ * - The [PlayCanvas Engine](https://github.com/playcanvas/engine) directly.
+ * - [PlayCanvas Web Components](https://github.com/playcanvas/web-components) or
+ * [PlayCanvas React](https://github.com/playcanvas/react) which wrap the PlayCanvas Engine
+ * with a declarative interface.
+ * - The [PlayCanvas Editor](https://playcanvas.com/products/editor) which supports the writing of
+ * custom scripts based on the Engine API.
+ *
+ * ### 🔍 Searching the API Reference
+ *
+ * You can search the API Reference by clicking the 🔍 icon in the header. The `/` key is a shortcut
+ * for opening the search dialog. Press `Escape` to close the search dialog.
+ *
+ * ### 🗺️ Navigating the API Reference
+ *
+ * This top level page groups the API into a number of categories: Animation, Asset, Debug, Exporter,
+ * Gizmo, Graphics, Input, Math, Other, Physics, Script, Sound, User Interface and XR.
+ *
+ * There is also a full alphabetical index available on the left hand side of the page. However,
+ * this list is extensive so here is a list of key classes that you can use as jumping on points
+ * for exploring the API:
+ *
+ * - {@link AppBase} - Represents your PlayCanvas application.
+ * - {@link Scene} - Represents the graphical scene managed by the application.
+ * - {@link Entity} - Represents objects in your app. The scene manages a hierarchy
+ * of entities. Add capabilities to entities with {@link Component}s.
+ * - {@link ScriptComponent} - A powerful component that allows you to write {@link Script}s
+ * that implement custom behavior for your entities.
+ * - {@link AssetRegistry} - Manages all the {@link Asset}s (3D models, sounds, etc) in your app.
+ *
+ * ### 🙌 Contributing to the API Reference
+ *
+ * We want the API Reference to be as high quality as possible. If you spot any errors or omissions,
+ * please raise an issue or open a pull request on the [PlayCanvas Engine GitHub repository](https://github.com/playcanvas/engine).
  *
  * @module Engine
  */
 
-// #if _IS_UMD
-// POLYFILLS
-import './polyfill/array-fill.js';
-import './polyfill/array-find.js';
-import './polyfill/array-find-index.js';
-import './polyfill/math-log2.js';
-import './polyfill/math-sign.js';
-import './polyfill/number-isfinite.js';
-import './polyfill/object-assign.js';
-import './polyfill/object-entries.js';
-import './polyfill/object-values.js';
-import './polyfill/pointer-lock.js';
-import './polyfill/string.js';
-import './polyfill/typedarray-fill.js';
-// #endif
-
 // CORE
 export * from './core/constants.js';
-export { apps, common, config, data, extend, revision, type, version } from './core/core.js';
+export { extend, revision, version } from './core/core.js';
 export { guid } from './core/guid.js';
 export { path } from './core/path.js';
 export { platform } from './core/platform.js';
@@ -49,6 +69,7 @@ export { Color } from './core/math/color.js';
 export { Curve } from './core/math/curve.js';
 export { CurveSet } from './core/math/curve-set.js';
 export { FloatPacking } from './core/math/float-packing.js';
+export { Kernel } from './core/math/kernel.js';
 export { Mat3 } from './core/math/mat3.js';
 export { Mat4 } from './core/math/mat4.js';
 export { Quat } from './core/math/quat.js';
@@ -65,9 +86,6 @@ export { Plane } from './core/shape/plane.js';
 export { Tri } from './core/shape/tri.js';
 export { Ray } from './core/shape/ray.js';
 
-// PLATFORM / AUDIO
-export * from './platform/audio/constants.js';
-
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
@@ -75,6 +93,7 @@ export { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat, BindStorag
 export { BlendState } from './platform/graphics/blend-state.js';
 export { Compute } from './platform/graphics/compute.js';
 export { DepthState } from './platform/graphics/depth-state.js';
+export { DrawCommands } from './platform/graphics/draw-commands.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { RenderTarget } from './platform/graphics/render-target.js';
@@ -82,11 +101,10 @@ export { RenderPass } from './platform/graphics/render-pass.js';
 export { ScopeId } from './platform/graphics/scope-id.js';
 export { ScopeSpace } from './platform/graphics/scope-space.js';
 export { Shader } from './platform/graphics/shader.js';
-export { ShaderProcessorOptions } from './platform/graphics/shader-processor-options.js';   // used by splats in extras
-export { ShaderUtils } from './platform/graphics/shader-utils.js';  // used by splats in extras
 export { StorageBuffer } from './platform/graphics/storage-buffer.js';
 export { Texture } from './platform/graphics/texture.js';
 export { TextureUtils } from './platform/graphics/texture-utils.js';
+export { TextureView } from './platform/graphics/texture-view.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
 export { UniformBufferFormat, UniformFormat } from './platform/graphics/uniform-buffer-format.js';
 export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
@@ -117,6 +135,7 @@ export { getTouchTargetCoords, Touch, TouchEvent } from './platform/input/touch-
 export { http, Http } from './platform/net/http.js';
 
 // PLATFORM / SOUND
+export * from './platform/sound/constants.js';
 export { SoundManager } from './platform/sound/manager.js';
 export { Sound } from './platform/sound/sound.js';
 export { SoundInstance } from './platform/sound/instance.js';
@@ -124,14 +143,12 @@ export { SoundInstance3d } from './platform/sound/instance3d.js';
 
 // SCENE
 export * from './scene/constants.js';
-export { drawQuadWithShader, drawTexture } from './scene/graphics/quad-render-utils.js';
-export { BasicMaterial } from './scene/materials/basic-material.js';
+export { drawQuadWithShader } from './scene/graphics/quad-render-utils.js';
 export { Batch } from './scene/batching/batch.js';
 export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
-export { LitMaterial } from './scene/materials/lit-material.js';
 export { WorldClusters } from './scene/lighting/world-clusters.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
@@ -139,7 +156,6 @@ export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
 export { LightingParams } from './scene/lighting/lighting-params.js';
-export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
 export { MeshInstance } from './scene/mesh-instance.js';
 export { Model } from './scene/model.js';
@@ -153,22 +169,29 @@ export { ShaderPass } from './scene/shader-pass.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';
-export { StandardMaterial } from './scene/materials/standard-material.js';
-export { StandardMaterialOptions } from './scene/materials/standard-material-options.js';
 export { StencilParameters } from './platform/graphics/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
 // SCENE / ANIMATION
-export { Animation, Key, Node } from './scene/animation/animation.js';
+export { Animation, AnimationKey, AnimationNode } from './scene/animation/animation.js';
 export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
+export { ComputeRadixSort } from './scene/graphics/compute-radix-sort.js';
 export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
-export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js';
+export { FramePass } from './platform/graphics/frame-pass.js';
+export { FramePassColorGrab } from './scene/graphics/frame-pass-color-grab.js';
+export { FramePassRadixSort } from './scene/graphics/frame-pass-radix-sort.js';
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
-export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
+
+// SCENE / MATERIALS
+export { LitMaterial } from './scene/materials/lit-material.js';
+export { Material } from './scene/materials/material.js';
+export { ShaderMaterial } from './scene/materials/shader-material.js';
+export { StandardMaterial } from './scene/materials/standard-material.js';
+export { StandardMaterialOptions } from './scene/materials/standard-material-options.js';
 
 // SCENE / PROCEDURAL
 export { calculateNormals, calculateTangents } from './scene/geometry/geometry-utils.js';
@@ -183,23 +206,29 @@ export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
 export { TorusGeometry } from './scene/geometry/torus-geometry.js';
 
 // SCENE / RENDERER
-export { RenderingParams } from './scene/renderer/rendering-params.js';
+export { FogParams } from './scene/fog-params.js';
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
-export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';
-export { getProgramLibrary } from './scene/shader-lib/get-program-library.js';      // used by splats in extras
+export { ShaderUtils, createShader, createShaderFromCode } from './scene/shader-lib/shader-utils.js';
 export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
-export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
-export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
-export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
-export { ShaderGenerator } from './scene/shader-lib/programs/shader-generator.js';  // used by splats in extras
+export { ChunkUtils } from './scene/shader-lib/chunk-utils.js';
+export { ShaderChunks } from './scene/shader-lib/shader-chunks.js';
+
+// SCENE / SKY
+export { Sky } from './scene/skybox/sky.js';
 
 // SCENE / SPLAT
+export { GSplatContainer } from './scene/gsplat/gsplat-container.js';
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
-export { GSplat } from './scene/gsplat/gsplat.js';
+export { GSplatFormat } from './scene/gsplat/gsplat-format.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+export { GSplatProcessor } from './framework/gsplat/gsplat-processor.js';
+export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
+export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
+export { GSplatSogData } from './scene/gsplat/gsplat-sog-data.js';
+export { GSplatSogResource } from './scene/gsplat/gsplat-sog-resource.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
@@ -229,7 +258,6 @@ export { ElementComponent } from './framework/components/element/component.js';
 export { ElementComponentSystem } from './framework/components/element/system.js';
 export { ElementDragHelper } from './framework/components/element/element-drag-helper.js';
 export { Entity } from './framework/entity.js';
-export { EntityReference } from './framework/utils/entity-reference.js';
 export { GSplatComponent } from './framework/components/gsplat/component.js';
 export { GSplatComponentSystem } from './framework/components/gsplat/system.js';
 export { ImageElement } from './framework/components/element/image-element.js';
@@ -314,10 +342,11 @@ export { BundleRegistry } from './framework/bundle/bundle-registry.js';
 
 // FRAMEWORK / GRAPHICS
 export { Picker } from './framework/graphics/picker.js';
+export { RenderPassPicker } from './framework/graphics/render-pass-picker.js';
 
 // FRAMEWORK / HANDLERS
 export { basisInitialize } from './framework/handlers/basis.js';
-export { dracoInitialize } from './framework/parsers/draco-decoder.js';
+export { dracoInitialize, dracoDecode } from './framework/parsers/draco-decoder.js';
 export { AnimClipHandler } from './framework/handlers/anim-clip.js';
 export { AnimStateGraphHandler } from './framework/handlers/anim-state-graph.js';
 export { AnimationHandler } from './framework/handlers/animation.js';
@@ -329,7 +358,6 @@ export { CssHandler } from './framework/handlers/css.js';
 export { CubemapHandler } from './framework/handlers/cubemap.js';
 export { FolderHandler } from './framework/handlers/folder.js';
 export { FontHandler } from './framework/handlers/font.js';
-export { GSplatResource } from './framework/parsers/gsplat-resource.js';
 export { HierarchyHandler } from './framework/handlers/hierarchy.js';
 export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';
@@ -369,7 +397,6 @@ export { I18n } from './framework/i18n/i18n.js';
 export * from './framework/xr/constants.js';
 export { XrAnchor } from './framework/xr/xr-anchor.js';
 export { XrAnchors } from './framework/xr/xr-anchors.js';
-export { XrDepthSensing } from './framework/xr/xr-depth-sensing.js';
 export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
 export { XrFinger } from './framework/xr/xr-finger.js';
 export { XrHand } from './framework/xr/xr-hand.js';

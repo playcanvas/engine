@@ -1,11 +1,11 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_SRGBA8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
-import { LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, SHADOW_PCF3 } from '../constants.js';
+import { LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, SHADOW_PCF3_32F, shadowTypeInfo } from '../constants.js';
 import { ShadowMap } from '../renderer/shadow-map.js';
 
 const _tempArray = [];
@@ -37,18 +37,7 @@ class LightTextureAtlas {
         this.shadowEdgePixels = 3;
 
         this.cookieAtlasResolution = 4;
-        this.cookieAtlas = new Texture(this.device, {
-            name: 'CookieAtlas',
-            width: this.cookieAtlasResolution,
-            height: this.cookieAtlasResolution,
-            format: PIXELFORMAT_RGBA8,
-            cubemap: false,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
+        this.cookieAtlas = Texture.createDataTexture2D(this.device, 'CookieAtlas', this.cookieAtlasResolution, this.cookieAtlasResolution, PIXELFORMAT_SRGBA8);
 
         this.cookieRenderTarget = new RenderTarget({
             colorBuffer: this.cookieAtlas,
@@ -98,15 +87,17 @@ class LightTextureAtlas {
         this.cookieRenderTarget = null;
     }
 
-    allocateShadowAtlas(resolution) {
+    allocateShadowAtlas(resolution, shadowType = SHADOW_PCF3_32F) {
 
-        if (!this.shadowAtlas || this.shadowAtlas.texture.width !== resolution) {
+        const existingFormat = this.shadowAtlas?.texture.format;
+        const requiredFormat = shadowTypeInfo.get(shadowType).format;
+        if (!this.shadowAtlas || this.shadowAtlas.texture.width !== resolution || existingFormat !== requiredFormat) {
 
             // content of atlas is lost, force re-render of static shadows
             this.version++;
 
             this.destroyShadowAtlas();
-            this.shadowAtlas = ShadowMap.createAtlas(this.device, resolution, SHADOW_PCF3);
+            this.shadowAtlas = ShadowMap.createAtlas(this.device, resolution, shadowType);
 
             // avoid it being destroyed by lights
             this.shadowAtlas.cached = true;
@@ -254,7 +245,7 @@ class LightTextureAtlas {
         });
 
         if (needsShadowAtlas) {
-            this.allocateShadowAtlas(this.shadowAtlasResolution);
+            this.allocateShadowAtlas(this.shadowAtlasResolution, lightingParams.shadowType);
         }
 
         if (needsCookieAtlas) {
@@ -356,8 +347,9 @@ class LightTextureAtlas {
             for (let i = 0; i < assignCount; i++) {
                 const light = lights[i];
 
-                if (light.castShadows)
+                if (light.castShadows) {
                     light._shadowMap = this.shadowAtlas;
+                }
 
                 // if currently assigned slot is the same size as what is needed, and was last used by this light, reuse it
                 const previousSlot = slots[light.atlasSlotIndex];
@@ -374,8 +366,9 @@ class LightTextureAtlas {
             for (let i = 0; i < assignCount; i++) {
 
                 // skip already used slots
-                while (usedCount < slots.length && slots[usedCount].used)
+                while (usedCount < slots.length && slots[usedCount].used) {
                     usedCount++;
+                }
 
                 const light = lights[i];
                 if (!light.atlasViewportAllocated) {

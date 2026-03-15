@@ -3,7 +3,7 @@ import { AnimBlendTree } from './anim-blend-tree.js';
 /**
  * An AnimBlendTree that calculates normalized weight values based on the total weight.
  *
- * @ignore
+ * @category Animation
  */
 class AnimBlendTreeDirect extends AnimBlendTree {
     calculateWeights() {

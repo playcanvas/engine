@@ -1,13 +1,11 @@
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -115,7 +113,7 @@ light.setLocalEulerAngles(15, 30, 0);
 
 // Set an update function on the app's update event
 let time = 0;
-app.on('update', function (/** @type {number} */ dt) {
+app.on('update', (/** @type {number} */ dt) => {
     time += dt;
 
     // move all entities along orbits

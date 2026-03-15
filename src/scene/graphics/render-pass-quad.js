@@ -1,12 +1,8 @@
-import { CULLFACE_NONE } from "../../platform/graphics/constants.js";
-import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
-import { DepthState } from "../../platform/graphics/depth-state.js";
-import { RenderPass } from "../../platform/graphics/render-pass.js";
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 /**
  * A render pass implementing rendering of a QuadRender.
- *
- * @ignore
  */
 class RenderPassQuad extends RenderPass {
     constructor(device, quad, rect, scissorRect) {
@@ -19,11 +15,9 @@ class RenderPassQuad extends RenderPass {
 
     execute() {
         const { device } = this;
-        DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
+        DebugGraphics.pushGpuMarker(device, `${this.name}:${this.quad.shader.name}`);
 
-        device.setCullMode(CULLFACE_NONE);
-        device.setDepthState(DepthState.NODEPTH);
-        device.setStencilState(null, null);
+        device.setDrawStates();
 
         this.quad.render(this.rect, this.scissorRect);
         DebugGraphics.popGpuMarker(device);

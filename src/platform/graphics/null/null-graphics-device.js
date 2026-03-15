@@ -1,14 +1,15 @@
-import { Debug } from '../../../core/debug.js';
 import {
     DEVICETYPE_NULL
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
+import { RenderTarget } from '../render-target.js';
 
 import { NullIndexBuffer } from './null-index-buffer.js';
 import { NullRenderTarget } from './null-render-target.js';
 import { NullShader } from './null-shader.js';
 import { NullTexture } from './null-texture.js';
 import { NullVertexBuffer } from './null-vertex-buffer.js';
+import { NullDrawCommands } from './null-draw-commands.js';
 
 class NullGraphicsDevice extends GraphicsDevice {
     constructor(canvas, options = {}) {
@@ -19,7 +20,15 @@ class NullGraphicsDevice extends GraphicsDevice {
         this._deviceType = DEVICETYPE_NULL;
         this.samples = 1;
 
-        Debug.log('NullGraphicsDevice');
+        this.backBuffer = new RenderTarget({
+            name: 'Framebuffer',
+            graphicsDevice: this,
+            depth: this.initOptions.depth,
+            stencil: this.supportsStencil,
+            samples: this.samples
+        });
+
+        this.initDeviceCaps();
     }
 
     destroy() {
@@ -40,12 +49,11 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.maxPixelRatio = 1;
         this.maxAnisotropy = 16;
         this.supportsUniformBuffers = false;
-        this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsGpuParticles = false;
         this.textureFloatRenderable = true;
         this.textureHalfFloatRenderable = true;
-        this.supportsImageBitmap = true;
+        this.supportsImageBitmap = false;
     }
 
     postInit() {
@@ -89,7 +97,15 @@ class NullGraphicsDevice extends GraphicsDevice {
         return new NullRenderTarget(renderTarget);
     }
 
-    draw(primitive, numInstances = 1, keepBuffers) {
+    createDrawCommandImpl(drawCommands) {
+        return new NullDrawCommands();
+    }
+
+    createUploadStreamImpl(uploadStream) {
+        return null;
+    }
+
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
     }
 
     setShader(shader, asyncCompile = false) {
@@ -108,6 +124,9 @@ class NullGraphicsDevice extends GraphicsDevice {
     }
 
     setCullMode(cullMode) {
+    }
+
+    setFrontFace(frontFace) {
     }
 
     setAlphaToCoverage(state) {

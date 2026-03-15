@@ -1,10 +1,11 @@
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from "../constants.js";
+import { DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../constants.js';
 import { Material } from './material.js';
 import { LitMaterialOptions } from './lit-material-options.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
-import { getProgramLibrary } from "../shader-lib/get-program-library.js";
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { lit } from '../shader-lib/programs/lit.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 
 const options = new LitMaterialOptions();
 
@@ -21,9 +22,9 @@ const options = new LitMaterialOptions();
 class LitMaterial extends Material {
     usedUvs = [true];
 
-    shaderChunk = 'void evaluateFrontend() {}\n';
+    shaderChunkGLSL = null;
 
-    chunks = null;
+    shaderChunkWGSL = null;
 
     useLighting = true;
 
@@ -39,8 +40,6 @@ class LitMaterial extends Material {
 
     nineSlicedMode = null;
 
-    fastTbn = false;
-
     twoSidedLighting = false;
 
     occludeDirect = false;
@@ -54,6 +53,8 @@ class LitMaterial extends Material {
     opacityDither = DITHER_NONE;
 
     opacityShadowDither = DITHER_NONE;
+
+    shadowCatcher = false;
 
     ggxSpecular = false;
 
@@ -86,13 +87,16 @@ class LitMaterial extends Material {
 
     hasClearCoatNormals = false;
 
-    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
-        options.usedUvs = this.usedUvs.slice();
-        options.shaderChunk = this.shaderChunk;
+    getShaderVariant(params) {
 
-        LitMaterialOptionsBuilder.update(options.litOptions, this, scene, renderParams, objDefs, pass, sortedLights);
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
-        const library = getProgramLibrary(device);
+        options.usedUvs = this.usedUvs.slice();
+        options.shaderChunkGLSL = this.shaderChunkGLSL;
+        options.shaderChunkWGSL = this.shaderChunkWGSL;
+        options.defines = ShaderUtils.getCoreDefines(this, params);
+
+        LitMaterialOptionsBuilder.update(options.litOptions, this, params.scene, params.cameraShaderParams, params.objDefs, params.pass, params.sortedLights);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);
+        const library = getProgramLibrary(params.device);
         library.register('lit', lit);
         const shader = library.getProgram('lit', options, processingOptions, this.userId);
         return shader;

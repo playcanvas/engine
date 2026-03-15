@@ -61,20 +61,13 @@ let shaderDepthFloat = null;
 
 const vertShader = /* glsl */ `
     attribute vec3 aPosition;
-    attribute vec2 aUv0;
     uniform mat4 matrix_model;
     uniform mat4 matrix_viewProjection;
-    varying vec2 vUv0;
-    void main(void)
-    {
-        vec4 screenPosition = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
-        gl_Position = screenPosition;
-        vUv0 = screenPosition.xy;
-    }
-    `;
+    void main(void) {
+        gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
+    }`;
 
 const fragShader = /* glsl */ `
-    varying vec2 vUv0;
     uniform vec4 uScreenSize;
     uniform mat4 matrix_depth_uv;
     uniform float depth_raw_to_meters;
@@ -89,7 +82,7 @@ const fragShader = /* glsl */ `
     void main (void) {
         vec2 uvScreen = gl_FragCoord.xy * uScreenSize.zw;
 
-        // use texture array for multi-view 
+        // use texture array for multi-view
         #ifdef XRDEPTH_ARRAY
             uvScreen = uvScreen * vec2(2.0, 1.0) - vec2(view_index, 0.0);
             vec3 uv = vec3((matrix_depth_uv * vec4(uvScreen.xy, 0.0, 1.0)).xy, view_index);
@@ -107,11 +100,10 @@ const fragShader = /* glsl */ `
 
         depth *= depth_raw_to_meters;
 
-        // depth = 1.0 - min(depth / 2.0, 1.0); // 0..1 = 0m..4m
         gl_FragColor = vec4(depth, depth, depth, 1.0);
     }`;
 
-const materialDepth = new pc.Material();
+const materialDepth = new pc.ShaderMaterial();
 
 /**
  * @param {boolean} array - If the depth information uses array texture.
@@ -123,18 +115,21 @@ const updateShader = (array, float) => {
     shaderDepthArray = array;
     shaderDepthFloat = float;
 
-    const key = 'textureDepthSensing_' + array + float;
-    let frag = fragShader;
+    const key = `textureDepthSensing_${array}${float}`;
 
-    if (shaderDepthArray) frag = '#define XRDEPTH_ARRAY\n' + frag;
+    if (shaderDepthArray) materialDepth.setDefine('XRDEPTH_ARRAY', true);
+    if (shaderDepthFloat) materialDepth.setDefine('XRDEPTH_FLOAT', true);
 
-    if (shaderDepthArray) frag = '#define XRDEPTH_FLOAT\n' + frag;
+    materialDepth.shaderDesc = {
+        uniqueName: key,
+        vertexGLSL: vertShader,
+        fragmentGLSL: fragShader,
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
+        }
+    };
 
-    materialDepth.shader = pc.createShaderFromCode(app.graphicsDevice, vertShader, frag, key, {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
-    });
-    materialDepth.clearVariants();
     materialDepth.update();
 };
 
@@ -161,7 +156,7 @@ if (app.xr.supported) {
                     dataFormatPreference: pc.XRDEPTHSENSINGFORMAT_F32
                 },
                 callback: function (err) {
-                    if (err) message('WebXR Immersive AR failed to start: ' + err.message);
+                    if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
         } else {
@@ -169,12 +164,12 @@ if (app.xr.supported) {
         }
     };
 
-    app.mouse.on('mousedown', function () {
+    app.mouse.on('mousedown', () => {
         if (!app.xr.active) activate();
     });
 
     if (app.touch) {
-        app.touch.on('touchend', function (evt) {
+        app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -189,23 +184,23 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', function (evt) {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
-    app.xr.on('start', function () {
+    app.xr.on('start', () => {
         message('Immersive AR session has started');
         console.log('depth gpu optimized', app.xr.views.depthGpuOptimized);
         console.log('depth texture format', app.xr.views.depthPixelFormat);
     });
-    app.xr.on('end', function () {
+    app.xr.on('end', () => {
         shaderUpdated = false;
         message('Immersive AR session has ended');
         plane.enabled = false;
     });
-    app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
+    app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
         if (available) {
             if (!app.xr.views.supportedDepth) {
                 message('AR Camera Depth is not supported');
@@ -222,7 +217,7 @@ if (app.xr.supported) {
         if (app.xr.views.availableDepth) {
             if (!shaderUpdated && app.xr.active) {
                 shaderUpdated = true;
-                updateShader(app.xr.views.list.length > 1, app.xr.views.depthPixelFormat === pc.PIXELFORMAT_R32F);
+                updateShader(app.xr.views.list.length > 1, app.xr.views.depthPixelFormat !== pc.PIXELFORMAT_LA8);
             }
 
             const view = app.xr.views.list?.[0];

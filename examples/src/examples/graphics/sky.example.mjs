@@ -1,31 +1,32 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
     hdri_street: new pc.Asset(
         'hdri',
         'texture',
-        { url: rootPath + '/static/assets/hdri/wide-street.hdr' },
+        { url: `${rootPath}/static/assets/hdri/wide-street.hdr` },
         { mipmaps: false }
     ),
     hdri_room: new pc.Asset(
         'hdri',
         'texture',
-        { url: rootPath + '/static/assets/hdri/empty-room.hdr' },
+        { url: `${rootPath}/static/assets/hdri/empty-room.hdr` },
         { mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+
+    // enable HDR rendering if supported
+    displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -57,8 +58,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     // add an instance of the statue
     const statueEntity = assets.statue.resource.instantiateRenderEntity();
     app.root.addChild(statueEntity);
@@ -67,7 +66,11 @@ assetListLoader.load(() => {
     const cameraEntity = new pc.Entity();
     cameraEntity.addComponent('camera', {
         farClip: 500,
-        fov: 60
+        fov: 60,
+
+        // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+        toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
+        gammaCorrection: pc.GAMMA_SRGB
     });
 
     // add orbit camera script with a mouse and a touch support
@@ -87,6 +90,10 @@ assetListLoader.load(() => {
     cameraEntity.setLocalPosition(-4, 5, 22);
     cameraEntity.lookAt(0, 0, 1);
     app.root.addChild(cameraEntity);
+
+    // ------ Custom render passes set up ------
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
+    cameraFrame.update();
 
     // skydome presets
     const presetStreetDome = {
@@ -164,11 +171,30 @@ assetListLoader.load(() => {
             app.scene.sky.center = new pc.Vec3(0, data.get('data.skybox.tripodY') ?? 0, 0);
             app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, data.get('data.skybox.rotation'), 0);
             app.scene.exposure = data.get('data.skybox.exposure');
+
+            // colorEnhance
+            cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
+            cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
+            cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
+            cameraFrame.colorEnhance.midtones = data.get('data.colorEnhance.midtones');
+            cameraFrame.colorEnhance.vibrance = data.get('data.colorEnhance.vibrance');
+            cameraFrame.colorEnhance.dehaze = data.get('data.colorEnhance.dehaze');
+            cameraFrame.update();
         }
     });
 
     // apply initial preset
     data.set('data.skybox.preset', 'Street Dome');
+
+    // set initial colorEnhance values (AFTER preset so it doesn't get overwritten)
+    data.set('data.colorEnhance', {
+        enabled: false,
+        shadows: 0,
+        highlights: 0,
+        midtones: 0,
+        vibrance: 0,
+        dehaze: 0
+    });
 });
 
 export { app };

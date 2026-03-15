@@ -8,7 +8,7 @@ import {
  * as their source (from) state. If so and the AnimTransitions parameter based conditions are met,
  * the controller will transition to the destination state.
  *
- * @ignore
+ * @category Animation
  */
 class AnimTransition {
     /**

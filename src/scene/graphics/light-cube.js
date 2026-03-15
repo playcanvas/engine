@@ -1,5 +1,5 @@
-import { Vec3 } from "../../core/math/vec3.js";
-import { LIGHTTYPE_DIRECTIONAL } from "../constants.js";
+import { Vec3 } from '../../core/math/vec3.js';
+import { LIGHTTYPE_DIRECTIONAL } from '../constants.js';
 
 const lightCubeDir = [
     new Vec3(-1, 0, 0),

@@ -1,17 +1,22 @@
+import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { math } from '../../core/math/math.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_R8U } from '../../platform/graphics/constants.js';
+import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
 import { Debug } from '../../core/debug.js';
 
+/**
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
+
+const tmpSize = new Vec2();
 const tempVec3 = new Vec3();
 const tempMin3 = new Vec3();
 const tempMax3 = new Vec3();
 const tempBox = new BoundingBox();
 
-const epsilon = 0.000001;
 const maxTextureSize = 4096;    // maximum texture size allowed to work on all devices
 
 // helper class to store properties of a light used by clustering
@@ -29,7 +34,7 @@ class ClusterLight {
 // Main class implementing clustered lighting. Internally it organizes the omni / spot lights placement in world space 3d cell structure,
 // and also uses LightsBuffer class to store light properties in textures
 class WorldClusters {
-    /** @type {import('../../platform/graphics/texture.js').Texture} */
+    /** @type {Texture} */
     clusterTexture;
 
     constructor(device) {
@@ -51,10 +56,6 @@ class WorldClusters {
 
         // number of lights each cell can store
         this.maxCellLightCount = 4;
-
-        // limits on some light properties, used for compression to 8bit texture
-        this._maxAttenuation = 0;
-        this._maxColorValue = 0;
 
         // internal list of lights (of type ClusterLight)
         this._usedLights = [];
@@ -113,14 +114,11 @@ class WorldClusters {
 
     registerUniforms(device) {
 
-        this._clusterSkipId = device.scope.resolve('clusterSkip');
+        this._numClusteredLightsId = device.scope.resolve('numClusteredLights');
 
         this._clusterMaxCellsId = device.scope.resolve('clusterMaxCells');
 
         this._clusterWorldTextureId = device.scope.resolve('clusterWorldTexture');
-
-        this._clusterTextureSizeId = device.scope.resolve('clusterTextureSize');
-        this._clusterTextureSizeData = new Float32Array(3);
 
         this._clusterBoundsMinId = device.scope.resolve('clusterBoundsMin');
         this._clusterBoundsMinData = new Float32Array(3);
@@ -132,15 +130,14 @@ class WorldClusters {
         this._clusterCellsCountByBoundsSizeData = new Float32Array(3);
 
         this._clusterCellsDotId = device.scope.resolve('clusterCellsDot');
-        this._clusterCellsDotData = new Float32Array(3);
+        this._clusterCellsDotData = new Int32Array(3);
 
-        // number of cells in each direction (vec3)
+        // number of cells in each direction (ivec3)
         this._clusterCellsMaxId = device.scope.resolve('clusterCellsMax');
-        this._clusterCellsMaxData = new Float32Array(3);
+        this._clusterCellsMaxData = new Int32Array(3);
 
-        // compression limit 0
-        this._clusterCompressionLimit0Id = device.scope.resolve('clusterCompressionLimit0');
-        this._clusterCompressionLimit0Data = new Float32Array(2);
+        // width of the cluster texture
+        this._clusterTextureWidthId = device.scope.resolve('clusterTextureWidth');
     }
 
     // updates itself based on parameters stored in the scene
@@ -169,13 +166,11 @@ class WorldClusters {
             const totalPixels = this.maxCellLightCount * numCells;
 
             // cluster texture size - roughly square that fits all cells. The width is multiply of numPixels to simplify shader math
-            let width = Math.ceil(Math.sqrt(totalPixels));
-            width = math.roundUp(width, this.maxCellLightCount);
-            const height = Math.ceil(totalPixels / width);
+            const { x: width, y: height } = TextureUtils.calcTextureSize(totalPixels, tmpSize, this.maxCellLightCount);
 
             // if the texture is allowed size
             Debug.assert(width <= maxTextureSize && height <= maxTextureSize,
-                         'Clustered lights parameters cause the texture size to be over the limit, please adjust them.');
+                'Clustered lights parameters cause the texture size to be over the limit, please adjust them.');
 
             // maximum range of cells
             this._clusterCellsMaxData[0] = cx;
@@ -191,12 +186,8 @@ class WorldClusters {
             this.clusters = new Uint8ClampedArray(totalPixels);
             this.counts = new Int32Array(numCells);
 
-            this._clusterTextureSizeData[0] = width;
-            this._clusterTextureSizeData[1] = 1.0 / width;
-            this._clusterTextureSizeData[2] = 1.0 / height;
-
             this.releaseClusterTexture();
-            this.clusterTexture = this.lightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8, 'ClusterTexture');
+            this.clusterTexture = this.lightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8U, 'ClusterTexture');
         }
     }
 
@@ -210,8 +201,8 @@ class WorldClusters {
 
     updateUniforms() {
 
-        // skip clustered lights shader evaluation if only the dummy light exists
-        this._clusterSkipId.setValue(this._usedLights.length > 1 ? 0 : 1);
+        // number of clustered lights (index 0 is reserved for 'no light')
+        this._numClusteredLightsId.setValue(this._usedLights.length);
 
         this.lightsBuffer.updateUniforms();
 
@@ -235,16 +226,12 @@ class WorldClusters {
         this._clusterBoundsDeltaData[1] = boundsDelta.y;
         this._clusterBoundsDeltaData[2] = boundsDelta.z;
 
-        this._clusterCompressionLimit0Data[0] = this._maxAttenuation;
-        this._clusterCompressionLimit0Data[1] = this._maxColorValue;
-
         // assign values
-        this._clusterTextureSizeId.setValue(this._clusterTextureSizeData);
         this._clusterBoundsMinId.setValue(this._clusterBoundsMinData);
         this._clusterBoundsDeltaId.setValue(this._clusterBoundsDeltaData);
         this._clusterCellsDotId.setValue(this._clusterCellsDotData);
         this._clusterCellsMaxId.setValue(this._clusterCellsMaxData);
-        this._clusterCompressionLimit0Id.setValue(this._clusterCompressionLimit0Data);
+        this._clusterTextureWidthId.setValue(this.clusterTexture.width);
     }
 
     // evaluates min and max coordinates of AABB of the light in the cell space
@@ -346,35 +333,13 @@ class WorldClusters {
         this.lightsBuffer.setBounds(min, this.boundsDelta);
     }
 
-    // evaluate ranges of variables compressed to 8bit texture to allow their scaling to 0..1 range
-    evaluateCompressionLimits() {
-
-        let maxAttenuation = 0;
-        let maxColorValue = 0;
-
-        const usedLights = this._usedLights;
-        for (let i = 1; i < usedLights.length; i++) {
-            const light = usedLights[i].light;
-            maxAttenuation = Math.max(light.attenuationEnd, maxAttenuation);
-
-            const color = light._colorLinear;
-            maxColorValue = Math.max(color[0], maxColorValue);
-            maxColorValue = Math.max(color[1], maxColorValue);
-            maxColorValue = Math.max(color[2], maxColorValue);
-        }
-
-        // increase slightly as compression needs value < 1
-        this._maxAttenuation = maxAttenuation + epsilon;
-        this._maxColorValue = maxColorValue + epsilon;
-
-        this.lightsBuffer.setCompressionRanges(this._maxAttenuation, this._maxColorValue);
-    }
-
-    updateClusters() {
+    updateClusters(lightingParams) {
 
         // clear clusters
         this.counts.fill(0);
         this.clusters.fill(0);
+
+        this.lightsBuffer.areaLightsEnabled = lightingParams ? lightingParams.areaLightsEnabled : false;
 
         // local accessors
         const divX = this._cells.x;
@@ -427,8 +392,8 @@ class WorldClusters {
         if (tooManyLights) {
             const reportLimit = 5;
             if (this.reportCount < reportLimit) {
-                console.warn('Too many lights in light cluster ' + this.name + ', please adjust parameters.' +
-                (this.reportCount === reportLimit - 1 ? ' Giving up on reporting it.' : ''));
+                console.warn(`Too many lights in light cluster ${this.name}, please adjust parameters.${
+                    this.reportCount === reportLimit - 1 ? ' Giving up on reporting it.' : ''}`);
                 this.reportCount++;
             }
         }
@@ -436,13 +401,12 @@ class WorldClusters {
     }
 
     // internal update of the cluster data, executes once per frame
-    update(lights, lightingParams) {
+    update(lights, lightingParams = null) {
         this.updateParams(lightingParams);
         this.updateCells();
         this.collectLights(lights);
         this.evaluateBounds();
-        this.evaluateCompressionLimits();
-        this.updateClusters();
+        this.updateClusters(lightingParams);
         this.uploadTextures();
     }
 

@@ -1,41 +1,8 @@
-import { extend, type } from '../../src/core/core.js';
-
 import { expect } from 'chai';
 
+import { extend } from '../../src/core/core.js';
+
 describe('core', function () {
-
-    describe('#type', function () {
-
-        it('returns the correct types', function () {
-            const types = [
-                null,
-                1,
-                'a',
-                true,
-                {},
-                [],
-                function () {},
-                new Date(),
-                new RegExp()
-            ];
-            const expected = [
-                'null',
-                'number',
-                'string',
-                'boolean',
-                'object',
-                'array',
-                'function',
-                'date',
-                'regexp'
-            ];
-
-            for (let i = 0; i < types.length; i++) {
-                expect(type(types[i])).to.equal(expected[i]);
-            }
-        });
-
-    });
 
     describe('#extend', function () {
 

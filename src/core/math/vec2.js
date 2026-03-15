@@ -1,7 +1,8 @@
 import { math } from './math.js';
 
 /**
- * A 2-dimensional vector.
+ * A 2-dimensional vector. Vec2 is commonly used to represent 2D positions, directions, texture
+ * coordinates (UVs) or any pair of related numeric values.
  *
  * @category Math
  */
@@ -21,13 +22,27 @@ class Vec2 {
     y;
 
     /**
-     * Create a new Vec2 instance.
+     * Creates a new Vec2 instance.
      *
+     * @overload
+     * @param {number} [x] - The x value. Defaults to 0.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @example
+     * const v1 = new pc.Vec2(); // defaults to 0, 0
+     * const v2 = new pc.Vec2(1, 2);
+     */
+    /**
+     * Creates a new Vec2 instance.
+     *
+     * @overload
+     * @param {number[]} arr - The array to set the vector values from.
+     * @example
+     * const v = new pc.Vec2([1, 2]);
+     */
+    /**
      * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 2, the
      * array will be used to populate all components.
      * @param {number} [y] - The y value. Defaults to 0.
-     * @example
-     * const v = new pc.Vec2(1, 2);
      */
     constructor(x = 0, y = 0) {
         if (x.length === 2) {
@@ -227,8 +242,8 @@ class Vec2 {
      * const r = new pc.Vec2();
      *
      * r.div2(a, b);
-     * // Outputs [2, 3]
      *
+     * // Outputs [2, 3]
      * console.log("The result of the division is: " + r.toString());
      */
     div2(lhs, rhs) {
@@ -322,7 +337,7 @@ class Vec2 {
     /**
      * Returns the magnitude squared of the specified 2-dimensional vector.
      *
-     * @returns {number} The magnitude of the specified 2-dimensional vector.
+     * @returns {number} The magnitude squared of the specified 2-dimensional vector.
      * @example
      * const vec = new pc.Vec2(3, 4);
      * const len = vec.lengthSq();
@@ -336,8 +351,8 @@ class Vec2 {
     /**
      * Returns the result of a linear interpolation between two specified 2-dimensional vectors.
      *
-     * @param {Vec2} lhs - The 2-dimensional to interpolate from.
-     * @param {Vec2} rhs - The 2-dimensional to interpolate to.
+     * @param {Vec2} lhs - The 2-dimensional vector to interpolate from.
+     * @param {Vec2} rhs - The 2-dimensional vector to interpolate to.
      * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1,
      * the linear interpolant will occur on a straight line between lhs and rhs. Outside of this
      * range, the linear interpolant will occur on a ray extrapolated from this line.
@@ -503,6 +518,10 @@ class Vec2 {
      *
      * @param {Vec2} [src] - The vector to floor. If not set, the operation is done in place.
      * @returns {Vec2} Self for chaining.
+     * @example
+     * const v = new pc.Vec2(1.2, 3.9);
+     * v.floor();
+     * // v is now [1, 3]
      */
     floor(src = this) {
         this.x = Math.floor(src.x);
@@ -515,6 +534,10 @@ class Vec2 {
      *
      * @param {Vec2} [src] - The vector to ceil. If not set, the operation is done in place.
      * @returns {Vec2} Self for chaining.
+     * @example
+     * const v = new pc.Vec2(1.2, 3.1);
+     * v.ceil();
+     * // v is now [2, 4]
      */
     ceil(src = this) {
         this.x = Math.ceil(src.x);
@@ -527,6 +550,10 @@ class Vec2 {
      *
      * @param {Vec2} [src] - The vector to round. If not set, the operation is done in place.
      * @returns {Vec2} Self for chaining.
+     * @example
+     * const v = new pc.Vec2(1.4, 3.6);
+     * v.round();
+     * // v is now [1, 4]
      */
     round(src = this) {
         this.x = Math.round(src.x);
@@ -539,6 +566,11 @@ class Vec2 {
      *
      * @param {Vec2} rhs - The 2-dimensional vector used as the source of elements to compare to.
      * @returns {Vec2} Self for chaining.
+     * @example
+     * const a = new pc.Vec2(5, 1);
+     * const b = new pc.Vec2(2, 8);
+     * a.min(b);
+     * // a is now [2, 1]
      */
     min(rhs) {
         if (rhs.x < this.x) this.x = rhs.x;
@@ -551,6 +583,11 @@ class Vec2 {
      *
      * @param {Vec2} rhs - The 2-dimensional vector used as the source of elements to compare to.
      * @returns {Vec2} Self for chaining.
+     * @example
+     * const a = new pc.Vec2(5, 1);
+     * const b = new pc.Vec2(2, 8);
+     * a.max(b);
+     * // a is now [5, 8]
      */
     max(rhs) {
         if (rhs.x > this.x) this.x = rhs.x;
@@ -643,6 +680,25 @@ class Vec2 {
     }
 
     /**
+     * Set the values of the vector from an array.
+     *
+     * @param {number[]|ArrayBufferView} arr - The array to set the vector values from.
+     * @param {number} [offset] - The zero-based index at which to start copying elements from the
+     * array. Default is 0.
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * const v = new pc.Vec2();
+     * v.fromArray([20, 10]);
+     * // v is set to [20, 10]
+     */
+    fromArray(arr, offset = 0) {
+        this.x = arr[offset] ?? this.x;
+        this.y = arr[offset + 1] ?? this.y;
+
+        return this;
+    }
+
+    /**
      * Converts the vector to string form.
      *
      * @returns {string} The vector in string form.
@@ -653,6 +709,42 @@ class Vec2 {
      */
     toString() {
         return `[${this.x}, ${this.y}]`;
+    }
+
+    /**
+     * @overload
+     * @param {number[]} [arr] - The array to populate with the vector's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]} The vector as an array.
+     */
+    /**
+     * @overload
+     * @param {ArrayBufferView} arr - The array to populate with the vector's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {ArrayBufferView} The vector as an array.
+     */
+    /**
+     * Converts the vector to an array.
+     *
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the vector's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]|ArrayBufferView} The vector as an array.
+     * @example
+     * const v = new pc.Vec2(20, 10);
+     * // Outputs [20, 10]
+     * console.log(v.toArray());
+     */
+    toArray(arr = [], offset = 0) {
+        arr[offset] = this.x;
+        arr[offset + 1] = this.y;
+
+        return arr;
     }
 
     /**
@@ -674,6 +766,14 @@ class Vec2 {
      * @readonly
      */
     static ZERO = Object.freeze(new Vec2(0, 0));
+
+    /**
+     * A constant vector set to [0.5, 0.5].
+     *
+     * @type {Vec2}
+     * @readonly
+     */
+    static HALF = Object.freeze(new Vec2(0.5, 0.5));
 
     /**
      * A constant vector set to [1, 1].

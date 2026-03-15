@@ -163,7 +163,7 @@ class StandardMaterialValidator {
                 }
 
             } else {
-                console.error('Unknown material type: ' + type);
+                console.error(`Unknown material type: ${type}`);
             }
         }
 

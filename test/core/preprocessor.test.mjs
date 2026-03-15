@@ -1,6 +1,6 @@
-import { Preprocessor } from '../../src/core/preprocessor.js';
-
 import { expect } from 'chai';
+
+import { Preprocessor } from '../../src/core/preprocessor.js';
 
 describe('Preprocessor', function () {
 
@@ -11,13 +11,43 @@ describe('Preprocessor', function () {
                 nested
             #endif
         `],
-        ['inc2', 'block2']
+        ['inc2', 'block2'],
+        ['incLoop', 'inserted{i}\n']
     ]);
 
     const srcData = `
         
+        #define LOOP_COUNT 3
+        #define {COUNT} 2
+        #define {STRING} hello
         #define FEATURE1
         #define FEATURE2
+        #define AND1
+        #define AND2
+        #define OR1
+        #define OR2
+
+        #include "incLoop, LOOP_COUNT"
+
+        #if (defined(AND1) && defined(AND2))
+            ANDS1
+        #endif
+
+        #if (defined(UNDEFINED) && defined(AND2))
+            ANDS2
+        #endif
+
+        #if (defined(OR1) || defined(OR2))
+            ORS1
+        #endif
+
+        #if (defined(UNDEFINED) || defined(OR2))
+            ORS2
+        #endif
+
+        #if (defined(UNDEFINED) || defined(UNDEFINED2) || defined(OR2))
+            ORS3
+        #endif
 
         #ifdef FEATURE1
             TEST1
@@ -72,6 +102,122 @@ describe('Preprocessor', function () {
 
         #ifdef (UNKNOWN)
             #define TEST14  // this should not be defined
+        #endif
+
+        #define INDEX 3
+        #if INDEX == 3
+            CMP1
+        #endif
+
+        #if INDEX != 3
+            CMP2
+        #endif
+
+        #if INDEX > 2
+            CMP3
+        #endif
+
+        #define NAME hello
+        #if NAME == hello
+            CMP4
+        #endif
+
+        #if NAME != hello
+            CMP5
+        #endif
+
+        // Test parentheses precedence
+        #define A
+        #define B
+        #define C
+
+        // Without parentheses, AND has higher precedence than OR
+        #if defined(A) || defined(B) && defined(UNDEFINED)
+            PREC1
+        #endif
+
+        // With parentheses, force OR to be evaluated first
+        #if (defined(A) || defined(B)) && defined(UNDEFINED)
+            PREC2
+        #endif
+
+        // Nested parentheses
+        #if (defined(A) && (defined(B) || defined(UNDEFINED))) && defined(C)
+            PREC3
+        #endif
+
+        // Complex expression with multiple parentheses
+        #if (defined(A) || defined(UNDEFINED)) && (defined(B) || defined(UNDEFINED)) && defined(C)
+            PREC4
+        #endif
+
+        // Parentheses with comparisons
+        #if (INDEX > 2) && (INDEX < 4)
+            PREC5
+        #endif
+
+        // Mixed defined() and comparisons with parentheses
+        #if (defined(A) && INDEX == 3) || (defined(UNDEFINED) && INDEX > 10)
+            PREC6
+        #endif
+
+        // Make sure defined() parentheses are not treated as precedence
+        #if defined(A) && defined(B)
+            PREC7
+        #endif
+
+        // Multiple levels of nesting
+        #if ((defined(A) || defined(B)) && (defined(C) || defined(UNDEFINED))) || defined(UNDEFINED)
+            PREC8
+        #endif
+
+       // Spaces in and around precedence parens
+        #if ( ( defined(A) && INDEX == 3) ||  (  defined(UNDEFINED) && INDEX > 10  ) ) 
+            PREC9
+        #endif
+
+        TESTINJECTION {COUNT}
+        INJECTSTRING {STRING}(x)
+
+        // Test numeric literals (standard C preprocessor behavior)
+        #if 1
+            NUM1
+        #endif
+
+        #if 0
+            NUM2
+        #endif
+
+        #if 42
+            NUM3
+        #endif
+
+        #if 0.0
+            NUM4
+        #endif
+
+        #if 1 && defined(A)
+            NUM5
+        #endif
+
+        #if 0 || defined(A)
+            NUM6
+        #endif
+
+        // Edge cases: expressions starting with numbers should not be parsed as numeric literals
+        // Note: numeric comparisons like "3 == 3" are not supported (COMPARISON regex requires
+        // left operand to start with a letter), but we must ensure they don't incorrectly
+        // evaluate to true due to parseFloat("3 == 3") returning 3
+        #if 3 == 3
+            EDGE1
+        #endif
+
+        #if 0 != 1
+            EDGE2
+        #endif
+
+        #if 5 > 3
+            EDGE3
         #endif
     `;
 
@@ -153,5 +299,140 @@ describe('Preprocessor', function () {
 
     it('returns true for nested', function () {
         expect(Preprocessor.run(srcData, includes).includes('nested')).to.equal(true);
+    });
+
+    it('returns true for CMP1', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP1')).to.equal(true);
+    });
+
+    it('returns false for CMP2', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP2')).to.equal(false);
+    });
+
+    it('returns true for CMP3', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP3')).to.equal(true);
+    });
+
+    it('returns true for CMP4', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP4')).to.equal(true);
+    });
+
+    it('returns false for CMP5', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP5')).to.equal(false);
+    });
+
+    it('returns false for any leftover hash symbols', function () {
+        expect(Preprocessor.run(srcData, includes, { stripDefines: true }).includes('#')).to.equal(false);
+    });
+
+    it('returns true for working integer injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('TESTINJECTION 2')).to.equal(true);
+    });
+
+    it('returns true for working string injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('INJECTSTRING hello(x)')).to.equal(true);
+    });
+
+    it('returns true for loop injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('inserted0')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted1')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted2')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted3')).to.equal(false);
+    });
+
+    it('returns true for ANDS1', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ANDS1')).to.equal(true);
+    });
+
+    it('returns false for ANDS2', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ANDS2')).to.equal(false);
+    });
+
+    it('returns true for ORS1', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ORS1')).to.equal(true);
+    });
+
+    it('returns true for ORS2', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ORS2')).to.equal(true);
+    });
+
+    it('returns true for ORS3', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ORS3')).to.equal(true);
+    });
+
+    // Parentheses precedence tests
+    it('returns true for PREC1 (without parentheses, A || B && UNDEFINED)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC1')).to.equal(true);
+    });
+
+    it('returns false for PREC2 (with parentheses, (A || B) && UNDEFINED)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC2')).to.equal(false);
+    });
+
+    it('returns true for PREC3 (nested parentheses)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC3')).to.equal(true);
+    });
+
+    it('returns true for PREC4 (complex expression with parentheses)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC4')).to.equal(true);
+    });
+
+    it('returns true for PREC5 (parentheses with comparisons)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC5')).to.equal(true);
+    });
+
+    it('returns true for PREC6 (mixed defined and comparisons)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC6')).to.equal(true);
+    });
+
+    it('returns true for PREC7 (defined() parentheses not treated as precedence)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC7')).to.equal(true);
+    });
+
+    it('returns true for PREC8 (multiple levels of nesting)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC8')).to.equal(true);
+    });
+
+    it('returns true for PREC9 (spaces inside precedence parens)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('PREC9')).to.equal(true);
+    });
+
+    // Numeric literal tests
+    it('returns true for NUM1 (#if 1 is truthy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM1')).to.equal(true);
+    });
+
+    it('returns false for NUM2 (#if 0 is falsy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM2')).to.equal(false);
+    });
+
+    it('returns true for NUM3 (#if 42 non-zero is truthy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM3')).to.equal(true);
+    });
+
+    it('returns false for NUM4 (#if 0.0 is falsy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM4')).to.equal(false);
+    });
+
+    it('returns true for NUM5 (#if 1 && defined(A))', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM5')).to.equal(true);
+    });
+
+    it('returns true for NUM6 (#if 0 || defined(A))', function () {
+        expect(Preprocessor.run(srcData, includes).includes('NUM6')).to.equal(true);
+    });
+
+    // Edge case tests: expressions starting with numbers must not be parsed as numeric literals
+    // These are unsupported expressions, but should evaluate to false rather than incorrectly true
+    it('returns false for EDGE1 (#if 3 == 3 is unsupported, must not parse "3" as truthy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('EDGE1')).to.equal(false);
+    });
+
+    it('returns false for EDGE2 (#if 0 != 1 is unsupported, must not parse "0" as falsy for wrong reason)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('EDGE2')).to.equal(false);
+    });
+
+    it('returns false for EDGE3 (#if 5 > 3 is unsupported, must not parse "5" as truthy)', function () {
+        expect(Preprocessor.run(srcData, includes).includes('EDGE3')).to.equal(false);
     });
 });

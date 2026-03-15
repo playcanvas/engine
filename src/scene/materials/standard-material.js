@@ -2,17 +2,16 @@ import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
-
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
     DETAILMODE_MUL,
     DITHER_NONE,
     FRESNEL_SCHLICK,
-    SHADER_DEPTH, SHADER_PICK,
-    SHADER_PREPASS_VELOCITY,
-    SPECOCC_AO
+    SHADER_PICK,
+    SHADER_PREPASS,
+    SPECOCC_AO,
+    tonemapNames
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { EnvLighting } from '../graphics/env-lighting.js';
@@ -21,6 +20,14 @@ import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
+
+/**
+ * @import { BoundingBox } from '../../core/shape/bounding-box.js'
+ * @import { StandardMaterialOptions } from './standard-material-options.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
 
 // properties that get created on a standard material
 const _props = {};
@@ -34,28 +41,27 @@ let _params = new Set();
 const _tempColor = new Color();
 
 /**
- * Callback used by {@link StandardMaterial#onUpdateShader}.
- *
  * @callback UpdateShaderCallback
- * @param {import('./standard-material-options.js').StandardMaterialOptions} options - An object with shader generator settings (based on current
+ * Callback used by {@link StandardMaterial#onUpdateShader}.
+ * @param {StandardMaterialOptions} options - An object with shader generator settings (based on current
  * material and scene properties), that you can change and then return. Properties of the object passed
  * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
  * which holds some of the options only used by the lit shader backend {@link LitShaderOptions}.
- * @returns {import('./standard-material-options.js').StandardMaterialOptions} Returned settings will be used by the shader.
+ * @returns {StandardMaterialOptions} Returned settings will be used by the shader.
  */
 
 /**
- * A Standard material is the main, general purpose material that is most often used for rendering.
+ * A standard material is the main, general purpose material that is most often used for rendering.
  * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
- * Most maps can use 3 types of input values in any combination: constant (color or number), mesh
- * vertex colors and a texture. All enabled inputs are multiplied together.
+ * Most maps can use 3 types of input values in any combination: constant ({@link Color} or number),
+ * mesh vertex colors and a {@link Texture}. All enabled inputs are multiplied together.
  *
  * @property {Color} ambient The ambient color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
  * @property {Color} diffuse The diffuse color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1. Defines basic surface color (aka albedo).
- * @property {import('../../platform/graphics/texture.js').Texture|null} diffuseMap The main
- * (primary) diffuse map of the material (default is null).
+ * @property {Texture|null} diffuseMap The main (primary) diffuse map of the material (default is
+ * null).
  * @property {number} diffuseMapUv Main (primary) diffuse map UV channel.
  * @property {Vec2} diffuseMapTiling Controls the 2D tiling of the main (primary) diffuse map.
  * @property {Vec2} diffuseMapOffset Controls the 2D offset of the main (primary) diffuse map. Each
@@ -67,9 +73,8 @@ const _tempColor = new Color();
  * @property {boolean} diffuseVertexColor Multiply diffuse by the mesh vertex colors.
  * @property {string} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {import('../../platform/graphics/texture.js').Texture|null} diffuseDetailMap The
- * detail (secondary) diffuse map of the material (default is null). Will only be used if main
- * (primary) diffuse map is non-null.
+ * @property {Texture|null} diffuseDetailMap The detail (secondary) diffuse map of the material
+ * (default is null). Will only be used if main (primary) diffuse map is non-null.
  * @property {number} diffuseDetailMapUv Detail (secondary) diffuse map UV channel.
  * @property {Vec2} diffuseDetailMapTiling Controls the 2D tiling of the detail (secondary) diffuse
  * map.
@@ -97,8 +102,7 @@ const _tempColor = new Color();
  * Affects specular intensity and tint.
  * @property {boolean} specularTint Multiply specular map and/or specular vertex color by the
  * constant specular value.
- * @property {import('../../platform/graphics/texture.js').Texture|null} specularMap The specular
- * map of the material (default is null).
+ * @property {Texture|null} specularMap The specular map of the material (default is null).
  * @property {number} specularMapUv Specular map UV channel.
  * @property {Vec2} specularMapTiling Controls the 2D tiling of the specular map.
  * @property {Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is
@@ -109,12 +113,12 @@ const _tempColor = new Color();
  * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or
  * are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be
+ * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} specularityFactorTint Multiply specularity factor map and/or specular vertex color by the
  * constant specular value.
- * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} specularityFactor The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
- * @property {import('../../platform/graphics/texture.js').Texture|null} specularityFactorMap The
- * factor of specularity as a texture (default is null).
+ * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is
+ * null).
  * @property {number} specularityFactorMapUv Specularity factor map UV channel.
  * @property {Vec2} specularityFactorMapTiling Controls the 2D tiling of the specularity factor map.
  * @property {Vec2} specularityFactorMapOffset Controls the 2D offset of the specularity factor map. Each component is
@@ -126,21 +130,22 @@ const _tempColor = new Color();
  * @property {string} specularityFactorVertexColorChannel Vertex color channels to use for specularity factor. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
- * {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
- * @property {number} anisotropy Defines amount of anisotropy. Requires
+ * {@link StandardMaterial#anisotropyIntensity} parameter to set material anisotropy.
+ * @property {number} anisotropyIntensity Defines amount of anisotropy. Requires
  * {@link StandardMaterial#enableGGXSpecular} is set to true.
- *
- * - When anisotropy == 0, specular is isotropic.
- * - When anisotropy < 0, anisotropy direction aligns with the tangent, and specular anisotropy
- * increases as the anisotropy value decreases to minimum of -1.
- * - When anisotropy > 0, anisotropy direction aligns with the bi-normal, and specular anisotropy
- * increases as anisotropy value increases to maximum of 1.
- *
+ * - When anisotropyIntensity == 0, specular is isotropic.
+ * - Specular anisotropy increases as anisotropyIntensity value increases to maximum of 1.
+ * @property {number} anisotropyRotation Defines the rotation (in degrees) of anisotropy.
+ * @property {Texture|null} anisotropyMap The anisotropy map of the material (default is null).
+ * @property {number} anisotropyMapUv Anisotropy map UV channel.
+ * @property {Vec2} anisotropyMapTiling Controls the 2D tiling of the anisotropy map.
+ * @property {Vec2} anisotropyMapOffset Controls the 2D offset of the anisotropy map. Each
+ * component is between 0 and 1.
+ * @property {number} anisotropyMapRotation Controls the 2D rotation (in degrees) of the anisotropy map.
  * @property {number} clearCoat Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer
  * is disabled when clearCoat == 0. Default value is 0 (disabled).
- * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatMap Monochrome
- * clearcoat intensity map (default is null). If specified, will be multiplied by normalized
- * 'clearCoat' value and/or vertex colors.
+ * @property {Texture|null} clearCoatMap Monochrome clearcoat intensity map (default is null). If
+ * specified, will be multiplied by normalized 'clearCoat' value and/or vertex colors.
  * @property {number} clearCoatMapUv Clearcoat intensity map UV channel.
  * @property {Vec2} clearCoatMapTiling Controls the 2D tiling of the clearcoat intensity map.
  * @property {Vec2} clearCoatMapOffset Controls the 2D offset of the clearcoat intensity map. Each
@@ -157,9 +162,9 @@ const _tempColor = new Color();
  * from 0 (rough) to 1 (mirror).
  * @property {boolean} clearCoatGlossInvert Invert the clearcoat gloss component (default is false).
  * Enabling this flag results in material treating the clear coat gloss members as roughness.
- * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatGlossMap Monochrome
- * clearcoat glossiness map (default is null). If specified, will be multiplied by normalized
- * 'clearCoatGloss' value and/or vertex colors.
+ * @property {Texture|null} clearCoatGlossMap Monochrome clearcoat glossiness map (default is
+ * null). If specified, will be multiplied by normalized 'clearCoatGloss' value and/or vertex
+ * colors.
  * @property {number} clearCoatGlossMapUv Clearcoat gloss map UV channel.
  * @property {Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clearcoat gloss map.
  * @property {Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clearcoat gloss map.
@@ -172,9 +177,8 @@ const _tempColor = new Color();
  * If clearCoatGlossMap is set, it'll be multiplied by vertex colors.
  * @property {string} clearCoatGlossVertexColorChannel Vertex color channel to use for clearcoat
  * glossiness. Can be "r", "g", "b" or "a".
- * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatNormalMap The
- * clearcoat normal map of the material (default is null). The texture must contains normalized,
- * tangent space normals.
+ * @property {Texture|null} clearCoatNormalMap The clearcoat normal map of the material (default is
+ * null). The texture must contains normalized, tangent space normals.
  * @property {number} clearCoatNormalMapUv Clearcoat normal map UV channel.
  * @property {Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clearcoat normal
  * map.
@@ -186,8 +190,8 @@ const _tempColor = new Color();
  * the assigned main clearcoat normal map. It should be normally between 0 (no bump mapping) and 1
  * (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  * @property {boolean} useIridescence Enable thin-film iridescence.
- * @property {import('../../platform/graphics/texture.js').Texture|null} iridescenceMap The
- * per-pixel iridescence intensity. Only used when useIridescence is enabled.
+ * @property {Texture|null} iridescenceMap The per-pixel iridescence intensity. Only used when
+ * useIridescence is enabled.
  * @property {number} iridescenceMapUv Iridescence map UV channel.
  * @property {Vec2} iridescenceMapTiling Controls the 2D tiling of the iridescence map.
  * @property {Vec2} iridescenceMapOffset Controls the 2D offset of the iridescence map. Each component is
@@ -196,9 +200,9 @@ const _tempColor = new Color();
  * map.
  * @property {string} iridescenceMapChannel Color channels of the iridescence map to use. Can be "r",
  * "g", "b" or "a".
- * @property {import('../../platform/graphics/texture.js').Texture|null} iridescenceThicknessMap The
- * per-pixel iridescence thickness. Defines a gradient weight between iridescenceThicknessMin and
- * iridescenceThicknessMax. Only used when useIridescence is enabled.
+ * @property {Texture|null} iridescenceThicknessMap The per-pixel iridescence thickness. Defines a
+ * gradient weight between iridescenceThicknessMin and iridescenceThicknessMax. Only used when
+ * useIridescence is enabled.
  * @property {number} iridescenceThicknessMapUv Iridescence thickness map UV channel.
  * @property {Vec2} iridescenceThicknessMapTiling Controls the 2D tiling of the iridescence
  * thickness map.
@@ -225,8 +229,7 @@ const _tempColor = new Color();
  * at direct angles.
  * @property {number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1
  * (metal).
- * @property {import('../../platform/graphics/texture.js').Texture|null} metalnessMap Monochrome
- * metalness map (default is null).
+ * @property {Texture|null} metalnessMap Monochrome metalness map (default is null).
  * @property {number} metalnessMapUv Metalness map UV channel.
  * @property {Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
  * @property {Vec2} metalnessMapOffset Controls the 2D offset of the metalness map. Each component
@@ -240,9 +243,8 @@ const _tempColor = new Color();
  * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be
  * "r", "g", "b" or "a".
  * @property {number} gloss Defines the glossiness of the material from 0 (rough) to 1 (shiny).
- * @property {import('../../platform/graphics/texture.js').Texture|null} glossMap Gloss map
- * (default is null). If specified, will be multiplied by normalized gloss value and/or vertex
- * colors.
+ * @property {Texture|null} glossMap Gloss map (default is null). If specified, will be multiplied
+ * by normalized gloss value and/or vertex colors.
  * @property {boolean} glossInvert Invert the gloss component (default is false). Enabling this
  * flag results in material treating the gloss members as roughness.
  * @property {number} glossMapUv Gloss map UV channel.
@@ -258,8 +260,7 @@ const _tempColor = new Color();
  * "r", "g", "b" or "a".
  * @property {number} refraction Defines the visibility of refraction. Material can refract the
  * same cube map as used for reflections.
- * @property {import('../../platform/graphics/texture.js').Texture|null} refractionMap The map of
- * the refraction visibility.
+ * @property {Texture|null} refractionMap The map of the refraction visibility.
  * @property {number} refractionMapUv Refraction map UV channel.
  * @property {Vec2} refractionMapTiling Controls the 2D tiling of the refraction map.
  * @property {Vec2} refractionMapOffset Controls the 2D offset of the refraction map. Each component
@@ -283,8 +284,8 @@ const _tempColor = new Color();
  * instead of pre-computed cube maps for refractions.
  * @property {number} thickness The thickness of the medium, only used when useDynamicRefraction
  * is enabled. The unit is in base units, and scales with the size of the object.
- * @property {import('../../platform/graphics/texture.js').Texture|null} thicknessMap The
- * per-pixel thickness of the medium, only used when useDynamicRefraction is enabled.
+ * @property {Texture|null} thicknessMap The per-pixel thickness of the medium, only used when
+ * useDynamicRefraction is enabled.
  * @property {number} thicknessMapUv Thickness map UV channel.
  * @property {Vec2} thicknessMapTiling Controls the 2D tiling of the thickness map.
  * @property {Vec2} thicknessMapOffset Controls the 2D offset of the thickness map. Each component is
@@ -301,10 +302,10 @@ const _tempColor = new Color();
  * within the medium. Only used when useDynamicRefraction is enabled.
  * @property {Color} emissive The emissive color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
- * @property {boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the
- * constant emissive value.
- * @property {import('../../platform/graphics/texture.js').Texture|null} emissiveMap The emissive
- * map of the material (default is null). Can be HDR.
+ * @property {Texture|null} emissiveMap The emissive map of the material (default is null). Can be
+ * HDR. When the emissive map is applied, the emissive color is multiplied by the texel color in the
+ * map. Since the emissive color is black by default, the emissive map won't be visible unless the
+ * emissive color is changed.
  * @property {number} emissiveIntensity Emissive color multiplier.
  * @property {number} emissiveMapUv Emissive map UV channel.
  * @property {Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
@@ -315,16 +316,14 @@ const _tempColor = new Color();
  * @property {string} emissiveMapChannel Color channels of the emissive map to use. Can be "r",
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} emissiveVertexColor Use mesh vertex colors for emission. If emissiveMap or
- * emissiveTint are set, they'll be multiplied by vertex colors.
+ * emissive are set, they'll be multiplied by vertex colors.
  * @property {string} emissiveVertexColorChannel Vertex color channels to use for emission. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} useSheen Toggle sheen specular effect on/off.
  * @property {Color} sheen The specular color of the sheen (fabric) microfiber structure.
  * This color value is 3-component (RGB), where each component is between 0 and 1.
- * @property {boolean} sheenTint Multiply sheen map and/or sheen vertex color by the constant
- * sheen value.
- * @property {import('../../platform/graphics/texture.js').Texture|null} sheenMap The sheen
- * microstructure color map of the material (default is null).
+ * @property {Texture|null} sheenMap The sheen microstructure color map of the material (default is
+ * null).
  * @property {number} sheenMapUv Sheen map UV channel.
  * @property {Vec2} sheenMapTiling Controls the 2D tiling of the sheen map.
  * @property {Vec2} sheenMapOffset Controls the 2D offset of the sheen map. Each component is
@@ -339,10 +338,8 @@ const _tempColor = new Color();
  * This color value is a single value between 0 and 1.
  * @property {boolean} sheenGlossInvert Invert the sheen gloss component (default is false).
  * Enabling this flag results in material treating the sheen gloss members as roughness.
- * @property {boolean} sheenGlossTint Multiply sheen glossiness map and/or sheen glossiness vertex
- * value by the scalar sheen glossiness value.
- * @property {import('../../platform/graphics/texture.js').Texture|null} sheenGlossMap The sheen
- * glossiness microstructure color map of the material (default is null).
+ * @property {Texture|null} sheenGlossMap The sheen glossiness microstructure color map of the
+ * material (default is null).
  * @property {number} sheenGlossMapUv Sheen map UV channel.
  * @property {Vec2} sheenGlossMapTiling Controls the 2D tiling of the sheen glossiness map.
  * @property {Vec2} sheenGlossMapOffset Controls the 2D offset of the sheen glossiness map.
@@ -361,8 +358,7 @@ const _tempColor = new Color();
  * {@link BLEND_ADDITIVE} or any other mode. Also note that for most semi-transparent objects you
  * want {@link Material#depthWrite} to be false, otherwise they can fully occlude objects behind
  * them.
- * @property {import('../../platform/graphics/texture.js').Texture|null} opacityMap The opacity map
- * of the material (default is null).
+ * @property {Texture|null} opacityMap The opacity map of the material (default is null).
  * @property {number} opacityMapUv Opacity map UV channel.
  * @property {string} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g",
  * "b" or "a".
@@ -397,9 +393,8 @@ const _tempColor = new Color();
  * Defaults to {@link DITHER_NONE}.
  * @property {number} alphaFade Used to fade out materials when
  * {@link StandardMaterial#opacityFadesSpecular} is set to false.
- * @property {import('../../platform/graphics/texture.js').Texture|null} normalMap The main
- * (primary) normal map of the material (default is null). The texture must contains normalized,
- * tangent space normals.
+ * @property {Texture|null} normalMap The main (primary) normal map of the material (default is
+ * null). The texture must contains normalized, tangent space normals.
  * @property {number} normalMapUv Main (primary) normal map UV channel.
  * @property {Vec2} normalMapTiling Controls the 2D tiling of the main (primary) normal map.
  * @property {Vec2} normalMapOffset Controls the 2D offset of the main (primary) normal map. Each
@@ -409,9 +404,8 @@ const _tempColor = new Color();
  * @property {number} bumpiness The bumpiness of the material. This value scales the assigned main
  * (primary) normal map. It should be normally between 0 (no bump mapping) and 1 (full bump
  * mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
- * @property {import('../../platform/graphics/texture.js').Texture|null} normalDetailMap The detail
- * (secondary) normal map of the material (default is null). Will only be used if main (primary)
- * normal map is non-null.
+ * @property {Texture|null} normalDetailMap The detail (secondary) normal map of the material
+ * (default is null). Will only be used if main (primary) normal map is non-null.
  * @property {number} normalDetailMapUv Detail (secondary) normal map UV channel.
  * @property {Vec2} normalDetailMapTiling Controls the 2D tiling of the detail (secondary) normal
  * map.
@@ -422,10 +416,10 @@ const _tempColor = new Color();
  * @property {number} normalDetailMapBumpiness The bumpiness of the material. This value scales the
  * assigned detail (secondary) normal map. It should be normally between 0 (no bump mapping) and 1
  * (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
- * @property {import('../../platform/graphics/texture.js').Texture|null} heightMap The height map
- * of the material (default is null). Used for a view-dependent parallax effect. The texture must
- * represent the height of the surface where darker pixels are lower and lighter pixels are higher.
- * It is recommended to use it together with a normal map.
+ * @property {Texture|null} heightMap The height map of the material (default is null). Used for a
+ * view-dependent parallax effect. The texture must represent the height of the surface where
+ * darker pixels are lower and lighter pixels are higher. It is recommended to use it together with
+ * a normal map.
  * @property {number} heightMapUv Height map UV channel.
  * @property {string} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b"
  * or "a".
@@ -435,26 +429,22 @@ const _tempColor = new Color();
  * @property {number} heightMapRotation Controls the 2D rotation (in degrees) of the height map.
  * @property {number} heightMapFactor Height map multiplier. Affects the strength of the parallax
  * effect.
- * @property {import('../../platform/graphics/texture.js').Texture|null} envAtlas The prefiltered
- * environment lighting atlas (default is null). This setting overrides cubeMap and sphereMap and
- * will replace the scene lighting environment.
- * @property {import('../../platform/graphics/texture.js').Texture|null} cubeMap The cubic
- * environment map of the material (default is null). This setting overrides sphereMap and will
- * replace the scene lighting environment.
- * @property {import('../../platform/graphics/texture.js').Texture|null} sphereMap The spherical
- * environment map of the material (default is null). This will replace the scene lighting
- * environment.
+ * @property {Texture|null} envAtlas The prefiltered environment lighting atlas (default is null).
+ * This setting overrides cubeMap and sphereMap and will replace the scene lighting environment.
+ * @property {Texture|null} cubeMap The cubic environment map of the material (default is null).
+ * This setting overrides sphereMap and will replace the scene lighting environment.
+ * @property {Texture|null} sphereMap The spherical environment map of the material (default is
+ * null). This will replace the scene lighting environment.
  * @property {number} cubeMapProjection The type of projection applied to the cubeMap property:
  * - {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
  * - {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
  * Defaults to {@link CUBEPROJ_NONE}.
- * @property {import('../../core/shape/bounding-box.js').BoundingBox} cubeMapProjectionBox The
- * world space axis-aligned bounding box defining the box-projection used for the cubeMap property.
- * Only used when cubeMapProjection is set to {@link CUBEPROJ_BOX}.
+ * @property {BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box
+ * defining the box-projection used for the cubeMap property. Only used when cubeMapProjection is
+ * set to {@link CUBEPROJ_BOX}.
  * @property {number} reflectivity Environment map intensity.
- * @property {import('../../platform/graphics/texture.js').Texture|null} lightMap A custom lightmap
- * of the material (default is null). Lightmaps are textures that contain pre-rendered lighting.
- * Can be HDR.
+ * @property {Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps
+ * are textures that contain pre-rendered lighting. Can be HDR.
  * @property {number} lightMapUv Lightmap UV channel
  * @property {string} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b",
  * "a", "rgb" or any swizzled combination.
@@ -466,9 +456,9 @@ const _tempColor = new Color();
  * multiplied by vertex colors.
  * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can
  * be "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {boolean} ambientTint Enables scene ambient multiplication by material ambient color.
- * @property {import('../../platform/graphics/texture.js').Texture|null} aoMap The main (primary) baked ambient
- * occlusion (AO) map (default is null). Modulates ambient color.
+ * @property {number} aoIntensity Ambient occlusion intensity. Defaults to 1.
+ * @property {Texture|null} aoMap The main (primary) baked ambient occlusion (AO) map (default is
+ * null). Modulates ambient color.
  * @property {number} aoMapUv Main (primary) AO map UV channel
  * @property {string} aoMapChannel Color channel of the main (primary) AO map to use. Can be "r", "g", "b" or "a".
  * @property {Vec2} aoMapTiling Controls the 2D tiling of the main (primary) AO map.
@@ -479,18 +469,16 @@ const _tempColor = new Color();
  * multiplied by vertex colors.
  * @property {string} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g",
  * "b" or "a".
- * @property {import('../../platform/graphics/texture.js').Texture|null} aoDetailMap The
- * detail (secondary) baked ambient occlusion (AO) map of the material (default is null). Will only be used if main
- * (primary) ao map is non-null.
+ * @property {Texture|null} aoDetailMap The detail (secondary) baked ambient occlusion (AO) map of
+ * the material (default is null). Will only be used if main (primary) ao map is non-null.
  * @property {number} aoDetailMapUv Detail (secondary) AO map UV channel.
- * @property {Vec2} aoDetailMapTiling Controls the 2D tiling of the detail (secondary) AO
- * map.
- * @property {Vec2} aoDetailMapOffset Controls the 2D offset of the detail (secondary) AO
- * map. Each component is between 0 and 1.
+ * @property {Vec2} aoDetailMapTiling Controls the 2D tiling of the detail (secondary) AO map.
+ * @property {Vec2} aoDetailMapOffset Controls the 2D offset of the detail (secondary) AO map. Each
+ * component is between 0 and 1.
  * @property {number} aoDetailMapRotation Controls the 2D rotation (in degrees) of the detail
  * (secondary) AO map.
- * @property {string} aoDetailMapChannel Color channels of the detail (secondary) AO map
- * to use. Can be "r", "g", "b" or "a" (default is "g").
+ * @property {string} aoDetailMapChannel Color channels of the detail (secondary) AO map to use.
+ * Can be "r", "g", "b" or "a" (default is "g").
  * @property {string} aoDetailMode Determines how the main (primary) and detail (secondary)
  * AO maps are blended together. Can be:
  *
@@ -533,16 +521,13 @@ const _tempColor = new Color();
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
  * backfaces.
- * @property {UpdateShaderCallback} onUpdateShader A custom function that will be called after all
- * shader generator properties are collected and before shader code is generated. This function
- * will receive an object with shader generator settings (based on current material and scene
- * properties), that you can change and then return. Returned value will be used instead. This is
- * mostly useful when rendering the same set of objects, but with different shader variations based
- * on the same material. For example, you may wish to render a depth or normal pass using textures
- * assigned to the material, a reflection pass with simpler shaders and so on. These properties are
- * split into two sections, generic standard material options and lit options. Properties of the
- * standard material options are {@link StandardMaterialOptions} and the options for the lit options
- * are {@link LitShaderOptions}.
+ * @property {boolean} shadowCatcher When enabled, the material will output accumulated directional
+ * shadow value in linear space as the color.
+ * @property {boolean} vertexColorGamma When set to true, the vertex shader converts vertex colors
+ * from gamma to linear space to ensure correct interpolation in the fragment shader. This flag is
+ * provided for backwards compatibility, allowing users to mark their materials to handle vertex
+ * colors in gamma space. Defaults to false, which indicates that vertex colors are stored in
+ * linear space.
  *
  * @category Graphics
  */
@@ -552,6 +537,22 @@ class StandardMaterial extends Material {
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
     userAttributes = new Map();
+
+    /**
+     * A custom function that will be called after all shader generator properties are collected
+     * and before shader code is generated. This function will receive an object with shader
+     * generator settings (based on current material and scene properties), that you can change and
+     * then return. Returned value will be used instead. This is mostly useful when rendering the
+     * same set of objects, but with different shader variations based on the same material. For
+     * example, you may wish to render a depth or normal pass using textures assigned to the
+     * material, a reflection pass with simpler shaders and so on. These properties are split into
+     * two sections, generic standard material options and lit options. Properties of the standard
+     * material options are {@link StandardMaterialOptions} and the options for the lit options are
+     * {@link LitShaderOptions}.
+     *
+     * @type {UpdateShaderCallback|undefined}
+     */
+    onUpdateShader;
 
     /**
      * Create a new StandardMaterial instance.
@@ -583,8 +584,6 @@ class StandardMaterial extends Material {
     constructor() {
         super();
 
-        this._dirtyShader = true;
-
         // storage for texture and cubemap asset references
         this._assetReferences = {};
 
@@ -602,36 +601,7 @@ class StandardMaterial extends Material {
             this[`_${name}`] = _props[name].value();
         });
 
-        /**
-         * @type {Object<string, string>}
-         * @private
-         */
-        this._chunks = { };
         this._uniformCache = { };
-    }
-
-    set shader(shader) {
-        Debug.warn('StandardMaterial#shader property is not implemented, and should not be used.');
-    }
-
-    get shader() {
-        Debug.warn('StandardMaterial#shader property is not implemented, and should not be used.');
-        return null;
-    }
-
-    /**
-     * Object containing custom shader chunks that will replace default ones.
-     *
-     * @type {Object<string, string>}
-     */
-    set chunks(value) {
-        this._dirtyShader = true;
-        this._chunks = value;
-    }
-
-    get chunks() {
-        this._dirtyShader = true;
-        return this._chunks;
     }
 
     /**
@@ -648,11 +618,8 @@ class StandardMaterial extends Material {
             this[k] = source[k];
         });
 
-        // clone chunks
-        for (const p in source._chunks) {
-            if (source._chunks.hasOwnProperty(p))
-                this._chunks[p] = source._chunks[p];
-        }
+        // clone user attributes
+        this.userAttributes = new Map(source.userAttributes);
 
         return this;
     }
@@ -661,8 +628,8 @@ class StandardMaterial extends Material {
      * Sets a vertex shader attribute on a material.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {string} semantic - Semantic to map the vertex data. Must match with the semantic set on vertex stream
-     * of the mesh.
+     * @param {string} semantic - Semantic to map the vertex data. Must match with the semantic set
+     * on vertex stream of the mesh.
      * @example
      * mesh.setVertexStream(pc.SEMANTIC_ATTR15, offset, 3);
      * material.setAttribute('offset', pc.SEMANTIC_ATTR15);
@@ -696,12 +663,12 @@ class StandardMaterial extends Material {
     }
 
     _updateMap(p) {
-        const mname = p + 'Map';
+        const mname = `${p}Map`;
         const map = this[mname];
         if (map) {
-            this._setParameter('texture_' + mname, map);
+            this._setParameter(`texture_${mname}`, map);
 
-            const tname = mname + 'Transform';
+            const tname = `${mname}Transform`;
             const uniform = this.getUniform(tname);
             if (uniform) {
                 this._setParameters(uniform);
@@ -730,6 +697,7 @@ class StandardMaterial extends Material {
 
         this._setParameter('material_ambient', getUniform('ambient'));
         this._setParameter('material_diffuse', getUniform('diffuse'));
+        this._setParameter('material_aoIntensity', this.aoIntensity);
 
         if (this.useMetalness) {
             if (!this.metalnessMap || this.metalness < 1) {
@@ -741,12 +709,9 @@ class StandardMaterial extends Material {
             if (!this.specularityFactorMap || this.specularityFactorTint) {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
             }
-            if (!this.sheenMap || this.sheenTint) {
-                this._setParameter('material_sheen', getUniform('sheen'));
-            }
-            if (!this.sheenGlossMap || this.sheenGlossTint) {
-                this._setParameter('material_sheenGloss', this.sheenGloss);
-            }
+
+            this._setParameter('material_sheen', getUniform('sheen'));
+            this._setParameter('material_sheenGloss', this.sheenGloss);
 
             this._setParameter('material_refractionIndex', this.refractionIndex);
         } else {
@@ -756,7 +721,8 @@ class StandardMaterial extends Material {
         }
 
         if (this.enableGGXSpecular) {
-            this._setParameter('material_anisotropy', this.anisotropy);
+            this._setParameter('material_anisotropyIntensity', this.anisotropyIntensity);
+            this._setParameter('material_anisotropyRotation', [Math.cos(this.anisotropyRotation * math.DEG_TO_RAD), Math.sin(this.anisotropyRotation * math.DEG_TO_RAD)]);
         }
 
         if (this.clearCoat > 0) {
@@ -767,12 +733,14 @@ class StandardMaterial extends Material {
 
         this._setParameter('material_gloss', this.gloss);
 
-        if (!this.emissiveMap || this.emissiveTint) {
-            this._setParameter('material_emissive', getUniform('emissive'));
-        }
-        if (this.emissiveIntensity !== 1) {
-            this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
-        }
+        Debug.call(() => {
+            if (this.emissiveMap && this.emissive.r === 0 && this.emissive.g === 0 && this.emissive.b === 0) {
+                Debug.warnOnce(`Emissive map is set but emissive color is black, making the map invisible. Set emissive color to white to make the map visible. Rendering [${DebugGraphics.toString()}]`, this);
+            }
+        });
+
+        this._setParameter('material_emissive', getUniform('emissive'));
+        this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
 
         if (this.refraction > 0) {
             this._setParameter('material_refraction', this.refraction);
@@ -846,9 +814,7 @@ class StandardMaterial extends Material {
         // remove unused params
         this._processParameters('_activeParams');
 
-        if (this._dirtyShader) {
-            this.clearVariants();
-        }
+        super.updateUniforms(device, scene);
     }
 
     updateEnvUniforms(device, scene) {
@@ -868,27 +834,37 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
-    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(params) {
+
+        const { device, scene, pass, objDefs, sortedLights, cameraShaderParams } = params;
 
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
 
         // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS_VELOCITY || shaderPassInfo.isShadow;
+        const minimalOptions = pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
+        options.defines = ShaderUtils.getCoreDefines(this, params);
 
-        if (minimalOptions)
+        if (minimalOptions) {
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
-        else
-            this.shaderOptBuilder.updateRef(options, scene, renderParams, this, objDefs, pass, sortedLights);
+        } else {
+            this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, sortedLights);
+        }
+
+        // standard material can overwrite camera's fog setting
+        if (!this.useFog) options.defines.set('FOG', 'NONE');
+
+        // standard material can overwrite camera's tonemapping setting
+        options.defines.set('TONEMAP', tonemapNames[options.litOptions.toneMap]);
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {
             options = this.onUpdateShader(options);
         }
 
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);
 
         const library = getProgramLibrary(device);
         library.register('standard', standard);
@@ -968,7 +944,7 @@ const defineProp = (prop) => {
     return prop.defaultValue && prop.defaultValue.clone ? defineAggProp(prop) : defineValueProp(prop);
 };
 
-function _defineTex2D(name, channel = "rgb", vertexColor = true, uv = 0) {
+function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
     // store texture name
     _matTex2D[name] = channel.length || -1;
 
@@ -1127,7 +1103,7 @@ function _defineFlag(name, defaultValue) {
 }
 
 function _defineMaterialProps() {
-    _defineColor('ambient', new Color(0.7, 0.7, 0.7));
+    _defineColor('ambient', new Color(1, 1, 1));
     _defineColor('diffuse', new Color(1, 1, 1));
     _defineColor('specular', new Color(0, 0, 0));
     _defineColor('emissive', new Color(0, 0, 0));
@@ -1137,6 +1113,7 @@ function _defineMaterialProps() {
     _defineFloat('specularityFactor', 1);
     _defineFloat('sheenGloss', 0.0);
     _defineFloat('gloss', 0.25);
+    _defineFloat('aoIntensity', 1);
 
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
@@ -1149,12 +1126,16 @@ function _defineMaterialProps() {
     _defineFloat('reflectivity', 1);
     _defineFloat('occludeSpecularIntensity', 1);
     _defineFloat('refraction', 0);
-    _defineFloat('refractionIndex', 1.0 / 1.5); // approx. (air ior / glass ior)
+    // approx. (air ior / glass ior), clamped to avoid division by zero in shader
+    _defineFloat('refractionIndex', 1.0 / 1.5, (material, device, scene) => {
+        return Math.max(0.001, material.refractionIndex);
+    });
     _defineFloat('dispersion', 0);
     _defineFloat('thickness', 0);
     _defineFloat('attenuationDistance', 0);
     _defineFloat('metalness', 1);
-    _defineFloat('anisotropy', 0);
+    _defineFloat('anisotropyIntensity', 0);
+    _defineFloat('anisotropyRotation', 0);
     _defineFloat('clearCoat', 0);
     _defineFloat('clearCoatGloss', 1);
     _defineFloat('clearCoatBumpiness', 1);
@@ -1193,24 +1174,18 @@ function _defineMaterialProps() {
         return uniform;
     });
 
-    _defineFlag('ambientTint', false);
-    _defineFlag('sheenTint', false);
     _defineFlag('specularTint', false);
     _defineFlag('specularityFactorTint', false);
-    _defineFlag('emissiveTint', false);
-    _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
     _defineFlag('useMetalnessSpecularColor', false);
     _defineFlag('useSheen', false);
     _defineFlag('enableGGXSpecular', false);
     _defineFlag('occludeDirect', false);
-    _defineFlag('normalizeNormalMap', true);
     _defineFlag('opacityFadesSpecular', true);
     _defineFlag('occludeSpecular', SPECOCC_AO);
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
     _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
-    _defineFlag('customFragmentShader', null);
     _defineFlag('useFog', true);
     _defineFlag('useLighting', true);
     _defineFlag('useTonemap', true);
@@ -1226,6 +1201,8 @@ function _defineMaterialProps() {
     _defineFlag('clearCoatGlossInvert', false);
     _defineFlag('opacityDither', DITHER_NONE);
     _defineFlag('opacityShadowDither', DITHER_NONE);
+    _defineFlag('shadowCatcher', false);
+    _defineFlag('vertexColorGamma', false);
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');
@@ -1251,6 +1228,7 @@ function _defineMaterialProps() {
     _defineTex2D('sheenGloss', 'g');
     _defineTex2D('iridescence', 'g');
     _defineTex2D('iridescenceThickness', 'g');
+    _defineTex2D('anisotropy', '');
 
     _defineFlag('diffuseDetailMode', DETAILMODE_MUL);
     _defineFlag('aoDetailMode', DETAILMODE_MUL);

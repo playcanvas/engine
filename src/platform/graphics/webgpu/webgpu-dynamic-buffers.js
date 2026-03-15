@@ -1,7 +1,7 @@
-import { DebugHelper } from "../../../core/debug.js";
-import { DebugGraphics } from "../debug-graphics.js";
-import { DynamicBuffers } from "../dynamic-buffers.js";
-import { WebgpuDynamicBuffer } from "./webgpu-dynamic-buffer.js";
+import { DebugHelper } from '../../../core/debug.js';
+import { DebugGraphics } from '../debug-graphics.js';
+import { DynamicBuffers } from '../dynamic-buffers.js';
+import { WebgpuDynamicBuffer } from './webgpu-dynamic-buffer.js';
 
 class WebgpuDynamicBuffers extends DynamicBuffers {
     /**

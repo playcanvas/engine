@@ -34,7 +34,7 @@ CubemapRenderer.prototype.initialize = function () {
     // this entity needs to have camera component as well
     var camera = this.entity.camera;
     if (!camera) {
-        console.error("CubemapRenderer component requires Camera component to be created on the Entity.");
+        console.error('CubemapRenderer component requires Camera component to be created on the Entity.');
         return;
     }
 
@@ -46,10 +46,10 @@ CubemapRenderer.prototype.initialize = function () {
 
     // Create cubemap render target with specified resolution and mipmap generation
     this.cubeMap = new pc.Texture(this.app.graphicsDevice, {
-        name: this.entity.name + ':CubemapRenderer-' + resolution,
+        name: `${this.entity.name}:CubemapRenderer-${resolution}`,
         width: resolution,
         height: resolution,
-        format: pc.PIXELFORMAT_RGBA8,
+        format: pc.PIXELFORMAT_SRGBA8,
         cubemap: true,
         mipmaps: this.mipmaps,
         minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
@@ -67,11 +67,13 @@ CubemapRenderer.prototype.initialize = function () {
     ];
 
     // set up rendering for all 6 faces
+    let firstCamera = null;
+    let lastCamera = null;
     for (var i = 0; i < 6; i++) {
 
         // render target, connected to cubemap texture face
         var renderTarget = new pc.RenderTarget({
-            name: 'CubemapRenderer-Face' + i,
+            name: `CubemapRenderer-Face${i}`,
             colorBuffer: this.cubeMap,
             depth: this.depth,
             face: i,
@@ -79,7 +81,7 @@ CubemapRenderer.prototype.initialize = function () {
         });
 
         // create a child entity with the camera for this face
-        var e = new pc.Entity("CubeMapCamera_" + i);
+        var e = new pc.Entity(`CubeMapCamera_${i}`);
         e.addComponent('camera', {
             aspectRatio: 1,
             fov: 90,
@@ -98,6 +100,9 @@ CubemapRenderer.prototype.initialize = function () {
             farClip: camera.farClip,
             nearClip: camera.nearClip,
             frustumCulling: camera.frustumCulling,
+            gammaCorrection: camera.gammaCorrection,
+            toneMapping: camera.toneMapping,
+            fog: camera.fog,
 
             // this camera renders into texture target
             renderTarget: renderTarget
@@ -109,19 +114,29 @@ CubemapRenderer.prototype.initialize = function () {
         // set up its rotation
         e.setRotation(cameraRotations[i]);
 
-        // Before the first camera renders, trigger onCubemapPreRender event on the entity.
-        if (i === 0) {
-            e.camera.onPreRender = () => {
-                this.entity.fire('onCubemapPreRender');
-            };
-        }
-
-        // When last camera is finished rendering, trigger onCubemapPostRender event on the entity.
-        // This can be listened to by the user, and the resulting cubemap can be further processed (e.g prefiltered)
-        if (i === 5) {
-            e.camera.onPostRender = () => {
-                this.entity.fire('onCubemapPostRender');
-            };
-        }
+        // keep the first and last camera
+        if (i === 0) firstCamera = e.camera;
+        if (i === 5) lastCamera = e.camera;
     }
+
+    // Before the first camera renders, trigger onCubemapPreRender event on the entity.
+    this.evtPreRender = this.app.scene.on('prerender', (cameraComponent) => {
+        if (cameraComponent === firstCamera) {
+            this.entity.fire('onCubemapPreRender');
+        }
+    });
+
+    // When last camera is finished rendering, trigger onCubemapPostRender event on the entity.
+    // This can be listened to by the user, and the resulting cubemap can be further processed (e.g pre-filtering)
+    this.evtPostRender = this.app.scene.on('postrender', (cameraComponent) => {
+        if (cameraComponent === lastCamera) {
+            this.entity.fire('onCubemapPostRender');
+        }
+    });
+
+    // when the script is destroyed, remove event listeners
+    this.on('destroy', () => {
+        this.evtPreRender.off();
+        this.evtPostRender.off();
+    });
 };

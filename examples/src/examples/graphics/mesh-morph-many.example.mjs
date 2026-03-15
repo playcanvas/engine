@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,16 +8,14 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    morph: new pc.Asset('glb', 'container', { url: rootPath + '/static/assets/models/morph-stress-test.glb' })
+    morph: new pc.Asset('glb', 'container', { url: `${rootPath}/static/assets/models/morph-stress-test.glb` })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -85,19 +83,13 @@ assetListLoader.load(() => {
 
     // update function called once per frame
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time += dt;
 
         // modify weights of all morph targets along sin curve
         const targetsCount = morphInstance.morph.targets.length;
         for (let i = 0; i < targetsCount; i++) {
             morphInstance.setWeight(i, Math.abs(Math.sin(time + i * 0.4)));
-        }
-
-        // debug display the morph target textures blended together
-        if (morphInstance.texturePositions) {
-            // @ts-ignore
-            app.drawTexture(-0.7, -0.7, 0.4, 0.4, morphInstance.texturePositions);
         }
     });
 });

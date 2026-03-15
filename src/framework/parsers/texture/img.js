@@ -14,8 +14,6 @@ import { TextureParser } from './texture.js';
 
 /**
  * Parser for browser-supported image formats.
- *
- * @ignore
  */
 class ImgParser extends TextureParser {
     constructor(registry, device) {
@@ -37,7 +35,7 @@ class ImgParser extends TextureParser {
         const hasContents = !!asset?.file?.contents;
 
         if (hasContents) {
-            // ImageBitmap interface can load iage
+            // ImageBitmap interface can load image
             if (this.device.supportsImageBitmap) {
                 this._loadImageBitmapFromBlob(new Blob([asset.file.contents]), callback);
                 return;
@@ -63,9 +61,9 @@ class ImgParser extends TextureParser {
         }
 
         if (this.device.supportsImageBitmap) {
-            this._loadImageBitmap(url.load, url.original, crossOrigin, handler);
+            this._loadImageBitmap(url.load, url.original, crossOrigin, handler, asset);
         } else {
-            this._loadImage(url.load, url.original, crossOrigin, handler);
+            this._loadImage(url.load, url.original, crossOrigin, handler, asset);
         }
     }
 
@@ -86,7 +84,7 @@ class ImgParser extends TextureParser {
         return texture;
     }
 
-    _loadImage(url, originalUrl, crossOrigin, callback) {
+    _loadImage(url, originalUrl, crossOrigin, callback, asset) {
         const image = new Image();
         if (crossOrigin) {
             image.crossOrigin = crossOrigin;
@@ -96,8 +94,14 @@ class ImgParser extends TextureParser {
         const maxRetries = this.maxRetries;
         let retryTimeout;
 
+        const dummySize = 1024 * 1024;
+
+        // HTMLImageElement doesn't support progress events, so we emulate it instead
+        asset?.fire('progress', 0, dummySize);
+
         // Call success callback after opening Texture
         image.onload = function () {
+            asset?.fire('progress', dummySize, dummySize);
             callback(null, image);
         };
 
@@ -112,10 +116,10 @@ class ImgParser extends TextureParser {
                 const idx = url.indexOf('?');
                 const separator = idx >= 0 ? '&' : '?';
 
-                retryTimeout = setTimeout(function () {
+                retryTimeout = setTimeout(() => {
                     // we need to add a cache busting argument if we are trying to re-load an image element
                     // with the same URL
-                    image.src = url + separator + 'retry=' + Date.now();
+                    image.src = `${url + separator}retry=${Date.now()}`;
                     retryTimeout = null;
                 }, retryDelay);
             } else {
@@ -127,12 +131,13 @@ class ImgParser extends TextureParser {
         image.src = url;
     }
 
-    _loadImageBitmap(url, originalUrl, crossOrigin, callback) {
+    _loadImageBitmap(url, originalUrl, crossOrigin, callback, asset) {
         const options = {
             cache: true,
             responseType: 'blob',
             retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
+            maxRetries: this.maxRetries,
+            progress: asset
         };
         http.get(url, options, (err, blob) => {
             if (err) {
@@ -148,8 +153,8 @@ class ImgParser extends TextureParser {
             premultiplyAlpha: 'none',
             colorSpaceConversion: 'none'
         })
-            .then(imageBitmap => callback(null, imageBitmap))
-            .catch(e => callback(e));
+        .then(imageBitmap => callback(null, imageBitmap))
+        .catch(e => callback(e));
     }
 }
 

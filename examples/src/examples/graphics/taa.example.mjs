@@ -1,25 +1,24 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    house: new pc.Asset('house', 'container', { url: rootPath + '/static/assets/models/pbr-house.glb' }),
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    house: new pc.Asset('house', 'container', { url: `${rootPath}/static/assets/models/pbr-house.glb` }),
+    cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/table-mountain-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
 
     // disable anti-aliasing as TAA is used to smooth edges
     antialias: false
@@ -110,74 +109,38 @@ assetListLoader.load(() => {
     app.root.addChild(light);
     light.setLocalEulerAngles(40, 10, 0);
 
+    const cubeEntity = assets.cube.resource.instantiateRenderEntity();
+    cubeEntity.setLocalScale(30, 30, 30);
+    app.root.addChild(cubeEntity);
+
     // ------ Custom render passes set up ------
 
-    const currentOptions = {
-        camera: cameraEntity.camera, // camera used to render those passes
-        samples: 0, // number of samples for multi-sampling
-        // sceneColorMap: true, // true if the scene color should be captured
-        sceneColorMap: false,
-        bloomEnabled: true,
-
-        // enable the pre-pass to generate the depth buffer, which is needed by the TAA
-        prepassEnabled: true,
-
-        // enable temporal anti-aliasing
-        taaEnabled: true
-    };
-
-    const setupRenderPass = () => {
-        // destroy existing pass if any
-        if (cameraEntity.camera.renderPasses.length > 0) {
-            cameraEntity.camera.renderPasses[0].destroy();
-        }
-
-        // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
-        // Internally this sets up additional passes it needs, based on the options passed to it.
-        const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
-
-        const composePass = renderPassCamera.composePass;
-        composePass.toneMapping = data.get('data.scene.tonemapping');
-        composePass.bloomIntensity = 0.02;
-
-        // and set up these rendering passes to be used by the camera, instead of its default rendering
-        cameraEntity.camera.renderPasses = [renderPassCamera];
-    };
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+    cameraFrame.bloom.intensity = 0.02;
+    cameraFrame.update();
 
     // ------
 
     const applySettings = () => {
-        // if settings require render passes to be re-created
-        const noPasses = cameraEntity.camera.renderPasses.length === 0;
-        const taaEnabled = data.get('data.taa.enabled');
-        const bloomEnabled = data.get('data.scene.bloom');
 
-        if (noPasses || taaEnabled !== currentOptions.taaEnabled || bloomEnabled !== currentOptions.bloomEnabled) {
-            currentOptions.taaEnabled = taaEnabled;
-            currentOptions.bloomEnabled = bloomEnabled;
-
-            // TAA has been flipped, setup sharpening appropriately
-            data.set('data.scene.sharpness', taaEnabled ? 1 : 0);
-
-            // create new pass
-            setupRenderPass();
-        }
-
-        // apply all runtime settings
-        const renderPassCamera = cameraEntity.camera.renderPasses[0];
-        renderPassCamera.renderTargetScale = data.get('data.scene.scale');
-
-        const composePass = renderPassCamera.composePass;
-        composePass.sharpness = data.get('data.scene.sharpness');
-
-        // taa - enable camera jitter if taa is enabled
-        cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
+        cameraFrame.bloom.intensity = data.get('data.scene.bloom') ? 0.02 : 0;
+        cameraFrame.taa.enabled = data.get('data.taa.enabled');
+        cameraFrame.taa.jitter = data.get('data.taa.jitter');
+        cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
+        cameraFrame.rendering.sharpness = data.get('data.scene.sharpness');
+        cameraFrame.update();
     };
 
     // apply UI changes
-    let initialValuesSetup = false;
-    data.on('*:set', () => {
-        if (initialValuesSetup) applySettings();
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        applySettings();
+
+        // TAA has been flipped, setup sharpening appropriately
+        const pathArray = path.split('.');
+        if (pathArray[2] === 'enabled') {
+            data.set('data.scene.sharpness', value ? 1 : 0);
+        }
     });
 
     // set initial values
@@ -185,18 +148,20 @@ assetListLoader.load(() => {
         scene: {
             scale: 1,
             bloom: true,
-            sharpness: 0.5,
-            tonemapping: pc.TONEMAP_ACES
+            sharpness: 0.5
         },
         taa: {
-            enabled: currentOptions.taaEnabled,
+            enabled: true,
             jitter: 1
         }
     });
 
-    // apply initial settings after all values are set
-    initialValuesSetup = true;
-    applySettings();
+    let time = 0;
+    app.on('update', (/** @type {number} */ dt) => {
+        time += dt;
+        cubeEntity.setLocalPosition(130 * Math.sin(time), 0, 130 * Math.cos(time));
+        cubeEntity.rotate(50 * dt, 20 * dt, 30 * dt);
+    });
 });
 
 export { app };

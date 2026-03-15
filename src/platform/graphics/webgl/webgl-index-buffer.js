@@ -1,5 +1,5 @@
 import { INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32 } from '../constants.js';
-import { WebglBuffer } from "./webgl-buffer.js";
+import { WebglBuffer } from './webgl-buffer.js';
 
 /**
  * A WebGL implementation of the IndexBuffer.

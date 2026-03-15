@@ -1,11 +1,16 @@
 import { SceneParser } from './parsers/scene.js';
 
 /**
+ * @import { AppBase } from './app-base.js'
+ * @import { Entity } from './entity.js'
+ */
+
+/**
  * Create a Template resource from raw database data.
  */
 class Template {
     /**
-     * @type {import('./app-base.js').AppBase}
+     * @type {AppBase}
      * @private
      */
     _app;
@@ -14,7 +19,7 @@ class Template {
     _data;
 
     /**
-     * @type {import('./entity.js').Entity|null}
+     * @type {Entity|null}
      * @private
      */
     _templateRoot = null;
@@ -22,7 +27,7 @@ class Template {
     /**
      * Create a new Template instance.
      *
-     * @param {import('./app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @param {object} data - Asset data from the database.
      */
     constructor(app, data) {
@@ -33,7 +38,7 @@ class Template {
     /**
      * Create an instance of this template.
      *
-     * @returns {import('./entity.js').Entity} The root entity of the created instance.
+     * @returns {Entity} The root entity of the created instance.
      */
     instantiate() {
         if (!this._templateRoot) { // at first use, after scripts are loaded
@@ -48,6 +53,16 @@ class Template {
         const parser = new SceneParser(this._app, true);
 
         this._templateRoot = parser.parse(this._data);
+    }
+
+    set data(value) {
+        this._data = value;
+        // cache invalidation: the next instantiate() will parse and use the new _data
+        this._templateRoot = null;
+    }
+
+    get data() {
+        return this._data;
     }
 }
 

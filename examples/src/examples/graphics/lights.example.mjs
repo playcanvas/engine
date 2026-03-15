@@ -1,6 +1,6 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -15,32 +15,31 @@ function createMaterial(colors) {
 }
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
-    heart: new pc.Asset('heart', 'texture', { url: rootPath + '/static/assets/textures/heart.png' }),
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    heart: new pc.Asset('heart', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` }),
     xmas_negx: new pc.Asset('xmas_negx', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negx.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negx.png`
     }),
     xmas_negy: new pc.Asset('xmas_negy', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negy.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negy.png`
     }),
     xmas_negz: new pc.Asset('xmas_negz', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negz.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negz.png`
     }),
     xmas_posx: new pc.Asset('xmas_posx', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posx.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posx.png`
     }),
     xmas_posy: new pc.Asset('xmas_posy', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posy.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posy.png`
     }),
     xmas_posz: new pc.Asset('xmas_posz', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posz.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posz.png`
     })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -49,9 +48,11 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new pc.Mouse(document.body);
+createOptions.touch = new pc.TouchDevice(document.body);
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.CubemapHandler];
+createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem, pc.ScriptComponentSystem];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.CubemapHandler, pc.ScriptHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -91,11 +92,25 @@ assetListLoader.load(() => {
     camera.rotate(-14, 0, 0);
     app.root.addChild(camera);
 
-    // ground material
-    const material = createMaterial({
-        ambient: pc.Color.GRAY,
-        diffuse: pc.Color.GRAY
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
+        attributes: {
+            inertiaFactor: 0.2,
+            frameOnStart: false,
+            distanceMax: 500
+        }
     });
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
+
+    // ground material
+    const material = new pc.StandardMaterial();
+    material.diffuse = pc.Color.GRAY;
+    material.ambient = pc.Color.GRAY;
+    material.gloss = 0.5;
+    material.metalness = 0.5;
+    material.useMetalness = true;
+    material.update();
 
     // Create an Entity for the ground
     const ground = new pc.Entity();
@@ -182,6 +197,10 @@ assetListLoader.load(() => {
             type: 'omni',
             color: pc.Color.YELLOW,
             castShadows: true,
+            shadowBias: 0.05,
+            normalOffsetBias: 0.03,
+            shadowType: pc.SHADOW_PCF3_32F,
+            shadowResolution: 256,
             range: 111,
             cookieAsset: cubemapAsset,
             cookieChannel: 'rgb'
@@ -214,7 +233,7 @@ assetListLoader.load(() => {
     // Allow user to toggle individual lights
     app.keyboard.on(
         'keydown',
-        function (e) {
+        (e) => {
             // if the user is editing an input field, ignore key presses
             if (e.element.constructor.name === 'HTMLInputElement') return;
             switch (e.key) {
@@ -234,7 +253,7 @@ assetListLoader.load(() => {
 
     // Simple update loop to rotate the light
     let angleRad = 1;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         angleRad += 0.3 * dt;
         if (entity) {
             lights.spot.lookAt(new pc.Vec3(0, -5, 0));

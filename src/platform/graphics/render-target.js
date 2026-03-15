@@ -1,8 +1,13 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_RENDER_TARGET_ALLOC } from '../../core/constants.js';
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, isSrgbPixelFormat } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
+import { TextureUtils } from './texture-utils.js';
+
+/**
+ * @import { Texture } from './texture.js'
+ */
 
 let id = 0;
 
@@ -20,25 +25,25 @@ class RenderTarget {
     name;
 
     /**
-     * @type {import('./graphics-device.js').GraphicsDevice}
+     * @type {GraphicsDevice}
      * @private
      */
     _device;
 
     /**
-     * @type {import('./texture.js').Texture}
+     * @type {Texture}
      * @private
      */
     _colorBuffer;
 
     /**
-     * @type {import('./texture.js').Texture[]}
+     * @type {Texture[]}
      * @private
      */
     _colorBuffers;
 
     /**
-     * @type {import('./texture.js').Texture}
+     * @type {Texture}
      * @private
      */
     _depthBuffer;
@@ -70,6 +75,33 @@ class RenderTarget {
      */
     _face;
 
+    /**
+     * @type {number}
+     * @private
+     */
+    _mipLevel;
+
+    /**
+     * True if the mipmaps should be automatically generated for the color buffer(s) if it contains
+     * a mip chain.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _mipmaps;
+
+    /**
+     * @type {number | undefined}
+     * @private
+     */
+    _width;
+
+    /**
+     * @type {number | undefined}
+     * @private
+     */
+    _height;
+
     /** @type {boolean} */
     flipY;
 
@@ -79,17 +111,18 @@ class RenderTarget {
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.autoResolve] - If samples > 1, enables or disables automatic MSAA
      * resolve after rendering to this RT (see {@link RenderTarget#resolve}). Defaults to true.
-     * @param {import('./texture.js').Texture} [options.colorBuffer] - The texture that this render
-     * target will treat as a rendering surface.
-     * @param {import('./texture.js').Texture[]} [options.colorBuffers] - The textures that this
-     * render target will treat as a rendering surfaces. If this option is set, the colorBuffer
-     * option is ignored.
+     * @param {Texture} [options.colorBuffer] - The texture that this render target will treat as a
+     * rendering surface.
+     * @param {Texture[]} [options.colorBuffers] - The textures that this render target will treat
+     * as a rendering surfaces. If this option is set, the colorBuffer option is ignored.
      * @param {boolean} [options.depth] - If set to true, depth buffer will be created. Defaults to
      * true. Ignored if depthBuffer is defined.
-     * @param {import('./texture.js').Texture} [options.depthBuffer] - The texture that this render
-     * target will treat as a depth/stencil surface (WebGL2 only). If set, the 'depth' and
-     * 'stencil' properties are ignored. Texture must have {@link PIXELFORMAT_DEPTH} or
-     * {@link PIXELFORMAT_DEPTHSTENCIL} format.
+     * @param {Texture} [options.depthBuffer] - The texture that this render target will treat as a
+     * depth/stencil surface (WebGL2 only). If set, the 'depth' and 'stencil' properties are
+     * ignored. Texture must have {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL}
+     * format.
+     * @param {number} [options.mipLevel] - If set to a number greater than 0, the render target
+     * will render to the specified mip level of the color buffer. Defaults to 0.
      * @param {number} [options.face] - If the colorBuffer parameter is a cubemap, use this option
      * to specify the face of the cubemap to render to. Can be:
      *
@@ -132,6 +165,19 @@ class RenderTarget {
         Debug.assert(!(options instanceof GraphicsDevice), 'pc.RenderTarget constructor no longer accepts GraphicsDevice parameter.');
         this.id = id++;
 
+        // device, from one of the buffers
+        const device = options.colorBuffer?.device ?? options.colorBuffers?.[0].device ?? options.depthBuffer?.device ?? options.graphicsDevice;
+        Debug.assert(device, 'Failed to obtain the device, colorBuffer nor depthBuffer store it.');
+        this._device = device;
+
+        // samples
+        const { maxSamples } = this._device;
+        this._samples = Math.min(options.samples ?? 1, maxSamples);
+        if (device.isWebGPU) {
+            // WebGPU only supports values of 1 or 4 for samples
+            this._samples = this._samples > 1 ? maxSamples : 1;
+        }
+
         // Use the single colorBuffer in the colorBuffers array. This allows us to always just use the array internally.
         this._colorBuffer = options.colorBuffer;
         if (options.colorBuffer) {
@@ -144,12 +190,17 @@ class RenderTarget {
 
         if (this._depthBuffer) {
             const format = this._depthBuffer._format;
-            if (format === PIXELFORMAT_DEPTH) {
+            if (format === PIXELFORMAT_DEPTH || format === PIXELFORMAT_DEPTH16) {
                 this._depth = true;
                 this._stencil = false;
             } else if (format === PIXELFORMAT_DEPTHSTENCIL) {
                 this._depth = true;
                 this._stencil = true;
+            } else if (format === PIXELFORMAT_R32F && this._depthBuffer.device.isWebGPU && this._samples > 1) {
+                // on WebGPU, when multisampling is enabled, we use R32F format for the specified buffer,
+                // which we can resolve depth to using a shader
+                this._depth = true;
+                this._stencil = false;
             } else {
                 Debug.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
                 this._depth = false;
@@ -172,19 +223,6 @@ class RenderTarget {
             }
         }
 
-        // device, from one of the buffers
-        const device = this._colorBuffer?.device || this._depthBuffer?.device || options.graphicsDevice;
-        Debug.assert(device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
-        this._device = device;
-
-        const { maxSamples } = this._device;
-        this._samples = Math.min(options.samples ?? 1, maxSamples);
-
-        // WebGPU only supports values of 1 or 4 for samples
-        if (device.isWebGPU) {
-            this._samples = this._samples > 1 ? maxSamples : 1;
-        }
-
         this.autoResolve = options.autoResolve ?? true;
 
         // use specified name, otherwise get one from color or depth buffer
@@ -196,11 +234,26 @@ class RenderTarget {
             this.name = this._depthBuffer?.name;
         }
         if (!this.name) {
-            this.name = "Untitled";
+            this.name = 'Untitled';
         }
 
         // render image flipped in Y
         this.flipY = options.flipY ?? false;
+
+        this._mipLevel = options.mipLevel ?? 0;
+        if (this._mipLevel > 0 && this._depth) {
+            Debug.error(`Rendering to a mipLevel is not supported when render target uses a depth buffer. Ignoring mipLevel ${this._mipLevel} for render target ${this.name}`, {
+                renderTarget: this,
+                options
+            });
+            this._mipLevel = 0;
+        }
+
+        // if we render to a specific mipmap (even 0), do not generate mipmaps
+        this._mipmaps = options.mipLevel === undefined;
+
+        // evaluate and cache dimensions
+        this.evaluateDimensions();
 
         this.validateMrt();
 
@@ -274,22 +327,31 @@ class RenderTarget {
      */
     resize(width, height) {
 
-        if (this.width !== width || this.height !== height) {
+        if (this.mipLevel > 0) {
+            Debug.warn('Only a render target rendering to mipLevel 0 can be resized, ignoring.', this);
+            return;
+        }
+
+        // resize textures (they handle their own change detection)
+        this._depthBuffer?.resize(width, height);
+        this._colorBuffers?.forEach((colorBuffer) => {
+            colorBuffer.resize(width, height);
+        });
+
+        // only rebuild framebuffers if dimensions changed
+        if (this._width !== width || this._height !== height) {
 
             // release existing
-            const device = this._device;
             this.destroyFrameBuffers();
+
+            // disconnect from the device
+            const device = this._device;
             if (device.renderTarget === this) {
                 device.setRenderTarget(null);
             }
 
-            // resize textures
-            this._depthBuffer?.resize(width, height);
-            this._colorBuffers?.forEach((colorBuffer) => {
-                colorBuffer.resize(width, height);
-            });
-
-            // initialize again
+            // create new
+            this.evaluateDimensions();
             this.validateMrt();
             this.impl = device.createRenderTargetImpl(this);
         }
@@ -308,6 +370,27 @@ class RenderTarget {
                 }
             }
         });
+    }
+
+    /**
+     * Evaluates and stores the width and height of the render target based on the color/depth
+     * buffers and mip level.
+     *
+     * @private
+     */
+    evaluateDimensions() {
+        // If we have buffers, calculate dimensions from them
+        const buffer = this._colorBuffer ?? this._depthBuffer;
+        if (buffer) {
+            this._width = buffer.width;
+            this._height = buffer.height;
+
+            // Apply mip level adjustment
+            if (this._mipLevel > 0) {
+                this._width = TextureUtils.calcLevelDimension(this._width, this._mipLevel);
+                this._height = TextureUtils.calcLevelDimension(this._height, this._mipLevel);
+            }
+        }
     }
 
     /**
@@ -357,7 +440,7 @@ class RenderTarget {
         // TODO: consider adding support for MRT to this function.
 
         if (this._device && this._samples > 1) {
-            DebugGraphics.pushGpuMarker(this._device, `RESOLVE-RT:${this.name}`);
+            DebugGraphics.pushGpuMarker(this._device, `RESOLVE-RT:${this.name}:${color ? '[color]' : ''}:${depth ? '[depth]' : ''}`);
             this.impl.resolve(this._device, this, color, depth);
             DebugGraphics.popGpuMarker(this._device);
         }
@@ -380,7 +463,7 @@ class RenderTarget {
             if (source._device) {
                 this._device = source._device;
             } else {
-                Debug.error("Render targets are not initialized");
+                Debug.error('Render targets are not initialized');
                 return false;
             }
         }
@@ -422,7 +505,7 @@ class RenderTarget {
     /**
      * Color buffer set up on the render target.
      *
-     * @type {import('./texture.js').Texture}
+     * @type {Texture}
      */
     get colorBuffer() {
         return this._colorBuffer;
@@ -432,7 +515,7 @@ class RenderTarget {
      * Accessor for multiple render target color buffers.
      *
      * @param {*} index - Index of the color buffer to get.
-     * @returns {import('./texture.js').Texture} - Color buffer at the specified index.
+     * @returns {Texture} - Color buffer at the specified index.
      */
     getColorBuffer(index) {
         return this._colorBuffers?.[index];
@@ -442,7 +525,7 @@ class RenderTarget {
      * Depth buffer set up on the render target. Only available, if depthBuffer was set in
      * constructor. Not available if depth property was used instead.
      *
-     * @type {import('./texture.js').Texture}
+     * @type {Texture}
      */
     get depthBuffer() {
         return this._depthBuffer;
@@ -466,12 +549,31 @@ class RenderTarget {
     }
 
     /**
+     * Mip level of the render target.
+     *
+     * @type {number}
+     */
+    get mipLevel() {
+        return this._mipLevel;
+    }
+
+    /**
+     * True if the mipmaps are automatically generated for the color buffer(s) if it contains
+     * a mip chain.
+     *
+     * @type {boolean}
+     */
+    get mipmaps() {
+        return this._mipmaps;
+    }
+
+    /**
      * Width of the render target in pixels.
      *
      * @type {number}
      */
     get width() {
-        return this._colorBuffer?.width || this._depthBuffer?.width || this._device.width;
+        return this._width ?? this._device.width;
     }
 
     /**
@@ -480,7 +582,23 @@ class RenderTarget {
      * @type {number}
      */
     get height() {
-        return this._colorBuffer?.height || this._depthBuffer?.height || this._device.height;
+        return this._height ?? this._device.height;
+    }
+
+    /**
+     * Gets whether the format of the specified color buffer is sRGB.
+     *
+     * @param {number} index - The index of the color buffer.
+     * @returns {boolean} True if the color buffer is sRGB, false otherwise.
+     * @ignore
+     */
+    isColorBufferSrgb(index = 0) {
+        if (this.device.backBuffer === this) {
+            return isSrgbPixelFormat(this.device.backBufferFormat);
+        }
+
+        const colorBuffer = this.getColorBuffer(index);
+        return colorBuffer ? isSrgbPixelFormat(colorBuffer.format) : false;
     }
 }
 

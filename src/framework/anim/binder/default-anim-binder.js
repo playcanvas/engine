@@ -2,10 +2,10 @@ import { Debug } from '../../../core/debug.js';
 import { AnimBinder } from './anim-binder.js';
 import { AnimTarget } from '../evaluator/anim-target.js';
 import { Entity } from '../../entity.js';
+
 /**
  * Implementation of {@link AnimBinder} for animating a skeleton in the graph-node hierarchy.
  *
- * @implements {AnimBinder}
  * @ignore
  */
 class DefaultAnimBinder {
@@ -79,32 +79,39 @@ class DefaultAnimBinder {
             },
 
             'weight': function (node, weightName) {
+                // Parse weight name: either a named weight ('name.something') or numeric index
                 if (weightName.indexOf('name.') === 0) {
                     weightName = weightName.replace('name.', '');
                 } else {
                     weightName = Number(weightName);
                 }
+
+                // Find all morph instances associated with this node
                 const meshInstances = findMeshInstances(node);
-                let setters;
+                const instances = [];
                 if (meshInstances) {
                     for (let i = 0; i < meshInstances.length; ++i) {
                         if (meshInstances[i].node.name === node.name && meshInstances[i].morphInstance) {
-                            const morphInstance = meshInstances[i].morphInstance;
-                            const func = (value) => {
-                                morphInstance.setWeight(weightName, value[0]);
-                            };
-                            if (!setters) setters = [];
-                            setters.push(func);
+                            instances.push(meshInstances[i].morphInstance);
                         }
                     }
                 }
-                if (setters) {
-                    const callSetters = (value) => {
-                        for (let i = 0; i < setters.length; ++i) {
-                            setters[i](value);
+
+                if (instances.length > 0) {
+                    // Provide both get/set functions to support layer blending
+                    const func = {
+                        set: (value) => {
+                            // Apply weight to all morph instances on this node
+                            for (let i = 0; i < instances.length; ++i) {
+                                instances[i].setWeight(weightName, value[0]);
+                            }
+                        },
+                        get: () => {
+                            // Return current weight from first instance (all should have same value)
+                            return [instances[0].getWeight(weightName)];
                         }
                     };
-                    return DefaultAnimBinder.createAnimTarget(callSetters, 'number', 1, node, `weight.${weightName}`);
+                    return DefaultAnimBinder.createAnimTarget(func, 'number', 1, node, `weight.${weightName}`);
                 }
                 return null;
             },
@@ -150,7 +157,7 @@ class DefaultAnimBinder {
             let currEntityPath = rootNodeNames[j];
             if (this._isPathInMask(currEntityPath, path.entityPath.length === 1)) return true;
             for (let i = 1; i < path.entityPath.length; i++) {
-                currEntityPath += '/' + path.entityPath[i];
+                currEntityPath += `/${path.entityPath[i]}`;
                 if (this._isPathInMask(currEntityPath, i === path.entityPath.length - 1)) return true;
             }
         }
@@ -171,12 +178,12 @@ class DefaultAnimBinder {
             }
         }
         if (!node) {
-            node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
+            node = this.nodes[path.entityPath[path.entityPath.length - 1] || ''];
 
             // #if _DEBUG
-            const fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || "", 'graph', path.propertyPath);
+            const fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || '', 'graph', path.propertyPath);
             if (this.visitedFallbackGraphPaths[fallbackGraphPath] === 1) {
-                Debug.warn(`Anim Binder: Multiple animation curves with the path ${fallbackGraphPath} are present in the ${this.graph.path} graph which may result in the incorrect binding of animations`);
+                Debug.warnOnce(`Anim Binder: Multiple animation curves with the path ${fallbackGraphPath} are present in the ${this.graph.path} graph which may result in the incorrect binding of animations`);
             }
             if (!Number.isFinite(this.visitedFallbackGraphPaths[fallbackGraphPath])) {
                 this.visitedFallbackGraphPaths[fallbackGraphPath] = 0;
@@ -226,10 +233,11 @@ class DefaultAnimBinder {
     }
 
     unresolve(path) {
-        if (path.component !== 'graph')
+        if (path.component !== 'graph') {
             return;
+        }
 
-        const node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
+        const node = this.nodes[path.entityPath[path.entityPath.length - 1] || ''];
 
         this.nodeCounts[node.path]--;
         if (this.nodeCounts[node.path] === 0) {

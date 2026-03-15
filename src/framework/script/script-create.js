@@ -12,7 +12,9 @@ const reservedScriptNames = new Set([
     '_onSetEnabled', '_checkState', '_onBeforeRemove',
     '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',
     '_onUpdate', '_onPostUpdate',
-    '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
+    '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent',
+    // 'worker' is reserved to prevent users from overwriting the native Worker constructor
+    'worker'
 ]);
 
 function getReservedScriptNames() {
@@ -30,7 +32,7 @@ function getReservedScriptNames() {
  * will perform hot swapping of existing Script Instances on entities using this new Script Type.
  * Note: There is a reserved list of names that cannot be used, such as list below as well as some
  * starting from `_` (underscore): system, entity, create, destroy, swap, move, scripts, onEnable,
- * onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
+ * onDisable, onPostStateChange, has, on, off, fire, once, hasEvent, worker.
  * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
  * to add a script to. By default it will use `Application.getApplication()` to get current
  * {@link AppBase}.
@@ -54,8 +56,9 @@ function getReservedScriptNames() {
  * @category Script
  */
 function createScript(name, app) {
-    if (reservedScriptNames.has(name))
+    if (reservedScriptNames.has(name)) {
         throw new Error(`Script name '${name}' is reserved, please rename the script`);
+    }
 
     const scriptType = function (args) {
         EventHandler.prototype.initEventHandler.call(this);
@@ -79,7 +82,6 @@ ScriptAttributes.reservedNames.forEach((value, value2, set) => {
 });
 createScript.reservedAttributes = reservedAttributes;
 
-/* eslint-disable jsdoc/check-examples */
 /**
  * Register a existing class type as a Script Type to {@link ScriptRegistry}. Useful when defining
  * a ES6 script class that extends {@link ScriptType} (see example).
@@ -119,16 +121,19 @@ createScript.reservedAttributes = reservedAttributes;
  * @category Script
  */
 function registerScript(script, name, app) {
-    if (typeof script !== 'function')
+    if (typeof script !== 'function') {
         throw new Error(`script class: '${script}' must be a constructor function (i.e. class).`);
+    }
 
-    if (!(script.prototype instanceof Script))
+    if (!(script.prototype instanceof Script)) {
         throw new Error(`script class: '${ScriptType.__getScriptName(script)}' does not extend pc.Script.`);
+    }
 
     name = name || script.__name || ScriptType.__getScriptName(script);
 
-    if (reservedScriptNames.has(name))
+    if (reservedScriptNames.has(name)) {
         throw new Error(`script name: '${name}' is reserved, please change script name`);
+    }
 
     script.__name = name;
 
@@ -138,6 +143,5 @@ function registerScript(script, name, app) {
 
     ScriptTypes.push(script);
 }
-/* eslint-enable jsdoc/check-examples */
 
 export { createScript, registerScript, getReservedScriptNames };

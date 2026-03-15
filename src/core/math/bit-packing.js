@@ -2,7 +2,6 @@
  * BitPacking API - functionality for operating on values stored as bits in a number.
  *
  * @namespace
- * @ignore
  */
 const BitPacking = {
 

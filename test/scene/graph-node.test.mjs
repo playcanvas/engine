@@ -1,10 +1,10 @@
-import { GraphNode } from '../../src/scene/graph-node.js';
+import { expect } from 'chai';
+
 import { Mat4 } from '../../src/core/math/mat4.js';
 import { Quat } from '../../src/core/math/quat.js';
-import { Tags } from '../../src/core/tags.js';
 import { Vec3 } from '../../src/core/math/vec3.js';
-
-import { expect } from 'chai';
+import { Tags } from '../../src/core/tags.js';
+import { GraphNode } from '../../src/scene/graph-node.js';
 
 describe('GraphNode', function () {
 
@@ -233,19 +233,19 @@ describe('GraphNode', function () {
             root.addChild(child);
 
             let res;
-            res = root.find(function (node) {
+            res = root.find((node) => {
                 return node.name === 'Untitled';
             });
             expect(res).to.be.an('array').with.lengthOf(1);
             expect(res[0]).to.equal(root);
 
-            res = root.find(function (node) {
+            res = root.find((node) => {
                 return node.name === 'Child';
             });
             expect(res).to.be.an('array').with.lengthOf(1);
             expect(res[0]).to.equal(child);
 
-            res = root.find(function (node) {
+            res = root.find((node) => {
                 return node.name === 'Not Found';
             });
             expect(res).to.be.an('array').with.lengthOf(0);
@@ -395,17 +395,17 @@ describe('GraphNode', function () {
             root.addChild(child);
 
             let res;
-            res = root.findOne(function (node) {
+            res = root.findOne((node) => {
                 return node.name === 'Untitled';
             });
             expect(res).to.equal(root);
 
-            res = root.findOne(function (node) {
+            res = root.findOne((node) => {
                 return node.name === 'Child';
             });
             expect(res).to.equal(child);
 
-            res = root.findOne(function (node) {
+            res = root.findOne((node) => {
                 return node.name === 'Not Found';
             });
             expect(res).to.be.null;

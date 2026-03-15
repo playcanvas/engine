@@ -1,19 +1,17 @@
 import { TRACEID_BINDGROUPFORMAT_ALLOC } from '../../core/constants.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
-
 import {
-    TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D, TEXTUREDIMENSION_2D_ARRAY,
-    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SAMPLETYPE_INT, SAMPLETYPE_UINT, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
+    TEXTUREDIMENSION_2D,
+    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
 } from './constants.js';
+import { DebugGraphics } from './debug-graphics.js';
+
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { ScopeId } from './scope-id.js'
+ */
 
 let id = 0;
-
-const textureDimensionInfo = {
-    [TEXTUREDIMENSION_2D]: 'texture2D',
-    [TEXTUREDIMENSION_CUBE]: 'textureCube',
-    [TEXTUREDIMENSION_3D]: 'texture3D',
-    [TEXTUREDIMENSION_2D_ARRAY]: 'texture2DArray'
-};
 
 /**
  * A base class to describe the format of the resource for {@link BindGroupFormat}.
@@ -28,7 +26,7 @@ class BindBaseFormat {
     slot = -1;
 
     /**
-     * @type {import('./scope-id.js').ScopeId|null}
+     * @type {ScopeId|null}
      * @ignore
      */
     scopeId = null;
@@ -68,6 +66,14 @@ class BindUniformBufferFormat extends BindBaseFormat {
  */
 class BindStorageBufferFormat extends BindBaseFormat {
     /**
+     * Format, extracted from vertex and fragment shader.
+     *
+     * @type {string}
+     * @ignore
+     */
+    format = '';
+
+    /**
      * Create a new instance.
      *
      * @param {string} name - The name of the storage buffer.
@@ -86,7 +92,7 @@ class BindStorageBufferFormat extends BindBaseFormat {
 
         // whether the buffer is read-only
         this.readOnly = readOnly;
-        Debug.assert(readOnly || !(visibility & SHADERSTAGE_VERTEX), "Storage buffer can only be used in read-only mode in SHADERSTAGE_VERTEX.");
+        Debug.assert(readOnly || !(visibility & SHADERSTAGE_VERTEX), 'Storage buffer can only be used in read-only mode in SHADERSTAGE_VERTEX.');
     }
 }
 
@@ -129,8 +135,9 @@ class BindTextureFormat extends BindBaseFormat {
      * @param {boolean} [hasSampler] - True if the sampler for the texture is needed. Note that if the
      * sampler is used, it will take up an additional slot, directly following the texture slot.
      * Defaults to true.
+     * @param {string|null} [samplerName] - Optional name of the sampler. Defaults to null.
      */
-    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true) {
+    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true, samplerName = null) {
         super(name, visibility);
 
         // TEXTUREDIMENSION_***
@@ -141,6 +148,9 @@ class BindTextureFormat extends BindBaseFormat {
 
         // whether to use a sampler with this texture
         this.hasSampler = hasSampler;
+
+        // optional name of the sampler (its automatically generated if not provided)
+        this.samplerName = samplerName ?? `${name}_sampler`;
     }
 }
 
@@ -148,6 +158,7 @@ class BindTextureFormat extends BindBaseFormat {
  * A class to describe the format of the storage texture for {@link BindGroupFormat}. Storage
  * texture is a texture created with the storage flag set to true, which allows it to be used as an
  * output of a compute shader.
+ *
  * Note: At the current time, storage textures are only supported in compute shaders in a
  * write-only mode.
  *
@@ -229,10 +240,9 @@ class BindGroupFormat {
     /**
      * Create a new instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this vertex format.
-     * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats
-     * - An array of bind formats. Note that each entry in the array uses up one slot. The exception
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
+     * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats -
+     * An array of bind formats. Note that each entry in the array uses up one slot. The exception
      * is a texture format that has a sampler, which uses up two slots. The slots are allocated
      * sequentially, starting from 0.
      */
@@ -265,7 +275,7 @@ class BindGroupFormat {
             }
         });
 
-        /** @type {import('./graphics-device.js').GraphicsDevice} */
+        /** @type {GraphicsDevice} */
         this.device = graphicsDevice;
         const scope = graphicsDevice.scope;
 
@@ -306,7 +316,7 @@ class BindGroupFormat {
 
         this.impl = graphicsDevice.createBindGroupFormatImpl(this);
 
-        Debug.trace(TRACEID_BINDGROUPFORMAT_ALLOC, `Alloc: Id ${this.id}`, this);
+        Debug.trace(TRACEID_BINDGROUPFORMAT_ALLOC, `Alloc: Id ${this.id}, while rendering [${DebugGraphics.toString()}]`, this);
     }
 
     /**
@@ -346,37 +356,6 @@ class BindGroupFormat {
         }
 
         return null;
-    }
-
-    getShaderDeclarationTextures(bindGroup) {
-        let code = '';
-        this.textureFormats.forEach((format) => {
-
-            let textureType = textureDimensionInfo[format.textureDimension];
-            Debug.assert(textureType, "Unsupported texture type", format.textureDimension);
-
-            // handle texture2DArray by renaming the texture object and defining a replacement macro
-            let namePostfix = '';
-            let extraCode = '';
-            if (textureType === 'texture2DArray') {
-                namePostfix = '_texture';
-                extraCode = `#define ${format.name} sampler2DArray(${format.name}${namePostfix}, ${format.name}_sampler)\n`;
-            }
-
-            if (format.sampleType === SAMPLETYPE_INT) {
-                textureType = `i${textureType}`;
-            } else if (format.sampleType === SAMPLETYPE_UINT) {
-                textureType = `u${textureType}`;
-            }
-
-            code += `layout(set = ${bindGroup}, binding = ${format.slot}) uniform ${textureType} ${format.name}${namePostfix};\n`;
-            if (format.hasSampler) {
-                code += `layout(set = ${bindGroup}, binding = ${format.slot + 1}) uniform sampler ${format.name}_sampler;\n`;
-            }
-            code += extraCode;
-        });
-
-        return code;
     }
 
     loseContext() {

@@ -1,6 +1,6 @@
-import * as pc from 'playcanvas';
 import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -9,17 +9,15 @@ const assets = {
     envatlas: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/utils/planar-renderer.js' })
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/utils/planar-renderer.js` })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -48,9 +46,6 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
-
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // setup skydome
     app.scene.envAtlas = assets.envatlas.resource;
@@ -106,15 +101,19 @@ assetListLoader.load(() => {
     app.scene.layers.insert(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
     // Create the shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
-    });
-
     // reflective ground
     // This is in the excluded layer so it does not render into reflection texture
-    const groundMaterial = new pc.Material();
-    groundMaterial.shader = shader;
+    const groundMaterial = new pc.ShaderMaterial({
+        uniqueName: 'MyShader',
+        vertexGLSL: files['shader.glsl.vert'],
+        fragmentGLSL: files['shader.glsl.frag'],
+        vertexWGSL: files['shader.wgsl.vert'],
+        fragmentWGSL: files['shader.wgsl.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
+        }
+    });
     createPrimitive(
         'plane',
         new pc.Vec3(0, 0, 0),
@@ -144,7 +143,8 @@ assetListLoader.load(() => {
     const camera = new pc.Entity('MainCamera');
     camera.addComponent('camera', {
         fov: 60,
-        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id]
+        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id],
+        toneMapping: pc.TONEMAP_ACES
     });
     app.root.addChild(camera);
 
@@ -153,7 +153,8 @@ assetListLoader.load(() => {
     reflectionCamera.addComponent('camera', {
         fov: 60,
         layers: [worldLayer.id, skyboxLayer.id],
-        priority: -1 // render reflections before the main camera
+        priority: -1, // render reflections before the main camera
+        toneMapping: pc.TONEMAP_ACES
     });
 
     // add planarRenderer script which renders the reflection texture
@@ -172,7 +173,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time += dt;
 
         // rotate primitives around their center and also orbit them around the shiny sphere

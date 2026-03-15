@@ -1,44 +1,17 @@
 import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI } from '../constants.js';
-import { createShaderFromCode } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { LightCamera } from './light-camera.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
 import { QuadRender } from '../graphics/quad-render.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
-import { RenderPass } from "../../platform/graphics/render-pass.js";
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
-const textureBlitVertexShader = /* glsl */ `
-    attribute vec2 vertex_position;
-    varying vec2 uv0;
-    void main(void) {
-        gl_Position = vec4(vertex_position, 0.5, 1.0);
-        uv0 = vertex_position.xy * 0.5 + 0.5;
-        #ifndef WEBGPU
-            uv0.y = 1.0 - uv0.y;
-        #endif
-    }`;
-
-const textureBlitFragmentShader = /* glsl */ `
-    varying vec2 uv0;
-    uniform sampler2D blitTexture;
-    void main(void) {
-        gl_FragColor = texture2D(blitTexture, uv0);
-    }`;
-
-// shader runs for each face, with inViewProj matrix representing a face camera
-const textureCubeBlitFragmentShader = /* glsl */ `
-    varying vec2 uv0;
-    uniform samplerCube blitTexture;
-    uniform mat4 invViewProj;
-    void main(void) {
-        vec4 projPos = vec4(uv0 * 2.0 - 1.0, 0.5, 1.0);
-        vec4 worldPos = invViewProj * projPos;
-        gl_FragColor = textureCube(blitTexture, worldPos.xyz);
-    }`;
+/**
+ * @import { EventHandle } from '../../core/event-handle.js';
+ */
 
 const _viewport = new Vec4();
 
@@ -59,6 +32,16 @@ class RenderPassCookieRenderer extends RenderPass {
 
     _filteredLights = [];
 
+    _forceCopy = false;
+
+    /**
+     * Event handle for device restored event.
+     *
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtDeviceRestored = null;
+
     constructor(device, cubeSlotsOffsets) {
         super(device);
         this._cubeSlotsOffsets = cubeSlotsOffsets;
@@ -67,6 +50,8 @@ class RenderPassCookieRenderer extends RenderPass {
 
         this.blitTextureId = device.scope.resolve('blitTexture');
         this.invViewProjId = device.scope.resolve('invViewProj');
+
+        this._evtDeviceRestored = device.on('devicerestored', this.onDeviceRestored, this);
     }
 
     destroy() {
@@ -75,6 +60,9 @@ class RenderPassCookieRenderer extends RenderPass {
 
         this._quadRendererCube?.destroy();
         this._quadRendererCube = null;
+
+        this._evtDeviceRestored?.off();
+        this._evtDeviceRestored = null;
     }
 
     static create(renderTarget, cubeSlotsOffsets) {
@@ -88,6 +76,10 @@ class RenderPassCookieRenderer extends RenderPass {
         renderPass.depthStencilOps.clearDepth = false;
 
         return renderPass;
+    }
+
+    onDeviceRestored() {
+        this._forceCopy = true;
     }
 
     update(lights) {
@@ -106,21 +98,26 @@ class RenderPassCookieRenderer extends RenderPass {
             const light = lights[i];
 
             // skip directional lights
-            if (light._type === LIGHTTYPE_DIRECTIONAL)
+            if (light._type === LIGHTTYPE_DIRECTIONAL) {
                 continue;
+            }
 
             // skip clustered cookies with no assigned atlas slot
-            if (!light.atlasViewportAllocated)
+            if (!light.atlasViewportAllocated) {
                 continue;
+            }
 
             // only render cookie when the slot is reassigned (assuming the cookie texture is static)
-            if (!light.atlasSlotUpdated)
+            if (!light.atlasSlotUpdated && !this._forceCopy) {
                 continue;
+            }
 
             if (light.enabled && light.cookie && light.visibleThisFrame) {
                 filteredLights.push(light);
             }
         }
+
+        this._forceCopy = false;
     }
 
     initInvViewProjMatrices() {
@@ -136,7 +133,12 @@ class RenderPassCookieRenderer extends RenderPass {
 
     get quadRenderer2D() {
         if (!this._quadRenderer2D) {
-            const shader = createShaderFromCode(this.device, textureBlitVertexShader, textureBlitFragmentShader, `cookieRenderer2d`);
+            const shader = ShaderUtils.createShader(this.device, {
+                uniqueName: 'cookieRenderer2d',
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexChunk: 'cookieBlitVS',
+                fragmentChunk: 'cookieBlit2DPS'
+            });
             this._quadRenderer2D = new QuadRender(shader);
         }
         return this._quadRenderer2D;
@@ -144,7 +146,12 @@ class RenderPassCookieRenderer extends RenderPass {
 
     get quadRendererCube() {
         if (!this._quadRendererCube) {
-            const shader = createShaderFromCode(this.device, textureBlitVertexShader, textureCubeBlitFragmentShader, `cookieRendererCube`);
+            const shader = ShaderUtils.createShader(this.device, {
+                uniqueName: 'cookieRendererCube',
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexChunk: 'cookieBlitVS',
+                fragmentChunk: 'cookieBlitCubePS'
+            });
             this._quadRendererCube = new QuadRender(shader);
         }
         return this._quadRendererCube;
@@ -154,10 +161,7 @@ class RenderPassCookieRenderer extends RenderPass {
 
         // render state
         const device = this.device;
-        device.setBlendState(BlendState.NOBLEND);
-        device.setCullMode(CULLFACE_NONE);
-        device.setDepthState(DepthState.NODEPTH);
-        device.setStencilState();
+        device.setDrawStates();
 
         const renderTargetWidth = this.renderTarget.colorBuffer.width;
         const cubeSlotsOffsets = this._cubeSlotsOffsets;

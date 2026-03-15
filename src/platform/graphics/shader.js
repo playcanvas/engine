@@ -2,7 +2,16 @@ import { TRACEID_SHADER_ALLOC } from '../../core/constants.js';
 import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
 import { Preprocessor } from '../../core/preprocessor.js';
+import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { ShaderDefinitionUtils } from './shader-definition-utils.js';
+import halfTypes from './shader-chunks/frag/half-types.js';
+
+/**
+ * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { UniformBufferFormat } from './uniform-buffer-format.js'
+ */
 
 let id = 0;
 
@@ -20,7 +29,7 @@ class Shader {
     /**
      * Format of the uniform buffer for mesh bind group.
      *
-     * @type {import('./uniform-buffer-format.js').UniformBufferFormat}
+     * @type {UniformBufferFormat}
      * @ignore
      */
     meshUniformBufferFormat;
@@ -28,37 +37,55 @@ class Shader {
     /**
      * Format of the bind group for the mesh bind group.
      *
-     * @type {import('./bind-group-format.js').BindGroupFormat}
+     * @type {BindGroupFormat}
      * @ignore
      */
     meshBindGroupFormat;
 
     /**
+     * The attributes that this shader code uses. The location is the key, the value is the name.
+     * These attributes are queried / extracted from the final shader.
+     *
+     * @type {Map<number, string>}
+     * @ignore
+     */
+    attributes = new Map();
+
+    /**
      * Creates a new Shader instance.
      *
-     * Consider {@link createShaderFromCode} as a simpler and more powerful way to create
+     * Consider {@link ShaderUtils#createShader} as a simpler and more powerful way to create
      * a shader.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this shader.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
      * @param {object} definition - The shader definition from which to build the shader.
      * @param {string} [definition.name] - The name of the shader.
      * @param {Object<string, string>} [definition.attributes] - Object detailing the mapping of
      * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
-     * vertex buffer data as inputs to the shader. When not specified, rendering without
-     * vertex buffer is assumed.
+     * vertex buffer data as inputs to the shader. When not specified, rendering without vertex
+     * buffer is assumed.
+     * @param {string[]} [definition.feedbackVaryings] - A list of shader output variable
+     * names that will be captured when using transform feedback. This setting is only effective
+     * if the useTransformFeedback property is enabled.
      * @param {string} [definition.vshader] - Vertex shader source (GLSL code). Optional when
      * compute shader is specified.
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
      * useTransformFeedback or compute shader is specified.
      * @param {string} [definition.cshader] - Compute shader source (WGSL code). Only supported on
      * WebGPU platform.
+     * @param {string} [definition.computeEntryPoint] - The entry point function name for the compute
+     * shader. Defaults to 'main'.
      * @param {Map<string, string>} [definition.vincludes] - A map containing key-value pairs of
      * include names and their content. These are used for resolving #include directives in the
      * vertex shader source.
      * @param {Map<string, string>} [definition.fincludes] - A map containing key-value pairs
      * of include names and their content. These are used for resolving #include directives in the
      * fragment shader source.
+     * @param {Map<string, string>} [definition.cincludes] - A map containing key-value pairs
+     * of include names and their content. These are used for resolving #include directives in the
+     * compute shader source.
+     * @param {Map<string, string>} [definition.cdefines] - A map containing key-value pairs of
+     * define names and their values. These are used for resolving defines in the compute shader.
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
      * post-VS data to a buffer.
      * @param {string | string[]} [definition.fragmentOutputTypes] - Fragment shader output types,
@@ -107,18 +134,70 @@ class Shader {
         if (definition.cshader) {
             Debug.assert(graphicsDevice.supportsCompute, 'Compute shaders are not supported on this device.');
             Debug.assert(!definition.vshader && !definition.fshader, 'Vertex and fragment shaders are not supported when creating a compute shader.');
+
+            // keep reference to unmodified shader in debug mode
+            Debug.call(() => {
+                this.cUnmodified = definition.cshader;
+            });
+
+            // Prepend enables and defines to compute shader source
+            const enablesCode = ShaderDefinitionUtils.getWGSLEnables(graphicsDevice, 'compute');
+            const definesCode = ShaderDefinitionUtils.getDefinesCode(graphicsDevice, definition.cdefines);
+
+            const cshader = enablesCode + definesCode + definition.cshader;
+
+            // Add built-in halfTypesCS include for compute shaders (if not already provided by user)
+            const cincludes = definition.cincludes ?? new Map();
+            if (!cincludes.has('halfTypesCS')) {
+                cincludes.set('halfTypesCS', halfTypes);
+            }
+
+            // pre-process compute shader source
+            definition.cshader = Preprocessor.run(cshader, cincludes, {
+                sourceName: `compute shader for ${this.label}`,
+                stripDefines: true
+            });
+
         } else {
             Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
             Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
 
-            // pre-process shader sources
-            definition.vshader = Preprocessor.run(definition.vshader, definition.vincludes);
+            // keep reference to unmodified shaders in debug mode
+            Debug.call(() => {
+                this.vUnmodified = definition.vshader;
+                this.fUnmodified = definition.fshader;
+            });
+
+            const wgsl = definition.shaderLanguage === SHADERLANGUAGE_WGSL;
+
+            // pre-process vertex shader source
+            definition.vshader = Preprocessor.run(definition.vshader, definition.vincludes, {
+                sourceName: `vertex shader for ${this.label}`,
+                stripDefines: wgsl
+            });
+
+            // if no attributes are specified, try to extract the default names after the shader has been pre-processed
+            if (definition.shaderLanguage === SHADERLANGUAGE_GLSL) {
+                definition.attributes ??= ShaderDefinitionUtils.collectAttributes(definition.vshader);
+            }
 
             // Strip unused color attachments from fragment shader.
             // Note: this is only needed for iOS 15 on WebGL2 where there seems to be a bug where color attachments that are not
             // written to generate metal linking errors. This is fixed on iOS 16, and iOS 14 does not support WebGL2.
             const stripUnusedColorAttachments = graphicsDevice.isWebGL2 && (platform.name === 'osx' || platform.name === 'ios');
-            definition.fshader = Preprocessor.run(definition.fshader, definition.fincludes, stripUnusedColorAttachments);
+
+            // pre-process fragment shader source
+            definition.fshader = Preprocessor.run(definition.fshader, definition.fincludes, {
+                stripUnusedColorAttachments,
+                stripDefines: wgsl,
+                sourceName: `fragment shader for ${this.label}`
+            });
+
+            if (!definition.vshader || !definition.fshader) {
+                Debug.error(`Shader: Failed to create shader ${this.label}. Vertex or fragment shader source is empty.`, this);
+                this.failed = true;
+                return;
+            }
         }
 
         this.impl = graphicsDevice.createShaderImpl(this);
@@ -140,7 +219,7 @@ class Shader {
 
     /** @ignore */
     get label() {
-        return `Shader Id ${this.id} ${this.name}`;
+        return `Shader Id ${this.id} (${this.definition.shaderLanguage === SHADERLANGUAGE_WGSL ? 'WGSL' : 'GLSL'}) ${this.name}`;
     }
 
     /**

@@ -29,7 +29,7 @@ class TriData {
      *
      * @type {Mat4}
      */
-    _ptm = new Mat4();
+    _transform = new Mat4();
 
     /**
      * The array of triangles for the geometry.
@@ -47,21 +47,35 @@ class TriData {
         this._priority = priority;
     }
 
-    get ptm() {
-        return this._ptm;
+    get transform() {
+        return this._transform;
     }
 
     get priority() {
         return this._priority;
     }
 
+    /**
+     * Sets the transform of the triangle data.
+     *
+     * @param {Vec3} [pos] - The position of the transform.
+     * @param {Quat} [rot] - The rotation of the transform.
+     * @param {Vec3} [scale] - The scale of the transform.
+     */
     setTransform(pos = new Vec3(), rot = new Quat(), scale = new Vec3()) {
-        this.ptm.setTRS(pos, rot, scale);
+        this.transform.setTRS(pos, rot, scale);
     }
 
-    calculateTris(geometry) {
-        const positions = geometry.positions;
-        const indices = geometry.indices;
+    /**
+     * @param {Geometry} geometry - The geometry to create the triangle data from.
+     */
+    fromGeometry(geometry) {
+        if (!geometry || !(geometry instanceof Geometry)) {
+            throw new Error('No geometry provided.');
+        }
+
+        const positions = geometry.positions ?? [];
+        const indices = geometry.indices ?? [];
         this.tris = [];
         for (let k = 0; k < indices.length; k += 3) {
             const i1 = indices[k];
@@ -74,13 +88,6 @@ class TriData {
             const tri = new Tri(tmpV1, tmpV2, tmpV3);
             this.tris.push(tri);
         }
-    }
-
-    fromGeometry(geometry) {
-        if (!geometry || !(geometry instanceof Geometry)) {
-            throw new Error('No geometry provided.');
-        }
-        this.calculateTris(geometry);
     }
 }
 

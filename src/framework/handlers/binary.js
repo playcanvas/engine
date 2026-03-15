@@ -18,7 +18,7 @@ class BinaryHandler extends ResourceHandler {
             responseType: Http.ResponseType.ARRAY_BUFFER,
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
-        }, function (err, response) {
+        }, (err, response) => {
             if (!err) {
                 callback(null, response);
             } else {

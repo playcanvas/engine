@@ -3,15 +3,20 @@ import { Mat4 } from '../core/math/mat4.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
-
 import { Frustum } from '../core/shape/frustum.js';
-
 import {
-    ASPECT_AUTO, PROJECTION_PERSPECTIVE,
+    ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
-import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
-import { RenderPassDepthGrab } from './graphics/render-pass-depth-grab.js';
+import { FramePassColorGrab } from './graphics/frame-pass-color-grab.js';
+import { FramePassDepthGrab } from './graphics/frame-pass-depth-grab.js';
+import { CameraShaderParams } from './camera-shader-params.js';
+
+/**
+ * @import { FramePass } from '../platform/graphics/frame-pass.js'
+ * @import { FogParams } from './fog-params.js'
+ * @import { ShaderPassInfo } from './shader-pass.js'
+ */
 
 // pre-allocated temp variables
 const _deviceCoord = new Vec3();
@@ -27,34 +32,41 @@ const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3
  */
 class Camera {
     /**
-     * @type {import('./shader-pass.js').ShaderPassInfo|null}
+     * @type {ShaderPassInfo|null}
      */
     shaderPassInfo = null;
 
     /**
-     * @type {RenderPassColorGrab|null}
+     * @type {FramePassColorGrab|null}
      */
     renderPassColorGrab = null;
 
     /**
-     * @type {import('../platform/graphics/render-pass.js').RenderPass|null}
+     * @type {FramePassDepthGrab|null}
      */
     renderPassDepthGrab = null;
 
     /**
-     * The rendering parameters.
+     * The fog parameters.
      *
-     * @type {import('./renderer/rendering-params.js').RenderingParams|null}
+     * @type {FogParams|null}
      */
-    renderingParams = null;
+    fogParams = null;
 
     /**
-     * Render passes used to render this camera. If empty, the camera will render using the default
-     * render passes.
+     * Shader parameters used to generate and use matching shaders.
      *
-     * @type {import('../platform/graphics/render-pass.js').RenderPass[]}
+     * @type {CameraShaderParams}
      */
-    renderPasses = [];
+    shaderParams = new CameraShaderParams();
+
+    /**
+     * Frame passes used to render this camera. If empty, the camera will render using the default
+     * frame passes.
+     *
+     * @type {FramePass[]}
+     */
+    framePasses = [];
 
     /** @type {number} */
     jitter = 0;
@@ -126,7 +138,7 @@ class Camera {
         this.renderPassDepthGrab?.destroy();
         this.renderPassDepthGrab = null;
 
-        this.renderPasses.length = 0;
+        this.framePasses.length = 0;
     }
 
     /**
@@ -492,7 +504,7 @@ class Camera {
     _enableRenderPassColorGrab(device, enable) {
         if (enable) {
             if (!this.renderPassColorGrab) {
-                this.renderPassColorGrab = new RenderPassColorGrab(device);
+                this.renderPassColorGrab = new FramePassColorGrab(device);
             }
         } else {
             this.renderPassColorGrab?.destroy();
@@ -503,7 +515,7 @@ class Camera {
     _enableRenderPassDepthGrab(device, renderer, enable) {
         if (enable) {
             if (!this.renderPassDepthGrab) {
-                this.renderPassDepthGrab = new RenderPassDepthGrab(device, this);
+                this.renderPassDepthGrab = new FramePassDepthGrab(device, this);
             }
         } else {
             this.renderPassDepthGrab?.destroy();
@@ -519,7 +531,7 @@ class Camera {
     }
 
     /**
-     * Convert a point from 3D world space to 2D canvas pixel space.
+     * Convert a point from 3D world space to 2D canvas pixel space based on the camera's rect.
      *
      * @param {Vec3} worldCoord - The world space coordinate to transform.
      * @param {number} cw - The width of PlayCanvas' canvas element.
@@ -538,14 +550,20 @@ class Camera {
                 worldCoord.z * vpm[11] +
                            1 * vpm[15];
 
-        screenCoord.x = (screenCoord.x / w + 1) * 0.5 * cw;
-        screenCoord.y = (1 - screenCoord.y / w) * 0.5 * ch;
+        // convert normalized clip space to screen space [0, 1]
+        screenCoord.x = (screenCoord.x / w + 1) * 0.5;
+        screenCoord.y = (1 - screenCoord.y / w) * 0.5;
+
+        // convert screen space [0, 1] to pixel space based on camera rect
+        const { x: rx, y: ry, z: rw, w: rh } = this._rect;
+        screenCoord.x = screenCoord.x * rw * cw + rx * cw;
+        screenCoord.y = screenCoord.y * rh * ch + (1 - ry - rh) * ch;
 
         return screenCoord;
     }
 
     /**
-     * Convert a point from 2D canvas pixel space to 3D world space.
+     * Convert a point from 2D canvas pixel space to 3D world space based on the camera's rect.
      *
      * @param {number} x - X coordinate on PlayCanvas' canvas element.
      * @param {number} y - Y coordinate on PlayCanvas' canvas element.
@@ -556,10 +574,14 @@ class Camera {
      * @returns {Vec3} The world space coordinate.
      */
     screenToWorld(x, y, z, cw, ch, worldCoord = new Vec3()) {
-
         // Calculate the screen click as a point on the far plane of the normalized device coordinate 'box' (z=1)
+        const { x: rx, y: ry, z: rw, w: rh } = this._rect;
         const range = this.farClip - this.nearClip;
-        _deviceCoord.set(x / cw, (ch - y) / ch, z / range);
+        _deviceCoord.set(
+            (x - rx * cw) / (rw * cw),
+            1 - (y - (1 - ry - rh) * ch) / (rh * ch),
+            z / range
+        );
         _deviceCoord.mulScalar(2);
         _deviceCoord.sub(Vec3.ONE);
 
@@ -589,7 +611,7 @@ class Camera {
             this._updateViewProjMat();
             _invViewProjMat.copy(this._viewProjMat).invert();
 
-                // Transform to world space
+            // Transform to world space
             _invViewProjMat.transformPoint(_deviceCoord, worldCoord);
         }
 
@@ -663,9 +685,21 @@ class Camera {
      */
     getFrustumCorners(near = this.nearClip, far = this.farClip) {
 
-        const fov = this.fov * Math.PI / 180.0;
-        let y = this._projection === PROJECTION_PERSPECTIVE ? Math.tan(fov / 2.0) * near : this._orthoHeight;
-        let x = y * this.aspectRatio;
+        const fov = this.fov * math.DEG_TO_RAD;
+        let x, y;
+
+        if (this.projection === PROJECTION_PERSPECTIVE) {
+            if (this.horizontalFov) {
+                x = near * Math.tan(fov / 2.0);
+                y = x / this.aspectRatio;
+            } else {
+                y = near * Math.tan(fov / 2.0);
+                x = y * this.aspectRatio;
+            }
+        } else {
+            y = this._orthoHeight;
+            x = y * this.aspectRatio;
+        }
 
         const points = _frustumPoints;
         points[0].x = x;
@@ -682,8 +716,13 @@ class Camera {
         points[3].z = -near;
 
         if (this._projection === PROJECTION_PERSPECTIVE) {
-            y = Math.tan(fov / 2.0) * far;
-            x = y * this.aspectRatio;
+            if (this.horizontalFov) {
+                x = far * Math.tan(fov / 2.0);
+                y = x / this.aspectRatio;
+            } else {
+                y = far * Math.tan(fov / 2.0);
+                x = y * this.aspectRatio;
+            }
         }
         points[4].x = x;
         points[4].y = -y;
@@ -714,6 +753,23 @@ class Camera {
     setXrProperties(properties) {
         Object.assign(this._xrProperties, properties);
         this._projMatDirty = true;
+    }
+
+    /**
+     * Fills the provided array with camera parameters for use in shaders.
+     * The array format is: [1/far, far, near, isOrtho].
+     *
+     * @param {Float32Array} output - Array to fill with camera parameters.
+     * @returns {Float32Array} The output array.
+     * @ignore
+     */
+    fillShaderParams(output) {
+        const f = this._farClip;
+        output[0] = 1 / f;
+        output[1] = f;
+        output[2] = this._nearClip;
+        output[3] = this._projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+        return output;
     }
 }
 

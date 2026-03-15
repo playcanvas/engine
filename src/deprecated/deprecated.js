@@ -3,16 +3,10 @@ import { Debug } from '../core/debug.js';
 import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
+import { math } from '../core/math/math.js';
 
-import {
-    BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
-    PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
-    PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
-    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
-} from '../platform/graphics/constants.js';
+import { BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8, TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR, SHADERLANGUAGE_GLSL } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
-import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
@@ -21,6 +15,8 @@ import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
+import { AnimationKey, AnimationNode } from '../scene/animation/animation.js';
+import { Geometry } from '../scene/geometry/geometry.js';
 import { CylinderGeometry } from '../scene/geometry/cylinder-geometry.js';
 import { BoxGeometry } from '../scene/geometry/box-geometry.js';
 import { CapsuleGeometry } from '../scene/geometry/capsule-geometry.js';
@@ -36,7 +32,6 @@ import { Morph } from '../scene/morph.js';
 import { MeshInstance } from '../scene/mesh-instance.js';
 import { Scene } from '../scene/scene.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
-import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
 import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
 import { LitShaderOptions } from '../scene/shader-lib/programs/lit-shader-options.js';
@@ -52,20 +47,11 @@ import { MouseEvent } from '../platform/input/mouse-event.js';
 import { AppBase } from '../framework/app-base.js';
 import { getApplication } from '../framework/globals.js';
 import { ModelComponent } from '../framework/components/model/component.js';
-import {
-    BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
-    BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
-    BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
-} from '../framework/components/rigid-body/constants.js';
+import { BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION, BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC } from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem, HitResult } from '../framework/components/rigid-body/system.js';
-import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
-import { Geometry } from '../scene/geometry/geometry.js';
-
-// CORE
-export const LINEBATCH_WORLD = 0;
-export const LINEBATCH_OVERLAY = 1;
-export const LINEBATCH_GIZMO = 2;
+import { CameraComponent } from '../framework/components/camera/component.js';
+import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 // MATH
 
@@ -76,14 +62,6 @@ Vec3.prototype.scale = Vec3.prototype.mulScalar;
 Vec4.prototype.scale = Vec4.prototype.mulScalar;
 
 // GRAPHICS
-
-export const ELEMENTTYPE_INT8 = TYPE_INT8;
-export const ELEMENTTYPE_UINT8 = TYPE_UINT8;
-export const ELEMENTTYPE_INT16 = TYPE_INT16;
-export const ELEMENTTYPE_UINT16 = TYPE_UINT16;
-export const ELEMENTTYPE_INT32 = TYPE_INT32;
-export const ELEMENTTYPE_UINT32 = TYPE_UINT32;
-export const ELEMENTTYPE_FLOAT32 = TYPE_FLOAT32;
 
 export const PIXELFORMAT_L8_A8 = PIXELFORMAT_LA8;
 export const PIXELFORMAT_R5_G6_B5 = PIXELFORMAT_RGB565;
@@ -99,51 +77,61 @@ export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = BLENDMODE_ONE_MINUS_CONSTANT;
 export const BLENDMODE_CONSTANT_ALPHA = BLENDMODE_CONSTANT;
 export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = BLENDMODE_ONE_MINUS_CONSTANT;
 
-export function ContextCreationError(message) {
-    this.name = 'ContextCreationError';
-    this.message = (message || '');
-}
-ContextCreationError.prototype = Error.prototype;
+export const CHUNKAPI_1_51 = '1.51';
+export const CHUNKAPI_1_55 = '1.55';
+export const CHUNKAPI_1_56 = '1.56';
+export const CHUNKAPI_1_57 = '1.57';
+export const CHUNKAPI_1_58 = '1.58';
+export const CHUNKAPI_1_60 = '1.60';
+export const CHUNKAPI_1_62 = '1.62';
+export const CHUNKAPI_1_65 = '1.65';
+export const CHUNKAPI_1_70 = '1.70';
+export const CHUNKAPI_2_1 = '2.1';
+export const CHUNKAPI_2_3 = '2.3';
+export const CHUNKAPI_2_5 = '2.5';
+export const CHUNKAPI_2_6 = '2.6';
+export const CHUNKAPI_2_7 = '2.7';
+export const CHUNKAPI_2_8 = '2.8';
 
 const _viewport = new Vec4();
 
 export function createSphere(device, opts) {
-    Debug.deprecated(`pc.createSphere is deprecated. Use 'pc.Mesh.fromGeometry(device, new SphereGeometry(options);' format instead.`);
+    Debug.deprecated("pc.createSphere is deprecated. Use 'pc.Mesh.fromGeometry(device, new SphereGeometry(options);' format instead.");
     return Mesh.fromGeometry(device, new SphereGeometry(opts));
 }
 
 export function createPlane(device, opts) {
-    Debug.deprecated(`pc.createPlane is deprecated. Use 'pc.Mesh.fromGeometry(device, new PlaneGeometry(options);' format instead.`);
+    Debug.deprecated("pc.createPlane is deprecated. Use 'pc.Mesh.fromGeometry(device, new PlaneGeometry(options);' format instead.");
     return Mesh.fromGeometry(device, new PlaneGeometry(opts));
 }
 
 export function createBox(device, opts) {
-    Debug.deprecated(`pc.createBox is deprecated. Use 'pc.Mesh.fromGeometry(device, new BoxGeometry(options);' format instead.`);
+    Debug.deprecated("pc.createBox is deprecated. Use 'pc.Mesh.fromGeometry(device, new BoxGeometry(options);' format instead.");
     return Mesh.fromGeometry(device, new BoxGeometry(opts));
 }
 
 export function createTorus(device, opts) {
-    Debug.deprecated(`pc.createTorus is deprecated. Use 'pc.Mesh.fromGeometry(device, new TorusGeometry(options);' format instead.`);
+    Debug.deprecated("pc.createTorus is deprecated. Use 'pc.Mesh.fromGeometry(device, new TorusGeometry(options);' format instead.");
     return Mesh.fromGeometry(device, new TorusGeometry(opts));
 }
 
 export function createCapsule(device, opts) {
-    Debug.deprecated(`pc.createCapsule is deprecated. Use 'pc.Mesh.fromGeometry(device, new CapsuleGeometry(options);' format instead.`);
+    Debug.deprecated("pc.createCapsule is deprecated. Use 'pc.Mesh.fromGeometry(device, new CapsuleGeometry(options);' format instead.");
     return Mesh.fromGeometry(device, new CapsuleGeometry(opts));
 }
 
 export function createCone(device, opts) {
-    Debug.deprecated(`pc.createCone is deprecated. Use 'pc.Mesh.fromGeometry(device, new ConeGeometry(options);' format instead.`);
+    Debug.deprecated("pc.createCone is deprecated. Use 'pc.Mesh.fromGeometry(device, new ConeGeometry(options);' format instead.");
     return Mesh.fromGeometry(device, new ConeGeometry(opts));
 }
 
 export function createCylinder(device, opts) {
-    Debug.deprecated(`pc.createCylinder is deprecated. Use 'pc.Mesh.fromGeometry(device, new CylinderGeometry(options);' format instead.`);
+    Debug.deprecated("pc.createCylinder is deprecated. Use 'pc.Mesh.fromGeometry(device, new CylinderGeometry(options);' format instead.");
     return Mesh.fromGeometry(device, new CylinderGeometry(opts));
 }
 
 export function createMesh(device, positions, opts = {}) {
-    Debug.deprecated(`pc.createMesh is deprecated. Use 'pc.Mesh.fromGeometry(device, new Geometry();' format instead.`);
+    Debug.deprecated("pc.createMesh is deprecated. Use 'pc.Mesh.fromGeometry(device, new Geometry();' format instead.");
 
     const geom = new Geometry();
     geom.positions = positions;
@@ -160,8 +148,7 @@ export function createMesh(device, positions, opts = {}) {
 }
 
 export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
-
-    Debug.deprecated(`pc.drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.`);
+    Debug.deprecated('pc.drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.');
 
     // convert rect in normalized space to viewport in pixel space
     let viewport;
@@ -173,72 +160,6 @@ export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
 
     drawQuadWithShader(device, target, shader, viewport);
 }
-
-Object.defineProperty(shaderChunks, 'transformSkinnedVS', {
-    get: function () {
-        return '#define SKIN\n' + shaderChunks.transformVS;
-    }
-});
-
-const deprecatedChunks = {
-    'ambientPrefilteredCube.frag': 'ambientEnv.frag',
-    'ambientPrefilteredCubeLod.frag': 'ambientEnv.frag',
-    'dpAtlasQuad.frag': null,
-    'genParaboloid.frag': null,
-    'prefilterCubemap.frag': null,
-    'reflectionDpAtlas.frag': 'reflectionEnv.frag',
-    'reflectionPrefilteredCube.frag': 'reflectionEnv.frag',
-    'reflectionPrefilteredCubeLod.frag': 'reflectionEnv.frag'
-};
-
-Object.keys(deprecatedChunks).forEach((chunkName) => {
-    const replacement = deprecatedChunks[chunkName];
-    const useInstead = replacement ? ` Use pc.shaderChunks['${replacement}'] instead.` : '';
-    const msg = `pc.shaderChunks['${chunkName}'] is deprecated.${useInstead}}`;
-    Object.defineProperty(shaderChunks, chunkName, {
-        get: function () {
-            Debug.error(msg);
-            return null;
-        },
-        set: function () {
-            Debug.error(msg);
-        }
-    });
-});
-
-// We only provide backwards compatibility in debug builds, production builds have to be
-// as fast and small as possible.
-
-// #if _DEBUG
-
-/**
- * Helper function to ensure a bit of backwards compatibility.
- *
- * @example
- * toLitArgs('litShaderArgs.sheen.specularity'); // Result: 'litArgs_sheen_specularity'
- * @param {string} src - The shader source which may generate shader errors.
- * @returns {string} The backwards compatible shader source.
- * @ignore
- */
-function compatibilityForLitArgs(src) {
-    if (src.includes('litShaderArgs')) {
-        src = src.replace(/litShaderArgs([\.a-zA-Z]+)+/g, (a, b) => {
-            const newSource = 'litArgs' + b.replace(/\./g, '_');
-            Debug.deprecated(`Nested struct property access is deprecated, because it's crashing some devices. Please update your custom chunks manually. In particular ${a} should be ${newSource} now.`);
-            return newSource;
-        });
-    }
-    return src;
-}
-
-/**
- * Add more backwards compatibility functions as needed.
- */
-LitShader.prototype.handleCompatibility = function () {
-    this.fshader = compatibilityForLitArgs(this.fshader);
-};
-
-// #endif
 
 // Note: This was never public interface, but has been used in external scripts
 Object.defineProperties(RenderTarget.prototype, {
@@ -288,17 +209,6 @@ Object.defineProperties(Texture.prototype, {
             Debug.deprecated('pc.Texture#_glTexture is no longer available, use Use pc.Texture.impl._glTexture instead.');
             return this.impl._glTexture;
         }
-    },
-
-    autoMipmap: {
-        get: function () {
-            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
-            return this._mipmaps;
-        },
-        set: function (value) {
-            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
-            this._mipmaps = value;
-        }
     }
 });
 
@@ -313,6 +223,13 @@ Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
     get: function () {
         Debug.deprecated('pc.GraphicsDevice#webgl2 is deprecated, use pc.GraphicsDevice#isWebGL2 instead.');
         return this.isWebGL2;
+    }
+});
+
+Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#textureFloatHighPrecision is deprecated and always returns true.');
+        return true;
     }
 });
 
@@ -392,7 +309,7 @@ const _tempBlendState = new BlendState();
 const _tempDepthState = new DepthState();
 
 GraphicsDevice.prototype.setBlendFunction = function (blendSrc, blendDst) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendFunction is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendFunction is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
@@ -401,7 +318,7 @@ GraphicsDevice.prototype.setBlendFunction = function (blendSrc, blendDst) {
 };
 
 GraphicsDevice.prototype.setBlendFunctionSeparate = function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendFunctionSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendFunctionSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
@@ -410,7 +327,7 @@ GraphicsDevice.prototype.setBlendFunctionSeparate = function (blendSrc, blendDst
 };
 
 GraphicsDevice.prototype.setBlendEquation = function (blendEquation) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendEquation is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendEquation is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
@@ -419,7 +336,7 @@ GraphicsDevice.prototype.setBlendEquation = function (blendEquation) {
 };
 
 GraphicsDevice.prototype.setBlendEquationSeparate = function (blendEquation, blendAlphaEquation) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendEquationSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendEquationSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
@@ -428,7 +345,7 @@ GraphicsDevice.prototype.setBlendEquationSeparate = function (blendEquation, ble
 };
 
 GraphicsDevice.prototype.setColorWrite = function (redWrite, greenWrite, blueWrite, alphaWrite) {
-    Debug.deprecated(`pc.GraphicsDevice#setColorWrite is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setColorWrite is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite);
@@ -440,28 +357,28 @@ GraphicsDevice.prototype.getBlending = function () {
 };
 
 GraphicsDevice.prototype.setBlending = function (blending) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlending is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlending is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     _tempBlendState.copy(this.blendState);
     _tempBlendState.blend = blending;
     this.setBlendState(_tempBlendState);
 };
 
 GraphicsDevice.prototype.setDepthWrite = function (write) {
-    Debug.deprecated(`pc.GraphicsDevice#setDepthWrite is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setDepthWrite is deprecated, use pc.GraphicsDevice.setDepthState instead.');
     _tempDepthState.copy(this.depthState);
     _tempDepthState.write = write;
     this.setDepthState(_tempDepthState);
 };
 
 GraphicsDevice.prototype.setDepthFunc = function (func) {
-    Debug.deprecated(`pc.GraphicsDevice#setDepthFunc is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setDepthFunc is deprecated, use pc.GraphicsDevice.setDepthState instead.');
     _tempDepthState.copy(this.depthState);
     _tempDepthState.func = func;
     this.setDepthState(_tempDepthState);
 };
 
 GraphicsDevice.prototype.setDepthTest = function (test) {
-    Debug.deprecated(`pc.GraphicsDevice#setDepthTest is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setDepthTest is deprecated, use pc.GraphicsDevice.setDepthState instead.');
     _tempDepthState.copy(this.depthState);
     _tempDepthState.test = test;
     this.setDepthState(_tempDepthState);
@@ -473,7 +390,26 @@ GraphicsDevice.prototype.getCullMode = function () {
 
 // SCENE
 
+export const Key = AnimationKey;
+export const Node = AnimationNode;
+
 export const LitOptions = LitShaderOptions;
+
+// deprecated access to global shader chunks
+export const shaderChunks = new Proxy(
+    {},
+    {
+        get(target, prop) {
+            Debug.deprecated(`Using pc.shaderChunks to access global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).get('${prop}');`);
+            return ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).get(prop);
+        },
+        set(target, prop, value) {
+            Debug.deprecated(`Using pc.shaderChunks to override global shader chunks is deprecated. Use pc.ShaderChunks.get instead, for example: pc.ShaderChunks.get(this.app.graphicsDevice, pc.SHADERLANGUAGE_GLSL).set('${prop}');`);
+            ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).set(prop, value);
+            return true;
+        }
+    }
+);
 
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {
@@ -482,25 +418,77 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     }
 });
 
-Object.defineProperty(Scene.prototype, 'toneMapping', {
+Object.defineProperty(Scene.prototype, 'fogColor', {
     set: function (value) {
-        Debug.deprecated('Scene#toneMapping is deprecated. Use Scene#rendering.toneMapping instead.');
-        this.rendering.toneMapping = value;
+        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#fog.color instead.');
+        this.fog.color = value;
     },
     get: function () {
-        Debug.deprecated('Scene#toneMapping is deprecated. Use Scene#rendering.toneMapping instead.');
-        return this.rendering.toneMapping;
+        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#fog.color instead.');
+        return this.fog.color;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fogEnd', {
+    set: function (value) {
+        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#fog.end instead.');
+        this.fog.end = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#fog.end instead.');
+        return this.fog.end;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fogStart', {
+    set: function (value) {
+        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#fog.start instead.');
+        this.fog.start = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#fog.start instead.');
+        return this.fog.start;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fogDensity', {
+    set: function (value) {
+        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#fog.density instead.');
+        this.fog.density = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#fog.density instead.');
+        return this.fog.density;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'toneMapping', {
+    set: function (value) {
+        Debug.removed('Scene#toneMapping is removed. Use CameraComponent#toneMapping instead.');
+    },
+    get: function () {
+        Debug.removed('Scene#toneMapping is removed. Use CameraComponent#toneMapping instead.');
+        return undefined;
     }
 });
 
 Object.defineProperty(Scene.prototype, 'gammaCorrection', {
     set: function (value) {
-        Debug.deprecated('Scene#gammaCorrection is deprecated. Use Scene#rendering.gammaCorrection instead.');
-        this.rendering.gammaCorrection = value;
+        Debug.removed('Scene#gammaCorrection is removed. Use CameraComponent#gammaCorrection instead.');
     },
     get: function () {
-        Debug.deprecated('Scene#gammaCorrection is deprecated. Use Scene#rendering.gammaCorrection instead.');
-        return this.rendering.gammaCorrection;
+        Debug.removed('Scene#gammaCorrection is removed. Use CameraComponent#gammaCorrection instead.');
+        return undefined;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'rendering', {
+    set: function (value) {
+        Debug.removed('Scene#rendering is removed. Use Scene#fog or CameraComponent#gammaCorrection or CameraComponent#toneMapping instead.');
+    },
+    get: function () {
+        Debug.removed('Scene#rendering is removed. Use Scene#fog or CameraComponent#gammaCorrection or CameraComponent#toneMapping instead.');
+        return undefined;
     }
 });
 
@@ -542,23 +530,37 @@ Object.defineProperty(Scene.prototype, 'models', {
     }
 });
 
-Object.defineProperty(Layer.prototype, 'renderTarget', {
-    set: function (rt) {
-        Debug.deprecated(`pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.`);
-        this._renderTarget = rt;
-        this._dirtyComposition = true;
-    },
-    get: function () {
-        return this._renderTarget;
-    }
-});
+// A helper function to add deprecated set and get property on a class
+function _removedClassProperty(targetClass, name, comment = '') {
+    Object.defineProperty(targetClass.prototype, name, {
+        set: function (value) {
+            Debug.errorOnce(`${targetClass.name}#${name} has been removed. ${comment}`);
+        },
+        get: function () {
+            Debug.errorOnce(`${targetClass.name}#${name} has been removed. ${comment}`);
+            return undefined;
+        }
+    });
+}
 
-Object.defineProperty(Batch.prototype, 'model', {
-    get: function () {
-        Debug.deprecated('pc.Batch#model is deprecated. Use pc.Batch#meshInstance to access batched mesh instead.');
-        return null;
-    }
-});
+_removedClassProperty(Layer, 'renderTarget');
+_removedClassProperty(Layer, 'onPreCull');
+_removedClassProperty(Layer, 'onPreRender');
+_removedClassProperty(Layer, 'onPreRenderOpaque');
+_removedClassProperty(Layer, 'onPreRenderTransparent');
+_removedClassProperty(Layer, 'onPostCull');
+_removedClassProperty(Layer, 'onPostRender');
+_removedClassProperty(Layer, 'onPostRenderOpaque');
+_removedClassProperty(Layer, 'onPostRenderTransparent');
+_removedClassProperty(Layer, 'onDrawCall');
+_removedClassProperty(Layer, 'layerReference');
+
+_removedClassProperty(CameraComponent, 'onPreCull', 'Use Scene#EVENT_PRECULL event instead.');
+_removedClassProperty(CameraComponent, 'onPostCull', 'Use Scene#EVENT_POSTCULL event instead.');
+_removedClassProperty(CameraComponent, 'onPreRender', 'Use Scene#EVENT_PRERENDER event instead.');
+_removedClassProperty(CameraComponent, 'onPostRender', 'Use Scene#EVENT_POSTRENDER event instead.');
+_removedClassProperty(CameraComponent, 'onPreRenderLayer', 'Use Scene#EVENT_PRERENDER_LAYER event instead.');
+_removedClassProperty(CameraComponent, 'onPostRenderLayer', 'Use Scene#EVENT_POSTRENDER_LAYER event instead.');
 
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');
@@ -611,30 +613,20 @@ GraphNode.prototype.setName = function (name) {
     this.name = name;
 };
 
-Material.prototype.getName = function () {
-    Debug.deprecated('pc.Material#getName is deprecated. Use pc.Material#name instead.');
-    return this.name;
-};
-
-Material.prototype.setName = function (name) {
-    Debug.deprecated('pc.Material#setName is deprecated. Use pc.Material#name instead.');
-    this.name = name;
-};
-
-Material.prototype.getShader = function () {
-    Debug.deprecated('pc.Material#getShader is deprecated. Use pc.Material#shader instead.');
-    return this.shader;
-};
-
-Material.prototype.setShader = function (shader) {
-    Debug.deprecated('pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
-    this.shader = shader;
-};
+Object.defineProperty(Material.prototype, 'shader', {
+    set: function (value) {
+        Debug.deprecated('pc.Material#shader is deprecated, use pc.ShaderMaterial instead.');
+    },
+    get: function () {
+        Debug.deprecated('pc.Material#shader is deprecated, use pc.ShaderMaterial instead.');
+        return null;
+    }
+});
 
 // Note: this is used by the Editor
 Object.defineProperty(Material.prototype, 'blend', {
     set: function (value) {
-        Debug.deprecated(`pc.Material#blend is deprecated, use pc.Material.blendState.`);
+        Debug.deprecated('pc.Material#blend is deprecated, use pc.Material.blendState.');
         this.blendState.blend = value;
     },
     get: function () {
@@ -663,6 +655,23 @@ Object.defineProperty(StandardMaterial.prototype, 'useGammaTonemap', {
     }
 });
 
+Object.defineProperty(StandardMaterial.prototype, 'anisotropy', {
+    get: function () {
+        Debug.deprecated('pc.StandardMaterial#anisotropy is deprecated. Use pc.StandardMaterial#anisotropyIntensity and pc.StandardMaterial#anisotropyRotation instead.');
+        const sign = Math.sign(Math.cos(this.anisotropyRotation * math.DEG_TO_RAD * 2));
+        return this.anisotropyIntensity * sign;
+    },
+    set: function (value) {
+        Debug.deprecated('pc.StandardMaterial#anisotropy is deprecated. Use pc.StandardMaterial#anisotropyIntensity and pc.StandardMaterial#anisotropyRotation instead.');
+        this.anisotropyIntensity = Math.abs(value);
+        if (value >= 0) {
+            this.anisotropyRotation = 0;
+        } else {
+            this.anisotropyRotation = 90;
+        }
+    }
+});
+
 function _defineAlias(newName, oldName) {
     Object.defineProperty(StandardMaterial.prototype, oldName, {
         get: function () {
@@ -688,9 +697,12 @@ function _deprecateTint(name) {
     });
 }
 
+_deprecateTint('sheenTint');
 _deprecateTint('diffuseTint');
+_deprecateTint('emissiveTint');
+_deprecateTint('ambientTint');
+
 _defineAlias('specularTint', 'specularMapTint');
-_defineAlias('emissiveTint', 'emissiveMapTint');
 _defineAlias('aoVertexColor', 'aoMapVertexColor');
 _defineAlias('diffuseVertexColor', 'diffuseMapVertexColor');
 _defineAlias('specularVertexColor', 'specularMapVertexColor');
@@ -756,6 +768,26 @@ Object.defineProperty(XrInputSource.prototype, 'rotation', {
 });
 
 // INPUT
+
+export const EVENT_KEYDOWN = 'keydown';
+export const EVENT_KEYUP = 'keyup';
+
+export const EVENT_MOUSEDOWN = 'mousedown';
+export const EVENT_MOUSEMOVE = 'mousemove';
+export const EVENT_MOUSEUP = 'mouseup';
+export const EVENT_MOUSEWHEEL = 'mousewheel';
+
+export const EVENT_TOUCHSTART = 'touchstart';
+export const EVENT_TOUCHEND = 'touchend';
+export const EVENT_TOUCHMOVE = 'touchmove';
+export const EVENT_TOUCHCANCEL = 'touchcancel';
+
+export const EVENT_GAMEPADCONNECTED = 'gamepadconnected';
+export const EVENT_GAMEPADDISCONNECTED = 'gamepaddisconnected';
+
+export const EVENT_SELECT = 'select';
+export const EVENT_SELECTSTART = 'selectstart';
+export const EVENT_SELECTEND = 'selectend';
 
 Object.defineProperty(ElementInput.prototype, 'wheel', {
     get: function () {

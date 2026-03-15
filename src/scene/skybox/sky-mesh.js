@@ -1,12 +1,17 @@
-import { CULLFACE_FRONT } from '../../platform/graphics/constants.js';
-import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-
-import { LAYERID_SKYBOX } from '../constants.js';
-import { Material } from '../materials/material.js';
+import { CULLFACE_FRONT, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { LAYERID_SKYBOX, SKYTYPE_INFINITE } from '../constants.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
-import { getProgramLibrary } from '../shader-lib/get-program-library.js';
-import { skybox } from '../shader-lib/programs/skybox.js';
+import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 import { SkyGeometry } from './sky-geometry.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
+
+/**
+ * @import { GraphNode } from '../graph-node.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../scene.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
 
 /**
  * A visual representation of the sky.
@@ -22,50 +27,48 @@ class SkyMesh {
     meshInstance = null;
 
     /**
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
-     * @param {import('../scene.js').Scene} scene - The scene owning the sky.
-     * @param {import('../../platform/graphics/texture.js').Texture} texture - The texture of the sky.
-     * @param {string} type - The type of the sky. One of the SKYMESH_* constants.
+     * @type {boolean}
+     */
+    _depthWrite = false;
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {Scene} scene - The scene owning the sky.
+     * @param {GraphNode} node - The graph node of the sky mesh instance.
+     * @param {Texture} texture - The texture of the sky.
+     * @param {string} type - The type of the sky. One of the SKYTYPE_* constants.
      */
     constructor(device, scene, node, texture, type) {
 
-        const material = new Material();
-        material.name = 'SkyMaterial';
-
-        material.getShaderVariant = function (dev, sc, defs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
-
-            const options = {
-                pass: pass,
-                encoding: texture.encoding,
-                gamma: renderParams.gammaCorrection,
-                toneMapping: renderParams.toneMapping,
-                skymesh: type
-            };
-
-            if (texture.cubemap) {
-                options.type = 'cubemap';
-                options.mip = scene.skyboxMip;
-            } else {
-                options.type = 'envAtlas';
+        const material = new ShaderMaterial({
+            uniqueName: 'SkyMaterial',
+            vertexGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('skyboxVS'),
+            fragmentGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('skyboxPS'),
+            vertexWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('skyboxVS'),
+            fragmentWGSL: ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('skyboxPS'),
+            attributes: {
+                aPosition: SEMANTIC_POSITION
             }
+        });
 
-            const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+        // defines
+        material.setDefine('{SKYBOX_DECODE_FNC}', ChunkUtils.decodeFunc(texture.encoding));
+        if (type !== SKYTYPE_INFINITE) material.setDefine('SKYMESH', '');
+        if (texture.cubemap) material.setDefine('SKY_CUBEMAP', '');
 
-            const library = getProgramLibrary(device);
-            library.register('skybox', skybox);
-            return library.getProgram('skybox', options, processingOptions);
-        };
+        material.setParameter('skyboxHighlightMultiplier', scene.skyboxHighlightMultiplier);
 
         if (texture.cubemap) {
             material.setParameter('texture_cubeMap', texture);
         } else {
             material.setParameter('texture_envAtlas', texture);
-            material.setParameter('mipLevel', scene._skyboxMip);
+            material.setParameter('mipLevel', scene.skyboxMip);
         }
 
+        // render inside of the geometry
         material.cull = CULLFACE_FRONT;
-        material.depthWrite = false;
+
+        material.depthWrite = this._depthWrite;
 
         const skyLayer = scene.layers.getLayerById(LAYERID_SKYBOX);
         if (skyLayer) {
@@ -93,6 +96,17 @@ class SkyMesh {
             this.meshInstance.destroy();
             this.meshInstance = null;
         }
+    }
+
+    set depthWrite(value) {
+        this._depthWrite = value;
+        if (this.meshInstance) {
+            this.meshInstance.material.depthWrite = value;
+        }
+    }
+
+    get depthWrite() {
+        return this._depthWrite;
     }
 }
 

@@ -1,4 +1,8 @@
 /**
+ * @import { AnimTarget } from '../evaluator/anim-target.js'
+ */
+
+/**
  * This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
  * into instances of {@link AnimTarget}.
  *
@@ -10,7 +14,7 @@ class AnimBinder {
     static joinPath(pathSegments, character) {
         character = character || '.';
         const escape = function (string) {
-            return string.replace(/\\/g, '\\\\').replace(new RegExp('\\' + character, 'g'), '\\' + character);
+            return string.replace(/\\/g, '\\\\').replace(new RegExp(`\\${character}`, 'g'), `\\${character}`);
         };
         return pathSegments.map(escape).join(character);
     }
@@ -19,7 +23,7 @@ class AnimBinder {
     static splitPath(path, character) {
         character = character || '.';
         const result = [];
-        let curr = "";
+        let curr = '';
         let i = 0;
         while (i < path.length) {
             let c = path[i++];
@@ -29,7 +33,7 @@ class AnimBinder {
                 if (c === '\\' || c === character) {
                     curr += c;
                 } else {
-                    curr += '\\' + c;
+                    curr += `\\${c}`;
                 }
             } else if (c === character) {
                 result.push(curr);
@@ -70,7 +74,7 @@ class AnimBinder {
      * handle setting the value, or return null if no such target exists.
      *
      * @param {string} path - The animation curve path to resolve.
-     * @returns {import('../evaluator/anim-target.js').AnimTarget|null} - Returns the target
+     * @returns {AnimTarget|null} - Returns the target
      * instance on success and null otherwise.
      */
     resolve(path) {

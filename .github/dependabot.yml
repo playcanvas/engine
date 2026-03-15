@@ -1,7 +1,0 @@
-version: 2
-updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    # Look for `package.json` and `lock` files in the `root` directory
-    schedule:
-      interval: "monthly"

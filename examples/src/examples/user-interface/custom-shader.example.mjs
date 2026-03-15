@@ -1,18 +1,16 @@
-import * as pc from 'playcanvas';
 import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    playcanvas: new pc.Asset('playcanvas', 'texture', { url: rootPath + '/static/assets/textures/playcanvas.png' })
+    playcanvas: new pc.Asset('playcanvas', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` }, { srgb: true })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -69,21 +67,18 @@ assetListLoader.load(() => {
     });
     app.root.addChild(screen);
 
-    // Create the shader from the vertex and fragment shader
-    const shader = pc.createShaderFromCode(
-        app.graphicsDevice,
-        files['shader.vert'],
-        files['shader.frag'],
-        'myUIShader',
-        {
+    // Create a new material with the new shader and additive alpha blending
+    const material = new pc.ShaderMaterial({
+        uniqueName: 'myUIShader',
+        vertexGLSL: files['shader.glsl.vert'],
+        fragmentGLSL: files['shader.glsl.frag'],
+        vertexWGSL: files['shader.wgsl.vert'],
+        fragmentWGSL: files['shader.wgsl.frag'],
+        attributes: {
             vertex_position: pc.SEMANTIC_POSITION,
             vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
         }
-    );
-
-    // Create a new material with the new shader and additive alpha blending
-    const material = new pc.Material();
-    material.shader = shader;
+    });
     material.blendType = pc.BLEND_ADDITIVEALPHA;
     material.depthWrite = true;
     material.setParameter('uDiffuseMap', assets.playcanvas.resource);

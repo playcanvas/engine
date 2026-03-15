@@ -3,6 +3,10 @@ import {
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32, TYPE_FLOAT16
 } from '../constants.js';
 
+/**
+ * @import { VertexFormat } from '../vertex-format.js'
+ */
+
 // map of TYPE_*** to GPUVertexFormat
 const gpuVertexFormats = [];
 gpuVertexFormats[TYPE_INT8] = 'sint8';
@@ -24,9 +28,6 @@ gpuVertexFormatsNormalized[TYPE_UINT32] = 'uint32';    // there is no 32bit norm
 gpuVertexFormatsNormalized[TYPE_FLOAT32] = 'float32';  // there is no 32bit normalized float
 gpuVertexFormatsNormalized[TYPE_FLOAT16] = 'float16';  // there is no 16bit normalized half-float
 
-/**
- * @ignore
- */
 class WebgpuVertexBufferLayout {
     /**
      * @type {Map<string, GPUVertexBufferLayout[]>}
@@ -37,8 +38,8 @@ class WebgpuVertexBufferLayout {
     /**
      * Obtain a vertex layout of one or two vertex formats.
      *
-     * @param {import('../vertex-format.js').VertexFormat} vertexFormat0 - The first vertex format.
-     * @param {import('../vertex-format.js').VertexFormat} [vertexFormat1] - The second vertex format.
+     * @param {VertexFormat} vertexFormat0 - The first vertex format.
+     * @param {VertexFormat} [vertexFormat1] - The second vertex format.
      * @returns {any[]} - The vertex layout.
      */
     get(vertexFormat0, vertexFormat1 = null) {
@@ -57,8 +58,8 @@ class WebgpuVertexBufferLayout {
     }
 
     /**
-     * @param {import('../vertex-format.js').VertexFormat} vertexFormat0 - The first vertex format.
-     * @param {import('../vertex-format.js').VertexFormat} vertexFormat1 - The second vertex format.
+     * @param {VertexFormat} vertexFormat0 - The first vertex format.
+     * @param {VertexFormat} vertexFormat1 - The second vertex format.
      * @returns {any[]} - The vertex buffer layout.
      */
     create(vertexFormat0, vertexFormat1) {
@@ -85,7 +86,7 @@ class WebgpuVertexBufferLayout {
                 attributes.push({
                     shaderLocation: location,
                     offset: interleaved ? element.offset : 0,
-                    format: `${formatTable[element.dataType]}${element.numComponents > 1 ? 'x' + element.numComponents : ''}`
+                    format: `${formatTable[element.dataType]}${element.numComponents > 1 ? `x${element.numComponents}` : ''}`
                 });
 
                 if (!interleaved || i === elementCount - 1) {
@@ -99,11 +100,13 @@ class WebgpuVertexBufferLayout {
             }
         };
 
-        if (vertexFormat0)
+        if (vertexFormat0) {
             addFormat(vertexFormat0);
+        }
 
-        if (vertexFormat1)
+        if (vertexFormat1) {
             addFormat(vertexFormat1);
+        }
 
         return layout;
     }

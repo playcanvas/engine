@@ -1,17 +1,21 @@
-import { Debug, DebugHelper } from "../../core/debug.js";
-import { Vec4 } from "../../core/math/vec4.js";
-import { BindGroup, DynamicBindGroup } from "../../platform/graphics/bind-group.js";
-import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRISTRIP } from "../../platform/graphics/constants.js";
-import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
-import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
-import { UniformBuffer } from "../../platform/graphics/uniform-buffer.js";
-import { processShader } from "../shader-lib/utils.js";
+import { Debug, DebugHelper } from '../../core/debug.js';
+import { Vec4 } from '../../core/math/vec4.js';
+import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
+import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRIANGLES } from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
+
+/**
+ * @import { Shader } from '../../platform/graphics/shader.js'
+ */
 
 const _quadPrimitive = {
-    type: PRIMITIVE_TRISTRIP,
+    type: PRIMITIVE_TRIANGLES,
     base: 0,
-    count: 4,
-    indexed: false
+    count: 6,
+    indexed: true
 };
 
 const _tempViewport = new Vec4();
@@ -21,11 +25,26 @@ const _dynamicBindGroup = new DynamicBindGroup();
 /**
  * An object that renders a quad using a {@link Shader}.
  *
+ * Note: QuadRender does not modify render states. Before calling {@link QuadRender#render},
+ * you should set up the required states using {@link GraphicsDevice#setDrawStates}, or the
+ * individual setters ({@link GraphicsDevice#setBlendState}, {@link GraphicsDevice#setCullMode},
+ * {@link GraphicsDevice#setFrontFace}, {@link GraphicsDevice#setDepthState},
+ * {@link GraphicsDevice#setStencilState}). Otherwise previously set states will be used.
+ *
  * Example:
  *
  * ```javascript
- * const shader = pc.createShaderFromCode(app.graphicsDevice, vertexShader, fragmentShader, `MyShader`);
+ * const shader = pc.ShaderUtils.createShader(app.graphicsDevice, {
+ *     uniqueName: 'MyShader',
+ *     attributes: { aPosition: SEMANTIC_POSITION },
+ *     vertexGLSL: '// vertex shader code',
+ *     fragmentGLSL: '// fragment shader code'
+ * });
  * const quad = new QuadRender(shader);
+ *
+ * // Set up render states before rendering (defaults are suitable for full-screen quads)
+ * app.graphicsDevice.setDrawStates();
+ *
  * quad.render();
  * quad.destroy();
  * ```
@@ -48,7 +67,7 @@ class QuadRender {
     /**
      * Create a new QuadRender instance.
      *
-     * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader to be used to render the quad.
+     * @param {Shader} shader - The shader to be used to render the quad.
      */
     constructor(shader) {
 
@@ -60,7 +79,7 @@ class QuadRender {
 
             // add uniform buffer support to shader
             const processingOptions = new ShaderProcessorOptions();
-            this.shader = processShader(shader, processingOptions);
+            this.shader = ShaderUtils.processShader(shader, processingOptions);
 
             // uniform buffer
             const ubFormat = this.shader.meshUniformBufferFormat;
@@ -91,15 +110,19 @@ class QuadRender {
      * Renders the quad. If the viewport is provided, the original viewport and scissor is restored
      * after the rendering.
      *
-     * @param {import('../../core/math/vec4.js').Vec4} [viewport] - The viewport rectangle of the
-     * quad, in pixels. The viewport is not changed if not provided.
-     * @param {import('../../core/math/vec4.js').Vec4} [scissor] - The scissor rectangle of the
-     * quad, in pixels. Used only if the viewport is provided.
+     * @param {Vec4} [viewport] - The viewport rectangle of the quad, in pixels. The viewport is
+     * not changed if not provided.
+     * @param {Vec4} [scissor] - The scissor rectangle of the quad, in pixels. Used only if the
+     * viewport is provided.
+     * @param {number} [numInstances] - Number of instances to draw. When provided, renders
+     * multiple quads using instanced drawing. Each instance can use the instance index
+     * (`gl_InstanceID` in GLSL, `pcInstanceIndex` in WGSL) to fetch per-quad data from
+     * a texture or buffer, allowing each quad to be parameterized independently.
      */
-    render(viewport, scissor) {
+    render(viewport, scissor, numInstances) {
 
         const device = this.shader.device;
-        DebugGraphics.pushGpuMarker(device, "QuadRender");
+        DebugGraphics.pushGpuMarker(device, 'QuadRender');
 
         // only modify viewport or scissor if viewport supplied
         if (viewport) {
@@ -114,7 +137,7 @@ class QuadRender {
             device.setScissor(scissor.x, scissor.y, scissor.z, scissor.w);
         }
 
-        device.setVertexBuffer(device.quadVertexBuffer, 0);
+        device.setVertexBuffer(device.quadVertexBuffer);
 
         const shader = this.shader;
         device.setShader(shader);
@@ -139,7 +162,7 @@ class QuadRender {
             }
         }
 
-        device.draw(_quadPrimitive);
+        device.draw(_quadPrimitive, device.quadIndexBuffer, numInstances);
 
         // restore if changed
         if (viewport) {

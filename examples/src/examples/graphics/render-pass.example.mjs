@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -11,17 +11,37 @@ class RenderPassTint extends pc.RenderPassShaderQuad {
         this.sourceTexture = sourceTexture;
         this.tint = pc.Color.WHITE.clone();
 
-        this.shader = this.createQuadShader(
-            'TintShader',
-            `
+        this.shader = pc.ShaderUtils.createShader(device, {
+            uniqueName: 'TintShader',
+            attributes: { aPosition: pc.SEMANTIC_POSITION },
+            vertexChunk: 'quadVS',
+
+            fragmentGLSL: /* glsl */ `
                 uniform sampler2D sourceTexture;
                 uniform vec3 tint;
                 varying vec2 uv0;
+
                 void main() {
                     vec4 color = texture2D(sourceTexture, uv0);
                     gl_FragColor = vec4(color.rgb * tint, color.a);
-                }`
-        );
+                }
+            `,
+
+            fragmentWGSL: /* wgsl */ `
+
+                var sourceTexture: texture_2d<f32>;
+                var sourceTextureSampler: sampler;
+                uniform tint: vec3f;
+                varying uv0: vec2f;
+                
+                @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+                    var output: FragmentOutput;
+                    let color: vec4f = textureSample(sourceTexture, sourceTextureSampler, uv0);
+                    output.color = vec4f(color.rgb * uniform.tint, color.a);
+                    return output;
+                }
+            `
+        });
     }
 
     execute() {
@@ -33,25 +53,23 @@ class RenderPassTint extends pc.RenderPassShaderQuad {
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
-    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
+    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
 });
 
 const assets = {
-    board: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/chess-board.glb' }),
+    board: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -145,11 +163,11 @@ assetListLoader.load(() => {
     tintPass.init(null);
 
     // assign those two passes to the camera to be used instead of its default rendering
-    cameraEntity.camera.renderPasses = [renderPass, tintPass];
+    cameraEntity.camera.framePasses = [renderPass, tintPass];
 
     // update things every frame
     let angle = 3;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         angle += dt;
 
         // move the focus position in the world

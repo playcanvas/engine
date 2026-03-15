@@ -1,5 +1,5 @@
-import { GpuProfiler } from "../gpu-profiler.js";
-import { WebgpuQuerySet } from "./webgpu-query-set.js";
+import { GpuProfiler } from '../gpu-profiler.js';
+import { WebgpuQuerySet } from './webgpu-query-set.js';
 
 class WebgpuGpuProfiler extends GpuProfiler {
     device;
@@ -11,8 +11,10 @@ class WebgpuGpuProfiler extends GpuProfiler {
         super();
         this.device = device;
 
+        this.maxCount = 1024;
+
         // gpu timing queries
-        this.timestampQueriesSet = device.supportsTimestampQuery ? new WebgpuQuerySet(device, true, 512) : null;
+        this.timestampQueriesSet = device.supportsTimestampQuery ? new WebgpuQuerySet(device, true, 2 * this.maxCount) : null;
     }
 
     destroy() {

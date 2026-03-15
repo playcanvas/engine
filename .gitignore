@@ -1,8 +1,9 @@
 *.DS_Store
+.cursor
 .idea/
 .vscode/
 build
-tree*.html
+tree*.*.html
 coverage
 docs
 examples/dist
@@ -14,3 +15,6 @@ stats.html
 .npmrc
 examples/.npmrc
 .prettierrc
+# Added by Snap Cursor Rules extension
+.cursor/rules/cursor-rules-debug.log
+.cursor/rules/remote

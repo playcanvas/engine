@@ -9,41 +9,6 @@ const version = '$_CURRENT_SDK_VERSION';
  */
 const revision = '$_CURRENT_SDK_REVISION';
 
-const config = { };
-const common = { };
-const apps = { }; // Storage for the applications using the PlayCanvas Engine
-const data = { }; // Storage for exported entity data
-
-const typeofs = ['undefined', 'number', 'string', 'boolean'];
-const objectTypes = {
-    '[object Array]': 'array',
-    '[object Object]': 'object',
-    '[object Function]': 'function',
-    '[object Date]': 'date',
-    '[object RegExp]': 'regexp',
-    '[object Float32Array]': 'float32array'
-};
-
-/**
- * Extended typeof() function, returns the type of the object.
- *
- * @param {object} obj - The object to get the type of.
- * @returns {string} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array".
- * @ignore
- */
-function type(obj) {
-    if (obj === null) {
-        return 'null';
-    }
-
-    const typeString = typeof obj;
-    if (typeofs.includes(typeString)) {
-        return typeString;
-    }
-
-    return objectTypes[Object.prototype.toString.call(obj)];
-}
-
 /**
  * Merge the contents of two objects into a single object.
  *
@@ -62,7 +27,7 @@ function type(obj) {
  *     }
  * };
  *
- * pc.extend(A, B);
+ * extend(A, B);
  * A.a();
  * // logs "a"
  * A.b();
@@ -73,10 +38,10 @@ function extend(target, ex) {
     for (const prop in ex) {
         const copy = ex[prop];
 
-        if (type(copy) === 'object') {
-            target[prop] = extend({}, copy);
-        } else if (type(copy) === 'array') {
+        if (Array.isArray(copy)) {
             target[prop] = extend([], copy);
+        } else if (copy && typeof copy === 'object') {
+            target[prop] = extend({}, copy);
         } else {
             target[prop] = copy;
         }
@@ -85,4 +50,4 @@ function extend(target, ex) {
     return target;
 }
 
-export { apps, common, config, data, extend, revision, type, version };
+export { extend, revision, version };

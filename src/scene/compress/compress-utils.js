@@ -1,8 +1,12 @@
+/**
+ * @import { Entity } from '../../framework/entity.js'
+ */
+
 class CompressUtils {
     /**
      * Set position, rotation and scale of an entity using compressed scene format.
      *
-     * @param {import('../../framework/entity.js').Entity} entity - The entity.
+     * @param {Entity} entity - The entity.
      * @param {object} data - Json entity data from a compressed scene.
      * @param {object} compressed - Compression metadata.
      */

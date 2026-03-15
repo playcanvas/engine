@@ -1,7 +1,5 @@
 /**
  * A cache for assigning unique numerical ids to strings.
- *
- * @ignore
  */
 class StringIds {
     /** @type {Map<string, number>} */

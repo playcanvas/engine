@@ -3,11 +3,15 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
 
+/**
+ * @import { BoundingBox } from '../../core/shape/bounding-box.js'
+ */
+
 const SH_C0 = 0.28209479177387814;
 
 // iterator for accessing compressed splat data
 class SplatCompressedIterator {
-    constructor(gsplatData, p, r, s, c) {
+    constructor(gsplatData, p, r, s, c, sh) {
         const unpackUnorm = (value, bits) => {
             const t = (1 << bits) - 1;
             return (value & t) / t;
@@ -28,27 +32,27 @@ class SplatCompressedIterator {
 
         // unpack quaternion with 2,10,10,10 format (largest element, 3x10bit element)
         const unpackRot = (result, value) => {
-            const norm = 1.0 / (Math.sqrt(2) * 0.5);
+            const norm = Math.SQRT2;
             const a = (unpackUnorm(value >>> 20, 10) - 0.5) * norm;
             const b = (unpackUnorm(value >>> 10, 10) - 0.5) * norm;
             const c = (unpackUnorm(value, 10) - 0.5) * norm;
             const m = Math.sqrt(1.0 - (a * a + b * b + c * c));
 
             switch (value >>> 30) {
-                case 0: result.set(m, a, b, c); break;
-                case 1: result.set(a, m, b, c); break;
-                case 2: result.set(a, b, m, c); break;
-                case 3: result.set(a, b, c, m); break;
+                case 0: result.set(a, b, c, m); break;
+                case 1: result.set(m, b, c, a); break;
+                case 2: result.set(b, m, c, a); break;
+                case 3: result.set(b, c, m, a); break;
             }
         };
 
         const lerp = (a, b, t) => a * (1 - t) + b * t;
 
-        const chunkData = gsplatData.chunkData;
-        const vertexData = gsplatData.vertexData;
+        const { chunkData, chunkSize, vertexData, shData0, shData1, shData2, shBands } = gsplatData;
+        const shCoeffs = [3, 8, 15][shBands - 1];
 
         this.read = (i) => {
-            const ci = Math.floor(i / 256) * 12;
+            const ci = Math.floor(i / 256) * chunkSize;
 
             if (p) {
                 unpack111011(p, vertexData[i * 4 + 0]);
@@ -70,6 +74,20 @@ class SplatCompressedIterator {
 
             if (c) {
                 unpack8888(c, vertexData[i * 4 + 3]);
+                if (chunkSize > 12) {
+                    c.x = lerp(chunkData[ci + 12], chunkData[ci + 15], c.x);
+                    c.y = lerp(chunkData[ci + 13], chunkData[ci + 16], c.y);
+                    c.z = lerp(chunkData[ci + 14], chunkData[ci + 17], c.z);
+                }
+            }
+
+            if (sh && shBands > 0) {
+                const shData = [shData0, shData1, shData2];
+                for (let j = 0; j < 3; ++j) {
+                    for (let k = 0; k < 15; ++k) {
+                        sh[j * 15 + k] = (k < shCoeffs) ? (shData[j][i * 16 + k] * (8 / 255) - 4) : 0;
+                    }
+                }
             }
         };
     }
@@ -79,11 +97,20 @@ class GSplatCompressedData {
     numSplats;
 
     /**
-     * Contains 12 floats per chunk:
+     * File header comments.
+     *
+     * @type { string[] }
+     */
+    comments;
+
+    /**
+     * Contains either 12 or 18 floats per chunk:
      *      min_x, min_y, min_z,
      *      max_x, max_y, max_z,
      *      min_scale_x, min_scale_y, min_scale_z,
      *      max_scale_x, max_scale_y, max_scale_z
+     *      min_r, min_g, min_b,
+     *      max_r, max_g, max_b
      * @type {Float32Array}
      */
     chunkData;
@@ -99,49 +126,70 @@ class GSplatCompressedData {
     vertexData;
 
     /**
+     * Contains optional quantized spherical harmonic data.
+     * @type {Uint8Array}
+     */
+    shData0;
+
+    /**
+     * Contains optional quantized spherical harmonic data.
+     * @type {Uint8Array}
+     */
+    shData1;
+
+    /**
+     * Contains optional quantized spherical harmonic data.
+     * @type {Uint8Array}
+     */
+    shData2;
+
+    /**
+     * Contains the number of bands of spherical harmonics data.
+     * @type {number}
+     */
+    shBands;
+
+    /**
      * Create an iterator for accessing splat data
      *
      * @param {Vec3|null} [p] - the vector to receive splat position
      * @param {Quat|null} [r] - the quaternion to receive splat rotation
      * @param {Vec3|null} [s] - the vector to receive splat scale
      * @param {Vec4|null} [c] - the vector to receive splat color
+     * @param {Float32Array|null} [sh] - the array to receive spherical harmonics data
      * @returns {SplatCompressedIterator} - The iterator
      */
-    createIter(p, r, s, c) {
-        return new SplatCompressedIterator(this, p, r, s, c);
+    createIter(p, r, s, c, sh) {
+        return new SplatCompressedIterator(this, p, r, s, c, sh);
     }
 
     /**
      * Calculate pessimistic scene aabb taking into account splat size. This is faster than
      * calculating an exact aabb.
      *
-     * @param {import('../../core/shape/bounding-box.js').BoundingBox} result - Where to store the resulting bounding box.
+     * @param {BoundingBox} result - Where to store the resulting bounding box.
      * @returns {boolean} - Whether the calculation was successful.
      */
     calcAabb(result) {
-        let mx, my, mz, Mx, My, Mz;
-
-        // fast bounds calc using chunk data
-        const numChunks = Math.ceil(this.numSplats / 256);
-
-        const chunkData = this.chunkData;
+        const { chunkData, numChunks, chunkSize } = this;
 
         let s = Math.exp(Math.max(chunkData[9], chunkData[10], chunkData[11]));
-        mx = chunkData[0] - s;
-        my = chunkData[1] - s;
-        mz = chunkData[2] - s;
-        Mx = chunkData[3] + s;
-        My = chunkData[4] + s;
-        Mz = chunkData[5] + s;
+        let mx = chunkData[0] - s;
+        let my = chunkData[1] - s;
+        let mz = chunkData[2] - s;
+        let Mx = chunkData[3] + s;
+        let My = chunkData[4] + s;
+        let Mz = chunkData[5] + s;
 
         for (let i = 1; i < numChunks; ++i) {
-            s = Math.exp(Math.max(chunkData[i * 12 + 9], chunkData[i * 12 + 10], chunkData[i * 12 + 11]));
-            mx = Math.min(mx, chunkData[i * 12 + 0] - s);
-            my = Math.min(my, chunkData[i * 12 + 1] - s);
-            mz = Math.min(mz, chunkData[i * 12 + 2] - s);
-            Mx = Math.max(Mx, chunkData[i * 12 + 3] + s);
-            My = Math.max(My, chunkData[i * 12 + 4] + s);
-            Mz = Math.max(Mz, chunkData[i * 12 + 5] + s);
+            const off = i * chunkSize;
+            s = Math.exp(Math.max(chunkData[off + 9], chunkData[off + 10], chunkData[off + 11]));
+            mx = Math.min(mx, chunkData[off + 0] - s);
+            my = Math.min(my, chunkData[off + 1] - s);
+            mz = Math.min(mz, chunkData[off + 2] - s);
+            Mx = Math.max(Mx, chunkData[off + 3] + s);
+            My = Math.max(My, chunkData[off + 4] + s);
+            Mz = Math.max(Mz, chunkData[off + 5] + s);
         }
 
         result.center.set((mx + Mx) * 0.5, (my + My) * 0.5, (mz + Mz) * 0.5);
@@ -151,23 +199,23 @@ class GSplatCompressedData {
     }
 
     /**
-     * @param {Float32Array} result - Array containing the centers.
+     * Returns a new Float32Array of centers (x, y, z per splat).
+     * @returns {Float32Array} Centers buffer
      */
-    getCenters(result) {
-        const chunkData = this.chunkData;
-        const vertexData = this.vertexData;
-
-        const numChunks = Math.ceil(this.numSplats / 256);
+    getCenters() {
+        const { vertexData, chunkData, numChunks, chunkSize } = this;
+        const result = new Float32Array(this.numSplats * 3);
 
         let mx, my, mz, Mx, My, Mz;
 
         for (let c = 0; c < numChunks; ++c) {
-            mx = chunkData[c * 12 + 0];
-            my = chunkData[c * 12 + 1];
-            mz = chunkData[c * 12 + 2];
-            Mx = chunkData[c * 12 + 3];
-            My = chunkData[c * 12 + 4];
-            Mz = chunkData[c * 12 + 5];
+            const off = c * chunkSize;
+            mx = chunkData[off + 0];
+            my = chunkData[off + 1];
+            mz = chunkData[off + 2];
+            Mx = chunkData[off + 3];
+            My = chunkData[off + 4];
+            Mz = chunkData[off + 5];
 
             const end = Math.min(this.numSplats, (c + 1) * 256);
             for (let i = c * 256; i < end; ++i) {
@@ -180,23 +228,48 @@ class GSplatCompressedData {
                 result[i * 3 + 2] = (1 - pz) * mz + pz * Mz;
             }
         }
+
+        return result;
+    }
+
+    getChunks(result) {
+        const { chunkData, numChunks, chunkSize } = this;
+
+        let mx, my, mz, Mx, My, Mz;
+
+        for (let c = 0; c < numChunks; ++c) {
+            const off = c * chunkSize;
+            mx = chunkData[off + 0];
+            my = chunkData[off + 1];
+            mz = chunkData[off + 2];
+            Mx = chunkData[off + 3];
+            My = chunkData[off + 4];
+            Mz = chunkData[off + 5];
+
+            result[c * 6 + 0] = mx;
+            result[c * 6 + 1] = my;
+            result[c * 6 + 2] = mz;
+            result[c * 6 + 3] = Mx;
+            result[c * 6 + 4] = My;
+            result[c * 6 + 5] = Mz;
+        }
     }
 
     /**
      * @param {Vec3} result - The result.
      */
     calcFocalPoint(result) {
-        const chunkData = this.chunkData;
-        const numChunks = Math.ceil(this.numSplats / 256);
+        const { chunkData, numChunks, chunkSize } = this;
 
         result.x = 0;
         result.y = 0;
         result.z = 0;
 
         for (let i = 0; i < numChunks; ++i) {
-            result.x += chunkData[i * 12 + 0] + chunkData[i * 12 + 3];
-            result.y += chunkData[i * 12 + 1] + chunkData[i * 12 + 4];
-            result.z += chunkData[i * 12 + 2] + chunkData[i * 12 + 5];
+            const off = i * chunkSize;
+            result.x += chunkData[off + 0] + chunkData[off + 3];
+            result.y += chunkData[off + 1] + chunkData[off + 4];
+            result.z += chunkData[off + 2] + chunkData[off + 5];
         }
         result.mulScalar(0.5 / numChunks);
     }
@@ -205,9 +278,34 @@ class GSplatCompressedData {
         return true;
     }
 
+    get numChunks() {
+        return Math.ceil(this.numSplats / 256);
+    }
+
+    get chunkSize() {
+        return this.chunkData.length / this.numChunks;
+    }
+
     // decompress into GSplatData
     decompress() {
-        const members = ['x', 'y', 'z', 'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity', 'rot_0', 'rot_1', 'rot_2', 'rot_3', 'scale_0', 'scale_1', 'scale_2'];
+        const members = [
+            'x', 'y', 'z',
+            'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity',
+            'scale_0', 'scale_1', 'scale_2',
+            'rot_0', 'rot_1', 'rot_2', 'rot_3'
+        ];
+
+        const { shBands } = this;
+
+        // allocate spherical harmonics data
+        if (shBands > 0) {
+            const shMembers = [];
+            for (let i = 0; i < 45; ++i) {
+                shMembers.push(`f_rest_${i}`);
+            }
+            const location = Math.max(...['f_dc_0', 'f_dc_1', 'f_dc_2'].map(name => members.indexOf(name)));
+            members.splice(location + 1, 0, ...shMembers);
+        }
 
         // allocate uncompressed data
         const data = {};
@@ -219,8 +317,9 @@ class GSplatCompressedData {
         const r = new Quat();
         const s = new Vec3();
         const c = new Vec4();
+        const sh = shBands > 0 ? new Float32Array(45) : null;
 
-        const iter = this.createIter(p, r, s, c);
+        const iter = this.createIter(p, r, s, c, sh);
 
         for (let i = 0; i < this.numSplats; ++i) {
             iter.read(i);
@@ -229,10 +328,10 @@ class GSplatCompressedData {
             data.y[i] = p.y;
             data.z[i] = p.z;
 
-            data.rot_0[i] = r.x;
-            data.rot_1[i] = r.y;
-            data.rot_2[i] = r.z;
-            data.rot_3[i] = r.w;
+            data.rot_1[i] = r.x;
+            data.rot_2[i] = r.y;
+            data.rot_3[i] = r.z;
+            data.rot_0[i] = r.w;
 
             data.scale_0[i] = s.x;
             data.scale_1[i] = s.y;
@@ -243,6 +342,12 @@ class GSplatCompressedData {
             data.f_dc_2[i] = (c.z - 0.5) / SH_C0;
             // convert opacity to log sigmoid taking into account infinities at 0 and 1
             data.opacity[i] = (c.w <= 0) ? -40 : (c.w >= 1) ? 40 : -Math.log(1 / c.w - 1);
+
+            if (sh) {
+                for (let c = 0; c < 45; ++c) {
+                    data[`f_rest_${c}`][i] = sh[c];
+                }
+            }
         }
 
         return new GSplatData([{
@@ -256,7 +361,7 @@ class GSplatCompressedData {
                     storage: data[name]
                 };
             })
-        }]);
+        }], this.comments);
     }
 }
 

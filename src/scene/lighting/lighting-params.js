@@ -1,6 +1,6 @@
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { SHADOW_PCF3 } from '../constants.js';
+import { SHADOW_PCF3_32F } from '../constants.js';
 
 /**
  * Lighting parameters, allow configuration of the global lighting parameters. For details see
@@ -22,7 +22,7 @@ class LightingParams {
     _shadowsEnabled = true;
 
     /** @private */
-    _shadowType = SHADOW_PCF3;
+    _shadowType = SHADOW_PCF3_32F;
 
     /** @private */
     _shadowAtlasResolution = 2048;
@@ -70,8 +70,9 @@ class LightingParams {
         this.cookieAtlasResolution = render.lightingCookieAtlasResolution ?? this.cookieAtlasResolution;
         this.maxLightsPerCell = render.lightingMaxLightsPerCell ?? this.maxLightsPerCell;
         this.shadowType = render.lightingShadowType ?? this.shadowType;
-        if (render.lightingCells)
-            this.cell = new Vec3(render.lightingCells);
+        if (render.lightingCells) {
+            this.cells = new Vec3(render.lightingCells);
+        }
     }
 
     /**
@@ -153,11 +154,14 @@ class LightingParams {
     /**
      * Sets the type of shadow filtering used by all shadows. Can be:
      *
-     * - {@link SHADOW_PCF1}: PCF 1x1 sampling.
-     * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
-     * - {@link SHADOW_PCF5}: PCF 5x5 sampling. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+     * - {@link SHADOW_PCF1_32F}
+     * - {@link SHADOW_PCF3_32F}
+     * - {@link SHADOW_PCF5_32F}
+     * - {@link SHADOW_PCF1_16F}
+     * - {@link SHADOW_PCF3_16F}
+     * - {@link SHADOW_PCF5_16F}
      *
-     * Defaults to {@link SHADOW_PCF3}
+     * Defaults to {@link SHADOW_PCF3_32F}
      *
      * @type {number}
      */

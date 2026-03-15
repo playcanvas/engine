@@ -23,15 +23,17 @@ const standardMaterialParameterTypes = {
     _engine: 'boolean', // internal param for engine-only loading
 
     ambient: 'rgb',
-    ambientTint: 'boolean',
     ..._textureParameter('ao'),
     ..._textureParameter('aoDetail', true, false),
     aoDetailMode: 'string',
+    aoIntensity: 'number',
 
     diffuse: 'rgb',
     ..._textureParameter('diffuse'),
     ..._textureParameter('diffuseDetail', true, false),
     diffuseDetailMode: 'string',
+
+    vertexColorGamma: 'boolean',
 
     specular: 'rgb',
     specularTint: 'boolean',
@@ -44,10 +46,13 @@ const standardMaterialParameterTypes = {
     useMetalness: 'boolean',
     metalness: 'number',
     enableGGXSpecular: 'boolean',
-    anisotropy: 'number',
     metalnessTint: 'boolean',
     ..._textureParameter('metalness'),
     useMetalnessSpecularColor: 'boolean',
+
+    anisotropyIntensity: 'number',
+    anisotropyRotation: 'number',
+    ..._textureParameter('anisotropy'),
 
     shininess: 'number',
     gloss: 'number',
@@ -64,17 +69,14 @@ const standardMaterialParameterTypes = {
 
     useSheen: 'boolean',
     sheen: 'rgb',
-    sheenTint: 'boolean',
     ..._textureParameter('sheen'),
     sheenGloss: 'number',
-    sheenGlossTint: 'boolean',
     sheenGlossInvert: 'boolean',
     ..._textureParameter('sheenGloss'),
 
     fresnelModel: 'number',
 
     emissive: 'rgb',
-    emissiveTint: 'boolean',
     ..._textureParameter('emissive'),
     emissiveIntensity: 'number',
 
@@ -141,15 +143,14 @@ const standardMaterialParameterTypes = {
 
     envAtlas: 'texture',
 
-    twoSidedLighting: 'boolean'
+    twoSidedLighting: 'boolean',
+    shadowCatcher: 'boolean'
 
     // nineSlicedMode
     // pixelSnap
     // forceUv1
     // occludeDirect
     // occludeSpecularIntensity
-    // fastTbn
-    // normalizeNormalMap
 
     // msdfMap
     // msdfMapChannel
@@ -188,7 +189,16 @@ const standardMaterialRemovedParameters = {
     opacityMapVertexColor: 'boolean',
     specularAntialias: 'boolean',
     specularMapTint: 'boolean',
-    specularMapVertexColor: 'boolean'
+    specularMapVertexColor: 'boolean',
+    ambientTint: 'boolean',
+    emissiveTint: 'boolean',
+    diffuseTint: 'boolean',
+    sheenTint: 'boolean',
+    conserveEnergy: 'boolean',
+    useGamma: 'boolean',
+    useGammaTonemap: 'boolean',
+    sheenGlossTint: 'boolean',
+    anisotropy: 'boolean'
 };
 
 export {

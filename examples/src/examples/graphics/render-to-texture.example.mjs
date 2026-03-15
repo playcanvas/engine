@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -17,17 +17,15 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    checkerboard: new pc.Asset('checkerboard', 'texture', { url: rootPath + '/static/assets/textures/checkboard.png' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
+    checkerboard: new pc.Asset('checkerboard', 'texture', { url: `${rootPath}/static/assets/textures/checkboard.png` }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -142,15 +140,13 @@ assetListLoader.load(() => {
     const texture = new pc.Texture(app.graphicsDevice, {
         width: 512,
         height: 256,
-        format: pc.PIXELFORMAT_RGB8,
+        format: pc.PIXELFORMAT_SRGBA8,
         mipmaps: true,
-        minFilter: pc.FILTER_LINEAR,
-        magFilter: pc.FILTER_LINEAR,
         addressU: pc.ADDRESS_CLAMP_TO_EDGE,
         addressV: pc.ADDRESS_CLAMP_TO_EDGE
     });
     const renderTarget = new pc.RenderTarget({
-        name: `RT`,
+        name: 'RT',
         colorBuffer: texture,
         depth: true,
         flipY: !app.graphicsDevice.isWebGPU,
@@ -176,7 +172,6 @@ assetListLoader.load(() => {
     // make the texture tiles and use anisotropic filtering to prevent blurring
     planeMaterial.diffuseMap = assets.checkerboard.resource;
     planeMaterial.diffuseMapTiling.set(10, 10);
-    planeMaterial.anisotropy = 16;
 
     createPrimitive('sphere', new pc.Vec3(-2, 1, 0), new pc.Vec3(2, 2, 2), pc.Color.RED, [worldLayer.id]);
     createPrimitive('cone', new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), pc.Color.CYAN, [worldLayer.id]);
@@ -189,7 +184,8 @@ assetListLoader.load(() => {
     const camera = new pc.Entity('Camera');
     camera.addComponent('camera', {
         fov: 100,
-        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id]
+        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id],
+        toneMapping: pc.TONEMAP_ACES
     });
     camera.translate(0, 9, 15);
     camera.lookAt(1, 4, 0);
@@ -212,6 +208,7 @@ assetListLoader.load(() => {
     const textureCamera = new pc.Entity('TextureCamera');
     textureCamera.addComponent('camera', {
         layers: [worldLayer.id, skyboxLayer.id],
+        toneMapping: pc.TONEMAP_ACES,
 
         // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
         // to make it rendered first each frame
@@ -247,21 +244,21 @@ assetListLoader.load(() => {
     tv.setLocalEulerAngles(90, 0, 0);
     tv.render.castShadows = false;
     tv.render.receiveShadows = false;
+
     /** @type {pc.StandardMaterial} */
     const material = tv.render.material;
     material.emissiveMap = texture; // assign the rendered texture as an emissive texture
+    material.emissive = pc.Color.WHITE;
     material.update();
 
     // setup skydome, use top mipmap level of cubemap (full resolution)
     app.scene.skyboxMip = 0;
     app.scene.envAtlas = assets.helipad.resource;
 
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     // update things each frame
     let time = 0;
     let switchTime = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         // rotate texture camera around the objects
         time += dt;
         textureCamera.setLocalPosition(12 * Math.sin(time), 3, 12 * Math.cos(time));

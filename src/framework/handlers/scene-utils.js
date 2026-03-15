@@ -19,18 +19,18 @@ class SceneUtils {
         http.get(url.load, {
             retry: maxRetries > 0,
             maxRetries: maxRetries
-        }, function (err, response) {
+        }, (err, response) => {
             if (!err) {
                 callback(err, response);
             } else {
-                let errMsg = 'Error while loading scene JSON ' + url.original;
+                let errMsg = `Error while loading scene JSON ${url.original}`;
                 if (err.message) {
-                    errMsg += ': ' + err.message;
+                    errMsg += `: ${err.message}`;
                     if (err.stack) {
-                        errMsg += '\n' + err.stack;
+                        errMsg += `\n${err.stack}`;
                     }
                 } else {
-                    errMsg += ': ' + err;
+                    errMsg += `: ${err}`;
                 }
 
                 callback(errMsg);

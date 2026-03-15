@@ -1,6 +1,6 @@
-import { path } from '../../src/core/path.js';
-
 import { expect } from 'chai';
+
+import { path } from '../../src/core/path.js';
 
 describe('path', function () {
 
@@ -109,7 +109,7 @@ describe('path', function () {
         });
 
         it('handles invalid values', function () {
-            expect(function () {
+            expect(() => {
                 path.join('a', undefined);
             }).to.throw();
         });
@@ -127,13 +127,13 @@ describe('path', function () {
             expect(path.normalize('a/b/c/..')).to.equal('a/b');
             expect(path.normalize('a/b/c/')).to.equal('a/b/c/');
             expect(path.normalize('../a/b/c/')).to.equal('../a/b/c/');
-//            expect(path.normalize('../../a/b/c')).to.equal('../../a/b/c');
+            //            expect(path.normalize('../../a/b/c')).to.equal('../../a/b/c');
             expect(path.normalize('/')).to.equal('/');
             expect(path.normalize('../')).to.equal('../');
-//            expect(path.normalize('./')).to.equal('./');
-//            expect(path.normalize('././')).to.equal('./');
-//            expect(path.normalize('../../')).to.equal('../../');
-//            expect(path.normalize('.')).to.equal('.');
+            //            expect(path.normalize('./')).to.equal('./');
+            //            expect(path.normalize('././')).to.equal('./');
+            //            expect(path.normalize('../../')).to.equal('../../');
+            //            expect(path.normalize('.')).to.equal('.');
             expect(path.normalize('./../.')).to.equal('..');
         });
 

@@ -1,10 +1,12 @@
 import { Debug } from '../../../core/debug.js';
-
-import { DISTANCE_LINEAR } from '../../../platform/audio/constants.js';
-
+import { DISTANCE_LINEAR } from '../../../platform/sound/constants.js';
 import { Component } from '../component.js';
-
 import { SoundSlot } from './slot.js';
+
+/**
+ * @import { Entity } from '../../entity.js'
+ * @import { SoundInstance } from '../../../platform/sound/instance.js'
+ */
 
 /**
  * The SoundComponent enables an {@link Entity} to play audio. The SoundComponent can manage
@@ -21,35 +23,35 @@ import { SoundSlot } from './slot.js';
  * to an Entity, use {@link Entity#addComponent}:
  *
  * ```javascript
- * // Add a sound component to an entity
  * const entity = new pc.Entity();
- * entity.addComponent("sound");
- * ```
- *
- * Then, to add a sound slot to the component:
- *
- * ```javascript
- * entity.sound.addSlot("beep", {
- *     asset: asset,
- *     autoPlay: true,
- *     loop: true,
- *     overlap: true,
- *     pitch: 1.5
+ * entity.addComponent('sound', {
+ *     volume: 0.8,
+ *     positional: true
  * });
  * ```
  *
- * Once the SoundComponent is added to the entity, you can set and get any of its properties:
+ * Once the SoundComponent is added to the entity, you can access it via the {@link Entity#sound}
+ * property:
  *
  * ```javascript
- * entity.sound.volume = 0.8;  // Set the volume for all sounds
+ * entity.sound.volume = 0.9;  // Set the volume for all sounds
  *
  * console.log(entity.sound.volume); // Get the volume and print it
  * ```
  *
- * Relevant examples:
+ * Add individual sounds by creating sound slots on the component:
+ *
+ * ```javascript
+ * entity.sound.addSlot('beep', {
+ *     asset: asset
+ * });
+ * ```
+ *
+ * Relevant Engine API examples:
  *
  * - [Positional Sound](https://playcanvas.github.io/#/sound/positional)
  *
+ * @hideconstructor
  * @category Sound
  */
 class SoundComponent extends Component {
@@ -113,41 +115,36 @@ class SoundComponent extends Component {
      */
     static EVENT_END = 'end';
 
+    /** @private */
+    _volume = 1;
+
+    /** @private */
+    _pitch = 1;
+
+    /** @private */
+    _positional = true;
+
+    /** @private */
+    _refDistance = 1;
+
+    /** @private */
+    _maxDistance = 10000;
+
+    /** @private */
+    _rollOffFactor = 1;
+
+    /** @private */
+    _distanceModel = DISTANCE_LINEAR;
+
     /**
-     * Create a new Sound Component.
-     *
-     * @param {import('./system.js').SoundComponentSystem} system - The ComponentSystem that
-     * created this component.
-     * @param {import('../../entity.js').Entity} entity - The entity that the Component is attached
-     * to.
+     * @type {Object<string, SoundSlot>}
+     * @private
      */
-    constructor(system, entity) {
-        super(system, entity);
+    _slots = {};
 
-        /** @private */
-        this._volume = 1;
-        /** @private */
-        this._pitch = 1;
-        /** @private */
-        this._positional = true;
-        /** @private */
-        this._refDistance = 1;
-        /** @private */
-        this._maxDistance = 10000;
-        /** @private */
-        this._rollOffFactor = 1;
-        /** @private */
-        this._distanceModel = DISTANCE_LINEAR;
+    /** @private */
+    _playingBeforeDisable = {};
 
-        /**
-         * @type {Object<string, SoundSlot>}
-         * @private
-         */
-        this._slots = {};
-
-        /** @private */
-        this._playingBeforeDisable = {};
-    }
 
     /**
      * Update the specified property on all sound instances.
@@ -322,8 +319,9 @@ class SoundComponent extends Component {
                 for (let i = oldLength - 1; i >= 0; i--) {
                     const isPlaying = instances[i].isPlaying || instances[i].isSuspended;
                     const currentTime = instances[i].currentTime;
-                    if (isPlaying)
+                    if (isPlaying) {
                         instances[i].stop();
+                    }
 
                     const instance = slot._createInstance();
                     if (isPlaying) {
@@ -377,8 +375,9 @@ class SoundComponent extends Component {
         this._slots = slots;
 
         // call onEnable in order to start autoPlay slots
-        if (this.enabled && this.entity.enabled)
+        if (this.enabled && this.entity.enabled) {
             this.onEnable();
+        }
     }
 
     /**
@@ -521,7 +520,8 @@ class SoundComponent extends Component {
      *
      * @param {string} name - The name of the {@link SoundSlot} to look for.
      * @param {string} property - The name of the property to look for.
-     * @returns {*} The value from the looked property inside the slot with specified name. May be undefined if slot does not exist.
+     * @returns {*} The value from the looked property inside the slot with specified name. May be
+     * undefined if slot does not exist.
      * @private
      */
     _getSlotProperty(name, property) {
@@ -584,9 +584,9 @@ class SoundComponent extends Component {
      * created and played.
      *
      * @param {string} name - The name of the {@link SoundSlot} to play.
-     * @returns {import('../../../platform/sound/instance.js').SoundInstance|null} The sound
-     * instance that will be played. Returns null if the component or its parent entity is disabled
-     * or if the SoundComponent has no slot with the specified name.
+     * @returns {SoundInstance|null} The sound instance that will be played. Returns null if the
+     * component or its parent entity is disabled or if the SoundComponent has no slot with the
+     * specified name.
      * @example
      * // get asset by id
      * const asset = app.assets.get(10);

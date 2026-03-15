@@ -1,8 +1,13 @@
 import { Debug } from '../../core/debug.js';
+import { math } from '../../core/math/math.js';
 import {
     pixelFormatInfo,
     PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1
 } from './constants.js';
+
+/**
+ * @import { Vec2 } from '../../core/math/vec2.js'
+ */
 
 /**
  * A class providing utility functions for textures.
@@ -41,7 +46,6 @@ class TextureUtils {
      * @param {number} depth - Texture's depth.
      * @param {number} format - Texture's pixel format PIXELFORMAT_***.
      * @returns {number} The number of bytes of GPU memory required for the texture.
-     * @ignore
      */
     static calcLevelGpuSize(width, height, depth, format) {
 
@@ -76,7 +80,6 @@ class TextureUtils {
      * @param {boolean} mipmaps - True if the texture includes mipmaps, false otherwise.
      * @param {boolean} cubemap - True is the texture is a cubemap, false otherwise.
      * @returns {number} The number of bytes of GPU memory required for the texture.
-     * @ignore
      */
     static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
         let result = 0;
@@ -94,6 +97,24 @@ class TextureUtils {
         }
 
         return result * (cubemap ? 6 : 1);
+    }
+
+    /**
+     * Calculate roughly square texture dimensions that can hold the given number of texels.
+     *
+     * @param {number} count - The number of texels to fit.
+     * @param {Vec2} result - Output vector to receive width (x) and height (y).
+     * @param {number} [widthMultiple] - If greater than 1, the width is rounded up to the
+     * nearest multiple of this value. Useful for ensuring rows align to a specific stride (e.g.
+     * 4 texels per matrix row, or N lights per cell).
+     * @returns {Vec2} The result vector with dimensions set.
+     */
+    static calcTextureSize(count, result, widthMultiple = 1) {
+        let width = Math.ceil(Math.sqrt(count));
+        if (widthMultiple > 1) {
+            width = math.roundUp(width, widthMultiple);
+        }
+        return result.set(width, Math.ceil(count / width));
     }
 }
 

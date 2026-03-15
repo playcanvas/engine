@@ -2,15 +2,16 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { random } from '../../core/math/random.js';
 import { Color } from '../../core/math/color.js';
 import { Entity } from '../entity.js';
-import { SHADOW_PCF3 } from '../../scene/constants.js';
+import { SHADOW_PCF3_32F } from '../../scene/constants.js';
 import { BakeLight } from './bake-light.js';
 
 const _tempPoint = new Vec3();
 
 // bake light representing an ambient light (cubemap or constant)
 class BakeLightAmbient extends BakeLight {
-    constructor(scene) {
+    constructor(lightmapper) {
 
+        const scene = lightmapper.scene;
         const lightEntity = new Entity('AmbientLight');
         lightEntity.addComponent('light', {
             type: 'directional',
@@ -23,13 +24,13 @@ class BakeLightAmbient extends BakeLight {
             shadowBias: 0.2,
             shadowDistance: 1,  // this is updated during shadow map rendering
             shadowResolution: 2048,
-            shadowType: SHADOW_PCF3,
+            shadowType: SHADOW_PCF3_32F,
             color: Color.WHITE,
             intensity: 1,
             bakeDir: false
         });
 
-        super(scene, lightEntity.light.light);
+        super(scene, lightEntity.light.light, lightmapper.lightingParams);
     }
 
     get numVirtualLights() {

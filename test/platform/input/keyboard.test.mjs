@@ -1,7 +1,7 @@
-import { Keyboard } from '../../../src/platform/input/keyboard.js';
-import { EVENT_KEYDOWN, EVENT_KEYUP, KEY_UP } from '../../../src/platform/input/constants.js';
-
 import { expect } from 'chai';
+
+import { KEY_UP } from '../../../src/platform/input/constants.js';
+import { Keyboard } from '../../../src/platform/input/keyboard.js';
 
 describe('Keyboard', function () {
 
@@ -55,8 +55,8 @@ describe('Keyboard', function () {
 
     describe('#on', function () {
 
-        it('should handle keydown events', function (done) {
-            keyboard.on(EVENT_KEYDOWN, function (event) {
+        it('should handle keydown events', (done) => {
+            keyboard.on('keydown', (event) => {
                 expect(event.key).to.equal(KEY_UP);
                 expect(event.element).to.equal(window);
                 expect(event.event).to.be.an.instanceOf(KeyboardEvent);
@@ -70,8 +70,8 @@ describe('Keyboard', function () {
             window.dispatchEvent(keyDownEvent);
         });
 
-        it('should handle keyup events', function (done) {
-            keyboard.on(EVENT_KEYUP, function (event) {
+        it('should handle keyup events', (done) => {
+            keyboard.on('keyup', (event) => {
                 expect(event.key).to.equal(KEY_UP);
                 expect(event.element).to.equal(window);
                 expect(event.event).to.be.an.instanceOf(KeyboardEvent);

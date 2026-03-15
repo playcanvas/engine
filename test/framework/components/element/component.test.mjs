@@ -1,22 +1,22 @@
-import { LAYERID_UI } from '../../../../src/scene/constants.js';
-import { Application } from '../../../../src/framework/application.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
+
+import { Entity } from '../../../../src/framework/entity.js';
+import { LAYERID_UI } from '../../../../src/scene/constants.js';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ElementComponent', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        jsdomSetup();
+        app = createApp();
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     describe('#constructor', function () {
@@ -155,5 +155,39 @@ describe('ElementComponent', function () {
         e.destroy();
 
         expect(screen.screen._elements).to.not.include(e.element);
+    });
+
+    describe('#type', function () {
+
+        it('adds model to layers when type is set to image after entity is in hierarchy', function () {
+            // This tests the fix for: https://github.com/playcanvas/engine/issues/1989
+            // When entity is added to hierarchy before element type is set, the image should still render
+            const e = new Entity();
+            app.root.addChild(e);
+
+            e.addComponent('element');
+            e.element.type = 'image';
+
+            // Verify that the image element's model has been added to the layers
+            const uiLayer = app.scene.layers.getLayerById(LAYERID_UI);
+            expect(uiLayer).to.not.be.null;
+            expect(e.element._image).to.not.be.null;
+            expect(e.element._image._renderable.model).to.not.be.null;
+            expect(e.element._addedModels).to.include(e.element._image._renderable.model);
+        });
+
+        it('adds model to layers when type is set to text after entity is in hierarchy', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+
+            e.addComponent('element');
+            e.element.type = 'text';
+
+            // Verify that the text element's model has been added to the layers
+            expect(e.element._text).to.not.be.null;
+            expect(e.element._text._model).to.not.be.null;
+            expect(e.element._addedModels).to.include(e.element._text._model);
+        });
+
     });
 });

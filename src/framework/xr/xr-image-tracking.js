@@ -1,12 +1,16 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
-
 import { XrTrackedImage } from './xr-tracked-image.js';
 
 /**
+ * @import { XrManager } from './xr-manager.js'
+ */
+
+/**
  * Image Tracking provides the ability to track real world images using provided image samples and
- * their estimated sizes. The underlying system will assume that tracked image can move and rotate
- * in the real world and will try to provide transformation estimates and its tracking state.
+ * their estimated sizes. The underlying system will assume that the tracked image can move and
+ * rotate in the real world and will try to provide transformation estimates and its tracking
+ * state.
  *
  * @category XR
  */
@@ -24,7 +28,7 @@ class XrImageTracking extends EventHandler {
     static EVENT_ERROR = 'error';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -35,10 +39,10 @@ class XrImageTracking extends EventHandler {
      */
     _supported = platform.browser && !!window.XRImageTrackingResult;
 
-     /**
-      * @type {boolean}
-      * @private
-      */
+    /**
+     * @type {boolean}
+     * @private
+     */
     _available = false;
 
     /**
@@ -48,10 +52,9 @@ class XrImageTracking extends EventHandler {
     _images = [];
 
     /**
-     * Image Tracking provides the ability to track real world images by provided image samples and
-     * their estimate sizes.
+     * Create a new XrImageTracking instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
     constructor(manager) {
@@ -70,11 +73,11 @@ class XrImageTracking extends EventHandler {
      * estimate the appropriate transformation. Modifying the tracked images list is only possible
      * before an AR session is started.
      *
-     * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image - Image
-     * that is matching real world image as close as possible. Resolution of images should be at
-     * least 300x300. High resolution does NOT improve tracking performance. Color of image is
-     * irrelevant, so grayscale images can be used. Images with too many geometric features or
-     * repeating patterns will reduce tracking stability.
+     * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image -
+     * Image that is matching real world image as close as possible. Resolution of images should be
+     * at least 300x300. High resolution does _not_ improve tracking performance. The color of the
+     * image is irrelevant, so grayscale images can be used. Images with too many geometric
+     * features or repeating patterns will reduce tracking stability.
      * @param {number} width - Width (in meters) of image in the real world. Providing this value
      * as close to the real value will improve tracking quality.
      * @returns {XrTrackedImage|null} Tracked image object that will contain tracking information.
@@ -144,11 +147,11 @@ class XrImageTracking extends EventHandler {
      */
     prepareImages(callback) {
         if (this._images.length) {
-            Promise.all(this._images.map(function (trackedImage) {
+            Promise.all(this._images.map((trackedImage) => {
                 return trackedImage.prepare();
-            })).then(function (bitmaps) {
+            })).then((bitmaps) => {
                 callback(null, bitmaps);
-            }).catch(function (err) {
+            }).catch((err) => {
                 callback(err, null);
             });
         } else {

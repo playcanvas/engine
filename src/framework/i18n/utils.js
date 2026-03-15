@@ -69,7 +69,7 @@ definePluralFn([
     'vi',
     'zh',
     'id'
-], function (n) {
+], (n) => {
     return 0;
 });
 
@@ -77,7 +77,7 @@ definePluralFn([
 definePluralFn([
     'fa',
     'hi'
-], function (n) {
+], (n) => {
     if (n >= 0 && n <= 1) {
         return 0; // one
     }
@@ -89,7 +89,7 @@ definePluralFn([
 definePluralFn([
     'fr',
     'pt'
-], function (n) {
+], (n) => {
     if (n >= 0 && n < 2) {
         return 0; // one
     }
@@ -100,7 +100,7 @@ definePluralFn([
 // danish
 definePluralFn([
     'da'
-], function (n) {
+], (n) => {
     if (n === 1 || !Number.isInteger(n) && n >= 0 && n <= 1) {
         return 0; // one
     }
@@ -120,7 +120,7 @@ definePluralFn([
     'nb',
     'no',
     'ur'
-], function (n) {
+], (n) => {
     if (n === 1)  {
         return 0; // one
     }
@@ -132,7 +132,7 @@ definePluralFn([
 definePluralFn([
     'ru',
     'uk'
-], function (n) {
+], (n) => {
     if (Number.isInteger(n)) {
         const mod10 = n % 10;
         const mod100 = n % 100;
@@ -152,7 +152,7 @@ definePluralFn([
 // polish
 definePluralFn([
     'pl'
-], function (n) {
+], (n) => {
     if (Number.isInteger(n)) {
         if (n === 1) {
             return 0; // one
@@ -173,7 +173,7 @@ definePluralFn([
 // ZERO, ONE, TWO, FEW, MANY, OTHER
 definePluralFn([
     'ar'
-], function (n) {
+], (n) => {
     if (n === 0)  {
         return 0; // zero
     } else if (n === 1) {

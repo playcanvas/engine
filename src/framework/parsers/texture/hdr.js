@@ -16,8 +16,6 @@ import { TextureParser } from './texture.js';
 
 /**
  * Texture parser for hdr files.
- *
- * @ignore
  */
 class HdrParser extends TextureParser {
     constructor(registry) {
@@ -27,6 +25,11 @@ class HdrParser extends TextureParser {
 
     load(url, callback, asset) {
         Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
+
+        // .hdr assets should be loaded with 'rgbe' type, but historically they were not, so set a default type here
+        if (asset.data && !asset.data.type) {
+            asset.data.type = TEXTURETYPE_RGBE;
+        }
     }
 
     open(url, data, device, textureOptions = {}) {

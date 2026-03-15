@@ -1,6 +1,10 @@
-import { platform } from "../../core/platform.js";
-import { EventHandler } from "../../core/event-handler.js";
-import { XrMesh } from "./xr-mesh.js";
+import { platform } from '../../core/platform.js';
+import { EventHandler } from '../../core/event-handler.js';
+import { XrMesh } from './xr-mesh.js';
+
+/**
+ * @import { XrManager } from './xr-manager.js'
+ */
 
 /**
  * Mesh Detection provides the ability to detect real world meshes based on the
@@ -14,7 +18,7 @@ import { XrMesh } from "./xr-mesh.js";
  * ```
  *
  * ```javascript
- * app.xr.meshDetection.on('add', function (mesh) {
+ * app.xr.meshDetection.on('add', (mesh) => {
  *     // new mesh been added
  * });
  * ```
@@ -69,7 +73,7 @@ class XrMeshDetection extends EventHandler {
     static EVENT_REMOVE = 'remove';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -101,7 +105,7 @@ class XrMeshDetection extends EventHandler {
     /**
      * Create a new XrMeshDetection instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
     constructor(manager) {
@@ -145,8 +149,9 @@ class XrMeshDetection extends EventHandler {
 
         // remove meshes
         for (const mesh of this._index.values()) {
-            if (frame.detectedMeshes.has(mesh.xrMesh))
+            if (frame.detectedMeshes.has(mesh.xrMesh)) {
                 continue;
+            }
 
             this._removeMesh(mesh);
         }
@@ -178,8 +183,9 @@ class XrMeshDetection extends EventHandler {
         if (!this._available) return;
         this._available = false;
 
-        for (const mesh of this._index.values())
+        for (const mesh of this._index.values()) {
             this._removeMesh(mesh);
+        }
 
         this.fire('unavailable');
     }

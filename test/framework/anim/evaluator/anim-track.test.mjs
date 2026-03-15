@@ -1,9 +1,10 @@
-import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
-import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
-import { AnimSnapshot } from '../../../../src/framework/anim/evaluator/anim-snapshot.js';
-import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import { expect } from 'chai';
+
+import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
+import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
+import { AnimSnapshot } from '../../../../src/framework/anim/evaluator/anim-snapshot.js';
+import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 
 describe('AnimTrack', function () {
     const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];

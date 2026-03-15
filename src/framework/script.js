@@ -1,19 +1,14 @@
 import { getApplication } from './globals.js';
 
 /**
- * Callback used by {@link script.createLoadingScreen}.
- *
- * @callback CreateScreenCallback
- * @param {import('./app-base.js').AppBase} app - The application.
+ * @import { AppBase } from './app-base.js'
  */
 
 /**
- * Callback used by {@link script.create}.
- *
- * @callback CreateScriptCallback
- * @param {import('./app-base.js').AppBase} app - The application.
- * @returns {object} Return the Type of the script resource to be instanced for each Entity.
- * @ignore
+ * @callback CreateScreenCallback
+ * Callback used by {@link script.createLoadingScreen}.
+ * @param {AppBase} app - The application.
+ * @returns {void}
  */
 
 // flag to avoid creating multiple loading screens e.g. when
@@ -40,18 +35,19 @@ const script = {
      * @param {CreateScreenCallback} callback - A function which can set up and tear down a
      * customized loading screen.
      * @example
-     * pc.script.createLoadingScreen(function (app) {
-     *     var showSplashScreen = function () {};
-     *     var hideSplashScreen = function () {};
-     *     var showProgress = function (progress) {};
+     * pc.script.createLoadingScreen((app) => {
+     *     const showSplashScreen = () => {};
+     *     const hideSplashScreen = () => {};
+     *     const showProgress = (progress) => {};
      *     app.on("preload:start", showSplashScreen);
      *     app.on("preload:progress", showProgress);
      *     app.on("start", hideSplashScreen);
      * });
      */
     createLoadingScreen(callback) {
-        if (_createdLoadingScreen)
+        if (_createdLoadingScreen) {
             return;
+        }
 
         _createdLoadingScreen = true;
 

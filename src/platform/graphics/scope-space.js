@@ -46,8 +46,7 @@ class ScopeSpace {
      * @ignore
      */
     removeValue(value) {
-        for (const uniformName in this.variables) {
-            const uniform = this.variables[uniformName];
+        for (const uniform of this.variables.values()) {
             if (uniform.value === value) {
                 uniform.value = null;
             }

@@ -1,13 +1,11 @@
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -183,7 +181,7 @@ for (let k = 0; k < 3; k++) {
 
 // update function called once per frame
 let time = 0;
-app.on('update', function (dt) {
+app.on('update', (dt) => {
     time += dt;
 
     for (let m = 0; m < morphInstances.length; m++) {
@@ -196,17 +194,6 @@ app.on('update', function (dt) {
     // orbit camera around
     camera.setLocalPosition(16 * Math.sin(time * 0.2), 4, 16 * Math.cos(time * 0.2));
     camera.lookAt(pc.Vec3.ZERO);
-
-    // debug display the morph target textures blended together
-    if (morphInstances[0].texturePositions) {
-        // @ts-ignore
-        app.drawTexture(-0.7, -0.7, 0.4, 0.4, morphInstances[0].texturePositions);
-    }
-
-    if (morphInstances[0].textureNormals) {
-        // @ts-ignore
-        app.drawTexture(0.7, -0.7, 0.4, 0.4, morphInstances[0].textureNormals);
-    }
 });
 
 export { app };

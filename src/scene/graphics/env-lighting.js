@@ -65,7 +65,7 @@ class EnvLighting {
     static generateSkyboxCubemap(source, size) {
         const device = source.device;
 
-        DebugGraphics.pushGpuMarker(device, "genSkyboxCubemap");
+        DebugGraphics.pushGpuMarker(device, 'genSkyboxCubemap');
 
         const result = createCubemap(device, size || (source.cubemap ? source.width : source.width / 4), PIXELFORMAT_RGBA8, false);
 
@@ -93,11 +93,11 @@ class EnvLighting {
     static generateLightingSource(source, options) {
         const device = source.device;
 
-        DebugGraphics.pushGpuMarker(device, "genLightingSource");
+        DebugGraphics.pushGpuMarker(device, 'genLightingSource');
 
         const format = lightingSourcePixelFormat(device);
         const result = options?.target || new Texture(device, {
-            name: `lighting-source`,
+            name: 'lighting-source',
             cubemap: true,
             width: options?.size || 128,
             height: options?.size || 128,
@@ -138,7 +138,7 @@ class EnvLighting {
         const device = source.device;
         const format = lightingPixelFormat(device);
 
-        DebugGraphics.pushGpuMarker(device, "genAtlas");
+        DebugGraphics.pushGpuMarker(device, 'genAtlas');
 
         const result = options?.target || new Texture(device, {
             name: 'envAtlas',
@@ -152,7 +152,7 @@ class EnvLighting {
             mipmaps: false
         });
 
-        DebugGraphics.pushGpuMarker(device, "mipmaps");
+        DebugGraphics.pushGpuMarker(device, 'mipmaps');
 
         const s = result.width / 512;
 
@@ -173,7 +173,7 @@ class EnvLighting {
         }
 
         DebugGraphics.popGpuMarker(device);
-        DebugGraphics.pushGpuMarker(device, "reflections");
+        DebugGraphics.pushGpuMarker(device, 'reflections');
 
         // generate blurry reflections
         rect.set(0, 256 * s, 256 * s, 128 * s);
@@ -191,7 +191,7 @@ class EnvLighting {
         }
 
         DebugGraphics.popGpuMarker(device);
-        DebugGraphics.pushGpuMarker(device, "ambient");
+        DebugGraphics.pushGpuMarker(device, 'ambient');
 
         // generate ambient
         rect.set(128 * s, (256 + 128) * s, 64 * s, 32 * s);
@@ -228,7 +228,7 @@ class EnvLighting {
         const format = sources[0].format;
         const type = sources[0].type;
 
-        DebugGraphics.pushGpuMarker(device, "genPrefilteredAtlas");
+        DebugGraphics.pushGpuMarker(device, 'genPrefilteredAtlas');
 
         const result = options?.target || new Texture(device, {
             name: 'envPrefilteredAtlas',
@@ -242,7 +242,7 @@ class EnvLighting {
             mipmaps: false
         });
 
-        DebugGraphics.pushGpuMarker(device, "mipmaps");
+        DebugGraphics.pushGpuMarker(device, 'mipmaps');
 
         const s = result.width / 512;
 
@@ -263,7 +263,7 @@ class EnvLighting {
         }
 
         DebugGraphics.popGpuMarker(device);
-        DebugGraphics.pushGpuMarker(device, "reflections");
+        DebugGraphics.pushGpuMarker(device, 'reflections');
 
         // copy blurry reflections
         rect.set(0, 256 * s, 256 * s, 128 * s);
@@ -279,7 +279,7 @@ class EnvLighting {
         }
 
         DebugGraphics.popGpuMarker(device);
-        DebugGraphics.pushGpuMarker(device, "ambient");
+        DebugGraphics.pushGpuMarker(device, 'ambient');
 
         // generate ambient
         rect.set(128 * s, (256 + 128) * s, 64 * s, 32 * s);

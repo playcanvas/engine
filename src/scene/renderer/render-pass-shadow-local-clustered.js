@@ -1,4 +1,4 @@
-import { RenderPass } from "../../platform/graphics/render-pass.js";
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 /**
  * A render pass used to render local clustered shadows. This is done inside a single render pass,

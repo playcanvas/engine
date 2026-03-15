@@ -297,7 +297,7 @@ TextMesh.prototype.parseCommands = function (commands) {
             const p1 = poly.points[i];
             const p2 = poly.points[i + 1];
             vertices.push(p1.x * scalar, p1.y * scalar, this.depth, p2.x * scalar, p2.y * scalar, this.depth,
-                          p1.x * scalar, p1.y * scalar, 0, p2.x * scalar, p2.y * scalar, 0);
+                p1.x * scalar, p1.y * scalar, 0, p2.x * scalar, p2.y * scalar, 0);
             indices.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
         }
     });
@@ -329,7 +329,7 @@ TextMesh.prototype.calculateWidth = function () {
 
 TextMesh.prototype.destroyCharacters = function () {
     // Destroy all existing characters
-    this.characters.forEach(function (character) {
+    this.characters.forEach((character) => {
         character.destroy();
     });
     this.characters.length = 0;

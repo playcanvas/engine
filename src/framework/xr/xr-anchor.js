@@ -1,22 +1,26 @@
 import { EventHandler } from '../../core/event-handler.js';
-
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 
 /**
- * Callback used by {@link XrAnchor#persist}.
- *
- * @callback XrAnchorPersistCallback
- * @param {Error|null} err - The Error object if failed to persist an anchor or null.
- * @param {string|null} uuid - Unique string that can be used to restore {@link XrAnchor}
- * in another session.
+ * @import { XrAnchors } from './xr-anchors.js'
  */
 
 /**
- * Callback used by {@link XrAnchor#forget}.
- *
+ * @callback XrAnchorPersistCallback
+ * Callback used by {@link XrAnchor#persist}.
+ * @param {Error|null} err - The Error object if failed to persist an anchor or null.
+ * @param {string|null} uuid - Unique string that can be used to restore an {@link XrAnchor} in
+ * another session.
+ * @returns {void}
+ */
+
+/**
  * @callback XrAnchorForgetCallback
- * @param {Error|null} err - The Error object if failed to forget an anchor or null if succeeded.
+ * Callback used by {@link XrAnchor#forget}.
+ * @param {Error|null} err - The Error object if failed to forget an {@link XrAnchor} or null if
+ * succeeded.
+ * @returns {void}
  */
 
 /**
@@ -102,7 +106,7 @@ class XrAnchor extends EventHandler {
     _uuidRequests = null;
 
     /**
-     * @param {import('./xr-anchors.js').XrAnchors} anchors - Anchor manager.
+     * @param {XrAnchors} anchors - Anchor manager.
      * @param {object} xrAnchor - Native XRAnchor object that is provided by WebXR API.
      * @param {string|null} uuid - ID string associated with a persistent anchor.
      * @ignore
@@ -131,13 +135,15 @@ class XrAnchor extends EventHandler {
      * @ignore
      */
     update(frame) {
-        if (!this._xrAnchor)
+        if (!this._xrAnchor) {
             return;
+        }
 
         const pose = frame.getPose(this._xrAnchor.anchorSpace, this._anchors.manager._referenceSpace);
         if (pose) {
-            if (this._position.equals(pose.transform.position) && this._rotation.equals(pose.transform.orientation))
+            if (this._position.equals(pose.transform.position) && this._rotation.equals(pose.transform.orientation)) {
                 return;
+            }
 
             this._position.copy(pose.transform.position);
             this._rotation.copy(pose.transform.orientation);
@@ -200,23 +206,23 @@ class XrAnchor extends EventHandler {
         this._uuidRequests = [];
 
         this._xrAnchor.requestPersistentHandle()
-            .then((uuid) => {
-                this._uuid = uuid;
-                this._anchors._indexByUuid.set(this._uuid, this);
-                callback?.(null, uuid);
-                for (const uuidRequest of this._uuidRequests) {
-                    uuidRequest(null, uuid);
-                }
-                this._uuidRequests = null;
-                this.fire('persist', uuid);
-            })
-            .catch((ex) => {
-                callback?.(ex, null);
-                for (const uuidRequest of this._uuidRequests) {
-                    uuidRequest(ex, null);
-                }
-                this._uuidRequests = null;
-            });
+        .then((uuid) => {
+            this._uuid = uuid;
+            this._anchors._indexByUuid.set(this._uuid, this);
+            callback?.(null, uuid);
+            for (const uuidRequest of this._uuidRequests) {
+                uuidRequest(null, uuid);
+            }
+            this._uuidRequests = null;
+            this.fire('persist', uuid);
+        })
+        .catch((ex) => {
+            callback?.(ex, null);
+            for (const uuidRequest of this._uuidRequests) {
+                uuidRequest(ex, null);
+            }
+            this._uuidRequests = null;
+        });
     }
 
     /**

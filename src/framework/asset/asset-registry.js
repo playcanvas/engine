@@ -1,35 +1,39 @@
 import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
+import { Tracing } from '../../core/tracing.js';
+import { TRACEID_ASSETS } from '../../core/constants.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { TagsCache } from '../../core/tags-cache.js';
-
 import { standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
-
 import { Asset } from './asset.js';
 
 /**
- * Callback used by {@link AssetRegistry#filter} to filter assets.
- *
+ * @import { BundleRegistry } from '../bundle/bundle-registry.js'
+ * @import { ResourceLoader } from '../handlers/loader.js'
+ */
+
+/**
  * @callback FilterAssetCallback
+ * Callback used by {@link AssetRegistry#filter} to filter assets.
  * @param {Asset} asset - The current asset to filter.
  * @returns {boolean} Return `true` to include asset to result list.
  */
 
 /**
+ * @callback LoadAssetCallback
  * Callback used by {@link AssetRegistry#loadFromUrl} and called when an asset is loaded (or an
  * error occurs).
- *
- * @callback LoadAssetCallback
  * @param {string|null} err - The error message is null if no errors were encountered.
  * @param {Asset} [asset] - The loaded asset if no errors were encountered.
+ * @returns {void}
  */
 
 /**
+ * @callback BundlesFilterCallback
  * Callback used by {@link ResourceLoader#load} and called when an asset is choosing a bundle
  * to load from. Return a single bundle to ensure asset is loaded from it.
- *
- * @callback BundlesFilterCallback
- * @param {import('../bundle/bundle.js').Bundle[]} bundles - List of bundles which contain the asset.
+ * @param {Asset[]} bundles - List of bundle assets which contain the asset.
+ * @returns {Asset} Return a single bundle asset to ensure asset is loaded from it.
  */
 
 /**
@@ -163,6 +167,12 @@ class AssetRegistry extends EventHandler {
     _assets = new Set();
 
     /**
+     * @type {ResourceLoader}
+     * @private
+     */
+    _loader;
+
+    /**
      * @type {Map<number, Asset>}
      * @private
      */
@@ -185,7 +195,7 @@ class AssetRegistry extends EventHandler {
      *
      * @private
      */
-    _tags = new TagsCache('_id');
+    _tags = new TagsCache('id');
 
     /**
      * A URL prefix that will be added to all asset loading requests.
@@ -197,15 +207,14 @@ class AssetRegistry extends EventHandler {
     /**
      * BundleRegistry
      *
-     * @type {import('../bundle/bundle-registry.js').BundleRegistry|null}
+     * @type {BundleRegistry|null}
      */
     bundles = null;
 
     /**
      * Create an instance of an AssetRegistry.
      *
-     * @param {import('../handlers/loader.js').ResourceLoader} loader - The ResourceLoader used to
-     * load the asset files.
+     * @param {ResourceLoader} loader - The ResourceLoader used to load the asset files.
      */
     constructor(loader) {
         super();
@@ -214,9 +223,20 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
+     * The ResourceLoader used to load asset files.
+     *
+     * @type {ResourceLoader}
+     * @ignore
+     */
+    get loader() {
+        return this._loader;
+    }
+
+    /**
      * Create a filtered list of assets from the registry.
      *
-     * @param {object} filters - Properties to filter on, currently supports: 'preload: true|false'.
+     * @param {object} [filters] - Filter options.
+     * @param {boolean} [filters.preload] - Filter by preload setting.
      * @returns {Asset[]} The filtered list of assets.
      */
     list(filters = {}) {
@@ -228,7 +248,7 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * Add an asset to the registry.
+     * Add an asset to the registry. If {@link Asset#preload} is `true`, it will also get loaded.
      *
      * @param {Asset} asset - The asset to add.
      * @example
@@ -248,8 +268,9 @@ class AssetRegistry extends EventHandler {
             this._urlToAsset.set(asset.file.url, asset);
         }
 
-        if (!this._nameToAsset.has(asset.name))
+        if (!this._nameToAsset.has(asset.name)) {
             this._nameToAsset.set(asset.name, new Set());
+        }
 
         this._nameToAsset.get(asset.name).add(asset);
 
@@ -263,13 +284,14 @@ class AssetRegistry extends EventHandler {
         asset.tags.on('remove', this._onTagRemove, this);
 
         this.fire('add', asset);
-        this.fire('add:' + asset.id, asset);
+        this.fire(`add:${asset.id}`, asset);
         if (asset.file?.url) {
-            this.fire('add:url:' + asset.file.url, asset);
+            this.fire(`add:url:${asset.file.url}`, asset);
         }
 
-        if (asset.preload)
+        if (asset.preload) {
             this.load(asset);
+        }
     }
 
     /**
@@ -309,9 +331,9 @@ class AssetRegistry extends EventHandler {
 
         asset.fire('remove', asset);
         this.fire('remove', asset);
-        this.fire('remove:' + asset.id, asset);
+        this.fire(`remove:${asset.id}`, asset);
         if (asset.file?.url) {
-            this.fire('remove:url:' + asset.file.url, asset);
+            this.fire(`remove:url:${asset.file.url}`, asset);
         }
 
         return true;
@@ -343,7 +365,7 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * Load the asset's file from a remote source. Listen for "load" events on the asset to find
+     * Load the asset's file from a remote source. Listen for `load` events on the asset to find
      * out when it is loaded.
      *
      * @param {Asset} asset - The asset to load.
@@ -354,8 +376,8 @@ class AssetRegistry extends EventHandler {
      * is already loaded is bypassed, which forces loading of asset regardless.
      * @param {BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
      * when loading an asset that is contained in any of the bundles. It provides an array of
-     * bundles and will ensure asset is loaded from bundle returned from a callback. By default
-     * smallest filesize bundle is choosen.
+     * bundles and will ensure asset is loaded from bundle returned from a callback. By default,
+     * the smallest filesize bundle is chosen.
      * @example
      * // load some assets
      * const assetsToLoad = [
@@ -363,8 +385,8 @@ class AssetRegistry extends EventHandler {
      *     app.assets.find("Another Asset")
      * ];
      * let count = 0;
-     * assetsToLoad.forEach(function (assetToLoad) {
-     *     assetToLoad.ready(function (asset) {
+     * assetsToLoad.forEach((assetToLoad) => {
+     *     assetToLoad.ready((asset) => {
      *         count++;
      *         if (count === assetsToLoad.length) {
      *             // done
@@ -385,9 +407,10 @@ class AssetRegistry extends EventHandler {
 
         const _fireLoad = () => {
             this.fire('load', asset);
-            this.fire('load:' + asset.id, asset);
-            if (file && file.url)
-                this.fire('load:url:' + file.url, asset);
+            this.fire(`load:${asset.id}`, asset);
+            if (file && file.url) {
+                this.fire(`load:url:${file.url}`, asset);
+            }
             asset.fire('load', asset);
         };
 
@@ -415,9 +438,10 @@ class AssetRegistry extends EventHandler {
                     _fireLoad();
                 } else {
                     this.fire('load:start', asset);
-                    this.fire('load:start:' + asset.id, asset);
-                    if (file && file.url)
-                        this.fire('load:start:url:' + file.url, asset);
+                    this.fire(`load:start:${asset.id}`, asset);
+                    if (file && file.url) {
+                        this.fire(`load:start:url:${file.url}`, asset);
+                    }
                     asset.fire('load:start', asset);
                     asset.resource.on('load', _fireLoad);
                 }
@@ -433,7 +457,7 @@ class AssetRegistry extends EventHandler {
 
             if (err) {
                 this.fire('error', err, asset);
-                this.fire('error:' + asset.id, err, asset);
+                this.fire(`error:${asset.id}`, err, asset);
                 asset.fire('error', err, asset);
             } else {
                 if (asset.type === 'script') {
@@ -442,7 +466,10 @@ class AssetRegistry extends EventHandler {
                         // remove old element
                         document.head.removeChild(handler._cache[asset.id]);
                     }
-                    handler._cache[asset.id] = extra;
+                    // prevents setting a null value in cache for esm scripts
+                    if (extra) {
+                        handler._cache[asset.id] = extra;
+                    }
                 }
 
                 _opened(resource);
@@ -452,7 +479,7 @@ class AssetRegistry extends EventHandler {
         if (file || asset.type === 'cubemap') {
             // start loading the resource
             this.fire('load:start', asset);
-            this.fire('load:' + asset.id + ':start', asset);
+            this.fire(`load:${asset.id}:start`, asset);
 
             asset.loading = true;
 
@@ -463,11 +490,13 @@ class AssetRegistry extends EventHandler {
                 const assetIds = asset.data.assets;
                 for (let i = 0; i < assetIds.length; i++) {
                     const assetInBundle = this._idToAsset.get(assetIds[i]);
-                    if (!assetInBundle)
+                    if (!assetInBundle) {
                         continue;
+                    }
 
-                    if (assetInBundle.loaded || assetInBundle.resource || assetInBundle.loading)
+                    if (assetInBundle.loaded || assetInBundle.resource || assetInBundle.loading) {
                         continue;
+                    }
 
                     assetInBundle.loading = true;
                 }
@@ -675,8 +704,9 @@ class AssetRegistry extends EventHandler {
         }
 
         // add
-        if (!this._nameToAsset.has(asset.name))
+        if (!this._nameToAsset.has(asset.name)) {
             this._nameToAsset.set(asset.name, new Set());
+        }
 
         this._nameToAsset.get(asset.name).add(asset);
     }
@@ -702,8 +732,8 @@ class AssetRegistry extends EventHandler {
      * const assets = app.assets.findByTag(["level-1", "monster"], ["level-2", "monster"]);
      * // returns all assets that tagged by (`level-1` AND `monster`) OR (`level-2` AND `monster`)
      */
-    findByTag() {
-        return this._tags.find(arguments);
+    findByTag(...query) {
+        return this._tags.find(query);
     }
 
     /**
@@ -758,6 +788,48 @@ class AssetRegistry extends EventHandler {
         const results = Array.from(items);
         if (!type) return results;
         return results.filter(asset => asset.type === type);
+    }
+
+    /**
+     * Logs all assets in the registry to the console. Used for debugging with TRACEID_ASSETS.
+     *
+     * @ignore
+     */
+    log() {
+        // #if _DEBUG
+        if (!Tracing.get(TRACEID_ASSETS)) return;
+
+        const assets = this.list();
+        Debug.trace(TRACEID_ASSETS, `Assets: ${assets.length}`);
+
+        // Count by type and status
+        const byType = {};
+        let loadedCount = 0;
+        let loadingCount = 0;
+
+        assets.forEach((asset, index) => {
+            // Count by type
+            byType[asset.type] = (byType[asset.type] || 0) + 1;
+
+            // Count by status
+            if (asset.loaded) loadedCount++;
+            else if (asset.loading) loadingCount++;
+
+            // Determine status string
+            const status = asset.loaded ? 'loaded' : (asset.loading ? 'loading' : 'pending');
+
+            // Get URL (skip if same as name to avoid duplication)
+            const url = asset.file?.url;
+            const urlPart = (url && url !== asset.name) ? ` ${url}` : '';
+
+            Debug.trace(TRACEID_ASSETS, `${index}. ID:${asset.id} [${asset.type}] "${asset.name}" ${status}${urlPart}`);
+        });
+
+        // Log summary
+        const pendingCount = assets.length - loadedCount - loadingCount;
+        Debug.trace(TRACEID_ASSETS, `Status: ${loadedCount} loaded, ${loadingCount} loading, ${pendingCount} pending`);
+        Debug.trace(TRACEID_ASSETS, `Types: ${Object.entries(byType).map(([type, count]) => `${type}:${count}`).join(', ')}`);
+        // #endif
     }
 }
 

@@ -18,7 +18,12 @@ import {
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32,
-    typedArrayIndexFormats
+    typedArrayIndexFormats,
+    requiresManualGamma,
+    PIXELFORMAT_SRGBA8,
+    SEMANTIC_POSITION,
+    SHADERLANGUAGE_WGSL,
+    SHADERLANGUAGE_GLSL
 } from '../../platform/graphics/constants.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
@@ -26,25 +31,21 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
-import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 
 import {
     BLEND_NORMAL,
     EMITTERSHAPE_BOX,
     PARTICLEMODE_GPU,
     PARTICLEORIENTATION_SCREEN, PARTICLEORIENTATION_WORLD,
-    PARTICLESORT_NONE,
-    SHADER_FORWARD
+    PARTICLESORT_NONE
 } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
-import { Material } from '../materials/material.js';
-import { getProgramLibrary } from '../shader-lib/get-program-library.js';
-import { createShaderFromCode } from '../shader-lib/utils.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
-import { particle } from '../shader-lib/programs/particle.js';
+import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';
+import { ParticleMaterial } from './particle-material.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 const particleVerts = [
     [-1, -1],
@@ -56,8 +57,9 @@ const particleVerts = [
 function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
 
     let mipFilter = FILTER_NEAREST;
-    if (filter && format === PIXELFORMAT_RGBA8)
+    if (filter && (format === PIXELFORMAT_RGBA8 || format === PIXELFORMAT_SRGBA8)) {
         mipFilter = FILTER_LINEAR;
+    }
 
     const texture = new Texture(device, {
         width: width,
@@ -74,7 +76,7 @@ function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_R
 
     const pixels = texture.lock();
 
-    if (format === PIXELFORMAT_RGBA8) {
+    if (format === PIXELFORMAT_RGBA8 || format === PIXELFORMAT_SRGBA8) {
         const temp = new Uint8Array(pixelData.length);
         for (let i = 0; i < pixelData.length; i++) {
             temp[i] = pixelData[i] * mult8Bit * 255;
@@ -219,6 +221,21 @@ function divGraphFrom2Curves(curve1, curve2, outUMax) {
 const particleEmitterDeviceCache = new DeviceCache();
 
 class ParticleEmitter {
+    /** @type {ParticleMaterial|null} */
+    material = null;
+
+    /** @type {Texture|null} */
+    internalTex0 = null;
+
+    /** @type {Texture|null} */
+    internalTex1 = null;
+
+    /** @type {Texture|null} */
+    internalTex2 = null;
+
+    /** @type {Texture|null} */
+    colorParam = null;
+
     constructor(graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
         const gd = graphicsDevice;
@@ -264,7 +281,7 @@ class ParticleEmitter {
         setProperty('alignToMotion', false);
         setProperty('depthSoftening', 0);
         setProperty('mesh', null);                              // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
-                                                                // Leave undefined to use simple quads
+        // Leave undefined to use simple quads
         setProperty('particleNormal', new Vec3(0, 1, 0));
         setProperty('orientation', PARTICLEORIENTATION_SCREEN);
 
@@ -318,11 +335,6 @@ class ParticleEmitter {
         this.animParams = new Float32Array(4);
         this.animIndexParams = new Float32Array(2);
 
-        this.internalTex0 = null;
-        this.internalTex1 = null;
-        this.internalTex2 = null;
-        this.colorParam = null;
-
         this.vbToSort = null;
         this.vbOld = null;
         this.particleDistance = null;
@@ -348,8 +360,8 @@ class ParticleEmitter {
         this.worldBoundsMul = new Vec3();
         this.worldBoundsAdd = new Vec3();
         this.timeToSwitchBounds = 0;
-        // this.prevPos = new Vec3();
 
+        // simulation shaders - do not destroy those, as they're cached and shared between emitters
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
         this.shaderParticleUpdateOnStop = null;
@@ -394,7 +406,7 @@ class ParticleEmitter {
                 }
             }
 
-            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_RGBA8, 1.0, true);
+            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_SRGBA8, 1.0, true);
             texture.minFilter = FILTER_LINEAR;
             texture.magFilter = FILTER_LINEAR;
             return texture;
@@ -402,7 +414,6 @@ class ParticleEmitter {
     }
 
     onChangeCamera() {
-        this.regenShader();
         this.resetMaterial();
     }
 
@@ -570,7 +581,7 @@ class ParticleEmitter {
         gd.fragmentUniformsCount < 64 || // force CPU if can't use many uniforms; TODO: change to more realistic value (this one is iphone's)
         gd.forceCpuParticles;
 
-        this._destroyResources();
+        const wasVisible = this._destroyResources();
 
         this.pack8 = (this.pack8 || !gd.textureFloatRenderable) && !this.useCpu;
 
@@ -584,7 +595,6 @@ class ParticleEmitter {
         this.resetWorldBounds();
 
         if (this.node) {
-            // this.prevPos.copy(this.node.getPosition());
             this.worldBounds.setFromTransformedAabb(
                 this.localBounds, this.localSpace ? Mat4.IDENTITY : this.node.getWorldTransform());
 
@@ -648,22 +658,43 @@ class ParticleEmitter {
             this.swapTex = false;
         }
 
-        const shaderCodeStart = (this.localSpace ? '#define LOCAL_SPACE\n' : '') + shaderChunks.particleUpdaterInitPS +
-        (this.pack8 ? (shaderChunks.particleInputRgba8PS + shaderChunks.particleOutputRgba8PS) :
-            (shaderChunks.particleInputFloatPS + shaderChunks.particleOutputFloatPS)) +
-        (this.emitterShape === EMITTERSHAPE_BOX ? shaderChunks.particleUpdaterAABBPS : shaderChunks.particleUpdaterSpherePS) +
-        shaderChunks.particleUpdaterStartPS;
-        const shaderCodeRespawn = shaderCodeStart + shaderChunks.particleUpdaterRespawnPS + shaderChunks.particleUpdaterEndPS;
-        const shaderCodeNoRespawn = shaderCodeStart + shaderChunks.particleUpdaterNoRespawnPS + shaderChunks.particleUpdaterEndPS;
-        const shaderCodeOnStop = shaderCodeStart + shaderChunks.particleUpdaterOnStopPS + shaderChunks.particleUpdaterEndPS;
+        // create 3 simulation shaders
+        const defines = new Map();
+        if (this.localSpace) defines.set('LOCAL_SPACE', '');
+        if (this.pack8) defines.set('PACK8', '');
+        if (this.emitterShape === EMITTERSHAPE_BOX) defines.set('EMITTERSHAPE_BOX', '');
+        const shaderUniqueId = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
 
-        // Note: createShaderFromCode can return a shader from the cache (not a new shader) so we *should not* delete these shaders
-        // when the particle emitter is destroyed
-        const params = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
-        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, `ParticleUpdateRespawn-${params}`);
-        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, `ParticleUpdateNoRespawn-${params}`);
-        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, `ParticleUpdateStop-${params}`);
+        const engineChunks = ShaderChunks.get(gd, gd.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
+        const includes = new Map(engineChunks);
 
+        // shader options shared by all 3 shaders
+        const shaderOptions = {
+            attributes: { vertex_position: SEMANTIC_POSITION },
+            vertexChunk: 'fullscreenQuadVS',
+            fragmentChunk: 'particle_simulationPS',
+            fragmentDefines: defines,
+            fragmentIncludes: includes
+        };
+
+        // shader 1
+        shaderOptions.uniqueName = `ParticleUpdateRespawn-${shaderUniqueId}`;
+        defines.set('RESPAWN', '');
+        this.shaderParticleUpdateRespawn = ShaderUtils.createShader(gd, shaderOptions);
+        defines.delete('RESPAWN');
+
+        // shader 2
+        shaderOptions.uniqueName = `ParticleUpdateNoRespawn-${shaderUniqueId}`;
+        defines.set('NO_RESPAWN', '');
+        this.shaderParticleUpdateNoRespawn = ShaderUtils.createShader(gd, shaderOptions);
+        defines.delete('NO_RESPAWN');
+
+        // shader 3
+        shaderOptions.uniqueName = `ParticleUpdateStop-${shaderUniqueId}`;
+        defines.set('ON_STOP', '');
+        this.shaderParticleUpdateOnStop = ShaderUtils.createShader(gd, shaderOptions);
+
+        // allocate various buffers
         this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
         this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
         this._allocate(this.numParticles);
@@ -676,19 +707,10 @@ class ParticleEmitter {
         mesh.primitive[0].count = (this.numParticles * this.numParticleIndices);
         mesh.primitive[0].indexed = true;
 
-        this.material = new Material();
-        this.material.name = this.node.name;
-        this.material.cull = CULLFACE_NONE;
-        this.material.alphaWrite = false;
-        this.material.blendType = this.blendType;
+        this.material = this._createMaterial();
 
-        this.material.depthWrite = this.depthWrite;
-        this.material.emitter = this;
-
-        this.regenShader();
         this.resetMaterial();
 
-        const wasVisible = this.meshInstance ? this.meshInstance.visible : true;
         this.meshInstance = new MeshInstance(mesh, this.material, this.node);
         this.meshInstance.pick = false;
         this.meshInstance.updateKey(); // shouldn't be here?
@@ -701,7 +723,7 @@ class ParticleEmitter {
         this.meshInstance._updateAabb = false;
         this.meshInstance.visible = wasVisible;
 
-        this._initializeTextures();
+        this._setMaterialTextures();
 
         this.resetTime();
 
@@ -794,11 +816,18 @@ class ParticleEmitter {
             this.internalTex2 = _createTexture(gd, precision, 1, packTexture5Floats(this.qRotSpeed, this.qScale, this.qScaleDiv, this.qRotSpeedDiv, this.qAlphaDiv));
             this.internalTex3 = _createTexture(gd, precision, 1, packTexture2Floats(this.qRadialSpeed, this.qRadialSpeedDiv));
         }
-        this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), PIXELFORMAT_RGBA8, 1.0, true);
+        this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), PIXELFORMAT_SRGBA8, 1.0, true);
     }
 
-    _initializeTextures() {
+    _setMaterialTextures() {
         if (this.colorMap) {
+
+            Debug.call(() => {
+                if (requiresManualGamma(this.colorMap.format)) {
+                    Debug.warnOnce(`ParticleEmitter: colorMap texture [${this.colorMap.name}] is not using sRGB format. Please correct it for the correct rendering.`, this.colorMap);
+                }
+            });
+
             this.material.setParameter('colorMap', this.colorMap);
             if (this.lighting && this.normalMap) {
                 this.material.setParameter('normalMap', this.normalMap);
@@ -806,69 +835,16 @@ class ParticleEmitter {
         }
     }
 
-    regenShader() {
-        const programLib = getProgramLibrary(this.graphicsDevice);
-        programLib.register('particle', particle);
+    _createMaterial() {
 
-        const hasNormal = (this.normalMap !== null);
-        this.normalOption = 0;
-        if (this.lighting) {
-            this.normalOption = hasNormal ? 2 : 1;
-        }
-        // getShaderVariant is also called by pc.Scene when all shaders need to be updated
-        this.material.getShaderVariant = function (dev, sc, defs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        const material = new ParticleMaterial(this);
+        material.name = `EmitterMaterial:${this.node.name}`;
+        material.cull = CULLFACE_NONE;
+        material.alphaWrite = false;
+        material.blendType = this.blendType;
+        material.depthWrite = this.depthWrite;
 
-            // The app works like this:
-            // 1. Emitter init
-            // 2. Update. No camera is assigned to emitters
-            // 3. Render; activeCamera = camera; shader init
-            // 4. Update. activeCamera is set to emitters
-            // -----
-            // The problem with 1st frame render is that we init the shader without having any camera set to emitter -
-            // so wrong shader is being compiled.
-            // To fix it, we need to check activeCamera!=emitter.camera in shader init too
-            if (this.emitter.scene) {
-                if (this.emitter.camera !== this.emitter.scene._activeCamera) {
-                    this.emitter.camera = this.emitter.scene._activeCamera;
-                    this.emitter.onChangeCamera();
-                }
-            }
-
-            // set by Editor if running inside editor
-            const inTools = this.emitter.inTools;
-            const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
-
-            // renderParams and other parametesr should be passed in, but they are not so work around it
-            renderParams = renderParams ?? this.emitter.camera?.renderingParams ?? this.emitter.scene?.rendering;
-
-            const shader = programLib.getProgram('particle', {
-                pass: SHADER_FORWARD,
-                useCpu: this.emitter.useCpu,
-                normal: this.emitter.normalOption,
-                halflambert: this.emitter.halfLambert,
-                stretch: this.emitter.stretch,
-                alignToMotion: this.emitter.alignToMotion,
-                soft: this.emitter.depthSoftening,
-                mesh: this.emitter.useMesh,
-                gamma: renderParams?.gammaCorrection ?? 0,
-                toneMap: renderParams?.toneMapping ?? 0,
-                fog: (this.emitter.scene && !this.emitter.noFog) ? this.emitter.scene.fog : 'none',
-                wrap: this.emitter.wrap && this.emitter.wrapBounds,
-                localSpace: this.emitter.localSpace,
-
-                // in Editor, screen space particles (children of 2D Screen) are still rendered in 3d space
-                screenSpace: inTools ? false : this.emitter.screenSpace,
-
-                blend: this.blendType,
-                animTex: this.emitter._isAnimated(),
-                animTexLoop: this.emitter.animLoop,
-                pack8: this.emitter.pack8,
-                customFace: this.emitter.orientation !== PARTICLEORIENTATION_SCREEN
-            }, processingOptions);
-
-            return shader;
-        };
-        this.material.shader = this.material.getShaderVariant();
+        return material;
     }
 
     resetMaterial() {
@@ -916,15 +892,8 @@ class ParticleEmitter {
             material.setParameter('wrapBounds', this.wrapBoundsUniform);
         }
 
-        if (this.colorMap) {
-            material.setParameter('colorMap', this.colorMap);
-        }
+        this._setMaterialTextures();
 
-        if (this.lighting) {
-            if (this.normalMap) {
-                material.setParameter('normalMap', this.normalMap);
-            }
-        }
         if (this.depthSoftening > 0) {
             material.setParameter('softening', 1.0 / (this.depthSoftening * this.depthSoftening * 100)); // remap to more perceptually linear
         }
@@ -948,8 +917,9 @@ class ParticleEmitter {
                 n = emitterMat.transformVector(this.particleNormal).normalize();
             }
             const t = new Vec3(1, 0, 0);
-            if (Math.abs(t.dot(n)) === 1)
+            if (Math.abs(t.dot(n)) === 1) {
                 t.set(0, 0, 1);
+            }
             const b = new Vec3().cross(n, t).normalize();
             t.cross(b, n).normalize();
             tangent = new Float32Array([t.x, t.y, t.z]);
@@ -959,6 +929,27 @@ class ParticleEmitter {
         this.material.setParameter('faceBinorm', binormal);
     }
 
+    getVertexInfo() {
+        const elements = [];
+        if (!this.useCpu) {
+            // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
+            elements.push({ semantic: SEMANTIC_ATTR0, components: 4, type: TYPE_FLOAT32 });
+            if (this.useMesh) {
+                elements.push({ semantic: SEMANTIC_ATTR1, components: 2, type: TYPE_FLOAT32 });
+            }
+        } else {
+            elements.push(
+                { semantic: SEMANTIC_ATTR0, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR1, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR2, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR3, components: 1, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR4, components: this.useMesh ? 4 : 2, type: TYPE_FLOAT32 }
+            );
+        }
+
+        return elements;
+    }
+
     // Declares vertex format, creates VB and IB
     _allocate(numParticles) {
         const psysVertCount = numParticles * this.numParticleVerts;
@@ -966,55 +957,13 @@ class ParticleEmitter {
 
         if ((this.vertexBuffer === undefined) || (this.vertexBuffer.getNumVertices() !== psysVertCount)) {
             // Create the particle vertex format
-            if (!this.useCpu) {
-                // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
-                const elements = [{
-                    semantic: SEMANTIC_ATTR0,
-                    components: 4,
-                    type: TYPE_FLOAT32
-                }];
-                if (this.useMesh) {
-                    elements.push({
-                        semantic: SEMANTIC_ATTR1,
-                        components: 2,
-                        type: TYPE_FLOAT32
-                    });
-                }
-                const particleFormat = new VertexFormat(this.graphicsDevice, elements);
+            const elements = this.getVertexInfo();
+            const vertexFormat = new VertexFormat(this.graphicsDevice, elements);
 
-                this.vertexBuffer = new VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, {
-                    usage: BUFFER_DYNAMIC
-                });
-                this.indexBuffer = new IndexBuffer(this.graphicsDevice, INDEXFORMAT_UINT32, psysIndexCount);
-            } else {
-                const elements = [{
-                    semantic: SEMANTIC_ATTR0,
-                    components: 4,
-                    type: TYPE_FLOAT32
-                }, {
-                    semantic: SEMANTIC_ATTR1,
-                    components: 4,
-                    type: TYPE_FLOAT32
-                }, {
-                    semantic: SEMANTIC_ATTR2,
-                    components: 4,
-                    type: TYPE_FLOAT32
-                }, {
-                    semantic: SEMANTIC_ATTR3,
-                    components: 1,
-                    type: TYPE_FLOAT32
-                }, {
-                    semantic: SEMANTIC_ATTR4,
-                    components: this.useMesh ? 4 : 2,
-                    type: TYPE_FLOAT32
-                }];
-                const particleFormat = new VertexFormat(this.graphicsDevice, elements);
-
-                this.vertexBuffer = new VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, {
-                    usage: BUFFER_DYNAMIC
-                });
-                this.indexBuffer = new IndexBuffer(this.graphicsDevice, INDEXFORMAT_UINT32, psysIndexCount);
-            }
+            this.vertexBuffer = new VertexBuffer(this.graphicsDevice, vertexFormat, psysVertCount, {
+                usage: BUFFER_DYNAMIC
+            });
+            this.indexBuffer = new IndexBuffer(this.graphicsDevice, INDEXFORMAT_UINT32, psysIndexCount);
 
             // Fill the vertex buffer
             const data = new Float32Array(this.vertexBuffer.lock());
@@ -1096,7 +1045,7 @@ class ParticleEmitter {
                 this.particleTex[i] = this.particleTexStart[i];
             }
         } else {
-            this._initializeTextures();
+            this._setMaterialTextures();
         }
         this.resetWorldBounds();
         this.resetTime();
@@ -1212,72 +1161,51 @@ class ParticleEmitter {
     }
 
     _destroyResources() {
-        if (this.particleTexIN) {
-            this.particleTexIN.destroy();
-            this.particleTexIN = null;
-        }
+        this.particleTexIN?.destroy();
+        this.particleTexIN = null;
 
-        if (this.particleTexOUT) {
-            this.particleTexOUT.destroy();
-            this.particleTexOUT = null;
-        }
+        this.particleTexOUT?.destroy();
+        this.particleTexOUT = null;
 
         if (this.particleTexStart && this.particleTexStart.destroy) {
             this.particleTexStart.destroy();
             this.particleTexStart = null;
         }
 
-        if (this.rtParticleTexIN) {
-            this.rtParticleTexIN.destroy();
-            this.rtParticleTexIN = null;
-        }
+        this.rtParticleTexIN?.destroy();
+        this.rtParticleTexIN = null;
 
-        if (this.rtParticleTexOUT) {
-            this.rtParticleTexOUT.destroy();
-            this.rtParticleTexOUT = null;
-        }
+        this.rtParticleTexOUT?.destroy();
+        this.rtParticleTexOUT = null;
 
-        if (this.internalTex0) {
-            this.internalTex0.destroy();
-            this.internalTex0 = null;
-        }
+        this.internalTex0?.destroy();
+        this.internalTex0 = null;
 
-        if (this.internalTex1) {
-            this.internalTex1.destroy();
-            this.internalTex1 = null;
-        }
+        this.internalTex1?.destroy();
+        this.internalTex1 = null;
 
-        if (this.internalTex2) {
-            this.internalTex2.destroy();
-            this.internalTex2 = null;
-        }
+        this.internalTex2?.destroy();
+        this.internalTex2 = null;
 
-        if (this.internalTex3) {
-            this.internalTex3.destroy();
-            this.internalTex3 = null;
-        }
+        this.internalTex3?.destroy();
+        this.internalTex3 = null;
 
-        if (this.colorParam) {
-            this.colorParam.destroy();
-            this.colorParam = null;
-        }
+        this.colorParam?.destroy();
+        this.colorParam = null;
 
-        if (this.vertexBuffer) {
-            this.vertexBuffer.destroy();
-            this.vertexBuffer = undefined; // we are testing if vb is undefined in some code, no idea why
-        }
+        this.vertexBuffer = undefined; // we are testing if vb is undefined in some code, no idea why
+        this.indexBuffer = undefined;
 
-        if (this.indexBuffer) {
-            this.indexBuffer.destroy();
-            this.indexBuffer = undefined;
-        }
+        const wasVisible = this.meshInstance?.visible ?? true;
+        this.meshInstance?.destroy();
+        this.meshInstance = null;
 
-        if (this.material) {
-            this.material.destroy();
-            this.material = null;
-        }
+        this.material?.destroy();
+        this.material = null;
 
         // note: shaders should not be destroyed as they could be shared between emitters
+
+        return wasVisible;
     }
 
     destroy() {

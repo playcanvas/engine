@@ -1,6 +1,6 @@
-import { Vec3 } from '../../../src/core/math/vec3.js';
-
 import { expect } from 'chai';
+
+import { Vec3 } from '../../../src/core/math/vec3.js';
 
 describe('Vec3', function () {
 
@@ -609,11 +609,47 @@ describe('Vec3', function () {
 
     });
 
+    describe('#fromArray', function () {
+
+        it('sets a vector from an array', function () {
+            const v = new Vec3();
+            v.fromArray([1, 2, 3]);
+            expect(v.x).to.equal(1);
+            expect(v.y).to.equal(2);
+            expect(v.z).to.equal(3);
+        });
+
+        it('sets a vector from an array with an offset', function () {
+            const v = new Vec3();
+            v.fromArray([0, 0, 1, 2, 3], 2);
+            expect(v.x).to.equal(1);
+            expect(v.y).to.equal(2);
+            expect(v.z).to.equal(3);
+        });
+
+    });
+
     describe('#toString', function () {
 
         it('returns a string representation of a vector', function () {
             const v = new Vec3(1, 2, 3);
             expect(v.toString()).to.equal('[1, 2, 3]');
+        });
+
+    });
+
+    describe('#toArray', function () {
+
+        it('returns an array representation of a vector', function () {
+            const v = new Vec3(1, 2, 3);
+            expect(v.toArray()).to.eql([1, 2, 3]);
+        });
+
+        it('returns an array representation of a vector with an offset and target array', function () {
+            const v = new Vec3(1, 2, 3);
+            const array = [0, 0, 0, 0, 0, 0];
+            v.toArray(array, 2);
+            expect(array).to.eql([0, 0, 1, 2, 3, 0]);
         });
 
     });

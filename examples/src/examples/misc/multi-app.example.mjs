@@ -2,9 +2,9 @@
 // @config NO_DEVICE_SELECTOR
 // @config WEBGPU_DISABLED
 // @config WEBGL_DISABLED
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 // Use custom createGraphicsDevice function to not automatically include fall backs
 /**
@@ -16,7 +16,7 @@ async function createGraphicsDevice(canvas, deviceType) {
     let device;
     if (deviceType === 'webgpu') {
         device = new pc.WebgpuGraphicsDevice(canvas, {});
-        await device.initWebGpu(rootPath + '/static/lib/glslang/glslang.js', rootPath + '/static/lib/twgsl/twgsl.js');
+        await device.initWebGpu(`${rootPath}/static/lib/glslang/glslang.js`, `${rootPath}/static/lib/twgsl/twgsl.js`);
     } else if (deviceType === 'webgl2') {
         device = new pc.WebglGraphicsDevice(canvas);
     } else {
@@ -31,7 +31,7 @@ async function createGraphicsDevice(canvas, deviceType) {
  */
 async function createApp(deviceType) {
     const assets = {
-        font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' })
+        font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
     };
 
     const canvas = document.createElement('canvas');

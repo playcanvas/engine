@@ -1,6 +1,6 @@
-import { createURI, URI } from '../../src/core/uri.js';
-
 import { expect } from 'chai';
+
+import { createURI, URI } from '../../src/core/uri.js';
 
 describe('URI', function () {
 
@@ -171,35 +171,35 @@ describe('createURI', function () {
     });
 
     it('throws exceptions', function () {
-        expect(function () {
+        expect(() => {
             createURI({
                 scheme: 'http',
                 host: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 authority: 'http',
                 host: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 scheme: 'http',
                 hostpath: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 authority: 'http',
                 hostpath: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 scheme: 'http',
                 authority: 'e.com',
@@ -207,7 +207,7 @@ describe('createURI', function () {
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 scheme: 'abc',
                 authority: 'http',
@@ -215,14 +215,14 @@ describe('createURI', function () {
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 host: 'http://test.com',
                 hostpath: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 path: '/abc',
                 hostpath: 'http://test.com/abc'

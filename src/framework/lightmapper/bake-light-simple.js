@@ -7,6 +7,10 @@ const _tempPoint = new Vec2();
 
 // a bake light representing a directional, omni or spot type of light
 class BakeLightSimple extends BakeLight {
+    constructor(lightmapper, light) {
+        super(lightmapper.scene, light, lightmapper.lightingParams);
+    }
+
     get numVirtualLights() {
         // only directional lights support multiple samples
         if (this.light.type === LIGHTTYPE_DIRECTIONAL) {

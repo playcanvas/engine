@@ -1,23 +1,44 @@
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
+import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import glslBilateralDeNoisePS from '../../scene/shader-lib/glsl/chunks/lightmapper/frag/bilateralDeNoise.js';
+import glslDilatePS from '../../scene/shader-lib/glsl/chunks/lightmapper/frag/dilate.js';
+import wgslBilateralDeNoisePS from '../../scene/shader-lib/wgsl/chunks/lightmapper/frag/bilateralDeNoise.js';
+import wgslDilatePS from '../../scene/shader-lib/wgsl/chunks/lightmapper/frag/dilate.js';
+import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 // size of the kernel - needs to match the constant in the shader
 const DENOISE_FILTER_SIZE = 15;
 
+// glsl shaders
+const lightmapFiltersChunksGLSL = {
+    glslBilateralDeNoisePS,
+    glslDilatePS
+};
+
+// wgsl shaders
+const lightmapFiltersChunksWLSL = {
+    wgslBilateralDeNoisePS,
+    wgslDilatePS
+};
+
 // helper class used by lightmapper, wrapping functionality of dilate and denoise shaders
 class LightmapFilters {
+    shaderDilate = [];
+
+    shaderDenoise = [];
+
     constructor(device) {
         this.device = device;
-        this.shaderDilate = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunksLightmapper.dilatePS, 'lmDilate');
+
+        // register shader chunks
+        ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).add(lightmapFiltersChunksGLSL);
+        ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).add(lightmapFiltersChunksWLSL);
 
         this.constantTexSource = device.scope.resolve('source');
 
         this.constantPixelOffset = device.scope.resolve('pixelOffset');
         this.pixelOffset = new Float32Array(2);
 
-        // denoise is optional and gets created only when needed
-        this.shaderDenoise = null;
         this.sigmas = null;
         this.constantSigmas = null;
         this.kernel = null;
@@ -35,10 +56,25 @@ class LightmapFilters {
         this.constantPixelOffset.setValue(this.pixelOffset);
     }
 
-    prepareDenoise(filterRange, filterSmoothness) {
+    prepareDenoise(filterRange, filterSmoothness, bakeHDR) {
 
-        if (!this.shaderDenoise) {
-            this.shaderDenoise = createShaderFromCode(this.device, shaderChunks.fullscreenQuadVS, shaderChunksLightmapper.bilateralDeNoisePS, 'lmBilateralDeNoise');
+        const index = bakeHDR ? 0 : 1;
+        if (!this.shaderDenoise[index]) {
+
+            const defines = new Map();
+            defines.set('{MSIZE}', 15);
+            if (bakeHDR) defines.set('HDR', '');
+
+            this.shaderDenoise[index] = ShaderUtils.createShader(this.device, {
+                uniqueName: `lmBilateralDeNoise-${bakeHDR ? 'hdr' : 'rgbm'}`,
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('fullscreenQuadVS'),
+                vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('fullscreenQuadVS'),
+                fragmentGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('glslBilateralDeNoisePS'),
+                fragmentWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('wgslBilateralDeNoisePS'),
+                fragmentDefines: defines
+            });
+
             this.sigmas = new Float32Array(2);
             this.constantSigmas = this.device.scope.resolve('sigmas');
             this.constantKernel = this.device.scope.resolve('kernel[0]');
@@ -50,6 +86,27 @@ class LightmapFilters {
         this.constantSigmas.setValue(this.sigmas);
 
         this.evaluateDenoiseUniforms(filterRange, filterSmoothness);
+    }
+
+    getDenoise(bakeHDR) {
+        const index = bakeHDR ? 0 : 1;
+        return this.shaderDenoise[index];
+    }
+
+    getDilate(device, bakeHDR) {
+        const index = bakeHDR ? 0 : 1;
+        if (!this.shaderDilate[index]) {
+            const define = bakeHDR ? '#define HDR\n' : '';
+            this.shaderDilate[index] = ShaderUtils.createShader(device, {
+                uniqueName: `lmDilate-${bakeHDR ? 'hdr' : 'rgbm'}`,
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexGLSL: ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('fullscreenQuadVS'),
+                vertexWGSL: ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('fullscreenQuadVS'),
+                fragmentGLSL: define + ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).get('glslDilatePS'),
+                fragmentWGSL: define + ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).get('wgslDilatePS')
+            });
+        }
+        return this.shaderDilate[index];
     }
 
     evaluateDenoiseUniforms(filterRange, filterSmoothness) {

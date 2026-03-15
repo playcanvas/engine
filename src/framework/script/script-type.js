@@ -2,6 +2,11 @@ import { ScriptAttributes } from './script-attributes.js';
 import { Script } from './script.js';
 
 /**
+ * @import { AppBase } from '../app-base.js'
+ * @import { Entity } from '../entity.js'
+ */
+
+/**
  * This is the legacy format for creating PlayCanvas script returned when calling `pc.createScript()`.
  * You should not use this inherit from this class directly.
  *
@@ -14,6 +19,18 @@ class ScriptType extends Script {
 
     /** @private */
     __attributesRaw;
+
+    /**
+     * Create a new ScriptType instance.
+     *
+     * @param {object} args - The input arguments object.
+     * @param {AppBase} args.app - The {@link AppBase} that is running the script.
+     * @param {Entity} args.entity - The {@link Entity} that the script is attached to.
+     */
+    constructor(args) {
+        super(args);
+        this.initScriptType(args);
+    }
 
     /**
      * The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
@@ -56,10 +73,12 @@ class ScriptType extends Script {
 
     /**
      * @param {boolean} [force] - Set to true to force initialization of the attributes.
+     * @ignore
      */
     __initializeAttributes(force) {
-        if (!force && !this.__attributesRaw)
+        if (!force && !this.__attributesRaw) {
             return;
+        }
 
         // set attributes values
         for (const key in this.__scriptType.attributes.index) {
@@ -95,8 +114,9 @@ class ScriptType extends Script {
      */
     static extend(methods) {
         for (const key in methods) {
-            if (!methods.hasOwnProperty(key))
+            if (!methods.hasOwnProperty(key)) {
                 continue;
+            }
 
             this.prototype[key] = methods[key];
         }

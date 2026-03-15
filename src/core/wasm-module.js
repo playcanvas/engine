@@ -17,10 +17,11 @@ class Impl {
     // returns true if the running host supports wasm modules (all browsers except IE)
     static wasmSupported = cachedResult(() => {
         try {
-            if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
+            if (typeof WebAssembly === 'object' && typeof WebAssembly.instantiate === 'function') {
                 const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
-                if (module instanceof WebAssembly.Module)
+                if (module instanceof WebAssembly.Module) {
                     return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
+                }
             }
         } catch (e) { }
         return false;
@@ -109,21 +110,40 @@ class Impl {
 }
 
 /**
- * Callback used by {@link Module#setConfig}.
- *
  * @callback ModuleErrorCallback
+ * Callback used by {@link WasmModule.setConfig}.
  * @param {string} error - If the instance fails to load this will contain a description of the error.
+ * @returns {void}
  */
 
 /**
- * Callback used by {@link Module#getInstance}.
- *
  * @callback ModuleInstanceCallback
+ * Callback used by {@link WasmModule.getInstance}.
  * @param {any} moduleInstance - The module instance.
+ * @returns {void}
  */
 
 /**
- * A pure static utility class which supports immediate and lazy loading of wasm modules.
+ * A pure static utility class which supports immediate and lazy loading of
+ * [WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly) modules. Note that you can
+ * load WebAssembly modules even before instantiating your {@link AppBase} instance.
+ *
+ * This class is generally only needed if you are developing against the Engine directly. Editor
+ * projects automatically load WebAssembly modules included in the project's assets.
+ *
+ * Do not use this class to load the Basis WebAssembly module. Instead, please refer to
+ * {@link basisInitialize}.
+ *
+ * @example
+ * // Load the Ammo.js physics engine
+ * pc.WasmModule.setConfig('Ammo', {
+ *     glueUrl: `ammo.wasm.js`,
+ *     wasmUrl: `ammo.wasm.wasm`,
+ *     fallbackUrl: `ammo.js`
+ * });
+ * await new Promise((resolve) => {
+ *     pc.WasmModule.getInstance('Ammo', () => resolve());
+ * });
  */
 class WasmModule {
     /**

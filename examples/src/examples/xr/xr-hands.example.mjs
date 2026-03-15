@@ -1,6 +1,6 @@
 // @config WEBGPU_DISABLED
-import * as pc from 'playcanvas';
 import files from 'examples/files';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -107,14 +107,14 @@ const createController = function (inputSource) {
             entity.addChild(jointEntity);
         }
         // when tracking lost, paint joints to red
-        inputSource.hand.on('trackinglost', function () {
+        inputSource.hand.on('trackinglost', () => {
             // @ts-ignore engine-tsd
             entity.joints[0].model.material.diffuse.set(1, 0, 0);
             // @ts-ignore engine-tsd
             entity.joints[0].model.material.update();
         });
         // when tracking recovered, paint joints to white
-        inputSource.hand.on('tracking', function () {
+        inputSource.hand.on('tracking', () => {
             // @ts-ignore engine-tsd
             entity.joints[0].model.material.diffuse.set(1, 1, 1);
             // @ts-ignore engine-tsd
@@ -136,7 +136,7 @@ const createController = function (inputSource) {
 
     // destroy input source related entity
     // when input source is removed
-    inputSource.on('remove', function () {
+    inputSource.on('remove', () => {
         controllers.splice(controllers.indexOf(entity), 1);
         entity.destroy();
     });
@@ -156,11 +156,11 @@ const vec3A = new pc.Vec3();
 if (app.xr.supported) {
     // XR availability
     document
-        .querySelector(`.container > .button[data-xr="immersive-ar"]`)
-        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
+    .querySelector('.container > .button[data-xr="immersive-ar"]')
+    ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
     document
-        .querySelector(`.container > .button[data-xr="immersive-vr"]`)
-        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
+    .querySelector('.container > .button[data-xr="immersive-vr"]')
+    ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
 
     // XR availability events
     app.xr.on('available', (type, available) => {
@@ -195,14 +195,14 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', function (evt) {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
     // when new input source added
-    app.xr.input.on('add', function (inputSource) {
+    app.xr.input.on('add', (inputSource) => {
         message('Controller Added');
         createController(inputSource);
     });
@@ -214,7 +214,7 @@ if (app.xr.supported) {
     }
 
     // update position and rotation for each controller
-    app.on('update', function () {
+    app.on('update', () => {
         for (let i = 0; i < controllers.length; i++) {
             const inputSource = controllers[i].inputSource;
 

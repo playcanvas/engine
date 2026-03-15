@@ -4,6 +4,10 @@ import { Untar } from './untar.js';
 import { ResourceHandler } from './handler.js';
 
 /**
+ * @import { AppBase } from '../app-base.js'
+ */
+
+/**
  * Loads Bundle Assets.
  *
  * @ignore
@@ -12,7 +16,7 @@ class BundleHandler extends ResourceHandler {
     /**
      * Create a new BundleHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      */
     constructor(app) {
         super(app, 'bundle');
@@ -46,8 +50,7 @@ class BundleHandler extends ResourceHandler {
         }
 
         this._fetchRetries(url.load, {
-            mode: 'cors',
-            credentials: 'include'
+            mode: 'cors'
         }, this.maxRetries).then((res) => {
             const bundle = new Bundle();
             callback(null, bundle);

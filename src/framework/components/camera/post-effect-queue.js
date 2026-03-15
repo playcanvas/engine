@@ -1,9 +1,14 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8 } from '../../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
-
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ * @import { CameraComponent } from './component.js'
+ * @import { PostEffect } from '../../../scene/graphics/post-effect.js'
+ */
 
 class PostEffectEntry {
     constructor(effect, inputTarget) {
@@ -23,8 +28,8 @@ class PostEffectQueue {
     /**
      * Create a new PostEffectQueue instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
-     * @param {import('./component.js').CameraComponent} camera - The camera component.
+     * @param {AppBase} app - The application.
+     * @param {CameraComponent} camera - The camera component.
      */
     constructor(app, camera) {
         this.app = app;
@@ -78,17 +83,7 @@ class PostEffectQueue {
         const width = Math.floor(rect.z * (renderTarget?.width ?? device.width));
         const height = Math.floor(rect.w * (renderTarget?.height ?? device.height));
 
-        const colorBuffer = new Texture(device, {
-            name: name,
-            format: format,
-            width: width,
-            height: height,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
+        const colorBuffer = Texture.createDataTexture2D(device, name, width, height, format);
 
         return colorBuffer;
     }
@@ -104,8 +99,14 @@ class PostEffectQueue {
     _createOffscreenTarget(useDepth, hdr) {
 
         const device = this.app.graphicsDevice;
-        const format = hdr && device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true) || PIXELFORMAT_RGBA8;
-        const name = this.camera.entity.name + '-posteffect-' + this.effects.length;
+
+        // use srgb LDR format if backbuffer is srgb
+        const outputRt = this.destinationRenderTarget ?? device.backBuffer;
+        const srgb = outputRt.isColorBufferSrgb(0);
+
+        const format = (hdr && device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true)) ??
+            (srgb ? PIXELFORMAT_SRGBA8 : PIXELFORMAT_RGBA8);
+        const name = `${this.camera.entity.name}-posteffect-${this.effects.length}`;
 
         const colorBuffer = this._allocateColorBuffer(format, name);
 
@@ -125,6 +126,7 @@ class PostEffectQueue {
         rt.destroyTextureBuffers();
         rt._colorBuffer = this._allocateColorBuffer(format, name);
         rt._colorBuffers = [rt._colorBuffer];
+        rt.evaluateDimensions();
     }
 
     _destroyOffscreenTarget(rt) {
@@ -136,8 +138,7 @@ class PostEffectQueue {
      * Adds a post effect to the queue. If the queue is disabled adding a post effect will
      * automatically enable the queue.
      *
-     * @param {import('../../../scene/graphics/post-effect.js').PostEffect} effect - The post
-     * effect to add to the queue.
+     * @param {PostEffect} effect - The post effect to add to the queue.
      */
     addEffect(effect) {
         // first rendering of the scene requires depth buffer
@@ -169,8 +170,7 @@ class PostEffectQueue {
      * Removes a post effect from the queue. If the queue becomes empty it will be disabled
      * automatically.
      *
-     * @param {import('../../../scene/graphics/post-effect.js').PostEffect} effect - The post effect
-     * to remove.
+     * @param {PostEffect} effect - The post effect to remove.
      */
     removeEffect(effect) {
 
@@ -224,8 +224,9 @@ class PostEffectQueue {
     _requestDepthMaps() {
         for (let i = 0, len = this.effects.length; i < len; i++) {
             const effect = this.effects[i].effect;
-            if (this._newPostEffect === effect)
+            if (this._newPostEffect === effect) {
                 continue;
+            }
 
             if (effect.needsDepthBuffer) {
                 this._requestDepthMap();
@@ -336,7 +337,7 @@ class PostEffectQueue {
 
             this._destroyOffscreenTarget(this._sourceTarget);
 
-            this.camera.renderTarget = null;
+            this.camera.renderTarget = this.destinationRenderTarget;
             this.camera.onPostprocessing = null;
         }
     }

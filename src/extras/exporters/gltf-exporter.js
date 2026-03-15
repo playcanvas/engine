@@ -1,5 +1,10 @@
 import { CoreExporter } from './core-exporter.js';
-
+import { math } from '../../core/math/math.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
+import { Color } from '../../core/math/color.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     CULLFACE_NONE,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
@@ -12,17 +17,14 @@ import {
     TYPE_UINT8, TYPE_INT16, TYPE_UINT16,
     TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../../platform/graphics/constants.js';
-import { math } from '../../core/math/math.js';
-import { Vec2 } from '../../core/math/vec2.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { Quat } from '../../core/math/quat.js';
-import { Color } from '../../core/math/color.js';
-import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
-import { BasicMaterial } from '../../scene/materials/basic-material.js';
 import { BLEND_NONE, BLEND_NORMAL, PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
+
+/**
+ * @import { Entity } from '../../framework/entity.js'
+ */
 
 const ARRAY_BUFFER = 34962;
 const ELEMENT_ARRAY_BUFFER = 34963;
@@ -115,11 +117,23 @@ function isCanvasTransparent(canvas) {
 
 // supported texture semantics on a material
 const textureSemantics = [
-    'diffuseMap',
+    'anisotropyMap',
+    'clearCoatGlossMap',
+    'clearCoatMap',
+    'clearCoatNormalMap',
     'colorMap',
-    'normalMap',
+    'diffuseMap',
+    'emissiveMap',
+    'iridescenceMap',
+    'iridescenceThicknessMap',
     'metalnessMap',
-    'emissiveMap'
+    'normalMap',
+    'refractionMap',
+    'sheenGlossMap',
+    'sheenMap',
+    'specularityFactorMap',
+    'specularMap',
+    'thicknessMap'
 ];
 
 /**
@@ -137,6 +151,7 @@ class GltfExporter extends CoreExporter {
             cameras: [],
             entities: [],
             materials: [],
+            skins: [],
             textures: [],
 
             // entry: { node, meshInstances}
@@ -198,6 +213,11 @@ class GltfExporter extends CoreExporter {
                 if (buffers.indexOf(indexBuffer) < 0) {
                     buffers.push(indexBuffer);
                 }
+
+                // Collect skin
+                if (mesh.skin && resources.skins.indexOf(mesh.skin) < 0) {
+                    resources.skins.push(mesh.skin);
+                }
             });
         };
 
@@ -240,14 +260,20 @@ class GltfExporter extends CoreExporter {
 
         // FIXME: don't create the function every time
         const addBufferView = (target, byteLength, byteOffset, byteStride) => {
-
             const bufferView = {
-                target: target,
                 buffer: 0,
                 byteLength: byteLength,
-                byteOffset: byteOffset,
-                byteStride: byteStride
+                byteOffset: byteOffset
             };
+
+            // Only add target if it's a vertex or index buffer
+            if (target === ARRAY_BUFFER || target === ELEMENT_ARRAY_BUFFER) {
+                bufferView.target = target;
+            }
+
+            if (byteStride !== undefined) {
+                bufferView.byteStride = byteStride;
+            }
 
             return json.bufferViews.push(bufferView) - 1;
         };
@@ -258,16 +284,12 @@ class GltfExporter extends CoreExporter {
 
             const format = buffer.getFormat();
             if (format.interleaved) {
-
                 const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset, format.size);
                 resources.bufferViewMap.set(buffer, [bufferViewIndex]);
-
             } else {
-
                 // generate buffer view per element
                 const bufferViewIndices = [];
                 for (const element of format.elements) {
-
                     const bufferViewIndex = addBufferView(
                         ARRAY_BUFFER,
                         element.size * format.vertexCount,
@@ -275,25 +297,18 @@ class GltfExporter extends CoreExporter {
                         element.size
                     );
                     bufferViewIndices.push(bufferViewIndex);
-
                 }
-
                 resources.bufferViewMap.set(buffer, bufferViewIndices);
             }
-
-        } else if (buffer instanceof IndexBuffer) {    // index buffer
+        } else if (buffer instanceof IndexBuffer) {
             arrayBuffer = buffer.lock();
-
-            const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset);
-            resources.bufferViewMap.set(buffer, [bufferViewIndex]);
-
-        } else {
-            // buffer is an array buffer
-            arrayBuffer = buffer;
-
             const bufferViewIndex = addBufferView(ELEMENT_ARRAY_BUFFER, arrayBuffer.byteLength, offset);
             resources.bufferViewMap.set(buffer, [bufferViewIndex]);
-
+        } else {
+            // buffer is an array buffer (for images)
+            arrayBuffer = buffer;
+            const bufferViewIndex = addBufferView(undefined, arrayBuffer.byteLength, offset);
+            resources.bufferViewMap.set(buffer, [bufferViewIndex]);
         }
 
         // increment buffer by the size of the array buffer to allocate buffer with enough space
@@ -322,7 +337,7 @@ class GltfExporter extends CoreExporter {
 
                     camera.type = 'perspective';
                     camera.perspective = {
-                        yfov: fov * Math.PI / 180,
+                        yfov: fov * math.DEG_TO_RAD,
                         znear: nearClip,
                         zfar: farClip
                     };
@@ -353,12 +368,12 @@ class GltfExporter extends CoreExporter {
                 };
 
                 json.extensionsUsed = json.extensionsUsed ?? [];
-                if (json.extensionsUsed.indexOf('KHR_texture_transform') < 0) {
+                if (!json.extensionsUsed.includes('KHR_texture_transform')) {
                     json.extensionsUsed.push('KHR_texture_transform');
                 }
 
                 json.extensionsRequired = json.extensionsRequired ?? [];
-                if (json.extensionsRequired.indexOf('KHR_texture_transform') < 0) {
+                if (!json.extensionsRequired.includes('KHR_texture_transform')) {
                     json.extensionsRequired.push('KHR_texture_transform');
                 }
 
@@ -377,17 +392,38 @@ class GltfExporter extends CoreExporter {
         }
     }
 
+    addExtension(json, output, name, data = {}) {
+        output.extensions = output.extensions || {};
+        output.extensions[name] = data;
+
+        json.extensionsUsed = json.extensionsUsed ?? [];
+        if (!json.extensionsUsed.includes(name)) {
+            json.extensionsUsed.push(name);
+        }
+    }
+
     writeStandardMaterial(resources, mat, output, json) {
 
         const { diffuse, emissive, opacity, metalness, gloss, glossInvert } = mat;
         const pbr = output.pbrMetallicRoughness;
 
-        if (!diffuse.equals(Color.WHITE) || opacity !== 1) {
-            pbr.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
+        // For unlit materials, the parser copies baseColor to emissive and sets diffuse to white.
+        // So we need to use emissive as the source for baseColorFactor.
+        const baseColor = mat.useLighting ? diffuse : emissive;
+
+        if (!baseColor.equals(Color.WHITE) || opacity !== 1) {
+            const { r, g, b } = baseColor.clone().linear();
+            pbr.baseColorFactor = [r, g, b, opacity];
         }
 
-        if (metalness !== 1) {
-            pbr.metallicFactor = metalness;
+        // For spec-gloss materials (useMetalness=false), always export as dielectric (metallicFactor=0)
+        // For metallic-roughness materials, export the actual metalness value
+        if (mat.useMetalness) {
+            if (metalness !== 1) {
+                pbr.metallicFactor = metalness;
+            }
+        } else {
+            pbr.metallicFactor = 0;
         }
 
         const roughness = glossInvert ? gloss : 1 - gloss;
@@ -395,24 +431,201 @@ class GltfExporter extends CoreExporter {
             pbr.roughnessFactor = roughness;
         }
 
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'diffuseMap', json);
+        // For unlit, use emissiveMap as baseColorTexture source (parser copies diffuseMap to emissiveMap)
+        this.attachTexture(resources, mat, pbr, 'baseColorTexture', mat.useLighting ? 'diffuseMap' : 'emissiveMap', json);
         this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap', json);
 
-        if (!emissive.equals(Color.BLACK)) {
-            output.emissiveFactor = [emissive.r, emissive.g, emissive.b];
-        }
-    }
-
-    writeBasicMaterial(resources, mat, output, json) {
-
-        const { color } = mat;
-        const pbr = output.pbrMetallicRoughness;
-
-        if (!color.equals(Color.WHITE)) {
-            pbr.baseColorFactor = [color.r, color.g, color.b, color];
+        // Emissive (skip for unlit - emissive holds the baseColor)
+        if (mat.useLighting && !emissive.equals(Color.BLACK)) {
+            const { r, g, b } = emissive.clone().linear();
+            output.emissiveFactor = [r, g, b];
         }
 
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'colorMap', json);
+        // === Material Extensions ===
+
+        // KHR_materials_anisotropy
+        if (mat.enableGGXSpecular && (mat.anisotropyIntensity !== 0 || mat.anisotropyRotation !== 0 || mat.anisotropyMap)) {
+            const anisotropyExt = {};
+
+            if (mat.anisotropyIntensity !== 0) {
+                anisotropyExt.anisotropyStrength = mat.anisotropyIntensity;
+            }
+
+            if (mat.anisotropyRotation !== 0) {
+                anisotropyExt.anisotropyRotation = mat.anisotropyRotation * math.DEG_TO_RAD;
+            }
+
+            this.attachTexture(resources, mat, anisotropyExt, 'anisotropyTexture', 'anisotropyMap', json);
+
+            if (Object.keys(anisotropyExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_anisotropy', anisotropyExt);
+            }
+        }
+
+        // KHR_materials_clearcoat
+        if (mat.clearCoat > 0) {
+            const clearcoatExt = {
+                // Parser multiplies by 0.25, so we divide by 0.25 (multiply by 4) to reverse
+                clearcoatFactor: Math.min(mat.clearCoat * 4, 1)
+            };
+
+            // clearcoatRoughnessFactor: parser sets clearCoatGlossInvert=true, so gloss is roughness
+            if (mat.clearCoatGloss !== 0) {
+                clearcoatExt.clearcoatRoughnessFactor = mat.clearCoatGloss;
+            }
+
+            this.attachTexture(resources, mat, clearcoatExt, 'clearcoatTexture', 'clearCoatMap', json);
+            this.attachTexture(resources, mat, clearcoatExt, 'clearcoatRoughnessTexture', 'clearCoatGlossMap', json);
+
+            // clearcoatNormalTexture with scale
+            if (mat.clearCoatNormalMap) {
+                this.attachTexture(resources, mat, clearcoatExt, 'clearcoatNormalTexture', 'clearCoatNormalMap', json);
+                if (mat.clearCoatBumpiness !== 1) {
+                    clearcoatExt.clearcoatNormalTexture.scale = mat.clearCoatBumpiness;
+                }
+            }
+
+            this.addExtension(json, output, 'KHR_materials_clearcoat', clearcoatExt);
+        }
+
+        // KHR_materials_dispersion
+        if (mat.dispersion !== 0) {
+            this.addExtension(json, output, 'KHR_materials_dispersion', {
+                dispersion: mat.dispersion
+            });
+        }
+
+        // KHR_materials_emissive_strength
+        if (mat.useLighting && mat.emissiveIntensity !== 1) {
+            this.addExtension(json, output, 'KHR_materials_emissive_strength', {
+                emissiveStrength: mat.emissiveIntensity
+            });
+        }
+
+        // KHR_materials_ior
+        const defaultRefractionIndex = 1.0 / 1.5;
+        if (mat.refractionIndex !== defaultRefractionIndex && mat.refractionIndex > 0) {
+            this.addExtension(json, output, 'KHR_materials_ior', {
+                ior: 1.0 / mat.refractionIndex
+            });
+        }
+
+        // KHR_materials_iridescence
+        if (mat.useIridescence) {
+            const iridescenceExt = {};
+
+            if (mat.iridescence !== 0) {
+                iridescenceExt.iridescenceFactor = mat.iridescence;
+            }
+
+            if (mat.iridescenceRefractionIndex !== 1.3) {
+                iridescenceExt.iridescenceIor = mat.iridescenceRefractionIndex;
+            }
+
+            if (mat.iridescenceThicknessMin !== 100) {
+                iridescenceExt.iridescenceThicknessMinimum = mat.iridescenceThicknessMin;
+            }
+
+            if (mat.iridescenceThicknessMax !== 400) {
+                iridescenceExt.iridescenceThicknessMaximum = mat.iridescenceThicknessMax;
+            }
+
+            this.attachTexture(resources, mat, iridescenceExt, 'iridescenceTexture', 'iridescenceMap', json);
+            this.attachTexture(resources, mat, iridescenceExt, 'iridescenceThicknessTexture', 'iridescenceThicknessMap', json);
+
+            if (Object.keys(iridescenceExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_iridescence', iridescenceExt);
+            }
+        }
+
+        // KHR_materials_sheen
+        if (mat.useSheen) {
+            const sheenExt = {};
+
+            if (!mat.sheen.equals(Color.BLACK)) {
+                const { r, g, b } = mat.sheen.clone().linear();
+                sheenExt.sheenColorFactor = [r, g, b];
+            }
+
+            if (mat.sheenGloss !== 0) {
+                sheenExt.sheenRoughnessFactor = mat.sheenGloss;
+            }
+
+            this.attachTexture(resources, mat, sheenExt, 'sheenColorTexture', 'sheenMap', json);
+            this.attachTexture(resources, mat, sheenExt, 'sheenRoughnessTexture', 'sheenGlossMap', json);
+
+            if (Object.keys(sheenExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_sheen', sheenExt);
+            }
+        }
+
+        // KHR_materials_specular
+        // Export when:
+        // 1. useMetalnessSpecularColor is true (metallic workflow with specular color tint)
+        // 2. useMetalness is false (spec-gloss material) - preserve the specular color as F0
+        if (mat.useMetalnessSpecularColor || !mat.useMetalness) {
+            const specularExt = {};
+
+            if (!mat.specular.equals(Color.WHITE)) {
+                const { r, g, b } = mat.specular.clone().linear();
+                specularExt.specularColorFactor = [r, g, b];
+            }
+
+            if (mat.specularityFactor !== 1) {
+                specularExt.specularFactor = mat.specularityFactor;
+            }
+
+            this.attachTexture(resources, mat, specularExt, 'specularColorTexture', 'specularMap', json);
+            this.attachTexture(resources, mat, specularExt, 'specularTexture', 'specularityFactorMap', json);
+
+            if (Object.keys(specularExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_specular', specularExt);
+            }
+        }
+
+        // KHR_materials_transmission
+        if (mat.useDynamicRefraction && (mat.refraction !== 0 || mat.refractionMap)) {
+            const transmissionExt = {};
+
+            if (mat.refraction !== 0) {
+                transmissionExt.transmissionFactor = mat.refraction;
+            }
+
+            this.attachTexture(resources, mat, transmissionExt, 'transmissionTexture', 'refractionMap', json);
+
+            if (Object.keys(transmissionExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_transmission', transmissionExt);
+            }
+        }
+
+        // KHR_materials_unlit
+        if (!mat.useLighting) {
+            this.addExtension(json, output, 'KHR_materials_unlit');
+        }
+
+        // KHR_materials_volume
+        if (mat.useDynamicRefraction && (mat.thickness !== 0 || mat.attenuationDistance !== 0 || !mat.attenuation.equals(Color.WHITE) || mat.thicknessMap)) {
+            const volumeExt = {};
+
+            if (mat.thickness !== 0) {
+                volumeExt.thicknessFactor = mat.thickness;
+            }
+
+            if (mat.attenuationDistance !== 0) {
+                volumeExt.attenuationDistance = mat.attenuationDistance;
+            }
+
+            if (!mat.attenuation.equals(Color.WHITE)) {
+                const { r, g, b } = mat.attenuation.clone().linear();
+                volumeExt.attenuationColor = [r, g, b];
+            }
+
+            this.attachTexture(resources, mat, volumeExt, 'thicknessTexture', 'thicknessMap', json);
+
+            if (Object.keys(volumeExt).length > 0) {
+                this.addExtension(json, output, 'KHR_materials_volume', volumeExt);
+            }
+        }
     }
 
     writeMaterials(resources, json) {
@@ -430,10 +643,6 @@ class GltfExporter extends CoreExporter {
 
                 if (mat instanceof StandardMaterial) {
                     this.writeStandardMaterial(resources, mat, material, json);
-                }
-
-                if (mat instanceof BasicMaterial) {
-                    this.writeBasicMaterial(resources, mat, material, json);
                 }
 
                 if (blendType === BLEND_NORMAL) {
@@ -491,6 +700,12 @@ class GltfExporter extends CoreExporter {
                 const entityMeshInstance = resources.entityMeshInstances.find(e => e.node === entity);
                 if (entityMeshInstance) {
                     node.mesh = resources.entityMeshInstances.indexOf(entityMeshInstance);
+
+                    // Add skin reference if this node has a skinned mesh
+                    const meshInstance = entityMeshInstance.meshInstances[0];
+                    if (meshInstance && meshInstance.mesh.skin) {
+                        node.skin = resources.skins.indexOf(meshInstance.mesh.skin);
+                    }
                 }
 
                 if (entity.children.length > 0) {
@@ -506,21 +721,20 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    writeMeshes(resources, json) {
+    writeMeshes(resources, json, options) {
         if (resources.entityMeshInstances.length > 0) {
             json.accessors = [];
             json.meshes = [];
 
             resources.entityMeshInstances.forEach((entityMeshInstances) => {
-
                 const mesh = {
                     primitives: []
                 };
 
-                // all mesh instances of a single node are stores as a single gltf mesh with multiple primitives
+                // all mesh instances of a single node are stored as a single gltf mesh with multiple primitives
                 const meshInstances = entityMeshInstances.meshInstances;
                 meshInstances.forEach((meshInstance) => {
-                    const primitive = GltfExporter.createPrimitive(resources, json, meshInstance.mesh);
+                    const primitive = GltfExporter.createPrimitive(resources, json, meshInstance.mesh, options);
 
                     primitive.material = resources.materials.indexOf(meshInstance.material);
 
@@ -532,7 +746,7 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    static createPrimitive(resources, json, mesh) {
+    static createPrimitive(resources, json, mesh, options = {}) {
         const primitive = {
             attributes: {}
         };
@@ -543,6 +757,43 @@ class GltfExporter extends CoreExporter {
         const { interleaved, elements } = format;
         const numVertices = vertexBuffer.getNumVertices();
         elements.forEach((element, elementIndex) => {
+            const semantic = getSemantic(element.name);
+
+            // Skip unused attributes if stripping is enabled
+            if (options.stripUnusedAttributes) {
+                let isUsed = true;
+
+                // Check texture coordinates
+                if (semantic.startsWith('TEXCOORD_')) {
+                    const texCoordIndex = parseInt(semantic.split('_')[1], 10);
+                    isUsed = resources.materials.some((material) => {
+                        return textureSemantics.some((texSemantic) => {
+                            const texture = material[texSemantic];
+                            // Most materials use UV0 by default, so keep TEXCOORD_0 unless explicitly using a different UV set
+                            return texture && (texCoordIndex === 0 || material[`${texSemantic}Tiling`]?.uv === texCoordIndex);
+                        });
+                    });
+                }
+
+                // Check vertex colors
+                if (semantic === 'COLOR_0') {
+                    isUsed = resources.materials.some(material => material.vertexColors);
+                }
+
+                // Check tangents
+                if (semantic === 'TANGENT') {
+                    isUsed = resources.materials.some(material => material.normalMap);
+                }
+
+                // Check skinning attributes
+                if (semantic === 'JOINTS_0' || semantic === 'WEIGHTS_0') {
+                    isUsed = resources.entityMeshInstances.some(emi => emi.meshInstances.some(mi => mi.mesh.skin));
+                }
+
+                if (!isUsed) {
+                    return; // Skip this attribute
+                }
+            }
 
             let bufferView = resources.bufferViewMap.get(vertexBuffer);
             if (!bufferView) {
@@ -562,11 +813,10 @@ class GltfExporter extends CoreExporter {
             };
 
             const idx = json.accessors.push(accessor) - 1;
-            primitive.attributes[getSemantic(element.name)] = idx;
+            primitive.attributes[semantic] = idx;
 
             // Position accessor also requires min and max properties
             if (element.name === SEMANTIC_POSITION) {
-
                 // compute min and max from positions, as the BoundingBox stores center and extents,
                 // and we get precision warnings from gltf validator
                 const positions = [];
@@ -606,6 +856,46 @@ class GltfExporter extends CoreExporter {
         return primitive;
     }
 
+    writeSkins(resources, json) {
+        if (resources.skins.length > 0) {
+            json.skins = resources.skins.map((skin) => {
+                // Create float32 array for inverse bind matrices
+                const matrices = new Float32Array(skin.inverseBindPose.length * 16);
+                for (let i = 0; i < skin.inverseBindPose.length; i++) {
+                    const ibm = skin.inverseBindPose[i];
+                    matrices.set(ibm.data, i * 16);
+                }
+
+                // Create buffer view for matrices
+                const matrixBuffer = matrices.buffer;
+                GltfExporter.writeBufferView(resources, json, matrixBuffer);
+                resources.buffers.push(matrixBuffer);
+                const bufferView = resources.bufferViewMap.get(matrixBuffer);
+
+                // Create accessor for inverse bind matrices
+                const accessor = {
+                    bufferView: bufferView[0],
+                    componentType: getComponentType(TYPE_FLOAT32),
+                    count: skin.inverseBindPose.length,
+                    type: 'MAT4'
+                };
+                const accessorIndex = json.accessors.push(accessor) - 1;
+
+                // Find joint nodes by bone names
+                const joints = skin.boneNames.map((boneName) => {
+                    const node = resources.entities.find(entity => entity.name === boneName);
+                    return resources.entities.indexOf(node);
+                });
+
+                // Create skin
+                return {
+                    inverseBindMatrices: accessorIndex,
+                    joints: joints
+                };
+            });
+        }
+    }
+
     convertTextures(srcTextures, options) {
 
         const textureOptions = {
@@ -640,41 +930,41 @@ class GltfExporter extends CoreExporter {
 
             promises.push(
                 this.getBlob(canvas, mimeType)
-                    .then((blob) => {
-                        const reader = new FileReader();
-                        reader.readAsArrayBuffer(blob);
+                .then((blob) => {
+                    const reader = new FileReader();
+                    reader.readAsArrayBuffer(blob);
 
-                        return new Promise((resolve) => {
-                            reader.onloadend = () => {
-                                resolve(reader);
-                            };
-                        });
-                    })
-                    .then((reader) => {
-                        const buffer = this.getPaddedArrayBuffer(reader.result);
-
-                        GltfExporter.writeBufferView(resources, json, buffer);
-                        resources.buffers.push(buffer);
-
-                        const bufferView = resources.bufferViewMap.get(buffer);
-
-                        json.images[i] = {
-                            mimeType: mimeType,
-                            bufferView: bufferView[0]
+                    return new Promise((resolve) => {
+                        reader.onloadend = () => {
+                            resolve(reader);
                         };
+                    });
+                })
+                .then((reader) => {
+                    const buffer = this.getPaddedArrayBuffer(reader.result);
 
-                        json.samplers[i] = {
-                            minFilter: getFilter(texture.minFilter),
-                            magFilter: getFilter(texture.magFilter),
-                            wrapS: getWrap(texture.addressU),
-                            wrapT: getWrap(texture.addressV)
-                        };
+                    GltfExporter.writeBufferView(resources, json, buffer);
+                    resources.buffers.push(buffer);
 
-                        json.textures[i] = {
-                            sampler: i,
-                            source: i
-                        };
-                    })
+                    const bufferView = resources.bufferViewMap.get(buffer);
+
+                    json.images[i] = {
+                        mimeType: mimeType,
+                        bufferView: bufferView[0]
+                    };
+
+                    json.samplers[i] = {
+                        minFilter: getFilter(texture.minFilter),
+                        magFilter: getFilter(texture.magFilter),
+                        wrapS: getWrap(texture.addressU),
+                        wrapT: getWrap(texture.addressV)
+                    };
+
+                    json.textures[i] = {
+                        sampler: i,
+                        source: i
+                    };
+                })
             );
         }
 
@@ -742,9 +1032,10 @@ class GltfExporter extends CoreExporter {
 
             this.writeBufferViews(resources, json);
             this.writeCameras(resources, json);
-            this.writeMeshes(resources, json);
+            this.writeMeshes(resources, json, options);
             this.writeMaterials(resources, json);
             this.writeNodes(resources, json, options);
+            this.writeSkins(resources, json);
             await this.writeTextures(resources, textureCanvases, json, options);
 
             // delete unused properties
@@ -759,23 +1050,30 @@ class GltfExporter extends CoreExporter {
     /**
      * Converts a hierarchy of entities to GLB format.
      *
-     * @param {import('playcanvas').Entity} entity - The root of the entity hierarchy to convert.
+     * @param {Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
-     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over
-     * the size.
+     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
+     * @param {boolean} [options.stripUnusedAttributes] - If true, removes unused vertex attributes:
+     *
+     * - Texture coordinates not referenced by materials
+     * - Vertex colors if not used by materials
+     * - Tangents if no normal maps are used
+     * - Skinning data if no skinned meshes exist
+     *
+     * Defaults to false.
      * @returns {Promise<ArrayBuffer>} - The GLB file content.
      */
     build(entity, options = {}) {
         const resources = this.collectResources(entity);
 
         return this.buildJson(resources, options).then((json) => {
-
-            const jsonText = JSON.stringify(json);
+            const encoder = new TextEncoder();
+            const jsonData = encoder.encode(JSON.stringify(json));
 
             const headerLength = 12;
 
             const jsonHeaderLength = 8;
-            const jsonDataLength = jsonText.length;
+            const jsonDataLength = jsonData.length;
             const jsonPaddingLength = (4 - (jsonDataLength & 3)) & 3;
 
             const binaryHeaderLength = 8;
@@ -804,9 +1102,7 @@ class GltfExporter extends CoreExporter {
             let offset = headerLength + jsonHeaderLength;
 
             // JSON data
-            for (let i = 0; i < jsonDataLength; i++) {
-                glbView.setUint8(offset + i, jsonText.charCodeAt(i));
-            }
+            new Uint8Array(glbBuffer, offset, jsonDataLength).set(jsonData);
 
             offset += jsonDataLength;
 

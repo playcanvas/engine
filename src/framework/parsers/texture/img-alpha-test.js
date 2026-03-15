@@ -54,10 +54,10 @@ const testImageBitmapAlpha = (device) => {
         premultiplyAlpha: 'none',
         colorSpaceConversion: 'none'
     })
-        .then((image) => {
-            return testAlpha(device, image);
-        })
-        .catch(e => false);
+    .then((image) => {
+        return testAlpha(device, image);
+    })
+    .catch(e => false);
 };
 
 // Test whether image element correctly loads PNG alpha data.

@@ -1,16 +1,17 @@
 import { getApplication } from './globals.js';
 
 /**
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ */
+
+/**
  * Records performance-related statistics related to the application.
- *
- * @ignore
  */
 class ApplicationStats {
     /**
      * Create a new ApplicationStats instance.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      */
     constructor(device) {
         this.frame = {
@@ -24,6 +25,12 @@ class ApplicationStats {
             renderTime: 0,
             physicsStart: 0,
             physicsTime: 0,
+            scriptUpdateStart: 0,
+            scriptUpdate: 0,
+            scriptPostUpdateStart: 0,
+            scriptPostUpdate: 0,
+            animUpdateStart: 0,
+            animUpdate: 0,
             cullTime: 0,
             sortTime: 0,
             skinTime: 0,
@@ -31,6 +38,9 @@ class ApplicationStats {
             instancingTime: 0, // deprecated
 
             triangles: 0,
+            gsplats: 0,
+            gsplatSort: 0,
+            gsplatBufferCopy: 0,
             otherPrimitives: 0,
             shaders: 0,
             materials: 0,
@@ -75,16 +85,23 @@ class ApplicationStats {
 
         this.shaders = device._shaderStats;
         this.vram = device._vram;
+        this.gpu = device.gpuProfiler?.passTimings ?? new Map();
 
         Object.defineProperty(this.vram, 'totalUsed', {
             get: function () {
-                return this.tex + this.vb + this.ib;
+                return this.tex + this.vb + this.ib + this.ub + this.sb;
             }
         });
 
         Object.defineProperty(this.vram, 'geom', {
             get: function () {
                 return this.vb + this.ib;
+            }
+        });
+
+        Object.defineProperty(this.vram, 'buffers', {
+            get: function () {
+                return this.ub + this.sb;
             }
         });
     }
@@ -100,6 +117,15 @@ class ApplicationStats {
     get batcher() {
         const batcher = getApplication()._batcher;
         return batcher ? batcher._stats : null;
+    }
+
+    /**
+     * Called at the end of each frame to reset per-frame statistics.
+     *
+     * @ignore
+     */
+    frameEnd() {
+        this.frame.gsplatSort = 0;
     }
 }
 

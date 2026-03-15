@@ -1,20 +1,36 @@
+import * as pc from 'playcanvas';
+
 /**
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } = ReactPCUI;
     return fragment(
+        jsx(
+            LabelGroup,
+            { text: 'enabled' },
+            jsx(BooleanInput, {
+                type: 'toggle',
+                binding: new BindingTwoWay(),
+                link: { observer, path: 'data.enabled' }
+            })
+        ),
         jsx(
             Panel,
             { headerText: 'Ambient Occlusion' },
             jsx(
                 LabelGroup,
-                { text: 'enabled' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+                { text: 'Type' },
+                jsx(SelectInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.ssao.enabled' }
+                    link: { observer, path: 'data.ssao.type' },
+                    type: 'string',
+                    options: [
+                        { v: pc.SSAOTYPE_NONE, t: 'None' },
+                        { v: pc.SSAOTYPE_LIGHTING, t: 'Lighting' },
+                        { v: pc.SSAOTYPE_COMBINE, t: 'Combine' }
+                    ]
                 })
             ),
             jsx(
@@ -24,6 +40,15 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.ssao.blurEnabled' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'randomize' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.randomize' }
                 })
             ),
             jsx(
@@ -85,7 +110,25 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.ssao.scale' }
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'TAA' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.taa' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'debug' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.debug' }
+                })
             )
         )
     );
-}
+};

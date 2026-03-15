@@ -1,17 +1,44 @@
+import { path } from '../../core/path.js';
 import { PlyParser } from '../parsers/ply.js';
-
 import { ResourceHandler } from './handler.js';
+import { SogParser } from '../parsers/sog.js';
+import { SogBundleParser } from '../parsers/sog-bundle.js';
+import { GSplatOctreeParser } from '../parsers/gsplat-octree.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 class GSplatHandler extends ResourceHandler {
     /**
      * Create a new GSplatHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {
         super(app, 'gsplat');
-        this.parser = new PlyParser(app.graphicsDevice, app.assets, 3);
+        this.parsers = {
+            ply: new PlyParser(app, 3),
+            sog: new SogBundleParser(app),
+            json: new SogParser(app, 3),
+            octree: new GSplatOctreeParser(app, 3)
+        };
+    }
+
+    _getUrlWithoutParams(url) {
+        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
+    }
+
+    _getParser(url) {
+        const basename = path.getBasename(this._getUrlWithoutParams(url)).toLowerCase();
+        if (basename === 'lod-meta.json') {
+            return this.parsers.octree;
+        }
+
+        const ext = path.getExtension(basename).replace('.', '');
+
+        return this.parsers[ext] || this.parsers.ply;
     }
 
     load(url, callback, asset) {
@@ -22,11 +49,11 @@ class GSplatHandler extends ResourceHandler {
             };
         }
 
-        this.parser.load(url, callback, asset);
+        this._getParser(url.original).load(url, callback, asset);
     }
 
     open(url, data, asset) {
-        return this.parser.open(url, data, asset);
+        return data;
     }
 }
 

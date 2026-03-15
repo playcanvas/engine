@@ -1,17 +1,16 @@
-import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
+import React, { Component } from 'react';
+import { useParams } from 'react-router-dom';
 
-import { DeviceSelector } from './DeviceSelector.mjs';
 import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
+import { DeviceSelector } from './DeviceSelector.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
-
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
-import { iframePath } from '../paths.mjs';
-import { jsx, fragment } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
+import { jsx, fragment } from '../jsx.mjs';
+import { iframePath } from '../paths.mjs';
 import { getOrientation } from '../utils.mjs';
 
 /** @typedef {import('../events.js').StateEvent} StateEvent */
@@ -310,7 +309,9 @@ class Example extends TypedComponent {
 
     renderPortrait() {
         const { collapsed, show, files, description } = this.state;
-        return fragment(
+        return jsx(
+            'div',
+            { style: { display: 'contents' } },
             jsx(
                 Panel,
                 {
@@ -371,7 +372,9 @@ class Example extends TypedComponent {
 
     renderLandscape() {
         const { collapsed } = this.state;
-        return fragment(
+        return jsx(
+            'div',
+            { style: { display: 'contents' } },
             jsx(
                 Panel,
                 {
@@ -408,7 +411,14 @@ class Example extends TypedComponent {
     }
 }
 
-// @ts-ignore
-const ExampleWithRouter = withRouter(Example);
+/**
+ * Wrapper component to provide router params to the class component.
+ * @returns {JSX.Element} The Example component with router params.
+ */
+function ExampleWithRouter() {
+    const params = useParams();
+    // @ts-ignore
+    return jsx(Example, { match: { params } });
+}
 
 export { ExampleWithRouter as Example };

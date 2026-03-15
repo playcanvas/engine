@@ -1,4 +1,4 @@
-import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET, pixelFormatLinearToGamma } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
 import { Asset } from '../../asset/asset.js';
@@ -8,8 +8,6 @@ import { TextureParser } from './texture.js';
 
 /**
  * Parser for basis files.
- *
- * @ignore
  */
 class BasisParser extends TextureParser {
     constructor(registry, device) {
@@ -31,7 +29,7 @@ class BasisParser extends TextureParser {
             );
 
             if (!basisModuleFound) {
-                callback(`Basis module not found. Asset '${asset.name}' basis texture variant will not be loaded.`);
+                callback(`Basis module not found. Asset [${asset.name}](${asset.getFileUrl()}) basis texture variant will not be loaded.`);
             }
         };
 
@@ -46,6 +44,7 @@ class BasisParser extends TextureParser {
 
     // our async transcode call provides the neat structure we need to create the texture instance
     open(url, data, device, textureOptions = {}) {
+        const format = textureOptions.srgb ? pixelFormatLinearToGamma(data.format) : data.format;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -55,7 +54,7 @@ class BasisParser extends TextureParser {
             addressV: data.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             width: data.width,
             height: data.height,
-            format: data.format,
+            format: format,
             cubemap: data.cubemap,
             levels: data.levels,
 

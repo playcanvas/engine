@@ -1,14 +1,16 @@
 import { path } from '../../core/path.js';
 import { Tags } from '../../core/tags.js';
-
 import { EventHandler } from '../../core/event-handler.js';
-
 import { findAvailableLocale } from '../i18n/utils.js';
-
 import { ABSOLUTE_URL } from './constants.js';
 import { AssetFile } from './asset-file.js';
 import { getApplication } from '../globals.js';
 import { http } from '../../platform/net/http.js';
+
+/**
+ * @import { AssetRegistry } from './asset-registry.js'
+ * @import { ResourceLoaderCallback } from '../handlers/loader.js'
+ */
 
 // auto incrementing number for asset ids
 let assetIdCounter = -1;
@@ -24,10 +26,10 @@ const VARIANT_SUPPORT = {
 const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
 /**
- * Callback used by {@link Asset#ready} and called when an asset is ready.
- *
  * @callback AssetReadyCallback
+ * Callback used by {@link Asset#ready} and called when an asset is ready.
  * @param {Asset} asset - The ready asset.
+ * @returns {void}
  */
 
 /**
@@ -105,6 +107,21 @@ class Asset extends EventHandler {
     static EVENT_CHANGE = 'change';
 
     /**
+     * Fired when the asset's stream download progresses.
+     *
+     * Please note:
+     * - only gsplat assets current emit this event
+     * - totalBytes may not be reliable as it is based on the content-length header of the response
+     *
+     * @event
+     * @example
+     * asset.on('progress', (receivedBytes, totalBytes) => {
+     *    console.log(`Asset ${asset.name} progress ${readBytes / totalBytes}`);
+     * });
+     */
+    static EVENT_PROGRESS = 'progress';
+
+    /**
      * Fired when we add a new localized asset id to the asset.
      *
      * @event
@@ -127,14 +144,100 @@ class Asset extends EventHandler {
     static EVENT_REMOVELOCALIZED = 'remove:localized';
 
     /**
+     * @type {AssetFile | null}
+     * @private
+     */
+    _file = null;
+
+    /**
+     * A string-assetId dictionary that maps locale to asset id.
+     *
+     * @type {object}
+     * @private
+     */
+    _i18n = {};
+
+    /**
+     * Whether to preload the asset.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _preload = false;
+
+    /**
+     * This is where the loaded resource(s) are stored.
+     *
+     * @type {object[]}
+     * @private
+     */
+    _resources = [];
+
+    /**
+     * The asset id.
+     *
+     * @type {number}
+     */
+    id = assetIdCounter--;
+
+    /**
+     * True if the asset has finished attempting to load the resource. It is not guaranteed
+     * that the resources are available as there could have been a network error.
+     *
+     * @type {boolean}
+     */
+    loaded = false;
+
+    /**
+     * True if the resource is currently being loaded.
+     *
+     * @type {boolean}
+     */
+    loading = false;
+
+    /**
+     * Optional JSON data that contains the asset handler options.
+     *
+     * @type {object}
+     */
+    options = {};
+
+    /**
+     * The asset registry that this Asset belongs to.
+     *
+     * @type {AssetRegistry|null}
+     */
+    registry = null;
+
+    /**
+     * Asset tags. Enables finding of assets by tags using the {@link AssetRegistry#findByTag} method.
+     *
+     * @type {Tags}
+     */
+    tags = new Tags(this);
+
+    /**
+     * The type of the asset.
+     *
+     * @type {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"gsplat"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"}
+     */
+    type;
+
+    /**
+     * The URL object.
+     *
+     * @type {string | null}
+     * @ignore
+     */
+    urlObject = null;
+
+    /**
      * Create a new Asset record. Generally, Assets are created in the loading process and you
      * won't need to create them by hand.
      *
      * @param {string} name - A non-unique but human-readable name which can be later used to
      * retrieve the asset.
-     * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "bundle", "container",
-     * "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite",
-     * "template", text", "texture", "textureatlas"]
+     * @param {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"gsplat"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"} type - Type of asset.
      * @param {object} [file] - Details about the file the asset is made from. At the least must
      * contain the 'url' field. For assets that don't contain file data use null.
      * @param {string} [file.url] - The URL of the resource file that contains the asset data.
@@ -160,89 +263,15 @@ class Asset extends EventHandler {
      *     url: "http://example.com/my/assets/here/texture.png"
      * });
      */
-    constructor(name, type, file, data, options) {
+    constructor(name, type, file, data = {}, options = {}) {
         super();
 
-        this._id = assetIdCounter--;
         this._name = name || '';
-
-        /**
-         * The type of the asset. One of ["animation", "audio", "binary", "container", "cubemap",
-         * "css", "font", "json", "html", "material", "model", "render", "script", "shader", "sprite",
-         * "template", "text", "texture", "textureatlas"]
-         *
-         * @type {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas")}
-         */
         this.type = type;
-
-        /**
-         * Asset tags. Enables finding of assets by tags using the {@link AssetRegistry#findByTag} method.
-         *
-         * @type {Tags}
-         */
-        this.tags = new Tags(this);
-
-        this._preload = false;
-        this._file = null;
-        this._data = data || { };
-
-        /**
-         * Optional JSON data that contains the asset handler options.
-         *
-         * @type {object}
-         */
-        this.options = options || { };
-
-        // This is where the loaded resource(s) will be
-        this._resources = [];
-
-        this.urlObject = null;
-
-        // a string-assetId dictionary that maps
-        // locale to asset id
-        this._i18n = {};
-
-        /**
-         * True if the asset has finished attempting to load the resource. It is not guaranteed
-         * that the resources are available as there could have been a network error.
-         *
-         * @type {boolean}
-         */
-        this.loaded = false;
-
-        /**
-         * True if the resource is currently being loaded.
-         *
-         * @type {boolean}
-         */
-        this.loading = false;
-
-        /**
-         * The asset registry that this Asset belongs to.
-         *
-         * @type {import('./asset-registry.js').AssetRegistry|null}
-         */
-        this.registry = null;
+        this._data = data || {};
+        this.options = options || {};
 
         if (file) this.file = file;
-    }
-
-    /**
-     * Sets the asset id.
-     *
-     * @type {number}
-     */
-    set id(value) {
-        this._id = value;
-    }
-
-    /**
-     * Gets the asset id.
-     *
-     * @type {number}
-     */
-    get id() {
-        return this._id;
     }
 
     /**
@@ -251,8 +280,9 @@ class Asset extends EventHandler {
      * @type {string}
      */
     set name(value) {
-        if (this._name === value)
+        if (this._name === value) {
             return;
+        }
         const old = this._name;
         this._name = value;
         this.fire('name', this, this._name, old);
@@ -336,8 +366,9 @@ class Asset extends EventHandler {
         if (value !== old) {
             this.fire('change', this, 'data', value, old);
 
-            if (this.loaded)
+            if (this.loaded) {
                 this.registry._loader.patch(this, this.registry);
+            }
         }
     }
 
@@ -351,7 +382,7 @@ class Asset extends EventHandler {
     }
 
     /**
-     * Sets the asset resource. For example, a {@link Texture} or a {@link Model}.
+     * Sets the asset resource. For example, a {@link StandardMaterial} or a {@link Texture}.
      *
      * @type {object}
      */
@@ -393,18 +424,20 @@ class Asset extends EventHandler {
 
     /**
      * Sets whether to preload an asset. If true, the asset will be loaded during the preload phase
-     * of application set up.
+     * of application initialization or when calling {@link AssetRegistry#add}.
      *
      * @type {boolean}
      */
     set preload(value) {
         value = !!value;
-        if (this._preload === value)
+        if (this._preload === value) {
             return;
+        }
 
         this._preload = value;
-        if (this._preload && !this.loaded && !this.loading && this.registry)
+        if (this._preload && !this.loaded && !this.loading && this.registry) {
             this.registry.load(this);
+        }
     }
 
     /**
@@ -424,8 +457,9 @@ class Asset extends EventHandler {
             // the loadFaces property should be part of the asset data block
             // because changing the flag should result in asset patch being invoked.
             // here we must invoke it manually instead.
-            if (this.loaded)
+            if (this.loaded) {
                 this.registry._loader.patch(this, this.registry);
+            }
         }
     }
 
@@ -444,18 +478,20 @@ class Asset extends EventHandler {
     getFileUrl() {
         const file = this.file;
 
-        if (!file || !file.url)
+        if (!file || !file.url) {
             return null;
+        }
 
         let url = file.url;
 
-        if (this.registry && this.registry.prefix && !ABSOLUTE_URL.test(url))
+        if (this.registry && this.registry.prefix && !ABSOLUTE_URL.test(url)) {
             url = this.registry.prefix + url;
+        }
 
         // add file hash to avoid hard-caching problems
         if (this.type !== 'script' && file.hash) {
             const separator = url.indexOf('?') !== -1 ? '&' : '?';
-            url += separator + 't=' + file.hash;
+            url += `${separator}t=${file.hash}`;
         }
 
         return url;
@@ -493,7 +529,7 @@ class Asset extends EventHandler {
 
     /**
      * Adds a replacement asset id for the specified locale. When the locale in
-     * {@link Application#i18n} changes then references to this asset will be replaced with the
+     * {@link AppBase#i18n} changes then references to this asset will be replaced with the
      * specified asset id. (Currently only supported by the {@link ElementComponent}).
      *
      * @param {string} locale - The locale e.g. Ar-AR.
@@ -528,8 +564,8 @@ class Asset extends EventHandler {
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
      * const asset = app.assets.find("My Asset");
-     * asset.ready(function (asset) {
-     *   // asset loaded
+     * asset.ready((asset) => {
+     *     // asset loaded
      * });
      * app.assets.load(asset);
      */
@@ -539,7 +575,7 @@ class Asset extends EventHandler {
         if (this.loaded) {
             callback.call(scope, this);
         } else {
-            this.once('load', function (asset) {
+            this.once('load', (asset) => {
                 callback.call(scope, asset);
             });
         }
@@ -562,11 +598,12 @@ class Asset extends EventHandler {
      * // asset.resource is null
      */
     unload() {
-        if (!this.loaded && this._resources.length === 0)
+        if (!this.loaded && this._resources.length === 0) {
             return;
+        }
 
         this.fire('unload', this);
-        this.registry.fire('unload:' + this.id, this);
+        this.registry.fire(`unload:${this.id}`, this);
 
         const old = this._resources;
 
@@ -586,10 +623,7 @@ class Asset extends EventHandler {
 
         // destroy resources
         for (let i = 0; i < old.length; ++i) {
-            const resource = old[i];
-            if (resource && resource.destroy) {
-                resource.destroy();
-            }
+            old[i]?.destroy?.();
         }
     }
 
@@ -599,8 +633,7 @@ class Asset extends EventHandler {
      * via http.
      *
      * @param {string} loadUrl - The URL as passed into the handler
-     * @param {import('../handlers/loader.js').ResourceLoaderCallback} callback - The callback
-     * function to receive results.
+     * @param {ResourceLoaderCallback} callback - The callback function to receive results.
      * @param {Asset} [asset] - The asset
      * @param {number} maxRetries - Number of retries if http download is required
      * @ignore
@@ -617,7 +650,8 @@ class Asset extends EventHandler {
                 cache: true,
                 responseType: 'arraybuffer',
                 retry: maxRetries > 0,
-                maxRetries: maxRetries
+                maxRetries: maxRetries,
+                progress: asset
             }, callback);
         }
     }

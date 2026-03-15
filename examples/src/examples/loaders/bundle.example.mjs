@@ -1,5 +1,5 @@
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
 
 // The example demonstrates loading multiple assets from a single bundle file
 
@@ -20,9 +20,7 @@ const assets = {
 assets.bundle.data = { assets: [assets.scene.id, assets.torus.id] };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -92,7 +90,7 @@ assetListLoader.load(() => {
 
     let time = 0;
     let activeCamera = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time -= dt;
 
         entityTorus.rotateLocal(360 * dt, 0, 0);

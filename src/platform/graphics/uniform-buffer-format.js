@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import {
-    uniformTypeToName, bindGroupNames,
+    uniformTypeToName,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_UINT, UNIFORMTYPE_VEC2,
     UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_UVEC2, UNIFORMTYPE_IVEC3,
     UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2, UNIFORMTYPE_BVEC3, UNIFORMTYPE_UVEC3, UNIFORMTYPE_BVEC4,
@@ -11,6 +11,11 @@ import {
     UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_UVEC3ARRAY, UNIFORMTYPE_BVEC3ARRAY,
     UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY
 } from './constants.js';
+
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { ScopeId } from './scope-id.js'
+ */
 
 // map of UNIFORMTYPE_*** to number of 32bit components
 const uniformTypeToNumComponents = [];
@@ -37,6 +42,8 @@ uniformTypeToNumComponents[UNIFORMTYPE_UVEC4] = 4;
 
 /**
  * A class storing description of an individual uniform, stored inside a uniform buffer.
+ *
+ * @category Graphics
  */
 class UniformFormat {
     /**
@@ -67,7 +74,7 @@ class UniformFormat {
     offset;
 
     /**
-     * @type {import('./scope-id.js').ScopeId}
+     * @type {ScopeId}
      * @ignore
      */
     scopeId;
@@ -156,8 +163,9 @@ class UniformFormat {
         this.count = count;
         Debug.assert(!isNaN(count), `Unsupported uniform: ${name}[${count}]`);
         Debug.call(() => {
-            if (isNaN(count))
+            if (isNaN(count)) {
                 this.invalid = true;
+            }
         });
 
         let componentSize = this.numComponents;
@@ -168,8 +176,9 @@ class UniformFormat {
         }
 
         this.byteSize = componentSize * 4;
-        if (count)
+        if (count) {
             this.byteSize *= count;
+        }
 
         Debug.assert(this.byteSize, `Unknown byte size for uniform format ${type} used for ${name}`);
     }
@@ -182,8 +191,9 @@ class UniformFormat {
         let alignment = this.byteSize <= 8 ? this.byteSize : 16;
 
         // arrays have vec4 alignments
-        if (this.count)
+        if (this.count) {
             alignment = 16;
+        }
 
         // align the start offset
         offset = math.roundUp(offset, alignment);
@@ -193,6 +203,8 @@ class UniformFormat {
 
 /**
  * A descriptor that defines the layout of of data inside the uniform buffer.
+ *
+ * @category Graphics
  */
 class UniformBufferFormat {
     /**
@@ -210,7 +222,7 @@ class UniformBufferFormat {
     /**
      * Create a new UniformBufferFormat instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device.
      * @param {UniformFormat[]} uniforms - An array of uniforms to be stored in the buffer
      */
     constructor(graphicsDevice, uniforms) {
@@ -244,20 +256,6 @@ class UniformBufferFormat {
      */
     get(name) {
         return this.map.get(name);
-    }
-
-    getShaderDeclaration(bindGroup, bindIndex) {
-
-        const name = bindGroupNames[bindGroup];
-        let code = `layout(set = ${bindGroup}, binding = ${bindIndex}, std140) uniform ub_${name} {\n`;
-
-        this.uniforms.forEach((uniform) => {
-            const typeString = uniformTypeToName[uniform.type];
-            Debug.assert(typeString.length > 0, `Uniform type ${uniform.type} is not handled.`);
-            code += `    ${typeString} ${uniform.shortName}${uniform.count ? `[${uniform.count}]` : ''};\n`;
-        });
-
-        return code + '};\n';
     }
 }
 

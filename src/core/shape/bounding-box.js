@@ -1,5 +1,11 @@
 import { Vec3 } from '../math/vec3.js';
 
+/**
+ * @import { BoundingSphere } from './bounding-sphere.js'
+ * @import { Mat4 } from '../math/mat4.js'
+ * @import { Ray } from './ray.js'
+ */
+
 const tmpVecA = new Vec3();
 const tmpVecB = new Vec3();
 const tmpVecC = new Vec3();
@@ -7,7 +13,8 @@ const tmpVecD = new Vec3();
 const tmpVecE = new Vec3();
 
 /**
- * Axis-Aligned Bounding Box.
+ * Axis-Aligned Bounding Box. An AABB is commonly used for fast overlap tests in collision
+ * detection, spatial indexing and frustum culling.
  *
  * @category Math
  */
@@ -43,10 +50,10 @@ class BoundingBox {
     /**
      * Create a new BoundingBox instance. The bounding box is axis-aligned.
      *
-     * @param {Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
-     * Defaults to (0, 0, 0).
+     * @param {Vec3} [center] - Center of box. The constructor copies this parameter. Defaults to
+     * (0, 0, 0).
      * @param {Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor
-     * takes a reference of this parameter. Defaults to (0.5, 0.5, 0.5).
+     * copies this parameter. Defaults to (0.5, 0.5, 0.5).
      */
     constructor(center, halfExtents) {
         if (center) {
@@ -180,8 +187,9 @@ class BoundingBox {
 
         const intersects = minMax >= maxMin && maxMin >= 0;
 
-        if (intersects)
+        if (intersects) {
             point.copy(ray.direction).mulScalar(maxMin).add(ray.origin);
+        }
 
         return intersects;
     }
@@ -199,27 +207,33 @@ class BoundingBox {
 
         prod.mul2(diff, rayDir);
 
-        if (absDiff.x > this.halfExtents.x && prod.x >= 0)
+        if (absDiff.x > this.halfExtents.x && prod.x >= 0) {
             return false;
+        }
 
-        if (absDiff.y > this.halfExtents.y && prod.y >= 0)
+        if (absDiff.y > this.halfExtents.y && prod.y >= 0) {
             return false;
+        }
 
-        if (absDiff.z > this.halfExtents.z && prod.z >= 0)
+        if (absDiff.z > this.halfExtents.z && prod.z >= 0) {
             return false;
+        }
 
         absDir.set(Math.abs(rayDir.x), Math.abs(rayDir.y), Math.abs(rayDir.z));
         cross.cross(rayDir, diff);
         cross.set(Math.abs(cross.x), Math.abs(cross.y), Math.abs(cross.z));
 
-        if (cross.x > this.halfExtents.y * absDir.z + this.halfExtents.z * absDir.y)
+        if (cross.x > this.halfExtents.y * absDir.z + this.halfExtents.z * absDir.y) {
             return false;
+        }
 
-        if (cross.y > this.halfExtents.x * absDir.z + this.halfExtents.z * absDir.x)
+        if (cross.y > this.halfExtents.x * absDir.z + this.halfExtents.z * absDir.x) {
             return false;
+        }
 
-        if (cross.z > this.halfExtents.x * absDir.y + this.halfExtents.y * absDir.x)
+        if (cross.z > this.halfExtents.x * absDir.y + this.halfExtents.y * absDir.x) {
             return false;
+        }
 
         return true;
     }
@@ -227,7 +241,7 @@ class BoundingBox {
     /**
      * Test if a ray intersects with the AABB.
      *
-     * @param {import('./ray.js').Ray} ray - Ray to test against (direction must be normalized).
+     * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
      * into here.
      * @returns {boolean} True if there is an intersection.
@@ -271,18 +285,18 @@ class BoundingBox {
     }
 
     /**
-     * Test if a point is inside a AABB.
+     * Test if a point is inside an AABB.
      *
      * @param {Vec3} point - Point to test.
      * @returns {boolean} True if the point is inside the AABB and false otherwise.
      */
     containsPoint(point) {
-        const min = this.getMin();
-        const max = this.getMax();
+        const c = this.center;
+        const h = this.halfExtents;
 
-        if (point.x < min.x || point.x > max.x ||
-            point.y < min.y || point.y > max.y ||
-            point.z < min.z || point.z > max.z) {
+        if (point.x < c.x - h.x || point.x > c.x + h.x ||
+            point.y < c.y - h.y || point.y > c.y + h.y ||
+            point.z < c.z - h.z || point.z > c.z + h.z) {
             return false;
         }
 
@@ -290,11 +304,39 @@ class BoundingBox {
     }
 
     /**
+     * Return the point on the AABB closest to a given point. If the point is inside the AABB, the
+     * point itself is returned.
+     *
+     * @param {Vec3} point - Point to find the closest point to.
+     * @param {Vec3} [result] - The vector to store the result in. If not provided, a new Vec3 is
+     * created and returned.
+     * @returns {Vec3} The closest point on the AABB.
+     * @example
+     * const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+     * const point = new Vec3(2, 0, 0);
+     * const closest = box.closestPoint(point); // Returns Vec3(1, 0, 0)
+     * @example
+     * // Reuse a result vector to avoid allocations in hot paths
+     * const result = new Vec3();
+     * box.closestPoint(point, result);
+     */
+    closestPoint(point, result = new Vec3()) {
+        const c = this.center;
+        const h = this.halfExtents;
+
+        return result.set(
+            Math.max(c.x - h.x, Math.min(point.x, c.x + h.x)),
+            Math.max(c.y - h.y, Math.min(point.y, c.y + h.y)),
+            Math.max(c.z - h.z, Math.min(point.z, c.z + h.z))
+        );
+    }
+
+    /**
      * Set an AABB to enclose the specified AABB if it were to be transformed by the specified 4x4
      * matrix.
      *
      * @param {BoundingBox} aabb - Box to transform and enclose.
-     * @param {import('../math/mat4.js').Mat4} m - Transformation matrix to apply to source AABB.
+     * @param {Mat4} m - Transformation matrix to apply to source AABB.
      * @param {boolean} ignoreScale - If true is specified, a scale from the matrix is ignored. Defaults to false.
      */
     setFromTransformedAabb(aabb, m, ignoreScale = false) {
@@ -403,7 +445,7 @@ class BoundingBox {
     /**
      * Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
      *
-     * @param {import('./bounding-sphere.js').BoundingSphere} sphere - Bounding Sphere to test.
+     * @param {BoundingSphere} sphere - Bounding Sphere to test.
      * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the
      * AABB and false otherwise.
      */

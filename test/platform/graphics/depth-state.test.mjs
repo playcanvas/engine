@@ -1,9 +1,9 @@
-import { DepthState } from '../../../src/platform/graphics/depth-state.js';
+import { expect } from 'chai';
+
 import {
     FUNC_LESSEQUAL, FUNC_ALWAYS, FUNC_NOTEQUAL
 } from '../../../src/platform/graphics/constants.js';
-
-import { expect } from 'chai';
+import { DepthState } from '../../../src/platform/graphics/depth-state.js';
 
 describe('DepthState', function () {
 

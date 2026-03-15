@@ -2,6 +2,11 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_VRAM_VB } from '../../core/constants.js';
 import { BUFFER_STATIC } from './constants.js';
 
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { VertexFormat } from './vertex-format.js'
+ */
+
 let id = 0;
 
 /**
@@ -16,10 +21,9 @@ class VertexBuffer {
     /**
      * Create a new VertexBuffer instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this vertex buffer.
-     * @param {import('./vertex-format.js').VertexFormat} format - The vertex format of this vertex
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex
      * buffer.
+     * @param {VertexFormat} format - The vertex format of this vertex buffer.
      * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {number} [options.usage] - The usage type of the vertex buffer (see BUFFER_*).
@@ -55,7 +59,7 @@ class VertexBuffer {
             this.storage = new ArrayBuffer(this.numBytes);
         }
 
-        this.device.buffers.push(this);
+        this.device.buffers.add(this);
     }
 
     /**
@@ -65,10 +69,7 @@ class VertexBuffer {
 
         // stop tracking the vertex buffer
         const device = this.device;
-        const idx = device.buffers.indexOf(this);
-        if (idx !== -1) {
-            device.buffers.splice(idx, 1);
-        }
+        device.buffers.delete(this);
 
         if (this.impl.initialized) {
             this.impl.destroy(device);
@@ -93,8 +94,7 @@ class VertexBuffer {
     /**
      * Returns the data format of the specified vertex buffer.
      *
-     * @returns {import('./vertex-format.js').VertexFormat} The data format of the specified vertex
-     * buffer.
+     * @returns {VertexFormat} The data format of the specified vertex buffer.
      */
     getFormat() {
         return this.format;

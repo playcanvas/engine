@@ -1,24 +1,31 @@
 import { Debug } from '../../../core/debug.js';
-import { TRACE_ID_ELEMENT } from '../../../core/constants.js';
-
+import { TRACEID_ELEMENT } from '../../../core/constants.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../platform/graphics/constants.js';
-
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
-
 import { Entity } from '../../entity.js';
-
 import { Component } from '../component.js';
-
 import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, FITMODE_STRETCH } from './constants.js';
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
+
+/**
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { CanvasFont } from '../../../framework/font/canvas-font.js'
+ * @import { Color } from '../../../core/math/color.js'
+ * @import { ElementComponentData } from './data.js'
+ * @import { ElementComponentSystem } from './system.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
+ * @import { Font } from '../../../framework/font/font.js'
+ * @import { Material } from '../../../scene/materials/material.js'
+ * @import { Sprite } from '../../../scene/sprite.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
+ */
 
 const position = new Vec3();
 const invParentWtm = new Mat4();
@@ -38,29 +45,29 @@ const matD = new Mat4();
  * {@link ScreenComponent} ancestor, the ElementComponent will be transformed like any other
  * entity.
  *
- * You should never need to use the ElementComponent constructor. To add an ElementComponent to a
- * {@link Entity}, use {@link Entity#addComponent}:
+ * You should never need to use the ElementComponent constructor directly. To add an
+ * ElementComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * // Add an element component to an entity with the default options
  * const entity = pc.Entity();
- * entity.addComponent("element"); // This defaults to a 'group' element
+ * entity.addComponent('element'); // This defaults to a 'group' element
  * ```
  *
  * To create a simple text-based element:
  *
  * ```javascript
- * entity.addComponent("element", {
+ * entity.addComponent('element', {
  *     anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5), // centered anchor
  *     fontAsset: fontAsset,
  *     fontSize: 128,
  *     pivot: new pc.Vec2(0.5, 0.5),            // centered pivot
- *     text: "Hello World!",
+ *     text: 'Hello World!',
  *     type: pc.ELEMENTTYPE_TEXT
  * });
  * ```
  *
- * Once the ElementComponent is added to the entity, you can set and get any of its properties:
+ * Once the ElementComponent is added to the entity, you can access it via the
+ * {@link Entity#element} property:
  *
  * ```javascript
  * entity.element.color = pc.Color.RED; // Set the element's color to red
@@ -68,7 +75,7 @@ const matD = new Mat4();
  * console.log(entity.element.color);   // Get the element's color and print it
  * ```
  *
- * Relevant 'Engine-only' examples:
+ * Relevant Engine API examples:
  *
  * - [Basic text rendering](https://playcanvas.github.io/#/user-interface/text)
  * - [Auto font sizing](https://playcanvas.github.io/#/user-interface/text-auto-font-size)
@@ -76,6 +83,7 @@ const matD = new Mat4();
  * - [Text localization](https://playcanvas.github.io/#/user-interface/text-localization)
  * - [Typewriter text](https://playcanvas.github.io/#/user-interface/text-typewriter)
  *
+ * @hideconstructor
  * @category User Interface
  */
 class ElementComponent extends Component {
@@ -213,10 +221,27 @@ class ElementComponent extends Component {
     static EVENT_TOUCHCANCEL = 'touchcancel';
 
     /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayersChanged = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
+
+    /**
      * Create a new ElementComponent instance.
      *
-     * @param {import('./system.js').ElementComponentSystem} system - The ComponentSystem that
-     * created this Component.
+     * @param {ElementComponentSystem} system - The ComponentSystem that created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
@@ -309,7 +334,7 @@ class ElementComponent extends Component {
 
     // TODO: Remove this override in upgrading component
     /**
-     * @type {import('./data.js').ElementComponentData}
+     * @type {ElementComponentData}
      * @ignore
      */
     get data() {
@@ -389,7 +414,7 @@ class ElementComponent extends Component {
     /**
      * Gets the world space axis-aligned bounding box for this element component.
      *
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox | null}
+     * @type {BoundingBox | null}
      */
     get aabb() {
         if (this._image) {
@@ -598,7 +623,7 @@ class ElementComponent extends Component {
         }
 
         if (value > 0xFFFFFF) {
-            Debug.warn('Element.drawOrder larger than max size of: ' + 0xFFFFFF);
+            Debug.warn(`Element.drawOrder larger than max size of: ${0xFFFFFF}`);
             value = 0xFFFFFF;
         }
 
@@ -1260,7 +1285,7 @@ class ElementComponent extends Component {
      * Sets the color of the image for {@link ELEMENTTYPE_IMAGE} types or the color of the text for
      * {@link ELEMENTTYPE_TEXT} types.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     set color(arg) {
         this._setValue('color', arg);
@@ -1269,7 +1294,7 @@ class ElementComponent extends Component {
     /**
      * Gets the color of the element.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     get color() {
         if (this._text) {
@@ -1286,7 +1311,7 @@ class ElementComponent extends Component {
     /**
      * Sets the font used for rendering the text. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
-     * @type {import('../../../framework/font/font.js').Font | import('../../../framework/font/canvas-font.js').CanvasFont}
+     * @type {Font|CanvasFont}
      */
     set font(arg) {
         this._setValue('font', arg);
@@ -1295,7 +1320,7 @@ class ElementComponent extends Component {
     /**
      * Gets the font used for rendering the text.
      *
-     * @type {import('../../../framework/font/font.js').Font | import('../../../framework/font/canvas-font.js').CanvasFont}
+     * @type {Font|CanvasFont}
      */
     get font() {
         if (this._text) {
@@ -1590,7 +1615,7 @@ class ElementComponent extends Component {
     /**
      * Sets the texture to render. Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
-     * @type {import('../../../platform/graphics/texture.js').Texture}
+     * @type {Texture}
      */
     set texture(arg) {
         this._setValue('texture', arg);
@@ -1599,7 +1624,7 @@ class ElementComponent extends Component {
     /**
      * Gets the texture to render.
      *
-     * @type {import('../../../platform/graphics/texture.js').Texture}
+     * @type {Texture}
      */
     get texture() {
         if (this._image) {
@@ -1634,7 +1659,7 @@ class ElementComponent extends Component {
     /**
      * Sets the material to use when rendering an image. Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      */
     set material(arg) {
         this._setValue('material', arg);
@@ -1643,7 +1668,7 @@ class ElementComponent extends Component {
     /**
      * Gets the material to use when rendering an image.
      *
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      */
     get material() {
         if (this._image) {
@@ -1680,7 +1705,7 @@ class ElementComponent extends Component {
      * Sets the sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} types which can render
      * either a texture or a sprite.
      *
-     * @type {import('../../../scene/sprite.js').Sprite}
+     * @type {Sprite}
      */
     set sprite(arg) {
         this._setValue('sprite', arg);
@@ -1689,7 +1714,7 @@ class ElementComponent extends Component {
     /**
      * Gets the sprite to render.
      *
-     * @type {import('../../../scene/sprite.js').Sprite}
+     * @type {Sprite}
      */
     get sprite() {
         if (this._image) {
@@ -1844,7 +1869,7 @@ class ElementComponent extends Component {
     /**
      * Sets the text outline effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     set outlineColor(arg) {
         this._setValue('outlineColor', arg);
@@ -1853,7 +1878,7 @@ class ElementComponent extends Component {
     /**
      * Gets the text outline effect color and opacity.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     get outlineColor() {
         if (this._text) {
@@ -1887,7 +1912,7 @@ class ElementComponent extends Component {
     /**
      * Sets the text shadow effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     set shadowColor(arg) {
         this._setValue('shadowColor', arg);
@@ -1896,7 +1921,7 @@ class ElementComponent extends Component {
     /**
      * Gets the text shadow effect color and opacity.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     get shadowColor() {
         if (this._text) {
@@ -2154,7 +2179,7 @@ class ElementComponent extends Component {
                 // transform element hierarchy
                 if (this._parent.element) {
                     element._screenToWorld.mul2(this._parent.element._modelTransform,
-                                                element._anchorTransform);
+                        element._anchorTransform);
                 } else {
                     element._screenToWorld.copy(element._anchorTransform);
                 }
@@ -2186,16 +2211,16 @@ class ElementComponent extends Component {
 
                     const pivotOffset = vecB;
                     pivotOffset.set(element._absLeft + element._pivot.x * element.calculatedWidth,
-                                    element._absBottom + element._pivot.y * element.calculatedHeight, 0);
+                        element._absBottom + element._pivot.y * element.calculatedHeight, 0);
 
                     matA.setTranslate(-pivotOffset.x, -pivotOffset.y, -pivotOffset.z);
                     matB.setTRS(depthOffset, this.getLocalRotation(), this.getLocalScale());
                     matC.setTranslate(pivotOffset.x, pivotOffset.y, pivotOffset.z);
 
                     element._screenTransform
-                        .mul2(element._parentWorldTransform, matC)
-                        .mul(matB)
-                        .mul(matA);
+                    .mul2(element._parentWorldTransform, matC)
+                    .mul(matB)
+                    .mul(matA);
 
                     element._cornersDirty = true;
                     element._canvasCornersDirty = true;
@@ -2233,7 +2258,7 @@ class ElementComponent extends Component {
                     this.system._prerender = [];
                     this.system.app.once('prerender', this._onPrerender, this);
 
-                    Debug.trace(TRACE_ID_ELEMENT, 'register prerender');
+                    Debug.trace(TRACEID_ELEMENT, 'register prerender');
                 }
                 const i = this.system._prerender.indexOf(this.entity);
                 if (i >= 0) {
@@ -2243,7 +2268,7 @@ class ElementComponent extends Component {
                 if (j < 0) {
                     this.system._prerender.push(current);
                 }
-                Debug.trace(TRACE_ID_ELEMENT, 'set prerender root to: ' + current.name);
+                Debug.trace(TRACEID_ELEMENT, `set prerender root to: ${current.name}`);
             }
 
             current = next;
@@ -2253,7 +2278,7 @@ class ElementComponent extends Component {
     _onPrerender() {
         for (let i = 0; i < this.system._prerender.length; i++) {
             const mask = this.system._prerender[i];
-            Debug.trace(TRACE_ID_ELEMENT, 'prerender from: ' + mask.name);
+            Debug.trace(TRACEID_ELEMENT, `prerender from: ${mask.name}`);
 
             // prevent call if element has been removed since being added
             if (mask.element) {
@@ -2324,7 +2349,7 @@ class ElementComponent extends Component {
 
         if (mask) {
             const ref = mask.element._image._maskRef;
-            Debug.trace(TRACE_ID_ELEMENT, 'masking: ' + this.entity.name + ' with ' + ref);
+            Debug.trace(TRACEID_ELEMENT, `masking: ${this.entity.name} with ${ref}`);
 
             // if this is image or text, set the stencil parameters
             renderableElement?._setStencil(new StencilParameters({
@@ -2334,7 +2359,7 @@ class ElementComponent extends Component {
 
             this._maskedBy = mask;
         } else {
-            Debug.trace(TRACE_ID_ELEMENT, 'no masking on: ' + this.entity.name);
+            Debug.trace(TRACEID_ELEMENT, `no masking on: ${this.entity.name}`);
 
             // remove stencil params if this is image or text
             renderableElement?._setStencil(null);
@@ -2363,8 +2388,8 @@ class ElementComponent extends Component {
                 // increment counter to count mask depth
                 depth++;
 
-                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + (sp.ref + 1));
-                Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
+                Debug.trace(TRACEID_ELEMENT, `masking from: ${this.entity.name} with ${sp.ref + 1}`);
+                Debug.trace(TRACEID_ELEMENT, 'depth++ to: ', depth);
 
                 currentMask = this.entity;
             }
@@ -2393,8 +2418,8 @@ class ElementComponent extends Component {
                 // increment mask counter to count depth of masks
                 depth++;
 
-                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + sp.ref);
-                Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
+                Debug.trace(TRACEID_ELEMENT, `masking from: ${this.entity.name} with ${sp.ref}`);
+                Debug.trace(TRACEID_ELEMENT, 'depth++ to: ', depth);
 
                 currentMask = this.entity;
             }
@@ -2481,7 +2506,7 @@ class ElementComponent extends Component {
         }
 
         this._localAnchor.set(this._anchor.x * resx, this._anchor.y * resy, this._anchor.z * resx,
-                              this._anchor.w * resy);
+            this._anchor.w * resy);
     }
 
     // internal - apply offset x,y to local position and find point in world space
@@ -2525,6 +2550,9 @@ class ElementComponent extends Component {
     }
 
     onEnable() {
+        const scene = this.system.app.scene;
+        const layers = scene.layers;
+
         if (this._image) {
             this._image.onEnable();
         }
@@ -2539,10 +2567,11 @@ class ElementComponent extends Component {
             this.system.app.elementInput.addElement(this);
         }
 
-        this.system.app.scene.on('set:layers', this.onLayersChanged, this);
-        if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.on('add', this.onLayerAdded, this);
-            this.system.app.scene.layers.on('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
+
+        if (layers) {
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this._batchGroupId >= 0) {
@@ -2553,10 +2582,17 @@ class ElementComponent extends Component {
     }
 
     onDisable() {
-        this.system.app.scene.off('set:layers', this.onLayersChanged, this);
-        if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.off('add', this.onLayerAdded, this);
-            this.system.app.scene.layers.off('remove', this.onLayerRemoved, this);
+        const scene = this.system.app.scene;
+        const layers = scene.layers;
+
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
+        if (layers) {
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
         if (this._image) this._image.onDisable();

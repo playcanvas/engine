@@ -100,7 +100,7 @@ const path = {
         if (lastDelimiterIndex !== -1) {
             return [pathname.substring(0, lastDelimiterIndex), pathname.substring(lastDelimiterIndex + 1)];
         }
-        return ["", pathname];
+        return ['', pathname];
     },
 
     /**
@@ -142,7 +142,7 @@ const path = {
     getExtension(pathname) {
         const ext = pathname.split('?')[0].split('.').pop();
         if (ext !== pathname) {
-            return '.' + ext;
+            return `.${ext}`;
         }
         return '';
     },
@@ -186,22 +186,22 @@ const path = {
             if (path.isRelativePath(pathname)) {
                 if (parts[0] === '.') {
                     for (i = 0; i < parts.length - 1; ++i) {
-                        result += (i === 0) ? parts[i] : '/' + parts[i];
+                        result += (i === 0) ? parts[i] : `/${parts[i]}`;
 
                     }
                 } else if (parts[0] === '..') {
                     for (i = 0; i < parts.length - 1; ++i) {
-                        result += (i === 0) ? parts[i] : '/' + parts[i];
+                        result += (i === 0) ? parts[i] : `/${parts[i]}`;
                     }
                 } else {
                     result = '.';
                     for (i = 0; i < parts.length - 1; ++i) {
-                        result += '/' + parts[i];
+                        result += `/${parts[i]}`;
                     }
                 }
             } else {
                 for (i = 0; i < parts.length - 1; ++i) {
-                    result += (i === 0) ? parts[i] : '/' + parts[i];
+                    result += (i === 0) ? parts[i] : `/${parts[i]}`;
                 }
             }
         }
