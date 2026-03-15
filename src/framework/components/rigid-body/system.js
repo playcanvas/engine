@@ -346,7 +346,7 @@ class ContactResult {
 
 const _schema = ['enabled'];
 
-/*
+/**
  * Creates a new shape.
  *
  * @param {string} name - Name of the shape. Must start with capital letter.
