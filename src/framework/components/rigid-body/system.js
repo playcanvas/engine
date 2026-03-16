@@ -873,7 +873,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             return results;
         }
 
-        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#shapeCest: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#shapeCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
 
         // We only initialize the shapeTest body here so we don't have an extra body unless the user uses this function
         if (!shapeTestBody) {
