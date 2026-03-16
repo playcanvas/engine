@@ -782,6 +782,58 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * ending transform from starting one.
      *
      * @returns {HitResult[]} An array of shapeCast hit results (0 length if there were no hits).
+     *
+     * @example
+     * // Return all results of a sphere shape cast at position (0, 2, 0)
+     * const hits = this.app.systems.rigidbody.shapeCast(
+     *     { type: "sphere", radius: 0.5 },
+     *     new Vec3(0, 2, 0),
+     *     { findAll: true }
+     * );
+     * @example
+     * // Return all results of a box shape cast at position (0, 2, 0)
+     * // where hit entity is tagged with `bird` OR `mammal`
+     * const hits = this.app.systems.rigidbody.shapeCast(
+     *     { type: "box", halfExtents: new Vec3(1, 1, 1) },
+     *     new Vec3(0, 2, 0),
+     *     {
+     *         filterTags: [ "bird", "mammal" ],
+     *         findAll: true
+     *     }
+     * );
+     * @example
+     * // Return all results of a capsule shape cast at position (0, 2, 0)
+     * // where hit entity has a `camera` component
+     * const hits = this.app.systems.rigidbody.shapeCast(
+     *     { type: "capsule", radius: 0.3, height: 1.6 },
+     *     new Vec3(0, 2, 0),
+     *     {
+     *         filterCallback: (entity) => entity && entity.camera,
+     *         findAll: true
+     *     }
+     * );
+     * @example
+     * // Return the closest result of a sphere sweep from (0, 2, 0) to (0, -2, 0)
+     * const hit = this.app.systems.rigidbody.shapeCast(
+     *     { type: "sphere", radius: 0.5 },
+     *     new Vec3(0, 2, 0),
+     *     { endPosition: new Vec3(0, -2, 0) }
+     * )[0];
+     * @example
+     * // Return the closest result of a cylinder shape cast at position (0, 2, 0)
+     * // where hit entity is tagged with (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
+     * // and the entity has an `anim` component
+     * const hit = this.app.systems.rigidbody.shapeCast(
+     *     { type: "cylinder", radius: 0.5, height: 2, axis: 1 },
+     *     new Vec3(0, 2, 0),
+     *     {
+     *         filterTags: [
+     *             [ "carnivore", "mammal" ],
+     *             [ "carnivore", "reptile" ]
+     *         ],
+     *         filterCallback: (entity) => entity && entity.anim
+     *     }
+     * )[0];
      */
     shapeCast(shape, startPosition, options = {}) {
         const results = [];
