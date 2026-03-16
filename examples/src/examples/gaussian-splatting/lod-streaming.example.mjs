@@ -129,6 +129,11 @@ assetListLoader.load(() => {
     app.scene.gsplat.lodUpdateAngle = 90;
     app.scene.gsplat.lodBehindPenalty = 3;
     app.scene.gsplat.radialSorting = true;
+
+    data.on('radialSorting:set', () => {
+        app.scene.gsplat.radialSorting = !!data.get('radialSorting');
+    });
+
     app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
@@ -150,6 +155,7 @@ assetListLoader.load(() => {
 
     // initialize UI settings (must be after observer registration)
     data.set('cameraFov', 75);
+    data.set('radialSorting', true);
     data.set('gpuSorting', false);
     data.set('culling', device.isWebGPU);
     data.set('compact', true);
