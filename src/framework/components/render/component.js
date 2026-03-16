@@ -810,7 +810,10 @@ class RenderComponent extends Component {
                 const meshInstance = meshInstances[j];
 
                 this.removeFromLayers(meshInstance);
-                this._clearSkinInstance(meshInstance);
+
+                if (destroy) {
+                    this._clearSkinInstance(meshInstance);
+                }
 
                 meshInstances.splice(j, 1);
 
