@@ -8,7 +8,7 @@ import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 
-describe.only('RenderComponent', function () {
+describe('RenderComponent', function () {
     let app;
 
     beforeEach(function () {
