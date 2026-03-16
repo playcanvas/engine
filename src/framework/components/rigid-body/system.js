@@ -679,7 +679,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
         ammoRayStart.setValue(start.x, start.y, start.z);
         ammoRayEnd.setValue(end.x, end.y, end.z);
 
-        const findAll = options.findAll || options.filterTags || options.filterCallback;
         const rayCallback = findAll ? new Ammo.AllHitsRayResultCallback(ammoRayStart, ammoRayEnd) : new Ammo.ClosestRayResultCallback(ammoRayStart, ammoRayEnd);
 
         if (typeof options.filterCollisionGroup === 'number') {
@@ -785,6 +784,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      */
     shapeCast(shape, startPosition, startRotation, endPosition, options = {}) {
         const results = [];
+        let destroyShape = options.destroyShape === true;
 
         let btShape;
         switch (shape.type) {
@@ -792,23 +792,23 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 ammoVec3.setValue(shape.halfExtents?.x ?? 0.5, shape.halfExtents?.y ?? 0.5, shape.halfExtents?.z ?? 0.5);
 
                 btShape = new Ammo.btBoxShape(ammoVec3);
-                options.destroyShape = true;
+                destroyShape = true;
                 break;
             case 'capsule':
                 btShape = createShape('Capsule', shape.axis, shape.radius ?? 0.5, shape.height ?? 1);
-                options.destroyShape = true;
+                destroyShape = true;
                 break;
             case 'cone':
                 btShape = createShape('Cone', shape.axis, shape.radius ?? 0.5, shape.height ?? 1);
-                options.destroyShape = true;
+                destroyShape = true;
                 break;
             case 'cylinder':
                 btShape = createShape('Cylinder', shape.axis, shape.radius ?? 0.5, shape.height ?? 1);
-                options.destroyShape = true;
+                destroyShape = true;
                 break;
             case 'sphere':
                 btShape = new Ammo.btSphereShape(shape.radius ?? 0.5);
-                options.destroyShape = true;
+                destroyShape = true;
                 break;
             default:
                 btShape = shape;
@@ -871,7 +871,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
             // Destroy Ammo variables.
             Ammo.destroy(resultCallback);
-            if (options.destroyShape) {
+            if (destroyShape) {
                 Ammo.destroy(btShape);
             }
 
@@ -946,7 +946,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         // Destroy Ammo variables.
         shapeTestBody.setCollisionShape(null);
         Ammo.destroy(resultCallback);
-        if (options.destroyShape) {
+        if (destroyShape) {
             Ammo.destroy(btShape);
         }
 
