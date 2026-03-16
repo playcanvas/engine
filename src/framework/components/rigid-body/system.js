@@ -759,10 +759,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * "capsule", "cone", "cylinder" or "sphere".
      * @param {number} [shape.radius] - The radius of the sphere, capsule, cylinder or cone.
      * @param {Vec3} startPosition - The world space position for the shape to be at start.
-     * @param {Vec3|Quat} [startRotation] - The world space rotation for the shape to have
-     * at start.
-     * @param {Vec3} [endPosition] - The world space position for the shape to be at end.
      * @param {object} [options] - The additional options for the shape casting.
+     * @param {Vec3} [options.endPosition] - The world space position for the shape to be at end.
+     * @param {Vec3|Quat} [options.startRotation] - The world space rotation for the shape to have
+     * at start.
      * @param {Vec3|Quat} [options.endRotation] - The world space rotation for the shape to have
      * at end.
      * @param {boolean} [options.sort] - Whether to sort shape cast results based on distance with
@@ -783,14 +783,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of shapeCast hit results (0 length if there were no hits).
      */
-    shapeCast(shape, startPosition, startRotation, endPosition, options = {}) {
+    shapeCast(shape, startPosition, options = {}) {
         const results = [];
         let destroyShape = options.destroyShape === true;
 
         let btShape;
         switch (shape.type) {
             case 'box':
-                ammoVec3.setValue(shape.halfExtents?.x ?? 0.5, shape.halfExtents?.y ?? 0.5, shape.halfExtents?.z ?? 0.5);
+                ammoVec3.setValue(
+                    shape.halfExtents?.x ?? 0.5,
+                    shape.halfExtents?.y ?? 0.5,
+                    shape.halfExtents?.z ?? 0.5
+                );
 
                 btShape = new Ammo.btBoxShape(ammoVec3);
                 destroyShape = true;
@@ -837,10 +841,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         ammoVec3.setValue(startPosition.x, startPosition.y, startPosition.z);
-        if (startRotation instanceof Quat) {
-            ammoQuat.setValue(startRotation.x, startRotation.y, startRotation.z, startRotation.w);
-        } else if (startRotation instanceof Vec3) {
-            tmpQuat.setFromEulerAngles(startRotation);
+        if (options.startRotation instanceof Quat) {
+            ammoQuat.setValue(
+                options.startRotation.x,
+                options.startRotation.y,
+                options.startRotation.z,
+                options.startRotation.w
+            );
+        } else if (options.startRotation instanceof Vec3) {
+            tmpQuat.setFromEulerAngles(options.startRotation);
             ammoQuat.setValue(tmpQuat.x, tmpQuat.y, tmpQuat.z, tmpQuat.w);
         } else {
             ammoQuat.setEulerZYX(0, 0, 0);
@@ -851,10 +860,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
         ammoTransform.setRotation(ammoQuat);
 
         const endRotation = options.endRotation;
-        if ((endPosition && !endPosition.equals(startPosition)) || endRotation) {
+        if ((options.endPosition && !options.endPosition.equals(startPosition)) || endRotation) {
             Debug.assert(Ammo.ClosestConvexResultCallback && Ammo.ClosestConvexResultCallback.get_m_hitCollisionObject, 'pc.RigidBodyComponentSystem#shapeCast: Your version of ammo.js does not expose Ammo.ClosestConvexResultCallback or Ammo.ClosestConvexResultCallback#get_m_hitCollisionObject. Update it to latest.');
 
-            ammoVec3.setValue(endPosition.x, endPosition.y, endPosition.z);
+            ammoVec3.setValue(options.endPosition.x, options.endPosition.y, options.endPosition.z);
             if (endRotation instanceof Quat) {
                 ammoQuat.setValue(endRotation.x, endRotation.y, endRotation.z, endRotation.w);
             } else if (endRotation instanceof Vec3) {
