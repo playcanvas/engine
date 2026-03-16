@@ -11,7 +11,7 @@ export default /* wgsl */`
         #ifdef CAS_HDR
             fn maxComponent(x: f32, y: f32, z: f32) -> f32 { return max(x, max(y, z)); }
             fn toSDR(c: vec3f) -> vec3f { return c / (1.0 + maxComponent(c.r, c.g, c.b)); }
-            fn toHDR(c: vec3f) -> vec3f { return c / (1.0 - maxComponent(c.r, c.g, c.b)); }
+            fn toHDR(c: vec3f) -> vec3f { return c / max(1.0 - maxComponent(c.r, c.g, c.b), 1e-4); }
         #else
             fn toSDR(c: vec3f) -> vec3f { return c; }
             fn toHDR(c: vec3f) -> vec3f { return c; }
@@ -31,8 +31,8 @@ export default /* wgsl */`
             // apply the sharpening
             let min_g = min(a.g, min(b.g, min(c.g, min(d.g, e.g))));
             let max_g = max(a.g, max(b.g, max(c.g, max(d.g, e.g))));
-            let sharpening_amount = sqrt(min(half(1.0) - max_g, min_g) / max_g);
-            let w = sharpening_amount * half(uniform.sharpness);
+            let sharpening_amount = sqrt(min(half(1.0) - max_g, min_g) / max(max_g, half(1e-4)));
+            let w = sharpening_amount * half(sharpness);
             var res = (w * (a + b + d + e) + c) / (half(4.0) * w + half(1.0));
 
             // remove negative colors
