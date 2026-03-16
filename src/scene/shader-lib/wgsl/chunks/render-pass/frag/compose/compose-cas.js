@@ -31,8 +31,8 @@ export default /* wgsl */`
             // apply the sharpening
             let min_g = min(a.g, min(b.g, min(c.g, min(d.g, e.g))));
             let max_g = max(a.g, max(b.g, max(c.g, max(d.g, e.g))));
-            let sharpening_amount = select(half(0.0), sqrt(min(half(1.0) - max_g, min_g) / max_g), max_g > half(0.0));
-            let w = sharpening_amount * half(uniform.sharpness);
+            let sharpening_amount = sqrt(min(half(1.0) - max_g, min_g) / max(max_g, half(1e-4)));
+            let w = sharpening_amount * half(sharpness);
             var res = (w * (a + b + d + e) + c) / (half(4.0) * w + half(1.0));
 
             // remove negative colors
