@@ -18,6 +18,7 @@ describe('RenderComponent', function () {
 
     afterEach(function () {
         jsdomTeardown();
+        app?.destroy();
         app = null;
     });
 
