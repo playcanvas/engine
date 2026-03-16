@@ -11,7 +11,7 @@ export default /* glsl */`
         #ifdef CAS_HDR
             float maxComponent(float x, float y, float z) { return max(x, max(y, z)); }
             vec3 toSDR(vec3 c) { return c / (1.0 + maxComponent(c.r, c.g, c.b)); }
-            vec3 toHDR(vec3 c) { return c / (1.0 - maxComponent(c.r, c.g, c.b)); }
+            vec3 toHDR(vec3 c) { return c / max(1.0 - maxComponent(c.r, c.g, c.b), 1e-4); }
         #else
             vec3 toSDR(vec3 c) { return c; }
             vec3 toHDR(vec3 c) { return c; }
@@ -31,7 +31,7 @@ export default /* glsl */`
             // apply the sharpening
             float min_g = min(a.g, min(b.g, min(c.g, min(d.g, e.g))));
             float max_g = max(a.g, max(b.g, max(c.g, max(d.g, e.g))));
-            float sharpening_amount = sqrt(min(1.0 - max_g, min_g) / max_g);
+            float sharpening_amount = max_g > 0.0 ? sqrt(min(1.0 - max_g, min_g) / max_g) : 0.0;
             float w = sharpening_amount * sharpness;
             vec3 res = (w * (a + b + d + e) + c) / (4.0 * w + 1.0);
 
