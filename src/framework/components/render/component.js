@@ -776,16 +776,12 @@ class RenderComponent extends Component {
         Debug.assert(meshInstance instanceof MeshInstance, 'Invalid MeshInstance');
         const meshInstances = this._meshInstances;
 
-        if (meshInstances) {
-            const index = meshInstances.indexOf(meshInstance);
-            if (index >= 0) {
-                Debug.warn('This MeshInstance already exists in this component');
-                return;
-            }
-            meshInstances.push(meshInstance);
-        } else {
-            this._meshInstances = [meshInstance];
+        const index = meshInstances.indexOf(meshInstance);
+        if (index >= 0) {
+            Debug.warn('This MeshInstance already exists in this component');
+            return;
         }
+        meshInstances.push(meshInstance);
 
         this._updateMeshInstance(meshInstance);
 
@@ -804,22 +800,20 @@ class RenderComponent extends Component {
         Debug.assert(instance instanceof MeshInstance, 'Invalid MeshInstance');
         const meshInstances = this._meshInstances;
 
-        if (meshInstances) {
-            const j = meshInstances.indexOf(instance);
-            if (j >= 0) {
-                const meshInstance = meshInstances[j];
+        const j = meshInstances.indexOf(instance);
+        if (j >= 0) {
+            const meshInstance = meshInstances[j];
 
-                this.removeFromLayers(meshInstance);
+            this.removeFromLayers(meshInstance);
 
-                if (destroy) {
-                    this._clearSkinInstance(meshInstance);
-                }
+            if (destroy) {
+                this._clearSkinInstance(meshInstance);
+            }
 
-                meshInstances.splice(j, 1);
+            meshInstances.splice(j, 1);
 
-                if (destroy) {
-                    meshInstance.destroy();
-                }
+            if (destroy) {
+                meshInstance.destroy();
             }
         }
     }
