@@ -1,5 +1,6 @@
 import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
+import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Color } from '../../core/math/color.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
@@ -7,13 +8,14 @@ import {
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
-    LAYERID_DEPTH
+    LAYERID_DEPTH,
+    PROJECTION_ORTHOGRAPHIC
 } from '../constants.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassForward } from './render-pass-forward.js';
-import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
+import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
 
 /**
@@ -75,9 +77,10 @@ class ForwardRenderer extends Renderer {
      * Create a new ForwardRenderer instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {Scene} scene - The scene.
      */
-    constructor(graphicsDevice) {
-        super(graphicsDevice);
+    constructor(graphicsDevice, scene) {
+        super(graphicsDevice, scene);
 
         const device = this.device;
 
@@ -260,6 +263,13 @@ class ForwardRenderer extends Renderer {
 
             if (directional.castShadows) {
 
+                // ortho projection does not support cascades
+                Debug.call(() => {
+                    if (camera.projection === PROJECTION_ORTHOGRAPHIC && directional.numCascades !== 1) {
+                        Debug.errorOnce(`Camera [${camera.node.name}] with orthographic projection cannot use cascaded shadows, expect incorrect rendering.`);
+                    }
+                });
+
                 const lightRenderData = directional.getRenderData(camera, 0);
                 const biases = directional._getUniformBiasValues(lightRenderData);
 
@@ -416,7 +426,7 @@ class ForwardRenderer extends Renderer {
             this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
 
             const pixelsPerMeter = spot.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
-            const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
+            const fov = lightRenderData.shadowCamera._fov * math.DEG_TO_RAD;
             const fovRatio = 1.0 / Math.tan(fov / 2.0);
             this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * fovRatio);
 
@@ -578,6 +588,7 @@ class ForwardRenderer extends Renderer {
         const preparedCallsCount = preparedCalls.drawCalls.length;
         for (let i = 0; i < preparedCallsCount; i++) {
 
+            /** @type {MeshInstance} */
             const drawCall = preparedCalls.drawCalls[i];
 
             // We have a mesh instance
@@ -614,7 +625,7 @@ class ForwardRenderer extends Renderer {
 
             DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}, Material: ${material.name}`);
 
-            this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
+            this.setupCullModeAndFrontFace(camera._cullFaces, flipFactor, drawCall);
 
             const stencilFront = drawCall.stencilFront ?? material.stencilFront;
             const stencilBack = drawCall.stencilBack ?? material.stencilBack;
@@ -646,7 +657,7 @@ class ForwardRenderer extends Renderer {
 
             drawCallback?.(drawCall, i);
 
-            const indirectSlot = drawCall.indirectData?.get(camera);
+            const indirectData = drawCall.getDrawCommands(camera);
 
             if (viewList) {
                 for (let v = 0; v < viewList.length; v++) {
@@ -666,7 +677,7 @@ class ForwardRenderer extends Renderer {
 
                     const first = v === 0;
                     const last = v === viewList.length - 1;
-                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectSlot, first, last);
+                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, first, last);
 
                     this._forwardDrawCalls++;
                     if (drawCall.instancingData) {
@@ -674,7 +685,7 @@ class ForwardRenderer extends Renderer {
                     }
                 }
             } else {
-                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectSlot);
+                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData);
 
                 this._forwardDrawCalls++;
                 if (drawCall.instancingData) {
@@ -904,12 +915,12 @@ class ForwardRenderer extends Renderer {
 
                 Debug.call(() => {
                     if (camera.postEffects.effects.length > 0) {
-                        Debug.warnOnce(`Camera '${camera.entity.name}' uses render passes, which are not compatible with post-effects scripts. Rendering of the post-effects is ignored, but they should not be attached to the camera.`);
+                        Debug.warnOnce(`Camera '${camera.entity.name}' uses frame passes, which are not compatible with post-effects scripts. Rendering of the post-effects is ignored, but they should not be attached to the camera.`);
                     }
                 });
 
-                // schedule render passes from the camera
-                camera.camera.renderPasses.forEach((renderPass) => {
+                // schedule frame passes from the camera
+                camera.camera.framePasses.forEach((renderPass) => {
                     frameGraph.addRenderPass(renderPass);
                 });
 
@@ -958,7 +969,7 @@ class ForwardRenderer extends Renderer {
 
                     // postprocessing
                     if (renderAction.triggerPostprocess && camera?.onPostprocessing) {
-                        const renderPass = new RenderPassPostprocessing(this.device, this, renderAction);
+                        const renderPass = new FramePassPostprocessing(this.device, this, renderAction);
                         frameGraph.addRenderPass(renderPass);
                     }
 
@@ -1004,6 +1015,9 @@ class ForwardRenderer extends Renderer {
         // Single per-frame calculations
         this.beginFrame(comp);
         this.setSceneConstants();
+
+        // update gsplat director
+        this.gsplatDirector?.update(comp);
 
         // visibility culling of lights, meshInstances, shadows casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible

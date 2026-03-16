@@ -46,6 +46,16 @@ class BoundingSphere {
         this.radius = radius;
     }
 
+    /**
+     * Test if a point is inside the sphere.
+     *
+     * @param {Vec3} point - Point to test.
+     * @returns {boolean} True if the point is inside the sphere and false otherwise.
+     * @example
+     * const sphere = new pc.BoundingSphere(new pc.Vec3(0, 0, 0), 1);
+     * const point = new pc.Vec3(0.5, 0, 0);
+     * const isInside = sphere.containsPoint(point); // true
+     */
     containsPoint(point) {
         const lenSq = tmpVecA.sub2(point, this.center).lengthSq();
         const r = this.radius;

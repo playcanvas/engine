@@ -1,14 +1,20 @@
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { SHADER_PICK } from '../../scene/constants.js';
+import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
 
 /**
  * @import { BindGroup } from '../../platform/graphics/bind-group.js'
+ * @import { CameraComponent } from '../components/camera/component.js'
+ * @import { Scene } from '../../scene/scene.js'
+ * @import { Layer } from '../../scene/layer.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { GSplatComponent } from '../components/gsplat/component.js'
  */
 
 const tempMeshInstances = [];
 const lights = [[], [], []];
+const defaultShadowAtlasParams = new Float32Array(2);
 
 /**
  * A render pass implementing rendering of mesh instances into a pick buffer.
@@ -18,6 +24,24 @@ const lights = [[], [], []];
 class RenderPassPicker extends RenderPass {
     /** @type {BindGroup[]} */
     viewBindGroups = [];
+
+    /** @type {BlendState} */
+    blendState = BlendState.NOBLEND;
+
+    /** @type {CameraComponent} */
+    camera;
+
+    /** @type {Scene} */
+    scene;
+
+    /** @type {Layer[]} */
+    layers;
+
+    /** @type {Map<number, MeshInstance | GSplatComponent>} */
+    mapping;
+
+    /** @type {boolean} */
+    depth;
 
     constructor(device, renderer) {
         super(device);
@@ -32,11 +56,23 @@ class RenderPassPicker extends RenderPass {
         this.viewBindGroups.length = 0;
     }
 
-    update(camera, scene, layers, mapping) {
+    /**
+     * @param {CameraComponent} camera - The camera component used for picking.
+     * @param {Scene} scene - The scene to pick from.
+     * @param {Layer[]} layers - The layers to pick from.
+     * @param {Map<number, MeshInstance | GSplatComponent>} mapping - Map to store ID to object mappings.
+     * @param {boolean} depth - Whether to render depth information.
+     */
+    update(camera, scene, layers, mapping, depth) {
         this.camera = camera;
         this.scene = scene;
         this.layers = layers;
         this.mapping = mapping;
+        this.depth = depth;
+
+        if (scene.clusteredLightingEnabled) {
+            this.emptyWorldClusters = this.renderer.worldClustersAllocator.empty;
+        }
     }
 
     execute() {
@@ -84,22 +120,46 @@ class RenderPassPicker extends RenderPass {
                         }
                     }
 
+                    // Process gsplat placements when ID is enabled
+                    // The gsplat unified mesh instance is already handled above (added to layer.meshInstances)
+                    // Here we just need to add the placement ID -> component mapping
+                    if (scene.gsplat.enableIds) {
+                        const placements = srcLayer.gsplatPlacements;
+                        for (let j = 0; j < placements.length; j++) {
+                            const placement = placements[j];
+                            const component = placement.node?.gsplat;
+                            if (component) {
+                                mapping.set(placement.id, component);
+                            }
+                        }
+                    }
+
                     if (tempMeshInstances.length > 0) {
 
                         // upload clustered lights uniforms
                         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
                         if (clusteredLightingEnabled) {
-                            const lightClusters = renderer.worldClustersAllocator.empty;
+                            const lightClusters = this.emptyWorldClusters;
                             lightClusters.activate();
                         }
 
                         renderer.setCameraUniforms(camera.camera, renderTarget);
+
+                        // TODO: These uniforms are not required by the picker pass, but it uses the
+                        // forward view format which includes them. Ideally, each pass should be able
+                        // to specify its own view format to avoid setting unnecessary uniforms.
+                        renderer.dispatchGlobalLights(scene);
+                        device.scope.resolve('shadowAtlasParams').setValue(defaultShadowAtlasParams);
+
                         if (device.supportsUniformBuffers) {
+                            // Initialize view bind group format if not already done
+                            renderer.initViewBindGroupFormat(clusteredLightingEnabled);
                             renderer.setupViewUniformBuffers(this.viewBindGroups, renderer.viewUniformFormat, renderer.viewBindGroupFormat, null);
                         }
 
-                        renderer.renderForward(camera.camera, renderTarget, tempMeshInstances, lights, SHADER_PICK, (meshInstance) => {
-                            device.setBlendState(BlendState.NOBLEND);
+                        const shaderPass = this.depth ? SHADER_DEPTH_PICK : SHADER_PICK;
+                        renderer.renderForward(camera.camera, renderTarget, tempMeshInstances, lights, shaderPass, (meshInstance) => {
+                            device.setBlendState(this.blendState);
                         });
 
                         tempMeshInstances.length = 0;

@@ -18,6 +18,11 @@ vec3 evalRefractionColor(vec3 refractionVector, float gloss, float refractionInd
     float refractionLod = log2(uScreenSize.x) * iorToRoughness;
     vec3 refraction = texture2DLod(uSceneColorMap, uv, refractionLod).rgb;
 
+    // Convert from gamma to linear space if needed
+    #ifdef SCENE_COLORMAP_GAMMA
+        refraction = decodeGamma(refraction);
+    #endif
+
     return refraction;
 }
 
@@ -71,7 +76,7 @@ void addRefraction(
     }
     else
     {
-        transmittance = refraction;
+        transmittance = vec3(1.0);
     }
 
     // Apply fresnel effect on refraction

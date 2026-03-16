@@ -70,6 +70,7 @@ class LitMaterialOptionsBuilder {
         litOptions.useSpecular = material.hasSpecular;
         litOptions.useSpecularityFactor = material.hasSpecularityFactor;
         litOptions.enableGGXSpecular = material.ggxSpecular;
+        litOptions.useAnisotropy = false; // LitMaterial doesn't support anisotropy
         litOptions.fresnelModel = material.fresnelModel;
         litOptions.useRefraction = material.hasRefraction;
         litOptions.useClearCoat = material.hasClearCoat;

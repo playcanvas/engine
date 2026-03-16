@@ -27,10 +27,15 @@ uniform float numParticles;
 uniform float lifetime;
 uniform float stretch;
 uniform float seed;
-uniform vec3 wrapBounds;
 uniform vec3 emitterScale;
 uniform vec3 faceTangent;
 uniform vec3 faceBinorm;
+
+#ifdef PARTICLE_GPU
+    #ifdef WRAP
+        uniform vec3 wrapBounds;
+    #endif
+#endif
 
 #ifdef PARTICLE_GPU
     uniform highp sampler2D internalTex0;
@@ -55,7 +60,11 @@ vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix)
 
 vec3 billboard(vec3 InstanceCoords, vec2 quadXY)
 {
-    vec3 pos = -matrix_viewInverse[0].xyz * quadXY.x + -matrix_viewInverse[1].xyz * quadXY.y;
+    #ifdef SCREEN_SPACE
+        vec3 pos = vec3(-1, 0, 0) * quadXY.x + vec3(0, -1, 0) * quadXY.y;
+    #else
+        vec3 pos = -matrix_viewInverse[0].xyz * quadXY.x + -matrix_viewInverse[1].xyz * quadXY.y;
+    #endif
     return pos;
 }
 

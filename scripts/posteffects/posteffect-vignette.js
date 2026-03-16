@@ -9,49 +9,46 @@
  * @property {number} offset Controls the offset of the effect.
  * @property {number} darkness Controls the darkness of the effect.
  */
-function VignetteEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+class VignetteEffect extends pc.PostEffect {
+    constructor(graphicsDevice) {
+        super(graphicsDevice);
 
-    // Shaders
-    var luminosityFrag = [
-        'uniform sampler2D uColorBuffer;',
-        'uniform float uDarkness;',
-        'uniform float uOffset;',
-        '',
-        'varying vec2 vUv0;',
-        '',
-        'void main() {',
-        '    vec4 texel = texture2D(uColorBuffer, vUv0);',
-        '    vec2 uv = (vUv0 - vec2(0.5)) * vec2(uOffset);',
-        '    gl_FragColor = vec4(mix(texel.rgb, vec3(1.0 - uDarkness), dot(uv, uv)), texel.a);',
-        '}'
-    ].join('\n');
+        // Shaders
+        const luminosityFrag = /* glsl */`
+            uniform sampler2D uColorBuffer;
+            uniform float uDarkness;
+            uniform float uOffset;
 
-    this.vignetteShader = pc.ShaderUtils.createShader(graphicsDevice, {
-        uniqueName: 'VignetteShader',
-        attributes: { aPosition: pc.SEMANTIC_POSITION },
-        vertexGLSL: pc.PostEffect.quadVertexShader,
-        fragmentGLSL: luminosityFrag
-    });
+            varying vec2 vUv0;
 
-    this.offset = 1;
-    this.darkness = 1;
-}
+            void main() {
+                vec4 texel = texture2D(uColorBuffer, vUv0);
+                vec2 uv = (vUv0 - vec2(0.5)) * vec2(uOffset);
+                gl_FragColor = vec4(mix(texel.rgb, vec3(1.0 - uDarkness), dot(uv, uv)), texel.a);
+            }
+        `;
 
-VignetteEffect.prototype = Object.create(pc.PostEffect.prototype);
-VignetteEffect.prototype.constructor = VignetteEffect;
+        this.vignetteShader = pc.ShaderUtils.createShader(graphicsDevice, {
+            uniqueName: 'VignetteShader',
+            attributes: { aPosition: pc.SEMANTIC_POSITION },
+            vertexGLSL: pc.PostEffect.quadVertexShader,
+            fragmentGLSL: luminosityFrag
+        });
 
-Object.assign(VignetteEffect.prototype, {
-    render: function (inputTarget, outputTarget, rect) {
-        var device = this.device;
-        var scope = device.scope;
+        this.offset = 1;
+        this.darkness = 1;
+    }
+
+    render(inputTarget, outputTarget, rect) {
+        const device = this.device;
+        const scope = device.scope;
 
         scope.resolve('uColorBuffer').setValue(inputTarget.colorBuffer);
         scope.resolve('uOffset').setValue(this.offset);
         scope.resolve('uDarkness').setValue(this.darkness);
         this.drawQuad(outputTarget, this.vignetteShader, rect);
     }
-});
+}
 
 // ----------------- SCRIPT DEFINITION ------------------ //
 var Vignette = pc.createScript('vignette');

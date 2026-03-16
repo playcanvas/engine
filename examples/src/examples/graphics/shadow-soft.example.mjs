@@ -17,9 +17,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -152,7 +150,7 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
 
     // Create a directional light casting soft shadows
-    const dirLight = new pc.Entity('Cascaded Light');
+    const dirLight = new pc.Entity('MainLight');
     dirLight.addComponent('light', {
         ...{
             type: 'directional',

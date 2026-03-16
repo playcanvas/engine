@@ -68,9 +68,27 @@ class ScreenComponentSystem extends ComponentSystem {
             component.referenceResolution = component._referenceResolution;
         }
 
+        // Update any existing element components in the hierarchy that don't have a screen yet.
+        // This handles cases where element components were added before the screen component.
+        this._updateDescendantElements(component.entity, component.entity);
+
         // queue up a draw order sync
         component.syncDrawOrder();
         super.initializeComponentData(component, data, _schema);
+    }
+
+    _updateDescendantElements(entity, screenEntity) {
+        const children = entity.children;
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child.element && !child.element.screen) {
+                child.element._updateScreen(screenEntity);
+            }
+            // Continue traversing unless this child has its own screen component
+            if (!child.screen) {
+                this._updateDescendantElements(child, screenEntity);
+            }
+        }
     }
 
     destroy() {
@@ -100,6 +118,8 @@ class ScreenComponentSystem extends ComponentSystem {
             enabled: screen.enabled,
             screenSpace: screen.screenSpace,
             scaleMode: screen.scaleMode,
+            scaleBlend: screen.scaleBlend,
+            priority: screen.priority,
             resolution: screen.resolution.clone(),
             referenceResolution: screen.referenceResolution.clone()
         });

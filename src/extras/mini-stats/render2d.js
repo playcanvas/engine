@@ -9,6 +9,7 @@ import {
     SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32
 } from '../../platform/graphics/constants.js';
+import { Debug } from '../../core/debug.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -18,6 +19,16 @@ import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
+
+// Graph colors for MiniStats
+const graphColorDefault = '1.0, 0.412, 0.380';  // Pastel Red
+const graphColorGpu = '0.467, 0.867, 0.467';    // Pastel Green
+const graphColorCpu = '0.424, 0.627, 0.863';    // Little Boy Blue
+
+// Background colors for MiniStats graphs
+const mainBackgroundColor = '0.0, 0.0, 0.0';
+const gpuBackgroundColor = '0.15, 0.15, 0.0';
+const cpuBackgroundColor = '0.15, 0.0, 0.1';
 
 const vertexShaderGLSL = /* glsl */ `
     attribute vec3 vertex_position;         // unnormalized xy, word flag
@@ -51,8 +62,7 @@ const vertexShaderWGSL = /* wgsl */ `
 
 // this fragment shader renders the bits required for text and graphs. The text is identified
 // in the texture by white color. The graph data is specified as a single row of pixels
-// where the R channel denotes the height of the 1st graph and the G channel the height
-// of the second graph and B channel the height of the last graph
+// where the R channel denotes the graph height
 const fragmentShaderGLSL = /* glsl */ `
     varying vec4 uv0;
     varying float wordFlag;
@@ -62,21 +72,36 @@ const fragmentShaderGLSL = /* glsl */ `
     uniform sampler2D wordsTex;
 
     void main (void) {
+        vec3 graphColor = vec3(${graphColorDefault});
+        if (wordFlag > 0.5) {
+            graphColor = vec3(${graphColorCpu});
+        } else if (wordFlag > 0.2) {
+            graphColor = vec3(${graphColorGpu});
+        }
+
         vec4 graphSample = texture2D(graphTex, uv0.xy);
 
         vec4 graph;
         if (uv0.w < graphSample.r)
-            graph = vec4(0.7, 0.2, 0.2, 1.0);
-        else if (uv0.w < graphSample.g)
-            graph = vec4(0.2, 0.7, 0.2, 1.0);
-        else if (uv0.w < graphSample.b)
-            graph = vec4(0.2, 0.2, 0.7, 1.0);
-        else
-            graph = vec4(0.0, 0.0, 0.0, 1.0 - 0.25 * sin(uv0.w * 3.14159));
+            graph = vec4(graphColor, 1.0);
+        else {
+            vec3 bgColor = vec3(${mainBackgroundColor});
+            if (wordFlag > 0.5) {
+                bgColor = vec3(${cpuBackgroundColor});  // CPU: red tint
+            } else if (wordFlag > 0.2) {
+                bgColor = vec3(${gpuBackgroundColor});  // GPU: blue tint
+            }
+            graph = vec4(bgColor, 1.0);
+        }
 
         vec4 words = texture2D(wordsTex, vec2(uv0.x, 1.0 - uv0.y));
 
-        gl_FragColor = mix(graph, words, wordFlag) * clr;
+        // Binary blend: either graph or text, no partial mixing
+        if (wordFlag > 0.99) {
+            gl_FragColor = words * clr;
+        } else {
+            gl_FragColor = graph * clr;
+        }
     }
 `;
 
@@ -94,30 +119,44 @@ const fragmentShaderWGSL = /* wgsl */ `
 
     @fragment fn fragmentMain(input : FragmentInput) -> FragmentOutput {
         var uv0: vec4f = input.uv0;
+        var graphColor: vec3f = vec3f(${graphColorDefault});
+        if (input.wordFlag > 0.5) {
+            graphColor = vec3f(${graphColorCpu});
+        } else if (input.wordFlag > 0.2) {
+            graphColor = vec3f(${graphColorGpu});
+        }
+
         var graphSample: vec4f = textureSample(graphTex, graphTex_sampler, uv0.xy);
 
         var graph: vec4f;
         if (uv0.w < graphSample.r) {
-            graph = vec4f(0.7, 0.2, 0.2, 1.0);
-        } else if (uv0.w < graphSample.g) {
-            graph = vec4f(0.2, 0.7, 0.2, 1.0);
-        } else if (uv0.w < graphSample.b) {
-            graph = vec4f(0.2, 0.2, 0.7, 1.0);
+            graph = vec4f(graphColor, 1.0);
         } else {
-            graph = vec4f(0.0, 0.0, 0.0, 1.0 - 0.25 * sin(uv0.w * 3.14159));
+            var bgColor: vec3f = vec3f(${mainBackgroundColor});
+            if (input.wordFlag > 0.5) {
+                bgColor = vec3f(${cpuBackgroundColor});  // CPU: red tint
+            } else if (input.wordFlag > 0.2) {
+                bgColor = vec3f(${gpuBackgroundColor});  // GPU: blue tint
+            }
+            graph = vec4f(bgColor, 1.0);
         }
 
         var words: vec4f = textureSample(wordsTex, wordsTex_sampler, vec2f(uv0.x, 1.0 - uv0.y));
 
         var output: FragmentOutput;
-        output.color = mix(graph, words, input.wordFlag) * uniform.clr;
+        // Binary blend: either graph or text, no partial mixing
+        if (input.wordFlag > 0.99) {
+            output.color = words * uniform.clr;
+        } else {
+            output.color = graph * uniform.clr;
+        }
         return output;
     }
 `;
 
 // render 2d textured quads
 class Render2d {
-    constructor(device, maxQuads = 512) {
+    constructor(device, maxQuads = 2048) {
         const format = new VertexFormat(device, [
             { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
             { semantic: SEMANTIC_TEXCOORD0, components: 4, type: TYPE_FLOAT32 }
@@ -135,6 +174,7 @@ class Render2d {
         }
 
         this.device = device;
+        this.maxQuads = maxQuads;
         this.buffer = new VertexBuffer(device, format, maxQuads * 4, {
             usage: BUFFER_STREAM
         });
@@ -185,6 +225,12 @@ class Render2d {
     }
 
     quad(x, y, w, h, u, v, uw, uh, texture, wordFlag = 0) {
+        // bounds check to prevent buffer overflow
+        if (this.quads >= this.maxQuads) {
+            Debug.warnOnce('MiniStats: maximum number of quads exceeded, some elements may not render.');
+            return;
+        }
+
         const rw = this.targetSize.width;
         const rh = this.targetSize.height;
         const x0 = x / rw;

@@ -32,7 +32,7 @@ class SplatCompressedIterator {
 
         // unpack quaternion with 2,10,10,10 format (largest element, 3x10bit element)
         const unpackRot = (result, value) => {
-            const norm = 1.0 / (Math.sqrt(2) * 0.5);
+            const norm = Math.SQRT2;
             const a = (unpackUnorm(value >>> 20, 10) - 0.5) * norm;
             const b = (unpackUnorm(value >>> 10, 10) - 0.5) * norm;
             const c = (unpackUnorm(value, 10) - 0.5) * norm;
@@ -199,10 +199,12 @@ class GSplatCompressedData {
     }
 
     /**
-     * @param {Float32Array} result - Array containing the centers.
+     * Returns a new Float32Array of centers (x, y, z per splat).
+     * @returns {Float32Array} Centers buffer
      */
-    getCenters(result) {
+    getCenters() {
         const { vertexData, chunkData, numChunks, chunkSize } = this;
+        const result = new Float32Array(this.numSplats * 3);
 
         let mx, my, mz, Mx, My, Mz;
 
@@ -226,6 +228,8 @@ class GSplatCompressedData {
                 result[i * 3 + 2] = (1 - pz) * mz + pz * Mz;
             }
         }
+
+        return result;
     }
 
     getChunks(result) {
@@ -299,7 +303,8 @@ class GSplatCompressedData {
             for (let i = 0; i < 45; ++i) {
                 shMembers.push(`f_rest_${i}`);
             }
-            members.splice(members.indexOf('f_dc_0') + 1, 0, ...shMembers);
+            const location = Math.max(...['f_dc_0', 'f_dc_1', 'f_dc_2'].map(name => members.indexOf(name)));
+            members.splice(location + 1, 0, ...shMembers);
         }
 
         // allocate uncompressed data

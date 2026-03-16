@@ -27,15 +27,18 @@ class StorageBuffer {
      * of {@link BUFFERUSAGE_READ}, {@link BUFFERUSAGE_WRITE}, {@link BUFFERUSAGE_COPY_SRC} and
      * {@link BUFFERUSAGE_COPY_DST} flags. This parameter can be omitted if no special usage is
      * required.
+     * @param {boolean} [addStorageUsage] - If true, automatically adds BUFFERUSAGE_STORAGE flag.
+     * Set to false for staging buffers that use BUFFERUSAGE_WRITE. Defaults to true.
      */
-    constructor(graphicsDevice, byteSize, bufferUsage = 0) {
+    constructor(graphicsDevice, byteSize, bufferUsage = 0, addStorageUsage = true) {
         this.device = graphicsDevice;
         this.byteSize = byteSize;
         this.bufferUsage = bufferUsage;
 
-        this.impl = graphicsDevice.createBufferImpl(BUFFERUSAGE_STORAGE | bufferUsage);
+        const usage = addStorageUsage ? (BUFFERUSAGE_STORAGE | bufferUsage) : bufferUsage;
+        this.impl = graphicsDevice.createBufferImpl(usage);
         this.impl.allocate(graphicsDevice, byteSize);
-        this.device.buffers.push(this);
+        this.device.buffers.add(this);
 
         this.adjustVramSizeTracking(graphicsDevice._vram, this.byteSize);
     }
@@ -47,10 +50,7 @@ class StorageBuffer {
 
         // stop tracking the buffer
         const device = this.device;
-        const idx = device.buffers.indexOf(this);
-        if (idx !== -1) {
-            device.buffers.splice(idx, 1);
-        }
+        device.buffers.delete(this);
 
         this.adjustVramSizeTracking(device._vram, -this.byteSize);
         this.impl.destroy(device);
@@ -71,12 +71,15 @@ class StorageBuffer {
      * storage buffer. When typed array is supplied, enough space needs to be reserved, otherwise
      * only partial data is copied. If not specified, the data is returned in an Uint8Array.
      * Defaults to null.
+     * @param {boolean} [immediate] - If true, the read operation will be executed as soon as
+     * possible. This has a performance impact, so it should be used only when necessary. Defaults
+     * to false.
      * @returns {Promise<ArrayBufferView>} A promise that resolves with the data read from the
      * storage buffer.
      * @ignore
      */
-    read(offset = 0, size = this.byteSize, data = null) {
-        return this.impl.read(this.device, offset, size, data);
+    read(offset = 0, size = this.byteSize, data = null, immediate = false) {
+        return this.impl.read(this.device, offset, size, data, immediate);
     }
 
     /**
@@ -102,6 +105,23 @@ class StorageBuffer {
      */
     clear(offset = 0, size = this.byteSize) {
         this.impl.clear(this.device, offset, size);
+    }
+
+    /**
+     * Copy data from another storage buffer into this storage buffer.
+     *
+     * @param {StorageBuffer} srcBuffer - The source storage buffer to copy from.
+     * @param {number} [srcOffset] - The byte offset in the source buffer. Defaults to 0.
+     * @param {number} [dstOffset] - The byte offset in this buffer. Defaults to 0.
+     * @param {number} [size] - The byte size of data to copy. Defaults to the full size of the
+     * source buffer minus the source offset.
+     */
+    copy(srcBuffer, srcOffset = 0, dstOffset = 0, size = srcBuffer.byteSize - srcOffset) {
+        Debug.assert(srcOffset + size <= srcBuffer.byteSize, 'Source copy range exceeds buffer size');
+        Debug.assert(dstOffset + size <= this.byteSize, 'Destination copy range exceeds buffer size');
+
+        const commandEncoder = this.device.getCommandEncoder();
+        commandEncoder.copyBufferToBuffer(srcBuffer.impl.buffer, srcOffset, this.impl.buffer, dstOffset, size);
     }
 }
 

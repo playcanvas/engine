@@ -14,9 +14,7 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const assets = {
@@ -106,10 +104,13 @@ camera.addComponent('script');
 camera.setPosition(start);
 app.root.addChild(camera);
 const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+const sceneSize = bbox.halfExtents.length();
 Object.assign(cc, {
-    sceneSize: bbox.halfExtents.length(),
     focusPoint: bbox.center,
-    enableFly: false
+    enableFly: false,
+    moveSpeed: 2 * sceneSize,
+    moveFastSpeed: 4 * sceneSize,
+    moveSlowSpeed: sceneSize
 });
 
 // focus on entity when 'f' key is pressed

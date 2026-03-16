@@ -6,7 +6,8 @@ import { Vec3 } from './vec3.js';
  */
 
 /**
- * A 3x3 matrix.
+ * A 3x3 matrix. Mat3 is commonly used to represent rotation matrices, 2D transformations or the
+ * upper-left portion of a 4x4 matrix for transforming normals.
  *
  * @category Math
  */
@@ -32,7 +33,7 @@ class Mat3 {
      *
      * @returns {this} A duplicate matrix.
      * @example
-     * const src = new pc.Mat3().translate(10, 20, 30);
+     * const src = new pc.Mat3().setFromQuat(new pc.Quat(0, 0, 0.383, 0.924));
      * const dst = src.clone();
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
@@ -48,7 +49,7 @@ class Mat3 {
      * @param {Mat3} rhs - A 3x3 matrix to be copied.
      * @returns {Mat3} Self for chaining.
      * @example
-     * const src = new pc.Mat3().translate(10, 20, 30);
+     * const src = new pc.Mat3().setFromQuat(new pc.Quat(0, 0, 0.383, 0.924));
      * const dst = new pc.Mat3();
      * dst.copy(src);
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
@@ -100,6 +101,9 @@ class Mat3 {
      *
      * @param {Vec3} [x] - The vector to receive the x axis of the matrix.
      * @returns {Vec3} The x-axis of the specified matrix.
+     * @example
+     * const m = new pc.Mat3();
+     * const xAxis = m.getX(); // Vec3(1, 0, 0) for identity matrix
      */
     getX(x = new Vec3()) {
         return x.set(this.data[0], this.data[1], this.data[2]);
@@ -110,6 +114,9 @@ class Mat3 {
      *
      * @param {Vec3} [y] - The vector to receive the y axis of the matrix.
      * @returns {Vec3} The y-axis of the specified matrix.
+     * @example
+     * const m = new pc.Mat3();
+     * const yAxis = m.getY(); // Vec3(0, 1, 0) for identity matrix
      */
     getY(y = new Vec3()) {
         return y.set(this.data[3], this.data[4], this.data[5]);
@@ -120,6 +127,9 @@ class Mat3 {
      *
      * @param {Vec3} [z] - The vector to receive the z axis of the matrix.
      * @returns {Vec3} The z-axis of the specified matrix.
+     * @example
+     * const m = new pc.Mat3();
+     * const zAxis = m.getZ(); // Vec3(0, 0, 1) for identity matrix
      */
     getZ(z = new Vec3()) {
         return z.set(this.data[6], this.data[7], this.data[8]);
@@ -131,7 +141,7 @@ class Mat3 {
      * @param {Mat3} rhs - The other matrix.
      * @returns {boolean} True if the matrices are equal and false otherwise.
      * @example
-     * const a = new pc.Mat3().translate(10, 20, 30);
+     * const a = new pc.Mat3().setFromQuat(new pc.Quat(0, 0, 0.383, 0.924));
      * const b = new pc.Mat3();
      * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
      */
@@ -249,6 +259,9 @@ class Mat3 {
      *
      * @param {Mat4} m - The 4x4 matrix to convert.
      * @returns {Mat3} Self for chaining.
+     * @example
+     * const m4 = new pc.Mat4();
+     * const m3 = new pc.Mat3().setFromMat4(m4);
      */
     setFromMat4(m) {
         const src = m.data;
@@ -277,7 +290,7 @@ class Mat3 {
      * @example
      * const r = new pc.Quat(1, 2, 3, 4).normalize();
      *
-     * const m = new pc.Mat4();
+     * const m = new pc.Mat3();
      * m.setFromQuat(r);
      */
     setFromQuat(r) {
@@ -377,6 +390,10 @@ class Mat3 {
      * @param {Vec3} [res] - An optional 3-dimensional vector to receive the result of the
      * transformation.
      * @returns {Vec3} The input vector v transformed by the current instance.
+     * @example
+     * const m = new pc.Mat3();
+     * const v = new pc.Vec3(1, 2, 3);
+     * const result = m.transformVector(v);
      */
     transformVector(vec, res = new Vec3()) {
         const m = this.data;

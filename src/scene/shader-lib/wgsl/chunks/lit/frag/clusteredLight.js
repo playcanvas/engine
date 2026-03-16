@@ -13,8 +13,8 @@ export default /* wgsl */`
     #include "clusteredLightShadowsPS"
 #endif
 
-var clusterWorldTexture: texture_2d<f32>;
-var lightsTexture: texture_2d<f32>;
+var clusterWorldTexture: texture_2d<u32>;
+var lightsTexture: texture_2d<uff>;
 
 #ifdef CLUSTER_SHADOWS
     // TODO: when VSM shadow is supported, it needs to use sampler2D in webgl2
@@ -29,15 +29,17 @@ var lightsTexture: texture_2d<f32>;
 
 uniform clusterMaxCells: i32;
 
-// 1.0 if clustered lighting can be skipped (0 lights in the clusters)
-uniform clusterSkip: f32;
+// number of lights in the cluster structure
+uniform numClusteredLights: i32;
+
+// width of the cluster texture
+uniform clusterTextureWidth: i32;
 
 uniform clusterCellsCountByBoundsSize: vec3f;
-uniform clusterTextureSize: vec3f;
 uniform clusterBoundsMin: vec3f;
 uniform clusterBoundsDelta: vec3f;
-uniform clusterCellsDot: vec3f;
-uniform clusterCellsMax: vec3f;
+uniform clusterCellsDot: vec3i;
+uniform clusterCellsMax: vec3i;
 uniform shadowAtlasParams: vec2f;
 
 // structure storing light properties of a clustered light
@@ -88,6 +90,9 @@ struct ClusterLightData {
     // compressed biases, two haf-floats stored in a float
     biasesData: f32,
 
+    // blue color component and angle flags (as uint for efficient bit operations)
+    colorBFlagsData: u32,
+
     // shadow bias values
     shadowBias: f32,
     shadowNormalBias: f32,
@@ -119,10 +124,10 @@ fn sampleLightTextureF(lightIndex: i32, index: i32) -> vec4f {
     return textureLoad(lightsTexture, vec2<i32>(index, lightIndex), 0);
 }
 
-fn decodeClusterLightCore(clusterLightData: ptr<function, ClusterLightData>, lightIndex: f32) {
+fn decodeClusterLightCore(clusterLightData: ptr<function, ClusterLightData>, lightIndex: i32) {
 
     // light index
-    clusterLightData.lightIndex = i32(lightIndex);
+    clusterLightData.lightIndex = lightIndex;
 
     // sample data encoding half-float values into 32bit uints
     let halfData: vec4f = sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_COLOR_ANGLES_BIAS});
@@ -130,11 +135,12 @@ fn decodeClusterLightCore(clusterLightData: ptr<function, ClusterLightData>, lig
     // store floats we decode later as needed
     clusterLightData.anglesData = halfData.z;
     clusterLightData.biasesData = halfData.w;
+    clusterLightData.colorBFlagsData = bitcast<u32>(halfData.y);
 
     // decompress color half-floats
     let colorRG: vec2f = unpack2x16float(bitcast<u32>(halfData.x));
-    let colorB_: vec2f = unpack2x16float(bitcast<u32>(halfData.y));
-    clusterLightData.color = vec3f(colorRG, colorB_.x) * {LIGHT_COLOR_DIVIDER};
+    let colorB_flags: vec2f = unpack2x16float(clusterLightData.colorBFlagsData);
+    clusterLightData.color = vec3f(colorRG, colorB_flags.x) * {LIGHT_COLOR_DIVIDER};
 
     // position and range, full floats
     let lightPosRange: vec4f = sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_POSITION_RANGE});
@@ -160,10 +166,18 @@ fn decodeClusterLightCore(clusterLightData: ptr<function, ClusterLightData>, lig
 }
 
 fn decodeClusterLightSpot(clusterLightData: ptr<function, ClusterLightData>) {
-    // spot light cos angles
-    let angles: vec2f = unpack2x16float(bitcast<u32>(clusterLightData.anglesData));
-    clusterLightData.innerConeAngleCos = angles.x;
-    clusterLightData.outerConeAngleCos = angles.y;
+    // decompress spot light angles
+    let angleFlags: u32 = (clusterLightData.colorBFlagsData >> 16u) & 0xFFFFu;  // Extract upper 16 bits as integer
+
+    let angleValues: vec2f = unpack2x16float(bitcast<u32>(clusterLightData.anglesData));
+    let innerVal: f32 = angleValues.x;
+    let outerVal: f32 = angleValues.y;
+
+    // decode based on flags (branch-free)
+    let innerIsVersine: bool = (angleFlags & 1u) != 0u;      // bit 0: inner angle format
+    let outerIsVersine: bool = ((angleFlags >> 1u) & 1u) != 0u;  // bit 1: outer angle format
+    clusterLightData.innerConeAngleCos = select(innerVal, 1.0 - innerVal, innerIsVersine);
+    clusterLightData.outerConeAngleCos = select(outerVal, 1.0 - outerVal, outerIsVersine);
 }
 
 fn decodeClusterLightOmniAtlasViewport(clusterLightData: ptr<function, ClusterLightData>) {
@@ -489,7 +503,7 @@ fn evaluateLight(
 
 
 fn evaluateClusterLight(
-    lightIndex: f32,
+    lightIndex: i32,
     worldNormal: vec3f,
     viewDir: vec3f,
     reflectionDir: vec3f,
@@ -565,36 +579,36 @@ fn addClusteredLights(
     iridescence_intensity: f32
 ) {
 
-    // skip lights if no lights at all
-    if (uniform.clusterSkip > 0.5) {
+    // skip if no lights (index 0 is reserved for 'no light')
+    if (uniform.numClusteredLights <= 1) {
         return;
     }
 
     // world space position to 3d integer cell cordinates in the cluster structure
-    let cellCoords: vec3f = floor((vPositionW - uniform.clusterBoundsMin) * uniform.clusterCellsCountByBoundsSize);
+    let cellCoords: vec3i = vec3i(floor((vPositionW - uniform.clusterBoundsMin) * uniform.clusterCellsCountByBoundsSize));
 
     // no lighting when cell coordinate is out of range
-    if (!(any(cellCoords < vec3f(0.0)) || any(cellCoords >= uniform.clusterCellsMax))) {
+    if (!(any(cellCoords < vec3i(0)) || any(cellCoords >= uniform.clusterCellsMax))) {
 
         // cell index (mapping from 3d cell coordinates to linear memory)
-        let cellIndex: f32 = dot(uniform.clusterCellsDot, cellCoords);
+        let cellIndex: i32 = cellCoords.x * uniform.clusterCellsDot.x + cellCoords.y * uniform.clusterCellsDot.y + cellCoords.z * uniform.clusterCellsDot.z;
 
         // convert cell index to uv coordinates
-        let clusterV: f32 = floor(cellIndex * uniform.clusterTextureSize.y);
-        let clusterU: f32 = cellIndex - (clusterV * uniform.clusterTextureSize.x);
+        let clusterV: i32 = cellIndex / uniform.clusterTextureWidth;
+        let clusterU: i32 = cellIndex - clusterV * uniform.clusterTextureWidth;
 
         // loop over maximum number of light cells
         for (var lightCellIndex: i32 = 0; lightCellIndex < uniform.clusterMaxCells; lightCellIndex = lightCellIndex + 1) {
 
             // using a single channel texture with data in red channel
-            let lightIndexPacked: f32 = textureLoad(clusterWorldTexture, vec2<i32>(i32(clusterU) + lightCellIndex, i32(clusterV)), 0).r;
+            let lightIndex: u32 = textureLoad(clusterWorldTexture, vec2<i32>(clusterU + lightCellIndex, clusterV), 0).r;
 
-            if (lightIndexPacked <= 0.0) {
+            if (lightIndex == 0u) {
                 break;
             }
 
             evaluateClusterLight(
-                lightIndexPacked * 255.0,
+                i32(lightIndex),
                 worldNormal,
                 viewDir,
                 reflectionDir,

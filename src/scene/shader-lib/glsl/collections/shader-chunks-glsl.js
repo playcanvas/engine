@@ -45,23 +45,6 @@ import gammaPS from '../chunks/common/frag/gamma.js';
 import gles3PS from '../../../../platform/graphics/shader-chunks/frag/gles3.js';
 import gles3VS from '../../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from '../chunks/standard/frag/gloss.js';
-import gsplatCenterVS from '../chunks/gsplat/vert/gsplatCenter.js';
-import gsplatColorVS from '../chunks/gsplat/vert/gsplatColor.js';
-import gsplatCommonVS from '../chunks/gsplat/vert/gsplatCommon.js';
-import gsplatCompressedDataVS from '../chunks/gsplat/vert/gsplatCompressedData.js';
-import gsplatCompressedSHVS from '../chunks/gsplat/vert/gsplatCompressedSH.js';
-import gsplatEvalSHVS from '../chunks/gsplat/vert/gsplatEvalSH.js';
-import gsplatQuatToMat3VS from '../chunks/gsplat/vert/gsplatQuatToMat3.js';
-import gsplatSogsColorVS from '../chunks/gsplat/vert/gsplatSogsColor.js';
-import gsplatSogsDataVS from '../chunks/gsplat/vert/gsplatSogsData.js';
-import gsplatSogsSHVS from '../chunks/gsplat/vert/gsplatSogsSH.js';
-import gsplatCornerVS from '../chunks/gsplat/vert/gsplatCorner.js';
-import gsplatDataVS from '../chunks/gsplat/vert/gsplatData.js';
-import gsplatOutputVS from '../chunks/gsplat/vert/gsplatOutput.js';
-import gsplatPS from '../chunks/gsplat/frag/gsplat.js';
-import gsplatSHVS from '../chunks/gsplat/vert/gsplatSH.js';
-import gsplatSourceVS from '../chunks/gsplat/vert/gsplatSource.js';
-import gsplatVS from '../chunks/gsplat/vert/gsplat.js';
 import quadVS from '../chunks/common/vert/quad.js';
 import immediateLinePS from '../chunks/internal/frag/immediateLine.js';
 import immediateLineVS from '../chunks/internal/vert/immediateLine.js';
@@ -79,6 +62,7 @@ import lightingPS from '../chunks/lit/frag/lighting/lighting.js';
 import lightmapAddPS from '../chunks/lit/frag/lightmapAdd.js';
 import lightmapPS from '../chunks/standard/frag/lightmap.js';
 import lightSpecularAnisoGGXPS from '../chunks/lit/frag/lightSpecularAnisoGGX.js';
+import lightSpecularGGXPS from '../chunks/lit/frag/lightSpecularGGX.js';
 import lightSpecularBlinnPS from '../chunks/lit/frag/lightSpecularBlinn.js';
 import lightSheenPS from '../chunks/lit/frag/lightSheen.js';
 import linearizeDepthPS from '../chunks/common/frag/linearizeDepth.js';
@@ -224,23 +208,6 @@ const shaderChunksGLSL = {
     gles3PS,
     gles3VS,
     glossPS,
-    gsplatCenterVS,
-    gsplatCornerVS,
-    gsplatColorVS,
-    gsplatCommonVS,
-    gsplatCompressedDataVS,
-    gsplatCompressedSHVS,
-    gsplatEvalSHVS,
-    gsplatQuatToMat3VS,
-    gsplatSogsColorVS,
-    gsplatSogsDataVS,
-    gsplatSogsSHVS,
-    gsplatDataVS,
-    gsplatOutputVS,
-    gsplatPS,
-    gsplatSHVS,
-    gsplatSourceVS,
-    gsplatVS,
     quadVS,
     immediateLinePS,
     immediateLineVS,
@@ -258,6 +225,7 @@ const shaderChunksGLSL = {
     lightmapAddPS,
     lightmapPS,
     lightSpecularAnisoGGXPS,
+    lightSpecularGGXPS,
     lightSpecularBlinnPS,
     lightSheenPS,
     linearizeDepthPS,

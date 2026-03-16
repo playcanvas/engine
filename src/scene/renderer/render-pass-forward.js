@@ -43,7 +43,18 @@ class RenderPassForward extends RenderPass {
     renderActions = [];
 
     /**
-     * The gamma correction setting for the render pass. In not set, setting from the camera is used.
+     * The gamma correction setting for the render pass. If not set, the setting from the camera
+     * is used. This allows render passes to override the camera's gamma correction during the
+     * render pass.
+     *
+     * For HDR pipelines, scene render passes typically set this to {@link GAMMA_NONE} to output
+     * linear values to an HDR render target, while subsequent passes (like UI) leave it undefined
+     * to use the camera's default {@link GAMMA_SRGB} for correct display output.
+     *
+     * Can be:
+     * - {@link GAMMA_NONE}
+     * - {@link GAMMA_SRGB}
+     * - `undefined` (uses camera setting)
      *
      * @type {number|undefined}
      */

@@ -141,7 +141,7 @@ class ParticleCPUUpdater {
             const a2 = 1.0;
             particleTex[i * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels * 2] = a2;
 
-            const maxNegLife = Math.max(emitter.lifetime, (emitter.numParticles - 1.0) * (Math.max(emitter.rate, emitter.rate2)));
+            const maxNegLife = Math.max(emitter.lifetime, emitter.numParticles * (Math.max(emitter.rate, emitter.rate2)));
             const maxPosLife = emitter.lifetime + 1.0;
             startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
             const rgba3 = encodeFloatRGBA(startSpawnTime);
@@ -396,7 +396,7 @@ class ParticleCPUUpdater {
                     // respawn particle by moving it's life back to zero.
                     // OR below zero, if there are still unspawned particles to be emitted before this one.
                     // such thing happens when you have an enormous amount of particles with short lifetime.
-                    life -= Math.max(particleLifetime, (emitter.numParticles - 1) * particleRate);
+                    life -= Math.max(particleLifetime, emitter.numParticles * particleRate);
 
                     // dead particles in a single-shot system continue their paths, but marked as invisible.
                     // it is necessary for keeping correct separation between particles, based on emission rate.

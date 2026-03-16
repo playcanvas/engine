@@ -11,7 +11,9 @@ uniform float graphNumSamples;
     uniform vec4 camera_params;
 #endif
 
-uniform float softening;
+#ifdef SOFT
+    uniform float softening;
+#endif
 uniform float colorMult;
 
 float saturate(float x) {

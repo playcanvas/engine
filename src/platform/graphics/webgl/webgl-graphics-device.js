@@ -8,7 +8,7 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
-    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_R8, PIXELFORMAT_RG8, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -33,8 +33,10 @@ import { DebugGraphics } from '../debug-graphics.js';
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
+import { WebglDrawCommands } from './webgl-draw-commands.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
+import { WebglUploadStream } from './webgl-upload-stream.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
@@ -47,6 +49,26 @@ import { getBuiltInTexture } from '../built-in-textures.js';
  * @import { Shader } from '../shader.js'
  * @import { VertexBuffer } from '../vertex-buffer.js'
  */
+
+/**
+ * Returns the number of channels for 8-bit normalized formats that require RGBA readback.
+ * WebGL2's readPixels only guarantees RGBA/UNSIGNED_BYTE support, so these formats
+ * need to be read as RGBA and have their channels extracted.
+ *
+ * @param {number} format - The pixel format constant.
+ * @returns {number} Number of channels (1, 2, or 3), or 0 if format doesn't require RGBA readback.
+ * @ignore
+ */
+const getPixelFormatChannelsForRgbaReadback = (format) => {
+    switch (format) {
+        case PIXELFORMAT_R8:
+            return 1;
+        case PIXELFORMAT_RG8:
+            return 2;
+        default:
+            return 0;
+    }
+};
 
 const invalidateAttachments = [];
 
@@ -311,6 +333,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.BACK,
             gl.FRONT,
             gl.FRONT_AND_BACK
+        ];
+
+        this.glFrontFace = [
+            gl.CCW,
+            gl.CW
         ];
 
         this.glFilter = [
@@ -672,12 +699,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return new WebglShader(shader);
     }
 
+    createDrawCommandImpl(drawCommands) {
+        return new WebglDrawCommands(drawCommands.indexSizeBytes);
+    }
+
     createTextureImpl(texture) {
+        this.textures.add(texture);
         return new WebglTexture(texture);
     }
 
     createRenderTargetImpl(renderTarget) {
         return new WebglRenderTarget();
+    }
+
+    createUploadStreamImpl(uploadStream) {
+        return new WebglUploadStream(uploadStream);
     }
 
     // #if _DEBUG
@@ -788,6 +824,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
 
+        this.extMultiDraw = this.getExtension('WEBGL_multi_draw');
+        this.supportsMultiDraw = !!this.extMultiDraw;
+
         // compressed textures
         this.extCompressedTextureETC1 = this.getExtension('WEBGL_compressed_texture_etc1');
         this.extCompressedTextureETC = this.getExtension('WEBGL_compressed_texture_etc');
@@ -797,6 +836,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
         this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
+
+        // HTML-in-Canvas support (texElementImage2D)
+        this.supportsHtmlTextures = typeof gl.texElementImage2D === 'function';
     }
 
     /**
@@ -944,6 +986,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.unpackPremultiplyAlpha = false;
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 
+        this.unpackAlignment = 1;
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     }
 
@@ -1415,6 +1458,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * Sets the byte alignment for unpacking pixel data during texture uploads.
+     *
+     * @param {number} alignment - The alignment in bytes. Must be 1, 2, 4, or 8.
+     * @ignore
+     */
+    setUnpackAlignment(alignment) {
+        if (this.unpackAlignment !== alignment) {
+            this.unpackAlignment = alignment;
+            this.gl.pixelStorei(this.gl.UNPACK_ALIGNMENT, alignment);
+        }
+    }
+
+    /**
      * Activate the specified texture unit.
      *
      * @param {number} textureUnit - The texture unit to activate.
@@ -1675,7 +1731,39 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
     }
 
-    draw(primitive, indexBuffer, numInstances, indirectSlot, first = true, last = true) {
+    _multiDrawLoopFallback(mode, primitive, indexBuffer, numInstances, drawCommands) {
+
+        const gl = this.gl;
+
+        if (primitive.indexed) {
+            const format = indexBuffer.impl.glFormat;
+            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
+
+            if (numInstances > 0) {
+                for (let i = 0; i < count; i++) {
+                    gl.drawElementsInstanced(mode, glCounts[i], format, glOffsetsBytes[i], glInstanceCounts[i]);
+                }
+            } else {
+                for (let i = 0; i < count; i++) {
+                    gl.drawElements(mode, glCounts[i], format, glOffsetsBytes[i]);
+                }
+            }
+        } else {
+            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
+
+            if (numInstances > 0) {
+                for (let i = 0; i < count; i++) {
+                    gl.drawArraysInstanced(mode, glOffsetsBytes[i], glCounts[i], glInstanceCounts[i]);
+                }
+            } else {
+                for (let i = 0; i < count; i++) {
+                    gl.drawArrays(mode, glOffsetsBytes[i], glCounts[i]);
+                }
+            }
+        }
+    }
+
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
 
         const shader = this.shader;
         if (shader) {
@@ -1703,11 +1791,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         Debug.assert(samplerName !== 'uDepthMap', 'Engine provided texture with sampler name \'uDepthMap\' is not longer supported, use \'uSceneDepthMap\' instead');
 
                         if (samplerName === 'uSceneDepthMap') {
-                            Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                            Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
                             samplerValue = getBuiltInTexture(this, 'white');
                         }
                         if (samplerName === 'uSceneColorMap') {
-                            Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                            Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
                             samplerValue = getBuiltInTexture(this, 'pink');
                         }
 
@@ -1786,24 +1874,50 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 const mode = this.glPrimitive[primitive.type];
                 const count = primitive.count;
 
-                if (primitive.indexed) {
-                    Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
+                if (drawCommands) { // multi-draw path
 
-                    const format = indexBuffer.impl.glFormat;
-                    const offset = primitive.base * indexBuffer.bytesPerIndex;
+                    // multi-draw extension is supported
+                    if (this.extMultiDraw) {
+                        const impl = drawCommands.impl;
+                        if (primitive.indexed) {
+                            const format = indexBuffer.impl.glFormat;
 
-                    if (numInstances > 0) {
-                        gl.drawElementsInstanced(mode, count, format, offset, numInstances);
+                            if (numInstances > 0) {
+                                this.extMultiDraw.multiDrawElementsInstancedWEBGL(mode, impl.glCounts, 0, format, impl.glOffsetsBytes, 0, impl.glInstanceCounts, 0, drawCommands.count);
+                            } else {
+                                this.extMultiDraw.multiDrawElementsWEBGL(mode, impl.glCounts, 0, format, impl.glOffsetsBytes, 0, drawCommands.count);
+                            }
+                        } else {
+                            if (numInstances > 0) {
+                                this.extMultiDraw.multiDrawArraysInstancedWEBGL(mode, impl.glOffsetsBytes, 0, impl.glCounts, 0, impl.glInstanceCounts, 0, drawCommands.count);
+                            } else {
+                                this.extMultiDraw.multiDrawArraysWEBGL(mode, impl.glOffsetsBytes, 0, impl.glCounts, 0, drawCommands.count);
+                            }
+                        }
                     } else {
-                        gl.drawElements(mode, count, format, offset);
+                        // multi-draw extension is not supported, use fallback loop
+                        this._multiDrawLoopFallback(mode, primitive, indexBuffer, numInstances, drawCommands);
                     }
                 } else {
-                    const first = primitive.base;
+                    if (primitive.indexed) {
+                        Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
 
-                    if (numInstances > 0) {
-                        gl.drawArraysInstanced(mode, first, count, numInstances);
+                        const format = indexBuffer.impl.glFormat;
+                        const offset = primitive.base * indexBuffer.bytesPerIndex;
+
+                        if (numInstances > 0) {
+                            gl.drawElementsInstanced(mode, count, format, offset, numInstances);
+                        } else {
+                            gl.drawElements(mode, count, format, offset);
+                        }
                     } else {
-                        gl.drawArrays(mode, first, count);
+                        const first = primitive.base;
+
+                        if (numInstances > 0) {
+                            gl.drawArraysInstanced(mode, first, count, numInstances);
+                        } else {
+                            gl.drawArrays(mode, first, count);
+                        }
                     }
                 }
 
@@ -1816,7 +1930,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 this._drawCallsPerFrame++;
 
                 // #if _PROFILER
-                this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                if (drawCommands) {
+                    // use pre-calculated primitive count from drawCommands
+                    this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+                } else {
+                    // single draw
+                    this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                }
                 // #endif
             }
         }
@@ -1972,14 +2092,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} h - The height of the rectangle, in pixels.
      * @param {ArrayBufferView} pixels - The ArrayBufferView object that holds the returned pixel
      * data.
+     * @param {boolean} [forceRgba] - If true, forces RGBA/UNSIGNED_BYTE format for guaranteed
+     * WebGL support. Used for reading non-RGBA 8-bit normalized textures. Defaults to false.
      * @ignore
      */
-    async readPixelsAsync(x, y, w, h, pixels) {
+    async readPixelsAsync(x, y, w, h, pixels, forceRgba = false) {
         const gl = this.gl;
 
-        const impl = this.renderTarget.colorBuffer?.impl;
-        const format = impl?._glFormat ?? gl.RGBA;
-        const pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
+        let format, pixelType;
+        if (forceRgba) {
+            format = gl.RGBA;
+            pixelType = gl.UNSIGNED_BYTE;
+        } else {
+            const impl = this.renderTarget.colorBuffer?.impl;
+            format = impl?._glFormat ?? gl.RGBA;
+            pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
+        }
 
         // create temporary (gpu-side) buffer and copy data into it
         const buf = gl.createBuffer();
@@ -2003,29 +2131,66 @@ class WebglGraphicsDevice extends GraphicsDevice {
     readTextureAsync(texture, x, y, width, height, options) {
 
         const face = options.face ?? 0;
+        const mipLevel = options.mipLevel ?? 0;
 
         // create a temporary render target if needed
         const renderTarget = options.renderTarget ?? new RenderTarget({
             colorBuffer: texture,
             depth: false,
-            face: face
+            face: face,
+            mipLevel: mipLevel
         });
         Debug.assert(renderTarget.colorBuffer === texture);
 
-        const buffer = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, 1, texture._format));
-        const data = options.data ?? new (getPixelFormatArrayType(texture._format))(buffer);
+        // Check if this format requires RGBA readback (WebGL only guarantees RGBA/UNSIGNED_BYTE)
+        const rgbaChannels = getPixelFormatChannelsForRgbaReadback(texture._format);
+        const needsRgbaReadback = rgbaChannels > 0;
+
+        // Use caller's buffer or allocate output buffer in the user's expected format
+        const ArrayType = getPixelFormatArrayType(texture._format);
+        const outputData = options.data ?? new ArrayType(
+            TextureUtils.calcLevelGpuSize(width, height, 1, texture._format) / ArrayType.BYTES_PER_ELEMENT
+        );
+
+        // For formats requiring RGBA readback, allocate a larger RGBA buffer
+        const readBuffer = needsRgbaReadback ?
+            new Uint8Array(width * height * 4) :
+            outputData;
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
+        this.setFramebuffer(renderTarget.impl._glFrameBuffer);
+
+        // flush commands to GPU immediately if requested
+        if (options.immediate) {
+            this.gl.flush();
+        }
 
         return new Promise((resolve, reject) => {
-            this.readPixelsAsync(x, y, width, height, data).then((data) => {
+            const readPromise = this.readPixelsAsync(x, y, width, height, readBuffer, needsRgbaReadback);
+
+            readPromise.then((data) => {
+
+                // return if the device was destroyed
+                if (this._destroyed) return;
 
                 // destroy RT if we created it
                 if (!options.renderTarget) {
                     renderTarget.destroy();
                 }
-                resolve(data);
+
+                // Extract channels from RGBA data if needed
+                if (needsRgbaReadback) {
+                    const pixelCount = width * height;
+                    for (let i = 0; i < pixelCount; i++) {
+                        for (let c = 0; c < rgbaChannels; c++) {
+                            outputData[i * rgbaChannels + c] = data[i * 4 + c];
+                        }
+                    }
+                    resolve(outputData);
+                } else {
+                    resolve(data);
+                }
             }).catch(reject);
         });
     }
@@ -2352,6 +2517,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
             this.cullMode = cullMode;
+        }
+    }
+
+    setFrontFace(frontFace) {
+        if (this.frontFace !== frontFace) {
+            const mode = this.glFrontFace[frontFace];
+            this.gl.frontFace(mode);
+            this.frontFace = frontFace;
         }
     }
 

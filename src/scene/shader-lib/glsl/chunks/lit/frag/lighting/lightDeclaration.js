@@ -48,7 +48,10 @@ export default /* glsl */`
     // shadow casting
     #if defined(LIGHT{i}CASTSHADOW)
 
-        uniform mat4 light{i}_shadowMatrix;
+        // shadowMatrix is not used for omni shadows
+        #if LIGHT{i}TYPE != OMNI
+            uniform mat4 light{i}_shadowMatrix;
+        #endif
         uniform float light{i}_shadowIntensity;
         uniform vec4 light{i}_shadowParams; // width, height, bias, radius
 
@@ -92,9 +95,8 @@ export default /* glsl */`
         #if LIGHT{i}TYPE == OMNI
             uniform samplerCube light{i}_cookie;
             uniform float light{i}_cookieIntensity;
-            #if !defined(LIGHT{i}CASTSHADOW)
-                uniform mat4 light{i}_shadowMatrix;
-            #endif
+            // shadowMatrix needed for cookie cube orientation
+            uniform mat4 light{i}_shadowMatrix;
         #endif
 
         #if LIGHT{i}TYPE == SPOT

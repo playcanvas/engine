@@ -1,3 +1,5 @@
+export const VERSION = process.env.VERSION;
+
 export const MIN_DESKTOP_WIDTH = 601;
 
 export const DEVICETYPE_WEBGL2 = 'webgl2';

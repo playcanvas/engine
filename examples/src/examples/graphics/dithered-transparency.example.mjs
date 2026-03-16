@@ -19,8 +19,6 @@ const assets = {
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // disable anti-aliasing as TAA is used to smooth edges
     antialias: false

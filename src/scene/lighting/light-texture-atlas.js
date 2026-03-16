@@ -1,7 +1,7 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_SRGBA8 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_SRGBA8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
@@ -37,18 +37,7 @@ class LightTextureAtlas {
         this.shadowEdgePixels = 3;
 
         this.cookieAtlasResolution = 4;
-        this.cookieAtlas = new Texture(this.device, {
-            name: 'CookieAtlas',
-            width: this.cookieAtlasResolution,
-            height: this.cookieAtlasResolution,
-            format: PIXELFORMAT_SRGBA8,
-            cubemap: false,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
+        this.cookieAtlas = Texture.createDataTexture2D(this.device, 'CookieAtlas', this.cookieAtlasResolution, this.cookieAtlasResolution, PIXELFORMAT_SRGBA8);
 
         this.cookieRenderTarget = new RenderTarget({
             colorBuffer: this.cookieAtlas,

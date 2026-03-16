@@ -1,20 +1,18 @@
-<div align="center">
+# PlayCanvas Engine
 
-<img width="200" src="https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/platform/images/logo/playcanvas-logo-medium.png"/>
+[![NPM Version](https://img.shields.io/npm/v/playcanvas)](https://www.npmjs.com/package/playcanvas)
+[![NPM Downloads](https://img.shields.io/npm/dw/playcanvas)](https://npmtrends.com/playcanvas)
+[![Minzipped size](https://img.shields.io/bundlephobia/minzip/playcanvas)](https://bundlephobia.com/result?p=playcanvas)
+[![License](https://img.shields.io/npm/l/playcanvas)](https://github.com/playcanvas/engine/blob/main/LICENSE)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=flat&logo=discord&logoColor=white&color=black)](https://discord.gg/RSaMRzg)
+[![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
+[![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-# PlayCanvas WebGL Game Engine
-
-[API Reference](https://api.playcanvas.com/modules/Engine.html) | [User Manual](https://developer.playcanvas.com) | [Examples](https://playcanvas.github.io) | [Forum](https://forum.playcanvas.com) | [Blog](https://blog.playcanvas.com)
+| [ユーザーマニュアル](https://developer.playcanvas.com/user-manual/engine/) | [APIリファレンス](https://api.playcanvas.com/engine/) | [例](https://playcanvas.github.io) | [ブログ](https://blog.playcanvas.com) | [フォーラム](https://forum.playcanvas.com) |
 
 PlayCanvasは、オープンソースのゲームエンジンです。
 
 HTML5とWebGLを使用してゲームやインタラクティブな3Dコンテンツをモバイルやデスクトップのブラウザで実行できます。
-
-[![NPM version][npm-badge]][npm-url]
-[![Minzipped size][minzip-badge]][minzip-url]
-[![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
-[![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
-[![Twitter][twitter-badge]][twitter-url]
 
 [English](https://github.com/playcanvas/engine/blob/dev/README.md)
 [中文](https://github.com/playcanvas/engine/blob/dev/README-zh.md)
@@ -26,12 +24,10 @@ HTML5とWebGLを使用してゲームやインタラクティブな3Dコンテ�
 PlayCanvasエンジンを使って[多くのゲームやアプリ](https://github.com/playcanvas/awesome-playcanvas) 公開されています。ここではその一部をご紹介します。
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
-[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
+[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Gaussian Splat Statues](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/1224723/266D9C-image-25.jpg)](https://playcanv.as/p/cLkf99ZV/)  
 [![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Global Illumination](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/)
 
 他のゲームは[PlayCanvasのウェブサイト](https://playcanvas.com/explore)で見ることができます。
-
-</div>
 
 ## 利用実績
 
@@ -42,7 +38,7 @@ PlayCanvasは、ビデオゲーム、広告、ビジュアライゼーション�
 
 PlayCanvasはフル機能のゲームエンジンです。
 
-* 🧊 **グラフィックス** -  WebGL 1.0 & 2.0で構築された高度な2D + 3Dグラフィックスエンジン。
+* 🧊 **グラフィックス** -  WebGL 1.0 & 2.0で構築された高度な2D + 3Dグラフィックスエンジン
 * 🏃 **アニメーション** - キャラクターやシーンに対する強力なステートベースのアニメーション
 * ⚛️ **物理** - 3Dリジッドボディ物理エンジン [ammo.js](https://github.com/kripken/ammo.js)
 * 🎮 **インプット** - マウス、キーボード、タッチ、ゲームパッド、VRコントローラのAPI
@@ -113,7 +109,7 @@ npm install
 | コマンド         | 説明                                                  | 出力先     |
 | --------------- | ----------------------------------------------------- | ---------- |
 | `npm run build` | すべてのエンジンビルドターゲットと型宣言をビルドする       | `build`    |
-| `npm run docs`  | エンジンの[APIリファレンスドキュメント][docs]をビルドする | `docs`     |
+| `npm run docs`  | エンジンの[APIリファレンスドキュメント](https://api.playcanvas.com/engine/)をビルドする | `docs`     |
 
 ## PlayCanvasエディター
 
@@ -122,14 +118,3 @@ PlayCanvas エンジンは、HTML5 アプリやゲームを作成するための
 [![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
 エディター関連のバグや問題については、[Editor's repo](https://github.com/playcanvas/editor)を参照してください。
-
-[npm-badge]: https://img.shields.io/npm/v/playcanvas
-[npm-url]: https://www.npmjs.com/package/playcanvas
-[minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
-[minzip-url]: https://bundlephobia.com/result?p=playcanvas
-[resolution-badge]: https://isitmaintained.com/badge/resolution/playcanvas/engine.svg
-[open-issues-badge]: https://isitmaintained.com/badge/open/playcanvas/engine.svg
-[isitmaintained-url]: https://isitmaintained.com/project/playcanvas/engine
-[twitter-badge]: https://img.shields.io/twitter/follow/playcanvas.svg?style=social&label=Follow
-[twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
-[docs]: https://api.playcanvas.com/modules/Engine.html

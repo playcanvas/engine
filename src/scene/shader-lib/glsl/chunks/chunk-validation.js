@@ -125,7 +125,8 @@ const removedChunks = {
     aoDetailMapPS: '2.7',
     lightmapDirPS: '2.7',
     lightmapSinglePS: '2.7',
-    tangentBinormalVS: '2.7'
+    tangentBinormalVS: '2.7',
+    gsplatCustomizeVS: '2.16'
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
@@ -149,7 +150,7 @@ const validateUserChunks = (userChunks, userAPIVersion) => {
             const chunkIsOutdated = engineAPIVersion && (!userAPIVersion || semverLess(userAPIVersion, engineAPIVersion));
 
             if (chunkIsOutdated) {
-                Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || 'undefined'}. Please update to the latest API: https://developer.playcanvas.com/user-manual/graphics/shader-chunk-migrations/`);
+                Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || 'undefined'}. Please update to the latest API: https://developer.playcanvas.com/user-manual/graphics/shaders/migrations/`);
             }
         }
     }

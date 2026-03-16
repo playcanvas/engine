@@ -121,7 +121,7 @@ class EventHandler {
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @returns {EventHandle} - can be used for removing event in the future.
+     * @returns {EventHandle} Can be used for removing event in the future.
      * @example
      * obj.once('test', (a, b) => {
      *     console.log(a + b);

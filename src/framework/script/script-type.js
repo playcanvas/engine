@@ -73,6 +73,7 @@ class ScriptType extends Script {
 
     /**
      * @param {boolean} [force] - Set to true to force initialization of the attributes.
+     * @ignore
      */
     __initializeAttributes(force) {
         if (!force && !this.__attributesRaw) {

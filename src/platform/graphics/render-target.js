@@ -90,6 +90,18 @@ class RenderTarget {
      */
     _mipmaps;
 
+    /**
+     * @type {number | undefined}
+     * @private
+     */
+    _width;
+
+    /**
+     * @type {number | undefined}
+     * @private
+     */
+    _height;
+
     /** @type {boolean} */
     flipY;
 
@@ -240,6 +252,9 @@ class RenderTarget {
         // if we render to a specific mipmap (even 0), do not generate mipmaps
         this._mipmaps = options.mipLevel === undefined;
 
+        // evaluate and cache dimensions
+        this.evaluateDimensions();
+
         this.validateMrt();
 
         // device specific implementation
@@ -312,27 +327,31 @@ class RenderTarget {
      */
     resize(width, height) {
 
-        if (this.width !== width || this.height !== height) {
+        if (this.mipLevel > 0) {
+            Debug.warn('Only a render target rendering to mipLevel 0 can be resized, ignoring.', this);
+            return;
+        }
 
-            if (this.mipLevel > 0) {
-                Debug.warn('Only a render target rendering to mipLevel 0 can be resized, ignoring.', this);
-                return;
-            }
+        // resize textures (they handle their own change detection)
+        this._depthBuffer?.resize(width, height);
+        this._colorBuffers?.forEach((colorBuffer) => {
+            colorBuffer.resize(width, height);
+        });
+
+        // only rebuild framebuffers if dimensions changed
+        if (this._width !== width || this._height !== height) {
 
             // release existing
-            const device = this._device;
             this.destroyFrameBuffers();
+
+            // disconnect from the device
+            const device = this._device;
             if (device.renderTarget === this) {
                 device.setRenderTarget(null);
             }
 
-            // resize textures
-            this._depthBuffer?.resize(width, height);
-            this._colorBuffers?.forEach((colorBuffer) => {
-                colorBuffer.resize(width, height);
-            });
-
-            // initialize again
+            // create new
+            this.evaluateDimensions();
             this.validateMrt();
             this.impl = device.createRenderTargetImpl(this);
         }
@@ -351,6 +370,27 @@ class RenderTarget {
                 }
             }
         });
+    }
+
+    /**
+     * Evaluates and stores the width and height of the render target based on the color/depth
+     * buffers and mip level.
+     *
+     * @private
+     */
+    evaluateDimensions() {
+        // If we have buffers, calculate dimensions from them
+        const buffer = this._colorBuffer ?? this._depthBuffer;
+        if (buffer) {
+            this._width = buffer.width;
+            this._height = buffer.height;
+
+            // Apply mip level adjustment
+            if (this._mipLevel > 0) {
+                this._width = TextureUtils.calcLevelDimension(this._width, this._mipLevel);
+                this._height = TextureUtils.calcLevelDimension(this._height, this._mipLevel);
+            }
+        }
     }
 
     /**
@@ -533,11 +573,7 @@ class RenderTarget {
      * @type {number}
      */
     get width() {
-        let width = this._colorBuffer?.width || this._depthBuffer?.width || this._device.width;
-        if (this._mipLevel > 0) {
-            width = TextureUtils.calcLevelDimension(width, this._mipLevel);
-        }
-        return width;
+        return this._width ?? this._device.width;
     }
 
     /**
@@ -546,11 +582,7 @@ class RenderTarget {
      * @type {number}
      */
     get height() {
-        let height = this._colorBuffer?.height || this._depthBuffer?.height || this._device.height;
-        if (this._mipLevel > 0) {
-            height = TextureUtils.calcLevelDimension(height, this._mipLevel);
-        }
-        return height;
+        return this._height ?? this._device.height;
     }
 
     /**

@@ -10,7 +10,7 @@ import { SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME } from '../constants.js';
 class RenderPassShadowDirectional extends RenderPass {
     constructor(device, shadowRenderer, light, camera, allCascadesRendering) {
         super(device);
-        DebugHelper.setName(this, `${this.name}-${light._node.name}`);
+        DebugHelper.setName(this, `RenderPassShadowDir-${light._node.name}`);
 
         this.shadowRenderer = shadowRenderer;
         this.light = light;

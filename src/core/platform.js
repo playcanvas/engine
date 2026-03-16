@@ -138,7 +138,7 @@ const platform = {
     gamepads: gamepads,
 
     /**
-     * True if the supports touch input.
+     * True if the platform supports touch input.
      *
      * @type {boolean}
      */
