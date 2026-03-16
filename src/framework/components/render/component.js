@@ -798,7 +798,7 @@ class RenderComponent extends Component {
      * Removes a MeshInstance from this component.
      *
      * @param {MeshInstance} instance - MeshInstance to remove.
-     * @param {boolean} destroy - If true (default), destroys MeshInstance after remove.
+     * @param {boolean} [destroy] - If true (default), destroys MeshInstance after remove.
      */
     removeMeshInstance(instance, destroy = true) {
         Debug.assert(instance instanceof MeshInstance, 'Invalid MeshInstance');
