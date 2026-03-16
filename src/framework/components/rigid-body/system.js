@@ -16,7 +16,7 @@ import { RigidBodyComponentData } from './data.js';
  * @import { Trigger } from '../collision/trigger.js'
  */
 
-let ammoRayStart, ammoRayEnd, ammoVec3, ammoQuat, ammoTransform, ammoTransform2, shapeTestBody;
+let ammoRayStart, ammoRayEnd, ammoVec3, ammoQuat, ammoTransform, ammoTransform2, shapeTestBody, tmpQuat;
 
 /**
  * Contains the result of a successful raycast intersection with a rigid body. When a ray
@@ -502,6 +502,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             ammoQuat = new Ammo.btQuaternion();
             ammoTransform = new Ammo.btTransform();
             ammoTransform2 = new Ammo.btTransform();
+            tmpQuat = new Quat();
 
             RigidBodyComponent.onLibraryLoaded();
 
@@ -819,7 +820,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
         if (startRotation instanceof Quat) {
             ammoQuat.setValue(startRotation.x, startRotation.y, startRotation.z, startRotation.w);
         } else if (startRotation instanceof Vec3) {
-            ammoQuat.setEulerZYX(startRotation.z, startRotation.y, startRotation.x);
+            tmpQuat.setFromEulerAngles(startRotation);
+            ammoQuat.setValue(tmpQuat.x, tmpQuat.y, tmpQuat.z, tmpQuat.w);
         } else {
             ammoQuat.setEulerZYX(0, 0, 0);
         }
@@ -1344,6 +1346,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this.collisionConfiguration = null;
             ammoRayStart = null;
             ammoRayEnd = null;
+            tmpQuat = null;
             RigidBodyComponent.onAppDestroy();
         }
     }
