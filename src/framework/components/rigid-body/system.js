@@ -760,7 +760,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} [options] - The additional options for the shape casting.
      * @param {Vec3|Quat} [options.endRotation] - The world space rotation for the shape to have
      * at end.
-     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with
+     * @param {boolean} [options.sort] - Whether to sort shape cast results based on distance with
      * closest first. Defaults to false.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the shape cast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the shape cast.
