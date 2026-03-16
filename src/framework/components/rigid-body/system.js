@@ -668,7 +668,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * })[0];
      */
     raycast(start, end, options = {}) {
-        Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycast: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
+        const findAll = options.findAll || options.filterTags || options.filterCallback;
+
+        if (findAll) {
+            Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycast: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
+        }
+
         const results = [];
 
         ammoRayStart.setValue(start.x, start.y, start.z);
