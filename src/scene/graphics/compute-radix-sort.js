@@ -200,6 +200,14 @@ class ComputeRadixSort {
     _hasInitialValues = false;
 
     /**
+     * Whether the last pass skips writing sorted keys (only values are written).
+     * When true, `sortedKeys` will contain stale data after sorting.
+     *
+     * @type {boolean}
+     */
+    _skipLastPassKeyWrite = false;
+
+    /**
      * Creates a new ComputeRadixSort instance.
      *
      * @param {GraphicsDevice} device - The graphics device (must support compute).
@@ -270,12 +278,24 @@ class ComputeRadixSort {
     }
 
     /**
-     * Gets the sorted indices buffer.
+     * Gets the sorted indices (or values) buffer.
      *
      * @type {StorageBuffer|null}
      */
     get sortedIndices() {
         return this._sortedIndices;
+    }
+
+    /**
+     * Gets the sorted keys buffer after the last sort operation. The keys end up
+     * in one of the internal ping-pong buffers depending on the number of passes.
+     *
+     * @type {StorageBuffer|null}
+     */
+    get sortedKeys() {
+        if (!this._keys0) return null;
+        const numPasses = this._numBits / BITS_PER_PASS;
+        return (numPasses % 2 === 0) ? this._keys1 : this._keys0;
     }
 
     /**
@@ -326,9 +346,10 @@ class ComputeRadixSort {
      * @param {number} numBits - Number of bits to sort.
      * @param {boolean} indirect - Whether to create indirect sort passes.
      * @param {boolean} hasInitialValues - Whether pass 0 reads from caller-supplied initial values.
+     * @param {boolean} skipLastPassKeyWrite - Whether the last pass skips writing keys.
      * @private
      */
-    _createPasses(numBits, indirect, hasInitialValues) {
+    _createPasses(numBits, indirect, hasInitialValues, skipLastPassKeyWrite) {
         // Destroy old passes and their shaders
         this._destroyPasses();
         this._numBits = numBits;
@@ -338,6 +359,7 @@ class ComputeRadixSort {
         this._ensureBindGroupFormats(indirect);
         this._indirect = indirect;
         this._hasInitialValues = hasInitialValues;
+        this._skipLastPassKeyWrite = skipLastPassKeyWrite;
 
         const numPasses = numBits / BITS_PER_PASS;
         const suffix = indirect ? '-Indirect' : '';
@@ -345,7 +367,7 @@ class ComputeRadixSort {
         for (let pass = 0; pass < numPasses; pass++) {
             const bitOffset = pass * BITS_PER_PASS;
             const isFirstPass = pass === 0 && !hasInitialValues;
-            const isLastPass = pass === numPasses - 1;
+            const isLastPass = skipLastPassKeyWrite && pass === numPasses - 1;
 
             const histogramShader = this._createShader(
                 `RadixSort4bit-Histogram${suffix}-${bitOffset}`,
@@ -381,16 +403,18 @@ class ComputeRadixSort {
      * @param {number} numBits - Number of bits to sort.
      * @param {boolean} indirect - Whether passes should use indirect dispatch.
      * @param {boolean} hasInitialValues - Whether pass 0 reads caller-supplied initial values.
+     * @param {boolean} skipLastPassKeyWrite - Whether the last pass skips writing keys.
      * @private
      */
-    _allocateBuffers(elementCount, numBits, indirect, hasInitialValues) {
+    _allocateBuffers(elementCount, numBits, indirect, hasInitialValues, skipLastPassKeyWrite) {
         const workgroupCount = Math.ceil(elementCount / ELEMENTS_PER_WORKGROUP);
 
         // Only reallocate buffers if we need MORE capacity (grow-only policy)
         const buffersNeedRealloc = workgroupCount > this._allocatedWorkgroupCount || !this._keys0;
 
-        // Recreate passes when numBits, indirect mode, or initial-values mode changes
-        const passesNeedRecreate = numBits !== this._numBits || indirect !== this._indirect || hasInitialValues !== this._hasInitialValues;
+        // Recreate passes when numBits, indirect mode, initial-values mode, or key-write mode changes
+        const passesNeedRecreate = numBits !== this._numBits || indirect !== this._indirect ||
+            hasInitialValues !== this._hasInitialValues || skipLastPassKeyWrite !== this._skipLastPassKeyWrite;
 
         if (buffersNeedRealloc) {
 
@@ -428,7 +452,7 @@ class ComputeRadixSort {
         this._prefixSumKernel.resize(this._blockSums, BUCKET_COUNT * workgroupCount);
 
         if (passesNeedRecreate) {
-            this._createPasses(numBits, indirect, hasInitialValues);
+            this._createPasses(numBits, indirect, hasInitialValues, skipLastPassKeyWrite);
         }
     }
 
@@ -473,14 +497,20 @@ class ComputeRadixSort {
      * @param {StorageBuffer} keysBuffer - Input storage buffer containing u32 keys.
      * @param {number} elementCount - Number of elements to sort.
      * @param {number} [numBits] - Number of bits to sort (must be multiple of 4). Defaults to 16.
-     * @returns {StorageBuffer} Storage buffer containing sorted indices.
+     * @param {StorageBuffer} [initialValues] - Optional buffer of initial values for pass 0.
+     * When provided, the sort produces output values derived from this buffer instead of
+     * sequential indices. The buffer is only read, never modified.
+     * @param {boolean} [skipLastPassKeyWrite] - When true, the last pass skips writing sorted
+     * keys for a small performance gain. Only use when sorted keys are not needed after sorting.
+     * @returns {StorageBuffer} Storage buffer containing sorted indices (or values if
+     * initialValues was provided).
      */
-    sort(keysBuffer, elementCount, numBits = 16) {
+    sort(keysBuffer, elementCount, numBits = 16, initialValues, skipLastPassKeyWrite = false) {
         Debug.assert(keysBuffer, 'ComputeRadixSort.sort: keysBuffer is required');
         Debug.assert(elementCount > 0, 'ComputeRadixSort.sort: elementCount must be > 0');
         Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSort.sort: numBits must be a multiple of ${BITS_PER_PASS}`);
 
-        return this._execute(keysBuffer, elementCount, numBits, false, -1, null, undefined);
+        return this._execute(keysBuffer, elementCount, numBits, false, -1, null, initialValues, skipLastPassKeyWrite);
     }
 
     /**
@@ -495,15 +525,17 @@ class ComputeRadixSort {
      * @param {StorageBuffer} [initialValues] - Optional buffer of initial values for pass 0.
      * When provided, the sort produces output values derived from this buffer instead of
      * sequential indices. The buffer is only read, never modified.
+     * @param {boolean} [skipLastPassKeyWrite] - When true, the last pass skips writing sorted
+     * keys for a small performance gain. Only use when sorted keys are not needed after sorting.
      * @returns {StorageBuffer} Storage buffer containing sorted values.
      */
-    sortIndirect(keysBuffer, maxElementCount, numBits, dispatchSlot, sortElementCountBuffer, initialValues) {
+    sortIndirect(keysBuffer, maxElementCount, numBits, dispatchSlot, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false) {
         Debug.assert(keysBuffer, 'ComputeRadixSort.sortIndirect: keysBuffer is required');
         Debug.assert(maxElementCount > 0, 'ComputeRadixSort.sortIndirect: maxElementCount must be > 0');
         Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSort.sortIndirect: numBits must be a multiple of ${BITS_PER_PASS}`);
         Debug.assert(sortElementCountBuffer, 'ComputeRadixSort.sortIndirect: sortElementCountBuffer is required');
 
-        return this._execute(keysBuffer, maxElementCount, numBits, true, dispatchSlot, sortElementCountBuffer, initialValues);
+        return this._execute(keysBuffer, maxElementCount, numBits, true, dispatchSlot, sortElementCountBuffer, initialValues, skipLastPassKeyWrite);
     }
 
     /**
@@ -516,15 +548,17 @@ class ComputeRadixSort {
      * @param {number} dispatchSlot - Indirect dispatch slot index (-1 for direct).
      * @param {StorageBuffer|null} sortElementCountBuffer - GPU-written element count (null for direct).
      * @param {StorageBuffer} [initialValues] - Optional initial values buffer for pass 0.
+     * @param {boolean} [skipLastPassKeyWrite] - When true, the last pass skips writing sorted
+     * keys for a small performance gain. Only use when sorted keys are not needed after sorting.
      * @returns {StorageBuffer} Storage buffer containing sorted values.
      * @private
      */
-    _execute(keysBuffer, elementCount, numBits, indirect, dispatchSlot, sortElementCountBuffer, initialValues) {
+    _execute(keysBuffer, elementCount, numBits, indirect, dispatchSlot, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false) {
         this._elementCount = elementCount;
         const hasInitialValues = !!initialValues;
 
         // Allocate buffers and create passes if needed
-        this._allocateBuffers(elementCount, numBits, indirect, hasInitialValues);
+        this._allocateBuffers(elementCount, numBits, indirect, hasInitialValues, skipLastPassKeyWrite);
 
         const device = this.device;
         const numPasses = numBits / BITS_PER_PASS;
