@@ -27,7 +27,7 @@ describe('RenderComponent', function () {
         app.root.addChild(entity);
         entity.addComponent('render');
 
-        expect(entity.render._meshInstances.length).to.be.equal(0);
+        expect(entity.render.meshInstances.length).to.be.equal(0);
 
         const mesh = Mesh.fromGeometry(app.graphicsDevice, new BoxGeometry());
 
@@ -38,17 +38,17 @@ describe('RenderComponent', function () {
         entity.render.addMeshInstance(instance2);
         entity.render.addMeshInstance(instance2); // test adding a duplicate instance
 
-        expect(entity.render._meshInstances.length).to.be.equal(2);
+        expect(entity.render.meshInstances.length).to.be.equal(2);
 
         // Make sure the properties are updated
         expect(instance1.node).to.be.equal(entity);
-        expect(instance1.castShadow).to.be.equal(entity.render._castShadows);
-        expect(instance1.receiveShadow).to.be.equal(entity.render._receiveShadows);
-        expect(instance1.renderStyle).to.be.equal(entity.render._renderStyle);
+        expect(instance1.castShadow).to.be.equal(entity.render.castShadows);
+        expect(instance1.receiveShadow).to.be.equal(entity.render.receiveShadows);
+        expect(instance1.renderStyle).to.be.equal(entity.render.renderStyle);
 
         // Make sure the instance is added to layers
         const sceneLayers = app.scene.layers;
-        const componentLayers = entity.render._layers;
+        const componentLayers = entity.render.layers;
         for (let i = 0; i < componentLayers.length; i++) {
             const layer = sceneLayers.getLayerById(componentLayers[i]);
             expect(layer.meshInstancesSet.has(instance1)).to.be.true;
@@ -65,15 +65,15 @@ describe('RenderComponent', function () {
         const instance = new MeshInstance(mesh, app.systems.render.defaultMaterial);
         entity.render.addMeshInstance(instance);
 
-        expect(entity.render._meshInstances.length).to.be.equal(1);
+        expect(entity.render.meshInstances.length).to.be.equal(1);
 
         entity.render.removeMeshInstance(instance);
 
-        expect(entity.render._meshInstances.length).to.be.equal(0);
+        expect(entity.render.meshInstances.length).to.be.equal(0);
 
         // Make sure the instance is removed from layers
         const sceneLayers = app.scene.layers;
-        const componentLayers = entity.render._layers;
+        const componentLayers = entity.render.layers;
         for (let i = 0; i < componentLayers.length; i++) {
             const layer = sceneLayers.getLayerById(componentLayers[i]);
             expect(layer.meshInstancesSet.has(instance)).to.be.false;
