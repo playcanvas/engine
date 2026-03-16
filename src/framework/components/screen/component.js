@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { math } from '../../../core/math/math.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Entity } from '../../entity.js';
@@ -355,16 +356,14 @@ class ScreenComponent extends Component {
 
     /**
      * Sets the screen's render priority. Priority determines the order in which ScreenComponents
-     * in the same layer are rendered. Number must be an integer between 0 and 255. Priority is set
+     * in the same layer are rendered. Number must be an integer between 0 and 127. Priority is set
      * into the top 8 bits of the {@link ElementComponent#drawOrder} property. Defaults to 0.
      *
      * @type {number}
      */
     set priority(value) {
-        if (value > 0xFF) {
-            Debug.warn(`Clamping screen priority from ${value} to 255`);
-            value = 0xFF;
-        }
+        Debug.assert(value >= 0 && value <= 0x7F, `Screen priority must be between 0 and 127, got ${value}`);
+        value = math.clamp(value, 0, 0x7F);
         if (this._priority === value) {
             return;
         }

@@ -1,6 +1,6 @@
 import { Container } from '@playcanvas/pcui/react';
 import { Component } from 'react';
-import { HashRouter, Switch, Route, Redirect } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import { CodeEditorDesktop } from './code-editor/CodeEditorDesktop.mjs';
 import { Example } from './Example.mjs';
@@ -67,27 +67,33 @@ class MainLayout extends TypedComponent {
                 HashRouter,
                 null,
                 jsx(
-                    Switch,
+                    Routes,
                     null,
-                    jsx(Route, { exact: true, path: '/' }, jsx(Redirect, { to: '/misc/hello-world' })),
-                    jsx(
-                        Route,
-                        { path: '/:category/:example' },
-                        jsx(SideBar, null),
-                        jsx(
-                            Container,
-                            { id: 'main-view-wrapper' },
-                            jsx(Menu, {
-                                setShowMiniStats: this.updateShowMiniStats.bind(this)
-                            }),
+                    jsx(Route, {
+                        path: '/',
+                        element: jsx(Navigate, { to: '/misc/hello-world', replace: true })
+                    }),
+                    jsx(Route, {
+                        path: '/:category/:example',
+                        element: jsx(
+                            'div',
+                            { id: 'appInner-router', style: { display: 'contents' } },
+                            jsx(SideBar, null),
                             jsx(
                                 Container,
-                                { id: 'main-view' },
-                                orientation === 'landscape' && jsx(CodeEditorDesktop),
-                                jsx(Example, null)
+                                { id: 'main-view-wrapper' },
+                                jsx(Menu, {
+                                    setShowMiniStats: this.updateShowMiniStats.bind(this)
+                                }),
+                                jsx(
+                                    Container,
+                                    { id: 'main-view' },
+                                    orientation === 'landscape' && jsx(CodeEditorDesktop),
+                                    jsx(Example, null)
+                                )
                             )
                         )
-                    )
+                    })
                 )
             )
         );

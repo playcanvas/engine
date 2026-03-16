@@ -196,7 +196,7 @@ class MorphInstance {
         const outputType = this.morph.intRenderFormat ? 'uvec4' : 'vec4';
 
         return ShaderUtils.createShader(this.device, {
-            uniqueName: 'TextureMorphShader',
+            uniqueName: `TextureMorphShader_${maxCount}-${this.morph.intRenderFormat ? 'int' : 'float'}`,
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'morphVS',
             fragmentChunk: 'morphPS',

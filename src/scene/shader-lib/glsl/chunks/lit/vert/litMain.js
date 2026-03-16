@@ -63,6 +63,15 @@ mat4 dModelMatrix;
 
 #include  "litUserCodeVS"
 
+#ifdef VERTEX_COLOR
+    vec3 decodeGamma(vec3 raw) {
+        return pow(raw, vec3(2.2));
+    }
+    vec4 gammaCorrectInput(vec4 color) {
+        return vec4(decodeGamma(color.xyz), color.w);
+    }
+#endif
+
 void main(void) {
 
     #include "litUserMainStartVS"
@@ -102,7 +111,11 @@ void main(void) {
     #include "uvTransformVS, UV_TRANSFORMS_COUNT"
 
     #ifdef VERTEX_COLOR
-        vVertexColor = vertex_color;
+        #ifdef STD_VERTEX_COLOR_GAMMA
+            vVertexColor = gammaCorrectInput(vertex_color);
+        #else
+            vVertexColor = vertex_color;
+        #endif
     #endif
 
     #ifdef LINEAR_DEPTH

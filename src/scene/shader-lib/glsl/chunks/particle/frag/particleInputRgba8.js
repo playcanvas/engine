@@ -35,7 +35,7 @@ void readInput(float uv) {
     inShow = tex2.a > 0.5;
 
     inLife = decodeFloatRGBA(tex3);
-    float maxNegLife = max(lifetime, (numParticles - 1.0) * (rate+rateDiv));
+    float maxNegLife = max(lifetime, numParticles * (rate+rateDiv));
     float maxPosLife = lifetime+1.0;
     inLife = inLife * (maxNegLife + maxPosLife) - maxNegLife;
 }

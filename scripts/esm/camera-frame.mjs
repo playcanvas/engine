@@ -181,7 +181,7 @@ class Bloom {
     /**
      * @attribute
      * @visibleif {enabled}
-     * @range [0, 16]
+     * @range [1, 16]
      * @precision 0
      * @step 0
      */
@@ -276,6 +276,12 @@ class Vignette {
      * @step 0.001
      */
     curvature = 0.5;
+
+    /**
+     * @attribute
+     * @visibleif {enabled}
+     */
+    color = new Color(0, 0, 0, 1);
 }
 
 /** @interface */
@@ -289,6 +295,51 @@ class Fringing {
      * @step 0.1
      */
     intensity = 50;
+}
+
+/** @interface */
+class ColorEnhance {
+    enabled = false;
+
+    /**
+     * @visibleif {enabled}
+     * @range [-3, 3]
+     * @precision 2
+     * @step 0.1
+     */
+    shadows = 0;
+
+    /**
+     * @visibleif {enabled}
+     * @range [-3, 3]
+     * @precision 2
+     * @step 0.1
+     */
+    highlights = 0;
+
+    /**
+     * @visibleif {enabled}
+     * @range [-1, 1]
+     * @precision 3
+     * @step 0.01
+     */
+    midtones = 0;
+
+    /**
+     * @visibleif {enabled}
+     * @range [-1, 1]
+     * @precision 3
+     * @step 0.01
+     */
+    vibrance = 0;
+
+    /**
+     * @visibleif {enabled}
+     * @range [-1, 1]
+     * @precision 3
+     * @step 0.01
+     */
+    dehaze = 0;
 }
 
 /** @interface */
@@ -409,6 +460,12 @@ class CameraFrame extends Script {
 
     /**
      * @attribute
+     * @type {ColorEnhance}
+     */
+    colorEnhance = new ColorEnhance();
+
+    /**
+     * @attribute
      * @type {Dof}
      */
     dof = new Dof();
@@ -439,7 +496,7 @@ class CameraFrame extends Script {
     postUpdate(dt) {
 
         const cf = this.engineCameraFrame;
-        const { rendering, bloom, grading, vignette, fringing, taa, ssao, dof, colorLUT } = this;
+        const { rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao, dof, colorLUT } = this;
 
         const dstRendering = cf.rendering;
         dstRendering.renderFormats.length = 0;
@@ -499,6 +556,7 @@ class CameraFrame extends Script {
             dstVignette.inner = vignette.inner;
             dstVignette.outer = vignette.outer;
             dstVignette.curvature = vignette.curvature;
+            dstVignette.color.copy(vignette.color);
         }
 
         // taa
@@ -511,6 +569,17 @@ class CameraFrame extends Script {
         // fringing
         const dstFringing = cf.fringing;
         dstFringing.intensity = fringing.enabled ? fringing.intensity : 0;
+
+        // colorEnhance
+        const dstColorEnhance = cf.colorEnhance;
+        dstColorEnhance.enabled = colorEnhance.enabled;
+        if (colorEnhance.enabled) {
+            dstColorEnhance.shadows = colorEnhance.shadows;
+            dstColorEnhance.highlights = colorEnhance.highlights;
+            dstColorEnhance.midtones = colorEnhance.midtones;
+            dstColorEnhance.vibrance = colorEnhance.vibrance;
+            dstColorEnhance.dehaze = colorEnhance.dehaze;
+        }
 
         // dof
         const dstDof = cf.dof;

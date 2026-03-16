@@ -1,14 +1,59 @@
-# CONTRIBUTING
+# Contributing to the PlayCanvas Engine
 
-# HOW TO CONTRIBUTE
+Welcome! We're excited that you want to contribute to PlayCanvas. This guide will help you get started, whether you're fixing a typo or adding a major feature.
+
+## Table of Contents
+- [Quick Start](#quick-start)
+- [Development Setup](#development-setup)
+- [How to Contribute](#how-to-contribute)
+- [Testing Your Changes](#testing-your-changes)
+- [Submitting Pull Requests](#submitting-pull-requests)
+- [Need Help?](#need-help)
+- [Coding Standards](#coding-standards)
+
+## Quick Start
+
+For **simple bug fixes or documentation updates**:
+
+1. Fork the repository
+2. Create a branch: `git checkout -b fix-issue-123`
+3. Make your changes
+4. Run tests: `npm test`
+5. Submit a pull request
+
+For **larger changes or new features**, please read the full guidelines below and consider opening an issue first to discuss your approach.
+
+## Development Setup
+
+1. **Fork and clone** the repository:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/engine.git
+   cd engine
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Run tests** to ensure everything works:
+   ```bash
+   npm test
+   ```
+
+4. **Build the engine** (optional, for testing):
+   ```bash
+   npm run build
+   ```
+
+## How to Contribute
 
 1. Looking for ideas? Check out ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+PR%22) label.
 2. Or start a conversation in [Issues](https://github.com/playcanvas/engine/issues) to get help and advice from community on PR ideas.
 3. Read the coding standards below.
 4. Keep PR simple and focused - one PR per feature.
 5. Make a Pull Request.
-6. Complete the [Contributor License Agreement](https://docs.google.com/a/playcanvas.com/forms/d/1Ih69zQfJG-QDLIEpHr6CsaAs6fPORNOVnMv5nuo0cjk/viewform).
-7. Happy Days! 🎉
+6. Happy Days! 🎉
 
 #### Tips
 
@@ -18,11 +63,58 @@ If you are looking for ideas what to work on, head to [Issues](https://github.co
 
 Try to keep PR focused on a single feature, small PR's are easier to review and will get merged faster. Too large PR's are better be broken into smaller ones so they can be merged and tested on its own.
 
-# CODING STANDARDS
+## Testing Your Changes
 
-## General
+PlayCanvas uses [Mocha](https://mochajs.org/) and [Chai](https://www.chaijs.com/) for unit testing.
 
-Our coding standards are derived from the [Google JavaScript Coding Standards](https://google.github.io/styleguide/javascriptguide.xml) which are based on ES5 (ECMA2009). Also we have a whitelist of modern JavaScript features (ES6+), explicitly listed below.
+### Running Tests
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+### Writing Tests
+- **Add tests for new features** - Write unit tests that prove your feature works
+- **Update existing tests** - Modify tests when changing existing behavior
+- **Test browser compatibility** - Ensure your changes work across target browsers
+- **Test with examples** - Check that relevant examples still work
+
+### Test Guidelines
+- Place test files in the `test/` directory mirroring the source structure
+- Use `.test.mjs` extension for test files
+- Follow the existing test patterns and naming conventions
+- See [test/README.md](test/README.md) for detailed testing documentation
+
+## Submitting Pull Requests
+
+1. **Create a focused PR** - One feature or fix per pull request
+2. **Write a clear description** - Explain what changes and why
+3. **Reference issues** - Link to related issues with "Fixes #123"
+4. **Test thoroughly** - Ensure tests pass and no regressions
+5. **Follow code standards** - See detailed guidelines below
+6. **Be patient** - Reviews take time, especially for complex changes
+
+### Git Workflow
+- Create feature branches from `main`: `git checkout -b feature-name`
+- Use clear commit messages describing what changed
+- Keep commits focused and atomic when possible
+- Rebase/squash if requested during review
+
+## Need Help?
+
+- **Questions about contributing?** Open a [Discussion](https://github.com/playcanvas/engine/discussions)
+- **Found a bug?** Check existing [Issues](https://github.com/playcanvas/engine/issues) first
+- **Want to chat?** Visit the [PlayCanvas Forum](http://forum.playcanvas.com/)
+- **Looking for ideas?** Check ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+PR%22) issues
+
+## Coding Standards
+
+### General
+
+Our coding standards are derived from established JavaScript best practices. We support modern JavaScript features (ES6+) as listed below, targeting current browser versions.
 
 ### Keep it simple
 
@@ -44,10 +136,10 @@ You may use the following JavaScript language features in the engine codebase:
 * [Default parameters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters)
 * [Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
 * [Optional chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
-* [Static keyword](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/static)
+* [`static` keyword](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/static)
 * [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals)
-* [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) - only functionality supported by all browsers, including Safari 8 - see the table at the end of the page. `for..of` type of loop should not be used to iterate a set as it is not supported on Safari 8.
-* [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) - only functionality supported by all browsers, including Safari 8 - see the table at the end of the page. `for..of` type of loop should not be used to iterate a map as it is not supported on Safari 8.
+* [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
+* [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)
 
 ### Opening braces should be on the same line as the statement
 
@@ -59,7 +151,7 @@ function inc() {
 }
 ```
 
-Also use the following style for 'if' statements:
+Also use the following style for `if` statements:
 ```javascript
 if (test) {
     // do something
@@ -158,7 +250,7 @@ for (let i = 0; i < items.length; i++) {
 }
 ```
 
-## Naming
+### Naming
 
 ### Capitalization
 
@@ -192,7 +284,7 @@ const THIS_IS_CONSTANT = "well, kind of";
 // Due to the lack of native enum support by JavaScript, the enums are
 // represented by constants. The constant name contains the enum name without
 // the underscores, followed by the values with optional underscores as
-// needed to improve the readibility. This is one possible implementation:
+// needed to improve the readability. This is one possible implementation:
 const CUBEFACE_POSX = 0;
 const CUBEFACE_POSY = 1;
 // and this is also acceptable
@@ -278,7 +370,7 @@ function foo(a, b) {
 ```
 
 
-## Privacy
+### Privacy
 
 ### Make variables private if used only internally
 
@@ -298,7 +390,7 @@ let foo = new Item();
 foo._a += "?"; // not good
 ```
 
-## Object Member Iteration
+### Object Member Iteration
 
 The hasOwnProperty() function should be used when iterating over an object's members. This is to avoid accidentally picking up unintended members that may have been added to the object's prototype. For example:
 
@@ -311,7 +403,7 @@ for (let key in values) {
 }
 ```
 
-## Source files
+### Source files
 
 ### Filenames should contain only class name
 
@@ -324,9 +416,9 @@ asset-registry.js
 graph-node.js
 ```
 
-## Namespaces and Classes (ES6)
+### Namespaces and Classes (ES6)
 
-The entire PlayCanvas API must be declared under the ```pc``` namespace. This is handled by build script, so ES6 notation of `import`/`export` should be used. The vast majority of the PlayCanvas codebase is made up of `class` definitions. These have the following structure (which should be adhered to):
+The entire PlayCanvas API must be declared under the `pc` namespace. This is handled by build script, so ES6 notation of `import`/`export` should be used. The vast majority of the PlayCanvas codebase is made up of `class` definitions. These have the following structure (which should be adhered to):
 
 ```javascript
 class Class {
@@ -348,7 +440,7 @@ class SubClass extends Class {
     }
 
     someFunc(x) {
-        // if method is overriden
+        // if method is overridden
         // this is the way to call parent class method
         super.someFunc(x);
     }

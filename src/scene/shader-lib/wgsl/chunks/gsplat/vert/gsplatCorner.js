@@ -1,13 +1,25 @@
 export default /* wgsl */`
-uniform viewport: vec2f;                  // viewport dimensions
-uniform camera_params: vec4f;             // 1 / far, far, near, isOrtho
+uniform viewport_size: vec4f;             // viewport width, height, 1/width, 1/height
+uniform minPixelSize: f32;
+
+// Rotation and scale source data are f16; covariance must be f32 to avoid scale^2 overflow
+fn computeCovariance(rotation: half4, scale: half3, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
+    let rot: half3x3 = quatToMat3(rotation);
+    let s: vec3f = vec3f(scale);
+
+    // M = S * R (promote to f32 to avoid overflow in dot products)
+    let M: mat3x3f = transpose(mat3x3f(
+        s.x * vec3f(rot[0]),
+        s.y * vec3f(rot[1]),
+        s.z * vec3f(rot[2])
+    ));
+
+    *covA_ptr = vec3f(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
+    *covB_ptr = vec3f(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
+}
 
 // calculate the clip-space offset from the center for this gaussian
-fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCenter>, corner: ptr<function, SplatCorner>) -> bool {
-    // get covariance
-    var covA: vec3f;
-    var covB: vec3f;
-    readCovariance(source, &covA, &covB);
+fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, SplatCenter>, corner: ptr<function, SplatCorner>, covA: vec3f, covB: vec3f) -> bool {
 
     let Vrk = mat3x3f(
         vec3f(covA.x, covA.y, covA.z),
@@ -15,7 +27,7 @@ fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCen
         vec3f(covA.z, covB.y, covB.z)
     );
 
-    let focal = uniform.viewport.x * center.projMat00;
+    let focal = uniform.viewport_size.x * center.projMat00;
 
     let v = select(center.view.xyz, vec3f(0.0, 0.0, 1.0), uniform.camera_params.w == 1.0);
     let J1 = focal / v.z;
@@ -34,7 +46,7 @@ fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCen
         // calculate AA factor
         let detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0]; // Using [0][1] * [1][0] as matrix might not be perfectly symmetric numerically
         let detBlur = (cov[0][0] + 0.3) * (cov[1][1] + 0.3) - cov[0][1] * cov[1][0];
-        corner.aaFactor = sqrt(detOrig / detBlur);
+        corner.aaFactor = half(sqrt(max(detOrig / detBlur, 0.0)));
     #endif
 
     let diagonal1 = cov[0][0] + 0.3;
@@ -47,17 +59,17 @@ fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCen
     let lambda2 = max(mid - radius, 0.1);
 
     // Use the smaller viewport dimension to limit the kernel size relative to the screen resolution.
-    let vmin = min(1024.0, min(uniform.viewport.x, uniform.viewport.y));
+    let vmin = min(1024.0, min(uniform.viewport_size.x, uniform.viewport_size.y));
 
     let l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     let l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
 
-    // early-out gaussians smaller than 2 pixels
-    if (l1 < 2.0 && l2 < 2.0) {
+    // early-out gaussians smaller than minPixelSize
+    if (max(l1, l2) < uniform.minPixelSize) {
         return false;
     }
 
-    let c = center.proj.ww / uniform.viewport;
+    let c = center.proj.ww * uniform.viewport_size.zw;
 
     // cull against frustum x/y axes
     if (any((abs(center.proj.xy) - vec2f(max(l1, l2)) * c) > center.proj.ww)) {
@@ -68,9 +80,45 @@ fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCen
     let v1 = l1 * diagonalVector;
     let v2 = l2 * vec2f(diagonalVector.y, -diagonalVector.x); // Swizzle
 
-    corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) * c;
+    corner.offset = vec3f((f32(source.cornerUV.x) * v1 + f32(source.cornerUV.y) * v2) * c, 0.0);
     corner.uv = source.cornerUV;
 
     return true;
+}
+
+#if GSPLAT_2DGS
+// 2DGS: Compute oriented quad corner in model space
+fn initCorner2DGS(source: ptr<function, SplatSource>, rotation: vec4f, scale: vec3f, corner: ptr<function, SplatCorner>) {
+    // Scale by 3.0 for 3-sigma coverage
+    let localPos: vec2f = vec2f(source.cornerUV) * vec2f(scale.x, scale.y) * 3.0;
+
+    // Rotate the local position using the quaternion
+    let v: vec3f = vec3f(localPos, 0.0);
+    let t: vec3f = 2.0 * cross(rotation.xyz, v);
+    corner.offset = v + rotation.w * t + cross(rotation.xyz, t);
+    corner.uv = source.cornerUV;
+}
+#endif
+
+// calculate the clip-space offset from the center for this gaussian
+fn initCorner(source: ptr<function, SplatSource>, center: ptr<function, SplatCenter>, corner: ptr<function, SplatCorner>) -> bool {
+    // Get rotation and scale
+    var rotation: vec4f = getRotation().yzwx;  // Convert (w,x,y,z) to (x,y,z,w)
+    var scale: vec3f = getScale();
+
+    // Hook: modify rotation and scale
+    modifySplatRotationScale(center.modelCenterOriginal, center.modelCenterModified, &rotation, &scale);
+
+    #if GSPLAT_2DGS
+        initCorner2DGS(source, rotation, scale, corner);
+        return true;
+    #else
+        // 3DGS: Use covariance-based screen-space projection
+        var covA: vec3f;
+        var covB: vec3f;
+        computeCovariance(half4(rotation.wxyz), half3(scale), &covA, &covB);  // Convert back to (w,x,y,z)
+
+        return initCornerCov(source, center, corner, covA, covB);
+    #endif
 }
 `;

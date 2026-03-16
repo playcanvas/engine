@@ -16,6 +16,14 @@ import { Vec4 } from '../../core/math/vec4.js';
  */
 class ComponentSystem extends EventHandler {
     /**
+     * The id type of the ComponentSystem.
+     *
+     * @type {string}
+     * @readonly
+     */
+    id;
+
+    /**
      * Create a new ComponentSystem instance.
      *
      * @param {AppBase} app - The application managing this system.

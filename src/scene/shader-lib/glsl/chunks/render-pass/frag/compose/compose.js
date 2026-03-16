@@ -10,20 +10,19 @@ export default /* glsl */`
     #include "composeDofPS"
     #include "composeSsaoPS"
     #include "composeGradingPS"
+    #include "composeColorEnhancePS"
     #include "composeVignettePS"
     #include "composeFringingPS"
     #include "composeCasPS"
     #include "composeColorLutPS"
 
-    void main() {
-        vec2 uv = uv0;
+    #include "composeDeclarationsPS"
 
-        // TAA pass renders upside-down on WebGPU, flip it here
-        #ifdef TAA
-        #ifdef WEBGPU
-            uv.y = 1.0 - uv.y;
-        #endif
-        #endif
+    void main() {
+
+        #include "composeMainStartPS"
+
+        vec2 uv = uv0;
 
         vec4 scene = texture2DLod(sceneTexture, uv, 0.0);
         vec3 result = scene.rgb;
@@ -53,6 +52,11 @@ export default /* glsl */`
             result = applyBloom(result, uv0);
         #endif
 
+        // Apply Color Enhancement (shadows, highlights, vibrance)
+        #ifdef COLOR_ENHANCE
+            result = applyColorEnhance(result);
+        #endif
+
         // Apply Color Grading
         #ifdef GRADING
             result = applyGrading(result);
@@ -70,6 +74,8 @@ export default /* glsl */`
         #ifdef VIGNETTE
             result = applyVignette(result, uv);
         #endif
+
+        #include "composeMainEndPS"
 
         // Debug output handling in one centralized location
         #ifdef DEBUG_COMPOSE

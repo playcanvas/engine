@@ -48,7 +48,10 @@ export default /* wgsl */`
     // shadow casting
     #if defined(LIGHT{i}CASTSHADOW)
 
-        uniform light{i}_shadowMatrix: mat4x4f;
+        // shadowMatrix is not used for omni shadows
+        #if LIGHT{i}TYPE != OMNI
+            uniform light{i}_shadowMatrix: mat4x4f;
+        #endif
         uniform light{i}_shadowIntensity: f32;
         uniform light{i}_shadowParams: vec4f; // width, height, bias, radius
 

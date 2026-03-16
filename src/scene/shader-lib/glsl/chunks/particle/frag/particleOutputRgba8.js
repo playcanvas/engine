@@ -22,7 +22,7 @@ void writeOutput() {
 
     outVel = (outVel / maxVel) + vec3(0.5); // TODO: mul
 
-    float maxNegLife = max(lifetime, (numParticles - 1.0) * (rate+rateDiv));
+    float maxNegLife = max(lifetime, numParticles * (rate+rateDiv));
     float maxPosLife = lifetime+1.0;
     outLife = (outLife + maxNegLife) / (maxNegLife + maxPosLife);
 

@@ -35,7 +35,8 @@ class JobQueue {
                     callback(data.error, {
                         indices: data.indices,
                         vertices: data.vertices,
-                        attributes: data.attributes
+                        attributes: data.attributes,
+                        stride: data.stride
                     });
                 }
                 this.jobCallbacks.delete(data.jobId);

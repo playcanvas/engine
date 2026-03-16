@@ -7,13 +7,16 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
+import { Frustum } from '../../core/shape/frustum.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
+    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    BINDGROUP_MESH_UB
+    CULLFACE_NONE,
+    BINDGROUP_MESH_UB,
+    FRONTFACE_CCW,
+    FRONTFACE_CW
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -21,8 +24,7 @@ import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindGroupFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import {
-    VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
-    LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
+    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     EVENT_PRECULL, EVENT_POSTCULL, EVENT_CULL_END
 } from '../constants.js';
@@ -35,7 +37,7 @@ import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
-import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
+import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -46,6 +48,7 @@ import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Scene } from '../scene.js'
+ * @import { GSplatDirector } from '../gsplat-unified/gsplat-director.js'
  */
 
 let _skinUpdateIndex = 0;
@@ -54,6 +57,7 @@ const viewInvMat = new Mat4();
 const viewMat = new Mat4();
 const viewMat3 = new Mat3();
 const tempSphere = new BoundingSphere();
+const tempFrustum = new Frustum();
 const _flipYMat = new Mat4().setScale(1, -1, 1);
 const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
@@ -107,12 +111,15 @@ class Renderer {
     /** @type {boolean} */
     clustersDebugRendered = false;
 
+    /** @type {Scene} */
+    scene;
+
     /**
      * A set of visible mesh instances which need further processing before being rendered, e.g.
      * skinning or morphing. Extracted during culling.
      *
      * @type {Set<MeshInstance>}
-     * @private
+     * @protected
      */
     processingMeshInstances = new Set();
 
@@ -156,15 +163,21 @@ class Renderer {
     blueNoise = new BlueNoise(123);
 
     /**
+     * A gsplat director for unified splat rendering.
+     *
+     * @type {GSplatDirector|null}
+     */
+    gsplatDirector = null;
+
+    /**
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {Scene} scene - The scene.
      */
-    constructor(graphicsDevice) {
+    constructor(graphicsDevice, scene) {
         this.device = graphicsDevice;
-
-        /** @type {Scene|null} */
-        this.scene = null;
+        this.scene = scene;
 
         // TODO: allocate only when the scene has clustered lighting enabled
         this.worldClustersAllocator = new WorldClustersAllocator(graphicsDevice);
@@ -179,8 +192,10 @@ class Renderer {
         this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
 
         // clustered passes
-        this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
-            this._shadowRendererLocal, this.lightTextureAtlas);
+        if (this.scene.clusteredLightingEnabled) {
+            this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.shadowRenderer,
+                this._shadowRendererLocal, this.lightTextureAtlas);
+        }
 
         // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
@@ -202,6 +217,7 @@ class Renderer {
         this._numDrawCallsCulled = 0;
         this._camerasRendered = 0;
         this._lightClusters = 0;
+        this._gsplatCount = 0;
 
         // Uniforms
         const scope = graphicsDevice.scope;
@@ -219,10 +235,10 @@ class Renderer {
         this.viewProjId = scope.resolve('matrix_viewProjection');
         this.flipYId = scope.resolve('projectionFlipY');
         this.tbnBasis = scope.resolve('tbnBasis');
-        this.nearClipId = scope.resolve('camera_near');
-        this.farClipId = scope.resolve('camera_far');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
+        this.viewportSize = new Float32Array(4);
+        this.viewportSizeId = scope.resolve('viewport_size');
         this.viewIndexId = scope.resolve('view_index');
         this.viewIndexId.setValue(0);
 
@@ -236,8 +252,6 @@ class Renderer {
         this.opacityMapId = scope.resolve('texture_opacityMap');
 
         this.exposureId = scope.resolve('exposure');
-        this.twoSidedLightingNegScaleFactorId = scope.resolve('twoSidedLightingNegScaleFactor');
-        this.twoSidedLightingNegScaleFactorId.setValue(0);
 
         this.morphPositionTex = scope.resolve('morphPositionTex');
         this.morphNormalTex = scope.resolve('morphNormalTex');
@@ -256,11 +270,14 @@ class Renderer {
         this.shadowMapCache.destroy();
         this.shadowMapCache = null;
 
-        this._renderPassUpdateClustered.destroy();
+        this._renderPassUpdateClustered?.destroy();
         this._renderPassUpdateClustered = null;
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
+
+        this.gsplatDirector?.destroy();
+        this.gsplatDirector = null;
     }
 
     /**
@@ -303,10 +320,11 @@ class Renderer {
             const transform = camera._node?.parent?.getWorldTransform() || null;
             const views = camera.xr.views;
             viewList = views.list;
+
+            // update transforms for all views
             for (let v = 0; v < viewList.length; v++) {
                 const view = viewList[v];
                 view.updateTransforms(transform);
-                camera.frustum.setFromMat4(view.projViewOffMat);
             }
         } else {
 
@@ -406,18 +424,25 @@ class Renderer {
 
         this.tbnBasis.setValue(flipY ? -1 : 1);
 
-        // Near and far clip values
-        const n = camera._nearClip;
-        const f = camera._farClip;
-        this.nearClipId.setValue(n);
-        this.farClipId.setValue(f);
-
         // camera params
-        this.cameraParams[0] = 1 / f;
-        this.cameraParams[1] = f;
-        this.cameraParams[2] = n;
-        this.cameraParams[3] = camera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
-        this.cameraParamsId.setValue(this.cameraParams);
+        this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
+
+        // viewport size
+        let viewportWidth = target ? target.width : this.device.width;
+        let viewportHeight = target ? target.height : this.device.height;
+        viewportWidth *= camera.rect.z;
+        viewportHeight *= camera.rect.w;
+
+        // adjust viewport for stereoscopic VR sessions
+        if (camera.xr?.active && camera.xr.views.list.length === 2) {
+            viewportWidth *= 0.5;
+        }
+
+        this.viewportSize[0] = viewportWidth;
+        this.viewportSize[1] = viewportHeight;
+        this.viewportSize[2] = 1 / viewportWidth;
+        this.viewportSize[3] = 1 / viewportHeight;
+        this.viewportSizeId.setValue(this.viewportSize);
 
         // exposure
         this.exposureId.setValue(this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure);
@@ -457,79 +482,44 @@ class Renderer {
         }
     }
 
-    // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-    // TODO: this function is only used from outside of forward renderer, and should be deprecated
-    // when the functionality moves to the render passes. Note that Editor uses it as well.
-    setCamera(camera, target, clear, renderAction = null) {
+    setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall) {
+        const material = drawCall.material;
+        const flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
 
-        this.setCameraUniforms(camera, target);
-        this.clearView(camera, target, clear, false);
-    }
-
-    // TODO: this is currently used by the lightmapper and the Editor,
-    // and will be removed when those call are removed.
-    clearView(camera, target, clear, forceWrite) {
-
-        const device = this.device;
-        DebugGraphics.pushGpuMarker(device, 'CLEAR-VIEW');
-
-        device.setRenderTarget(target);
-        device.updateBegin();
-
-        if (forceWrite) {
-            device.setColorWrite(true, true, true, true);
-            device.setDepthWrite(true);
+        let frontFace = material.frontFace;
+        if (flipFaces < 0) {
+            frontFace = frontFace === FRONTFACE_CCW ? FRONTFACE_CW : FRONTFACE_CCW;
         }
 
-        this.setupViewport(camera, target);
-
-        if (clear) {
-
-            // use camera clear options if any
-            const options = camera._clearOptions;
-            device.clear(options ? options : {
-                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-                depth: camera._clearDepth,
-                flags: (camera._clearColorBuffer ? CLEARFLAG_COLOR : 0) |
-                       (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
-                       (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
-                stencil: camera._clearStencil
-            });
-        }
-
-        DebugGraphics.popGpuMarker(device);
+        this.device.setCullMode(cullFaces ? material.cull : CULLFACE_NONE);
+        this.device.setFrontFace(frontFace);
     }
 
     setupCullMode(cullFaces, flipFactor, drawCall) {
-        const material = drawCall.material;
-        let mode = CULLFACE_NONE;
-        if (cullFaces) {
-            let flipFaces = 1;
-
-            if (material.cull === CULLFACE_FRONT || material.cull === CULLFACE_BACK) {
-                flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
-            }
-
-            if (flipFaces < 0) {
-                mode = material.cull === CULLFACE_FRONT ? CULLFACE_BACK : CULLFACE_FRONT;
-            } else {
-                mode = material.cull;
-            }
-        }
-        this.device.setCullMode(mode);
-
-        if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
-            this.twoSidedLightingNegScaleFactorId.setValue(drawCall.node.worldScaleSign);
-        }
+        Debug.deprecated('pc.Renderer.setupCullMode is deprecated. Use \'pc.Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
+        this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
     }
 
     updateCameraFrustum(camera) {
 
         if (camera.xr && camera.xr.views.list.length) {
-            // calculate frustum based on XR view
-            const view = camera.xr.views.list[0];
-            viewProjMat.mul2(view.projMat, view.viewOffMat);
+            // Calculate combined frustum from all XR views to avoid culling objects
+            // visible in any view (e.g. right edge of right eye in stereo rendering).
+            // This works because WebXR uses parallel projection for stereo views - both eyes
+            // look in the same direction with only a horizontal offset, so frustum plane
+            // normals are identical and we can merge by selecting outermost planes.
+            const views = camera.xr.views.list;
+
+            // first view establishes the base frustum
+            viewProjMat.mul2(views[0].projMat, views[0].viewOffMat);
             camera.frustum.setFromMat4(viewProjMat);
+
+            // for additional views, expand frustum to encompass all views
+            for (let v = 1; v < views.length; v++) {
+                viewProjMat.mul2(views[v].projMat, views[v].viewOffMat);
+                tempFrustum.setFromMat4(viewProjMat);
+                camera.frustum.add(tempFrustum);
+            }
             return;
         }
 
@@ -556,6 +546,9 @@ class Renderer {
 
         // Cull mode
         device.setCullMode(material.cull);
+
+        // Front face
+        device.setFrontFace(material.frontFace);
 
         // Alpha test
         if (material.opacityMap) {
@@ -721,6 +714,7 @@ class Renderer {
                 new UniformFormat('matrix_view3', UNIFORMTYPE_MAT3),
                 new UniformFormat('cubeMapRotationMatrix', UNIFORMTYPE_MAT3),
                 new UniformFormat('view_position', UNIFORMTYPE_VEC3),
+                new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
                 new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
@@ -730,14 +724,14 @@ class Renderer {
             if (isClustered) {
                 uniforms.push(...[
                     new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterTextureSize', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
+                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3),
                     new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
                     new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
-                    new UniformFormat('clusterSkip', UNIFORMTYPE_FLOAT)
+                    new UniformFormat('numClusteredLights', UNIFORMTYPE_INT),
+                    new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT)
                 ]);
             }
 

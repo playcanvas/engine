@@ -170,7 +170,10 @@ class RigidBodyComponent extends Component {
     /** @private */
     _simulationEnabled = false;
 
-    /** @private */
+    /**
+     * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
+     * @private
+     */
     _type = BODYTYPE_STATIC;
 
     /** @ignore */
@@ -546,7 +549,7 @@ class RigidBodyComponent extends Component {
      *
      * Defaults to {@link BODYTYPE_STATIC}.
      *
-     * @type {string}
+     * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
      */
     set type(type) {
         if (this._type !== type) {
@@ -579,7 +582,7 @@ class RigidBodyComponent extends Component {
     /**
      * Gets the rigid body type determines how the body is simulated.
      *
-     * @type {string}
+     * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
      */
     get type() {
         return this._type;

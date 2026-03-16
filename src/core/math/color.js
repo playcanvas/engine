@@ -85,6 +85,10 @@ class Color {
      * Returns a clone of the specified color.
      *
      * @returns {this} A duplicate color object.
+     * @example
+     * const c = new pc.Color(1, 0, 0, 1);
+     * const cClone = c.clone();
+     * // cClone is [1, 0, 0, 1]
      */
     clone() {
         /** @type {this} */
@@ -132,10 +136,14 @@ class Color {
      * Assign values to the color components, including alpha.
      *
      * @param {number} r - The value for red (0-1).
-     * @param {number} g - The value for blue (0-1).
-     * @param {number} b - The value for green (0-1).
+     * @param {number} g - The value for green (0-1).
+     * @param {number} b - The value for blue (0-1).
      * @param {number} [a] - The value for the alpha (0-1), defaults to 1.
      * @returns {Color} Self for chaining.
+     * @example
+     * const c = new pc.Color();
+     * c.set(1, 0, 0, 1);
+     * // c is now red [1, 0, 0, 1]
      */
     set(r, g, b, a = 1) {
         this.r = r;
@@ -179,6 +187,10 @@ class Color {
      * @param {Color} [src] - The color to convert to linear color space. If not set, the operation
      * is done in place.
      * @returns {Color} Self for chaining.
+     * @example
+     * const c = new pc.Color(0.5, 0.5, 0.5, 1);
+     * c.linear();
+     * // c is now approximately [0.218, 0.218, 0.218, 1]
      */
     linear(src = this) {
         this.r = Math.pow(src.r, 2.2);
@@ -194,6 +206,10 @@ class Color {
      * @param {Color} [src] - The color to convert to gamma color space. If not set, the operation is
      * done in place.
      * @returns {Color} Self for chaining.
+     * @example
+     * const c = new pc.Color(0.218, 0.218, 0.218, 1);
+     * c.gamma();
+     * // c is now approximately [0.5, 0.5, 0.5, 1]
      */
     gamma(src = this) {
         this.r = Math.pow(src.r, 1 / 2.2);
@@ -208,6 +224,10 @@ class Color {
      *
      * @param {number} scalar - The number to multiply by.
      * @returns {Color} Self for chaining.
+     * @example
+     * const c = new pc.Color(0.2, 0.4, 0.6, 1);
+     * c.mulScalar(2);
+     * // c is now [0.4, 0.8, 1.2, 1]
      */
     mulScalar(scalar) {
         this.r *= scalar;
@@ -223,6 +243,10 @@ class Color {
      * RR, GG, BB, AA are red, green, blue and alpha values. This is the same format used in
      * HTML/CSS.
      * @returns {Color} Self for chaining.
+     * @example
+     * const c = new pc.Color();
+     * c.fromString('#ff0000');
+     * // c is now [1, 0, 0, 1]
      */
     fromString(hex) {
         const i = parseInt(hex.replace('#', '0x'), 16);
@@ -240,9 +264,9 @@ class Color {
     }
 
     /**
-     * Set the values of the vector from an array.
+     * Set the values of the color from an array.
      *
-     * @param {number[]} arr - The array to set the vector values from.
+     * @param {number[]} arr - The array to set the color values from.
      * @param {number} [offset] - The zero-based index at which to start copying elements from the
      * array. Default is 0.
      * @returns {Color} Self for chaining.
@@ -270,7 +294,7 @@ class Color {
      * @returns {string} The color in string form.
      * @example
      * const c = new pc.Color(1, 1, 1);
-     * // Outputs #ffffffff
+     * // Outputs #ffffff
      * console.log(c.toString());
      */
     toString(alpha, asArray) {

@@ -9,6 +9,7 @@ import { RenderAction } from './render-action.js';
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../layer.js'
+ * @import { Camera } from '../camera.js'
  */
 
 /**
@@ -85,6 +86,14 @@ class LayerComposition extends EventHandler {
     cameras = [];
 
     /**
+     * A set of {@link Camera}s.
+     *
+     * @type {Set<Camera>}
+     * @ignore
+     */
+    camerasSet = new Set();
+
+    /**
      * The actual rendering sequence, generated based on layers and cameras
      *
      * @type {RenderAction[]}
@@ -146,16 +155,17 @@ class LayerComposition extends EventHandler {
 
             // walk the layers and build an array of unique cameras from all layers
             this.cameras.length = 0;
+            this.camerasSet.clear();
             for (let i = 0; i < len; i++) {
                 const layer = this.layerList[i];
                 layer._dirtyComposition = false;
 
                 // for all cameras in the layer
                 for (let j = 0; j < layer.cameras.length; j++) {
-                    const camera = layer.cameras[j];
-                    const index = this.cameras.indexOf(camera);
-                    if (index < 0) {
-                        this.cameras.push(camera);
+                    const cameraComponent = layer.cameras[j];
+                    if (!this.camerasSet.has(cameraComponent.camera)) {
+                        this.camerasSet.add(cameraComponent.camera);
+                        this.cameras.push(cameraComponent);
                     }
                 }
             }
@@ -176,9 +186,9 @@ class LayerComposition extends EventHandler {
                 const camera = this.cameras[i];
                 cameraLayers.length = 0;
 
-                // if the camera uses custom render passes, only add a dummy render action to mark
+                // if the camera defines frame passes, only add a dummy render action to mark
                 // the place where to add them during building of the frame graph
-                if (camera.camera.renderPasses.length > 0) {
+                if (camera.camera.framePasses.length > 0) {
                     this.addDummyRenderAction(renderActionCount, camera);
                     renderActionCount++;
                     continue;
@@ -332,7 +342,7 @@ class LayerComposition extends EventHandler {
                 continue;
             }
 
-            // end of stacking if camera with custom render passes
+            // end of stacking if camera with custom frame passes
             if (ra.useCameraPasses) {
                 break;
             }

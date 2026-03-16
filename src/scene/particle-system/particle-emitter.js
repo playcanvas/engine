@@ -581,7 +581,7 @@ class ParticleEmitter {
         gd.fragmentUniformsCount < 64 || // force CPU if can't use many uniforms; TODO: change to more realistic value (this one is iphone's)
         gd.forceCpuParticles;
 
-        this._destroyResources();
+        const wasVisible = this._destroyResources();
 
         this.pack8 = (this.pack8 || !gd.textureFloatRenderable) && !this.useCpu;
 
@@ -711,7 +711,6 @@ class ParticleEmitter {
 
         this.resetMaterial();
 
-        const wasVisible = this.meshInstance ? this.meshInstance.visible : true;
         this.meshInstance = new MeshInstance(mesh, this.material, this.node);
         this.meshInstance.pick = false;
         this.meshInstance.updateKey(); // shouldn't be here?
@@ -1194,16 +1193,19 @@ class ParticleEmitter {
         this.colorParam?.destroy();
         this.colorParam = null;
 
-        this.vertexBuffer?.destroy();
         this.vertexBuffer = undefined; // we are testing if vb is undefined in some code, no idea why
-
-        this.indexBuffer?.destroy();
         this.indexBuffer = undefined;
+
+        const wasVisible = this.meshInstance?.visible ?? true;
+        this.meshInstance?.destroy();
+        this.meshInstance = null;
 
         this.material?.destroy();
         this.material = null;
 
         // note: shaders should not be destroyed as they could be shared between emitters
+
+        return wasVisible;
     }
 
     destroy() {

@@ -337,6 +337,12 @@ class ImageElement {
         this._element.on('set:screen', this._onScreenChange, this);
         this._element.on('set:draworder', this._onDrawOrderChange, this);
         this._element.on('screen:set:resolution', this._onResolutionChange, this);
+
+        // If not being initialized (i.e., type changed after component was already enabled),
+        // we need to call onEnable to add the model to layers
+        if (!element._beingInitialized && element.enabled && element.entity.enabled) {
+            this.onEnable();
+        }
     }
 
     destroy() {

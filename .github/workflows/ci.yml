@@ -3,9 +3,9 @@ name: CI
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
@@ -20,132 +20,132 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-    - name: Setup Node.js 22.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'npm'
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      - name: Install dependencies
+        run: npm clean-install --progress=false --no-fund
 
-    - name: Build PlayCanvas
-      run: npm run build
+      - name: Build PlayCanvas
+        run: npm run build
 
-    - name: Run Publint
-      run: npm run publint
+      - name: Run Publint
+        run: npm run publint
 
   docs:
     name: Docs
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-    - name: Setup Node.js 18.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'npm'
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      - name: Install dependencies
+        run: npm clean-install --progress=false --no-fund
 
-    - name: Build API reference manual
-      run: npm run docs
+      - name: Build API reference manual
+        run: npm run docs
 
   lint:
     name: Lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-    - name: Setup Node.js 18.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'npm'
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      - name: Install dependencies
+        run: npm clean-install --progress=false --no-fund
 
-    - name: Run ESLint
-      run: npm run lint
+      - name: Run ESLint
+        run: npm run lint
 
-    - name: Run ESLint on examples
-      working-directory: ./examples
-      run: |
-        npm clean-install --progress=false --no-fund
-        npm run lint
+      - name: Run ESLint on examples
+        working-directory: ./examples
+        run: |
+          npm clean-install --progress=false --no-fund
+          npm run lint
 
   typescript-declarations:
     name: TypeScript Declarations
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-    - name: Setup Node.js 18.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'npm'
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      - name: Install dependencies
+        run: npm clean-install --progress=false --no-fund
 
-    - name: Build TypeScript declarations
-      run: npm run build:types
+      - name: Build TypeScript declarations
+        run: npm run build:types
 
-    - name: Compile TypeScript declarations
-      run: npm run test:types
+      - name: Compile TypeScript declarations
+        run: npm run test:types
 
   unit-test:
     name: Unit Test
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-    - name: Setup Node.js 18.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'npm'
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      - name: Install dependencies
+        run: npm clean-install --progress=false --no-fund
 
-    - name: Run unit tests
-      run: npm test
+      - name: Run unit tests
+        run: npm test
 
   build-examples:
     name: Build Examples Browser
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-    - name: Setup Node.js 18.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'npm'
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      - name: Install dependencies
+        run: npm clean-install --progress=false --no-fund
 
-    - name: Build Examples Browser
-      working-directory: ./examples
-      run: |
-        npm clean-install --progress=false --no-fund
-        npm run build
+      - name: Build Examples Browser
+        working-directory: ./examples
+        run: |
+          npm clean-install --progress=false --no-fund
+          npm run build

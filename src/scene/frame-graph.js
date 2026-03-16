@@ -1,18 +1,19 @@
 import { Debug } from '../core/debug.js';
 
 /**
+ * @import { FramePass } from '../platform/graphics/frame-pass.js'
  * @import { RenderPass } from '../platform/graphics/render-pass.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
  * @import { Texture } from '../platform/graphics/texture.js'
  */
 
 /**
- * A frame graph represents a single rendering frame as a sequence of render passes.
+ * A frame graph represents a single rendering frame as a sequence of frame passes.
  *
  * @ignore
  */
 class FrameGraph {
-    /** @type {RenderPass[]} */
+    /** @type {FramePass[]} */
     renderPasses = [];
 
     /**
@@ -23,9 +24,9 @@ class FrameGraph {
     renderTargetMap = new Map();
 
     /**
-     * Add a render pass to the frame.
+     * Add a frame pass to the frame.
      *
-     * @param {RenderPass} renderPass - The render pass to add.
+     * @param {FramePass} renderPass - The frame pass to add.
      */
     addRenderPass(renderPass) {
         Debug.assert(renderPass);
@@ -62,6 +63,9 @@ class FrameGraph {
         const renderPasses = this.renderPasses;
         for (let i = 0; i < renderPasses.length; i++) {
             const renderPass = renderPasses[i];
+            renderPass._skipStart = false;
+            renderPass._skipEnd = false;
+
             const renderTarget = renderPass.renderTarget;
 
             // if using a target, or null which represents the default back-buffer
@@ -133,7 +137,7 @@ class FrameGraph {
         // mipmaps being generated after each face.
         /** @type {Texture} */
         let lastCubeTexture = null;
-        /** @type {RenderPass} */
+        /** @type {RenderPass|null} */
         let lastCubeRenderPass = null;
         for (let i = 0; i < renderPasses.length; i++) {
             const renderPass = renderPasses[i];

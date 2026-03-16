@@ -20,7 +20,7 @@ fn getAlbedo() {
     #endif
 
     #ifdef STD_DIFFUSE_VERTEX
-        dAlbedo = dAlbedo * gammaCorrectInputVec3(saturate3(vVertexColor.{STD_DIFFUSE_VERTEX_CHANNEL}));
+        dAlbedo = dAlbedo * saturate3(vVertexColor.{STD_DIFFUSE_VERTEX_CHANNEL});
     #endif
 }
 `;

@@ -44,6 +44,8 @@ function SortWorker() {
     const update = () => {
         if (!order || !centers || centers.length === 0 || !cameraPosition || !cameraDirection) return;
 
+        const sortStartTime = performance.now();
+
         const px = cameraPosition.x;
         const py = cameraPosition.y;
         const pz = cameraPosition.z;
@@ -197,7 +199,8 @@ function SortWorker() {
         // send results
         myself.postMessage({
             order: order.buffer,
-            count
+            count,
+            sortTime: performance.now() - sortStartTime
         }, [order.buffer]);
 
         order = null;

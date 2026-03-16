@@ -1,5 +1,6 @@
 import { DOUBLE_TAP_THRESHOLD, DOUBLE_TAP_VARIANCE } from '../constants.js';
 import { InputSource } from '../input.js';
+import { movementState } from '../utils.js';
 import { VirtualJoystick } from './virtual-joystick.js';
 
 /**
@@ -29,6 +30,12 @@ const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length
  * @augments {InputSource<DualGestureSourceDeltas>}
  */
 class DualGestureSource extends InputSource {
+    /**
+     * @type {ReturnType<typeof movementState>}
+     * @private
+     */
+    _movementState = movementState();
+
     /**
      * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
      * @private
@@ -116,6 +123,7 @@ class DualGestureSource extends InputSource {
      */
     _onPointerDown(event) {
         const { pointerType, pointerId, clientX, clientY } = event;
+        this._movementState.down(event);
 
         if (pointerType !== 'touch') {
             return;
@@ -151,7 +159,8 @@ class DualGestureSource extends InputSource {
      * @private
      */
     _onPointerMove(event) {
-        const { pointerType, pointerId, target, clientX, clientY, movementX, movementY } = event;
+        const { pointerType, pointerId, target, clientX, clientY } = event;
+        const [movementX, movementY] = this._movementState.move(event);
 
         if (pointerType !== 'touch') {
             return;
@@ -188,6 +197,7 @@ class DualGestureSource extends InputSource {
      */
     _onPointerUp(event) {
         const { pointerType, pointerId } = event;
+        this._movementState.up(event);
 
         if (pointerType !== 'touch') {
             return;

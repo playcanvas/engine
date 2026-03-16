@@ -4,16 +4,15 @@
  * The options for swc(...) plugin.
  *
  * @param {boolean} isDebug - Whether the build is for debug.
- * @param {boolean} isUMD - Whether the build is for UMD.
  * @param {boolean} minify - Whether to minify.
  * @returns {SWCOptions} The swc options.
  */
-function swcOptions(isDebug, isUMD, minify) {
+function swcOptions(isDebug, minify) {
 
     return {
         minify,
         jsc: {
-            target: isUMD ? 'es5' : 'es2022',
+            target: 'es2020',
             minify: {
                 format: {
                     comments: !isDebug || minify ? 'some' : 'all'
