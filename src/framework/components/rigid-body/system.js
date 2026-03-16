@@ -795,18 +795,38 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 btShape = new Ammo.btBoxShape(ammoVec3);
                 destroyShape = true;
                 break;
-            case 'capsule':
-                btShape = createShape('Capsule', shape.axis, shape.radius ?? 0.5, shape.height ?? 1);
+            case 'capsule': {
+                const radius = shape.radius ?? 0.5;
+                const totalHeight = shape.height ?? 1;
+                const cylinderHeight = totalHeight - 2 * radius;
+
+                btShape = createShape('Capsule', shape.axis, radius, cylinderHeight);
                 destroyShape = true;
                 break;
+            }
             case 'cone':
                 btShape = createShape('Cone', shape.axis, shape.radius ?? 0.5, shape.height ?? 1);
                 destroyShape = true;
                 break;
-            case 'cylinder':
-                btShape = createShape('Cylinder', shape.axis, shape.radius ?? 0.5, shape.height ?? 1);
+            case 'cylinder': {
+                const radius = shape.radius ?? 0.5;
+                const height = shape.height ?? 1;
+                const axis = shape.axis ?? 1;
+
+                if (axis === 0) {
+                    ammoVec3.setValue(height * 0.5, radius, radius);
+                    btShape = new Ammo.btCylinderShapeX(ammoVec3);
+                } else if (axis === 2) {
+                    ammoVec3.setValue(radius, radius, height * 0.5);
+                    btShape = new Ammo.btCylinderShapeZ(ammoVec3);
+                } else {
+                    ammoVec3.setValue(radius, height * 0.5, radius);
+                    btShape = new Ammo.btCylinderShape(ammoVec3);
+                }
+
                 destroyShape = true;
                 break;
+            }
             case 'sphere':
                 btShape = new Ammo.btSphereShape(shape.radius ?? 0.5);
                 destroyShape = true;
