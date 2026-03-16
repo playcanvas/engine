@@ -6,6 +6,7 @@ import { GSplatInfo } from './gsplat-info.js';
 import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
 import { GSplatQuadRenderer } from './gsplat-quad-renderer.js';
+import { GSplatComputeGlobalRenderer } from './gsplat-compute-global-renderer.js';
 import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
 import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
@@ -31,6 +32,8 @@ import { BlockAllocator } from '../../core/block-allocator.js';
  * @import { MemBlock } from '../../core/block-allocator.js'
  * @import { GSplatRenderer } from './gsplat-renderer.js'
  */
+
+const USE_COMPUTE_RENDERER = false;
 
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
@@ -402,7 +405,11 @@ class GSplatManager {
         this._allocator = new BlockAllocator(budget > 0 ? Math.ceil(budget * allocatorGrowMultiplier) : 0, allocatorGrowMultiplier);
 
         this.workBuffer = new GSplatWorkBuffer(device, this.scene.gsplat.format);
-        this.renderer = new GSplatQuadRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
+        if (USE_COMPUTE_RENDERER && device.isWebGPU) {
+            this.renderer = new GSplatComputeGlobalRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
+        } else {
+            this.renderer = new GSplatQuadRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
+        }
         this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
 
         // Initialize sorting strategy based on current gpuSorting setting
@@ -1551,9 +1558,11 @@ class GSplatManager {
             this.refreshIndirectDraw();
         }
 
-        // renderer update and camera tracking
+        // renderer per-frame update (material syncing, deferred setup)
+        this.renderer.frameUpdate(this.scene.gsplat);
+
+        // camera tracking only after first sort
         if (sortedState?.sortedBefore) {
-            this.renderer.frameUpdate(this.scene.gsplat);
             this.updateColorCameraTracking();
         }
 
@@ -1711,7 +1720,8 @@ class GSplatManager {
             roundedNumBits,
             this.indirectDispatchSlot + 1,
             /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
-            /** @type {StorageBuffer} */ (compactedSplatIds)
+            /** @type {StorageBuffer} */ (compactedSplatIds),
+            true
         );
     }
 
