@@ -1056,6 +1056,7 @@ class RenderComponent extends Component {
     }
 
     /**
+     * @private
      * @param {MeshInstance} meshInstance - MeshInstance that needs to have skin instance cleared.
      */
     _clearSkinInstance(meshInstance) {

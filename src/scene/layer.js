@@ -612,6 +612,7 @@ class Layer {
     }
 
     /**
+     * @private
      * @param {MeshInstance} meshInstance - MeshInstance to add to layer's array and the set
      */
     _addInstanceToLayer(meshInstance) {
