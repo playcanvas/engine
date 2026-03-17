@@ -791,6 +791,23 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *     { findAll: true }
      * );
      * @example
+     * // Create a single sphere shape for both casting.
+     * const sphere = new Ammo.btSphereShape(0.5);
+     * 
+     * // Return all results of a sphere shape cast at position (0, 2, 0) and (0, -2, 0)
+     * const hits = [
+     *     ...this.app.systems.rigidbody.shapeCast(
+     *         sphere,
+     *         new Vec3(0, 2, 0),
+     *         { findAll: true }
+     *     ),
+     *     ...this.app.systems.rigidbody.shapeCast(
+     *         sphere,
+     *         new Vec3(0, 2, 0),
+     *         { findAll: true }
+     *     ),
+     * ];
+     * @example
      * // Return all results of a box shape cast at position (0, 2, 0)
      * // where hit entity is tagged with `bird` OR `mammal`
      * const hits = this.app.systems.rigidbody.shapeCast(
