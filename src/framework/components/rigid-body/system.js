@@ -793,7 +793,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @example
      * // Create a single sphere shape for both casting.
      * const sphere = new Ammo.btSphereShape(0.5);
-     * 
+     *
      * // Return all results of a sphere shape cast at position (0, 2, 0) and (0, -2, 0)
      * const hits = [
      *     ...this.app.systems.rigidbody.shapeCast(
