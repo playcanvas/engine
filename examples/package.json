@@ -41,7 +41,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-router-dom": "7.13.0",
-    "rollup": "4.58.0",
+    "rollup": "4.59.0",
     "serve": "14.2.5",
     "sharp": "0.34.5"
   },
