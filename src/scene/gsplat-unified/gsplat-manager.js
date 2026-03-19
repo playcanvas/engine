@@ -417,6 +417,7 @@ class GSplatManager {
         if (USE_LOCAL_COMPUTE_RENDERER && device.isWebGPU) {
             this.renderer = new GSplatComputeLocalRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
             this.useLocalRenderer = true;
+            this.useGpuSorting = true;
         } else if (USE_GLOBAL_COMPUTE_RENDERER && device.isWebGPU) {
             this.renderer = new GSplatComputeGlobalRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
             this.useLocalRenderer = false;

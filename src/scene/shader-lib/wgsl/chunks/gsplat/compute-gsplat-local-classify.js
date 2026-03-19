@@ -59,7 +59,8 @@ fn main(@builtin(local_invocation_index) localIdx: u32) {
     workgroupBarrier();
 
     // Thread 0 writes indirect dispatch args for passes 4a (small sort), 4b (bucket), 5 (rasterize).
-    // Uses 2D dispatch (x,y) to stay within maxComputeWorkgroupsPerDimension at high resolutions.
+    // Uses balanced 2D dispatch to stay within maxComputeWorkgroupsPerDimension with minimal waste:
+    // y = ceil(count / maxDim), x = ceil(count / y). Waste is at most y-1 workgroups (typically 0-1).
     if (localIdx == 0u) {
         let smallCount = atomicLoad(&tileListCounts[0]);
         let largeCount = atomicLoad(&tileListCounts[1]);
@@ -68,18 +69,24 @@ fn main(@builtin(local_invocation_index) localIdx: u32) {
         let maxDim = uniforms.maxWorkgroupsPerDim;
 
         // Slot 0: small tile sort — 1 workgroup per tile
-        indirectDispatchArgs[off + 0u] = min(smallCount, maxDim);
-        indirectDispatchArgs[off + 1u] = (smallCount + maxDim - 1u) / maxDim;
+        var sy = (smallCount + maxDim - 1u) / maxDim;
+        sy = max(sy, 1u);
+        indirectDispatchArgs[off + 0u] = (smallCount + sy - 1u) / sy;
+        indirectDispatchArgs[off + 1u] = sy;
         indirectDispatchArgs[off + 2u] = 1u;
 
         // Slot 1: bucket pre-sort — 1 workgroup per large tile
-        indirectDispatchArgs[off + 3u] = min(largeCount, maxDim);
-        indirectDispatchArgs[off + 4u] = (largeCount + maxDim - 1u) / maxDim;
+        var ly = (largeCount + maxDim - 1u) / maxDim;
+        ly = max(ly, 1u);
+        indirectDispatchArgs[off + 3u] = (largeCount + ly - 1u) / ly;
+        indirectDispatchArgs[off + 4u] = ly;
         indirectDispatchArgs[off + 5u] = 1u;
 
         // Slot 2: rasterize — 1 workgroup per non-empty tile
-        indirectDispatchArgs[off + 6u] = min(rasterizeCount, maxDim);
-        indirectDispatchArgs[off + 7u] = (rasterizeCount + maxDim - 1u) / maxDim;
+        var ry = (rasterizeCount + maxDim - 1u) / maxDim;
+        ry = max(ry, 1u);
+        indirectDispatchArgs[off + 6u] = (rasterizeCount + ry - 1u) / ry;
+        indirectDispatchArgs[off + 7u] = ry;
         indirectDispatchArgs[off + 8u] = 1u;
     }
 }

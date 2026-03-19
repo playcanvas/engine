@@ -20,8 +20,10 @@ struct Uniforms {
 fn main() {
     let count = min(totalChunks[0], uniforms.maxChunks);
     let maxDim = uniforms.maxWorkgroupsPerDim;
-    chunkSortIndirect[0] = min(count, maxDim);
-    chunkSortIndirect[1] = (count + maxDim - 1u) / maxDim;
+    var y = (count + maxDim - 1u) / maxDim;
+    y = max(y, 1u);
+    chunkSortIndirect[0] = (count + y - 1u) / y;
+    chunkSortIndirect[1] = y;
     chunkSortIndirect[2] = 1u;
 }
 `;

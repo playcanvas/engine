@@ -224,6 +224,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     _bucketSortBindGroupFormat;
 
     /** @type {BindGroupFormat} */
+    _copyBindGroupFormat;
+
+    /** @type {BindGroupFormat} */
     _chunkSortBindGroupFormat;
 
     /** @type {BindGroupFormat} */
@@ -553,6 +556,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this.bucketSortCompute.setParameter('largeTileList', this._largeTileListBuffer);
         this.bucketSortCompute.setParameter('chunkRanges', this._chunkRangesBuffer);
         this.bucketSortCompute.setParameter('totalChunks', this._totalChunksBuffer);
+        this.bucketSortCompute.setParameter('tileListCounts', this._tileListCountsBuffer);
         this.bucketSortCompute.setParameter('bufferCapacity', maxEntries);
         this.bucketSortCompute.setParameter('maxChunks', numTiles * MAX_CHUNKS_PER_TILE);
 
@@ -575,6 +579,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this.sortCompute.setParameter('tileSplatCounts', this._tileSplatCountsBuffer);
         this.sortCompute.setParameter('projCache', this._projCacheBuffer);
         this.sortCompute.setParameter('smallTileList', this._smallTileListBuffer);
+        this.sortCompute.setParameter('tileListCounts', this._tileListCountsBuffer);
 
         this.sortCompute.setupIndirectDispatch(indirectSlot);
         device.computeDispatch([this.sortCompute], 'GSplatLocalTileSort');
@@ -583,6 +588,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this.chunkSortCompute.setParameter('tileEntries', this._tileEntriesBuffer);
         this.chunkSortCompute.setParameter('projCache', this._projCacheBuffer);
         this.chunkSortCompute.setParameter('chunkRanges', this._chunkRangesBuffer);
+        this.chunkSortCompute.setParameter('totalChunks', this._totalChunksBuffer);
+        this.chunkSortCompute.setParameter('maxChunks', numTiles * MAX_CHUNKS_PER_TILE);
 
         this.chunkSortCompute.setupIndirectDispatch(0, this._chunkSortIndirectBuffer);
         device.computeDispatch([this.chunkSortCompute], 'GSplatLocalChunkSort');
@@ -593,6 +600,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this.rasterizeCompute.setParameter('tileSplatCounts', this._tileSplatCountsBuffer);
         this.rasterizeCompute.setParameter('projCache', this._projCacheBuffer);
         this.rasterizeCompute.setParameter('rasterizeTileList', this._rasterizeTileListBuffer);
+        this.rasterizeCompute.setParameter('tileListCounts', this._tileListCountsBuffer);
         this.rasterizeCompute.setParameter('screenWidth', width);
         this.rasterizeCompute.setParameter('screenHeight', height);
         this.rasterizeCompute.setParameter('numTilesX', numTilesX);
@@ -772,7 +780,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('smallTileList', SHADERSTAGE_COMPUTE, true)
+            new BindStorageBufferFormat('smallTileList', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true)
         ]);
 
         const shader = new Shader(device, {
@@ -803,6 +812,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new BindStorageBufferFormat('largeTileList', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('chunkRanges', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('totalChunks', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true),
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
         ]);
 
@@ -847,10 +857,16 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     _createChunkSortCompute() {
         const device = this.device;
 
+        const uniformBufferFormat = new UniformBufferFormat(device, [
+            new UniformFormat('maxChunks', UNIFORMTYPE_UINT)
+        ]);
+
         this._chunkSortBindGroupFormat = new BindGroupFormat(device, [
             new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('chunkRanges', SHADERSTAGE_COMPUTE, true)
+            new BindStorageBufferFormat('chunkRanges', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('totalChunks', SHADERSTAGE_COMPUTE, true),
+            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
         ]);
 
         const shader = new Shader(device, {
@@ -858,7 +874,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatLocalChunkSortSource,
             cincludes: this._createBitonicIncludes(),
-            computeBindGroupFormat: this._chunkSortBindGroupFormat
+            computeBindGroupFormat: this._chunkSortBindGroupFormat,
+            computeUniformBufferFormats: { uniforms: uniformBufferFormat }
         });
 
         this.chunkSortCompute = new Compute(device, shader, 'GSplatLocalChunkSort');
@@ -880,6 +897,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('rasterizeTileList', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true),
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
         ]);
 

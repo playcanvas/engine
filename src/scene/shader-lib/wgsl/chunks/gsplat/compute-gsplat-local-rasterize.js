@@ -15,13 +15,14 @@ const ALPHA_THRESHOLD: half = half(1.0) / half(255.0);
 @group(0) @binding(2) var<storage, read> tileSplatCounts: array<u32>;
 @group(0) @binding(3) var<storage, read> projCache: array<u32>;
 @group(0) @binding(4) var<storage, read> rasterizeTileList: array<u32>;
+@group(0) @binding(5) var<storage, read> tileListCounts: array<u32>;
 
 struct Uniforms {
     screenWidth: u32,
     screenHeight: u32,
     numTilesX: u32,
 }
-@group(0) @binding(5) var<uniform> uniforms: Uniforms;
+@group(0) @binding(6) var<uniform> uniforms: Uniforms;
 
 var<workgroup> sharedCenterScreen: array<vec2f, 64>;
 var<workgroup> sharedCoeffs: array<vec3f, 64>;
@@ -46,6 +47,9 @@ fn main(
     @builtin(num_workgroups) numWorkgroups: vec3u
 ) {
     let workgroupIdx = wid.y * numWorkgroups.x + wid.x;
+    if (workgroupIdx >= tileListCounts[2]) {
+        return;
+    }
     let tileIdx = rasterizeTileList[workgroupIdx];
     let tileX = tileIdx % uniforms.numTilesX;
     let tileY = tileIdx / uniforms.numTilesX;

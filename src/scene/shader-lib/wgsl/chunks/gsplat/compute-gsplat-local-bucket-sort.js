@@ -21,11 +21,13 @@ const CACHE_STRIDE: u32 = 8u;
 @group(0) @binding(5) var<storage, read_write> chunkRanges: array<u32>;
 @group(0) @binding(6) var<storage, read_write> totalChunks: array<atomic<u32>>;
 
+@group(0) @binding(7) var<storage, read> tileListCounts: array<u32>;
+
 struct Uniforms {
     bufferCapacity: u32,
     maxChunks: u32,
 }
-@group(0) @binding(7) var<uniform> uniforms: Uniforms;
+@group(0) @binding(8) var<uniform> uniforms: Uniforms;
 
 var<workgroup> sDepthMin: atomic<u32>;
 var<workgroup> sDepthMax: atomic<u32>;
@@ -40,6 +42,9 @@ fn main(
     @builtin(num_workgroups) numWorkgroups: vec3u
 ) {
     let largeTileIdx = wid.y * numWorkgroups.x + wid.x;
+    if (largeTileIdx >= tileListCounts[1]) {
+        return;
+    }
     let tileIdx = largeTileList[largeTileIdx];
     let tStart = tileSplatCounts[tileIdx];
     let tEnd = tileSplatCounts[tileIdx + 1u];
