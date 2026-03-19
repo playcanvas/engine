@@ -256,7 +256,7 @@ class GSplatOctreeInstance {
     /**
      * Destroys this octree instance and clears internal references.
      *
-     * @param {boolean} [skipRefCounting=false] - When true, skip decrementing file ref counts
+     * @param {boolean} [skipRefCounting] - When true, skip decrementing file ref counts
      * on the octree. Used when the caller handles ref counting externally via pendingReleases
      * (e.g. during world state updates where decrements must be deferred).
      */
