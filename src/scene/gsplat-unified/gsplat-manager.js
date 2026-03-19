@@ -760,12 +760,23 @@ class GSplatManager {
             if (this.octreeInstancesToDestroy.length) {
                 for (const inst of this.octreeInstancesToDestroy) {
 
-                    // collect file-release requests from octree instances
+                    // collect pending removedCandidates (files removed by LOD changes
+                    // but whose octree decRef hasn't been applied yet)
+                    if (inst.removedCandidates && inst.removedCandidates.size) {
+                        for (const fileIndex of inst.removedCandidates) {
+                            newState.pendingReleases.push([inst.octree, fileIndex]);
+                        }
+                        inst.removedCandidates.clear();
+                    }
+
+                    // collect file-release requests for files still in use
                     const toRelease = inst.getFileDecrements();
                     for (const fileIndex of toRelease) {
                         newState.pendingReleases.push([inst.octree, fileIndex]);
                     }
-                    inst.destroy();
+
+                    // skip ref counting in destroy — handled via pendingReleases above
+                    inst.destroy(true);
                 }
                 this.octreeInstancesToDestroy.length = 0;
             }
