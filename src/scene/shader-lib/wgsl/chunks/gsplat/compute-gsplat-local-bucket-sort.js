@@ -23,6 +23,7 @@ const CACHE_STRIDE: u32 = 8u;
 
 struct Uniforms {
     bufferCapacity: u32,
+    maxChunks: u32,
 }
 @group(0) @binding(7) var<uniform> uniforms: Uniforms;
 
@@ -119,30 +120,45 @@ fn main(
     workgroupBarrier();
 
     // --- Phase 5: Thread 0 greedy-packs whole buckets into chunks ---
+    // Buckets larger than MAX_CHUNK_SIZE are split into multiple pieces.
+    // Chunk emission is bounds-checked against maxChunks; excess chunks are dropped
+    // (those entries retain bucket-level ordering but skip the bitonic sort pass).
     if (localIdx == 0u) {
         var chunkStart: u32 = 0u;
         var currentSize: u32 = 0u;
+        let maxChunks = uniforms.maxChunks;
 
         for (var b: u32 = 0u; b < NUM_BUCKETS; b++) {
-            let bCount = sBucketOffsets[b + 1u] - sBucketOffsets[b];
-            if (bCount == 0u) {
+            var bRemaining = sBucketOffsets[b + 1u] - sBucketOffsets[b];
+            if (bRemaining == 0u) {
                 continue;
             }
 
-            if (currentSize + bCount > MAX_CHUNK_SIZE && currentSize > 0u) {
-                let cIdx = atomicAdd(&totalChunks[0], 1u);
-                chunkRanges[cIdx * 2u] = tStart + chunkStart;
-                chunkRanges[cIdx * 2u + 1u] = currentSize;
-                chunkStart += currentSize;
-                currentSize = 0u;
+            // Split oversized buckets into MAX_CHUNK_SIZE pieces
+            while (bRemaining > 0u) {
+                let space = MAX_CHUNK_SIZE - currentSize;
+                let take = min(bRemaining, space);
+                currentSize += take;
+                bRemaining -= take;
+
+                if (currentSize == MAX_CHUNK_SIZE) {
+                    let cIdx = atomicAdd(&totalChunks[0], 1u);
+                    if (cIdx < maxChunks) {
+                        chunkRanges[cIdx * 2u] = tStart + chunkStart;
+                        chunkRanges[cIdx * 2u + 1u] = currentSize;
+                    }
+                    chunkStart += currentSize;
+                    currentSize = 0u;
+                }
             }
-            currentSize += bCount;
         }
 
         if (currentSize > 0u) {
             let cIdx = atomicAdd(&totalChunks[0], 1u);
-            chunkRanges[cIdx * 2u] = tStart + chunkStart;
-            chunkRanges[cIdx * 2u + 1u] = currentSize;
+            if (cIdx < maxChunks) {
+                chunkRanges[cIdx * 2u] = tStart + chunkStart;
+                chunkRanges[cIdx * 2u + 1u] = currentSize;
+            }
         }
     }
 }

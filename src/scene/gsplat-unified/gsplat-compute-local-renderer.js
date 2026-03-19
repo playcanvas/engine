@@ -51,7 +51,8 @@ const TILE_SIZE = 16;
 const INITIAL_TILE_ENTRY_MULTIPLIER = 1.5;
 const COUNT_WORKGROUP_SIZE = 256;
 const CACHE_STRIDE = 8;
-const MAX_CHUNKS_PER_TILE = 2;
+// Budget for chunkRanges buffer; excess chunks from bucket sort are silently dropped.
+const MAX_CHUNKS_PER_TILE = 8;
 const _viewProjMat = new Mat4();
 const _viewProjData = new Float32Array(16);
 const _viewData = new Float32Array(16);
@@ -84,6 +85,10 @@ const _dispatchSize = new Vec2();
  * The tileEntries buffer is unified: main tile entry lists occupy [0, totalEntries), overflow
  * scratch for bucket sort occupies [totalEntries, totalEntries + overflowUsed). The buffer
  * capacity adapts dynamically via async GPU readback of actual usage (high-water mark).
+ *
+ * Note: the chunkRanges buffer is sized for MAX_CHUNKS_PER_TILE chunks per tile. The bucket
+ * sort splits oversized buckets into MAX_CHUNK_SIZE (4096) pieces and bounds-checks against
+ * this budget; excess chunks are silently dropped (those entries keep bucket-level ordering).
  *
  * The result is composited into the scene via a full-screen quad with premultiplied blending.
  *
@@ -452,9 +457,10 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const numTilesX = Math.ceil(width / TILE_SIZE);
         const numTilesY = Math.ceil(height / TILE_SIZE);
         const numTiles = numTilesX * numTilesY;
-        const maxEntries = this._allocatedEntryCapacity;
 
         this._ensureBuffers(numSplats, numTiles);
+
+        const maxEntries = this._allocatedEntryCapacity;
 
         const wb = this.workBuffer;
         const camera = this.cameraNode.camera;
@@ -499,8 +505,6 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this.prefixSumKernel.dispatch(device);
 
         // --- Pass 3: Scatter splat cache indices into per-tile entries ---
-        // DEBUG ONLY: clear to detect stale entries from count/scatter divergence (not required)
-        this._tileEntriesBuffer.clear();
         this._tileWriteCursorsBuffer.clear();
 
         this.scatterCompute.setParameter('projCache', this._projCacheBuffer);
@@ -535,6 +539,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this.classifyCompute.setParameter('numTiles', numTiles);
         this.classifyCompute.setParameter('dispatchSlotOffset', indirectSlot * 3);
         this.classifyCompute.setParameter('bufferCapacity', maxEntries);
+        this.classifyCompute.setParameter('maxWorkgroupsPerDim', device.limits.maxComputeWorkgroupsPerDimension || 65535);
 
         this.classifyCompute.setupDispatch(1, 1, 1);
         device.computeDispatch([this.classifyCompute], 'GSplatLocalClassify');
@@ -549,6 +554,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this.bucketSortCompute.setParameter('chunkRanges', this._chunkRangesBuffer);
         this.bucketSortCompute.setParameter('totalChunks', this._totalChunksBuffer);
         this.bucketSortCompute.setParameter('bufferCapacity', maxEntries);
+        this.bucketSortCompute.setParameter('maxChunks', numTiles * MAX_CHUNKS_PER_TILE);
 
         this.bucketSortCompute.setupIndirectDispatch(indirectSlot + 1);
         device.computeDispatch([this.bucketSortCompute], 'GSplatLocalBucketSort');
@@ -558,6 +564,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         // (tileEntries, totalChunks, chunkRanges) are visible before the chunk sort.
         this.copyCompute.setParameter('totalChunks', this._totalChunksBuffer);
         this.copyCompute.setParameter('chunkSortIndirect', this._chunkSortIndirectBuffer);
+        this.copyCompute.setParameter('maxChunks', numTiles * MAX_CHUNKS_PER_TILE);
+        this.copyCompute.setParameter('maxWorkgroupsPerDim', device.limits.maxComputeWorkgroupsPerDimension || 65535);
 
         this.copyCompute.setupDispatch(1, 1, 1);
         device.computeDispatch([this.copyCompute], 'GSplatLocalCopy');
@@ -730,7 +738,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const uniformBufferFormat = new UniformBufferFormat(device, [
             new UniformFormat('numTiles', UNIFORMTYPE_UINT),
             new UniformFormat('dispatchSlotOffset', UNIFORMTYPE_UINT),
-            new UniformFormat('bufferCapacity', UNIFORMTYPE_UINT)
+            new UniformFormat('bufferCapacity', UNIFORMTYPE_UINT),
+            new UniformFormat('maxWorkgroupsPerDim', UNIFORMTYPE_UINT)
         ]);
 
         this._classifyBindGroupFormat = new BindGroupFormat(device, [
@@ -782,7 +791,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const device = this.device;
 
         const uniformBufferFormat = new UniformBufferFormat(device, [
-            new UniformFormat('bufferCapacity', UNIFORMTYPE_UINT)
+            new UniformFormat('bufferCapacity', UNIFORMTYPE_UINT),
+            new UniformFormat('maxChunks', UNIFORMTYPE_UINT)
         ]);
 
         this._bucketSortBindGroupFormat = new BindGroupFormat(device, [
@@ -811,16 +821,23 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     _createCopyCompute() {
         const device = this.device;
 
+        const uniformBufferFormat = new UniformBufferFormat(device, [
+            new UniformFormat('maxChunks', UNIFORMTYPE_UINT),
+            new UniformFormat('maxWorkgroupsPerDim', UNIFORMTYPE_UINT)
+        ]);
+
         this._copyBindGroupFormat = new BindGroupFormat(device, [
             new BindStorageBufferFormat('totalChunks', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('chunkSortIndirect', SHADERSTAGE_COMPUTE)
+            new BindStorageBufferFormat('chunkSortIndirect', SHADERSTAGE_COMPUTE),
+            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
         ]);
 
         const shader = new Shader(device, {
             name: 'GSplatLocalCopy',
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatLocalCopySource,
-            computeBindGroupFormat: this._copyBindGroupFormat
+            computeBindGroupFormat: this._copyBindGroupFormat,
+            computeUniformBufferFormats: { uniforms: uniformBufferFormat }
         });
 
         this.copyCompute = new Compute(device, shader, 'GSplatLocalCopy');
