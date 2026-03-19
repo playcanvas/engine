@@ -223,8 +223,8 @@ class Compute {
         if (count <= maxDimension) {
             return result.set(count, 1);
         }
-        const x = Math.floor(Math.sqrt(count));
-        return result.set(x, Math.ceil(count / x));
+        const y = Math.ceil(count / maxDimension);
+        return result.set(Math.ceil(count / y), y);
     }
 }
 
