@@ -88,11 +88,22 @@ class ComputeRadixSort {
     _workgroupCount = 0;
 
     /**
-     * Allocated workgroup capacity (only grows, never shrinks).
+     * Allocated workgroup capacity. Tracks the last allocated size; reallocation is triggered
+     * when the effective workgroup count (derived from element count and capacity) differs.
      *
      * @type {number}
      */
     _allocatedWorkgroupCount = 0;
+
+    /**
+     * Minimum element capacity for internal buffers. When set, `_allocateBuffers` uses
+     * `max(elementCount, capacity)` as the effective size. The caller can lower this value
+     * to request shrinkage; actual reallocation is deferred to the next sort call.
+     * After allocation, this is updated to reflect the effective element count.
+     *
+     * @type {number}
+     */
+    capacity = 0;
 
     /**
      * Current number of bits for which passes are created.
@@ -407,10 +418,10 @@ class ComputeRadixSort {
      * @private
      */
     _allocateBuffers(elementCount, numBits, indirect, hasInitialValues, skipLastPassKeyWrite) {
-        const workgroupCount = Math.ceil(elementCount / ELEMENTS_PER_WORKGROUP);
+        const effectiveCount = Math.max(elementCount, this.capacity);
+        const workgroupCount = Math.ceil(effectiveCount / ELEMENTS_PER_WORKGROUP);
 
-        // Only reallocate buffers if we need MORE capacity (grow-only policy)
-        const buffersNeedRealloc = workgroupCount > this._allocatedWorkgroupCount || !this._keys0;
+        const buffersNeedRealloc = workgroupCount !== this._allocatedWorkgroupCount || !this._keys0;
 
         // Recreate passes when numBits, indirect mode, initial-values mode, or key-write mode changes
         const passesNeedRecreate = numBits !== this._numBits || indirect !== this._indirect ||
@@ -423,8 +434,9 @@ class ComputeRadixSort {
 
             // Store the new capacity
             this._allocatedWorkgroupCount = workgroupCount;
+            this.capacity = effectiveCount;
 
-            const elementSize = elementCount * 4;
+            const elementSize = effectiveCount * 4;
             const blockSumSize = BUCKET_COUNT * workgroupCount * 4;
 
             // Create ping-pong buffers for keys and values

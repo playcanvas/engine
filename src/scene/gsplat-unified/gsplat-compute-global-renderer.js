@@ -6,6 +6,7 @@ import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
+    BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC,
     CULLFACE_NONE,
     FILTER_NEAREST,
     PIXELFORMAT_RGBA8,
@@ -13,7 +14,6 @@ import {
     SEMANTIC_POSITION,
     SHADERLANGUAGE_WGSL,
     SHADERSTAGE_COMPUTE,
-    BUFFERUSAGE_COPY_DST,
     UNIFORMTYPE_FLOAT,
     UNIFORMTYPE_MAT4,
     UNIFORMTYPE_UINT
@@ -43,10 +43,9 @@ import { computeGsplatTileRangesSource } from '../shader-lib/wgsl/chunks/gsplat/
  */
 
 const TILE_SIZE = 16;
-// Multiplier for entry buffer allocation: maxEntries = numSplats * TILE_OVERLAP_FACTOR.
-// Must be large enough to cover the average number of tiles each splat overlaps; if too low,
-// distant/large splats that span many tiles will be silently dropped.
-const TILE_OVERLAP_FACTOR = 4;
+// Starting multiplier for tile entry buffers. The actual multiplier grows dynamically
+// based on async GPU readback of real usage (high-water mark tracking).
+const INITIAL_TILE_ENTRY_MULTIPLIER = 1.5;
 const COUNT_WORKGROUP_SIZE = 256;
 const SORT_ELEMENTS_PER_WORKGROUP = RADIX_SORT_ELEMENTS_PER_WORKGROUP;
 const _viewProjMat = new Mat4();
@@ -76,6 +75,9 @@ const _dispatchSize = new Vec2();
  *   7. Rasterize: one workgroup per tile iterates its entry range, evaluates each Gaussian from
  *      the projection cache, and blends front-to-back into an output texture using premultiplied
  *      alpha. Threads exit early once their pixel's transmittance drops below a threshold.
+ *
+ * The tileKeys and tileSplatIds buffer capacity adapts dynamically via async GPU readback of
+ * the actual total entry count from the prefix sum (high-water mark tracking).
  *
  * The result is composited into the scene via a full-screen quad with premultiplied blending.
  *
@@ -148,11 +150,22 @@ class GSplatComputeGlobalRenderer extends GSplatRenderer {
     /** @type {number} */
     _allocatedSplatCapacity = 0;
 
-    /** @type {number} */
-    _allocatedMaxEntries = 0;
+    /** @type {number} Allocated capacity (in u32 entries) of tileKeys/tileSplatIds buffers */
+    _allocatedEntryCapacity = 0;
 
     /** @type {number} */
     _allocatedTileCapacity = 0;
+
+    /**
+     * Dynamic multiplier: capacity = numSplats * _tileEntryMultiplier.
+     * Grows automatically via async GPU readback when the buffer is too small.
+     *
+     * @type {number}
+     */
+    _tileEntryMultiplier = INITIAL_TILE_ENTRY_MULTIPLIER;
+
+    /** @type {boolean} */
+    _readbackPending = false;
 
     /** @type {BindGroupFormat} */
     _countBindGroupFormat;
@@ -317,18 +330,25 @@ class GSplatComputeGlobalRenderer extends GSplatRenderer {
             this._splatTileCountsBuffer?.destroy();
             this._projCacheBuffer?.destroy();
             this._allocatedSplatCapacity = requiredSplatSlots;
-            this._splatTileCountsBuffer = new StorageBuffer(this.device, requiredSplatSlots * 4, BUFFERUSAGE_COPY_DST);
+            // COPY_SRC needed for async readback of totalEntries at splatTileCounts[numSplats]
+            this._splatTileCountsBuffer = new StorageBuffer(this.device, requiredSplatSlots * 4, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
             this._projCacheBuffer = new StorageBuffer(this.device, numSplats * CACHE_STRIDE * 4);
             this.prefixSumKernel.destroyPasses();
         }
 
-        const requiredMaxEntries = numSplats * TILE_OVERLAP_FACTOR;
-        if (requiredMaxEntries > this._allocatedMaxEntries) {
+        // Capacity adapts dynamically via _tileEntryMultiplier (async GPU readback).
+        // Grow immediately; shrink only when overallocated by >2x (dead zone prevents thrashing).
+        const requiredEntryCapacity = Math.ceil(numSplats * this._tileEntryMultiplier);
+        const needsGrow = requiredEntryCapacity > this._allocatedEntryCapacity;
+        const needsShrink = this._allocatedEntryCapacity > 0 &&
+            requiredEntryCapacity * 2 < this._allocatedEntryCapacity;
+        if (needsGrow || needsShrink) {
             this._tileKeysBuffer?.destroy();
             this._tileSplatIdsBuffer?.destroy();
-            this._allocatedMaxEntries = requiredMaxEntries;
-            this._tileKeysBuffer = new StorageBuffer(this.device, requiredMaxEntries * 4);
-            this._tileSplatIdsBuffer = new StorageBuffer(this.device, requiredMaxEntries * 4);
+            this._allocatedEntryCapacity = requiredEntryCapacity;
+            this._tileKeysBuffer = new StorageBuffer(this.device, requiredEntryCapacity * 4);
+            this._tileSplatIdsBuffer = new StorageBuffer(this.device, requiredEntryCapacity * 4);
+            this.radixSort.capacity = requiredEntryCapacity;
         }
     }
 
@@ -342,9 +362,10 @@ class GSplatComputeGlobalRenderer extends GSplatRenderer {
         const numTilesX = Math.ceil(width / TILE_SIZE);
         const numTilesY = Math.ceil(height / TILE_SIZE);
         const numTiles = numTilesX * numTilesY;
-        const maxEntries = numSplats * TILE_OVERLAP_FACTOR;
 
         this._ensureBuffers(numSplats);
+
+        const maxEntries = this._allocatedEntryCapacity;
 
         if (numTiles > this._allocatedTileCapacity) {
             this._tileRangesBuffer?.destroy();
@@ -462,6 +483,35 @@ class GSplatComputeGlobalRenderer extends GSplatRenderer {
 
         this.rasterizeCompute.setupDispatch(numTilesX, numTilesY, 1);
         this.device.computeDispatch([this.rasterizeCompute], 'GSplatTileRasterize');
+
+        // Async readback: check if the buffer was large enough, grow multiplier if not.
+        this._scheduleReadback(numSplats);
+    }
+
+    /**
+     * Schedule async GPU readback of the total entry count from the prefix sum.
+     * Updates _tileEntryMultiplier to track actual usage, allowing both growth and shrinkage.
+     *
+     * @param {number} numSplats - Splat count at dispatch time (for computing new multiplier).
+     * @private
+     */
+    _scheduleReadback(numSplats) {
+        if (this._readbackPending || numSplats === 0) return;
+        this._readbackPending = true;
+
+        const capturedNumSplats = numSplats;
+
+        // splatTileCounts[numSplats] = totalEntries (prefix sum total, 4 bytes at offset numSplats*4)
+        this._splatTileCountsBuffer.read(numSplats * 4, 4).then((data) => {
+            this._readbackPending = false;
+            const totalEntries = new Uint32Array(data.buffer, data.byteOffset, 1)[0];
+
+            if (capturedNumSplats > 0) {
+                this._tileEntryMultiplier = Math.max((totalEntries / capturedNumSplats) * 1.1, INITIAL_TILE_ENTRY_MULTIPLIER);
+            }
+        }).catch(() => {
+            this._readbackPending = false;
+        });
     }
 
     /** @private */
