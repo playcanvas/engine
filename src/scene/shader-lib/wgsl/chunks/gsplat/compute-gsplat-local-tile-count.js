@@ -75,7 +75,6 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
 
     let tC = textureLoad(dataColor, uv, 0).x;
     let rgb = decodeColor(tC);
-    let colorHalf = vec4<f16>(half(rgb.x), half(rgb.y), half(rgb.z), half(opacity));
 
     let base = threadIdx * CACHE_STRIDE;
     projCache[base + 0u] = bitcast<u32>(proj.screen.x);
@@ -83,8 +82,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     projCache[base + 2u] = bitcast<u32>(coeffX);
     projCache[base + 3u] = bitcast<u32>(coeffY);
     projCache[base + 4u] = bitcast<u32>(coeffXY);
-    projCache[base + 5u] = pack2x16float(vec2f(f32(colorHalf.r), f32(colorHalf.g)));
-    projCache[base + 6u] = pack2x16float(vec2f(f32(colorHalf.b), f32(colorHalf.a)));
+    projCache[base + 5u] = pack2x16float(vec2f(rgb.x, rgb.y));
+    projCache[base + 6u] = pack2x16float(vec2f(rgb.z, opacity));
 
     let viewDepth = -(uniforms.viewMatrix * vec4f(worldCenter, 1.0)).z;
     projCache[base + 7u] = bitcast<u32>(viewDepth);
