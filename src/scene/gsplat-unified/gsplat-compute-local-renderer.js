@@ -7,21 +7,16 @@ import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, Bin
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
     BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC, BUFFERUSAGE_INDIRECT,
-    CULLFACE_NONE,
     FILTER_NEAREST,
     PIXELFORMAT_RGBA8,
     SAMPLETYPE_UINT,
-    SEMANTIC_POSITION,
     SHADERLANGUAGE_WGSL,
     SHADERSTAGE_COMPUTE,
     UNIFORMTYPE_FLOAT,
     UNIFORMTYPE_MAT4,
     UNIFORMTYPE_UINT
 } from '../../platform/graphics/constants.js';
-import { BLEND_PREMULTIPLIED, GSPLAT_FORWARD } from '../constants.js';
-import { ShaderMaterial } from '../materials/shader-material.js';
-import { MeshInstance } from '../mesh-instance.js';
-import { Mesh } from '../mesh.js';
+import { GSPLAT_FORWARD } from '../constants.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
 import { FramePassGSplatComputeLocal } from './frame-pass-gsplat-compute-local.js';
@@ -37,6 +32,7 @@ import { computeGsplatLocalCopySource } from '../shader-lib/wgsl/chunks/gsplat/c
 import { computeGsplatLocalBitonicSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-bitonic.js';
 import { computeGsplatCommonSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-common.js';
 import { computeGsplatTileIntersectSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-tile-intersect.js';
+import { GSplatTileComposite } from './gsplat-tile-composite.js';
 
 /**
  * @import { GraphNode } from '../graph-node.js'
@@ -128,11 +124,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     /** @type {FramePassGSplatComputeLocal} */
     framePass;
 
-    /** @type {ShaderMaterial} */
-    _material;
-
-    /** @type {MeshInstance} */
-    meshInstance;
+    /** @type {GSplatTileComposite} */
+    tileComposite;
 
     /** @type {boolean} */
     _needsFramePassRegister = false;
@@ -264,8 +257,12 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._createChunkSortCompute();
         this._createRasterizeCompute();
         this.framePass = new FramePassGSplatComputeLocal(this);
-        this._createCompositeMaterial();
-        this.meshInstance = this._createMeshInstance();
+
+        const thisCamera = cameraNode.camera;
+        this.tileComposite = new GSplatTileComposite(device, node, (camera) => {
+            const renderMode = this.renderMode ?? 0;
+            return thisCamera.camera === camera && (renderMode & GSPLAT_FORWARD) !== 0;
+        });
     }
 
     destroy() {
@@ -273,7 +270,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         if (this.renderMode) {
             if (this.renderMode & GSPLAT_FORWARD) {
-                this.layer.removeMeshInstances([this.meshInstance], true);
+                this.layer.removeMeshInstances([this.tileComposite.meshInstance], true);
             }
         }
 
@@ -309,14 +306,13 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._chunkSortIndirectBuffer?.destroy();
 
         this.outputTexture.destroy();
-        this._material.destroy();
-        this.meshInstance.destroy();
+        this.tileComposite.destroy();
 
         super.destroy();
     }
 
     get material() {
-        return this._material;
+        return this.tileComposite.material;
     }
 
     setRenderMode(renderMode) {
@@ -325,12 +321,12 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const isForward = (renderMode & GSPLAT_FORWARD) !== 0;
 
         if (!wasForward && isForward) {
-            this.layer.addMeshInstances([this.meshInstance], true);
+            this.layer.addMeshInstances([this.tileComposite.meshInstance], true);
             this._registerFramePass();
         }
 
         if (wasForward && !isForward) {
-            this.layer.removeMeshInstances([this.meshInstance], true);
+            this.layer.removeMeshInstances([this.tileComposite.meshInstance], true);
             this._unregisterFramePass();
         }
 
@@ -532,6 +528,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         // Reserve 3 indirect dispatch slots: 0=smallSort, 1=bucketSort, 2=rasterize
         const indirectSlot = device.getIndirectDispatchSlot(3);
 
+        // Reserve 1 indirect draw slot for the tile-based composite
+        const drawSlot = device.getIndirectDrawSlot(1);
+
         this.classifyCompute.setParameter('tileSplatCounts', this._tileSplatCountsBuffer);
         this.classifyCompute.setParameter('smallTileList', this._smallTileListBuffer);
         this.classifyCompute.setParameter('largeTileList', this._largeTileListBuffer);
@@ -539,10 +538,12 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this.classifyCompute.setParameter('tileListCounts', this._tileListCountsBuffer);
         this.classifyCompute.setParameter('indirectDispatchArgs', device.indirectDispatchBuffer);
         this.classifyCompute.setParameter('largeTileOverflowBases', this._largeTileOverflowBasesBuffer);
+        this.classifyCompute.setParameter('indirectDrawArgs', device.indirectDrawBuffer);
         this.classifyCompute.setParameter('numTiles', numTiles);
         this.classifyCompute.setParameter('dispatchSlotOffset', indirectSlot * 3);
         this.classifyCompute.setParameter('bufferCapacity', maxEntries);
         this.classifyCompute.setParameter('maxWorkgroupsPerDim', device.limits.maxComputeWorkgroupsPerDimension || 65535);
+        this.classifyCompute.setParameter('drawSlot', drawSlot);
 
         this.classifyCompute.setupDispatch(1, 1, 1);
         device.computeDispatch([this.classifyCompute], 'GSplatLocalClassify');
@@ -607,6 +608,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         this.rasterizeCompute.setupIndirectDispatch(indirectSlot + 2);
         device.computeDispatch([this.rasterizeCompute], 'GSplatLocalRasterize');
+
+        // Update tile composite for indirect draw
+        this.tileComposite.update(drawSlot, this.outputTexture, this._rasterizeTileListBuffer, numTilesX, width, height);
 
         // Async readback: check if the buffer was large enough, grow multiplier if not.
         // Reads totalEntries (from prefix sum) and totalOverflowUsed (from classify).
@@ -747,7 +751,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new UniformFormat('numTiles', UNIFORMTYPE_UINT),
             new UniformFormat('dispatchSlotOffset', UNIFORMTYPE_UINT),
             new UniformFormat('bufferCapacity', UNIFORMTYPE_UINT),
-            new UniformFormat('maxWorkgroupsPerDim', UNIFORMTYPE_UINT)
+            new UniformFormat('maxWorkgroupsPerDim', UNIFORMTYPE_UINT),
+            new UniformFormat('drawSlot', UNIFORMTYPE_UINT)
         ]);
 
         this._classifyBindGroupFormat = new BindGroupFormat(device, [
@@ -758,7 +763,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('indirectDispatchArgs', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('largeTileOverflowBases', SHADERSTAGE_COMPUTE),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
+            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('indirectDrawArgs', SHADERSTAGE_COMPUTE)
         ]);
 
         const shader = new Shader(device, {
@@ -910,56 +916,6 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         });
 
         this.rasterizeCompute = new Compute(device, shader, 'GSplatLocalRasterize');
-    }
-
-    /** @private */
-    _createCompositeMaterial() {
-        this._material = new ShaderMaterial({
-            uniqueName: 'GSplatLocalComputeComposite',
-            vertexGLSL: '#include "fullscreenQuadVS"',
-            fragmentGLSL: '#include "outputTex2DPS"',
-            vertexWGSL: '#include "fullscreenQuadVS"',
-            fragmentWGSL: '#include "outputTex2DPS"',
-            attributes: {
-                vertex_position: SEMANTIC_POSITION
-            }
-        });
-
-        this._material.setParameter('source', this.outputTexture);
-        this._material.blendType = BLEND_PREMULTIPLIED;
-        this._material.cull = CULLFACE_NONE;
-        this._material.depthWrite = false;
-        this._material.update();
-    }
-
-    /**
-     * @returns {MeshInstance} The compositing mesh instance.
-     * @private
-     */
-    _createMeshInstance() {
-        const mesh = new Mesh(this.device);
-        mesh.setPositions(new Float32Array([
-            -1, -1,
-            1, -1,
-            1, 1,
-            -1, 1
-        ]), 2);
-        mesh.setIndices(new Uint32Array([0, 1, 2, 0, 2, 3]));
-        mesh.update();
-
-        const meshInstance = new MeshInstance(mesh, this._material);
-        meshInstance.node = this.node;
-
-        const thisCamera = this.cameraNode.camera;
-        meshInstance.isVisibleFunc = (camera) => {
-            const renderMode = this.renderMode ?? 0;
-            if (thisCamera.camera === camera && (renderMode & GSPLAT_FORWARD)) {
-                return true;
-            }
-            return false;
-        };
-
-        return meshInstance;
     }
 }
 

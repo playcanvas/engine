@@ -1,9 +1,15 @@
 // Tile classification: scans prefix-summed tile counts, builds small/large/rasterize
-// tile lists, and writes indirect dispatch args for subsequent passes.
+// tile lists, writes indirect dispatch args for subsequent passes, and writes indirect
+// draw args for the tile-based composite.
 // For large tiles (>4096 entries), assigns compact overflow scratch offsets within
 // the shared tileEntries buffer (overflow region starts at totalEntries).
 // Single workgroup (256 threads) — each thread processes ceil(numTiles/256) tiles.
+
+import indirectCoreCS from '../common/comp/indirect-core.js';
+
 export const computeGsplatLocalClassifySource = /* wgsl */`
+
+${indirectCoreCS}
 
 const MAX_TILE_ENTRIES: u32 = 4096u;
 const CLASSIFY_WORKGROUP: u32 = 256u;
@@ -15,12 +21,14 @@ const CLASSIFY_WORKGROUP: u32 = 256u;
 @group(0) @binding(4) var<storage, read_write> tileListCounts: array<atomic<u32>>;
 @group(0) @binding(5) var<storage, read_write> indirectDispatchArgs: array<u32>;
 @group(0) @binding(6) var<storage, read_write> largeTileOverflowBases: array<u32>;
+@group(0) @binding(8) var<storage, read_write> indirectDrawArgs: array<DrawIndirectArgs>;
 
 struct Uniforms {
     numTiles: u32,
     dispatchSlotOffset: u32,
     bufferCapacity: u32,
     maxWorkgroupsPerDim: u32,
+    drawSlot: u32,
 }
 @group(0) @binding(7) var<uniform> uniforms: Uniforms;
 
@@ -88,6 +96,9 @@ fn main(@builtin(local_invocation_index) localIdx: u32) {
         indirectDispatchArgs[off + 6u] = (rasterizeCount + ry - 1u) / ry;
         indirectDispatchArgs[off + 7u] = ry;
         indirectDispatchArgs[off + 8u] = 1u;
+
+        // Indirect draw args for tile-based composite: 6 vertices per tile quad
+        indirectDrawArgs[uniforms.drawSlot] = DrawIndirectArgs(rasterizeCount * 6u, 1u, 0u, 0u, 0u);
     }
 }
 `;
