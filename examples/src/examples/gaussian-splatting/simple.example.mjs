@@ -42,9 +42,44 @@ const presets = [
     }
 ];
 
-// --- UI controls at bottom ---
+// --- UI wrapper at bottom ---
+const uiWrapper = document.createElement('div');
+uiWrapper.style.cssText = 'position:absolute;bottom:40px;left:50%;transform:translateX(-50%);z-index:100;display:flex;flex-direction:column;align-items:center;gap:6px;';
+
+// --- Top row: drop zone + scale slider ---
+const topRow = document.createElement('div');
+topRow.style.cssText = 'background:rgba(0,0,0,0.6);padding:8px 16px;border-radius:6px;display:flex;align-items:center;gap:14px;font:13px sans-serif;color:#fff;';
+
+const dropZone = document.createElement('div');
+dropZone.style.cssText = 'border:2px dashed rgba(255,255,255,0.5);border-radius:4px;padding:4px 12px;cursor:pointer;white-space:nowrap;';
+dropZone.textContent = 'Drop .ply / .sog file';
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = '#fff';
+    dropZone.style.background = 'rgba(255,255,255,0.15)';
+});
+dropZone.addEventListener('dragleave', () => {
+    dropZone.style.borderColor = 'rgba(255,255,255,0.5)';
+    dropZone.style.background = 'transparent';
+});
+topRow.appendChild(dropZone);
+
+const scaleLabel = document.createElement('span');
+scaleLabel.textContent = 'Scale: 1.00';
+const scaleSlider = document.createElement('input');
+scaleSlider.type = 'range';
+scaleSlider.min = '1';
+scaleSlider.max = '500';
+scaleSlider.value = '100';
+scaleSlider.style.width = '150px';
+topRow.appendChild(scaleLabel);
+topRow.appendChild(scaleSlider);
+
+uiWrapper.appendChild(topRow);
+
+// --- Bottom row: preset selector, falloff, depth alpha ---
 const controlsContainer = document.createElement('div');
-controlsContainer.style.cssText = 'position:absolute;bottom:40px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(0,0,0,0.6);padding:8px 16px;border-radius:6px;display:flex;align-items:center;gap:14px;font:13px sans-serif;color:#fff;';
+controlsContainer.style.cssText = 'background:rgba(0,0,0,0.6);padding:8px 16px;border-radius:6px;display:flex;align-items:center;gap:14px;font:13px sans-serif;color:#fff;';
 
 const dropdown = document.createElement('select');
 dropdown.style.cssText = 'font:13px sans-serif;padding:2px 6px;border-radius:4px;';
@@ -77,10 +112,11 @@ depthAlphaSlider.style.width = '150px';
 controlsContainer.appendChild(depthAlphaLabel);
 controlsContainer.appendChild(depthAlphaSlider);
 
-document.body.appendChild(controlsContainer);
+uiWrapper.appendChild(controlsContainer);
+document.body.appendChild(uiWrapper);
 
 for (const evt of ['mousedown', 'mousemove', 'mouseup', 'pointerdown', 'pointermove', 'pointerup', 'touchstart', 'touchmove', 'touchend']) {
-    controlsContainer.addEventListener(evt, e => e.stopPropagation());
+    uiWrapper.addEventListener(evt, e => e.stopPropagation());
 }
 
 // Resolve pass: reads two MRT textures (accumulation + log transmittance) and computes WBOIT output.
@@ -323,8 +359,14 @@ assetListLoader.load(() => {
         setupDone.clear();
     }
 
+    let userScale = 1.0;
+
     function loadPreset(preset) {
         destroySplatEntities();
+
+        userScale = 1.0;
+        scaleSlider.value = '100';
+        scaleLabel.textContent = 'Scale: 1.00';
 
         const da = preset.depthAlpha ?? 0.3;
         depthAlphaSlider.value = String(Math.round(da * 100));
@@ -344,12 +386,22 @@ assetListLoader.load(() => {
                 const xOffset = count > 1 ? (i - (count - 1) / 2) * 1.0 : 0;
                 entity.setLocalPosition(xOffset, -0.5, 0);
                 entity.setLocalEulerAngles(180, 90, 0);
-                const s = model.scale;
+                entity._baseScale = model.scale;
+                const s = model.scale * userScale;
                 entity.setLocalScale(s, s, s);
                 app.root.addChild(entity);
                 splatEntities.push(entity);
             });
         });
+    }
+
+    function applyScale(scale) {
+        userScale = scale;
+        for (const entity of splatEntities) {
+            const base = entity._baseScale ?? 1.0;
+            const s = base * userScale;
+            entity.setLocalScale(s, s, s);
+        }
     }
 
     function applyFalloff(val) {
@@ -379,7 +431,82 @@ assetListLoader.load(() => {
     });
 
     dropdown.addEventListener('change', () => {
-        loadPreset(presets[dropdown.selectedIndex]);
+        const preset = presets[dropdown.selectedIndex];
+        if (!preset) return;
+        const customOpt = dropdown.querySelector('[data-custom]');
+        if (customOpt) customOpt.remove();
+        dropZone.textContent = 'Drop .ply / .sog file';
+        loadPreset(preset);
+    });
+
+    scaleSlider.addEventListener('input', () => {
+        const val = parseFloat(scaleSlider.value) / 100;
+        scaleLabel.textContent = `Scale: ${val.toFixed(2)}`;
+        applyScale(val);
+    });
+
+    dropZone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'rgba(255,255,255,0.5)';
+        dropZone.style.background = 'transparent';
+
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+
+        const fileName = file.name.toLowerCase();
+        if (!fileName.endsWith('.ply') && !fileName.endsWith('.sog')) {
+            dropZone.textContent = 'Only .ply / .sog files';
+            setTimeout(() => {
+                dropZone.textContent = 'Drop .ply / .sog file';
+            }, 2000);
+            return;
+        }
+
+        destroySplatEntities();
+        dropZone.textContent = `Loading ${file.name}...`;
+
+        const blobUrl = URL.createObjectURL(file);
+        try {
+            const asset = await new Promise((resolve, reject) => {
+                app.assets.loadFromUrlAndFilename(blobUrl, file.name, 'gsplat', (err, loadedAsset) => {
+                    if (err) reject(err);
+                    else resolve(loadedAsset);
+                });
+            });
+
+            const entity = new pc.Entity(file.name);
+            entity.addComponent('gsplat', {
+                asset: asset,
+                unified: false,
+                oir: true
+            });
+            entity.setLocalPosition(0, -0.5, 0);
+            entity.setLocalEulerAngles(180, 90, 0);
+            entity._baseScale = 1.0;
+            const s = userScale;
+            entity.setLocalScale(s, s, s);
+            app.root.addChild(entity);
+            splatEntities.push(entity);
+
+            // Add "Custom" option to dropdown and select it
+            let customOpt = dropdown.querySelector('[data-custom]');
+            if (!customOpt) {
+                customOpt = document.createElement('option');
+                customOpt.setAttribute('data-custom', '1');
+                dropdown.appendChild(customOpt);
+            }
+            customOpt.textContent = file.name;
+            dropdown.value = customOpt.value;
+            customOpt.selected = true;
+
+            dropZone.textContent = file.name;
+        } catch (err) {
+            console.error('Failed to load file:', err);
+            dropZone.textContent = 'Load failed';
+            setTimeout(() => {
+                dropZone.textContent = 'Drop .ply / .sog file';
+            }, 2000);
+        }
     });
 
     app.on('prerender', () => {
