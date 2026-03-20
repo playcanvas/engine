@@ -51,6 +51,7 @@ class SideBar extends TypedComponent {
     state = {
         defaultCategories: getDefaultExampleFiles(),
         filteredCategories: null,
+        filterText: '',
         observer: new Observer({ largeThumbnails: false }),
         // @ts-ignore
         collapsed: localStorage.getItem('sideBarCollapsed') === 'true' || window.top.innerWidth < MIN_DESKTOP_WIDTH,
@@ -147,6 +148,7 @@ class SideBar extends TypedComponent {
      * @param {string} filter - The filter string.
      */
     onChangeFilter(filter) {
+        this.mergeState({ filterText: filter });
         const { defaultCategories } = this.state;
         // Turn a filter like 'mes dec' (for mesh decals) into 'mes.*dec', because the examples
         // show "MESH DECALS" but internally it's just "MeshDecals".
@@ -184,6 +186,13 @@ class SideBar extends TypedComponent {
         this.mergeState({ filteredCategories: updatedCategories });
     }
 
+    clearFilter() {
+        const input = document.querySelector('.filter-input input');
+        if (input) {
+            /** @type {HTMLInputElement} */ (input).value = '';
+        }
+        this.onChangeFilter('');
+    }
 
     /**
      * @param {import("react").MouseEvent<HTMLAnchorElement, MouseEvent>} e - The event.
@@ -278,12 +287,24 @@ class SideBar extends TypedComponent {
             Panel,
             // @ts-ignore
             panelOptions,
-            jsx(TextInput, {
-                class: 'filter-input',
-                keyChange: true,
-                placeholder: 'Filter...',
-                onChange: this.onChangeFilter.bind(this)
-            }),
+            jsx(
+                Container,
+                { class: ['filter-container', this.state.filterText ? 'has-filter-text' : null] },
+                jsx(TextInput, {
+                    class: 'filter-input',
+                    keyChange: true,
+                    placeholder: 'Filter...',
+                    onChange: this.onChangeFilter.bind(this)
+                }),
+                this.state.filterText ? jsx(
+                    'div',
+                    {
+                        className: 'filter-clear',
+                        onClick: this.clearFilter.bind(this)
+                    },
+                    '\u2715'
+                ) : null
+            ),
             jsx(
                 LabelGroup,
                 { text: 'Large thumbnails:' },
