@@ -472,9 +472,36 @@ body {
     display: block;
 }
 
-.filter-input {
+.filter-container {
+    position: relative !important;
     margin: 8px 8px 0px 8px !important;
     width: calc(100% - 16px);
+}
+
+.filter-container .filter-input {
+    margin: 0 !important;
+    width: 100%;
+}
+
+.filter-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #888;
+    font-size: 12px;
+    line-height: 1;
+    z-index: 1;
+    user-select: none;
+}
+
+.filter-clear:hover {
+    color: #fff;
+}
+
+.has-filter-text .pcui-input-element[placeholder]::after {
+    display: none;
 }
 
 ::-webkit-scrollbar {
