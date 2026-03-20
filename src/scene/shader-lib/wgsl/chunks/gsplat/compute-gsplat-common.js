@@ -72,7 +72,8 @@ fn computeSplatCov(
     nearClip: f32,
     farClip: f32,
     opacity: f32,
-    minPixelSize: f32
+    minPixelSize: f32,
+    isOrtho: u32
 ) -> SplatCov2D {
     var result: SplatCov2D;
     result.valid = false;
@@ -107,9 +108,11 @@ fn computeSplatCov(
         vec3f(covA.z, covB.y, covB.z)
     );
 
-    let clampedZ = min(viewCenter.z, -nearClip);
-    let J1 = focal / clampedZ;
-    let J2 = -J1 / clampedZ * viewCenter.xy;
+    let ortho = isOrtho == 1u;
+    let v = select(viewCenter.xyz, vec3f(0.0, 0.0, 1.0), ortho);
+    let vz = select(min(v.z, -nearClip), v.z, ortho);
+    let J1 = focal / vz;
+    let J2 = -J1 / vz * v.xy;
     let J = mat3x3f(
         vec3f(J1, 0.0, J2.x),
         vec3f(0.0, J1, J2.y),

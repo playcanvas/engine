@@ -27,6 +27,7 @@ struct Uniforms {
     nearClip: f32,
     farClip: f32,
     minPixelSize: f32,
+    isOrtho: u32,
 }
 @group(0) @binding(7) var<uniform> uniforms: Uniforms;
 
@@ -59,7 +60,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
         worldCenter, rotation, scale,
         uniforms.viewMatrix, uniforms.viewProj,
         uniforms.focal, uniforms.viewportWidth, uniforms.viewportHeight,
-        uniforms.nearClip, uniforms.farClip, opacity, uniforms.minPixelSize
+        uniforms.nearClip, uniforms.farClip, opacity, uniforms.minPixelSize,
+        uniforms.isOrtho
     );
 
     if (!proj.valid) {
