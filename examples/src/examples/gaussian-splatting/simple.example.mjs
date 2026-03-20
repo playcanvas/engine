@@ -113,6 +113,21 @@ controlsContainer.appendChild(depthAlphaLabel);
 controlsContainer.appendChild(depthAlphaSlider);
 
 uiWrapper.appendChild(controlsContainer);
+
+// --- Third row: linear weights checkbox ---
+const optionsRow = document.createElement('div');
+optionsRow.style.cssText = 'background:rgba(0,0,0,0.6);padding:8px 16px;border-radius:6px;display:flex;align-items:center;gap:14px;font:13px sans-serif;color:#fff;';
+
+const linearLabel = document.createElement('label');
+linearLabel.style.cssText = 'display:flex;align-items:center;gap:6px;cursor:pointer;';
+const linearCheckbox = document.createElement('input');
+linearCheckbox.type = 'checkbox';
+linearCheckbox.checked = false;
+linearLabel.appendChild(linearCheckbox);
+linearLabel.appendChild(document.createTextNode('Linear weights'));
+optionsRow.appendChild(linearLabel);
+
+uiWrapper.appendChild(optionsRow);
 document.body.appendChild(uiWrapper);
 
 for (const evt of ['mousedown', 'mousemove', 'mouseup', 'pointerdown', 'pointermove', 'pointerup', 'touchstart', 'touchmove', 'touchend']) {
@@ -418,6 +433,13 @@ assetListLoader.load(() => {
         }
     }
 
+    function applyLinearWeights(enabled) {
+        for (const entity of splatEntities) {
+            const inst = entity.gsplat?.instance;
+            if (inst) inst.material.setParameter('oirLinear', enabled ? 1.0 : 0.0);
+        }
+    }
+
     slider.addEventListener('input', () => {
         const val = parseFloat(slider.value);
         sliderLabel.textContent = `Falloff: ${val}`;
@@ -428,6 +450,10 @@ assetListLoader.load(() => {
         const val = parseFloat(depthAlphaSlider.value) / 100;
         depthAlphaLabel.textContent = `Depth Alpha: ${val.toFixed(2)}`;
         applyDepthAlpha(val);
+    });
+
+    linearCheckbox.addEventListener('change', () => {
+        applyLinearWeights(linearCheckbox.checked);
     });
 
     dropdown.addEventListener('change', () => {
@@ -518,6 +544,7 @@ assetListLoader.load(() => {
             depthLayer.addMeshInstances([instance.depthMeshInstance]);
             instance.material.setParameter('oirDepthRange', depthRangeTexture);
             instance.material.setParameter('oirFalloff', parseFloat(slider.value));
+            instance.material.setParameter('oirLinear', linearCheckbox.checked ? 1.0 : 0.0);
             instance.depthMeshInstance.material.setParameter('alphaClip', parseFloat(depthAlphaSlider.value) / 100);
             setupDone.add(entity);
         }

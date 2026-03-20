@@ -22,6 +22,7 @@ export default /* glsl */`
 #ifdef GSPLAT_OIR
     uniform sampler2D oirDepthRange;
     uniform float oirFalloff;
+    uniform float oirLinear;
 #endif
 
 varying mediump vec2 gaussianUV;
@@ -92,10 +93,16 @@ void main(void) {
 
         float a = alpha;
         float dMin = texelFetch(oirDepthRange, ivec2(gl_FragCoord.xy), 0).r;
-        float w = exp(-oirFalloff * max(oirDepth - dMin, 0.0));
+        float dd = max(oirDepth - dMin, 0.0);
+        float w, wt;
+        if (oirLinear > 0.5) {
+            w = max(0.0, 1.0 - oirFalloff * dd);
+            wt = max(0.0, 1.0 - oirFalloff * 0.1 * dd);
+        } else {
+            w = exp(-oirFalloff * dd);
+            wt = exp(-oirFalloff * 0.1 * dd);
+        }
         vec3 color = gaussianColor.xyz;
-
-        float wt = exp(-oirFalloff * 0.1 * max(oirDepth - dMin, 0.0));
         gl_FragColor = vec4(color * a * w, a * w);
         pcFragColor1 = vec4(log(max(1.0 - a * wt, 1e-5)), 0.0, 0.0, 0.0);
 

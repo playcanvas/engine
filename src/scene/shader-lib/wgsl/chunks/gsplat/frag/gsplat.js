@@ -22,6 +22,7 @@ export default /* wgsl */`
 #ifdef GSPLAT_OIR
     var oirDepthRange: texture_2d<f32>;
     uniform oirFalloff: f32;
+    uniform oirLinear: f32;
 #endif
 
 const EXP4: half = exp(half(-4.0));
@@ -100,10 +101,17 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         let a: f32 = f32(alpha);
         let dMin: f32 = textureLoad(oirDepthRange, vec2i(input.position.xy), 0).r;
-        let w: f32 = exp(-uniform.oirFalloff * max(oirDepth - dMin, 0.0));
+        let dd: f32 = max(oirDepth - dMin, 0.0);
+        var w: f32;
+        var wt: f32;
+        if (uniform.oirLinear > 0.5) {
+            w = max(0.0, 1.0 - uniform.oirFalloff * dd);
+            wt = max(0.0, 1.0 - uniform.oirFalloff * 0.1 * dd);
+        } else {
+            w = exp(-uniform.oirFalloff * dd);
+            wt = exp(-uniform.oirFalloff * 0.1 * dd);
+        }
         let color: vec3f = vec3f(gaussianColor.xyz);
-
-        let wt: f32 = exp(-uniform.oirFalloff * 0.1 * max(oirDepth - dMin, 0.0));
         output.color = vec4f(color * a * w, a * w);
         output.color1 = vec4f(log(max(1.0 - a * wt, 1e-5)), 0.0, 0.0, 0.0);
 
