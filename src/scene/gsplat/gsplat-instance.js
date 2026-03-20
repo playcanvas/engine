@@ -1,7 +1,8 @@
 import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { BUFFERUSAGE_COPY_DST, CULLFACE_NONE, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
+import { BLENDEQUATION_MIN, BLENDMODE_ONE, BUFFERUSAGE_COPY_DST, CULLFACE_NONE, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatResolveSH } from './gsplat-resolve-sh.js';
@@ -9,7 +10,7 @@ import { GSplatSorter } from './gsplat-sorter.js';
 import { GSplatSogData } from './gsplat-sog-data.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
-import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
+import { BLEND_NONE, BLEND_ADDITIVE, BLEND_PREMULTIPLIED } from '../constants.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -40,6 +41,15 @@ class GSplatInstance {
 
     options = {};
 
+    /** @type {boolean} */
+    oir = false;
+
+    /** @type {ShaderMaterial|null} */
+    _depthMaterial = null;
+
+    /** @type {MeshInstance|null} */
+    depthMeshInstance = null;
+
     /** @type {GSplatSorter|null} */
     sorter = null;
 
@@ -64,9 +74,11 @@ class GSplatInstance {
      * @param {ShaderMaterial|null} [options.material] - The material instance.
      * @param {boolean} [options.highQualitySH] - Whether to use the high quality or the approximate spherical harmonic calculation. Only applies to SOG data.
      * @param {import('../scene.js').Scene} [options.scene] - The scene to fire sort timing events on.
+     * @param {boolean} [options.oir] - Whether to use order-independent rendering mode.
      */
     constructor(resource, options = {}) {
         this.resource = resource;
+        this.oir = options.oir ?? false;
 
         const device = resource.device;
         const dims = resource.streams.textureDimensions;
@@ -74,21 +86,25 @@ class GSplatInstance {
 
         const numSplats = dims.x * dims.y;
 
-        // create order target: StorageBuffer on WebGPU, Texture on WebGL
-        if (device.isWebGPU) {
-            this.orderBuffer = new StorageBuffer(device, numSplats * 4, BUFFERUSAGE_COPY_DST);
-        } else {
-            this.orderTexture = resource.streams.createTexture(
-                'splatOrder',
-                PIXELFORMAT_R32U,
-                dims
-            );
+        if (!this.oir) {
+            // create order target: StorageBuffer on WebGPU, Texture on WebGL
+            if (device.isWebGPU) {
+                this.orderBuffer = new StorageBuffer(device, numSplats * 4, BUFFERUSAGE_COPY_DST);
+            } else {
+                this.orderTexture = resource.streams.createTexture(
+                    'splatOrder',
+                    PIXELFORMAT_R32U,
+                    dims
+                );
+            }
         }
 
         if (options.material) {
             this._material = options.material;
             this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', String(GSplatResourceBase.instanceSize));
-            this.setMaterialOrderData(this._material);
+            if (!this.oir) {
+                this.setMaterialOrderData(this._material);
+            }
         } else {
             this._material = new ShaderMaterial({
                 uniqueName: 'SplatMaterial',
@@ -110,15 +126,51 @@ class GSplatInstance {
         this.meshInstance.setInstancing(true, true);
         this.meshInstance.gsplatInstance = this;
 
-        // only start rendering the splat after we've received the splat order data
-        this.meshInstance.instancingCount = 0;
+        if (this.oir) {
+            const instancingCount = Math.ceil(numSplats / GSplatResourceBase.instanceSize);
 
-        const centers = resource.centers.slice();
-        const chunks = resource.chunks?.slice();
+            this.meshInstance.instancingCount = instancingCount;
+            this.material.setParameter('numSplats', numSplats);
 
-        const orderTarget = this.orderBuffer ?? this.orderTexture;
-        this.sorter = new GSplatSorter(device, options.scene);
-        this.sorter.init(orderTarget, numSplats, centers, chunks);
+            // depth prepass material: renders oirDepth with MIN blending
+            this._depthMaterial = new ShaderMaterial({
+                uniqueName: 'SplatDepthMaterial',
+                vertexGLSL: '#include "gsplatVS"',
+                fragmentGLSL: '#include "gsplatPS"',
+                vertexWGSL: '#include "gsplatVS"',
+                fragmentWGSL: '#include "gsplatPS"',
+                attributes: {
+                    vertex_position: SEMANTIC_POSITION
+                }
+            });
+
+            this.resource.configureMaterial(this._depthMaterial, null, this.resource.format.getInputDeclarations());
+            this._depthMaterial.setDefine('{GSPLAT_INSTANCE_SIZE}', GSplatResourceBase.instanceSize);
+            this._depthMaterial.setParameter('numSplats', numSplats);
+            this._depthMaterial.setParameter('alphaClip', 0.3);
+            this._depthMaterial.setParameter('minPixelSize', 2.0);
+            this._depthMaterial.setDefine('DITHER_NONE', '');
+            this._depthMaterial.setDefine('GSPLAT_OIR_DEPTH', '');
+            this._depthMaterial.cull = CULLFACE_NONE;
+            this._depthMaterial.depthWrite = false;
+            this._depthMaterial.blendState = new BlendState(true, BLENDEQUATION_MIN, BLENDMODE_ONE, BLENDMODE_ONE);
+            this._depthMaterial.update();
+
+            this.depthMeshInstance = new MeshInstance(/** @type {Mesh} */ (resource.mesh), this._depthMaterial);
+            this.depthMeshInstance.setInstancing(true, true);
+            this.depthMeshInstance.gsplatInstance = this;
+            this.depthMeshInstance.instancingCount = instancingCount;
+        } else {
+            // only start rendering the splat after we've received the splat order data
+            this.meshInstance.instancingCount = 0;
+
+            const centers = resource.centers.slice();
+            const chunks = resource.chunks?.slice();
+
+            const orderTarget = this.orderBuffer ?? this.orderTexture;
+            this.sorter = new GSplatSorter(device, options.scene);
+            this.sorter.init(orderTarget, numSplats, centers, chunks);
+        }
 
         this.setHighQualitySH(options.highQualitySH ?? false);
     }
@@ -130,6 +182,8 @@ class GSplatInstance {
         this.resolveSH?.destroy();
         this.material?.destroy();
         this.meshInstance?.destroy();
+        this._depthMaterial?.destroy();
+        this.depthMeshInstance?.destroy();
         this.sorter?.destroy();
     }
 
@@ -178,13 +232,22 @@ class GSplatInstance {
 
         material.setDefine('{GSPLAT_INSTANCE_SIZE}', GSplatResourceBase.instanceSize);
         material.setParameter('numSplats', 0);
-        this.setMaterialOrderData(material);
+        if (!this.oir) {
+            this.setMaterialOrderData(material);
+        }
         material.setParameter('alphaClip', 0.3);
         material.setParameter('minPixelSize', 2.0);
         material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
         material.cull = CULLFACE_NONE;
-        material.blendType = options.dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
-        material.depthWrite = !!options.dither;
+
+        if (this.oir) {
+            material.setDefine('GSPLAT_OIR', '');
+            material.blendType = BLEND_ADDITIVE;
+            material.depthWrite = false;
+        } else {
+            material.blendType = options.dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
+            material.depthWrite = !!options.dither;
+        }
     }
 
     /**

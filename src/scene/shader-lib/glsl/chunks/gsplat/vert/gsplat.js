@@ -14,6 +14,10 @@ mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
     varying float vLinearDepth;
 #endif
 
+#if defined(GSPLAT_OIR) || defined(GSPLAT_OIR_DEPTH)
+    varying float oirDepth;
+#endif
+
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
     flat varying uint vPickId;
 #endif
@@ -109,6 +113,10 @@ void main(void) {
 
     #ifdef PREPASS_PASS
         vLinearDepth = -center.view.z;
+    #endif
+
+    #if defined(GSPLAT_OIR) || defined(GSPLAT_OIR_DEPTH)
+        oirDepth = -center.view.z;
     #endif
 
     #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)

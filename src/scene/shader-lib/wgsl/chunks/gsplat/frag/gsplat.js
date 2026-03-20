@@ -6,13 +6,22 @@ export default /* wgsl */`
     varying id: f32;
 #endif
 
-#if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
+#if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS) || defined(GSPLAT_OIR_DEPTH)
     uniform alphaClip: f32;
 #endif
 
 #ifdef PREPASS_PASS
     varying vLinearDepth: f32;
     #include "floatAsUintPS"
+#endif
+
+#if defined(GSPLAT_OIR) || defined(GSPLAT_OIR_DEPTH)
+    varying oirDepth: f32;
+#endif
+
+#ifdef GSPLAT_OIR
+    var oirDepthRange: texture_2d<f32>;
+    uniform oirFalloff: f32;
 #endif
 
 const EXP4: half = exp(half(-4.0));
@@ -73,6 +82,30 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     #elif PREPASS_PASS
 
         output.color = float2vec4(vLinearDepth);
+
+    #elif GSPLAT_OIR_DEPTH
+
+        if (alpha < half(uniform.alphaClip)) {
+            discard;
+            return output;
+        }
+        output.color = vec4f(oirDepth, 0.0, 0.0, 1.0);
+
+    #elif GSPLAT_OIR
+
+        if (alpha < half(1.0 / 255.0)) {
+            discard;
+            return output;
+        }
+
+        let a: f32 = f32(alpha);
+        let dMin: f32 = textureLoad(oirDepthRange, vec2i(input.position.xy), 0).r;
+        let w: f32 = exp(-uniform.oirFalloff * max(oirDepth - dMin, 0.0));
+        let color: vec3f = vec3f(gaussianColor.xyz);
+
+        let wt: f32 = exp(-uniform.oirFalloff * 0.1 * max(oirDepth - dMin, 0.0));
+        output.color = vec4f(color * a * w, a * w);
+        output.color1 = vec4f(log(max(1.0 - a * wt, 1e-5)), 0.0, 0.0, 0.0);
 
     #else
 

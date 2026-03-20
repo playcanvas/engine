@@ -37,6 +37,7 @@ const _properties = [
     'castShadows',
     'material',
     'highQualitySH',
+    'oir',
     'asset',
     'resource',
     'layers'
