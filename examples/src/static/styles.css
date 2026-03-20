@@ -68,7 +68,8 @@ body {
         position: fixed;
         z-index: 99999;
         max-height: calc(100% - 70px);
-        min-width: calc(100% - 16px);
+        min-width: calc(50% - 12px);
+        max-width: calc(50% - 12px);
     }
 
     #sideBar .panel-toggle {
