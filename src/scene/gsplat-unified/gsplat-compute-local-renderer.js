@@ -16,7 +16,7 @@ import {
     UNIFORMTYPE_MAT4,
     UNIFORMTYPE_UINT
 } from '../../platform/graphics/constants.js';
-import { GSPLAT_FORWARD } from '../constants.js';
+import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
 import { FramePassGSplatComputeLocal } from './frame-pass-gsplat-compute-local.js';
@@ -493,6 +493,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this.countCompute.setParameter('nearClip', cam.nearClip);
         this.countCompute.setParameter('farClip', cam.farClip);
         this.countCompute.setParameter('minPixelSize', this._minPixelSize);
+        this.countCompute.setParameter('isOrtho', cam.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0);
 
         const countWorkgroups = Math.ceil(numSplats / COUNT_WORKGROUP_SIZE);
         Compute.calcDispatchSize(countWorkgroups, _dispatchSize);
@@ -681,7 +682,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new UniformFormat('viewportHeight', UNIFORMTYPE_FLOAT),
             new UniformFormat('nearClip', UNIFORMTYPE_FLOAT),
             new UniformFormat('farClip', UNIFORMTYPE_FLOAT),
-            new UniformFormat('minPixelSize', UNIFORMTYPE_FLOAT)
+            new UniformFormat('minPixelSize', UNIFORMTYPE_FLOAT),
+            new UniformFormat('isOrtho', UNIFORMTYPE_UINT)
         ]);
 
         this._countBindGroupFormat = new BindGroupFormat(device, [
