@@ -10,7 +10,9 @@ attribute vertex_position: vec3f;         // xy: cornerUV, z: render order offse
 #else
     uniform numSplats: u32;               // total number of splats
 
-    var<storage, read> splatOrder: array<u32>;
+    #if !defined(GSPLAT_OIR) && !defined(GSPLAT_OIR_DEPTH)
+        var<storage, read> splatOrder: array<u32>;
+    #endif
 #endif
 
 // initialize the splat source structure
@@ -30,7 +32,9 @@ fn initSource(source: ptr<function, SplatSource>) -> bool {
 
     // read splat id and initialize global splat for format read functions
     var splatId: u32;
-    #ifdef GSPLAT_INDIRECT_DRAW
+    #if defined(GSPLAT_OIR) || defined(GSPLAT_OIR_DEPTH)
+        splatId = source.order;
+    #elif GSPLAT_INDIRECT_DRAW
         splatId = compactedSplatIds[source.order];
     #else
         splatId = splatOrder[source.order];

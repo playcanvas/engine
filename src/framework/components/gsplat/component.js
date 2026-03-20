@@ -111,6 +111,9 @@ class GSplatComponent extends Component {
     /** @private */
     _highQualitySH = true;
 
+    /** @private */
+    _oir = false;
+
     /**
      * Base distance for the first LOD transition (LOD 0 to LOD 1).
      *
@@ -285,6 +288,11 @@ class GSplatComponent extends Component {
             mi.castShadow = this._castShadows;
             mi.setCustomAabb(this._customAabb);
 
+            const depthMi = this._instance.depthMeshInstance;
+            if (depthMi && !depthMi.node) {
+                depthMi.node = this.entity;
+            }
+
             if (this.enabled && this.entity.enabled) {
                 this.addToLayers();
             }
@@ -366,6 +374,24 @@ class GSplatComponent extends Component {
      */
     get highQualitySH() {
         return this._highQualitySH;
+    }
+
+    /**
+     * Sets whether order-independent rendering mode is enabled.
+     *
+     * @type {boolean}
+     */
+    set oir(value) {
+        this._oir = value;
+    }
+
+    /**
+     * Gets whether order-independent rendering mode is enabled.
+     *
+     * @type {boolean}
+     */
+    get oir() {
+        return this._oir;
     }
 
     /**
@@ -1009,7 +1035,8 @@ class GSplatComponent extends Component {
             this.instance = new GSplatInstance(resource, {
                 material: this._materialTmp,
                 highQualitySH: this._highQualitySH,
-                scene: this.system.app.scene
+                scene: this.system.app.scene,
+                oir: this._oir
             });
             this._materialTmp = null;
         }

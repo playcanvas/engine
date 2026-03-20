@@ -2,7 +2,9 @@ export default /* glsl */`
 attribute vec3 vertex_position;         // xy: cornerUV, z: render order offset within instance
 
 uniform uint numSplats;                 // total number of splats
-uniform highp usampler2D splatOrder;    // per-splat index to source gaussian
+#if !defined(GSPLAT_OIR) && !defined(GSPLAT_OIR_DEPTH)
+    uniform highp usampler2D splatOrder;    // per-splat index to source gaussian
+#endif
 
 // initialize the splat source structure and global splat
 bool initSource(out SplatSource source) {
@@ -14,10 +16,13 @@ bool initSource(out SplatSource source) {
         return false;
     }
 
-    ivec2 orderUV = ivec2(source.order % splatTextureSize, source.order / splatTextureSize);
-
     // read splat id and initialize global splat for format read functions
-    uint splatId = texelFetch(splatOrder, orderUV, 0).r;
+    #if defined(GSPLAT_OIR) || defined(GSPLAT_OIR_DEPTH)
+        uint splatId = source.order;
+    #else
+        ivec2 orderUV = ivec2(source.order % splatTextureSize, source.order / splatTextureSize);
+        uint splatId = texelFetch(splatOrder, orderUV, 0).r;
+    #endif
     setSplat(splatId);
 
     // get the corner
