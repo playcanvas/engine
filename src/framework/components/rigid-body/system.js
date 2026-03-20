@@ -2,9 +2,10 @@ import { now } from '../../../core/time.js';
 import { ObjectPool } from '../../../core/object-pool.js';
 import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
+import { Quat } from '../../../core/math/quat.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
+import { BODYFLAG_NORESPONSE_OBJECT, BODYSTATE_ACTIVE_TAG } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
@@ -15,7 +16,7 @@ import { RigidBodyComponentData } from './data.js';
  * @import { Trigger } from '../collision/trigger.js'
  */
 
-let ammoRayStart, ammoRayEnd;
+let ammoRayStart, ammoRayEnd, ammoVec3, ammoQuat, ammoTransform, ammoTransform2, shapeTestBody, tmpQuat;
 
 /**
  * Contains the result of a successful raycast intersection with a rigid body. When a ray
@@ -28,7 +29,7 @@ let ammoRayStart, ammoRayEnd;
  *
  * @category Physics
  */
-class RaycastResult {
+class HitResult {
     /**
      * The entity that was hit.
      *
@@ -59,20 +60,29 @@ class RaycastResult {
     hitFraction;
 
     /**
-     * Create a new RaycastResult instance.
+     * The distance at which the hit occurred from the starting point.
+     *
+     * @type {number}
+     */
+    distance;
+
+    /**
+     * Create a new HitResult instance.
      *
      * @param {Entity} entity - The entity that was hit.
      * @param {Vec3} point - The point at which the ray hit the entity in world space.
      * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
-     * @param {number} hitFraction - The normalized distance (between 0 and 1) at which the ray hit
+     * @param {number} hitFraction - The normalized distance (between 0 and 1) at which the hit
      * occurred from the starting point.
+     * @param {number} distance - The distance at which the hit occurred from the starting point.
      * @ignore
      */
-    constructor(entity, point, normal, hitFraction) {
+    constructor(entity, point, normal, hitFraction, distance) {
         this.entity = entity;
         this.point = point;
         this.normal = normal;
         this.hitFraction = hitFraction;
+        this.distance = distance;
     }
 }
 
@@ -337,6 +347,28 @@ class ContactResult {
 const _schema = ['enabled'];
 
 /**
+ * Creates a new shape.
+ *
+ * @param {string} name - Name of the shape. Must start with capital letter.
+ * @param {number} [axis] - The local space axis with which the shape's length is aligned.
+ * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+ * @param {...any} [args] - Arguments to pass to creation.
+ * @returns {object} Created Ammo.btCollisionShape.
+ * @ignore
+ */
+function createShape(name, axis, ...args) {
+    let fn = `bt${name}Shape`;
+
+    if (axis === 0) {
+        fn += 'X';
+    } else if (axis === 2) {
+        fn += 'Z';
+    }
+
+    return new Ammo[fn](...args);
+}
+
+/**
  * The RigidBodyComponentSystem manages the physics simulation for all rigid body components
  * in the application. It creates and maintains the underlying Ammo.js physics world, handles
  * physics object creation and destruction, performs physics raycasting, detects and reports
@@ -466,6 +498,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
             // Lazily create temp vars
             ammoRayStart = new Ammo.btVector3();
             ammoRayEnd = new Ammo.btVector3();
+            ammoVec3 = new Ammo.btVector3();
+            ammoQuat = new Ammo.btQuaternion();
+            ammoTransform = new Ammo.btTransform();
+            ammoTransform2 = new Ammo.btTransform();
+            tmpQuat = new Quat();
+
             RigidBodyComponent.onLibraryLoaded();
 
             this.contactPointPool = new ObjectPool(ContactPoint, 1);
@@ -577,120 +615,72 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Raycast the world and return the first entity the ray hits. Fire a ray into the world from
-     * start to end, if the ray hits an entity with a collision component, it returns a
-     * {@link RaycastResult}, otherwise returns null.
+     * Raycast the world and return the entities the ray hits. It returns an array of
+     * {@link HitResult}, one for each hit. If no hits are detected, the returned array will be
+     * of length 0.
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @param {object} [options] - The additional options for the raycasting.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with
+     * closest first. Defaults to false.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
-     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
-     * query but within an array.
-     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
-     * Must return true to proceed with result. Takes one argument: the entity to evaluate.
-     *
-     * @returns {RaycastResult|null} The result of the raycasting or null if there was no hit.
-     */
-    raycastFirst(start, end, options = {}) {
-        // Tags and custom callback can only be performed by looking at all results.
-        if (options.filterTags || options.filterCallback) {
-            options.sort = true;
-            return this.raycastAll(start, end, options)[0] || null;
-        }
-
-        let result = null;
-
-        ammoRayStart.setValue(start.x, start.y, start.z);
-        ammoRayEnd.setValue(end.x, end.y, end.z);
-        const rayCallback = new Ammo.ClosestRayResultCallback(ammoRayStart, ammoRayEnd);
-
-        if (typeof options.filterCollisionGroup === 'number') {
-            rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
-        }
-
-        if (typeof options.filterCollisionMask === 'number') {
-            rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
-        }
-
-        this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
-        if (rayCallback.hasHit()) {
-            const collisionObj = rayCallback.get_m_collisionObject();
-            const body = Ammo.castObject(collisionObj, Ammo.btRigidBody);
-
-            if (body) {
-                const point = rayCallback.get_m_hitPointWorld();
-                const normal = rayCallback.get_m_hitNormalWorld();
-
-                result = new RaycastResult(
-                    body.entity,
-                    new Vec3(point.x(), point.y(), point.z()),
-                    new Vec3(normal.x(), normal.y(), normal.z()),
-                    rayCallback.get_m_closestHitFraction()
-                );
-            }
-        }
-
-        Ammo.destroy(rayCallback);
-
-        return result;
-    }
-
-    /**
-     * Raycast the world and return all entities the ray hits. It returns an array of
-     * {@link RaycastResult}, one for each hit. If no hits are detected, the returned array will be
-     * of length 0. Results are sorted by distance with closest first.
-     *
-     * @param {Vec3} start - The world space point where the ray starts.
-     * @param {Vec3} end - The world space point where the ray ends.
-     * @param {object} [options] - The additional options for the raycasting.
-     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
-     * first. Defaults to false.
-     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
-     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
-     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
-     * query but within an array.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a
+     * {@link Tags#has} query but within an array.
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
      * Must return true to proceed with result. Takes the entity to evaluate as argument.
+     * @param {boolean} [options.findAll] - Whether to return all results. When false will return
+     * only the closest result. Defaults to false.
      *
-     * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of raycast hit results (0 length if there were no hits).
      *
      * @example
-     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
-     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2));
+     * // Return all results of a raycast between (0, 2, 2) and (0, -2, -2)
+     * const hits = this.app.systems.rigidbody.raycast(
+     *     new Vec3(0, 2, 2),
+     *     new Vec3(0, -2, -2),
+     *     { findAll: true }
+     * );
      * @example
-     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
+     * // Return all results of a raycast between (0, 2, 2) and (0, -2, -2)
      * // where hit entity is tagged with `bird` OR `mammal`
-     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
-     *     filterTags: [ "bird", "mammal" ]
+     * const hits = this.app.systems.rigidbody.raycast(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
+     *     filterTags: [ "bird", "mammal" ],
+     *     findAll: true
      * });
      * @example
-     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
+     * // Return all results of a raycast between (0, 2, 2) and (0, -2, -2)
      * // where hit entity has a `camera` component
-     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
-     *     filterCallback: (entity) => entity && entity.camera
+     * const hits = this.app.systems.rigidbody.raycast(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
+     *     filterCallback: (entity) => entity && entity.camera,
+     *     findAll: true
      * });
      * @example
-     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
+     * // Return the closest result of a raycast between (0, 2, 2) and (0, -2, -2)
      * // where hit entity is tagged with (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
      * // and the entity has an `anim` component
-     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
+     * const hit = this.app.systems.rigidbody.raycast(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
      *     filterTags: [
      *         [ "carnivore", "mammal" ],
      *         [ "carnivore", "reptile" ]
      *     ],
      *     filterCallback: (entity) => entity && entity.anim
-     * });
+     * })[0];
      */
-    raycastAll(start, end, options = {}) {
-        Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
+    raycast(start, end, options = {}) {
+        const findAll = options.findAll || options.filterTags || options.filterCallback;
+
+        if (findAll) {
+            Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycast: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
+        }
 
         const results = [];
 
         ammoRayStart.setValue(start.x, start.y, start.z);
         ammoRayEnd.setValue(end.x, end.y, end.z);
-        const rayCallback = new Ammo.AllHitsRayResultCallback(ammoRayStart, ammoRayEnd);
+
+        const rayCallback = findAll ? new Ammo.AllHitsRayResultCallback(ammoRayStart, ammoRayEnd) : new Ammo.ClosestRayResultCallback(ammoRayStart, ammoRayEnd);
 
         if (typeof options.filterCollisionGroup === 'number') {
             rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
@@ -701,40 +691,372 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
+
         if (rayCallback.hasHit()) {
-            const collisionObjs = rayCallback.get_m_collisionObjects();
-            const points = rayCallback.get_m_hitPointWorld();
-            const normals = rayCallback.get_m_hitNormalWorld();
-            const hitFractions = rayCallback.get_m_hitFractions();
+            const rayDistance = start.distance(end);
 
-            const numHits = collisionObjs.size();
-            for (let i = 0; i < numHits; i++) {
-                const body = Ammo.castObject(collisionObjs.at(i), Ammo.btRigidBody);
+            if (findAll) {
+                const collisionObjs = rayCallback.get_m_collisionObjects();
+                const points = rayCallback.get_m_hitPointWorld();
+                const normals = rayCallback.get_m_hitNormalWorld();
+                const hitFractions = rayCallback.get_m_hitFractions();
 
-                if (body && body.entity) {
-                    if (options.filterTags && !body.entity.tags.has(...options.filterTags) || options.filterCallback && !options.filterCallback(body.entity)) {
-                        continue;
+                const numHits = collisionObjs.size();
+                for (let i = 0; i < numHits; i++) {
+                    const body = Ammo.castObject(collisionObjs.at(i), Ammo.btRigidBody);
+
+                    if (body && body.entity) {
+                        if ((options.filterTags && !body.entity.tags.has(...options.filterTags)) || (options.filterCallback && !options.filterCallback(body.entity))) {
+                            continue;
+                        }
+
+                        const point = points.at(i);
+                        const normal = normals.at(i);
+                        const hitFraction = hitFractions.at(i);
+
+                        results.push(new HitResult(body.entity, new Vec3(point.x(), point.y(), point.z()), new Vec3(normal.x(), normal.y(), normal.z()), hitFraction, rayDistance * hitFraction));
                     }
-
-                    const point = points.at(i);
-                    const normal = normals.at(i);
-                    const result = new RaycastResult(
-                        body.entity,
-                        new Vec3(point.x(), point.y(), point.z()),
-                        new Vec3(normal.x(), normal.y(), normal.z()),
-                        hitFractions.at(i)
-                    );
-
-                    results.push(result);
                 }
-            }
 
-            if (options.sort) {
-                results.sort((a, b) => a.hitFraction - b.hitFraction);
+                if (options.sort || !options.findAll) {
+                    results.sort((a, b) => a.hitFraction - b.hitFraction);
+
+                    if (!options.findAll && results.length > 1) {
+                        results.length = 1;
+                    }
+                }
+            } else {
+                const collisionObj = rayCallback.get_m_collisionObject();
+                const body = Ammo.castObject(collisionObj, Ammo.btRigidBody);
+
+                if (body) {
+                    const point = rayCallback.get_m_hitPointWorld();
+                    const normal = rayCallback.get_m_hitNormalWorld();
+                    const hitFraction = rayCallback.get_m_closestHitFraction();
+
+                    results.push(new HitResult(body.entity, new Vec3(point.x(), point.y(), point.z()), new Vec3(normal.x(), normal.y(), normal.z()), hitFraction, rayDistance * hitFraction));
+                }
             }
         }
 
         Ammo.destroy(rayCallback);
+        return results;
+    }
+
+    /**
+     * Perform a collision check on the world and return the entities the shape hits.
+     * It returns an array of {@link HitResult}. If no hits are
+     * detected, the returned array will be of length 0.
+     *
+     * @param {object} shape - The shape to use for collision. Can be a btCollisionShape
+     * or shape config.
+     * @param {number} [shape.axis] - The local space axis with which the capsule, cylinder or
+     * cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} [shape.halfExtents] - The half-extents of the box in the x, y and z axes.
+     * @param {number} [shape.height] - The total height of the capsule, cylinder or cone from
+     * tip to tip.
+     * @param {string} shape.type - The type of shape to use. Available options are "box",
+     * "capsule", "cone", "cylinder" or "sphere".
+     * @param {number} [shape.radius] - The radius of the sphere, capsule, cylinder or cone.
+     * @param {Vec3} startPosition - The world space position for the shape to be at start.
+     * @param {object} [options] - The additional options for the shape casting.
+     * @param {Vec3} [options.endPosition] - The world space position for the shape to be at end.
+     * @param {Vec3|Quat} [options.startRotation] - The world space rotation for the shape to have
+     * at start.
+     * @param {Vec3|Quat} [options.endRotation] - The world space rotation for the shape to have
+     * at end.
+     * @param {boolean} [options.sort] - Whether to sort shape cast results based on distance with
+     * closest first. Defaults to false.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the shape cast.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the shape cast.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a
+     * {@link Tags#has} query but within an array. Only available if shape is not having different
+     * ending transform from starting one.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument. Only
+     * available if shape is not having different ending transform from starting one.
+     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the cast.
+     * Defaults to false, forced true when shape is not a btCollisionShape.
+     * @param {boolean} [options.findAll] - Whether to return all results. When false will return
+     * only the closest result. Defaults to false. Only available if shape is not having different
+     * ending transform from starting one.
+     *
+     * @returns {HitResult[]} An array of shapeCast hit results (0 length if there were no hits).
+     *
+     * @example
+     * // Return all results of a sphere shape cast at position (0, 2, 0)
+     * const hits = this.app.systems.rigidbody.shapeCast(
+     *     { type: "sphere", radius: 0.5 },
+     *     new Vec3(0, 2, 0),
+     *     { findAll: true }
+     * );
+     * @example
+     * // Create a single sphere shape for both casting.
+     * const sphere = new Ammo.btSphereShape(0.5);
+     *
+     * // Return all results of a sphere shape cast at position (0, 2, 0) and (0, -2, 0)
+     * const hits = [
+     *     ...this.app.systems.rigidbody.shapeCast(
+     *         sphere,
+     *         new Vec3(0, 2, 0),
+     *         { findAll: true }
+     *     ),
+     *     ...this.app.systems.rigidbody.shapeCast(
+     *         sphere,
+     *         new Vec3(0, 2, 0),
+     *         { findAll: true }
+     *     ),
+     * ];
+     * @example
+     * // Return all results of a box shape cast at position (0, 2, 0)
+     * // where hit entity is tagged with `bird` OR `mammal`
+     * const hits = this.app.systems.rigidbody.shapeCast(
+     *     { type: "box", halfExtents: new Vec3(1, 1, 1) },
+     *     new Vec3(0, 2, 0),
+     *     {
+     *         filterTags: [ "bird", "mammal" ],
+     *         findAll: true
+     *     }
+     * );
+     * @example
+     * // Return all results of a capsule shape cast at position (0, 2, 0)
+     * // where hit entity has a `camera` component
+     * const hits = this.app.systems.rigidbody.shapeCast(
+     *     { type: "capsule", radius: 0.3, height: 1.6 },
+     *     new Vec3(0, 2, 0),
+     *     {
+     *         filterCallback: (entity) => entity && entity.camera,
+     *         findAll: true
+     *     }
+     * );
+     * @example
+     * // Return the closest result of a sphere sweep from (0, 2, 0) to (0, -2, 0)
+     * const hit = this.app.systems.rigidbody.shapeCast(
+     *     { type: "sphere", radius: 0.5 },
+     *     new Vec3(0, 2, 0),
+     *     { endPosition: new Vec3(0, -2, 0) }
+     * )[0];
+     * @example
+     * // Return the closest result of a cylinder shape cast at position (0, 2, 0)
+     * // where hit entity is tagged with (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
+     * // and the entity has an `anim` component
+     * const hit = this.app.systems.rigidbody.shapeCast(
+     *     { type: "cylinder", radius: 0.5, height: 2, axis: 1 },
+     *     new Vec3(0, 2, 0),
+     *     {
+     *         filterTags: [
+     *             [ "carnivore", "mammal" ],
+     *             [ "carnivore", "reptile" ]
+     *         ],
+     *         filterCallback: (entity) => entity && entity.anim
+     *     }
+     * )[0];
+     */
+    shapeCast(shape, startPosition, options = {}) {
+        const results = [];
+        let destroyShape = options.destroyShape === true;
+
+        let btShape;
+        switch (shape.type) {
+            case 'box':
+                ammoVec3.setValue(
+                    shape.halfExtents?.x ?? 0.5,
+                    shape.halfExtents?.y ?? 0.5,
+                    shape.halfExtents?.z ?? 0.5
+                );
+
+                btShape = new Ammo.btBoxShape(ammoVec3);
+                destroyShape = true;
+                break;
+            case 'capsule': {
+                const radius = shape.radius ?? 0.5;
+                const totalHeight = shape.height ?? 1;
+                const cylinderHeight = totalHeight - 2 * radius;
+
+                btShape = createShape('Capsule', shape.axis, radius, cylinderHeight);
+                destroyShape = true;
+                break;
+            }
+            case 'cone':
+                btShape = createShape('Cone', shape.axis, shape.radius ?? 0.5, shape.height ?? 1);
+                destroyShape = true;
+                break;
+            case 'cylinder': {
+                const radius = shape.radius ?? 0.5;
+                const height = shape.height ?? 1;
+                const axis = shape.axis ?? 1;
+
+                if (axis === 0) {
+                    ammoVec3.setValue(height * 0.5, radius, radius);
+                    btShape = new Ammo.btCylinderShapeX(ammoVec3);
+                } else if (axis === 2) {
+                    ammoVec3.setValue(radius, radius, height * 0.5);
+                    btShape = new Ammo.btCylinderShapeZ(ammoVec3);
+                } else {
+                    ammoVec3.setValue(radius, height * 0.5, radius);
+                    btShape = new Ammo.btCylinderShape(ammoVec3);
+                }
+
+                destroyShape = true;
+                break;
+            }
+            case 'sphere':
+                btShape = new Ammo.btSphereShape(shape.radius ?? 0.5);
+                destroyShape = true;
+                break;
+            default:
+                btShape = shape;
+                break;
+        }
+
+        ammoVec3.setValue(startPosition.x, startPosition.y, startPosition.z);
+        if (options.startRotation instanceof Quat) {
+            ammoQuat.setValue(
+                options.startRotation.x,
+                options.startRotation.y,
+                options.startRotation.z,
+                options.startRotation.w
+            );
+        } else if (options.startRotation instanceof Vec3) {
+            tmpQuat.setFromEulerAngles(options.startRotation);
+            ammoQuat.setValue(tmpQuat.x, tmpQuat.y, tmpQuat.z, tmpQuat.w);
+        } else {
+            ammoQuat.setEulerZYX(0, 0, 0);
+        }
+
+        ammoTransform.setIdentity();
+        ammoTransform.setOrigin(ammoVec3);
+        ammoTransform.setRotation(ammoQuat);
+
+        const endRotation = options.endRotation;
+        if ((options.endPosition && !options.endPosition.equals(startPosition)) || endRotation) {
+            Debug.assert(Ammo.ClosestConvexResultCallback && Ammo.ClosestConvexResultCallback.get_m_hitCollisionObject, 'pc.RigidBodyComponentSystem#shapeCast: Your version of ammo.js does not expose Ammo.ClosestConvexResultCallback or Ammo.ClosestConvexResultCallback#get_m_hitCollisionObject. Update it to latest.');
+
+            ammoVec3.setValue(options.endPosition.x, options.endPosition.y, options.endPosition.z);
+            if (endRotation instanceof Quat) {
+                ammoQuat.setValue(endRotation.x, endRotation.y, endRotation.z, endRotation.w);
+            } else if (endRotation instanceof Vec3) {
+                ammoQuat.setEulerZYX(endRotation.z, endRotation.y, endRotation.x);
+            } else {
+                ammoQuat.setEulerZYX(0, 0, 0);
+            }
+
+            ammoTransform2.setIdentity();
+            ammoTransform2.setOrigin(ammoVec3);
+            ammoTransform2.setRotation(ammoQuat);
+
+            const resultCallback = new Ammo.ClosestConvexResultCallback();
+
+            if (typeof options.filterCollisionGroup === 'number') {
+                resultCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
+            }
+
+            if (typeof options.filterCollisionMask === 'number') {
+                resultCallback.set_m_collisionFilterMask(options.filterCollisionMask);
+            }
+
+            this.app.systems.rigidbody.dynamicsWorld.convexSweepTest(btShape, ammoTransform, ammoTransform2, resultCallback);
+
+            if (resultCallback.hasHit()) {
+                const body = Ammo.castObject(resultCallback.get_m_hitCollisionObject(), Ammo.btRigidBody);
+
+                if (body) {
+                    const point = resultCallback.get_m_hitPointWorld();
+                    const normal = resultCallback.get_m_hitNormalWorld();
+
+                    const pointVec = new Vec3(point.x(), point.y(), point.z());
+                    results.push(new HitResult(body.entity, pointVec, new Vec3(normal.x(), normal.y(), normal.z()), resultCallback.get_m_closestHitFraction(), startPosition.distance(pointVec)));
+                }
+            }
+
+            // Destroy Ammo variables.
+            Ammo.destroy(resultCallback);
+            if (destroyShape) {
+                Ammo.destroy(btShape);
+            }
+
+            return results;
+        }
+
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#shapeCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+
+        // We only initialize the shapeTest body here so we don't have an extra body unless the user uses this function
+        if (!shapeTestBody) {
+            shapeTestBody = this.createBody(0, btShape, ammoTransform);
+        }
+
+        // Make sure the body has proper shape, transform and is active.
+        shapeTestBody.setCollisionShape(btShape);
+        shapeTestBody.setWorldTransform(ammoTransform);
+        shapeTestBody.forceActivationState(BODYSTATE_ACTIVE_TAG);
+
+        // Callback for the contactTest results.
+        const resultCallback = new Ammo.ConcreteContactResultCallback();
+        resultCallback.addSingleResult = function (cp, colObj0Wrap, partId0, index0, colObj1Wrap, p1, index1) {
+            // Retrieve collided entity.
+            const body1 = Ammo.castObject(Ammo.wrapPointer(colObj1Wrap, Ammo.btCollisionObjectWrapper).getCollisionObject(), Ammo.btRigidBody);
+
+            // Make sure there is an existing entity.
+            if (body1.entity) {
+                if ((options.filterTags && !body1.entity.tags.has(...options.filterTags)) || (options.filterCallback && !options.filterCallback(body1.entity))) {
+                    return 0;
+                }
+
+                // Retrieve manifold point.
+                const manifold = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
+
+                // Make sure there is a collision
+                const distance = manifold.getDistance();
+                if (distance < 0) {
+                    const point = manifold.get_m_positionWorldOnB();
+                    const normal = manifold.get_m_normalWorldOnB();
+
+                    const pointVec = new Vec3(point.x(), point.y(), point.z());
+                    const startDistance = startPosition.distance(pointVec);
+
+                    // Push the result.
+                    results.push(
+                        new HitResult(
+                            body1.entity,
+                            pointVec,
+                            new Vec3(normal.x(), normal.y(), normal.z()),
+                            // Minus distance as it's negative.
+                            startDistance / (startDistance - distance),
+                            startDistance
+                        )
+                    );
+
+                    return 1;
+                }
+            }
+
+            return 0;
+        };
+
+        if (typeof options.filterCollisionGroup === 'number') {
+            resultCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
+        }
+
+        if (typeof options.filterCollisionMask === 'number') {
+            resultCallback.set_m_collisionFilterMask(options.filterCollisionMask);
+        }
+
+        this.dynamicsWorld.contactTest(shapeTestBody, resultCallback);
+
+        // Destroy Ammo variables.
+        shapeTestBody.setCollisionShape(null);
+        Ammo.destroy(resultCallback);
+        if (destroyShape) {
+            Ammo.destroy(btShape);
+        }
+
+        if (options.sort || !options.findAll) {
+            results.sort((a, b) => a.distance - b.distance);
+
+            if (!options.findAll && results.length > 1) {
+                results.length = 1;
+            }
+        }
 
         return results;
     }
@@ -1122,6 +1444,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this.collisionConfiguration = null;
             ammoRayStart = null;
             ammoRayEnd = null;
+            tmpQuat = null;
             RigidBodyComponent.onAppDestroy();
         }
     }
@@ -1129,4 +1452,4 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
 Component._buildAccessors(RigidBodyComponent.prototype, _schema);
 
-export { ContactPoint, ContactResult, RaycastResult, RigidBodyComponentSystem, SingleContactResult };
+export { ContactPoint, ContactResult, HitResult, RigidBodyComponentSystem, SingleContactResult };
