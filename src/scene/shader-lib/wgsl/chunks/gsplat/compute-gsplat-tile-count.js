@@ -89,20 +89,20 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     projCache[base + 5u] = pack2x16float(vec2f(f32(colorHalf.r), f32(colorHalf.g)));
     projCache[base + 6u] = pack2x16float(vec2f(f32(colorHalf.b), f32(colorHalf.a)));
 
-    let splatMin = proj.screen - proj.radius;
-    let splatMax = proj.screen + proj.radius;
+    let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, opacity,
+                                    uniforms.viewportWidth, uniforms.viewportHeight);
 
-    let minTileX = max(0i, i32(floor(splatMin.x / f32(TILE_SIZE))));
-    let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(splatMax.x / f32(TILE_SIZE))));
-    let minTileY = max(0i, i32(floor(splatMin.y / f32(TILE_SIZE))));
-    let maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(splatMax.y / f32(TILE_SIZE))));
+    let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
+    let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
+    let minTileY = max(0i, i32(floor(eval.splatMin.y / f32(TILE_SIZE))));
+    let maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(eval.splatMax.y / f32(TILE_SIZE))));
 
     var count = 0u;
     for (var ty = minTileY; ty <= maxTileY; ty++) {
         for (var tx = minTileX; tx <= maxTileX; tx++) {
             let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
             let tMax = tMin + vec2f(f32(TILE_SIZE));
-            if (tileIntersectsEllipse(tMin, tMax, proj.screen, coeffX, coeffY, coeffXY, proj.radiusFactor)) {
+            if (tileIntersectsEllipse(tMin, tMax, proj.screen, coeffX, coeffY, coeffXY, eval.radiusFactor)) {
                 count++;
             }
         }
