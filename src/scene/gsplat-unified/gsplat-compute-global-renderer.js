@@ -540,6 +540,7 @@ class GSplatComputeGlobalRenderer extends GSplatRenderer {
     /** @private */
     _recreateCountCompute() {
         this.countCompute.shader.destroy();
+        this.countCompute.destroy();
         this._countBindGroupFormat.destroy();
         this._createCountCompute();
     }
