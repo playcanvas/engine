@@ -29,6 +29,37 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     link: { observer, path: 'highRes' },
                     value: observer.get('highRes') || false
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Tonemapping' },
+                jsx(SelectInput, {
+                    type: 'number',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'toneMapping' },
+                    value: observer.get('toneMapping') ?? 0,
+                    options: [
+                        { v: 0, t: 'Linear' },
+                        { v: 1, t: 'Filmic' },
+                        { v: 2, t: 'Hejl' },
+                        { v: 3, t: 'ACES' },
+                        { v: 4, t: 'ACES2' },
+                        { v: 5, t: 'Neutral' },
+                        { v: 6, t: 'None' }
+                    ]
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Exposure' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'exposure' },
+                    min: 0,
+                    max: 5,
+                    precision: 2,
+                    step: 0.05
+                })
             )
         ),
         jsx(

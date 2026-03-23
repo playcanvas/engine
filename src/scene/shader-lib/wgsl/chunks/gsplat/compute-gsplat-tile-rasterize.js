@@ -6,6 +6,8 @@ const CACHE_STRIDE: u32 = 7u;
 const BATCH_SIZE: u32 = 64u;
 const WORKGROUP_SIZE: u32 = 64u;
 const ALPHA_THRESHOLD: half = half(1.0) / half(255.0);
+const EXP4: half = exp(half(-4.0));
+const INV_EXP4: half = half(1.0) / (half(1.0) - EXP4);
 
 @group(0) @binding(0) var outputTexture: texture_storage_2d<rgba8unorm, write>;
 @group(0) @binding(1) var<storage, read> sortedValues: array<u32>;
@@ -27,7 +29,8 @@ var<workgroup> doneCount: atomic<u32>;
 fn evalSplat(pixelCoord: vec2f, center: vec2f, coeffX: f32, coeffY: f32, coeffXY: f32, splatColor: half4, colorAccum: ptr<function, half3>, T: ptr<function, half>) {
     let dx = pixelCoord - center;
     let power = coeffX * dx.x * dx.x + coeffXY * dx.x * dx.y + coeffY * dx.y * dx.y;
-    let alpha = half(min(0.99, f32(splatColor.a) * exp(power)));
+    let gauss = (half(exp(power)) - EXP4) * INV_EXP4;
+    let alpha = half(min(half(0.99), splatColor.a * gauss));
     let newT = *T * (half(1.0) - alpha);
     let cond = half(power > -4.0 && alpha > ALPHA_THRESHOLD && *T >= ALPHA_THRESHOLD);
     *colorAccum += splatColor.rgb * alpha * (*T) * cond;

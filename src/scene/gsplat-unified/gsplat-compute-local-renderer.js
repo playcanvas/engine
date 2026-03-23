@@ -16,7 +16,7 @@ import {
     UNIFORMTYPE_MAT4,
     UNIFORMTYPE_UINT
 } from '../../platform/graphics/constants.js';
-import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
+import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC, tonemapNames, gammaNames } from '../constants.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
 import { FramePassGSplatComputeLocal } from './frame-pass-gsplat-compute-local.js';
@@ -135,6 +135,15 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
     /** @type {number} */
     _minPixelSize = 2.0;
+
+    /** @type {number} */
+    _exposure = 1.0;
+
+    /** @type {number} */
+    _toneMapping = -1;
+
+    /** @type {number} */
+    _gamma = -1;
 
     /** @type {number} */
     _numSplats = 0;
@@ -261,7 +270,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const thisCamera = cameraNode.camera;
         this.tileComposite = new GSplatTileComposite(device, node, (camera) => {
             const renderMode = this.renderMode ?? 0;
-            return thisCamera.camera === camera && (renderMode & GSPLAT_FORWARD) !== 0;
+            return thisCamera.camera === camera && (renderMode & GSPLAT_FORWARD) !== 0 && this._rasterizeTileListBuffer !== null;
         });
     }
 
@@ -333,11 +342,23 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         super.setRenderMode(renderMode);
     }
 
-    frameUpdate(gsplat) {
+    frameUpdate(gsplat, exposure) {
         if (this._needsFramePassRegister) {
             this._registerFramePass();
         }
         this._minPixelSize = gsplat.minPixelSize;
+        this._exposure = exposure ?? 1.0;
+
+        const cam = this.cameraNode.camera?.camera;
+        if (cam) {
+            const toneMapping = cam.shaderParams.toneMapping;
+            const gamma = cam.shaderParams.shaderOutputGamma;
+            if (toneMapping !== this._toneMapping || gamma !== this._gamma) {
+                this._toneMapping = toneMapping;
+                this._gamma = gamma;
+                this._recreateCountCompute();
+            }
+        }
     }
 
     /**
@@ -470,7 +491,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         _viewProjMat.mul2(proj, view);
         _viewProjData.set(_viewProjMat.data);
         _viewData.set(view.data);
-        const focal = width * proj.data[0] * 0.5;
+        const focal = width * proj.data[0];
 
         // --- Pass 1: Per-tile count + projection cache ---
         this._tileSplatCountsBuffer.clear();
@@ -494,6 +515,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this.countCompute.setParameter('farClip', cam.farClip);
         this.countCompute.setParameter('minPixelSize', this._minPixelSize);
         this.countCompute.setParameter('isOrtho', cam.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0);
+        this.countCompute.setParameter('exposure', this._exposure);
 
         const countWorkgroups = Math.ceil(numSplats / COUNT_WORKGROUP_SIZE);
         Compute.calcDispatchSize(countWorkgroups, _dispatchSize);
@@ -653,6 +675,13 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     }
 
     /** @private */
+    _recreateCountCompute() {
+        this.countCompute.shader.destroy();
+        this._countBindGroupFormat.destroy();
+        this._createCountCompute();
+    }
+
+    /** @private */
     _createCommonIncludes() {
         const cincludes = new Map();
         cincludes.set('gsplatCommonCS', computeGsplatCommonSource);
@@ -683,7 +712,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new UniformFormat('nearClip', UNIFORMTYPE_FLOAT),
             new UniformFormat('farClip', UNIFORMTYPE_FLOAT),
             new UniformFormat('minPixelSize', UNIFORMTYPE_FLOAT),
-            new UniformFormat('isOrtho', UNIFORMTYPE_UINT)
+            new UniformFormat('isOrtho', UNIFORMTYPE_UINT),
+            new UniformFormat('exposure', UNIFORMTYPE_FLOAT)
         ]);
 
         this._countBindGroupFormat = new BindGroupFormat(device, [
@@ -697,11 +727,20 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
         ]);
 
+        const cincludes = this._createCommonIncludes();
+        this._createTonemapIncludes(cincludes);
+
+        const cdefines = new Map();
+        cdefines.set('TONEMAP', tonemapNames[this._toneMapping] ?? 'LINEAR');
+        cdefines.set('GAMMA', gammaNames[this._gamma] ?? 'NONE');
+        cdefines.set('TONEMAP_NO_EXPOSURE_UNIFORM', '');
+
         const shader = new Shader(device, {
             name: 'GSplatLocalTileCount',
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatLocalTileCountSource,
-            cincludes: this._createCommonIncludes(),
+            cincludes: cincludes,
+            cdefines: cdefines,
             computeBindGroupFormat: this._countBindGroupFormat,
             computeUniformBufferFormats: { uniforms: uniformBufferFormat }
         });

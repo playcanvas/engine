@@ -44,12 +44,12 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
 
     // Recover radius from coefficients (same logic as tile-expand shader)
     let K = 4.0 * coeffX * coeffY - coeffXY * coeffXY;
-    let a = -2.0 * coeffY / K;
-    let c = -2.0 * coeffX / K;
+    let a = -8.0 * coeffY / K;
+    let c = -8.0 * coeffX / K;
     let radiusFactor = min(8.0, 2.0 * log(255.0 * opacity));
 
     let vmin = min(1024.0, min(uniforms.viewportWidth, uniforms.viewportHeight));
-    let radius = vec2f(min(sqrt(radiusFactor * a), 2.0 * vmin), min(sqrt(radiusFactor * c), 2.0 * vmin));
+    let radius = vec2f(min(sqrt(2.0 * a), 2.0 * vmin), min(sqrt(2.0 * c), 2.0 * vmin));
     let screen = vec2f(screenX, screenY);
     let splatMin = screen - radius;
     let splatMax = screen + radius;

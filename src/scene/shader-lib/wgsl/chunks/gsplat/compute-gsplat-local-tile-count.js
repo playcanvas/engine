@@ -4,6 +4,7 @@ export const computeGsplatLocalTileCountSource = /* wgsl */`
 
 #include "gsplatCommonCS"
 #include "gsplatTileIntersectCS"
+#include "gsplatOutputVS"
 
 const CACHE_STRIDE: u32 = 8u;
 
@@ -28,6 +29,7 @@ struct Uniforms {
     farClip: f32,
     minPixelSize: f32,
     isOrtho: u32,
+    exposure: f32,
 }
 @group(0) @binding(7) var<uniform> uniforms: Uniforms;
 
@@ -71,12 +73,12 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
 
     let det = proj.a * proj.c - proj.b * proj.b;
     let invDet = 1.0 / det;
-    let coeffX = -0.5 * proj.c * invDet;
-    let coeffY = -0.5 * proj.a * invDet;
-    let coeffXY = proj.b * invDet;
+    let coeffX = -2.0 * proj.c * invDet;
+    let coeffY = -2.0 * proj.a * invDet;
+    let coeffXY = 4.0 * proj.b * invDet;
 
     let tC = textureLoad(dataColor, uv, 0).x;
-    let rgb = decodeColor(tC);
+    var rgb = prepareOutputFromGamma(decodeColor(tC));
 
     let base = threadIdx * CACHE_STRIDE;
     projCache[base + 0u] = bitcast<u32>(proj.screen.x);

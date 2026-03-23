@@ -119,10 +119,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    // setup skydome
-    app.scene.skyboxMip = 1;
-    app.scene.exposure = 1.5;
-
     const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
     // enable rotation-based LOD updates and behind-camera penalty
@@ -158,6 +154,8 @@ assetListLoader.load(() => {
 
     // initialize UI settings (must be after observer registration)
     data.set('cameraFov', 75);
+    data.set('toneMapping', pc.TONEMAP_LINEAR);
+    data.set('exposure', 1.5);
     data.set('minPixelSize', 2);
     data.set('radialSorting', true);
     data.set('gpuSorting', false);
@@ -246,6 +244,12 @@ assetListLoader.load(() => {
 
     data.on('cameraFov:set', () => {
         camera.camera.fov = data.get('cameraFov');
+    });
+    data.on('toneMapping:set', () => {
+        camera.camera.toneMapping = data.get('toneMapping');
+    });
+    data.on('exposure:set', () => {
+        app.scene.exposure = data.get('exposure');
     });
 
     // Add the GsplatRevealRadial script to the gsplat entity
