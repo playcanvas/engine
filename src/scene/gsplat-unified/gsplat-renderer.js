@@ -1,3 +1,6 @@
+import gsplatOutputVS from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatOutput.js';
+import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
+
 /**
  * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
  * @import { ShaderMaterial } from '../materials/shader-material.js'
@@ -121,8 +124,9 @@ class GSplatRenderer {
      * Per-frame update for the renderer (material syncing, parameter updates).
      *
      * @param {object} params - The gsplat parameters.
+     * @param {number} [exposure] - Scene exposure value.
      */
-    frameUpdate(params) {
+    frameUpdate(params, exposure) {
     }
 
     /**
@@ -131,6 +135,25 @@ class GSplatRenderer {
      * @param {object} params - The gsplat parameters.
      */
     updateOverdrawMode(params) {
+    }
+
+    /**
+     * Populates a cincludes map with tonemapping, gamma, decode and gsplatOutput
+     * shader chunks needed by compute tile-count shaders.
+     *
+     * @param {Map<string, string>} cincludes - The shader includes map to populate.
+     * @protected
+     */
+    _createTonemapIncludes(cincludes) {
+        cincludes.set('gsplatOutputVS', gsplatOutputVS);
+        const chunkNames = [
+            'tonemappingPS', 'tonemappingNonePS', 'tonemappingLinearPS', 'tonemappingFilmicPS',
+            'tonemappingHejlPS', 'tonemappingAcesPS', 'tonemappingAces2PS', 'tonemappingNeutralPS',
+            'decodePS', 'gammaPS'
+        ];
+        for (const name of chunkNames) {
+            cincludes.set(name, shaderChunksWGSL[name]);
+        }
     }
 }
 

@@ -148,6 +148,14 @@ class Compute {
     }
 
     /**
+     * Frees resources associated with this compute instance.
+     */
+    destroy() {
+        this.impl?.destroy();
+        this.impl = null;
+    }
+
+    /**
      * Apply the parameters to the scope.
      *
      * @ignore

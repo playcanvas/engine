@@ -4,6 +4,7 @@ export const computeGsplatLocalTileCountSource = /* wgsl */`
 
 #include "gsplatCommonCS"
 #include "gsplatTileIntersectCS"
+#include "gsplatOutputVS"
 
 const CACHE_STRIDE: u32 = 8u;
 
@@ -28,6 +29,7 @@ struct Uniforms {
     farClip: f32,
     minPixelSize: f32,
     isOrtho: u32,
+    exposure: f32,
 }
 @group(0) @binding(7) var<uniform> uniforms: Uniforms;
 
@@ -71,12 +73,12 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
 
     let det = proj.a * proj.c - proj.b * proj.b;
     let invDet = 1.0 / det;
-    let coeffX = -0.5 * proj.c * invDet;
-    let coeffY = -0.5 * proj.a * invDet;
-    let coeffXY = proj.b * invDet;
+    let coeffX = -2.0 * proj.c * invDet;
+    let coeffY = -2.0 * proj.a * invDet;
+    let coeffXY = 4.0 * proj.b * invDet;
 
     let tC = textureLoad(dataColor, uv, 0).x;
-    let rgb = decodeColor(tC);
+    var rgb = prepareOutputFromGamma(decodeColor(tC));
 
     let base = threadIdx * CACHE_STRIDE;
     projCache[base + 0u] = bitcast<u32>(proj.screen.x);
@@ -90,19 +92,19 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     let viewDepth = -(uniforms.viewMatrix * vec4f(worldCenter, 1.0)).z;
     projCache[base + 7u] = bitcast<u32>(viewDepth);
 
-    let splatMin = proj.screen - proj.radius;
-    let splatMax = proj.screen + proj.radius;
+    let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, opacity,
+                                    uniforms.viewportWidth, uniforms.viewportHeight);
 
-    let minTileX = max(0i, i32(floor(splatMin.x / f32(TILE_SIZE))));
-    let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(splatMax.x / f32(TILE_SIZE))));
-    let minTileY = max(0i, i32(floor(splatMin.y / f32(TILE_SIZE))));
-    let maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(splatMax.y / f32(TILE_SIZE))));
+    let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
+    let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
+    let minTileY = max(0i, i32(floor(eval.splatMin.y / f32(TILE_SIZE))));
+    let maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(eval.splatMax.y / f32(TILE_SIZE))));
 
     for (var ty = minTileY; ty <= maxTileY; ty++) {
         for (var tx = minTileX; tx <= maxTileX; tx++) {
             let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
             let tMax = tMin + vec2f(f32(TILE_SIZE));
-            if (tileIntersectsEllipse(tMin, tMax, proj.screen, coeffX, coeffY, coeffXY, proj.radiusFactor)) {
+            if (tileIntersectsEllipse(tMin, tMax, proj.screen, coeffX, coeffY, coeffXY, eval.radiusFactor)) {
                 let tileIdx = u32(ty) * uniforms.numTilesX + u32(tx);
                 atomicAdd(&tileSplatCounts[tileIdx], 1u);
             }

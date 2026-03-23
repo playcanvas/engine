@@ -42,28 +42,20 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     let coeffY = bitcast<f32>(projCache[base + 3u]);
     let coeffXY = bitcast<f32>(projCache[base + 4u]);
 
-    // Recover radius from coefficients (same logic as tile-expand shader)
-    let K = 4.0 * coeffX * coeffY - coeffXY * coeffXY;
-    let a = -2.0 * coeffY / K;
-    let c = -2.0 * coeffX / K;
-    let radiusFactor = min(8.0, 2.0 * log(255.0 * opacity));
-
-    let vmin = min(1024.0, min(uniforms.viewportWidth, uniforms.viewportHeight));
-    let radius = vec2f(min(sqrt(radiusFactor * a), 2.0 * vmin), min(sqrt(radiusFactor * c), 2.0 * vmin));
     let screen = vec2f(screenX, screenY);
-    let splatMin = screen - radius;
-    let splatMax = screen + radius;
+    let eval = computeSplatTileEval(screen, coeffX, coeffY, coeffXY, opacity,
+                                    uniforms.viewportWidth, uniforms.viewportHeight);
 
-    let minTileX = max(0i, i32(floor(splatMin.x / f32(TILE_SIZE))));
-    let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(splatMax.x / f32(TILE_SIZE))));
-    let minTileY = max(0i, i32(floor(splatMin.y / f32(TILE_SIZE))));
-    let maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(splatMax.y / f32(TILE_SIZE))));
+    let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
+    let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
+    let minTileY = max(0i, i32(floor(eval.splatMin.y / f32(TILE_SIZE))));
+    let maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(eval.splatMax.y / f32(TILE_SIZE))));
 
     for (var ty = minTileY; ty <= maxTileY; ty++) {
         for (var tx = minTileX; tx <= maxTileX; tx++) {
             let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
             let tMax = tMin + vec2f(f32(TILE_SIZE));
-            if (tileIntersectsEllipse(tMin, tMax, screen, coeffX, coeffY, coeffXY, radiusFactor)) {
+            if (tileIntersectsEllipse(tMin, tMax, screen, coeffX, coeffY, coeffXY, eval.radiusFactor)) {
                 let tileIdx = u32(ty) * uniforms.numTilesX + u32(tx);
                 let writePos = tileSplatCounts[tileIdx] + atomicAdd(&tileWriteCursors[tileIdx], 1u);
                 // Bounds-check against the tile's allocated range, not just the buffer size.

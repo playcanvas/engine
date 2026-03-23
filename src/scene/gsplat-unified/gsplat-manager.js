@@ -1596,7 +1596,7 @@ class GSplatManager {
         }
 
         // renderer per-frame update (material syncing, deferred setup)
-        this.renderer.frameUpdate(this.scene.gsplat);
+        this.renderer.frameUpdate(this.scene.gsplat, this.scene.exposure);
 
         // camera tracking only after first sort
         if (sortedState?.sortedBefore) {

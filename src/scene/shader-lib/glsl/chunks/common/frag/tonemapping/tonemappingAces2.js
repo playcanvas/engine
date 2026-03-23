@@ -1,6 +1,4 @@
 export default /* glsl */`
-uniform float exposure;
-
 // ACES approximation by Stephen Hill
 
 // sRGB => XYZ => D65_2_D60 => AP1 => RRT_SAT
@@ -24,7 +22,7 @@ vec3 RRTAndODTFit(vec3 v) {
 }
 
 vec3 toneMap(vec3 color) {
-    color *= exposure / 0.6;
+    color *= getExposure() / 0.6;
     color = color * ACESInputMat;
 
     // Apply RRT and ODT
