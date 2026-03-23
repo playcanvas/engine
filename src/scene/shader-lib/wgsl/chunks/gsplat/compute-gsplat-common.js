@@ -18,38 +18,6 @@ fn quatToMat3(r: half4) -> half3x3 {
     );
 }
 
-fn decodeRotation(packed: u32) -> half4 {
-    let pf = vec3f(
-        f32(packed & 0x7FFu) / 2047.0 * 2.0 - 1.0,
-        f32((packed >> 11u) & 0x7FFu) / 2047.0 * 2.0 - 1.0,
-        f32((packed >> 22u) & 0x3FFu) / 1023.0 * 2.0 - 1.0
-    );
-    let p = half3(pf);
-    let d = dot(p, p);
-    return half4(half(1.0) - d, sqrt(max(half(0.0), half(2.0) - d)) * p);
-}
-
-fn decodeScale(packed: u32) -> half3 {
-    let sx = f32(packed & 0xFFu);
-    let sy = f32((packed >> 8u) & 0xFFu);
-    let sz = f32((packed >> 16u) & 0xFFu);
-
-    let logRange = 21.0 / 255.0;
-    let logMin = -12.0;
-    return half3(vec3f(
-        select(exp(sx * logRange + logMin), 0.0, sx == 0.0),
-        select(exp(sy * logRange + logMin), 0.0, sy == 0.0),
-        select(exp(sz * logRange + logMin), 0.0, sz == 0.0)
-    ));
-}
-
-fn decodeColor(packed: u32) -> vec3f {
-    let r = f32(packed & 0x7FFu) * (4.0 / 2047.0);
-    let g = f32((packed >> 11u) & 0x7FFu) * (4.0 / 2047.0);
-    let b = f32((packed >> 22u) & 0x3FFu) * (4.0 / 1023.0);
-    return vec3f(r, g, b);
-}
-
 struct SplatCov2D {
     screen: vec2f,
     a: f32,
