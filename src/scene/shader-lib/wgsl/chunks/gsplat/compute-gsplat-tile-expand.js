@@ -1,5 +1,6 @@
 export const computeGsplatTileExpandSource = /* wgsl */`
 
+#include "halfTypesCS"
 #include "gsplatTileIntersectCS"
 
 const TILE_SIZE: u32 = 16u;
@@ -43,7 +44,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     let opacity = unpack2x16float(projCache[base + 6u]).y;
 
     let screen = vec2f(screenX, screenY);
-    let eval = computeSplatTileEval(screen, coeffX, coeffY, coeffXY, opacity,
+    let eval = computeSplatTileEval(screen, coeffX, coeffY, coeffXY, half(opacity),
                                     uniforms.viewportWidth, uniforms.viewportHeight);
 
     let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
@@ -54,7 +55,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     var writeIdx = offset;
     for (var ty = minTileY; ty <= maxTileY; ty++) {
         for (var tx = minTileX; tx <= maxTileX; tx++) {
-            if (writeIdx >= uniforms.maxEntries) {
+            if (writeIdx >= nextOffset || writeIdx >= uniforms.maxEntries) {
                 return;
             }
             let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));

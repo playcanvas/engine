@@ -3,13 +3,12 @@ import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
-import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
     BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC, BUFFERUSAGE_INDIRECT,
     FILTER_NEAREST,
-    PIXELFORMAT_RGBA8,
-    SAMPLETYPE_UINT,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16U,
     SHADERLANGUAGE_WGSL,
     SHADERSTAGE_COMPUTE,
     UNIFORMTYPE_FLOAT,
@@ -33,6 +32,7 @@ import { computeGsplatLocalBitonicSource } from '../shader-lib/wgsl/chunks/gspla
 import { computeGsplatCommonSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-common.js';
 import { computeGsplatTileIntersectSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-tile-intersect.js';
 import { GSplatTileComposite } from './gsplat-tile-composite.js';
+import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeSplat.js';
 
 /**
  * @import { GraphNode } from '../graph-node.js'
@@ -349,6 +349,13 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._minPixelSize = gsplat.minPixelSize;
         this._exposure = exposure ?? 1.0;
 
+        let needsRecreate = false;
+
+        const formatHash = this.workBuffer.format.hash;
+        if (formatHash !== this._formatHash) {
+            needsRecreate = true;
+        }
+
         const cam = this.cameraNode.camera?.camera;
         if (cam) {
             const toneMapping = cam.shaderParams.toneMapping;
@@ -356,8 +363,12 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             if (toneMapping !== this._toneMapping || gamma !== this._gamma) {
                 this._toneMapping = toneMapping;
                 this._gamma = gamma;
-                this._recreateCountCompute();
+                needsRecreate = true;
             }
+        }
+
+        if (needsRecreate) {
+            this._recreateCountCompute();
         }
     }
 
@@ -498,11 +509,14 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         this.countCompute.setParameter('compactedSplatIds', this._compactedSplatIds);
         this.countCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
-        this.countCompute.setParameter('dataTransformA', wb.getTexture('dataTransformA'));
-        this.countCompute.setParameter('dataTransformB', wb.getTexture('dataTransformB'));
-        this.countCompute.setParameter('dataColor', wb.getTexture('dataColor'));
         this.countCompute.setParameter('projCache', this._projCacheBuffer);
         this.countCompute.setParameter('tileSplatCounts', this._tileSplatCountsBuffer);
+        for (const stream of wb.format.streams) {
+            this.countCompute.setParameter(stream.name, wb.getTexture(stream.name));
+        }
+        for (const stream of wb.format.extraStreams) {
+            this.countCompute.setParameter(stream.name, wb.getTexture(stream.name));
+        }
         this.countCompute.setParameter('splatTextureSize', this._textureSize);
         this.countCompute.setParameter('numTilesX', numTilesX);
         this.countCompute.setParameter('numTilesY', numTilesY);
@@ -717,24 +731,35 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new UniformFormat('exposure', UNIFORMTYPE_FLOAT)
         ]);
 
-        this._countBindGroupFormat = new BindGroupFormat(device, [
+        const wbFormat = this.workBuffer.format;
+
+        const fixedBindings = [
             new BindStorageBufferFormat('compactedSplatIds', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('sortElementCount', SHADERSTAGE_COMPUTE, true),
-            new BindTextureFormat('dataTransformA', SHADERSTAGE_COMPUTE, undefined, SAMPLETYPE_UINT, false),
-            new BindTextureFormat('dataTransformB', SHADERSTAGE_COMPUTE, undefined, SAMPLETYPE_UINT, false),
-            new BindTextureFormat('dataColor', SHADERSTAGE_COMPUTE, undefined, SAMPLETYPE_UINT, false),
             new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE),
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
+        ];
+
+        this._countBindGroupFormat = new BindGroupFormat(device, [
+            ...fixedBindings,
+            ...wbFormat.getComputeBindFormats()
         ]);
 
         const cincludes = this._createCommonIncludes();
         this._createTonemapIncludes(cincludes);
+        cincludes.set('gsplatComputeSplatCS', computeSplatSource);
+        cincludes.set('gsplatFormatDeclCS', wbFormat.getComputeInputDeclarations(fixedBindings.length));
+        cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
 
         const cdefines = new Map();
         cdefines.set('TONEMAP', tonemapNames[this._toneMapping] ?? 'LINEAR');
         cdefines.set('GAMMA', gammaNames[this._gamma] ?? 'NONE');
         cdefines.set('TONEMAP_NO_EXPOSURE_UNIFORM', '');
+        const colorStream = wbFormat.getStream('dataColor');
+        if (colorStream && colorStream.format !== PIXELFORMAT_RGBA16U) {
+            cdefines.set('GSPLAT_COLOR_FLOAT', '');
+        }
 
         const shader = new Shader(device, {
             name: 'GSplatLocalTileCount',
@@ -747,6 +772,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         });
 
         this.countCompute = new Compute(device, shader, 'GSplatLocalTileCount');
+        this._formatHash = this.workBuffer.format.hash;
     }
 
     /** @private */

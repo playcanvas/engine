@@ -52,7 +52,12 @@ void main(void) {
     }
 
     // read color
-    vec4 clr = getColor();
+    #ifdef GSPLAT_SEPARATE_OPACITY
+        float opacity = getOpacity(); // must run before getColor() to cache color data
+        vec4 clr = vec4(getColor(), opacity);
+    #else
+        vec4 clr = getColor();
+    #endif
 
     #if GSPLAT_AA
         // apply AA compensation

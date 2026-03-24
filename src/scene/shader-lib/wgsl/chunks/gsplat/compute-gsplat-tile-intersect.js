@@ -18,14 +18,14 @@ struct SplatTileEval {
     splatMax: vec2f,
 }
 
-fn computeRadiusFactor(opacity: f32) -> f32 {
-    return min(8.0, 2.0 * log(255.0 * opacity));
+fn computeRadiusFactor(opacity: half) -> f32 {
+    return min(8.0, 2.0 * log(255.0 * f32(opacity)));
 }
 
 fn computeSplatTileEval(
     screen: vec2f,
     coeffX: f32, coeffY: f32, coeffXY: f32,
-    opacity: f32,
+    opacity: half,
     viewportWidth: f32, viewportHeight: f32
 ) -> SplatTileEval {
     let K = 4.0 * coeffX * coeffY - coeffXY * coeffXY;

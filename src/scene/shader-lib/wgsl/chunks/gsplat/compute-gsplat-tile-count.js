@@ -7,11 +7,8 @@ export const computeGsplatTileCountSource = /* wgsl */`
 const CACHE_STRIDE: u32 = 7u;
 
 @group(0) @binding(0) var<storage, read> splatOrder: array<u32>;
-@group(0) @binding(1) var dataTransformA: texture_2d<u32>;
-@group(0) @binding(2) var dataTransformB: texture_2d<u32>;
-@group(0) @binding(3) var dataColor: texture_2d<u32>;
-@group(0) @binding(4) var<storage, read_write> splatTileCounts: array<u32>;
-@group(0) @binding(5) var<storage, read_write> projCache: array<u32>;
+@group(0) @binding(1) var<storage, read_write> splatTileCounts: array<u32>;
+@group(0) @binding(2) var<storage, read_write> projCache: array<u32>;
 
 struct Uniforms {
     numSplats: u32,
@@ -29,7 +26,11 @@ struct Uniforms {
     isOrtho: u32,
     exposure: f32,
 }
-@group(0) @binding(6) var<uniform> uniforms: Uniforms;
+@group(0) @binding(3) var<uniform> uniforms: Uniforms;
+
+#include "gsplatComputeSplatCS"
+#include "gsplatFormatDeclCS"
+#include "gsplatFormatReadCS"
 
 @compute @workgroup_size(256)
 fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numWorkgroups: vec3u) {
@@ -39,24 +40,23 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     }
 
     let splatId = splatOrder[uniforms.numSplats - 1u - threadIdx];
-    let texSize = uniforms.splatTextureSize;
-    let uv = vec2i(i32(splatId % texSize), i32(splatId / texSize));
 
-    let tA = textureLoad(dataTransformA, uv, 0);
-    let tB = textureLoad(dataTransformB, uv, 0).x;
-
-    let worldCenter = vec3f(bitcast<f32>(tA.r), bitcast<f32>(tA.g), bitcast<f32>(tA.b));
-    let rotation = decodeRotation(tA.a);
-    let scale = decodeScale(tB);
-    let opacity = f32(tB >> 24u) / 255.0;
+    // Call order: getCenter() first, then getOpacity() for early culling,
+    // then getRotation()/getScale(), then getColor() only for visible splats.
+    setSplat(splatId);
+    let center = getCenter();
+    let opacity = getOpacity();
 
     if (opacity < 1.0 / 255.0) {
         splatTileCounts[threadIdx] = 0u;
         return;
     }
 
+    let rotation = half4(getRotation());
+    let scale = half3(getScale());
+
     let proj = computeSplatCov(
-        worldCenter, rotation, scale,
+        center, rotation, scale,
         uniforms.viewMatrix, uniforms.viewProj,
         uniforms.focal, uniforms.viewportWidth, uniforms.viewportHeight,
         uniforms.nearClip, uniforms.farClip, opacity, uniforms.minPixelSize,
@@ -68,15 +68,14 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
         return;
     }
 
-    // Precompute Gaussian evaluation coefficients
     let det = proj.a * proj.c - proj.b * proj.b;
     let invDet = 1.0 / det;
     let coeffX = -2.0 * proj.c * invDet;
     let coeffY = -2.0 * proj.a * invDet;
     let coeffXY = 4.0 * proj.b * invDet;
 
-    let tC = textureLoad(dataColor, uv, 0).x;
-    var rgb = prepareOutputFromGamma(decodeColor(tC));
+    let color = getColor();
+    var rgb = prepareOutputFromGamma(max(color, vec3f(0.0)));
 
     let colorHalf = vec4<f16>(half(rgb.x), half(rgb.y), half(rgb.z), half(opacity));
 
@@ -89,7 +88,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     projCache[base + 5u] = pack2x16float(vec2f(f32(colorHalf.r), f32(colorHalf.g)));
     projCache[base + 6u] = pack2x16float(vec2f(f32(colorHalf.b), f32(colorHalf.a)));
 
-    let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, opacity,
+    let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, half(opacity),
                                     uniforms.viewportWidth, uniforms.viewportHeight);
 
     let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
