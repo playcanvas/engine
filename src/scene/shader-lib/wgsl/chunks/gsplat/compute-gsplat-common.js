@@ -127,8 +127,11 @@ fn computeSplatCov(
     let radiusFactor = computeRadiusFactor(half(opacity));
 
     let vmin = min(1024.0, min(viewportWidth, viewportHeight));
-    let radiusX = min(sqrt(2.0 * a), 2.0 * vmin);
-    let radiusY = min(sqrt(2.0 * c), 2.0 * vmin);
+    let maxRadius = 2.0 * vmin;
+    let radiusXUncapped = sqrt(2.0 * a);
+    let radiusYUncapped = sqrt(2.0 * c);
+    let radiusX = min(radiusXUncapped, maxRadius);
+    let radiusY = min(radiusYUncapped, maxRadius);
 
     if (max(radiusX, radiusY) < minPixelSize) {
         return result;
@@ -140,10 +143,18 @@ fn computeSplatCov(
         return result;
     }
 
+    // When the projected extent exceeds the radius cap, rescale the covariance
+    // so the Gaussian reaches its cutoff at the capped boundary. Without this,
+    // the Gaussian is still opaque at the boundary, creating hard rectangular
+    // edges. This matches the quad renderer's implicit UV renormalization.
+    let capScale = max(1.0, max(radiusXUncapped, radiusYUncapped) / maxRadius);
+    let invCapScale2 = 1.0 / (capScale * capScale);
+
     result.screen = screen;
-    result.a = a;
-    result.b = b;
-    result.c = c;
+    let scaledCov = vec3f(a, b, c) * invCapScale2;
+    result.a = scaledCov.x;
+    result.b = scaledCov.y;
+    result.c = scaledCov.z;
     result.radius = vec2f(radiusX, radiusY);
     result.radiusFactor = radiusFactor;
     result.valid = true;
