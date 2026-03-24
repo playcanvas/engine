@@ -92,7 +92,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     let viewDepth = -(uniforms.viewMatrix * vec4f(center, 1.0)).z;
     projCache[base + 7u] = bitcast<u32>(viewDepth);
 
-    let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, opacity,
+    let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, half(opacity),
                                     uniforms.viewportWidth, uniforms.viewportHeight);
 
     let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));

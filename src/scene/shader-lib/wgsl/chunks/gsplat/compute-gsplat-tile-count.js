@@ -88,7 +88,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     projCache[base + 5u] = pack2x16float(vec2f(f32(colorHalf.r), f32(colorHalf.g)));
     projCache[base + 6u] = pack2x16float(vec2f(f32(colorHalf.b), f32(colorHalf.a)));
 
-    let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, opacity,
+    let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, half(opacity),
                                     uniforms.viewportWidth, uniforms.viewportHeight);
 
     let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));

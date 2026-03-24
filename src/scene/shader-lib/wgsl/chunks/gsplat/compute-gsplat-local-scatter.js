@@ -2,6 +2,7 @@
 // and atomically writes the splat's cache index into per-tile entry lists.
 export const computeGsplatLocalScatterSource = /* wgsl */`
 
+#include "halfTypesCS"
 #include "gsplatTileIntersectCS"
 
 const TILE_SIZE: u32 = 16u;
@@ -43,7 +44,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     let coeffXY = bitcast<f32>(projCache[base + 4u]);
 
     let screen = vec2f(screenX, screenY);
-    let eval = computeSplatTileEval(screen, coeffX, coeffY, coeffXY, opacity,
+    let eval = computeSplatTileEval(screen, coeffX, coeffY, coeffXY, half(opacity),
                                     uniforms.viewportWidth, uniforms.viewportHeight);
 
     let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));

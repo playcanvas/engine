@@ -124,7 +124,7 @@ fn computeSplatCov(
     // distance. We solve for the power where opacity * exp(power) = 1/255,
     // giving radiusFactor = min(8.0, 2.0 * ln(255 * opacity)). This shrinks
     // the effective radius for low-opacity splats, reducing tile assignments.
-    let radiusFactor = computeRadiusFactor(opacity);
+    let radiusFactor = computeRadiusFactor(half(opacity));
 
     let vmin = min(1024.0, min(viewportWidth, viewportHeight));
     let radiusX = min(sqrt(2.0 * a), 2.0 * vmin);
