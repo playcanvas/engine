@@ -34,6 +34,7 @@ import { BlockAllocator } from '../../core/block-allocator.js';
  * @import { GSplatRenderer } from './gsplat-renderer.js'
  */
 
+// test
 const USE_GLOBAL_COMPUTE_RENDERER = false;
 const USE_LOCAL_COMPUTE_RENDERER = false;
 
