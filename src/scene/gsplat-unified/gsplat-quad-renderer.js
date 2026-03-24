@@ -72,6 +72,7 @@ class GSplatQuadRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_UNIFIED_ID');
         this._internalDefines.add('PICK_CUSTOM_ID');
         this._internalDefines.add('GSPLAT_INDIRECT_DRAW');
+        this._internalDefines.add('GSPLAT_SEPARATE_OPACITY');
 
         this.meshInstance = this.createMeshInstance();
     }
@@ -145,6 +146,7 @@ class GSplatQuadRenderer extends GSplatRenderer {
 
         // Set defines
         this._material.setDefine('SH_BANDS', '0');
+        this._material.setDefine('GSPLAT_SEPARATE_OPACITY', '');
 
         // Set GSPLAT_COLOR_FLOAT define based on work buffer's color format
         const colorStream = workBuffer.format.getStream('dataColor');

@@ -41,17 +41,19 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
 
     let splatId = splatOrder[uniforms.numSplats - 1u - threadIdx];
 
+    // Call order: getCenter() first, then getOpacity() for early culling,
+    // then getRotation()/getScale(), then getColor() only for visible splats.
     setSplat(splatId);
     let center = getCenter();
-    let color = getColor();
-    let opacity = color.a;
-    let rotation = half4(getRotation());
-    let scale = half3(getScale());
+    let opacity = getOpacity();
 
     if (opacity < 1.0 / 255.0) {
         splatTileCounts[threadIdx] = 0u;
         return;
     }
+
+    let rotation = half4(getRotation());
+    let scale = half3(getScale());
 
     let proj = computeSplatCov(
         center, rotation, scale,
@@ -72,7 +74,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     let coeffY = -2.0 * proj.a * invDet;
     let coeffXY = 4.0 * proj.b * invDet;
 
-    var rgb = prepareOutputFromGamma(max(color.rgb, vec3f(0.0)));
+    let color = getColor();
+    var rgb = prepareOutputFromGamma(max(color, vec3f(0.0)));
 
     let colorHalf = vec4<f16>(half(rgb.x), half(rgb.y), half(rgb.z), half(opacity));
 

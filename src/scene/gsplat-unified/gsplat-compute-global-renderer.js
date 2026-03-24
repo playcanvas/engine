@@ -428,6 +428,9 @@ class GSplatComputeGlobalRenderer extends GSplatRenderer {
         for (const stream of wb.format.streams) {
             this.countCompute.setParameter(stream.name, wb.getTexture(stream.name));
         }
+        for (const stream of wb.format.extraStreams) {
+            this.countCompute.setParameter(stream.name, wb.getTexture(stream.name));
+        }
         this.countCompute.setParameter('numSplats', numSplats);
         this.countCompute.setParameter('splatTextureSize', this._textureSize ?? 0);
         this.countCompute.setParameter('numTilesX', numTilesX);
@@ -586,20 +589,23 @@ class GSplatComputeGlobalRenderer extends GSplatRenderer {
         ]);
 
         const wbFormat = this.workBuffer.format;
-        const formatStartBinding = 4;
 
-        this._countBindGroupFormat = new BindGroupFormat(device, [
+        const fixedBindings = [
             new BindStorageBufferFormat('splatOrder', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('splatTileCounts', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
+            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
+        ];
+
+        this._countBindGroupFormat = new BindGroupFormat(device, [
+            ...fixedBindings,
             ...wbFormat.getComputeBindFormats()
         ]);
 
         const cincludes = this._createCommonIncludes();
         this._createTonemapIncludes(cincludes);
         cincludes.set('gsplatComputeSplatCS', computeSplatSource);
-        cincludes.set('gsplatFormatDeclCS', wbFormat.getComputeInputDeclarations(formatStartBinding));
+        cincludes.set('gsplatFormatDeclCS', wbFormat.getComputeInputDeclarations(fixedBindings.length));
         cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
 
         const cdefines = new Map();

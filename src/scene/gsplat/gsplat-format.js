@@ -387,7 +387,7 @@ class GSplatFormat {
     getComputeInputDeclarations(startBinding, streamNames) {
         const lines = [];
 
-        let streams = [...this.streams];
+        let streams = [...this.streams, ...this._extraStreams];
         if (streamNames) {
             streams = streams.filter(s => streamNames.includes(s.name));
         }
@@ -417,7 +417,7 @@ class GSplatFormat {
      * @ignore
      */
     getComputeBindFormats(streamNames) {
-        let streams = [...this.streams];
+        let streams = [...this.streams, ...this._extraStreams];
         if (streamNames) {
             streams = streams.filter(s => streamNames.includes(s.name));
         }

@@ -56,7 +56,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     }
 
     // read color (~11 bit source data, use half precision)
-    var clr: half4 = half4(getColor());
+    #ifdef GSPLAT_SEPARATE_OPACITY
+        let opacity = getOpacity(); // must run before getColor() to cache color data
+        var clr: half4 = half4(vec4f(getColor(), opacity));
+    #else
+        var clr: half4 = half4(getColor());
+    #endif
 
     #if GSPLAT_AA
         clr.a = clr.a * corner.aaFactor;
