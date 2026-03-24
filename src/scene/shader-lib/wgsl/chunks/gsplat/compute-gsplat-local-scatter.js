@@ -59,11 +59,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
             if (tileIntersectsEllipse(tMin, tMax, screen, coeffX, coeffY, coeffXY, eval.radiusFactor)) {
                 let tileIdx = u32(ty) * uniforms.numTilesX + u32(tx);
                 let writePos = tileSplatCounts[tileIdx] + atomicAdd(&tileWriteCursors[tileIdx], 1u);
-                // Bounds-check against the tile's allocated range, not just the buffer size.
-                // The tile-count and scatter passes may disagree on borderline tile intersections
-                // due to GPU compiler optimizations (e.g. FMA fusion) producing different results
-                // for identical inputs across separate shader programs. Without this check,
-                // overflow entries corrupt the adjacent tile's data in tileEntries.
+                // Bounds-check against the tile's allocated range to prevent overflow
+                // into adjacent tile data in tileEntries.
                 let tileEnd = tileSplatCounts[tileIdx + 1u];
                 if (writePos < tileEnd && writePos < uniforms.maxEntries) {
                     tileEntries[writePos] = threadIdx;
