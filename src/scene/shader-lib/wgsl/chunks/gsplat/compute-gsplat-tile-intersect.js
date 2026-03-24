@@ -1,15 +1,11 @@
-// Two tile intersection strategies: uncomment one.
-// StopThePop is measurably faster on the tile count pass with little visible quality loss.
-// TILE_INTERSECT_STOPTHEPOP: Closest-point Gaussian evaluation (faster, ~10 ops).
-//   Based on "StopThePop: Sorted Gaussian Splatting for View-Consistent Real-time Rendering"
-//   (Radl et al., 2024) https://github.com/r4dl/StopThePop-Rasterization
-//   Clamps center to tile bounds, evaluates Gaussian power at that point.
-//   Slightly approximate for highly elongated ellipses.
-// TILE_INTERSECT_FLASHGS: Exact conic-edge intersection (slower, ~25 ops).
-//   Based on "FlashGS: Efficient 3D Gaussian Splatting for Large-scale and High-resolution Rendering"
-//   (Feng et al., 2024) https://github.com/InternLandMark/FlashGS
-//   Solves quadratic intersections along the two closest tile edges.
-//   Mathematically exact for arbitrary ellipses.
+// Tile intersection test based on FlashGS exact conic-edge intersection.
+// Based on "FlashGS: Efficient 3D Gaussian Splatting for Large-scale and High-resolution Rendering"
+// (Feng et al., 2024) https://github.com/InternLandMark/FlashGS
+// Solves quadratic intersections along the two closest tile edges.
+// Mathematically exact for arbitrary ellipses.
+//
+// Note: A faster alternative based on StopThePop (closest-point Gaussian evaluation) was tested
+// but produced grid artifacts on larger splats due to false negatives for elongated ellipses.
 export const computeGsplatTileIntersectSource = /* wgsl */`
 
 struct SplatTileEval {
@@ -40,27 +36,6 @@ fn computeSplatTileEval(
     result.splatMax = screen + radius;
     return result;
 }
-
-#define TILE_INTERSECT_STOPTHEPOP
-
-#ifdef TILE_INTERSECT_STOPTHEPOP
-
-// Clamp center to tile bounds and evaluate the Gaussian power at that point.
-// If the power is below the cutoff threshold, the splat doesn't visibly
-// contribute to this tile. Faster than exact edge intersection but can
-// produce rare false negatives for extremely elongated ellipses.
-fn tileIntersectsEllipse(
-    tileMin: vec2f, tileMax: vec2f, center: vec2f,
-    coeffX: f32, coeffY: f32, coeffXY: f32,
-    radiusFactor: f32
-) -> bool {
-    let closest = clamp(center, tileMin, tileMax);
-    let dx = closest - center;
-    let power = coeffX * dx.x * dx.x + coeffXY * dx.x * dx.y + coeffY * dx.y * dx.y;
-    return power > -radiusFactor * 0.5;
-}
-
-#else // TILE_INTERSECT_FLASHGS
 
 // Tests if the quadratic a*t^2 + b*t + c = 0 has a root in the interval [l-d, r-d].
 fn segmentIntersectsEllipse(a: f32, b: f32, c: f32, d: f32, l: f32, r: f32) -> bool {
@@ -113,6 +88,4 @@ fn tileIntersectsEllipse(
 
     return false;
 }
-
-#endif
 `;
