@@ -171,7 +171,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'splatBudget' },
                     min: 0,
-                    max: 10,
+                    max: 20,
                     precision: 1,
                     step: 0.1
                 })
