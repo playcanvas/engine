@@ -6,7 +6,6 @@ import {
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { QuadRender } from '../graphics/quad-render.js';
@@ -196,16 +195,12 @@ class GSplatResolveSH {
 
         const { resource } = gsplatInstance;
 
-        const includes = new Map(ShaderChunks.get(device, device.isWebGPU ? 'wgsl' : 'glsl'));
-
         this.shader = ShaderUtils.createShader(device, {
             uniqueName: 'gsplatResolveSH',
             vertexGLSL,
             fragmentGLSL,
             vertexWGSL,
             fragmentWGSL,
-            vertexIncludes: includes,
-            fragmentIncludes: includes,
             fragmentDefines: new Map([
                 ['SH_BANDS', resource.gsplatData.shBands.toString()]
             ]),

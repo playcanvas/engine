@@ -4,9 +4,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import {
     FILTER_NEAREST,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE,
-    SEMANTIC_POSITION,
-    SHADERLANGUAGE_WGSL,
-    SHADERLANGUAGE_GLSL
+    SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
@@ -17,7 +15,6 @@ import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
-import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
  * @import { Vec4 } from '../../core/math/vec4.js'
@@ -441,18 +438,11 @@ function reprojectTexture(source, target, options = {}) {
         defines.set('{NUM_SAMPLES}', numSamples);
         defines.set('{NUM_SAMPLES_SQRT}', Math.round(Math.sqrt(numSamples)).toFixed(1));
 
-        const wgsl = device.isWebGPU;
-        const chunks = ShaderChunks.get(device, wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
-        const includes = new Map();
-        includes.set('decodePS', chunks.get('decodePS'));
-        includes.set('encodePS', chunks.get('encodePS'));
-
         shader = ShaderUtils.createShader(device, {
             uniqueName: shaderKey,
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'reprojectVS',
             fragmentChunk: 'reprojectPS',
-            fragmentIncludes: includes,
             fragmentDefines: defines
         });
     }

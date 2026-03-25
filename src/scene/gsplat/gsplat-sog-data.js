@@ -13,10 +13,8 @@ import glslGsplatSogReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplat
 import wgslGsplatSogReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogReorder.js';
 
 import glslGsplatSogReorderSh from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogReorderSh.js';
-import glslGsplatPackingPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatPacking.js';
 
 import wgslGsplatSogReorderSH from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogReorderSh.js';
-import wgslGsplatPackingPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatPacking.js';
 
 import glslSogCentersPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogCenters.js';
 import wgslSogCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogCenters.js';
@@ -404,8 +402,7 @@ class GSplatSogData {
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslSogCentersPS,
             fragmentWGSL: wgslSogCentersPS,
-            fragmentOutputTypes: ['uvec4'],
-            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]])
+            fragmentOutputTypes: ['uvec4']
         });
 
         const renderTarget = new RenderTarget({
@@ -467,7 +464,6 @@ class GSplatSogData {
             fragmentGLSL: glslGsplatSogReorderPS,
             fragmentWGSL: wgslGsplatSogReorderPS,
             fragmentOutputTypes: ['uvec4', 'vec4'],
-            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]]),
             fragmentDefines: (meta.version === 2) ? undefined : new Map([['REORDER_V1', '1']])
         });
 
@@ -520,7 +516,6 @@ class GSplatSogData {
             vertexChunk: 'fullscreenQuadVS',
             fragmentGLSL: glslGsplatSogReorderSh,
             fragmentWGSL: wgslGsplatSogReorderSH,
-            fragmentIncludes: new Map([['gsplatPackingPS', device.isWebGPU ? wgslGsplatPackingPS : glslGsplatPackingPS]]),
             fragmentDefines: (meta.version === 2) ? undefined : new Map([['REORDER_V1', '1']])
         });
 

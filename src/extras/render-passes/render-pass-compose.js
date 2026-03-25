@@ -361,15 +361,12 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 }
                 if (this._debug) defines.set('DEBUG_COMPOSE', this._debug);
 
-                const includes = new Map(shaderChunks);
-
                 this.shader = ShaderUtils.createShader(this.device, {
                     uniqueName: `ComposeShader-${key}`,
                     attributes: { aPosition: SEMANTIC_POSITION },
                     vertexChunk: 'quadVS',
                     fragmentChunk: 'composePS',
-                    fragmentDefines: defines,
-                    fragmentIncludes: includes
+                    fragmentDefines: defines
                 });
             }
         }
