@@ -25,6 +25,7 @@ var<workgroup> sharedCenterScreen: array<vec2f, 64>;
 var<workgroup> sharedCoeffs: array<vec3f, 64>;
 var<workgroup> sharedColor: array<half4, 64>;
 var<workgroup> doneCount: atomic<u32>;
+var<workgroup> doneCountShared: u32;
 
 fn evalSplat(pixelCoord: vec2f, center: vec2f, coeffX: f32, coeffY: f32, coeffXY: f32, splatColor: half4, colorAccum: ptr<function, half3>, T: ptr<function, half>) {
     let dx = pixelCoord - center;
@@ -113,7 +114,11 @@ fn main(
         if (threadDone) {
             atomicAdd(&doneCount, 1u);
         }
-        let totalDone = workgroupUniformLoad(&doneCount);
+        workgroupBarrier();
+        if (localIdx == 0u) {
+            doneCountShared = atomicLoad(&doneCount);
+        }
+        let totalDone = workgroupUniformLoad(&doneCountShared);
         if (totalDone == WORKGROUP_SIZE) {
             break;
         }
