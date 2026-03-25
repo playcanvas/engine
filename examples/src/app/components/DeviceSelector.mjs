@@ -9,7 +9,7 @@ import {
 } from '../constants.mjs';
 import { jsx } from '../jsx.mjs';
 
-const isWebGPU = (dt) => dt === 'webgpu' || dt.startsWith('webgpu:');
+const isWebGPU = dt => dt === 'webgpu' || dt.startsWith('webgpu:');
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGPU]: 'WebGPU',

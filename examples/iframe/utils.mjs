@@ -103,7 +103,7 @@ export function parseConfig(script) {
 }
 
 const DEVICE_TYPES = ['webgpu', 'webgpu:bare', 'webgl2', 'null'];
-const isWebGPU = (dt) => dt === 'webgpu' || dt.startsWith('webgpu:');
+const isWebGPU = dt => dt === 'webgpu' || dt.startsWith('webgpu:');
 export let deviceType = 'webgl2';
 
 /**
