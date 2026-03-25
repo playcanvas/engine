@@ -303,37 +303,35 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const featureLevel = this.initOptions.featureLevel;
         const bare = featureLevel === 'bare';
 
-        // request optional features (skipped for bare mode to simulate the most constrained device)
+        // request optional features (returns false for bare mode to simulate the most constrained device)
         const requiredFeatures = [];
-        if (!bare) {
-            const requireFeature = (feature) => {
-                const supported = this.gpuAdapter.features.has(feature);
-                if (supported) {
-                    requiredFeatures.push(feature);
-                }
-                return supported;
-            };
-            this.textureFloatFilterable = requireFeature('float32-filterable');
-            this.textureFloatBlendable = requireFeature('float32-blendable');
-            this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
-            this.extCompressedTextureS3TCSliced3D = requireFeature('texture-compression-bc-sliced-3d');
-            this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
-            this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
-            this.extCompressedTextureASTCSliced3D = requireFeature('texture-compression-astc-sliced-3d');
-            this.supportsTimestampQuery = requireFeature('timestamp-query');
-            this.supportsDepthClip = requireFeature('depth-clip-control');
-            this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
-            this.supportsIndirectFirstInstance = requireFeature('indirect-first-instance');
-            this.supportsShaderF16 = requireFeature('shader-f16');
-            this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
-            this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
-            this.supportsClipDistances = requireFeature('clip-distances');
-            this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
-            this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
-            this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
-            this.supportsPrimitiveIndex = requireFeature('primitive-index');
-            this.supportsSubgroups = requireFeature('subgroups');
-        }
+        const requireFeature = bare ? () => false : (feature) => {
+            const supported = this.gpuAdapter.features.has(feature);
+            if (supported) {
+                requiredFeatures.push(feature);
+            }
+            return supported;
+        };
+        this.textureFloatFilterable = requireFeature('float32-filterable');
+        this.textureFloatBlendable = requireFeature('float32-blendable');
+        this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
+        this.extCompressedTextureS3TCSliced3D = requireFeature('texture-compression-bc-sliced-3d');
+        this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
+        this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
+        this.extCompressedTextureASTCSliced3D = requireFeature('texture-compression-astc-sliced-3d');
+        this.supportsTimestampQuery = requireFeature('timestamp-query');
+        this.supportsDepthClip = requireFeature('depth-clip-control');
+        this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
+        this.supportsIndirectFirstInstance = requireFeature('indirect-first-instance');
+        this.supportsShaderF16 = requireFeature('shader-f16');
+        this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
+        this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
+        this.supportsClipDistances = requireFeature('clip-distances');
+        this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
+        this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
+        this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
+        this.supportsPrimitiveIndex = requireFeature('primitive-index');
+        this.supportsSubgroups = requireFeature('subgroups');
         Debug.log(`WEBGPU features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}`);
 
         // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
