@@ -353,10 +353,14 @@ class GSplatFormat {
         for (const stream of streams) {
             const info = getShaderType(stream.format);
             const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
+            let textureType = info.textureType ?? '';
+            if (isWebGPU && stream.format === PIXELFORMAT_RGBA32F) {
+                textureType = 'texture_2d<uff>';
+            }
             const decl = template
             .replace(RE_NAME, stream.name)
             .replace(RE_SAMPLER, info.sampler ?? '')
-            .replace(RE_TEXTURE_TYPE, info.textureType ?? '')
+            .replace(RE_TEXTURE_TYPE, textureType)
             .replace(RE_RETURN_TYPE, info.returnType)
             .replace(RE_FUNC_NAME, funcName);
             lines.push(decl);
@@ -396,10 +400,14 @@ class GSplatFormat {
             const stream = streams[i];
             const info = getWgslShaderType(stream.format);
             const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
+            let textureType = info.textureType ?? '';
+            if (stream.format === PIXELFORMAT_RGBA32F) {
+                textureType = 'texture_2d<uff>';
+            }
             const decl = wgslComputeStreamDecl
             .replace(RE_BINDING, String(startBinding + i))
             .replace(RE_NAME, stream.name)
-            .replace(RE_TEXTURE_TYPE, info.textureType ?? '')
+            .replace(RE_TEXTURE_TYPE, textureType)
             .replace(RE_RETURN_TYPE, info.returnType)
             .replace(RE_FUNC_NAME, funcName);
             lines.push(decl);
