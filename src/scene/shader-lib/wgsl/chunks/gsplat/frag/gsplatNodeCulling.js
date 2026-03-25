@@ -3,9 +3,9 @@
 // (bit b = 1 means sphere baseIndex+b is visible). The visibility texture is
 // 32x smaller than the bounds texture.
 export default /* wgsl */`
-var boundsSphereTexture: texture_2d<f32>;
+var boundsSphereTexture: texture_2d<uff>;
 var boundsTransformIndexTexture: texture_2d<u32>;
-var transformsTexture: texture_2d<f32>;
+var transformsTexture: texture_2d<uff>;
 
 uniform boundsTextureWidth: i32;
 uniform transformsTextureWidth: i32;
