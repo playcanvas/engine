@@ -1,5 +1,6 @@
 // @config DESCRIPTION Test example for FramePassRadixSort - GPU radix sort using mipmap binary search
 // @config HIDDEN
+// @config WEBGPU_BARE_DISABLED
 import files from 'examples/files';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';

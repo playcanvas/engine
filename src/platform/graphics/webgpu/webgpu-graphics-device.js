@@ -197,6 +197,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
+        this.featureLevel = options.featureLevel;
 
         this.scope.resolve(UNUSED_UNIFORM_NAME).setValue(0);
     }
@@ -299,47 +300,54 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
-        // request optional features
-        const requiredFeatures = [];
-        const requireFeature = (feature) => {
-            const supported = this.gpuAdapter.features.has(feature);
-            if (supported) {
-                requiredFeatures.push(feature);
-            }
-            return supported;
-        };
-        this.textureFloatFilterable = requireFeature('float32-filterable');
-        this.textureFloatBlendable = requireFeature('float32-blendable');
-        this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
-        this.extCompressedTextureS3TCSliced3D = requireFeature('texture-compression-bc-sliced-3d');
-        this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
-        this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
-        this.extCompressedTextureASTCSliced3D = requireFeature('texture-compression-astc-sliced-3d');
-        this.supportsTimestampQuery = requireFeature('timestamp-query');
-        this.supportsDepthClip = requireFeature('depth-clip-control');
-        this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
-        this.supportsIndirectFirstInstance = requireFeature('indirect-first-instance');
-        this.supportsShaderF16 = requireFeature('shader-f16');
-        this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
-        this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
-        this.supportsClipDistances = requireFeature('clip-distances');
-        this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
-        this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
-        this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
-        this.supportsPrimitiveIndex = requireFeature('primitive-index');
-        this.supportsSubgroups = requireFeature('subgroups');
-        Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
+        const featureLevel = this.initOptions.featureLevel;
+        const bare = featureLevel === 'bare';
 
-        // copy all adapter limits to the requiredLimits object - to created a device with the best feature sets available
-        const adapterLimits = this.gpuAdapter?.limits;
-        const requiredLimits = {};
-        if (adapterLimits) {
-            for (const limitName in adapterLimits) {
-                // skip these as they fail on Windows Chrome and are not part of spec currently
-                if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
-                    continue;
+        // request optional features (skipped for bare mode to simulate the most constrained device)
+        const requiredFeatures = [];
+        if (!bare) {
+            const requireFeature = (feature) => {
+                const supported = this.gpuAdapter.features.has(feature);
+                if (supported) {
+                    requiredFeatures.push(feature);
                 }
-                requiredLimits[limitName] = adapterLimits[limitName];
+                return supported;
+            };
+            this.textureFloatFilterable = requireFeature('float32-filterable');
+            this.textureFloatBlendable = requireFeature('float32-blendable');
+            this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
+            this.extCompressedTextureS3TCSliced3D = requireFeature('texture-compression-bc-sliced-3d');
+            this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
+            this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
+            this.extCompressedTextureASTCSliced3D = requireFeature('texture-compression-astc-sliced-3d');
+            this.supportsTimestampQuery = requireFeature('timestamp-query');
+            this.supportsDepthClip = requireFeature('depth-clip-control');
+            this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
+            this.supportsIndirectFirstInstance = requireFeature('indirect-first-instance');
+            this.supportsShaderF16 = requireFeature('shader-f16');
+            this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
+            this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
+            this.supportsClipDistances = requireFeature('clip-distances');
+            this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
+            this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
+            this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
+            this.supportsPrimitiveIndex = requireFeature('primitive-index');
+            this.supportsSubgroups = requireFeature('subgroups');
+        }
+        Debug.log(`WEBGPU features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}`);
+
+        // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
+        const requiredLimits = {};
+        if (!bare) {
+            const adapterLimits = this.gpuAdapter?.limits;
+            if (adapterLimits) {
+                for (const limitName in adapterLimits) {
+                    // skip these as they fail on Windows Chrome and are not part of spec currently
+                    if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
+                        continue;
+                    }
+                    requiredLimits[limitName] = adapterLimits[limitName];
+                }
             }
         }
 

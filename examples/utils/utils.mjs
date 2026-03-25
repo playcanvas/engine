@@ -41,7 +41,7 @@ export const isModuleWithExternalDependencies = (content) => {
  * @returns {ExampleConfig} - The parsed config.
  */
 export const parseConfig = (script) => {
-    const regex = /\/\/ @config (\S+)(?:\s+([^\n]+))?/g;
+    const regex = /\/\/ @config (\S+)(?:[ \t]+([^\n]+))?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};

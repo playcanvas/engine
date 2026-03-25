@@ -90,7 +90,7 @@ export function clearImports() {
  * @returns {Record<string, any>} - The parsed config.
  */
 export function parseConfig(script) {
-    const regex = /\/\/ @config (\S+)(?:\s+([^\n]+))?/g;
+    const regex = /\/\/ @config (\S+)(?:[ \t]+([^\n]+))?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};
@@ -102,7 +102,8 @@ export function parseConfig(script) {
     return config;
 }
 
-const DEVICE_TYPES = ['webgpu', 'webgl2', 'null'];
+const DEVICE_TYPES = ['webgpu', 'webgpu:bare', 'webgl2', 'null'];
+const isWebGPU = (dt) => dt === 'webgpu' || dt.startsWith('webgpu:');
 export let deviceType = 'webgl2';
 
 /**
@@ -123,13 +124,17 @@ export function updateDeviceType(config) {
         deviceType = 'null';
         return;
     }
-    if (config.WEBGPU_DISABLED && deviceType !== 'webgl2') {
+    if (config.WEBGPU_DISABLED && isWebGPU(deviceType)) {
         console.warn('WebGPU is disabled. Using WebGL 2.0 device instead.');
         deviceType = 'webgl2';
         return;
     }
-    if (config.WEBGL_DISABLED && deviceType !== 'webgpu') {
+    if (config.WEBGL_DISABLED && !isWebGPU(deviceType)) {
         console.warn('WebGL 2.0 is disabled. Using WebGPU device instead.');
+        deviceType = 'webgpu';
+    }
+    if (config.WEBGPU_BARE_DISABLED && deviceType === 'webgpu:bare') {
+        console.warn('WebGPU Bare is disabled for this example. Using WebGPU instead.');
         deviceType = 'webgpu';
     }
 }
