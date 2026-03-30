@@ -569,7 +569,7 @@ class GSplatManager {
      * @private
      */
     get canCull() {
-        return this.scene.gsplat.culling && this.workBuffer.totalBoundsEntries > 0;
+        return this.scene.gsplat.culling && this.workBuffer.frustumCuller.totalBoundsEntries > 0;
     }
 
     /**
@@ -827,8 +827,8 @@ class GSplatManager {
         // Bounds and transforms textures are needed for frustum culling.
         // These index splats sequentially, so always use the full splats array.
         if (this.scene.gsplat.culling) {
-            this.workBuffer.updateBoundsTexture(worldState.boundsGroups);
-            this.workBuffer.updateTransformsTexture(worldState.boundsGroups);
+            this.workBuffer.frustumCuller.updateBoundsTexture(worldState.boundsGroups);
+            this.workBuffer.frustumCuller.updateTransformsTexture(worldState.boundsGroups);
         }
 
         // Render splats to work buffer: full rebuild renders all, partial renders only changed
@@ -1593,7 +1593,7 @@ class GSplatManager {
         // Always run interval compaction (culling or not)
         const numIntervals = worldState.totalIntervals;
         const totalActiveSplats = worldState.totalActiveSplats;
-        const nodeVisibilityTexture = cullingEnabled ? this.workBuffer.nodeVisibilityTexture : null;
+        const nodeVisibilityTexture = cullingEnabled ? this.workBuffer.frustumCuller.nodeVisibilityTexture : null;
         this.intervalCompaction.dispatchCompact(nodeVisibilityTexture, numIntervals, totalActiveSplats, cullingEnabled);
 
         // Allocate indirect draw/dispatch slots and write args from visible count
@@ -1653,7 +1653,7 @@ class GSplatManager {
 
         const numIntervals = worldState.totalIntervals;
         const totalActiveSplats = worldState.totalActiveSplats;
-        const nodeVisibilityTexture = cullingEnabled ? this.workBuffer.nodeVisibilityTexture : null;
+        const nodeVisibilityTexture = cullingEnabled ? this.workBuffer.frustumCuller.nodeVisibilityTexture : null;
         this.intervalCompaction.dispatchCompact(nodeVisibilityTexture, numIntervals, totalActiveSplats, cullingEnabled);
 
         // Extract the visible count from the prefix sum into sortElementCountBuffer.
@@ -1754,10 +1754,10 @@ class GSplatManager {
      * @private
      */
     _runFrustumCulling(worldState) {
-        this.workBuffer.updateTransformsTexture(worldState.boundsGroups);
+        this.workBuffer.frustumCuller.updateTransformsTexture(worldState.boundsGroups);
 
         const cam = this.cameraNode.camera;
-        this.workBuffer.updateNodeVisibility(cam.projectionMatrix, cam.viewMatrix);
+        this.workBuffer.frustumCuller.updateNodeVisibility(cam.projectionMatrix, cam.viewMatrix);
     }
 
     /**
