@@ -12,7 +12,6 @@ import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
 import { GSplatPlacementStateTracker } from './gsplat-placement-state-tracker.js';
 import { GSplatSortKeyCompute } from './gsplat-sort-key-compute.js';
-import { GSplatCompaction } from './gsplat-compaction.js';
 import { GSplatIntervalCompaction } from './gsplat-interval-compaction.js';
 import { ComputeRadixSort } from '../graphics/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
@@ -173,13 +172,6 @@ class GSplatManager {
     gpuSorter = null;
 
     /**
-     * GPU stream compaction for culling (CPU sort path on WebGPU).
-     *
-     * @type {GSplatCompaction|null}
-     */
-    compaction = null;
-
-    /**
      * Interval-based GPU compaction (always-on for GPU sort path).
      *
      * @type {GSplatIntervalCompaction|null}
@@ -202,27 +194,12 @@ class GSplatManager {
     indirectDispatchSlot = -1;
 
     /**
-     * Total splats from the last CPU compaction dispatch. Needed for writeIndirectArgs
-     * to index into the prefix sum buffer to read the visible count.
-     *
-     * @type {number}
-     */
-    lastCompactedTotalSplats = 0;
-
-    /**
      * Total intervals from the last interval compaction dispatch. Needed for
      * writeIndirectArgs to index into the prefix sum buffer for visible count.
      *
      * @type {number}
      */
     lastCompactedNumIntervals = 0;
-
-    /**
-     * Flag set when CPU sort results arrive and compaction needs to run.
-     *
-     * @type {boolean}
-     */
-    cpuCompactionNeeded = false;
 
     /** @type {number} */
     sortedVersion = 0;
@@ -470,11 +447,10 @@ class GSplatManager {
         this.gpuSorter?.destroy();
         this.gpuSorter = null;
 
-        // Switch renderer to CPU mode once, before destroying both compaction systems.
+        // Switch renderer to CPU mode once, before destroying compaction.
         const useCpuSort = false;
         this.renderer.setCpuSortedRendering();
         this.destroyIntervalCompaction(useCpuSort);
-        this.destroyCompaction(useCpuSort);
     }
 
     /**
@@ -491,23 +467,6 @@ class GSplatManager {
             this.intervalCompaction.destroy();
             this.intervalCompaction = null;
         }
-    }
-
-    /**
-     * Destroys compaction resources.
-     *
-     * @param {boolean} [useCpuSort] - Whether to switch the renderer to CPU-sorted mode.
-     * @private
-     */
-    destroyCompaction(useCpuSort = true) {
-        if (this.compaction) {
-            if (useCpuSort) {
-                this.renderer.setCpuSortedRendering();
-            }
-            this.compaction.destroy();
-            this.compaction = null;
-        }
-        this.cpuCompactionNeeded = false;
     }
 
     /**
@@ -611,17 +570,6 @@ class GSplatManager {
      */
     get canCull() {
         return this.scene.gsplat.culling && this.workBuffer.totalBoundsEntries > 0;
-    }
-
-    /**
-     * True when CPU compaction can run (CPU sort path on a device with compute support,
-     * culling available).
-     *
-     * @type {boolean}
-     * @private
-     */
-    get canCpuCompact() {
-        return !this.useGpuSorting && this.device.isWebGPU && this.canCull;
     }
 
     /**
@@ -858,12 +806,6 @@ class GSplatManager {
 
             // update renderer with new order data
             this.renderer.setOrderData();
-
-            // If CPU compaction is active, schedule it to run in the next update()
-            // after the sorted order has been uploaded.
-            if (this.canCpuCompact) {
-                this.cpuCompactionNeeded = true;
-            }
         }
     }
 
@@ -1430,19 +1372,13 @@ class GSplatManager {
         }
 
         // if culling is active but we do not need to sort, check if the frustum changed requiring re-culling
-        if ((this.compaction || this.intervalCompaction) && !this.sortNeeded && this.testFrustumChanged()) {
+        if (this.intervalCompaction && !this.sortNeeded && this.testFrustumChanged()) {
 
             // store the current camera frustum related properties
             this.lastCullingCameraFwd.copy(this.cameraNode.forward);
             this.lastCullingProjMat.copy(this.cameraNode.camera.projectionMatrix);
 
-            if (this.useGpuSorting) {
-                // GPU sorting: we need to re-sort, as sort runs after compaction
-                this.sortNeeded = true;
-            } else {
-                // CPU sorting: we need to re-compact, as compaction runs after sorting
-                this.cpuCompactionNeeded = true;
-            }
+            this.sortNeeded = true;
         }
 
         Debug.call(() => {
@@ -1543,17 +1479,6 @@ class GSplatManager {
             }
         }
 
-        // CPU path: tear down compaction when culling is toggled off
-        if (this.compaction && !this.useGpuSorting && !this.canCull) {
-            this.destroyCompaction();
-
-            // Restore direct rendering with current order data
-            this.renderer.setOrderData();
-            if (sortedState) {
-                this.renderer.update(sortedState.totalActiveSplats, sortedState.textureSize);
-            }
-        }
-
         // kick off sorting / compaction only if needed
         let gpuSortedThisFrame = false;
         if (this.sortNeeded && lastState) {
@@ -1568,12 +1493,6 @@ class GSplatManager {
             } else {
                 // CPU sort just posts to the worker — indirect draw still needs updating below
                 this.sortCpu(lastState);
-
-                // Camera moved → frustum changed → re-cull with existing order
-                // while waiting for new sort results from the worker
-                if (this.compaction) {
-                    this.cpuCompactionNeeded = true;
-                }
             }
             this.sortNeeded = false;
 
@@ -1586,25 +1505,10 @@ class GSplatManager {
             this.lastCullingProjMat.copy(this.cameraNode.camera.projectionMatrix);
         }
 
-        // When CPU compaction conditions are met but compaction hasn't started yet,
-        // bootstrap it immediately. This handles culling being toggled ON while the camera is
-        // stationary (no sort kick) or during the gap frames before the first onSorted() callback.
-        if (!this.useLocalRenderer && this.canCpuCompact &&
-            !this.compaction && sortedState && sortedState.sortedBefore) {
-            this.cpuCompactionNeeded = true;
-        }
-
-        // Compaction dispatch: run full culling + compaction when explicitly requested
-        // (camera moved, frustum changed, sort completed, or bootstrap). On stationary
-        // frames, only refresh the per-frame indirect draw slot.
-        if (!this.useLocalRenderer) {
-            if (this.cpuCompactionNeeded) {
-                this.cpuCompactionNeeded = false;
-                this._runCpuCompaction();
-            } else if ((this.compaction || this.intervalCompaction) && !gpuSortedThisFrame) {
-                // Refresh the per-frame indirect draw slot (sortGpu already handled GPU-sort frames)
-                this.refreshIndirectDraw();
-            }
+        // Refresh the per-frame indirect draw slot on non-sort frames
+        // (sortGpu already handled GPU-sort frames).
+        if (!this.useLocalRenderer && this.intervalCompaction && !gpuSortedThisFrame) {
+            this.refreshIndirectDraw();
         }
 
         // renderer per-frame update (material syncing, deferred setup)
@@ -1857,21 +1761,6 @@ class GSplatManager {
     }
 
     /**
-     * Allocates per-frame indirect draw and dispatch slots and runs writeIndirectArgs
-     * to write draw/dispatch args from the prefix sum visible count.
-     *
-     * @param {number} totalSplats - Total splat count (index into prefix sum buffer).
-     * @private
-     */
-    allocateAndWriteIndirectArgs(totalSplats) {
-        this.indirectDrawSlot = this.device.getIndirectDrawSlot(1);
-        this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(2);
-        const compaction = /** @type {GSplatCompaction} */ (this.compaction);
-        compaction.writeIndirectArgs(this.indirectDrawSlot, this.indirectDispatchSlot, totalSplats);
-        this.lastCompactedTotalSplats = totalSplats;
-    }
-
-    /**
      * Refreshes indirect draw parameters on non-sort frames.
      * Allocates a new per-frame draw slot and re-runs writeIndirectArgs to write
      * draw args from the visibleCount that was established during the last sort.
@@ -1881,68 +1770,12 @@ class GSplatManager {
      */
     refreshIndirectDraw() {
         const sortedState = this.worldStates.get(this.sortedVersion);
-        if (!sortedState) return;
+        if (!sortedState || !this.intervalCompaction) return;
 
-        if (this.intervalCompaction) {
-            // GPU sort path: radix sort output already contains sorted splat IDs
-            this.allocateAndWriteIntervalIndirectArgs(this.lastCompactedNumIntervals);
-            const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
-            const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
-            this.renderer.setGpuSortedRendering(this.indirectDrawSlot, /** @type {StorageBuffer} */ (gpuSorter.sortedIndices), /** @type {StorageBuffer} */ (ic.numSplatsBuffer), sortedState.textureSize);
-        } else {
-            // CPU sort path: compacted buffer already contains sorted visible splat IDs
-            this.allocateAndWriteIndirectArgs(this.lastCompactedTotalSplats);
-            const compaction = /** @type {GSplatCompaction} */ (this.compaction);
-            this.renderer.setGpuSortedRendering(this.indirectDrawSlot, /** @type {StorageBuffer} */ (compaction.compactedSplatIds), /** @type {StorageBuffer} */ (compaction.numSplatsBuffer), sortedState.textureSize);
-        }
-    }
-
-    /**
-     * Runs GPU compaction for the CPU sorting path on WebGPU. After CPU sort results
-     * have been uploaded (order buffer), this runs frustum culling and prefix-sum
-     * compaction using the sorted order, then sets up indirect draw so only visible
-     * sorted splats are rendered.
-     *
-     * @private
-     */
-    _runCpuCompaction() {
-        const sortedState = this.worldStates.get(this.sortedVersion);
-        if (!sortedState) return;
-
-        const elementCount = sortedState.totalActiveSplats;
-        if (elementCount === 0) return;
-
-        // Run frustum culling first — this creates nodeVisibilityTexture on first call
-        this._runFrustumCulling(sortedState);
-
-        const pcNodeIndexTexture = this.workBuffer.getTexture('pcNodeIndex');
-        const nodeVisibilityTexture = this.workBuffer.nodeVisibilityTexture;
-        const orderBuffer = this.workBuffer.orderBuffer;
-        if (!pcNodeIndexTexture || !nodeVisibilityTexture || !orderBuffer) return;
-
-        // Lazily create the compaction instance
-        if (!this.compaction) {
-            this.compaction = new GSplatCompaction(this.device);
-        }
-
-        // Run compaction with sorted order (order-preserving)
-        this.compaction.dispatchCompact(
-            pcNodeIndexTexture,
-            nodeVisibilityTexture,
-            elementCount,
-            this.workBuffer.textureSize,
-            orderBuffer
-        );
-
-        this.allocateAndWriteIndirectArgs(elementCount);
-
-        // Set up GPU-sorted rendering: compacted buffer already contains sorted visible splatIds
-        this.renderer.setGpuSortedRendering(
-            this.indirectDrawSlot,
-            /** @type {StorageBuffer} */ (this.compaction.compactedSplatIds),
-            /** @type {StorageBuffer} */ (this.compaction.numSplatsBuffer),
-            sortedState.textureSize
-        );
+        this.allocateAndWriteIntervalIndirectArgs(this.lastCompactedNumIntervals);
+        const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
+        const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
+        this.renderer.setGpuSortedRendering(this.indirectDrawSlot, /** @type {StorageBuffer} */ (gpuSorter.sortedIndices), /** @type {StorageBuffer} */ (ic.numSplatsBuffer), sortedState.textureSize);
     }
 
     /**
