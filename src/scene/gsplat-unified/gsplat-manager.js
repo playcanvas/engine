@@ -567,6 +567,23 @@ class GSplatManager {
     }
 
     /**
+     * Dispatches compute pick pipeline and returns the configured pick mesh instance.
+     * Only works when the local compute renderer is active.
+     *
+     * @param {object} camera - The camera.
+     * @param {number} width - Pick target width.
+     * @param {number} height - Pick target height.
+     * @returns {import('../mesh-instance.js').MeshInstance|null} The pick mesh instance, or null.
+     */
+    prepareForPicking(camera, width, height) {
+        if (!this.useLocalRenderer) return null;
+
+        /** @type {GSplatComputeLocalRenderer} */
+        const localRenderer = /** @type {any} */ (this.renderer);
+        return localRenderer.dispatchPick(camera, width, height);
+    }
+
+    /**
      * Creates the CPU sorter (Web Worker based).
      *
      * @returns {GSplatUnifiedSorter} The created sorter.

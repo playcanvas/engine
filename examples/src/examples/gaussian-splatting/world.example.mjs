@@ -104,6 +104,7 @@ assetListLoader.load(() => {
     app.scene.gsplat.lodUpdateAngle = 90;
     app.scene.gsplat.lodBehindPenalty = 2;
     app.scene.gsplat.radialSorting = true;
+    app.scene.gsplat.minPixelSize = 1;
     app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 

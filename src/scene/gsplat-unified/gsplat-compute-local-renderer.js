@@ -1,25 +1,23 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
-import { Texture } from '../../platform/graphics/texture.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
-    BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC, BUFFERUSAGE_INDIRECT,
-    FILTER_NEAREST,
-    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16U,
+    BUFFERUSAGE_COPY_DST,
+    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
     SHADERLANGUAGE_WGSL,
     SHADERSTAGE_COMPUTE,
     UNIFORMTYPE_FLOAT,
     UNIFORMTYPE_MAT4,
     UNIFORMTYPE_UINT
 } from '../../platform/graphics/constants.js';
-import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC, tonemapNames, gammaNames } from '../constants.js';
+import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
+import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { FramePassGSplatComputeLocal } from './frame-pass-gsplat-compute-local.js';
-import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
 import { computeGsplatLocalTileCountSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-tile-count.js';
 import { computeGsplatLocalScatterSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-scatter.js';
 import { computeGsplatLocalRasterizeSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-rasterize.js';
@@ -32,6 +30,7 @@ import { computeGsplatLocalBitonicSource } from '../shader-lib/wgsl/chunks/gspla
 import { computeGsplatCommonSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-common.js';
 import { computeGsplatTileIntersectSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-tile-intersect.js';
 import { GSplatTileComposite } from './gsplat-tile-composite.js';
+import { GSplatLocalDispatchSet } from './gsplat-local-dispatch-set.js';
 import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeSplat.js';
 
 /**
@@ -39,16 +38,15 @@ import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComp
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Layer } from '../layer.js'
  * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
  */
 
 const TILE_SIZE = 16;
-// Starting multiplier for the unified tile entry buffer. The actual multiplier grows
-// dynamically based on async GPU readback of real usage (high-water mark tracking).
 const INITIAL_TILE_ENTRY_MULTIPLIER = 1.5;
 const COUNT_WORKGROUP_SIZE = 256;
 const CACHE_STRIDE = 8;
-// Budget for chunkRanges buffer; excess chunks from bucket sort are silently dropped.
 const MAX_CHUNKS_PER_TILE = 8;
+const SHRINK_THRESHOLD = 10;
 const _viewProjMat = new Mat4();
 const _viewProjData = new Float32Array(16);
 const _viewData = new Float32Array(16);
@@ -56,70 +54,18 @@ const _dispatchSize = new Vec2();
 
 /**
  * Renders splats using a tiled compute pipeline with per-tile binning and local sorting.
- * Receives a compacted splat ID list from {@link GSplatIntervalCompaction}, projects each
- * splat into a projection cache, bins them into screen-space tiles via atomic counting +
- * prefix sum + scatter, classifies tiles by size, sorts each tile by depth (with bucket
- * pre-sort for large tiles), then rasterizes front-to-back. Pipeline:
- *
- *   1. Tile count: project each visible splat, write projection cache (including view-space
- *      depth), atomically count per-tile overlaps.
- *   2. Prefix sum: exclusive prefix sum over per-tile counts produces offsets + total.
- *   3. Scatter: re-iterate splats, atomically write projection cache indices into per-tile
- *      entry lists using the prefix sum offsets.
- *   3.5. Classify: scan tiles, build small/large/rasterize tile lists, assign compact
- *        overflow scratch offsets for large tiles, write indirect args.
- *   4b. Bucket pre-sort: logarithmic-depth bucket histogram + scatter for large tiles (>4096),
- *       using overflow scratch in the unified tileEntries buffer, packs whole buckets into
- *       <=4096 chunks (indirect dispatch). Runs first so the longer chain starts sooner.
- *   4b.5. Write chunk sort indirect dispatch args (separate pass for inter-pass barrier).
- *   4a. Small tile sort: bitonic sort for tiles with 1..4096 entries (indirect dispatch).
- *   4c. Chunk sort: bitonic sort on each chunk from the bucket pre-sort (indirect dispatch).
- *   5. Rasterize: one workgroup per non-empty tile reads its sorted entry range, loads from
- *      the projection cache via shared memory, and blends front-to-back with early-out
- *      (indirect dispatch).
- *
- * The tileEntries buffer is unified: main tile entry lists occupy [0, totalEntries), overflow
- * scratch for bucket sort occupies [totalEntries, totalEntries + overflowUsed). The buffer
- * capacity adapts dynamically via async GPU readback of actual usage (high-water mark).
- *
- * Note: the chunkRanges buffer is sized for MAX_CHUNKS_PER_TILE chunks per tile. The bucket
- * sort splits oversized buckets into MAX_CHUNK_SIZE (4096) pieces and bounds-checks against
- * this budget; excess chunks are silently dropped (those entries keep bucket-level ordering).
- *
- * The result is composited into the scene via a full-screen quad with premultiplied blending.
+ * Supports both color and pick dispatch via two {@link GSplatLocalDispatchSet} instances.
+ * Splat/entry-dependent buffers (projCache, tileEntries) are shared between dispatch sets
+ * with a submitVersion guard to prevent resizing within the same command encoder.
  *
  * @ignore
  */
 class GSplatComputeLocalRenderer extends GSplatRenderer {
-    /** @type {Texture} */
-    outputTexture;
+    /** @type {GSplatLocalDispatchSet} */
+    _mainSet;
 
-    /** @type {Compute} */
-    countCompute;
-
-    /** @type {Compute} */
-    scatterCompute;
-
-    /** @type {Compute} */
-    classifyCompute;
-
-    /** @type {Compute} */
-    sortCompute;
-
-    /** @type {Compute} */
-    bucketSortCompute;
-
-    /** @type {Compute} */
-    copyCompute;
-
-    /** @type {Compute} */
-    chunkSortCompute;
-
-    /** @type {Compute} */
-    rasterizeCompute;
-
-    /** @type {PrefixSumKernel} */
-    prefixSumKernel;
+    /** @type {GSplatLocalDispatchSet|null} */
+    _pickSet = null;
 
     /** @type {FramePassGSplatComputeLocal} */
     framePass;
@@ -137,13 +83,10 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     _minPixelSize = 2.0;
 
     /** @type {number} */
+    _alphaClip = 0.3;
+
+    /** @type {number} */
     _exposure = 1.0;
-
-    /** @type {number} */
-    _toneMapping = -1;
-
-    /** @type {number} */
-    _gamma = -1;
 
     /** @type {number} */
     _numSplats = 0;
@@ -154,85 +97,90 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     /** @type {StorageBuffer|null} */
     _sortElementCountBuffer = null;
 
-    /** @type {StorageBuffer|null} Projection cache: 8 u32 per splat (screen, coeffs, color, depth) */
+    // --- Shared splat/entry-dependent buffers ---
+
+    /** @type {StorageBuffer|null} */
     _projCacheBuffer = null;
 
-    /** @type {StorageBuffer|null} Per-tile splat counts / prefix sum offsets (numTiles + 1) */
-    _tileSplatCountsBuffer = null;
-
-    /** @type {StorageBuffer|null} Per-tile atomic write cursors for scatter */
-    _tileWriteCursorsBuffer = null;
-
-    /** @type {StorageBuffer|null} Unified buffer for tile entry lists + overflow scratch */
+    /** @type {StorageBuffer|null} */
     _tileEntriesBuffer = null;
-
-    /** @type {StorageBuffer|null} Tile indices with 1..4096 splats */
-    _smallTileListBuffer = null;
-
-    /** @type {StorageBuffer|null} Tile indices with >4096 splats */
-    _largeTileListBuffer = null;
-
-    /** @type {StorageBuffer|null} Per-large-tile overflow base offsets (parallel to largeTileList) */
-    _largeTileOverflowBasesBuffer = null;
-
-    /** @type {StorageBuffer|null} All non-empty tile indices */
-    _rasterizeTileListBuffer = null;
-
-    /** @type {StorageBuffer|null} Atomic counters [smallCount, largeCount, rasterizeCount, overflowUsed] */
-    _tileListCountsBuffer = null;
-
-    /** @type {StorageBuffer|null} (offset, count) pairs for chunk sort workgroups */
-    _chunkRangesBuffer = null;
-
-    /** @type {StorageBuffer|null} Atomic counter for total chunk count */
-    _totalChunksBuffer = null;
-
-    /** @type {StorageBuffer|null} Indirect dispatch args for chunk sort (3 u32s) */
-    _chunkSortIndirectBuffer = null;
 
     /** @type {number} */
     _allocatedSplatCapacity = 0;
 
-    /** @type {number} Allocated capacity (in u32 entries) of the unified tileEntries buffer */
+    /** @type {number} */
     _allocatedEntryCapacity = 0;
 
     /** @type {number} */
-    _allocatedTileCapacity = 0;
-
-    /**
-     * Dynamic multiplier: capacity = numSplats * _tileEntryMultiplier.
-     * Grows automatically via async GPU readback when the buffer is too small.
-     *
-     * @type {number}
-     */
     _tileEntryMultiplier = INITIAL_TILE_ENTRY_MULTIPLIER;
 
-    /** @type {boolean} */
-    _readbackPending = false;
+    /** @type {number} Last device.submitVersion when shared buffers were resized */
+    _lastBufferSubmitVersion = -1;
 
-    /** @type {BindGroupFormat} */
-    _countBindGroupFormat;
+    /** @type {number} Last readback entry count (-1 = consumed / no fresh data) */
+    _lastReadbackEntryCount = -1;
+
+    /** @type {number} Consecutive frames where usage < half capacity */
+    _shrinkFrameCount = 0;
+
+    // --- Shared shaders and bind group formats ---
+
+    /** @type {Shader|null} */
+    _countColorShader = null;
+
+    /** @type {Shader|null} */
+    _countPickShader = null;
+
+    /** @type {BindGroupFormat|null} */
+    _countBindGroupFormat = null;
+
+    /** @type {BindGroupFormat|null} */
+    _countPickBindGroupFormat = null;
+
+    /** @type {Shader} */
+    _scatterShader;
 
     /** @type {BindGroupFormat} */
     _scatterBindGroupFormat;
 
+    /** @type {Shader} */
+    _classifyShader;
+
     /** @type {BindGroupFormat} */
     _classifyBindGroupFormat;
+
+    /** @type {Shader} */
+    _sortShader;
 
     /** @type {BindGroupFormat} */
     _sortBindGroupFormat;
 
+    /** @type {Shader} */
+    _bucketSortShader;
+
     /** @type {BindGroupFormat} */
     _bucketSortBindGroupFormat;
+
+    /** @type {Shader} */
+    _copyShader;
 
     /** @type {BindGroupFormat} */
     _copyBindGroupFormat;
 
+    /** @type {Shader} */
+    _chunkSortShader;
+
     /** @type {BindGroupFormat} */
     _chunkSortBindGroupFormat;
 
+    /** @type {Shader} */
+    _rasterizeColorShader;
+
+    /** @type {Shader|null} */
+    _rasterizePickShader = null;
+
     /** @type {BindGroupFormat} */
-    _rasterizeBindGroupFormat;
+    _rasterizeColorBindGroupFormat;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -244,33 +192,15 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     constructor(device, node, cameraNode, layer, workBuffer) {
         super(device, node, cameraNode, layer, workBuffer);
 
-        this.outputTexture = new Texture(device, {
-            name: 'GSplatLocalComputeOutput',
-            width: 4,
-            height: 4,
-            format: PIXELFORMAT_RGBA8,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            storage: true
-        });
+        this._createSharedShaders();
+        this._mainSet = this._createDispatchSet(false);
 
-        this.prefixSumKernel = new PrefixSumKernel(device);
-
-        this._createCountCompute();
-        this._createScatterCompute();
-        this._createClassifyCompute();
-        this._createSortCompute();
-        this._createBucketSortCompute();
-        this._createCopyCompute();
-        this._createChunkSortCompute();
-        this._createRasterizeCompute();
         this.framePass = new FramePassGSplatComputeLocal(this);
 
         const thisCamera = cameraNode.camera;
         this.tileComposite = new GSplatTileComposite(device, node, (camera) => {
             const renderMode = this.renderMode ?? 0;
-            return thisCamera.camera === camera && (renderMode & GSPLAT_FORWARD) !== 0 && this._rasterizeTileListBuffer !== null;
+            return thisCamera.camera === camera && (renderMode & GSPLAT_FORWARD) !== 0 && this._mainSet._rasterizeTileListBuffer !== null;
         });
     }
 
@@ -283,38 +213,32 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             }
         }
 
-        this.countCompute.shader.destroy();
-        this._countBindGroupFormat.destroy();
-        this.scatterCompute.shader.destroy();
+        this._mainSet.destroy();
+        this._pickSet?.destroy();
+
+        this._countColorShader?.destroy();
+        this._countPickShader?.destroy();
+        this._countBindGroupFormat?.destroy();
+        this._countPickBindGroupFormat?.destroy();
+        this._scatterShader.destroy();
         this._scatterBindGroupFormat.destroy();
-        this.classifyCompute.shader.destroy();
+        this._classifyShader.destroy();
         this._classifyBindGroupFormat.destroy();
-        this.sortCompute.shader.destroy();
+        this._sortShader.destroy();
         this._sortBindGroupFormat.destroy();
-        this.bucketSortCompute.shader.destroy();
+        this._bucketSortShader.destroy();
         this._bucketSortBindGroupFormat.destroy();
-        this.copyCompute.shader.destroy();
+        this._copyShader.destroy();
         this._copyBindGroupFormat.destroy();
-        this.chunkSortCompute.shader.destroy();
+        this._chunkSortShader.destroy();
         this._chunkSortBindGroupFormat.destroy();
-        this.rasterizeCompute.shader.destroy();
-        this._rasterizeBindGroupFormat.destroy();
-        this.prefixSumKernel.destroy();
+        this._rasterizeColorShader.destroy();
+        this._rasterizePickShader?.destroy();
+        this._rasterizeColorBindGroupFormat.destroy();
 
         this._projCacheBuffer?.destroy();
-        this._tileSplatCountsBuffer?.destroy();
-        this._tileWriteCursorsBuffer?.destroy();
         this._tileEntriesBuffer?.destroy();
-        this._smallTileListBuffer?.destroy();
-        this._largeTileListBuffer?.destroy();
-        this._largeTileOverflowBasesBuffer?.destroy();
-        this._rasterizeTileListBuffer?.destroy();
-        this._tileListCountsBuffer?.destroy();
-        this._chunkRangesBuffer?.destroy();
-        this._totalChunksBuffer?.destroy();
-        this._chunkSortIndirectBuffer?.destroy();
 
-        this.outputTexture.destroy();
         this.tileComposite.destroy();
 
         super.destroy();
@@ -347,6 +271,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             this._registerFramePass();
         }
         this._minPixelSize = gsplat.minPixelSize;
+        this._alphaClip = gsplat.alphaClip;
         this._exposure = exposure ?? 1.0;
 
         let needsRecreate = false;
@@ -356,29 +281,16 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             needsRecreate = true;
         }
 
-        const cam = this.cameraNode.camera?.camera;
-        if (cam) {
-            const toneMapping = cam.shaderParams.toneMapping;
-            const gamma = cam.shaderParams.shaderOutputGamma;
-            if (toneMapping !== this._toneMapping || gamma !== this._gamma) {
-                this._toneMapping = toneMapping;
-                this._gamma = gamma;
-                needsRecreate = true;
-            }
-        }
-
-        if (needsRecreate) {
-            this._recreateCountCompute();
+        if (needsRecreate || !this._countColorShader) {
+            this._ensureCountCompute();
         }
     }
 
     /**
-     * Receives compacted splat data from the manager's interval compaction pipeline.
-     *
      * @param {StorageBuffer} compactedSplatIds - Dense buffer of visible splat IDs.
      * @param {StorageBuffer} sortElementCountBuffer - Single-u32 buffer with visible count.
      * @param {number} textureSize - The work buffer texture size.
-     * @param {number} numSplats - Upper bound on visible splats (for buffer sizing).
+     * @param {number} numSplats - Upper bound on visible splats.
      */
     setCompactedData(compactedSplatIds, sortElementCountBuffer, textureSize, numSplats) {
         this._compactedSplatIds = compactedSplatIds;
@@ -413,26 +325,46 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     }
 
     resizeOutputTexture(width, height) {
-        this.outputTexture.resize(width, height);
+        this._mainSet.resizeOutputTextures(width, height);
     }
 
     /**
-     * Ensure buffers are large enough for the current splat count and tile count.
+     * Ensure shared splat/entry buffers are large enough. Only resizes when
+     * device.submitVersion has changed (preventing mid-encoder buffer destruction).
      *
      * @param {number} numSplats - Upper bound on visible splats.
-     * @param {number} numTiles - Total number of screen tiles.
      * @private
      */
-    _ensureBuffers(numSplats, numTiles) {
+    _ensureSharedBuffers(numSplats) {
+        const device = this.device;
+        const canResize = device.submitVersion !== this._lastBufferSubmitVersion;
+
+        // Consume readback for shrink logic
+        const readbackValue = this._lastReadbackEntryCount;
+        if (readbackValue !== -1) {
+            this._lastReadbackEntryCount = -1;
+            const currentCapacity = this._allocatedEntryCapacity;
+            if (currentCapacity > 0 && readbackValue < currentCapacity / 2) {
+                this._shrinkFrameCount++;
+            } else {
+                this._shrinkFrameCount = 0;
+            }
+            if (this._shrinkFrameCount >= SHRINK_THRESHOLD && numSplats > 0) {
+                this._tileEntryMultiplier = Math.max(INITIAL_TILE_ENTRY_MULTIPLIER, (readbackValue / numSplats) * 1.1);
+                this._shrinkFrameCount = 0;
+            }
+        }
+
+        if (!canResize) return;
+
+        // Splat capacity (projCache)
         if (numSplats > this._allocatedSplatCapacity) {
             this._projCacheBuffer?.destroy();
             this._allocatedSplatCapacity = numSplats;
-            this._projCacheBuffer = new StorageBuffer(this.device, numSplats * CACHE_STRIDE * 4);
+            this._projCacheBuffer = new StorageBuffer(device, numSplats * CACHE_STRIDE * 4);
         }
 
-        // Unified buffer: main tile entries [0..totalEntries) + overflow scratch for bucket sort.
-        // Capacity adapts dynamically via _tileEntryMultiplier (async GPU readback).
-        // Grow immediately; shrink only when overallocated by >2x (dead zone prevents thrashing).
+        // Entry capacity (tileEntries)
         const requiredEntryCapacity = Math.ceil(numSplats * this._tileEntryMultiplier);
         const needsGrow = requiredEntryCapacity > this._allocatedEntryCapacity;
         const needsShrink = this._allocatedEntryCapacity > 0 &&
@@ -440,48 +372,79 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         if (needsGrow || needsShrink) {
             this._tileEntriesBuffer?.destroy();
             this._allocatedEntryCapacity = requiredEntryCapacity;
-            this._tileEntriesBuffer = new StorageBuffer(this.device, requiredEntryCapacity * 4, BUFFERUSAGE_COPY_DST);
+            this._tileEntriesBuffer = new StorageBuffer(device, requiredEntryCapacity * 4, BUFFERUSAGE_COPY_DST);
         }
 
-        const requiredTileSlots = numTiles + 1;
-        if (requiredTileSlots > this._allocatedTileCapacity) {
-            this._tileSplatCountsBuffer?.destroy();
-            this._tileWriteCursorsBuffer?.destroy();
-            this._smallTileListBuffer?.destroy();
-            this._largeTileListBuffer?.destroy();
-            this._largeTileOverflowBasesBuffer?.destroy();
-            this._rasterizeTileListBuffer?.destroy();
-            this._tileListCountsBuffer?.destroy();
-            this._chunkRangesBuffer?.destroy();
-            this._totalChunksBuffer?.destroy();
-            this._chunkSortIndirectBuffer?.destroy();
-
-            this._allocatedTileCapacity = requiredTileSlots;
-            // COPY_SRC needed for async readback of totalEntries at tileSplatCounts[numTiles]
-            this._tileSplatCountsBuffer = new StorageBuffer(this.device, requiredTileSlots * 4, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
-            this._tileWriteCursorsBuffer = new StorageBuffer(this.device, numTiles * 4, BUFFERUSAGE_COPY_DST);
-            this._smallTileListBuffer = new StorageBuffer(this.device, numTiles * 4);
-            this._largeTileListBuffer = new StorageBuffer(this.device, numTiles * 4);
-            this._largeTileOverflowBasesBuffer = new StorageBuffer(this.device, numTiles * 4);
-            this._rasterizeTileListBuffer = new StorageBuffer(this.device, numTiles * 4);
-            // 4 slots: [smallCount, largeCount, rasterizeCount, overflowUsed]
-            // COPY_SRC needed for async readback of overflow usage at slot 3
-            this._tileListCountsBuffer = new StorageBuffer(this.device, 4 * 4, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
-
-            const maxChunks = numTiles * MAX_CHUNKS_PER_TILE;
-            this._chunkRangesBuffer = new StorageBuffer(this.device, maxChunks * 8);
-            this._totalChunksBuffer = new StorageBuffer(this.device, 1 * 4, BUFFERUSAGE_COPY_DST);
-            this._chunkSortIndirectBuffer = new StorageBuffer(this.device, 3 * 4, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_INDIRECT);
-
-            this.prefixSumKernel.destroyPasses();
-        }
+        this._lastBufferSubmitVersion = device.submitVersion;
     }
 
+    /**
+     * Main color dispatch.
+     */
     dispatch() {
-        const width = this.outputTexture.width;
-        const height = this.outputTexture.height;
-        const numSplats = this._numSplats;
+        const set = this._mainSet;
+        const outputTex = set.outputTexture;
+        if (!outputTex) return;
+        const width = outputTex.width;
+        const height = outputTex.height;
 
+        this._dispatchPipeline(set, width, height, false);
+
+        this.tileComposite.update(
+            this._lastDrawSlot, outputTex,
+            set._rasterizeTileListBuffer, this._lastNumTilesX, width, height
+        );
+    }
+
+    /**
+     * Pick dispatch: runs the compute pick pipeline and returns the configured pick mesh instance.
+     *
+     * @param {object} cam - The camera.
+     * @param {number} width - Pick target width.
+     * @param {number} height - Pick target height.
+     * @returns {MeshInstance|null} The pick mesh instance ready for the picker's render list.
+     */
+    dispatchPick(cam, width, height) {
+        if (!this._pickSet) {
+            this._pickSet = this._createDispatchSet(true);
+
+            // Create pick count compute (count shader must exist by now from frameUpdate)
+            if (!this._countPickShader) {
+                const { shader, bindGroupFormat } = this._createCountShaderAndFormat(true);
+                this._countPickShader = shader;
+                this._countPickBindGroupFormat = bindGroupFormat;
+            }
+            this._pickSet.countCompute = new Compute(this.device, this._countPickShader, 'GSplatPickTileCount');
+        }
+
+        const set = this._pickSet;
+        set.resizeOutputTextures(width, height);
+
+        this._dispatchPipeline(set, width, height, true);
+
+        return this.tileComposite.prepareForPicking(
+            this._lastDrawSlot, set.pickIdTexture, set.pickDepthTexture,
+            set._rasterizeTileListBuffer, this._lastNumTilesX, width, height
+        );
+    }
+
+    /** @type {number} */
+    _lastDrawSlot = 0;
+
+    /** @type {number} */
+    _lastNumTilesX = 0;
+
+    /**
+     * Unified dispatch pipeline used by both color and pick paths.
+     *
+     * @param {GSplatLocalDispatchSet} set - The dispatch set to use.
+     * @param {number} width - Render target width.
+     * @param {number} height - Render target height.
+     * @param {boolean} pickMode - Whether this is a pick dispatch.
+     * @private
+     */
+    _dispatchPipeline(set, width, height, pickMode) {
+        const numSplats = this._numSplats;
         if (!this._compactedSplatIds || !this._sortElementCountBuffer || numSplats === 0) return;
 
         const device = this.device;
@@ -489,7 +452,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const numTilesY = Math.ceil(height / TILE_SIZE);
         const numTiles = numTilesX * numTilesY;
 
-        this._ensureBuffers(numSplats, numTiles);
+        this._ensureSharedBuffers(numSplats);
+        set.ensureTileBuffers(numTiles);
 
         const maxEntries = this._allocatedEntryCapacity;
 
@@ -504,197 +468,220 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         _viewData.set(view.data);
         const focal = width * proj.data[0];
 
-        // --- Pass 1: Per-tile count + projection cache ---
-        this._tileSplatCountsBuffer.clear();
+        const alphaClip = pickMode ? this._alphaClip : (1.0 / 255.0);
 
-        this.countCompute.setParameter('compactedSplatIds', this._compactedSplatIds);
-        this.countCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
-        this.countCompute.setParameter('projCache', this._projCacheBuffer);
-        this.countCompute.setParameter('tileSplatCounts', this._tileSplatCountsBuffer);
+        // --- Pass 1: Per-tile count + projection cache ---
+        set._tileSplatCountsBuffer.clear();
+
+        set.countCompute.setParameter('compactedSplatIds', this._compactedSplatIds);
+        set.countCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
+        set.countCompute.setParameter('projCache', this._projCacheBuffer);
+        set.countCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
         for (const stream of wb.format.streams) {
-            this.countCompute.setParameter(stream.name, wb.getTexture(stream.name));
+            set.countCompute.setParameter(stream.name, wb.getTexture(stream.name));
         }
         for (const stream of wb.format.extraStreams) {
-            this.countCompute.setParameter(stream.name, wb.getTexture(stream.name));
+            set.countCompute.setParameter(stream.name, wb.getTexture(stream.name));
         }
-        this.countCompute.setParameter('splatTextureSize', this._textureSize);
-        this.countCompute.setParameter('numTilesX', numTilesX);
-        this.countCompute.setParameter('numTilesY', numTilesY);
-        this.countCompute.setParameter('viewProj', _viewProjData);
-        this.countCompute.setParameter('viewMatrix', _viewData);
-        this.countCompute.setParameter('focal', focal);
-        this.countCompute.setParameter('viewportWidth', width);
-        this.countCompute.setParameter('viewportHeight', height);
-        this.countCompute.setParameter('nearClip', cam.nearClip);
-        this.countCompute.setParameter('farClip', cam.farClip);
-        this.countCompute.setParameter('minPixelSize', this._minPixelSize);
-        this.countCompute.setParameter('isOrtho', cam.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0);
-        this.countCompute.setParameter('exposure', this._exposure);
+        set.countCompute.setParameter('splatTextureSize', this._textureSize);
+        set.countCompute.setParameter('numTilesX', numTilesX);
+        set.countCompute.setParameter('numTilesY', numTilesY);
+        set.countCompute.setParameter('viewProj', _viewProjData);
+        set.countCompute.setParameter('viewMatrix', _viewData);
+        set.countCompute.setParameter('focal', focal);
+        set.countCompute.setParameter('viewportWidth', width);
+        set.countCompute.setParameter('viewportHeight', height);
+        set.countCompute.setParameter('nearClip', cam.nearClip);
+        set.countCompute.setParameter('farClip', cam.farClip);
+        set.countCompute.setParameter('minPixelSize', this._minPixelSize);
+        set.countCompute.setParameter('isOrtho', cam.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0);
+        set.countCompute.setParameter('exposure', this._exposure);
+        set.countCompute.setParameter('alphaClip', alphaClip);
 
         const countWorkgroups = Math.ceil(numSplats / COUNT_WORKGROUP_SIZE);
         Compute.calcDispatchSize(countWorkgroups, _dispatchSize);
-        this.countCompute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
-        device.computeDispatch([this.countCompute], 'GSplatLocalTileCount');
+        set.countCompute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
+        device.computeDispatch([set.countCompute], pickMode ? 'GSplatPickTileCount' : 'GSplatLocalTileCount');
 
-        // --- Pass 2: Prefix sum over per-tile counts ---
-        this.prefixSumKernel.resize(this._tileSplatCountsBuffer, numTiles + 1);
-        this.prefixSumKernel.dispatch(device);
+        // --- Pass 2: Prefix sum ---
+        set.prefixSumKernel.resize(set._tileSplatCountsBuffer, numTiles + 1);
+        set.prefixSumKernel.dispatch(device);
 
-        // --- Pass 3: Scatter splat cache indices into per-tile entries ---
-        this._tileWriteCursorsBuffer.clear();
+        // --- Pass 3: Scatter ---
+        set._tileWriteCursorsBuffer.clear();
 
-        this.scatterCompute.setParameter('projCache', this._projCacheBuffer);
-        this.scatterCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
-        this.scatterCompute.setParameter('tileSplatCounts', this._tileSplatCountsBuffer);
-        this.scatterCompute.setParameter('tileWriteCursors', this._tileWriteCursorsBuffer);
-        this.scatterCompute.setParameter('tileEntries', this._tileEntriesBuffer);
-        this.scatterCompute.setParameter('numTilesX', numTilesX);
-        this.scatterCompute.setParameter('numTilesY', numTilesY);
-        this.scatterCompute.setParameter('maxEntries', maxEntries);
-        this.scatterCompute.setParameter('viewportWidth', width);
-        this.scatterCompute.setParameter('viewportHeight', height);
+        set.scatterCompute.setParameter('projCache', this._projCacheBuffer);
+        set.scatterCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
+        set.scatterCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+        set.scatterCompute.setParameter('tileWriteCursors', set._tileWriteCursorsBuffer);
+        set.scatterCompute.setParameter('tileEntries', this._tileEntriesBuffer);
+        set.scatterCompute.setParameter('numTilesX', numTilesX);
+        set.scatterCompute.setParameter('numTilesY', numTilesY);
+        set.scatterCompute.setParameter('maxEntries', maxEntries);
+        set.scatterCompute.setParameter('viewportWidth', width);
+        set.scatterCompute.setParameter('viewportHeight', height);
 
-        this.scatterCompute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
-        device.computeDispatch([this.scatterCompute], 'GSplatLocalScatter');
+        set.scatterCompute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
+        device.computeDispatch([set.scatterCompute], pickMode ? 'GSplatPickScatter' : 'GSplatLocalScatter');
 
-        // --- Pass 3.5: Classify tiles → build small/large/rasterize lists + indirect args ---
-        this._tileListCountsBuffer.clear();
-        this._totalChunksBuffer.clear();
-        this._chunkSortIndirectBuffer.clear();
+        // --- Pass 3.5: Classify ---
+        set._tileListCountsBuffer.clear();
+        set._totalChunksBuffer.clear();
+        set._chunkSortIndirectBuffer.clear();
 
-        // Reserve 3 indirect dispatch slots: 0=smallSort, 1=bucketSort, 2=rasterize
         const indirectSlot = device.getIndirectDispatchSlot(3);
-
-        // Reserve 1 indirect draw slot for the tile-based composite
         const drawSlot = device.getIndirectDrawSlot(1);
 
-        this.classifyCompute.setParameter('tileSplatCounts', this._tileSplatCountsBuffer);
-        this.classifyCompute.setParameter('smallTileList', this._smallTileListBuffer);
-        this.classifyCompute.setParameter('largeTileList', this._largeTileListBuffer);
-        this.classifyCompute.setParameter('rasterizeTileList', this._rasterizeTileListBuffer);
-        this.classifyCompute.setParameter('tileListCounts', this._tileListCountsBuffer);
-        this.classifyCompute.setParameter('indirectDispatchArgs', device.indirectDispatchBuffer);
-        this.classifyCompute.setParameter('largeTileOverflowBases', this._largeTileOverflowBasesBuffer);
-        this.classifyCompute.setParameter('indirectDrawArgs', device.indirectDrawBuffer);
-        this.classifyCompute.setParameter('numTiles', numTiles);
-        this.classifyCompute.setParameter('dispatchSlotOffset', indirectSlot * 3);
-        this.classifyCompute.setParameter('bufferCapacity', maxEntries);
-        this.classifyCompute.setParameter('maxWorkgroupsPerDim', device.limits.maxComputeWorkgroupsPerDimension || 65535);
-        this.classifyCompute.setParameter('drawSlot', drawSlot);
+        set.classifyCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+        set.classifyCompute.setParameter('smallTileList', set._smallTileListBuffer);
+        set.classifyCompute.setParameter('largeTileList', set._largeTileListBuffer);
+        set.classifyCompute.setParameter('rasterizeTileList', set._rasterizeTileListBuffer);
+        set.classifyCompute.setParameter('tileListCounts', set._tileListCountsBuffer);
+        set.classifyCompute.setParameter('indirectDispatchArgs', device.indirectDispatchBuffer);
+        set.classifyCompute.setParameter('largeTileOverflowBases', set._largeTileOverflowBasesBuffer);
+        set.classifyCompute.setParameter('indirectDrawArgs', device.indirectDrawBuffer);
+        set.classifyCompute.setParameter('numTiles', numTiles);
+        set.classifyCompute.setParameter('dispatchSlotOffset', indirectSlot * 3);
+        set.classifyCompute.setParameter('bufferCapacity', maxEntries);
+        set.classifyCompute.setParameter('maxWorkgroupsPerDim', device.limits.maxComputeWorkgroupsPerDimension || 65535);
+        set.classifyCompute.setParameter('drawSlot', drawSlot);
 
-        this.classifyCompute.setupDispatch(1, 1, 1);
-        device.computeDispatch([this.classifyCompute], 'GSplatLocalClassify');
+        set.classifyCompute.setupDispatch(1, 1, 1);
+        device.computeDispatch([set.classifyCompute], pickMode ? 'GSplatPickClassify' : 'GSplatLocalClassify');
 
-        // --- Pass 4b: Bucket pre-sort for large tiles (indirect dispatch) ---
-        // Runs before 4a so the longer chain (4b → 4b.5 → 4c) starts sooner.
-        this.bucketSortCompute.setParameter('tileEntries', this._tileEntriesBuffer);
-        this.bucketSortCompute.setParameter('largeTileOverflowBases', this._largeTileOverflowBasesBuffer);
-        this.bucketSortCompute.setParameter('tileSplatCounts', this._tileSplatCountsBuffer);
-        this.bucketSortCompute.setParameter('projCache', this._projCacheBuffer);
-        this.bucketSortCompute.setParameter('largeTileList', this._largeTileListBuffer);
-        this.bucketSortCompute.setParameter('chunkRanges', this._chunkRangesBuffer);
-        this.bucketSortCompute.setParameter('totalChunks', this._totalChunksBuffer);
-        this.bucketSortCompute.setParameter('tileListCounts', this._tileListCountsBuffer);
-        this.bucketSortCompute.setParameter('bufferCapacity', maxEntries);
-        this.bucketSortCompute.setParameter('maxChunks', numTiles * MAX_CHUNKS_PER_TILE);
+        // --- Pass 4b: Bucket pre-sort ---
+        set.bucketSortCompute.setParameter('tileEntries', this._tileEntriesBuffer);
+        set.bucketSortCompute.setParameter('largeTileOverflowBases', set._largeTileOverflowBasesBuffer);
+        set.bucketSortCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+        set.bucketSortCompute.setParameter('projCache', this._projCacheBuffer);
+        set.bucketSortCompute.setParameter('largeTileList', set._largeTileListBuffer);
+        set.bucketSortCompute.setParameter('chunkRanges', set._chunkRangesBuffer);
+        set.bucketSortCompute.setParameter('totalChunks', set._totalChunksBuffer);
+        set.bucketSortCompute.setParameter('tileListCounts', set._tileListCountsBuffer);
+        set.bucketSortCompute.setParameter('bufferCapacity', maxEntries);
+        set.bucketSortCompute.setParameter('maxChunks', numTiles * MAX_CHUNKS_PER_TILE);
 
-        this.bucketSortCompute.setupIndirectDispatch(indirectSlot + 1);
-        device.computeDispatch([this.bucketSortCompute], 'GSplatLocalBucketSort');
+        set.bucketSortCompute.setupIndirectDispatch(indirectSlot + 1);
+        device.computeDispatch([set.bucketSortCompute], pickMode ? 'GSplatPickBucketSort' : 'GSplatLocalBucketSort');
 
-        // --- Pass 4b.5: Write chunk sort indirect dispatch args ---
-        // Separate pass so the inter-pass barrier guarantees all bucket sort writes
-        // (tileEntries, totalChunks, chunkRanges) are visible before the chunk sort.
-        this.copyCompute.setParameter('totalChunks', this._totalChunksBuffer);
-        this.copyCompute.setParameter('chunkSortIndirect', this._chunkSortIndirectBuffer);
-        this.copyCompute.setParameter('maxChunks', numTiles * MAX_CHUNKS_PER_TILE);
-        this.copyCompute.setParameter('maxWorkgroupsPerDim', device.limits.maxComputeWorkgroupsPerDimension || 65535);
+        // --- Pass 4b.5: Copy chunk sort indirect ---
+        set.copyCompute.setParameter('totalChunks', set._totalChunksBuffer);
+        set.copyCompute.setParameter('chunkSortIndirect', set._chunkSortIndirectBuffer);
+        set.copyCompute.setParameter('maxChunks', numTiles * MAX_CHUNKS_PER_TILE);
+        set.copyCompute.setParameter('maxWorkgroupsPerDim', device.limits.maxComputeWorkgroupsPerDimension || 65535);
 
-        this.copyCompute.setupDispatch(1, 1, 1);
-        device.computeDispatch([this.copyCompute], 'GSplatLocalCopy');
+        set.copyCompute.setupDispatch(1, 1, 1);
+        device.computeDispatch([set.copyCompute], pickMode ? 'GSplatPickCopy' : 'GSplatLocalCopy');
 
-        // --- Pass 4a: Bitonic sort for small tiles (indirect dispatch) ---
-        this.sortCompute.setParameter('tileEntries', this._tileEntriesBuffer);
-        this.sortCompute.setParameter('tileSplatCounts', this._tileSplatCountsBuffer);
-        this.sortCompute.setParameter('projCache', this._projCacheBuffer);
-        this.sortCompute.setParameter('smallTileList', this._smallTileListBuffer);
-        this.sortCompute.setParameter('tileListCounts', this._tileListCountsBuffer);
+        // --- Pass 4a: Small tile sort ---
+        set.sortCompute.setParameter('tileEntries', this._tileEntriesBuffer);
+        set.sortCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+        set.sortCompute.setParameter('projCache', this._projCacheBuffer);
+        set.sortCompute.setParameter('smallTileList', set._smallTileListBuffer);
+        set.sortCompute.setParameter('tileListCounts', set._tileListCountsBuffer);
 
-        this.sortCompute.setupIndirectDispatch(indirectSlot);
-        device.computeDispatch([this.sortCompute], 'GSplatLocalTileSort');
+        set.sortCompute.setupIndirectDispatch(indirectSlot);
+        device.computeDispatch([set.sortCompute], pickMode ? 'GSplatPickTileSort' : 'GSplatLocalTileSort');
 
-        // --- Pass 4c: Chunk sort for large-tile chunks (indirect dispatch) ---
-        this.chunkSortCompute.setParameter('tileEntries', this._tileEntriesBuffer);
-        this.chunkSortCompute.setParameter('projCache', this._projCacheBuffer);
-        this.chunkSortCompute.setParameter('chunkRanges', this._chunkRangesBuffer);
-        this.chunkSortCompute.setParameter('totalChunks', this._totalChunksBuffer);
-        this.chunkSortCompute.setParameter('maxChunks', numTiles * MAX_CHUNKS_PER_TILE);
+        // --- Pass 4c: Chunk sort ---
+        set.chunkSortCompute.setParameter('tileEntries', this._tileEntriesBuffer);
+        set.chunkSortCompute.setParameter('projCache', this._projCacheBuffer);
+        set.chunkSortCompute.setParameter('chunkRanges', set._chunkRangesBuffer);
+        set.chunkSortCompute.setParameter('totalChunks', set._totalChunksBuffer);
+        set.chunkSortCompute.setParameter('maxChunks', numTiles * MAX_CHUNKS_PER_TILE);
 
-        this.chunkSortCompute.setupIndirectDispatch(0, this._chunkSortIndirectBuffer);
-        device.computeDispatch([this.chunkSortCompute], 'GSplatLocalChunkSort');
+        set.chunkSortCompute.setupIndirectDispatch(0, set._chunkSortIndirectBuffer);
+        device.computeDispatch([set.chunkSortCompute], pickMode ? 'GSplatPickChunkSort' : 'GSplatLocalChunkSort');
 
-        // --- Pass 5: Rasterize from sorted per-tile entry ranges (indirect dispatch) ---
-        this.rasterizeCompute.setParameter('outputTexture', this.outputTexture);
-        this.rasterizeCompute.setParameter('tileEntries', this._tileEntriesBuffer);
-        this.rasterizeCompute.setParameter('tileSplatCounts', this._tileSplatCountsBuffer);
-        this.rasterizeCompute.setParameter('projCache', this._projCacheBuffer);
-        this.rasterizeCompute.setParameter('rasterizeTileList', this._rasterizeTileListBuffer);
-        this.rasterizeCompute.setParameter('tileListCounts', this._tileListCountsBuffer);
-        this.rasterizeCompute.setParameter('screenWidth', width);
-        this.rasterizeCompute.setParameter('screenHeight', height);
-        this.rasterizeCompute.setParameter('numTilesX', numTilesX);
+        // --- Pass 5: Rasterize ---
+        set.rasterizeCompute.setParameter('screenWidth', width);
+        set.rasterizeCompute.setParameter('screenHeight', height);
+        set.rasterizeCompute.setParameter('numTilesX', numTilesX);
+        set.rasterizeCompute.setParameter('nearClip', cam.nearClip);
+        set.rasterizeCompute.setParameter('farClip', cam.farClip);
+        set.rasterizeCompute.setParameter('alphaClip', alphaClip);
+        set.rasterizeCompute.setParameter('tileEntries', this._tileEntriesBuffer);
+        set.rasterizeCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+        set.rasterizeCompute.setParameter('projCache', this._projCacheBuffer);
+        set.rasterizeCompute.setParameter('rasterizeTileList', set._rasterizeTileListBuffer);
+        set.rasterizeCompute.setParameter('tileListCounts', set._tileListCountsBuffer);
+        if (pickMode) {
+            set.rasterizeCompute.setParameter('pickIdTexture', set.pickIdTexture);
+            set.rasterizeCompute.setParameter('pickDepthTexture', set.pickDepthTexture);
+        } else {
+            set.rasterizeCompute.setParameter('outputTexture', set.outputTexture);
+        }
 
-        this.rasterizeCompute.setupIndirectDispatch(indirectSlot + 2);
-        device.computeDispatch([this.rasterizeCompute], 'GSplatLocalRasterize');
+        set.rasterizeCompute.setupIndirectDispatch(indirectSlot + 2);
+        device.computeDispatch([set.rasterizeCompute], pickMode ? 'GSplatPickRasterize' : 'GSplatLocalRasterize');
 
-        // Update tile composite for indirect draw
-        this.tileComposite.update(drawSlot, this.outputTexture, this._rasterizeTileListBuffer, numTilesX, width, height);
+        this._lastDrawSlot = drawSlot;
+        this._lastNumTilesX = numTilesX;
 
-        // Async readback: check if the buffer was large enough, grow multiplier if not.
-        // Reads totalEntries (from prefix sum) and totalOverflowUsed (from classify).
-        // The readback arrives 1-2 frames later; until then rendering may be degraded.
-        this._scheduleReadback(numSplats, numTiles);
+        this._scheduleReadback(numSplats, numTiles, set);
     }
 
     /**
-     * Schedule async GPU readback of tile entry and overflow usage.
-     * Updates _tileEntryMultiplier to track actual usage, allowing both growth and shrinkage.
-     *
-     * @param {number} numSplats - Splat count at dispatch time (for computing new multiplier).
-     * @param {number} numTiles - Tile count at dispatch time (for reading prefix sum total).
+     * @param {number} numSplats - Splat count at dispatch time.
+     * @param {number} numTiles - Tile count at dispatch time.
+     * @param {GSplatLocalDispatchSet} set - The dispatch set to readback from.
      * @private
      */
-    _scheduleReadback(numSplats, numTiles) {
-        if (this._readbackPending || numSplats === 0) return;
-        this._readbackPending = true;
+    _scheduleReadback(numSplats, numTiles, set) {
+        if (numSplats === 0) return;
 
         const capturedNumSplats = numSplats;
 
-        // tileSplatCounts[numTiles] = totalEntries (prefix sum total, 4 bytes at offset numTiles*4)
-        // tileListCounts[3] = totalOverflowUsed (4 bytes at offset 12)
-        const readback1 = this._tileSplatCountsBuffer.read(numTiles * 4, 4);
-        const readback2 = this._tileListCountsBuffer.read(3 * 4, 4);
+        const readback1 = set._tileSplatCountsBuffer.read(numTiles * 4, 4);
+        const readback2 = set._tileListCountsBuffer.read(3 * 4, 4);
 
         Promise.all([readback1, readback2]).then(([r1, r2]) => {
-            this._readbackPending = false;
             const totalEntries = new Uint32Array(r1.buffer, r1.byteOffset, 1)[0];
             const totalOverflow = new Uint32Array(r2.buffer, r2.byteOffset, 1)[0];
             const needed = totalEntries + totalOverflow;
 
             if (capturedNumSplats > 0) {
-                this._tileEntryMultiplier = Math.max((needed / capturedNumSplats) * 1.1, INITIAL_TILE_ENTRY_MULTIPLIER);
+                this._tileEntryMultiplier = Math.max(this._tileEntryMultiplier, (needed / capturedNumSplats) * 1.1);
+                this._tileEntryMultiplier = Math.max(this._tileEntryMultiplier, INITIAL_TILE_ENTRY_MULTIPLIER);
             }
+
+            this._lastReadbackEntryCount = needed;
         }).catch(() => {
-            this._readbackPending = false;
+            // readback failed, ignore
         });
     }
 
-    /** @private */
-    _recreateCountCompute() {
-        this.countCompute.shader.destroy();
-        this.countCompute.destroy();
-        this._countBindGroupFormat.destroy();
-        this._createCountCompute();
+    /**
+     * Creates or recreates the count shader, bind group format, and Compute instances
+     * for all active dispatch sets. Called lazily on the first frame and whenever
+     * the work buffer format changes.
+     *
+     * @private
+     */
+    _ensureCountCompute() {
+        const device = this.device;
+
+        this._mainSet.countCompute?.destroy();
+        this._countColorShader?.destroy();
+        this._countBindGroupFormat?.destroy();
+        this._countPickShader?.destroy();
+        this._countPickBindGroupFormat?.destroy();
+
+        const { shader, bindGroupFormat } = this._createCountShaderAndFormat(false);
+        this._countColorShader = shader;
+        this._countBindGroupFormat = bindGroupFormat;
+        this._mainSet.countCompute = new Compute(device, shader, 'GSplatLocalTileCount');
+
+        if (this._pickSet) {
+            this._pickSet.countCompute?.destroy();
+            const { shader: pickShader, bindGroupFormat: pickBgf } = this._createCountShaderAndFormat(true);
+            this._countPickShader = pickShader;
+            this._countPickBindGroupFormat = pickBgf;
+            this._pickSet.countCompute = new Compute(device, pickShader, 'GSplatPickTileCount');
+        }
     }
+
+    // ---- Shader / BindGroupFormat creation ----
 
     /** @private */
     _createCommonIncludes() {
@@ -711,8 +698,172 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         return cincludes;
     }
 
-    /** @private */
-    _createCountCompute() {
+    /**
+     * Creates all shared shaders and bind group formats (called once in constructor).
+     *
+     * @private
+     */
+    _createSharedShaders() {
+        const device = this.device;
+
+        // Count shader/format are created lazily in _ensureCountCompute()
+
+        // --- Scatter ---
+        {
+            const ubf = new UniformBufferFormat(device, [
+                new UniformFormat('numTilesX', UNIFORMTYPE_UINT),
+                new UniformFormat('numTilesY', UNIFORMTYPE_UINT),
+                new UniformFormat('maxEntries', UNIFORMTYPE_UINT),
+                new UniformFormat('viewportWidth', UNIFORMTYPE_FLOAT),
+                new UniformFormat('viewportHeight', UNIFORMTYPE_FLOAT)
+            ]);
+            this._scatterBindGroupFormat = new BindGroupFormat(device, [
+                new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('sortElementCount', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('tileWriteCursors', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
+                new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
+            ]);
+            const cincludes = new Map();
+            cincludes.set('gsplatTileIntersectCS', computeGsplatTileIntersectSource);
+            this._scatterShader = new Shader(device, {
+                name: 'GSplatLocalScatter',
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                cshader: computeGsplatLocalScatterSource,
+                cincludes,
+                computeBindGroupFormat: this._scatterBindGroupFormat,
+                computeUniformBufferFormats: { uniforms: ubf }
+            });
+        }
+
+        // --- Classify ---
+        {
+            const ubf = new UniformBufferFormat(device, [
+                new UniformFormat('numTiles', UNIFORMTYPE_UINT),
+                new UniformFormat('dispatchSlotOffset', UNIFORMTYPE_UINT),
+                new UniformFormat('bufferCapacity', UNIFORMTYPE_UINT),
+                new UniformFormat('maxWorkgroupsPerDim', UNIFORMTYPE_UINT),
+                new UniformFormat('drawSlot', UNIFORMTYPE_UINT)
+            ]);
+            this._classifyBindGroupFormat = new BindGroupFormat(device, [
+                new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('smallTileList', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('largeTileList', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('rasterizeTileList', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('indirectDispatchArgs', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('largeTileOverflowBases', SHADERSTAGE_COMPUTE),
+                new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('indirectDrawArgs', SHADERSTAGE_COMPUTE)
+            ]);
+            this._classifyShader = new Shader(device, {
+                name: 'GSplatLocalClassify',
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                cshader: computeGsplatLocalClassifySource,
+                computeBindGroupFormat: this._classifyBindGroupFormat,
+                computeUniformBufferFormats: { uniforms: ubf }
+            });
+        }
+
+        // --- Sort ---
+        this._sortBindGroupFormat = new BindGroupFormat(device, [
+            new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('smallTileList', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true)
+        ]);
+        this._sortShader = new Shader(device, {
+            name: 'GSplatLocalTileSort',
+            shaderLanguage: SHADERLANGUAGE_WGSL,
+            cshader: computeGsplatLocalTileSortSource,
+            cincludes: this._createBitonicIncludes(),
+            computeBindGroupFormat: this._sortBindGroupFormat
+        });
+
+        // --- BucketSort ---
+        {
+            const ubf = new UniformBufferFormat(device, [
+                new UniformFormat('bufferCapacity', UNIFORMTYPE_UINT),
+                new UniformFormat('maxChunks', UNIFORMTYPE_UINT)
+            ]);
+            this._bucketSortBindGroupFormat = new BindGroupFormat(device, [
+                new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('largeTileOverflowBases', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('largeTileList', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('chunkRanges', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('totalChunks', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true),
+                new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
+            ]);
+            this._bucketSortShader = new Shader(device, {
+                name: 'GSplatLocalBucketSort',
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                cshader: computeGsplatLocalBucketSortSource,
+                computeBindGroupFormat: this._bucketSortBindGroupFormat,
+                computeUniformBufferFormats: { uniforms: ubf }
+            });
+        }
+
+        // --- Copy ---
+        {
+            const ubf = new UniformBufferFormat(device, [
+                new UniformFormat('maxChunks', UNIFORMTYPE_UINT),
+                new UniformFormat('maxWorkgroupsPerDim', UNIFORMTYPE_UINT)
+            ]);
+            this._copyBindGroupFormat = new BindGroupFormat(device, [
+                new BindStorageBufferFormat('totalChunks', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('chunkSortIndirect', SHADERSTAGE_COMPUTE),
+                new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
+            ]);
+            this._copyShader = new Shader(device, {
+                name: 'GSplatLocalCopy',
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                cshader: computeGsplatLocalCopySource,
+                computeBindGroupFormat: this._copyBindGroupFormat,
+                computeUniformBufferFormats: { uniforms: ubf }
+            });
+        }
+
+        // --- ChunkSort ---
+        {
+            const ubf = new UniformBufferFormat(device, [
+                new UniformFormat('maxChunks', UNIFORMTYPE_UINT)
+            ]);
+            this._chunkSortBindGroupFormat = new BindGroupFormat(device, [
+                new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('chunkRanges', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('totalChunks', SHADERSTAGE_COMPUTE, true),
+                new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
+            ]);
+            this._chunkSortShader = new Shader(device, {
+                name: 'GSplatLocalChunkSort',
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                cshader: computeGsplatLocalChunkSortSource,
+                cincludes: this._createBitonicIncludes(),
+                computeBindGroupFormat: this._chunkSortBindGroupFormat,
+                computeUniformBufferFormats: { uniforms: ubf }
+            });
+        }
+
+        // --- Rasterize (color) ---
+        const { shader: rasterizeColorShader, bindGroupFormat: rasterizeColorBGF } = this._createRasterizeShaderAndFormat(false);
+        this._rasterizeColorShader = rasterizeColorShader;
+        this._rasterizeColorBindGroupFormat = rasterizeColorBGF;
+    }
+
+    /**
+     * Creates the count shader + shared bind group format.
+     *
+     * @param {boolean} pickMode - Whether to create the pick variant.
+     * @returns {{ shader: Shader, bindGroupFormat: BindGroupFormat }} The shader and format.
+     * @private
+     */
+    _createCountShaderAndFormat(pickMode) {
         const device = this.device;
 
         const uniformBufferFormat = new UniformBufferFormat(device, [
@@ -728,7 +879,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new UniformFormat('farClip', UNIFORMTYPE_FLOAT),
             new UniformFormat('minPixelSize', UNIFORMTYPE_FLOAT),
             new UniformFormat('isOrtho', UNIFORMTYPE_UINT),
-            new UniformFormat('exposure', UNIFORMTYPE_FLOAT)
+            new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
+            new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT)
         ]);
 
         const wbFormat = this.workBuffer.format;
@@ -741,249 +893,136 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
         ];
 
-        this._countBindGroupFormat = new BindGroupFormat(device, [
+        const bindGroupFormat = new BindGroupFormat(device, [
             ...fixedBindings,
             ...wbFormat.getComputeBindFormats()
         ]);
 
         const cincludes = this._createCommonIncludes();
-        this._createTonemapIncludes(cincludes);
         cincludes.set('gsplatComputeSplatCS', computeSplatSource);
         cincludes.set('gsplatFormatDeclCS', wbFormat.getComputeInputDeclarations(fixedBindings.length));
         cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
 
         const cdefines = new Map();
-        cdefines.set('TONEMAP', tonemapNames[this._toneMapping] ?? 'LINEAR');
-        cdefines.set('GAMMA', gammaNames[this._gamma] ?? 'NONE');
-        cdefines.set('TONEMAP_NO_EXPOSURE_UNIFORM', '');
+        if (pickMode) {
+            cdefines.set('PICK_MODE', '');
+        }
         const colorStream = wbFormat.getStream('dataColor');
         if (colorStream && colorStream.format !== PIXELFORMAT_RGBA16U) {
             cdefines.set('GSPLAT_COLOR_FLOAT', '');
         }
 
         const shader = new Shader(device, {
-            name: 'GSplatLocalTileCount',
+            name: pickMode ? 'GSplatLocalTileCountPick' : 'GSplatLocalTileCount',
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatLocalTileCountSource,
-            cincludes: cincludes,
-            cdefines: cdefines,
-            computeBindGroupFormat: this._countBindGroupFormat,
+            cincludes,
+            cdefines,
+            computeBindGroupFormat: bindGroupFormat,
             computeUniformBufferFormats: { uniforms: uniformBufferFormat }
         });
 
-        this.countCompute = new Compute(device, shader, 'GSplatLocalTileCount');
         this._formatHash = this.workBuffer.format.hash;
+        return { shader, bindGroupFormat };
     }
 
-    /** @private */
-    _createScatterCompute() {
+    /**
+     * Creates the rasterize shader + bind group format.
+     *
+     * @param {boolean} pickMode - Whether to create the pick variant.
+     * @returns {{ shader: Shader, bindGroupFormat: BindGroupFormat }} The shader and format.
+     * @private
+     */
+    _createRasterizeShaderAndFormat(pickMode) {
         const device = this.device;
 
-        const uniformBufferFormat = new UniformBufferFormat(device, [
-            new UniformFormat('numTilesX', UNIFORMTYPE_UINT),
-            new UniformFormat('numTilesY', UNIFORMTYPE_UINT),
-            new UniformFormat('maxEntries', UNIFORMTYPE_UINT),
-            new UniformFormat('viewportWidth', UNIFORMTYPE_FLOAT),
-            new UniformFormat('viewportHeight', UNIFORMTYPE_FLOAT)
-        ]);
-
-        this._scatterBindGroupFormat = new BindGroupFormat(device, [
-            new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('sortElementCount', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('tileWriteCursors', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
-        ]);
-
-        const cincludes = new Map();
-        cincludes.set('gsplatTileIntersectCS', computeGsplatTileIntersectSource);
-
-        const shader = new Shader(device, {
-            name: 'GSplatLocalScatter',
-            shaderLanguage: SHADERLANGUAGE_WGSL,
-            cshader: computeGsplatLocalScatterSource,
-            cincludes: cincludes,
-            computeBindGroupFormat: this._scatterBindGroupFormat,
-            computeUniformBufferFormats: { uniforms: uniformBufferFormat }
-        });
-
-        this.scatterCompute = new Compute(device, shader, 'GSplatLocalScatter');
-    }
-
-    /** @private */
-    _createClassifyCompute() {
-        const device = this.device;
-
-        const uniformBufferFormat = new UniformBufferFormat(device, [
-            new UniformFormat('numTiles', UNIFORMTYPE_UINT),
-            new UniformFormat('dispatchSlotOffset', UNIFORMTYPE_UINT),
-            new UniformFormat('bufferCapacity', UNIFORMTYPE_UINT),
-            new UniformFormat('maxWorkgroupsPerDim', UNIFORMTYPE_UINT),
-            new UniformFormat('drawSlot', UNIFORMTYPE_UINT)
-        ]);
-
-        this._classifyBindGroupFormat = new BindGroupFormat(device, [
-            new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('smallTileList', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('largeTileList', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('rasterizeTileList', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('indirectDispatchArgs', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('largeTileOverflowBases', SHADERSTAGE_COMPUTE),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('indirectDrawArgs', SHADERSTAGE_COMPUTE)
-        ]);
-
-        const shader = new Shader(device, {
-            name: 'GSplatLocalClassify',
-            shaderLanguage: SHADERLANGUAGE_WGSL,
-            cshader: computeGsplatLocalClassifySource,
-            computeBindGroupFormat: this._classifyBindGroupFormat,
-            computeUniformBufferFormats: { uniforms: uniformBufferFormat }
-        });
-
-        this.classifyCompute = new Compute(device, shader, 'GSplatLocalClassify');
-    }
-
-    /** @private */
-    _createSortCompute() {
-        const device = this.device;
-
-        this._sortBindGroupFormat = new BindGroupFormat(device, [
-            new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('smallTileList', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true)
-        ]);
-
-        const shader = new Shader(device, {
-            name: 'GSplatLocalTileSort',
-            shaderLanguage: SHADERLANGUAGE_WGSL,
-            cshader: computeGsplatLocalTileSortSource,
-            cincludes: this._createBitonicIncludes(),
-            computeBindGroupFormat: this._sortBindGroupFormat
-        });
-
-        this.sortCompute = new Compute(device, shader, 'GSplatLocalTileSort');
-    }
-
-    /** @private */
-    _createBucketSortCompute() {
-        const device = this.device;
-
-        const uniformBufferFormat = new UniformBufferFormat(device, [
-            new UniformFormat('bufferCapacity', UNIFORMTYPE_UINT),
-            new UniformFormat('maxChunks', UNIFORMTYPE_UINT)
-        ]);
-
-        this._bucketSortBindGroupFormat = new BindGroupFormat(device, [
-            new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('largeTileOverflowBases', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('largeTileList', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('chunkRanges', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('totalChunks', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
-        ]);
-
-        const shader = new Shader(device, {
-            name: 'GSplatLocalBucketSort',
-            shaderLanguage: SHADERLANGUAGE_WGSL,
-            cshader: computeGsplatLocalBucketSortSource,
-            computeBindGroupFormat: this._bucketSortBindGroupFormat,
-            computeUniformBufferFormats: { uniforms: uniformBufferFormat }
-        });
-
-        this.bucketSortCompute = new Compute(device, shader, 'GSplatLocalBucketSort');
-    }
-
-    /** @private */
-    _createCopyCompute() {
-        const device = this.device;
-
-        const uniformBufferFormat = new UniformBufferFormat(device, [
-            new UniformFormat('maxChunks', UNIFORMTYPE_UINT),
-            new UniformFormat('maxWorkgroupsPerDim', UNIFORMTYPE_UINT)
-        ]);
-
-        this._copyBindGroupFormat = new BindGroupFormat(device, [
-            new BindStorageBufferFormat('totalChunks', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('chunkSortIndirect', SHADERSTAGE_COMPUTE),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
-        ]);
-
-        const shader = new Shader(device, {
-            name: 'GSplatLocalCopy',
-            shaderLanguage: SHADERLANGUAGE_WGSL,
-            cshader: computeGsplatLocalCopySource,
-            computeBindGroupFormat: this._copyBindGroupFormat,
-            computeUniformBufferFormats: { uniforms: uniformBufferFormat }
-        });
-
-        this.copyCompute = new Compute(device, shader, 'GSplatLocalCopy');
-    }
-
-    /** @private */
-    _createChunkSortCompute() {
-        const device = this.device;
-
-        const uniformBufferFormat = new UniformBufferFormat(device, [
-            new UniformFormat('maxChunks', UNIFORMTYPE_UINT)
-        ]);
-
-        this._chunkSortBindGroupFormat = new BindGroupFormat(device, [
-            new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('chunkRanges', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('totalChunks', SHADERSTAGE_COMPUTE, true),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
-        ]);
-
-        const shader = new Shader(device, {
-            name: 'GSplatLocalChunkSort',
-            shaderLanguage: SHADERLANGUAGE_WGSL,
-            cshader: computeGsplatLocalChunkSortSource,
-            cincludes: this._createBitonicIncludes(),
-            computeBindGroupFormat: this._chunkSortBindGroupFormat,
-            computeUniformBufferFormats: { uniforms: uniformBufferFormat }
-        });
-
-        this.chunkSortCompute = new Compute(device, shader, 'GSplatLocalChunkSort');
-    }
-
-    /** @private */
-    _createRasterizeCompute() {
-        const device = this.device;
-
-        const uniformBufferFormat = new UniformBufferFormat(device, [
+        const ubf = new UniformBufferFormat(device, [
             new UniformFormat('screenWidth', UNIFORMTYPE_UINT),
             new UniformFormat('screenHeight', UNIFORMTYPE_UINT),
-            new UniformFormat('numTilesX', UNIFORMTYPE_UINT)
+            new UniformFormat('numTilesX', UNIFORMTYPE_UINT),
+            new UniformFormat('nearClip', UNIFORMTYPE_FLOAT),
+            new UniformFormat('farClip', UNIFORMTYPE_FLOAT),
+            new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT)
         ]);
 
-        this._rasterizeBindGroupFormat = new BindGroupFormat(device, [
-            new BindStorageTextureFormat('outputTexture', PIXELFORMAT_RGBA8),
+        const sharedBindings = [
+            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('rasterizeTileList', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
-        ]);
+            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true)
+        ];
+
+        const outputBindings = pickMode ? [
+            new BindStorageTextureFormat('pickIdTexture', PIXELFORMAT_R32U),
+            new BindStorageTextureFormat('pickDepthTexture', PIXELFORMAT_RGBA16F)
+        ] : [
+            new BindStorageTextureFormat('outputTexture', PIXELFORMAT_RGBA16F)
+        ];
+
+        const bgf = new BindGroupFormat(device, [...sharedBindings, ...outputBindings]);
+
+        const cdefines = pickMode ? new Map([['PICK_MODE', '']]) : undefined;
+        const cincludes = pickMode ? undefined : new Map([['decodePS', shaderChunksWGSL.decodePS]]);
 
         const shader = new Shader(device, {
-            name: 'GSplatLocalRasterize',
+            name: pickMode ? 'GSplatLocalRasterizePick' : 'GSplatLocalRasterize',
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatLocalRasterizeSource,
-            computeBindGroupFormat: this._rasterizeBindGroupFormat,
-            computeUniformBufferFormats: { uniforms: uniformBufferFormat }
+            cdefines,
+            cincludes,
+            computeBindGroupFormat: bgf,
+            computeUniformBufferFormats: { uniforms: ubf }
         });
 
-        this.rasterizeCompute = new Compute(device, shader, 'GSplatLocalRasterize');
+        return { shader, bindGroupFormat: bgf };
+    }
+
+    /**
+     * Creates a dispatch set with its 8 Compute instances.
+     *
+     * @param {boolean} pickMode - Whether this set is for picking.
+     * @returns {GSplatLocalDispatchSet} The populated dispatch set.
+     * @private
+     */
+    _createDispatchSet(pickMode) {
+        const device = this.device;
+        const set = new GSplatLocalDispatchSet(device, pickMode);
+
+        // Count compute is created lazily by _ensureCountCompute()
+
+        // Scatter: shared shader
+        set.scatterCompute = new Compute(device, this._scatterShader, pickMode ? 'GSplatPickScatter' : 'GSplatLocalScatter');
+
+        // Classify: shared shader
+        set.classifyCompute = new Compute(device, this._classifyShader, pickMode ? 'GSplatPickClassify' : 'GSplatLocalClassify');
+
+        // Sort: shared shader
+        set.sortCompute = new Compute(device, this._sortShader, pickMode ? 'GSplatPickTileSort' : 'GSplatLocalTileSort');
+
+        // BucketSort: shared shader
+        set.bucketSortCompute = new Compute(device, this._bucketSortShader, pickMode ? 'GSplatPickBucketSort' : 'GSplatLocalBucketSort');
+
+        // Copy: shared shader
+        set.copyCompute = new Compute(device, this._copyShader, pickMode ? 'GSplatPickCopy' : 'GSplatLocalCopy');
+
+        // ChunkSort: shared shader
+        set.chunkSortCompute = new Compute(device, this._chunkSortShader, pickMode ? 'GSplatPickChunkSort' : 'GSplatLocalChunkSort');
+
+        // Rasterize: mode-specific shader and BGF
+        if (pickMode) {
+            if (!this._rasterizePickShader) {
+                const { shader, bindGroupFormat } = this._createRasterizeShaderAndFormat(true);
+                this._rasterizePickShader = shader;
+                set.rasterizeBindGroupFormat = bindGroupFormat;
+            }
+            set.rasterizeCompute = new Compute(device, this._rasterizePickShader, 'GSplatPickRasterize');
+        } else {
+            set.rasterizeCompute = new Compute(device, this._rasterizeColorShader, 'GSplatLocalRasterize');
+        }
+
+        return set;
     }
 }
 

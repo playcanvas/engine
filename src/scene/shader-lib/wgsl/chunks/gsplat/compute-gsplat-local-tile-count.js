@@ -4,7 +4,6 @@ export const computeGsplatLocalTileCountSource = /* wgsl */`
 
 #include "gsplatCommonCS"
 #include "gsplatTileIntersectCS"
-#include "gsplatOutputVS"
 
 const CACHE_STRIDE: u32 = 8u;
 
@@ -27,6 +26,7 @@ struct Uniforms {
     minPixelSize: f32,
     isOrtho: u32,
     exposure: f32,
+    alphaClip: f32,
 }
 @group(0) @binding(4) var<uniform> uniforms: Uniforms;
 
@@ -50,7 +50,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     let center = getCenter();
     let opacity = getOpacity();
 
-    if (opacity < 1.0 / 255.0) {
+    if (opacity < uniforms.alphaClip) {
         projCache[threadIdx * CACHE_STRIDE + 6u] = 0u;
         return;
     }
@@ -63,7 +63,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
         uniforms.viewMatrix, uniforms.viewProj,
         uniforms.focal, uniforms.viewportWidth, uniforms.viewportHeight,
         uniforms.nearClip, uniforms.farClip, opacity, uniforms.minPixelSize,
-        uniforms.isOrtho
+        uniforms.isOrtho, uniforms.alphaClip
     );
 
     if (!proj.valid) {
@@ -77,23 +77,30 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     let coeffY = -2.0 * proj.a * invDet;
     let coeffXY = 4.0 * proj.b * invDet;
 
-    let color = getColor();
-    var rgb = prepareOutputFromGamma(max(color, vec3f(0.0)));
-
     let base = threadIdx * CACHE_STRIDE;
     projCache[base + 0u] = bitcast<u32>(proj.screen.x);
     projCache[base + 1u] = bitcast<u32>(proj.screen.y);
     projCache[base + 2u] = bitcast<u32>(coeffX);
     projCache[base + 3u] = bitcast<u32>(coeffY);
     projCache[base + 4u] = bitcast<u32>(coeffXY);
+
+#ifdef PICK_MODE
+    let pcIdVal = loadPcId().r;
+    projCache[base + 5u] = pcIdVal;
+    projCache[base + 6u] = pack2x16float(vec2f(0.0, opacity));
+#else
+    let color = getColor();
+    var rgb = max(color, vec3f(0.0));
     projCache[base + 5u] = pack2x16float(vec2f(rgb.x, rgb.y));
     projCache[base + 6u] = pack2x16float(vec2f(rgb.z, opacity));
+#endif
 
     let viewDepth = -(uniforms.viewMatrix * vec4f(center, 1.0)).z;
     projCache[base + 7u] = bitcast<u32>(viewDepth);
 
     let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, half(opacity),
-                                    uniforms.viewportWidth, uniforms.viewportHeight);
+                                    uniforms.viewportWidth, uniforms.viewportHeight,
+                                    uniforms.alphaClip);
 
     let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
     let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
