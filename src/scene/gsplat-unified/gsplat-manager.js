@@ -6,7 +6,6 @@ import { GSplatInfo } from './gsplat-info.js';
 import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
 import { GSplatQuadRenderer } from './gsplat-quad-renderer.js';
-import { GSplatComputeGlobalRenderer } from './gsplat-compute-global-renderer.js';
 import { GSplatComputeLocalRenderer } from './gsplat-compute-local-renderer.js';
 import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
 import { GSplatOctreeResource } from './gsplat-octree.resource.js';
@@ -34,7 +33,6 @@ import { BlockAllocator } from '../../core/block-allocator.js';
  * @import { GSplatRenderer } from './gsplat-renderer.js'
  */
 
-const USE_GLOBAL_COMPUTE_RENDERER = false;
 const USE_LOCAL_COMPUTE_RENDERER = false;
 
 const cameraPosition = new Vec3();
@@ -418,9 +416,6 @@ class GSplatManager {
             this.renderer = new GSplatComputeLocalRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
             this.useLocalRenderer = true;
             this.useGpuSorting = true;
-        } else if (USE_GLOBAL_COMPUTE_RENDERER && device.isWebGPU) {
-            this.renderer = new GSplatComputeGlobalRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
-            this.useLocalRenderer = false;
         } else {
             this.renderer = new GSplatQuadRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
             this.useLocalRenderer = false;
