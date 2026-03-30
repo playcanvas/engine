@@ -4,6 +4,9 @@
 export const computeGsplatLocalRasterizeSource = /* wgsl */`
 
 #include "halfTypesCS"
+#ifndef PICK_MODE
+#include "decodePS"
+#endif
 
 const CACHE_STRIDE: u32 = 8u;
 const BATCH_SIZE: u32 = 64u;
@@ -12,26 +15,75 @@ const ALPHA_THRESHOLD: half = half(1.0) / half(255.0);
 const EXP4: half = exp(half(-4.0));
 const INV_EXP4: half = half(1.0) / (half(1.0) - EXP4);
 
-@group(0) @binding(0) var outputTexture: texture_storage_2d<rgba8unorm, write>;
+// Shared uniforms and storage buffers (same layout for both color and pick modes).
+// Pick-only uniforms (nearClip, farClip, alphaClip) are present but unused in color mode.
+struct Uniforms {
+    screenWidth: u32,
+    screenHeight: u32,
+    numTilesX: u32,
+    nearClip: f32,
+    farClip: f32,
+    alphaClip: f32,
+}
+@group(0) @binding(0) var<uniform> uniforms: Uniforms;
 @group(0) @binding(1) var<storage, read> tileEntries: array<u32>;
 @group(0) @binding(2) var<storage, read> tileSplatCounts: array<u32>;
 @group(0) @binding(3) var<storage, read> projCache: array<u32>;
 @group(0) @binding(4) var<storage, read> rasterizeTileList: array<u32>;
 @group(0) @binding(5) var<storage, read> tileListCounts: array<u32>;
 
-struct Uniforms {
-    screenWidth: u32,
-    screenHeight: u32,
-    numTilesX: u32,
-}
-@group(0) @binding(6) var<uniform> uniforms: Uniforms;
+// Mode-specific output textures appended after the shared bindings.
+#ifdef PICK_MODE
+    @group(0) @binding(6) var pickIdTexture: texture_storage_2d<r32uint, write>;
+    @group(0) @binding(7) var pickDepthTexture: texture_storage_2d<rgba16float, write>;
+#else
+    @group(0) @binding(6) var outputTexture: texture_storage_2d<rgba16float, write>;
+#endif
 
 var<workgroup> sharedCenterScreen: array<vec2f, 64>;
 var<workgroup> sharedCoeffs: array<vec3f, 64>;
-var<workgroup> sharedColor: array<half4, 64>;
+
+// Pick mode stores per-splat opacity, ID and depth; color mode stores packed RGBA.
+#ifdef PICK_MODE
+    var<workgroup> sharedOpacity: array<half, 64>;
+    var<workgroup> sharedPickId: array<u32, 64>;
+    var<workgroup> sharedViewDepth: array<f32, 64>;
+#else
+    var<workgroup> sharedColor: array<half4, 64>;
+#endif
+
 var<workgroup> doneCount: atomic<u32>;
 var<workgroup> doneCountShared: u32;
 
+// Evaluate a single splat for picking. Records the front-most pick ID (first splat above
+// alphaClip) and accumulates alpha-weighted depth for sub-pixel depth reconstruction.
+#ifdef PICK_MODE
+fn evalSplatPick(pixelCoord: vec2f, center: vec2f, coeffX: f32, coeffY: f32, coeffXY: f32,
+                 opacity: half, pickId: u32, viewDepth: f32, alphaClip: half,
+                 bestPickId: ptr<function, u32>, depthAccum: ptr<function, f32>,
+                 weightAccum: ptr<function, f32>, T: ptr<function, half>) {
+    let dx = pixelCoord - center;
+    let power = coeffX * dx.x * dx.x + coeffXY * dx.x * dx.y + coeffY * dx.y * dx.y;
+    let gauss = (half(exp(power)) - EXP4) * INV_EXP4;
+    let alpha = half(min(half(0.99), opacity * gauss));
+    let newT = *T * (half(1.0) - alpha);
+    let visible = power > -4.0 && alpha > ALPHA_THRESHOLD && *T >= ALPHA_THRESHOLD;
+    if (!visible) { return; }
+
+    // Per-pixel alphaClip: only solid splat centers contribute to pick
+    if (alpha >= alphaClip) {
+        if (*bestPickId == 0xFFFFFFFFu) {
+            *bestPickId = pickId;
+        }
+        let normalizedDepth = saturate((viewDepth - uniforms.nearClip) / (uniforms.farClip - uniforms.nearClip));
+        let w = f32(alpha) * f32(*T);
+        *depthAccum += w * normalizedDepth;
+        *weightAccum += w;
+    }
+
+    *T = newT;
+}
+#else
 fn evalSplat(pixelCoord: vec2f, center: vec2f, coeffX: f32, coeffY: f32, coeffXY: f32, splatColor: half4, colorAccum: ptr<function, half3>, T: ptr<function, half>) {
     let dx = pixelCoord - center;
     let power = coeffX * dx.x * dx.x + coeffXY * dx.x * dx.y + coeffY * dx.y * dx.y;
@@ -42,6 +94,7 @@ fn evalSplat(pixelCoord: vec2f, center: vec2f, coeffX: f32, coeffY: f32, coeffXY
     *colorAccum += splatColor.rgb * alpha * (*T) * cond;
     *T = cond * newT + (half(1.0) - cond) * (*T);
 }
+#endif
 
 @compute @workgroup_size(8, 8)
 fn main(
@@ -66,10 +119,24 @@ fn main(
     let p01 = p00 + vec2f(0.0, 1.0);
     let p11 = p00 + vec2f(1.0, 1.0);
 
-    var c00 = half3(0.0); var T00: half = half(1.0);
-    var c10 = half3(0.0); var T10: half = half(1.0);
-    var c01 = half3(0.0); var T01: half = half(1.0);
-    var c11 = half3(0.0); var T11: half = half(1.0);
+    // Per-pixel state for the 2x2 quad. Pick mode tracks transmittance, pick IDs,
+    // and alpha-weighted depth accumulators. Color mode tracks color and transmittance.
+    #ifdef PICK_MODE
+        var T00: half = half(1.0); var T10: half = half(1.0);
+        var T01: half = half(1.0); var T11: half = half(1.0);
+        var pickId00: u32 = 0xFFFFFFFFu; var pickId10: u32 = 0xFFFFFFFFu;
+        var pickId01: u32 = 0xFFFFFFFFu; var pickId11: u32 = 0xFFFFFFFFu;
+        var dAcc00: f32 = 0.0; var dAcc10: f32 = 0.0;
+        var dAcc01: f32 = 0.0; var dAcc11: f32 = 0.0;
+        var wAcc00: f32 = 0.0; var wAcc10: f32 = 0.0;
+        var wAcc01: f32 = 0.0; var wAcc11: f32 = 0.0;
+        let clipH = half(uniforms.alphaClip);
+    #else
+        var c00 = half3(0.0); var T00: half = half(1.0);
+        var c10 = half3(0.0); var T10: half = half(1.0);
+        var c01 = half3(0.0); var T01: half = half(1.0);
+        var c11 = half3(0.0); var T11: half = half(1.0);
+    #endif
 
     let tileCount = tEnd - tStart;
 
@@ -95,9 +162,16 @@ fn main(
                 bitcast<f32>(projCache[base + 3u]),
                 bitcast<f32>(projCache[base + 4u])
             );
-            let rg = unpack2x16float(projCache[base + 5u]);
-            let ba = unpack2x16float(projCache[base + 6u]);
-            sharedColor[localIdx] = half4(half(rg.x), half(rg.y), half(ba.x), half(ba.y));
+            // Pick mode: cache stores pick ID, opacity, and view depth per splat
+            #ifdef PICK_MODE
+                sharedPickId[localIdx] = projCache[base + 5u];
+                sharedOpacity[localIdx] = half(unpack2x16float(projCache[base + 6u]).y);
+                sharedViewDepth[localIdx] = bitcast<f32>(projCache[base + 7u]);
+            #else
+                let rg = unpack2x16float(projCache[base + 5u]);
+                let ba = unpack2x16float(projCache[base + 6u]);
+                sharedColor[localIdx] = half4(half(rg.x), half(rg.y), half(ba.x), half(ba.y));
+            #endif
         }
 
         workgroupBarrier();
@@ -108,12 +182,24 @@ fn main(
             for (var i: u32 = 0u; i < batchCount; i++) {
                 let center = sharedCenterScreen[i];
                 let coeffs = sharedCoeffs[i];
-                let splatColor = sharedColor[i];
 
-                evalSplat(p00, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c00, &T00);
-                evalSplat(p10, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c10, &T10);
-                evalSplat(p01, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c01, &T01);
-                evalSplat(p11, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c11, &T11);
+                #ifdef PICK_MODE
+                    let splatOpacity = sharedOpacity[i];
+                    let splatPickId = sharedPickId[i];
+                    let splatDepth = sharedViewDepth[i];
+
+                    evalSplatPick(p00, center, coeffs.x, coeffs.y, coeffs.z, splatOpacity, splatPickId, splatDepth, clipH, &pickId00, &dAcc00, &wAcc00, &T00);
+                    evalSplatPick(p10, center, coeffs.x, coeffs.y, coeffs.z, splatOpacity, splatPickId, splatDepth, clipH, &pickId10, &dAcc10, &wAcc10, &T10);
+                    evalSplatPick(p01, center, coeffs.x, coeffs.y, coeffs.z, splatOpacity, splatPickId, splatDepth, clipH, &pickId01, &dAcc01, &wAcc01, &T01);
+                    evalSplatPick(p11, center, coeffs.x, coeffs.y, coeffs.z, splatOpacity, splatPickId, splatDepth, clipH, &pickId11, &dAcc11, &wAcc11, &T11);
+                #else
+                    let splatColor = sharedColor[i];
+
+                    evalSplat(p00, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c00, &T00);
+                    evalSplat(p10, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c10, &T10);
+                    evalSplat(p01, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c01, &T01);
+                    evalSplat(p11, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c11, &T11);
+                #endif
 
                 if (T00 < ALPHA_THRESHOLD && T10 < ALPHA_THRESHOLD && T01 < ALPHA_THRESHOLD && T11 < ALPHA_THRESHOLD) {
                     threadDone = true;
@@ -135,17 +221,44 @@ fn main(
         }
     }
 
+    // Write results for the 2x2 pixel quad owned by this thread.
+    // Pick mode: store the front-most pick ID and (accumulated depth, weight) per pixel.
+    // Color mode: convert accumulated gamma-space color to linear via decodeGamma3 and store
+    // to the rgba16float output texture; alpha holds total opacity (1 - transmittance).
     if (basePixel.x < uniforms.screenWidth && basePixel.y < uniforms.screenHeight) {
-        textureStore(outputTexture, basePixel, vec4f(vec3f(c00), f32(half(1.0) - T00)));
+        #ifdef PICK_MODE
+            textureStore(pickIdTexture, basePixel, vec4u(pickId00, 0u, 0u, 0u));
+            textureStore(pickDepthTexture, basePixel, vec4f(dAcc00, wAcc00, 0.0, 0.0));
+        #else
+            textureStore(outputTexture, basePixel, vec4f(decodeGamma3(vec3f(c00)), f32(half(1.0) - T00)));
+        #endif
     }
     if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y < uniforms.screenHeight) {
-        textureStore(outputTexture, vec2u(basePixel.x + 1u, basePixel.y), vec4f(vec3f(c10), f32(half(1.0) - T10)));
+        let px10 = vec2u(basePixel.x + 1u, basePixel.y);
+        #ifdef PICK_MODE
+            textureStore(pickIdTexture, px10, vec4u(pickId10, 0u, 0u, 0u));
+            textureStore(pickDepthTexture, px10, vec4f(dAcc10, wAcc10, 0.0, 0.0));
+        #else
+            textureStore(outputTexture, px10, vec4f(decodeGamma3(vec3f(c10)), f32(half(1.0) - T10)));
+        #endif
     }
     if (basePixel.x < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
-        textureStore(outputTexture, vec2u(basePixel.x, basePixel.y + 1u), vec4f(vec3f(c01), f32(half(1.0) - T01)));
+        let px01 = vec2u(basePixel.x, basePixel.y + 1u);
+        #ifdef PICK_MODE
+            textureStore(pickIdTexture, px01, vec4u(pickId01, 0u, 0u, 0u));
+            textureStore(pickDepthTexture, px01, vec4f(dAcc01, wAcc01, 0.0, 0.0));
+        #else
+            textureStore(outputTexture, px01, vec4f(decodeGamma3(vec3f(c01)), f32(half(1.0) - T01)));
+        #endif
     }
     if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
-        textureStore(outputTexture, vec2u(basePixel.x + 1u, basePixel.y + 1u), vec4f(vec3f(c11), f32(half(1.0) - T11)));
+        let px11 = vec2u(basePixel.x + 1u, basePixel.y + 1u);
+        #ifdef PICK_MODE
+            textureStore(pickIdTexture, px11, vec4u(pickId11, 0u, 0u, 0u));
+            textureStore(pickDepthTexture, px11, vec4f(dAcc11, wAcc11, 0.0, 0.0));
+        #else
+            textureStore(outputTexture, px11, vec4f(decodeGamma3(vec3f(c11)), f32(half(1.0) - T11)));
+        #endif
     }
 }
 `;

@@ -217,6 +217,26 @@ class GSplatDirector {
     }
 
     /**
+     * Dispatches pick compute for the given camera and layer, returning a ready-to-render
+     * pick mesh instance (or null if no gsplat data exists for this camera/layer pair).
+     *
+     * @param {Camera} camera - The camera.
+     * @param {number} width - Pick target width.
+     * @param {number} height - Pick target height.
+     * @param {Layer} layer - The layer to pick from.
+     * @returns {import('../mesh-instance.js').MeshInstance|null} The configured pick mesh instance.
+     */
+    prepareForPicking(camera, width, height, layer) {
+        const cameraData = this.camerasMap.get(camera);
+        if (!cameraData) return null;
+
+        const layerData = cameraData.layersMap.get(layer);
+        if (!layerData?.gsplatManager) return null;
+
+        return layerData.gsplatManager.prepareForPicking(camera, width, height);
+    }
+
+    /**
      * Updates the director for the given layer composition cameras and layers.
      *
      * @param {LayerComposition} comp - The layer composition.

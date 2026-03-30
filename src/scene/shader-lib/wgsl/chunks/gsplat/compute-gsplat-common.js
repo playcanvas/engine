@@ -41,7 +41,8 @@ fn computeSplatCov(
     farClip: f32,
     opacity: f32,
     minPixelSize: f32,
-    isOrtho: u32
+    isOrtho: u32,
+    alphaClip: f32
 ) -> SplatCov2D {
     var result: SplatCov2D;
     result.valid = false;
@@ -124,7 +125,7 @@ fn computeSplatCov(
     // distance. We solve for the power where opacity * exp(power) = 1/255,
     // giving radiusFactor = min(8.0, 2.0 * ln(255 * opacity)). This shrinks
     // the effective radius for low-opacity splats, reducing tile assignments.
-    let radiusFactor = computeRadiusFactor(half(opacity));
+    let radiusFactor = computeRadiusFactor(half(opacity), alphaClip);
 
     let vmin = min(1024.0, min(viewportWidth, viewportHeight));
     let maxRadius = 2.0 * vmin;

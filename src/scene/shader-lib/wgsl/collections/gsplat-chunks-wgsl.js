@@ -10,6 +10,7 @@ import gsplatCornerVS from '../chunks/gsplat/vert/gsplatCorner.js';
 import gsplatTileCompositeVS from '../chunks/gsplat/vert/gsplatTileComposite.js';
 import gsplatOutputVS from '../chunks/gsplat/vert/gsplatOutput.js';
 import gsplatPS from '../chunks/gsplat/frag/gsplat.js';
+import gsplatTileCompositePS from '../chunks/gsplat/frag/gsplatTileComposite.js';
 import gsplatSourceVS from '../chunks/gsplat/vert/gsplatSource.js';
 import gsplatVS from '../chunks/gsplat/vert/gsplat.js';
 import gsplatPackingPS from '../chunks/gsplat/frag/gsplatPacking.js';
@@ -39,6 +40,7 @@ export const gsplatChunksWGSL = {
     gsplatQuatToMat3VS,
     gsplatOutputVS,
     gsplatPS,
+    gsplatTileCompositePS,
     gsplatSourceVS,
     gsplatVS,
     gsplatPackingPS,

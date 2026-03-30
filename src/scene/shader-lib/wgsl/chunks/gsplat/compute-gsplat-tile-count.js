@@ -60,7 +60,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
         uniforms.viewMatrix, uniforms.viewProj,
         uniforms.focal, uniforms.viewportWidth, uniforms.viewportHeight,
         uniforms.nearClip, uniforms.farClip, opacity, uniforms.minPixelSize,
-        uniforms.isOrtho
+        uniforms.isOrtho, 1.0 / 255.0
     );
 
     if (!proj.valid) {
@@ -89,7 +89,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     projCache[base + 6u] = pack2x16float(vec2f(f32(colorHalf.b), f32(colorHalf.a)));
 
     let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, half(opacity),
-                                    uniforms.viewportWidth, uniforms.viewportHeight);
+                                    uniforms.viewportWidth, uniforms.viewportHeight,
+                                    1.0 / 255.0);
 
     let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
     let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
