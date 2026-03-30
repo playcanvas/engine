@@ -434,7 +434,7 @@ class Renderer {
         viewportHeight *= camera.rect.w;
 
         // adjust viewport for stereoscopic VR sessions
-        if (camera.xr?.active && camera.xr.views.list.length === 2) {
+        if (camera.xr?.session && camera.xr.views.list.length === 2) {
             viewportWidth *= 0.5;
         }
 
