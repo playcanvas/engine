@@ -360,7 +360,6 @@ class GSplatWorkBuffer {
             this.colorRenderPass.render();
         }
     }
-
 }
 
 export { GSplatWorkBuffer, WorkBufferRenderInfo };
