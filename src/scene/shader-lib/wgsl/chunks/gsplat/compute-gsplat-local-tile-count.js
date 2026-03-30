@@ -4,8 +4,6 @@ export const computeGsplatLocalTileCountSource = /* wgsl */`
 
 #include "gsplatCommonCS"
 #include "gsplatTileIntersectCS"
-#ifndef PICK_MODE
-#endif
 
 const CACHE_STRIDE: u32 = 8u;
 

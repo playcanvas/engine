@@ -104,7 +104,7 @@ class RenderPassPicker extends RenderPass {
             // store the index of the layers we need to render
             this._qualifiedLayerIndices.push(i);
 
-            // kick off a compute tiled renderer for gsplamanager on this layer, and store the mesh instance
+            // kick off a compute tiled renderer for the gsplat manager on this layer, and store the mesh instance
             // which copies the results to the pick buffer
             if (gsplatDirector) {
                 const pickMI = gsplatDirector.prepareForPicking(camera.camera, pickerWidth, pickerHeight, srcLayer);

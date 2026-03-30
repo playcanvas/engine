@@ -83,6 +83,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     _minPixelSize = 2.0;
 
     /** @type {number} */
+    _alphaClip = 0.3;
+
+    /** @type {number} */
     _exposure = 1.0;
 
     /** @type {number} */
@@ -130,6 +133,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
     /** @type {BindGroupFormat|null} */
     _countBindGroupFormat = null;
+
+    /** @type {BindGroupFormat|null} */
+    _countPickBindGroupFormat = null;
 
     /** @type {Shader} */
     _scatterShader;
@@ -213,6 +219,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._countColorShader?.destroy();
         this._countPickShader?.destroy();
         this._countBindGroupFormat?.destroy();
+        this._countPickBindGroupFormat?.destroy();
         this._scatterShader.destroy();
         this._scatterBindGroupFormat.destroy();
         this._classifyShader.destroy();
@@ -264,6 +271,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             this._registerFramePass();
         }
         this._minPixelSize = gsplat.minPixelSize;
+        this._alphaClip = gsplat.alphaClip;
         this._exposure = exposure ?? 1.0;
 
         let needsRecreate = false;
@@ -402,8 +410,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
             // Create pick count compute (count shader must exist by now from frameUpdate)
             if (!this._countPickShader) {
-                const { shader } = this._createCountShaderAndFormat(true);
+                const { shader, bindGroupFormat } = this._createCountShaderAndFormat(true);
                 this._countPickShader = shader;
+                this._countPickBindGroupFormat = bindGroupFormat;
             }
             this._pickSet.countCompute = new Compute(this.device, this._countPickShader, 'GSplatPickTileCount');
         }
@@ -459,7 +468,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         _viewData.set(view.data);
         const focal = width * proj.data[0];
 
-        const alphaClip = pickMode ? (this.device.scope.resolve('scene_gsplatAlphaClip')?.getValue() ?? 0.3) : (1.0 / 255.0);
+        const alphaClip = pickMode ? this._alphaClip : (1.0 / 255.0);
 
         // --- Pass 1: Per-tile count + projection cache ---
         set._tileSplatCountsBuffer.clear();
@@ -656,6 +665,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._countColorShader?.destroy();
         this._countBindGroupFormat?.destroy();
         this._countPickShader?.destroy();
+        this._countPickBindGroupFormat?.destroy();
 
         const { shader, bindGroupFormat } = this._createCountShaderAndFormat(false);
         this._countColorShader = shader;
@@ -664,8 +674,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         if (this._pickSet) {
             this._pickSet.countCompute?.destroy();
-            const { shader: pickShader } = this._createCountShaderAndFormat(true);
+            const { shader: pickShader, bindGroupFormat: pickBgf } = this._createCountShaderAndFormat(true);
             this._countPickShader = pickShader;
+            this._countPickBindGroupFormat = pickBgf;
             this._pickSet.countCompute = new Compute(device, pickShader, 'GSplatPickTileCount');
         }
     }
