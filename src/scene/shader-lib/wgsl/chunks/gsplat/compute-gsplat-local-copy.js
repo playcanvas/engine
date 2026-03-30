@@ -5,7 +5,12 @@
 //   - The chunkSortIndirect args written here are visible to the chunk sort (next pass).
 // Clamps the count to maxChunks (matching the chunkRanges buffer budget) and writes a 2D
 // dispatch to stay within maxComputeWorkgroupsPerDimension.
+
+import dispatchCoreCS from '../common/comp/dispatch-core.js';
+
 export const computeGsplatLocalCopySource = /* wgsl */`
+
+${dispatchCoreCS}
 
 @group(0) @binding(0) var<storage, read> totalChunks: array<u32>;
 @group(0) @binding(1) var<storage, read_write> chunkSortIndirect: array<u32>;
@@ -19,11 +24,9 @@ struct Uniforms {
 @compute @workgroup_size(1)
 fn main() {
     let count = min(totalChunks[0], uniforms.maxChunks);
-    let maxDim = uniforms.maxWorkgroupsPerDim;
-    var y = (count + maxDim - 1u) / maxDim;
-    y = max(y, 1u);
-    chunkSortIndirect[0] = (count + y - 1u) / y;
-    chunkSortIndirect[1] = y;
+    let dim = calcDispatch2D(count, uniforms.maxWorkgroupsPerDim);
+    chunkSortIndirect[0] = dim.x;
+    chunkSortIndirect[1] = dim.y;
     chunkSortIndirect[2] = 1u;
 }
 `;

@@ -2,15 +2,15 @@ import { Debug } from '../../core/debug.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
-import { BindGroupFormat, BindStorageBufferFormat, BindTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindStorageBufferFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
     BUFFERUSAGE_COPY_DST,
     BUFFERUSAGE_COPY_SRC,
-    SAMPLETYPE_UINT,
     SHADERLANGUAGE_WGSL,
     SHADERSTAGE_COMPUTE,
-    UNIFORMTYPE_UINT
+    UNIFORMTYPE_UINT,
+    UNIFORMTYPE_VEC4
 } from '../../platform/graphics/constants.js';
 import { computeGsplatIntervalCullSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-interval-cull.js';
 import { computeGsplatIntervalScatterSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-interval-scatter.js';
@@ -21,8 +21,8 @@ import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { GSplatFrustumCuller } from './gsplat-frustum-culler.js'
  * @import { GSplatWorldState } from './gsplat-world-state.js'
- * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 const WORKGROUP_SIZE = 256;
@@ -178,11 +178,6 @@ class GSplatIntervalCompaction {
     _createUniformBufferFormats() {
         const device = this.device;
 
-        this._cullUniformBufferFormat = new UniformBufferFormat(device, [
-            new UniformFormat('numIntervals', UNIFORMTYPE_UINT),
-            new UniformFormat('visWidth', UNIFORMTYPE_UINT)
-        ]);
-
         this._scatterUniformBufferFormat = new UniformBufferFormat(device, [
             new UniformFormat('numIntervals', UNIFORMTYPE_UINT),
             new UniformFormat('pad0', UNIFORMTYPE_UINT),
@@ -221,9 +216,21 @@ class GSplatIntervalCompaction {
             new BindStorageBufferFormat('countBuffer', SHADERSTAGE_COMPUTE, false)
         ];
         if (cullingEnabled) {
-            entries.push(new BindTextureFormat('nodeVisibilityTexture', SHADERSTAGE_COMPUTE, undefined, SAMPLETYPE_UINT, false));
+            entries.push(new BindStorageBufferFormat('boundsBuffer', SHADERSTAGE_COMPUTE, true));
+            entries.push(new BindStorageBufferFormat('transformsBuffer', SHADERSTAGE_COMPUTE, true));
         }
         this._cullBindGroupFormat = new BindGroupFormat(device, entries);
+
+        if (cullingEnabled) {
+            this._cullUniformBufferFormat = new UniformBufferFormat(device, [
+                new UniformFormat('frustumPlanes', UNIFORMTYPE_VEC4, 6),
+                new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
+            ]);
+        } else {
+            this._cullUniformBufferFormat = new UniformBufferFormat(device, [
+                new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
+            ]);
+        }
 
         /** @type {Map<string, string>} */
         const cdefines = new Map([
@@ -292,7 +299,8 @@ class GSplatIntervalCompaction {
         const cdefines = new Map([
             ['{INSTANCE_SIZE}', GSplatResourceBase.instanceSize],
             ['{KEYGEN_THREADS_PER_WORKGROUP}', 256],
-            ['{SORT_ELEMENTS_PER_WORKGROUP}', SORT_ELEMENTS_PER_WORKGROUP]
+            ['{SORT_ELEMENTS_PER_WORKGROUP}', SORT_ELEMENTS_PER_WORKGROUP],
+            ['{MAX_WORKGROUPS_PER_DIM}', device.limits.maxComputeWorkgroupsPerDimension || 65535]
         ]);
 
         const shader = new Shader(device, {
@@ -386,12 +394,12 @@ class GSplatIntervalCompaction {
     /**
      * Runs the full interval compaction pipeline: cull+count, prefix sum, scatter.
      *
-     * @param {Texture|null} nodeVisibilityTexture - Bit-packed visibility texture (when culling).
+     * @param {GSplatFrustumCuller|null} frustumCuller - Frustum culler with textures and planes (when culling).
      * @param {number} numIntervals - Total number of intervals.
      * @param {number} totalActiveSplats - Total active splats across all intervals.
      * @param {boolean} cullingEnabled - Whether frustum culling is active.
      */
-    dispatchCompact(nodeVisibilityTexture, numIntervals, totalActiveSplats, cullingEnabled) {
+    dispatchCompact(frustumCuller, numIntervals, totalActiveSplats, cullingEnabled) {
         if (numIntervals === 0) return;
 
         this._ensureCapacity(numIntervals, totalActiveSplats);
@@ -403,11 +411,12 @@ class GSplatIntervalCompaction {
         cullCompute.setParameter('intervals', this.intervalsBuffer);
         cullCompute.setParameter('countBuffer', this.countBuffer);
         if (cullingEnabled) {
-            cullCompute.setParameter('nodeVisibilityTexture', nodeVisibilityTexture);
+            cullCompute.setParameter('boundsBuffer', frustumCuller.boundsBuffer);
+            cullCompute.setParameter('transformsBuffer', frustumCuller.transformsBuffer);
+            cullCompute.setParameter('frustumPlanes[0]', frustumCuller.frustumPlanes);
         }
 
         cullCompute.setParameter('numIntervals', numIntervals);
-        cullCompute.setParameter('visWidth', cullingEnabled ? nodeVisibilityTexture.width : 0);
 
         const cullWorkgroups = Math.ceil(numIntervals / WORKGROUP_SIZE);
         cullCompute.setupDispatch(cullWorkgroups);

@@ -1,18 +1,14 @@
 // Compute shader for interval-based culling and counting.
 //
-// Replaces the per-pixel flag pass for the GPU sort path. Instead of testing
-// every work-buffer pixel, this shader tests one bounding sphere per interval
-// against the nodeVisibilityTexture and writes the interval's splat count
-// (or 0 if culled) into a count buffer.
+// Each thread processes one interval. When CULLING_ENABLED is defined, the
+// shader performs an inline sphere-vs-frustum test per interval (reading
+// bounding spheres and transforms from storage buffers) and writes the
+// interval's splat count (or 0 if culled) into a count buffer. Otherwise
+// all intervals are visible (count is copied directly).
 //
 // After an exclusive prefix sum over numIntervals + 1 elements:
 //   - prefixSum[i] gives the output offset for interval i's splats
 //   - prefixSum[numIntervals] equals the total visible splat count
-//
-// When CULLING_ENABLED is defined, reads the bit-packed nodeVisibilityTexture
-// to determine per-interval visibility. Otherwise all intervals are visible
-// (count is copied directly), making this a trivial O(numIntervals) pass that
-// still produces the prefix-sum input needed by the scatter shader.
 
 export const computeGsplatIntervalCullSource = /* wgsl */`
 
@@ -23,10 +19,28 @@ struct Interval {
     pad: u32
 };
 
-struct CullUniforms {
-    numIntervals: u32,
-    visWidth: u32
-};
+#ifdef CULLING_ENABLED
+    struct BoundsEntry {
+        centerX: f32,
+        centerY: f32,
+        centerZ: f32,
+        radius: f32,
+        transformIndex: u32,
+        pad0: u32,
+        pad1: u32,
+        pad2: u32
+    };
+
+    struct CullUniforms {
+        frustumPlanes: array<vec4f, 6>,
+        numIntervals: u32
+    };
+#else
+    struct CullUniforms {
+        numIntervals: u32
+    };
+#endif
+
 @group(0) @binding(0) var<uniform> uniforms: CullUniforms;
 
 @group(0) @binding(1) var<storage, read> intervals: array<Interval>;
@@ -34,7 +48,8 @@ struct CullUniforms {
 @group(0) @binding(2) var<storage, read_write> countBuffer: array<u32>;
 
 #ifdef CULLING_ENABLED
-@group(0) @binding(3) var nodeVisibilityTexture: texture_2d<u32>;
+@group(0) @binding(3) var<storage, read> boundsBuffer: array<BoundsEntry>;
+@group(0) @binding(4) var<storage, read> transformsBuffer: array<vec4f>;
 #endif
 
 @compute @workgroup_size({WORKGROUP_SIZE})
@@ -44,13 +59,33 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
         let interval = intervals[idx];
 
         #ifdef CULLING_ENABLED
-            let boundsIdx = interval.boundsIndex;
-            let texelIdx = boundsIdx >> 5u;
-            let bitIdx = boundsIdx & 31u;
-            let visW = uniforms.visWidth;
-            let visCoord = vec2i(i32(texelIdx % visW), i32(texelIdx / visW));
-            let visBits = textureLoad(nodeVisibilityTexture, visCoord, 0).r;
-            let visible = (visBits & (1u << bitIdx)) != 0u;
+            let entry = boundsBuffer[interval.boundsIndex];
+            let localCenter = vec3f(entry.centerX, entry.centerY, entry.centerZ);
+            let radius = entry.radius;
+
+            let base = entry.transformIndex * 3u;
+            let row0 = transformsBuffer[base];
+            let row1 = transformsBuffer[base + 1u];
+            let row2 = transformsBuffer[base + 2u];
+
+            let worldCenter = vec3f(
+                dot(vec4f(localCenter, 1.0), row0),
+                dot(vec4f(localCenter, 1.0), row1),
+                dot(vec4f(localCenter, 1.0), row2)
+            );
+
+            let worldRadius = radius * length(vec3f(row0.x, row1.x, row2.x));
+
+            var visible = true;
+            for (var p = 0; p < 6; p++) {
+                let plane = uniforms.frustumPlanes[p];
+                let dist = dot(plane.xyz, worldCenter) + plane.w;
+                if (dist <= -worldRadius) {
+                    visible = false;
+                    break;
+                }
+            }
+
             countBuffer[idx] = select(0u, interval.splatCount, visible);
         #else
             countBuffer[idx] = interval.splatCount;

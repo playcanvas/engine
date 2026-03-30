@@ -6,10 +6,12 @@
 // Single workgroup (256 threads) — each thread processes ceil(numTiles/256) tiles.
 
 import indirectCoreCS from '../common/comp/indirect-core.js';
+import dispatchCoreCS from '../common/comp/dispatch-core.js';
 
 export const computeGsplatLocalClassifySource = /* wgsl */`
 
 ${indirectCoreCS}
+${dispatchCoreCS}
 
 const MAX_TILE_ENTRIES: u32 = 4096u;
 const CLASSIFY_WORKGROUP: u32 = 256u;
@@ -77,24 +79,21 @@ fn main(@builtin(local_invocation_index) localIdx: u32) {
         let maxDim = uniforms.maxWorkgroupsPerDim;
 
         // Slot 0: small tile sort — 1 workgroup per tile
-        var sy = (smallCount + maxDim - 1u) / maxDim;
-        sy = max(sy, 1u);
-        indirectDispatchArgs[off + 0u] = (smallCount + sy - 1u) / sy;
-        indirectDispatchArgs[off + 1u] = sy;
+        let smallDim = calcDispatch2D(smallCount, maxDim);
+        indirectDispatchArgs[off + 0u] = smallDim.x;
+        indirectDispatchArgs[off + 1u] = smallDim.y;
         indirectDispatchArgs[off + 2u] = 1u;
 
         // Slot 1: bucket pre-sort — 1 workgroup per large tile
-        var ly = (largeCount + maxDim - 1u) / maxDim;
-        ly = max(ly, 1u);
-        indirectDispatchArgs[off + 3u] = (largeCount + ly - 1u) / ly;
-        indirectDispatchArgs[off + 4u] = ly;
+        let largeDim = calcDispatch2D(largeCount, maxDim);
+        indirectDispatchArgs[off + 3u] = largeDim.x;
+        indirectDispatchArgs[off + 4u] = largeDim.y;
         indirectDispatchArgs[off + 5u] = 1u;
 
         // Slot 2: rasterize — 1 workgroup per non-empty tile
-        var ry = (rasterizeCount + maxDim - 1u) / maxDim;
-        ry = max(ry, 1u);
-        indirectDispatchArgs[off + 6u] = (rasterizeCount + ry - 1u) / ry;
-        indirectDispatchArgs[off + 7u] = ry;
+        let rasterDim = calcDispatch2D(rasterizeCount, maxDim);
+        indirectDispatchArgs[off + 6u] = rasterDim.x;
+        indirectDispatchArgs[off + 7u] = rasterDim.y;
         indirectDispatchArgs[off + 8u] = 1u;
 
         // Indirect draw args for tile-based composite: 6 vertices per tile quad
