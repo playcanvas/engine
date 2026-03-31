@@ -95,8 +95,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     projCache[base + 6u] = pack2x16float(vec2f(rgb.z, opacity));
 #endif
 
-    let viewDepth = -(uniforms.viewMatrix * vec4f(center, 1.0)).z;
-    projCache[base + 7u] = bitcast<u32>(viewDepth);
+    projCache[base + 7u] = bitcast<u32>(proj.viewDepth);
 
     let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, half(opacity),
                                     uniforms.viewportWidth, uniforms.viewportHeight,
