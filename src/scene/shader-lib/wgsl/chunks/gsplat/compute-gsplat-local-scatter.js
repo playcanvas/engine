@@ -20,6 +20,7 @@ struct Uniforms {
     maxEntries: u32,
     viewportWidth: f32,
     viewportHeight: f32,
+    alphaClip: f32,
 }
 @group(0) @binding(5) var<uniform> uniforms: Uniforms;
 
@@ -46,7 +47,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     let screen = vec2f(screenX, screenY);
     let eval = computeSplatTileEval(screen, coeffX, coeffY, coeffXY, half(opacity),
                                     uniforms.viewportWidth, uniforms.viewportHeight,
-                                    1.0 / 255.0);
+                                    uniforms.alphaClip);
 
     let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
     let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
