@@ -564,7 +564,8 @@ class GSplatManager {
      * @private
      */
     get canCull() {
-        return this.workBuffer.frustumCuller.totalBoundsEntries > 0;
+        return (this.useLocalRenderer || !!this.useGpuSorting) &&
+            this.workBuffer.frustumCuller.totalBoundsEntries > 0;
     }
 
     /**
@@ -819,10 +820,12 @@ class GSplatManager {
             this.workBuffer.resize(textureSize);
         }
 
-        // Bounds and transforms storage buffers are needed for frustum culling.
-        // These index splats sequentially, so always use the full splats array.
-        this.workBuffer.frustumCuller.updateBoundsData(worldState.boundsGroups);
-        this.workBuffer.frustumCuller.updateTransformsData(worldState.boundsGroups);
+        // Bounds and transforms storage buffers are needed for frustum culling,
+        // which only runs with interval compaction (local renderer or GPU sorting).
+        if (this.useLocalRenderer || this.useGpuSorting) {
+            this.workBuffer.frustumCuller.updateBoundsData(worldState.boundsGroups);
+            this.workBuffer.frustumCuller.updateTransformsData(worldState.boundsGroups);
+        }
 
         // Render splats to work buffer: full rebuild renders all, partial renders only changed
         const renderAll = forceFullRebuild || worldState.fullRebuild;
