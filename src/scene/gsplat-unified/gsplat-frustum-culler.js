@@ -44,6 +44,15 @@ class GSplatFrustumCuller {
     /** @type {number} */
     _allocatedBoundsEntries = 0;
 
+    /** @type {Float32Array|null} */
+    _boundsFloatView = null;
+
+    /** @type {Uint32Array|null} */
+    _boundsUintView = null;
+
+    /** @type {Float32Array|null} */
+    _tmpSpheres = null;
+
     /**
      * Storage buffer holding world matrices as vec4f triplets (3 vec4f per matrix,
      * rows of a 4x3 affine matrix). 48 bytes per matrix.
@@ -54,6 +63,9 @@ class GSplatFrustumCuller {
 
     /** @type {number} */
     _allocatedTransformCount = 0;
+
+    /** @type {Float32Array|null} */
+    _transformsData = null;
 
     /**
      * Packed frustum planes (6 planes x 4 floats: nx, ny, nz, distance).
@@ -95,17 +107,16 @@ class GSplatFrustumCuller {
             this.boundsBuffer?.destroy();
             this._allocatedBoundsEntries = totalEntries;
             this.boundsBuffer = new StorageBuffer(this.device, totalEntries * BOUNDS_ENTRY_FLOATS * 4, BUFFERUSAGE_COPY_DST);
+
+            const ab = new ArrayBuffer(totalEntries * BOUNDS_ENTRY_FLOATS * 4);
+            this._boundsFloatView = new Float32Array(ab);
+            this._boundsUintView = new Uint32Array(ab);
+            this._tmpSpheres = new Float32Array(totalEntries * 4);
         }
 
-        // Build interleaved data: sphere floats first, then patch in transform indices.
-        // Use a shared ArrayBuffer so we can write both f32 and u32 fields.
-        const byteLength = totalEntries * BOUNDS_ENTRY_FLOATS * 4;
-        const ab = new ArrayBuffer(byteLength);
-        const floatView = new Float32Array(ab);
-        const uintView = new Uint32Array(ab);
-
-        // Temp buffer for writeBoundsSpheres (4 floats per entry, tightly packed)
-        const tmpSpheres = new Float32Array(totalEntries * 4);
+        const floatView = this._boundsFloatView;
+        const uintView = this._boundsUintView;
+        const tmpSpheres = this._tmpSpheres;
 
         for (let i = 0; i < boundsGroups.length; i++) {
             const group = boundsGroups[i];
@@ -144,9 +155,10 @@ class GSplatFrustumCuller {
             this._allocatedTransformCount = numMatrices;
             // 3 vec4f per matrix = 12 floats = 48 bytes
             this.transformsBuffer = new StorageBuffer(this.device, numMatrices * 12 * 4, BUFFERUSAGE_COPY_DST);
+            this._transformsData = new Float32Array(numMatrices * 12);
         }
 
-        const data = new Float32Array(numMatrices * 12);
+        const data = this._transformsData;
 
         // Write world matrices as 3 rows of a 4x3 matrix (row-major, 12 floats per matrix).
         // Mat4.data is column-major: [col0(4), col1(4), col2(4), col3(4)].

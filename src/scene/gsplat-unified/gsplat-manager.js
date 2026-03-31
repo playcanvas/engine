@@ -824,7 +824,7 @@ class GSplatManager {
             this.workBuffer.resize(textureSize);
         }
 
-        // Bounds and transforms textures are needed for frustum culling.
+        // Bounds and transforms storage buffers are needed for frustum culling.
         // These index splats sequentially, so always use the full splats array.
         if (this.scene.gsplat.culling) {
             this.workBuffer.frustumCuller.updateBoundsData(worldState.boundsGroups);
@@ -1747,7 +1747,7 @@ class GSplatManager {
     }
 
     /**
-     * Prepares frustum culling data: updates the transforms texture and computes
+     * Prepares frustum culling data: updates the GPU transform buffers and computes
      * frustum planes from the camera. The actual culling test runs inline in the
      * interval compaction compute shader.
      *

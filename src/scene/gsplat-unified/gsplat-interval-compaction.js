@@ -394,7 +394,7 @@ class GSplatIntervalCompaction {
     /**
      * Runs the full interval compaction pipeline: cull+count, prefix sum, scatter.
      *
-     * @param {GSplatFrustumCuller|null} frustumCuller - Frustum culler with textures and planes (when culling).
+     * @param {GSplatFrustumCuller|null} frustumCuller - Frustum culler providing bounds/transforms storage buffers and frustum planes (when culling).
      * @param {number} numIntervals - Total number of intervals.
      * @param {number} totalActiveSplats - Total active splats across all intervals.
      * @param {boolean} cullingEnabled - Whether frustum culling is active.
@@ -411,6 +411,7 @@ class GSplatIntervalCompaction {
         cullCompute.setParameter('intervals', this.intervalsBuffer);
         cullCompute.setParameter('countBuffer', this.countBuffer);
         if (cullingEnabled) {
+            Debug.assert(frustumCuller, 'frustumCuller must be provided when cullingEnabled is true');
             cullCompute.setParameter('boundsBuffer', frustumCuller.boundsBuffer);
             cullCompute.setParameter('transformsBuffer', frustumCuller.transformsBuffer);
             cullCompute.setParameter('frustumPlanes[0]', frustumCuller.frustumPlanes);
