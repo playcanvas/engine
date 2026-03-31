@@ -7,10 +7,12 @@
 // index N equals the total number of visible splats.
 
 import indirectCoreCS from '../common/comp/indirect-core.js';
+import dispatchCoreCS from '../common/comp/dispatch-core.js';
 
 export const computeGsplatWriteIndirectArgsSource = /* wgsl */`
 
 ${indirectCoreCS}
+${dispatchCoreCS}
 
 // Prefix sum buffer (flagBuffer after in-place exclusive scan)
 @group(0) @binding(0) var<storage, read> prefixSumBuffer: array<u32>;
@@ -55,17 +57,20 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // Write numSplats for vertex shader
     numSplatsBuf[0] = count;
 
-    // Write indirect dispatch args: slot 0 = key gen, slot 1 = sort
+    // Write indirect dispatch args: slot 0 = key gen, slot 1 = sort.
+    // Use 2D layout to stay within maxComputeWorkgroupsPerDimension.
     let dispatchOffset = uniforms.dispatchSlotOffset;
 
     let keygenWorkgroupCount = (count + {KEYGEN_THREADS_PER_WORKGROUP}u - 1u) / {KEYGEN_THREADS_PER_WORKGROUP}u;
-    indirectDispatchArgs[dispatchOffset + 0u] = keygenWorkgroupCount;
-    indirectDispatchArgs[dispatchOffset + 1u] = 1u;
+    let keygenDim = calcDispatch2D(keygenWorkgroupCount, {MAX_WORKGROUPS_PER_DIM}u);
+    indirectDispatchArgs[dispatchOffset + 0u] = keygenDim.x;
+    indirectDispatchArgs[dispatchOffset + 1u] = keygenDim.y;
     indirectDispatchArgs[dispatchOffset + 2u] = 1u;
 
     let sortWorkgroupCount = (count + {SORT_ELEMENTS_PER_WORKGROUP}u - 1u) / {SORT_ELEMENTS_PER_WORKGROUP}u;
-    indirectDispatchArgs[dispatchOffset + 3u] = sortWorkgroupCount;
-    indirectDispatchArgs[dispatchOffset + 4u] = 1u;
+    let sortDim = calcDispatch2D(sortWorkgroupCount, {MAX_WORKGROUPS_PER_DIM}u);
+    indirectDispatchArgs[dispatchOffset + 3u] = sortDim.x;
+    indirectDispatchArgs[dispatchOffset + 4u] = sortDim.y;
     indirectDispatchArgs[dispatchOffset + 5u] = 1u;
 
     // Write sortElementCount for sort shaders (= visibleCount)
