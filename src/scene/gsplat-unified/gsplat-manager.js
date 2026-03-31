@@ -93,13 +93,8 @@ let _randomColorRaw = null;
  * CPU sorting (WebGPU):
  *   1. Sort on worker: camera position and splat centers are sent to a web worker which
  *      performs a radix sort and returns the sorted order as orderBuffer (storage buffer).
- *   2. [culling] Frustum cull: same fragment shader as the GPU path, producing the
- *      bit-packed nodeVisibilityTexture.
- *   3. [culling] Per-pixel compaction: a flag pass tests each splat's pcNodeIndex against
- *      the visibility bits, using USE_SORTED_ORDER to read orderBuffer[i] for the splat ID.
- *      A prefix sum and scatter pass produce compactedSplatIds that is both sorted and
- *      visibility-filtered. The last prefix sum element gives visibleCount.
- *   4. Render: the vertex shader reads compactedSplatIds[vertexId] → splatId.
+ *   2. Interval compaction with frustum culling (same as GPU path steps 1-2).
+ *   3. Render: the vertex shader reads compactedSplatIds[vertexId] → splatId.
  *
  * CPU sorting (WebGL):
  *   1. Sort on worker: same as the WebGPU CPU path, producing orderBuffer (texture).
@@ -338,7 +333,7 @@ class GSplatManager {
 
     /**
      * True when placements have been added or removed since the last world state was created.
-     * Triggers a full work buffer rebuild so boundsBaseIndex and pcNodeIndex stay consistent.
+     * Triggers a full work buffer rebuild so boundsBaseIndex stays consistent.
      *
      * @type {boolean}
      * @private
@@ -563,13 +558,13 @@ class GSplatManager {
     }
 
     /**
-     * True when frustum culling can run (culling enabled and bounds data available).
+     * True when frustum culling can run (bounds data available).
      *
      * @type {boolean}
      * @private
      */
     get canCull() {
-        return this.scene.gsplat.culling && this.workBuffer.frustumCuller.totalBoundsEntries > 0;
+        return this.workBuffer.frustumCuller.totalBoundsEntries > 0;
     }
 
     /**
@@ -766,9 +761,9 @@ class GSplatManager {
                 this.octreeInstancesToDestroy.length = 0;
             }
 
-            // When placements are added/removed, boundsBaseIndex values shift and all
-            // pcNodeIndex values must be rewritten. Force a full rebuild so no stale indices remain.
-            if (this._placementSetChanged && this.scene.gsplat.culling) {
+            // When placements are added/removed, boundsBaseIndex values shift.
+            // Force a full rebuild so no stale indices remain.
+            if (this._placementSetChanged) {
                 newState.fullRebuild = true;
             }
 
@@ -826,10 +821,8 @@ class GSplatManager {
 
         // Bounds and transforms storage buffers are needed for frustum culling.
         // These index splats sequentially, so always use the full splats array.
-        if (this.scene.gsplat.culling) {
-            this.workBuffer.frustumCuller.updateBoundsData(worldState.boundsGroups);
-            this.workBuffer.frustumCuller.updateTransformsData(worldState.boundsGroups);
-        }
+        this.workBuffer.frustumCuller.updateBoundsData(worldState.boundsGroups);
+        this.workBuffer.frustumCuller.updateTransformsData(worldState.boundsGroups);
 
         // Render splats to work buffer: full rebuild renders all, partial renders only changed
         const renderAll = forceFullRebuild || worldState.fullRebuild;
@@ -1580,21 +1573,17 @@ class GSplatManager {
         // Upload interval metadata after rebuild so boundsBaseIndex is assigned
         this.intervalCompaction.uploadIntervals(worldState);
 
-        // Run frustum culling when available (after any rebuild) so the visibility
-        // texture is consistent with the current work buffer data before compaction.
-        const cullingEnabled = this.canCull;
-        if (cullingEnabled) {
+        // Run frustum culling when bounds data is available
+        if (this.canCull) {
             const state = this.worldStates.get(this.sortedVersion);
             if (state) {
                 this._runFrustumCulling(state);
             }
         }
 
-        // Always run interval compaction (culling or not)
         const numIntervals = worldState.totalIntervals;
         const totalActiveSplats = worldState.totalActiveSplats;
-        const frustumCuller = cullingEnabled ? this.workBuffer.frustumCuller : null;
-        this.intervalCompaction.dispatchCompact(frustumCuller, numIntervals, totalActiveSplats, cullingEnabled);
+        this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats);
 
         // Allocate indirect draw/dispatch slots and write args from visible count
         this.allocateAndWriteIntervalIndirectArgs(numIntervals);
@@ -1643,8 +1632,7 @@ class GSplatManager {
 
         this.intervalCompaction.uploadIntervals(worldState);
 
-        const cullingEnabled = this.canCull;
-        if (cullingEnabled) {
+        if (this.canCull) {
             const state = this.worldStates.get(this.sortedVersion);
             if (state) {
                 this._runFrustumCulling(state);
@@ -1653,8 +1641,7 @@ class GSplatManager {
 
         const numIntervals = worldState.totalIntervals;
         const totalActiveSplats = worldState.totalActiveSplats;
-        const frustumCuller = cullingEnabled ? this.workBuffer.frustumCuller : null;
-        this.intervalCompaction.dispatchCompact(frustumCuller, numIntervals, totalActiveSplats, cullingEnabled);
+        this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats);
 
         // Extract the visible count from the prefix sum into sortElementCountBuffer.
         // writeIndirectArgs is the only path that does this; the indirect draw/dispatch

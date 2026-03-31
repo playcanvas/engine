@@ -1,10 +1,8 @@
 // Compute shader for interval-based culling and counting.
 //
-// Each thread processes one interval. When CULLING_ENABLED is defined, the
-// shader performs an inline sphere-vs-frustum test per interval (reading
-// bounding spheres and transforms from storage buffers) and writes the
-// interval's splat count (or 0 if culled) into a count buffer. Otherwise
-// all intervals are visible (count is copied directly).
+// Each thread processes one interval, performs an inline sphere-vs-frustum test
+// (reading bounding spheres and transforms from storage buffers), and writes the
+// interval's splat count (or 0 if culled) into a count buffer.
 //
 // After an exclusive prefix sum over numIntervals + 1 elements:
 //   - prefixSum[i] gives the output offset for interval i's splats
@@ -19,27 +17,21 @@ struct Interval {
     pad: u32
 };
 
-#ifdef CULLING_ENABLED
-    struct BoundsEntry {
-        centerX: f32,
-        centerY: f32,
-        centerZ: f32,
-        radius: f32,
-        transformIndex: u32,
-        pad0: u32,
-        pad1: u32,
-        pad2: u32
-    };
+struct BoundsEntry {
+    centerX: f32,
+    centerY: f32,
+    centerZ: f32,
+    radius: f32,
+    transformIndex: u32,
+    pad0: u32,
+    pad1: u32,
+    pad2: u32
+};
 
-    struct CullUniforms {
-        frustumPlanes: array<vec4f, 6>,
-        numIntervals: u32
-    };
-#else
-    struct CullUniforms {
-        numIntervals: u32
-    };
-#endif
+struct CullUniforms {
+    frustumPlanes: array<vec4f, 6>,
+    numIntervals: u32
+};
 
 @group(0) @binding(0) var<uniform> uniforms: CullUniforms;
 
@@ -47,10 +39,8 @@ struct Interval {
 
 @group(0) @binding(2) var<storage, read_write> countBuffer: array<u32>;
 
-#ifdef CULLING_ENABLED
 @group(0) @binding(3) var<storage, read> boundsBuffer: array<BoundsEntry>;
 @group(0) @binding(4) var<storage, read> transformsBuffer: array<vec4f>;
-#endif
 
 @compute @workgroup_size({WORKGROUP_SIZE})
 fn main(@builtin(global_invocation_id) gid: vec3u) {
@@ -58,38 +48,34 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     if (idx < uniforms.numIntervals) {
         let interval = intervals[idx];
 
-        #ifdef CULLING_ENABLED
-            let entry = boundsBuffer[interval.boundsIndex];
-            let localCenter = vec3f(entry.centerX, entry.centerY, entry.centerZ);
-            let radius = entry.radius;
+        let entry = boundsBuffer[interval.boundsIndex];
+        let localCenter = vec3f(entry.centerX, entry.centerY, entry.centerZ);
+        let radius = entry.radius;
 
-            let base = entry.transformIndex * 3u;
-            let row0 = transformsBuffer[base];
-            let row1 = transformsBuffer[base + 1u];
-            let row2 = transformsBuffer[base + 2u];
+        let base = entry.transformIndex * 3u;
+        let row0 = transformsBuffer[base];
+        let row1 = transformsBuffer[base + 1u];
+        let row2 = transformsBuffer[base + 2u];
 
-            let worldCenter = vec3f(
-                dot(vec4f(localCenter, 1.0), row0),
-                dot(vec4f(localCenter, 1.0), row1),
-                dot(vec4f(localCenter, 1.0), row2)
-            );
+        let worldCenter = vec3f(
+            dot(vec4f(localCenter, 1.0), row0),
+            dot(vec4f(localCenter, 1.0), row1),
+            dot(vec4f(localCenter, 1.0), row2)
+        );
 
-            let worldRadius = radius * length(vec3f(row0.x, row1.x, row2.x));
+        let worldRadius = radius * length(vec3f(row0.x, row1.x, row2.x));
 
-            var visible = true;
-            for (var p = 0; p < 6; p++) {
-                let plane = uniforms.frustumPlanes[p];
-                let dist = dot(plane.xyz, worldCenter) + plane.w;
-                if (dist <= -worldRadius) {
-                    visible = false;
-                    break;
-                }
+        var visible = true;
+        for (var p = 0; p < 6; p++) {
+            let plane = uniforms.frustumPlanes[p];
+            let dist = dot(plane.xyz, worldCenter) + plane.w;
+            if (dist <= -worldRadius) {
+                visible = false;
+                break;
             }
+        }
 
-            countBuffer[idx] = select(0u, interval.splatCount, visible);
-        #else
-            countBuffer[idx] = interval.splatCount;
-        #endif
+        countBuffer[idx] = select(0u, interval.splatCount, visible);
     }
 
     // Thread 0 writes sentinel so prefixSum[numIntervals] = total visible count

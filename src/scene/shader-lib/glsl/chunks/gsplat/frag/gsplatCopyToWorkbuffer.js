@@ -28,13 +28,6 @@ uniform vec4 model_rotation;  // (x,y,z,w) format
     uniform uint uId;
 #endif
 
-#ifdef GSPLAT_NODE_INDEX
-    uniform uint uBoundsBaseIndex;
-    #ifdef HAS_NODE_MAPPING
-        uniform usampler2D nodeMappingTexture;
-    #endif
-#endif
-
 void main(void) {
     // Compute source index from packed sub-draw varying: (sourceBase, colStart, rowWidth, rowStart)
     int localRow = int(gl_FragCoord.y) - vSubDraw.w;
@@ -100,19 +93,6 @@ void main(void) {
 
     #ifdef GSPLAT_ID
         writePcId(uvec4(uId, 0u, 0u, 0u));
-    #endif
-
-    #ifdef GSPLAT_NODE_INDEX
-        #ifdef HAS_NODE_MAPPING
-            // Octree: nodeIndex is the direct bounds offset (all nodes uploaded)
-            int srcTextureWidth = int(textureSize(nodeMappingTexture, 0).x);
-            ivec2 sourceCoord = ivec2(int(originalIndex) % srcTextureWidth, int(originalIndex) / srcTextureWidth);
-            uint nodeIndex = texelFetch(nodeMappingTexture, sourceCoord, 0).r;
-            writePcNodeIndex(uvec4(uBoundsBaseIndex + nodeIndex, 0u, 0u, 0u));
-        #else
-            // Non-octree: single bounds entry
-            writePcNodeIndex(uvec4(uBoundsBaseIndex, 0u, 0u, 0u));
-        #endif
     #endif
 }
 `;

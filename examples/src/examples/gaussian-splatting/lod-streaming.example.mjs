@@ -133,13 +133,10 @@ assetListLoader.load(() => {
     app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
-    // GPU sorting and culling are WebGPU-only features
+    // GPU sorting is a WebGPU-only feature
     if (device.isWebGPU) {
         data.on('gpuSorting:set', () => {
             app.scene.gsplat.gpuSorting = !!data.get('gpuSorting');
-        });
-        data.on('culling:set', () => {
-            app.scene.gsplat.culling = !!data.get('culling');
         });
     }
     data.on('minPixelSize:set', () => {

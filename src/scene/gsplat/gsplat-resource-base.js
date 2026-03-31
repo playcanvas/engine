@@ -228,11 +228,6 @@ class GSplatResourceBase {
         tempMap.set('GSPLAT_LOD', '');
         if (colorOnly) tempMap.set('GSPLAT_COLOR_ONLY', '');
 
-        // Set HAS_NODE_MAPPING when resource has node mapping texture (octree resources)
-        if (this.streams.textures.has('nodeMappingTexture')) {
-            tempMap.set('HAS_NODE_MAPPING', '');
-        }
-
         let definesKey = '';
         for (const [k, v] of tempMap) {
             if (definesKey) definesKey += ';';
