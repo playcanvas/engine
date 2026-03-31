@@ -96,16 +96,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     value: observer.get('gpuSorting') || false
                 })
             ),
-            isWebGPU && jsx(
-                LabelGroup,
-                { text: 'Culling' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'culling' },
-                    value: observer.get('culling') || false
-                })
-            ),
             jsx(
                 LabelGroup,
                 { text: 'Compact' },

@@ -69,11 +69,6 @@ class WorkBufferRenderInfo {
             clonedDefines.set('GSPLAT_ID', '');
         }
 
-        // Enable node index output when pcNodeIndex stream exists in format
-        if (format.getStream('pcNodeIndex')) {
-            clonedDefines.set('GSPLAT_NODE_INDEX', '');
-        }
-
         // Get custom shader chunks from material (for container support)
         const fragmentIncludes = material.hasShaderChunks ?
             (device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl) :

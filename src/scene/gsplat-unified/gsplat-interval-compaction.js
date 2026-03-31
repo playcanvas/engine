@@ -82,14 +82,6 @@ class GSplatIntervalCompaction {
      */
     _uploadedVersion = -1;
 
-    /**
-     * Whether the current cull pass uses culling. Lazily created and recreated when
-     * switching between culling-enabled and culling-disabled modes.
-     *
-     * @type {boolean}
-     */
-    _cullingEnabled = false;
-
     /** @type {Compute|null} */
     _cullCompute = null;
 
@@ -194,62 +186,42 @@ class GSplatIntervalCompaction {
     }
 
     /**
-     * Ensures the cull compute pass exists for the requested culling mode.
+     * Ensures the cull compute pass exists.
      *
-     * @param {boolean} cullingEnabled - Whether frustum culling is active.
      * @private
      */
-    _ensureCullPass(cullingEnabled) {
-        if (this._cullCompute && cullingEnabled === this._cullingEnabled) {
+    _ensureCullPass() {
+        if (this._cullCompute) {
             return;
         }
 
-        this._destroyCullPass();
-        this._cullingEnabled = cullingEnabled;
-
         const device = this.device;
-        const suffix = cullingEnabled ? 'Culled' : '';
 
-        const entries = [
+        this._cullBindGroupFormat = new BindGroupFormat(device, [
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('intervals', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('countBuffer', SHADERSTAGE_COMPUTE, false)
-        ];
-        if (cullingEnabled) {
-            entries.push(new BindStorageBufferFormat('boundsBuffer', SHADERSTAGE_COMPUTE, true));
-            entries.push(new BindStorageBufferFormat('transformsBuffer', SHADERSTAGE_COMPUTE, true));
-        }
-        this._cullBindGroupFormat = new BindGroupFormat(device, entries);
-
-        if (cullingEnabled) {
-            this._cullUniformBufferFormat = new UniformBufferFormat(device, [
-                new UniformFormat('frustumPlanes', UNIFORMTYPE_VEC4, 6),
-                new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
-            ]);
-        } else {
-            this._cullUniformBufferFormat = new UniformBufferFormat(device, [
-                new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
-            ]);
-        }
-
-        /** @type {Map<string, string>} */
-        const cdefines = new Map([
-            ['{WORKGROUP_SIZE}', WORKGROUP_SIZE.toString()]
+            new BindStorageBufferFormat('countBuffer', SHADERSTAGE_COMPUTE, false),
+            new BindStorageBufferFormat('boundsBuffer', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('transformsBuffer', SHADERSTAGE_COMPUTE, true)
         ]);
-        if (cullingEnabled) {
-            cdefines.set('CULLING_ENABLED', '');
-        }
+
+        this._cullUniformBufferFormat = new UniformBufferFormat(device, [
+            new UniformFormat('frustumPlanes', UNIFORMTYPE_VEC4, 6),
+            new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
+        ]);
 
         const shader = new Shader(device, {
-            name: `GSplatIntervalCull${suffix}`,
+            name: 'GSplatIntervalCull',
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatIntervalCullSource,
-            cdefines: cdefines,
+            cdefines: new Map([
+                ['{WORKGROUP_SIZE}', WORKGROUP_SIZE.toString()]
+            ]),
             computeBindGroupFormat: this._cullBindGroupFormat,
             computeUniformBufferFormats: { uniforms: this._cullUniformBufferFormat }
         });
 
-        this._cullCompute = new Compute(device, shader, `GSplatIntervalCull${suffix}`);
+        this._cullCompute = new Compute(device, shader, 'GSplatIntervalCull');
     }
 
     /**
@@ -394,28 +366,24 @@ class GSplatIntervalCompaction {
     /**
      * Runs the full interval compaction pipeline: cull+count, prefix sum, scatter.
      *
-     * @param {GSplatFrustumCuller|null} frustumCuller - Frustum culler providing bounds/transforms storage buffers and frustum planes (when culling).
+     * @param {GSplatFrustumCuller} frustumCuller - Frustum culler providing bounds/transforms storage buffers and frustum planes.
      * @param {number} numIntervals - Total number of intervals.
      * @param {number} totalActiveSplats - Total active splats across all intervals.
-     * @param {boolean} cullingEnabled - Whether frustum culling is active.
      */
-    dispatchCompact(frustumCuller, numIntervals, totalActiveSplats, cullingEnabled) {
+    dispatchCompact(frustumCuller, numIntervals, totalActiveSplats) {
         if (numIntervals === 0) return;
 
         this._ensureCapacity(numIntervals, totalActiveSplats);
-        this._ensureCullPass(cullingEnabled);
+        this._ensureCullPass();
 
         // --- Pass 1: Interval cull + count ---
         const cullCompute = this._cullCompute;
 
         cullCompute.setParameter('intervals', this.intervalsBuffer);
         cullCompute.setParameter('countBuffer', this.countBuffer);
-        if (cullingEnabled) {
-            Debug.assert(frustumCuller, 'frustumCuller must be provided when cullingEnabled is true');
-            cullCompute.setParameter('boundsBuffer', frustumCuller.boundsBuffer);
-            cullCompute.setParameter('transformsBuffer', frustumCuller.transformsBuffer);
-            cullCompute.setParameter('frustumPlanes[0]', frustumCuller.frustumPlanes);
-        }
+        cullCompute.setParameter('boundsBuffer', frustumCuller.boundsBuffer);
+        cullCompute.setParameter('transformsBuffer', frustumCuller.transformsBuffer);
+        cullCompute.setParameter('frustumPlanes[0]', frustumCuller.frustumPlanes);
 
         cullCompute.setParameter('numIntervals', numIntervals);
 
