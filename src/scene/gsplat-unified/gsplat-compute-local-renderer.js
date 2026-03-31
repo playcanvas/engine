@@ -520,6 +520,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         set.scatterCompute.setParameter('maxEntries', maxEntries);
         set.scatterCompute.setParameter('viewportWidth', width);
         set.scatterCompute.setParameter('viewportHeight', height);
+        set.scatterCompute.setParameter('alphaClip', alphaClip);
 
         set.scatterCompute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
         device.computeDispatch([set.scatterCompute], pickMode ? 'GSplatPickScatter' : 'GSplatLocalScatter');
@@ -715,7 +716,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
                 new UniformFormat('numTilesY', UNIFORMTYPE_UINT),
                 new UniformFormat('maxEntries', UNIFORMTYPE_UINT),
                 new UniformFormat('viewportWidth', UNIFORMTYPE_FLOAT),
-                new UniformFormat('viewportHeight', UNIFORMTYPE_FLOAT)
+                new UniformFormat('viewportHeight', UNIFORMTYPE_FLOAT),
+                new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT)
             ]);
             this._scatterBindGroupFormat = new BindGroupFormat(device, [
                 new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
