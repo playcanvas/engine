@@ -185,7 +185,6 @@ class GSplatParams {
      * fallback mode actually being used.
      *
      * @type {number}
-     * @readonly
      */
     get currentRenderer() {
         return this._currentRenderer;
