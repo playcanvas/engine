@@ -3,8 +3,37 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, SliderInput, Label } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, SliderInput, Label, TextInput } = ReactPCUI;
     return fragment(
+        jsx(
+            Panel,
+            { headerText: 'Scene' },
+            jsx(
+                LabelGroup,
+                { text: 'URL' },
+                jsx(TextInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'url' },
+                    value: observer.get('url') || '',
+                    placeholder: 'Enter gsplat URL...'
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Orientation' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'orientation' },
+                    type: 'number',
+                    options: [
+                        { v: 0, t: '0°' },
+                        { v: 90, t: '90°' },
+                        { v: 180, t: '180°' },
+                        { v: 270, t: '270°' }
+                    ]
+                })
+            )
+        ),
         jsx(
             Panel,
             { headerText: 'Camera' },

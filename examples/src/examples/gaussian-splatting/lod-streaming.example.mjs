@@ -113,7 +113,7 @@ const assets = {
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
+assetListLoader.load(async () => {
     app.start();
 
     const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
@@ -163,66 +163,10 @@ assetListLoader.load(() => {
     data.set('debugLod', false);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
     data.set('splatBudget', pc.platform.mobile ? 1 : 4);
+    data.set('url', '');
+    data.set('orientation', 270);
 
-    const entity = new pc.Entity(config.name || 'gsplat');
-    entity.addComponent('gsplat', {
-        asset: assets.church,
-        unified: true
-    });
-    entity.setLocalPosition(0, 0, 0);
-    const [rotX, rotY, rotZ] = /** @type {[number, number, number]} */ (config.eulerAngles || [-90, 0, 0]);
-    entity.setLocalEulerAngles(rotX, rotY, rotZ);
-    entity.setLocalScale(1, 1, 1);
-    app.root.addChild(entity);
-    const gs = /** @type {any} */ (entity.gsplat);
-
-    const applyPreset = () => {
-        const preset = data.get('lodPreset');
-        const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
-        app.scene.gsplat.lodRangeMin = presetData.range[0];
-        app.scene.gsplat.lodRangeMax = presetData.range[1];
-        gs.lodBaseDistance = presetData.lodBaseDistance;
-        gs.lodMultiplier = presetData.lodMultiplier;
-        data.set('lodBaseDistance', presetData.lodBaseDistance);
-        data.set('lodMultiplier', presetData.lodMultiplier);
-    };
-
-    applyPreset();
-
-    // Start with lowest LOD only for fast initial load
-    const lodLevels = gs.resource?.octree?.lodLevels;
-    if (lodLevels) {
-        const worstLod = lodLevels - 1;
-        app.scene.gsplat.lodRangeMin = worstLod;
-        app.scene.gsplat.lodRangeMax = worstLod;
-    }
-
-    // When lowest LOD is fully loaded, switch to the normal quality range
     const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
-    const onFrameReady = (/** @type {any} */ camera, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
-        if (ready && loadingCount === 0) {
-            gsplatSystem.off('frame:ready', onFrameReady);
-            applyPreset();
-        }
-    };
-    gsplatSystem.on('frame:ready', onFrameReady);
-
-    data.on('lodPreset:set', applyPreset);
-
-    data.on('lodBaseDistance:set', () => {
-        gs.lodBaseDistance = data.get('lodBaseDistance');
-    });
-    data.on('lodMultiplier:set', () => {
-        gs.lodMultiplier = data.get('lodMultiplier');
-    });
-
-    const applySplatBudget = () => {
-        const millions = data.get('splatBudget');
-        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
-    };
-
-    applySplatBudget();
-    data.on('splatBudget:set', applySplatBudget);
 
     // Create a camera with fly controls
     const camera = new pc.Entity('camera');
@@ -232,14 +176,23 @@ assetListLoader.load(() => {
         toneMapping: pc.TONEMAP_LINEAR
     });
 
-    // Set camera position
     const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
     const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint || [0, 0.6, 0]);
     const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
 
     camera.setLocalPosition(camX, camY, camZ);
-
     app.root.addChild(camera);
+
+    camera.addComponent('script');
+    const cc = /** @type { CameraControls} */ ((/** @type {any} */ (camera.script)).create(CameraControls));
+    Object.assign(cc, {
+        sceneSize: 500,
+        moveSpeed: /** @type {number} */ (config.moveSpeed),
+        moveFastSpeed: /** @type {number} */ (config.moveFastSpeed),
+        enableOrbit: false,
+        enablePan: false,
+        focusPoint: focusPoint
+    });
 
     data.on('cameraFov:set', () => {
         camera.camera.fov = data.get('cameraFov');
@@ -251,27 +204,134 @@ assetListLoader.load(() => {
         app.scene.exposure = data.get('exposure');
     });
 
-    // Add the GsplatRevealRadial script to the gsplat entity
-    entity.addComponent('script');
-    const revealScript = entity.script?.create(GsplatRevealRadial);
-    if (revealScript) {
-        revealScript.center.set(focusX, focusY, focusZ);
-        revealScript.speed = 5;
-        revealScript.acceleration = 0;
-        revealScript.delay = 3;
-        revealScript.oscillationIntensity = 0.2;
-        revealScript.endRadius = 25;
-    }
+    // Gsplat loading state
+    /** @type {pc.Entity|null} */
+    let gsplatEntity = null;
+    /** @type {any} */
+    let gsplatGs = null;
+    /** @type {pc.Asset|null} */
+    let customAsset = null;
 
-    camera.addComponent('script');
-    const cc = /** @type { CameraControls} */ ((/** @type {any} */ (camera.script)).create(CameraControls));
-    Object.assign(cc, {
-        sceneSize: 500,
-        moveSpeed: /** @type {number} */ (config.moveSpeed),
-        moveFastSpeed: /** @type {number} */ (config.moveFastSpeed),
-        enableOrbit: false,
-        enablePan: false,
-        focusPoint: focusPoint
+    const applyPreset = () => {
+        const preset = data.get('lodPreset');
+        const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
+        app.scene.gsplat.lodRangeMin = presetData.range[0];
+        app.scene.gsplat.lodRangeMax = presetData.range[1];
+        if (gsplatGs) {
+            gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
+            gsplatGs.lodMultiplier = presetData.lodMultiplier;
+        }
+        data.set('lodBaseDistance', presetData.lodBaseDistance);
+        data.set('lodMultiplier', presetData.lodMultiplier);
+    };
+
+    const loadGsplat = async (/** @type {string|null} */ url) => {
+        if (gsplatEntity) {
+            gsplatEntity.destroy();
+            gsplatEntity = null;
+            gsplatGs = null;
+        }
+
+        if (customAsset) {
+            app.assets.remove(customAsset);
+            customAsset.unload();
+            customAsset = null;
+        }
+
+        /** @type {pc.Asset} */
+        let asset;
+        if (url) {
+            asset = new pc.Asset('gsplat', 'gsplat', { url: url });
+            app.assets.add(asset);
+            await new Promise((resolve, reject) => {
+                asset.on('load', resolve);
+                asset.on('error', (/** @type {string} */ err) => {
+                    console.error('Failed to load gsplat:', err);
+                    reject(err);
+                });
+                app.assets.load(asset);
+            });
+            customAsset = asset; // eslint-disable-line require-atomic-updates
+        } else {
+            asset = assets.church;
+        }
+
+        gsplatEntity = new pc.Entity(config.name || 'gsplat'); // eslint-disable-line require-atomic-updates
+        gsplatEntity.addComponent('gsplat', {
+            asset: asset,
+            unified: true
+        });
+        gsplatEntity.setLocalPosition(0, 0, 0);
+        gsplatEntity.setLocalEulerAngles(data.get('orientation'), 0, 0);
+        gsplatEntity.setLocalScale(1, 1, 1);
+        app.root.addChild(gsplatEntity);
+        gsplatGs = /** @type {any} */ (gsplatEntity.gsplat);
+
+        const presetData = LOD_PRESETS[data.get('lodPreset')] || LOD_PRESETS.desktop;
+        gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
+        gsplatGs.lodMultiplier = presetData.lodMultiplier;
+
+        // Start with lowest LOD for fast initial display, then stream up
+        const lodLevels = gsplatGs.resource?.octree?.lodLevels;
+        if (lodLevels) {
+            const worstLod = lodLevels - 1;
+            app.scene.gsplat.lodRangeMin = worstLod;
+            app.scene.gsplat.lodRangeMax = worstLod;
+        }
+
+        const onFrameReady = (/** @type {any} */ cam, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
+            if (ready && loadingCount === 0) {
+                gsplatSystem.off('frame:ready', onFrameReady);
+                applyPreset();
+            }
+        };
+        gsplatSystem.on('frame:ready', onFrameReady);
+
+        // Radial reveal effect
+        gsplatEntity.addComponent('script');
+        const revealScript = gsplatEntity.script?.create(GsplatRevealRadial);
+        if (revealScript) {
+            revealScript.center.set(focusX, focusY, focusZ);
+            revealScript.speed = 5;
+            revealScript.acceleration = 0;
+            revealScript.delay = 3;
+            revealScript.oscillationIntensity = 0.2;
+            revealScript.endRadius = 25;
+        }
+    };
+
+    // Initial load
+    await loadGsplat(null);
+
+    data.on('lodPreset:set', applyPreset);
+
+    data.on('lodBaseDistance:set', () => {
+        if (gsplatGs) gsplatGs.lodBaseDistance = data.get('lodBaseDistance');
+    });
+    data.on('lodMultiplier:set', () => {
+        if (gsplatGs) gsplatGs.lodMultiplier = data.get('lodMultiplier');
+    });
+
+    const applySplatBudget = () => {
+        const millions = data.get('splatBudget');
+        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
+    };
+
+    applySplatBudget();
+    data.on('splatBudget:set', applySplatBudget);
+
+    data.on('orientation:set', () => {
+        if (gsplatEntity) {
+            gsplatEntity.setLocalEulerAngles(data.get('orientation'), 0, 0);
+        }
+    });
+
+    data.on('url:set', () => {
+        const url = data.get('url');
+        loadGsplat(url || null).catch((err) => {
+            console.warn('Loading failed, reverting to default:', err);
+            loadGsplat(null);
+        });
     });
 
     // update HUD stats every frame
