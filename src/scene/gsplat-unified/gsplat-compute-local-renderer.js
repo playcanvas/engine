@@ -493,7 +493,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         set.countCompute.setParameter('viewportHeight', height);
         set.countCompute.setParameter('nearClip', cam.nearClip);
         set.countCompute.setParameter('farClip', cam.farClip);
-        set.countCompute.setParameter('minPixelSize', this._minPixelSize);
+        set.countCompute.setParameter('minPixelSize', this._minPixelSize * 0.5);
         set.countCompute.setParameter('isOrtho', cam.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0);
         set.countCompute.setParameter('exposure', this._exposure);
         set.countCompute.setParameter('alphaClip', alphaClip);
