@@ -61,14 +61,20 @@ fn bitonicSortRange(localIdx: u32, tStart: u32, count: u32) {
     let depthMinU = atomicLoad(&sDepthMin);
     let depthMaxU = atomicLoad(&sDepthMax);
     let depthMin = bitcast<f32>(depthMinU);
-    let depthRange = bitcast<f32>(depthMaxU) - depthMin;
-    let invRange = select(DEPTH_LEVELS / depthRange, 0.0, depthRange < 1e-10);
+    let depthMax = bitcast<f32>(depthMaxU);
+
+    // Logarithmic quantization: more precision for near depths, less for far,
+    // matching the bucket sort's approach. Reduces depth collisions at distance.
+    let logMin = log(max(depthMin, 1e-6));
+    let logRange = log(max(depthMax, 1e-6)) - logMin;
+    let invLogRange = select(DEPTH_LEVELS / logRange, 0.0, logRange < 1e-10);
 
     // Phase 3: In-place repack to (depth20 << 12 | localIndex12)
     for (var i: u32 = localIdx; i < sortN; i += BITONIC_WG_SIZE) {
         if (i < clampedCount) {
             let depth = bitcast<f32>(sData[i]);
-            let depth20 = min(u32((depth - depthMin) * invRange + 0.5), u32(DEPTH_LEVELS));
+            let logDepth = log(max(depth, 1e-6));
+            let depth20 = min(u32((logDepth - logMin) * invLogRange + 0.5), u32(DEPTH_LEVELS));
             sData[i] = (depth20 << INDEX_BITS) | i;
         } else {
             sData[i] = 0xFFFFFFFFu;
