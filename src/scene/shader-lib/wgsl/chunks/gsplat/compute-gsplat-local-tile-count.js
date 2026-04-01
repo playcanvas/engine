@@ -73,16 +73,16 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
 
     let det = proj.a * proj.c - proj.b * proj.b;
     let invDet = 1.0 / det;
-    let coeffX = -2.0 * proj.c * invDet;
-    let coeffY = -2.0 * proj.a * invDet;
-    let coeffXY = 4.0 * proj.b * invDet;
+    let cx = 4.0 * proj.c * invDet;
+    let cy = -4.0 * proj.b * invDet;
+    let cz = 4.0 * proj.a * invDet;
 
     let base = threadIdx * CACHE_STRIDE;
     projCache[base + 0u] = bitcast<u32>(proj.screen.x);
     projCache[base + 1u] = bitcast<u32>(proj.screen.y);
-    projCache[base + 2u] = bitcast<u32>(coeffX);
-    projCache[base + 3u] = bitcast<u32>(coeffY);
-    projCache[base + 4u] = bitcast<u32>(coeffXY);
+    projCache[base + 2u] = bitcast<u32>(cx);
+    projCache[base + 3u] = bitcast<u32>(cy);
+    projCache[base + 4u] = bitcast<u32>(cz);
 
 #ifdef PICK_MODE
     let pcIdVal = loadPcId().r;
@@ -97,7 +97,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
 
     projCache[base + 7u] = bitcast<u32>(proj.viewDepth);
 
-    let eval = computeSplatTileEval(proj.screen, coeffX, coeffY, coeffXY, half(opacity),
+    let eval = computeSplatTileEval(proj.screen, cx, cy, cz, half(opacity),
                                     uniforms.viewportWidth, uniforms.viewportHeight,
                                     uniforms.alphaClip);
 
@@ -110,7 +110,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
         for (var tx = minTileX; tx <= maxTileX; tx++) {
             let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
             let tMax = tMin + vec2f(f32(TILE_SIZE));
-            if (tileIntersectsEllipse(tMin, tMax, proj.screen, coeffX, coeffY, coeffXY, eval.radiusFactor)) {
+            if (tileIntersectsEllipse(tMin, tMax, proj.screen, cx, cy, cz, eval.radiusFactor)) {
                 let tileIdx = u32(ty) * uniforms.numTilesX + u32(tx);
                 atomicAdd(&tileSplatCounts[tileIdx], 1u);
             }
