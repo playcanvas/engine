@@ -83,6 +83,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     _minPixelSize = 2.0;
 
     /** @type {number} */
+    _minContribution = 2.0;
+
+    /** @type {number} */
     _alphaClip = 0.3;
 
     /** @type {number} */
@@ -271,6 +274,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             this._registerFramePass();
         }
         this._minPixelSize = gsplat.minPixelSize;
+        this._minContribution = gsplat.minContribution;
         this._alphaClip = gsplat.alphaClip;
         this._exposure = exposure ?? 1.0;
 
@@ -497,6 +501,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         set.countCompute.setParameter('isOrtho', cam.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0);
         set.countCompute.setParameter('exposure', this._exposure);
         set.countCompute.setParameter('alphaClip', alphaClip);
+        set.countCompute.setParameter('minContribution', this._minContribution);
 
         const countWorkgroups = Math.ceil(numSplats / COUNT_WORKGROUP_SIZE);
         Compute.calcDispatchSize(countWorkgroups, _dispatchSize);
@@ -882,7 +887,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new UniformFormat('minPixelSize', UNIFORMTYPE_FLOAT),
             new UniformFormat('isOrtho', UNIFORMTYPE_UINT),
             new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
-            new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT)
+            new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT),
+            new UniformFormat('minContribution', UNIFORMTYPE_FLOAT)
         ]);
 
         const wbFormat = this.workBuffer.format;

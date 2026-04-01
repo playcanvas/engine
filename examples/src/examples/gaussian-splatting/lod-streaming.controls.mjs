@@ -93,6 +93,17 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Min Contribution' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'minContribution' },
+                    min: 0,
+                    max: 10,
+                    precision: 1
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Radial' },
                 jsx(BooleanInput, {
                     type: 'toggle',

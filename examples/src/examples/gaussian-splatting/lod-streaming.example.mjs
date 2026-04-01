@@ -140,6 +140,9 @@ assetListLoader.load(() => {
     data.on('minPixelSize:set', () => {
         app.scene.gsplat.minPixelSize = data.get('minPixelSize');
     });
+    data.on('minContribution:set', () => {
+        app.scene.gsplat.minContribution = data.get('minContribution');
+    });
     data.on('debugLod:set', () => {
         app.scene.gsplat.colorizeLod = !!data.get('debugLod');
     });
@@ -152,6 +155,7 @@ assetListLoader.load(() => {
     data.set('toneMapping', pc.TONEMAP_LINEAR);
     data.set('exposure', 1.5);
     data.set('minPixelSize', 2);
+    data.set('minContribution', 2);
     data.set('radialSorting', true);
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('culling', device.isWebGPU);

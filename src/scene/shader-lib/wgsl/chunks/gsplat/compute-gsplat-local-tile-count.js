@@ -27,6 +27,7 @@ struct Uniforms {
     isOrtho: u32,
     exposure: f32,
     alphaClip: f32,
+    minContribution: f32,
 }
 @group(0) @binding(4) var<uniform> uniforms: Uniforms;
 
@@ -63,7 +64,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
         uniforms.viewMatrix, uniforms.viewProj,
         uniforms.focal, uniforms.viewportWidth, uniforms.viewportHeight,
         uniforms.nearClip, uniforms.farClip, opacity, uniforms.minPixelSize,
-        uniforms.isOrtho, uniforms.alphaClip
+        uniforms.isOrtho, uniforms.alphaClip, uniforms.minContribution
     );
 
     if (!proj.valid) {

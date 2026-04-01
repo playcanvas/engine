@@ -68,6 +68,7 @@ class GSplatParams {
 
         this._material.setParameter('alphaClip', 0.3);
         this._material.setParameter('minPixelSize', 2.0);
+        this._material.setParameter('minContribution', 2.0);
     }
 
     /**
@@ -557,6 +558,28 @@ class GSplatParams {
      */
     get minPixelSize() {
         return this._material.getParameter('minPixelSize')?.data ?? 2.0;
+    }
+
+    /**
+     * Sets the minimum visual contribution threshold for the {@link GSPLAT_RENDERER_COMPUTE} renderer.
+     * Splats whose total screen contribution (opacity * projected area) falls below this value are
+     * discarded. Higher values cull more aggressively, improving performance at the cost of quality.
+     * Set to 0 to disable contribution culling. Defaults to 2.
+     *
+     * @type {number}
+     */
+    set minContribution(value) {
+        this._material.setParameter('minContribution', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets the minimum contribution threshold.
+     *
+     * @type {number}
+     */
+    get minContribution() {
+        return this._material.getParameter('minContribution')?.data ?? 2.0;
     }
 
     /**
