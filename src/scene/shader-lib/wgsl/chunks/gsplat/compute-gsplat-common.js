@@ -48,7 +48,7 @@ fn computeSplatCov(
 
     let viewCenter = (viewMatrix * vec4f(worldCenter, 1.0)).xyz;
 
-    if (viewCenter.z > -nearClip) {
+    if (viewCenter.z > 0.0) {
         return result;
     }
 
@@ -69,7 +69,7 @@ fn computeSplatCov(
 
     let ortho = isOrtho == 1u;
     let v = select(viewCenter.xyz, vec3f(0.0, 0.0, 1.0), ortho);
-    let vz = select(min(v.z, -nearClip), v.z, ortho);
+    let vz = select(min(v.z, -0.001), v.z, ortho);
     let J1 = focal / vz;
     let J2 = -J1 / vz * v.xy;
 
