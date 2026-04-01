@@ -4,7 +4,6 @@
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, SliderInput, Label } = ReactPCUI;
-    const isWebGPU = observer.get('isWebGPU');
     return fragment(
         jsx(
             Panel,
@@ -67,6 +66,22 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'Settings' },
             jsx(
                 LabelGroup,
+                { text: 'Renderer' },
+                jsx(SelectInput, {
+                    type: 'number',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'renderer' },
+                    value: observer.get('renderer') ?? 0,
+                    options: [
+                        { v: 0, t: 'Auto' },
+                        { v: 1, t: 'Raster (CPU Sort)' },
+                        { v: 2, t: 'Raster (GPU Sort)' },
+                        { v: 3, t: 'Compute' }
+                    ]
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Min Pixel Size' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -84,16 +99,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'radialSorting' },
                     value: observer.get('radialSorting') ?? true
-                })
-            ),
-            isWebGPU && jsx(
-                LabelGroup,
-                { text: 'GPU Sorting' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gpuSorting' },
-                    value: observer.get('gpuSorting') || false
                 })
             ),
             jsx(

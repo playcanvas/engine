@@ -112,9 +112,6 @@ const assets = {
     )
 };
 
-// Set device type flag before controls render (controls read this synchronously)
-data.set('isWebGPU', device.isWebGPU);
-
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
@@ -133,12 +130,13 @@ assetListLoader.load(() => {
     app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
-    // GPU sorting is a WebGPU-only feature
-    if (device.isWebGPU) {
-        data.on('gpuSorting:set', () => {
-            app.scene.gsplat.gpuSorting = !!data.get('gpuSorting');
-        });
-    }
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            data.set('renderer', current);
+        }
+    });
     data.on('minPixelSize:set', () => {
         app.scene.gsplat.minPixelSize = data.get('minPixelSize');
     });
@@ -155,7 +153,7 @@ assetListLoader.load(() => {
     data.set('exposure', 1.5);
     data.set('minPixelSize', 2);
     data.set('radialSorting', true);
-    data.set('gpuSorting', false);
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('culling', device.isWebGPU);
     data.set('compact', true);
     data.set('debugLod', false);

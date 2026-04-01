@@ -2,9 +2,14 @@ import {
     PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
     PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
 } from '../../platform/graphics/constants.js';
+import { Debug } from '../../core/debug.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatFormat } from '../gsplat/gsplat-format.js';
-import { GSPLATDATA_COMPACT } from '../constants.js';
+import {
+    GSPLATDATA_COMPACT,
+    GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
+    GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE
+} from '../constants.js';
 
 import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
 import glslCompactWrite from '../shader-lib/glsl/chunks/gsplat/frag/formats/containerCompactWrite.js';
@@ -129,12 +134,61 @@ class GSplatParams {
     radialSorting = false;
 
     /**
-     * Enables GPU-based sorting using compute shaders. WebGPU only.
-     *
-     * @type {boolean}
-     * @ignore
+     * @type {number}
+     * @private
      */
-    gpuSorting = false;
+    _renderer = GSPLAT_RENDERER_AUTO;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
+
+    /**
+     * The rendering pipeline used for gaussian splatting. Can be:
+     *
+     * - {@link GSPLAT_RENDERER_AUTO}: Automatically selects the best pipeline for the platform.
+     * - {@link GSPLAT_RENDERER_RASTER_CPU_SORT}: Rasterization with CPU-side sorting.
+     * - {@link GSPLAT_RENDERER_RASTER_GPU_SORT}: Rasterization with compute shader sorting
+     * (WebGPU only, experimental).
+     * - {@link GSPLAT_RENDERER_COMPUTE}: Full compute pipeline (WebGPU only, experimental).
+     *
+     * Defaults to {@link GSPLAT_RENDERER_AUTO}. Modes requiring WebGPU fall back to
+     * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices.
+     *
+     * @type {number}
+     */
+    set renderer(value) {
+        if (this._renderer !== value) {
+            this._renderer = value;
+
+            if (value === GSPLAT_RENDERER_AUTO) {
+                this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
+            } else if ((value === GSPLAT_RENDERER_RASTER_GPU_SORT || value === GSPLAT_RENDERER_COMPUTE) &&
+                !this._device.isWebGPU) {
+                Debug.warnOnce(`GSplatParams: renderer mode ${value} requires WebGPU, falling back to GSPLAT_RENDERER_RASTER_CPU_SORT.`);
+                this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
+            } else {
+                this._currentRenderer = value;
+            }
+        }
+    }
+
+    get renderer() {
+        return this._renderer;
+    }
+
+    /**
+     * The current rendering pipeline in effect after platform-based fallback resolution. When
+     * {@link renderer} is set to a mode requiring WebGPU on a WebGL device, this returns the
+     * fallback mode actually being used.
+     *
+     * @type {number}
+     */
+    get currentRenderer() {
+        return this._currentRenderer;
+    }
 
     /**
      * Enables debug rendering of AABBs for GSplat octree nodes. Defaults to false.
