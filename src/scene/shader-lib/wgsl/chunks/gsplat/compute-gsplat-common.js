@@ -41,7 +41,8 @@ fn computeSplatCov(
     opacity: f32,
     minPixelSize: f32,
     isOrtho: u32,
-    alphaClip: f32
+    alphaClip: f32,
+    minContribution: f32
 ) -> SplatCov2D {
     var result: SplatCov2D;
     result.valid = false;
@@ -103,16 +104,11 @@ fn computeSplatCov(
         return result;
     }
 
-    // Distance-adaptive contribution culling inspired by cullByTotalInk from gsm-renderer
-    // https://github.com/AugmentedPercception/gsm-renderer
-    // Rejects splats whose total visual contribution (opacity * ellipse area) is negligible.
-    // The threshold increases with depth so nearby quality is preserved while distant
-    // low-impact splats are culled, acting as a built-in LOD mechanism.
+    // Rejects splats whose total visual contribution (opacity * projected area) is
+    // negligible. Near the camera, projected areas are large so contributions naturally
+    // exceed the threshold; at distance, areas shrink and low-impact splats are culled.
     let totalContribution = opacity * 6.283185 * sqrt(det);
-    // Distance from camera within which contribution culling is not applied
-    let effectiveCullDistance = farClip * 0.02;
-    let depthNorm = 1.0 - pow(saturate((effectiveCullDistance + viewCenter.z) / (effectiveCullDistance - nearClip)), 2.0);
-    if (totalContribution < depthNorm * 2.0) {
+    if (totalContribution < minContribution) {
         return result;
     }
 
