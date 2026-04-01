@@ -324,8 +324,8 @@ class GSplatInfo {
             this.intervalAllocIds.push(this.allocId);
 
             // check if we need to limit to active splats (instead of rendering all splats)
-            const totalCenters = resource.centers?.length / 3;
-            if (totalCenters && this.activeSplats < totalCenters) {
+            const totalCapacity = resource.maxSplats;
+            if (totalCapacity && this.activeSplats < totalCapacity) {
                 // Provide interval [0, numSplats) to limit sorting to active splats only
                 this.intervals[0] = 0;
                 this.intervals[1] = this.activeSplats;
