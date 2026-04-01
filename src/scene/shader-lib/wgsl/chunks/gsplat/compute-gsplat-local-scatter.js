@@ -38,14 +38,13 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
         return;
     }
 
-    let screenX = bitcast<f32>(projCache[base + 0u]);
-    let screenY = bitcast<f32>(projCache[base + 1u]);
-    let coeffX = bitcast<f32>(projCache[base + 2u]);
-    let coeffY = bitcast<f32>(projCache[base + 3u]);
-    let coeffXY = bitcast<f32>(projCache[base + 4u]);
+    let screen = vec2f(bitcast<f32>(projCache[base + 0u]),
+                       bitcast<f32>(projCache[base + 1u]));
+    let cx = bitcast<f32>(projCache[base + 2u]);
+    let cy = bitcast<f32>(projCache[base + 3u]);
+    let cz = bitcast<f32>(projCache[base + 4u]);
 
-    let screen = vec2f(screenX, screenY);
-    let eval = computeSplatTileEval(screen, coeffX, coeffY, coeffXY, half(opacity),
+    let eval = computeSplatTileEval(screen, cx, cy, cz, half(opacity),
                                     uniforms.viewportWidth, uniforms.viewportHeight,
                                     uniforms.alphaClip);
 
@@ -58,7 +57,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
         for (var tx = minTileX; tx <= maxTileX; tx++) {
             let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
             let tMax = tMin + vec2f(f32(TILE_SIZE));
-            if (tileIntersectsEllipse(tMin, tMax, screen, coeffX, coeffY, coeffXY, eval.radiusFactor)) {
+            if (tileIntersectsEllipse(tMin, tMax, screen, cx, cy, cz, eval.radiusFactor)) {
                 let tileIdx = u32(ty) * uniforms.numTilesX + u32(tx);
                 let writePos = tileSplatCounts[tileIdx] + atomicAdd(&tileWriteCursors[tileIdx], 1u);
                 // Bounds-check against the tile's allocated range to prevent overflow

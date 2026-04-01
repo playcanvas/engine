@@ -157,12 +157,12 @@ fn main(
                 bitcast<f32>(projCache[base + 0u]),
                 bitcast<f32>(projCache[base + 1u])
             );
-            sharedCoeffs[localIdx] = vec3f(
-                bitcast<f32>(projCache[base + 2u]),
-                bitcast<f32>(projCache[base + 3u]),
-                bitcast<f32>(projCache[base + 4u])
-            );
-            // Pick mode: cache stores pick ID, opacity, and view depth per splat
+            // Conic values cx/cy/cz stored as f32; convert to evaluation coefficients.
+            let cx = bitcast<f32>(projCache[base + 2u]);
+            let cy = bitcast<f32>(projCache[base + 3u]);
+            let cz = bitcast<f32>(projCache[base + 4u]);
+            sharedCoeffs[localIdx] = vec3f(cx * -0.5, cz * -0.5, -cy);
+
             #ifdef PICK_MODE
                 sharedPickId[localIdx] = projCache[base + 5u];
                 sharedOpacity[localIdx] = half(unpack2x16float(projCache[base + 6u]).y);

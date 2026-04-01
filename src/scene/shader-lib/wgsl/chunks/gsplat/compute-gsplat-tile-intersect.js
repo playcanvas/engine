@@ -6,6 +6,12 @@
 //
 // Note: A faster alternative based on StopThePop (closest-point Gaussian evaluation) was tested
 // but produced grid artifacts on larger splats due to false negatives for elongated ellipses.
+//
+// Conic form: the projCache stores conic values cx/cy/cz (f32) instead of the
+// Gaussian evaluation coefficients coeffX/coeffY/coeffXY. This avoids per-tile conversion
+// in the intersection test.
+//   cx = -2 * coeffX,  cy = -coeffXY,  cz = -2 * coeffY
+// To recover evaluation coefficients: coeffX = -cx/2, coeffY = -cz/2, coeffXY = -cy
 export const computeGsplatTileIntersectSource = /* wgsl */`
 
 struct SplatTileEval {
@@ -20,14 +26,14 @@ fn computeRadiusFactor(opacity: half, alphaClip: f32) -> f32 {
 
 fn computeSplatTileEval(
     screen: vec2f,
-    coeffX: f32, coeffY: f32, coeffXY: f32,
+    cx: f32, cy: f32, cz: f32,
     opacity: half,
     viewportWidth: f32, viewportHeight: f32,
     alphaClip: f32
 ) -> SplatTileEval {
-    let K = 4.0 * coeffX * coeffY - coeffXY * coeffXY;
-    let a = -8.0 * coeffY / K;
-    let c = -8.0 * coeffX / K;
+    let K = cx * cz - cy * cy;
+    let a = 4.0 * cz / K;
+    let c = 4.0 * cx / K;
     let radiusFactor = computeRadiusFactor(opacity, alphaClip);
     let vmin = min(1024.0, min(viewportWidth, viewportHeight));
     let radius = vec2f(min(sqrt(2.0 * a), 2.0 * vmin), min(sqrt(2.0 * c), 2.0 * vmin));
@@ -47,11 +53,10 @@ fn segmentIntersectsEllipse(a: f32, b: f32, c: f32, d: f32, l: f32, r: f32) -> b
 }
 
 // Tests if the Gaussian cutoff ellipse intersects a tile rectangle.
-// Exact conic-edge intersection: solves the quadratic along the two closest
-// tile edges to determine if the cutoff ellipse crosses them.
+// Exact conic-edge intersection using positive-definite conic: cx*dx^2 + 2*cy*dx*dy + cz*dy^2 = w
 fn tileIntersectsEllipse(
     tileMin: vec2f, tileMax: vec2f, center: vec2f,
-    coeffX: f32, coeffY: f32, coeffXY: f32,
+    cx: f32, cy: f32, cz: f32,
     radiusFactor: f32
 ) -> bool {
     if (center.x >= tileMin.x && center.x <= tileMax.x &&
@@ -59,10 +64,6 @@ fn tileIntersectsEllipse(
         return true;
     }
 
-    // Convert to positive-definite conic: cx*dx^2 + 2*cy*dx*dy + cz*dy^2 = w
-    let cx = -2.0 * coeffX;
-    let cy = -coeffXY;
-    let cz = -2.0 * coeffY;
     let w = radiusFactor;
 
     // Test closest horizontal edge
