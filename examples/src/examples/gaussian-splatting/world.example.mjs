@@ -88,9 +88,9 @@ const assets = {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
 
-    // Enable GPU sorting (desktop only for now)
+    // Use GPU sorting on desktop (experimental, WebGPU only)
     if (!pc.platform.mobile) {
-        app.scene.gsplat.gpuSorting = true;
+        app.scene.gsplat.renderer = pc.GSPLAT_RENDERER_RASTER_GPU_SORT;
     }
 
     app.start();

@@ -16,6 +16,9 @@ import { GSplatIntervalCompaction } from './gsplat-interval-compaction.js';
 import { ComputeRadixSort } from '../graphics/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
+import {
+    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE
+} from '../constants.js';
 import { Color } from '../../core/math/color.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
 import { BlockAllocator } from '../../core/block-allocator.js';
@@ -31,8 +34,6 @@ import { BlockAllocator } from '../../core/block-allocator.js';
  * @import { MemBlock } from '../../core/block-allocator.js'
  * @import { GSplatRenderer } from './gsplat-renderer.js'
  */
-
-const USE_LOCAL_COMPUTE_RENDERER = false;
 
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
@@ -131,19 +132,12 @@ class GSplatManager {
     lastWorldStateVersion = 0;
 
     /**
-     * Whether to use GPU-based sorting (WebGPU only). Starts as undefined so the first
-     * prepareSortMode() call always creates the appropriate resources.
+     * The currently active renderer mode. Starts as undefined so the first
+     * prepareRendererMode() call always creates the appropriate resources.
      *
-     * @type {boolean|undefined}
+     * @type {number|undefined}
      */
-    useGpuSorting;
-
-    /**
-     * Whether the local compute renderer is active (compaction-only, no sorting).
-     *
-     * @type {boolean}
-     */
-    useLocalRenderer = false;
+    activeRenderer;
 
     /**
      * CPU-based sorter (when not using GPU sorting).
@@ -384,20 +378,10 @@ class GSplatManager {
         this._allocator = new BlockAllocator(budget > 0 ? Math.ceil(budget * allocatorGrowMultiplier) : 0, allocatorGrowMultiplier);
 
         this.workBuffer = new GSplatWorkBuffer(device, this.scene.gsplat.format);
-        if (USE_LOCAL_COMPUTE_RENDERER && device.isWebGPU) {
-            this.renderer = new GSplatComputeLocalRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
-            this.useLocalRenderer = true;
-            this.useGpuSorting = true;
-        } else {
-            this.renderer = new GSplatQuadRenderer(device, this.node, this.cameraNode, layer, this.workBuffer);
-            this.useLocalRenderer = false;
-        }
-        this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
 
-        // Local renderer handles its own compaction; skip full sort initialization.
-        if (!this.useLocalRenderer) {
-            this.prepareSortMode();
-        }
+        this.layer = layer;
+        this._createRenderer(this.scene.gsplat.currentRenderer);
+        this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
     }
 
     destroy() {
@@ -525,7 +509,7 @@ class GSplatManager {
      * @returns {import('../mesh-instance.js').MeshInstance|null} The pick mesh instance, or null.
      */
     prepareForPicking(camera, width, height) {
-        if (!this.useLocalRenderer) return null;
+        if (this.activeRenderer !== GSPLAT_RENDERER_COMPUTE) return null;
 
         /** @type {GSplatComputeLocalRenderer} */
         const localRenderer = /** @type {any} */ (this.renderer);
@@ -564,31 +548,48 @@ class GSplatManager {
      * @private
      */
     get canCull() {
-        return (this.useLocalRenderer || !!this.useGpuSorting) &&
+        return this.activeRenderer !== GSPLAT_RENDERER_RASTER_CPU_SORT &&
             this.workBuffer.frustumCuller.totalBoundsEntries > 0;
     }
 
     /**
-     * Prepares the sorting mode by matching it to the current gpuSorting setting. Lazily creates
-     * GPU or CPU sorting resources as needed and handles transitions between modes.
+     * Creates the renderer and sort resources for the given mode. Used at init time.
+     *
+     * @param {number} mode - The GSPLAT_RENDERER_* constant.
+     * @private
+     */
+    _createRenderer(mode) {
+        if (mode === GSPLAT_RENDERER_COMPUTE) {
+            this.renderer = new GSplatComputeLocalRenderer(this.device, this.node, this.cameraNode, this.layer, this.workBuffer);
+        } else {
+            this.renderer = new GSplatQuadRenderer(this.device, this.node, this.cameraNode, this.layer, this.workBuffer);
+            if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT) {
+                this.initGpuSorting();
+            } else {
+                this.initCpuSorting();
+            }
+        }
+        this.activeRenderer = mode;
+    }
+
+    /**
+     * Checks whether the resolved renderer mode has changed and transitions to the new mode.
+     * Handles both sort-mode transitions (CPU <-> GPU sort) and full renderer swaps
+     * (quad <-> compute).
      *
      * @private
      */
-    prepareSortMode() {
-        const gpuSorting = this.device.isWebGPU && this.scene.gsplat.gpuSorting;
-        if (gpuSorting !== this.useGpuSorting) {
+    prepareRendererMode() {
+        const requested = this.scene.gsplat.currentRenderer;
+        if (requested === this.activeRenderer) return;
 
-            if (gpuSorting) {
-                this.destroyCpuSorting();
-                this.initGpuSorting();
-            } else {
-                this.destroyGpuSorting();
-                this.initCpuSorting();
-            }
-
-            this.useGpuSorting = gpuSorting;
-            this.sortNeeded = true;
-        }
+        this.destroyGpuSorting();
+        this.destroyCpuSorting();
+        this.renderer.destroy();
+        this._createRenderer(requested);
+        this.renderer.setRenderMode(this.renderMode);
+        this._workBufferRebuildRequired = true;
+        this.sortNeeded = true;
     }
 
     /**
@@ -822,7 +823,7 @@ class GSplatManager {
 
         // Bounds and transforms storage buffers are needed for frustum culling,
         // which only runs with interval compaction (local renderer or GPU sorting).
-        if (this.useLocalRenderer || this.useGpuSorting) {
+        if (this.activeRenderer !== GSPLAT_RENDERER_RASTER_CPU_SORT) {
             this.workBuffer.frustumCuller.updateBoundsData(worldState.boundsGroups);
             this.workBuffer.frustumCuller.updateTransformsData(worldState.boundsGroups);
         }
@@ -1293,11 +1294,8 @@ class GSplatManager {
             this.sortNeeded = true;
         }
 
-        // Prepare sorting mode for current gpuSorting setting (may switch GPU <-> CPU).
-        // Skipped for the local renderer — it handles its own compaction without sorting.
-        if (!this.useLocalRenderer) {
-            this.prepareSortMode();
-        }
+        // Check for runtime renderer mode changes and transition if needed.
+        this.prepareRendererMode();
 
         // apply any pending sorted results (CPU path only)
         if (this.cpuSorter) {
@@ -1305,7 +1303,7 @@ class GSplatManager {
         }
 
         // GPU sorting is always ready, CPU sorting is ready if not too many jobs in flight
-        const sorterAvailable = this.useLocalRenderer || this.useGpuSorting || (this.cpuSorter && this.cpuSorter.jobsInFlight < 3);
+        const sorterAvailable = this.activeRenderer !== GSPLAT_RENDERER_RASTER_CPU_SORT || (this.cpuSorter && this.cpuSorter.jobsInFlight < 3);
 
         // full update every 10 frames
         let fullUpdate = false;
@@ -1478,11 +1476,11 @@ class GSplatManager {
         // kick off sorting / compaction only if needed
         let gpuSortedThisFrame = false;
         if (this.sortNeeded && lastState) {
-            if (this.useLocalRenderer) {
-                // Local renderer: run compaction only (no key generation or radix sort)
+            if (this.activeRenderer === GSPLAT_RENDERER_COMPUTE) {
+                // Compute renderer: run compaction only (no key generation or radix sort)
                 this.compactGpu(lastState);
                 gpuSortedThisFrame = true;
-            } else if (this.useGpuSorting) {
+            } else if (this.activeRenderer === GSPLAT_RENDERER_RASTER_GPU_SORT) {
                 // GPU sort runs compaction internally, so indirect draw is always valid
                 this.sortGpu(lastState);
                 gpuSortedThisFrame = true;
@@ -1503,7 +1501,7 @@ class GSplatManager {
 
         // Refresh the per-frame indirect draw slot on non-sort frames
         // (sortGpu already handled GPU-sort frames).
-        if (!this.useLocalRenderer && this.intervalCompaction && !gpuSortedThisFrame) {
+        if (this.activeRenderer !== GSPLAT_RENDERER_COMPUTE && this.intervalCompaction && !gpuSortedThisFrame) {
             this.refreshIndirectDraw();
         }
 
