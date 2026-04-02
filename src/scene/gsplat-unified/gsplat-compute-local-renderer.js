@@ -42,11 +42,12 @@ import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComp
  */
 
 const TILE_SIZE = 16;
-const INITIAL_TILE_ENTRY_MULTIPLIER = 1.5;
+const INITIAL_TILE_ENTRY_MULTIPLIER = 1.5; // floor for _tileEntryMultiplier (min tile entries per splat)
 const COUNT_WORKGROUP_SIZE = 256;
 const CACHE_STRIDE = 8;
 const MAX_CHUNKS_PER_TILE = 8;
-const SHRINK_THRESHOLD = 10;
+const SHRINK_THRESHOLD = 200; // consecutive low-usage readbacks before considering multiplier shrink
+const ENTRY_HEADROOM_MULTIPLIER = 1.5; // headroom factor applied to measured entry demand
 const _viewProjMat = new Mat4();
 const _viewProjData = new Float32Array(16);
 const _viewData = new Float32Array(16);
@@ -354,7 +355,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
                 this._shrinkFrameCount = 0;
             }
             if (this._shrinkFrameCount >= SHRINK_THRESHOLD && numSplats > 0) {
-                this._tileEntryMultiplier = Math.max(INITIAL_TILE_ENTRY_MULTIPLIER, (readbackValue / numSplats) * 1.1);
+                const target = Math.max(INITIAL_TILE_ENTRY_MULTIPLIER, (readbackValue / numSplats) * ENTRY_HEADROOM_MULTIPLIER);
+                this._tileEntryMultiplier = Math.max(target, this._tileEntryMultiplier * 0.9);
                 this._shrinkFrameCount = 0;
             }
         }
@@ -647,7 +649,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             const needed = totalEntries + totalOverflow;
 
             if (capturedNumSplats > 0) {
-                this._tileEntryMultiplier = Math.max(this._tileEntryMultiplier, (needed / capturedNumSplats) * 1.1);
+                this._tileEntryMultiplier = Math.max(this._tileEntryMultiplier, (needed / capturedNumSplats) * ENTRY_HEADROOM_MULTIPLIER);
                 this._tileEntryMultiplier = Math.max(this._tileEntryMultiplier, INITIAL_TILE_ENTRY_MULTIPLIER);
             }
 
