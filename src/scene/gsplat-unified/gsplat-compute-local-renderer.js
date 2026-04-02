@@ -84,7 +84,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     _minPixelSize = 2.0;
 
     /** @type {number} */
-    _minContribution = 2.0;
+    _minContribution = 3.0;
 
     /** @type {number} */
     _alphaClip = 0.3;
