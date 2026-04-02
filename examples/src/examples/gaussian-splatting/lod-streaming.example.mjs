@@ -155,7 +155,7 @@ assetListLoader.load(async () => {
     data.set('toneMapping', pc.TONEMAP_LINEAR);
     data.set('exposure', 1.5);
     data.set('minPixelSize', 2);
-    data.set('minContribution', 2);
+    data.set('minContribution', 3);
     data.set('radialSorting', true);
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('culling', device.isWebGPU);
