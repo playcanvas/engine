@@ -122,7 +122,7 @@ fn computeSplatCov(
     let radiusFactor = computeRadiusFactor(half(opacity), alphaClip);
 
     let vmin = min(1024.0, min(viewportWidth, viewportHeight));
-    let maxRadius = 2.0 * vmin;
+    let maxRadius = vmin;
     let radiusXUncapped = sqrt(2.0 * a);
     let radiusYUncapped = sqrt(2.0 * c);
     let radiusX = min(radiusXUncapped, maxRadius);

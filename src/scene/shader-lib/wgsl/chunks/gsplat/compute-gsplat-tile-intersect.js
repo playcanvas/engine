@@ -36,7 +36,7 @@ fn computeSplatTileEval(
     let c = 4.0 * cx / K;
     let radiusFactor = computeRadiusFactor(opacity, alphaClip);
     let vmin = min(1024.0, min(viewportWidth, viewportHeight));
-    let radius = vec2f(min(sqrt(2.0 * a), 2.0 * vmin), min(sqrt(2.0 * c), 2.0 * vmin));
+    let radius = vec2f(min(sqrt(2.0 * a), vmin), min(sqrt(2.0 * c), vmin));
     var result: SplatTileEval;
     result.radiusFactor = radiusFactor;
     result.splatMin = screen - radius;
