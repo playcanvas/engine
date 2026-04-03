@@ -247,12 +247,22 @@ assetListLoader.load(async () => {
     phCredit.rel = 'noopener';
     phCredit.textContent = 'HDRI by Poly Haven';
     Object.assign(phCredit.style, {
-        position: 'fixed', bottom: '6px', right: '10px', zIndex: '11',
-        font: '400 16px/1 sans-serif', color: 'rgba(255,255,255,0.25)',
-        textDecoration: 'none', pointerEvents: 'auto', display: 'none'
+        position: 'fixed',
+        bottom: '6px',
+        right: '10px',
+        zIndex: '11',
+        font: '400 16px/1 sans-serif',
+        color: 'rgba(255,255,255,0.25)',
+        textDecoration: 'none',
+        pointerEvents: 'auto',
+        display: 'none'
     });
-    phCredit.onmouseenter = () => { phCredit.style.color = 'rgba(255,255,255,0.5)'; };
-    phCredit.onmouseleave = () => { phCredit.style.color = 'rgba(255,255,255,0.25)'; };
+    phCredit.onmouseenter = () => {
+        phCredit.style.color = 'rgba(255,255,255,0.5)';
+    };
+    phCredit.onmouseleave = () => {
+        phCredit.style.color = 'rgba(255,255,255,0.25)';
+    };
     document.body.appendChild(phCredit);
     app.on('destroy', () => phCredit.remove());
 
