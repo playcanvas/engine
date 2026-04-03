@@ -1584,7 +1584,7 @@ class GSplatManager {
 
         const numIntervals = worldState.totalIntervals;
         const totalActiveSplats = worldState.totalActiveSplats;
-        this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats);
+        this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats, this.renderer.fisheyeProj.enabled);
 
         // Allocate indirect draw/dispatch slots and write args from visible count
         this.allocateAndWriteIntervalIndirectArgs(numIntervals);
@@ -1642,7 +1642,7 @@ class GSplatManager {
 
         const numIntervals = worldState.totalIntervals;
         const totalActiveSplats = worldState.totalActiveSplats;
-        this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats);
+        this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats, this.renderer.fisheyeProj.enabled);
 
         // Extract the visible count from the prefix sum into sortElementCountBuffer.
         // writeIndirectArgs is the only path that does this; the indirect draw/dispatch
@@ -1747,6 +1747,18 @@ class GSplatManager {
 
         const cam = this.cameraNode.camera;
         this.workBuffer.frustumCuller.computeFrustumPlanes(cam.projectionMatrix, cam.viewMatrix);
+
+        const gsplat = this.scene.gsplat;
+        const fp = this.renderer.fisheyeProj;
+        fp.update(gsplat.fisheye, cam.fov, cam.projectionMatrix);
+
+        if (fp.enabled) {
+            this.workBuffer.frustumCuller.setFisheyeData(
+                this.cameraNode.getPosition(),
+                this.cameraNode.forward,
+                fp.maxTheta
+            );
+        }
     }
 
     /**

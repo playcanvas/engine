@@ -127,19 +127,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     /** @type {number} Consecutive frames where usage < half capacity */
     _shrinkFrameCount = 0;
 
-    // --- Shared shaders and bind group formats ---
-
-    /** @type {Shader|null} */
-    _countColorShader = null;
-
-    /** @type {Shader|null} */
-    _countPickShader = null;
-
-    /** @type {BindGroupFormat|null} */
-    _countBindGroupFormat = null;
-
-    /** @type {BindGroupFormat|null} */
-    _countPickBindGroupFormat = null;
+    /** @type {number} */
+    _fisheye = 0;
 
     /** @type {Shader} */
     _scatterShader;
@@ -220,10 +209,6 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._mainSet.destroy();
         this._pickSet?.destroy();
 
-        this._countColorShader?.destroy();
-        this._countPickShader?.destroy();
-        this._countBindGroupFormat?.destroy();
-        this._countPickBindGroupFormat?.destroy();
         this._scatterShader.destroy();
         this._scatterBindGroupFormat.destroy();
         this._classifyShader.destroy();
@@ -278,16 +263,12 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._minContribution = gsplat.minContribution;
         this._alphaClip = gsplat.alphaClip;
         this._exposure = exposure ?? 1.0;
-
-        let needsRecreate = false;
+        this._fisheye = gsplat.fisheye;
 
         const formatHash = this.workBuffer.format.hash;
         if (formatHash !== this._formatHash) {
-            needsRecreate = true;
-        }
-
-        if (needsRecreate || !this._countColorShader) {
-            this._ensureCountCompute();
+            this._formatHash = formatHash;
+            this._invalidateCountCompute();
         }
     }
 
@@ -413,14 +394,6 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     dispatchPick(cam, width, height) {
         if (!this._pickSet) {
             this._pickSet = this._createDispatchSet(true);
-
-            // Create pick count compute (count shader must exist by now from frameUpdate)
-            if (!this._countPickShader) {
-                const { shader, bindGroupFormat } = this._createCountShaderAndFormat(true);
-                this._countPickShader = shader;
-                this._countPickBindGroupFormat = bindGroupFormat;
-            }
-            this._pickSet.countCompute = new Compute(this.device, this._countPickShader, 'GSplatPickTileCount');
         }
 
         const set = this._pickSet;
@@ -476,39 +449,54 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         const alphaClip = pickMode ? this._alphaClip : (1.0 / 255.0);
 
+        // Ensure fisheyeProj is up-to-date (culling may not have run this frame)
+        this.fisheyeProj.update(this._fisheye, camera.fov, proj);
+
+        const fisheyeEnabled = this.fisheyeProj.enabled;
+        const createCountShader = (pick, fisheye) => this._createCountShaderAndFormat(pick, fisheye);
+        const countCompute = set.getCountCompute(fisheyeEnabled, createCountShader);
+
         // --- Pass 1: Per-tile count + projection cache ---
         set._tileSplatCountsBuffer.clear();
 
-        set.countCompute.setParameter('compactedSplatIds', this._compactedSplatIds);
-        set.countCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
-        set.countCompute.setParameter('projCache', this._projCacheBuffer);
-        set.countCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+        countCompute.setParameter('compactedSplatIds', this._compactedSplatIds);
+        countCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
+        countCompute.setParameter('projCache', this._projCacheBuffer);
+        countCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
         for (const stream of wb.format.streams) {
-            set.countCompute.setParameter(stream.name, wb.getTexture(stream.name));
+            countCompute.setParameter(stream.name, wb.getTexture(stream.name));
         }
         for (const stream of wb.format.extraStreams) {
-            set.countCompute.setParameter(stream.name, wb.getTexture(stream.name));
+            countCompute.setParameter(stream.name, wb.getTexture(stream.name));
         }
-        set.countCompute.setParameter('splatTextureSize', this._textureSize);
-        set.countCompute.setParameter('numTilesX', numTilesX);
-        set.countCompute.setParameter('numTilesY', numTilesY);
-        set.countCompute.setParameter('viewProj', _viewProjData);
-        set.countCompute.setParameter('viewMatrix', _viewData);
-        set.countCompute.setParameter('focal', focal);
-        set.countCompute.setParameter('viewportWidth', width);
-        set.countCompute.setParameter('viewportHeight', height);
-        set.countCompute.setParameter('nearClip', cam.nearClip);
-        set.countCompute.setParameter('farClip', cam.farClip);
-        set.countCompute.setParameter('minPixelSize', this._minPixelSize * 0.5);
-        set.countCompute.setParameter('isOrtho', cam.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0);
-        set.countCompute.setParameter('exposure', this._exposure);
-        set.countCompute.setParameter('alphaClip', alphaClip);
-        set.countCompute.setParameter('minContribution', this._minContribution);
+        countCompute.setParameter('splatTextureSize', this._textureSize);
+        countCompute.setParameter('numTilesX', numTilesX);
+        countCompute.setParameter('numTilesY', numTilesY);
+        countCompute.setParameter('viewProj', _viewProjData);
+        countCompute.setParameter('viewMatrix', _viewData);
+        countCompute.setParameter('focal', focal);
+        countCompute.setParameter('viewportWidth', width);
+        countCompute.setParameter('viewportHeight', height);
+        countCompute.setParameter('nearClip', cam.nearClip);
+        countCompute.setParameter('farClip', cam.farClip);
+        countCompute.setParameter('minPixelSize', this._minPixelSize * 0.5);
+        countCompute.setParameter('isOrtho', cam.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0);
+        countCompute.setParameter('exposure', this._exposure);
+        countCompute.setParameter('alphaClip', alphaClip);
+        countCompute.setParameter('minContribution', this._minContribution);
+
+        if (fisheyeEnabled) {
+            const fp = this.fisheyeProj;
+            countCompute.setParameter('fisheye_k', fp.k);
+            countCompute.setParameter('fisheye_inv_k', fp.invK);
+            countCompute.setParameter('fisheye_projMat00', fp.projMat00);
+            countCompute.setParameter('fisheye_projMat11', fp.projMat11);
+        }
 
         const countWorkgroups = Math.ceil(numSplats / COUNT_WORKGROUP_SIZE);
         Compute.calcDispatchSize(countWorkgroups, _dispatchSize);
-        set.countCompute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
-        device.computeDispatch([set.countCompute], pickMode ? 'GSplatPickTileCount' : 'GSplatLocalTileCount');
+        countCompute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
+        device.computeDispatch([countCompute], pickMode ? 'GSplatPickTileCount' : 'GSplatLocalTileCount');
 
         // --- Pass 2: Prefix sum ---
         set.prefixSumKernel.resize(set._tileSplatCountsBuffer, numTiles + 1);
@@ -660,33 +648,14 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     }
 
     /**
-     * Creates or recreates the count shader, bind group format, and Compute instances
-     * for all active dispatch sets. Called lazily on the first frame and whenever
-     * the work buffer format changes.
+     * Invalidates all cached count resources on both dispatch sets. Called when the
+     * work buffer format changes, making all compiled count shaders invalid.
      *
      * @private
      */
-    _ensureCountCompute() {
-        const device = this.device;
-
-        this._mainSet.countCompute?.destroy();
-        this._countColorShader?.destroy();
-        this._countBindGroupFormat?.destroy();
-        this._countPickShader?.destroy();
-        this._countPickBindGroupFormat?.destroy();
-
-        const { shader, bindGroupFormat } = this._createCountShaderAndFormat(false);
-        this._countColorShader = shader;
-        this._countBindGroupFormat = bindGroupFormat;
-        this._mainSet.countCompute = new Compute(device, shader, 'GSplatLocalTileCount');
-
-        if (this._pickSet) {
-            this._pickSet.countCompute?.destroy();
-            const { shader: pickShader, bindGroupFormat: pickBgf } = this._createCountShaderAndFormat(true);
-            this._countPickShader = pickShader;
-            this._countPickBindGroupFormat = pickBgf;
-            this._pickSet.countCompute = new Compute(device, pickShader, 'GSplatPickTileCount');
-        }
+    _invalidateCountCompute() {
+        this._mainSet.destroyCountResources();
+        this._pickSet?.destroyCountResources();
     }
 
     // ---- Shader / BindGroupFormat creation ----
@@ -714,7 +683,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     _createSharedShaders() {
         const device = this.device;
 
-        // Count shader/format are created lazily in _ensureCountCompute()
+        // Count shader/format are created lazily by each dispatch set's getCountCompute()
 
         // --- Scatter ---
         {
@@ -869,13 +838,14 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
      * Creates the count shader + shared bind group format.
      *
      * @param {boolean} pickMode - Whether to create the pick variant.
+     * @param {boolean} fisheyeEnabled - Whether to include the GSPLAT_FISHEYE define and fisheye uniforms.
      * @returns {{ shader: Shader, bindGroupFormat: BindGroupFormat }} The shader and format.
      * @private
      */
-    _createCountShaderAndFormat(pickMode) {
+    _createCountShaderAndFormat(pickMode, fisheyeEnabled) {
         const device = this.device;
 
-        const uniformBufferFormat = new UniformBufferFormat(device, [
+        const uniforms = [
             new UniformFormat('splatTextureSize', UNIFORMTYPE_UINT),
             new UniformFormat('numTilesX', UNIFORMTYPE_UINT),
             new UniformFormat('numTilesY', UNIFORMTYPE_UINT),
@@ -891,7 +861,16 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
             new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT),
             new UniformFormat('minContribution', UNIFORMTYPE_FLOAT)
-        ]);
+        ];
+        if (fisheyeEnabled) {
+            uniforms.push(
+                new UniformFormat('fisheye_k', UNIFORMTYPE_FLOAT),
+                new UniformFormat('fisheye_inv_k', UNIFORMTYPE_FLOAT),
+                new UniformFormat('fisheye_projMat00', UNIFORMTYPE_FLOAT),
+                new UniformFormat('fisheye_projMat11', UNIFORMTYPE_FLOAT)
+            );
+        }
+        const uniformBufferFormat = new UniformBufferFormat(device, uniforms);
 
         const wbFormat = this.workBuffer.format;
 
@@ -914,6 +893,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
 
         const cdefines = new Map();
+        if (fisheyeEnabled) {
+            cdefines.set('GSPLAT_FISHEYE', '');
+        }
         if (pickMode) {
             cdefines.set('PICK_MODE', '');
         }
@@ -922,8 +904,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             cdefines.set('GSPLAT_COLOR_FLOAT', '');
         }
 
+        const suffix = fisheyeEnabled ? 'Fisheye' : '';
         const shader = new Shader(device, {
-            name: pickMode ? 'GSplatLocalTileCountPick' : 'GSplatLocalTileCount',
+            name: pickMode ? `GSplatLocalTileCountPick${suffix}` : `GSplatLocalTileCount${suffix}`,
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatLocalTileCountSource,
             cincludes,
@@ -932,7 +915,6 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             computeUniformBufferFormats: { uniforms: uniformBufferFormat }
         });
 
-        this._formatHash = this.workBuffer.format.hash;
         return { shader, bindGroupFormat };
     }
 
@@ -1000,7 +982,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const device = this.device;
         const set = new GSplatLocalDispatchSet(device, pickMode);
 
-        // Count compute is created lazily by _ensureCountCompute()
+        // Count compute is created lazily by set.getCountCompute()
 
         // Scatter: shared shader
         set.scatterCompute = new Compute(device, this._scatterShader, pickMode ? 'GSplatPickScatter' : 'GSplatLocalScatter');

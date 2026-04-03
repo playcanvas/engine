@@ -32,6 +32,24 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: 270, t: '270°' }
                     ]
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Environment' },
+                jsx(SelectInput, {
+                    type: 'string',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'environment' },
+                    value: observer.get('environment') || 'none',
+                    options: [
+                        { v: 'none', t: 'None' },
+                        { v: 'rosendal', t: 'Rosendal Sunset' },
+                        { v: 'industrial-sunset', t: 'Industrial Sunset' },
+                        { v: 'partly-cloudy', t: 'Partly Cloudy' },
+                        { v: 'moonlit', t: 'Moonlit Sky' },
+                        { v: 'night-sky', t: 'Night Sky' }
+                    ]
+                })
             )
         ),
         jsx(
@@ -44,8 +62,20 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'cameraFov' },
                     min: 10,
-                    max: 120,
+                    max: 360,
                     precision: 0
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Fisheye' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'fisheye' },
+                    min: 0,
+                    max: 1,
+                    precision: 4,
+                    step: 0.0001
                 })
             ),
             jsx(
