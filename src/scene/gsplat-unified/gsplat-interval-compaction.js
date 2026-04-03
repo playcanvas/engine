@@ -431,7 +431,7 @@ class GSplatIntervalCompaction {
             cullCompute.setParameter('maxTheta', frustumCuller.fisheyeMaxTheta);
             cullCompute.setParameter('cameraForward', frustumCuller.fisheyeCameraForward);
         } else {
-            cullCompute.setParameter('frustumPlanes', frustumCuller.frustumPlanes);
+            cullCompute.setParameter('frustumPlanes[0]', frustumCuller.frustumPlanes);
         }
 
         cullCompute.setParameter('numIntervals', numIntervals);

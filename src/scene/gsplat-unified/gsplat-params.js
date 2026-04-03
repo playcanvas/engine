@@ -653,6 +653,9 @@ class GSplatParams {
      * Note: This only affects Gaussian splat rendering. Other objects in the scene (meshes,
      * sprites, etc.) continue to use the standard camera projection and are not distorted.
      *
+     * For best results, enable {@link GSplatParams#radialSorting} when using fisheye projection
+     * to avoid sorting artifacts caused by the wide field of view.
+     *
      * Defaults to 0.
      *
      * @type {number}

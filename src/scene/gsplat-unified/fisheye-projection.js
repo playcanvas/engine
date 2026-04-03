@@ -1,7 +1,8 @@
 /**
- * Stateless helper that computes all derived fisheye projection values from a normalized slider
- * value, camera FOV, and projection matrix. Each consumer (renderer, culling, future skydome)
- * creates its own instance and calls {@link FisheyeProjection#update} when it needs current values.
+ * Helper that caches derived fisheye projection values from a normalized slider value, camera FOV,
+ * and projection matrix. Each consumer (renderer, culling, future skydome) creates its own instance
+ * and calls {@link FisheyeProjection#update} when it needs current values. The instance only
+ * mutates its own cached fields, with no external side effects.
  *
  * Uses the generalized fisheye model g(θ) = k·tan(θ/k), where k controls the projection
  * characteristic: k=1 is rectilinear perspective, lower k increases barrel distortion.
@@ -79,6 +80,12 @@ class FisheyeProjection {
      * @param {import('../../core/math/mat4.js').Mat4} projMatrix - The camera's projection matrix.
      */
     update(t, fov, projMatrix) {
+        // Fisheye is only meaningful for perspective cameras (projMatrix[15] === 0).
+        // Force it off for orthographic projections.
+        if (projMatrix.data[15] === 1) {
+            t = 0;
+        }
+
         const p00 = projMatrix.data[0];
         const p11 = projMatrix.data[5];
 
