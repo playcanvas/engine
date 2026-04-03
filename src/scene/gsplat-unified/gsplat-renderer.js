@@ -1,5 +1,6 @@
 import gsplatOutputVS from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatOutput.js';
 import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
+import { FisheyeProjection } from './fisheye-projection.js';
 
 /**
  * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
@@ -43,6 +44,16 @@ class GSplatRenderer {
      * @protected
      */
     _workBufferFormatVersion = -1;
+
+    /**
+     * Fisheye projection helper shared by all renderer paths.
+     * The manager calls update() during culling; renderers read the computed values
+     * when binding uniforms.
+     *
+     * @type {FisheyeProjection}
+     * @ignore
+     */
+    fisheyeProj = new FisheyeProjection();
 
     /**
      * @param {GraphicsDevice} device - The graphics device.

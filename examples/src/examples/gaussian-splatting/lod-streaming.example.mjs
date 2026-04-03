@@ -76,6 +76,32 @@ const config = {
     focusPoint: [12, 3, 0]
 };
 
+// HDRI environment presets (Poly Haven, infinite projection)
+/** @type {Record<string, { url: string, exposure: number } | null>} */
+const ENV_PRESETS = {
+    'none': null,
+    'rosendal': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/rosendal_park_sunset_puresky_2k.hdr',
+        exposure: 0.06
+    },
+    'industrial-sunset': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/industrial_sunset_puresky_2k.hdr',
+        exposure: 0.3
+    },
+    'partly-cloudy': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr',
+        exposure: 0.9
+    },
+    'moonlit': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_moon_noon_puresky_2k.hdr',
+        exposure: 0.2
+    },
+    'night-sky': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_night_puresky_2k.hdr',
+        exposure: 0.06
+    }
+};
+
 // LOD preset definitions
 /** @type {Record<string, { range: number[], lodBaseDistance: number, lodMultiplier: number }>} */
 const LOD_PRESETS = {
@@ -150,10 +176,13 @@ assetListLoader.load(async () => {
         app.scene.gsplat.dataFormat = data.get('compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
     });
 
+    const MAX_PERSPECTIVE_FOV = 140;
+
     // initialize UI settings (must be after observer registration)
+    data.set('fisheye', 0);
     data.set('cameraFov', 75);
     data.set('toneMapping', pc.TONEMAP_LINEAR);
-    data.set('exposure', 1.5);
+    data.set('exposure', 1);
     data.set('minPixelSize', 2);
     data.set('minContribution', 3);
     data.set('radialSorting', true);
@@ -163,6 +192,7 @@ assetListLoader.load(async () => {
     data.set('debugLod', false);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
     data.set('splatBudget', pc.platform.mobile ? 1 : 4);
+    data.set('environment', 'none');
     data.set('url', '');
     data.set('orientation', 270);
 
@@ -171,7 +201,7 @@ assetListLoader.load(async () => {
     // Create a camera with fly controls
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
+        clearColor: new pc.Color(1, 1, 1),
         fov: 75,
         toneMapping: pc.TONEMAP_LINEAR
     });
@@ -194,14 +224,84 @@ assetListLoader.load(async () => {
         focusPoint: focusPoint
     });
 
-    data.on('cameraFov:set', () => {
-        camera.camera.fov = data.get('cameraFov');
+    const applyFov = () => {
+        const fov = data.get('cameraFov');
+        camera.camera.fov = (data.get('fisheye') === 0) ? Math.min(fov, MAX_PERSPECTIVE_FOV) : fov;
+    };
+    data.on('cameraFov:set', applyFov);
+    data.on('fisheye:set', () => {
+        app.scene.gsplat.fisheye = data.get('fisheye');
+        applyFov();
     });
     data.on('toneMapping:set', () => {
         camera.camera.toneMapping = data.get('toneMapping');
     });
     data.on('exposure:set', () => {
         app.scene.exposure = data.get('exposure');
+    });
+
+    // Poly Haven credit overlay (shown when an HDRI is active)
+    const phCredit = document.createElement('a');
+    phCredit.href = 'https://polyhaven.com';
+    phCredit.target = '_blank';
+    phCredit.rel = 'noopener';
+    phCredit.textContent = 'HDRI by Poly Haven';
+    Object.assign(phCredit.style, {
+        position: 'fixed', bottom: '6px', right: '10px', zIndex: '11',
+        font: '400 16px/1 sans-serif', color: 'rgba(255,255,255,0.25)',
+        textDecoration: 'none', pointerEvents: 'auto', display: 'none'
+    });
+    phCredit.onmouseenter = () => { phCredit.style.color = 'rgba(255,255,255,0.5)'; };
+    phCredit.onmouseleave = () => { phCredit.style.color = 'rgba(255,255,255,0.25)'; };
+    document.body.appendChild(phCredit);
+    app.on('destroy', () => phCredit.remove());
+
+    // HDRI environment loading
+    /** @type {Map<string, { skybox: pc.Texture, envAtlas: pc.Texture }>} */
+    const hdriCache = new Map();
+
+    const applyEnvironment = async (/** @type {string} */ name) => {
+        const preset = ENV_PRESETS[name];
+        if (!preset) {
+            app.scene.skybox = null;
+            app.scene.envAtlas = null;
+            phCredit.style.display = 'none';
+            data.set('exposure', 1);
+            return;
+        }
+
+        if (!hdriCache.has(preset.url)) {
+            const asset = new pc.Asset('hdri', 'texture', { url: preset.url }, { mipmaps: false });
+            await new Promise((resolve, reject) => {
+                asset.on('load', resolve);
+                asset.on('error', (/** @type {string} */ err) => {
+                    console.error('Failed to load HDRI:', err);
+                    reject(err);
+                });
+                app.assets.add(asset);
+                app.assets.load(asset);
+            });
+
+            const source = asset.resource;
+            const skybox = pc.EnvLighting.generateSkyboxCubemap(source);
+            const lighting = pc.EnvLighting.generateLightingSource(source);
+            const envAtlas = pc.EnvLighting.generateAtlas(lighting);
+            lighting.destroy();
+            hdriCache.set(preset.url, { skybox, envAtlas });
+        }
+
+        const cached = /** @type {{ skybox: pc.Texture, envAtlas: pc.Texture }} */ (hdriCache.get(preset.url));
+        app.scene.skybox = cached.skybox;
+        app.scene.envAtlas = cached.envAtlas;
+        app.scene.sky.type = pc.SKYTYPE_INFINITE;
+        data.set('exposure', preset.exposure ?? 1);
+        phCredit.style.display = 'block';
+    };
+
+    data.on('environment:set', () => {
+        applyEnvironment(data.get('environment')).catch((err) => {
+            console.warn('Environment load failed:', err);
+        });
     });
 
     // Gsplat loading state

@@ -632,6 +632,54 @@ class GSplatParams {
     }
 
     /**
+     * @type {number}
+     * @private
+     */
+    _fisheye = 0;
+
+    /**
+     * Controls the fisheye projection strength for Gaussian splats. The value is in the
+     * range [0, 1]:
+     *
+     * - 0: Standard rectilinear (perspective) projection.
+     * - (0, 1]: Increasing barrel distortion, producing a wider field of view with a
+     *   "little planet" effect at higher values.
+     *
+     * Enabling fisheye for the first time has a small one-off cost as new shaders are
+     * compiled. Subsequent switches between 0 and non-zero are instantaneous.
+     *
+     * Only supported with perspective cameras. Has no effect with orthographic projection.
+     *
+     * Note: This only affects Gaussian splat rendering. Other objects in the scene (meshes,
+     * sprites, etc.) continue to use the standard camera projection and are not distorted.
+     *
+     * Defaults to 0.
+     *
+     * @type {number}
+     */
+    set fisheye(value) {
+        if (this._fisheye !== value) {
+            const wasEnabled = this._fisheye > 0;
+            this._fisheye = value;
+
+            const isEnabled = value > 0;
+            if (wasEnabled !== isEnabled) {
+                this._material.setDefine('GSPLAT_FISHEYE', isEnabled);
+                this._material.update();
+            }
+        }
+    }
+
+    /**
+     * Gets the fisheye projection strength.
+     *
+     * @type {number}
+     */
+    get fisheye() {
+        return this._fisheye;
+    }
+
+    /**
      * Number of update ticks before unloading unused streamed resources. When a streamed resource's
      * reference count reaches zero, it enters a cooldown period before being unloaded. This allows
      * recently used data to remain in memory for quick reuse if needed again soon. Set to 0 to

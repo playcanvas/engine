@@ -28,6 +28,12 @@ struct Uniforms {
     exposure: f32,
     alphaClip: f32,
     minContribution: f32,
+    #ifdef GSPLAT_FISHEYE
+        fisheye_k: f32,
+        fisheye_inv_k: f32,
+        fisheye_projMat00: f32,
+        fisheye_projMat11: f32,
+    #endif
 }
 @group(0) @binding(4) var<uniform> uniforms: Uniforms;
 
@@ -64,7 +70,11 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
         uniforms.viewMatrix, uniforms.viewProj,
         uniforms.focal, uniforms.viewportWidth, uniforms.viewportHeight,
         uniforms.nearClip, uniforms.farClip, opacity, uniforms.minPixelSize,
-        uniforms.isOrtho, uniforms.alphaClip, uniforms.minContribution
+        uniforms.isOrtho, uniforms.alphaClip, uniforms.minContribution,
+        #ifdef GSPLAT_FISHEYE
+            uniforms.fisheye_k, uniforms.fisheye_inv_k,
+            uniforms.fisheye_projMat00, uniforms.fisheye_projMat11,
+        #endif
     );
 
     if (!proj.valid) {

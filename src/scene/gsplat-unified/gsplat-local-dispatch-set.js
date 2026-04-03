@@ -1,5 +1,6 @@
 import { Texture } from '../../platform/graphics/texture.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
+import { Compute } from '../../platform/graphics/compute.js';
 import {
     BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC, BUFFERUSAGE_INDIRECT,
     FILTER_NEAREST,
@@ -8,9 +9,9 @@ import {
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
 
 /**
- * @import { Compute } from '../../platform/graphics/compute.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
  */
 
 const MAX_CHUNKS_PER_TILE = 8;
@@ -31,8 +32,25 @@ class GSplatLocalDispatchSet {
     /** @type {boolean} */
     pickMode;
 
-    /** @type {Compute} */
-    countCompute;
+    // Count compute caching: standard and fisheye variants, created lazily
+
+    /** @type {Shader|null} */
+    _countShader = null;
+
+    /** @type {BindGroupFormat|null} */
+    _countBindGroupFormat = null;
+
+    /** @type {Compute|null} */
+    _countCompute = null;
+
+    /** @type {Shader|null} */
+    _countShaderFisheye = null;
+
+    /** @type {BindGroupFormat|null} */
+    _countBindGroupFormatFisheye = null;
+
+    /** @type {Compute|null} */
+    _countComputeFisheye = null;
 
     /** @type {Compute} */
     scatterCompute;
@@ -199,7 +217,58 @@ class GSplatLocalDispatchSet {
         this.prefixSumKernel.destroyPasses();
     }
 
+    /**
+     * Returns the cached count Compute for the given fisheye state, lazily creating
+     * the requested variant on first use via the provided factory function.
+     *
+     * @param {boolean} fisheyeEnabled - Whether fisheye is active.
+     * @param {Function} createShaderAndFormat - Factory `(pickMode, fisheye) => { shader, bindGroupFormat }`.
+     * @returns {Compute} The cached Compute instance.
+     */
+    getCountCompute(fisheyeEnabled, createShaderAndFormat) {
+        if (fisheyeEnabled) {
+            if (!this._countComputeFisheye) {
+                const { shader, bindGroupFormat } = createShaderAndFormat(this.pickMode, true);
+                this._countShaderFisheye = shader;
+                this._countBindGroupFormatFisheye = bindGroupFormat;
+                const label = this.pickMode ? 'GSplatPickTileCountFisheye' : 'GSplatLocalTileCountFisheye';
+                this._countComputeFisheye = new Compute(this.device, shader, label);
+            }
+            return this._countComputeFisheye;
+        }
+        if (!this._countCompute) {
+            const { shader, bindGroupFormat } = createShaderAndFormat(this.pickMode, false);
+            this._countShader = shader;
+            this._countBindGroupFormat = bindGroupFormat;
+            const label = this.pickMode ? 'GSplatPickTileCount' : 'GSplatLocalTileCount';
+            this._countCompute = new Compute(this.device, shader, label);
+        }
+        return this._countCompute;
+    }
+
+    /**
+     * Destroy all cached count shaders, bind group formats, and Compute objects. Called when the
+     * work buffer format changes (invalidating all compiled shaders) and on final set destruction.
+     */
+    destroyCountResources() {
+        this._countShader?.destroy();
+        this._countBindGroupFormat?.destroy();
+        this._countCompute?.destroy();
+        this._countShaderFisheye?.destroy();
+        this._countBindGroupFormatFisheye?.destroy();
+        this._countComputeFisheye?.destroy();
+
+        this._countShader = null;
+        this._countBindGroupFormat = null;
+        this._countCompute = null;
+        this._countShaderFisheye = null;
+        this._countBindGroupFormatFisheye = null;
+        this._countComputeFisheye = null;
+    }
+
     destroy() {
+        this.destroyCountResources();
+
         this._tileSplatCountsBuffer?.destroy();
         this._tileWriteCursorsBuffer?.destroy();
         this._smallTileListBuffer?.destroy();

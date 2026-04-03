@@ -28,14 +28,39 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
 
     float focal = viewport_size.x * center.projMat00;
 
-    vec3 v = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : center.view.xyz;
-    float J1 = focal / v.z;
-    vec2 J2 = -J1 / v.z * v.xy;
-    mat3 J = mat3(
-        J1, 0.0, J2.x, 
-        0.0, J1, J2.y, 
-        0.0, 0.0, 0.0
-    );
+    vec3 v = center.view.xyz;
+
+    #ifdef GSPLAT_FISHEYE
+
+        // Generalized fisheye Jacobian for g(θ) = k·tan(θ/k)
+        // fisheyeSinTK, fisheyeCosTK, fisheyeRxy are shared from center shader
+        float r_sq = max(center.fisheyeRxy * center.fisheyeRxy, 1e-8);
+        float d2 = dot(v, v);
+        float neg_z = -v.z;
+        float g_prime = 1.0 / (center.fisheyeCosTK * center.fisheyeCosTK);
+        float g_theta = fisheye_k * center.fisheyeSinTK / center.fisheyeCosTK;
+        float sv = (center.fisheyeRxy > 1e-4) ? g_theta / center.fisheyeRxy : (neg_z > 0.0 ? 1.0 / neg_z : 0.0);
+        float K = (center.fisheyeRxy > 1e-4) ? (g_prime * neg_z / d2 - sv) / r_sq : 0.0;
+
+        mat3 J = mat3(
+            focal * (sv + K * v.x * v.x),  focal * K * v.x * v.y,         focal * g_prime * v.x / d2,
+            focal * K * v.x * v.y,        focal * (sv + K * v.y * v.y),    focal * g_prime * v.y / d2,
+            0.0,                           0.0,                            0.0
+        );
+
+    #else
+
+        // Standard perspective Jacobian
+        vec3 vp = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : v;
+        float J1 = focal / vp.z;
+        vec2 J2 = -J1 / vp.z * vp.xy;
+        mat3 J = mat3(
+            J1, 0.0, J2.x,
+            0.0, J1, J2.y,
+            0.0, 0.0, 0.0
+        );
+
+    #endif
 
     mat3 W = transpose(mat3(center.modelView));
     mat3 T = W * J;
