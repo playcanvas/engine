@@ -47,7 +47,10 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: 'industrial-sunset', t: 'Industrial Sunset' },
                         { v: 'partly-cloudy', t: 'Partly Cloudy' },
                         { v: 'moonlit', t: 'Moonlit Sky' },
-                        { v: 'night-sky', t: 'Night Sky' }
+                        { v: 'sunflowers', t: 'Sunflowers' },
+                        { v: 'table-mountain', t: 'Table Mountain' },
+                        { v: 'cloud-layers', t: 'Cloud Layers' },
+                        { v: 'night', t: 'Night Sky' }
                     ]
                 })
             )
@@ -55,6 +58,16 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
         jsx(
             Panel,
             { headerText: 'Camera' },
+            jsx(
+                LabelGroup,
+                { text: 'Camera Frame' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'cameraFrame' },
+                    value: observer.get('cameraFrame') || false
+                })
+            ),
             jsx(
                 LabelGroup,
                 { text: 'FOV' },

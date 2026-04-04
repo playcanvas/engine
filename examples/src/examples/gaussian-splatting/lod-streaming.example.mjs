@@ -86,7 +86,7 @@ const ENV_PRESETS = {
     },
     'industrial-sunset': {
         url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/industrial_sunset_puresky_2k.hdr',
-        exposure: 0.3
+        exposure: 0.8
     },
     'partly-cloudy': {
         url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr',
@@ -94,11 +94,23 @@ const ENV_PRESETS = {
     },
     'moonlit': {
         url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_moon_noon_puresky_2k.hdr',
-        exposure: 0.2
+        exposure: 0.4
     },
-    'night-sky': {
+    'sunflowers': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/sunflowers_puresky_2k.hdr',
+        exposure: 0.8
+    },
+    'table-mountain': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/table_mountain_2_puresky_2k.hdr',
+        exposure: 1
+    },
+    'cloud-layers': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/cloud_layers_2k.hdr',
+        exposure: 1
+    },
+    'night': {
         url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_night_puresky_2k.hdr',
-        exposure: 0.06
+        exposure: 0.2
     }
 };
 
@@ -224,18 +236,48 @@ assetListLoader.load(async () => {
         focusPoint: focusPoint
     });
 
+    // CameraFrame for HDR linear rendering (created lazily on first enable)
+    /** @type {pc.CameraFrame|null} */
+    let cameraFrame = null;
+
+    const applyToneMapping = () => {
+        const tm = data.get('toneMapping');
+        if (cameraFrame?.enabled) {
+            cameraFrame.rendering.toneMapping = tm;
+            cameraFrame.update();
+        } else {
+            camera.camera.toneMapping = tm;
+        }
+    };
+
+    data.set('cameraFrame', false);
+    data.on('cameraFrame:set', () => {
+        if (data.get('cameraFrame')) {
+            if (!cameraFrame) {
+                cameraFrame = new pc.CameraFrame(app, camera.camera);
+                cameraFrame.rendering.toneMapping = data.get('toneMapping');
+            }
+            cameraFrame.enabled = true;
+            cameraFrame.update();
+        } else if (cameraFrame) {
+            cameraFrame.destroy();
+            cameraFrame = null;
+        }
+        applyToneMapping();
+    });
+
     const applyFov = () => {
         const fov = data.get('cameraFov');
         camera.camera.fov = (data.get('fisheye') === 0) ? Math.min(fov, MAX_PERSPECTIVE_FOV) : fov;
     };
     data.on('cameraFov:set', applyFov);
     data.on('fisheye:set', () => {
-        app.scene.gsplat.fisheye = data.get('fisheye');
+        const fisheye = data.get('fisheye');
+        app.scene.gsplat.fisheye = fisheye;
+        app.scene.sky.fisheye = fisheye;
         applyFov();
     });
-    data.on('toneMapping:set', () => {
-        camera.camera.toneMapping = data.get('toneMapping');
-    });
+    data.on('toneMapping:set', applyToneMapping);
     data.on('exposure:set', () => {
         app.scene.exposure = data.get('exposure');
     });

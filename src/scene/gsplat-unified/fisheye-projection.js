@@ -118,15 +118,20 @@ class FisheyeProjection {
         this.invK = 1.0 / k;
         this.cornerScale = 1.0 + (Math.SQRT2 - 1.0) * t;
 
-        // Projection-dependent values derived from the camera's projection matrix
-        const halfFovX = Math.atan2(1.0, p00);
+        // Projection-dependent values derived from the camera's projection matrix.
+        // Compute X and Y scales independently to avoid the 0/0 singularity at 180° FOV
+        // and to correctly handle the non-linear fisheye mapping for non-square aspect ratios.
         const maxTheta = Math.min(k * Math.PI / 2, 3.13);
-        const effHalfFov = Math.min(halfFovX, maxTheta - 0.01);
-        const gFov = k * Math.tan(effHalfFov / k);
-        const pm00 = this.cornerScale / gFov;
+        const cs = this.cornerScale;
 
-        this.projMat00 = pm00;
-        this.projMat11 = pm00 * p11 / p00;
+        const halfFovX = Math.atan2(1.0, p00);
+        const effHalfFovX = Math.min(halfFovX, maxTheta - 0.01);
+        this.projMat00 = cs / (k * Math.tan(effHalfFovX / k));
+
+        const halfFovY = Math.atan2(1.0, p11);
+        const effHalfFovY = Math.min(halfFovY, maxTheta - 0.01);
+        this.projMat11 = cs / (k * Math.tan(effHalfFovY / k));
+
         this.maxTheta = maxTheta;
     }
 }
