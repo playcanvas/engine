@@ -188,7 +188,9 @@ class Sky {
             const isEnabled = value > 0;
             if (wasEnabled !== isEnabled) {
                 this._fisheyeProj ??= new FisheyeProjection();
-                this._setFisheyeDefine(isEnabled);
+                if (this._type === SKYTYPE_INFINITE) {
+                    this._setFisheyeDefine(isEnabled);
+                }
             }
         }
     }
@@ -204,7 +206,7 @@ class Sky {
             this.skyMesh = new SkyMesh(this.device, this.scene, this.node, texture, this.type);
             this.skyMesh.depthWrite = this._depthWrite;
 
-            if (this._fisheye > 0) {
+            if (this._fisheye > 0 && this.type === SKYTYPE_INFINITE) {
                 this._setFisheyeDefine(true);
             }
 
